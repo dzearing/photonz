@@ -210,6 +210,11 @@ public enum PlaytestLockSafety {
         // the window, never a name. The first locked run of
         // the-speed-curve-shows-under-a-clip-walk is its watch.
         "expectSpeedCurve",
+        // Added 2026-10-17 by reading, NOT yet watched under a lock: it reads
+        // the rows' own register of where they drew and an offscreen picture
+        // of the window, never a name. The first locked run of
+        // a-cut-opens-into-its-two-clips-walk is its watch.
+        "expectExpandedCut",
         // Added 2026-09-28 by reading, NOT yet watched under a lock: it drives
         // the ruler's own press, drag and release through the editor, the way
         // clickRuler puts the playhead, never a name. The first locked run of

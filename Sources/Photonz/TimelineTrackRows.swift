@@ -53,6 +53,12 @@ struct TimelineTrackRow: View {
             }
             .frame(height: laneHeight)
             .playtestField("Track \(track.name)")
+            // The cut opened into its two clips, A over B, right under the
+            // lane they are cut on (`ExpandedCutRows`).
+            if row.expandsCut, let open = editorState.expandedCutRows(onTrack: track.id) {
+                ExpandedCutRows(rows: open.rows, laneWidth: laneWidth, indent: indent)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
             if row.isCaptions, !row.clips.isEmpty, editorState.isKeyTrackOpen(track.id) {
                 HStack(spacing: TimelineDock.gap) {
                     CaptionWordsLane.header(indent: indent)

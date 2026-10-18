@@ -94,6 +94,8 @@ public enum PlaytestMenuStandIn {
         Chord(key: "c", modifiers: [.command, .option, .shift]): .copyLook,
         Chord(key: "v", modifiers: [.command, .option, .shift]): .pasteLook,
         Chord(key: "t", modifiers: [.command, .option]): .toggleTimingStrip,
+        // Clip ▸ Expand the Cut, on the cut in hand.
+        Chord(key: "e", modifiers: [.option]): .expandCut,
         // View ▸ Mode ▸ … . The whole submenu hangs off the focused window like
         // undo, so a walk pressing ⌃2 is told the item has no action behind it
         // and stops there. The numbers are `WindowModes.shortcutNumber`, in the

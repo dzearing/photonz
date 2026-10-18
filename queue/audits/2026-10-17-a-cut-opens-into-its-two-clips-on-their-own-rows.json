@@ -1,0 +1,56 @@
+{
+  "feature": "Expand the Cut: a cut opens into its two clips on their own rows",
+  "epic": "video-transitions-motion",
+  "summary": "Pick a cut and press Option E (or right-click it, or Clip > Expand the Cut): the cut opens into an A row and a B row under its track, so you can see a dissolve's overlap and the spare frames it spends, and see a dip release it.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Walks: a-cut-opens-into-its-two-clips-walk (Option E, dip, hold) and expand-the-cut-from-its-menus-walk (right-click and Clip menu, front).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the sample recording, put the playhead at 6s and press W, then drop a second clip onto V1 right after it.",
+      "shot": "2026-10-17-expanded-cut-0-right-click.png",
+      "shotNote": "The cut's right-click with a dissolve on it: Expand the Cut sits under Remove Transition with its Option E."
+    },
+    {
+      "do": "Click the cut, put a Cross dissolve on it and set Length to 1.0s."
+    },
+    {
+      "do": "Press Option E.",
+      "shot": "2026-10-17-expanded-cut-1-dissolve.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Put the playhead on the cut and look at the canvas.",
+      "shot": "2026-10-17-expanded-cut-2-on-the-seam.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Change Type to Dip to black.",
+      "shot": "2026-10-17-expanded-cut-3-dip.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Set Hold on black to 3.0s.",
+      "shot": "2026-10-17-expanded-cut-4-hold.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Option E again to close the rows.",
+      "shot": "2026-10-17-expanded-cut-5-closed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "With the dissolve on, can you tell at a glance that A runs half a second past the cut and B starts half a second early?",
+    "Does the switch to Dip to black make it obvious that the overlap went away and nothing moved?",
+    "Is Option E, the cut's right-click and Clip > Expand the Cut enough, or do you reach for something on the track header?",
+    "Do the two extra rows push anything you need out of sight on your screen?"
+  ],
+  "rough": [
+    "The mock opens the cut from a chevron on the V1 track label; the app has no header control for it yet, because the header's arrow already opens the key lanes. Settled by decision card a-picked-cut-opens-from-a-chevron-on-its-track-h-how-should-a-track-s-header-open (task a-picked-cut-opens-from-a-chevron-on-its-track-h).",
+    "Beside the mock's step 5 (video-transition-wt.html, 'See the overlap'): rows, hatch over each bar running on, the dashed box on B and the 'both on screen · 1.0s' label match; A and B wear the colours their clips wear on V1, as the mock's rows do (2026-10-17-expanded-cut-beside-the-mock.png, mock above, app below).",
+    "Under a hold the rows show the gap and the black itself is drawn on V1, as the mock's step 8 draws it.",
+    "Names sit above a dip's fade with a soft shadow, where the mock lets the fade cover them: on a dark lane the mock's way left 'b-roll' grey on near black. Settled by the written rule, UX-PATTERNS 'Text is always legible' (the user, 2026-09-30).",
+    "The rows only show; clicking or right-clicking on them does nothing. One cut is open at a time.",
+    "In a walk Option E runs through the walk's stand-in, because a walk's menu bar is frozen; the live menu bar was read with the window in front, showing Clip > Expand the Cut ⌥E ticked and closing the rows when chosen."
+  ]
+}

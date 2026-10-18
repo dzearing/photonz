@@ -53,7 +53,7 @@ when it can act.
 | **Picture** (a picture, a shape, clip art) | as a title | as a title |
 | **Caption** | Edit Words · [Join with Next Line] · Start Here / Delete / More ▸ | the Captions track's own rows: Rewrite Captions, Timing ▸, Export Subtitles ▸, Safe Areas, [Reset Captions], [Clear Captions] |
 | **Zoom bar** | [Follow Cursor] · Zoom ▸ / Delete Zoom ⌫ | none |
-| **Join** (a cut in a clip, or the edit point between two) | with no transition: Apply Default Transition ⌘T · Add Transition ▸; with one: Change Transition ▸ · Length ▸ · Curve ▸ · Remove Transition / [Copy Transition] · [Paste Transition] / [Roll Edit to t] · [Join Through Edit] | none |
+| **Join** (a cut in a clip, or the edit point between two) | with no transition: Apply Default Transition ⌘T · Add Transition ▸; with one: Change Transition ▸ · Length ▸ · Curve ▸ · Remove Transition; then Expand the Cut ⌥E (a toggle) / [Copy Transition] · [Paste Transition] / [Roll Edit to t] · [Join Through Edit] | none |
 | **Gap** | Ripple Delete ⇧⌫ / [Zoom to Fit] · [Compact Tracks] / Track ▸ | the track header's own menu |
 | **Empty space** | on an empty picture track: Add Title Page ▸ · Add Name Card ▸ · Add Text · Add Rectangle · [Put Layer Here ▸] · [Paste Here]; on the Captions track its rows / [Zoom to Fit] · [Compact Tracks] / Track ▸ | the track header's own menu |
 

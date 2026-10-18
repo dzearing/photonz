@@ -1,0 +1,31 @@
+{
+  "id": "a-picked-cut-opens-from-a-chevron-on-its-track-h",
+  "title": "A picked cut opens from a chevron on its track header, as the transition mock draws it",
+  "goal": "In the transition walkthrough the cut opens into its two clips from a small chevron on the V1 track label. Today it opens from its right-click, the Clip menu and Option E, but the header has no control for it, because the arrow already on the header opens the track keyed-value lanes. Decide with the user how the header offers it, then build that.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 249.98046875,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-18T06:28:51.470Z",
+  "updated": "2026-10-18T06:29:18.415Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html line 376 #btnExpand (.xbtn chevron-down in the V1 .tl), step 5 data-cue #btnExpand. Today: TimelineTrackRows.swift twist (hasKeyLanes / hasParts arrow). Expand the Cut itself shipped in a-cut-opens-into-its-two-clips-on-their-own-rows (EditorState+ExpandedCut.toggleExpandedCut, ExpandedCutRows). Walk to extend: Scripts/playtest/expand-the-cut-from-its-menus-walk.json.",
+  "acceptance": [
+    "The user has answered the decision card on how the track header opens a picked cut",
+    "With a cut picked, the header control the user chose opens and closes the A and B rows, and the existing arrow still opens the key lanes",
+    "A walk at Next defaults clicks that control at a point on its face and measures the rows open, then closed"
+  ],
+  "log": [
+    {
+      "t": "2026-10-18T06:28:51.472Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T06:29:18.412Z",
+      "note": "Waiting on the user: how the track header opens a picked cut (the mock's chevron vs the key-lanes arrow)"
+    }
+  ]
+}

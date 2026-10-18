@@ -21612,3 +21612,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A stop can be a Freeze (speed 0 holding its frame for holdMS); Freeze is first in the stop's Speed list.
 - New walk step `expectSpeedCurve` reads the lane's ink; `dragGrip` takes `rise`.
 - Next: the clip bar's band tint and legend (a-ramped-clip-s-bar-is-tinted-by-its-speed-bands); a cut inside a freeze restarts its hold (cutting-a-clip-in-the-middle-of-a-speed-stop-fre).
+
+## 2026-10-17 — Expand the Cut (Next)
+
+- A picked cut opens into its two clips on rows of their own under the track (Option E, the cut's right-click, Clip > Expand the Cut): A over B, each bar running on over the spare frames an overlap spends, hatched, with "both on screen · 1.0s" over the overlap; a dip releases it, a hold parts the rows by the black. Core: `ExpandedCut.swift`; app: `EditorState+ExpandedCut.swift`, `ExpandedCutRows.swift`.
+- New walk step `expectExpandedCut` measures the rows' ink against the ruler off a picture of the window; walk action `expandCut` stands in for Option E.
+- Next: the mock's chevron on the track label waits on decision card `a-picked-cut-opens-from-a-chevron-on-its-track-h-how-should-a-track-s-header-open`.

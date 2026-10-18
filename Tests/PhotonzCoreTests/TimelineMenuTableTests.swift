@@ -99,6 +99,18 @@ struct TimelineMenuTableTests {
         #expect(TimelineMenuTable.groups(for: .join).first?.first == .applyDefaultTransition)
     }
 
+    /// A cut opens into its two clips from its own right-click, beside its
+    /// transition, the way the mock's Edit point group puts Expand the cut
+    /// under Add transition (`video-transition-wt.html`, `#cmdMenu`).
+    @Test func aCutOpensIntoItsTwoClipsFromItsRightClick() {
+        let first = TimelineMenuTable.groups(for: .join).first ?? []
+        let add = first.firstIndex(of: .addTransition)
+        let expand = first.firstIndex(of: .expandCut)
+        #expect(add != nil && expand != nil)
+        #expect((add ?? 0) < (expand ?? 0))
+        #expect(TimelineMenuTable.title(.expandCut, playheadMS: 0) == "Expand the Cut")
+    }
+
     /// Empty space on a track is somewhere to put things; the track's own
     /// settings are one level down, under the track's name, as on its header.
     @Test func emptySpaceOffersWhatToPutThereAndTheTrackOneLevelDown() {

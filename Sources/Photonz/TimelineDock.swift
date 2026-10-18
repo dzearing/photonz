@@ -800,7 +800,9 @@ struct TimelineDock: View {
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
         let zooms = CGFloat(track.zoomedClips.count) * (ZoomLane.height + 3)
         let curves = CGFloat(track.rampedClips.count) * (SpeedCurveLane.height + 3)
+        let expanded = track.expandsCut ? ExpandedCutRows.height + 3 : 0
         return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner + words + zooms + curves
+            + expanded
     }
 
     /// One track's lane and its words, without the rows that open inside its
@@ -808,7 +810,10 @@ struct TimelineDock: View {
     static func ownHeight(of track: TimelineTrackRowModel, wordsOpen: Bool = true) -> CGFloat {
         let lane = track.carriesSound ? soundLaneHeight : laneHeight
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
-        return lane + words
+        // The open cut's rows are part of the track itself, right under its
+        // lane, so the timeline grows to show them.
+        let expanded = track.expandsCut ? ExpandedCutRows.height + 3 : 0
+        return lane + words + expanded
     }
 
     /// The track lifted by its header, drawn over the others: the real row,

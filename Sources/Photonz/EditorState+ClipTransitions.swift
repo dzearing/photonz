@@ -269,7 +269,11 @@ extension EditorState {
         var landed: TimelineCutPlace?
         perform { landed = $0.holdOnColour(ms, at: inHand.place) }
         guard let landed else { return }
-        if landed != inHand.place { pickCut(landed) }
+        if landed != inHand.place {
+            // An open cut stays open as the cut it has become.
+            if expandedCutPlace == inHand.place { expandedCutPlace = landed }
+            pickCut(landed)
+        }
         // Stand on the black, so the canvas shows what was just put in.
         if ms > 0, let at = document?.documentCut(at: landed)?.atMS {
             documentTimeMS = min(max(0, at + ms / 2), lastDocumentTimeMS)

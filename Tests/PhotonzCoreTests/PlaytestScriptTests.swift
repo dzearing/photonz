@@ -5303,6 +5303,46 @@ struct PlaytestScriptTests {
         #expect(script.steps[0].name == "expectSpeedCurve")
     }
 
+    // MARK: - The expanded cut
+
+    @Test("An expectExpandedCut step claims how far A runs past the cut and B starts early, in seconds")
+    func expectExpandedCutClaimsTheOverlap() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectExpandedCut", "runsPast": 0.5, "startsEarly": 0.5,
+                       "both": "both on screen · 1.0s" } ] }
+        """)
+        guard case .expectExpandedCut(let claim) = script.steps[0] else {
+            Issue.record("expectExpandedCut"); return
+        }
+        #expect(claim.runsPastSeconds == 0.5 && claim.startsEarlySeconds == 0.5)
+        #expect(claim.both == "both on screen · 1.0s")
+        #expect(claim.within == 1 && !claim.closed && claim.holdSeconds == nil)
+        #expect(script.steps[0].name == "expectExpandedCut")
+    }
+
+    @Test("An expectExpandedCut step can claim the rows closed, or a hold between them")
+    func expectExpandedCutClosedAndHold() throws {
+        let closed = try decode(#"{ "steps": [ { "do": "expectExpandedCut", "closed": true } ] }"#)
+        guard case .expectExpandedCut(let shut) = closed.steps[0] else { Issue.record("closed"); return }
+        #expect(shut.closed)
+        let held = try decode(#"{ "steps": [ { "do": "expectExpandedCut", "runsPast": 0, "startsEarly": 0, "hold": 3 } ] }"#)
+        guard case .expectExpandedCut(let hold) = held.steps[0] else { Issue.record("hold"); return }
+        #expect(hold.holdSeconds == 3 && hold.runsPastSeconds == 0)
+    }
+
+    @Test("An expectExpandedCut step has to claim something, and no claim beside closed")
+    func expectExpandedCutRefusesNonsense() throws {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectExpandedCut" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectExpandedCut", "closed": true, "runsPast": 0.5 } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectExpandedCut", "runsPast": -1 } ] }"#)
+        }
+    }
+
     @Test("An expectSpeedCurve step names its clip and only the mock's four bands")
     func expectSpeedCurveRefusesNonsense() throws {
         #expect(throws: (any Error).self) {

@@ -1,0 +1,49 @@
+{
+  "id": "a-picked-cut-opens-from-a-chevron-on-its-track-h-how-should-a-track-s-header-open",
+  "taskId": "a-picked-cut-opens-from-a-chevron-on-its-track-h",
+  "question": "How should a track's header open the picked cut into its two clips?",
+  "context": "The transition walkthrough mock opens a cut into its two clips from a chevron on the V1 track label. In the app that header already has an arrow that opens the track keyed-value lanes, so the mock chevron cannot simply take its place. Expand the Cut already works from the cut right-click, Clip > Expand the Cut and Option E.",
+  "options": [
+    {
+      "id": "a",
+      "label": "A second chevron while a cut is picked",
+      "summary": "With a cut picked on a track, a small down chevron appears on that track header beside its name. Click it and the cut opens into its A and B rows; click again and they close. The arrow that opens keyed values stays where it is.",
+      "pros": [
+        "Exactly where the mock puts it",
+        "The key-lanes arrow keeps its one job"
+      ],
+      "cons": [
+        "Two arrows on one header while a cut is picked"
+      ],
+      "mitigation": "The chevron shows only while a cut on that track is picked, and its tip says Expand the cut (Option E)."
+    },
+    {
+      "id": "b",
+      "label": "The existing arrow opens the picked cut",
+      "summary": "The arrow already on the header opens the cut into its A and B rows whenever a cut on that track is picked, and opens keyed values the rest of the time.",
+      "pros": [
+        "One control on the header, as the mock draws one"
+      ],
+      "cons": [
+        "The same arrow does two different things depending on what is picked"
+      ],
+      "mitigation": "Its tip changes with what it will open."
+    },
+    {
+      "id": "c",
+      "label": "No header control",
+      "summary": "Keep the cut opening from its right-click, Clip menu and Option E only. Nothing is added to the track header.",
+      "pros": [
+        "The header stays as it is"
+      ],
+      "cons": [
+        "Leaves the mock chevron out"
+      ],
+      "mitigation": "The right-click on the cut and Option E already open it.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-18T06:28:59.616Z"
+}

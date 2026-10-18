@@ -1,0 +1,236 @@
+{
+  "out": "/tmp/photonz-playtest/expand-the-cut-from-its-menus-walk",
+  "seed": "Expand the Cut is reached the way a hand reaches it, at Next defaults: a right-click on the dissolve over the cut between two clips offers Expand the Cut, which opens the cut into its A and B rows, and Clip > Expand the Cut in the menu bar, ticked while it is open, closes them again.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "w"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 6.0,
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 5.96
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 6.0,
+      "endsAt": 14.0,
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "q"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 6.0,
+      "endsAt": 13.0,
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "clipPickEditPoint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionDissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Length",
+      "at": [
+        "centre"
+      ],
+      "choose": "1.0s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "1.0s"
+    },
+    {
+      "do": "expectExpandedCut",
+      "closed": true
+    },
+    {
+      "do": "rightClick",
+      "on": "Transition Tutorial Sample to b-roll",
+      "shot": "1-the-cut-menu",
+      "choose": "Expand the Cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectExpandedCut",
+      "runsPast": 0.5,
+      "startsEarly": 0.5,
+      "both": "both on screen · 1.0s",
+      "within": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-opened-from-the-right-click",
+      "note": "Right-click the dissolve on the cut, Expand the Cut: the A and B rows open under V1"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-opened"
+    },
+    {
+      "do": "menus",
+      "stage": "3-clip-menu",
+      "menu": "Clip",
+      "choose": "Clip > Expand the Cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectExpandedCut",
+      "closed": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-closed-from-the-menu-bar",
+      "note": "Clip > Expand the Cut, ticked while the cut is open, closes the rows again"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-closed"
+    }
+  ]
+}

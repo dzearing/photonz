@@ -36,6 +36,10 @@ extension EditorState {
         static let detachAudio = MenuShortcut(key: "d", modifiers: [.control, .shift])
         static let duplicate = MenuShortcut.command("j")
         static let clearInOut = MenuShortcut(key: "x", modifiers: .option)
+        /// The mock's ⌥E for Expand the cut (`video-transition-wt.html`).
+        /// Neither Photoshop nor Premiere gives ⌥E anything, so the mock's
+        /// key stands (UX-PATTERNS §7).
+        static let expandCut = MenuShortcut(key: "e", modifiers: .option)
         static let splitEverything = MenuShortcut.commandShift("k")
         /// Freeze Frame…. Premiere gives frame holds no key, so it takes a
         /// free one beside ⌥F (UX-PATTERNS §7: no grown-up tool claims it).
@@ -704,6 +708,16 @@ extension EditorState {
                 guard self.canRollCut(at: place) else { return [] }
                 return [.command(TimelineMenuTable.title(.rollEdit, playheadMS: self.documentTimeMS) ?? "") {
                     self.rollCutToPlayhead(at: place)
+                }]
+            case .expandCut:
+                // A view of the cut, not an edit: its two clips on rows of
+                // their own under the track (`EditorState+ExpandedCut`).
+                guard Experiments.shared.transitionsAtACutEnabled else { return [] }
+                return [.toggle(TimelineMenuTable.title(.expandCut, playheadMS: 0) ?? "",
+                                isOn: self.expandedCutPlace == place,
+                                shortcut: TimelineMenuKeys.expandCut) {
+                    self.pickCut(place)
+                    self.toggleExpandedCut(at: place)
                 }]
             case .joinThroughEdit:
                 // A cut with nothing removed, put back into one piece

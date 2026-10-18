@@ -1953,6 +1953,9 @@ final class EditorState {
     /// The cut between two clips on one track that is picked
     /// (`comp-video.html` §02). Picking a layer lets it go.
     var selectedEditPoint: TimelineEditPoint?
+    /// The cut opened into its two clips, one row each, under its track
+    /// (`EditorState+ExpandedCut`). Nil while every cut is closed.
+    var expandedCutPlace: TimelineCutPlace?
     /// The zoom region picked on a clip's Zoom lane (`EditorState+Zoom`).
     /// Picking another layer lets it go. With several picked it is the one
     /// clicked last, and setting it to one outside `pickedZooms` picks just

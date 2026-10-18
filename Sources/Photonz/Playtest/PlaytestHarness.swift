@@ -3417,6 +3417,9 @@ private final class Run {
             note(number, step.name, try await checkSpeedCurve(clip: clip, bands: bands, within: within),
                  state: describe())
 
+        case .expectExpandedCut(let claim):
+            note(number, step.name, try await checkExpandedCut(claim), state: describe())
+
         case .expectLanding(let near, let within, let absent, let says):
             var said = try checkLanding(near: near, within: within, absent: absent)
             if let says {
@@ -6550,6 +6553,11 @@ private final class Run {
                 guard editor.cutInHand?.cut.transition?.kind == kind else {
                     throw Failure(description: "the \(kind.title) did not land on the cut")
                 }
+            case .expandCut:
+                guard editor.canExpandCut else {
+                    throw Failure(description: "there is no cut in hand to expand: pick a cut first")
+                }
+                editor.toggleExpandedCut()
             case .clipTransitionHardCut:
                 guard editor.cutInHand?.cut.transition != nil else {
                     throw Failure(description: "this cut is already hard, so there is nothing "
@@ -7701,7 +7709,7 @@ private final class Run {
                  .clipSlideShortOfPlayhead,
                  .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
                  .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipPickEveryClip, .clipTransitionDissolve, .clipTransitionDipToBlack,
-                 .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
+                 .clipTransitionHardCut, .clipTransitionDragLonger, .expandCut, .clipBlurComesOn,
                  .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
                  .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
                  .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
@@ -9648,6 +9656,171 @@ private final class Run {
     /// floor, a freeze both of its amber stripes, and the dashed 1x line sits
     /// within `within` points of where the scale puts it. A plain line, or one
     /// band colour for everything, fails it.
+    /// The open cut's two rows, measured off a picture of the window against
+    /// the ruler: where A's ink stops past the cut, where B's starts before
+    /// it (or after a hold), that the frames between are hatched and the bars
+    /// either side are not, and the label over the overlap.
+    private func checkExpandedCut(_ claim: ExpandedCutClaim) async throws -> String {
+        let editor = try requireEditor()
+        if claim.closed {
+            guard editor.expandedCutPlace == nil, DrawnExpandedCut.shared.rows == nil else {
+                throw Failure(description: "a cut is still open: its two rows are under the track")
+            }
+            return "no cut is open, and no rows are drawn under any track"
+        }
+        guard var drawn = DrawnExpandedCut.shared.rows else {
+            throw Failure(description: "no cut is open: nothing is drawn under any track"
+                + (editor.expandedCutPlace == nil ? "" : " though one is meant to be open"))
+        }
+        // Scrolled, the least that will do, until both rows and the label
+        // over B's are in sight.
+        var scrolled = ""
+        do {
+            let viewport = editor.timelineTracksViewport
+            let top = drawn.laneFrame.minY - ExpandedCutRows.labelRise, bottom = drawn.laneFrame.maxY
+            let shift = top < viewport.minY ? top - viewport.minY - 2 : (bottom > viewport.maxY ? bottom - viewport.maxY + 2 : 0)
+            if shift != 0 {
+                editor.scrollTimelineTracks(toY: editor.timelineTracksScrollGeometry.offsetY + shift)
+                await sleep(0.4)
+                drawn = DrawnExpandedCut.shared.rows ?? drawn
+                scrolled = " (the tracks scrolled \(Self.round1(shift))pt to show them)"
+            }
+        }
+        if let want = claim.both, drawn.label != want {
+            throw Failure(description: "the overlap's label says "
+                + (drawn.label.map { "\"\($0)\"" } ?? "nothing") + ", and the walk expects \"\(want)\"")
+        }
+        if claim.both == nil, claim.runsPastSeconds == 0, claim.startsEarlySeconds == 0, let label = drawn.label {
+            throw Failure(description: "nothing should overlap, and the rows still carry \"\(label)\"")
+        }
+        let window = try requireWindow()
+        guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+        let rep = try harnessWork { try picture(of: content) }
+        let scale = CGFloat(rep.pixelsWide) / max(content.bounds.width, 1)
+        func rgb(_ x: CGFloat, _ y: CGFloat) -> (Int, Int, Int)? {
+            let px = Int((x * scale).rounded(.down)), py = Int((y * scale).rounded(.down))
+            guard px >= 0, py >= 0, px < rep.pixelsWide, py < rep.pixelsHigh, rep.samplesPerPixel >= 3 else { return nil }
+            var raw = [Int](repeating: 0, count: rep.samplesPerPixel)
+            rep.getPixel(&raw, atX: px, y: py)
+            let top = CGFloat((1 << rep.bitsPerSample) - 1)
+            return (Int(CGFloat(raw[0]) / top * 255), Int(CGFloat(raw[1]) / top * 255), Int(CGFloat(raw[2]) / top * 255))
+        }
+        func apart(_ a: (Int, Int, Int), _ b: (Int, Int, Int)) -> Int {
+            max(abs(a.0 - b.0), abs(a.1 - b.1), abs(a.2 - b.2))
+        }
+        func luma(_ c: (Int, Int, Int)) -> Double { 0.299 * Double(c.0) + 0.587 * Double(c.1) + 0.114 * Double(c.2) }
+        let ruler = editor.motionStripRuler
+        let frame = drawn.laneFrame
+        func lineX(_ ms: Int) -> CGFloat { frame.minX + drawn.laneWidth * ruler.fraction(ofMS: Double(ms)) }
+        let rows = drawn.rows
+        let cut = rows.atMS, cutX = lineX(cut)
+        // Each row is read along its top, over its own colour but clear of
+        // the name inside it, and on A clear of the label riding down over
+        // its foot. Neither line is the top edge, where the corners round.
+        let aY = frame.minY + 7, bY = frame.minY + drawn.bTop + 6
+        let holdMS = Int(((claim.holdSeconds ?? 0) * 1000).rounded())
+        let runsMS = Int(((claim.runsPastSeconds ?? 0) * 1000).rounded())
+        let earlyMS = Int(((claim.startsEarlySeconds ?? 0) * 1000).rounded())
+        let aEndX = lineX(cut + runsMS), bStartX = lineX(cut + holdMS - earlyMS)
+        guard aEndX + 14 < frame.maxX, bStartX - 14 > frame.minX else {
+            throw Failure(description: "the cut is too near an end of the lane to measure its rows: the lane runs "
+                + "\(Self.round1(frame.minX))-\(Self.round1(frame.maxX))pt and the cut is at \(Self.round1(cutX))pt")
+        }
+        // The lane with nothing on it, read in each row past where its ink
+        // should stop.
+        guard let aGround = rgb(aEndX + 12, aY), let bGround = rgb(bStartX - 12, bY) else {
+            throw Failure(description: "the rows are off the window: drawn at \(short(frame.origin))")
+        }
+        /// Where ink gives way to the empty lane, scanning from `from` by `step`.
+        func edge(from: CGFloat, step: CGFloat, y: CGFloat, ground: (Int, Int, Int), limit: CGFloat) -> CGFloat? {
+            var x = from
+            // The lane is one flat colour, and a dip's fade into black at
+            // the cut is still darker than it, so a small step apart is ink.
+            guard let first = rgb(x, y), apart(first, ground) > 5 else { return nil }
+            while (step > 0 ? x < limit : x > limit) {
+                if let c = rgb(x + step, y), apart(c, ground) <= 5,
+                   let d = rgb(x + 2 * step, y), apart(d, ground) <= 5 {
+                    return x + step / 2
+                }
+                x += step
+            }
+            return nil
+        }
+        // The playhead's line is ink too, and an edge it stands on cannot
+        // be told from it.
+        let playheadX = lineX(editor.documentTimeMS)
+        for (side, x) in [("A's end", aEndX), ("B's start", bStartX)] where abs(playheadX - x) < 4 {
+            throw Failure(description: "the playhead stands on \(side) at \(Self.round1(x))pt, so that edge cannot be "
+                + "measured: move the playhead off it first")
+        }
+        let aStartScan = cutX - 14, bStartScan = lineX(cut + holdMS) + 14
+        guard let aEdge = edge(from: aStartScan, step: 0.25, y: aY, ground: aGround, limit: aEndX + 40) else {
+            throw Failure(description: "A's row has no ink just before the cut at \(Self.round1(cutX))pt, "
+                + "or it never stops")
+        }
+        guard let bEdge = edge(from: bStartScan, step: -0.25, y: bY, ground: bGround, limit: bStartX - 40) else {
+            throw Failure(description: "B's row has no ink where B should start, or it never stops before it")
+        }
+        let pointsPerSecond = drawn.laneWidth * ruler.fraction(spanningMS: 1000)
+        var said: [String] = []
+        let aOff = aEdge - aEndX, bOff = bEdge - bStartX
+        guard abs(aOff) <= claim.within else {
+            throw Failure(description: "A's ink stops \(Self.round1((aEdge - cutX) / pointsPerSecond))s past the cut "
+                + "(\(Self.round1(aEdge))pt), and the ruler puts \(Self.round1(Double(runsMS) / 1000))s past it at "
+                + "\(Self.round1(aEndX))pt: \(Self.round1(aOff))pt out, allowed \(Self.round1(claim.within))")
+        }
+        guard abs(bOff) <= claim.within else {
+            throw Failure(description: "B's ink starts \(Self.round1((cutX - bEdge) / pointsPerSecond))s before the cut "
+                + "(\(Self.round1(bEdge))pt), and the ruler puts it at \(Self.round1(bStartX))pt: "
+                + "\(Self.round1(bOff))pt out, allowed \(Self.round1(claim.within))")
+        }
+        said.append("A runs \(Self.round1(Double(runsMS) / 1000))s past the cut, ink to \(Self.round1(aEdge))pt "
+            + "against the ruler's \(Self.round1(aEndX))pt")
+        said.append(holdMS > 0
+            ? "B starts after \(Self.round1(Double(holdMS) / 1000))s of black, ink from \(Self.round1(bEdge))pt "
+              + "against the ruler's \(Self.round1(bStartX))pt"
+            : "B starts \(Self.round1(Double(earlyMS) / 1000))s early, ink from \(Self.round1(bEdge))pt "
+              + "against the ruler's \(Self.round1(bStartX))pt")
+        /// How much the brightness swings along a stretch of a row: the
+        /// hatch's stripes swing it, a bar's smooth colour does not.
+        func swing(from x0: CGFloat, to x1: CGFloat, y: CGFloat) -> Double {
+            var lo = 255.0, hi = 0.0, x = x0
+            while x <= x1 {
+                if let c = rgb(x, y) { lo = min(lo, luma(c)); hi = max(hi, luma(c)) }
+                x += 0.5
+            }
+            return hi - lo
+        }
+        if runsMS > 0 {
+            let inside = swing(from: cutX + 3, to: aEdge - 2, y: aY)
+            // Clear of the playhead, which may stand on the cut.
+            let bar = swing(from: cutX - 10, to: cutX - 4, y: aY)
+            guard inside >= 20, bar < inside / 2 else {
+                throw Failure(description: "A's frames past the cut are not hatched over the overlap: brightness "
+                    + "swings \(Int(inside)) across them and \(Int(bar)) across A's own bar before the cut")
+            }
+            said.append("hatched from the cut to there (swing \(Int(inside)), A's own bar \(Int(bar)))")
+        } else if let c = rgb(cutX + 3, aY), apart(c, aGround) > 5 {
+            throw Failure(description: "A's row still has ink past the cut at \(Self.round1(cutX + 3))pt, "
+                + "and nothing should run past it")
+        }
+        if earlyMS > 0 {
+            let inside = swing(from: bEdge + 2, to: cutX - 3, y: bY)
+            let bar = swing(from: cutX + 4, to: cutX + 10, y: bY)
+            guard inside >= 20, bar < inside / 2 else {
+                throw Failure(description: "B's frames before the cut are not hatched over the overlap: brightness "
+                    + "swings \(Int(inside)) across them and \(Int(bar)) across B's own bar after the cut")
+            }
+            said.append("hatched from there to the cut (swing \(Int(inside)), B's own bar \(Int(bar)))")
+        } else if holdMS == 0, let c = rgb(cutX - 3, bY), apart(c, bGround) > 5 {
+            throw Failure(description: "B's row still has ink before the cut at \(Self.round1(cutX - 3))pt, "
+                + "and nothing should come up early")
+        }
+        if let label = drawn.label { said.append("\"\(label)\" over the overlap") }
+        return "the cut at \(ClipTransitionCopy.seconds(cut)) opens into \(rows.a.name) over \(rows.b.name): "
+            + said.joined(separator: "; ") + scrolled
+    }
+
     private func checkSpeedCurve(clip: String, bands wanted: [String], within: Double) async throws -> String {
         let editor = try requireEditor()
         guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {

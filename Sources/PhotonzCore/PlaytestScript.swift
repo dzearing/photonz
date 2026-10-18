@@ -1586,6 +1586,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case clipTransitionDipToBlack
     /// Take whatever is on the cut off again, leaving a hard cut.
     case clipTransitionHardCut
+    /// Clip ▸ Expand the Cut (⌥E) on the cut in hand: open it into its two
+    /// clips on rows of their own, or close it again. What a `key` step's ⌥E
+    /// stands in for while a walk's menu bar is frozen.
+    case expandCut
     /// Drag the band's right hand end outwards, through the real drag, so the
     /// clamping and the readout are exercised rather than stepped around.
     case clipTransitionDragLonger
@@ -1677,7 +1681,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipSlideShortOfPlayhead,
              .clipCarryUpATrackHeld, .clipCarryToNewTrackOnTopHeld, .tracksGroupPicked,
              .clipPickCut, .clipPickFirstCut, .clipPickEditPoint, .clipPickEveryClip, .clipTransitionDissolve, .clipTransitionDipToBlack,
-             .clipTransitionHardCut, .clipTransitionDragLonger, .clipBlurComesOn,
+             .clipTransitionHardCut, .clipTransitionDragLonger, .expandCut, .clipBlurComesOn,
              .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
              .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
              .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
@@ -3925,6 +3929,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// named band among them, and the dashed 1x line within `within` points
     /// of where the scale puts it.
     case expectSpeedCurve(clip: String, bands: [String], within: Double)
+    /// Measures the open cut's two rows (`ExpandedCutRows`) against the
+    /// ruler, off a picture of the window: how far A's ink runs past the cut
+    /// and how early B's starts, each within `within` points, the hatch over
+    /// exactly those frames, the label over the overlap, and the black a hold
+    /// parts them by. `closed` claims no cut is open.
+    case expectExpandedCut(ExpandedCutClaim)
     /// What the pill riding under a drag says right now, or that there is no
     /// pill at all. The absent form is how a walk proves the reading goes the
     /// instant the button comes up rather than lingering over the canvas.
@@ -4401,7 +4411,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4524,6 +4534,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectLevel: "expectLevel"
         case .expectClipPictures: "expectClipPictures"
         case .expectSpeedCurve: "expectSpeedCurve"
+        case .expectExpandedCut: "expectExpandedCut"
         case .expectReadout: "expectReadout"
         case .expectFresh: "expectFresh"
         case .spaceHandle: "spaceHandle"
@@ -5517,6 +5528,29 @@ public enum PlaytestStep: Sendable, Equatable {
             let within = try f.optionalNumber("within") ?? 1
             guard within >= 0 else { throw f.invalid("within", "a distance in points is zero or more") }
             self = .expectSpeedCurve(clip: try f.string("clip"), bands: bands, within: within)
+        case "expectExpandedCut":
+            let closed = try f.optionalFlag("closed") ?? false
+            let runsPast = try f.optionalNumber("runsPast")
+            let startsEarly = try f.optionalNumber("startsEarly")
+            let both = try f.optionalString("both")
+            let hold = try f.optionalNumber("hold")
+            let claims = runsPast != nil || startsEarly != nil || both != nil || hold != nil
+            guard closed || claims else {
+                throw f.invalid("runsPast", "expectExpandedCut has to claim something: \"runsPast\" and "
+                    + "\"startsEarly\" in seconds, \"both\" with the overlap's label, \"hold\" in "
+                    + "seconds, or \"closed\": true")
+            }
+            guard !(closed && claims) else {
+                throw f.invalid("closed", "a closed cut has no rows to measure, so it claims nothing else")
+            }
+            for (key, value) in [("runsPast", runsPast), ("startsEarly", startsEarly), ("hold", hold)] {
+                if let value, value < 0 { throw f.invalid(key, "a length in seconds is zero or more") }
+            }
+            let within = try f.optionalNumber("within") ?? 1
+            guard within >= 0 else { throw f.invalid("within", "a distance in points is zero or more") }
+            self = .expectExpandedCut(ExpandedCutClaim(closed: closed, runsPastSeconds: runsPast,
+                                                       startsEarlySeconds: startsEarly, both: both,
+                                                       holdSeconds: hold, within: within))
         case "expectCorners":
             let radius = try f.optionalNumber("radius")
             let rounded = try f.optionalNumber("rounded")
@@ -6620,5 +6654,32 @@ public struct PlaytestDragWatch: Equatable, Sendable {
         self.seconds = seconds
         self.followsHand = followsHand
         self.landsAsHeld = landsAsHeld
+    }
+}
+
+/// What an `expectExpandedCut` step claims about the open cut's two rows.
+public struct ExpandedCutClaim: Hashable, Sendable {
+    /// No cut is open: no rows under any track.
+    public let closed: Bool
+    /// How far A's row runs past the cut, in seconds: half a 1s dissolve's
+    /// length across it, nought once a dip releases the overlap.
+    public let runsPastSeconds: Double?
+    /// How far before the cut B's row starts.
+    public let startsEarlySeconds: Double?
+    /// The label over the overlap, word for word.
+    public let both: String?
+    /// The black a hold parts the two rows by, in seconds.
+    public let holdSeconds: Double?
+    /// Points of slack for every edge measured.
+    public let within: Double
+
+    public init(closed: Bool, runsPastSeconds: Double?, startsEarlySeconds: Double?, both: String?,
+                holdSeconds: Double?, within: Double) {
+        self.closed = closed
+        self.runsPastSeconds = runsPastSeconds
+        self.startsEarlySeconds = startsEarlySeconds
+        self.both = both
+        self.holdSeconds = holdSeconds
+        self.within = within
     }
 }

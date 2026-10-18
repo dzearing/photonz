@@ -59,7 +59,7 @@ public enum TimelineMenuRow: String, CaseIterable, Sendable {
     case followCursor, zoomAmount, deleteZoom
     // A cut
     case applyDefaultTransition, transitionLength, transitionCurve, removeTransition
-    case copyTransition, pasteTransition, rollEdit, joinThroughEdit
+    case copyTransition, pasteTransition, rollEdit, joinThroughEdit, expandCut
     // Space on a track
     case closeGap, addTitlePage, addNameCard, addText, addRectangle, putLayerHere, pasteHere
     case zoomToFit, compactTracks, trackRows
@@ -98,7 +98,8 @@ public enum TimelineMenuTable {
             [[.followCursor, .zoomAmount],
              [.deleteZoom]]
         case .join:
-            [[.applyDefaultTransition, .addTransition, .transitionLength, .transitionCurve, .removeTransition],
+            [[.applyDefaultTransition, .addTransition, .transitionLength, .transitionCurve, .removeTransition,
+              .expandCut],
              [.copyTransition, .pasteTransition],
              [.rollEdit, .joinThroughEdit]]
         case .gap:
@@ -160,6 +161,10 @@ public enum TimelineMenuTable {
         case .startAtPlayhead: TimelinePointing.atPlayhead("Start", ms: ms)
         case .endAtPlayhead: TimelinePointing.atPlayhead("End", ms: ms)
         case .rollEdit: TimelinePointing.atPlayhead("Roll Edit", ms: ms).replacingOccurrences(of: " at ", with: " to ")
+        // The mock's own words (`video-transition-wt.html`, "Expand the cut
+        // ⌥E"), capitalised as a menu row is (UX-PATTERNS §7). A toggle: its
+        // tick says the cut is open.
+        case .expandCut: "Expand the Cut"
         case .cut: "Cut"
         case .copy: "Copy"
         case .more: "More"

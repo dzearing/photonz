@@ -83,6 +83,9 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// The clips on it with speed stops, whose speed curve opens under them
     /// with the track's arrow (`SpeedCurveLane`); empty while it is closed.
     var rampedClips: [UUID] = []
+    /// The cut opened into its two clips is on this track: two rows of them
+    /// under its lane (`ExpandedCutRows`).
+    var expandsCut = false
     /// How each row in `inner` sits: how far in, and whether it wears an
     /// arrow (`TimelineChildRows.swift`).
     var nesting: [UUID: TimelineRowNesting] = [:]
@@ -225,6 +228,7 @@ extension EditorState {
                     document.layer(id: $0)?.clipPieces?.pieces.contains { $0.speedRamp != nil } == true
                 }
             }
+            row.expandsCut = trackHasExpandedCut(track.id)
             if Experiments.shared.zoomRegionsEnabled {
                 row.zoomedClips = clips.map(\.layerID).filter {
                     document.layer(id: $0)?.zooms?.isEmpty == false

@@ -834,6 +834,19 @@ struct EditorCommands: Commands {
         }
     }
 
+    // The mock's Edit point group (`video-transition-wt.html`, `#cmdMenu`):
+    // Expand the cut, ⌥E. A view of the cut in hand, so it keeps its name
+    // and wears a tick while that cut is open.
+    @ViewBuilder private var expandCutRow: some View {
+        if Experiments.shared.transitionsAtACutEnabled {
+            Toggle(TimelineMenuTable.title(.expandCut, playheadMS: 0) ?? "", isOn: Binding(
+                get: { editor?.isCutInHandExpanded ?? false },
+                set: { _ in editor?.toggleExpandedCut() }))
+                .keyboardShortcut("e", modifiers: .option)
+                .disabled(!(editor?.canExpandCut ?? false))
+        }
+    }
+
     // Premiere's Sequence > Snap in Timeline, on its S. A
     // setting, so it keeps its name and wears a checkmark; the
     // magnet in the timeline's bar is the same switch.
@@ -1660,6 +1673,7 @@ struct EditorCommands: Commands {
             if Experiments.shared.transitionsAtACutEnabled {
                 transitionAtCutMenu
                 if Experiments.shared.cutRecordingEnabled { applyDefaultTransitionRow }
+                expandCutRow
             }
             if Experiments.shared.cutRecordingEnabled { rollEditRow }
             Divider()
