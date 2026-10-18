@@ -150,31 +150,27 @@ struct TitleSetTests {
         }
     }
 
-    @Test("Everything comes in on an ease out, a spring or an even turn, and leaves quicker on an ease in")
+    @Test("Everything comes in on a soft ease out and leaves in 300 to 450 ms on an even ease")
     func easesAndExits() {
-        // Ease out rather than expo for words, so half way through an in it is
-        // still plainly happening; the even ease for the ones that turn in
-        // depth (`TitleBuildKind.defaultCurve`), and in and out for a wipe
-        // that uncovers words, so its edge is seen crossing them.
-        let arriving: Set<EasingCurve> = [.easeOut, .easeOutExpo, .easeOutQuint, .easeOutBack, .easeInOutSine,
-                                          .easeInOut]
+        // Toned down to the calm set's curves (task
+        // `the-existing-title-pages-are-toned-down-to-calm`): a landing on
+        // Ease out expo or a plain ease out, a background's fade on quint,
+        // and every way off a short even sine.
+        let arriving: Set<EasingCurve> = [.easeOut, .easeOutExpo, .easeOutQuint]
         for preset in Self.twelve {
             for part in preset.design.parts {
                 if let entrance = part.in, entrance.kind != .typewriter {
                     #expect(arriving.contains(entrance.curve), "\(preset.name) \(part.path) comes in on \(entrance.curve)")
                 }
                 if let exit = part.out {
-                    #expect(exit.curve == .easeIn, "\(preset.name) \(part.path) leaves on \(exit.curve)")
-                    if let entrance = part.in {
-                        #expect(exit.lengthMS < entrance.lengthMS,
-                                "\(preset.name) \(part.path) leaves in \(exit.lengthMS) ms, came in \(entrance.lengthMS)")
-                    }
+                    #expect(exit.curve == .easeInOutSine, "\(preset.name) \(part.path) leaves on \(exit.curve)")
+                    #expect((300...450).contains(exit.lengthMS), "\(preset.name) \(part.path) leaves in \(exit.lengthMS) ms")
                 }
             }
         }
     }
 
-    @Test("Something is still moving while every title holds")
+    @Test("Every title on a moving look is still, barely, moving while it holds; the bare card holds still")
     func movesWhileHolding() throws {
         for preset in Self.twelve {
             let (doc, id) = try Self.placed(preset)
@@ -183,7 +179,11 @@ struct TitleSetTests {
             let arrived = time.inMS + doc.titleArrivalMS(layerID: id)
             let early = try Self.drawn(doc, atMS: arrived + 200)
             let later = try Self.drawn(doc, atMS: min(arrived + 1500, time.outMS - 700))
-            #expect(early != later, "\(preset.name) stands still while it holds")
+            if preset.hasMovingBackdrop {
+                #expect(early != later, "\(preset.name) stands still while it holds")
+            } else {
+                #expect(early == later, "\(preset.name) moves while it holds")
+            }
         }
     }
 

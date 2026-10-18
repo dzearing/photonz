@@ -19,18 +19,22 @@ import Testing
 /// counted up to what it holds once arrived). Words faded, blurred, still
 /// travelling, still behind their mask or not yet typed all count short.
 ///
-/// - On the title's first frame, under a tenth.
-/// - Half way through the headline's in, between a fifth and four fifths.
-/// - Never all there before 400 ms.
-/// - The same on the way off: under a tenth on the last frame, between a
-///   fifth and four fifths half way through its out, and already leaving
-///   400 ms before the end.
+/// Since 2026-10-18 the older set lands as the calm set does (task
+/// `the-existing-title-pages-are-toned-down-to-calm`): on a soft exponential
+/// settle that is most of the way home a quarter of the way through, which the
+/// user asked for over the slow, even entrances this bar first held. What
+/// stays is that nobody misses the entrance:
 ///
-/// The calm set that now leads the title pages (task
-/// `title-pages-that-look-like-apple-designed-them`) lands as its mock does,
-/// on a soft exponential settle that is most of the way home a quarter of the
-/// way through; its bar is the mock itself, frame for frame
-/// (`TitleCalmMockTests`), not this one.
+/// - On the title's first frame, under a tenth.
+/// - A tenth of a second after its in starts, still under nine tenths: seen
+///   arriving, not there in a flash.
+/// - Nine tenths or more by the end of its in, and never in before 400 ms.
+/// - Going off: under a tenth on the last frame, part way gone half way
+///   through its out, and already leaving 400 ms before the end.
+///
+/// The calm set that leads the title pages (task
+/// `title-pages-that-look-like-apple-designed-them`) is held to its mock
+/// frame for frame instead (`TitleCalmMockTests`).
 @Suite("Every built-in title's headline visibly comes in and goes off")
 struct TitleEntranceInkTests {
 
@@ -140,7 +144,7 @@ struct TitleEntranceInkTests {
                 (length - exit.delayMS - exit.lengthMS)...(length - exit.delayMS))
     }
 
-    @Test("Every headline is nowhere on its first frame, part way in half way through its in, and all there no earlier than 400 ms; the same going off",
+    @Test("Every headline is nowhere on its first frame, seen arriving, home by the end of its in and no earlier than 400 ms; the same going off",
           arguments: BuiltInTitle.shelved.filter { !$0.isCalm })
     func headlineVisiblyArrivesAndLeaves(_ preset: BuiltInTitle) throws {
         let part = try #require(Self.headline(preset), "\(preset.name) has no headline")
@@ -160,21 +164,19 @@ struct TitleEntranceInkTests {
         }
         let first = meter.share(0)
         #expect(first < 0.1, "\(preset.name): \(Self.percent(first)) of the headline on its first frame")
-        let middle = (entrance.lowerBound + entrance.upperBound) / 2
-        let half = meter.share(middle)
-        #expect((0.2...0.8).contains(half),
-                "\(preset.name): \(Self.percent(half)) half way through its in (\(middle) ms of \(entrance))")
-        for ms in stride(from: 0, to: 400, by: 50) {
-            let early = meter.share(ms)
-            #expect(early < 0.97, "\(preset.name): \(Self.percent(early)) already at \(ms) ms")
-        }
+        // Seen arriving: a tenth of a second after it starts it is still on
+        // its way, and it is home by the end of its in.
+        let started = meter.share(entrance.lowerBound + 100)
+        #expect(started < 0.9, "\(preset.name): \(Self.percent(started)) 100 ms after its in starts")
+        let home = meter.share(entrance.upperBound)
+        #expect(home >= 0.9, "\(preset.name): only \(Self.percent(home)) at the end of its in")
         #expect(entrance.upperBound >= 400, "\(preset.name)'s headline is in by \(entrance.upperBound) ms")
 
         let last = meter.share(length - 1)
         #expect(last < 0.1, "\(preset.name): \(Self.percent(last)) of the headline on its last frame")
         let leaving = (exit.lowerBound + exit.upperBound) / 2
         let halfOff = meter.share(leaving)
-        #expect((0.2...0.8).contains(halfOff),
+        #expect((0.03...0.95).contains(halfOff),
                 "\(preset.name): \(Self.percent(halfOff)) half way through its out (\(leaving) ms of \(exit))")
         let going = meter.share(length - 400)
         #expect(going < 0.97, "\(preset.name): \(Self.percent(going)) still there 400 ms before the end")

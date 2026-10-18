@@ -1,0 +1,48 @@
+{
+  "id": "the-existing-title-pages-are-toned-down-to-calm-the-older-title-styles-are-toned",
+  "taskId": "the-existing-title-pages-are-toned-down-to-calm",
+  "question": "The older title styles are toned down. Do they look calm and presentable now?",
+  "context": "Reel, before on the left, after on the right: queue/audits/2026-10-18-calm-more-styles-reel.mp4 (51 s, all twelve). Before and after frames: queue/audits/2026-10-18-calm-more-styles-before-after-contact.png. Per title audit: queue/audits/2026-10-18-calm-more-styles-audit.md.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Ship as toned down",
+      "summary": "All twelve older styles stay under More Styles as you see them in the reel: slow, faint backgrounds, one gentle move per part, no springs or 3D turns, the card leaving with a fade.",
+      "pros": [
+        "Backgrounds move a quarter to a ninth as much as before",
+        "Each style still looks like itself"
+      ],
+      "cons": [
+        "Kinetic Bold keeps its bright blue, Gradient Glow its coloured words, Tech Terminal its moving grid"
+      ],
+      "mitigation": "Speed, strength and colours stay tunable per title in the panel."
+    },
+    {
+      "id": "b",
+      "label": "Ship, but still busy: rework the ones I name",
+      "summary": "Say which styles still look busy and what bothers you (the blue, the specks, the aurora streaks, the grid); those get calmed further and the rest ship as they are.",
+      "pros": [
+        "Nothing busy is left on the shelf"
+      ],
+      "cons": [
+        "Needs your notes on which ones"
+      ],
+      "mitigation": "React straight on the audit lines for the styles you mean."
+    },
+    {
+      "id": "c",
+      "label": "Make every background hold still",
+      "summary": "Go all the way to the new ten: every older style stands on a still picture of its look, and only its words move.",
+      "pros": [
+        "As calm as the new title pages"
+      ],
+      "cons": [
+        "The older styles lose what set them apart from the new ten"
+      ],
+      "mitigation": "A person can still turn a look back on, with its Speed, from the panel."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-18T21:38:10.105Z"
+}

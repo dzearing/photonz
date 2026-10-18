@@ -1,0 +1,30 @@
+{
+  "feature": "The older title styles, toned down to calm",
+  "epic": "video-titles-graphics",
+  "summary": "The twelve older title styles under More Styles (nine pages, three name cards) now stand on slow, faint backgrounds and bring their words in with one gentle move, no springs or 3D turns, so each is presentable while still looking like itself. Titles already placed in documents draw as they were.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a video, show the Library (View > Library), Catalog.",
+  "switched": {},
+  "try": [
+    { "do": "Watch the reel, old on the left and new on the right: queue/audits/2026-10-18-calm-more-styles-reel.mp4 (or the GIF beside it)." },
+    { "do": "In the Library's Catalog, pick Title Pages and scroll to the More Styles header under the ten new pages.", "shot": "2026-10-18-calm-more-styles-light-leak-holding-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Double-click Light Leak, press Space and watch it come in and hold: the warm light drifts slowly and the capitals close up once." },
+    { "do": "Add Stacked Stagger the same way and scrub its first second: each line rises a few points, nothing flips.", "shot": "2026-10-18-calm-more-styles-stacked-coming-in-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Add Keynote Clean and let it hold for two seconds: the specks of light barely move.", "shot": "2026-10-18-calm-more-styles-keynote-holding-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click a video track, Add Title Page > More Styles > Soft Gradient Glass, and play it." },
+    { "do": "Open a project saved before today that has one of these titles in it, and play it: it looks as it did." }
+  ],
+  "evaluate": [
+    "Does any of the twelve still look busy to you, and if so which one and what part of it?",
+    "Does each still read as its own style (Editorial as editorial, Tech Terminal as a terminal), or have they become too alike?",
+    "Is Kinetic Bold's blue still too loud now that its wind has slowed?",
+    "Do the words arrive gently enough, or should they move even less?"
+  ],
+  "rough": [
+    "No mock covers these older styles, so the rules of the approved video-titles-apple mock were the bar, and the per-style audit is queue/audits/2026-10-18-calm-more-styles-audit.md.",
+    "Kinetic Bold keeps a saturated blue ground, Gradient Glow faint violet aurora streaks, Tech Terminal a slowly moving grid and Keynote Clean a field of dim specks: kept as each style's identity; card the-existing-title-pages-are-toned-down-to-calm-the-older-title-styles-are-toned asks whether they are calm enough.",
+    "Grain is off on every style rather than thinned: grain is redrawn every frame and read as flicker even at a low amount.",
+    "Split Wipe now leaves by fading the whole card instead of wiping the bar back: the words fade rather than wipe, so a bar wiping away left them hanging past its edge over the footage.",
+    "Tech Terminal's grid runs at a tenth of its old speed, not a third: its thin lines read as flicker at any faster pace.",
+    "The pictures in the app show the window behind another app (walks never take the front); the reel and the contact sheet are the app's own renderer and export, not screen captures."
+  ]
+}

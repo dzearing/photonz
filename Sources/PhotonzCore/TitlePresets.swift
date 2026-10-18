@@ -106,48 +106,50 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     case keynoteSection, filmSuper, sessionTitle, chapterCard, editorialNY
     case sessionsStage, launch, gradientWord, bigNumber, endCard
 
-    // The set before it, in shelf order; its pages now sit under More Styles. Each headline comes in its own way and each
-    // stands on its own moving look (task
-    // `title-text-visibly-comes-in-and-every-built-in-t`).
-    /// Near black with specks of light drifting in depth, a big bold
-    /// headline whose words rise in one after another out of their own blur,
+    // The set before it, in shelf order; its pages now sit under More Styles.
+    // Each headline comes in its own way and each stands on its own moving
+    // look (task `title-text-visibly-comes-in-and-every-built-in-t`), toned
+    // down to the calm set's restraint on 2026-10-18 (task
+    // `the-existing-title-pages-are-toned-down-to-calm`).
+    /// Near black with a few specks of light drifting slowly in depth, a
+    /// headline whose words rise a few points into place one after another,
     /// and a light line under it. Apple's keynote slide.
     case keynote
-    /// A liquid gradient flowing under a frosted panel, each word sharpening
-    /// out of a deep blur inside it.
+    /// A liquid gradient flowing slowly under a frosted panel, each word
+    /// sharpening out of a soft focus inside it.
     case softGlass
-    /// Huge condensed capitals sliding up word by word out of their own
-    /// line, on saturated blue with wind streaming through it.
+    /// Big condensed capitals sliding up word by word out of their own line,
+    /// on a deep blue with faint wind drifting through it.
     case kinetic
-    /// Warm paper an architect's sketch draws itself across, a small kicker,
-    /// a serif headline whose words swing up on a hinge at their foot, and a
-    /// hairline rule drawing itself under it.
+    /// Warm paper a faint sketch draws itself across, a small kicker, a serif
+    /// headline rising out of its own baseline, and a hairline rule drawing
+    /// itself under it.
     case editorial
-    /// A green grid running to a horizon in the dark, the words typed in a
-    /// letter at a time, a blinking cursor and a progress line.
+    /// A faint green grid running to a horizon in the dark, the words typed
+    /// in a letter at a time, a blinking cursor and a progress line.
     case terminal
     /// The recording under the title, blurred, dimmed and slowly settling,
-    /// each word flying forward out of its depth, sharpening into the real
-    /// footage as the title leaves: the Photonz signature, which ties the
+    /// the words sharpening out of a soft focus, and the footage racking back
+    /// into focus as the title leaves: the Photonz signature, which ties the
     /// intro to the content.
     case glass
-    /// Warm light leaking across the dark, and wide capitals tracking in a
-    /// letter after another with a glow.
+    /// Warm light leaking softly across the dark, and capitals closing up
+    /// from slightly open tracking with a faint glow.
     case lightLeak
-    /// A very large headline filled with a moving gradient and a soft glow,
-    /// falling into place from far larger out of a deep blur, over an aurora.
+    /// A large headline filled with a slowly sliding violet gradient and a
+    /// faint glow, settling from a touch larger, over a faint aurora.
     case gradientGlow
-    /// Lines of two weights flipping up word by word from facing away, then
-    /// a small mark popping in, over streams of light.
+    /// Two lines of two weights rising into place one after the other, then
+    /// a small mark settling in, over faint streams of light.
     case stacked
-    /// A colour bar with rays sweeping across it wipes in and the name and
-    /// role are revealed behind its edge: the broadcast lower third.
+    /// A colour bar with faint rays across it wipes in and the name and role
+    /// are revealed behind its edge: the broadcast lower third.
     case splitWipe
-    /// No backing, the deliberately bare one: the name's letters rise in one
-    /// after another, a line draws itself under it, and the role follows.
+    /// No backing, the deliberately bare one: the name rises a few points, a
+    /// line draws itself under it, and the role follows.
     case underline
-    /// A rounded pill with colour blooming inside it and a round mark,
-    /// springing in, the name's words settling flat from tipped back.
+    /// A rounded pill with colour blooming faintly inside it and a round
+    /// mark, settling in, the name's words fading up one after another.
     case pill
 
     // Retired from the shelf.
@@ -623,10 +625,13 @@ struct TitlePen {
     func words(_ name: String, _ string: String, font: String, size: CGFloat,
                weight: TextWeight = .regular, color: String, origin: CGPoint,
                align: TextAlign? = nil, width: CGFloat? = nil,
-               legibleOverVideo: Bool = false) -> Layer {
+               legibleOverVideo: Bool = false, tracking: CGFloat? = nil,
+               lineHeight: CGFloat? = nil) -> Layer {
         var content = TextContent(string: string, fontName: font, fontSize: u(size),
                                   colorHex: color, weight: weight)
         content.alignment = align
+        content.tracking = tracking
+        content.lineHeight = lineHeight
         let natural = TextMeasurement.size(of: content)
         let frame = CGRect(origin: CGPoint(x: origin.x.rounded(), y: origin.y.rounded()),
                            size: CGSize(width: max(width ?? 0, natural.width.rounded(.up)),
@@ -641,11 +646,12 @@ struct TitlePen {
     /// Words centred across the frame, in a box four fifths of its width so
     /// they stay centred however long a person makes them.
     func centred(_ name: String, _ string: String, font: String, size: CGFloat,
-                 weight: TextWeight = .regular, color: String, top: CGFloat) -> Layer {
+                 weight: TextWeight = .regular, color: String, top: CGFloat,
+                 tracking: CGFloat? = nil, lineHeight: CGFloat? = nil) -> Layer {
         let width = (canvas.width * 0.8).rounded()
         return words(name, string, font: font, size: size, weight: weight, color: color,
                      origin: CGPoint(x: (canvas.width - width) / 2, y: top),
-                     align: .center, width: width)
+                     align: .center, width: width, tracking: tracking, lineHeight: lineHeight)
     }
 
     /// The box a card's surface is drawn at before its group stretches it to

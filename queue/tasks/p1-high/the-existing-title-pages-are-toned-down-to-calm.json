@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.09,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T16:27:50.933Z",
-  "updated": "2026-10-18T20:11:20.326Z",
+  "updated": "2026-10-18T21:39:12.646Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-18), after viewing the Apple-level mock: \"these look so much better. The existing title pages are far too busy so i think we need to audit them and tone them down to make them a little more presentable and more subtle\". The card on title-pages-that-look-like-apple-designed-them was resolved b (build all ten, old set under More styles) with these words. Existing set: PhotonzCore/TitleSet.swift (12 built-ins), live backgrounds from title-backgrounds-that-are-alive-auroras-energy, entrances from title-text-visibly-comes-in-and-every-built-in-t. Memory: visual work needs a measured bar the weak version fails, and a reel for the user.",
@@ -33,6 +33,42 @@
     {
       "t": "2026-10-18T20:11:20.325Z",
       "note": "From title-pages-that-look-like-apple-designed-them (2026-10-18): the More Styles grouping is built (Library header and Insert submenu, BuiltInTitle.isMoreStyle), so acceptance item 4's grouping is done; what is left is the toning down itself. Old-set rule tests now run over TitleSetTests.twelve; TitleCalmMockTests is a model for measuring before/after frames."
+    },
+    {
+      "t": "2026-10-18T20:30:43.933Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T21:38:45.311Z",
+      "note": "owns these walks: title-set-light-leak-walk, title-set-keynote-clean-walk, title-set-stacked-stagger-walk, title-set-split-wipe-walk, title-set-soft-gradient-glass-walk, editing-a-title-never-plays-walk, timeline-sub-layer-rows-walk, title-part-rows-retime-walk, video-library-catalog-walk"
+    },
+    {
+      "t": "2026-10-18T21:39:12.443Z",
+      "note": "Adversarial review before building: the busy parts were measured, not guessed (TitleMoreStylesCalmReelTests on the old code, numbers in queue/audits/2026-10-18-calm-more-styles-before.json): five styles turned in 3D or sprang (Kinetic, Editorial, Glass, Stacked, Pill), rises of 36 to 90 pt, live looks at 70 to 100 speed and 55 to 100 strength, grain 20 to 30 on six, strong glows on two, up to six hues. A Premiere/Final Cut editor expects a lower third and a title card that land once and hold still; nothing in the mock needs state the app lacks, so no prerequisite was filed."
+    },
+    {
+      "t": "2026-10-18T21:39:12.509Z",
+      "note": "Built: TitleSet.swift redesigned to the calm rules (one move per part, rise under 24, ins 360-950 ms on expo, outs 300-450 on sine, no springs/3D, live looks at a third or less, grain off, glows 0.2, one hue family, tracking and leading on every headline). Tests first: TitleMoreStylesCalmTests (rules), TitleMoreStylesCalmFramesTests (measured bar: background motion at most half of before, all twelve pass, e.g. Light Leak 12.8 -> 1.4, Keynote 8.3 -> 2.0, Terminal 6.0 -> 2.6), TitleSetTests/TitleDesignTests/TitleEntranceInkTests/TitlePartTimingTests/TitleBackgroundsTests restated to the calm timing. Full suite 13,744 passed. All 39 walks that use the older styles pass after updating three walks' timing numbers and the catalog walk's first tile (Keynote Section now leads the shelf)."
+    },
+    {
+      "t": "2026-10-18T21:39:12.574Z",
+      "note": "Pictures looked at: the before/after contact sheet (every after row quieter, words land with one short move), the reel frames at six points (Soft Glass marble and Light Leak orange wash were still loud on the first pass and were retuned: liquid with no crests at scale 180, deeper leaks at strength 12), the Split Wipe exit crops (words hung past a wiping bar; now the card fades whole), and the probe's own Light Leak capture under More Styles."
+    },
+    {
+      "t": "2026-10-18T21:39:12.645Z",
+      "note": "Left rough, not filed (each is by design and put to the user on the approval card rather than a task): Kinetic Bold's saturated blue, Gradient Glow's faint aurora streaks, Keynote Clean's dim specks, Terminal's slow grid. TitleMoreStylesCalmReelTests stays as the tool that films any future before/after."
     }
+  ],
+  "started": "2026-10-18T20:30:43.931Z",
+  "walks": [
+    "title-set-light-leak-walk",
+    "title-set-keynote-clean-walk",
+    "title-set-stacked-stagger-walk",
+    "title-set-split-wipe-walk",
+    "title-set-soft-gradient-glass-walk",
+    "editing-a-title-never-plays-walk",
+    "timeline-sub-layer-rows-walk",
+    "title-part-rows-retime-walk",
+    "video-library-catalog-walk"
   ]
 }

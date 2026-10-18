@@ -38,13 +38,13 @@ struct TitlePartTimingTests {
     @Test("A part's bar runs from its in's start to its out's end, inside the title")
     func barSpansInToOut() throws {
         let (doc, id) = try Self.keynote()
-        // Keynote's subtitle rises in from 1.0 s for 0.6 s and fades out over
-        // 0.28 s ending 0.2 s before the 4 s title ends.
+        // Keynote's subtitle rises in from 0.45 s for 0.75 s and fades out
+        // over 0.36 s ending 0.14 s before the 4 s title ends.
         let subtitle = try Self.part(doc, id, "Subtitle")
-        #expect(subtitle.inStartMS == 1_000)
-        #expect(subtitle.inEndMS == 1_600)
-        #expect(subtitle.outStartMS == 3_520)
-        #expect(subtitle.outEndMS == 3_800)
+        #expect(subtitle.inStartMS == 450)
+        #expect(subtitle.inEndMS == 1_200)
+        #expect(subtitle.outStartMS == 3_500)
+        #expect(subtitle.outEndMS == 3_860)
         #expect(subtitle.titleInMS == 2_000)
         // A part with no out stays to the title's end.
         let background = try Self.part(doc, id, "Background")
@@ -58,7 +58,7 @@ struct TitlePartTimingTests {
         var (doc, id) = try Self.keynote()
         TitleRestyleTests.restyle(&doc, id) { $0.energy = .calm }
         let subtitle = try Self.part(doc, id, "Subtitle")
-        #expect(subtitle.inStartMS == 1_300)
+        #expect(subtitle.inStartMS == 585)
     }
 
     @Test("Nothing that is not a title has parts")
@@ -78,18 +78,18 @@ struct TitlePartTimingTests {
         let moved = doc.retimeTitlePart(layerID: id, index: subtitle.index, grab: .start, byMS: 500)
         #expect(moved)
         let after = try Self.part(doc, id, "Subtitle")
-        #expect(after.inStartMS == 1_500)
-        #expect(after.outEndMS == 3_800)
+        #expect(after.inStartMS == 950)
+        #expect(after.outEndMS == 3_860)
         // The others are untouched.
         let others = doc.titlePartTimings(layerID: id).filter { $0.name != "Subtitle" }
         #expect(others == before.filter { $0.name != "Subtitle" })
         // ...and the canvas agrees: the subtitle's own in starts there now.
         let piece = try #require(TitleRestyleTests.piece(doc, id, "Subtitle"))
         let arrival = try #require(doc.titlePartArrival(layerID: id, pieceID: piece.id))
-        #expect(arrival.lowerBound == 1_500)
+        #expect(arrival.lowerBound == 950)
         // Kept in the design, so a restyle after it keeps the new timing.
         TitleRestyleTests.restyle(&doc, id) { $0.intensity = 80 }
-        #expect(try Self.part(doc, id, "Subtitle").inStartMS == 1_500)
+        #expect(try Self.part(doc, id, "Subtitle").inStartMS == 950)
     }
 
     @Test("Dragging a part's end earlier makes it leave earlier")
@@ -99,9 +99,9 @@ struct TitlePartTimingTests {
         let moved = doc.retimeTitlePart(layerID: id, index: subtitle.index, grab: .end, byMS: -300)
         #expect(moved)
         let after = try Self.part(doc, id, "Subtitle")
-        #expect(after.outEndMS == 3_500)
-        #expect(after.outStartMS == 3_220)
-        #expect(after.inStartMS == 1_000)
+        #expect(after.outEndMS == 3_560)
+        #expect(after.outStartMS == 3_200)
+        #expect(after.inStartMS == 450)
     }
 
     @Test("Dragging the bar's middle slides the part, keeping its length")
@@ -111,8 +111,8 @@ struct TitlePartTimingTests {
         let moved = doc.retimeTitlePart(layerID: id, index: subtitle.index, grab: .body, byMS: -200)
         #expect(moved)
         let after = try Self.part(doc, id, "Subtitle")
-        #expect(after.inStartMS == 800)
-        #expect(after.outEndMS == 3_600)
+        #expect(after.inStartMS == 250)
+        #expect(after.outEndMS == 3_660)
     }
 
     @Test("An end stays inside the half of the title it lives in")

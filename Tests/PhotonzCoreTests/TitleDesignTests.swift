@@ -121,14 +121,18 @@ struct TitleDesignTests {
 
     @Test("Exits are shorter than entrances, ease in, and finish inside the last half second")
     func exitsAreShorterAndEaseIn() throws {
-        // The calm set leaves on the mock's even sine (`TitleCalmSetTests`).
+        // The calm set leaves on the mock's even sine (`TitleCalmSetTests`),
+        // and so, since 2026-10-18, does the set before it
+        // (`TitleMoreStylesCalmTests`); the retired plain set still eases in.
         for preset in BuiltInTitle.allCases where !preset.isCalm {
             for part in preset.design.parts {
                 guard let out = part.out else { continue }
-                #expect(out.curve == .easeIn, "\(preset.name): \(part.path)")
+                #expect(out.curve == (preset.isRetired ? .easeIn : .easeInOutSine), "\(preset.name): \(part.path)")
                 if let entrance = part.in {
                     #expect(out.lengthMS < entrance.lengthMS, "\(preset.name): \(part.path)")
-                    #expect(out.lengthMS <= entrance.lengthMS * 7 / 10, "\(preset.name): \(part.path)")
+                    if preset.isRetired {
+                        #expect(out.lengthMS <= entrance.lengthMS * 7 / 10, "\(preset.name): \(part.path)")
+                    }
                 }
             }
             // The refit that keeps an out at the bar's end finds it there.

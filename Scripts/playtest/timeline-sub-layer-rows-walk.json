@@ -144,7 +144,7 @@
    "part": "Subtitle",
    "grab": "start",
    "byMS": 500,
-   "startsAt": 1.5
+   "startsAt": 1.45
   },
   {
    "do": "wait",

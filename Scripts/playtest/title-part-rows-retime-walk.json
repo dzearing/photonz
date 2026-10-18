@@ -137,7 +137,7 @@
    "grab": "start",
    "byMS": 500,
    "hold": "2-subtitle-in-hand",
-   "startsAt": 1.5
+   "startsAt": 1.45
   },
   {
    "do": "wait",
@@ -152,7 +152,7 @@
   {
    "do": "describe",
    "stage": "subtitle-later",
-   "note": "The Subtitle's start let go half a second later: its bar starts at 1.5 s, it is the part picked, and the Part section reads its new In."
+   "note": "The Subtitle's start let go half a second later: its bar starts at 1.45 s, it is the part picked, and the Part section reads its new In."
   },
   {
    "do": "snapshot",
@@ -163,8 +163,8 @@
    "part": "Subtitle",
    "grab": "end",
    "byMS": -300,
-   "endsAt": 3.52,
-   "comment": "Pulled 0.3 s earlier from 3.8 s, the end catches on the Headline's out starting at 3.52 s, six points away."
+   "endsAt": 3.5,
+   "comment": "Pulled 0.3 s earlier from 3.86 s, the end catches on the Headline's out starting at 3.5 s, six points away."
   },
   {
    "do": "wait",

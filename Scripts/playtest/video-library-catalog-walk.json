@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/video-library-catalog-walk",
-  "seed": "In a video the Library is a catalog of things built for video, grouped by kind (the user, 2026-10-17: 'Styles and Systems are confusing to me ... It should be a catalog that is easy to find things which can apply to videos'). At Next defaults with no flag set: the sample recording is opened and View > Library shown. Its pivots are Media and Catalog only: no Comps, no Styles, no Systems. Catalog pressed by the pointer shows every kind under its own header with chips above it, each with its count. The Title Pages chip narrows the shelf to title pages and a double click on Keynote Clean puts one in front of the recording; the Name Cards chip narrows it to name cards and a double click on Split Wipe lands one at the playhead; the Backgrounds chip and a double click on Aurora lands a moving background on a Gfx track, and Light Rays dragged onto the timeline at six seconds lands there. With Built for video on there is no Components chip and the Badge starter is nowhere; turned off by the pointer, a Components chip appears and Badge is on it. Last, typing 'cube' in the search box finds the Cube transition whatever chip was picked.",
+  "seed": "In a video the Library is a catalog of things built for video, grouped by kind (the user, 2026-10-17: 'Styles and Systems are confusing to me ... It should be a catalog that is easy to find things which can apply to videos'). At Next defaults with no flag set: the sample recording is opened and View > Library shown. Its pivots are Media and Catalog only: no Comps, no Styles, no Systems. Catalog pressed by the pointer shows every kind under its own header with chips above it, each with its count. The Title Pages chip narrows the shelf to title pages and a double click on Keynote Section puts one in front of the recording; the Name Cards chip narrows it to name cards and a double click on Split Wipe lands one at the playhead; the Backgrounds chip and a double click on Aurora lands a moving background on a Gfx track, and Light Rays dragged onto the timeline at six seconds lands there. With Built for video on there is no Components chip and the Badge starter is nowhere; turned off by the pointer, a Components chip appears and Badge is on it. Last, typing 'cube' in the search box finds the Cube transition whatever chip was picked.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -125,7 +125,7 @@
     },
     {
       "do": "expect",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "present": true
     },
     {
@@ -144,7 +144,7 @@
     },
     {
       "do": "press",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "count": 2
     },
     {
@@ -240,7 +240,7 @@
     },
     {
       "do": "expect",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "present": false
     },
     {
@@ -373,7 +373,7 @@
     },
     {
       "do": "expect",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "present": false
     },
     {

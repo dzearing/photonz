@@ -1,0 +1,511 @@
+[
+  {
+    "bgMotion" : 7.918604038065844,
+    "colours" : [
+      "#4A6FA5",
+      "#5E6B8C",
+      "#8C7BB8"
+    ],
+    "entrance" : "rise\/word ",
+    "frameMotion" : 7.922600308641975,
+    "glows" : [
+
+    ],
+    "grain" : [
+
+    ],
+    "holds" : [
+      "Title push 1.5"
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Title rise easeOut",
+      "Subtitle rise easeOut"
+    ],
+    "liveSpeed" : 70,
+    "liveStrength" : 80,
+    "longestInMS" : 800,
+    "maxEffectsPerPart" : 2,
+    "maxRise" : 70,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Keynote Clean",
+    "outsMS" : [
+      400,
+      280
+    ],
+    "springsAndTurns" : [
+
+    ],
+    "typeRatio" : 2.857142857142857
+  },
+  {
+    "bgMotion" : 6.676107253086419,
+    "colours" : [
+      "#0B4F66",
+      "#16205E",
+      "#4A2FA8"
+    ],
+    "entrance" : "blurIn\/word ",
+    "frameMotion" : 6.001156121399177,
+    "glows" : [
+
+    ],
+    "grain" : [
+      25
+    ],
+    "holds" : [
+      "Panel push 1.0"
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Panel scaleFrom easeOutQuint",
+      "Title blurIn easeOut",
+      "Subtitle blurIn easeOut"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 100,
+    "longestInMS" : 900,
+    "maxEffectsPerPart" : 2,
+    "maxRise" : 0,
+    "maxScaleOff" : 8,
+    "maxTrack" : 0,
+    "name" : "Soft Gradient Glass",
+    "outsMS" : [
+      360,
+      400,
+      280
+    ],
+    "springsAndTurns" : [
+
+    ],
+    "typeRatio" : 2.736842105263158
+  },
+  {
+    "bgMotion" : 3.1843962191358024,
+    "colours" : [
+      "#1D3BFF",
+      "#59D9FF",
+      "#6C8CFF",
+      "#A98BFF"
+    ],
+    "entrance" : "maskReveal\/word ",
+    "frameMotion" : 3.2812538580246913,
+    "glows" : [
+
+    ],
+    "grain" : [
+
+    ],
+    "holds" : [
+      "Title push 2.0"
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Title maskReveal easeOutBack",
+      "Subtitle rise easeOut"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 100,
+    "longestInMS" : 700,
+    "maxEffectsPerPart" : 2,
+    "maxRise" : 90,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Kinetic Bold",
+    "outsMS" : [
+      400,
+      280
+    ],
+    "springsAndTurns" : [
+      "Title maskReveal easeOutBack"
+    ],
+    "typeRatio" : 5.25
+  },
+  {
+    "bgMotion" : 3.7968827160493825,
+    "colours" : [
+      "#3E5C76",
+      "#7A5A3A",
+      "#9A4A26"
+    ],
+    "entrance" : "swingIn\/word ",
+    "frameMotion" : 3.748849022633745,
+    "glows" : [
+
+    ],
+    "grain" : [
+      30
+    ],
+    "holds" : [
+      "Background push 2.0"
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Kicker fade easeOutExpo",
+      "Title swingIn easeOut",
+      "Rule drawOn easeOutExpo",
+      "Subtitle rise easeOut"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 80,
+    "longestInMS" : 1000,
+    "maxEffectsPerPart" : 1,
+    "maxRise" : 12,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Editorial Serif",
+    "outsMS" : [
+      240,
+      400,
+      300,
+      260
+    ],
+    "springsAndTurns" : [
+      "Title swingIn easeOut"
+    ],
+    "typeRatio" : 4.285714285714286
+  },
+  {
+    "bgMotion" : 6.20988554526749,
+    "colours" : [
+      "#1FA35B",
+      "#3DFF8F",
+      "#7CFFB8",
+      "#8FD6AE"
+    ],
+    "entrance" : "typewriter\/letter ",
+    "frameMotion" : 6.28247170781893,
+    "glows" : [
+
+    ],
+    "grain" : [
+      20
+    ],
+    "holds" : [
+      "Cursor blink 0.0"
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Title typewriter easeOutExpo",
+      "Cursor fade easeOutExpo",
+      "Subtitle typewriter easeOutExpo",
+      "Progress drawOn easeOutQuint"
+    ],
+    "liveSpeed" : 80,
+    "liveStrength" : 100,
+    "longestInMS" : 1500,
+    "maxEffectsPerPart" : 1,
+    "maxRise" : 0,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Tech Terminal",
+    "outsMS" : [
+      400,
+      100,
+      280,
+      300
+    ],
+    "springsAndTurns" : [
+
+    ],
+    "typeRatio" : 2.4
+  },
+  {
+    "bgMotion" : 0.1087352109053498,
+    "colours" : [
+
+    ],
+    "entrance" : "flyInFromDepth\/word ",
+    "frameMotion" : 0.10845293209876543,
+    "glows" : [
+
+    ],
+    "grain" : [
+
+    ],
+    "holds" : [
+      "Background push -5.0"
+    ],
+    "inCurves" : [
+      "Background frost easeOutQuint",
+      "Title flyInFromDepth easeInOutSine",
+      "Subtitle rise easeOut"
+    ],
+    "longestInMS" : 1000,
+    "maxEffectsPerPart" : 2,
+    "maxRise" : 16,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Behind Glass",
+    "outsMS" : [
+      480,
+      400,
+      260
+    ],
+    "springsAndTurns" : [
+      "Title flyInFromDepth easeInOutSine"
+    ],
+    "typeRatio" : 2.8
+  },
+  {
+    "bgMotion" : 12.872105838477367,
+    "colours" : [
+      "#FF3D7F",
+      "#FF7A2F",
+      "#FFB35C"
+    ],
+    "entrance" : "trackIn\/letter ",
+    "frameMotion" : 12.523479938271604,
+    "glows" : [
+      "Title #FFB58A r18 0.55"
+    ],
+    "grain" : [
+      22
+    ],
+    "holds" : [
+
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Title trackIn easeOut",
+      "Subtitle rise easeOut"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 65,
+    "longestInMS" : 1100,
+    "maxEffectsPerPart" : 1,
+    "maxRise" : 10,
+    "maxScaleOff" : 0,
+    "maxTrack" : 70,
+    "name" : "Light Leak",
+    "outsMS" : [
+      460,
+      280
+    ],
+    "springsAndTurns" : [
+
+    ],
+    "typeRatio" : 2.933333333333333
+  },
+  {
+    "bgMotion" : 3.9065805041152264,
+    "colours" : [
+      "#14B8A6",
+      "#1F6FFF",
+      "#2EC4B6",
+      "#8A5CFF",
+      "#FF5FD2",
+      "#FFB36B"
+    ],
+    "entrance" : "scaleFrom\/whole blurIn\/whole ",
+    "frameMotion" : 3.748039480452675,
+    "glows" : [
+      "Headline #B07CFF r28 0.6"
+    ],
+    "grain" : [
+
+    ],
+    "holds" : [
+      "Gradient drift 900.0"
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Headline scaleFrom easeOut",
+      "Title blurIn easeOut",
+      "Subtitle rise easeOut"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 55,
+    "longestInMS" : 1000,
+    "maxEffectsPerPart" : 1,
+    "maxRise" : 12,
+    "maxScaleOff" : 70,
+    "maxTrack" : 0,
+    "name" : "Gradient Glow",
+    "outsMS" : [
+      400,
+      280
+    ],
+    "springsAndTurns" : [
+
+    ],
+    "typeRatio" : 3.75
+  },
+  {
+    "bgMotion" : 10.437536008230452,
+    "colours" : [
+      "#1B2050",
+      "#2A1240",
+      "#7C8CFF",
+      "#9FA8FF"
+    ],
+    "entrance" : "flipUp\/word ",
+    "frameMotion" : 10.146430041152263,
+    "glows" : [
+
+    ],
+    "grain" : [
+      20
+    ],
+    "holds" : [
+
+    ],
+    "inCurves" : [
+      "Background fade easeOutQuint",
+      "Title flipUp easeInOutSine",
+      "Line 2 flipUp easeInOutSine",
+      "Subtitle rise easeOut",
+      "Mark springPop easeOutExpo"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 100,
+    "longestInMS" : 800,
+    "maxEffectsPerPart" : 1,
+    "maxRise" : 40,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Stacked Stagger",
+    "outsMS" : [
+      400,
+      380,
+      280,
+      200
+    ],
+    "springsAndTurns" : [
+      "Title flipUp easeInOutSine",
+      "Line 2 flipUp easeInOutSine",
+      "Mark springPop easeOutExpo"
+    ],
+    "typeRatio" : 3.3333333333333335
+  },
+  {
+    "bgMotion" : 0.030182613168724278,
+    "colours" : [
+      "#1A4DFF",
+      "#59D9FF",
+      "#6E8BFF",
+      "#9C7BFF"
+    ],
+    "entrance" : "wipe\/whole ",
+    "frameMotion" : 0.025430812757201646,
+    "glows" : [
+
+    ],
+    "grain" : [
+
+    ],
+    "holds" : [
+
+    ],
+    "inCurves" : [
+      "Background wipe easeOutQuint",
+      "Edge wipe easeOutQuint",
+      "Name wipe easeInOut",
+      "Role wipe easeInOut"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 100,
+    "longestInMS" : 700,
+    "maxEffectsPerPart" : 1,
+    "maxRise" : 0,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Split Wipe",
+    "outsMS" : [
+      260,
+      200,
+      420,
+      260
+    ],
+    "springsAndTurns" : [
+
+    ],
+    "typeRatio" : 1.6
+  },
+  {
+    "bgMotion" : 0,
+    "colours" : [
+      "#FFD60A"
+    ],
+    "entrance" : "rise\/letter ",
+    "frameMotion" : 0.034503600823045266,
+    "glows" : [
+
+    ],
+    "grain" : [
+
+    ],
+    "holds" : [
+      "Role drift 4.0"
+    ],
+    "inCurves" : [
+      "Shade fade easeOutQuint",
+      "Name rise easeOut",
+      "Rule drawOn easeOutExpo",
+      "Role rise easeOut"
+    ],
+    "longestInMS" : 650,
+    "maxEffectsPerPart" : 2,
+    "maxRise" : 36,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Minimal Underline",
+    "outsMS" : [
+      300,
+      450,
+      260,
+      200
+    ],
+    "springsAndTurns" : [
+
+    ],
+    "typeRatio" : 1.8
+  },
+  {
+    "bgMotion" : 0.051970807613168725,
+    "colours" : [
+      "#3D8BFF",
+      "#6E8BFF",
+      "#C46BFF"
+    ],
+    "entrance" : "tiltSettle\/word ",
+    "frameMotion" : 0.03713155864197531,
+    "glows" : [
+
+    ],
+    "grain" : [
+
+    ],
+    "holds" : [
+      "Mark push 6.0"
+    ],
+    "inCurves" : [
+      "Background springPop easeOutExpo",
+      "Mark springPop easeOutExpo",
+      "Name tiltSettle easeOut",
+      "Role rise easeOut"
+    ],
+    "liveSpeed" : 100,
+    "liveStrength" : 80,
+    "longestInMS" : 800,
+    "maxEffectsPerPart" : 2,
+    "maxRise" : 20,
+    "maxScaleOff" : 0,
+    "maxTrack" : 0,
+    "name" : "Pill Card",
+    "outsMS" : [
+      300,
+      200,
+      440,
+      200
+    ],
+    "springsAndTurns" : [
+      "Background springPop easeOutExpo",
+      "Background springPop easeIn",
+      "Mark springPop easeOutExpo",
+      "Name tiltSettle easeOut"
+    ],
+    "typeRatio" : 1.5
+  }
+]

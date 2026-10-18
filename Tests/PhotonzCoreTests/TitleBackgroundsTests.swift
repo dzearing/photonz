@@ -396,16 +396,17 @@ struct TitleBackgroundsTests {
         #expect(abs(glass.style.opacity - TitleLook.glassDim) < 0.001)
 
         // Held: blurred 30 to 40, dimmed enough for white words to read over
-        // a white screenshot, the zoom easing from 105 to 100.
+        // a white screenshot, the zoom easing from 102 to 100 (toned down
+        // from 105 on 2026-10-18, task `the-existing-title-pages-are-toned-down-to-calm`).
         let held = try #require(Self.piece(doc, inserted.layerID, "Background", atMS: 1200))
         #expect(held.style.backgroundBlurRadius >= 30)
         #expect(abs(held.style.opacity - TitleLook.glassDim) < 0.01)
         let zoomEarly = held.style.backgroundBlurZoom
         let later = try #require(Self.piece(doc, inserted.layerID, "Background", atMS: length - 900))
         #expect(zoomEarly > later.style.backgroundBlurZoom)
-        #expect(zoomEarly <= 105.001 && later.style.backgroundBlurZoom >= 99.999)
+        #expect(zoomEarly <= 102.001 && later.style.backgroundBlurZoom >= 99.999)
         let first = try #require(Self.piece(doc, inserted.layerID, "Background", atMS: 0))
-        #expect(first.style.backgroundBlurZoom > 104)
+        #expect(first.style.backgroundBlurZoom > 101.5)
 
         // Out: blur and dim go to nothing by the end, so the last frame of the
         // title IS the footage.
