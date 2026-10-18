@@ -1,0 +1,31 @@
+{
+  "id": "cutting-a-clip-in-the-middle-of-a-speed-stop-fre",
+  "title": "Cutting a clip in the middle of a speed-stop freeze keeps the freeze and every frame",
+  "goal": "When a clip has a speed stop set to Freeze and you cut it while the picture is frozen, the second half should carry on the freeze for only what was left of it and still end on the recording's last frame. Today the freeze starts over in the second half and the end of the recording drops off.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-18T05:12:11.282Z",
+  "updated": "2026-10-18T12:19:52.760Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-17 with a throwaway test in Tests/PhotonzCoreTests (deleted after): rampedToFour (8 s recording, stops 0@1x, 3000@4x, 8000@1x), freezeSpeedStop(stop 1, hold 1000), split(atMS: 6500) inside the hold (6000-7000). Printed: before length 17000 out 8000; after length 17000 pieces [(0, 6500, 3000), (3000, 10500, 7513)]; frames at 6400 7400 7600 16900: [3000, 3000, 3001, 7418]. So the second piece starts on the frozen frame and spends the whole 1000 ms hold again (frame 3000 until 7500, not 7000), and its out point lands at 7513, losing 7513-8000. Cause: SpeedRamp holds are spent on [from, to), so a piece starting on the held frame holds it in full; ClipPiece.split(atOffsetMS:) gives both halves the same ramp. Likely fix: the second piece's copy of the ramp carries the remaining hold on that stop (and the first piece's length keeps the part spent), with joined(with:) summing them back.",
+  "acceptance": [
+    "Cutting a clip part way through a freeze leaves the freeze exactly as long as it was, split across the two pieces",
+    "Both pieces together still play every frame the clip did, ending on the same last frame",
+    "Joining the two pieces back gives the clip it was"
+  ],
+  "log": [
+    {
+      "t": "2026-10-18T05:12:11.284Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T12:19:52.759Z",
+      "note": "seq 249.9609375 -> 30"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "At a cut with no spare frames, the Properties panel offers \"Or · Shorten the cut by 0.4s\". The mock puts Or on the left with the button beside it; at the panel's usual width the full button does not fit, so today Or sits on its own line above it. Decide whether to keep the full words and icon on a second line or trim the button to fit beside.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 80,
+  "seq": 70,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T04:57:34.253Z",
-  "updated": "2026-10-17T12:59:59.411Z",
+  "updated": "2026-10-18T12:19:53.016Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html #rowForce (irow, Or + btn secondary sm with ic-swap). App: TransitionInspector.shorten(_:), a VideoKit.FieldRow with a .fixedSize() button, so PanelFieldRowLayout stacks it under Or when the 76pt label column plus the ~173pt button exceeds the row (~236pt at default dock width). Without the icon at 10.5pt it is ~145pt, which would fit beside. Picture: queue/audits/2026-10-15-shorten-the-cut-1b-the-offer-sc.png.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-10-17T12:59:59.409Z",
       "note": "seq 30 -> 80"
+    },
+    {
+      "t": "2026-10-18T12:19:53.015Z",
+      "note": "seq 80 -> 70"
     }
   ],
   "walks": [

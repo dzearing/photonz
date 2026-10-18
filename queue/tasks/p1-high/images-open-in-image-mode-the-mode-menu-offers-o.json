@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 1.2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:06:51.467Z",
-  "updated": "2026-10-17T13:06:51.569Z",
+  "updated": "2026-10-17T23:01:59.198Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"i open an image and the top left dropdown says 'video'. WTF is this. There isn't even an image mode. The modes confuse me really. Redline should just be 'Image' and it should be the default mode for images. Then maybe Icon, then Video, then Design. But! Video mode doesnt even apply to anything but a video! In fact, I think the dropdown should only apply to image editing, and when you open a video, you shouldn't see the dropdown. it makes no sense if only one mode is relevant. Remove video mode from the dropdown for images.\" Screenshot 2026-10-17 06.03: an image window (layers Arrow 2, Arrow, Background) whose chip reads Video; the menu lists Icon ^1, Redline ^2, Video ^3 (checked), Design ^4, Show Everything.\n\nFrom code reading: PhotonzCore/WindowMode.swift ('A MODE is what the WINDOW is set up for, never what the document IS'), design in docs/design/modes.md; the chosen mode is stored once in UserDefaults (experiments.next.windowMode), so it leaks across document kinds. PanelSectionsFooter.swift and ToolBarLayout.swift read it.",
@@ -32,6 +32,41 @@
     {
       "t": "2026-10-17T13:06:51.568Z",
       "note": "seq 3970 -> 1.2"
+    },
+    {
+      "t": "2026-10-17T22:24:49.591Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T22:27:31.185Z",
+      "note": "Reproduced at Next defaults: zz repro walk opened the Noisy voice recording mp4, Edit, modeVideo, then opened settings-pane-2x.png: expect Mode reads Image FAILED: 'the control called \"Mode\" reads \"Video\"'. User's Mac: defaults read com.dzearing.photonz.dev experiments.next.windowMode = {\"bends\":{},\"modeID\":\"video\"}, panelSections = columns=0;measurements=0;placement=0 (the Video preset, applied app-wide). Cause: WindowModeStore and PanelSectionVisibilityStore are single app-wide stores."
+    },
+    {
+      "t": "2026-10-17T23:01:08.051Z",
+      "note": "owns these walks: modes-follow-the-document-walk, window-modes-walk, design-mode-tool-strip-walk"
+    },
+    {
+      "t": "2026-10-17T23:01:31.344Z",
+      "note": "Adversarial review before building: Redline's preset (folds Motion, Component, Placement, Columns) as the default for every picture would hide the Motion plus, the only door to a first animation, on every picture, so Image folds nothing (it is what Everything was) and Everything is retired: Show Everything lands in Image. Video's preset stays as the one video setup (no video walk reads Measurements/Columns/Placement). Panel choices could not stay one app-wide live value with per-window modes, so: mode per window (WindowModeSession on EditorState), arrangement per mode app-wide (WindowModeArrangements in WindowModeStore, key experiments.next.windowModeArrangements), migrated once from the old windowMode + panelSections keys."
+    },
+    {
+      "t": "2026-10-17T23:01:31.409Z",
+      "note": "Built + verified: PhotonzCore WindowMode.swift (offered(hasTime:), imageID/videoID, WindowModeArrangements.migrating, per-window WindowModeSession), EditorState+WindowMode.swift, chip/menu/footer/inspector rewired, newUIDesign swaps its window to Design, ⌃1 Image ⌃2 Icon ⌃3 Design (stand-ins + modeImage action). Tests: ModesFollowTheDocumentTests (incl. the user's exact saved value) + reworked ModeIsAPresetTests; full suite 13564 green. Walks green: new modes-follow-the-document-walk, window-modes-walk and design-mode-tool-strip-walk (rewritten for Image), chrome-says-labels-walk, front-door-walk. Pictures looked at: 1-video-no-chip (no chip beside traffic lights), 3-image-mode-list (Image ⌃1, Icon ⌃2, Design ⌃3, Show Everything, no Video)."
+    },
+    {
+      "t": "2026-10-17T23:01:31.473Z",
+      "note": "left rough (no task, under the bar or a question for the user on the audit): mode is per window, not remembered per file across reopen (by design, nothing about a mode is stored in a file); whether Image should fold Motion/Components like Redline is an evaluate question on the audit; modes mock page still draws Redline/Video, left as drawn per the user's 2026-10-17 words."
+    },
+    {
+      "t": "2026-10-17T23:01:59.196Z",
+      "note": "Shipped in f6198421 (Next): mode is per window; pictures start in Image (Redline renamed, folds nothing) and are offered Image, Icon, Design on Control 1-3; videos draw no chip and View > Mode is dimmed; old app-wide setting migrated so the next image opens in Image. Verified by ModesFollowTheDocumentTests (user's saved value), full suite green, walks modes-follow-the-document, window-modes, design-mode-tool-strip, chrome-says-labels, front-door green. Audit queue/audits/2026-10-17-images-open-in-image-mode.json."
     }
-  ]
+  ],
+  "started": "2026-10-17T22:24:49.590Z",
+  "walks": [
+    "modes-follow-the-document-walk",
+    "window-modes-walk",
+    "design-mode-tool-strip-walk"
+  ],
+  "completed": "2026-10-17T23:01:59.197Z"
 }

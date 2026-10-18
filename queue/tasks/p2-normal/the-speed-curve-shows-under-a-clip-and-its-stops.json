@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.090Z",
-  "updated": "2026-10-17T12:59:59.020Z",
+  "updated": "2026-10-18T05:13:37.235Z",
   "deps": [
     "a-clip-s-speed-can-change-across-its-length-with"
   ],
@@ -21,7 +21,8 @@
     "The curve opens and closes the way a layer's other lanes open on the timeline, and takes no room on a clip with no stops",
     "Try path, no flag changed from Next defaults: on the sample recording add two speed stops, open the clip's speed curve, drag the second stop up",
     "Measured bar a plain line fails: the walk samples the curve area and finds the fast band in the mock's #ff5d8f and the hatched amber freeze band where the stops say, and the 1x line within 1 px of where the scale puts it; a reel of a stop being dragged goes with the audit",
-    "Audit written under queue/audits/ with the app beside the mock on one picture; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+    "Audit written under queue/audits/ with the app beside the mock on one picture; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not",
+    "A stop can go to zero, the mock's Freeze: one zero holds a single frame and two zeros side by side make a freeze, offered as Freeze in the stop's Speed list (the speed stops slice stops at 0.25x)"
   ],
   "log": [
     {
@@ -39,6 +40,36 @@
     {
       "t": "2026-10-17T12:59:59.019Z",
       "note": "seq 25 -> 20"
+    },
+    {
+      "t": "2026-10-18T03:05:01.288Z",
+      "note": "From the speed stops slice (a-clip-s-speed-can-change-across-its-length-with): stops are SpeedRamp on ClipPiece (Sources/PhotonzCore/SpeedRamp.swift, SpeedStops.swift), nailed to source frames, speed linear in timeline time between stops (Ramp) or flat (Hold). A zero stop is not in the model yet: SpeedStop clamps to ClipPiece.slowestPercent, and in a source-anchored model two zeros on different frames cannot take time, so a freeze stop needs a held duration (perhaps a zero stop carrying holdMS) — added to this task's acceptance. Also still to do from the mock: the Clip section's Source / Output / Stops / Frames readout, and the mock's tip line 'A stop at zero holds a single frame, so two zeros side by side make a freeze' once zero exists."
+    },
+    {
+      "t": "2026-10-18T03:22:59.881Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T03:28:51.000Z",
+      "note": "Adversarial review before building: (1) the mock places stops by fraction of the clip's timeline; ours are nailed to recording frames, so a sideways drag solves for the frame that lands under the hand (bisection) and the neighbours bound it. (2) Two zeros side by side cannot take time in a frame-anchored model, so a zero stop carries a held length: Freeze in the Speed list makes one with a 1 s hold, drawn as the mock's two zero diamonds, the second dragging the hold longer or shorter; dragging any stop to the floor makes a single-frame zero. Two neighbouring zero stops on different frames are refused (would never end). (3) The shared animated-line rule (user 2026-10-13) says a plain click picks and Command-click adds a dot; the acceptance says click adds. The user's rule wins and the curve follows it. (4) Premiere's time remap rubber band lives on the clip and its keyframes drag up/down; ours is the mock's lane under the clip, opened by the track's arrow like the key lanes. (5) The mock also tints the clip bar itself by band and prints a legend; the curve carries the bands here, the bar tint is a follow-up."
+    },
+    {
+      "t": "2026-10-18T05:13:09.796Z",
+      "note": "owns these walks: the-speed-curve-shows-under-a-clip-walk, speed-stops-ramp-walk"
+    },
+    {
+      "t": "2026-10-18T05:13:09.862Z",
+      "note": "Built: zero stops with a hold in the model (SpeedStop.holdMS, Freeze in the stop's Speed list at 1 s), SpeedCurve (core: line, handles, bands at the mock's edges), the SpeedCurveLane under a ramped clip (opens with the track's arrow, Command-click adds, diamonds drag both ways as one undo, hold end drags along, right-click Freeze/Delete), expectSpeedCurve walk step reading the ink as Display P3, dragGrip rise. Review after building: the curve and the clip do not both fit a 1280x800 timeline (106pt of tracks); the timeline scrolls to the curve when it opens, and speed-stops-ramp-walk needed a reveal for it. Left rough, under the bar: the first and last diamonds are half cut by the plot's edges, as the mock's are; the readout under the hand shows round speeds like 2.15x between the snapped ones. Filed: a-ramped-clip-s-bar-is-tinted-by-its-speed-bands (mock's clip bar tint, legend, title placement) and cutting-a-clip-in-the-middle-of-a-speed-stop-fre (reproduced). Pictures looked at: 1-two-stops, 2-dragging (2.5x readout beside the stop), 3-dragged-up (pink Fast band), 4-freeze (amber hatch between two zeros), 5-longer-hold, 6-moved-along, the reel contact sheet and the beside-the-mock picture; each shows the goal, none shows a flat plain line."
+    },
+    {
+      "t": "2026-10-18T05:13:37.233Z",
+      "note": "A clip with speed stops shows its Speed curve under it (SpeedCurveLane, SpeedCurve in core): mock scale 3x/1x/0, bands tinted with the mock's swatches, stops drag along and up/down as one undo, Command-click adds (shared line rule), right-click Freeze/Delete. Freeze is a zero stop that holds its frame (holdMS), first in the stop's Speed list, its second zero drags the hold. Commit b88134ed. Verified: 21 new core tests, full suite 13664 green; the-speed-curve-shows-under-a-clip-walk green at Next defaults with every band read at its exact mock swatch and the 1x line within a point; neighbouring walks green. Audit queue/audits/2026-10-17-speed-curve.json with reel, contact sheet and app-beside-mock; look card open. Follow-ups: a-ramped-clip-s-bar-is-tinted-by-its-speed-bands, cutting-a-clip-in-the-middle-of-a-speed-stop-fre."
     }
-  ]
+  ],
+  "started": "2026-10-18T03:22:59.878Z",
+  "walks": [
+    "the-speed-curve-shows-under-a-clip-walk",
+    "speed-stops-ramp-walk"
+  ],
+  "completed": "2026-10-18T05:13:37.234Z"
 }

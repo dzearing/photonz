@@ -12485,3 +12485,123 @@
 {"t":"2026-10-17T22:10:53.970Z","ev":"task_note","id":"any-timeline-row-that-holds-sub-layers-expands-a"}
 {"t":"2026-10-17T22:10:54.035Z","ev":"task_note","id":"any-timeline-row-that-holds-sub-layers-expands-a"}
 {"t":"2026-10-17T22:11:33.289Z","ev":"task_done","id":"any-timeline-row-that-holds-sub-layers-expands-a","from":"in_progress","note":"Shipped in 5c55b6e8: any timeline row made of parts (title pages, name cards, groups, groups of groups, component copies) opens by an arrow into indented rows, one Layers-list step per level, each with its own arrow (Option = every level), name, kind icon and bar; a part's bar retimes it alone (new core LayerPartTime: a stretch on its parent's clock that travels with it, keys travel on a slide; 23 TDD tests). Closed rows mark their parts' timings. Open state is shared with the Layers list and remembered per file in settings, not the document. Verified: Scripts/test.sh 13555 green; timeline-sub-layer-rows-walk green at Next defaults (no arrow on a plain clip, title opened with zoom unchanged, Subtitle retimed, a grandchild two levels deep slid +1s alone, Option opens/closes every level), title-part-rows-retime-walk and 37 other related walks green. Right/Left stay frame step per UX-PATTERNS §7. Not verified: Size measurement groups on a video; logos land as one picture with no layers. Audit queue/audits/2026-10-17-timeline-sub-layer-rows.json."}
+{"t":"2026-10-17T22:24:49.423Z","ev":"slice_pass","walks":31,"passed":31,"failed":0,"seconds":620,"of":966,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-17T22:24:49.597Z","ev":"task_started","id":"images-open-in-image-mode-the-mode-menu-offers-o","title":"Images open in Image mode, the mode menu offers only what fits the document, and videos have no mode menu","priority":"p1-high"}
+{"t":"2026-10-17T22:27:31.187Z","ev":"task_note","id":"images-open-in-image-mode-the-mode-menu-offers-o"}
+{"t":"2026-10-17T23:01:08.053Z","ev":"task_walks","id":"images-open-in-image-mode-the-mode-menu-offers-o","walks":["modes-follow-the-document-walk","window-modes-walk","design-mode-tool-strip-walk"]}
+{"t":"2026-10-17T23:01:31.346Z","ev":"task_note","id":"images-open-in-image-mode-the-mode-menu-offers-o"}
+{"t":"2026-10-17T23:01:31.411Z","ev":"task_note","id":"images-open-in-image-mode-the-mode-menu-offers-o"}
+{"t":"2026-10-17T23:01:31.475Z","ev":"task_note","id":"images-open-in-image-mode-the-mode-menu-offers-o"}
+{"t":"2026-10-17T23:01:59.199Z","ev":"task_done","id":"images-open-in-image-mode-the-mode-menu-offers-o","from":"in_progress","note":"Shipped in f6198421 (Next): mode is per window; pictures start in Image (Redline renamed, folds nothing) and are offered Image, Icon, Design on Control 1-3; videos draw no chip and View > Mode is dimmed; old app-wide setting migrated so the next image opens in Image. Verified by ModesFollowTheDocumentTests (user's saved value), full suite green, walks modes-follow-the-document, window-modes, design-mode-tool-strip, chrome-says-labels, front-door green. Audit queue/audits/2026-10-17-images-open-in-image-mode.json."}
+{"t":"2026-10-17T23:14:32.871Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":491,"of":967,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-17T23:14:33.059Z","ev":"task_started","id":"in-a-video-the-library-is-a-catalog-of-things-bu","title":"In a video, the Library is a catalog of things built for video, grouped by kind","priority":"p1-high"}
+{"t":"2026-10-17T23:31:08.455Z","ev":"task_walks","id":"in-a-video-the-library-is-a-catalog-of-things-bu","walks":["video-library-catalog-walk"]}
+{"t":"2026-10-18T00:20:02.694Z","ev":"decision_opened","id":"in-a-video-the-library-is-a-catalog-of-things-bu-how-should-a-video-s-library-let","taskId":"in-a-video-the-library-is-a-catalog-of-things-bu","question":"How should a video's Library let you pick a kind of thing (title pages, name cards, backgrounds...)?"}
+{"t":"2026-10-18T00:21:02.336Z","ev":"task_note","id":"in-a-video-the-library-is-a-catalog-of-things-bu"}
+{"t":"2026-10-18T00:21:02.401Z","ev":"task_note","id":"in-a-video-the-library-is-a-catalog-of-things-bu"}
+{"t":"2026-10-18T00:21:02.466Z","ev":"task_note","id":"in-a-video-the-library-is-a-catalog-of-things-bu"}
+{"t":"2026-10-18T00:21:02.533Z","ev":"task_note","id":"in-a-video-the-library-is-a-catalog-of-things-bu"}
+{"t":"2026-10-18T00:21:02.597Z","ev":"task_note","id":"in-a-video-the-library-is-a-catalog-of-things-bu"}
+{"t":"2026-10-18T00:21:31.904Z","ev":"task_done","id":"in-a-video-the-library-is-a-catalog-of-things-bu","from":"in_progress","note":"Video Library now has Media and Catalog only (Styles/Systems hidden for video, kept for pictures). Catalog groups title pages, name cards, 10 moving backgrounds, transitions and the video's pictures under chips with counts; components behind a Built for video checkbox (on by default); search across kinds; last kind remembered. Backgrounds land by double click or drag. Mock video-library.html; chips vs column vs dropdown on an open card (chips built). Verified: video-library-catalog-walk at Next defaults, 30 touched walks, Scripts/test.sh 13586 green. Commit 5896a408."}
+{"t":"2026-10-18T00:36:19.188Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":720,"of":968,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-18T00:36:19.365Z","ev":"task_started","id":"animated-charts-you-can-drop-into-a-video","title":"Animated charts you can drop into a video","priority":"p1-high"}
+{"t":"2026-10-18T00:40:34.665Z","ev":"task_note","id":"animated-charts-you-can-drop-into-a-video"}
+{"t":"2026-10-18T02:00:41.443Z","ev":"task_created","id":"find-out-whether-a-crowded-dock-can-hide-the-lib","priority":"p2-normal","title":"Find out whether a crowded dock can hide the Library shelf's second row where no scroll reaches it"}
+{"t":"2026-10-18T02:01:05.449Z","ev":"decision_opened","id":"animated-charts-you-can-drop-into-a-video-do-the-six-charts-build-in-and-l","taskId":"animated-charts-you-can-drop-into-a-video","question":"Do the six charts build in and look the way you want in a video?"}
+{"t":"2026-10-18T02:01:36.426Z","ev":"task_walks","id":"animated-charts-you-can-drop-into-a-video","walks":["animated-charts-walk"]}
+{"t":"2026-10-18T02:01:55.613Z","ev":"task_note","id":"animated-charts-you-can-drop-into-a-video"}
+{"t":"2026-10-18T02:01:55.676Z","ev":"task_note","id":"animated-charts-you-can-drop-into-a-video"}
+{"t":"2026-10-18T02:01:55.743Z","ev":"task_note","id":"animated-charts-you-can-drop-into-a-video"}
+{"t":"2026-10-18T02:01:55.808Z","ev":"task_note","id":"animated-charts-you-can-drop-into-a-video"}
+{"t":"2026-10-18T02:08:34.506Z","ev":"task_done","id":"animated-charts-you-can-drop-into-a-video","from":"in_progress","note":"Six animated charts (Bar, Horizontal Bars, Line, Donut, Big Number, Comparison) as a title kind, in the video Library's Animated Charts chip and Sequence > Insert Chart, with a Chart section (rows, paste from a spreadsheet, unit, decimals) and a Count Up build; commit 29761749. Verified: 25 core tests + render tests (ink 0 at first frame, part way half way in; 5.1 to 10.3 ms medians at 1080p), animated-charts-walk green at Next defaults, touched walks green, full suite 13,615 passing. Reel + decision card for the look; audit queue/audits/2026-10-17-animated-charts.json."}
+{"t":"2026-10-18T02:22:57.226Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":590,"of":969,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-18T02:22:57.415Z","ev":"task_started","id":"a-clip-s-speed-can-change-across-its-length-with","title":"A clip's speed can change across its length with speed stops","priority":"p2-normal"}
+{"t":"2026-10-18T02:28:27.312Z","ev":"task_note","id":"a-clip-s-speed-can-change-across-its-length-with"}
+{"t":"2026-10-18T03:05:01.290Z","ev":"task_note","id":"the-speed-curve-shows-under-a-clip-and-its-stops"}
+{"t":"2026-10-18T03:05:22.197Z","ev":"task_walks","id":"a-clip-s-speed-can-change-across-its-length-with","walks":["speed-stops-ramp-walk"]}
+{"t":"2026-10-18T03:12:13.344Z","ev":"task_note","id":"a-clip-s-speed-can-change-across-its-length-with"}
+{"t":"2026-10-18T03:12:36.127Z","ev":"task_done","id":"a-clip-s-speed-can-change-across-its-length-with","from":"in_progress","note":"Speed stops shipped in 791a428c: Add Speed Stop / Delete Speed Stop / Reset Ramp under Speed on the clip's right-click and Clip menu; Properties shows Speed stop N of M, Speed, Between stops Ramp/Hold; frames, length and export follow the eased ramp (SpeedRampTests, 30 tests; full suite green); speed-stops-ramp-walk ok at Next defaults with export timed at 3.2s; audit queue/audits/2026-10-17-speed-stops.json. Zero/freeze stops and the curve go to the-speed-curve-shows-under-a-clip-and-its-stops."}
+{"t":"2026-10-18T03:22:59.718Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":464,"of":970,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-18T03:22:59.887Z","ev":"task_started","id":"the-speed-curve-shows-under-a-clip-and-its-stops","title":"The speed curve shows under a clip and its stops drag","priority":"p2-normal"}
+{"t":"2026-10-18T03:28:51.002Z","ev":"task_note","id":"the-speed-curve-shows-under-a-clip-and-its-stops"}
+{"t":"2026-10-18T04:37:35.652Z","ev":"task_created","id":"a-ramped-clip-s-bar-is-tinted-by-its-speed-bands","priority":"p2-normal","title":"A ramped clip's bar is tinted by its speed bands, with the mock's legend under it"}
+{"t":"2026-10-18T05:12:11.286Z","ev":"task_created","id":"cutting-a-clip-in-the-middle-of-a-speed-stop-fre","priority":"p2-normal","title":"Cutting a clip in the middle of a speed-stop freeze keeps the freeze and every frame"}
+{"t":"2026-10-18T05:12:50.894Z","ev":"decision_opened","id":"the-speed-curve-shows-under-a-clip-and-its-stops-does-the-speed-curve-under-a-cli","taskId":"the-speed-curve-shows-under-a-clip-and-its-stops","question":"Does the speed curve under a clip look and move the way you want?"}
+{"t":"2026-10-18T05:13:09.798Z","ev":"task_walks","id":"the-speed-curve-shows-under-a-clip-and-its-stops","walks":["the-speed-curve-shows-under-a-clip-walk","speed-stops-ramp-walk"]}
+{"t":"2026-10-18T05:13:09.864Z","ev":"task_note","id":"the-speed-curve-shows-under-a-clip-and-its-stops"}
+{"t":"2026-10-18T05:13:37.236Z","ev":"task_done","id":"the-speed-curve-shows-under-a-clip-and-its-stops","from":"in_progress","note":"A clip with speed stops shows its Speed curve under it (SpeedCurveLane, SpeedCurve in core): mock scale 3x/1x/0, bands tinted with the mock's swatches, stops drag along and up/down as one undo, Command-click adds (shared line rule), right-click Freeze/Delete. Freeze is a zero stop that holds its frame (holdMS), first in the stop's Speed list, its second zero drags the hold. Commit b88134ed. Verified: 21 new core tests, full suite 13664 green; the-speed-curve-shows-under-a-clip-walk green at Next defaults with every band read at its exact mock swatch and the 1x line within a point; neighbouring walks green. Audit queue/audits/2026-10-17-speed-curve.json with reel, contact sheet and app-beside-mock; look card open. Follow-ups: a-ramped-clip-s-bar-is-tinted-by-its-speed-bands, cutting-a-clip-in-the-middle-of-a-speed-stop-fre."}
+{"t":"2026-10-18T05:24:21.830Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":481,"of":971,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-18T05:24:22.021Z","ev":"task_started","id":"a-cut-opens-into-its-two-clips-on-their-own-rows","title":"A cut opens into its two clips on their own rows","priority":"p2-normal"}
+{"t":"2026-10-18T05:42:19.181Z","ev":"task_walks","id":"a-cut-opens-into-its-two-clips-on-their-own-rows","walks":["a-cut-opens-into-its-two-clips-walk"]}
+{"t":"2026-10-18T06:12:29.169Z","ev":"task_walks","id":"a-cut-opens-into-its-two-clips-on-their-own-rows","walks":["a-cut-opens-into-its-two-clips-walk","expand-the-cut-from-its-menus-walk"]}
+{"t":"2026-10-18T06:28:51.474Z","ev":"task_created","id":"a-picked-cut-opens-from-a-chevron-on-its-track-h","priority":"p2-normal","title":"A picked cut opens from a chevron on its track header, as the transition mock draws it"}
+{"t":"2026-10-18T06:28:59.617Z","ev":"decision_opened","id":"a-picked-cut-opens-from-a-chevron-on-its-track-h-how-should-a-track-s-header-open","taskId":"a-picked-cut-opens-from-a-chevron-on-its-track-h","question":"How should a track's header open the picked cut into its two clips?"}
+{"t":"2026-10-18T06:29:18.416Z","ev":"task_blocked","id":"a-picked-cut-opens-from-a-chevron-on-its-track-h","from":"pending","note":"Waiting on the user: how the track header opens a picked cut (the mock's chevron vs the key-lanes arrow)"}
+{"t":"2026-10-18T06:30:10.454Z","ev":"task_note","id":"a-cut-opens-into-its-two-clips-on-their-own-rows"}
+{"t":"2026-10-18T06:30:10.516Z","ev":"task_note","id":"a-cut-opens-into-its-two-clips-on-their-own-rows"}
+{"t":"2026-10-18T06:30:10.586Z","ev":"task_note","id":"a-cut-opens-into-its-two-clips-on-their-own-rows"}
+{"t":"2026-10-18T06:30:10.647Z","ev":"task_note","id":"a-cut-opens-into-its-two-clips-on-their-own-rows"}
+{"t":"2026-10-18T06:30:37.715Z","ev":"task_done","id":"a-cut-opens-into-its-two-clips-on-their-own-rows","from":"in_progress","note":"Expand the Cut ships in Next (Option E, the cut's right-click, Clip > Expand the Cut): the picked cut opens into A and B rows under its track, bars running on over the spent frames hatched, a 'both on screen' label over the overlap, a dip releasing it, a hold parting them by the black. Measured against the ruler by the new expectExpandedCut step in a-cut-opens-into-its-two-clips-walk (no flags, within 0.2pt) and proven by hand in expand-the-cut-from-its-menus-walk; tests 13676 passed; audit 2026-10-17-a-cut-opens-into-its-two-clips-on-their-own-rows.json beside the mock's step 5. The mock's header chevron waits on card a-picked-cut-opens-from-a-chevron-on-its-track-h-how-should-a-track-s-header-open."}
+{"t":"2026-10-18T11:02:13.504Z","ev":"sweep_pass","walks":973,"passed":971,"failed":2,"seconds":16250,"complete":true,"total":973}
+{"t":"2026-10-18T11:02:13.685Z","ev":"task_started","id":"a-title-s-words-can-follow-a-curved-path","title":"A title's words can follow a curved path","priority":"p2-normal"}
+{"t":"2026-10-18T11:56:45.522Z","ev":"task_created","id":"words-on-a-curve-are-typed-on-the-curve-and-come","priority":"p2-normal","title":"Words on a curve are typed on the curve and come in a letter at a time"}
+{"t":"2026-10-18T11:57:10.043Z","ev":"task_walks","id":"a-title-s-words-can-follow-a-curved-path","walks":["text-on-a-path-walk","text-on-a-path-menus-walk"]}
+{"t":"2026-10-18T11:57:39.460Z","ev":"decision_opened","id":"a-title-s-words-can-follow-a-curved-path-do-words-travelling-along-a-curv","taskId":"a-title-s-words-can-follow-a-curved-path","question":"Do words travelling along a curve look the way you want as they arrive?"}
+{"t":"2026-10-18T12:04:55.927Z","ev":"task_note","id":"a-title-s-words-can-follow-a-curved-path"}
+{"t":"2026-10-18T12:04:55.994Z","ev":"task_note","id":"a-title-s-words-can-follow-a-curved-path"}
+{"t":"2026-10-18T12:04:56.069Z","ev":"task_done","id":"a-title-s-words-can-follow-a-curved-path","from":"in_progress","note":"Put Text on a Path (Layer menu + right-click) sets a title along a Pen curve, letters turned to it; points reshape live; Start keyable so words travel; canvas, playback and MP4. Commit f71f2ec2. Verified by unit tests, full suite, two walks at Next defaults, measured bar 0.03 deg/0.3 pt, export frames. Audit queue/audits/2026-10-18-text-on-a-path.json, reel + decision card on the arrival look."}
+{"t":"2026-10-18T12:15:49.254Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":479,"of":975,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-18T12:19:18.379Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
+{"t":"2026-10-18T12:19:18.445Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
+{"t":"2026-10-18T12:19:30.563Z","ev":"task_created","id":"a-chart-with-negative-numbers-draws-its-bars-bel","priority":"p2-normal","title":"A chart with negative numbers draws its bars below the line"}
+{"t":"2026-10-18T12:19:52.106Z","ev":"task_resequenced","id":"title-pages-that-look-like-apple-designed-them","from":1.08,"to":10}
+{"t":"2026-10-18T12:19:52.167Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":10,"to":20}
+{"t":"2026-10-18T12:19:52.231Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":20,"to":30}
+{"t":"2026-10-18T12:19:52.293Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":30,"to":40}
+{"t":"2026-10-18T12:19:52.357Z","ev":"task_resequenced","id":"a-picked-rounded-shape-is-ringed-round-its-box-a","from":40,"to":50}
+{"t":"2026-10-18T12:19:52.424Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":50,"to":60}
+{"t":"2026-10-18T12:19:52.491Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":60,"to":70}
+{"t":"2026-10-18T12:19:52.557Z","ev":"task_resequenced","id":"on-a-video-captions-and-transitions-sit-where-th","from":70,"to":80}
+{"t":"2026-10-18T12:19:52.620Z","ev":"task_resequenced","id":"finishing-a-typed-title-and-picking-a-dissolve-l","from":50,"to":10}
+{"t":"2026-10-18T12:19:52.689Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":60,"to":20}
+{"t":"2026-10-18T12:19:52.761Z","ev":"task_resequenced","id":"cutting-a-clip-in-the-middle-of-a-speed-stop-fre","from":249.9609375,"to":30}
+{"t":"2026-10-18T12:19:52.826Z","ev":"task_resequenced","id":"a-title-part-move-dragged-by-hand-on-the-timelin","from":245,"to":40}
+{"t":"2026-10-18T12:19:52.890Z","ev":"task_resequenced","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo","from":249.375,"to":50}
+{"t":"2026-10-18T12:19:52.953Z","ev":"task_resequenced","id":"a-colour-grade-can-be-its-own-track-over-the-cli","from":70,"to":60}
+{"t":"2026-10-18T12:19:53.017Z","ev":"task_resequenced","id":"or-sits-beside-shorten-the-cut-the-way-the-trans","from":80,"to":70}
+{"t":"2026-10-18T12:19:53.078Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":90,"to":80}
+{"t":"2026-10-18T12:19:53.142Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":100,"to":90}
+{"t":"2026-10-18T12:19:53.204Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":110,"to":100}
+{"t":"2026-10-18T12:19:53.270Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":120,"to":110}
+{"t":"2026-10-18T12:19:53.334Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":130,"to":120}
+{"t":"2026-10-18T12:19:53.396Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":140,"to":130}
+{"t":"2026-10-18T12:19:53.459Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":150,"to":140}
+{"t":"2026-10-18T12:19:53.521Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":160,"to":150}
+{"t":"2026-10-18T12:19:53.585Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":170,"to":160}
+{"t":"2026-10-18T12:19:53.648Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":180,"to":170}
+{"t":"2026-10-18T12:19:53.712Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":190,"to":180}
+{"t":"2026-10-18T12:19:53.775Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":200,"to":190}
+{"t":"2026-10-18T12:19:53.838Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":210,"to":200}
+{"t":"2026-10-18T12:19:53.902Z","ev":"task_resequenced","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","from":220,"to":210}
+{"t":"2026-10-18T12:19:53.966Z","ev":"task_resequenced","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b","from":230,"to":220}
+{"t":"2026-10-18T12:19:54.030Z","ev":"task_resequenced","id":"delete-on-a-picked-through-edit-joins-it-as-in-p","from":240,"to":230}
+{"t":"2026-10-18T12:19:54.094Z","ev":"task_resequenced","id":"a-clip-or-title-held-as-an-insert-shows-what-mov","from":247.5,"to":240}
+{"t":"2026-10-18T12:19:54.158Z","ev":"task_resequenced","id":"a-title-or-picture-right-click-leads-with-animat","from":248.75,"to":250}
+{"t":"2026-10-18T12:19:54.221Z","ev":"task_resequenced","id":"the-panel-s-hold-takes-any-typed-length","from":249.6875,"to":260}
+{"t":"2026-10-18T12:19:54.284Z","ev":"task_resequenced","id":"find-out-whether-a-crowded-dock-can-hide-the-lib","from":249.84375,"to":270}
+{"t":"2026-10-18T12:19:54.347Z","ev":"task_resequenced","id":"a-ramped-clip-s-bar-is-tinted-by-its-speed-bands","from":249.921875,"to":280}
+{"t":"2026-10-18T12:19:54.411Z","ev":"task_resequenced","id":"a-picked-cut-opens-from-a-chevron-on-its-track-h","from":249.98046875,"to":290}
+{"t":"2026-10-18T12:19:54.478Z","ev":"task_resequenced","id":"words-on-a-curve-are-typed-on-the-curve-and-come","from":249.990234375,"to":300}
+{"t":"2026-10-18T12:19:54.541Z","ev":"task_resequenced","id":"a-chart-with-negative-numbers-draws-its-bars-bel","from":249.9951171875,"to":310}
+{"t":"2026-10-18T12:19:54.616Z","ev":"task_resequenced","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","from":250,"to":320}
+{"t":"2026-10-18T12:19:54.680Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":260,"to":330}
+{"t":"2026-10-18T12:19:54.747Z","ev":"task_resequenced","id":"the-measuring-legend-says-something-useful-now-t","from":270,"to":340}
+{"t":"2026-10-18T12:19:54.814Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":280,"to":350}
+{"t":"2026-10-18T12:19:54.879Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":290,"to":360}
+{"t":"2026-10-18T12:19:54.941Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":300,"to":370}
+{"t":"2026-10-18T12:19:55.004Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":310,"to":380}
+{"t":"2026-10-18T12:19:55.067Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":320,"to":390}
+{"t":"2026-10-18T12:19:55.129Z","ev":"task_resequenced","id":"the-repeats-label-on-the-timing-strip-s-ruler-ne","from":330,"to":400}
+{"t":"2026-10-18T12:19:55.192Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-26","from":4070,"to":410}
+{"t":"2026-10-18T12:20:10.234Z","ev":"triage","summary":"50 open before, 51 after; 0 merged, 0 dropped, 0 priority moves, 0 reset, 0 leftovers; 1 filed (a-chart-with-negative-numbers-draws-its-bars-bel, p2); 5 findings folded (chart hand edits into title-part-move, freeze drag jump into insert preview, speed curve out of sight on a laptop into ramped bar tint, Transitions twice in the video dock into captions-and-transitions card task, Place in Picture button into panel task); 2 measured visual bars added (words on a curve, ramped bar tint); p1, p2 renumbered in steps of 10 with the user ask first and three work-lost bugs moved ahead of the colour grade track"}
+{"t":"2026-10-18T12:21:14.754Z","ev":"digest","file":"2026-10-18.md"}

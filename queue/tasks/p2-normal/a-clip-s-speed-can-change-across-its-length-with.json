@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:03.994Z",
-  "updated": "2026-10-17T12:59:58.954Z",
+  "updated": "2026-10-18T03:12:36.126Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-speed.html. Menu rows 'Add speed stop A', 'Delete speed stop', 'Reset ramp'; Properties 'Speed stop 4 of 7', Speed, 'Between stops interpolation: Ramp / Hold' with the line 'Ramp eases between stops... A stop at zero holds a single frame, so two zeros side by side make a freeze' (that sentence goes in the tip, not the panel). API sketch clip.retime({at:1.2, speed:0.25}). The mock prints A for Add speed stop: A is Photoshop's Path Selection and on a video it may already be taken; apply UX-PATTERNS §7 and name the move in the audit. Code today: one constant speed per piece, Sources/PhotonzCore/ClipPieces.swift:66 speedPercent, dropdown stops ClipSpeed.swift:189, SpeedInspector.swift:109-118, freeze is holdFrame ClipPieces.swift:666. Keep a piece with no stops exactly as today (Codable back compat test). Sound: Premiere's time remapping leaves the sound unchanged; decide by measuring what reads right and say it in the audit. The curve plotted under the clip is the next task (deps). TDD for Core.",
@@ -32,6 +32,31 @@
     {
       "t": "2026-10-17T12:59:58.953Z",
       "note": "seq 24 -> 10"
+    },
+    {
+      "t": "2026-10-18T02:22:57.409Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T02:28:27.310Z",
+      "note": "Adversarial review before building: (1) a first-time user finds Add Speed Stop where speed already lives, in the clip's Speed submenu (right-click and Clip menu): the clip right-click is at its 11-row ceiling (TimelineMenuTable.mostTopLevelRows) so the three stop rows go inside Speed rather than at the top level. (2) Without the curve (next task the-speed-curve-shows-under-a-clip-and-its-stops) stops are not visible on the bar; the Properties 'Speed stop N of M' row is a dropdown so any stop can be picked and the playhead lands on it. (3) First Add seeds stops at the piece's two ends at its current speed plus the playhead, so setting the middle stop to 400% ramps normal to fast and back, the goal's own sentence; nothing changes at the moment a stop is added. (4) Stops are nailed to frames of the recording (source time), like Premiere's time remap keyframes, so a trim or split keeps them on their frames; speed is linear in timeline time between stops (closed form, exact length). (5) A key: the mock prints A, which is Premiere's Track Select Forward (already A here), so Add Speed Stop gets no key (UX-PATTERNS §7). (6) A stop at zero (mock's freeze) is not offered: a freeze is Freeze Frame; the dropdown's values are 25%..3000%. (7) Sound: Premiere leaves sound unchanged under time remap, which drifts the voice off the picture; this app silences a piece past 2x already, so a ramped piece plays silent and the Sound row says why."
+    },
+    {
+      "t": "2026-10-18T03:05:22.195Z",
+      "note": "owns these walks: speed-stops-ramp-walk"
+    },
+    {
+      "t": "2026-10-18T03:12:13.341Z",
+      "note": "Built: SpeedRamp/SpeedStop on ClipPiece (PhotonzCore/SpeedRamp.swift, SpeedStops.swift), stops pinned to source frames, speed linear in timeline time between stops (closed form), Hold flat. Every piece edit (split, trims, join, through edit, merge/copy gates, source ghost) carries or respects the ramp; offset<->source mapping used by zooms, clicks and key navigation now ramp-aware. Menus: Speed submenu rows on right-click and Clip menu; Properties: Speed stop N of M dropdown (picks and lands playhead), Speed dropdown, Between stops Ramp/Hold segmented, Sound Silent. 30 unit tests in SpeedRampTests; walk speed-stops-ramp-walk ok plus speed-a-stretch, command-r, timeline right-click x2, retimed-source, half-speed walks ok; full suite 13642 passed. Visual check: opened shots 2-5, they show 2 of 3 at Normal, 3.2s ramp bar, 4.25s under Hold, 8s after reset. Folded zero/freeze stops and the mock's Clip readout into the-speed-curve-shows-under-a-clip-and-its-stops (acceptance added). Left rough (no task): the linked sound bar's 'ramp' badge is clipped to 'ram' by its end handle at this zoom; the Speed submenu shows only one stop row set for the piece under the right-click. Sound decision (silent) is a question in the audit's evaluate list, not a card."
+    },
+    {
+      "t": "2026-10-18T03:12:36.124Z",
+      "note": "Speed stops shipped in 791a428c: Add Speed Stop / Delete Speed Stop / Reset Ramp under Speed on the clip's right-click and Clip menu; Properties shows Speed stop N of M, Speed, Between stops Ramp/Hold; frames, length and export follow the eased ramp (SpeedRampTests, 30 tests; full suite green); speed-stops-ramp-walk ok at Next defaults with export timed at 3.2s; audit queue/audits/2026-10-17-speed-stops.json. Zero/freeze stops and the curve go to the-speed-curve-shows-under-a-clip-and-its-stops."
     }
-  ]
+  ],
+  "started": "2026-10-18T02:22:57.406Z",
+  "walks": [
+    "speed-stops-ramp-walk"
+  ],
+  "completed": "2026-10-18T03:12:36.125Z"
 }

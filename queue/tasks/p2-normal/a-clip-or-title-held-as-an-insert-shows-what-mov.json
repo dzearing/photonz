@@ -4,24 +4,33 @@
   "goal": "While a recording or a title page is held over a track where letting go will insert it, the clips after the drop point are drawn already moved along by its length, so a person sees what the insert will push before they let go, the way Premiere and Final Cut preview an insert.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 247.5,
+  "seq": 240,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T15:50:01.099Z",
-  "updated": "2026-10-17T15:50:01.102Z",
+  "updated": "2026-10-18T12:19:54.093Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while doing insert-a-title-before-a-clip-on-its-track-and-ch (2026-10-17). Today an insert ghost (TimelineLaneDrop.swift ~L344, TimelineFileHover) draws the held clip with a 2px insert bar at its start and the label Insert · V1 · 0:00, but the clips it will push stay drawn where they are, under the ghost: see queue/audits/2026-10-17-title-before-clip-6-held-over-v1.png, where the ghost covers the recording it is about to push. Reproduced: Scripts/playtest.sh Scripts/playtest/insert-a-title-before-a-clip-walk.json, picture 6-held-over-v1-sc.png. The insert itself is PhotonzDocument.land(.insert) -> pushAlong (ClipLanding.swift), which moves everything starting at or after the moment on unlocked tracks and splits a clip on the landing track.",
   "acceptance": [
     "Held as an insert over a track, every clip from the drop point on, on every track the insert moves, is drawn shifted later by the held clip's length; let go, they land exactly where they were drawn",
     "Held as an overwrite, or laid over the picture on a new track, nothing is drawn moved",
-    "A walk holds a title page over V1 at the start of the recording, photographs the recording drawn moved along, and checks it lands there"
+    "A walk holds a title page over V1 at the start of the recording, photographs the recording drawn moved along, and checks it lands there",
+    "Dragging a freeze's end slides the clips after it on its track along under the hand, instead of them jumping on release"
   ],
   "log": [
     {
       "t": "2026-10-17T15:50:01.101Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T12:19:18.251Z",
+      "note": "digest 2026-10-18: same principle, second place. The Freeze Frame audit (queue/audits/2026-10-17-freeze-frame-asks-how-long.json, rough) says that while you drag a still's end, the next clip on the track jumps to its new place on release rather than sliding under the hand. Both are a drag whose effect on the clips after it is only shown after you let go. Acceptance widened."
+    },
+    {
+      "t": "2026-10-18T12:19:54.092Z",
+      "note": "seq 247.5 -> 240"
     }
   ]
 }

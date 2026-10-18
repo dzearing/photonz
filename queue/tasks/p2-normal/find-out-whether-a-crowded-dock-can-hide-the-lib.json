@@ -4,12 +4,12 @@
   "goal": "In a video whose dock is full (Captions, Transitions and the Library catalog with three rows of kind chips), the Library's tiles past the first row looked cut off under the Sections bar, and a walk could not scroll them into view. Confirm whether a person hits this too, and if so make every tile reachable.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 249.84375,
+  "seq": 270,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T02:00:41.439Z",
-  "updated": "2026-10-18T02:00:41.442Z",
+  "updated": "2026-10-18T12:19:54.283Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-17 while landing animated charts (the Animated Charts chip wraps the catalog's chips to a third row, as the mock's own chips do once a video holds pictures). Reproduction before the walk's leak was fixed: Scripts/playtest-all.sh --no-build video-library-catalog -> 'step 52 (press): scrolled 490pt and a press still could not land: \"Split Wipe\" is 62pt below the bottom of the part of its own scrolling area that is on screen, and that area would not scroll any further.' Split Wipe was in the second row only because two name cards saved by other walks led the shelf (fixed: forget all now covers saved title presets, PlaytestMemory.titlePresets). Picture of the state: dock with Captions, Transitions (squeezed) and Library at one tile row, Sections - 1 hidden. Not confirmed by hand: the harness says the shelf ScrollView's frame runs ~62pt below the dock's visible area (InspectorDockLayout squeezeFloor / LibraryShelfLayout.squeezeFloor). To reproduce: put two saved name cards on the probe (run title-pages-and-name-cards-walk with forget not covering titlePresets) then the catalog walk.",
@@ -21,6 +21,10 @@
     {
       "t": "2026-10-18T02:00:41.441Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T12:19:54.281Z",
+      "note": "seq 249.84375 -> 270"
     }
   ]
 }

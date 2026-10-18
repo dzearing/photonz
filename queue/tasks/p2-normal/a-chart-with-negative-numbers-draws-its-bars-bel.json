@@ -1,0 +1,33 @@
+{
+  "id": "a-chart-with-negative-numbers-draws-its-bars-bel",
+  "title": "A chart with negative numbers draws its bars below the line",
+  "goal": "An animated chart given a negative number, such as a quarter that lost money, draws that bar as a flat line on the baseline, so the chart says the value was nothing. Negative values should draw below the baseline the way any chart app draws them, and a row that wears the theme colour should show that colour in its swatch rather than a struck-through box that reads as no colour.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 310,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-18T12:19:30.558Z",
+  "updated": "2026-10-18T12:19:54.540Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-10-17-animated-charts.json: \"Negative values draw as a flat bar on the baseline\" and \"A row wearing the theme colour shows a struck-through swatch in its colour well, which can read as no colour at all.\" Left in the charts task log as rough on 2026-10-18; filed by the digest because a chart that draws a wrong value is broken, not a nit. Charts shipped in commit 29761749 as a title kind with a Chart section. The open card animated-charts-you-can-drop-into-a-video-do-the-six-charts-build-in-and-l is about the look, not this.",
+  "acceptance": [
+    "Reproduced first: a Bar chart with rows 40, -25, 60 photographed at the hold, and what the -25 bar does pasted into this task log",
+    "Bar and Horizontal Bars charts draw a negative value as a bar running the other way from a visible baseline, its length to scale with the positive bars (measured within 2 px at 1080p), in the canvas, playback and an MP4 export",
+    "The Line chart takes a negative point below its baseline, and the Big Number counts up to a negative number with its minus sign",
+    "A row whose colour comes from the theme shows the theme colour in its swatch, not a struck-through box",
+    "A walk at Next defaults builds the 40, -25, 60 chart, photographs it at the hold and measures the -25 bar below the baseline"
+  ],
+  "log": [
+    {
+      "t": "2026-10-18T12:19:30.561Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T12:19:54.539Z",
+      "note": "seq 249.9951171875 -> 310"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "A headline set along a curve can be put there, reshaped and keyed, but re-wording it opens the words straight in a box until you finish, and a Reveal or a colour ramp does nothing to it. Let a person type the words in place on the curve and give curved words the same letter-by-letter reveals and ramps straight words have.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 249.990234375,
+  "seq": 300,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T11:56:45.518Z",
-  "updated": "2026-10-18T11:56:45.521Z",
+  "updated": "2026-10-18T12:19:54.477Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from a-title-s-words-can-follow-a-curved-path (2026-10-18). Today: CanvasTextEditing opens the inline editor in the curve box with the words straight; DocumentRenderer skips reveal pieces when text.onPath != nil and InspectorPanel hides the Reveal section for curved words; TextRasterizer.rasterizeOnPath draws text.fillPaint flat (colorHex). Placement maths is TextOnPathLayout/PathWalk in PhotonzCore; TextRasterizer.pathLetters gives each glyph its place.",
@@ -17,12 +17,21 @@
     "Double-clicking words on a curve puts the caret on the curve and the letters stay on it while typing, as Illustrator types on a path",
     "The Reveal section shows for words on a curve and a letter-at-a-time reveal brings each letter in where it stands on the curve, in the canvas, playback and an export",
     "A colour ramp through the letters runs along the curve instead of being drawn flat",
-    "A walk at Next defaults proves all three, with a reel"
+    "A walk at Next defaults proves all three, with a reel",
+    "Measured bar: while typing, every letter's centre stays within 2 pt of the curve and turned to it within 5 degrees; half way through a letter-at-a-time reveal, the letters shown are the first half, each within 2 pt of where it stands when whole. Today's version (words drawn straight in a box while typing, and arriving whole) fails both"
   ],
   "log": [
     {
       "t": "2026-10-18T11:56:45.520Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T12:19:30.428Z",
+      "note": "digest 2026-10-18: added a measured bar the weak version fails, as the visual-work rule asks."
+    },
+    {
+      "t": "2026-10-18T12:19:54.475Z",
+      "note": "seq 249.990234375 -> 300"
     }
   ],
   "walks": [

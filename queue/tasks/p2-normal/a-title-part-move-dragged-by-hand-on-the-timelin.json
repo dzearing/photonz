@@ -4,24 +4,33 @@
   "goal": "When someone drags one of a title part's own movement bars on the timeline (the Headline's Opacity, Position or Scale), that change is thrown away the next time anything about the title changes: retiming another part, a theme, the energy or intensity. Their edit should stay, or the bar should not be draggable in a way that gets silently undone.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 245,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T14:19:16.459Z",
-  "updated": "2026-10-17T14:19:16.462Z",
+  "updated": "2026-10-18T12:19:52.825Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-17 by a core probe (Tests, deleted after): Keynote title, headline opacity motion retimed 3520->3220 ms via LayerMotion.retimed, then doc.retimeTitlePart(layerID:index:2,grab:.start,byMS:300): headline opacity back at MotionTiming(startMS: 3520, durationMS: 400). Cause: restyleTitle -> refitTitle recompiles every part (applyTitleDesign replaces motions for every property the design moves), so a direct edit of compiled keys is lost. Predates a-title-page-s-parts-each-have-their-own-labelle (any restyle did it), which makes it easier to hit. Options: store per-part overrides in the recipe, or route bar drags on a title part's compiled motions into the design (a part's in/out builds), or recompile only the part that changed.",
   "acceptance": [
     "Drag the Headline's Opacity bar 0.3 s earlier, then drag the Subtitle's start later: the Headline's Opacity bar is still where it was dragged",
     "The same holds after changing the title's theme, energy and intensity",
-    "A walk does the drag, the restyle and the check at Next defaults"
+    "A walk does the drag, the restyle and the check at Next defaults",
+    "The same holds for an animated chart: a key or effect set by hand on one bar survives changing the chart's numbers or theme"
   ],
   "log": [
     {
       "t": "2026-10-17T14:19:16.461Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T12:19:18.186Z",
+      "note": "digest 2026-10-18: same fault, second place. The animated charts audit (queue/audits/2026-10-17-animated-charts.json, rough) says changing a chart's data or theme lays its pieces out again and a key or effect set by hand on one bar is lost. Both are built pieces being rebuilt from their recipe and throwing away what the person did by hand, so one fix should cover both. Acceptance widened."
+    },
+    {
+      "t": "2026-10-18T12:19:52.824Z",
+      "note": "seq 245 -> 40"
     }
   ],
   "walks": []

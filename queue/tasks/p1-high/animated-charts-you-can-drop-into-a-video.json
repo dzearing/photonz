@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:10:09.994Z",
-  "updated": "2026-10-18T02:01:55.807Z",
+  "updated": "2026-10-18T02:08:34.505Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17), naming the video catalog's kinds: \"Like title page, name plates, animated charts, etc.\" No chart content exists in Photonz today (none found in the Library or title presets). Build on the title model (PhotonzCore TitleDesign / TitleRestyle, text reveal, motion blur, live backgrounds) rather than a separate system. Companion: 'In a video, the Library is a catalog of things built for video, grouped by kind' (its Animated Charts category stays hidden until this ships). Memory: visual work needs a measured bar and a reel.",
@@ -60,10 +60,15 @@
     {
       "t": "2026-10-18T02:01:55.806Z",
       "note": "Left rough (in the audit, not filed: none clears the bar on its own until the user judges the reel): hand-set keys on a bar lost on data change; negative values draw flat; theme-coloured row shows a struck-through swatch; line axis starts at 0. Filed: find-out-whether-a-crowded-dock-can-hide-the-lib (p2, reproduced only through a walk). Decision card on the look: animated-charts-you-can-drop-into-a-video-do-the-six-charts-build-in-and-l."
+    },
+    {
+      "t": "2026-10-18T02:08:34.503Z",
+      "note": "Six animated charts (Bar, Horizontal Bars, Line, Donut, Big Number, Comparison) as a title kind, in the video Library's Animated Charts chip and Sequence > Insert Chart, with a Chart section (rows, paste from a spreadsheet, unit, decimals) and a Count Up build; commit 29761749. Verified: 25 core tests + render tests (ink 0 at first frame, part way half way in; 5.1 to 10.3 ms medians at 1080p), animated-charts-walk green at Next defaults, touched walks green, full suite 13,615 passing. Reel + decision card for the look; audit queue/audits/2026-10-17-animated-charts.json."
     }
   ],
   "started": "2026-10-18T00:36:19.356Z",
   "walks": [
     "animated-charts-walk"
-  ]
+  ],
+  "completed": "2026-10-18T02:08:34.504Z"
 }
