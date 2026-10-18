@@ -1095,7 +1095,9 @@ struct InspectorPanel: View {
             set.insert(.text)
         }
         // How the picked text's words come in, on a video (`TextReveal.swift`).
-        if editorState.textRevealLayer != nil {
+        // Not for words on a curve, which come in whole: a reveal lays its
+        // pieces out in a box (`TextOnPath.swift`).
+        if let revealing = editorState.textRevealLayer, revealing.text?.onPath == nil {
             set.insert(.reveal)
         }
         // A picked title's few knobs, and the part of it in hand

@@ -1316,6 +1316,10 @@ final class CanvasNSView: NSView {
     let pathPickedAnchorsLayer = CAShapeLayer()
     /// The levers of the picked points: the arms and the dot on each end.
     let pathLeversLayer = CAShapeLayer()
+    /// The curve picked words are set along, drawn as a thin dashed line under
+    /// its points: the curve itself draws nothing, so without this its points
+    /// would float over the words with no line between them.
+    let pathGuideLayer = CAShapeLayer()
     /// The point the picked layer's TURN turns around (Next, `next-motion`),
     /// echoed from the editor: nil whenever nothing picked is turning.
     var motionPivot: MotionPivotHandle?

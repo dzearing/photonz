@@ -3942,6 +3942,37 @@ private final class Run {
                      + " and titled \"\(saving.windowTitle)\"",
                  state: describe())
 
+        case .action(.expectWordsFollowTheCurve):
+            let editor = try requireEditor()
+            guard let id = editor.selectedLayerID else {
+                throw Failure(description: "no layer is picked to read the words of")
+            }
+            guard let drawn = editor.playtestLastDrawn?.layer(id: id), let words = drawn.text else {
+                throw Failure(description: "the canvas has not drawn the picked text")
+            }
+            guard let onPath = words.onPath else {
+                throw Failure(description: "the picked text \"\(words.string)\" is set in a box, not on a curve")
+            }
+            let letters = TextRasterizer.pathLetters(words).compactMap { $0 }
+            guard letters.count >= 3 else {
+                throw Failure(description: "only \(letters.count) letter(s) of \"\(words.string)\" are on the curve")
+            }
+            let reading = TextOnPathReading(letters: letters, along: onPath.guide)
+            // How far the curve itself turns under the words, so a straight
+            // line cannot pass for a curve.
+            let turn = abs(Double(letters[letters.count - 1].angle - letters[0].angle)) * 180 / .pi
+            let summary = "\(letters.count) letters, worst turn off the curve "
+                + String(format: "%.2f", reading.worstTurnDegrees) + "°, worst baseline off it "
+                + String(format: "%.2f", reading.worstBaselineDistance) + " pt, the curve turning "
+                + String(format: "%.0f", turn) + "° under them"
+            guard reading.worstTurnDegrees <= 5, reading.worstBaselineDistance <= 2 else {
+                throw Failure(description: "the words do not follow the curve: " + summary)
+            }
+            guard turn >= 30 else {
+                throw Failure(description: "the curve under the words is nearly straight: " + summary)
+            }
+            note(number, step.name, "the words follow the curve: " + summary, state: describe())
+
         case .action(.expectMissingMedia):
             let opened = try requireEditor()
             let closing = try requireWindow()
@@ -7659,6 +7690,8 @@ private final class Run {
                 editor.toggleSurface()
             case .floatSelectionInFront:
                 editor.toggleFloating()
+            case .putTextOnPath:
+                editor.putSelectionTextOnPath()
             case .alignWordsLeft:
                 if let id = editor.selectedLayerID {
                     editor.setTextAlignment(layerID: id, TextAlign.left)
@@ -7669,7 +7702,8 @@ private final class Run {
                 }
             case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes,
                  .startExportAt1080p, .awaitExport, .copyVideo, .copyAsGIF, .awaitCopy,
-                 .saveProjectAs, .answerCloseExport, .expectReopenedAsSaved, .expectMissingMedia:
+                 .saveProjectAs, .answerCloseExport, .expectReopenedAsSaved, .expectMissingMedia,
+                 .expectWordsFollowTheCurve:
                 break  // handled above, where there is still a window to close
             case .closeSheets:
                 editor.isExportDialogPresented = false

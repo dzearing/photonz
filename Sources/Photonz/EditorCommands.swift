@@ -2041,6 +2041,13 @@ struct EditorCommands: Commands {
                 }
                 .disabled(!(editor?.canCombineSelection ?? false))
             }
+            // Words set along a drawn curve (`TextOnPath.swift`): beside the
+            // other commands that turn what you drew into something new, and
+            // dimmed until a text and a path are picked together.
+            if Experiments.shared.textOnPathEnabled {
+                Button(EditorState.putTextOnPathTitle) { editor?.putSelectionTextOnPath() }
+                    .disabled(!(editor?.canPutTextOnPath ?? false))
+            }
             // The two the icon mock's Layers panel menu puts together: Join
             // under the name every other drawing program gives it, with the
             // mock's key, and a line turned into the filled shape it draws

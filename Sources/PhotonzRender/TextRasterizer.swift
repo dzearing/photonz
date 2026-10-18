@@ -67,6 +67,9 @@ public enum TextRasterizer {
                                  outlines: [TextOutline],
                                  scale: CGFloat = 1) -> CGImage? {
         guard scale > 0, scale.isFinite else { return nil }
+        // Words set along a curve are drawn a letter at a time, each on the
+        // curve and turned to it (`TextOnPath.swift`).
+        if text.onPath != nil { return rasterizeOnPath(text, size: size, outlines: outlines, scale: scale) }
         // Words that stay on one line give way here, before anything is laid
         // out, so everything below — the box, the alignment, the halo — is
         // working on the string that actually fits.
@@ -979,5 +982,109 @@ extension TextWeight {
         case .semibold: 0.3
         case .bold: 0.4
         }
+    }
+}
+
+// MARK: - Words on a curve
+
+extension TextRasterizer {
+
+    /// The words of a text on a curve as one straight line of type, the
+    /// way they would be set before the curve bends them: a break is a space.
+    private static func pathLine(_ text: TextContent, borderWidth: CGFloat = 0,
+                                 borderColorHex: String = "#000000") -> CTLine {
+        var straight = text
+        straight.string = TextOnPath.lineOfWords(text.string)
+        straight.alignment = nil
+        straight.lineHeight = nil
+        return CTLineCreateWithAttributedString(
+            attributedString(straight, borderWidth: borderWidth, borderColorHex: borderColorHex))
+    }
+
+    /// Each glyph of a line: the run it is in, its index there, and where it
+    /// sits along the line and how far it advances.
+    private static func glyphs(of line: CTLine) -> [(run: CTRun, index: Int, glyph: TextOnPathLayout.Glyph)] {
+        var out: [(run: CTRun, index: Int, glyph: TextOnPathLayout.Glyph)] = []
+        let runs = CTLineGetGlyphRuns(line) as? [CTRun] ?? []
+        for run in runs {
+            let count = CTRunGetGlyphCount(run)
+            guard count > 0 else { continue }
+            var positions = [CGPoint](repeating: .zero, count: count)
+            var advances = [CGSize](repeating: .zero, count: count)
+            CTRunGetPositions(run, CFRange(location: 0, length: count), &positions)
+            CTRunGetAdvances(run, CFRange(location: 0, length: count), &advances)
+            for index in 0..<count {
+                out.append((run, index, TextOnPathLayout.Glyph(x: positions[index].x,
+                                                               width: advances[index].width)))
+            }
+        }
+        return out
+    }
+
+    /// Where every letter of a text on a curve goes, in the layer's own
+    /// coordinates, nil for one off the end of the curve: one entry per glyph
+    /// drawn. The same answer the picture is drawn from, which is what lets a
+    /// walk read how well the letters follow the curve.
+    public static func pathLetters(_ text: TextContent) -> [PathLetter?] {
+        guard let onPath = text.onPath, text.fontSize > 0 else { return [] }
+        let walk = PathWalk(onPath.guide)
+        return TextOnPathLayout.letters(glyphs(of: pathLine(text)).map(\.glyph), on: walk,
+                                        startDistance: onPath.startDistance(along: walk))
+    }
+
+    /// Words drawn along their curve, a letter at a time: each glyph's
+    /// baseline on the curve and the glyph turned to the way it runs there.
+    ///
+    /// The picture is `TextOnPath.reach` bigger than the box on every side,
+    /// because letters stand off the curve and the curve runs to the box's
+    /// edges; the renderer is told the same reach (`Layer.contentOutset`) and
+    /// centres the picture on the box. Outlines go under the letters widest
+    /// first, as they do on words in a box. A ramp through the letters is
+    /// drawn in its flat colour here.
+    static func rasterizeOnPath(_ text: TextContent, size: CGSize, outlines: [TextOutline],
+                                scale: CGFloat) -> CGImage? {
+        guard let onPath = text.onPath else { return nil }
+        let pad = TextOnPath.reach(fontSize: text.fontSize)
+        let width = Int(((size.width + 2 * pad) * scale).rounded())
+        let height = Int(((size.height + 2 * pad) * scale).rounded())
+        guard width >= 1, height >= 1,
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        guard text.fontSize > 0, !text.string.isEmpty else { return context.makeImage() }
+        // Top-left coordinates in document points, measured from the box's
+        // corner, the space the curve is stored in.
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        context.translateBy(x: pad, y: pad)
+        context.textMatrix = .identity
+
+        let walk = PathWalk(onPath.guide)
+        let start = onPath.startDistance(along: walk)
+        func draw(_ line: CTLine) {
+            let set = glyphs(of: line)
+            let letters = TextOnPathLayout.letters(set.map(\.glyph), on: walk, startDistance: start)
+            for (item, letter) in zip(set, letters) {
+                guard let letter else { continue }
+                context.saveGState()
+                context.translateBy(x: letter.origin.x, y: letter.origin.y)
+                context.rotate(by: letter.angle)
+                // Back to type's own upward y, so the letter stands up off
+                // the curve rather than hanging under it upside down.
+                context.scaleBy(x: 1, y: -1)
+                context.translateBy(x: -item.glyph.x, y: 0)
+                context.textPosition = .zero
+                CTRunDraw(item.run, context, CFRange(location: item.index, length: 1))
+                context.restoreGState()
+            }
+        }
+        for outline in outlines.filter({ $0.width > 0 }).sorted(by: { $0.width > $1.width }) {
+            var underlay = text
+            underlay.colorHex = outline.colorHex
+            draw(pathLine(underlay, borderWidth: outline.width * 2, borderColorHex: outline.colorHex))
+        }
+        draw(pathLine(text))
+        return context.makeImage()
     }
 }

@@ -609,6 +609,9 @@ extension Experiments {
     /// `next-animated-charts`: the charts on the shelf, in Sequence > Insert
     /// Chart, and the Chart section that edits their data.
     var animatedChartsEnabled: Bool { isEnabled(FeatureCatalog.animatedChartsFlag) }
+    /// `next-text-on-path`: Put Text on a Path, the curve's points on the
+    /// words, and the Start row.
+    var textOnPathEnabled: Bool { isEnabled(FeatureCatalog.textOnPathFlag) }
     /// `next-motion-blur`: Motion Blur in the Effects list on video, and on
     /// the built-in titles.
     var motionBlurEnabled: Bool { isEnabled(FeatureCatalog.motionBlurFlag) }

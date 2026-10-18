@@ -1,0 +1,61 @@
+{
+  "feature": "A title's words follow a drawn curve",
+  "epic": "video-titles-graphics",
+  "task": "a-title-s-words-can-follow-a-curved-path",
+  "summary": "Pick a title and a curve you drew with the Pen, choose Put Text on a Path, and the words stand on the curve one letter at a time, each turned to it. Drag the curve's points and the words reflow; Start in the Text section moves them along the curve and can be keyed so they travel, on the canvas, in playback and in an exported MP4.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (Help > Sample Recording) and put the playhead at 0:01.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press T, click in the top right of the picture, type Follow the curve and press Command-Return.",
+      "shot": "2026-10-18-text-on-a-path-1-headline-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press P and draw a curve: press and drag a lever from its first point, then press and drag at its last point, then press Return.",
+      "shot": "2026-10-18-text-on-a-path-2-curve-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Shift-click the headline so both are picked, right-click it and choose Put Text on a Path (it is in the Layer menu too).",
+      "shot": "2026-10-18-text-on-a-path-3-right-click-sc.png"
+    },
+    {
+      "do": "Look at the words on the curve, with the curve's two points and its dashed line on them.",
+      "shot": "2026-10-18-text-on-a-path-4-on-the-curve-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the curve's end point down and to the right and watch the words reflow.",
+      "shot": "2026-10-18-text-on-a-path-5-reshaped-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the Text section type -60 in Start and click its diamond; step one second on, type 0 in Start; play from 0:01.",
+      "shot": "2026-10-18-text-on-a-path-6-travelling-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Double-click the words, type new ones and press Command-Return: they go back onto the same curve.",
+      "shot": "2026-10-18-text-on-a-path-7-reworded-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Reel: 2026-10-18-text-on-a-path-reel.gif (and .mp4, contact sheet 2026-10-18-text-on-a-path-reel-contact.png), frames of the exported MP4. Is words travelling along the curve and arriving the motion you pictured?",
+    "Is the right-click on the picked headline, plus the Layer menu, where you would look for Put Text on a Path?",
+    "Do the curve's dashed line and its two points, shown only while the words are picked, tell you the curve is there to reshape?",
+    "Is Start, a percent of the curve's length beside the key diamond, the control you expected for moving the words along it?",
+    "When the words are longer than the curve, the letters past its end are not drawn, as SVG and Photoshop do. Is that right, or should the curve show that words are cut off?"
+  ],
+  "rough": [
+    "Matches the mock (video-motion.html, Techniques, Text on a path), side by side in 2026-10-18-text-on-a-path-beside-the-mock.png: the words stand on the curve turned to it, and the specimen's dashed guide matches the dashed line the app shows while the words are picked. The mock's app frame draws no line under its kicker either (its path has no stroke).",
+    "The specimen's small cyan capitals are a text style, not part of the feature: the walk used the default title style (Georgia Bold 80), and any font, size, colour, tracking, shadow or outline carries onto the curve.",
+    "The mock lists Put text on a path in the canvas's command surface, which in the shipping app is the menu bar (UX-PATTERNS §D3): it is in the Layer menu, and on the right-click of the words as every action is.",
+    "Re-wording by double-click opens the words straight in their box until Command-Return puts them back on the curve; Illustrator types in place on the curve. Task words-on-a-curve-are-typed-on-the-curve-and-come.",
+    "Words on a curve come in whole: the Reveal section is hidden for them and a colour ramp through the letters is drawn in its flat colour. Task words-on-a-curve-are-typed-on-the-curve-and-come.",
+    "Across and Down are hidden for words on a curve, since the curve places them. There is no command to take the words off the curve again; Undo does it.",
+    "The selection box is the curve's box, so letters stand outside it on the outer side of a bend; clicking a letter outside that box does not pick the words.",
+    "Measured bar: every letter as the canvas drew it is within 0.03 degrees of the curve's direction under it and within 0.3 points of the curve, on a quarter circle turning 75 degrees, through putting on, reshaping, Start, keys and re-wording (text-on-a-path-walk). Words set flat or all at one angle fail the same reading (TextOnPathTests)."
+  ]
+}

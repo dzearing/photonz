@@ -54,7 +54,9 @@ extension CanvasNSView {
     /// its points. Under the Pen a press inside a shape starts the next shape,
     /// so nothing there may be a knob.
     private var pathCornerKnobsOffered: Bool {
-        tool == .select && editablePath != nil
+        // A curve words are set along has no corners to round: the words
+        // follow its points, not a rounded outline (`TextOnPath.swift`).
+        tool == .select && editablePath?.layer.path != nil
     }
 
     /// The corner whose knob is under `p` (document coordinates), if any.

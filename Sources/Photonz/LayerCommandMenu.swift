@@ -147,6 +147,11 @@ enum LayerCommandList {
                                      }
                                  }))
         }
+        // A text and a path picked together: the words go onto the curve.
+        // Absent rather than dimmed, like every row here.
+        if editorState.canPutTextOnPath(id: id) {
+            rows.append(.command(EditorState.putTextOnPathTitle) { editorState.putTextOnPath(id: id) })
+        }
         // Join under the name the icon mock gives it, and a line turned into
         // the filled shape it draws (`OutlineStroke.swift`), beside Combine
         // Shapes. Absent rather than dimmed, like every row here.

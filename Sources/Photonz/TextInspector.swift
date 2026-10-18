@@ -134,10 +134,16 @@ struct TextInspector: View {
                         setTracking: { editorState.setTextSpacing(ids: pickedIDs, tracking: $0) },
                         setLeading: { editorState.setTextSpacing(ids: pickedIDs, lineHeight: .some($0)) })
                 }
+                // Words set along a curve: where along it they start
+                // (`TextOnPath.swift`).
+                if let start = editorState.textPathStart { TextPathStartRow(start: start) }
                 // Where the words sit inside their own boxes. Only tells while
                 // a box is bigger than its words, which is what a box told to
                 // stretch is (Next, `next-placement`).
-                if Experiments.shared.placementEnabled { alignRow(selection, ids: ids) }
+                // Words on a curve sit on the curve, so neither applies to them.
+                if Experiments.shared.placementEnabled, editorState.textPathStart == nil {
+                    alignRow(selection, ids: ids)
+                }
                 SelectionStyleNotes(notes: [selection.note,
                                             Experiments.shared.placementEnabled
                                                 ? selection.downTheBoxNote : nil,

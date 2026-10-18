@@ -1,0 +1,38 @@
+{
+  "id": "a-title-s-words-can-follow-a-curved-path-do-words-travelling-along-a-curv",
+  "taskId": "a-title-s-words-can-follow-a-curved-path",
+  "question": "Do words travelling along a curve look the way you want as they arrive?",
+  "context": "Reel: queue/audits/2026-10-18-text-on-a-path-reel.gif (and .mp4), contact sheet 2026-10-18-text-on-a-path-reel-contact.png, app beside the mock 2026-10-18-text-on-a-path-beside-the-mock.png. Measured in the walk: every letter within 0.03 degrees of the curve and 0.3 points of it.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep it: letters pop on at the curve start",
+      "summary": "Each letter appears the moment it reaches the start of the curve and is gone once it runs past the end, the way SVG and Photoshop set type on a path.",
+      "pros": [
+        "What every tool with type on a path does",
+        "The words are crisp the whole way along"
+      ],
+      "cons": [
+        "The first letter to arrive pops on rather than easing in"
+      ],
+      "mitigation": "Fade the whole title in with its Fade In row when a softer arrival is wanted."
+    },
+    {
+      "id": "b",
+      "label": "Soft ends: letters fade in at the start and out at the end",
+      "summary": "Over the first and last tenth of the curve each letter fades from nothing to full and back, so the words seem to grow out of the curve and melt off its end.",
+      "pros": [
+        "Smoother arrival with no extra keys",
+        "Reads as motion design rather than a cut"
+      ],
+      "cons": [
+        "Letters near the ends of a still title are pale",
+        "Unlike Photoshop and SVG"
+      ],
+      "mitigation": "Only while Start is keyed, so a still title on a curve is fully solid."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-18T11:57:39.459Z"
+}

@@ -24,7 +24,7 @@ extension MotionProperty {
                                                   .cornerRadius, .shadow, .shadowDistance,
                                                   .shadowDirection, .shadowColor, .shadowOpacity,
                                                   .glow, .glowColor, .glowOpacity, .borderWidth,
-                                                  .borderColor, .textSize, .gradientShift, .trimStart, .trimEnd,
+                                                  .borderColor, .textSize, .gradientShift, .pathStart, .trimStart, .trimEnd,
                                                   .backgroundBlur, .backgroundZoom]
         + MotionProperty.gradeProperties
 }

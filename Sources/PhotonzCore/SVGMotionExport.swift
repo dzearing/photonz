@@ -162,7 +162,7 @@ enum MotionSVG {
                 }
                 wrap.omitPaint.insert(role)
                 push(" \(role)=\"\(track.base)\"", [track.element])
-            case .blur, .cornerRadius, .shadow, .textSize, .glow, .gradientShift,
+            case .blur, .cornerRadius, .shadow, .textSize, .glow, .gradientShift, .pathStart,
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
@@ -311,7 +311,7 @@ enum MotionSVG {
         case .strokeWidth:
             element = "animate"
             attributes = "attributeName=\"stroke-width\""
-        case .blur, .cornerRadius, .shadow, .textSize, .glow, .gradientShift,
+        case .blur, .cornerRadius, .shadow, .textSize, .glow, .gradientShift, .pathStart,
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
@@ -546,7 +546,7 @@ private extension MotionProperty {
     var isTransform: Bool {
         switch self {
         case .position, .rotation, .scale: true
-        case .opacity, .color, .strokeWidth, .blur, .cornerRadius, .shadow, .textSize, .glow, .gradientShift,
+        case .opacity, .color, .strokeWidth, .blur, .cornerRadius, .shadow, .textSize, .glow, .gradientShift, .pathStart,
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,

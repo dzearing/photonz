@@ -115,6 +115,9 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// start on the first letter, one puts its end on the last. A title sweeps
     /// colour through its words by keying this (`MotionProperty.gradientShift`).
     public var fillShift: Double?
+    /// The curve these words are set along, letter by letter, or nil for
+    /// words set in their box (`TextOnPath.swift`).
+    public var onPath: TextOnPath?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
                 colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
@@ -165,6 +168,8 @@ public struct TextContent: Hashable, Codable, Sendable {
         fill = try container.decodeIfPresent(Paint.self, forKey: .fill)
         fillLength = try container.decodeIfPresent(Double.self, forKey: .fillLength)
         fillShift = try container.decodeIfPresent(Double.self, forKey: .fillShift)
+        // Words on a curve postdate everything: older text sits in its box.
+        onPath = try container.decodeIfPresent(TextOnPath.self, forKey: .onPath)
     }
 }
 
@@ -214,6 +219,7 @@ extension TextContent {
         lineHeight = existing.lineHeight
         fillLength = existing.fillLength
         fillShift = existing.fillShift
+        onPath = existing.onPath
         if let ramp = existing.fillPaint, ramp.hex.caseInsensitiveCompare(colorHex) == .orderedSame {
             fill = ramp
         }

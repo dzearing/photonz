@@ -891,6 +891,17 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless the project in the window opened without some of its
     /// files AND says which, on a sheet on its window.
     case expectMissingMedia
+    /// Fail unless the picked text is set along a curve, as the canvas last
+    /// drew it: every letter's turn within 5 degrees of the curve's own
+    /// direction under that letter and its baseline within 2 points of the
+    /// curve, read against the curve by itself (`TextOnPathReading`), and
+    /// the curve turning far enough for that to mean something. Words set
+    /// flat, or all turned by one angle, fail it.
+    case expectWordsFollowTheCurve
+    /// What Layer > Put Text on a Path runs, over the selection: the stand-in
+    /// for a walk that cannot open the menu bar (the probe is not in front).
+    /// The menu row itself is proven by a walk that takes the front.
+    case putTextOnPath
     /// Open the New Canvas sheet, so a walk can photograph it. A snapshot
     /// taken while a sheet is up photographs the sheet.
     /// The guided tutorials, driven from a walk (`TutorialController`).

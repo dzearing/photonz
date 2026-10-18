@@ -408,7 +408,17 @@ extension PathBuilder {
     public static func refit(_ layer: Layer, content: PathContent) -> Layer {
         let box = content.bounds
         var fitted = layer
-        fitted.content = .path(content.offsetBy(dx: -box.origin.x, dy: -box.origin.y))
+        let local = content.offsetBy(dx: -box.origin.x, dy: -box.origin.y)
+        // Words on a curve are reshaped by their curve, and stay words
+        // (`TextOnPath.swift`).
+        if var words = layer.text, var onPath = words.onPath {
+            onPath.guide = local
+            words.onPath = onPath
+            fitted.content = .text(words)
+            fitted.frame = PathEditSpace(layer: layer).steadyFrame(contentBounds: box)
+            return fitted
+        }
+        fitted.content = .path(local)
         fitted.frame = PathEditSpace(layer: layer).steadyFrame(contentBounds: box)
         return fitted
     }

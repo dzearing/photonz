@@ -134,7 +134,7 @@ extension CanvasNSView {
     var editablePath: (id: UUID, layer: Layer, content: PathContent)? {
         guard Experiments.shared.reshapePathEnabled, toolCanReshapeAPath,
               let id = selectedLayerID, let layer = document?.canvasLayer(id: id),
-              let content = layer.path, offersOwnHandles(layer) else { return nil }
+              let content = layer.reshapablePath, offersOwnHandles(layer) else { return nil }
         return (id, layer, content)
     }
 
@@ -541,7 +541,7 @@ extension CanvasNSView {
     /// hand drew, and it takes the points it visibly goes round, so a turned
     /// shape answers a sweep the same way a straight one does.
     private func pathPointSweepCatch(_ sweep: PathPointSweepDrag) -> Set<Int> {
-        guard let content = document?.canvasLayer(id: sweep.layerID)?.path else { return [] }
+        guard let content = document?.canvasLayer(id: sweep.layerID)?.reshapablePath else { return [] }
         return content.anchorIndices(in: pathPointSweepRect(sweep), of: sweep.space)
     }
 
@@ -671,7 +671,13 @@ extension CanvasNSView {
         pathCornerKnobsLayer.zPosition = 99
         pathCornerKnobsLayer.lineWidth = 1
 
-        for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer,
+        pathGuideLayer.fillColor = nil
+        pathGuideLayer.isHidden = true
+        pathGuideLayer.zPosition = 96
+        pathGuideLayer.lineWidth = 1
+        pathGuideLayer.lineDashPattern = [4, 3]
+
+        for shape in [pathGuideLayer, pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer,
                       pathCornerKnobsLayer] {
             layer?.addSublayer(shape)
         }
@@ -687,7 +693,7 @@ extension CanvasNSView {
     /// you can still see what you are editing.
     func refreshPathEditChrome() {
         guard let viewport, let picked = editablePath else {
-            for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer,
+            for shape in [pathGuideLayer, pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer,
                           pathCornerKnobsLayer] {
                 shape.isHidden = true
                 shape.path = nil
@@ -720,6 +726,32 @@ extension CanvasNSView {
             viewport.viewPoint(fromDocument: space.document(local))
         }
         let accent = NSColor.controlAccentColor.cgColor
+
+        // Words on a curve: the curve itself, which draws nothing of its own,
+        // as a thin dashed line in the accent, the guide the mock's "Follow
+        // the curve" card draws. Traced through the same mapping as the dots,
+        // so it bends under them while they are dragged.
+        if picked.layer.path == nil {
+            let guide = CGMutablePath()
+            for (index, run) in content.segments.enumerated() {
+                if index == 0 { guide.move(to: chromePoint(run.start)) }
+                let steps = run.isStraight ? 1 : 32
+                for step in 1...steps {
+                    let t = CGFloat(step) / CGFloat(steps)
+                    let local = run.isStraight
+                        ? CGPoint(x: run.start.x + (run.end.x - run.start.x) * t,
+                                  y: run.start.y + (run.end.y - run.start.y) * t)
+                        : run.point(at: t)
+                    guide.addLine(to: chromePoint(local))
+                }
+            }
+            pathGuideLayer.path = guide
+            pathGuideLayer.strokeColor = accent
+            pathGuideLayer.isHidden = guide.isEmpty
+        } else {
+            pathGuideLayer.isHidden = true
+            pathGuideLayer.path = nil
+        }
 
         // The levers first, so the arms run UNDER the dots rather than across
         // them. They belong to ONE picked point: a box that sweeps up thirty

@@ -512,7 +512,7 @@ public struct LayerGeometryEditing: Hashable, Sendable {
         // ROOM the words then sit in, so the shortest it can be is the words
         // themselves. Counted without the room the renderer draws them in,
         // because the field speaks the box a person sees.
-        let textHeightFloor: CGFloat? = if case .text(let content) = layer.content {
+        let textHeightFloor: CGFloat? = if case .text(let content) = layer.content, content.onPath == nil {
             max(LayerGeometry.minimumSide,
                 TextMeasurement.size(of: content, wrappingAt: layer.frame.standardized.width)
                     .height - layer.boxSlack.height)

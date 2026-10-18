@@ -764,7 +764,7 @@ enum MotionEntry {
         case .rotation, .shadowDirection, .rotationX, .rotationY, .cameraPerspective: "°"
         case .scale, .opacity, .shadowOpacity, .glowOpacity,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
-             .backgroundZoom, .trimStart, .trimEnd, .gradeSaturation, .gradientShift: "%"
+             .backgroundZoom, .trimStart, .trimEnd, .gradeSaturation, .gradientShift, .pathStart: "%"
         // The app's ONE word for a length (`DocumentUnit`), not a second one
         // of this panel's own: a thickness on a motion row and a thickness in
         // Appearance are the same distance.

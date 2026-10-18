@@ -1220,7 +1220,10 @@ public final class DocumentRenderer: @unchecked Sendable {
             // piece's own picture, kept until the words change
             // (`TextRevealRasterizer.swift`). Once the last piece is home it is
             // the ordinary picture again, pixel for pixel.
+            // Words on a curve come in whole: a reveal lays its pieces out in
+            // a box, and these words are not in one.
             if let reveal = text.reveal, let elapsed = text.revealElapsedMS, text.wordPaint == nil,
+               text.onPath == nil,
                let pieces = revealPieces(for: still, size: layer.frame.size, box: boxInPoints,
                                          outlines: outlines, bake: bake, variant: variant, unit: reveal.unit),
                // Under a motion blur a piece landing still smears until the

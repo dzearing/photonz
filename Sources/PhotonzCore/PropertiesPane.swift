@@ -114,7 +114,7 @@ public enum PropertyPicker {
             case .trimStart, .trimEnd: return "Appearance"
             case .rotationX, .rotationY, .depth, .pivotDepth: return "3D"
             case .cameraPerspective, .cameraDepth, .cameraX, .cameraY: return "Camera"
-            case .textSize, .gradientShift: return "Text"
+            case .textSize, .gradientShift, .pathStart: return "Text"
             case .cropLeft, .cropTop, .cropRight, .cropBottom: return "Crop"
             }
         }

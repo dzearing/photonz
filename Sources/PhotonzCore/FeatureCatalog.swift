@@ -277,6 +277,8 @@ public enum FeatureCatalog {
 
     public static let animatedChartsFlag = "next-animated-charts"
 
+    public static let textOnPathFlag = "next-text-on-path"
+
     public static let motionBlurFlag = "next-motion-blur"
 
     public static let colorGradeFlag = "next-color-grade"
@@ -1006,6 +1008,16 @@ public enum FeatureCatalog {
                     name: titleBackgroundsFlag,
                     title: "Title backgrounds that move",
                     description: "Ten moving title backgrounds picked from tiles that play, the Aurora and Behind Glass pages, Grain in the Effects list, a Zoom on a background blur, and Trim keys on lines. Off means title backgrounds stay still.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: textOnPathFlag,
+                    title: "Text on a path",
+                    description: "Put Text on a Path sets a title's words along a drawn curve, reshaped by its points and moved along it by a keyable Start. Off means words stay in their box.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

@@ -301,6 +301,12 @@ extension PhotonzDocument {
         // fell out of the bottom of the bar.
         var content = content
         content.staysOnOneLine = existing.text?.staysOnOneLine
+        // Words on a curve stay on it, in the curve's box: re-wording them is
+        // not a reason to set them back in a straight line.
+        if let onPath = existing.text?.onPath {
+            content.onPath = onPath
+            local = existing.frame
+        }
         updateLayer(id: id) {
             $0.content = .text(content)
             $0.frame = local

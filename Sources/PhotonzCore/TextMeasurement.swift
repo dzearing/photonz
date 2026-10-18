@@ -386,7 +386,8 @@ extension Layer {
     /// edge `anchor` pins, so a centred label stays centred and a title that
     /// starts at the left still starts there.
     func textRefitted(hugging: Bool, anchor: HorizontalPlacement) -> Layer {
-        guard case .text(let content) = self.content else { return self }
+        // Words on a curve live in the curve's box, whatever they say.
+        guard case .text(let content) = self.content, content.onPath == nil else { return self }
         let box = frame.standardized
         var size = hugging ? TextMeasurement.size(of: content)
                            : TextMeasurement.size(of: content, wrappingAt: box.width)

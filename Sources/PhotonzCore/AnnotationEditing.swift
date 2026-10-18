@@ -108,7 +108,9 @@ extension Layer {
     /// re-wrap, and vertical handle drags don't stretch glyphs. Other content
     /// resizes freely in both axes.
     public var resizeWidthOnly: Bool {
-        if case .text = content { return true }
+        // Words on a curve are resized by their curve, both ways
+        // (`TextOnPath.swift`).
+        if case .text(let words) = content { return words.onPath == nil }
         return false
     }
 
@@ -263,6 +265,7 @@ extension Layer {
                         chosenByHand: Bool = false) -> Layer {
         if annotation != nil { return AnnotationBuilder.resized(self, to: frame) }
         if path != nil { return PathBuilder.resized(self, to: frame) }
+        if text?.onPath != nil { return resizedOnPath(to: frame) }
         if measure != nil { return MeasureBuilder.resized(self, to: frame) }
         if zoomCallout != nil { return ZoomCalloutBuilder.resized(self, to: frame) }
         if let group {
