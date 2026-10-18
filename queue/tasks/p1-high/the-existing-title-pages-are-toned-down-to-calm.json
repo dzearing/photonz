@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-18T16:27:50.933Z",
-  "updated": "2026-10-18T16:27:51.043Z",
+  "updated": "2026-10-18T20:11:20.326Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-18), after viewing the Apple-level mock: \"these look so much better. The existing title pages are far too busy so i think we need to audit them and tone them down to make them a little more presentable and more subtle\". The card on title-pages-that-look-like-apple-designed-them was resolved b (build all ten, old set under More styles) with these words. Existing set: PhotonzCore/TitleSet.swift (12 built-ins), live backgrounds from title-backgrounds-that-are-alive-auroras-energy, entrances from title-text-visibly-comes-in-and-every-built-in-t. Memory: visual work needs a measured bar the weak version fails, and a reel for the user.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-18T16:27:51.042Z",
       "note": "seq 55 -> 1.09"
+    },
+    {
+      "t": "2026-10-18T20:11:20.325Z",
+      "note": "From title-pages-that-look-like-apple-designed-them (2026-10-18): the More Styles grouping is built (Library header and Insert submenu, BuiltInTitle.isMoreStyle), so acceptance item 4's grouping is done; what is left is the toning down itself. Old-set rule tests now run over TitleSetTests.twelve; TitleCalmMockTests is a model for measuring before/after frames."
     }
   ]
 }

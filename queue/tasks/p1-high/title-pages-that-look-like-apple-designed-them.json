@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.08,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:18:32.752Z",
-  "updated": "2026-10-18T16:27:56.939Z",
+  "updated": "2026-10-18T20:11:36.669Z",
   "deps": [
     "title-text-can-be-set-like-apple-sets-it-trackin"
   ],
@@ -67,7 +67,27 @@
     {
       "t": "2026-10-18T16:27:56.937Z",
       "note": "seq 10 -> 1.08"
+    },
+    {
+      "t": "2026-10-18T18:51:24.295Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T20:04:17.031Z",
+      "note": "owns these walks: apple-title-pages-walk"
+    },
+    {
+      "t": "2026-10-18T20:11:20.392Z",
+      "note": "Built all ten (TitleSetCalm.swift): mock transcribed part by part; TitleBuild gains blur/scale alongside its move; More Styles header on the Catalog and submenu in Insert/Add Title Page. Measured beside the mock's own frames (TitleCalmMockTests, gated): 0.2 to 2.8 of 255 for nine at every moment, Editorial 5.6 (New York's headline cut; CoreText already sizes it optically, my renderer theory was wrong and reverted). Fixed: re-wording a title's words added a halo then two big shadows (commitTextEdit). Walks: new apple-title-pages-walk at Next defaults; 20 walks moved to Add Title Page > More Styles > ..., four tile walks moved to the new tiles (Behind Glass found by search). Looked at: beside-mock sheet (all ten rows), the ten app hold frames at full size, Editorial and Sessions Stage crops, walk pictures 0-searched/2a-quarter/3-holding: calm type on still backgrounds, entrances mid-flight at 25%, no shadow on typed words. Left rough, under the bar: Sessions Stage and Film Super lights are round where the mock's are ovals (within 2.8 of 255); kept in the approval card."
+    },
+    {
+      "t": "2026-10-18T20:11:36.667Z",
+      "note": "Built all ten mock title pages as the first title pages (Library Catalog and Insert/Add Title Page), old set under More Styles. Measured beside the mock's frames at 0/25/50/100% of each in and the hold: 0.2 to 2.8 of 255 for nine, Editorial 5.6 (New York headline cut, on the approval card). Reel, sheet and audit under queue/audits/2026-10-18-apple-titles-*; walk apple-title-pages-walk green at Next defaults; full suite green (13,734 tests). Approval card open: title-pages-that-look-like-apple-designed-them-the-ten-title-pages-are-built-fr."
     }
   ],
-  "started": "2026-10-17T19:39:51.618Z"
+  "started": "2026-10-18T18:51:24.294Z",
+  "walks": [
+    "apple-title-pages-walk"
+  ],
+  "completed": "2026-10-18T20:11:36.668Z"
 }
