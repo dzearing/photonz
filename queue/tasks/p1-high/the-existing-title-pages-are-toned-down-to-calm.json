@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.09,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T16:27:50.933Z",
-  "updated": "2026-10-18T21:39:12.646Z",
+  "updated": "2026-10-18T21:39:33.151Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-18), after viewing the Apple-level mock: \"these look so much better. The existing title pages are far too busy so i think we need to audit them and tone them down to make them a little more presentable and more subtle\". The card on title-pages-that-look-like-apple-designed-them was resolved b (build all ten, old set under More styles) with these words. Existing set: PhotonzCore/TitleSet.swift (12 built-ins), live backgrounds from title-backgrounds-that-are-alive-auroras-energy, entrances from title-text-visibly-comes-in-and-every-built-in-t. Memory: visual work needs a measured bar the weak version fails, and a reel for the user.",
@@ -57,6 +57,10 @@
     {
       "t": "2026-10-18T21:39:12.645Z",
       "note": "Left rough, not filed (each is by design and put to the user on the approval card rather than a task): Kinetic Bold's saturated blue, Gradient Glow's faint aurora streaks, Keynote Clean's dim specks, Terminal's slow grid. TitleMoreStylesCalmReelTests stays as the tool that films any future before/after."
+    },
+    {
+      "t": "2026-10-18T21:39:33.149Z",
+      "note": "Twelve older styles toned down in TitleSet.swift: one gentle move per part, no springs or 3D, ins under a second on expo, outs 0.3-0.45 s on sine, live backgrounds at a third or less with grain off and faint glows, one hue family, set type. Measured: background motion at most half of before for all twelve (TitleMoreStylesCalmFramesTests; Light Leak 12.8->1.4, Keynote 8.3->2.0). Full suite 13,744 green; 39 walks using these styles pass. Audit queue/audits/2026-10-18-the-existing-title-pages-are-toned-down-to-calm.json, reel and before/after sheet, approval card open for the user to judge."
     }
   ],
   "started": "2026-10-18T20:30:43.931Z",
@@ -70,5 +74,6 @@
     "timeline-sub-layer-rows-walk",
     "title-part-rows-retime-walk",
     "video-library-catalog-walk"
-  ]
+  ],
+  "completed": "2026-10-18T21:39:33.150Z"
 }
