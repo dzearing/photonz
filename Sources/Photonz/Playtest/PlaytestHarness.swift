@@ -1980,7 +1980,7 @@ private final class Run {
             }
             try await windowClick(at: target.point, saying: "the middle of \"\(control)\"",
                                   count: count, modifiers: modifiers, number: number)
-        case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers, let cancel):
+        case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers, let cancel, let rise):
             // A grip on the timeline pulled by real mouse moves, and where it
             // was DRAWN read back after every one (`GripTrace`). The fault it
             // exists for lives between pictures: a bar end that lands half way
@@ -2015,7 +2015,8 @@ private final class Run {
             var cancelled = ""
             for i in 1...steps {
                 let x = start.x + by * CGFloat(i) / CGFloat(steps)
-                post(.leftMouseDragged, at: CGPoint(x: x, y: start.y), pressure: 1)
+                // Window points count up from the bottom, so a rise adds.
+                post(.leftMouseDragged, at: CGPoint(x: x, y: start.y + rise * CGFloat(i) / CGFloat(steps)), pressure: 1)
                 // One frame and a bit: what a person sees before the next move.
                 await sleep(0.03)
                 if cancel, i == steps / 2 {
@@ -2049,13 +2050,13 @@ private final class Run {
                 await screenCapture(window, name: hold)
                 held = ", held \(hold).png"
             }
-            post(.leftMouseUp, at: CGPoint(x: start.x + by, y: start.y), pressure: 0)
+            post(.leftMouseUp, at: CGPoint(x: start.x + by, y: start.y + rise), pressure: 0)
             await sleep(0.3)
             await giveTheFrontBack(front)
             let trace = GripTrace(samples)
             try SafeJSON.data(from: readings, options: [.prettyPrinted])?
                 .write(to: out.appendingPathComponent("grip-trace-\(number).json"))
-            note(number, "dragGrip", "\(control) pulled \(short(CGPoint(x: by, y: 0))) in \(steps) moves: "
+            note(number, "dragGrip", "\(control) pulled \(short(CGPoint(x: by, y: -rise))) in \(steps) moves: "
                  + trace.summary + held + cancelled + front.note)
             if let within, !trace.follows(within: within) {
                 throw Failure(description: "\(control) did not follow the pointer within \(within)pt: "
@@ -3410,6 +3411,10 @@ private final class Run {
 
         case .expectClipPictures(let clip, let absent, let within):
             note(number, step.name, try await checkClipPictures(clip: clip, absent: absent, within: within),
+                 state: describe())
+
+        case .expectSpeedCurve(let clip, let bands, let within):
+            note(number, step.name, try await checkSpeedCurve(clip: clip, bands: bands, within: within),
                  state: describe())
 
         case .expectLanding(let near, let within, let absent, let says):
@@ -9635,6 +9640,145 @@ private final class Run {
             ? "\(clip)'s bar shows no pictures at all after \(Self.round1(CGFloat(within)))s"
             : "\(clip)'s bar has \(now.read) of \(now.tiles) pictures read, at \(Int(now.opacity * 100))%, "
                 + "after \(Self.round1(CGFloat(within)))s")
+    }
+
+    /// The ink a clip's speed curve put down, read off an offscreen picture of
+    /// the window where the lane says it drew (`DrawnSpeedCurves`): every band
+    /// the stops make wide enough to read carries the legend's swatch along the
+    /// floor, a freeze both of its amber stripes, and the dashed 1x line sits
+    /// within `within` points of where the scale puts it. A plain line, or one
+    /// band colour for everything, fails it.
+    private func checkSpeedCurve(clip: String, bands wanted: [String], within: Double) async throws -> String {
+        let editor = try requireEditor()
+        guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {
+            throw Failure(description: "there is no clip called \(clip) in the document")
+        }
+        guard var drawn = DrawnSpeedCurves.shared.curve(of: layer.id) else {
+            throw Failure(description: "\(clip) has no speed curve on screen: it has no speed stops, "
+                + "or its track's arrow is closed")
+        }
+        // A short timeline shows the clip or its curve: the tracks are
+        // scrolled, the least that will do, until the part read is in sight.
+        var scrolled = ""
+        do {
+            let viewport = editor.timelineTracksViewport
+            let top = drawn.laneFrame.minY + drawn.oneX - 5, bottom = drawn.laneFrame.minY + drawn.strip.upperBound
+            let shift = top < viewport.minY ? top - viewport.minY - 2 : (bottom > viewport.maxY ? bottom - viewport.maxY + 2 : 0)
+            if shift != 0 {
+                editor.scrollTimelineTracks(toY: editor.timelineTracksScrollGeometry.offsetY + shift)
+                await sleep(0.4)
+                drawn = DrawnSpeedCurves.shared.curve(of: layer.id) ?? drawn
+                scrolled = " (the tracks scrolled \(Self.round1(shift))pt to show it)"
+            }
+        }
+        let window = try requireWindow()
+        guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+        let viewport = editor.timelineTracksViewport
+        // What is read must be in sight: from just over the 1x line down to
+        // the band strip on the floor.
+        let plotTop = drawn.laneFrame.minY + drawn.oneX - 5
+        let plotBottom = drawn.laneFrame.minY + drawn.strip.upperBound
+        guard plotTop >= viewport.minY - 1, plotBottom <= viewport.maxY + 1 else {
+            throw Failure(description: "\(clip)'s speed curve is scrolled out of the timeline's sight "
+                + "(drawn \(Self.round1(plotTop))-\(Self.round1(plotBottom))pt down the window, the tracks show "
+                + "\(Self.round1(viewport.minY))-\(Self.round1(viewport.maxY))pt); a reveal step brings it in")
+        }
+        let rep = try harnessWork { try picture(of: content) }
+        let scale = CGFloat(rep.pixelsWide) / max(content.bounds.width, 1)
+        func rgb(atX x: CGFloat, y: CGFloat) -> (Int, Int, Int)? {
+            let px = Int(((drawn.laneFrame.minX + x) * scale).rounded(.down))
+            let py = Int(((drawn.laneFrame.minY + y) * scale).rounded(.down))
+            guard px >= 0, py >= 0, px < rep.pixelsWide, py < rep.pixelsHigh, rep.samplesPerPixel >= 3 else { return nil }
+            // The window draws in the display's Display P3, whatever its
+            // picture is tagged: the raw pixel is read as P3 and brought back
+            // to the sRGB the mock's swatches are written in.
+            var raw = [Int](repeating: 0, count: rep.samplesPerPixel)
+            rep.getPixel(&raw, atX: px, y: py)
+            let top = CGFloat((1 << rep.bitsPerSample) - 1)
+            guard let colour = NSColor(displayP3Red: CGFloat(raw[0]) / top, green: CGFloat(raw[1]) / top,
+                                       blue: CGFloat(raw[2]) / top, alpha: 1).usingColorSpace(.sRGB) else { return nil }
+            func byte(_ v: CGFloat) -> Int { min(255, max(0, Int((v * 255).rounded()))) }
+            return (byte(colour.redComponent), byte(colour.greenComponent), byte(colour.blueComponent))
+        }
+        func components(_ hex: String) -> (Int, Int, Int) {
+            let value = Int(hex.dropFirst(), radix: 16) ?? 0
+            return ((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF)
+        }
+        func near(_ a: (Int, Int, Int), _ b: (Int, Int, Int)) -> Bool {
+            abs(a.0 - b.0) <= 24 && abs(a.1 - b.1) <= 24 && abs(a.2 - b.2) <= 24
+        }
+        func hex(_ c: (Int, Int, Int)) -> String { String(format: "#%02x%02x%02x", c.0, c.1, c.2) }
+        let stripY = (drawn.strip.lowerBound + drawn.strip.upperBound) / 2
+        var said: [String] = []
+        var read: Set<String> = []
+        for run in drawn.bands {
+            let x0 = max(run.x0, drawn.plot.lowerBound + 2), x1 = min(run.x1, drawn.plot.upperBound - 2)
+            guard x1 - x0 >= 6 else { continue }
+            let span = "\(Int(x0.rounded()))-\(Int(x1.rounded()))pt"
+            if run.band == .freeze {
+                let light = components(SpeedBand.freeze.hex), deep = components(SpeedBand.freezeStripeHex)
+                var sawLight = false, sawDeep = false
+                var x = x0 + 1
+                while x < x1 - 1 {
+                    if let c = rgb(atX: x, y: stripY) {
+                        if near(c, light) { sawLight = true }
+                        if near(c, deep) { sawDeep = true }
+                    }
+                    x += 0.5
+                }
+                guard sawLight, sawDeep else {
+                    throw Failure(description: "\(clip)'s freeze at \(span) is not the mock's hatched amber: "
+                        + "light stripe \(sawLight ? "seen" : "missing"), dark stripe \(sawDeep ? "seen" : "missing")")
+                }
+                said.append("freeze at \(span) hatched \(SpeedBand.freeze.hex) and \(SpeedBand.freezeStripeHex)")
+            } else {
+                let want = components(run.band.hex)
+                guard let got = rgb(atX: (x0 + x1) / 2, y: stripY) else {
+                    throw Failure(description: "\(clip)'s \(run.band.rawValue) band at \(span) is off the window: "
+                        + "the plot is at \(short(drawn.laneFrame.origin)) in a window "
+                        + "\(short(CGPoint(x: content.bounds.width, y: content.bounds.height))) across")
+                }
+                // Read as the swatch it is nearest of the legend's four, and
+                // close to it.
+                func distance(_ a: (Int, Int, Int), _ b: (Int, Int, Int)) -> Int {
+                    abs(a.0 - b.0) + abs(a.1 - b.1) + abs(a.2 - b.2)
+                }
+                let nearest = SpeedBand.allCases.min { distance(got, components($0.hex)) < distance(got, components($1.hex)) }
+                guard nearest == run.band, near(got, want) else {
+                    throw Failure(description: "\(clip)'s \(run.band.rawValue) band at \(span) reads \(hex(got)), "
+                        + "and the mock's swatch is \(run.band.hex)")
+                }
+                said.append("\(run.band.rawValue) at \(span) reads \(hex(got)) for \(run.band.hex)")
+            }
+            read.insert(run.band.rawValue)
+        }
+        if let missing = wanted.first(where: { !read.contains($0) }) {
+            throw Failure(description: "\(clip)'s speed curve inks no \(missing) band wide enough to read; "
+                + "it inks \(read.sorted().joined(separator: ", ").isEmpty ? "none" : read.sorted().joined(separator: ", "))")
+        }
+        // The 1x line: the row near where the scale puts it that reads most
+        // like the dashed cyan.
+        let rows = stride(from: drawn.oneX - 4, through: drawn.oneX + 4, by: 1 / scale)
+        var best: (y: CGFloat, score: Double) = (drawn.oneX, -.infinity)
+        for y in rows {
+            var total = 0.0, count = 0.0
+            var x = drawn.plot.lowerBound + 3
+            while x < drawn.plot.upperBound - 3 {
+                if let c = rgb(atX: x, y: y) { total += Double(c.1 + c.2 - 2 * c.0); count += 1 }
+                x += 1
+            }
+            let score = count > 0 ? total / count : -.infinity
+            if score > best.score { best = (y, score) }
+        }
+        let measured = best.y + 0.5 / scale
+        guard abs(measured - drawn.oneX) <= within else {
+            throw Failure(description: "\(clip)'s 1x line is drawn at \(Self.round1(measured))pt down the plot, "
+                + "and the scale puts 1x at \(Self.round1(drawn.oneX))pt")
+        }
+        return "\(clip)'s speed curve: " + said.joined(separator: "; ")
+            + "; the 1x line at \(Self.round1(measured))pt where the scale puts 1x at \(Self.round1(drawn.oneX))pt"
+            + scrolled
+            + "; the plot at window \(short(drawn.laneFrame.origin)), \(Self.round1(drawn.laneFrame.width))pt across"
     }
 
     /// Where a clip's level line has been left, read out of the document: the

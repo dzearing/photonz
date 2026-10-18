@@ -142,7 +142,10 @@ struct SpeedInspector: View {
         let count = ramp.stops.count
         let picked = min(editorState.speedStopInHand ?? 0, count - 1)
         let speed = ramp.stops[picked].speedPercent
-        let speeds = ClipSpeed.stops.contains(speed) ? ClipSpeed.stops : (ClipSpeed.stops + [speed]).sorted()
+        // Freeze first, the mock's fourth preset, then every speed a piece
+        // can play at.
+        let offered = SpeedStopNames.speeds
+        let speeds = offered.contains(speed) ? offered : (offered + [speed]).sorted()
         VideoKit.DropdownRow(
             label: "Speed stop", value: Self.stopTitle(picked, of: count),
             choices: .picking(Array(0..<count), current: picked, title: { Self.stopTitle($0, of: count) },
@@ -152,10 +155,13 @@ struct SpeedInspector: View {
         .playtestField("Speed stop")
         .panelHelp("The stop the rows below change. The playhead goes to it.")
         VideoKit.DropdownRow(
-            label: "Speed", value: ClipSpeed.title(speed),
-            choices: .picking(speeds, current: speed, title: ClipSpeed.title,
-                              isEnabled: { $0 == speed || editorState.canSetSpeedStopInHand($0) }) {
-                editorState.setSpeedStopInHand($0)
+            label: "Speed", value: SpeedStopNames.speedTitle(speed),
+            choices: .picking(speeds, current: speed, title: SpeedStopNames.speedTitle,
+                              isEnabled: {
+                                  $0 == speed || ($0 == 0 ? editorState.canFreezeSpeedStopInHand
+                                                          : editorState.canSetSpeedStopInHand($0))
+                              }) {
+                if $0 == 0 { editorState.freezeSpeedStopInHand() } else { editorState.setSpeedStopInHand($0) }
             },
             opensWhenAsked: editorState.pendingClipSpeedChoices,
             opened: editorState.clipSpeedChoicesOpened)
@@ -171,7 +177,7 @@ struct SpeedInspector: View {
         .panelReadout(ramp.blend.title)
         .playtestField("Between stops")
         // The mock's own line, moved behind the row (UX-PATTERNS §4).
-        .panelHelp("Ramp eases between stops. Hold keeps each section flat.")
+        .panelHelp(SpeedStopNames.betweenStopsHelp)
         sound(ClipSpeedReading(piece).sound)
     }
 

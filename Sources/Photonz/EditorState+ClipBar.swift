@@ -263,7 +263,8 @@ extension EditorState {
     /// `withDraggedClipBar`), and reading the shown document would tie every
     /// bar on the timeline to every move of the one that is being dragged.
     func shownDocument(forClip id: UUID) -> PhotonzDocument? {
-        if trimSession == nil, captionWordDrag == nil, !clipBarInHandIDs.contains(id) { return document }
+        if trimSession == nil, captionWordDrag == nil, speedStopDrag?.layerID != id,
+           !clipBarInHandIDs.contains(id) { return document }
         return shownDocument
     }
 

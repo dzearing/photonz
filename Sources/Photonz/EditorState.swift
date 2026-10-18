@@ -1877,6 +1877,8 @@ final class EditorState {
     /// A word chip on the Words lane under a hand. Kept out of the document so
     /// the whole drag is one step to undo, exactly like the bar drag above.
     var captionWordDrag: CaptionWordDragSession?
+    /// A stop on a speed curve in the hand (`EditorState+SpeedCurve`).
+    var speedStopDrag: SpeedStopDragSession?
     /// Escape, for as long as a word chip is in the hand.
     @ObservationIgnored var captionWordEscapeWatch: Any?
     /// The tracks picked in the timeline's gutter (`EditorState+Tracks`).
@@ -5194,6 +5196,9 @@ final class EditorState {
         // ...and a caption's WORD under a hand on the Words lane, so the line
         // lights its words at the times the hand is giving them.
         document = withDraggedCaptionWord(document)
+        // ...and a stop on a speed curve, so the picture plays the ramp the
+        // hand is giving it (`EditorState+SpeedCurve`).
+        document = withDraggedSpeedStop(document)
         // ...and a zoom's bar or box under a hand (`EditorState+Zoom`).
         document = withDraggedZoom(document)
         // ...and the BAND over a cut under a hand, for the third time for the

@@ -1,0 +1,50 @@
+{
+  "id": "the-speed-curve-shows-under-a-clip-and-its-stops-does-the-speed-curve-under-a-cli",
+  "taskId": "the-speed-curve-shows-under-a-clip-and-its-stops",
+  "question": "Does the speed curve under a clip look and move the way you want?",
+  "context": "Reel: queue/audits/2026-10-17-speed-curve-reel.gif (and .mp4), contact sheet 2026-10-17-speed-curve-reel-contact.png, app beside the mock 2026-10-17-speed-curve-beside-the-mock.png. Measured in the walk: every band'\"s",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep it: band wash under the line, swatch strip on the floor",
+      "summary": "The cyan line runs over a wash tinted by speed (pink where fast, cyan where slow, purple at normal) with a solid strip of the legend colours along the bottom, a freeze hatched amber.",
+      "pros": [
+        "Fast, slow and frozen read at a glance without the legend",
+        "The strip gives the exact mock colours"
+      ],
+      "cons": [
+        "Busier than the mock, whose wash under the line is one faint cyan"
+      ],
+      "mitigation": "The wash is light (a fifth strength) so the line and diamonds stay on top."
+    },
+    {
+      "id": "b",
+      "label": "Quieter: one faint cyan wash, as the mock draws it",
+      "summary": "Only the strip along the floor carries the band colours; under the line is the mock's single faint cyan.",
+      "pros": [
+        "Exactly the mock",
+        "Calmer next to the clips above"
+      ],
+      "cons": [
+        "Where the clip is fast reads only from the thin strip"
+      ],
+      "mitigation": "The clip bar itself will carry the bands once its own task lands."
+    },
+    {
+      "id": "c",
+      "label": "Bolder: colour the line itself by band",
+      "summary": "No wash; the line changes colour along its length (pink where fast, cyan where slow, amber where frozen), with the strip on the floor.",
+      "pros": [
+        "The line itself says the speed"
+      ],
+      "cons": [
+        "Loses the mock's single cyan line",
+        "Thin coloured line is harder to see on dark"
+      ],
+      "mitigation": "A slightly thicker line."
+    }
+  ],
+  "recommended": "strip",
+  "status": "pending",
+  "created": "2026-10-18T05:12:50.893Z"
+}

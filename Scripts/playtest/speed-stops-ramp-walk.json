@@ -61,6 +61,8 @@
 
     { "comment": "The menu bar's Clip menu carries the same three rows under Speed.",
       "do": "menus", "stage": "clip-menu", "menu": "Clip" },
+    { "comment": "The stops opened the clip's speed curve under it, and the timeline scrolled to show it.",
+      "do": "reveal", "control": "Tutorial Sample clip" },
     { "comment": "THE FIFTH TEST: Reset Ramp puts the clip back to one speed.",
       "do": "rightClick", "on": "Tutorial Sample clip", "across": 0.5, "choose": "Speed > Reset Ramp" },
     { "do": "wait", "seconds": 0.6 },

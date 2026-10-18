@@ -138,7 +138,9 @@ extension EditorState {
         // A bar under a hand is drawn where the HAND has it, not where the
         // document still says it is, which is the same bargain the timing
         // strip and the pivot crosshair strike (`EditorState+ClipBar`).
-        guard let session = trimSession else { return withDraggedCaptionWord(withDraggedClipBar(document)) }
+        guard let session = trimSession else {
+            return withDraggedSpeedStop(withDraggedCaptionWord(withDraggedClipBar(document)))
+        }
         return document.openedForTrim(session)
     }
 

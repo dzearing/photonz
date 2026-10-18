@@ -80,6 +80,9 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// The clips on this track that have zooms, each with a Zoom lane under
     /// it (`ZoomLane`).
     var zoomedClips: [UUID] = []
+    /// The clips on it with speed stops, whose speed curve opens under them
+    /// with the track's arrow (`SpeedCurveLane`); empty while it is closed.
+    var rampedClips: [UUID] = []
     /// How each row in `inner` sits: how far in, and whether it wears an
     /// arrow (`TimelineChildRows.swift`).
     var nesting: [UUID: TimelineRowNesting] = [:]
@@ -217,6 +220,11 @@ extension EditorState {
                                             linked: linked)
             row.nesting = nesting
             row.soundNumber = tracks.soundTrackNumber(of: track.id) ?? 0
+            if isKeyTrackOpen(track.id) {
+                row.rampedClips = clips.map(\.layerID).filter {
+                    document.layer(id: $0)?.clipPieces?.pieces.contains { $0.speedRamp != nil } == true
+                }
+            }
             if Experiments.shared.zoomRegionsEnabled {
                 row.zoomedClips = clips.map(\.layerID).filter {
                     document.layer(id: $0)?.zooms?.isEmpty == false

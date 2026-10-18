@@ -832,12 +832,12 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "dragGrip", "control": "Rectangle clip end", "by": -120, "steps": 40,
                        "within": 2, "hold": "mid-drag", "modifiers": ["command"], "cancel": true },
-                     { "do": "dragGrip", "control": "Rectangle clip start", "by": 30 } ] }
+                     { "do": "dragGrip", "control": "Rectangle clip start", "by": 30, "rise": 24 } ] }
         """)
         guard case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers,
-                             let cancel) = script.steps[0],
+                             let cancel, let rise) = script.steps[0],
               case .dragGrip(_, let by2, let steps2, let within2, let hold2, let modifiers2,
-                             let cancel2) = script.steps[1] else {
+                             let cancel2, let rise2) = script.steps[1] else {
             Issue.record("dragGrip"); return
         }
         #expect(control == "Rectangle clip end")
@@ -853,6 +853,8 @@ struct PlaytestScriptTests {
         #expect(modifiers2.isEmpty)
         #expect(cancel)
         #expect(!cancel2)
+        #expect(rise == 0)
+        #expect(rise2 == 24)
         #expect(script.steps[0].name == "dragGrip")
         #expect(PlaytestStep.names.contains("dragGrip"))
     }
@@ -5282,6 +5284,32 @@ struct PlaytestScriptTests {
         }
         #expect(throws: (any Error).self) {
             try decode(#"{ "steps": [ { "do": "expectClipPictures", "clip": "a", "within": -1 } ] }"#)
+        }
+    }
+
+    // MARK: - The ink of a speed curve
+
+    @Test("An expectSpeedCurve step claims the bands a clip's speed curve inks and where its 1x line is")
+    func expectSpeedCurveClaimsBands() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSpeedCurve", "clip": "Tutorial Sample", "bands": ["fast", "freeze"] } ] }
+        """)
+        guard case .expectSpeedCurve(let clip, let bands, let within) = script.steps[0] else {
+            Issue.record("expectSpeedCurve"); return
+        }
+        #expect(clip == "Tutorial Sample")
+        #expect(bands == ["fast", "freeze"])
+        #expect(within == 1)
+        #expect(script.steps[0].name == "expectSpeedCurve")
+    }
+
+    @Test("An expectSpeedCurve step names its clip and only the mock's four bands")
+    func expectSpeedCurveRefusesNonsense() throws {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectSpeedCurve" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectSpeedCurve", "clip": "a", "bands": ["quick"] } ] }"#)
         }
     }
 

@@ -21605,3 +21605,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Walk `animated-charts-walk` (new `clipboardText` step). Harness: `forget: all` now covers saved title presets.
 - Measured: chart ink 0 at first frame; 5 to 10 ms a frame at 1080p while building. Reel and decision card for the user.
 - Next: the user's answer on the reel; open question filed about a crowded dock hiding Library rows.
+
+## 2026-10-17 — speed curve under a clip (go loop)
+
+- A clip with speed stops shows its Speed curve under it on the timeline (SpeedCurveLane, SpeedCurve in core): the mock's 3x/1x/0 scale, bands tinted Slow-mo/Normal/Fast/Freeze, diamonds that drag along and up and down as one undo, Command-click adds, a freeze's second zero drags the hold.
+- A stop can be a Freeze (speed 0 holding its frame for holdMS); Freeze is first in the stop's Speed list.
+- New walk step `expectSpeedCurve` reads the lane's ink; `dragGrip` takes `rise`.
+- Next: the clip bar's band tint and legend (a-ramped-clip-s-bar-is-tinted-by-its-speed-bands); a cut inside a freeze restarts its hold (cutting-a-clip-in-the-middle-of-a-speed-stop-fre).

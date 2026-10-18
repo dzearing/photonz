@@ -99,6 +99,11 @@ struct TimelineTrackRow: View {
                              isLocked: track.isLocked, isLifted: isLifted)
                 }
             }
+            // A clip's speed curve, under it, with the track's arrow.
+            ForEach(row.clips.filter { row.rampedClips.contains($0.layerID) }) { clip in
+                SpeedCurveLane(layerID: clip.layerID, layerName: clip.layerName, laneWidth: laneWidth,
+                               indent: indent, isLocked: track.isLocked, isLifted: isLifted)
+            }
             ForEach(row.inner) { group in
                 TimelineInnerRow(group: group, laneWidth: laneWidth, isBlade: isBlade,
                                  isLocked: track.isLocked, rows: rows,
@@ -284,6 +289,7 @@ struct TimelineTrackRow: View {
     /// the header its arrow.
     private var hasKeyLanes: Bool {
         editorState.trackHasKeyLanes(row.clips.map(\.layerID))
+            || editorState.trackHasSpeedCurves(row.clips.map(\.layerID))
     }
 
     /// A track holding anything made of parts (a title page, a logo, a
@@ -325,7 +331,8 @@ struct TimelineTrackRow: View {
             .panelReadout("\(track.name) parts \(open ? "open" : "closed")")
         } else if hasKeyLanes || hasWordsLane {
             let open = editorState.isKeyTrackOpen(track.id)
-            let what = hasWordsLane ? "words" : "keyed values"
+            let what = hasWordsLane ? "words"
+                : editorState.trackHasKeyLanes(row.clips.map(\.layerID)) ? "keyed values" : "speed curve"
             Button {
                 withAnimation(.snappy(duration: 0.18)) { editorState.toggleKeyTrack(track.id) }
             } label: {

@@ -1,0 +1,36 @@
+{
+  "feature": "The speed curve under a clip, with stops you drag",
+  "epic": "video-transitions-motion",
+  "task": "the-speed-curve-shows-under-a-clip-and-its-stops",
+  "summary": "A clip with speed stops now shows its speed curve under it on the timeline, on the clip's own clock, with the mock's 3x, 1x and 0 scale and its four bands. You drag a stop up, down and along, Command-click the line to add one, and a stop can now be a Freeze that holds its frame.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (Help > Sample Recording).",
+  "switched": {},
+  "try": [
+    { "do": "Put the playhead at 3 seconds, right-click the clip and choose Speed > Add Speed Stop. Do it again at 6 seconds.", "shot": "2026-10-17-speed-curve-1-two-stops-sc.png" },
+    { "do": "Scroll the timeline down to the Speed curve under the clip." },
+    { "do": "Drag the second diamond straight up to about 2.5x and watch the readout, the curve and the picture follow your hand.", "shot": "2026-10-17-speed-curve-2-dragging-sc.png" },
+    { "do": "Let go: the stretch around it turns pink (Fast) and the clip gets shorter. Press Command-Z once to undo the whole drag.", "shot": "2026-10-17-speed-curve-3-dragged-up-sc.png" },
+    { "do": "Pick the third stop and choose Freeze in the panel's Speed list.", "shot": "2026-10-17-speed-curve-4-freeze-sc.png" },
+    { "do": "Drag the freeze's second zero diamond to the right to make the hold longer.", "shot": "2026-10-17-speed-curve-5-longer-hold-sc.png" },
+    { "do": "Command-click the line to add a stop; right-click a stop for Freeze and Delete Speed Stop." }
+  ],
+  "evaluate": [
+    "Does dragging a stop feel direct enough that you would reach for the curve before the panel's Speed list?",
+    "Are the band colours along the floor and under the line easy to read at a glance, or is the wash under the line too heavy?",
+    "Is Freeze from the Speed list, held one second with a second diamond for its end, the freeze you expected?",
+    "At the default window size the timeline shows the clip or its curve, not both: is scrolling acceptable, or should the curve get shorter or the timeline taller when it opens?",
+    "Reel: 2026-10-17-speed-curve-reel.gif (and .mp4, contact sheet 2026-10-17-speed-curve-reel-contact.png). Is the motion of a dragged stop what you want?"
+  ],
+  "rough": [
+    "The app beside the mock (video-speed.html, timeline dock) in one picture, 2026-10-17-speed-curve-beside-the-mock.png: it matches apart from the lines below.",
+    "Differs from the mock: the clip bar itself is not yet tinted by band and the Slow-mo / Normal / Fast / Freeze legend is not drawn under it; the bands are on the curve instead. Task a-ramped-clip-s-bar-is-tinted-by-its-speed-bands.",
+    "Differs from the mock: the curve's name sits in the track gutter beside the plot, like the Zoom and Source lanes, not as a SPEED CURVE heading above it. Task a-ramped-clip-s-bar-is-tinted-by-its-speed-bands settles where it goes.",
+    "Goes further than the mock: the 1x label sits on its dashed line (the mock spaces its three labels evenly, which puts 1x half way up a 0 to 3x scale), and the wash under the line is tinted by band rather than one cyan.",
+    "The mock's Playhead 1.00x @ 0.00s pill is left out: your call on 2026-09-25 that pills like it are unprofessional (UX-PATTERNS §4).",
+    "A plain click on the curve picks and a Command-click adds a stop, the rule every animated line follows (your call on 2026-10-13); the task asked for a plain click to add.",
+    "Matches the mock's narrow plot height (104pt) at every window size; on a 1280 by 800 window the timeline shows about 106pt of tracks, so the curve opening scrolls the clip mostly out of sight.",
+    "A freeze is one stop that holds its frame, its second diamond the end of the hold, because stops are pinned to frames of the recording; it matches the mock's two zeros on screen.",
+    "Matches the mock's scale, which ends at 3x, so a stop dragged on the curve stops at 3x; 4x, 10x and 30x are still in the Speed list.",
+    "Cutting a clip in the middle of a freeze restarts the hold and drops the end of the recording: task cutting-a-clip-in-the-middle-of-a-speed-stop-fre."
+  ]
+}

@@ -1,0 +1,459 @@
+{
+  "out": "/tmp/photonz-playtest/the-speed-curve-shows-under-a-clip-walk",
+  "seed": "At Next defaults, with no switch touched: the tutorial recording (eight seconds). Two speed stops go on from the clip's right click, at three and six seconds, and the clip's speed curve opens under it on the timeline with the mock's 3x, 1x and 0 scale, all Normal. The second stop is dragged straight up by a real pointer to 2.5x: the curve, the clip and the picture follow the hand, the Fast band inks the mock's #ff5d8f along the floor, and it is one step to undo. The third stop is then made a Freeze from its Speed list: two zeros side by side, the band between them hatched in amber, and the freeze's second zero drags the hold longer. Every band is read off the window's own picture where the lane drew it, and the dashed 1x line within a point of where the scale puts it.",
+  "setup": {
+    "timelineOpen": true,
+    "front": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "on": "Tutorial Sample clip",
+      "across": 0.375,
+      "choose": "Speed > Add Speed Stop at 0:03.00"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 6.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "The first stop opened the curve under the clip and the timeline scrolled to show it.",
+      "do": "reveal",
+      "control": "Tutorial Sample clip"
+    },
+    {
+      "do": "rightClick",
+      "on": "Tutorial Sample clip",
+      "across": 0.75,
+      "choose": "Speed > Add Speed Stop at 0:06.00"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "startsAt": 0,
+      "endsAt": 8,
+      "within": 0.02
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "THE FIRST TEST: the clip's speed curve is open under it with four stops, all Normal, on the clip's own clock.",
+      "do": "expectSpeedCurve",
+      "clip": "Tutorial Sample",
+      "bands": [
+        "normal"
+      ]
+    },
+    {
+      "comment": "A Command-click on the line adds a stop there at the speed the line already has, the rule every animated line follows (a plain click picks). The check above scrolled the curve into sight, its plot at window (160, 874) and 1556pt across, so seven seconds in on the 1x line is (1521, 936).",
+      "do": "windowClick",
+      "at": [
+        1521,
+        936
+      ],
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Time section"
+    },
+    {
+      "do": "expect",
+      "menu": "Speed stop",
+      "reads": "4 of 5"
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "Normal"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "startsAt": 0,
+      "endsAt": 8,
+      "within": 0.02
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-stops",
+      "note": "two stops added from the clip's right click: the speed curve under the clip, flat at 1x with a diamond on each of its four stops"
+    },
+    {
+      "do": "snapshot",
+      "name": "speed-curve-1-two-stops"
+    },
+    {
+      "do": "reveal",
+      "control": "Speed stop 2 Tutorial Sample"
+    },
+    {
+      "comment": "THE SECOND TEST: the second stop dragged straight up by a real pointer, in steps, the curve and the clip following the hand. Each frame is a picture for the reel.",
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": 40,
+      "steps": 24,
+      "hold": "speed-curve-2-dragging"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "reveal",
+      "control": "Time section"
+    },
+    {
+      "do": "expect",
+      "menu": "Speed stop",
+      "reads": "2 of 5"
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "2.5x"
+    },
+    {
+      "do": "expectSpeedCurve",
+      "clip": "Tutorial Sample",
+      "bands": [
+        "normal",
+        "fast"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-dragged-up",
+      "note": "the second stop at 2.5x: the line climbs to it and back down, the Fast band pink along the floor between, the clip shorter"
+    },
+    {
+      "do": "snapshot",
+      "name": "speed-curve-3-dragged-up"
+    },
+    {
+      "comment": "The whole drag is one step to undo.",
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "Normal"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "startsAt": 0,
+      "endsAt": 8,
+      "within": 0.02
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "2.5x"
+    },
+    {
+      "comment": "THE THIRD TEST: the third stop made a Freeze from its Speed list, a hand's click on the dropdown's face: two zeros side by side and the band between them hatched amber.",
+      "do": "panelMenu",
+      "menu": "Speed stop",
+      "at": [
+        "centre"
+      ],
+      "choose": "3 of 5"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Speed",
+      "at": [
+        "centre"
+      ],
+      "choose": "Freeze"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "Freeze"
+    },
+    {
+      "do": "snapshot",
+      "name": "speed-curve-4-freeze"
+    },
+    {
+      "do": "expectSpeedCurve",
+      "clip": "Tutorial Sample",
+      "bands": [
+        "fast",
+        "freeze"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-freeze",
+      "note": "the third stop a Freeze: the line eases down to nought, holds there for a second (two zero diamonds side by side) and eases back up, the hold hatched in amber"
+    },
+    {
+      "do": "reveal",
+      "control": "Speed hold end 3 Tutorial Sample"
+    },
+    {
+      "comment": "THE FOURTH TEST: the freeze's second zero dragged along makes the hold longer, and the clip grows with it.",
+      "do": "dragGrip",
+      "control": "Speed hold end 3 Tutorial Sample",
+      "by": 30,
+      "steps": 16
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSpeedCurve",
+      "clip": "Tutorial Sample",
+      "bands": [
+        "fast",
+        "freeze"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "speed-curve-5-longer-hold"
+    },
+    {
+      "do": "reveal",
+      "control": "Speed stop 2 Tutorial Sample"
+    },
+    {
+      "comment": "THE FIFTH TEST: the second stop dragged along: it lands under the hand, between its neighbours.",
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 30,
+      "steps": 16,
+      "within": 4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Speed stop",
+      "reads": "2 of 5"
+    },
+    {
+      "do": "snapshot",
+      "name": "speed-curve-6-moved-along"
+    },
+    {
+      "comment": "THE REEL: the second stop pulled down to the floor and back up in short pulls, a picture after each, so the reel shows the curve, the bands and the picture following the hand.",
+      "do": "reveal",
+      "control": "Speed stop 2 Tutorial Sample"
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": -10,
+      "steps": 8,
+      "hold": "speed-curve-reel-01"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": -10,
+      "steps": 8,
+      "hold": "speed-curve-reel-02"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": -10,
+      "steps": 8,
+      "hold": "speed-curve-reel-03"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": -10,
+      "steps": 8,
+      "hold": "speed-curve-reel-04"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": 10,
+      "steps": 8,
+      "hold": "speed-curve-reel-05"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": 10,
+      "steps": 8,
+      "hold": "speed-curve-reel-06"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": 10,
+      "steps": 8,
+      "hold": "speed-curve-reel-07"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": 10,
+      "steps": 8,
+      "hold": "speed-curve-reel-08"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "dragGrip",
+      "control": "Speed stop 2 Tutorial Sample",
+      "by": 0,
+      "rise": 10,
+      "steps": 8,
+      "hold": "speed-curve-reel-09"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "comment": "THE SIXTH TEST: a stop's own right click offers Freeze and Delete Speed Stop. Delete takes the stop the Command-click added.",
+      "do": "reveal",
+      "control": "Speed stop 4 Tutorial Sample"
+    },
+    {
+      "do": "rightClick",
+      "on": "Speed stop 4 Tutorial Sample",
+      "rows": [
+        "Freeze",
+        "Delete Speed Stop"
+      ],
+      "choose": "Delete Speed Stop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Time section"
+    },
+    {
+      "do": "expect",
+      "menu": "Speed stop",
+      "reads": "2 of 4"
+    }
+  ]
+}

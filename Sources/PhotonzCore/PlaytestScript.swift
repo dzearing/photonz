@@ -2906,9 +2906,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// once went the other way. `hold` names a picture taken with the button
     /// still down, and `modifiers` are held for the whole drag. `cancel`
     /// presses Escape half way along and carries on to the end before letting
-    /// go, the way a hand changes its mind.
+    /// go, the way a hand changes its mind. `rise` lifts the pointer that
+    /// many points as it goes, for a grip that also moves up and down (a speed
+    /// stop on its curve); the trace still reads along.
     case dragGrip(control: String, by: CGFloat, steps: Int, within: CGFloat?, hold: String?,
-                  modifiers: [PlaytestModifier], cancel: Bool)
+                  modifiers: [PlaytestModifier], cancel: Bool, rise: CGFloat = 0)
     case dragFile(file: String, at: PlaytestPoint, hold: String?, release: Bool, leave: Bool,
                   says: String?)
     /// A file carried from the Finder onto the TIMELINE, over the lane of the
@@ -3918,6 +3920,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// them to land. With `absent` it claims the opposite: the clip is its
     /// plain coloured bar, which is what it is at Fit (`ClipFilmstrip`).
     case expectClipPictures(clip: String, absent: Bool, within: Double)
+    /// Reads the ink a clip's speed curve put down (`SpeedCurveLane`): the
+    /// legend's swatch along the floor of every band the stops make, each
+    /// named band among them, and the dashed 1x line within `within` points
+    /// of where the scale puts it.
+    case expectSpeedCurve(clip: String, bands: [String], within: Double)
     /// What the pill riding under a drag says right now, or that there is no
     /// pill at all. The absent form is how a walk proves the reading goes the
     /// instant the button comes up rather than lingering over the canvas.
@@ -4394,7 +4401,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4516,6 +4523,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectWaveform: "expectWaveform"
         case .expectLevel: "expectLevel"
         case .expectClipPictures: "expectClipPictures"
+        case .expectSpeedCurve: "expectSpeedCurve"
         case .expectReadout: "expectReadout"
         case .expectFresh: "expectFresh"
         case .spaceHandle: "spaceHandle"
@@ -4867,7 +4875,8 @@ public enum PlaytestStep: Sendable, Equatable {
                              within: try f.optionalNumber("within").map { CGFloat($0) },
                              hold: try f.optionalString("hold"),
                              modifiers: try f.modifiers(),
-                             cancel: try f.optionalFlag("cancel") ?? false)
+                             cancel: try f.optionalFlag("cancel") ?? false,
+                             rise: CGFloat(try f.optionalNumber("rise") ?? 0))
         case "dragFile":
             self = .dragFile(file: try f.string("file"), at: try f.point("at"),
                              hold: try f.optionalString("hold"),
@@ -5499,6 +5508,15 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectClipPictures(clip: try f.string("clip"),
                                        absent: try f.optionalFlag("absent") ?? false, within: within)
+        case "expectSpeedCurve":
+            let bands = try f.optionalStrings("bands")
+            let known = SpeedBand.allCases.map(\.rawValue)
+            if let odd = bands.first(where: { !known.contains($0) }) {
+                throw f.invalid("bands", "\(odd) is not one of the mock's bands: \(known.joined(separator: ", "))")
+            }
+            let within = try f.optionalNumber("within") ?? 1
+            guard within >= 0 else { throw f.invalid("within", "a distance in points is zero or more") }
+            self = .expectSpeedCurve(clip: try f.string("clip"), bands: bands, within: within)
         case "expectCorners":
             let radius = try f.optionalNumber("radius")
             let rounded = try f.optionalNumber("rounded")
