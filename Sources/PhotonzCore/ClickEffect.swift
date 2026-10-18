@@ -279,8 +279,7 @@ extension ClipPieces {
             defer { elapsed += piece.lengthMS }
             guard !piece.isHeld, piece.sourceLengthMS > 0,
                   source >= piece.sourceInMS, source < piece.sourceOutMS else { continue }
-            let speed = Double(max(1, piece.speedPercent)) / 100
-            return elapsed + min(Int((Double(source - piece.sourceInMS) / speed).rounded()), piece.lengthMS)
+            return elapsed + min(piece.offsetMS(ofSourceMS: source) ?? 0, piece.lengthMS)
         }
         return nil
     }

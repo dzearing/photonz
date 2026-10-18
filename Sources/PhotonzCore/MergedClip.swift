@@ -120,7 +120,7 @@ extension Layer {
         guard !inner.isEmpty else { return [] }
         var heard: [AudioMixSegment] = []
         for (index, piece) in pieces.pieces.enumerated()
-        where piece.speedPercent == ClipPiece.asRecordedPercent {
+        where piece.playsAsRecorded {
             let window = piece.sourceInMS..<(piece.sourceInMS + piece.lengthMS)
             let at = time.inMS + pieces.startMS(ofPiece: index)
             for segment in inner {
@@ -242,7 +242,7 @@ extension PhotonzDocument {
     public func canBreakApart(_ id: UUID) -> Bool {
         guard let layer = layer(id: id), layer.merged != nil, !layer.isLocked,
               !isClipOnLockedTrack(id), let pieces = layer.clipPieces else { return false }
-        return pieces.pieces.allSatisfy { $0.speedPercent == ClipPiece.asRecordedPercent }
+        return pieces.pieces.allSatisfy { $0.playsAsRecorded }
     }
 
     /// Break Apart: the clips a merged clip holds, back on its track where it
@@ -347,8 +347,7 @@ extension Layer {
             guard first.movie == second.movie, first.sound == second.sound,
                   let ap = first.clipPieces, let bp = second.clipPieces,
                   let last = ap.pieces.last, let next = bp.pieces.first,
-                  last.speedPercent == ClipPiece.asRecordedPercent,
-                  next.speedPercent == ClipPiece.asRecordedPercent,
+                  last.playsAsRecorded, next.playsAsRecorded,
                   next.transitionIn == nil, last.sourceOutMS == next.sourceInMS,
                   last.pictureHidden == next.pictureHidden,
                   last.noiseReduction == next.noiseReduction else { return nil }

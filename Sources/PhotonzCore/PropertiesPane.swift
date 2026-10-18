@@ -16,6 +16,8 @@ public struct ClipLine: Hashable, Sendable {
     public let endMS: Int
     /// How fast it plays: 100 as recorded, 0 for a held frame.
     public let speedPercent: Int
+    /// Whether the piece's speed changes across it (`SpeedRamp.swift`).
+    public let isRamped: Bool
 
     /// The line for a layer with time: for a cut clip, the piece at `piece`
     /// (the one the timeline has in hand), since each piece is its own clip on
@@ -27,10 +29,12 @@ public struct ClipLine: Hashable, Sendable {
             startMS = time.inMS + pieces.startMS(ofPiece: piece)
             endMS = startMS + one.lengthMS
             speedPercent = one.speedPercent
+            isRamped = one.speedRamp != nil
         } else {
             startMS = time.inMS
             endMS = time.outMS
             speedPercent = ClipPiece.asRecordedPercent
+            isRamped = false
         }
     }
 
@@ -39,7 +43,7 @@ public struct ClipLine: Hashable, Sendable {
     public var inText: String { Self.seconds(startMS) }
     public var outText: String { Self.seconds(endMS) }
     public var lengthText: String { Self.seconds(lengthMS) }
-    public var speedText: String { Self.speedText(percent: speedPercent) }
+    public var speedText: String { isRamped ? ClipSpeed.rampBadge : Self.speedText(percent: speedPercent) }
 
     /// Everything after the name, as one string for a walk to read back.
     public var reading: String {

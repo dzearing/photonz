@@ -337,7 +337,8 @@ extension EditorState {
     func canSetClipSpeed(_ percent: Int) -> Bool {
         guard Experiments.shared.cutRecordingEnabled, documentHasTime,
               let current = clipSpeedInHand else { return false }
-        return current != percent
+        // One speed for the whole piece replaces its stops, the same one too.
+        return current != percent || clipPieceInHandPiece?.speedRamp != nil
     }
 
     /// Speed a stretch up or slow it down. The piece keeps the frames it reads

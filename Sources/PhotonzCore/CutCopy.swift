@@ -63,7 +63,7 @@ extension PhotonzDocument {
         guard pictures.count == 1, let clip = pictures.first, let movie = clip.movie,
               let time = clip.time, time.inMS == 0,
               let pieces = clip.clipPieces,
-              pieces.pieces.allSatisfy({ !$0.isHeld && $0.speedPercent == ClipPiece.asRecordedPercent
+              pieces.pieces.allSatisfy({ !$0.isHeld && $0.playsAsRecorded
                                           && $0.transitionIn == nil
                                           // A stretch hidden or cleaned is not the file as it is.
                                           && !$0.pictureHidden && $0.noiseReduction == nil })

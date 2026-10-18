@@ -27,7 +27,7 @@ public struct ClipSourceGhost: Hashable, Sendable {
     /// a before and after to show. A held frame on its own is not a retime.
     public init?(pieces: ClipPieces, startMS: Int) {
         let playing = pieces.pieces.filter { !$0.isHeld }
-        guard playing.contains(where: { $0.speedPercent != ClipPiece.asRecordedPercent }) else { return nil }
+        guard playing.contains(where: { !$0.playsAsRecorded }) else { return nil }
         self.startMS = startMS
         self.lengthMS = pieces.pieces.reduce(0) { $0 + ($1.isHeld ? $1.lengthMS : $1.sourceLengthMS) }
         self.retimedLengthMS = pieces.pieces.reduce(0) { $0 + $1.lengthMS }

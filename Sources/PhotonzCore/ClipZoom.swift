@@ -445,9 +445,8 @@ extension ClipPieces {
         for piece in pieces {
             defer { elapsed += piece.lengthMS }
             guard !piece.isHeld, piece.sourceLengthMS > 0 else { continue }
-            let speed = Double(max(1, piece.speedPercent)) / 100
             if source >= piece.sourceInMS, source <= piece.sourceOutMS {
-                let inside = Int((Double(source - piece.sourceInMS) / speed).rounded())
+                let inside = piece.offsetMS(ofSourceMS: source) ?? 0
                 return elapsed + min(inside, piece.lengthMS)
             }
             // Nearest playing moment in the way it leans.

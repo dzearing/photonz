@@ -166,6 +166,31 @@ extension EditorState {
         return rows
     }
 
+    /// Add Speed Stop, Delete Speed Stop and Reset Ramp, under the speeds in a
+    /// clip's Speed submenu (`EditorState+SpeedStops`). On a picture only: a
+    /// ramped stretch plays silent, so a sound has nothing to gain from one.
+    func speedStopMenuRows(layerID: UUID, piece index: Int, picture: Bool) -> [MenuRow] {
+        guard picture else { return [] }
+        var rows: [MenuRow] = []
+        if canAddSpeedStop(layerID) {
+            rows.append(.command(TimelinePointing.atPlayhead(SpeedStopNames.add, ms: documentTimeMS)) {
+                self.addSpeedStop(layerID)
+            })
+        }
+        let ramped = document?.layer(id: layerID)?.clipPieces?.piece(at: index)?.speedRamp != nil
+        if ramped {
+            rows.append(.command(SpeedStopNames.delete) {
+                self.selectClipPiece(layerID: layerID, index: index)
+                self.deleteSpeedStopInHand()
+            })
+            rows.append(.command(SpeedStopNames.reset) {
+                self.selectClipPiece(layerID: layerID, index: index)
+                self.resetRampInHand()
+            })
+        }
+        return rows.isEmpty ? [] : [.separator] + rows
+    }
+
     /// A list without a separator at either end or two in a row.
     static func trimmedSeparators(_ rows: [MenuRow]) -> [MenuRow] {
         var out: [MenuRow] = []
@@ -212,12 +237,13 @@ extension EditorState {
             }]
         case .speed:
             guard let piece = clip.piece, !piece.isHeld, layer.hasMediaBehindIt else { return [] }
-            return [.submenu("Speed", EditorState.clipSpeeds.map { percent in
-                .toggle(ClipSpeed.title(percent), isOn: piece.speedPercent == percent) {
+            let speeds: [MenuRow] = EditorState.clipSpeeds.map { percent in
+                .toggle(ClipSpeed.title(percent), isOn: piece.speedRamp == nil && piece.speedPercent == percent) {
                     self.selectClipPiece(layerID: layerID, index: index)
                     self.setClipSpeedInHand(percent)
                 }
-            })]
+            }
+            return [.submenu("Speed", speeds + speedStopMenuRows(layerID: layerID, piece: index, picture: picture))]
         case .startAtPlayhead, .endAtPlayhead:
             let start = row == .startAtPlayhead
             guard start ? canStartPlacedLayerHere(layerID) : canEndPlacedLayerHere(layerID) else { return [] }

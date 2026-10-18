@@ -917,6 +917,15 @@ struct EditorCommands: Commands {
                 }
                 .disabled(!(editor?.canSetClipSpeed(percent) ?? false))
             }
+            // Speed stops (`EditorState+SpeedStops`): no key, since the
+            // mock's A is Premiere's Track Select Forward (UX-PATTERNS §7).
+            Divider()
+            Button(SpeedStopNames.add) { editor?.addSpeedStopInHand() }
+                .disabled(!(editor?.canAddSpeedStopInHand ?? false))
+            Button(SpeedStopNames.delete) { editor?.deleteSpeedStopInHand() }
+                .disabled(!(editor?.canDeleteSpeedStopInHand ?? false))
+            Button(SpeedStopNames.reset) { editor?.resetRampInHand() }
+                .disabled(!(editor?.canResetRampInHand ?? false))
         }
         .disabled(editor?.clipSpeedInHand == nil)
     }

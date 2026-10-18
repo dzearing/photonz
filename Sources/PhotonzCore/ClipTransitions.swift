@@ -379,6 +379,7 @@ public struct ClipCut: Hashable, Sendable {
     public var isContinuous: Bool {
         readsOneRecording && !outgoing.isHeld && !incoming.isHeld
             && outgoing.speedPercent == incoming.speedPercent
+            && outgoing.speedRamp == incoming.speedRamp
             && outgoing.sourceOutMS == incoming.sourceInMS
     }
 

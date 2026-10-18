@@ -106,6 +106,15 @@ struct SpeedInspector: View {
 
     @ViewBuilder
     private func plays(_ piece: ClipPiece) -> some View {
+        if let ramp = piece.speedRamp {
+            ramped(piece, ramp)
+        } else {
+            playsAtOneSpeed(piece)
+        }
+    }
+
+    @ViewBuilder
+    private func playsAtOneSpeed(_ piece: ClipPiece) -> some View {
         let reading = ClipSpeedReading(piece)
         VideoKit.DropdownRow(
             label: "Speed", value: ClipSpeed.title(piece.speedPercent),
@@ -121,6 +130,53 @@ struct SpeedInspector: View {
         // How long it runs is the Properties pane's clip line, one section up.
         sound(reading.sound)
     }
+
+    // MARK: A piece with speed stops
+
+    /// The mock's Speed stop section (`video-speed.html`, PROPERTIES): which
+    /// stop of how many, its speed, and how the piece gets between stops.
+    /// Adding, deleting and resetting are verbs, so they are rows of the
+    /// clip's Speed menu, not buttons here.
+    @ViewBuilder
+    private func ramped(_ piece: ClipPiece, _ ramp: SpeedRamp) -> some View {
+        let count = ramp.stops.count
+        let picked = min(editorState.speedStopInHand ?? 0, count - 1)
+        let speed = ramp.stops[picked].speedPercent
+        let speeds = ClipSpeed.stops.contains(speed) ? ClipSpeed.stops : (ClipSpeed.stops + [speed]).sorted()
+        VideoKit.DropdownRow(
+            label: "Speed stop", value: Self.stopTitle(picked, of: count),
+            choices: .picking(Array(0..<count), current: picked, title: { Self.stopTitle($0, of: count) },
+                              isEnabled: { _ in true }) {
+                editorState.pickSpeedStop($0)
+            })
+        .playtestField("Speed stop")
+        .panelHelp("The stop the rows below change. The playhead goes to it.")
+        VideoKit.DropdownRow(
+            label: "Speed", value: ClipSpeed.title(speed),
+            choices: .picking(speeds, current: speed, title: ClipSpeed.title,
+                              isEnabled: { $0 == speed || editorState.canSetSpeedStopInHand($0) }) {
+                editorState.setSpeedStopInHand($0)
+            },
+            opensWhenAsked: editorState.pendingClipSpeedChoices,
+            opened: editorState.clipSpeedChoicesOpened)
+        .playtestField("Speed")
+        .panelHelp("How fast the clip plays as it passes this stop.")
+        VideoKit.FieldRow(label: "Between stops") {
+            SegmentedControl("Between stops", selection: ramp.blend,
+                             options: SpeedRampBlend.allCases.map { .init($0, $0.title) },
+                             form: .natural) { editorState.setRampBlendInHand($0) }
+                .controlSize(.small)
+                .fixedSize()
+        }
+        .panelReadout(ramp.blend.title)
+        .playtestField("Between stops")
+        // The mock's own line, moved behind the row (UX-PATTERNS §4).
+        .panelHelp("Ramp eases between stops. Hold keeps each section flat.")
+        sound(ClipSpeedReading(piece).sound)
+    }
+
+    /// `2 of 3`: the mock's `4 of 7`.
+    static func stopTitle(_ index: Int, of count: Int) -> String { "\(index + 1) of \(count)" }
 
     /// What you hear under this piece, in a word, with the reason on hover.
     /// A stretch that has gone quiet must never go quiet quietly, so Silent

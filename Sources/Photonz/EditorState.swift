@@ -3184,6 +3184,11 @@ final class EditorState {
     /// pass or two later, and it opens when it is built.
     var pendingClipSpeedChoices = false
 
+    /// The speed stop picked on a clip's piece, for the panel's Speed stop
+    /// rows (`EditorState+SpeedStops`). Nil, or a pick on another piece,
+    /// means the stop nearest the playhead.
+    var pickedSpeedStop: PickedSpeedStop?
+
     /// The effect you last opened, by `LayerEffectRow.id`, for as long as it
     /// stays open.
     ///

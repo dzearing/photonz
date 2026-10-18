@@ -337,7 +337,7 @@ extension Layer {
             for piece in pieces.playback where piece.speedPercent > 0 {
                 guard clock >= piece.sourceInMS,
                       clock <= piece.sourceInMS + piece.sourceLengthMS else { continue }
-                let offset = (clock - piece.sourceInMS) * 100 / piece.speedPercent
+                let offset = piece.offsetMS(ofSourceMS: clock) ?? 0
                 return time.inMS + piece.startMS + min(max(0, offset), max(0, piece.lengthMS - 1))
             }
             return nil

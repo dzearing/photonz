@@ -955,7 +955,7 @@ struct ClipPiecesBar: View {
         // A stretch whose picture a range took off: its sound still plays,
         // so the sound's bar says nothing.
         if piece.pictureHidden, !isSound { return "hidden" }
-        return ClipSpeed.badge(piece.speedPercent)
+        return ClipSpeed.badge(piece)
     }
 
     static func pieceName(layerName: String, index: Int, of count: Int) -> String {

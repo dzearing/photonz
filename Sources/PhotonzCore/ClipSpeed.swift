@@ -48,12 +48,14 @@ public enum ClipSpeedSound: Hashable, Sendable {
     case silentTooSlow
     /// A held frame, which reads no stretch of the recording at all.
     case silentHeld
+    /// A piece whose speed changes across it (`SpeedRamp.swift`).
+    case silentRamp
 
     /// Whether anything is heard under this piece.
     public var plays: Bool {
         switch self {
         case .asRecorded, .pitchedUp, .pitchedDown: true
-        case .silentTooFast, .silentTooSlow, .silentHeld: false
+        case .silentTooFast, .silentTooSlow, .silentHeld, .silentRamp: false
         }
     }
 
@@ -63,7 +65,7 @@ public enum ClipSpeedSound: Hashable, Sendable {
         case .asRecorded: "As recorded"
         case .pitchedUp: "Higher"
         case .pitchedDown: "Lower"
-        case .silentTooFast, .silentTooSlow, .silentHeld: "Silent"
+        case .silentTooFast, .silentTooSlow, .silentHeld, .silentRamp: "Silent"
         }
     }
 
@@ -84,6 +86,9 @@ public enum ClipSpeedSound: Hashable, Sendable {
             + "plays with none."
         case .silentHeld:
             "Silent. This is one frame held, and one frame has no sound under it."
+        case .silentRamp:
+            "Silent. The speed changes across this stretch, and a voice sped up and slowed "
+            + "down inside one stretch is not a voice any more."
         }
     }
 }
@@ -118,12 +123,15 @@ public struct ClipSpeedReading: Hashable, Sendable {
     /// How much of the recording that is. Nought for a held frame.
     public let sourceLengthMS: Int
     public let isHeld: Bool
+    /// Whether its speed changes across it (`SpeedRamp.swift`).
+    public let isRamped: Bool
 
     public init(_ piece: ClipPiece) {
         self.speedPercent = piece.speedPercent
         self.lengthMS = piece.lengthMS
         self.sourceLengthMS = piece.sourceLengthMS
         self.isHeld = piece.isHeld
+        self.isRamped = piece.speedRamp != nil
     }
 
     /// What is being skipped or held.
@@ -136,7 +144,9 @@ public struct ClipSpeedReading: Hashable, Sendable {
 
     /// What the sound is doing.
     public var sound: ClipSpeedSound {
-        isHeld ? .silentHeld : ClipSpeed.sound(atPercent: speedPercent)
+        if isHeld { return .silentHeld }
+        if isRamped { return .silentRamp }
+        return ClipSpeed.sound(atPercent: speedPercent)
     }
 
     /// How much recording fits in how much timeline, which is the whole of what
@@ -220,6 +230,15 @@ public enum ClipSpeed {
     /// speed it was recorded, because a badge on every piece says nothing.
     public static func badge(_ percent: Int) -> String? {
         percent == ClipPiece.asRecordedPercent ? nil : multiple(percent)
+    }
+
+    /// What is written on a piece whose speed changes across it, and on its
+    /// clip line, in place of one speed it does not have.
+    public static let rampBadge = "ramp"
+
+    /// The badge for a piece, ramp or not.
+    public static func badge(_ piece: ClipPiece) -> String? {
+        piece.speedRamp != nil ? rampBadge : badge(piece.speedPercent)
     }
 
     /// A speed as a multiple of the recorded one, the mock's `1.5x`: `2x`

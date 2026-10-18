@@ -95,9 +95,15 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// sound cleaned whole is cleaned everywhere, whatever this says.
     public private(set) var noiseReduction: NoiseReduction?
 
+    /// The speed stops across this piece, nil where it plays at one speed
+    /// (`SpeedRamp.swift`). While it has them they decide every frame and its
+    /// length, and `speedPercent` is the one speed Reset Ramp goes back to.
+    public private(set) var speedRamp: SpeedRamp?
+
     public init(sourceInMS: Int, lengthMS: Int, speedPercent: Int = ClipPiece.asRecordedPercent,
                 transitionIn: ClipTransition? = nil, push: HoldPush? = nil,
-                pictureHidden: Bool = false, noiseReduction: NoiseReduction? = nil) {
+                pictureHidden: Bool = false, noiseReduction: NoiseReduction? = nil,
+                speedRamp: SpeedRamp? = nil) {
         self.sourceInMS = max(0, sourceInMS)
         self.lengthMS = max(Self.shortestMS, lengthMS)
         self.speedPercent = speedPercent == 0
@@ -108,6 +114,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         self.push = self.speedPercent == 0 ? push : nil
         self.pictureHidden = pictureHidden
         self.noiseReduction = noiseReduction
+        // A held frame reads no stretch of the recording, so it has no speed
+        // to change across it.
+        self.speedRamp = self.speedPercent == 0 ? nil : speedRamp
     }
 
     /// The same piece with its picture off, or back on.
@@ -158,10 +167,16 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// Whether this piece is a frame held rather than a stretch played.
     public var isHeld: Bool { speedPercent == 0 }
 
+    /// Whether it plays its recording at the speed it was recorded, all the
+    /// way across: no speed of its own and no stops.
+    public var playsAsRecorded: Bool { speedPercent == Self.asRecordedPercent && speedRamp == nil }
+
     /// How much of the recording this piece plays: nothing at all while a
     /// frame is held, which is exactly what makes a hold a hold.
     public var sourceLengthMS: Int {
-        isHeld ? 0 : Self.scaled(lengthMS, byPercent: speedPercent)
+        if isHeld { return 0 }
+        if let speedRamp { return max(0, Self.rampedSourceMS(speedRamp, from: sourceInMS, after: lengthMS) - sourceInMS) }
+        return Self.scaled(lengthMS, byPercent: speedPercent)
     }
 
     /// Where in the file the piece stops reading. The same moment it started
@@ -179,7 +194,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
 
     /// What the sound of this piece is doing, and why.
     public var speedSound: ClipSpeedSound {
-        isHeld ? .silentHeld : ClipSpeed.sound(atPercent: speedPercent)
+        if isHeld { return .silentHeld }
+        if speedRamp != nil { return .silentRamp }
+        return ClipSpeed.sound(atPercent: speedPercent)
     }
 
     /// How fast the sound runs, which is how fast the picture runs.
@@ -203,7 +220,49 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     public func sourceMS(atOffsetMS offset: Int, runningOn: Bool = false) -> Int {
         guard !isHeld else { return sourceInMS }
         let inside = runningOn ? offset : min(max(0, offset), lengthMS)
+        if let speedRamp { return max(0, Self.rampedSourceMS(speedRamp, from: sourceInMS, after: inside)) }
         return sourceInMS + Self.scaled(inside, byPercent: speedPercent)
+    }
+
+    /// How far into the piece a moment of the recording plays: the way back
+    /// from `sourceMS(atOffsetMS:)`. Not clamped, so a moment before the piece
+    /// answers a negative offset and one after it an offset past its end. Nil
+    /// for a held frame, where every moment is the one frame.
+    public func offsetMS(ofSourceMS source: Int) -> Int? {
+        guard !isHeld else { return nil }
+        if let speedRamp {
+            return Int(speedRamp.timelineMS(fromSourceMS: Double(sourceInMS), toSourceMS: Double(source)).rounded())
+        }
+        return Int((Double(source - sourceInMS) / (Double(speedPercent) / 100)).rounded())
+    }
+
+    /// The frame `timeline` after `from`, rounded once, here.
+    static func rampedSourceMS(_ ramp: SpeedRamp, from: Int, after timeline: Int) -> Int {
+        Int(ramp.sourceMS(fromSourceMS: Double(from), afterTimelineMS: Double(timeline)).rounded())
+    }
+
+    /// The most timeline the recording between two moments can pay for, never
+    /// one more than there really is: what a trim is stopped by.
+    func spareTimelineMS(fromSourceMS from: Int, toSourceMS to: Int) -> Int {
+        guard to > from else { return 0 }
+        guard let speedRamp else { return Self.timelineMS(forSourceMS: to - from, atPercent: speedPercent) }
+        let exact = speedRamp.timelineMS(fromSourceMS: Double(from), toSourceMS: Double(to))
+        return max(0, Int((exact - 1e-6).rounded(.down)))
+    }
+
+    /// The same frames under other stops, or none: as long as those stops
+    /// take to play them. What the recording reads never moves.
+    func reramped(_ ramp: SpeedRamp?) -> ClipPiece {
+        guard !isHeld else { return self }
+        let source = (sourceInMS, sourceOutMS)
+        let length: Int
+        if let ramp {
+            length = Int(ramp.timelineMS(fromSourceMS: Double(source.0), toSourceMS: Double(source.1)).rounded())
+        } else {
+            length = Self.unscaled(source.1 - source.0, byPercent: speedPercent)
+        }
+        return marking(ClipPiece(sourceInMS: source.0, lengthMS: length, speedPercent: speedPercent,
+                                 transitionIn: transitionIn, speedRamp: ramp))
     }
 
     // MARK: - Editing
@@ -217,9 +276,10 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         // The head still arrives the way this piece did; the new join between
         // them is a hard cut until somebody puts something on it.
         return (marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: offset, speedPercent: speedPercent,
-                                  transitionIn: transitionIn, push: push)),
+                                  transitionIn: transitionIn, push: push, speedRamp: speedRamp)),
                 marking(ClipPiece(sourceInMS: sourceMS(atOffsetMS: offset),
-                                  lengthMS: lengthMS - offset, speedPercent: speedPercent, push: push)))
+                                  lengthMS: lengthMS - offset, speedPercent: speedPercent, push: push,
+                                  speedRamp: speedRamp)))
     }
 
     /// The same piece with its start edge moved later into the recording by
@@ -229,16 +289,19 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// the file, they are merely not being played, and moving the edge back
     /// gives back the identical piece.
     public func trimmedStart(byMS delta: Int) -> ClipPiece {
-        marking(ClipPiece(sourceInMS: sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent)),
-                          lengthMS: lengthMS - delta,
-                          speedPercent: speedPercent, transitionIn: transitionIn, push: push))
+        let start = speedRamp != nil
+            ? sourceMS(atOffsetMS: delta, runningOn: true)
+            : sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent))
+        return marking(ClipPiece(sourceInMS: start, lengthMS: lengthMS - delta,
+                                 speedPercent: speedPercent, transitionIn: transitionIn, push: push,
+                                 speedRamp: speedRamp))
     }
 
     /// The same piece with its end edge moved later by `delta` (earlier, for a
     /// negative one).
     public func trimmedEnd(byMS delta: Int) -> ClipPiece {
         marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + delta, speedPercent: speedPercent,
-                          transitionIn: transitionIn, push: push))
+                          transitionIn: transitionIn, push: push, speedRamp: speedRamp))
     }
 
     /// This piece and the one after it as ONE, where they are two halves of
@@ -246,11 +309,11 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// nil where the second one arrives on a transition, which is a cut
     /// somebody put something on.
     func joined(with next: ClipPiece) -> ClipPiece? {
-        guard !isHeld, !next.isHeld, speedPercent == next.speedPercent,
+        guard !isHeld, !next.isHeld, speedPercent == next.speedPercent, speedRamp == next.speedRamp,
               next.transitionIn == nil, sourceOutMS == next.sourceInMS,
               pictureHidden == next.pictureHidden, noiseReduction == next.noiseReduction else { return nil }
         return marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + next.lengthMS,
-                                 speedPercent: speedPercent, transitionIn: transitionIn))
+                                 speedPercent: speedPercent, transitionIn: transitionIn, speedRamp: speedRamp))
     }
 
     /// The same stretch of recording, played at another speed.
@@ -264,6 +327,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// double speed and back can come back a millisecond different when its
     /// length was odd — half of an odd number of milliseconds is not one. Where
     /// the piece starts reading never moves.
+    ///
+    /// One speed for the whole piece replaces any stops across it.
     public func atSpeed(percent: Int) -> ClipPiece {
         guard !isHeld, percent > 0 else { return self }
         let speed = min(max(Self.slowestPercent, percent), Self.fastestPercent)
@@ -303,7 +368,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     // MARK: - Written down
 
     private enum CodingKeys: String, CodingKey {
-        case sourceInMS, lengthMS, speedPercent, transitionIn, push, pictureHidden, noiseReduction
+        case sourceInMS, lengthMS, speedPercent, transitionIn, push, pictureHidden, noiseReduction, speedRamp
     }
 
     /// A piece playing at the speed it was recorded writes two numbers. The
@@ -323,6 +388,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         // ...and the marks a range leaves on a stretch only where they are on.
         if pictureHidden { try c.encode(true, forKey: .pictureHidden) }
         if let noiseReduction { try c.encode(noiseReduction, forKey: .noiseReduction) }
+        // ...and speed stops only on a piece that has them.
+        if let speedRamp { try c.encode(speedRamp, forKey: .speedRamp) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -334,7 +401,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
                   transitionIn: try c.decodeIfPresent(ClipTransition.self, forKey: .transitionIn),
                   push: try c.decodeIfPresent(HoldPush.self, forKey: .push),
                   pictureHidden: try c.decodeIfPresent(Bool.self, forKey: .pictureHidden) ?? false,
-                  noiseReduction: try c.decodeIfPresent(NoiseReduction.self, forKey: .noiseReduction))
+                  noiseReduction: try c.decodeIfPresent(NoiseReduction.self, forKey: .noiseReduction),
+                  speedRamp: try c.decodeIfPresent(SpeedRamp.self, forKey: .speedRamp))
     }
 }
 
@@ -354,15 +422,19 @@ public struct ClipPlayback: Hashable, Sendable {
     public let speedPercent: Int
     /// How hard the noise is taken out of this piece alone (`ClipPiece`).
     public let noiseReduction: NoiseReduction?
+    /// The speed stops across it, nil at one speed (`SpeedRamp.swift`).
+    public let speedRamp: SpeedRamp?
 
     public init(startMS: Int, lengthMS: Int, sourceInMS: Int,
-                sourceLengthMS: Int, speedPercent: Int, noiseReduction: NoiseReduction? = nil) {
+                sourceLengthMS: Int, speedPercent: Int, noiseReduction: NoiseReduction? = nil,
+                speedRamp: SpeedRamp? = nil) {
         self.startMS = startMS
         self.lengthMS = lengthMS
         self.sourceInMS = sourceInMS
         self.sourceLengthMS = sourceLengthMS
         self.speedPercent = speedPercent
         self.noiseReduction = noiseReduction
+        self.speedRamp = speedPercent == 0 ? nil : speedRamp
     }
 
     public var isHeld: Bool { speedPercent == 0 }
@@ -370,7 +442,19 @@ public struct ClipPlayback: Hashable, Sendable {
     /// The same one gate `ClipPiece` answers with, so what the exporter writes
     /// and what the player schedules can never disagree (`ClipSpeedSound`).
     public var speedSound: ClipSpeedSound {
-        isHeld ? .silentHeld : ClipSpeed.sound(atPercent: speedPercent)
+        if isHeld { return .silentHeld }
+        if speedRamp != nil { return .silentRamp }
+        return ClipSpeed.sound(atPercent: speedPercent)
+    }
+
+    /// How far into this piece a moment of the recording plays, the same
+    /// answer `ClipPiece.offsetMS(ofSourceMS:)` gives.
+    public func offsetMS(ofSourceMS source: Int) -> Int? {
+        guard !isHeld else { return nil }
+        if let speedRamp {
+            return Int(speedRamp.timelineMS(fromSourceMS: Double(sourceInMS), toSourceMS: Double(source)).rounded())
+        }
+        return (source - sourceInMS) * 100 / speedPercent
     }
     public var playsSound: Bool { speedSound.plays }
 }
@@ -475,6 +559,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
     /// already say, which is why it is never written down separately.
     public var isOnePlainPiece: Bool {
         pieces.count == 1 && pieces[0].speedPercent == ClipPiece.asRecordedPercent && !pieces[0].isMarked
+            && pieces[0].speedRamp == nil
     }
 
     /// Where a piece starts, measured from the clip's own start.
@@ -535,7 +620,8 @@ public struct ClipPieces: Hashable, Codable, Sendable {
                                         sourceInMS: piece.sourceInMS,
                                         sourceLengthMS: piece.sourceLengthMS,
                                         speedPercent: piece.speedPercent,
-                                        noiseReduction: piece.noiseReduction))
+                                        noiseReduction: piece.noiseReduction,
+                                        speedRamp: piece.speedRamp))
             cursor += piece.lengthMS
         }
         return written
@@ -584,7 +670,8 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         let out = cut.outgoing
         let joined = ClipPiece(sourceInMS: out.sourceInMS, lengthMS: out.lengthMS + cut.incoming.lengthMS,
                                speedPercent: out.speedPercent, transitionIn: out.transitionIn,
-                               pictureHidden: out.pictureHidden, noiseReduction: out.noiseReduction)
+                               pictureHidden: out.pictureHidden, noiseReduction: out.noiseReduction,
+                               speedRamp: out.speedRamp)
         pieces.replaceSubrange((index - 1)...index, with: [joined])
         settleFirstArrival()
         return true
@@ -621,7 +708,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard let piece = piece(at: index) else { return nil }
         let out: Int? = piece.isHeld
             ? nil
-            : -ClipPiece.timelineMS(forSourceMS: piece.sourceInMS, atPercent: piece.speedPercent)
+            : -piece.spareTimelineMS(fromSourceMS: 0, toSourceMS: piece.sourceInMS)
         return (out, piece.lengthMS - ClipPiece.shortestMS)
     }
 
@@ -632,8 +719,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard let piece = piece(at: index) else { return nil }
         var out: Int?
         if !piece.isHeld, let sourceLengthMS {
-            out = ClipPiece.timelineMS(forSourceMS: max(0, sourceLengthMS - piece.sourceOutMS),
-                                       atPercent: piece.speedPercent)
+            out = piece.spareTimelineMS(fromSourceMS: piece.sourceOutMS, toSourceMS: sourceLengthMS)
         }
         return (-(piece.lengthMS - ClipPiece.shortestMS), out)
     }
@@ -650,8 +736,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard let piece = piece(at: index), delta != 0 else { return false }
         guard delta <= piece.lengthMS - ClipPiece.shortestMS else { return false }
         if delta < 0, !piece.isHeld {
-            let spare = ClipPiece.timelineMS(forSourceMS: piece.sourceInMS,
-                                             atPercent: piece.speedPercent)
+            let spare = piece.spareTimelineMS(fromSourceMS: 0, toSourceMS: piece.sourceInMS)
             guard -delta <= spare else { return false }
         }
         pieces[index] = piece.trimmedStart(byMS: delta)
@@ -664,8 +749,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         guard let piece = piece(at: index), delta != 0 else { return false }
         guard -delta <= piece.lengthMS - ClipPiece.shortestMS else { return false }
         if delta > 0, !piece.isHeld, let sourceLengthMS {
-            let spare = ClipPiece.timelineMS(forSourceMS: max(0, sourceLengthMS - piece.sourceOutMS),
-                                             atPercent: piece.speedPercent)
+            let spare = piece.spareTimelineMS(fromSourceMS: piece.sourceOutMS, toSourceMS: sourceLengthMS)
             guard delta <= spare else { return false }
         }
         pieces[index] = piece.trimmedEnd(byMS: delta)

@@ -1,0 +1,35 @@
+{
+  "feature": "Speed stops: a clip's speed changes across its length",
+  "epic": "video-transitions-motion",
+  "summary": "A clip can now ramp: put a speed stop at the playhead, set it to 4x, and the clip speeds up from normal to four times and eases back down, in playback, scrubbing and the exported MP4. Ramp or Hold decides how it gets between stops, and Reset Ramp puts it back to one speed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (eight seconds). Walk: Scripts/playtest/speed-stops-ramp-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Click the ruler at 0:03 so the playhead is three seconds in.", "shot": "2026-10-17-speed-stops-1-speed-submenu-sc.png" },
+    { "do": "Right-click the clip and choose Speed > Add Speed Stop at 0:03.00.", "shot": "2026-10-17-speed-stops-speed-stops-2-a-stop-added-sc.png" },
+    { "do": "In Properties > Time, set Speed to 4x. The clip shrinks to 3.2 seconds and its bar reads ramp.", "shot": "2026-10-17-speed-stops-speed-stops-3-ramped-to-four-sc.png" },
+    { "do": "Press Space and watch it speed up into the stop and ease back out." },
+    { "do": "Click Hold under Between stops: three seconds at normal, then flat at 4x (4.25 seconds).", "shot": "2026-10-17-speed-stops-speed-stops-4-hold-sc.png" },
+    { "do": "Open Speed stop and pick 3 of 3: the playhead jumps to the clip's last frame." },
+    { "do": "Right-click the clip and choose Speed > Reset Ramp: back to eight seconds at Normal.", "shot": "2026-10-17-speed-stops-speed-stops-5-reset-sc.png" }
+  ],
+  "evaluate": [
+    "Does a ramp from normal to 4x and back read as a smooth speed-up when you play it, or does it feel like it jumps?",
+    "Is the Speed submenu where you would look for Add Speed Stop, or would you expect it at the top of the right-click menu?",
+    "Adding the first stop also puts stops on the clip's two ends (2 of 3). Is that the ramp you expected when you set the middle one to 4x?",
+    "A ramped clip plays silent. Is that right for your recordings, or do you want the voice kept at normal speed the way Premiere leaves it?",
+    "Without the curve drawn under the clip, can you keep track of where your stops are from the Speed stop list alone?"
+  ],
+  "rough": [
+    "The mock prints A for Add speed stop. On a video A is Premiere's Track Select Forward, which A already does here, so Add Speed Stop has no key (UX-PATTERNS §7).",
+    "The mock puts Add speed stop, Delete speed stop and Reset ramp at the top of its Clip menu. Here they are under Speed, in the right-click and in the menu bar's Clip menu, because the clip's right-click is held to eleven rows since your call on 2026-10-17 about the enormous clip menu.",
+    "The mock's panel has Add stop, Delete stop, Click to add and Reset ramp buttons. They are menu rows instead, since the panel holds values and not one-shot verbs (UX-PATTERNS placement contract, Inspector row; card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h).",
+    "The mock's Speed row is a bar with Slow-mo, Normal, Fast and Freeze. Here it is a dropdown of the speeds Speed already offers, 0.25x to 30x, because more than three exclusive choices is a dropdown (UX-PATTERNS §4).",
+    "No stop can go to zero yet, so the mock's Freeze choice and its line 'A stop at zero holds a single frame, so two zeros side by side make a freeze' are left out; a freeze is still Freeze Frame. Covered by the-speed-curve-shows-under-a-clip-and-its-stops.",
+    "The speed curve under the clip and the Clip section's Source, Output, Stops and Frames readout are not built; the clip line and the Source ghost row say the before and after for now. Covered by the-speed-curve-shows-under-a-clip-and-its-stops.",
+    "The mock's tip line moved behind the Between stops row, shortened to 'Ramp eases between stops. Hold keeps each section flat.' to fit the panel's tooltip budget (UX-PATTERNS §4).",
+    "Sound: a ramped stretch plays silent, and the Sound row says Silent in the warning colour. Premiere leaves the sound at normal speed, which runs it off the picture; this app already silences anything past 2x, and the try path ramps to 4x. Not measured by ear yet.",
+    "Between stops the speed changes evenly in timeline time; stops are pinned to frames of the recording, so a trim or split keeps them on their frames. A trim pulled in and back out can land one millisecond off.",
+    "Pictures were taken with the probe in front."
+  ]
+}
