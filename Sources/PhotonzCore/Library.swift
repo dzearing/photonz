@@ -9,6 +9,27 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
     case components
     case styles
     case systems
+    /// A video's shelf of things made and animated for video, grouped by
+    /// kind (`VideoCatalog`). Only a document with time offers it, and a
+    /// document with time offers nothing else beside Media.
+    case catalog
+
+    /// The pivots a document offers, in the order the segmented control
+    /// draws them. Styles and Systems are design-document ideas with no job
+    /// in a video (the user, 2026-10-17: "Things not relevant to a video
+    /// shouldn't be in the library pivots"), and components, built for
+    /// mockups, are inside the catalog behind its Built for video filter.
+    public static func scopes(hasTime: Bool) -> [LibraryScope] {
+        hasTime ? [.media, .catalog] : [.media, .components, .styles, .systems]
+    }
+
+    /// The pivot to show for a stored one, in a document that may not offer
+    /// it: the nearest one it does, so a shelf left on Components in a
+    /// picture opens a video on its catalog and the other way round.
+    public static func resolved(_ stored: LibraryScope, hasTime: Bool) -> LibraryScope {
+        if scopes(hasTime: hasTime).contains(stored) { return stored }
+        return hasTime ? .catalog : .components
+    }
 
     /// The scope's full name, used in the panel header and anywhere there is
     /// room for the whole word.
@@ -18,6 +39,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         case .components: return "Components"
         case .styles: return "Styles"
         case .systems: return "Systems"
+        case .catalog: return "Catalog"
         }
     }
 
@@ -29,6 +51,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         case .components: return "Comps"
         case .styles: return "Styles"
         case .systems: return "Systems"
+        case .catalog: return "Catalog"
         }
     }
 
@@ -41,6 +64,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         case .components: return "Component"
         case .styles: return "Style"
         case .systems: return "System"
+        case .catalog: return "Item"
         }
     }
 
@@ -51,6 +75,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         case .components: return "Search components"
         case .styles: return "Search styles"
         case .systems: return "Search systems"
+        case .catalog: return "Search catalog"
         }
     }
 
@@ -64,6 +89,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         case .components: return "Components you make will show up here."
         case .styles: return "Colors and text styles you save under a name will show up here."
         case .systems: return "Design systems you add will show up here."
+        case .catalog: return "Titles, backgrounds and transitions show up here."
         }
     }
 

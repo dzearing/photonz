@@ -180,6 +180,16 @@ struct InspectorPanel: View {
     /// The Library's scope, so the picked item's section can be titled after
     /// what it is ("Media", "Component") rather than "Library Item".
     @StoredSetting(LibraryPanel.scopeKey) private var libraryScopeRaw = LibraryScope.media.rawValue
+    /// ...and a video's own, watched so the header follows it too.
+    @StoredSetting(EditorState.videoLibraryScopeKey) private var videoLibraryScopeRaw = LibraryScope.media.rawValue
+
+    /// The Library's pivot for the open document (`EditorState.libraryPivot`),
+    /// read through the two settings above so a change to either redraws.
+    private var libraryScope: LibraryScope {
+        let hasTime = editorState.documentHasTime
+        return LibraryScope.resolved(LibraryScope(rawValue: hasTime ? videoLibraryScopeRaw : libraryScopeRaw) ?? .media,
+                                     hasTime: hasTime)
+    }
     /// Scratch measurements for the Library reveal. A reference on purpose:
     /// see the note at the geometry reader.
     @State private var reveal = DockRevealScratch()
@@ -1437,7 +1447,7 @@ struct InspectorPanel: View {
             text = editorState.timelinePickSummary != nil ? nil : DockGroupHeader.chip(editorState.keyLayerKind)
             return text.map { .init(text: $0, field: "Properties Kind") }
         case .library:
-            text = (LibraryScope(rawValue: libraryScopeRaw) ?? .media).title
+            text = libraryScope.title
             return text.map { .init(text: $0, field: "Library Scope") }
         case .effects where Experiments.shared.shapePartsEnabled:
             text = DockGroupHeader.countChip(editorState.layerEffectRows.count)
@@ -1531,7 +1541,7 @@ struct InspectorPanel: View {
             if Experiments.shared.dockHeadersEnabled { return AnyView(PropertiesPanelMenu()) }
             return AnyView(PropertyKeysSectionAccessory())
         case .library:
-            let scope = LibraryScope(rawValue: libraryScopeRaw) ?? .media
+            let scope = libraryScope
             let chipped = Experiments.shared.dockHeadersEnabled
             return AnyView(HStack(spacing: 6) {
                 if !chipped {
@@ -1583,7 +1593,16 @@ struct InspectorPanel: View {
             // A title tile is named after its kind: a picked lower third is a
             // Name Card, not a Component.
             if let preset = editorState.titlePresetInPanel { return preset.kind.name }
-            return (LibraryScope(rawValue: libraryScopeRaw) ?? .media).itemTitle
+            // A catalog tile is named after its kind too: a Background, a
+            // Picture, a Component.
+            if libraryScope == .catalog {
+                if editorState.catalogBackgroundInPanel != nil { return VideoCatalogCategory.backgrounds.singular }
+                if editorState.selectedComponentLayer != nil || editorState.selectedStarterComponent != nil {
+                    return VideoCatalogCategory.components.singular
+                }
+                return VideoCatalogCategory.logos.singular
+            }
+            return libraryScope.itemTitle
         }
         // With the parts list on, this section is no longer only colours: it
         // holds every part the picked layers paint, each with its switch and
@@ -1801,6 +1820,8 @@ struct InspectorPanel: View {
             // from: a capture's details, or a component's.
             if let preset = editorState.titlePresetInPanel {
                 LibraryTitlePresetInspector(preset: preset)
+            } else if let look = editorState.catalogBackgroundInPanel {
+                LibraryBackgroundInspector(look: look)
             } else if editorState.selectedComponentLayer != nil {
                 LibraryComponentInspector()
             } else if editorState.selectedStarterComponent != nil {

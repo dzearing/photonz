@@ -8,7 +8,7 @@
     { "do": "action", "action": "videoPause" },
     { "do": "action", "action": "showLibrary" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "press", "control": "Comps" },
+    { "do": "press", "control": "Catalog" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "describe", "stage": "1-from-nothing", "note": "THE FIRST TEST: Kinetic Bold and Keynote Clean, ten clicks each from nothing picked, every one shown picked within 33ms and the dock ready within 100ms" },
     { "do": "timeTileClicks", "tiles": ["Kinetic Bold", "Keynote Clean"], "times": 10, "highlightUnderMS": 33, "settledUnderMS": 100 },

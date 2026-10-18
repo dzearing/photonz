@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-library-shelf-walk",
-  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Soft Gradient Glass tile is picked up by the pointer, and the Keynote Clean tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Behind Glass, the page made of the recording under it, held over the recording on V1 says it goes on a new track, never into the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Keynote Clean double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
+  "seed": "Title pages and name cards are picture tiles on the Library's Catalog, under Title Pages and Name Cards headers, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Catalog segment pressed by the pointer. The Soft Gradient Glass tile is picked up by the pointer, and the Keynote Clean tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Behind Glass, the page made of the recording under it, held over the recording on V1 says it goes on a new track, never into the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Keynote Clean double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -41,7 +41,7 @@
       "seconds": 0.4
     },
     {
-      "comment": "View > Library, the way a person turns the shelf on, then the Comps segment by the pointer.",
+      "comment": "View > Library, the way a person turns the shelf on, then the Catalog segment by the pointer.",
       "do": "action",
       "action": "showLibrary"
     },
@@ -51,7 +51,7 @@
     },
     {
       "do": "press",
-      "control": "Comps"
+      "control": "Catalog"
     },
     {
       "do": "wait",
@@ -310,7 +310,7 @@
     },
     {
       "do": "scrollPanel",
-      "row": "Comps",
+      "row": "Catalog",
       "by": -3000
     },
     {

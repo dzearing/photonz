@@ -324,6 +324,11 @@ final class EditorState {
     /// The title tile the Library last handed to a drag, so the timeline can
     /// answer the moment it arrives, before the drag's own bytes are read.
     @ObservationIgnored var titleTileLifted: TitlePreset?
+    /// A moving background off the Library's catalog held over the timeline,
+    /// and the one the catalog last handed to a drag, the same pair a title
+    /// keeps (`BackgroundDrag`).
+    @ObservationIgnored var timelineBackgroundInAir: LiveLook?
+    @ObservationIgnored var backgroundTileLifted: LiveLook?
     /// A component tile held over the timeline, read off its drag
     /// (`EditorState+ComponentTimelineDrop`).
     @ObservationIgnored var timelineComponentInAir: ComponentDrag.Payload?

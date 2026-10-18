@@ -1,0 +1,51 @@
+{
+  "id": "in-a-video-the-library-is-a-catalog-of-things-bu-how-should-a-video-s-library-let",
+  "taskId": "in-a-video-the-library-is-a-catalog-of-things-bu",
+  "question": "How should a video's Library let you pick a kind of thing (title pages, name cards, backgrounds...)?",
+  "context": "Built: chips. The Library in a video now has Media and Catalog only; the catalog groups everything made for video by kind. This card only asks how the kinds are picked.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Chips that wrap above the tiles (built)",
+      "summary": "A row of small pills under the search box, one per kind with its count, plus All; they wrap to a second line in a narrow dock. Click one and the tiles below show only that kind.",
+      "pros": [
+        "Every kind and its count is readable at a glance",
+        "Tiles keep the whole width of the dock"
+      ],
+      "cons": [
+        "Takes two lines of the dock above the tiles"
+      ],
+      "mitigation": "Kinds with nothing in them have no chip, so the row stays short."
+    },
+    {
+      "id": "b",
+      "label": "A column of kinds down the left of the tiles",
+      "summary": "A narrow list of kinds (Title Pages, Name Cards, ...) runs down the left edge of the Library, like the Finder sidebar; the tiles fill the space to its right.",
+      "pros": [
+        "Familiar from Final Cut title browser and the Finder sidebar",
+        "Adds no lines above the tiles"
+      ],
+      "cons": [
+        "In a 300 point dock the tiles shrink to one narrow column",
+        "Long kind names get cut off"
+      ],
+      "mitigation": "The column could fold to icons when the dock is narrow."
+    },
+    {
+      "id": "c",
+      "label": "One dropdown naming the kind",
+      "summary": "A single pop-up button above the tiles reads All, or Title Pages and so on; pick from it to change the kind.",
+      "pros": [
+        "One line, the smallest footprint"
+      ],
+      "cons": [
+        "You cannot see what kinds exist or how many without opening it",
+        "Two clicks to change kind instead of one"
+      ],
+      "mitigation": "The dropdown can show the count beside each kind."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-18T00:20:02.693Z"
+}

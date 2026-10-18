@@ -190,6 +190,16 @@ DRAG_TYPE=$(cat <<'TYPES'
             <key>UTTypeTagSpecification</key>
             <dict/>
         </dict>
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.photonz.catalog-background</string>
+            <key>UTTypeDescription</key><string>Photonz Moving Background</string>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.item</string>
+            </array>
+            <key>UTTypeTagSpecification</key>
+            <dict/>
+        </dict>
 TYPES
 )
 

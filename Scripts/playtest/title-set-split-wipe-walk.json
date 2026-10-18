@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-set-split-wipe-walk",
-  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Split Wipe, a name card, found on the Library's Comps shelf by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 7.9s.",
+  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Split Wipe, a name card, found on the Library's Catalog by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 7.9s.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -42,7 +42,7 @@
     },
     {
       "do": "press",
-      "control": "Comps"
+      "control": "Catalog"
     },
     {
       "do": "wait",

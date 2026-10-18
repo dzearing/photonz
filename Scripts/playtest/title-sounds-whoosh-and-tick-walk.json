@@ -42,7 +42,7 @@
     },
     {
       "do": "press",
-      "control": "Comps"
+      "control": "Catalog"
     },
     {
       "do": "wait",

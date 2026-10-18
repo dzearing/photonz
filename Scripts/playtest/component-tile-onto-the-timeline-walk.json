@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/component-tile-onto-the-timeline-walk",
-  "seed": "A component off the Library lands on the timeline where it is let go, the way the title mock drags its lower third onto the Title track (video-title-wt.html, step 10). At Next defaults with no flag set: the sample recording is opened, the Library shown with the Comps segment pressed by the pointer, and the Badge starter tile carried onto V1 at five seconds. Held there, the lane draws the dashed ghost and says it goes on a new track, never over the recording. Let go, the badge lands on that new track from five seconds for three, picked, with the playhead on its in. One Undo takes the whole of it away, track and all. Dropped again over the badge's own new track after its end, it lands on that same track. Last, a double click on the tile still places one at the playhead, the way it did before the timeline took components.",
+  "seed": "A component off the Library lands on the timeline where it is let go, the way the title mock drags its lower third onto the Title track (video-title-wt.html, step 10). At Next defaults with no flag set: the sample recording is opened, the Library shown with the Catalog segment pressed and its Built for video filter turned off by the pointer, and the Badge starter tile carried onto V1 at five seconds. Held there, the lane draws the dashed ghost and says it goes on a new track, never over the recording. Let go, the badge lands on that new track from five seconds for three, picked, with the playhead on its in. One Undo takes the whole of it away, track and all. Dropped again over the badge's own new track after its end, it lands on that same track. Last, a double click on the tile still places one at the playhead, the way it did before the timeline took components.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -14,10 +14,12 @@
     { "do": "tool", "tool": "select" },
     { "do": "key", "key": "home" },
     { "do": "wait", "seconds": 0.4 },
-    { "comment": "View > Library, the way a person turns the shelf on, then the Comps segment by the pointer.", "do": "action", "action": "showLibrary" },
+    { "comment": "View > Library, the way a person turns the shelf on, then the Catalog segment by the pointer.", "do": "action", "action": "showLibrary" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "press", "control": "Comps" },
+    { "do": "press", "control": "Catalog" },
     { "do": "wait", "seconds": 1.2 },
+    { "comment": "Components are built for mockups, so the catalog keeps them behind its Built for video filter: turned off by the pointer, they join the shelf.", "do": "press", "control": "Built for video" },
+    { "do": "wait", "seconds": 0.6 },
     { "comment": "The six title tiles come first and the grid is lazy, so the shelf is searched for the tile, the way a person finds one.", "do": "press", "control": "Search library" },
     { "do": "type", "text": "Badge" },
     { "do": "wait", "seconds": 1.0 },

@@ -33,6 +33,7 @@ struct TimelineFileDropDelegate: DropDelegate {
     /// a file and not always what kind.
     func validateDrop(info: DropInfo) -> Bool {
         carriesTransition(info) || carriesTitle(info) || carriesComponent(info) || carriesPicture(info)
+            || carriesBackground(info)
             || info.hasItemsConforming(to: [.fileURL])
             || FileDrop.carriesUsableFile(info, into: editorState)
     }
@@ -41,7 +42,13 @@ struct TimelineFileDropDelegate: DropDelegate {
     /// transition tile out of the panel's Transitions group, a title page or
     /// name card off the Library shelf, and a component off it.
     static let types: [UTType] = FileDrop.types
-        + [TransitionDrag.type, TitlePresetDrag.type, UTType(ComponentDrag.typeIdentifier) ?? .data]
+        + [TransitionDrag.type, TitlePresetDrag.type, UTType(ComponentDrag.typeIdentifier) ?? .data,
+           BackgroundDrag.type]
+
+    /// A moving background off the Library's catalog (`BackgroundDrag`).
+    private func carriesBackground(_ info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [BackgroundDrag.type])
+    }
 
     /// A transition tile rather than a file (`TransitionDrag.swift`).
     private func carriesTransition(_ info: DropInfo) -> Bool {
@@ -76,6 +83,12 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropEntered(info: DropInfo) {
+        if carriesBackground(info) {
+            let point = info.location
+            if let lifted = editorState.backgroundTileLifted { editorState.moveBackgroundHover(lifted, to: point) }
+            BackgroundDrag.load(info) { [editorState] look in editorState.moveBackgroundHover(look, to: point) }
+            return
+        }
         if carriesPicture(info) {
             if let id = pictureID() { editorState.movePictureHover(id, to: info.location) }
             return
@@ -114,6 +127,12 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        if carriesBackground(info) {
+            if let look = editorState.timelineBackgroundInAir ?? editorState.backgroundTileLifted {
+                editorState.moveBackgroundHover(look, to: info.location)
+            }
+            return DropProposal(operation: .copy)
+        }
         if carriesPicture(info) {
             if let id = pictureID() { editorState.movePictureHover(id, to: info.location) }
             return DropProposal(operation: .copy)
@@ -148,12 +167,21 @@ struct TimelineFileDropDelegate: DropDelegate {
 
     func dropExited(info: DropInfo) {
         editorState.endPictureHover()
+        editorState.endBackgroundHover()
         editorState.endTitleHover()
         editorState.endTransitionHover()
         editorState.endComponentHover()
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        if carriesBackground(info) {
+            let point = info.location
+            if let look = editorState.timelineBackgroundInAir ?? editorState.backgroundTileLifted {
+                return editorState.dropBackgroundOnTimeline(look, at: point)
+            }
+            BackgroundDrag.load(info) { [editorState] look in editorState.dropBackgroundOnTimeline(look, at: point) }
+            return true
+        }
         if carriesPicture(info) {
             guard let id = pictureID() else {
                 editorState.endPictureHover()

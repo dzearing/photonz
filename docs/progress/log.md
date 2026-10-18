@@ -21588,3 +21588,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - App: mode held per `EditorState` (`EditorState+WindowMode.swift`); chip only on pictures; View ▸ Mode dimmed on a video; ⌃1 Image, ⌃2 Icon, ⌃3 Design; New UI Design opens its window in Design.
 - Walk: `modes-follow-the-document-walk`; `window-modes-walk` and `design-mode-tool-strip-walk` updated. Audit: `queue/audits/2026-10-17-images-open-in-image-mode.json`.
 - Open: should Image fold Motion/Components like Redline did; should a reopened file remember its mode (asked on the audit).
+
+## 2026-10-17 — Video Library is a catalog grouped by kind (Next)
+
+- A video's Library has two pivots, Media and Catalog; Styles and Systems stay for pictures (`LibraryScope.scopes(hasTime:)`, per-kind setting `library.scope.video`).
+- `VideoCatalog` (PhotonzCore, tested): Title Pages, Name Cards, Backgrounds, Transitions, Logos & Brand, with Animated Charts, Callouts, End Cards hidden until something exists; Components only with Built for video off; search across kinds; last kind remembered.
+- Moving backgrounds land full frame on a Gfx track by double click or drag (`landBackground`, `BackgroundDrag`, declared in `Scripts/build-app.sh`).
+- Mock: `docs/design/mocks/pages/video-library.html`. Open card: chips vs side column vs dropdown (chips built).
+- Next: the card's answer; whether the Library shows in a video's dock (`a-video-document-shows-the-library-in-its-dock`); animated charts.

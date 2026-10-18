@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-and-gfx-track-icons-walk",
-  "seed": "A Title track and a Gfx track wear the icons video-title-wt.html draws beside V1: the text mark on Title, the sparkle on Gfx, the picture on V1, and the logo's clip on Gfx is the mock's amber with a dark name, apart from the teal and violet of V1. At Next defaults with no flag set: a PNG logo comes in by File > Import Media and is let go over V1 two seconds in, the Keynote Clean title is double clicked onto the playhead from the Library's Comps shelf, nothing is left picked, and the timeline is photographed with Title, Gfx and V1 together.",
+  "seed": "A Title track and a Gfx track wear the icons video-title-wt.html draws beside V1: the text mark on Title, the sparkle on Gfx, the picture on V1, and the logo's clip on Gfx is the mock's amber with a dark name, apart from the teal and violet of V1. At Next defaults with no flag set: a PNG logo comes in by File > Import Media and is let go over V1 two seconds in, the Keynote Clean title is double clicked onto the playhead from the Library's Catalog, nothing is left picked, and the timeline is photographed with Title, Gfx and V1 together.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -78,7 +78,7 @@
     },
     {
       "do": "press",
-      "control": "Comps"
+      "control": "Catalog"
     },
     {
       "do": "wait",

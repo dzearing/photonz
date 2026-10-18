@@ -1,0 +1,32 @@
+{
+  "feature": "The Library in a video is a catalog grouped by kind",
+  "epic": "video-titles-graphics",
+  "summary": "With a video open, the Library has just Media and Catalog. The Catalog files titles, name cards, moving backgrounds, transitions and your pictures under chips with counts, keeps mockup components behind a Built for video checkbox, and adds any tile at the playhead with a double click or a drag onto the timeline.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a screen recording and turn on View > Library. Walk: video-library-catalog-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and choose View > Library. Look at the pivots: only Media and Catalog.", "shot": "2026-10-17-video-library-1-catalog-all.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Catalog, then the Backgrounds chip. Hover a tile to see it move.", "shot": "2026-10-17-video-library-3-backgrounds.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Title Pages and double click Keynote Clean, then Name Cards and double click Split Wipe." },
+    { "do": "Back on Backgrounds, double click Aurora, then drag Light Rays onto the timeline.", "shot": "2026-10-17-video-library-4-three-things-added.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Untick Built for video and click the Components chip that appears.", "shot": "2026-10-17-video-library-5-components-for-mockups.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Tick it again, pick Title Pages, and type cube in the search box.", "shot": "2026-10-17-video-library-6-search-across-kinds.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Switch to a picture document's window: its Library still shows Media, Comps, Styles and Systems." }
+  ],
+  "evaluate": [
+    "Can you find a name card in one glance and one click, without scrolling?",
+    "Do chips above the tiles read better to you than a column down the side or a single dropdown (the open card on this task)?",
+    "Is Catalog the right word for the second pivot, or would something like Titles & More say it better?",
+    "Should a moving background land under the titles but over the recording, as it does now, or somewhere else?",
+    "Is it right that components only appear with Built for video unticked?"
+  ],
+  "rough": [
+    "How the kinds are picked (chips, a side column or a dropdown) is open on decision card in-a-video-the-library-is-a-catalog-of-things-bu-how-should-a-video-s-library-let; chips are built, matching the mock page video-library.html.",
+    "The shipped Library matches the mock page video-library.html (frames 1 to 4); the walk's video had no pictures, so its Logos & Brand chip is absent rather than different.",
+    "Animated Charts, Callouts and End Cards have no chip yet because nothing exists for them; charts arrive with task animated-charts-you-can-drop-into-a-video.",
+    "In a crowded dock (a clip picked, its Properties and Title sections open) the shelf shows about one row of tiles; whether the Library should be in a video's dock at all is the blocked task a-video-document-shows-the-library-in-its-dock.",
+    "Transitions now appear twice in a video's dock: the Transitions group and the catalog's Transitions chip. Both work; one of them may be one too many.",
+    "A moving background lands for five seconds on a Gfx track and covers the recording while it plays, which is what a background is for, but there is no way yet to pick its colours before it lands (it takes the title theme's palette).",
+    "A logo picked in the catalog opens the same section a Media picture does, whose button still says Place in Picture rather than adding at the playhead; double click and drag do add at the playhead."
+  ]
+}

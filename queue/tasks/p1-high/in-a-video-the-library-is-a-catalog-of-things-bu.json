@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:10:09.802Z",
-  "updated": "2026-10-17T13:10:09.907Z",
+  "updated": "2026-10-18T00:21:02.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"In the library, 'Styles' and 'Systems' are confusing to me. Why should these be in the library when i'm editing a video? Things not relevant to a video shouldn't be in the library pivots. Also, the contents of the library really arent grouped well for videos. Like it's just a big list of stuff. We need a better layout to select types of things for videos. Like title page, name plates, animated charts, etc. It should be a catalog that is easy to find things which can apply to videos. I think components could be there, but there should be a way to filter to just content useful for video that is animated and built for video. Components are built for mocks. and i'm not sure at the moment they apply well in video cases.\" Screenshot context (06.03): Library pivots Media / Comps / Styles / Systems with a Titles group of tiles inside Comps.\n\nCode: Sources/Photonz/LibraryPanel.swift (pivots and tiles), title tiles that play (LibraryTitleTile.swift), live backgrounds, transitions (TransitionsGroup.swift). Related blocked task a-video-document-shows-the-library-in-its-dock (card: 'Should a video document show the Library in the dock without being asked?'); this task is about what the Library holds for video, not whether it shows. Companion filed the same day: 'Animated charts you can drop into a video'.",
@@ -31,6 +31,38 @@
     {
       "t": "2026-10-17T13:10:09.906Z",
       "note": "seq 45 -> 1.3"
+    },
+    {
+      "t": "2026-10-17T23:14:33.052Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T23:31:08.453Z",
+      "note": "owns these walks: video-library-catalog-walk"
+    },
+    {
+      "t": "2026-10-18T00:21:02.334Z",
+      "note": "Review before building: a Final Cut editor expects a title/generator browser with categories on the left; the dock is ~300pt so a left column would crush tiles to one column, hence chips with counts (fork put on a decision card, chips built). Premiere keeps transitions in the Effects panel, so the catalog's Transitions chip duplicates the dock's Transitions group on purpose for now. Pivot named Catalog after the user's own word."
+    },
+    {
+      "t": "2026-10-18T00:21:02.399Z",
+      "note": "Built: LibraryScope.catalog + scopes(hasTime:)/resolved (video gets Media|Catalog, pictures keep Media|Comps|Styles|Systems); VideoCatalog in PhotonzCore (kinds, counts, search across kinds, Built for video filter, remembered kind, landBackground) with 23 tests; app: per-kind scope setting library.scope.video, chips + checkbox in LibraryPanel, LibraryCatalogTiles.swift (background + transition tiles, BackgroundDrag type declared in build-app.sh), backgrounds drop onto the timeline, logos double click lands at the playhead on Gfx. 20 video walks renamed Comps -> Catalog; component-tile walk unticks Built for video; showComponentShelf in a video opens the catalog's Components with the filter off. Mock: docs/design/mocks/pages/video-library.html."
+    },
+    {
+      "t": "2026-10-18T00:21:02.464Z",
+      "note": "Gotcha: a Library tile with only a tap gesture (no onDrag) never gets the first click while the window is not key, so walks (which never activate the probe) could not pick a background tile. Making it a drag source fixed it, and is the feature anyway."
+    },
+    {
+      "t": "2026-10-18T00:21:02.531Z",
+      "note": "left rough (not filed, below the bar or unconfirmed): (1) Transitions appear twice in a video's dock (group + catalog chip); (2) a logo picked in the catalog opens the Media picture section whose button says Place in Picture; (3) in the walk two Escapes after typing in a name card left it picked, not reproduced by hand; (4) background colours come from the title themes in turn, no picker before landing. Whether the Library shows in a video's dock at all stays with a-video-document-shows-the-library-in-its-dock."
+    },
+    {
+      "t": "2026-10-18T00:21:02.595Z",
+      "note": "Verified: video-library-catalog-walk green at Next defaults (no flags); 30 touched walks green (playtest-all --only, 11m); Scripts/test.sh 13586 tests green. Pictures looked at: 1-catalog-all, 3-backgrounds, 4-three-things-added, 5-components-for-mockups, 6-search-across-kinds; all show the catalog as the mock draws it. No sweep requested: landing code starts the rotating check."
     }
+  ],
+  "started": "2026-10-17T23:14:33.050Z",
+  "walks": [
+    "video-library-catalog-walk"
   ]
 }

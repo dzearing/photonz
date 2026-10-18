@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-library</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-library · the Library in a video is a catalog of things built for
+   video, grouped by kind (the user, 2026-10-17). Two pivots only: Media and
+   Catalog. Chips with counts pick a kind; All shows every kind under its own
+   header; search runs across every kind; Built for video is on by default and
+   off brings in components, labelled "for mockups". Every local class carries
+   the vl- prefix (AGENTS.md). */
+#video-library .vl-intro{max-width:760px;color:var(--fg2,#a1a1a6);font-size:13px;line-height:1.5;margin:0 0 20px}
+#video-library .vl-row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+#video-library .vl-fig{margin:0}
+#video-library .vl-cap{font-size:12px;color:var(--fg2,#a1a1a6);max-width:300px;line-height:1.45;margin-top:10px}
+#video-library .vl-cap b{color:var(--fg1,#f5f5f7);font-weight:650}
+#video-library .vl-dock{width:300px;border-radius:12px;padding:10px 12px 12px;
+  background:rgba(40,40,44,.72);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);
+  box-shadow:0 0 0 1px rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.35);color:#f5f5f7;font-size:12px}
+#video-library .vl-h{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:rgba(235,235,245,.6);margin-bottom:8px}
+#video-library .vl-h .vl-tag{font:500 10px ui-monospace,SFMono-Regular,monospace;letter-spacing:0;text-transform:none;
+  padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.08);color:rgba(235,235,245,.8)}
+#video-library .vl-h .vl-plus{margin-left:auto;font-size:14px;font-weight:400;color:rgba(235,235,245,.8)}
+#video-library .vl-seg{display:grid;grid-template-columns:1fr 1fr;padding:2px;border-radius:9px;background:rgba(0,0,0,.35);margin-bottom:8px}
+#video-library .vl-seg span{text-align:center;padding:4px 0;border-radius:7px;font-weight:500;color:rgba(235,235,245,.75)}
+#video-library .vl-seg span.on{background:rgba(255,255,255,.14);color:#fff;font-weight:600}
+#video-library .vl-srch{display:flex;gap:6px;align-items:center;padding:4px 7px;border-radius:6px;background:rgba(255,255,255,.07);
+  color:rgba(235,235,245,.45);margin-bottom:8px}
+#video-library .vl-srch.typed{color:#f5f5f7}
+#video-library .vl-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+#video-library .vl-chip{height:20px;display:inline-flex;align-items:center;gap:4px;padding:0 8px;border-radius:10px;
+  background:rgba(255,255,255,.09);color:#f5f5f7;cursor:pointer}
+#video-library .vl-chip i{font-style:normal;color:rgba(235,235,245,.6);font-variant-numeric:tabular-nums}
+#video-library .vl-chip.on{background:var(--accent,#0a84ff);color:#fff}
+#video-library .vl-chip.on i{color:rgba(255,255,255,.8)}
+#video-library .vl-check{display:flex;align-items:center;gap:6px;margin-bottom:8px;color:#f5f5f7}
+#video-library .vl-box{width:12px;height:12px;border-radius:3px;background:var(--accent,#0a84ff);display:grid;place-items:center;font-size:9px;color:#fff}
+#video-library .vl-box.off{background:transparent;box-shadow:inset 0 0 0 1px rgba(235,235,245,.5)}
+#video-library .vl-gh{font-size:11px;font-weight:600;color:rgba(235,235,245,.6);margin:8px 0 5px}
+#video-library .vl-gh em{font-style:normal;font-weight:400;color:rgba(235,235,245,.35);margin-left:6px}
+#video-library .vl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#video-library .vl-tile{border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+#video-library .vl-tile.sel{box-shadow:0 0 0 2px var(--accent,#0a84ff)}
+#video-library .vl-pic{aspect-ratio:16/10;position:relative;overflow:hidden}
+#video-library .vl-nm{padding:5px 7px 0;font-weight:600;font-size:11px;color:#f5f5f7}
+#video-library .vl-mt{padding:0 7px 6px;font:500 9.5px ui-monospace,SFMono-Regular,monospace;color:rgba(235,235,245,.5)}
+/* the pictures: each plays on hover, the way the app's tiles do */
+#video-library .vl-pic .vl-w{position:absolute;left:0;right:0;text-align:center;color:#fff;font-weight:700;letter-spacing:-.2px}
+#video-library .vl-kn{background:radial-gradient(circle at 30% 30%,#2a3557 0,#050507 70%)}
+#video-library .vl-gl{background:linear-gradient(130deg,#16205e,#4a2fa8 55%,#0b4f66)}
+#video-library .vl-nc{background:linear-gradient(160deg,#3a4358,#1c212c)}
+#video-library .vl-nc .vl-bar{position:absolute;left:10%;bottom:16%;padding:3px 7px;background:#3b5bff;color:#fff;font-size:9px;font-weight:700;border-radius:2px}
+#video-library .vl-au{background:linear-gradient(180deg,#5a6bff 0,#2b2f7a 45%,#0b1426);background-size:100% 200%}
+#video-library .vl-rays{background:repeating-conic-gradient(from 200deg at 50% 120%,#1f6b47 0 6deg,#0e3a27 6deg 12deg)}
+#video-library .vl-bub{background:radial-gradient(circle at 25% 40%,#c86bd8 0 12%,transparent 13%),radial-gradient(circle at 70% 60%,#7b5bff 0 16%,transparent 17%),#1a1030}
+#video-library .vl-cube{background:#111;display:grid;place-items:center}
+#video-library .vl-cube b{width:38%;aspect-ratio:1;background:linear-gradient(135deg,#12c2e9,#ff5d8f);transform:perspective(80px) rotateY(-28deg);border-radius:3px}
+#video-library .vl-diss{background:linear-gradient(90deg,#12c2e9,#5b53ff 45%,#ff5d8f)}
+#video-library .vl-comp{background:#e9ebf0;display:grid;place-items:center}
+#video-library .vl-comp b{padding:3px 9px;border-radius:9px;background:#0a84ff;color:#fff;font-size:9px;font-weight:600}
+#video-library .vl-tile:hover .vl-au{animation:vl-drift 2.4s linear infinite alternate}
+#video-library .vl-tile:hover .vl-gl{filter:hue-rotate(40deg);transition:filter 1.2s}
+#video-library .vl-tile:hover .vl-cube b{animation:vl-turn 1.2s ease-in-out infinite alternate}
+@keyframes vl-drift{to{background-position:0 100%}}
+@keyframes vl-turn{to{transform:perspective(80px) rotateY(28deg)}}
+#video-library .vl-notes{max-width:900px;margin-top:28px;font-size:12.5px;line-height:1.55;color:var(--fg2,#a1a1a6)}
+#video-library .vl-notes h3{font-size:13px;color:var(--fg1,#f5f5f7);margin:16px 0 4px}
+#video-library .vl-notes li{margin:2px 0}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="video-library">
+    <div class="scen-head"><span class="pip" style="background:#0a84ff"></span><h2>The Library in a video</h2><span class="k">· a catalog of things built for video, grouped by kind</span></div>
+    <p class="vl-intro">With a video open, the Library has two pivots: <b>Media</b> (the recordings, sounds and pictures this video holds) and <b>Catalog</b>. Styles and Systems belong to pictures and designs and are not shown. The catalog files everything made for video under what it is, so finding a name card is a glance at a chip, not a scroll down one long list.</p>
+
+    <div class="vl-row">
+      <figure class="vl-fig">
+        <div class="vl-dock">
+          <div class="vl-h">Library <span class="vl-tag">Catalog</span><span class="vl-plus">+</span></div>
+          <div class="vl-seg"><span>Media</span><span class="on">Catalog</span></div>
+          <div class="vl-srch">⌕ Search catalog</div>
+          <div class="vl-chips">
+            <span class="vl-chip on">All <i>36</i></span><span class="vl-chip">Title Pages <i>9</i></span>
+            <span class="vl-chip">Name Cards <i>3</i></span><span class="vl-chip">Backgrounds <i>10</i></span>
+            <span class="vl-chip">Transitions <i>12</i></span><span class="vl-chip">Logos &amp; Brand <i>2</i></span>
+          </div>
+          <div class="vl-check"><span class="vl-box">✓</span>Built for video</div>
+          <div class="vl-gh">Title Pages</div>
+          <div class="vl-grid">
+            <div class="vl-tile"><div class="vl-pic vl-kn"><div class="vl-w" style="top:38%;font-size:11px">Your Title</div></div><div class="vl-nm">Keynote Clean</div><div class="vl-mt">Title Page</div></div>
+            <div class="vl-tile"><div class="vl-pic vl-gl"><div class="vl-w" style="top:40%;font-size:10px">Your Title</div></div><div class="vl-nm">Soft Gradient Glass</div><div class="vl-mt">Title Page</div></div>
+          </div>
+          <div class="vl-gh">Name Cards</div>
+          <div class="vl-grid">
+            <div class="vl-tile"><div class="vl-pic vl-nc"><span class="vl-bar">Your Name</span></div><div class="vl-nm">Split Wipe</div><div class="vl-mt">Name Card</div></div>
+            <div class="vl-tile"><div class="vl-pic vl-nc"><span class="vl-bar" style="background:none;border-bottom:1px solid #fff;border-radius:0">Your Name</span></div><div class="vl-nm">Minimal Underline</div><div class="vl-mt">Name Card</div></div>
+          </div>
+        </div>
+        <figcaption class="vl-cap"><b>1 · All.</b> Every kind under its own header, each starting a row of its own. Chips say how many of each there are; a kind with nothing in it has no chip. Tiles play while the pointer is on them.</figcaption>
+      </figure>
+
+      <figure class="vl-fig">
+        <div class="vl-dock">
+          <div class="vl-h">Library <span class="vl-tag">Catalog</span><span class="vl-plus">+</span></div>
+          <div class="vl-seg"><span>Media</span><span class="on">Catalog</span></div>
+          <div class="vl-srch">⌕ Search catalog</div>
+          <div class="vl-chips">
+            <span class="vl-chip">All <i>36</i></span><span class="vl-chip">Title Pages <i>9</i></span>
+            <span class="vl-chip">Name Cards <i>3</i></span><span class="vl-chip on">Backgrounds <i>10</i></span>
+            <span class="vl-chip">Transitions <i>12</i></span><span class="vl-chip">Logos &amp; Brand <i>2</i></span>
+          </div>
+          <div class="vl-check"><span class="vl-box">✓</span>Built for video</div>
+          <div class="vl-grid">
+            <div class="vl-tile sel"><div class="vl-pic vl-au"></div><div class="vl-nm">Aurora</div><div class="vl-mt">Background</div></div>
+            <div class="vl-tile"><div class="vl-pic vl-rays"></div><div class="vl-nm">Light Rays</div><div class="vl-mt">Background</div></div>
+            <div class="vl-tile"><div class="vl-pic vl-bub"></div><div class="vl-nm">Color Bubbles</div><div class="vl-mt">Background</div></div>
+            <div class="vl-tile"><div class="vl-pic vl-gl"></div><div class="vl-nm">Liquid Gradient</div><div class="vl-mt">Background</div></div>
+          </div>
+        </div>
+        <figcaption class="vl-cap"><b>2 · One kind picked.</b> The shelf shows only that kind, with no header (the chip says it). Double click a tile, or drag it onto a track: a background lands at the playhead on a Gfx track of its own, a title on a Title track, a transition on the cut under the pointer. The kind picked is remembered for the next video.</figcaption>
+      </figure>
+
+      <figure class="vl-fig">
+        <div class="vl-dock">
+          <div class="vl-h">Library <span class="vl-tag">Catalog</span><span class="vl-plus">+</span></div>
+          <div class="vl-seg"><span>Media</span><span class="on">Catalog</span></div>
+          <div class="vl-srch typed">⌕ cube</div>
+          <div class="vl-chips"><span class="vl-chip on">All <i>1</i></span><span class="vl-chip">Transitions <i>1</i></span></div>
+          <div class="vl-check"><span class="vl-box">✓</span>Built for video</div>
+          <div class="vl-gh">Transitions</div>
+          <div class="vl-grid">
+            <div class="vl-tile"><div class="vl-pic vl-cube"><b></b></div><div class="vl-nm">Cube</div><div class="vl-mt">a box turning</div></div>
+          </div>
+        </div>
+        <figcaption class="vl-cap"><b>3 · Search.</b> Typing searches every kind whatever chip was picked, by name and by kind ("name card" finds every name card). The chips count what the search found.</figcaption>
+      </figure>
+
+      <figure class="vl-fig">
+        <div class="vl-dock">
+          <div class="vl-h">Library <span class="vl-tag">Catalog</span><span class="vl-plus">+</span></div>
+          <div class="vl-seg"><span>Media</span><span class="on">Catalog</span></div>
+          <div class="vl-srch">⌕ Search catalog</div>
+          <div class="vl-chips">
+            <span class="vl-chip">All <i>41</i></span><span class="vl-chip">Title Pages <i>9</i></span>
+            <span class="vl-chip">Name Cards <i>3</i></span><span class="vl-chip">Backgrounds <i>10</i></span>
+            <span class="vl-chip">Transitions <i>12</i></span><span class="vl-chip">Logos &amp; Brand <i>2</i></span>
+            <span class="vl-chip on">Components <i>5</i></span>
+          </div>
+          <div class="vl-check"><span class="vl-box off"></span>Built for video</div>
+          <div class="vl-grid">
+            <div class="vl-tile"><div class="vl-pic vl-comp"><b>Badge</b></div><div class="vl-nm">Badge</div><div class="vl-mt">Component</div></div>
+            <div class="vl-tile"><div class="vl-pic vl-comp"><b>Button</b></div><div class="vl-nm">Button</div><div class="vl-mt">Component</div></div>
+          </div>
+        </div>
+        <figcaption class="vl-cap"><b>4 · Built for video off.</b> Components, which are built for mockups, join the catalog under their own chip; on All their header reads <i>Components  for mockups</i>. Dropping one into a video still works.</figcaption>
+      </figure>
+    </div>
+
+    <div class="vl-notes">
+      <h3>Placement (UX-PATTERNS, placement contract)</h3>
+      <ul>
+        <li>The Library is a dock group, whose purpose is things you place: the chips, the search box and the filter are that group's own controls, not the tool bar's or the timeline's.</li>
+        <li>Adding is where you click: double click, drag onto a track, or right-click a tile for Insert at Playhead (transitions: Apply to Every Cut, Set as Default Transition).</li>
+      </ul>
+      <h3>Kinds</h3>
+      <ul>
+        <li>Title Pages, Name Cards, Animated Charts, Callouts, Backgrounds, Transitions, Logos &amp; Brand (the pictures this video holds), End Cards, and Components (only with Built for video off).</li>
+        <li>A kind with nothing in it has no chip: Animated Charts appears once its own task ships; Callouts and End Cards once something is made for them.</li>
+      </ul>
+      <h3>The fork</h3>
+      <ul>
+        <li>Chips that wrap above the shelf, or a column of kinds down the left of the shelf, or one dropdown naming the kind: this page draws chips. The other two are on the decision card for this task.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+</body>
+</html>

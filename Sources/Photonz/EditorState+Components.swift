@@ -50,7 +50,7 @@ extension EditorState {
         perform { made = $0.makeComponent(id: id) }
         guard let componentID = made else { return }
         setLibraryVisible(true)
-        UserDefaults.standard.set(LibraryScope.components.rawValue, forKey: LibraryPanel.scopeKey)
+        showComponentsInLibrary()
         // ...and the shelf scrolls to the new tile, which is listed after the
         // components already in the document and so is often below the shelf's
         // own fold.

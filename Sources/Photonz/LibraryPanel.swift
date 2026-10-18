@@ -27,6 +27,14 @@ struct LibraryPanel: View {
     /// The scope you were last in, remembered across launches (and read by the
     /// section header, so a collapsed Library still says what it is set to).
     @StoredSetting(LibraryPanel.scopeKey) private var scopeRaw = LibraryScope.media.rawValue
+    /// ...and a video's, which is its own: a video offers Media and its
+    /// catalog, and nothing a picture left behind (`LibraryScope.scopes`).
+    @StoredSetting(EditorState.videoLibraryScopeKey) private var videoScopeRaw = LibraryScope.media.rawValue
+    /// The kind the catalog was last showing, "" for All.
+    @StoredSetting(EditorState.catalogCategoryKey) private var catalogCategoryRaw = ""
+    /// Whether the catalog keeps only what was made for video. On until a
+    /// person turns it off: components are built for mockups.
+    @StoredSetting(EditorState.catalogBuiltForVideoKey) private var builtForVideoOnly = true
     /// The tile area's max height, resizable and persisted, the same way the
     /// layers area is: a long shelf must not shove the rest of the dock off
     /// the bottom. Its first value is the release's own: two whole rows of
@@ -111,12 +119,20 @@ struct LibraryPanel: View {
     // business being isolated in the first place.
     fileprivate nonisolated static let shelfSpace = "library.shelf"
 
-    private var scope: LibraryScope { LibraryScope(rawValue: scopeRaw) ?? .media }
+    private var hasTime: Bool { editorState.documentHasTime }
+
+    /// The pivot showing: the open document's kind's own, fallen to the
+    /// nearest one that kind offers, so the pivots follow the window in front.
+    private var scope: LibraryScope {
+        LibraryScope.resolved(LibraryScope(rawValue: hasTime ? videoScopeRaw : scopeRaw) ?? .media,
+                              hasTime: hasTime)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             scopePicker
             searchField
+            if scope == .catalog { catalogFilters }
             // A colour let go of on the shelf asks for its name HERE, right
             // above the tiles it is about to join, rather than in a dialog
             // over the picture. Same field, same keys, as the one a colour row
@@ -161,6 +177,7 @@ struct LibraryPanel: View {
         // Switching scope with a search still running would show an empty
         // shelf for a reason that is not on screen anymore.
         .onChange(of: scopeRaw) { query = "" }
+        .onChange(of: videoScopeRaw) { query = "" }
         // The one place in the app a dropped colour is KEPT rather than
         // painted with.
         .libraryColorDrop()
@@ -192,9 +209,9 @@ struct LibraryPanel: View {
         // the canvas (`panelMargins`, 2026-09-24). The drawn one becomes a
         // dropdown when its words will not fit.
         SegmentedControl("Shelf", selection: scope,
-                         options: LibraryScope.allCases.map { .init($0, $0.segmentTitle) },
+                         options: LibraryScope.scopes(hasTime: hasTime).map { .init($0, $0.segmentTitle) },
                          fallsBackToSystem: false) {
-            scopeRaw = $0.rawValue
+            if hasTime { videoScopeRaw = $0.rawValue } else { scopeRaw = $0.rawValue }
         }
             .panelHelp("What the shelf is showing")
     }
@@ -232,6 +249,41 @@ struct LibraryPanel: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
         .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary))
+    }
+
+    /// The catalog's kinds as chips, each with its count, and the Built for
+    /// video filter under them (`video-library.html`, `.vl-chips`).
+    @ViewBuilder
+    private var catalogFilters: some View {
+        let catalog = editorState.videoCatalog
+        let counts = catalog.categories(builtForVideoOnly: builtForVideoOnly, query: query)
+        let picked = catalogCategory(catalog)
+        if !counts.isEmpty {
+            LibraryChipWrap {
+                LibraryCatalogChip(title: "All", count: counts.reduce(0) { $0 + $1.count },
+                                   isOn: picked == nil) { pickCategory(nil) }
+                ForEach(counts, id: \.category) { kind in
+                    LibraryCatalogChip(title: kind.category.title, count: kind.count,
+                                       isOn: picked == kind.category) { pickCategory(kind.category) }
+                }
+            }
+            .animation(.easeOut(duration: 0.15), value: counts.map(\.category))
+        }
+        Toggle("Built for video", isOn: $builtForVideoOnly)
+            .toggleStyle(.checkbox)
+            .controlSize(.small)
+            .font(.caption)
+            .fixedSize()
+            .panelHelp("Off shows components too, which are built for mockups")
+            .playtestControl("Built for video", detail: "Catalog")
+    }
+
+    /// A chip pressed: that kind, remembered for the next video. A search
+    /// still running is let go, since it runs across every kind and would
+    /// hide the pick.
+    private func pickCategory(_ category: VideoCatalogCategory?) {
+        query = ""
+        catalogCategoryRaw = category?.rawValue ?? ""
     }
 
     // MARK: Tiles
@@ -278,40 +330,70 @@ struct LibraryPanel: View {
         // One walk of the tree for all the tiles, not one per tile: this runs
         // on every draw of the shelf, and a lookup by id copies the whole
         // layer tree on its way through.
-        let mains = Dictionary(document.mainComponents.compactMap { layer in
+        let mains = Self.mains(of: document)
+        return hits.prefix(Self.maxTiles).compactMap { componentTile($0, mains: mains) }
+    }
+
+    /// Every main in the document by its component id, in one walk of the tree.
+    private static func mains(of document: PhotonzDocument) -> [UUID: Layer] {
+        Dictionary(document.mainComponents.compactMap { layer in
             layer.componentID.map { ($0, layer) }
         }, uniquingKeysWith: { first, _ in first })
-        return hits.prefix(Self.maxTiles).compactMap { entry in
-            guard let id = UUID(uuidString: entry.id) else { return nil }
-            if let layer = mains[id] { return (entry, layer, nil, nil) }
-            if let shared = editorState.sharedComponent(entryID: entry.id),
-               let drawing = editorState.sharedPreviewLayer(shared) {
-                return (entry, drawing, nil, shared)
-            }
-            guard editorState.starterComponentsEnabled,
-                  let starter = StarterComponent(componentID: id) else { return nil }
-            return (entry, editorState.starterPreviewLayer(starter), starter, nil)
+    }
+
+    /// The component tile for an entry: a main in the open document, one off
+    /// the shared shelf, or a starter it has not taken yet, each with the
+    /// layer it stands for so the tile can draw a picture of it. A starter's
+    /// layer is not in the document: it is what a drop would bring in.
+    private func componentTile(_ entry: LibraryEntry, mains: [UUID: Layer])
+        -> (entry: LibraryEntry, layer: Layer, starter: StarterComponent?, shared: SharedComponent?)? {
+        guard let id = UUID(uuidString: entry.id) else { return nil }
+        if let layer = mains[id] { return (entry, layer, nil, nil) }
+        if let shared = editorState.sharedComponent(entryID: entry.id),
+           let drawing = editorState.sharedPreviewLayer(shared) {
+            return (entry, drawing, nil, shared)
         }
+        guard editorState.starterComponentsEnabled,
+              let starter = StarterComponent(componentID: id) else { return nil }
+        return (entry, editorState.starterPreviewLayer(starter), starter, nil)
     }
 
-    /// The title pages and name cards Components draws for what is typed, in
-    /// a document with time: every preset, the person's own first in each
-    /// kind (`video-title-wt.html`, step 10, the lower third on this shelf).
-    private var visibleTitles: [TitlePreset] {
-        guard scope == .components else { return [] }
-        let shelf = editorState.titleShelf
-        guard !shelf.isEmpty else { return [] }
-        let hits = Set(LibrarySearch.filter(shelf.map(\.entry), query: query).map(\.id))
-        return Array(shelf.filter { hits.contains($0.id) }.prefix(Self.maxTiles))
+    // MARK: The catalog
+
+    /// The kind the catalog is showing, nil for All: the one remembered while
+    /// it still has a chip. A search runs over every kind whatever is picked,
+    /// so while one is typed the chip that reads as picked is All.
+    private func catalogCategory(_ catalog: VideoCatalog) -> VideoCatalogCategory? {
+        guard LibrarySearch.normalized(query).isEmpty else { return nil }
+        let shown = catalog.categories(builtForVideoOnly: builtForVideoOnly).map(\.category)
+        return VideoCatalog.resolvedCategory(catalogCategoryRaw, shown: shown)
     }
 
-    /// The shelf's groups, when it is drawn in groups: the titles under their
-    /// header and the components under theirs. Nil for a shelf with no
-    /// titles on it, which is drawn as the one grid it has always been.
+    /// The groups the catalog draws for what is typed and picked.
+    private var catalogGroups: [VideoCatalogGroup] {
+        guard scope == .catalog else { return [] }
+        let catalog = editorState.videoCatalog
+        return catalog.groups(category: catalogCategory(catalog), query: query,
+                              builtForVideoOnly: builtForVideoOnly)
+    }
+
+    /// Whether the catalog heads each group with its kind: on All and while
+    /// searching, where more than one kind can show. One kind picked is
+    /// already named by its chip.
+    private var catalogShowsHeaders: Bool {
+        !LibrarySearch.normalized(query).isEmpty || VideoCatalog.resolvedCategory(
+            catalogCategoryRaw,
+            shown: editorState.videoCatalog.categories(builtForVideoOnly: builtForVideoOnly).map(\.category)) == nil
+    }
+
+    private var catalogItemCount: Int { catalogGroups.reduce(0) { $0 + $1.items.count } }
+
+    /// The shelf's groups, when it is drawn in groups: the catalog's kinds,
+    /// each under its header. Nil for a shelf drawn as one grid.
     private var shelfGroups: [Int]? {
-        let titles = visibleTitles.count
-        guard titles > 0 else { return nil }
-        return [titles, visibleComponents.count]
+        guard scope == .catalog, catalogShowsHeaders else { return nil }
+        let groups = catalogGroups
+        return groups.isEmpty ? nil : groups.map(\.items.count)
     }
 
     /// The tiles Styles draws for what is typed: the named colors saved in the
@@ -359,14 +441,14 @@ struct LibraryPanel: View {
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
         visibleClips.isEmpty && visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
-            && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty && visibleTitles.isEmpty
+            && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty && catalogGroups.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
     /// from — the shelf only ever draws one scope at a time.
     private var tileCount: Int {
         visibleClips.count + visibleMedia.count + visibleComponents.count + visibleStyles.count
-            + visibleTextStyles.count + visibleEffectStyles.count + visibleTitles.count
+            + visibleTextStyles.count + visibleEffectStyles.count + catalogItemCount
     }
 
     /// The height the shelf takes: its tiles, capped at the LOWER of the two
@@ -457,31 +539,68 @@ struct LibraryPanel: View {
 
     @ViewBuilder
     private var grid: some View {
-        if shelfGroups != nil {
-            // Titles, then the components, each under its header and each
-            // starting a row of its own, so a lower third never sits beside a
-            // button as if they were one kind of thing.
-            VStack(alignment: .leading, spacing: 0) {
-                groupHeader("Titles")
-                tileGrid {
-                    ForEach(visibleTitles) { preset in LibraryTitleTile(preset: preset) }
-                }
-                if !visibleComponents.isEmpty {
-                    groupHeader("Components")
-                    tileGrid { componentTiles }
-                }
-            }
+        if scope == .catalog {
+            catalogGrid
         } else {
             tileGrid { allTiles }
         }
     }
 
+    /// The catalog: each kind under its header, starting a row of its own, so
+    /// a name card never sits beside a transition as if they were one kind of
+    /// thing; or the one kind picked, as one grid.
+    @ViewBuilder
+    private var catalogGrid: some View {
+        let groups = catalogGroups
+        let mains = editorState.document.map(Self.mains(of:)) ?? [:]
+        if catalogShowsHeaders {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(groups, id: \.category) { group in
+                    groupHeader(group.category.title, note: group.category.note)
+                    tileGrid {
+                        ForEach(group.items) { item in catalogTile(item, mains: mains) }
+                    }
+                }
+            }
+        } else {
+            tileGrid {
+                ForEach(groups.flatMap(\.items)) { item in catalogTile(item, mains: mains) }
+            }
+        }
+    }
+
+    /// One catalog item as the tile its kind draws: a title's playing tile,
+    /// a moving background, a transition, a picture or a component.
+    @ViewBuilder
+    private func catalogTile(_ item: VideoCatalogItem, mains: [UUID: Layer]) -> some View {
+        switch item.category {
+        case .titlePages, .nameCards:
+            if let preset = editorState.titlePreset(entryID: item.id) { LibraryTitleTile(preset: preset) }
+        case .backgrounds:
+            if let look = VideoCatalog.background(id: item.id) { LibraryBackgroundTile(look: look) }
+        case .transitions:
+            if let kind = VideoCatalog.transition(id: item.id) { LibraryTransitionTile(kind: kind) }
+        case .logos:
+            if let media = editorState.documentMediaItems.first(where: { $0.id.uuidString == item.id }),
+               let entry = DocumentMedia.entriesOf([media]).first {
+                LibraryTile(item: entry, media: media) { editorState.placePictureAtPlayhead(media) }
+            }
+        case .components:
+            if let entry = editorState.componentEntries.first(where: { $0.id == item.id }),
+               let tile = componentTile(entry, mains: mains) {
+                LibraryComponentTile(entry: tile.entry, layer: tile.layer, starter: tile.starter,
+                                     shared: tile.shared)
+            }
+        case .animatedCharts, .callouts, .endCards:
+            EmptyView()
+        }
+    }
+
     /// The label over a group of tiles, exactly as tall as the shelf's
     /// arithmetic says (`LibraryShelfLayout.groupHeaderHeight`).
-    private func groupHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
+    private func groupHeader(_ title: String, note: String? = nil) -> some View {
+        (Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            + Text(note.map { "  \($0)" } ?? "").font(.caption).foregroundStyle(.tertiary))
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(height: LibraryShelfLayout.groupHeaderHeight, alignment: .bottomLeading)
@@ -586,10 +705,14 @@ struct LibraryPanel: View {
         guard let index = shelfIndex(of: id), shelfWidth > 0 else { return }
         let action: DockReveal.Action
         if let groups = shelfGroups {
-            // A component sits in the second group, under the titles.
-            let inTitles = index < groups[0]
-            let top = LibraryShelfLayout.tileTop(group: inTitles ? 0 : 1,
-                                                 index: inTitles ? index : index - groups[0],
+            // The index counts across every group; the tile sits in the
+            // group its count lands in.
+            var group = 0, inGroup = index
+            while group < groups.count - 1, inGroup >= groups[group] {
+                inGroup -= groups[group]
+                group += 1
+            }
+            let top = LibraryShelfLayout.tileTop(group: group, index: inGroup,
                                                  groups: groups, width: shelfWidth, sizing: sizing)
             action = LibraryShelfLayout.tileReveal(top: top, width: shelfWidth, gridTop: shelfReveal.gridTop,
                                                    viewportHeight: shelfHeight, sizing: sizing)
@@ -613,10 +736,8 @@ struct LibraryPanel: View {
         if let index = visibleMedia.firstIndex(where: { $0.entry.id == id }) {
             return visibleClips.count + index
         }
-        if let index = visibleTitles.firstIndex(where: { $0.id == id }) { return index }
-        if let index = visibleComponents.firstIndex(where: { $0.entry.id == id }) {
-            return visibleTitles.count + index
-        }
+        if let index = catalogGroups.flatMap(\.items).firstIndex(where: { $0.id == id }) { return index }
+        if let index = visibleComponents.firstIndex(where: { $0.entry.id == id }) { return index }
         if let index = visibleStyles.firstIndex(where: { $0.entry.id == id }) { return index }
         return nil
     }
@@ -628,8 +749,14 @@ struct LibraryPanel: View {
             editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleMedia.first {
             editorState.selectLibraryItem(first.entry.id)
-        } else if let first = visibleTitles.first {
-            editorState.selectLibraryItem(first.id)
+        } else if let first = catalogGroups.first?.items.first {
+            // A transition's click is the Transitions group's, so the cut in
+            // hand is not let go of.
+            if let kind = VideoCatalog.transition(id: first.id) {
+                editorState.pickTransitionTile(kind)
+            } else {
+                editorState.selectLibraryItem(first.id)
+            }
         } else if let first = visibleComponents.first {
             editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleStyles.first {
@@ -731,6 +858,9 @@ private struct LibraryTile: View {
     @Environment(\.libraryTile) private var tileMetrics
     let item: LibraryEntry
     let media: DocumentMediaItem
+    /// What a double click does instead of placing the picture again: in the
+    /// catalog it lands on the timeline at the playhead.
+    var open: (() -> Void)?
     @Environment(EditorState.self) private var editorState
 
     private var isSelected: Bool { editorState.selectedLibraryItemID == item.id }
@@ -798,7 +928,7 @@ private struct LibraryTile: View {
 
     private func place() {
         editorState.selectLibraryItem(item.id)
-        editorState.placeLibraryPick()
+        if let open { open() } else { editorState.placeLibraryPick() }
     }
 }
 

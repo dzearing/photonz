@@ -7502,12 +7502,10 @@ private final class Run {
             case .showLibrary: editor.setLibraryVisible(true)
             case .showComponentShelf:
                 editor.setLibraryVisible(true)
-                UserDefaults.standard.set(LibraryScope.components.rawValue,
-                                          forKey: LibraryPanel.scopeKey)
+                editor.showComponentsInLibrary()
             case .showMediaShelf:
                 editor.setLibraryVisible(true)
-                UserDefaults.standard.set(LibraryScope.media.rawValue,
-                                          forKey: LibraryPanel.scopeKey)
+                editor.setLibraryScope(.media)
             case .hideLibrary: editor.setLibraryVisible(false)
             case .placeLibraryPick: editor.placeLibraryPick()
             case .insertPickedComponent: editor.insertPickedComponent()
@@ -19941,6 +19939,11 @@ extension Run {
             // ...and a title page or name card off the Library lands on the
             // track under it, or on a new one of its own.
             if board.data(forType: NSPasteboard.PasteboardType(TitlePresetDrag.typeIdentifier)) != nil {
+                return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
+                                                     hold: hold, release: release, says: says)
+            }
+            // ...and so does a moving background off the Library's catalog.
+            if board.data(forType: NSPasteboard.PasteboardType(BackgroundDrag.typeIdentifier)) != nil {
                 return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
                                                      hold: hold, release: release, says: says)
             }

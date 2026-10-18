@@ -1,0 +1,389 @@
+{
+  "out": "/tmp/photonz-playtest/video-library-catalog-walk",
+  "seed": "In a video the Library is a catalog of things built for video, grouped by kind (the user, 2026-10-17: 'Styles and Systems are confusing to me ... It should be a catalog that is easy to find things which can apply to videos'). At Next defaults with no flag set: the sample recording is opened and View > Library shown. Its pivots are Media and Catalog only: no Comps, no Styles, no Systems. Catalog pressed by the pointer shows every kind under its own header with chips above it, each with its count. The Title Pages chip narrows the shelf to title pages and a double click on Keynote Clean puts one in front of the recording; the Name Cards chip narrows it to name cards and a double click on Split Wipe lands one at the playhead; the Backgrounds chip and a double click on Aurora lands a moving background on a Gfx track, and Light Rays dragged onto the timeline at six seconds lands there. With Built for video on there is no Components chip and the Badge starter is nowhere; turned off by the pointer, a Components chip appears and Badge is on it. Last, typing 'cube' in the search box finds the Cube transition whatever chip was picked.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "View > Library, the way a person turns the shelf on.",
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "THE FIRST TEST: a video's Library offers Media and Catalog, nothing a picture's Library has.",
+      "do": "expect",
+      "control": "Catalog",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Media",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Styles",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Systems",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Comps",
+      "present": false
+    },
+    {
+      "do": "press",
+      "control": "Catalog"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "field": "Library Scope",
+      "reads": "Catalog"
+    },
+    {
+      "do": "expect",
+      "control": "All",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Title Pages",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Name Cards",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Backgrounds",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Built for video",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-catalog-all",
+      "note": "The Catalog at All: chips for Title Pages, Name Cards, Backgrounds and Transitions, each with its count, Built for video ticked under them, and the shelf headed by Title Pages with its playing title tiles"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-catalog-all"
+    },
+    {
+      "comment": "THE SECOND TEST: a kind picked by the pointer narrows the shelf to it.",
+      "do": "press",
+      "control": "Title Pages"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Keynote Clean",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Split Wipe",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-title-pages",
+      "note": "Title Pages picked: only title pages on the shelf, no header over them since the chip already says what they are"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-title-pages"
+    },
+    {
+      "do": "press",
+      "control": "Keynote Clean",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "THE THIRD TEST: a moving background off the catalog lands on a track of its own at the playhead.",
+      "do": "press",
+      "control": "Backgrounds"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Aurora",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "3-backgrounds",
+      "note": "Backgrounds picked: the ten moving looks as cards"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-backgrounds"
+    },
+    {
+      "do": "press",
+      "control": "Aurora",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Aurora",
+      "count": 1
+    },
+    {
+      "comment": "Dragged instead, a background lands under the pointer the way a picture does, laid over the recording on a track of its own.",
+      "do": "dropOnTimeline",
+      "tile": "Light Rays",
+      "track": "V1",
+      "seconds": 6.0
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Light Rays",
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Name Cards"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Split Wipe",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Keynote Clean",
+      "present": false
+    },
+    {
+      "do": "press",
+      "control": "Split Wipe",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Name Card",
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-three-things-added",
+      "note": "A title page in front of the recording, a name card and an Aurora background on the timeline, each added by a double click on a catalog tile"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-three-things-added"
+    },
+    {
+      "comment": "Escape ends typing in the name card, a second lets go of it.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "THE FOURTH TEST: components stay out until Built for video is turned off by the pointer.",
+      "do": "press",
+      "control": "All"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Components",
+      "present": false
+    },
+    {
+      "do": "press",
+      "control": "Built for video"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Components",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Components"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Badge",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "5-components-for-mockups",
+      "note": "Built for video off: a Components chip at the end of the row and the starter components on the shelf"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-components-for-mockups"
+    },
+    {
+      "do": "press",
+      "control": "Built for video"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Components",
+      "present": false
+    },
+    {
+      "comment": "THE FIFTH TEST: search runs across every kind.",
+      "do": "press",
+      "control": "Title Pages"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "cube"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Cube",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Keynote Clean",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "6-search-across-kinds",
+      "note": "'cube' typed with Title Pages picked: the Cube transition is found under a Transitions header, and the chips count what the search found"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-search-across-kinds"
+    }
+  ]
+}

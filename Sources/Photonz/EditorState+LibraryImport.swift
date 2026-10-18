@@ -135,7 +135,7 @@ extension EditorState {
 
     /// Opens the Library on Media, with this tile scrolled into view.
     func showMediaShelf(revealing id: UUID?) {
-        UserDefaults.standard.set(LibraryScope.media.rawValue, forKey: LibraryPanel.scopeKey)
+        setLibraryScope(.media)
         // Opens the dock too, and unfolds a folded Library: a header and
         // nothing else is not showing somebody what they just brought in.
         setLibraryVisible(true)

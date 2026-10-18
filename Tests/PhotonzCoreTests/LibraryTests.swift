@@ -11,8 +11,8 @@ struct LibraryTests {
 
     // MARK: Scopes
 
-    @Test func offersTheFourScopesInOrder() {
-        #expect(LibraryScope.allCases == [.media, .components, .styles, .systems])
+    @Test func offersTheScopesInOrder() {
+        #expect(LibraryScope.allCases == [.media, .components, .styles, .systems, .catalog])
         #expect(LibraryScope.media.title == "Media")
         #expect(LibraryScope.components.title == "Components")
         #expect(LibraryScope.styles.title == "Styles")
@@ -31,6 +31,7 @@ struct LibraryTests {
         #expect(LibraryScope.components.itemTitle == "Component")
         #expect(LibraryScope.styles.itemTitle == "Style")
         #expect(LibraryScope.systems.itemTitle == "System")
+        #expect(LibraryScope.catalog.itemTitle == "Item")
     }
 
     @Test func everyScopeCarriesItsOwnSearchPlaceholderAndEmptyCopy() {

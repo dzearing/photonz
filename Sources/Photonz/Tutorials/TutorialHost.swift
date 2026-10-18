@@ -79,14 +79,12 @@ extension EditorState: TutorialHost {
             // would otherwise ring a shelf of screenshots. Same two lines Make
             // Component runs for the same reason.
             if !isLibraryVisible { setLibraryVisible(true) }
-            UserDefaults.standard.set(LibraryScope.components.rawValue,
-                                      forKey: LibraryPanel.scopeKey)
+            showComponentsInLibrary()
         case .showMediaShelf:
             // The recordings and sounds this document holds, which is what a
             // video guide about bringing a clip in is pointing at.
             if !isLibraryVisible { setLibraryVisible(true) }
-            UserDefaults.standard.set(LibraryScope.media.rawValue,
-                                      forKey: LibraryPanel.scopeKey)
+            setLibraryScope(.media)
         case .revealTarget:
             break // the controller drives this one through the registry
         }

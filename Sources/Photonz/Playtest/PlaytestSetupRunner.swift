@@ -63,6 +63,10 @@ extension PlaytestMemory {
         case .panel:
             [EditorState.inspectorVisibleKey, EditorState.libraryVisibleKey,
              EditorState.inspectorWidthKey, LibraryPanel.scopeKey,
+             // ...and a video's own pivot, the kind its catalog was showing
+             // and its Built for video filter (`EditorState+VideoCatalog`).
+             EditorState.videoLibraryScopeKey, EditorState.catalogCategoryKey,
+             EditorState.catalogBuiltForVideoKey,
              InspectorPanel.sectionOrderKey, InspectorPanel.sectionOrderVersionKey,
              InspectorPanel.collapsedKey,
              // The folds INSIDE sections, which last across launches the same
