@@ -4,12 +4,12 @@
   "goal": "The built-in title pages must look like they came from an Apple keynote or product video: restrained, typographically excellent, beautifully spaced, with motion that is calm and precise. Today, even with the moving backgrounds, the user says they look like a high school presentation. This task resets the bar: design first, judged by the user, then build exactly that.",
   "epic": "video-titles-graphics",
   "priority": "p1-high",
-  "seq": 10,
-  "status": "blocked",
+  "seq": 1.08,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:18:32.752Z",
-  "updated": "2026-10-18T12:19:52.105Z",
+  "updated": "2026-10-18T16:27:56.939Z",
   "deps": [
     "title-text-can-be-set-like-apple-sets-it-trackin"
   ],
@@ -59,6 +59,14 @@
     {
       "t": "2026-10-18T12:19:52.104Z",
       "note": "seq 1.08 -> 10"
+    },
+    {
+      "t": "2026-10-18T16:27:50.854Z",
+      "note": "decision \"Which of these ten title pages should become Photonz's built-in set?\" resolved: Build all ten, old set under More styles (User 2026-10-18 after viewing the mock: 'these look so much better. The existing title pages are far too busy so i think we need to audit them and tone them down to make them a little more presentable and more subtle'. Build all ten; keep the existing set but toned down (separate task) under More styles.)"
+    },
+    {
+      "t": "2026-10-18T16:27:56.937Z",
+      "note": "seq 10 -> 1.08"
     }
   ],
   "started": "2026-10-17T19:39:51.618Z"

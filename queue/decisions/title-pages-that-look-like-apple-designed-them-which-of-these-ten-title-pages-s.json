@@ -43,6 +43,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-10-17T19:49:55.727Z"
+  "status": "resolved",
+  "created": "2026-10-17T19:49:55.727Z",
+  "answer": {
+    "choice": "b",
+    "note": "User 2026-10-18 after viewing the mock: 'these look so much better. The existing title pages are far too busy so i think we need to audit them and tone them down to make them a little more presentable and more subtle'. Build all ten; keep the existing set but toned down (separate task) under More styles.",
+    "resolved": "2026-10-18T16:27:50.817Z"
+  }
 }

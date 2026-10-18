@@ -1,0 +1,34 @@
+{
+  "id": "the-existing-title-pages-are-toned-down-to-calm",
+  "title": "The existing title pages are toned down to calm, presentable versions of themselves",
+  "goal": "The current built-in title pages (Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal, Behind Glass, Light Leak, Gradient Glow, Stacked Stagger and the lower thirds) are far too busy. Audit each against the restraint of the approved Apple-level mock and tone it down: quieter backgrounds, fewer effects per part, shorter and calmer motion, better type, so every one is presentable and subtle. They stay available under More styles beneath the ten new pages.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 1.09,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-18T16:27:50.933Z",
+  "updated": "2026-10-18T16:27:51.043Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-18), after viewing the Apple-level mock: \"these look so much better. The existing title pages are far too busy so i think we need to audit them and tone them down to make them a little more presentable and more subtle\". The card on title-pages-that-look-like-apple-designed-them was resolved b (build all ten, old set under More styles) with these words. Existing set: PhotonzCore/TitleSet.swift (12 built-ins), live backgrounds from title-backgrounds-that-are-alive-auroras-energy, entrances from title-text-visibly-comes-in-and-every-built-in-t. Memory: visual work needs a measured bar the weak version fails, and a reel for the user.",
+  "acceptance": [
+    "Audit first, one row per existing title in the audit: what makes it busy (background motion speed and contrast, number of effects per part, travel distance, bounce/spin/flip/3D, glows, grain, colour count, type size contrast, timing) measured from its frames, compared with the rules the approved mock follows (docs/design/mocks/pages/video-titles-apple.html and title-pages-that-look-like-apple-designed-them's review: fade, rise of 10 to 22 px, blur in, tracking settle, per-line mask reveal, 600 to 950 ms expo out, outs 300 to 450 ms, one accent colour at most, still or barely moving backgrounds)",
+    "Each existing title is revised to those rules while keeping its own identity (Editorial stays editorial, Tech Terminal stays a terminal): at most one effect per part, travel under 24 px, no spring, flip or 3D builds by default, backgrounds slowed to barely moving and lowered in contrast (live backgrounds at about a third of today's speed and strength unless the look needs less), glows and grain subtle or off, typography using the new tracking and line height settings",
+    "VISUAL BAR, MEASURED: for each title, background motion (mean pixel difference between frames 0.5 s apart) at most half of today's, and the busyness numbers in the audit all within the mock's ranges; a side by side contact sheet before and after for each, plus a reel",
+    "They are grouped under More styles below the ten new pages (per the user's card answer b); titles already in documents keep drawing as they were",
+    "A decision card links the before/after reel for the user to judge; anything they still call busy is reworked",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-18T16:27:50.935Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-18T16:27:51.042Z",
+      "note": "seq 55 -> 1.09"
+    }
+  ]
+}
