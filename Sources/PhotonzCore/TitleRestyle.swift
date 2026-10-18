@@ -376,6 +376,8 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
             case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter, .countUp:
                 break
             }
+            build.blur = build.blur.map { $0 * share }
+            build.scale = build.scale.map { 100 + ($0 - 100) * share }
             return build
         }
         return TitleDesign(parts: design.parts.map { part in
@@ -769,6 +771,15 @@ struct TitleRestyler {
             if let own {
                 shape.fill = own
                 shape.colorHex = own.hex
+            } else if var paint = shape.fill, paint.isGradient, paint.stops.contains(where: { $0.hex.count == 9 }) {
+                // A glow fading to nothing takes the accent and keeps how see
+                // through each of its stops is.
+                paint.hex = hex
+                paint.stops = paint.stops.map { GradientStop(hex: String(hex.prefix(7)) + ($0.hex.count == 9
+                                                                                     ? String($0.hex.suffix(2)) : ""),
+                                                             position: $0.position) }
+                shape.fill = paint
+                shape.colorHex = hex
             } else if var paint = shape.fill, paint.isGradient {
                 let ends = paint.stops.count > 2 ? [hex, recipe.theme.primary, hex] : [hex, recipe.theme.primary]
                 paint.hex = hex

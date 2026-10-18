@@ -18,6 +18,11 @@ struct TitleSetTests {
 
     static let canvas = CGSize(width: 1920, height: 1080)
 
+    /// The twelve of the brief. The calm set that now leads the title pages
+    /// keeps the mock's own rules instead (`TitleCalmSetTests`), and the
+    /// pages of these twelve sit under More Styles below it.
+    static let twelve = BuiltInTitle.shelved.filter { !$0.isCalm }
+
     static let names = ["Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif",
                         "Tech Terminal", "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
                         "Split Wipe", "Minimal Underline", "Pill Card"]
@@ -41,15 +46,16 @@ struct TitleSetTests {
 
     @Test("The shelf and the menus carry the twelve styles of the brief, pages then cards")
     func theTwelve() {
-        #expect(BuiltInTitle.shelved.map(\.name) == Self.names)
-        let pages = BuiltInTitle.presets(of: .titlePage).map(\.name)
+        #expect(Self.twelve.map(\.name) == Self.names)
+        #expect(BuiltInTitle.shelved.map(\.name) == BuiltInTitle.calmSet.map(\.name) + Self.names)
+        let pages = BuiltInTitle.presets(of: .titlePage).filter(\.isMoreStyle).map(\.name)
         let cards = BuiltInTitle.presets(of: .nameCard).map(\.name)
         #expect(pages == Array(Self.names.prefix(9)))
         #expect(cards == Array(Self.names.suffix(3)))
         // Nothing of the old plain set is offered any more.
         // Charts follow on the shelf, a kind of their own (`AnimatedChartTests`).
         let shelf = TitlePreset.shelf(saved: [], charts: false).map(\.name)
-        #expect(shelf == Self.names)
+        #expect(shelf == BuiltInTitle.calmSet.map(\.name) + Self.names)
         for retired in ["Midnight", "Sunrise", "Paper", "Spotlight", "Aurora", "Bar", "Clean", "Accent", "Minimal"] {
             #expect(!shelf.contains(retired))
         }
@@ -57,7 +63,7 @@ struct TitleSetTests {
         // every page now stands on a moving look (task
         // `title-text-visibly-comes-in-and-every-built-in-t`), so that is the
         // one bare name card.
-        let still = BuiltInTitle.shelved.filter { !$0.hasMovingBackdrop }
+        let still = Self.twelve.filter { !$0.hasMovingBackdrop }
         #expect(still.allSatisfy { !$0.hasMovingBackdrop })
         #expect(BuiltInTitle.presets(of: .nameCard, movingBackdrops: false) == [.underline])
     }
@@ -66,7 +72,7 @@ struct TitleSetTests {
 
     @Test("Every part arrives on its own beat: at least three different moments in each")
     func separateBeats() {
-        for preset in BuiltInTitle.shelved {
+        for preset in Self.twelve {
             let starts = Set(preset.design.parts.compactMap { $0.in?.delayMS })
             #expect(starts.count >= 3, "\(preset.name) brings its parts in at \(starts.sorted())")
         }
@@ -87,7 +93,7 @@ struct TitleSetTests {
     @Test("Every headline comes in its own way: no two of the set share an entrance")
     func ownEntrances() {
         var seen: [String: String] = [:]
-        for preset in BuiltInTitle.shelved {
+        for preset in Self.twelve {
             let entrance = Self.entrance(preset)
             #expect(!entrance.isEmpty, "\(preset.name) has no headline entrance")
             if let other = seen[entrance] {
@@ -99,7 +105,7 @@ struct TitleSetTests {
 
     @Test("A headline takes most of a second to come in, and the line under it comes on its own later beat")
     func headlineThenSubtitle() {
-        for preset in BuiltInTitle.shelved {
+        for preset in Self.twelve {
             guard let headline = preset.design.parts.first(where: { $0.role == .headline })?.in else {
                 Issue.record("\(preset.name) has no headline in")
                 continue
@@ -115,7 +121,7 @@ struct TitleSetTests {
     @Test("Every title stands on a moving look, except one deliberately bare name card")
     func movingLooks() {
         var still: [BuiltInTitle] = []
-        for preset in BuiltInTitle.shelved {
+        for preset in Self.twelve {
             let title = preset.layer(in: Self.canvas)
             let background = TitleDesign.find("Background", in: title)
             let live = background?.annotation?.fill?.kind == .live
@@ -127,7 +133,7 @@ struct TitleSetTests {
         #expect(still == [.underline], "standing on something still: \(still.map(\.name))")
         // Ten looks, and the set uses most of them, not the same one twice
         // over.
-        let looks = BuiltInTitle.shelved.compactMap {
+        let looks = Self.twelve.compactMap {
             TitleDesign.find("Background", in: $0.layer(in: Self.canvas))?.annotation?.fill?.live?.look
         }
         #expect(Set(looks).count == looks.count, "a look is used twice: \(looks)")
@@ -136,7 +142,7 @@ struct TitleSetTests {
 
     @Test("Two type sizes at most")
     func twoSizes() {
-        for preset in BuiltInTitle.shelved {
+        for preset in Self.twelve {
             let layer = preset.layer(in: Self.canvas)
             let sizes = Set(layer.selfAndDescendants.compactMap { $0.text.map { Int($0.fontSize.rounded()) } })
             #expect(!sizes.isEmpty, "\(preset.name) has no words")
@@ -152,7 +158,7 @@ struct TitleSetTests {
         // that uncovers words, so its edge is seen crossing them.
         let arriving: Set<EasingCurve> = [.easeOut, .easeOutExpo, .easeOutQuint, .easeOutBack, .easeInOutSine,
                                           .easeInOut]
-        for preset in BuiltInTitle.shelved {
+        for preset in Self.twelve {
             for part in preset.design.parts {
                 if let entrance = part.in, entrance.kind != .typewriter {
                     #expect(arriving.contains(entrance.curve), "\(preset.name) \(part.path) comes in on \(entrance.curve)")
@@ -170,7 +176,7 @@ struct TitleSetTests {
 
     @Test("Something is still moving while every title holds")
     func movesWhileHolding() throws {
-        for preset in BuiltInTitle.shelved {
+        for preset in Self.twelve {
             let (doc, id) = try Self.placed(preset)
             let layer = try #require(doc.layer(id: id))
             let time = try #require(layer.time)
@@ -245,18 +251,47 @@ struct TitleSetTests {
             guard shape.fill != nil else { continue }
             // A moving look is read as drawn: its ground and the brightest
             // (or darkest) it is held to (`LivePalette`).
-            let stops = paint.kind == .live
+            let hexes = paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]
+            var stops: [RGBA] = paint.kind == .live
                 ? [LivePalette(paint).ground, LivePalette(paint).extreme]
-                : (paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]).compactMap(RGBA.init(hex:))
-            let alpha = Double(piece.style.opacity)
-            behind = stops.flatMap { stop in
-                behind.map { under in
-                    RGBA(r: stop.r * alpha + under.r * (1 - alpha), g: stop.g * alpha + under.g * (1 - alpha),
-                         b: stop.b * alpha + under.b * (1 - alpha))
+                : hexes.compactMap(RGBA.init(hex:))
+            var alphas: [Double] = paint.kind == .live || !paint.isGradient ? [1.0] : hexes.map(Self.stopAlpha)
+            // A radial ramp is read where the words sit on it.
+            if paint.kind == .radial, paint.isGradient, let (hex, alpha) = Self.radial(paint, in: frame, at: middle) {
+                stops = RGBA(hex: hex).map { [$0] } ?? stops
+                alphas = [alpha]
+            }
+            let alpha = Double(piece.style.opacity) * (alphas.max() ?? 1)
+            behind = stops.flatMap { stop -> [RGBA] in
+                behind.map { under -> RGBA in
+                    let r = stop.r * alpha + under.r * (1 - alpha)
+                    let g = stop.g * alpha + under.g * (1 - alpha)
+                    let b = stop.b * alpha + under.b * (1 - alpha)
+                    return RGBA(r: r, g: g, b: b)
                 }
             }
         }
         return behind.map { SegmentInk.contrast(ink, $0) }.min() ?? 0
+    }
+
+    /// How opaque a `#RRGGBBAA` stop is; one for `#RRGGBB`. A glow made of
+    /// see-through stops is judged at its most opaque.
+    static func stopAlpha(_ hex: String) -> Double {
+        let digits = hex.dropFirst()
+        guard digits.count == 8, let value = Int(digits.suffix(2), radix: 16) else { return 1 }
+        return Double(value) / 255
+    }
+
+    /// The colour and opacity of a radial ramp at `point`: its nearest stop
+    /// at that distance from its centre, as a share of the farthest corner.
+    static func radial(_ paint: Paint, in box: CGRect, at point: CGPoint) -> (String, Double)? {
+        let centre = CGPoint(x: box.minX + paint.center.x * box.width, y: box.minY + paint.center.y * box.height)
+        let radius = paint.radialRadius(in: box)
+        guard radius > 0 else { return nil }
+        let t = Double(hypot(point.x - centre.x, point.y - centre.y) / radius)
+        let stops = paint.orderedStops
+        guard let stop = stops.last(where: { $0.position <= t }) ?? stops.first else { return nil }
+        return (String(stop.hex.prefix(7)), stopAlpha(stop.hex))
     }
 
     @Test("Every line of words reads over black footage and white footage alike")

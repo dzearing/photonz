@@ -85,7 +85,8 @@ struct TitleDesignTests {
         for preset in BuiltInTitle.allCases {
             let design = preset.design
             let group = preset.layer(in: Self.canvas)
-            #expect(design.parts.count >= 3, "\(preset.name)")
+            // A calm page can be one headline on its background (Gradient Word).
+            #expect(design.parts.count >= (preset.isCalm ? 2 : 3), "\(preset.name)")
             for part in design.parts {
                 #expect(TitleDesign.find(part.path, in: group) != nil, "\(preset.name): \(part.path)")
             }
@@ -96,7 +97,8 @@ struct TitleDesignTests {
 
     @Test("A title's parts come in on separate beats: background, then headline, then subtitle 100 to 150 ms later")
     func partsEnterOnSeparateBeats() throws {
-        for preset in BuiltInTitle.allCases {
+        // The calm set keeps the mock's own beats instead (`TitleCalmSetTests`).
+        for preset in BuiltInTitle.allCases where !preset.isCalm {
             let ins = preset.design.parts.compactMap { part in part.in.map { (part.role, $0.delayMS) } }
             // Not one slab: at least three different moments.
             #expect(Set(ins.map(\.1)).count >= 3, "\(preset.name)")
@@ -119,7 +121,8 @@ struct TitleDesignTests {
 
     @Test("Exits are shorter than entrances, ease in, and finish inside the last half second")
     func exitsAreShorterAndEaseIn() throws {
-        for preset in BuiltInTitle.allCases {
+        // The calm set leaves on the mock's even sine (`TitleCalmSetTests`).
+        for preset in BuiltInTitle.allCases where !preset.isCalm {
             for part in preset.design.parts {
                 guard let out = part.out else { continue }
                 #expect(out.curve == .easeIn, "\(preset.name): \(part.path)")
@@ -422,7 +425,9 @@ struct TitleDesignTests {
                 guard let entrance = part.in else { return false }
                 return entrance.unit != nil || [.maskReveal, .trackIn, .typewriter].contains(entrance.kind)
             }
-            if byPiece {
+            // Gradient Word's colour keeps washing through its words after
+            // they land, so it has arrived when the wash has.
+            if byPiece || preset == .gradientWord {
                 #expect(doc.titleArrivalMS(layerID: inserted.layerID) >= preset.design.inLengthMS, "\(preset.name)")
             } else {
                 #expect(doc.titleArrivalMS(layerID: inserted.layerID) == preset.design.inLengthMS, "\(preset.name)")

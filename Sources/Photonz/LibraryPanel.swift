@@ -379,9 +379,10 @@ struct LibraryPanel: View {
 
     /// Whether the catalog heads each group with its kind: on All and while
     /// searching, where more than one kind can show. One kind picked is
-    /// already named by its chip.
+    /// already named by its chip, unless it splits under headers of its own
+    /// (the title pages, with More Styles below the ten).
     private var catalogShowsHeaders: Bool {
-        !LibrarySearch.normalized(query).isEmpty || VideoCatalog.resolvedCategory(
+        !LibrarySearch.normalized(query).isEmpty || catalogGroups.count > 1 || VideoCatalog.resolvedCategory(
             catalogCategoryRaw,
             shown: editorState.videoCatalog.categories(builtForVideoOnly: builtForVideoOnly).map(\.category)) == nil
     }
@@ -555,8 +556,8 @@ struct LibraryPanel: View {
         let mains = editorState.document.map(Self.mains(of:)) ?? [:]
         if catalogShowsHeaders {
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(groups, id: \.category) { group in
-                    groupHeader(group.category.title, note: group.category.note)
+                ForEach(groups, id: \.title) { group in
+                    groupHeader(group.title, note: group.title == group.category.title ? group.category.note : nil)
                     tileGrid {
                         ForEach(group.items) { item in catalogTile(item, mains: mains) }
                     }

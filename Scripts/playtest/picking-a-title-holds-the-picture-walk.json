@@ -48,7 +48,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Stacked Stagger"
+      "choose": "Add Title Page > More Styles > Stacked Stagger"
     },
     {
       "do": "wait",

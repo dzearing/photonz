@@ -307,12 +307,17 @@ extension PhotonzDocument {
             content.onPath = onPath
             local = existing.frame
         }
+        // Words of a title that wear no shadow stand on the title's own
+        // backing (a calm title page's black or white, task
+        // `title-pages-that-look-like-apple-designed-them`): re-wording them
+        // gives them none.
+        let bare = existing.style.shadows.isEmpty && titleLayerID(containing: id) != nil
         updateLayer(id: id) {
             $0.content = .text(content)
             $0.frame = local
             // A re-edit may have changed the color; keep the auto-contrast
             // shadow opposing it.
-            $0.style.shadow = TextBuilder.autoContrastShadow(forColorHex: content.colorHex)
+            if !bare { $0.style.shadow = TextBuilder.autoContrastShadow(forColorHex: content.colorHex) }
         }
     }
 

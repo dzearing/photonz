@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/insert-a-title-before-a-clip-walk",
-  "seed": "Putting a title page in front of a recording is one move, at Next defaults with no flag set: pick the recording, double click a title page tile in the Library, and the page lands on V1 right before the clip, the clip moved later by the page's length, with a cross dissolve on the join between them instead of a fade baked into the title. The join is an edit point like any other: right-click it and Change Transition > Cube turns it into a cube, which plays as the page turns away into the recording; picked, Delete takes the transition off and leaves a straight cut, nothing moving. Last, with all of that undone, the Soft Gradient Glass tile dragged onto V1 says Insert there at 0:00, and let go it lands in front of the recording the same way, its join dissolving.",
+  "seed": "Putting a title page in front of a recording is one move, at Next defaults with no flag set: pick the recording, double click a title page tile in the Library, and the page lands on V1 right before the clip, the clip moved later by the page's length, with a cross dissolve on the join between them instead of a fade baked into the title. The join is an edit point like any other: right-click it and Change Transition > Cube turns it into a cube, which plays as the page turns away into the recording; picked, Delete takes the transition off and leaves a straight cut, nothing moving. Last, with all of that undone, the Film Super tile dragged onto V1 says Insert there at 0:00, and let go it lands in front of the recording the same way, its join dissolving.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -62,7 +62,7 @@
     {
       "comment": "THE FIRST TEST: the recording picked, a double click on a title page tile by the pointer.",
       "do": "press",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "count": 2
     },
     {
@@ -109,7 +109,7 @@
     {
       "do": "describe",
       "stage": "1-inserted-before-the-clip",
-      "note": "THE FIRST TEST: with the recording picked, a double click on Keynote Clean put the title page on V1 from 0:00 to 0:04, right before the recording, which moved along to start at 0:04 and plays whole. The join between them carries a cross dissolve, drawn as a band over the cut, and the title has no fade of its own"
+      "note": "THE FIRST TEST: with the recording picked, a double click on Keynote Section put the title page on V1 from 0:00 to 0:04, right before the recording, which moved along to start at 0:04 and plays whole. The join between them carries a cross dissolve, drawn as a band over the cut, and the title has no fade of its own"
     },
     {
       "do": "snapshot",
@@ -287,7 +287,7 @@
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Soft Gradient Glass",
+      "tile": "Film Super",
       "track": "V1",
       "seconds": 0.0,
       "release": false,
@@ -297,11 +297,11 @@
     {
       "do": "describe",
       "stage": "6-held-over-v1",
-      "note": "THE FOURTH TEST: the Soft Gradient Glass tile held over the recording's own track at its start: the ghost says Insert on V1 at 0:00, with the insert bar at its start: it goes in front of the recording, pushing it along, not on a new track"
+      "note": "THE FOURTH TEST: the Film Super tile held over the recording's own track at its start: the ghost says Insert on V1 at 0:00, with the insert bar at its start: it goes in front of the recording, pushing it along, not on a new track"
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Soft Gradient Glass",
+      "tile": "Film Super",
       "track": "V1",
       "seconds": 0.0
     },

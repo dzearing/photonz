@@ -1,0 +1,48 @@
+{
+  "id": "title-pages-that-look-like-apple-designed-them-the-ten-title-pages-are-built-fr",
+  "taskId": "title-pages-that-look-like-apple-designed-them",
+  "question": "The ten title pages are built from your mock. Do they look right in the app?",
+  "context": "Built from the mock you picked on 2026-10-18 (all ten, old set under More Styles). Reel: queue/audits/2026-10-18-apple-titles-reel.mp4. Mock beside app at 0, 25, 50, 100 percent of each entrance and the hold: queue/audits/2026-10-18-apple-titles-beside-mock.png. Mean pixel difference 0.2 to 2.8 of 255 for nine; Editorial 5.6 because of its serif cut.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Ship as built; Editorial keeps the Mac's headline serif",
+      "summary": "All ten stay as the first title pages, the old set under More Styles. Editorial's headline uses the cut of New York the Mac draws at that size, a touch bolder and narrower than in the mock.",
+      "pros": [
+        "Nine of ten match the mock frame for frame",
+        "Editorial's serif is the one Apple's own apps draw at headline size"
+      ],
+      "cons": [
+        "Editorial reads slightly heavier than the mock you approved"
+      ],
+      "mitigation": "Font, weight and spacing can still be changed per title in the panel."
+    },
+    {
+      "id": "b",
+      "label": "Ship, but make Editorial's serif wider and lighter like the mock",
+      "summary": "Same as a, and Editorial's headline is redrawn in the wider, lighter cut of New York the mock shows. That needs the app to choose a serif cut by hand, which is a follow-up build.",
+      "pros": [
+        "Editorial matches the mock too"
+      ],
+      "cons": [
+        "One more build before Editorial is final"
+      ],
+      "mitigation": "The other nine ship now either way."
+    },
+    {
+      "id": "c",
+      "label": "Some still look amateur: rework the ones I name",
+      "summary": "Tell me which pages still look like a school presentation and what is wrong with them; those get reworked and the rest ship.",
+      "pros": [
+        "Nothing ships that you do not like"
+      ],
+      "cons": [
+        "Needs your notes on which pages and why"
+      ],
+      "mitigation": "Comment straight on the reel lines in the audit."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-18T20:03:36.266Z"
+}

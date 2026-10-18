@@ -15,7 +15,7 @@
   { "do": "wait", "seconds": 0.6 },
   { "do": "rightClick", "on": "Track V1", "choose": "Add Track Above" },
   { "do": "wait", "seconds": 0.6 },
-  { "do": "rightClick", "on": "Track V2", "choose": "Add Title Page > Stacked Stagger" },
+  { "do": "rightClick", "on": "Track V2", "choose": "Add Title Page > More Styles > Stacked Stagger" },
   { "do": "wait", "seconds": 1.2 },
   { "comment": "Inserting parks the playhead where every part has arrived, 1.85 s into this title.", "do": "expectTimeline", "rate": 0, "playheadMS": 1850, "withinMS": 40 },
   { "do": "type", "text": "Ship it faster" },

@@ -31,7 +31,9 @@ struct TitlePresetShelfTests {
     @Test func theShelfHoldsEveryBuiltInPresetPagesFirst() {
         let shelf = TitlePreset.shelf(saved: [])
         #expect(shelf.count == BuiltInTitle.shelved.count + ChartKind.allCases.count)
-        #expect(shelf.map(\.name) == ["Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
+        #expect(shelf.map(\.name) == ["Keynote Section", "Film Super", "Session Title", "Chapter Card", "Editorial",
+                                      "Sessions Stage", "Launch", "Gradient Word", "Big Number", "End Card",
+                                      "Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
                                       "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
                                       "Split Wipe", "Minimal Underline", "Pill Card",
                                       "Bar Chart", "Horizontal Bars", "Line Chart", "Donut", "Big Number", "Comparison"])
@@ -43,7 +45,9 @@ struct TitlePresetShelfTests {
         let card = try Self.saved("Team Card", .nameCard)
         let page = try Self.saved("Intro", .titlePage)
         let shelf = TitlePreset.shelf(saved: [card, page], charts: false)
-        #expect(shelf.map(\.name) == ["Intro", "Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
+        #expect(shelf.map(\.name) == ["Intro", "Keynote Section", "Film Super", "Session Title", "Chapter Card", "Editorial",
+                                      "Sessions Stage", "Launch", "Gradient Word", "Big Number", "End Card",
+                                      "Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
                                       "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
                                       "Team Card", "Split Wipe", "Minimal Underline", "Pill Card"])
     }

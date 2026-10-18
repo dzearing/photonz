@@ -48,7 +48,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Keynote Clean"
+      "choose": "Add Title Page > More Styles > Keynote Clean"
     },
     {
       "do": "wait",

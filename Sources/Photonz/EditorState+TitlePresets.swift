@@ -94,11 +94,15 @@ extension EditorState {
         let own = TitlePresetStore.shared.presets(of: kind).map { saved in
             MenuRow.command(saved.name) { self.insertTitle(saved: saved, onTrack: trackID) }
         }
-        let builtIn = TitlePreset.builtIn(of: kind,
-                                          movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
-            .map { preset in
+        let presets = TitlePreset.builtIn(of: kind, movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
+        func row(_ preset: TitlePreset) -> MenuRow {
             MenuRow.command(preset.name) { self.insertTitle(preset, onTrack: trackID) }
         }
+        // The pages the calm set replaced wait one level down, under More
+        // Styles (the user's answer, 2026-10-18).
+        let more = presets.filter(\.isMoreStyle).map(row)
+        let builtIn = presets.filter { !$0.isMoreStyle }.map(row)
+            + (more.isEmpty ? [] : [.separator, .submenu(VideoCatalogGroup.moreStyles, more)])
         return own.isEmpty ? builtIn : own + [.separator] + builtIn
     }
 

@@ -133,6 +133,8 @@ struct TitlePresetsTests {
             // the group as one slab.
             for part in preset.design.parts {
                 let piece = try #require(TitleDesign.find(part.path, in: layer), "\(preset.name)")
+                // A calm page's background simply stays (`TitleSetCalm.swift`).
+                if part.in == nil, part.out == nil, part.hold == .still { continue }
                 #expect(!(piece.motions ?? []).isEmpty, "\(preset.name): \(part.path)")
             }
             #expect(layer.pictureFadeMS(.in) == 0, "\(preset.name)")
@@ -154,6 +156,13 @@ struct TitlePresetsTests {
             let authored = preset.layer(in: Self.canvas)
             for part in preset.design.parts {
                 let start = try #require(TitleDesign.find(part.path, in: first))
+                // A calm page stands on its background, and Sessions Stage
+                // on its glow, from its first frame, as the mock draws them
+                // (task `title-pages-that-look-like-apple-designed-them`).
+                if preset.isCalm, part.in == nil {
+                    #expect(start.style.opacity > 0.1, "\(preset.name): \(part.path)")
+                    continue
+                }
                 // Invisible, or a wipe not yet begun (a sliver at most), or a
                 // line not yet drawn on.
                 // Words that come in a piece at a time are hidden by their

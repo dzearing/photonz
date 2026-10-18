@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > Behind Glass"
+   "choose": "Add Title Page > More Styles > Behind Glass"
   },
   {
    "do": "wait",
@@ -57,7 +57,7 @@
   {
    "do": "describe",
    "stage": "glass-landed",
-   "note": "Add Title Page > Behind Glass from the empty track's right-click at 0:00, at Next defaults. It lies OVER the recording's first four seconds (the recording is not pushed later), with its title open for typing"
+   "note": "Add Title Page > More Styles > Behind Glass from the empty track's right-click at 0:00, at Next defaults. It lies OVER the recording's first four seconds (the recording is not pushed later), with its title open for typing"
   },
   {
    "do": "snapshot",
@@ -658,7 +658,7 @@
   {
    "do": "rightClick",
    "on": "Track V3",
-   "choose": "Add Title Page > Soft Gradient Glass"
+   "choose": "Add Title Page > More Styles > Soft Gradient Glass"
   },
   {
    "do": "wait",

@@ -25,6 +25,12 @@ import Testing
 /// - The same on the way off: under a tenth on the last frame, between a
 ///   fifth and four fifths half way through its out, and already leaving
 ///   400 ms before the end.
+///
+/// The calm set that now leads the title pages (task
+/// `title-pages-that-look-like-apple-designed-them`) lands as its mock does,
+/// on a soft exponential settle that is most of the way home a quarter of the
+/// way through; its bar is the mock itself, frame for frame
+/// (`TitleCalmMockTests`), not this one.
 @Suite("Every built-in title's headline visibly comes in and goes off")
 struct TitleEntranceInkTests {
 
@@ -135,7 +141,7 @@ struct TitleEntranceInkTests {
     }
 
     @Test("Every headline is nowhere on its first frame, part way in half way through its in, and all there no earlier than 400 ms; the same going off",
-          arguments: BuiltInTitle.shelved)
+          arguments: BuiltInTitle.shelved.filter { !$0.isCalm })
     func headlineVisiblyArrivesAndLeaves(_ preset: BuiltInTitle) throws {
         let part = try #require(Self.headline(preset), "\(preset.name) has no headline")
         let (doc, id) = try Self.placed(preset)

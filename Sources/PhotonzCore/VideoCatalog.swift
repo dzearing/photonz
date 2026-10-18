@@ -77,10 +77,15 @@ public enum VideoCatalogCategory: String, CaseIterable, Hashable, Codable, Senda
 public struct VideoCatalogItem: Identifiable, Hashable, Sendable {
     public let entry: LibraryEntry
     public let category: VideoCatalogCategory
+    /// The header it sits under within its kind, where that is not the kind's
+    /// own: the title pages the calm set replaced, under More Styles (task
+    /// `title-pages-that-look-like-apple-designed-them`). Nil for the kind's.
+    public let section: String?
 
-    public init(entry: LibraryEntry, category: VideoCatalogCategory) {
+    public init(entry: LibraryEntry, category: VideoCatalogCategory, section: String? = nil) {
         self.entry = entry
         self.category = category
+        self.section = section
     }
 
     public var id: String { entry.id }
@@ -91,6 +96,18 @@ public struct VideoCatalogItem: Identifiable, Hashable, Sendable {
 public struct VideoCatalogGroup: Hashable, Sendable {
     public let category: VideoCatalogCategory
     public let items: [VideoCatalogItem]
+    /// What the header says: the kind's name, or the section's.
+    public let title: String
+
+    public init(category: VideoCatalogCategory, items: [VideoCatalogItem], title: String? = nil) {
+        self.category = category
+        self.items = items
+        self.title = title ?? category.title
+    }
+
+    /// The header the title pages the calm set replaced sit under, on the
+    /// shelf and in the Insert menus.
+    public static let moreStyles = "More Styles"
 }
 
 /// Everything the catalog holds for one document.
@@ -131,9 +148,10 @@ public struct VideoCatalog: Hashable, Sendable {
     public static func assemble(titles: [TitlePreset], backgrounds: [LiveLook],
                                 transitions: [ClipTransitionKind], pictures: [LibraryEntry],
                                 components: [LibraryEntry]) -> VideoCatalog {
-        func item(_ id: String, _ name: String, _ detail: String, _ category: VideoCatalogCategory) -> VideoCatalogItem {
+        func item(_ id: String, _ name: String, _ detail: String, _ category: VideoCatalogCategory,
+                  section: String? = nil) -> VideoCatalogItem {
             VideoCatalogItem(entry: LibraryEntry(id: id, scope: .catalog, name: name, detail: detail),
-                             category: category)
+                             category: category, section: section)
         }
         var items: [VideoCatalogItem] = []
         for preset in titles {
@@ -142,7 +160,8 @@ public struct VideoCatalog: Hashable, Sendable {
             case .chart: .animatedCharts
             case .titlePage: .titlePages
             }
-            items.append(item(preset.id, preset.name, preset.entry.detail, category))
+            items.append(item(preset.id, preset.name, preset.entry.detail, category,
+                              section: preset.isMoreStyle ? VideoCatalogGroup.moreStyles : nil))
         }
         items += backgrounds.map { item(backgroundID($0), $0.title, VideoCatalogCategory.backgrounds.singular,
                                         .backgrounds) }
@@ -186,11 +205,26 @@ public struct VideoCatalog: Hashable, Sendable {
                        builtForVideoOnly: Bool) -> [VideoCatalogGroup] {
         let searching = !LibrarySearch.normalized(query).isEmpty
         let kept = kept(query: query, builtForVideoOnly: builtForVideoOnly)
-        return VideoCatalogCategory.allCases.compactMap { kind in
-            if !searching, let category, category != kind { return nil }
+        return VideoCatalogCategory.allCases.flatMap { kind -> [VideoCatalogGroup] in
+            if !searching, let category, category != kind { return [] }
             let inKind = kept.filter { $0.category == kind }
-            return inKind.isEmpty ? nil : VideoCatalogGroup(category: kind, items: inKind)
+            let own = VideoCatalogGroup(category: kind, items: inKind.filter { $0.section == nil })
+            let sections = Self.sections(of: inKind).map { VideoCatalogGroup(category: kind, items: $0.1, title: $0.0) }
+            return ([own] + sections).filter { !$0.items.isEmpty }
         }
+    }
+
+    /// A kind's items that sit under a header of their own, a group per
+    /// header in the order they first appear.
+    private static func sections(of items: [VideoCatalogItem]) -> [(String, [VideoCatalogItem])] {
+        var order: [String] = []
+        var held: [String: [VideoCatalogItem]] = [:]
+        for item in items {
+            guard let section = item.section else { continue }
+            if held[section] == nil { order.append(section) }
+            held[section, default: []].append(item)
+        }
+        return order.map { ($0, held[$0] ?? []) }
     }
 
     /// The category to open on, from the one remembered: it stands while it

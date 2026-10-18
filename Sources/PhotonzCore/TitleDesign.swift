@@ -186,10 +186,19 @@ public struct TitleBuild: Hashable, Codable, Sendable {
     /// How long after one piece starts the next one does; nil for the
     /// unit's own (`TextRevealUnit.defaultStaggerMS`).
     public var staggerMS: Int?
+    /// A blur, in points of a 1080 line frame, that clears alongside the
+    /// build's own move: the soft focus a calm title rises out of (task
+    /// `title-pages-that-look-like-apple-designed-them`). Nil for none, which
+    /// is every build written before this. Ignored where the kind blurs.
+    public var blur: Double?
+    /// A size, in percent, the part settles from alongside the build's own
+    /// move. Nil for none. Ignored where the kind scales.
+    public var scale: Double?
 
     public init(_ kind: TitleBuildKind, delayMS: Int, lengthMS: Int, amount: Double? = nil,
                 direction: TitleDirection = .up, curve: EasingCurve? = nil,
-                by unit: TextRevealUnit? = nil, staggerMS: Int? = nil) {
+                by unit: TextRevealUnit? = nil, staggerMS: Int? = nil,
+                blur: Double? = nil, scale: Double? = nil) {
         self.kind = kind
         self.delayMS = max(0, delayMS)
         self.lengthMS = max(1, lengthMS)
@@ -198,6 +207,8 @@ public struct TitleBuild: Hashable, Codable, Sendable {
         self.curve = curve ?? kind.defaultCurve
         self.unit = unit
         self.staggerMS = staggerMS.map { max(0, $0) }
+        self.blur = blur
+        self.scale = scale
     }
 
     /// The usual way off: shorter than the way in, eased in.
@@ -602,6 +613,15 @@ struct TitleCompiler {
         var inEnd = 0
         if let build = part.in, revealsWords(build) {
             inEnd = min(build.delayMS + build.lengthMS, half)
+            // The words come in by their own reveal; a blur or a size beside
+            // it clears on the whole piece over the same span.
+            let start = min(build.delayMS, half)
+            if inEnd > start {
+                for (property, off, curve) in alongside(build, besides: []) {
+                    runs[property, default: []].append(Run(start: start, end: inEnd, from: off,
+                                                           to: rest(property), curve: curve))
+                }
+            }
         } else if let build = part.in {
             let start = min(build.delayMS, half)
             let end = min(build.delayMS + build.lengthMS, half)
@@ -610,7 +630,8 @@ struct TitleCompiler {
                 runs[.opacity, default: []].append(Run(start: start, end: start + countFade(end - start),
                                                        from: .number(0), to: rest(.opacity), curve: .easeOut))
             } else if end > start {
-                for (property, off, curve) in offs(build, arriving: true) {
+                let own = offs(build, arriving: true)
+                for (property, off, curve) in own + alongside(build, besides: Set(own.map(\.0))) {
                     runs[property, default: []].append(Run(start: start, end: end, from: off,
                                                            to: rest(property), curve: curve))
                 }
@@ -768,6 +789,20 @@ struct TitleCompiler {
                     (.rotationY, .number(-0.5 * build.amount), curve),
                     (.depth, .number(-2 * build.amount * Double(unit)), curve)]
         }
+    }
+
+    /// The blur and the size a build carries beside its own move, for the
+    /// properties its kind does not already move.
+    private func alongside(_ build: TitleBuild,
+                           besides moved: Set<MotionProperty>) -> [(MotionProperty, MotionValue, EasingCurve)] {
+        var extra: [(MotionProperty, MotionValue, EasingCurve)] = []
+        if let blur = build.blur, blur > 0, !moved.contains(.blur) {
+            extra.append((.blur, .number(blur * Double(unit)), build.curve))
+        }
+        if let scale = build.scale, scale != 100, !moved.contains(.scale) {
+            extra.append((.scale, .number(scale), build.curve))
+        }
+        return extra
     }
 
     /// The property a swing in `direction` turns, and the sign that takes its

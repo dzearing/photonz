@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > Keynote Clean"
+   "choose": "Add Title Page > More Styles > Keynote Clean"
   },
   {
    "do": "wait",
@@ -57,7 +57,7 @@
   {
    "do": "describe",
    "stage": "page-landed",
-   "note": "Add Title Page > Keynote Clean from the empty track's right-click, at Next defaults. The playhead moves on to where its LAST part has arrived, once the subtitle's last word is in, with its title open for typing"
+   "note": "Add Title Page > More Styles > Keynote Clean from the empty track's right-click, at Next defaults. The playhead moves on to where its LAST part has arrived, once the subtitle's last word is in, with its title open for typing"
   },
   {
    "do": "snapshot",

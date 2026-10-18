@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-pages-and-name-cards-walk",
-  "seed": "The user's basic edit, end to end at Next defaults with no switch touched, every step from a right-click: a recording with a second clip cut on after it; a track added above V1 and, from that empty track's right-click, Add Title Page > Keynote Clean at the start with its words typed straight in; the page at the start pushes the recording later by its length less its half-second fade out, so it dissolves into the recording with no frame lost; another track and Add Name Card > Split Wipe at five seconds, wiping in and out, its name typed in; the last clip faded to black from its right-click; the card saved as a preset from its right-click and inserted again from the empty-track menu; and the edit written out as an MP4. Frames are photographed at each step.",
+  "seed": "The user's basic edit, end to end at Next defaults with no switch touched, every step from a right-click: a recording with a second clip cut on after it; a track added above V1 and, from that empty track's right-click, Add Title Page > More Styles > Keynote Clean at the start with its words typed straight in; the page at the start pushes the recording later by its length less its half-second fade out, so it dissolves into the recording with no frame lost; another track and Add Name Card > Split Wipe at five seconds, wiping in and out, its name typed in; the last clip faded to black from its right-click; the card saved as a preset from its right-click and inserted again from the empty-track menu; and the edit written out as an MP4. Frames are photographed at each step.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -67,7 +67,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Keynote Clean"
+      "choose": "Add Title Page > More Styles > Keynote Clean"
     },
     {
       "do": "wait",
@@ -76,7 +76,7 @@
     {
       "do": "describe",
       "stage": "1-title-page-ready",
-      "note": "RIGHT-CLICK, TWO ROWS: Add Track Above on V1, then the empty track's Add Title Page > Keynote Clean. A full-frame title page lands at the playhead on that track, four seconds long; the playhead steps half a second in to where it has finished arriving and its title is open for typing"
+      "note": "RIGHT-CLICK, TWO ROWS: Add Track Above on V1, then the empty track's Add Title Page > More Styles > Keynote Clean. A full-frame title page lands at the playhead on that track, four seconds long; the playhead steps half a second in to where it has finished arriving and its title is open for typing"
     },
     {
       "do": "snapshot",

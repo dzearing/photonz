@@ -56,6 +56,13 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         }
     }
 
+    /// One of the title pages the calm set replaced, offered under More
+    /// Styles (`TitleSetCalm.swift`).
+    public var isMoreStyle: Bool {
+        if case .builtIn(let preset) = self { return preset.isMoreStyle }
+        return false
+    }
+
     public var isOwn: Bool {
         if case .saved = self { return true }
         return false

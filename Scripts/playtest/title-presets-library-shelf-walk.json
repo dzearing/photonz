@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-library-shelf-walk",
-  "seed": "Title pages and name cards are picture tiles on the Library's Catalog, under Title Pages and Name Cards headers, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Catalog segment pressed by the pointer. The Soft Gradient Glass tile is picked up by the pointer, and the Keynote Clean tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Behind Glass, the page made of the recording under it, held over the recording on V1 says it goes on a new track, never into the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Keynote Clean double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
+  "seed": "Title pages and name cards are picture tiles on the Library's Catalog, under Title Pages and Name Cards headers, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Catalog segment pressed by the pointer. The Film Super tile is picked up by the pointer, and the Keynote Section tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Behind Glass, the page made of the recording under it, held over the recording on V1 says it goes on a new track, never into the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Keynote Section double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -59,12 +59,12 @@
     },
     {
       "do": "expect",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "present": true
     },
     {
       "do": "expect",
-      "control": "Soft Gradient Glass",
+      "control": "Film Super",
       "present": true
     },
     {
@@ -113,7 +113,7 @@
     },
     {
       "do": "pickUpTile",
-      "tile": "Soft Gradient Glass",
+      "tile": "Film Super",
       "to": [
         640,
         700
@@ -121,7 +121,7 @@
     },
     {
       "do": "press",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "count": 2
     },
     {
@@ -146,7 +146,7 @@
     {
       "do": "describe",
       "stage": "2-double-clicked",
-      "note": "THE SECOND TEST: a double click on the Keynote Clean tile, by the pointer, put the Keynote Clean title page at the playhead (two seconds) on a track of its own, four seconds long, exactly as Sequence > Insert Title Page > Keynote Clean does"
+      "note": "THE SECOND TEST: a double click on the Keynote Section tile, by the pointer, put the Keynote Section title page at the playhead (two seconds) on a track of its own, four seconds long, exactly as Sequence > Insert Title Page > Keynote Section does"
     },
     {
       "do": "snapshot",
@@ -163,13 +163,26 @@
       "seconds": 0.4
     },
     {
+      "comment": "Behind Glass now sits under More Styles below the ten calm pages, so it is found by name, as a person would.",
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "Behind Glass"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
       "do": "dropOnTimeline",
       "tile": "Behind Glass",
       "track": "V1",
       "seconds": 0.5,
       "release": false,
       "hold": "3-held-over-the-recording",
-      "says": "Title Page · New Title 2"
+      "says": "Title Page \u00b7 New Title 2"
     },
     {
       "do": "describe",
@@ -212,7 +225,7 @@
     {
       "do": "describe",
       "stage": "4-let-go-over-the-recording",
-      "note": "Let go, the Behind Glass title page lands half a second in on a new track called Title 2, named the way the mock names a title track, under the Keynote Clean one on Title, over the recording, which is untouched on V1"
+      "note": "Let go, the Behind Glass title page lands half a second in on a new track called Title 2, named the way the mock names a title track, under the Keynote Section one on Title, over the recording, which is untouched on V1"
     },
     {
       "do": "snapshot",
@@ -224,13 +237,25 @@
       "track": "Title 2",
       "seconds": 5.5,
       "release": false,
-      "says": "Title Page · Title 2"
+      "says": "Title Page \u00b7 Title 2"
     },
     {
       "do": "dropOnTimeline",
       "tile": "Behind Glass",
       "track": "Title 2",
       "seconds": 5.5
+    },
+    {
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "wait",
@@ -286,9 +311,9 @@
       ]
     },
     {
-      "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding), with the last drop's headline still picked: a double click on Keynote Clean by the pointer. The first click lets go of the headline and its rows fold out of the timeline, and the timeline keeps its height while the tile is picked, so the tile stays under the second click (the press fails if it slides). The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
+      "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding), with the last drop's headline still picked: a double click on Keynote Section by the pointer. The first click lets go of the headline and its rows fold out of the timeline, and the timeline keeps its height while the tile is picked, so the tile stays under the second click (the press fails if it slides). The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
       "do": "press",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "count": 2
     },
     {
@@ -319,13 +344,13 @@
     },
     {
       "do": "expect",
-      "control": "Keynote Clean",
+      "control": "Keynote Section",
       "present": true
     },
     {
       "do": "describe",
       "stage": "7-crowded-dock-at-its-end",
-      "note": "THE FIFTH TEST: with the timeline grown and the dock crowded, a double click on Keynote Clean by the pointer still lands it at the playhead, and the dock scrolled to its end shows a whole row of title tiles with a sliver of the next under the fade"
+      "note": "THE FIFTH TEST: with the timeline grown and the dock crowded, a double click on Keynote Section by the pointer still lands it at the playhead, and the dock scrolled to its end shows a whole row of title tiles with a sliver of the next under the fade"
     },
     {
       "do": "snapshot",
@@ -340,7 +365,7 @@
       "seconds": 1.0
     },
     {
-      "comment": "Back to the top of the dock, so the Media tile has to be scrolled to the same way Keynote Clean was.",
+      "comment": "Back to the top of the dock, so the Media tile has to be scrolled to the same way Keynote Section was.",
       "do": "scrollPanel",
       "row": "Media",
       "by": 3000

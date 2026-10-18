@@ -61,7 +61,7 @@ struct VideoCatalogTests {
         #expect(cards.count == BuiltInTitle.presets(of: .nameCard).count)
         // A title keeps its shelf id, so picking it opens the same section and
         // a drag carries the same preset as before.
-        #expect(pages.first?.id == TitlePreset.builtIn(.keynote).id)
+        #expect(pages.first?.id == TitlePreset.builtIn(.keynoteSection).id)
     }
 
     @Test func backgroundsTransitionsAndPicturesHaveTheirOwnCategories() {
@@ -122,8 +122,11 @@ struct VideoCatalogTests {
 
     @Test func allShowsEveryCategoryInItsOwnGroup() {
         let groups = everything.groups(category: nil, query: "", builtForVideoOnly: true)
-        #expect(groups.map(\.category) == [.titlePages, .nameCards, .animatedCharts, .backgrounds, .transitions,
-                                            .logos])
+        // The title pages the calm set replaced sit under a header of their
+        // own, More Styles, still filed as title pages.
+        #expect(groups.map(\.category) == [.titlePages, .titlePages, .nameCards, .animatedCharts, .backgrounds,
+                                            .transitions, .logos])
+        #expect(groups.map(\.title).prefix(3) == ["Title Pages", "More Styles", "Name Cards"])
     }
 
     @Test func aCategoryShowsOnlyItsOwnItems() {

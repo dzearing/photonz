@@ -100,7 +100,13 @@ public struct InsertedTitle: Hashable, Sendable {
 /// fits its time are written against those plain shapes, and a drag that
 /// names one still resolves.
 public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable {
-    // The set, in shelf order. Each headline comes in its own way and each
+    // The calm set, leading the title pages (`TitleSetCalm.swift`, task
+    // `title-pages-that-look-like-apple-designed-them`): ten studies of how
+    // Apple, Stripe and Linear open a film, in the mock's order.
+    case keynoteSection, filmSuper, sessionTitle, chapterCard, editorialNY
+    case sessionsStage, launch, gradientWord, bigNumber, endCard
+
+    // The set before it, in shelf order; its pages now sit under More Styles. Each headline comes in its own way and each
     // stands on its own moving look (task
     // `title-text-visibly-comes-in-and-every-built-in-t`).
     /// Near black with specks of light drifting in depth, a big bold
@@ -166,7 +172,9 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
 
     public var kind: TitleKind {
         switch self {
-        case .keynote, .softGlass, .kinetic, .editorial, .terminal, .glass, .lightLeak, .gradientGlow, .stacked,
+        case .keynoteSection, .filmSuper, .sessionTitle, .chapterCard, .editorialNY,
+             .sessionsStage, .launch, .gradientWord, .bigNumber, .endCard,
+             .keynote, .softGlass, .kinetic, .editorial, .terminal, .glass, .lightLeak, .gradientGlow, .stacked,
              .midnight, .sunrise, .paper, .spotlight, .aurora: .titlePage
         case .splitWipe, .underline, .pill, .bar, .clean, .accent, .minimal: .nameCard
         }
@@ -174,6 +182,16 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
 
     public var name: String {
         switch self {
+        case .keynoteSection: "Keynote Section"
+        case .filmSuper: "Film Super"
+        case .sessionTitle: "Session Title"
+        case .chapterCard: "Chapter Card"
+        case .editorialNY: "Editorial"
+        case .sessionsStage: "Sessions Stage"
+        case .launch: "Launch"
+        case .gradientWord: "Gradient Word"
+        case .bigNumber: "Big Number"
+        case .endCard: "End Card"
         case .keynote: "Keynote Clean"
         case .softGlass: "Soft Gradient Glass"
         case .kinetic: "Kinetic Bold"
@@ -212,6 +230,7 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         let backdrop = TitlePart(path: "Background", role: .background,
                                  in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint),
                                  hold: TitleHold(.push, amount: 3))
+        if let calm = calmDesign { return calm }
         if let designed = designedSet { return designed }
         switch self {
         case .midnight:
@@ -358,15 +377,17 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     /// (`docs/design/video-titles-polish.md`, step 3): what a release without
     /// moving backdrops cannot draw.
     public var hasMovingBackdrop: Bool {
+        guard !isCalm else { return false }
         switch self {
-        case .underline, .midnight, .sunrise, .paper, .spotlight, .bar, .clean, .accent, .minimal: false
-        default: true
+        case .underline, .midnight, .sunrise, .paper, .spotlight, .bar, .clean, .accent, .minimal: return false
+        default: return true
         }
     }
 
     /// The group this preset draws on a frame this size.
     public func layer(in canvas: CGSize) -> Layer {
         let pen = TitlePen(canvas: canvas)
+        if let calm = calmLayer(pen) { return calm }
         if let designed = designedLayer(pen) { return designed }
         let page: [Layer]
         switch self {

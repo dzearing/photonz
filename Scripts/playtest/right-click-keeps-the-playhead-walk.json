@@ -13,7 +13,7 @@
   { "do": "wait", "seconds": 0.3 },
   { "do": "rightClick", "on": "Track V1", "choose": "Add Track Above" },
   { "do": "wait", "seconds": 0.6 },
-  { "do": "rightClick", "on": "Track V2", "choose": "Add Title Page > Stacked Stagger" },
+  { "do": "rightClick", "on": "Track V2", "choose": "Add Title Page > More Styles > Stacked Stagger" },
   { "do": "wait", "seconds": 1.2 },
   { "do": "key", "key": "escape" },
   { "do": "key", "key": "escape" },

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-menu-bar-walk",
-  "seed": "The menu-bar half of title pages and name cards, at Next defaults: Sequence carries Insert Title Page and Insert Name Card with their presets, Sequence > Insert Title Page > Kinetic Bold puts one in at the playhead (in front of the recording, which starts there) with its words open for typing, the clip's right-click offers Save as Preset beside Animate In and Out, an empty track's right-click offers Add Title Page and Add Name Card, and Clip > Save as Preset opens the naming sheet. Needs the front for the menu pictures.",
+  "seed": "The menu-bar half of title pages and name cards, at Next defaults: Sequence carries Insert Title Page and Insert Name Card with their presets, Sequence > Insert Title Page > More Styles > Kinetic Bold puts one in at the playhead (in front of the recording, which starts there) with its words open for typing, the clip's right-click offers Save as Preset beside Animate In and Out, an empty track's right-click offers Add Title Page and Add Name Card, and Clip > Save as Preset opens the naming sheet. Needs the front for the menu pictures.",
   "setup": {
     "timelineOpen": true,
     "front": true,
@@ -47,7 +47,7 @@
       "stage": "2-insert",
       "menu": "Sequence",
       "oneKeyEach": true,
-      "choose": "Sequence > Insert Title Page > Kinetic Bold"
+      "choose": "Sequence > Insert Title Page > More Styles > Kinetic Bold"
     },
     {
       "do": "wait",
@@ -80,7 +80,7 @@
     {
       "do": "describe",
       "stage": "2-inserted",
-      "note": "Sequence > Insert Title Page > Kinetic Bold from the menu bar: three clicks, words typed straight in, and the page is in front of the recording on V1 since the playhead was where it starts"
+      "note": "Sequence > Insert Title Page > More Styles > Kinetic Bold from the menu bar: three clicks, words typed straight in, and the page is in front of the recording on V1 since the playhead was where it starts"
     },
     {
       "do": "snapshot",

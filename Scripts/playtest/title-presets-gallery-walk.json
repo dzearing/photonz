@@ -52,7 +52,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Keynote Clean"
+      "choose": "Add Title Page > More Styles > Keynote Clean"
     },
     {
       "do": "wait",
@@ -113,7 +113,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Soft Gradient Glass"
+      "choose": "Add Title Page > More Styles > Soft Gradient Glass"
     },
     {
       "do": "wait",
@@ -174,7 +174,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Kinetic Bold"
+      "choose": "Add Title Page > More Styles > Kinetic Bold"
     },
     {
       "do": "wait",
@@ -235,7 +235,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Editorial Serif"
+      "choose": "Add Title Page > More Styles > Editorial Serif"
     },
     {
       "do": "wait",
@@ -296,7 +296,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Tech Terminal"
+      "choose": "Add Title Page > More Styles > Tech Terminal"
     },
     {
       "do": "wait",
@@ -357,7 +357,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Light Leak"
+      "choose": "Add Title Page > More Styles > Light Leak"
     },
     {
       "do": "wait",
@@ -418,7 +418,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Gradient Glow"
+      "choose": "Add Title Page > More Styles > Gradient Glow"
     },
     {
       "do": "wait",
@@ -479,7 +479,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Stacked Stagger"
+      "choose": "Add Title Page > More Styles > Stacked Stagger"
     },
     {
       "do": "wait",

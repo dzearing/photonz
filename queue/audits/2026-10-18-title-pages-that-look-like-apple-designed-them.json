@@ -1,0 +1,32 @@
+{
+  "feature": "Title pages that look like Apple designed them",
+  "epic": "video-titles-graphics",
+  "summary": "The ten title pages from the mock you picked are now the first title pages in the Library and the Insert menus, drawn and moving as the mock does; the old busy set waits under More Styles.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording.",
+  "switched": {},
+  "try": [
+    { "do": "Open the Library, press Catalog, and type Keynote in its search: Keynote Section sits under Title Pages, Keynote Clean under More Styles.", "shot": "2026-10-18-apple-titles-walk-0-searched-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick the recording, then double click Keynote Section: it lands in front of the recording on V1 with a dissolve into it." },
+    { "do": "Type a headline and press Command Return." },
+    { "do": "Press Home and step a quarter second at a time: the word sharpens out of a soft focus, the line under it rises a few points.", "shot": "2026-10-18-apple-titles-walk-2a-quarter-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Step on to two seconds: it holds perfectly still on black.", "shot": "2026-10-18-apple-titles-walk-3-holding-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open Sequence > Insert Title Page: the ten are listed, then a More Styles submenu with the old pages." },
+    { "do": "Watch the reel of all ten: 2026-10-18-apple-titles-reel.mp4, and the mock beside the app: 2026-10-18-apple-titles-beside-mock.png.", "shot": "2026-10-18-apple-titles-beside-mock.png" }
+  ],
+  "evaluate": [
+    "Would you put any of the ten in front of an Apple keynote audience without wincing?",
+    "Does any page still read as a school presentation? Which one, and what about it?",
+    "Is Editorial's serif, a little bolder and narrower than in the mock, acceptable?",
+    "Is More Styles the right place for the old pages, or should they go entirely once the toned down versions land?",
+    "Do the entrances feel calm rather than slow?"
+  ],
+  "rough": [
+    "Editorial's headline serif is the Mac's 128 point cut of New York, a little bolder and about 60 pixels narrower than the mock's browser drew it (mean difference 5.6 of 255 against 0.2 to 2.8 for the other nine): settled by decision title-pages-that-look-like-apple-designed-them-the-ten-title-pages-are-built-fr.",
+    "Sessions Stage's glow is a round light where the mock's is an oval, so it reaches a little less far down the frame; within 2.8 of 255 of the mock at every moment measured: covered by decision title-pages-that-look-like-apple-designed-them-the-ten-title-pages-are-built-fr.",
+    "Film Super's warm pool of light is round where the mock's is an oval; within 1.7 of 255 of the mock: covered by decision title-pages-that-look-like-apple-designed-them-the-ten-title-pages-are-built-fr.",
+    "The sample words are the mock's (Timeline, Record. Redline. Ship., Dana Zhou, and so on) rather than Your Title, so the tile shows the design as designed; typing replaces them as before.",
+    "Matches the mock: a page's background is there from its first frame. Over footage mid-edit it therefore cuts in, and a transition on the cut softens that.",
+    "The old pages under More Styles are still as busy as before; toning them down is the-existing-title-pages-are-toned-down-to-calm.",
+    "Typing new words into any title no longer adds a halo shadow to words that had none; the old set's words never meant to wear one either."
+  ]
+}
