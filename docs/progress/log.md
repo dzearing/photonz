@@ -21596,3 +21596,12 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Moving backgrounds land full frame on a Gfx track by double click or drag (`landBackground`, `BackgroundDrag`, declared in `Scripts/build-app.sh`).
 - Mock: `docs/design/mocks/pages/video-library.html`. Open card: chips vs side column vs dropdown (chips built).
 - Next: the card's answer; whether the Library shows in a video's dock (`a-video-document-shows-the-library-in-its-dock`); animated charts.
+
+## 2026-10-17 — Animated charts you can drop into a video (Next)
+
+- Six charts (Bar, Horizontal Bars, Line, Donut, Big Number, Comparison) as a new title kind, `TitleKind.chart` / `TitlePreset.chart` (`Sources/PhotonzCore/AnimatedChart.swift`). Data lives in `TitleRecipe.chart` and every restyle redraws the pieces from it; words typed on the canvas are read back on relayout.
+- New Count Up build (`TextCount.swift`): a number in any title's words counts from 0 to its value.
+- Chart section in the panel (`ChartInspector.swift`, `EditorState+Charts.swift`): rows, paste from a spreadsheet, unit, decimals, change. Flag `next-animated-charts`, on at Next defaults. Catalog's Animated Charts chip now shows them; Sequence > Insert Chart and a track's Add Chart.
+- Walk `animated-charts-walk` (new `clipboardText` step). Harness: `forget: all` now covers saved title presets.
+- Measured: chart ink 0 at first frame; 5 to 10 ms a frame at 1080p while building. Reel and decision card for the user.
+- Next: the user's answer on the reel; open question filed about a crowded dock hiding Library rows.

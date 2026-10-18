@@ -87,6 +87,10 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// Arrives tipped back `amount` degrees and a little turned, and settles
     /// flat.
     case tiltSettle
+    /// The number in the words counts up from nought to its value as they
+    /// fade in (`TextCount.swift`): a chart's big number. Anything with no
+    /// number in it fades.
+    case countUp
 
     public var title: String {
         switch self {
@@ -105,6 +109,7 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
         case .flipUp: "Flip Up"
         case .flyInFromDepth: "Fly In From Depth"
         case .tiltSettle: "Tilt Settle"
+        case .countUp: "Count Up"
         }
     }
 
@@ -122,6 +127,9 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     public var defaultCurve: EasingCurve {
         switch self {
         case .swingIn, .flipUp, .flyInFromDepth, .tiltSettle: .easeInOutSine
+        // A count that is nearly there at once and crawls the last digits
+        // reads as stuck: it settles on a plain ease out.
+        case .countUp: .easeOut
         default: .easeOutExpo
         }
     }
@@ -131,7 +139,7 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// for a track in how wide the letters start, as a percent of the type.
     public var defaultAmount: Double {
         switch self {
-        case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter: 0
+        case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter, .countUp: 0
         case .rise: 24
         case .blurIn: 12
         case .scaleFrom: 110
@@ -239,14 +247,18 @@ public struct TitlePart: Hashable, Codable, Sendable {
     public var `in`: TitleBuild?
     public var hold: TitleHold
     public var out: TitleBuild?
+    /// What the timeline and the Part menu call it, where its role alone
+    /// would not say (a chart's Bar 2, Value 2). Nil names it by its role.
+    public var name: String?
 
     public init(path: String, role: TitlePartRole, in entrance: TitleBuild? = nil,
-                hold: TitleHold = .still, out: TitleBuild? = nil) {
+                hold: TitleHold = .still, out: TitleBuild? = nil, name: String? = nil) {
         self.path = path
         self.role = role
         self.in = entrance
         self.hold = hold
         self.out = out
+        self.name = name
     }
 }
 
@@ -312,7 +324,9 @@ extension PhotonzDocument {
             // Words wiped in are uncovered by their own reveal, which is the
             // whole of how they arrive: no fade keyed on top of it.
             let reveal = compiler.wordReveal(for: part)
-            guard !made.isEmpty || reveal != nil else { continue }
+            // A number that counts up says when on the words themselves.
+            let count = compiler.textCount(for: part)
+            guard !made.isEmpty || reveal != nil || count != nil else { continue }
             var moved = Set(made.map(\.property))
             if reveal != nil { moved.insert(.opacity) }
             // Turned in depth as a whole, it hangs from its hinge and hides
@@ -324,6 +338,10 @@ extension PhotonzDocument {
                 edited.motions = motions.isEmpty ? nil : motions
                 if let reveal, case .text(var text) = edited.content {
                     text.reveal = reveal
+                    edited.content = .text(text)
+                }
+                if case .text(var text) = edited.content, text.count != count {
+                    text.count = count
                     edited.content = .text(text)
                 }
                 if let setup { edited.turn3D = setup }
@@ -350,13 +368,18 @@ extension PhotonzDocument {
             var moved = Set(compiler.motions(for: part).map(\.property))
             let revealed = compiler.wordReveal(for: part) != nil
             if revealed { moved.insert(.opacity) }
+            let counted = compiler.textCount(for: part) != nil
             let turned = compiler.turnSetup(for: part) != nil
-            guard !moved.isEmpty || turned else { continue }
+            guard !moved.isEmpty || turned || counted else { continue }
             updateLayer(id: piece.id) { edited in
                 let motions = (edited.motions ?? []).filter { !moved.contains($0.property) }
                 edited.motions = motions.isEmpty ? nil : motions
                 if revealed, case .text(var text) = edited.content {
                     text.reveal = nil
+                    edited.content = .text(text)
+                }
+                if counted, case .text(var text) = edited.content {
+                    text.count = nil
                     edited.content = .text(text)
                 }
                 // The hinge and the hidden back a depth build set go with it.
@@ -383,6 +406,11 @@ extension PhotonzDocument {
                 let count = TextReveal.spans(in: text.string, unit: reveal.unit)?.count
                     ?? max(1, text.string.split(whereSeparator: \.isNewline).count)
                 let ends = reveal.startMS - time.sourceInMS + reveal.lengthMS(count: count)
+                if ends < time.lengthMS { last = max(last, ends) }
+            }
+            // ...and a number counting up has arrived when it reads its value.
+            if let count = piece.text?.count {
+                let ends = count.startMS - time.sourceInMS + count.lengthMS
                 if ends < time.lengthMS { last = max(last, ends) }
             }
             for motion in piece.motions ?? [] where motion.repeats == .once && motion.isOn {
@@ -415,6 +443,11 @@ extension PhotonzDocument {
                     ?? max(1, text.string.split(whereSeparator: \.isNewline).count)
                 let start = reveal.startMS - time.sourceInMS
                 let ends = start + reveal.lengthMS(count: count)
+                if ends < time.lengthMS { saw(max(0, start), ends) }
+            }
+            if let count = inner.text?.count {
+                let start = count.startMS - time.sourceInMS
+                let ends = start + count.lengthMS
                 if ends < time.lengthMS { saw(max(0, start), ends) }
             }
             for motion in inner.motions ?? [] where motion.repeats == .once && motion.isOn {
@@ -489,9 +522,27 @@ struct TitleCompiler {
         // nearest thing it can.
         case .maskReveal: piece.text != nil ? .maskReveal : .wipe
         case .trackIn, .typewriter: piece.text != nil ? build.kind : .fade
+        case .countUp: counts ? .countUp : .fade
         default: build.kind
         }
     }
+
+    /// Whether this piece is words holding a number that can count up.
+    private var counts: Bool { piece.text.flatMap { CountedNumber(parsing: $0.string) } != nil }
+
+    /// When a piece's number counts up, where its in is a count: from the
+    /// in's start to its end, inside the title's front half.
+    func textCount(for part: TitlePart) -> TextCount? {
+        guard let build = part.in, kind(of: build) == .countUp else { return nil }
+        let half = lengthMS / 2
+        let start = min(build.delayMS, half)
+        let length = max(1, min(build.delayMS + build.lengthMS, half) - start)
+        return TextCount(startMS: clock + start, lengthMS: length, curve: build.curve)
+    }
+
+    /// How long a counting number takes to fade up: its first moments, so
+    /// the count is seen from nearly nought.
+    private func countFade(_ length: Int) -> Int { min(length, 250) }
 
     /// Whether this piece is a line that can be drawn on.
     private var draws: Bool { piece.drawsItsOwnOutline && piece.strokeTrimForMotion != nil }
@@ -515,7 +566,7 @@ struct TitleCompiler {
         case .flipUp: return build.unit == nil ? nil : .flipUp
         case .flyInFromDepth: return build.unit == nil ? nil : .flyInFromDepth
         case .tiltSettle: return build.unit == nil ? nil : .tiltSettle
-        case .scaleFrom, .springPop, .drawOn, .frost: return nil
+        case .scaleFrom, .springPop, .drawOn, .frost, .countUp: return nil
         }
     }
 
@@ -555,7 +606,10 @@ struct TitleCompiler {
             let start = min(build.delayMS, half)
             let end = min(build.delayMS + build.lengthMS, half)
             inEnd = end
-            if end > start {
+            if end > start, kind(of: build) == .countUp {
+                runs[.opacity, default: []].append(Run(start: start, end: start + countFade(end - start),
+                                                       from: .number(0), to: rest(.opacity), curve: .easeOut))
+            } else if end > start {
                 for (property, off, curve) in offs(build, arriving: true) {
                     runs[property, default: []].append(Run(start: start, end: end, from: off,
                                                            to: rest(property), curve: curve))
@@ -693,7 +747,7 @@ struct TitleCompiler {
             // Words leaving by a mask: they drop back behind their baseline,
             // which keys can only say as a short fall and a fade.
             return [gone, (.position, moved(opposite(build.direction), by: 12), curve)]
-        case .trackIn, .typewriter:
+        case .trackIn, .typewriter, .countUp:
             return [gone]
         case .swingIn:
             // On its hinge (`turnSetup`), the free edge swung away.

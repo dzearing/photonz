@@ -574,7 +574,7 @@ struct LibraryPanel: View {
     @ViewBuilder
     private func catalogTile(_ item: VideoCatalogItem, mains: [UUID: Layer]) -> some View {
         switch item.category {
-        case .titlePages, .nameCards:
+        case .titlePages, .nameCards, .animatedCharts:
             if let preset = editorState.titlePreset(entryID: item.id) { LibraryTitleTile(preset: preset) }
         case .backgrounds:
             if let look = VideoCatalog.background(id: item.id) { LibraryBackgroundTile(look: look) }
@@ -591,7 +591,7 @@ struct LibraryPanel: View {
                 LibraryComponentTile(entry: tile.entry, layer: tile.layer, starter: tile.starter,
                                      shared: tile.shared)
             }
-        case .animatedCharts, .callouts, .endCards:
+        case .callouts, .endCards:
             EmptyView()
         }
     }

@@ -3701,6 +3701,11 @@ private final class Run {
             NSPasteboard.general.clearContents()
             note(number, step.name, "cleared")
 
+        case .clipboardText(let text):
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+            note(number, step.name, "\(text.split(separator: "\n").count) line(s)")
+
         case .readClipboard(let stage, let behind, let movie, let svgClaim):
             let types = NSPasteboard.general.types?.map(\.rawValue) ?? []
             if movie { try await claimClipboardMovieIsTheEdit(number: number, stage: stage) }

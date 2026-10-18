@@ -606,6 +606,9 @@ extension Experiments {
     /// `next-title-backgrounds-move`: the Aurora and Behind Glass pages, the
     /// Mesh fill, Grain, the glass's Zoom and line trims.
     var titleBackgroundsEnabled: Bool { isEnabled(FeatureCatalog.titleBackgroundsFlag) }
+    /// `next-animated-charts`: the charts on the shelf, in Sequence > Insert
+    /// Chart, and the Chart section that edits their data.
+    var animatedChartsEnabled: Bool { isEnabled(FeatureCatalog.animatedChartsFlag) }
     /// `next-motion-blur`: Motion Blur in the Effects list on video, and on
     /// the built-in titles.
     var motionBlurEnabled: Bool { isEnabled(FeatureCatalog.motionBlurFlag) }

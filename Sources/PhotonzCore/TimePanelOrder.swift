@@ -65,7 +65,7 @@ public enum TimePanelOrder {
     public static func leads(_ role: Role) -> [String] {
         switch role {
         case .playing: ["keys", "speed"]
-        case .onScreen: ["keys", "title", "titlePart", "speed", "text", "reveal"]
+        case .onScreen: ["keys", "chart", "title", "titlePart", "speed", "text", "reveal"]
         case .heard: ["keys", "sound", "fades", "gain", "soundEffects", "speed"]
         case .captioned: ["captions", "text", "keys"]
         }

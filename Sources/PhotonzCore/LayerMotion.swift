@@ -1641,7 +1641,9 @@ extension Layer {
         }
         // ...and text whose words come in a piece at a time says how far in
         // it is, on the same clock (`TextReveal.swift`).
-        return moved.withTextRevealShown(atMotionMS: ms).withClockShown(atMotionMS: ms)
+        // ...and a number that counts up says where it has got to.
+        return moved.withTextRevealShown(atMotionMS: ms).withTextCountShown(atMotionMS: ms)
+            .withClockShown(atMotionMS: ms)
     }
 }
 

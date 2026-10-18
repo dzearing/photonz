@@ -18,8 +18,8 @@ import Foundation
 public enum VideoCatalogCategory: String, CaseIterable, Hashable, Codable, Sendable {
     case titlePages
     case nameCards
-    /// Nothing ships here yet (task `animated-charts-you-can-drop-into-a-video`);
-    /// an empty category is not drawn.
+    /// The charts (`AnimatedChart.swift`): bars, a line, a donut, a big
+    /// number and a comparison, each building in.
     case animatedCharts
     case callouts
     case backgrounds
@@ -137,7 +137,11 @@ public struct VideoCatalog: Hashable, Sendable {
         }
         var items: [VideoCatalogItem] = []
         for preset in titles {
-            let category: VideoCatalogCategory = preset.kind == .nameCard ? .nameCards : .titlePages
+            let category: VideoCatalogCategory = switch preset.kind {
+            case .nameCard: .nameCards
+            case .chart: .animatedCharts
+            case .titlePage: .titlePages
+            }
             items.append(item(preset.id, preset.name, preset.entry.detail, category))
         }
         items += backgrounds.map { item(backgroundID($0), $0.title, VideoCatalogCategory.backgrounds.singular,

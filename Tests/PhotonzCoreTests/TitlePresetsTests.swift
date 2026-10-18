@@ -43,8 +43,9 @@ struct TitlePresetsTests {
     @Test func everyKindHasAtLeastThreePresets() {
         #expect(TitleKind.allCases.count >= 2)
         // The designed set: nine pages and the brief's three lower thirds.
+        // ...and the charts, six of their own (`AnimatedChart.swift`).
         for kind in TitleKind.allCases {
-            #expect(BuiltInTitle.presets(of: kind).count >= 3, "\(kind.name)")
+            #expect(TitlePreset.builtIn(of: kind).count >= 3, "\(kind.name)")
         }
     }
 

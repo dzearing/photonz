@@ -1,0 +1,50 @@
+{
+  "id": "animated-charts-you-can-drop-into-a-video-do-the-six-charts-build-in-and-l",
+  "taskId": "animated-charts-you-can-drop-into-a-video",
+  "question": "Do the six charts build in and look the way you want in a video?",
+  "context": "Reel: queue/audits/2026-10-17-chart-reel-*.mp4/.gif and 2026-10-17-chart-reel-contact.png. Measured: chart ink at the first frame is 0 for every chart (bar is under 10% of held); half way through its in each chart is part way up (bar 57%, donut 49%, comparison 87%).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep them as they are",
+      "summary": "Bars grow up one after another with their numbers counting, the line draws left to right, the donut sweeps round, the big number counts up, cards rise then count. Flat accent colour bars over a slow moving background.",
+      "pros": [
+        "Reads cleanly at a glance",
+        "Every chart already takes the title themes, fonts and backgrounds"
+      ],
+      "cons": [
+        "Flat bars can look plain next to broadcast graphics"
+      ],
+      "mitigation": "A theme or a row colour changes the look in one click."
+    },
+    {
+      "id": "b",
+      "label": "Bolder: gradient bars, grid lines, values ride up with each bar",
+      "summary": "Bars get a soft top-to-bottom gradient and a faint grid behind them, and each value label travels up with the top of its bar instead of counting in place.",
+      "pros": [
+        "Closer to a motion graphics template look",
+        "The eye follows one moving thing per bar"
+      ],
+      "cons": [
+        "Busier over footage",
+        "Grid lines add clutter on small charts"
+      ],
+      "mitigation": "Grid lines only on bar and line charts, at low opacity."
+    },
+    {
+      "id": "c",
+      "label": "Quieter: still backgrounds behind charts",
+      "summary": "Charts land on a still gradient instead of a moving look, so nothing competes with the data while it builds.",
+      "pros": [
+        "The data is the only thing moving"
+      ],
+      "cons": [
+        "Less alive than the title pages beside them"
+      ],
+      "mitigation": "The Background row still offers every moving look."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-18T02:01:05.448Z"
+}

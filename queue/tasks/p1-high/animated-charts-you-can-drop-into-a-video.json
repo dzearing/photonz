@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:10:09.994Z",
-  "updated": "2026-10-17T13:10:10.106Z",
+  "updated": "2026-10-18T02:01:55.807Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17), naming the video catalog's kinds: \"Like title page, name plates, animated charts, etc.\" No chart content exists in Photonz today (none found in the Library or title presets). Build on the title model (PhotonzCore TitleDesign / TitleRestyle, text reveal, motion blur, live backgrounds) rather than a separate system. Companion: 'In a video, the Library is a catalog of things built for video, grouped by kind' (its Animated Charts category stays hidden until this ships). Memory: visual work needs a measured bar and a reel.",
@@ -32,6 +32,38 @@
     {
       "t": "2026-10-17T13:10:10.105Z",
       "note": "seq 45 -> 1.4"
+    },
+    {
+      "t": "2026-10-18T00:36:19.359Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T00:40:34.663Z",
+      "note": "Pre-build review: no mock draws a chart (video-library.html only names the Animated Charts chip), so the floor is the task's own list. A Premiere/Keynote user expects: pick a chart, type numbers in a small table, it animates; Keynote's chart builds (bars grow one after another, line draws, wedges sweep) are the bar. Built on the title model: TitleKind.chart with six built-in presets (Bar, Horizontal Bar, Line, Donut, Big Number, Comparison), so the catalog, tile reels, Insert menu, drag onto the timeline, themes, font pairs, energy, backgrounds and the per-part timeline rows all come for free. New: a ChartSpec kept in the title's recipe (rows of label/value/colour, prefix/suffix/decimals, delta), rebuilt into ordinary layers on every restyle; a Count Up build kind (a number counts from 0 to the value its own words hold); TitlePart.name so rows read Bar 1, Value 1. Risks: rebuilding pieces drops hand-set keys on them (accepted, ids kept by name); counting text re-rasterises per frame (measure)."
+    },
+    {
+      "t": "2026-10-18T02:01:36.424Z",
+      "note": "owns these walks: animated-charts-walk"
+    },
+    {
+      "t": "2026-10-18T02:01:55.611Z",
+      "note": "Built: TitleKind.chart + six ChartKind presets under TitlePreset.chart (AnimatedChart.swift), ChartSpec in TitleRecipe.chart redrawn on every restyle (chartRedrawn in refitTitle), canvas words read back in relayOutTitle, Count Up build kind (TextCount.swift, TextContent.count), TitlePart.name for row names, Chart section (ChartInspector.swift, EditorState+Charts.swift), flag next-animated-charts (on at Next defaults), catalog tiles, Insert Chart / Add Chart menus. Walk animated-charts-walk green at defaults (paste via new clipboardText step; Bar 1 up and Bar 4 at 0 at 0.6s, all up at 2.0s; Unit and Kind dropdowns clicked by pointer)."
+    },
+    {
+      "t": "2026-10-18T02:01:55.674Z",
+      "note": "Measured bar (AnimatedChartRenderTests): chart ink at first frame 0 for all six (bar 10% of held); half way in bar 57%, horizontal 78%, line 78%, donut 49%, comparison 87% of held; big number reads 8.6 of 12.5 a third into its count. Perf 1080p while building: medians 5.1 (big number) to 10.3 ms (donut), worst frame 14 ms; gate baseline 10.5 ms scaled. Reel: queue/audits/2026-10-17-chart-reel-*.mp4/.gif + contact sheet; I opened the contact sheet and the walk pictures 1, 2, 4, 7: bars visibly grow one after another with counting values, the line draws, the donut sweeps, the start column is empty as it should be."
+    },
+    {
+      "t": "2026-10-18T02:01:55.741Z",
+      "note": "Found on the way: render tests run without the app's real text measurer, so Avenir Next bold boxes come out short and CoreText drops the line (Geometric pair looked blank in tests only; the app installs TextRasterizer.naturalSize at launch, not an app bug). Big Number lands in the Clean pair. Harness: forget all did not clear saved title presets, so walks leaked name cards into each other; added PlaytestMemory.titlePresets, fixed library-tile-click-latency-walk which depended on the leak (Dana card -> Split Wipe). timeline-right-click-menus-walk gains Add Chart."
+    },
+    {
+      "t": "2026-10-18T02:01:55.806Z",
+      "note": "Left rough (in the audit, not filed: none clears the bar on its own until the user judges the reel): hand-set keys on a bar lost on data change; negative values draw flat; theme-coloured row shows a struck-through swatch; line axis starts at 0. Filed: find-out-whether-a-crowded-dock-can-hide-the-lib (p2, reproduced only through a walk). Decision card on the look: animated-charts-you-can-drop-into-a-video-do-the-six-charts-build-in-and-l."
     }
+  ],
+  "started": "2026-10-18T00:36:19.356Z",
+  "walks": [
+    "animated-charts-walk"
   ]
 }

@@ -121,6 +121,8 @@ extension PlaytestMemory {
             SilenceableQuestion.all.map(\.storageKey)
         case .recent:
             [RecentDocumentsStore.defaultsKey]
+        case .titlePresets:
+            [TitlePresetStore.key]
         }
     }
 }
@@ -191,6 +193,7 @@ struct PlaytestSetupRunner {
                 TrackColumnWidth.shared.reload()
             }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }
+            if setup.forget.contains(.titlePresets) { TitlePresetStore.shared.reload() }
             // The shared shelf is a file rather than a setting, so it is
             // emptied here by hand. The shelf it had is already on record
             // above, so `restoreSharedShelf` still hands the machine back

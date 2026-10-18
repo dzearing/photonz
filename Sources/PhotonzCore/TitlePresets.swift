@@ -26,6 +26,9 @@ public enum TitleKind: String, CaseIterable, Identifiable, Hashable, Codable, Se
     case titlePage
     /// A name and a role that come in at the bottom of the frame.
     case nameCard
+    /// Data that builds in: bars, a line, a donut, a big number
+    /// (`AnimatedChart.swift`).
+    case chart
 
     public var id: String { rawValue }
 
@@ -34,6 +37,7 @@ public enum TitleKind: String, CaseIterable, Identifiable, Hashable, Codable, Se
         switch self {
         case .titlePage: "Title Page"
         case .nameCard: "Name Card"
+        case .chart: "Chart"
         }
     }
 
@@ -42,13 +46,21 @@ public enum TitleKind: String, CaseIterable, Identifiable, Hashable, Codable, Se
         switch self {
         case .titlePage: 4000
         case .nameCard: 5000
+        // Long enough to read every number once it has counted.
+        case .chart: 6000
         }
+    }
+
+    /// The kinds a release offers, in menu order: charts only where they
+    /// are switched on.
+    public static func offered(charts: Bool) -> [TitleKind] {
+        allCases.filter { charts || $0 != .chart }
     }
 
     /// The name of the line a person types first.
     var wordsName: String {
         switch self {
-        case .titlePage: "Title"
+        case .titlePage, .chart: "Title"
         case .nameCard: "Name"
         }
     }
@@ -865,7 +877,7 @@ extension PhotonzDocument {
         refreshDuration()
     }
 
-    private mutating func landTitle(_ built: Layer, kind: TitleKind, lengthMS: Int,
+    mutating func landTitle(_ built: Layer, kind: TitleKind, lengthMS: Int,
                                     sourceInMS: Int, atTimeMS ms: Int,
                                     landing: ClipLanding?) -> InsertedTitle? {
         var layer = built
@@ -910,7 +922,8 @@ extension PhotonzDocument {
         guard !trimmed.isEmpty, canSaveTitlePreset(layerID: layerID),
               let layer = layer(id: layerID), let time = layer.time else { return nil }
         return SavedTitlePreset(name: trimmed,
-                                kind: TitleKind.reading(layer.localBounds, in: canvasSize),
+                                kind: layer.group?.titleRecipe?.chart != nil
+                                    ? .chart : TitleKind.reading(layer.localBounds, in: canvasSize),
                                 layer: layer, lengthMS: time.lengthMS, canvasSize: canvasSize)
     }
 }

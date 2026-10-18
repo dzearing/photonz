@@ -1,0 +1,60 @@
+{
+  "feature": "Animated charts you can drop into a video",
+  "epic": "video-titles-graphics",
+  "summary": "A video's Library has an Animated Charts chip with six charts (bars, horizontal bars, line, donut, big number, comparison) that build in like a title: bars grow one after another as their numbers count, lines draw, donuts sweep. Their numbers are typed or pasted into a Chart section.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording; walk: Scripts/playtest/animated-charts-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "View > Library, press Catalog, then the Animated Charts chip.",
+      "shot": "2026-10-17-charts-1-charts-chip.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Double click Bar Chart: it lands at the playhead on a Title track, picked, with the Chart section in the panel.",
+      "shot": "2026-10-17-charts-2-bar-chart-landed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Copy four rows from a spreadsheet (a label and a number each) and press the clipboard button beside Data.",
+      "shot": "2026-10-17-charts-3-pasted.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Home and Space: the bars grow in one after another while each value counts up.",
+      "shot": "2026-10-17-charts-4-building.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Set Unit to $ Dollars, then Kind to Horizontal Bars.",
+      "shot": "2026-10-17-charts-7-horizontal.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the Title section pick another Theme and Font Pair, and Background None to lay the chart over the recording."
+    },
+    {
+      "do": "Open the chart's row on the timeline and drag a Bar's part bar to retime when it grows."
+    },
+    {
+      "do": "Watch every chart in the reel: queue/audits/2026-10-17-chart-reel-contact.png and the chart-reel MP4s."
+    }
+  ],
+  "evaluate": [
+    "Do the bars, line and donut build in a way you would use in a product video, or do they want more motion?",
+    "Is pasting rows from a spreadsheet with one button the way you expect to get numbers in?",
+    "Does a chart over your recording (Background None) read clearly enough?",
+    "Is Kind in the Chart section enough to switch between bar, line and donut, or should each be its own thing?",
+    "Is the big number's count-up speed right, or should it land faster?"
+  ],
+  "rough": [
+    "No mock draws a chart or the Chart section (video-library.html only names the Animated Charts chip), so its rows are the panel's own controls under UX-PATTERNS §4.",
+    "Whether the look and build are right is your call on the reel: decision animated-charts-you-can-drop-into-a-video-do-the-six-charts-build-in-and-l.",
+    "Changing the data or the theme lays the chart's pieces out again: a key or an effect set by hand on one bar is lost (the pieces keep their ids, and a part's retimed in and out are kept).",
+    "Negative values draw as a flat bar on the baseline; the line chart's axis starts at nought, so small changes look flat.",
+    "A row wearing the theme's colour shows a struck-through swatch in its colour well, which can read as no colour at all.",
+    "Count Up is new in the Part section's In menu, offered only for words; any title's number can now count up.",
+    "With a crowded dock the Library shelf's second row could not be scrolled into view by a walk: filed as find-out-whether-a-crowded-dock-can-hide-the-lib.",
+    "Every picture here was taken with the window behind another app (shotNote says what that changes)."
+  ]
+}

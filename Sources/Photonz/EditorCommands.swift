@@ -1118,7 +1118,7 @@ struct EditorCommands: Commands {
     /// the person's own first (`EditorState+TitlePresets`). Dimmed where the
     /// document has no time to put one in.
     @ViewBuilder private var insertTitleRows: some View {
-        ForEach(TitleKind.allCases) { kind in
+        ForEach(TitleKind.offered(charts: Experiments.shared.animatedChartsEnabled)) { kind in
             Menu("Insert \(kind.name)") {
                 if let editor { MenuRowsView(rows: editor.titlePresetRows(kind)) }
             }

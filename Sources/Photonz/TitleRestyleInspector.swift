@@ -325,9 +325,11 @@ struct TitlePartInspector: View {
 
     private func build(_ name: String, _ build: TitleBuild?, id: UUID,
                        edit: @escaping (@escaping (inout TitleBuild?) -> Void) -> Void) -> some View {
-        let kinds: [TitleBuildKind?] = [nil] + TitleBuildKind.allCases.map(Optional.some)
-        let value = build?.kind.title ?? "None"
         let arriving = name == "In"
+        // A count is a way in for words with a number in them, never a way off.
+        let offered = TitleBuildKind.allCases.filter { $0 != .countUp || (arriving && inHandIsText) }
+        let kinds: [TitleBuildKind?] = [nil] + offered.map(Optional.some)
+        let value = build?.kind.title ?? "None"
         return VStack(alignment: .leading, spacing: 6) {
             VideoKit.DropdownRow(
                 label: name, value: value,
@@ -373,7 +375,7 @@ struct TitlePartInspector: View {
         switch kind {
         case .fade, .rise, .blurIn, .maskReveal, .trackIn, .typewriter: true
         case .swingIn, .flipUp, .flyInFromDepth, .tiltSettle: true
-        case .scaleFrom, .wipe, .springPop, .drawOn, .frost: false
+        case .scaleFrom, .wipe, .springPop, .drawOn, .frost, .countUp: false
         }
     }
 
@@ -494,7 +496,7 @@ struct TitlePartInspector: View {
         case .trackIn: .spread
         case .swingIn, .flipUp, .tiltSettle: .angle
         case .flyInFromDepth: .depth
-        case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter: nil
+        case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter, .countUp: nil
         }
     }
 

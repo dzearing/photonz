@@ -30,16 +30,19 @@ struct TitlePresetShelfTests {
 
     @Test func theShelfHoldsEveryBuiltInPresetPagesFirst() {
         let shelf = TitlePreset.shelf(saved: [])
-        #expect(shelf.count == BuiltInTitle.shelved.count)
+        #expect(shelf.count == BuiltInTitle.shelved.count + ChartKind.allCases.count)
         #expect(shelf.map(\.name) == ["Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
                                       "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
-                                      "Split Wipe", "Minimal Underline", "Pill Card"])
+                                      "Split Wipe", "Minimal Underline", "Pill Card",
+                                      "Bar Chart", "Horizontal Bars", "Line Chart", "Donut", "Big Number", "Comparison"])
+        // A release without charts offers the titles alone.
+        #expect(TitlePreset.shelf(saved: [], charts: false).count == BuiltInTitle.shelved.count)
     }
 
     @Test func aPersonsOwnPresetsComeFirstWithinTheirKind() throws {
         let card = try Self.saved("Team Card", .nameCard)
         let page = try Self.saved("Intro", .titlePage)
-        let shelf = TitlePreset.shelf(saved: [card, page])
+        let shelf = TitlePreset.shelf(saved: [card, page], charts: false)
         #expect(shelf.map(\.name) == ["Intro", "Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
                                       "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
                                       "Team Card", "Split Wipe", "Minimal Underline", "Pill Card"])

@@ -25,7 +25,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "comment": "Empty space on an empty picture track: somewhere to put something, and the track one level down.",
       "do": "rightClick", "at": [800, 825], "space": "window", "shot": "9-empty-track-space",
-      "rows": ["Add Title Page", "Add Name Card", "Add Text", "Add Rectangle", "—", "Track"] },
+      "rows": ["Add Title Page", "Add Name Card", "Add Chart", "Add Text", "Add Rectangle", "—", "Track"] },
     { "do": "dropOnTimeline", "file": "fixtures/Plain blue tile 200x140.png", "track": "V3", "seconds": 4.0 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "key", "key": "escape" },

@@ -1,0 +1,250 @@
+{
+  "out": "/tmp/photonz-playtest/animated-charts-walk",
+  "seed": "Animated charts you can drop into a video (task animated-charts-you-can-drop-into-a-video), at Next defaults with no flag set. The sample recording is opened and View > Library shown; Catalog then the Animated Charts chip, pressed by the pointer, show the six charts as playing tiles. A double click on Bar Chart lands one at the playhead, picked, with the Chart section in the panel. Four rows are put on the clipboard as a spreadsheet would put them (a label and a number, tab separated) and Paste Rows pressed: the chart now has four bars, Bar 4 the tallest. On its own clock the bars arrive one after another: at 0.6 s Bar 1 is fully up while Bar 4 has not started, at 2.0 s every bar is up. The Unit dropdown, clicked by the pointer, puts the values in dollars, and the Kind dropdown turns the same rows into horizontal bars. Played from the start, the chart shows while it plays.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Catalog"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "comment": "THE FIRST TEST: the catalog has a chip for the charts, and it holds all six.",
+      "do": "press",
+      "control": "Animated Charts"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "control": "Bar Chart",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Big Number",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Keynote Clean",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-charts-chip",
+      "note": "Animated Charts picked: Bar Chart, Horizontal Bars, Line Chart, Donut, Big Number and Comparison as playing tiles"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-charts-chip"
+    },
+    {
+      "comment": "THE SECOND TEST: a double click lands a bar chart at the playhead, picked, with its Chart section.",
+      "do": "press",
+      "control": "Bar Chart",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Bar Chart",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "field": "Chart Kind",
+      "reads": "Bar Chart"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-bar-chart-landed"
+    },
+    {
+      "comment": "THE THIRD TEST: four rows copied out of a spreadsheet and pasted.",
+      "do": "clipboardText",
+      "text": "Q1\t12\nQ2\t18\nQ3\t15\nQ4\t24"
+    },
+    {
+      "do": "reveal",
+      "control": "Paste Rows"
+    },
+    {
+      "do": "press",
+      "control": "Paste Rows"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "Row 4 Value",
+      "reads": "24"
+    },
+    {
+      "do": "expect",
+      "field": "Row 1 Label",
+      "reads": "Q1"
+    },
+    {
+      "do": "describe",
+      "stage": "3-pasted",
+      "note": "Four pasted rows: Q1 to Q4 with 12, 18, 15 and 24, the chart laid out again with four bars, Q4 the tallest, held with every bar arrived"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-pasted"
+    },
+    {
+      "comment": "THE FOURTH TEST: the bars arrive one after another. 0.6 s in, the first is up and the last has not begun.",
+      "do": "clickRuler",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Bar 1",
+      "opacity": 1.0
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Bar 4",
+      "opacity": 0.0
+    },
+    {
+      "do": "snapshot",
+      "name": "4-building"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Bar 4",
+      "opacity": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "5-built"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Chart Unit",
+      "at": [
+        "centre"
+      ],
+      "choose": "$ Dollars",
+      "comment": "THE FIFTH TEST: the unit, from its dropdown clicked by the pointer."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Chart Unit",
+      "reads": "$ Dollars"
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "$24",
+      "opacity": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "6-dollars"
+    },
+    {
+      "comment": "THE SIXTH TEST: the same rows as horizontal bars, from the Kind dropdown clicked by the pointer.",
+      "do": "panelMenu",
+      "menu": "Chart Kind",
+      "at": [
+        "centre"
+      ],
+      "choose": "Horizontal Bars"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Chart Kind",
+      "reads": "Horizontal Bars"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-horizontal"
+    },
+    {
+      "comment": "Played from the start, the chart is in the picture while it plays.",
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPlaybackShows",
+      "layer": "Bar 4",
+      "name": "8-playing",
+      "seconds": 2.5,
+      "moments": 4
+    }
+  ]
+}

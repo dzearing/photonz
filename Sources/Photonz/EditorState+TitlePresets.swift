@@ -19,14 +19,21 @@ import PhotonzCore
 final class TitlePresetStore {
     static let shared = TitlePresetStore()
 
-    private static let key = "experiments.next.titlePresets"
+    static let key = "experiments.next.titlePresets"
 
     private(set) var saved: [SavedTitlePreset] = []
 
     private init() {
+        reload()
+    }
+
+    /// Reads the saved presets again, after a walk's setup forgot them.
+    func reload() {
         if let data = UserDefaults.standard.data(forKey: Self.key),
            let list = try? JSONDecoder().decode([SavedTitlePreset].self, from: data) {
             saved = list
+        } else {
+            saved = []
         }
     }
 
@@ -87,8 +94,8 @@ extension EditorState {
         let own = TitlePresetStore.shared.presets(of: kind).map { saved in
             MenuRow.command(saved.name) { self.insertTitle(saved: saved, onTrack: trackID) }
         }
-        let builtIn = BuiltInTitle.presets(of: kind,
-                                           movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
+        let builtIn = TitlePreset.builtIn(of: kind,
+                                          movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
             .map { preset in
             MenuRow.command(preset.name) { self.insertTitle(preset, onTrack: trackID) }
         }
@@ -100,7 +107,7 @@ extension EditorState {
     /// rows beside them already say Add.
     func titleInsertMenuRows(verb: String = "Insert", onTrack trackID: UUID? = nil) -> [MenuRow] {
         guard canInsertTitle else { return [] }
-        return TitleKind.allCases.map { kind in
+        return TitleKind.offered(charts: Experiments.shared.animatedChartsEnabled).map { kind in
             .submenu("\(verb) \(kind.name)", titlePresetRows(kind, onTrack: trackID))
         }
     }
@@ -109,7 +116,16 @@ extension EditorState {
         switch preset {
         case .builtIn(let builtIn): insertTitle(builtIn, onTrack: trackID)
         case .saved(let saved): insertTitle(saved: saved, onTrack: trackID)
+        case .chart(let kind): insertChart(kind, onTrack: trackID)
         }
+    }
+
+    /// A chart at the playhead, picked, with the playhead where its data has
+    /// all arrived, and the Chart section ready for its numbers rather than
+    /// a caret in its title.
+    func insertChart(_ kind: ChartKind, onTrack trackID: UUID? = nil) {
+        let blurs = Experiments.shared.motionBlurEnabled
+        landTitle(onTrack: trackID, typing: false) { $0.insertTitle(chart: kind, atTimeMS: $1, motionBlur: blurs) }
     }
 
     func insertTitle(_ preset: BuiltInTitle, onTrack trackID: UUID? = nil) {
@@ -160,7 +176,7 @@ extension EditorState {
     /// Puts it in at the playhead, picks it, moves the playhead on to where its
     /// last part has finished arriving (at its first frame nothing of it is up
     /// yet), and opens its main line for typing.
-    private func landTitle(onTrack trackID: UUID?, atMS ms: Int? = nil,
+    private func landTitle(onTrack trackID: UUID?, atMS ms: Int? = nil, typing: Bool = true,
                            _ insert: @escaping (inout PhotonzDocument, Int) -> InsertedTitle?) {
         guard canInsertTitle else { return }
         pauseDocument()
@@ -177,7 +193,7 @@ extension EditorState {
         // The caret waits for the picture to be drawn at that moment: the
         // canvas places its field on what it has drawn, and until then that
         // is the card at the start of its slide.
-        typeInOnceShown = (inserted.wordsID, documentTimeMS)
+        if typing { typeInOnceShown = (inserted.wordsID, documentTimeMS) }
         rerender()
     }
 
@@ -189,7 +205,8 @@ extension EditorState {
     var titleShelf: [TitlePreset] {
         guard canInsertTitle else { return [] }
         return TitlePreset.shelf(saved: TitlePresetStore.shared.saved,
-                                 movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
+                                 movingBackdrops: Experiments.shared.titleBackgroundsEnabled,
+                                 charts: Experiments.shared.animatedChartsEnabled)
     }
 
     /// The preset behind a shelf id, nil for any other kind of tile.

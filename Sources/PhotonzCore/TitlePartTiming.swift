@@ -159,7 +159,7 @@ extension PhotonzDocument {
             seen[part.role, default: 0] += 1
             guard let piece = TitleDesign.find(part.path, in: title) else { return nil }
             let base = TitlePartTiming.name(of: part.role)
-            let name = (counts[part.role] ?? 0) > 1 ? "\(base) \(seen[part.role] ?? 1)" : base
+            let name = part.name ?? ((counts[part.role] ?? 0) > 1 ? "\(base) \(seen[part.role] ?? 1)" : base)
             let span = TitleRecipe.span(of: part, lengthMS: time.lengthMS)
             return TitlePartTiming(index: index, name: name, role: part.role, pieceID: piece.id,
                                    titleInMS: time.inMS, inStartMS: span.inStart, inEndMS: span.inEnd,

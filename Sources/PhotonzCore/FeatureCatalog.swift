@@ -275,6 +275,8 @@ public enum FeatureCatalog {
 
     public static let titleBackgroundsFlag = "next-title-backgrounds-move"
 
+    public static let animatedChartsFlag = "next-animated-charts"
+
     public static let motionBlurFlag = "next-motion-blur"
 
     public static let colorGradeFlag = "next-color-grade"
@@ -1004,6 +1006,16 @@ public enum FeatureCatalog {
                     name: titleBackgroundsFlag,
                     title: "Title backgrounds that move",
                     description: "Ten moving title backgrounds picked from tiles that play, the Aurora and Behind Glass pages, Grain in the Effects list, a Zoom on a background blur, and Trim keys on lines. Off means title backgrounds stay still.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: animatedChartsFlag,
+                    title: "Animated charts",
+                    description: "Six charts in the video Library and Sequence > Insert Chart whose bars grow, lines draw, donuts sweep and numbers count up, with their data typed or pasted in a Chart section. Off means no charts.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

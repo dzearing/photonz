@@ -91,6 +91,9 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// way it travels in that time (`MotionSmear.swift`). Set only on the
     /// frame drawn at a moment, like `revealElapsedMS`.
     public var revealShutterMS: Double?
+    /// When the number in these words counts up from nought to its value
+    /// (`TextCount.swift`), or nil for words that simply show it.
+    public var count: TextCount?
     /// How far apart the letters are pulled, as a share of the type size: the
     /// CSS `letter-spacing` in em that every Apple title is set with (-0.028
     /// on a 184 point headline, +0.16 on a small caps eyebrow). Nil for the
@@ -153,6 +156,8 @@ public struct TextContent: Hashable, Codable, Sendable {
         // A reveal postdates all of it: older text simply has its words.
         reveal = try container.decodeIfPresent(TextReveal.self, forKey: .reveal)
         revealElapsedMS = try container.decodeIfPresent(Int.self, forKey: .revealElapsedMS)
+        // A count postdates the reveal: older numbers simply show.
+        count = try container.decodeIfPresent(TextCount.self, forKey: .count)
         // How the words are set postdates everything: older text is set in
         // its face's own spacing, in one colour.
         tracking = try container.decodeIfPresent(CGFloat.self, forKey: .tracking)

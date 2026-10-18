@@ -15,6 +15,8 @@ import Foundation
 public enum TitlePreset: Hashable, Sendable, Identifiable {
     case builtIn(BuiltInTitle)
     case saved(SavedTitlePreset)
+    /// One of the charts (`AnimatedChart.swift`), drawn from its sample data.
+    case chart(ChartKind)
 
     /// The tile's id on the shelf, and what a drag carries. Never a bare
     /// UUID, so it can never be read as a component's.
@@ -22,6 +24,7 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         switch self {
         case .builtIn(let preset): "title.builtIn.\(preset.rawValue)"
         case .saved(let saved): Self.id(ofSaved: saved.id)
+        case .chart(let kind): "title.chart.\(kind.rawValue)"
         }
     }
 
@@ -32,6 +35,7 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         switch self {
         case .builtIn(let preset): preset.name
         case .saved(let saved): saved.name
+        case .chart(let kind): kind.name
         }
     }
 
@@ -39,6 +43,7 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         switch self {
         case .builtIn(let preset): preset.kind
         case .saved(let saved): saved.kind
+        case .chart: .chart
         }
     }
 
@@ -47,6 +52,7 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         switch self {
         case .builtIn(let preset): preset.kind.lengthMS
         case .saved(let saved): saved.lengthMS
+        case .chart: TitleKind.chart.lengthMS
         }
     }
 
@@ -64,18 +70,28 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
 
     /// Every preset on the shelf: title pages, then name cards, each kind with
     /// the person's own first, the order the Insert menus list them in.
-    public static func shelf(saved: [SavedTitlePreset], movingBackdrops: Bool = true) -> [TitlePreset] {
-        TitleKind.allCases.flatMap { kind in
-            saved.filter { $0.kind == kind }.map(TitlePreset.saved)
-                + BuiltInTitle.presets(of: kind, movingBackdrops: movingBackdrops).map(TitlePreset.builtIn)
+    public static func shelf(saved: [SavedTitlePreset], movingBackdrops: Bool = true,
+                             charts: Bool = true) -> [TitlePreset] {
+        TitleKind.offered(charts: charts).flatMap { kind in
+            saved.filter { $0.kind == kind }.map(TitlePreset.saved) + builtIn(of: kind, movingBackdrops: movingBackdrops)
         }
+    }
+
+    /// The app's own presets of one kind, in shelf order.
+    public static func builtIn(of kind: TitleKind, movingBackdrops: Bool = true) -> [TitlePreset] {
+        kind == .chart
+            ? ChartKind.allCases.map(TitlePreset.chart)
+            : BuiltInTitle.presets(of: kind, movingBackdrops: movingBackdrops).map(TitlePreset.builtIn)
     }
 
     /// The preset a tile id or a drag names, nil when it names none, or names
     /// one of the person's own that has since been forgotten.
     public init?(entryID: String, saved: [SavedTitlePreset]) {
-        let builtInPrefix = "title.builtIn.", savedPrefix = "title.saved."
-        if entryID.hasPrefix(builtInPrefix),
+        let builtInPrefix = "title.builtIn.", savedPrefix = "title.saved.", chartPrefix = "title.chart."
+        if entryID.hasPrefix(chartPrefix),
+           let kind = ChartKind(rawValue: String(entryID.dropFirst(chartPrefix.count))) {
+            self = .chart(kind)
+        } else if entryID.hasPrefix(builtInPrefix),
            let preset = BuiltInTitle(rawValue: String(entryID.dropFirst(builtInPrefix.count))) {
             self = .builtIn(preset)
         } else if entryID.hasPrefix(savedPrefix),
@@ -192,6 +208,7 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         switch self {
         case .builtIn(let preset): preset.usesTheRecording
         case .saved(let saved): saved.layer.group?.titleRecipe?.background == .glass
+        case .chart: false
         }
     }
 
@@ -226,6 +243,7 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         switch self {
         case .builtIn(let preset): inserted = doc.insertTitle(preset, atTimeMS: 0)
         case .saved(let saved): inserted = doc.insertTitle(saved, atTimeMS: 0)
+        case .chart(let kind): inserted = doc.insertTitle(chart: kind, atTimeMS: 0)
         }
         guard let inserted, doc.layer(id: inserted.layerID)?.time != nil,
               doc.layers.last?.id == inserted.layerID else { return nil }
@@ -305,6 +323,7 @@ extension PhotonzDocument {
         // A saved title carries whatever it was saved wearing.
         case .builtIn(let builtIn): insertTitle(builtIn, atTimeMS: ms, landing: landing, motionBlur: motionBlur)
         case .saved(let saved): insertTitle(saved, atTimeMS: ms, landing: landing)
+        case .chart(let kind): insertTitle(chart: kind, atTimeMS: ms, landing: landing, motionBlur: motionBlur)
         }
         if let inserted, let sequence {
             settleTitleInSequence(inserted.layerID, trackID: sequence.track, carried: sequence.carried,

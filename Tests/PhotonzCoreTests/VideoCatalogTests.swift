@@ -92,11 +92,12 @@ struct VideoCatalogTests {
 
     @Test func onlyCategoriesWithSomethingInThemAreShown() {
         let counts = everything.categories(builtForVideoOnly: true)
-        #expect(counts.map(\.category) == [.titlePages, .nameCards, .backgrounds, .transitions, .logos])
+        #expect(counts.map(\.category) == [.titlePages, .nameCards, .animatedCharts, .backgrounds, .transitions,
+                                             .logos])
         #expect(counts.first { $0.category == .backgrounds }?.count == LiveLook.allCases.count)
+        #expect(counts.first { $0.category == .animatedCharts }?.count == ChartKind.allCases.count)
         // Nothing ships under these yet, so they are not chips to click into
         // an empty shelf.
-        #expect(!counts.contains { $0.category == .animatedCharts })
         #expect(!counts.contains { $0.category == .endCards })
     }
 
@@ -113,14 +114,16 @@ struct VideoCatalogTests {
     @Test func aDocumentWithNoPicturesHasNoLogoCategory() {
         let catalog = VideoCatalog.assemble(titles: TitlePreset.shelf(saved: []), backgrounds: [],
                                             transitions: [], pictures: [], components: [])
-        #expect(catalog.categories(builtForVideoOnly: true).map(\.category) == [.titlePages, .nameCards])
+        #expect(catalog.categories(builtForVideoOnly: true).map(\.category) == [.titlePages, .nameCards,
+                                                                               .animatedCharts])
     }
 
     // MARK: What the shelf shows
 
     @Test func allShowsEveryCategoryInItsOwnGroup() {
         let groups = everything.groups(category: nil, query: "", builtForVideoOnly: true)
-        #expect(groups.map(\.category) == [.titlePages, .nameCards, .backgrounds, .transitions, .logos])
+        #expect(groups.map(\.category) == [.titlePages, .nameCards, .animatedCharts, .backgrounds, .transitions,
+                                            .logos])
     }
 
     @Test func aCategoryShowsOnlyItsOwnItems() {

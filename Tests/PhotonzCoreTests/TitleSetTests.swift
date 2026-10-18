@@ -47,7 +47,8 @@ struct TitleSetTests {
         #expect(pages == Array(Self.names.prefix(9)))
         #expect(cards == Array(Self.names.suffix(3)))
         // Nothing of the old plain set is offered any more.
-        let shelf = TitlePreset.shelf(saved: []).map(\.name)
+        // Charts follow on the shelf, a kind of their own (`AnimatedChartTests`).
+        let shelf = TitlePreset.shelf(saved: [], charts: false).map(\.name)
         #expect(shelf == Self.names)
         for retired in ["Midnight", "Sunrise", "Paper", "Spotlight", "Aurora", "Bar", "Clean", "Accent", "Minimal"] {
             #expect(!shelf.contains(retired))

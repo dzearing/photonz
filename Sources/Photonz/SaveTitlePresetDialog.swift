@@ -22,7 +22,7 @@ struct SaveTitlePresetDialog: View {
                     .focused($nameFocused)
                     .playtestField("Preset name")
                 Picker("Kind", selection: $kind) {
-                    ForEach(TitleKind.allCases) { kind in
+                    ForEach(TitleKind.offered(charts: Experiments.shared.animatedChartsEnabled)) { kind in
                         Text(kind.name).tag(kind)
                     }
                 }

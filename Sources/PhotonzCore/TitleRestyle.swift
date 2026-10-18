@@ -350,6 +350,9 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
     /// True when the title plays its whoosh and ticks (`TitleSounds.swift`);
     /// nil, and so off, for every title until somebody turns them on.
     public var sounds: Bool? = nil
+    /// The data a chart is drawn from (`AnimatedChart.swift`), nil for every
+    /// other title. Every restyle lays a chart's pieces out again from it.
+    public var chart: ChartSpec? = nil
 
     public static let intensityRange: ClosedRange<Double> = 0...200
 
@@ -370,7 +373,7 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
                 build.amount *= share
             case .scaleFrom, .springPop:
                 build.amount = 100 + (build.amount - 100) * share * energy.overshoot
-            case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter:
+            case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter, .countUp:
                 break
             }
             return build
@@ -477,7 +480,14 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func relayOutTitle(layerID: UUID) -> Bool {
         guard let recipe = titleRecipe(layerID: layerID) else { return false }
-        refitTitle(layerID: layerID, from: recipe, to: recipe)
+        var laid = recipe
+        // A chart reads back the words typed on it first, so a label renamed
+        // or a number retyped in place is its data from now on.
+        if var chart = recipe.chart, let group = layer(id: layerID) {
+            chart.read(from: group)
+            laid.chart = chart.tidied
+        }
+        refitTitle(layerID: layerID, from: recipe, to: laid)
         return true
     }
 
@@ -486,6 +496,7 @@ extension PhotonzDocument {
         clearTitleDesign(old.compiled, layerID: layerID)
         guard var group = layer(id: layerID) else { return }
         group = TitleRestyler(recipe: recipe, unit: titleUnit).restyled(group)
+        group = chartRedrawn(group, recipe: recipe)
         if case .group(var content) = group.content {
             content.titleRecipe = recipe
             group.content = .group(content)

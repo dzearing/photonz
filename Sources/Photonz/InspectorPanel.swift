@@ -1101,6 +1101,7 @@ struct InspectorPanel: View {
         // A picked title's few knobs, and the part of it in hand
         // (`TitleRestyle.swift`).
         if editorState.titleRecipeInHand != nil { set.insert(.title) }
+        if editorState.chartInHand != nil { set.insert(.chart) }
         if editorState.titlePartInHand != nil { set.insert(.titlePart) }
         if let layer = selectedLayer {
             // A frame's own properties: its size, its clipping, its surface
@@ -1418,6 +1419,7 @@ struct InspectorPanel: View {
         case .space3D: Space3DInspector.sectionHelp
         case .camera: CameraInspector.sectionHelp
         case .reveal: TextRevealInspector.sectionHelp
+        case .chart: ChartInspector.sectionHelp
         case .title: TitleRestyleInspector.sectionHelp
         case .titlePart: TitlePartInspector.sectionHelp
         case .editPoint: EditPointInspector.sectionHelp
@@ -1725,6 +1727,8 @@ struct InspectorPanel: View {
             }
         case .reveal:
             TextRevealInspector()
+        case .chart:
+            ChartInspector()
         case .title:
             TitleRestyleInspector()
         case .titlePart:

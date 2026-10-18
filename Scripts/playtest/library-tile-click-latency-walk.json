@@ -23,10 +23,10 @@
     { "do": "press", "control": "Search library" },
     { "do": "type", "text": "card" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "3-name-card", "note": "A name card, Dana card, found by searching card: ten clicks, every one shown picked within 33ms" },
-    { "do": "timeTileClicks", "tiles": ["Dana card"], "times": 10, "highlightUnderMS": 33, "settledUnderMS": 100 },
+    { "do": "describe", "stage": "3-name-card", "note": "A name card, Split Wipe, found by searching card: ten clicks, every one shown picked within 33ms" },
+    { "do": "timeTileClicks", "tiles": ["Split Wipe"], "times": 10, "highlightUnderMS": 33, "settledUnderMS": 100 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "press", "control": "Dana card" },
+    { "do": "press", "control": "Split Wipe" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "snapshot", "name": "name-card-picked" }
   ]

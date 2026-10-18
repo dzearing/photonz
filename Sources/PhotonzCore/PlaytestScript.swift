@@ -427,6 +427,12 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// from Recent forgets this first, or the card it clicks may be one the
     /// last run left.
     case recent
+    /// The title pages, name cards and charts somebody saved as their own. A
+    /// walk that saved one and did not forget it left it at the head of every
+    /// later walk's shelf, pushing the app's own presets down a row
+    /// (`video-library-catalog-walk` on 2026-10-17 could not reach Split Wipe
+    /// behind two name cards other walks had saved).
+    case titlePresets
 }
 
 /// One feature a walk switches on or off for the length of its run.
@@ -4232,6 +4238,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the log under `stage`.
     case describe(stage: String, note: String?)
     case clearClipboard
+    /// Put plain text on the clipboard, as a person copying rows out of a
+    /// spreadsheet would, for a paste the walk then presses.
+    case clipboardText(String)
     /// Log what is on the clipboard. `behind` is the CLAIM about the picture
     /// on it, read off its four corners the way `writePicture` reads a file:
     /// "empty" means nothing behind the drawing, "painted" means a background.
@@ -4380,7 +4389,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "appearance", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "click", "describe", "drag",
+        "action", "appKey", "appearance", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
@@ -4547,6 +4556,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .reveal: "reveal"
         case .describe: "describe"
         case .clearClipboard: "clearClipboard"
+        case .clipboardText: "clipboardText"
         case .readClipboard: "readClipboard"
         case .menus: "menus"
         case .toolBar: "toolBar"
@@ -6143,6 +6153,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .describe(stage: try f.string("stage"), note: fields["note"] as? String)
         case "clearClipboard":
             self = .clearClipboard
+        case "clipboardText":
+            self = .clipboardText(try f.string("text"))
         case "readClipboard":
             let carriesSVG = try f.optionalFlag("svg")
             let svgSameAs = try f.optionalString("svgSameAs")

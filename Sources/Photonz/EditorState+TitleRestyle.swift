@@ -60,7 +60,7 @@ extension EditorState {
     /// What the panel calls a part: what it is for.
     static func partName(_ part: TitlePart) -> String {
         // The same name the part's row on the timeline goes by.
-        TitlePartTiming.name(of: part.role)
+        part.name ?? TitlePartTiming.name(of: part.role)
     }
 
     /// Whether the title in hand could be glass: something is on screen under it.
