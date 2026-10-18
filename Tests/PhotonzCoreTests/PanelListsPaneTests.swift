@@ -203,4 +203,98 @@ struct PanelListsPaneTests {
         #expect(PanelListsPane.listCeiling(grabBar: 105, dock: 172, inPane: true) == 172)
         #expect(PanelListsPane.listCeiling(grabBar: 105, dock: 172, inPane: false) == 105)
     }
+
+    // MARK: The pane grows into any room the pick leaves
+
+    /// The user, 2026-10-18: "why does the library pane have this giant gap
+    /// above it??? I minimized everything to see the library pane, and
+    /// couldn't get rid of this gap". Measured on a recording at Next
+    /// defaults: Time, Captions and Transitions folded came to 105pt of a
+    /// 421pt part, 310pt of empty panel above the Library.
+    @Test("Everything above folded: the pane takes every point the pick leaves")
+    func growsIntoTheRoomTheFoldsLeave() {
+        // The user's case: a 645pt column, the pane held at 218, the pick
+        // needing 111 (three folded headers and the padding).
+        #expect(PanelListsPane.drawnHeight(chosen: 218, column: 645, pickNeeds: 111,
+                                           foldedHeight: nil) == 534)
+    }
+
+    @Test("A pick that needs more than is left: the pane keeps the height you chose")
+    func keepsTheChosenHeightWhenThePickOverflows() {
+        #expect(PanelListsPane.drawnHeight(chosen: 218, column: 645, pickNeeds: 900,
+                                           foldedHeight: nil) == 218)
+        // ...exactly at the line it is the same either way.
+        #expect(PanelListsPane.drawnHeight(chosen: 218, column: 645, pickNeeds: 427,
+                                           foldedHeight: nil) == 218)
+    }
+
+    @Test("Opening a section above takes back exactly that section's height")
+    func openingASectionShrinksThePaneByItsHeight() {
+        let folded = PanelListsPane.drawnHeight(chosen: 218, column: 645, pickNeeds: 111,
+                                                foldedHeight: nil)
+        let timeOpen = PanelListsPane.drawnHeight(chosen: 218, column: 645, pickNeeds: 111 + 132,
+                                                  foldedHeight: nil)
+        #expect(folded - timeOpen == 132)
+    }
+
+    @Test("Every list in the pane folded: it is only its headers, and the pick has the rest")
+    func foldedListsGiveTheRoomBack() {
+        // The pick overflows, so it is the one that wants the room back.
+        #expect(PanelListsPane.drawnHeight(chosen: 300, column: 645, pickNeeds: 900,
+                                           foldedHeight: 80) == 80)
+        // A pick that fits still meets the pane's top: the headers sit right
+        // under it and the empty room is at the foot of the panel.
+        #expect(PanelListsPane.drawnHeight(chosen: 300, column: 645, pickNeeds: 111,
+                                           foldedHeight: 80) == 534)
+    }
+
+    @Test("Before the pick has been measured the pane is drawn at the height chosen")
+    func unmeasuredPickKeepsTheChosenHeight() {
+        #expect(PanelListsPane.drawnHeight(chosen: 218, column: 645, pickNeeds: nil,
+                                           foldedHeight: nil) == 218)
+        #expect(PanelListsPane.drawnHeight(chosen: 218, column: nil, pickNeeds: 111,
+                                           foldedHeight: nil) == 218)
+    }
+
+    @Test("Nothing picked at all: the pane is the whole column")
+    func nothingPickedTakesTheColumn() {
+        #expect(PanelListsPane.drawnHeight(chosen: 218, column: 645, pickNeeds: 0,
+                                           foldedHeight: nil) == 645)
+    }
+
+    @Test("What the pick needs: its headers, open bodies and the dividers, with the padding")
+    func pickNeedsAddsUpItsSections() {
+        let needs = PanelListsPane.contentHeight(
+            [(header: 33, body: nil), (header: 33, body: 97), (header: 33, body: nil)],
+            padding: 6, divider: 1)
+        let expected: CGFloat = 6 + 34 + 34 + 97 + 34 + 6
+        #expect(needs == expected)
+        #expect(PanelListsPane.contentHeight([], padding: 6, divider: 1) == 12)
+    }
+
+    @Test("What the pick needs is unknown while an open section is unmeasured")
+    func pickNeedsWaitsForMeasurements() {
+        #expect(PanelListsPane.contentHeight([(header: nil, body: nil)], padding: 6, divider: 1) == nil)
+    }
+
+    // MARK: The grip, when the pane is already taller than chosen
+
+    @Test("Pulled up past the room the pick leaves: that is the new chosen height")
+    func gripPulledUpPastTheRoom() {
+        #expect(PanelListsPane.gripChoice(dragged: 560, startChosen: 218, roomLeft: 534) == 560)
+    }
+
+    @Test("Pulled down while the pick fits: nothing to give it, so the choice stays")
+    func gripPulledDownWhileThePickFits() {
+        #expect(PanelListsPane.gripChoice(dragged: 500, startChosen: 218, roomLeft: 534) == 218)
+        // ...unless it goes under what was chosen, which is a choice too.
+        #expect(PanelListsPane.gripChoice(dragged: 150, startChosen: 218, roomLeft: 534) == 150)
+    }
+
+    @Test("Pulled while the pick overflows: the grip sets the pane as it always did")
+    func gripWhileThePickOverflows() {
+        #expect(PanelListsPane.gripChoice(dragged: 250, startChosen: 300, roomLeft: 200) == 250)
+        #expect(PanelListsPane.gripChoice(dragged: 150, startChosen: 300, roomLeft: 200) == 150)
+    }
 }
+

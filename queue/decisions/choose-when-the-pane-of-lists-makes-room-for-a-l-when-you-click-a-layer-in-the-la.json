@@ -1,0 +1,49 @@
+{
+  "id": "choose-when-the-pane-of-lists-makes-room-for-a-l-when-you-click-a-layer-in-the-la",
+  "taskId": "choose-when-the-pane-of-lists-makes-room-for-a-l",
+  "question": "When you click a layer in the Layers list and its settings need room above, when should the list make way?",
+  "context": "With nothing picked, the Layers and Library pane now fills the panel (2026-10-18). Picking a layer from that list brings its settings in above, so the pane has to shrink.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Wait until the pointer leaves the list",
+      "summary": "The row you clicked stays exactly under the pointer. The picked layer's settings slide in above as soon as you move the pointer out of the list, toward them.",
+      "pros": [
+        "A second click on the same spot never misses, which you asked for on 2026-10-14",
+        "Moving toward the settings is what reveals them, so they appear where you are heading"
+      ],
+      "cons": [
+        "Right after the click the settings are not visible yet, so it can look as if the click did nothing"
+      ],
+      "mitigation": "The row lights up as picked at once, and on the canvas the layer gets its handles straight away."
+    },
+    {
+      "id": "b",
+      "label": "Make way at once; the list slides down",
+      "summary": "The settings appear above the moment you click, and the Layers list slides down by however much room they take, carrying the row you clicked away from the pointer.",
+      "pros": [
+        "The settings are on screen in the same frame as the click"
+      ],
+      "cons": [
+        "The row you clicked moves out from under the pointer, often by a few hundred points, so a quick second click lands on a different row"
+      ],
+      "mitigation": "The list keeps the picked row on screen after it slides."
+    },
+    {
+      "id": "c",
+      "label": "Wait a beat, then make way",
+      "summary": "The list holds still for about half a second after a click in it, then slides down and the settings appear, whether or not the pointer has moved.",
+      "pros": [
+        "Quick double clicks still land where you aimed",
+        "The settings appear without having to move the pointer"
+      ],
+      "cons": [
+        "The list moves under a pointer that is sitting still, which can surprise you mid-read"
+      ],
+      "mitigation": "The slide uses the same short curve as a section folding, so it reads as one motion."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-18T18:42:18.827Z"
+}

@@ -3735,6 +3735,25 @@ struct PlaytestScriptTests {
         #expect(absent == ["Measure Tool", "Canvas"])
     }
 
+    @Test("An expectPaneGap step claims no empty panel above the lists pane, to half a point by default")
+    func expectPaneGapReadsItsAllowance() throws {
+        let plain = try decode("""
+        { "steps": [ { "do": "expectPaneGap" } ] }
+        """)
+        guard case .expectPaneGap(let atMost) = plain.steps[0] else {
+            Issue.record("expectPaneGap"); return
+        }
+        #expect(atMost == 0.5)
+        #expect(plain.steps[0].name == "expectPaneGap")
+        let loose = try decode("""
+        { "steps": [ { "do": "expectPaneGap", "atMost": 2 } ] }
+        """)
+        guard case .expectPaneGap(let two) = loose.steps[0] else {
+            Issue.record("expectPaneGap"); return
+        }
+        #expect(two == 2)
+    }
+
     @Test("An expectSections step can name the lists in the pane under the pick")
     func expectSectionsClaimsTheListsPane() throws {
         let script = try decode("""

@@ -1,0 +1,37 @@
+{
+  "id": "choose-when-the-pane-of-lists-makes-room-for-a-l",
+  "title": "Choose when the pane of lists makes room for a layer picked from it",
+  "goal": "When nothing is picked, the Layers and Library pane fills the panel. Clicking a layer in it brings that layer's settings in above, which needs the pane to get shorter. Today the pane waits until the pointer leaves the list, so the clicked row never moves, but the settings stay hidden until then. The user picks which behaviour feels right.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 4070,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-18T18:42:04.213Z",
+  "updated": "2026-10-18T18:42:30.636Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Built in the-layers-and-library-pane-grows-into-any-room (2026-10-18): InspectorPanel.pointerInListsPane holds the pane at its drawn height while the pointer is inside it (DockRevealScratch.heldWhilePointerInside), settling on the fold curve when the pointer leaves. Pictures: queue/audits/2026-10-18-lists-pane-fills-the-room-6.png (pointer in the list, sections hidden) and -7.png (pointer left, sections shown). The 2026-10-14 rule this protects: a click in the pane never moves what is under the pointer (lists-pane-holds-still-walk).",
+  "acceptance": [
+    "The user has answered the card on how the pane behaves when a layer picked from the list brings its settings in",
+    "The chosen behaviour ships at Next defaults, and lists-pane-fills-the-room-walk proves it with a pointer click on a row"
+  ],
+  "log": [
+    {
+      "t": "2026-10-18T18:42:04.215Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-18T18:42:18.786Z",
+      "note": "Pictures: queue/audits/2026-10-18-lists-pane-fills-the-room-6-picked-pointer-in-the-list.png (pointer still in the list: row stayed put, settings hidden) and ...-7-pointer-left-the-list.png (pointer left: pane settled, settings shown)."
+    },
+    {
+      "t": "2026-10-18T18:42:30.633Z",
+      "note": "Waiting on the card: when the list makes way for a layer picked from it (option a is built)"
+    }
+  ],
+  "walks": [
+    "lists-pane-fills-the-room-walk"
+  ]
+}

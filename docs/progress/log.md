@@ -21618,3 +21618,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A picked cut opens into its two clips on rows of their own under the track (Option E, the cut's right-click, Clip > Expand the Cut): A over B, each bar running on over the spare frames an overlap spends, hatched, with "both on screen · 1.0s" over the overlap; a dip releases it, a hold parts the rows by the black. Core: `ExpandedCut.swift`; app: `EditorState+ExpandedCut.swift`, `ExpandedCutRows.swift`.
 - New walk step `expectExpandedCut` measures the rows' ink against the ruler off a picture of the window; walk action `expandCut` stands in for Option E.
 - Next: the mock's chevron on the track label waits on decision card `a-picked-cut-opens-from-a-chevron-on-its-track-h-how-should-a-track-s-header-open`.
+
+## 2026-10-18 — The Layers and Library pane grows into any room the sections above leave
+
+- What changed: the right panel's top part now hugs its open sections and the pane of lists (Layers, Library) fills the rest (`PanelListsPane.drawnHeight`, tested). Folding everything above no longer leaves a gap (310pt before, on a recording). The pane holds still while the pointer is in it; the Layers list keeps the pick in view when it gets shorter. New walk `lists-pane-fills-the-room-walk` and walk step `expectPaneGap`.
+- Perf: a fold that moves the pane costs one panel pass (pick's room taken from the split in the same pass), max 8.4ms in `section-fold-motion-walk`.
+- Open question: card on `choose-when-the-pane-of-lists-makes-room-for-a-l` (settings wait for the pointer to leave the list after a pick from it).

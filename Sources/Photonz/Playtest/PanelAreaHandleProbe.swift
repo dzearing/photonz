@@ -29,6 +29,10 @@ struct PanelAreaHandleReading: Equatable {
     let minHeight: CGFloat
     /// The highest ceiling the panel allows.
     let maxAllowedHeight: CGFloat
+    /// For the pane of lists: the room the pick's sections leave empty above
+    /// it, which the pane is never drawn shorter than
+    /// (`PanelListsPane.drawnHeight`). Nil elsewhere, and while unknown.
+    var roomLeft: CGFloat? = nil
 }
 
 #if PHOTONZ_PLAYTEST

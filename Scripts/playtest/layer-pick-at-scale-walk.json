@@ -1,6 +1,10 @@
 {
  "out": "/tmp/photonz-playtest/layer-pick-at-scale-walk",
- "setup": { "forget": ["all"] },
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
  "steps": [
   {
    "do": "describe",
@@ -324,11 +328,11 @@
   {
    "do": "describe",
    "stage": "following",
-   "note": "The two picks that need the list to move. Rectangle 9 and Rectangle 8 are below the fold of a five row window onto eighteen rows, so the list follows each of them down."
+   "note": "The two picks that need the list to move. Rectangle 7 and Rectangle 6 are below the fold of the list, which shows eight of the eighteen rows now that the pane of lists takes the room the picked layer's sections leave (2026-10-18), so the list follows each of them down."
   },
   {
    "do": "selectRow",
-   "row": "Rectangle 9"
+   "row": "Rectangle 7"
   },
   {
    "do": "wait",
@@ -340,7 +344,7 @@
   },
   {
    "do": "selectRow",
-   "row": "Rectangle 8"
+   "row": "Rectangle 6"
   },
   {
    "do": "wait",
@@ -357,7 +361,7 @@
   },
   {
    "do": "selectRow",
-   "row": "Rectangle 9"
+   "row": "Rectangle 7"
   },
   {
    "do": "wait",
@@ -383,7 +387,7 @@
   },
   {
    "do": "selectRow",
-   "row": "Rectangle 8"
+   "row": "Rectangle 6"
   },
   {
    "do": "wait",

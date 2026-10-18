@@ -16,6 +16,12 @@ import CoreGraphics
 /// the list you clicked in, and folding a list or switching the Library's
 /// scope never moves the pane (`Hold`).
 ///
+/// The pane's own height is only ever its least: when the pick's sections
+/// need less than the column leaves them, the pane grows into the rest, so
+/// there is never empty panel between the last section and the pane
+/// (`drawnHeight`, the user, 2026-10-18). While the pointer is inside the
+/// pane it holds still whatever the pick does, and settles once it leaves.
+///
 /// On a video the timeline is the layer list, and Captions and Transitions
 /// stay at the foot of the pick's own column: both are forms the pane cannot
 /// shorten, and on a laptop window a pane holding them pushed a picked
@@ -158,4 +164,63 @@ public enum PanelListsPane {
             ?? startingHeight(column: column, fit: fit)
         return min(max(start, floor), maxAllowedHeight(column: column, floor: floor))
     }
+
+    // MARK: The pane grows into any room the pick leaves
+
+    /// How tall the pane is DRAWN: the height chosen for it (`height`), or
+    /// every point the pick's sections leave empty, whichever is more.
+    ///
+    /// The pick's part hugs its sections and the pane fills the rest, so
+    /// there is never empty panel between the last section on top and the
+    /// pane (the user, 2026-10-18: "why does the library pane have this giant
+    /// gap above it??? I minimized everything to see the library pane, and
+    /// couldn't get rid of this gap"; 310pt of it with a recording's three
+    /// sections folded). Only when the pick needs more than the column has
+    /// left does the chosen height decide, and then the pick's part scrolls.
+    ///
+    /// - Parameters:
+    ///   - chosen: the height `height(...)` works out: the grip's, the held
+    ///     one, or the starting share.
+    ///   - column: the height the two parts share, nil until laid out.
+    ///   - pickNeeds: the pick's part drawn whole (`contentHeight`), nil
+    ///     until every open section in it has been measured.
+    ///   - foldedHeight: the pane's height with every list in it folded, nil
+    ///     while any is open. A pane of headers asks for nothing more, so a
+    ///     pick that overflows gets the room back.
+    public static func drawnHeight(chosen: CGFloat, column: CGFloat?, pickNeeds: CGFloat?,
+                                   foldedHeight: CGFloat?) -> CGFloat {
+        let asks = foldedHeight.map { min(chosen, $0) } ?? chosen
+        guard let column, let pickNeeds else { return chosen }
+        return max(asks, column - pickNeeds)
+    }
+
+    /// The height of a column of sections drawn whole: each header with the
+    /// hairline under it, each open body, and the padding above and below.
+    /// Nil until every header and every open body has been measured.
+    public static func contentHeight(_ sections: [(header: CGFloat?, body: CGFloat?)],
+                                     padding: CGFloat, divider: CGFloat) -> CGFloat? {
+        var total = 2 * padding
+        for section in sections {
+            guard let header = section.header else { return nil }
+            total += header + divider + (section.body ?? 0)
+        }
+        return total
+    }
+
+    /// What the grip writes down as the chosen height when it is let go at
+    /// `dragged`, having taken hold of a pane chosen at `startChosen`, with
+    /// `roomLeft` the room the pick leaves empty (the column less what the
+    /// pick needs).
+    ///
+    /// Above the room left it is the new choice: the pane is that tall and
+    /// the pick scrolls. At or under it the pane is drawn at the room left
+    /// anyway, so pulling down there gives the pick nothing and must not
+    /// quietly make the pane taller the next time the pick overflows; the
+    /// choice only moves when the grip goes under it.
+    public static func gripChoice(dragged: CGFloat, startChosen: CGFloat,
+                                  roomLeft: CGFloat?) -> CGFloat {
+        guard let roomLeft, dragged <= roomLeft else { return dragged }
+        return min(startChosen, dragged)
+    }
 }
+

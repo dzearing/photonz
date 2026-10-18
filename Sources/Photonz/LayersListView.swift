@@ -534,8 +534,25 @@ struct LayersListView: View {
         // nobody can explain from a capture. `follow` does nothing when the row
         // is already whole on screen, so in the ordinary case this costs a
         // comparison.
-        .onChange(of: viewport, initial: true) { _, height in
+        .onChange(of: viewport, initial: true) { old, height in
             scroll.viewport = height
+            // The list got shorter, which is the pane of lists giving room
+            // back to a pick that has grown, often well after the pick
+            // itself (reading a picture's words brings its Text section in
+            // and renames the rows seconds later). What is picked is brought
+            // back on screen; `follow` leaves the list alone when a picked
+            // row is already whole on it (2026-10-18, `PanelListsPane.drawnHeight`).
+            let picked = editorState.multiSelectedLayerIDs
+                .union(editorState.selectedLayerID.map { [$0] } ?? [])
+            if settlingReveal == nil, height < old, Experiments.shared.layersFollowPick,
+               !picked.isEmpty {
+                let request = EditorState.LayersListReveal(
+                    ids: picked, tick: editorState.layersListReveal?.tick ?? 0)
+                DispatchQueue.main.async {
+                    follow(request, displays: displays, viewport: scroll.viewport)
+                }
+                return
+            }
             guard let request = settlingReveal else { return }
             // Next turn, not this one: a scroll already in flight swallows a
             // second one asked for beside it, and the list is left at the

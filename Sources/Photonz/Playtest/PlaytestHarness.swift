@@ -3511,6 +3511,11 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
+        case .expectPaneGap(let atMost):
+            note(number, step.name,
+                 try await patiently { try self.checkPaneGap(atMost: CGFloat(atMost)) },
+                 state: describe())
+
         case .expectSections(let leading, let layers, let absent, let lists):
             note(number, step.name,
                  try await patiently {
@@ -8863,14 +8868,19 @@ private final class Run {
                                                       contentHeight: after.contentHeight,
                                                       minHeight: after.minHeight,
                                                       maxAllowedHeight: after.maxAllowedHeight)
-        let allowed = by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow)
+        // The pane of lists is never drawn shorter than the room the pick's
+        // sections leave empty, so pulled down into that room it stops at it
+        // (`PanelListsPane.drawnHeight`, 2026-10-18).
+        let allowed = max(by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow),
+                          min(after.roomLeft ?? 0, after.maxAllowedHeight))
         guard abs(after.height - allowed) <= 1 else {
             throw Failure(description: "\(area) was \(pt(start.height)) tall, "
                 + "the bar was dragged \(pt(abs(by))) \(direction), "
                 + "and it is \(pt(after.height)) now, where it should be \(pt(allowed)) "
                 + "(content \(pt(start.contentHeight)) -> \(pt(after.contentHeight)), "
                 + "floor \(pt(start.minHeight)), "
-                + "ceiling \(pt(start.maxAllowedHeight)) -> \(pt(after.maxAllowedHeight)))")
+                + "ceiling \(pt(start.maxAllowedHeight)) -> \(pt(after.maxAllowedHeight))"
+                + (after.roomLeft.map { ", room the pick leaves \(pt($0))" } ?? "") + ")")
         }
         note(number, "dragHandle",
              "\(area) dragged \(pt(abs(by))) \(direction)\(held); "
@@ -12669,6 +12679,26 @@ private final class Run {
         }
         return (listSays.isEmpty ? "" : listSays + "; ") + "the panel starts \(leading.joined(separator: ", "))"
             + (shown.count > leading.count ? ", then \(shown.dropFirst(leading.count).joined(separator: ", "))" : "")
+    }
+
+    /// Whether the pane of lists meets the last section of the pick's part,
+    /// with no empty panel between them (`PanelListsPane.drawnHeight`).
+    private func checkPaneGap(atMost: CGFloat) throws -> String {
+        let probe = InspectorLayoutProbe.shared
+        guard let gap = probe.paneGap, let band = probe.listsBand else {
+            throw Failure(description: "there is no pane of lists at the bottom of the panel to measure; "
+                + "it shows: \(probe.measured.map(\.title).joined(separator: ", "))")
+        }
+        let pick = probe.measured.filter { !probe.lists.contains($0.id) }
+        let above = pick.map { "\($0.title) \(Int($0.frame.minY.rounded()))-\(Int($0.frame.maxY.rounded()))" }
+        let says = "pane \(Int(band.lowerBound.rounded()))-\(Int(band.upperBound.rounded())), "
+            + "\(Int((band.upperBound - band.lowerBound).rounded()))pt tall, under "
+            + (above.isEmpty ? "nothing" : above.joined(separator: ", "))
+        guard gap <= atMost else {
+            throw Failure(description: "\(Int(gap.rounded()))pt of empty panel sits between the last section "
+                + "and the pane of lists (at most \(atMost) allowed); \(says)")
+        }
+        return "the pane meets the last section (\(gap < -0.5 ? "the part above scrolls, \(String(format: "%.1f", -gap))pt more than it has" : "gap \(String(format: "%.1f", max(gap, 0)))pt")); \(says)"
     }
 
     private func checkSectionFits(_ title: String) throws -> String {
@@ -19818,6 +19848,14 @@ private final class Run {
                 "\($0.title) \(Int($0.frame.minY.rounded()))-\(Int($0.frame.maxY.rounded()))"
             },
             "dockViewport": Int(InspectorLayoutProbe.shared.viewportHeight.rounded()),
+            // The pane of lists at the foot of the panel, where it sits in
+            // the same coordinates as the sections, and the empty panel
+            // between the last section above and its top (0 when they meet,
+            // below 0 when the part above scrolls).
+            "dockListsPane": InspectorLayoutProbe.shared.listsBand.map {
+                "\(Int($0.lowerBound.rounded()))-\(Int($0.upperBound.rounded()))"
+            } ?? "none",
+            "dockPaneGap": InspectorLayoutProbe.shared.paneGap.map { ($0 * 10).rounded() / 10 } ?? 0,
             // What the height budget did to each list: "Effects 129/129 floor
             // 129" reads as drawn/natural, and the floor it may never go under.
             "dockListRoom": InspectorLayoutProbe.shared.measured.compactMap { section in

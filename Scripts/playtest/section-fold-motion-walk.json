@@ -497,7 +497,7 @@
    "do": "windowClick",
    "at": [
     1308,
-    559
+    67
    ],
    "space": "window",
    "count": 5
@@ -520,7 +520,7 @@
    "do": "windowClick",
    "at": [
     1308,
-    559
+    67
    ],
    "space": "window",
    "count": 5

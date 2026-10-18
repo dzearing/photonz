@@ -1,0 +1,53 @@
+{
+  "feature": "The Layers and Library pane fills the room the sections above leave",
+  "epic": "ui-building",
+  "summary": "The sections at the top of the panel now take only the height they need, and the Layers and Library pane fills everything under them. Fold everything above and the Library starts right under the last header; there is no empty band to get rid of any more (310 points of it before, on a recording with Time, Captions and Transitions folded).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording with the Library showing (View > Show Library), and fold Time, Captions and Transitions by clicking their headers.",
+      "shot": "2026-10-18-lists-pane-fills-the-room-2-all-folded.png"
+    },
+    {
+      "do": "Compare with the same three folds before the change.",
+      "shot": "2026-10-18-lists-pane-fills-the-room-before.png"
+    },
+    {
+      "do": "Open Time again: the Library pane gets shorter by exactly Time's height and still starts right under Transitions.",
+      "shot": "2026-10-18-lists-pane-fills-the-room-3-time-open.png"
+    },
+    {
+      "do": "Open every section, then fold the Library: the pane shrinks to its header and the sections above get the room.",
+      "shot": "2026-10-18-lists-pane-fills-the-room-4b-library-folded.png"
+    },
+    {
+      "do": "Open a picture with nothing picked: Layers and the Library take the whole panel.",
+      "shot": "2026-10-18-lists-pane-fills-the-room-5-picture-nothing-picked.png"
+    },
+    {
+      "do": "Click a layer in the list and keep the pointer still: the row stays under the pointer.",
+      "shot": "2026-10-18-lists-pane-fills-the-room-6-picked-pointer-in-the-list.png"
+    },
+    {
+      "do": "Move the pointer out of the list: the pane settles and the layer's settings appear above it.",
+      "shot": "2026-10-18-lists-pane-fills-the-room-7-pointer-left-the-list.png"
+    },
+    {
+      "do": "Drag the line above the pane up: the pane grows and the sections above scroll. Drag it down: it stops where the sections above end."
+    }
+  ],
+  "evaluate": [
+    "With everything above folded, does the Library now sit where you expected it, right under the last header?",
+    "When you open or fold a section above, does the pane moving with it feel like one motion rather than a jump?",
+    "After clicking a layer in a full height list, is it fine that its settings appear only once the pointer leaves the list? (This one is also on its own card.)",
+    "When the sections above need more room than the panel has, is the pane keeping the height you dragged it to the right call?"
+  ],
+  "rough": [
+    "No mock draws how tall the two parts of the panel are; the split follows your answer of 2026-10-13 (the pick on top, the lists in a pane at the bottom) and your report of 2026-10-18.",
+    "After clicking a layer in a list that fills the panel, its settings stay out of sight until the pointer leaves the list, so the clicked row never moves under the pointer. Whether that is the right trade is on card choose-when-the-pane-of-lists-makes-room-for-a-l-when-you-click-a-layer-in-the-la (task choose-when-the-pane-of-lists-makes-room-for-a-l).",
+    "Folding Layers and the Library while the sections above already fit leaves their two headers at the top of the pane and the empty room at the foot of the panel, not above them. The room only goes back to the sections above when they need it.",
+    "Pulling the line down while the sections above fit does not move it, since there is nothing above to give the room to; it does lower the height the pane keeps for later, when the sections above outgrow the panel.",
+    "Whenever the Layers list gets shorter, it now brings a picked row back into view. Before, it did that only for a moment after each pick."
+  ]
+}

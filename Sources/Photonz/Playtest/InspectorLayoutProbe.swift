@@ -129,6 +129,17 @@ import SwiftUI
         visible.compactMap { frames[$0] }
     }
 
+    /// The empty panel between the last section of the pick's part and the
+    /// pane of lists under it: the pane's top less where that section ends,
+    /// the part's padding and the grip's hairline. Zero when they meet,
+    /// below zero when the part above scrolls; nil with no pane.
+    var paneGap: CGFloat? {
+        guard let band = listsBand, !lists.isEmpty else { return nil }
+        let pickEnd = measured.filter { !lists.contains($0.id) }.map(\.frame.maxY).max()
+            ?? DockMetrics.listTopPadding
+        return band.lowerBound - (pickEnd + DockMetrics.listTopPadding + 1)
+    }
+
     /// The band a section can be seen in: the pane at the bottom for one of
     /// its lists, the scrolling area above it for everything else.
     func band(of section: Section) -> ClosedRange<CGFloat>? {

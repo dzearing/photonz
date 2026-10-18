@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T16:25:38.246Z",
-  "updated": "2026-10-18T16:25:38.358Z",
+  "updated": "2026-10-18T18:43:17.917Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-18): \"why does the library pane have this giant gap above it??? I minimized everything to see the library pane, and couldn't get rid of this gap\". Screenshot: panel with TIME, CAPTIONS, TRANSITIONS collapsed, then a large empty band, then LIBRARY (Media / Catalog) with tiles, then Sections.\n\nFrom code reading (not run): the lists pane's height is a stored setting (InspectorPanel.swift:204-208, @StoredSetting inspector.listsPaneHeight, default PanelListsPane.defaultShare) with a hold so a scope switch never moves it (:212-213, PanelListsPane.Hold); used at :372-374 listsPaneHeight(for:)/listsLayout. Nothing shrinks the top area to its content, so collapsed sections leave the fixed split's space empty. Shipped by 'The pick on top, Layers and Library in a pane at the bottom' (10-13).",
@@ -31,6 +31,44 @@
     {
       "t": "2026-10-18T16:25:38.356Z",
       "note": "seq 3970 -> 1"
+    },
+    {
+      "t": "2026-10-18T16:49:02.811Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T16:58:32.073Z",
+      "note": "Reproduced at Next defaults (probe, front, Sample Recording, 1728x990 window, no stored inspector.listsPaneHeight so the pane sat at its held starting share): Time/Captions/Transitions folded -> pick viewport 421pt, last header ends at 105, so 310pt of empty panel above LIBRARY (pane band 428-646). Same as the user's screenshot. Cause: the pick's scroller always takes everything the pane leaves; nothing makes it hug its sections."
+    },
+    {
+      "t": "2026-10-18T18:42:50.255Z",
+      "note": "owns these walks: lists-pane-fills-the-room-walk, lists-pane-holds-still-walk, panel-grip-walk, section-fold-motion-walk, find-what-stayed-a-picture-walk, layer-pick-at-scale-walk"
+    },
+    {
+      "t": "2026-10-18T18:43:08.057Z",
+      "note": "Built: PanelListsPane.drawnHeight (core, tested) draws the pane at max(chosen height, column - what the pick's sections need), so the pick's part hugs its sections; with every list in the pane folded the pane asks only for its headers. contentHeight sums the pick's measured headers/bodies. gripChoice keeps a drag down into the room the pick leaves from inflating the chosen height. App: InspectorPanel.listsPaneHeight/pickNeeds/pickLayout; the pick's part is shared out at column - pane in the same pass (was a second full panel pass per fold, 19-26ms; now one pass, max 8.4ms in section-fold-motion-walk). Fixed a stale-closure bug: the column was measured without the grip on a recording whose Library arrived later (1pt short). Pane holds still while the pointer is inside it (playtestHover 'lists pane'), settling on the fold curve when it leaves; the trade (settings hidden until the pointer leaves) is on card for task choose-when-the-pane-of-lists-makes-room-for-a-l. LayersListView brings a picked row back into view whenever the list gets shorter. New walk step expectPaneGap + describe dockListsPane/dockPaneGap."
+    },
+    {
+      "t": "2026-10-18T18:43:08.118Z",
+      "note": "Measured (lists-pane-fills-the-room-walk, front, Next defaults): all folded gap 0.0pt, pane 591pt (was 218 with a 310pt gap); Time opened: pane 459pt, exactly Time's 132pt body less, gap 0; all open: part above scrolls, pane keeps chosen height; Library folded while overflowing: pane 45pt (header), part above 421->657pt; picture with nothing picked: pane takes the column; pointer-click on a row: pane held, row stayed under the pointer; pointer out: pane settled at 487pt, gap 0. Walks updated for the new layout: lists-pane-holds-still-walk and section-fold-motion-walk (fixed points re-read), panel-grip-walk (check now knows the room the pick leaves), layer-pick-at-scale-walk (re-aimed at rows 7 and 6, below the now-taller list's fold). Green: those plus properties-pane, panel-shows-what-is-picked(+video), sound-fades-in-the-panel, every-section-header-opens, effects-fit-one-open, effects-room-for-the-one-you-opened, effects-open-into-view, find-what-stayed-a-picture (4/4 after the follow fix), sound-effects x2, tutorial-text-styles, tutorial-save-a-colour-as-a-style, tutorial-the-library, video-panel-order, layer-pick-latency, a-separation-arrives-shut, find-a-layer, layers-list-follows-pick, region-keeps-your-layer. Scripts/test.sh: 13723 tests passed."
+    },
+    {
+      "t": "2026-10-18T18:43:08.180Z",
+      "note": "Left rough (no task, under the bar): 'same for every window mode' was checked on the recording (Edit) and a picture only, not View mode or a design document; the rule has no per-mode branch, so the sweep will catch any walk that disagrees. Grip floor when dragged all the way down is still just the first header, not 'header + scope switch + one row of tiles'; only a deliberate drag reaches it, and expanding sections above never pushes the pane under the chosen height."
+    },
+    {
+      "t": "2026-10-18T18:43:17.915Z",
+      "note": "The panel's top part now hugs its open sections and the Layers/Library pane fills the rest (PanelListsPane.drawnHeight, tested; InspectorPanel). Folded recording: gap 0pt, was 310pt; opening Time takes back exactly its 132pt; folding the Library while the pick overflows gives the room back; the pane holds still while the pointer is in it (trade on card, task choose-when-the-pane-of-lists-makes-room-for-a-l). Verified by lists-pane-fills-the-room-walk (new, Next defaults, expectPaneGap) and 25 touched walks green, Scripts/test.sh 13723 passed. Audit queue/audits/2026-10-18-the-layers-and-library-pane-grows-into-any-room.json."
     }
-  ]
+  ],
+  "started": "2026-10-18T16:49:02.750Z",
+  "walks": [
+    "lists-pane-fills-the-room-walk",
+    "lists-pane-holds-still-walk",
+    "panel-grip-walk",
+    "section-fold-motion-walk",
+    "find-what-stayed-a-picture-walk",
+    "layer-pick-at-scale-walk"
+  ],
+  "completed": "2026-10-18T18:43:17.916Z"
 }
