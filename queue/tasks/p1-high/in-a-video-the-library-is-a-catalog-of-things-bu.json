@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:10:09.802Z",
-  "updated": "2026-10-18T00:21:02.596Z",
+  "updated": "2026-10-18T00:21:31.903Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"In the library, 'Styles' and 'Systems' are confusing to me. Why should these be in the library when i'm editing a video? Things not relevant to a video shouldn't be in the library pivots. Also, the contents of the library really arent grouped well for videos. Like it's just a big list of stuff. We need a better layout to select types of things for videos. Like title page, name plates, animated charts, etc. It should be a catalog that is easy to find things which can apply to videos. I think components could be there, but there should be a way to filter to just content useful for video that is animated and built for video. Components are built for mocks. and i'm not sure at the moment they apply well in video cases.\" Screenshot context (06.03): Library pivots Media / Comps / Styles / Systems with a Titles group of tiles inside Comps.\n\nCode: Sources/Photonz/LibraryPanel.swift (pivots and tiles), title tiles that play (LibraryTitleTile.swift), live backgrounds, transitions (TransitionsGroup.swift). Related blocked task a-video-document-shows-the-library-in-its-dock (card: 'Should a video document show the Library in the dock without being asked?'); this task is about what the Library holds for video, not whether it shows. Companion filed the same day: 'Animated charts you can drop into a video'.",
@@ -59,10 +59,15 @@
     {
       "t": "2026-10-18T00:21:02.595Z",
       "note": "Verified: video-library-catalog-walk green at Next defaults (no flags); 30 touched walks green (playtest-all --only, 11m); Scripts/test.sh 13586 tests green. Pictures looked at: 1-catalog-all, 3-backgrounds, 4-three-things-added, 5-components-for-mockups, 6-search-across-kinds; all show the catalog as the mock draws it. No sweep requested: landing code starts the rotating check."
+    },
+    {
+      "t": "2026-10-18T00:21:31.901Z",
+      "note": "Video Library now has Media and Catalog only (Styles/Systems hidden for video, kept for pictures). Catalog groups title pages, name cards, 10 moving backgrounds, transitions and the video's pictures under chips with counts; components behind a Built for video checkbox (on by default); search across kinds; last kind remembered. Backgrounds land by double click or drag. Mock video-library.html; chips vs column vs dropdown on an open card (chips built). Verified: video-library-catalog-walk at Next defaults, 30 touched walks, Scripts/test.sh 13586 green. Commit 5896a408."
     }
   ],
   "started": "2026-10-17T23:14:33.050Z",
   "walks": [
     "video-library-catalog-walk"
-  ]
+  ],
+  "completed": "2026-10-18T00:21:31.902Z"
 }
