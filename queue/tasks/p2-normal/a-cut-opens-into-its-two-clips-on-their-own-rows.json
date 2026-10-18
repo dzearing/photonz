@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.190Z",
-  "updated": "2026-10-17T12:59:59.088Z",
+  "updated": "2026-10-18T06:30:37.714Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html line 81 menu 'Expand the cut ⌥E' under Edit point; lines 166-173 'THE EXPANDED CUT · the same two clips on their own rows' (A screen-recording, B b-roll.mov, 'both on screen · 1.0s', Audio); steps 5-9 (data-class #btnExpand=open). The mock opens it from a chevron on the V1 track label. Today that chevron opens the keyed-value and words lanes (Sources/Photonz/TimelineTrackRows.swift:292-300), so do not take it over: ship the menu rows and Option E, and say in the audit's rough list how the mock's chevron and today's chevron differ, so the user can react. Option E is neither Photoshop's nor Premiere's key (check before binding; UX-PATTERNS §7). Spare strips already drawn in-row: TimelineLaneDrop.swift:538 TimelineSpareStrips; spare and paid-with numbers: TransitionInspector.swift:22-23,112. Nothing moves a clip by opening the view; only a Hold moves time, as today.",
@@ -37,6 +37,44 @@
     {
       "t": "2026-10-17T12:59:59.087Z",
       "note": "seq 26 -> 30"
+    },
+    {
+      "t": "2026-10-18T05:24:22.015Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T05:42:19.178Z",
+      "note": "owns these walks: a-cut-opens-into-its-two-clips-walk"
+    },
+    {
+      "t": "2026-10-18T06:12:29.167Z",
+      "note": "walks a-cut-opens-into-its-two-clips-walk -> a-cut-opens-into-its-two-clips-walk, expand-the-cut-from-its-menus-walk"
+    },
+    {
+      "t": "2026-10-18T06:30:10.452Z",
+      "note": "Review before building: a Premiere editor has no Expand the Cut (Premiere shows A/B rolls only in its old A/B mode; FCP's Expand Edit is close), so the mock's rows are a teaching view; the real gap is the mock's chevron on the V1 label, which collides with today's key-lanes arrow. Shipped the menu rows and Option E as the task notes ask, filed a-picked-cut-opens-from-a-chevron-on-its-track-h with decision card for the header. A Cmd-K join is supported too (pieces either side), but a split of one recording dissolves a picture into itself, so the walk uses two clips like the roll walk."
+    },
+    {
+      "t": "2026-10-18T06:30:10.513Z",
+      "note": "Built: PhotonzCore ExpandedCut (+8 tests) and TimelineMenuRow.expandCut in the join menu (+1 test); EditorState+ExpandedCut (expandedCutPlace, toggle, follows a hold that turns a join into an edit point); ExpandedCutRows under the track lane (A over B, bars run on over spent frames hatched, dip fades, dashed both box + label, names above fades); dock height counts the rows; Clip > Expand the Cut toggle on Option E; walk step expectExpandedCut measures ink edges against the ruler off a window picture, refusing edges the playhead covers; walk action expandCut + Option E stand-in."
+    },
+    {
+      "t": "2026-10-18T06:30:10.584Z",
+      "note": "Verified: a-cut-opens-into-its-two-clips-walk green at Next defaults (A ink 938.0pt vs ruler 938.0, B 818.5 vs 818.3, hatch swing 55/70 vs bars 1/0; dip 878.0 vs 878.1 both sides; hold B 1035.4 vs 1035.3); expand-the-cut-from-its-menus-walk green (right-click Expand the Cut opens, Clip > Expand the Cut ⌥E (on) closes); neighbours green: timeline-right-click-menus, transitions-where-clips-meet, roll-the-cut-between-two-clips, hold-on-black-at-a-blade-cut, transition-band-reads-as-the-mock, timeline-right-click. Scripts/test.sh 13676 passed. Pictures looked at: 2-the-cut-expanded (A hatched past cut, B hatched before, label over the overlap), 3-playhead-on-the-seam (playhead crosses V1, A, B; canvas shows both shots ghosted), 4-dip (no overlap, fades inside each clip; first build had b-roll's name grey under the fade, fixed), 5-hold (B starts 3s after A), 6-closed, the mock's step 5 beside the app."
+    },
+    {
+      "t": "2026-10-18T06:30:10.645Z",
+      "note": "Left rough, under the bar: the rows answer no pointer (a click or right-click on them does nothing); one cut open at a time; a join's open place is named by piece index, so cutting earlier in the same clip moves it to the neighbouring join."
+    },
+    {
+      "t": "2026-10-18T06:30:37.711Z",
+      "note": "Expand the Cut ships in Next (Option E, the cut's right-click, Clip > Expand the Cut): the picked cut opens into A and B rows under its track, bars running on over the spent frames hatched, a 'both on screen' label over the overlap, a dip releasing it, a hold parting them by the black. Measured against the ruler by the new expectExpandedCut step in a-cut-opens-into-its-two-clips-walk (no flags, within 0.2pt) and proven by hand in expand-the-cut-from-its-menus-walk; tests 13676 passed; audit 2026-10-17-a-cut-opens-into-its-two-clips-on-their-own-rows.json beside the mock's step 5. The mock's header chevron waits on card a-picked-cut-opens-from-a-chevron-on-its-track-h-how-should-a-track-s-header-open."
     }
-  ]
+  ],
+  "started": "2026-10-18T05:24:22.012Z",
+  "walks": [
+    "a-cut-opens-into-its-two-clips-walk",
+    "expand-the-cut-from-its-menus-walk"
+  ],
+  "completed": "2026-10-18T06:30:37.713Z"
 }
