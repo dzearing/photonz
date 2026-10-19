@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T05:16:47.373Z",
-  "updated": "2026-10-19T02:20:04.060Z",
+  "updated": "2026-10-19T02:20:35.620Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from finishing-a-typed-title-on-a-video-never-stalls (2026-10-16), whose log has the traces. Numbers at its commit, markers down, three runs: after Command Return 64.2 / 64.6 / 54.5 ms (worst pass is either the commit's own pass, 55-62 ms, or an effect pane arriving ~0.5 s later, up to 80 ms once); tile 53.2 / 49.9 / 47.2 ms. Attribution (xctrace Time Profiler, attach to the probe, export time-profile, cut to the pass): commit pass = ~10 ms harness/window performKeyEquivalent walk + ~45 ms diffuse SwiftUI graph update (timeline gains a Title track, canvas, menu commands body, panel) + ~8 ms AX. Moving the hand-back to Select a turn later was tried and did NOT help (61.8 ms; the landing is the cost, not the pick). Effect panes: each shadow pane is ~8 rows built in one pass plus SwiftUI's AccessibilityNode.updateFocus walk over every focusable view in the window (20-80 ms, half of it swift_conformsToProtocol for new view types on first use); splitting a pane's rows across passes is the next lever. Tile pass: diffuse graph update after setTransition (document change, pickCut, playhead to the cut, picker closing); the transition form already arrives a pass later. | 2026-10-18 DONE. What landed: (1) EditorState.catchUpOnTheNextPass + readingALatePass/buildingALatePass (LookRowsReading.swift): for the pass of a marked edit, look rows (panel sections) and late-pass reads (TimelineTrackRow, its lane, ClipPiecesBar, CaptionCuesLayer, CaptionWordsLane, TimelineDock grid, InspectorPanel's section list) are told about the document a pass later; LateTrackRows holds the timeline's track list unchanged in that pass. Marked edits: new text block on a video (EditorState+Text) and the transition picker's tile (TransitionPicker). For every other edit the late-pass revision moves synchronously, so nothing else changes. (2) Menu bar reads document/history unwatched and watches menuDocumentRevision, bumped a pass later (EditorState+MenuPlayhead, Next's pro menu bar only). (3) setTransition(picksLater:) picks the cut + moves the playhead a pass later for the picker tile. (4) Effects list pieces: settings a pass after the effect's header rows, a shadow's Distance/Direction/Opacity a pass after those, effects spaced 3 passes apart. GOTCHAS: DispatchQueue.main.async does NOT reach the next pass (the run loop services the main queue before it sleeps); use NextRunLoopPass. Every earlier 'X a pass later, no gain' experiment (pick later, close picker later) was this bug. A marked edit makes several history changes (setTransition then the pick's selection flush), so the flag has to hold for the whole pass, not one change. Closing the picker alone costs ~38 ms of the ~50: a whole-window SwiftUI update floor, not any one view.",
@@ -144,7 +144,7 @@
     "an-editing-session-walk"
   ],
   "started": "2026-10-18T21:53:33.520Z",
-  "failures": 1,
+  "failures": 0,
   "lastError": {
     "at": "2026-10-18T13:50:44.931Z",
     "exit": 1,
