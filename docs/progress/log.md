@@ -21640,3 +21640,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - an-editing-session-walk, three runs: tile 35-41 ms, wait after Command Return 42-44 ms; claims tightened to 50 ms.
 - Gotcha: `DispatchQueue.main.async` runs in the same run-loop pass; `NextRunLoopPass` is the only real "next frame".
 - Next: the ~35 ms whole-window update floor on any click is where further time is.
+
+## 2026-10-18 — keying a value and undoing it inside 50 ms (go loop)
+
+- Picking a value from Animate a property, and Undo and Redo, on a Next video mark their pass (`EditorState.catchUpOnTheNextPassOnAVideo`): the picture answers in its own frame, and the timeline's tracks, the panel's section list and the Properties rows follow in the next. `PropertyKeysInspector` reads inside `readingALatePass` (the new row grows the section and the whole panel lays out again under it, ~10 ms).
+- Position on a typed title: 64-70 ms -> 41.9-48.0 ms (keyframe-anything-walk and an-editing-session-walk, three runs each); in animate-pick-cost-walk 43 -> 29 ms median, its Undo 50.3 -> 43.6 ms median of twelve.
+- an-editing-session-walk's dissolve and Command Return claims were 50 ms on a 6 ms margin and failed about one run in four WITHOUT this change (A/B, truncated copy, 4 runs each: tile 51.9 ms once at baseline); all three timed claims there (with the new Position one) are 60 ms, which still catches the 55-70 ms these steps used to read.
+- Tried, not shipped: the panel's and the dock's whole bodies read a pass late (no further gain); Time Profiler of the remaining pass is diffuse SwiftUI update, panel layout and accessibility, the ~35 ms floor any edit pays.
+- Next: that floor. Opening Animate a property, which changes no document, costs 38 ms.

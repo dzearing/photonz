@@ -21,7 +21,16 @@ struct PropertyKeysInspector: View {
     /// not beside its button.
     @State private var isPicking = false
 
-    var body: some View {
+    // A pass late for an edit marked to catch up next pass
+    // (`readingALatePass`): a key picked from Animate a property, and Undo or
+    // Redo on a video. The new row grows the section, and the whole panel is
+    // laid out again under it, about 10 ms of a key's own pass on top of the
+    // window's ~35 ms of answering any edit (`keyframe-anything-walk`,
+    // 2026-10-18); it comes in with the timeline's key lane instead. Every
+    // other edit reaches it exactly as before.
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.keysSection)
         #endif
@@ -511,11 +520,16 @@ private struct AnimatePropertyPicker: View {
     /// lane and the key), and done in one pass they held the main thread far
     /// longer than either does alone (`perf/animate-pick-cost-walk.json`,
     /// 2026-10-06).
+    ///
+    /// On a video the key's own pass is the picture, and the new row, its
+    /// lane and the timeline's diamonds follow a pass later
+    /// (`catchUpOnTheNextPassOnAVideo`).
     private func pick(_ property: KeyedProperty) {
         isOpen = false
         let state = editorState
         Task { @MainActor in
             await NextRunLoopPass.start()
+            state.catchUpOnTheNextPassOnAVideo()
             state.startAnimating(property)
         }
     }

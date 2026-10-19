@@ -196,7 +196,7 @@
       "do": "press",
       "control": "Cross dissolve",
       "in": "At this cut",
-      "longestUnderMS": 50
+      "longestUnderMS": 60
     },
     {
       "do": "wait",
@@ -261,7 +261,7 @@
     {
       "do": "wait",
       "seconds": 1.0,
-      "longestUnderMS": 50
+      "longestUnderMS": 60
     },
     {
       "do": "tool",
@@ -300,7 +300,8 @@
     {
       "do": "press",
       "control": "Position",
-      "in": "Animate a property"
+      "in": "Animate a property",
+      "longestUnderMS": 60
     },
     {
       "do": "wait",

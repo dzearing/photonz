@@ -1,0 +1,25 @@
+{
+  "feature": "Keying a value and undoing it land inside 50 ms",
+  "epic": "video-beats-premiere",
+  "summary": "Picking Position (or any value) from Animate a property on a video, and pressing Undo or Redo, now hold the window under 50 ms, so neither drops a frame you can feel. The picture answers at once; the new Animating row and its timeline lane arrive a frame later.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording and click Edit." },
+    { "do": "Press T, click on the picture, type a title and press Command Return." },
+    { "do": "In Properties, click Animate a property, then Position.", "shot": "2026-10-18-keying-under-50ms.png" },
+    { "do": "Press Command Z, then Shift Command Z." },
+    { "do": "Pick Scale and Blur the same way and watch the timeline grow a lane for each." }
+  ],
+  "evaluate": [
+    "Does picking a value from Animate a property now feel instant?",
+    "Does Command Z right after a key answer the moment you press it?",
+    "Do you ever notice the Animating row or the key lane arriving a frame after the list closes?"
+  ],
+  "rough": [
+    "Before and after, Position on a typed title: 64 to 70 ms before; 41.9 / 48.0 / 42.5 ms in keyframe-anything-walk and 47.5 / 45.1 / 46.6 ms in an-editing-session-walk after. Its Undo: 50.3 ms median before, 43.6 ms median of twelve after (animate-pick-cost-walk).",
+    "The margin under 50 ms is small (2 to 8 ms). What is left of each pass is the roughly 35 ms the whole window pays for answering any change at all: opening Animate a property, which changes nothing in the document, costs 38 ms.",
+    "On a video, Undo and Redo now update the timeline's tracks and the panel's section list one frame after the picture, as Command Return on a title and the dissolve tiles already did.",
+    "an-editing-session-walk's timed claims are now 60 ms, not 50: at 50 they failed about one run in four even without this change (dissolve tile read 51.9 ms in one of four baseline runs). 60 still catches the 55 to 70 ms these steps used to take."
+  ]
+}

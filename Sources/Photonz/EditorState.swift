@@ -97,6 +97,19 @@ final class EditorState {
         }
     }
 
+    /// `catchUpOnTheNextPass` where the timeline and the panel are built in
+    /// pieces: Next's videos (`next-panel-builds-what-you-see`). A key picked
+    /// from Animate a property, and Undo and Redo, draw the picture in their
+    /// own frame, and the timeline's tracks, the panel's section list and the
+    /// Properties rows follow in the next. In one pass, keying Position on a
+    /// typed title held the window 64 to 70 ms (`keyframe-anything-walk`,
+    /// `an-editing-session-walk`) and undoing it 48 to 66 ms
+    /// (`perf/animate-pick-cost-walk.json`, 2026-10-18).
+    func catchUpOnTheNextPassOnAVideo() {
+        guard documentHasTime, Experiments.shared.panelBuildsWhatYouSeeEnabled else { return }
+        catchUpOnTheNextPass()
+    }
+
     /// Whether a document is open, changing only when that answer does. The
     /// window's shell asks this in a dozen places; asking `document != nil`
     /// instead made every edit (a mark, a nudge) re-run the whole editor
@@ -5084,6 +5097,7 @@ final class EditorState {
         let pastedWasThere = returning.map { document?.layer(id: $0.layer) != nil } ?? false
         let before = document
         flushSelectionToHistory()
+        catchUpOnTheNextPassOnAVideo()
         history?.undo()
         restoreSelectionFromHistory()
         rerender()
@@ -5112,6 +5126,7 @@ final class EditorState {
         let pastedWasGone = returning.map { document?.layer(id: $0.layer) == nil } ?? false
         let before = document
         flushSelectionToHistory()
+        catchUpOnTheNextPassOnAVideo()
         history?.redo()
         restoreSelectionFromHistory()
         rerender()
