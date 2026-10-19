@@ -21655,3 +21655,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Library is hidden in Image and Icon windows until turned on there (`WindowMode.libraryWaitsToBeTurnedOn`); design work no longer leaks it into pictures. Sections list lost the per-row reset arrow.
 - Walks: `panel-reads-top-to-bottom-walk`, `layers-divider-drags-by-pointer-walk` (new); four walks updated, `lists-pane-fills-the-room-walk` removed.
 - Next: user's reaction to the audit (`queue/audits/2026-10-18-the-panel-reads-top-to-bottom-the-way-the-user-e.json`).
+
+## 2026-10-19: v0.18.0 released
+
+- Released v0.18.0 (https://github.com/dzearing/photonz/releases/tag/v0.18.0, latest, Photonz.dmg 23.6 MB). Leads with the microphone fix: the shipped app now carries com.apple.security.device.audio-input (verified on the downloaded DMG: Developer ID, hardened runtime, notarized, Gatekeeper accepted), so recording with sound works in the released app. Also keys and curves, the attached audio row, ripple trim and Join Through Edit, speed stops, title parts and sub-layer rows, the Apple-level title pages, the video Library catalog and charts, the blue measurement look, Layers on top with a draggable divider, Image mode.
+- Full local suite green first try (13,740 tests); Release run 1h12m, first try.
+- The repo is public again: the site's latest download returns content and version.json reads 0.18.0.
