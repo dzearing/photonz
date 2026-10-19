@@ -1,0 +1,30 @@
+{
+  "id": "a-title-part-row-shows-where-its-hand-dragged-mo",
+  "title": "A title part row shows where its hand-dragged moves put it",
+  "goal": "When someone drags one of a title part's own movement bars (say the Headline's fade, 0.3 s earlier), the part's own row on the timeline should show the part leaving when it now really leaves, not where the design first put it.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 317.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T12:19:57.912Z",
+  "updated": "2026-10-19T12:19:57.915Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-19 running Scripts/playtest/a-dragged-part-bar-survives-a-restyle-walk.json --no-build: the dragTiming log says Title Opacity 3500-3920 ms became 3200-3620 ms, and 3-restyled-sc.png (queue/audits/2026-10-19-hand-dragged-part-bar-3-restyled-sc.png) still draws the Headline row to about 3.9 s. Cause: PhotonzDocument.titlePartTimings reads TitleRecipe.span(of: compiled part), never the keys; since a-title-part-move-dragged-by-hand-on-the-timelin, hand moves survive restyles (TitleHandMoves.swift), so the row and the keys can disagree. Dragging the row end itself still retimes the design and resets the hand move, which may be the right model; the row could widen to cover hand moves.",
+  "acceptance": [
+    "Drag the Headline's Opacity bar 0.3 s earlier: the Headline row's bar ends where the fade now ends",
+    "A part nobody dragged draws its row exactly as before",
+    "A walk does the drag and claims the row's end at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T12:19:57.914Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "a-dragged-part-bar-survives-a-restyle-walk"
+  ]
+}

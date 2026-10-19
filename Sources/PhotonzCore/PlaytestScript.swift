@@ -3007,8 +3007,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// moments and values under that word; with `movedSince` it FAILS unless
     /// the row has the same keys at the same moments as when that word was
     /// noted, and every one of them moved by the same amount, which is not
-    /// nothing. How a walk proves a drag moved a whole animation.
-    case expectRowKeys(clip: String?, row: String, remember: String?, movedSince: String?)
+    /// nothing. How a walk proves a drag moved a whole animation. With
+    /// `keptSince` it FAILS unless the row has as many keys at the same
+    /// moments as when that word was noted, whatever their values: how a walk
+    /// proves a bar dragged by hand stayed where it was put through a restyle
+    /// that laid the words out again.
+    case expectRowKeys(clip: String?, row: String, remember: String?, movedSince: String?, keptSince: String?)
     /// CLAIMS the popover a click on a key opens, and FAILS when it is not
     /// so: `present` whether it is on screen; `rows` the values it lists by
     /// their lane names ("Opacity", "Position X"); `reads` what each row's
@@ -5003,11 +5007,14 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             let remember = try f.optionalString("remember")
             let since = try f.optionalString("movedSince")
-            guard (remember == nil) != (since == nil) else {
+            let kept = try f.optionalString("keptSince")
+            guard [remember, since, kept].compactMap({ $0 }).count == 1 else {
                 throw f.invalid("remember", "expectRowKeys either remembers the keys under a word or "
-                                + "compares them with the ones remembered under movedSince, one of the two")
+                                + "compares them with the ones remembered under movedSince or keptSince, "
+                                + "one of the three")
             }
-            self = .expectRowKeys(clip: try f.optionalString("clip"), row: row, remember: remember, movedSince: since)
+            self = .expectRowKeys(clip: try f.optionalString("clip"), row: row, remember: remember,
+                                  movedSince: since, keptSince: kept)
         case "expectKeyValues":
             guard let present = try f.optionalFlag("present") else {
                 throw f.invalid("present", "expectKeyValues says whether the key popover is up, true or false")

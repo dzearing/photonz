@@ -1,0 +1,232 @@
+{
+ "out": "/tmp/photonz-playtest/a-dragged-part-bar-survives-a-restyle-walk",
+ "seed": "A title part's own movement bar, dragged by hand, stays where it was put when the title is restyled, at Next defaults with no switch touched: a Keynote Clean title page on a new track, its parts opened, the Headline's Opacity bar dragged 0.3 s earlier, then the Subtitle's start dragged later, the Theme set to Sunset, the Energy to Punchy and the Intensity lowered. After each, the Headline's Opacity keys are still at the moments the hand left them (task a-title-part-move-dragged-by-hand-on-the-timelin).",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > More Styles > Keynote Clean"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "comment": "One click in the picture picks the whole title page, as a person picks it.",
+   "do": "click",
+   "at": [
+    640,
+    640
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Title Page"
+   ]
+  },
+  {
+   "comment": "The arrow on V2's header, clicked with the pointer at its face as a hand clicks it.",
+   "do": "windowClick",
+   "on": "Parts V2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "comment": "The Headline's own Opacity bar (its fade out) dragged 0.3 s earlier by hand.",
+   "do": "dragTiming",
+   "bar": "Title Opacity",
+   "grab": "body",
+   "byMS": -300
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Title",
+   "row": "Opacity",
+   "remember": "dragged"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-headline-fade-dragged"
+  },
+  {
+   "comment": "Another part retimed: the whole title is compiled again, which used to put the Headline's fade back.",
+   "do": "dragTitlePart",
+   "part": "Subtitle",
+   "grab": "start",
+   "byMS": 300
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Title",
+   "row": "Opacity",
+   "keptSince": "dragged"
+  },
+  {
+   "do": "describe",
+   "stage": "subtitle-retimed",
+   "note": "The Subtitle's start dragged 0.3 s later. The Headline's Opacity bar is still where the hand left it, 0.3 s ahead of where the design put it."
+  },
+  {
+   "do": "snapshot",
+   "name": "2-subtitle-retimed"
+  },
+  {
+   "comment": "The Subtitle is still the part picked; the Title section above the Part section turns the whole title's knobs.",
+   "do": "expect",
+   "field": "Title Theme",
+   "reads": "Original"
+  },
+  {
+   "do": "press",
+   "control": "Theme Sunset"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Theme",
+   "reads": "Sunset"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Title",
+   "row": "Opacity",
+   "keptSince": "dragged"
+  },
+  {
+   "do": "press",
+   "control": "Punchy"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0,
+   "onTheClock": true
+  },
+  {
+   "do": "expect",
+   "field": "Title Energy",
+   "reads": "Punchy"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Title",
+   "row": "Opacity",
+   "keptSince": "dragged"
+  },
+  {
+   "comment": "Intensity lowered from 100 by a click a quarter of the way along its track, which reads 35 once the thumb's own width is taken off.",
+   "do": "press",
+   "control": "Slider",
+   "in": "Intensity",
+   "across": 0.25
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Intensity",
+   "reads": "35"
+  },
+  {
+   "do": "expectRowKeys",
+   "clip": "Title",
+   "row": "Opacity",
+   "keptSince": "dragged"
+  },
+  {
+   "do": "describe",
+   "stage": "restyled",
+   "note": "Theme Sunset, energy Punchy and intensity lowered, one after another. Every other part took the punchier pace; the Headline's Opacity bar did not move from where it was dragged."
+  },
+  {
+   "do": "snapshot",
+   "name": "3-restyled"
+  }
+ ]
+}

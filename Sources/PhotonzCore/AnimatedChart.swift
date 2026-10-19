@@ -382,17 +382,26 @@ struct ChartPen {
     /// `group` laid out again from `spec`: its background kept as the
     /// restyle left it, every other piece drawn afresh, each keeping the id
     /// of the piece of its name it replaces.
-    func rebuilt(_ group: Layer, _ spec: ChartSpec) -> Layer {
+    func rebuilt(_ group: Layer, _ spec: ChartSpec, drawnBefore: [String: Layer] = [:]) -> Layer {
         guard let background = group.children.first(where: { $0.name == "Background" }) else { return group }
         let offset = background.frame.origin
-        let ids = Dictionary(group.children.map { ($0.name, $0.id) }, uniquingKeysWith: { first, _ in first })
+        let was = Dictionary(group.children.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
         let drawn = pieces(spec).map { piece -> Layer in
             var piece = piece
             piece.frame = piece.frame.offsetBy(dx: offset.x, dy: offset.y)
-            guard let id = ids[piece.name] else { return piece }
-            // Freshly drawn, so its name, content, frame and style are all it has.
-            return Layer(id: id, name: piece.name, content: piece.content, frame: piece.frame,
-                         style: piece.style, isVisible: piece.isVisible)
+            guard let old = was[piece.name] else { return piece }
+            // Freshly drawn, so its name, content, frame and style are all it
+            // has, but for what a hand set on it: its keys (the design's own
+            // are already off it and are written again after), and an effect
+            // the drawing it had did not give it.
+            var style = piece.style
+            if let before = drawnBefore[piece.name] {
+                style.effects += old.style.effects.filter { !before.style.effects.contains($0) }
+            }
+            var redrawn = Layer(id: old.id, name: piece.name, content: piece.content, frame: piece.frame,
+                                style: style, isVisible: piece.isVisible)
+            redrawn.motions = old.motions
+            return redrawn
         }
         var rebuilt = group
         rebuilt.children = [background] + drawn
@@ -894,10 +903,19 @@ extension PhotonzDocument {
 
     /// The chart's pieces drawn again from its data in the recipe's colours
     /// and faces, where `group` is a chart: what every restyle ends on.
-    func chartRedrawn(_ group: Layer, recipe: TitleRecipe) -> Layer {
+    /// Whatever somebody set by hand on a piece (`from` is the recipe it was
+    /// drawn from) comes along: its own keys, and any effect the old drawing
+    /// did not give it.
+    func chartRedrawn(_ group: Layer, recipe: TitleRecipe, from old: TitleRecipe? = nil) -> Layer {
         guard let spec = recipe.chart else { return group }
         let chartPen = ChartPen(canvas: canvasSize, theme: recipe.theme, fonts: recipe.fonts,
                                 overFootage: !recipe.showsBackground)
-        return chartPen.rebuilt(group, spec)
+        var drawnBefore: [String: Layer] = [:]
+        if let old, let was = old.chart {
+            let oldPen = ChartPen(canvas: canvasSize, theme: old.theme, fonts: old.fonts,
+                                  overFootage: !old.showsBackground)
+            drawnBefore = Dictionary(oldPen.pieces(was).map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+        }
+        return chartPen.rebuilt(group, spec, drawnBefore: drawnBefore)
     }
 }

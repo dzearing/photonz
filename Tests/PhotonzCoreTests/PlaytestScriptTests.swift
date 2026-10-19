@@ -3574,14 +3574,14 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "expectRowKeys", "clip": "Text", "row": "Position", "remember": "before" },
                      { "do": "expectRowKeys", "row": "Position", "movedSince": "before" } ] }
         """)
-        guard case .expectRowKeys(let clip, let row, let remember, let since) = script.steps[0] else {
+        guard case .expectRowKeys(let clip, let row, let remember, let since, nil) = script.steps[0] else {
             Issue.record("expectRowKeys"); return
         }
         #expect(clip == "Text")
         #expect(row == "Position")
         #expect(remember == "before")
         #expect(since == nil)
-        guard case .expectRowKeys(nil, "Position", nil, "before") = script.steps[1] else {
+        guard case .expectRowKeys(nil, "Position", nil, "before", nil) = script.steps[1] else {
             Issue.record("movedSince"); return
         }
         #expect(PlaytestStep.names.contains("expectRowKeys"))
@@ -3589,8 +3589,19 @@ struct PlaytestScriptTests {
         // A row, and exactly one of remembering and comparing.
         for bad in [#"{ "do": "expectRowKeys", "remember": "a" }"#,
                     #"{ "do": "expectRowKeys", "row": "Position" }"#,
-                    #"{ "do": "expectRowKeys", "row": "Position", "remember": "a", "movedSince": "a" }"#] {
+                    #"{ "do": "expectRowKeys", "row": "Position", "remember": "a", "movedSince": "a" }"#,
+                    #"{ "do": "expectRowKeys", "row": "Position", "movedSince": "a", "keptSince": "a" }"#] {
             #expect(throws: (any Error).self) { _ = try decode(#"{ "steps": [ "# + bad + " ] }") }
+        }
+    }
+
+    @Test("An expectRowKeys step can claim a row's keys are still at the moments remembered")
+    func expectRowKeysKeptSinceParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectRowKeys", "clip": "Title", "row": "Opacity", "keptSince": "dragged" } ] }
+        """)
+        guard case .expectRowKeys("Title", "Opacity", nil, nil, "dragged") = script.steps[0] else {
+            Issue.record("keptSince"); return
         }
     }
 

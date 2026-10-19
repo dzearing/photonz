@@ -2471,7 +2471,7 @@ private final class Run {
             guard wrong.isEmpty else { throw Failure(description: reading + ". " + wrong.joined(separator: "; ")) }
             note(number, step.name, reading, state: describe())
 
-        case .expectRowKeys(let clip, let rowName, let remember, let since):
+        case .expectRowKeys(let clip, let rowName, let remember, let since, let kept):
             let editor = try requireEditor()
             let layers = editor.document?.allLayers ?? []
             let layer: Layer
@@ -2504,6 +2504,16 @@ private final class Run {
             if let remember {
                 notedRowKeys[remember] = keys
                 note(number, step.name, reading + " (remembered as \"\(remember)\")", state: describe())
+            } else if let kept {
+                guard let was = notedRowKeys[kept] else {
+                    throw Failure(description: "nothing was remembered as \"\(kept)\"")
+                }
+                guard was.map(\.atMS) == keys.map(\.atMS) else {
+                    throw Failure(description: reading + ". It had \(was.count) key(s) at \(was.map(\.atMS)) ms "
+                        + "when \"\(kept)\" was remembered and now has \(keys.count) at \(keys.map(\.atMS)) ms")
+                }
+                note(number, step.name, reading + ", its keys still at \(keys.map(\.atMS)) ms as when \"\(kept)\" "
+                     + "was remembered", state: describe())
             } else if let since {
                 guard let was = notedRowKeys[since] else {
                     throw Failure(description: "nothing was remembered as \"\(since)\"")

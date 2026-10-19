@@ -353,6 +353,11 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
     /// The data a chart is drawn from (`AnimatedChart.swift`), nil for every
     /// other title. Every restyle lays a chart's pieces out again from it.
     public var chart: ChartSpec? = nil
+    /// The stretch of the title its design was last written onto as keys
+    /// (`TitleHandMoves.swift`), so a restyle can tell a key somebody dragged
+    /// from one a trim simply left where it was. Nil on a title from before,
+    /// which is read against the stretch it has now.
+    public var keyedOver: TitleKeyedSpan? = nil
 
     public static let intensityRange: ClosedRange<Double> = 0...200
 
@@ -416,7 +421,8 @@ extension PhotonzDocument {
     @discardableResult
     mutating func rememberTitleDesign(_ design: TitleDesign, layerID: UUID) -> Bool {
         guard let group = layer(id: layerID), group.group != nil else { return false }
-        let recipe = TitleRecipe.reading(group, design: design)
+        var recipe = TitleRecipe.reading(group, design: design)
+        recipe.keyedOver = group.time.map(TitleKeyedSpan.init)
         updateLayer(id: layerID) { edited in
             guard case .group(var content) = edited.content else { return }
             content.titleRecipe = recipe
@@ -495,10 +501,13 @@ extension PhotonzDocument {
 
     private mutating func refitTitle(layerID: UUID, from old: TitleRecipe, to recipe: TitleRecipe) {
         let kept = handReveals(layerID: layerID, from: old, to: recipe)
+        let moves = handMoves(layerID: layerID, from: old, to: recipe)
         clearTitleDesign(old.compiled, layerID: layerID)
         guard var group = layer(id: layerID) else { return }
+        var recipe = recipe
+        recipe.keyedOver = group.time.map(TitleKeyedSpan.init)
         group = TitleRestyler(recipe: recipe, unit: titleUnit).restyled(group)
-        group = chartRedrawn(group, recipe: recipe)
+        group = chartRedrawn(group, recipe: recipe, from: old)
         if case .group(var content) = group.content {
             content.titleRecipe = recipe
             group.content = .group(content)
@@ -513,6 +522,7 @@ extension PhotonzDocument {
                 piece.content = .text(text)
             }
         }
+        putBack(moves)
     }
 
     /// Reveals somebody set by hand on a title's words (the Reveal section):
@@ -521,12 +531,13 @@ extension PhotonzDocument {
     /// that part's In says how it comes in now.
     private func handReveals(layerID: UUID, from old: TitleRecipe, to recipe: TitleRecipe) -> [(UUID, TextReveal)] {
         guard let group = layer(id: layerID), let time = group.time else { return [] }
+        let span = old.keyedOver ?? TitleKeyedSpan(time)
         let compiled = old.compiled.parts
         var kept: [(UUID, TextReveal)] = []
         for (index, part) in old.design.parts.enumerated() where compiled.indices.contains(index) {
             guard let now = recipe.design.parts.first(where: { $0.path == part.path }), now.in == part.in,
                   let piece = TitleDesign.find(part.path, in: group), let reveal = piece.text?.reveal else { continue }
-            let written = TitleCompiler(piece: piece, lengthMS: time.lengthMS, clock: time.sourceInMS,
+            let written = TitleCompiler(piece: piece, lengthMS: span.lengthMS, clock: span.clockMS,
                                         unit: titleUnit).wordReveal(for: compiled[index])
             if reveal != written { kept.append((piece.id, reveal)) }
         }

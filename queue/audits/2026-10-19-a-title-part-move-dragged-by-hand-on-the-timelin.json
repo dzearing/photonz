@@ -1,0 +1,29 @@
+{
+  "feature": "A title part's movement bar dragged by hand survives a restyle",
+  "epic": "video-titles-graphics",
+  "summary": "Drag one of a title part's own movement bars (the Headline's Opacity, a Subtitle's Position, a chart bar's grow) and it now stays where you put it when you retime another part or change the theme, font pair, energy or intensity. Keys and effects you add by hand to a chart's bar also survive new numbers and a new theme.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-dragged-part-bar-survives-a-restyle-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Right-click an empty V2 track and choose Add Title Page > More Styles > Keynote Clean." },
+    { "do": "Click the title in the picture, then click the arrow on V2's header to open its parts." },
+    { "do": "On the timing strip, drag the Headline's Opacity bar about 0.3 s earlier.", "shot": "2026-10-19-hand-dragged-part-bar-1-headline-fade-dragged-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the Subtitle row's start 0.3 s later.", "shot": "2026-10-19-hand-dragged-part-bar-2-subtitle-retimed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In the Title section pick the Sunset theme, then Punchy, then lower Intensity.", "shot": "2026-10-19-hand-dragged-part-bar-3-restyled-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the Headline's Opacity bar: it is still where you dragged it." },
+    { "do": "Add a Bar chart, give Bar 2 a glow and a Rotation key, then change its numbers and theme: both stay." }
+  ],
+  "evaluate": [
+    "After a theme or energy change, does the bar you dragged stay put while every part you did not touch takes the new pace?",
+    "When you then retime the Headline's own row, is it right that its dragged fade goes back to following the design?",
+    "Does a dragged slide still land where the words are after a font change moves them?",
+    "On a chart, do your own keys and effects on a bar feel safe through a change of numbers?"
+  ],
+  "rough": [
+    "The Headline's part row is still drawn from the design, so after its fade is dragged 0.3 s earlier the row still shows it leaving at 3.86 s while it is gone at 3.62 s (filed as a-title-part-row-shows-where-its-hand-dragged-mo).",
+    "Retiming a part's own row, or changing its In, Hold or Out, puts that part's dragged bars back to the design: the new design says how it moves now. Other parts keep theirs.",
+    "A hand-dragged bar keeps its exact times through an energy change; it does not take the new pace, by design.",
+    "On a chart, an effect the drawing gave a bar and that you then edited (rather than added) still goes back to the theme's on a restyle; only effects you added are kept.",
+    "No mock covers this; it is a behaviour fix."
+  ]
+}
