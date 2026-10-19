@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T05:12:11.282Z",
-  "updated": "2026-10-18T12:19:52.760Z",
+  "updated": "2026-10-19T05:39:38.715Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-17 with a throwaway test in Tests/PhotonzCoreTests (deleted after): rampedToFour (8 s recording, stops 0@1x, 3000@4x, 8000@1x), freezeSpeedStop(stop 1, hold 1000), split(atMS: 6500) inside the hold (6000-7000). Printed: before length 17000 out 8000; after length 17000 pieces [(0, 6500, 3000), (3000, 10500, 7513)]; frames at 6400 7400 7600 16900: [3000, 3000, 3001, 7418]. So the second piece starts on the frozen frame and spends the whole 1000 ms hold again (frame 3000 until 7500, not 7000), and its out point lands at 7513, losing 7513-8000. Cause: SpeedRamp holds are spent on [from, to), so a piece starting on the held frame holds it in full; ClipPiece.split(atOffsetMS:) gives both halves the same ramp. Likely fix: the second piece's copy of the ramp carries the remaining hold on that stop (and the first piece's length keeps the part spent), with joined(with:) summing them back.",
@@ -26,6 +26,24 @@
     {
       "t": "2026-10-18T12:19:52.759Z",
       "note": "seq 249.9609375 -> 30"
+    },
+    {
+      "t": "2026-10-19T05:14:48.298Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T05:39:38.574Z",
+      "note": "Fix: ClipPiece.split hands the tail speedRampCarriedOn(fromOffsetMS:), the same stops with the freeze it lands in holding only what is left (hold minus offset past the timeline that reaches the stop). New ClipPiece.carriesOn(into:) is the one continuity rule: joined(with:) and ClipCut.isContinuous both use it, so through edits and closed joins give back the clip it was. TDD: 6 new SpeedRampTests (cut mid-hold, at hold end, at hold start, join back, two cuts in one hold) failed without the fix (tail out 7513 / 7050, hold 1000) and pass with it. Full suite 13750 passed; speed-stops-ramp-walk and the-speed-curve-shows-under-a-clip-walk ok on a rebuilt probe. No audit: model fix with no new surface."
+    },
+    {
+      "t": "2026-10-19T05:39:38.644Z",
+      "note": "Same bug in trimming a piece start into a freeze (reproduced: out 7513); filed trimming-a-clip-start-into-a-speed-stop-freeze-k, since a reversible trim needs the hold given back on the way out."
+    },
+    {
+      "t": "2026-10-19T05:39:38.714Z",
+      "note": "owns no walks; the ones it names are examples"
     }
-  ]
+  ],
+  "started": "2026-10-19T05:14:48.297Z",
+  "walks": []
 }
