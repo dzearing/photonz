@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T12:40:50.553Z",
-  "updated": "2026-10-19T12:44:09.259Z",
+  "updated": "2026-10-19T15:57:48.562Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed by the 2026-10-19 digest pass. The full sweep of 2026-10-19 (968 of 978) failed 8 walks that all passed in the 2026-10-18 sweep, all touching the Library: five fail with a Library tile moving between the clicks of a double click (Keynote Section 110pt in video-library-catalog-walk and title-presets-library-shelf-walk, Bar Chart 110pt in animated-charts-walk, Card 131pt in library-tile-click-latency-picture-walk, Keynote Section 6pt in insert-a-title-before-a-clip-walk), two with sectionHeaderInView(\"Library\") never happening (starter-shelf-walk step 29, component-drag-lands-a-copy-walk step 7), and tutorial-add-a-second-clip-walk with no panel.library among the names on screen (canvas, panel, panel.captions, panel.speed, panel.transitions, ...). Reproduced by the digest pass with Scripts/playtest.sh <walk> --no-build for video-library-catalog-walk, tutorial-add-a-second-clip-walk and starter-shelf-walk, same steps and same messages. Landed between the two sweeps: 23d55b26 (the panel reads top to bottom: Layers on top, Library last, Library waits to be turned on in Image and Icon via WindowMode.libraryWaitsToBeTurnedOn) and e3cf47e1 / 557f24a9 (ten new title pages lead the shelf). Picture: /tmp/photonz-playtest/video-library-catalog-walk/2-title-pages.png showed the Transitions grid filling the panel and the Library's title page tiles cut off at its foot. Where a walk only needs a new point or name because the layout moved by the user's word, update the walk; where a person would see the tile move or the tutorial point at nothing, fix the app.",
@@ -38,6 +38,26 @@
     {
       "t": "2026-10-19T12:44:09.258Z",
       "note": "digest 2026-10-19: the card on a-video-document-shows-the-library-in-its-dock (open since 2026-09-23) decides whether a video shows the Library without View > Library; build to today's default and do not re-ask it here."
+    },
+    {
+      "t": "2026-10-19T12:45:25.593Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T12:57:22.192Z",
+      "note": "Reproduced at Next defaults: video-library-catalog-walk step 30 Keynote Section moved 110pt; insert-a-title 6pt; picture walk Card 131pt; starter-shelf + component-drag sectionHeaderInView(Library) never; tutorial: no panel.library on screen. Causes: (1) PanelListsPane.split put libraryItem ABOVE the Library in one scroller, so the tile's own section arriving on the first click pushed the shelf 110pt down; (2) with the Library at the foot of the pick's scroller, a tile click that lets go of the picked title drops the title's sections above the shelf and every tile jumps; (3) with a clip or title picked the Library is 1000pt+ down the scroller, so it is out of view and the tutorial anchor is never on screen. Adversarial: a Premiere person expects the bins/Effects browser to be a panel that holds still, never one that slides when the selection changes. Plan: Library back in its own pane at the panel's foot (as it was on a video until 2026-10-18, when all eight walks passed), Layers stays on top, the order reads Layers, pick, Library. Pane height rules restored from the pre-2026-10-18 code (hold, grow into room the pick leaves, held while the pointer is inside)."
+    },
+    {
+      "t": "2026-10-19T15:57:35.711Z",
+      "note": "walks video-library-catalog-walk, title-presets-library-shelf-walk, animated-charts-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, component-drag-lands-a-copy-walk, tutorial-add-a-second-clip-walk -> video-library-catalog-walk, title-presets-library-shelf-walk, animated-charts-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, component-drag-lands-a-copy-walk, tutorial-add-a-second-clip-walk, library-last-tile-reachable-walk, library-shelf-height-walk"
+    },
+    {
+      "t": "2026-10-19T15:57:35.815Z",
+      "note": "Built: Library in its own pane at the panel's foot (PanelShelfPane, core + 16 tests), split gives the shelf a third part, a tile pick holds the pane for a double click, a hovered pane holds, never shorter than the shelf's first row (atLeastTheShelf). Tutorial cause found by logging: the guide's prepare ran before its sample opened, window mode read Image, so setLibraryVisible wrote Image's own choice; now with no document it writes the app-wide switch. Harness dragHandle honours roomLeft again (removed 2026-10-18). Verified at Next defaults, no flags: all 8 owned walks + panel-reads-top-to-bottom + new library-last-tile-reachable-walk (Grid Horizon scrolled to and double clicked with a title picked) pass; 117 Library-touching walks rerun, all pass except 3 deferred because the person was at the Mac (button-states-journey-walk, command-r-opens-the-speed-walk, tool-and-library-dropdowns-open-on-a-click-walk); video panel walks of on-a-video-captions-and-transitions-sit-where-th pass. Scripts/test.sh green twice (13,766); a run concurrent with walks failed two RenderPerfTests on load, rerun quiet was green. Pictures read: 2-title-pages, 3-backgrounds (title picked, Library whole at foot), 2-deepest-tile-added, tutorial 3-a-tile-is-a-handle (Brand tile whole). Rough items all in the audit; none cleared the follow-up bar (the Transitions-below-the-fold note folds into on-a-video-captions-and-transitions-sit-where-th, logged there)."
+    },
+    {
+      "t": "2026-10-19T15:57:48.559Z",
+      "note": "The Library sits in its own pane at the foot of the right panel (Next, PanelShelfPane, e746181a): tiles hold still between the two clicks of a double click (measured by the walk harness: 0pt), the Library stays on screen with a clip or title picked, and add-a-second-clip rings a Library that is there. All 8 owned walks, panel-reads-top-to-bottom-walk and the new library-last-tile-reachable-walk pass at Next defaults with no flags; 117 Library walks rerun green (3 deferred, person at the Mac); Scripts/test.sh green (13,766). Audit queue/audits/2026-10-19-library-holds-still.json with real pictures; UX-PATTERNS has the click rule."
     }
   ],
   "walks": [
@@ -48,6 +68,10 @@
     "library-tile-click-latency-picture-walk",
     "starter-shelf-walk",
     "component-drag-lands-a-copy-walk",
-    "tutorial-add-a-second-clip-walk"
-  ]
+    "tutorial-add-a-second-clip-walk",
+    "library-last-tile-reachable-walk",
+    "library-shelf-height-walk"
+  ],
+  "started": "2026-10-19T12:45:25.592Z",
+  "completed": "2026-10-19T15:57:48.561Z"
 }

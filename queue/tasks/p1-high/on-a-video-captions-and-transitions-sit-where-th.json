@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-14T03:26:52.669Z",
-  "updated": "2026-10-19T12:42:47.237Z",
+  "updated": "2026-10-19T15:27:17.384Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-right-panel-shows-only-what-the-picked-thing (2026-10-13). Measured on the laptop window (windowLaptop, sound picked): with Captions and Transitions in the pane at 40 per cent of a ~395pt column, the pick part was 235pt and Fades (244-352) fell under it; sound-fades-in-the-panel-walk step 12 and video-panel-order-walk step 45 failed. Both are forms the pane cannot shorten (not in DockMetrics.scrollingSections). Code: PanelListsPane.listSections (PhotonzCore), InspectorPanel.paneSplit.",
@@ -72,6 +72,10 @@
     {
       "t": "2026-10-19T12:42:47.236Z",
       "note": "seq 80 -> 60"
+    },
+    {
+      "t": "2026-10-19T15:27:17.383Z",
+      "note": "2026-10-19 (the-library-holds-still-under-a-click-and-every): the Library now sits in a pane of its own at the foot of the panel with a divider over it (PanelShelfPane), so the order on a video reads: picked clip's sections, Captions, Transitions (scrolling together), then the Library pane. Photograph against that. Its three walks still pass."
     }
   ],
   "walks": [
