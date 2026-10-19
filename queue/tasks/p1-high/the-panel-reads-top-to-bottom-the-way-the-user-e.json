@@ -1,0 +1,36 @@
+{
+  "id": "the-panel-reads-top-to-bottom-the-way-the-user-e",
+  "title": "The panel reads top to bottom the way the user expects: Layers on top, a draggable divider, no Library for images, plain switches",
+  "goal": "Make the right panel predictable. Layers sits at the top of the panel. The picked thing's sections sit below it. The boundary between them is a divider the person can drag up and down, remembered. In image documents the Library is hidden unless the person turns it on (it is mostly for video and design). The Sections popover's switches are plain switches: no extra circular 'reset' icon beside each one.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T05:33:43.733Z",
+  "updated": "2026-10-19T05:33:43.845Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-18): \"the panes are totally confusing!!!! layers isn't at the top, i can't drag the pane up and down, library was expanded by default. I think for image editing it should be hidden. And this weird ux with the undo icon when i toggle a pane on? what the hell is that? there's no need to undo toggling a switch\". Screenshots: (1) image doc: APPEARANCE, EFFECTS, MOTION collapsed at top, then LAYERS 17 (Size groups, Background, Canvas) in a pane with a large empty area, MEASUREMENTS 4, LIBRARY Components collapsed, Sections; (2) image doc with nothing picked: LAYERS 14 collapsed at the top and the rest of the panel empty, and the Sections popover showing Library 'Always hidden' and Measurements 'Always hidden' each with a circular arrow, plus Motion, Layout, Columns, Arrange, Component switches and 'Use Automatic for All'.\n\nHistory: the card 'Where do Layers and Library sit when something is picked?' was resolved b 'Pick on top, lists in a pane at the bottom' (no note) and shipped 10-13; the-layers-and-library-pane-grows-into-any-room (done 10-18) made the pane fill room the sections leave, but the user still sees empty bands. Code: InspectorPanel.swift lists pane (inspector.listsPaneHeight, PanelListsPane), PanelSectionsFooter.swift Sections popover (reset icon :213). Memory: one purpose per area; never leave empty gaps the user cannot remove.",
+  "acceptance": [
+    "Reproduce first at Next defaults in an image document (the user's screenshots 2026-10-18 22.31.11 and 22.32.42): record the panel order (today Appearance/Effects/Motion on top, then LAYERS, MEASUREMENTS, LIBRARY in a bottom pane), whether the divider drags, the Library's default open state, the empty space under a collapsed Layers with nothing picked, and the circular arrow (arrow.counterclockwise, PanelSectionsFooter.swift:213) beside Library and Measurements in the Sections popover",
+    "Order, top to bottom: Layers (with its search), then Measurements when the document has any, then the picked thing's sections; the Library, when shown, is last. This reverses the 2026-10-13 card answer 'Pick on top, lists in a pane at the bottom' by the user's later word; update the UX-PATTERNS placement contract's Inspector row to say so",
+    "A visible divider between Layers and the sections below drags up and down with the resize cursor, live, clamped so each side keeps a minimum; its position is remembered per document kind; double click resets it",
+    "No empty bands: when Layers is collapsed or short, the sections below move up to meet it; when nothing is picked, Layers fills the panel (no blank area beneath a collapsed header); MEASURED gap 0 pt in every state",
+    "Library in image documents: hidden by default (absent from the panel), turned on from the Sections popover or View > Library; video and design documents keep their own default (video shows its catalog per the video library task)",
+    "Sections popover: each row is a name, a one-line state and a switch; the per-row circular reset icon is removed; the 'Use Automatic for All' link at the bottom stays as the one way back to automatic; switching a section on or off takes effect at once and needs no undo",
+    "A walk in an image document checks the order (Layers first), drags the divider and checks it moved and was remembered after reopening, checks the Library is absent by default, and checks the Sections popover has no reset icons",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T05:33:43.735Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-19T05:33:43.843Z",
+      "note": "seq 3970 -> 1"
+    }
+  ]
+}
