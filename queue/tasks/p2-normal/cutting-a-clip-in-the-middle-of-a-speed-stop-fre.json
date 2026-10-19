@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T05:12:11.282Z",
-  "updated": "2026-10-19T05:39:38.715Z",
+  "updated": "2026-10-19T05:39:38.883Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-17 with a throwaway test in Tests/PhotonzCoreTests (deleted after): rampedToFour (8 s recording, stops 0@1x, 3000@4x, 8000@1x), freezeSpeedStop(stop 1, hold 1000), split(atMS: 6500) inside the hold (6000-7000). Printed: before length 17000 out 8000; after length 17000 pieces [(0, 6500, 3000), (3000, 10500, 7513)]; frames at 6400 7400 7600 16900: [3000, 3000, 3001, 7418]. So the second piece starts on the frozen frame and spends the whole 1000 ms hold again (frame 3000 until 7500, not 7000), and its out point lands at 7513, losing 7513-8000. Cause: SpeedRamp holds are spent on [from, to), so a piece starting on the held frame holds it in full; ClipPiece.split(atOffsetMS:) gives both halves the same ramp. Likely fix: the second piece's copy of the ramp carries the remaining hold on that stop (and the first piece's length keeps the part spent), with joined(with:) summing them back.",
@@ -42,8 +42,13 @@
     {
       "t": "2026-10-19T05:39:38.714Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-19T05:39:38.881Z",
+      "note": "A cut inside a speed-stop freeze now gives the second half only the rest of the hold, so the freeze is as long as before and the clip still ends on the recording's last frame; joining the halves gives back the original clip (ClipPiece.split/carriesOn, ClipCut.isContinuous). 6 new SpeedRampTests red before, green after; full suite 13750 green; two speed-stop walks ok."
     }
   ],
   "started": "2026-10-19T05:14:48.297Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-10-19T05:39:38.882Z"
 }

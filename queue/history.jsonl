@@ -12682,3 +12682,4 @@
 {"t":"2026-10-19T05:39:38.576Z","ev":"task_note","id":"cutting-a-clip-in-the-middle-of-a-speed-stop-fre"}
 {"t":"2026-10-19T05:39:38.646Z","ev":"task_note","id":"cutting-a-clip-in-the-middle-of-a-speed-stop-fre"}
 {"t":"2026-10-19T05:39:38.716Z","ev":"task_walks","id":"cutting-a-clip-in-the-middle-of-a-speed-stop-fre","walks":[]}
+{"t":"2026-10-19T05:39:38.884Z","ev":"task_done","id":"cutting-a-clip-in-the-middle-of-a-speed-stop-fre","from":"in_progress","note":"A cut inside a speed-stop freeze now gives the second half only the rest of the hold, so the freeze is as long as before and the clip still ends on the recording's last frame; joining the halves gives back the original clip (ClipPiece.split/carriesOn, ClipCut.isContinuous). 6 new SpeedRampTests red before, green after; full suite 13750 green; two speed-stop walks ok."}
