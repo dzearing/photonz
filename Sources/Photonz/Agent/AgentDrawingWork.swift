@@ -1,0 +1,356 @@
+import AppKit
+import PhotonzCore
+import PhotonzRender
+
+/// What the picture tools do in the running app (`docs/design/agent-mcp.md`,
+/// slice 3).
+///
+/// Each one builds the layer the matching tool would have built
+/// (`AgentDrawing`, PhotonzCore) and lands it through the same `EditorState`
+/// call that tool makes, inside `asOneUndoStep`, so one Command Z takes back
+/// one thing the agent did and what is left is a layer a person can pick up.
+@MainActor
+enum AgentDrawingWork {
+
+    typealias Failure = AgentWork.Failure
+    typealias Answer = AgentWork.Answer
+
+    static func answer(_ request: AgentRequest) async throws -> Answer {
+        switch request {
+        case .newPicture(let width, let height):
+            return try await newPicture(CGSize(width: width, height: height))
+        case .addShape(let id, let shape):
+            let editor = try AgentDocuments.editor(id).get()
+            return try add(AgentDrawing.layer(for: shape), to: editor)
+        case .addPath(let id, let path):
+            let editor = try AgentDocuments.editor(id).get()
+            return try add(AgentDrawing.layer(for: path), to: editor)
+        case .addText(let id, let text):
+            let editor = try AgentDocuments.editor(id).get()
+            return try addText(text, to: editor)
+        case .setLayer(let id, let layer, let change):
+            return try setLayer(AgentDocuments.editor(id).get(), layer: layer, change: change)
+        case .findElements(let id, let region, let limit):
+            return try await findElements(AgentDocuments.editor(id).get(), region: region, limit: limit)
+        case .addMeasurement(let id, let measurement):
+            return try await addMeasurement(AgentDocuments.editor(id).get(), measurement)
+        case .listComponents(let id):
+            return try listComponents(AgentDocuments.editor(id).get())
+        case .placeComponent(let id, let component, let center):
+            return try placeComponent(AgentDocuments.editor(id).get(), component: component, at: center)
+        case .export(let id, let format, let path, let scale, let background):
+            return try await export(AgentDocuments.editor(id).get(), format: format, path: path,
+                                    scale: scale, background: background)
+        default:
+            throw Failure("That is not a picture tool.")
+        }
+    }
+
+    // MARK: A new picture
+
+    private static func newPicture(_ size: CGSize) async throws -> Answer {
+        guard let coordinator = AgentWork.coordinator else {
+            throw Failure("Photonz is still starting up. Try again in a moment.")
+        }
+        let before = Set(AgentDocuments.open.compactMap(\.agentID))
+        // File > New Blank Canvas, once its size has been chosen.
+        coordinator.newBlankCanvasWindow(size: BlankCanvas.normalized(size))
+        let deadline = Date().addingTimeInterval(AgentWork.openPatienceSeconds)
+        while Date() < deadline {
+            if let made = AgentDocuments.open.first(where: { !before.contains($0.agentID ?? "") && $0.document != nil }) {
+                return .json(AgentWork.listing(made, front: AgentDocuments.front === made))
+            }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        throw Failure("The new picture did not open within \(Int(AgentWork.openPatienceSeconds)) seconds.")
+    }
+
+    // MARK: Drawing
+
+    struct Box: Encodable {
+        let x: Double, y: Double, width: Double, height: Double
+        init(_ rect: CGRect) {
+            func tidy(_ v: CGFloat) -> Double { (Double(v) * 100).rounded() / 100 }
+            x = tidy(rect.minX); y = tidy(rect.minY); width = tidy(rect.width); height = tidy(rect.height)
+        }
+    }
+
+    struct Drawn: Encodable {
+        let layer: String
+        let name: String
+        let frame: Box
+        let canUndo: Bool
+    }
+
+    private static func drawn(_ id: UUID, in editor: EditorState) -> Answer {
+        let layer = editor.document?.layer(id: id)
+        // A group's stored size is unused; its box is what it holds.
+        let box = layer.map { $0.isGroup ? $0.localBounds.offsetBy(dx: $0.frame.minX, dy: $0.frame.minY) : $0.frame }
+        return .json(Drawn(layer: id.uuidString, name: layer?.name ?? "",
+                           frame: Box(box ?? .zero), canUndo: editor.canUndo))
+    }
+
+    /// Lands `layer` the way a drawing tool does, at the playhead on a video,
+    /// and picks it, as one undo step.
+    private static func add(_ layer: Layer, to editor: EditorState) throws -> Answer {
+        _ = try AgentWork.document(of: editor)
+        editor.asOneUndoStep {
+            editor.addDrawnLayer(layer)
+            editor.selectLayer(layer.id)
+        }
+        guard editor.document?.layer(id: layer.id) != nil else {
+            throw Failure("Photonz could not add that layer to \(AgentWork.title(of: editor)).")
+        }
+        return drawn(layer.id, in: editor)
+    }
+
+    private static func addText(_ text: AgentText, to editor: EditorState) throws -> Answer {
+        if let family = text.fontName, family != "SF Pro",
+           !NSFontManager.shared.availableFontFamilies.contains(family) {
+            throw Failure("add_text: there is no font called \(family) on this Mac. Leave fontName out for SF Pro.")
+        }
+        let content = text.content
+        let natural = TextRasterizer.naturalSize(content, maxWidth: text.width ?? .greatestFiniteMagnitude)
+        let size = CGSize(width: text.width ?? natural.width, height: natural.height)
+        var layer = TextBuilder.layer(content: content, at: text.origin, naturalSize: size)
+        if let name = text.name { layer.name = name }
+        if !text.shadow { layer.style.shadows = [] }
+        return try add(layer, to: editor)
+    }
+
+    private static func setLayer(_ editor: EditorState, layer: String, change: AgentLayerChange) throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        guard let id = UUID(uuidString: layer), let was = document.layer(id: id) else {
+            throw Failure("There is no layer \(layer) in this document. read_document lists the layer ids.")
+        }
+        guard !was.isLocked else { throw Failure("\(was.name) is locked. Unlock it with run_command first.") }
+        var changed = try AgentDrawing.applying(change, to: was, canvas: document.canvasSize).get()
+        if change.changesTheWords, change.width == nil, change.height == nil, let words = changed.text,
+           let before = was.text {
+            // A box that hugged its words keeps hugging them; one set to a
+            // width keeps that width and wraps.
+            let hugged = was.frame.width >= TextRasterizer.naturalSize(before).width - 1
+            let natural = TextRasterizer.naturalSize(words, maxWidth: hugged ? .greatestFiniteMagnitude : was.frame.width)
+            changed.frame.size = CGSize(width: hugged ? natural.width : was.frame.width, height: natural.height)
+        }
+        editor.asOneUndoStep {
+            editor.perform { $0.updateLayer(id: id) { $0 = changed } }
+        }
+        return drawn(id, in: editor)
+    }
+
+    // MARK: What is in the picture
+
+    /// The picture's edges and brightness, read once and kept with the editor
+    /// so the Measure tool's own snapping sees them too.
+    private static func analysis(of editor: EditorState) async -> EdgeMapAnalyzer.Analysis {
+        guard let ref = editor.document?.layers.compactMap(\.imageRef).first else { return .empty }
+        if let ready = editor.readyEdgeMaps[ref.id] { return ready }
+        let cache = editor.edgeMapCache
+        let store = editor.store
+        let analysis = await Task.detached(priority: .userInitiated) {
+            cache.analysis(for: ref, store: store)
+        }.value
+        editor.readyEdgeMaps[ref.id] = analysis
+        return analysis
+    }
+
+    struct Found: Encodable {
+        let count: Int
+        let readsThePicture: Bool
+        let elements: [Box]
+    }
+
+    private static func findElements(_ editor: EditorState, region: CGRect?, limit: Int) async throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        let read = await analysis(of: editor)
+        let found = await Task.detached(priority: .userInitiated) {
+            AgentElementScan.elements(in: document, edges: read.edges, luma: read.luma,
+                                      region: region, limit: limit)
+        }.value
+        return .json(Found(count: found.count, readsThePicture: !read.edges.isEmpty,
+                           elements: found.map(Box.init)))
+    }
+
+    // MARK: Measuring
+
+    struct Measured: Encodable {
+        let layers: [String]
+        let names: [String]
+        /// How many of the measured sides or feet sit on an edge the picture
+        /// really has, out of how many there are. Nil on a canvas with no picture.
+        let onEdges: Int?
+        let outOf: Int
+        let measured: Box?
+    }
+
+    private static func addMeasurement(_ editor: EditorState, _ measurement: AgentMeasurement) async throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        let read = await analysis(of: editor)
+        let canvas = CGRect(origin: .zero, size: document.canvasSize)
+        func inside(_ point: CGPoint) throws {
+            guard canvas.contains(point) else {
+                throw Failure("That point is outside the canvas, which is \(Int(canvas.width)) by \(Int(canvas.height)).")
+            }
+        }
+        // The Measure tool in hand, as a person measuring has it, so the
+        // readouts steer round what they measure the way a click's do.
+        editor.setTool(.measure)
+        let before = Set(document.layers.map(\.id))
+        var onEdges: Int?
+        var outOf = 0
+        var measuredBox: CGRect?
+        switch measurement {
+        case .size, .sizeAt:
+            let rect: CGRect
+            switch measurement {
+            case .size(let box):
+                rect = box.standardized
+            case .sizeAt(let point, let level):
+                try inside(point)
+                guard let found = AgentMeasurePlan.element(at: point, level: level, edges: read.edges,
+                                                           luma: read.luma, document: document) else {
+                    throw Failure("The Measure tool finds no element at that point. find_elements lists the ones it sees.")
+                }
+                rect = found
+            default:
+                rect = .zero
+            }
+            guard rect.width >= 1, rect.height >= 1, rect.intersects(canvas) else {
+                throw Failure("That box is empty or off the canvas.")
+            }
+            editor.measureToolMode = .size
+            let neighbors = AgentMeasurePlan.sizeNeighbors(of: rect, style: editor.measureStyles.content(for: .size),
+                                                           edges: read.edges, luma: read.luma, document: document)
+            editor.asOneUndoStep { editor.addElementSize(rect, neighbors: neighbors) }
+            measuredBox = rect
+            outOf = 4
+            if !read.edges.isEmpty { onEdges = AgentMeasurePlan.sidesOnEdges(rect, in: read.edges) }
+        case .gap(let a, let b):
+            guard let gap = AgentMeasurePlan.gap(between: a, and: b) else {
+                throw Failure("Those two boxes overlap or sit corner to corner, so no space faces across between them.")
+            }
+            try landGap(gap, in: editor)
+            outOf = 2
+            if !read.edges.isEmpty { onEdges = feet(gap, read.edges) }
+        case .gapAt(let point):
+            try inside(point)
+            guard let gap = AgentMeasurePlan.gap(at: point, luma: read.luma, document: document) else {
+                throw Failure("The Measure tool finds no gap at that point. Try two boxes from find_elements.")
+            }
+            try landGap(gap, in: editor)
+            outOf = 2
+            if !read.edges.isEmpty { onEdges = feet(gap, read.edges) }
+        case .distance(let from, let to, let axis):
+            editor.measureToolMode = .distance
+            editor.asOneUndoStep { editor.addMeasure(from: from, to: to, mode: axis, headOffset: nil) }
+            outOf = 2
+            if !read.edges.isEmpty {
+                onEdges = AgentMeasurePlan.feetOnEdges(from: from, to: to, axis: axis, in: read.edges)
+            }
+        }
+        let added = (editor.document?.layers ?? []).filter { !before.contains($0.id) }
+        guard !added.isEmpty else { throw Failure("Photonz could not place that measurement.") }
+        return .json(Measured(layers: added.map(\.id.uuidString), names: added.map(\.name),
+                              onEdges: onEdges, outOf: outOf, measured: measuredBox.map(Box.init)))
+    }
+
+    private static func landGap(_ gap: GapMeasurement, in editor: EditorState) throws {
+        guard gap.length > 0 else { throw Failure("Those edges touch; there is no space between them.") }
+        editor.measureToolMode = .gap
+        editor.asOneUndoStep { editor.addGapMeasure(gap) }
+    }
+
+    private static func feet(_ gap: GapMeasurement, _ edges: EdgeMap) -> Int {
+        AgentMeasurePlan.feetOnEdges(from: gap.start, to: gap.end, axis: gap.axis, in: edges)
+    }
+
+    // MARK: Components
+
+    struct Component: Encodable {
+        let id: String
+        let name: String
+        let from: String
+        let detail: String
+    }
+
+    private static func listComponents(_ editor: EditorState) throws -> Answer {
+        _ = try AgentWork.document(of: editor)
+        guard editor.componentsEnabled else { throw Failure("This release has no Library components.") }
+        return .json(editor.componentEntries.map {
+            Component(id: $0.id, name: $0.name, from: from($0, in: editor), detail: $0.detail)
+        })
+    }
+
+    private static func from(_ entry: LibraryEntry, in editor: EditorState) -> String {
+        if editor.starterComponent(entryID: entry.id) != nil { return "starter" }
+        if editor.sharedComponent(entryID: entry.id) != nil { return "shared" }
+        return "document"
+    }
+
+    private static func placeComponent(_ editor: EditorState, component: String, at center: CGPoint) throws -> Answer {
+        _ = try AgentWork.document(of: editor)
+        guard editor.componentsEnabled else { throw Failure("This release has no Library components.") }
+        let entries = editor.componentEntries
+        let wanted = component.trimmingCharacters(in: .whitespaces)
+        guard let entry = entries.first(where: { $0.id == wanted })
+                ?? entries.first(where: { $0.name.caseInsensitiveCompare(wanted) == .orderedSame }),
+              let id = UUID(uuidString: entry.id) else {
+            let names = entries.map(\.name).joined(separator: ", ")
+            throw Failure("There is no component called \(component). The Library has \(names).")
+        }
+        var placed: UUID?
+        editor.asOneUndoStep { placed = editor.placeComponent(componentID: id, at: center) }
+        guard let placed else { throw Failure("Photonz could not place \(entry.name) there.") }
+        return drawn(placed, in: editor)
+    }
+
+    // MARK: Export
+
+    struct Exported: Encodable {
+        let path: String
+        let format: String
+        let bytes: Int
+        let width: Int?
+        let height: Int?
+        /// Layers an SVG could only carry as pictures, with why.
+        let asPictures: [String]?
+    }
+
+    private static func export(_ editor: EditorState, format: AgentExportFormat, path: String,
+                               scale: Double, background: Bool) async throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        let url = URL(fileURLWithPath: path)
+        var isFolder: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.deletingLastPathComponent().path, isDirectory: &isFolder),
+              isFolder.boolValue else {
+            throw Failure("There is no folder at \(url.deletingLastPathComponent().path) to write into.")
+        }
+        let backdrop: SVGExport.Background = background ? .keep : .drop
+        let answer: Exported
+        switch format {
+        case .png:
+            let sizer = ExportSizer(renderer: DocumentRenderer(), store: editor.store)
+            guard let data = await sizer.data(of: document, frameID: nil, scale: CGFloat(scale),
+                                              format: .png, quality: 0.9, background: backdrop) else {
+                throw Failure("Photonz could not draw the picture as a PNG.")
+            }
+            try data.write(to: url)
+            let size = document.canvasSize
+            answer = Exported(path: url.path, format: "png", bytes: data.count,
+                              width: Int((size.width * scale).rounded()), height: Int((size.height * scale).rounded()),
+                              asPictures: nil)
+        case .svg:
+            guard let written = SVGExporter.data(document, store: editor.store, renderer: DocumentRenderer(),
+                                                 background: backdrop) else {
+                throw Failure("Photonz could not write the picture as SVG.")
+            }
+            try written.data.write(to: url)
+            answer = Exported(path: url.path, format: "svg", bytes: written.data.count,
+                              width: Int(document.canvasSize.width), height: Int(document.canvasSize.height),
+                              asPictures: written.fallbacks.isEmpty ? nil
+                                  : written.fallbacks.map { "\($0.layerName): \($0.reason)" })
+        }
+        return .json(answer)
+    }
+}

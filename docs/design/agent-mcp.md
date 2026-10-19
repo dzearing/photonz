@@ -200,15 +200,27 @@ that were already "pick, then the in-hand call" now go through `run` too
 
 ### Slice 3 (`an-agent-can-draw-a-picture-with-shapes-paths-te`): pictures
 
-`new_picture`, `add_shape` (rectangle, ellipse, line, arrow, highlight),
-`add_path` (anchors, corner or smooth), `add_text`, `set_layer` (frame, fill,
-stroke, corner radius, shadow, opacity, name, order, visibility), `group` /
-`ungroup`, `delete_layers`, `add_measurement` and `add_annotation` (the app's
-own redline marks, editable afterwards), `find_elements` (the element detector
-the Measure tool snaps to), `export` (PNG, SVG). Each maps onto the
-`EditorState` call the tool or panel already makes, inside `perform`, so it
-undoes like a click. Scenarios 2 (a box in a cloud, as SVG) and 3 (measurements
-on an open screenshot) are its try paths.
+| Tool | What it does | Maps onto |
+| --- | --- | --- |
+| `new_picture` | A blank canvas in a window of its own; answers with its id | `AppCoordinator.newBlankCanvasWindow` (File > New Blank Canvas) |
+| `add_shape` | Rectangle, ellipse or highlight in a frame; line or arrow between two points; fill, line, thickness, corners, opacity, shadow | `AnnotationBuilder.layer` (the shape tools), landed by `addDrawnLayer` |
+| `add_path` | Points in order, corner or smooth (handles worked out Catmull-Rom style unless given), open or closed | `PathBuilder.layer` (the Pen), landed by `addDrawnLayer` |
+| `add_text` | Words at a point, font, size, weight, colour, alignment, wrap width; `shadow: false` drops the Text tool's legibility shadow so an SVG keeps the words as text | `TextBuilder.layer` measured by `TextRasterizer.naturalSize` |
+| `set_layer` | Frame, name, visibility, fill, line, thickness, corners, opacity, shadow, a text layer's words and size (its box re-measured) | `Layer.geometrySet` (the Position and Size fields), the Effects list's Border and Shadow |
+| `find_elements` | The boxes the Measure tool sees in the picture plus every drawn layer, largest first | `ElementBounds.ladder` per probe (`AgentElementScan`) |
+| `add_measurement` | `size` of a box or of the element at a point, `gap` between two boxes or around a point, `distance` between two points; answers with the names ("Size 220 × 26") and how many measured sides sit on a real edge | `addElementSize`, `addGapMeasure`, `addMeasure` (Size, Gap and Distance modes) |
+| `list_components` / `place_component` | The Library's components (the document's, the shared shelf's, the starters) and a copy of one centred on a point | `componentEntries`, `placeComponent` (dragging a tile) |
+| `export` | PNG (scale, background on or off) or SVG to a path | `ExportSizer.data`, `SVGExporter.data` (File > Export) |
+
+Group, ungroup, delete, order, align and combine already run by name through `run_command` (slice 2), so they have no tools of their own. Each call is folded by `asOneUndoStep`, picks what it made, and lands exactly the layer the tool would have: a box's line is a Border in its Effects list, as one drawn by hand (`OutlineRetirement.swift`).
+
+**The pure half** is `AgentDrawing.swift` (PhotonzCore): the typed specs, the builders, `AgentMeasurePlan` (the gap between two boxes, and the edge check) and `AgentElementScan`. The app half is `Sources/Photonz/Agent/AgentDrawingWork.swift`.
+
+**Measuring puts the Measure tool in hand.** The readout planner keeps a number off the elements it measures only while the tool or a measurement is picked, so the measuring calls pick the tool up (and its mode) the way a person measuring has it, and the edge analysis the call ran is handed to the editor so the planner sees it.
+
+**How find_elements reads a picture.** Probes run along the middle of every band between two of the picture's full-width horizontal edges, plus rows half a grid step apart (a switch's own edges are too short to show across the whole picture), with the straight-edged reader (a few milliseconds a probe). Each distinct thin or control-sized thing is read once more with the shape reader, which is the reader Size mode clicks with, so the box listed is the box a click would measure (a field's outer border, a switch's pill); a coarse grid with the shape reader then finds round cards and avatars. On the 1440 x 960 settings fixture it lists all ten controls exactly as Size reads them, 31 boxes in all, in about two seconds in the app (`AgentElementScanFixtureTests`). The edge check (`onEdges`) counts a side as on an edge within 3 px in the same edge map the tool snaps to.
+
+The try paths: scenario 2 (a box in a cloud, as SVG) and scenario 3 (measurements on an open screenshot), run from fresh sessions on 2026-10-19: `queue/audits/2026-10-19-agent-drawing-transcript.md`.
 
 ### Slice 4 (`an-agent-can-cut-a-video-from-history-clips-with`): video
 
@@ -248,7 +260,7 @@ The first slice's run of exactly that is in
 
 ## Not in this slice
 
-* Drawing and video edits (slices 3 and 4), and the menu rows still on slice
+* Video edits (slice 4), and the menu rows still on slice
   2's not-yet list (`the-rest-of-the-menu-commands-can-be-run-by-name`).
 * Notifications when the person changes the document while the agent works:
   the agent reads again when it needs to.

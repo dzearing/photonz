@@ -73,6 +73,9 @@ enum AgentWork {
             return try listCommands(AgentDocuments.editor(id).get(), area: area, readyOnly: readyOnly)
         case .runCommand(let id, let call):
             return try runCommand(AgentDocuments.editor(id).get(), call)
+        case .newPicture, .addShape, .addPath, .addText, .setLayer, .findElements,
+             .addMeasurement, .listComponents, .placeComponent, .export:
+            return try await AgentDrawingWork.answer(request)
         }
     }
 
@@ -91,7 +94,7 @@ enum AgentWork {
         let canRedo: Bool
     }
 
-    private static func title(of editor: EditorState) -> String {
+    static func title(of editor: EditorState) -> String {
         (editor.documentURL ?? editor.openedFileURL ?? editor.recordingURL)?.lastPathComponent ?? editor.untitledName
     }
 
@@ -99,7 +102,7 @@ enum AgentWork {
         (editor.documentURL ?? editor.openedFileURL ?? editor.recordingURL)?.path
     }
 
-    private static func listing(_ editor: EditorState, front: Bool) -> Listing {
+    static func listing(_ editor: EditorState, front: Bool) -> Listing {
         let document = editor.document
         let hasTime = document?.hasTime ?? false
         return Listing(id: editor.agentID ?? "?", title: title(of: editor), file: file(of: editor),
@@ -109,7 +112,7 @@ enum AgentWork {
                        front: front, canUndo: editor.canUndo, canRedo: editor.canRedo)
     }
 
-    private static func document(of editor: EditorState) throws -> PhotonzDocument {
+    static func document(of editor: EditorState) throws -> PhotonzDocument {
         guard let document = editor.document else { throw Failure("That window has no document in it yet.") }
         return document
     }

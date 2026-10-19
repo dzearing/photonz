@@ -1,0 +1,29 @@
+{
+  "feature": "An agent draws a picture and redlines a screenshot",
+  "epic": "agent-mcp",
+  "summary": "An agent session with the Photonz MCP server can now build a picture out of real layers (shapes, paths, text, Library components), place the Measure tool's own Size, Gap and Distance measurements on a screenshot, and export PNG or SVG. Every call is one undo step and leaves an ordinary layer you can edit by hand.",
+  "setup": "Photonz Probe (or Dev, once rebuilt), release Next, no switch changed from its default. Server installed once with Scripts/install-mcp.sh (--probe for the probe). Both runs, call by call: 2026-10-19-agent-drawing-transcript.md.",
+  "switched": {},
+  "try": [
+    { "do": "In a new Claude Code session with the server, ask: Create a product icon svg of a box inside of a cloud.", "shot": "2026-10-19-agent-drawing-2-cloud-box-icon-svg-rendered.png", "shotNote": "This is the exported SVG file drawn by Quick Look, not by Photonz; the file itself is 2026-10-19-agent-drawing-1-cloud-box-icon.svg." },
+    { "do": "Open the new Untitled window in Photonz: the tile, cloud and box are ten named layers. Click one and change its colour by hand." },
+    { "do": "Press Command Z a few times: each takes back one thing the agent did." },
+    { "do": "Open a UI screenshot in Photonz.", "shot": "2026-10-19-agent-drawing-3-redline-before-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In a new session ask: annotate the ux with measurements around the major ui elements.", "shot": "2026-10-19-agent-drawing-4-redline-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick any of the agent's measurements and drag a handle: it is the Measure tool's own redline and listed under Measurements." }
+  ],
+  "evaluate": [
+    "Is the icon from the one sentence prompt something you would start from, or does it need a house look the agent should be taught first?",
+    "On the redlined screenshot, are these the measurements you would have placed yourself, and is 13 about the right number?",
+    "The agent hid three of its own measurements whose numbers crowded others, rather than deleting them. Would you rather it deleted them?",
+    "Should text an agent sets skip the soft legibility shadow by default, as an icon wants, rather than only when asked?"
+  ],
+  "rough": [
+    "No mock covers this surface: it has no window of its own; the pictures are the probe window and the exported file.",
+    "Scenario 3, the run pictured: 13 measurements, 11 of them wholly on edges the picture really has (34 of 36 sides and feet within 3 px of an edge in the Measure tool's own edge map). The two partial: a page margin whose left end is the picture's border, and a 20 px distance whose lower end sits on empty background beside the buttons. Every number matches what a Size click reads on the same element.",
+    "Readouts still crowd round the top right switch and the fields in the pictured run. After it, the agent's Size now steers round the same neighbours a click does (the drawn layers and the elements as far out as a number travels), which moved the switch's width number off the next switch (2026-10-19-agent-drawing-5-switch-size-readouts.png, the app's own render). The run pictured predates that change.",
+    "The cloud is four white shapes, not one outline: combine_shapes would join them, and the agent was told so in the tool's description after this run.",
+    "Two earlier redline runs went worse and led to fixes in this task: one floated distances beside the elements with their ends on nothing (5 of 13 on edges), one read the text fields as 218 x 25 (their inner border) where Size reads 220 x 26.",
+    "find_elements takes about two seconds on a 1440 x 960 screenshot. Nothing in either scenario needed a capability the app lacks, so no prerequisite task was filed."
+  ]
+}

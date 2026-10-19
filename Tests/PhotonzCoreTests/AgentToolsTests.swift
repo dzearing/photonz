@@ -13,12 +13,14 @@ struct AgentToolsTests {
         try AgentJSON.parse(Data(json.utf8))
     }
 
-    @Test("The first two slices offer the reach, read, see and undo tools, then the commands")
+    @Test("The first three slices offer the reach, read, see and undo tools, the commands, then drawing")
     func theSliceIsComplete() {
         #expect(AgentTools.all.map(\.name) == [
             "list_documents", "list_history", "open_document", "read_document",
             "render_picture", "video_frame", "contact_sheet", "undo", "redo",
             "list_commands", "run_command",
+            "new_picture", "add_shape", "add_path", "add_text", "set_layer", "find_elements",
+            "add_measurement", "list_components", "place_component", "export",
         ])
     }
 
