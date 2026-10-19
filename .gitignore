@@ -31,3 +31,4 @@ queue/leftovers/.before.json
 # one machine's live process, not queue state: committed, it would send a dead
 # pid to every other checkout, and a hold is a thing you put down BY PID.
 queue/.loop-awake.pid
+.build-mcp/

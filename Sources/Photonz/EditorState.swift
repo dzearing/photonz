@@ -2634,6 +2634,8 @@ final class EditorState {
         #endif
         captureCenter = capture
         Self.seeded.add(self)
+        // An agent finds this window's document by the id it gets here.
+        AgentDocuments.note(self)
         switch windowID {
         case .file(let url):
             openImageOrSidecar(at: url)
@@ -2827,6 +2829,9 @@ final class EditorState {
     /// Its canvas joins a window nobody sees, and it must never take that
     /// window as its own or announce itself as an open editor.
     @ObservationIgnored var isWarmUp = false
+
+    /// The short id an agent names this window's document by (`AgentDocuments`).
+    @ObservationIgnored var agentID: String?
 
     /// Whether closing this window would lose work.
     var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
@@ -3662,6 +3667,9 @@ final class EditorState {
         // window, which is its own window and so has no focused editor to hand.
         // The registry is weak and compiled in for every build.
         TutorialLauncher.register(self)
+        // A file handed to the app as it starts loads into a window that was
+        // never seeded, so an agent finds this window from here as well.
+        AgentDocuments.note(self)
         if let window {
             hostWindow = window
             // A fresh mount during an open: hide until sized (a re-open into an

@@ -800,6 +800,8 @@ struct FeatureAreaTests {
     /// about where it belongs ends up here, and this test fails until it picks
     /// a real part of the app (or is genuinely app chrome and joins the list).
     private let appChrome: Set<String> = [
+        // The door agents come in by: the whole app, not one part of it.
+        FeatureCatalog.agentChannelFlag,
         FeatureCatalog.releaseTagFlag,
         FeatureCatalog.tutorialsFlag,
         FeatureCatalog.setupTakesNoForAnAnswerFlag,

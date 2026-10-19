@@ -21668,3 +21668,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `PanelListsPane.split` now returns the shelf as a third part; a guide asking for the Library before its sample has opened writes the app-wide switch (`setLibraryVisible`).
 - Walks: `library-last-tile-reachable-walk` (new), `library-shelf-height-walk` drags the Library divider; the harness's `dragHandle` honours the room the pick leaves again. UX-PATTERNS gains "A click never moves the control it landed on".
 - Next: user's reaction to `queue/audits/2026-10-19-library-holds-still.json`.
+
+## 2026-10-19: An agent can reach the running app, read the open document and see it (go loop)
+
+- First slice of the MCP ask. The app listens on a Unix socket of its own (`~/Library/Application Support/Photonz/Agent/<release|dev|probe>.sock`) and speaks MCP itself; `Scripts/photonz-mcp.sh` runs a small bridge (`Sources/PhotonzMCP`) that finds the app, starts it in the background when a tool is called, and copies lines. `Scripts/install-mcp.sh` registers it with Claude Code in one command (`--probe` for the loop's probe).
+- Nine tools: list_documents, list_history, open_document, read_document, render_picture, video_frame, contact_sheet, undo, redo. Schemas, the protocol and the structured read live in PhotonzCore and are unit tested (34 tests); the work is `Sources/Photonz/Agent/AgentWork.swift`. Next switch `next-agent-channel`, on by default.
+- A go loop runner that names no app is always sent to the probe (`GO_LOOP_PID`). A session with the server installed does not start Photonz until a tool is called (the app leaves its handshake beside its socket).
+- Try path passed in a fresh session: `queue/audits/2026-10-19-agent-mcp-transcript.md`. Filed: a recording handed to the app at launch never opens; the frame at a whole second is one frame early.
+- Next: `every-command-in-the-app-s-menus-can-be-run-by-n` (slice 2), see `docs/design/agent-mcp.md`.

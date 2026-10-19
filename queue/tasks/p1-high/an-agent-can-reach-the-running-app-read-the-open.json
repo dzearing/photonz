@@ -5,11 +5,11 @@
   "epic": "agent-mcp",
   "priority": "p1-high",
   "seq": 21,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:21:47.951Z",
-  "updated": "2026-10-19T16:22:00.697Z",
+  "updated": "2026-10-19T18:36:36.062Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of claude-can-make-and-edit-pictures-and-videos-in by the 2026-10-19 manager pass, so each slice fits one runner session. Its notes and traps apply here (watch it happen in the open document, never a headless re-implementation; never name a vendor in app copy).\n\nWhat exists (surveyed 2026-10-19): no IPC of any kind today, the only outside entry is .onOpenURL opening files (EditorView.swift:402). The playtest harness is compiled out of release (#if PHOTONZ_PLAYTEST, PlaytestHarness.swift:11; Scripts/build-app.sh:123) and reads its script once from --playtest at launch, so it is a reference, not the transport. EditorState is @MainActor (EditorState.swift:23); mutation is EditorState.perform (EditorState.swift:4917) over History.perform (PhotonzCore/History.swift:81). Only the harness keeps a list of open editors (PlaytestHarness.register, EditorState.swift:2505); the app needs its own. Render: DocumentRenderer.render (PhotonzRender/DocumentRenderer.swift:406), ImageCodec.encode(.png) (ImageCodec.swift:68). Frames: DocumentFrames.frame(atMS:) and png(atMS:) (EditorState+VideoExport.swift:523-614). PhotonzDocument is Codable (Document.swift:7) and round-trips as JSON (PackageIO.swift:24), but there is no slimmer summary type; build one in Core. History list: CaptureStore.entries (Capture/CaptureStore.swift:22); CaptureEntry is not Codable.",
@@ -30,6 +30,37 @@
     {
       "t": "2026-10-19T16:22:00.695Z",
       "note": "seq 3970 -> 21"
+    },
+    {
+      "t": "2026-10-19T17:39:17.832Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T18:36:18.988Z",
+      "note": "Adversarial review before building: (1) a first-time agent with no context needs to know where to start, so the server sends instructions at initialize (list_documents, read_document, then look) and every tool error says what to do next; (2) the mock assumption 'watch it happen in the open document' rules out a headless editor, so the channel is a Unix socket inside the app and every tool calls what a person's command calls (openFileWindow, DocumentRenderer, DocumentFrames, EditorState.undo); (3) Claude Code starts every MCP server at session start, so a bridge that launched Photonz on the handshake would open the app in every session on the machine: the app leaves its handshake and tool list beside its socket and the bridge answers those itself; (4) a user-scoped server is also in every go loop runner's session, which must never drive the Dev app: the bridge sends a session with GO_LOOP_PID and no PHOTONZ_APP to the probe (verified MCP servers inherit the session's env)."
+    },
+    {
+      "t": "2026-10-19T18:36:19.053Z",
+      "note": "Built: design doc docs/design/agent-mcp.md; PhotonzCore AgentJSON, AgentTools (9 tools + schema checker), AgentMCP (JSON-RPC, handshake cache), AgentDocumentRead (structured read), AgentContactSheet; PhotonzAgentLink (socket address, shared by app and bridge so the bridge builds in ~4s); app Sources/Photonz/Agent (AgentChannel socket server, AgentDocuments registry noted in EditorState.seed AND canvasDidMoveToWindow, AgentWork); bridge Sources/PhotonzMCP; Scripts/photonz-mcp.sh, Scripts/install-mcp.sh; Next switch next-agent-channel (on by default, area app). 34 new unit tests; full suite 13807 passed."
+    },
+    {
+      "t": "2026-10-19T18:36:19.116Z",
+      "note": "Verified on the probe: every tool by a hand driver (frames, sheet, region crop, errors), undo/redo on a rectangle a scratch walk drew (gone, then back, canUndo/canRedo follow), app quit mid-session (next call relaunches it), closed-app handshake answered from cache without launching, install via Scripts/install-mcp.sh into a throwaway HOME (claude mcp list: Connected). Try path in a fresh claude -p session with only the probe server: answered what is open and showed the frame at 10 s; transcript queue/audits/2026-10-19-agent-mcp-transcript.md. Pictures looked at: frame-at-10s (colour bars, stamp 00:00:09.967), contact sheet (9 frames, labels under each), region crop of Busy screenshot (top-left quarter)."
+    },
+    {
+      "t": "2026-10-19T18:36:19.179Z",
+      "note": "Left rough, not filed: (a) a picture handed to the app at launch lists as 'Untitled' with no file, because that window never learns its file (openPicked -> openImage); only an agent sees it, so it did not clear the bar. (b) The bridge is in the repo, not in the app bundle; a release user cannot install it yet (design doc, Not in this slice). (c) PHOTONZ_APP unset prefers a running Dev app, then release, then Probe. Filed: a-recording-handed-to-photonz-as-it-starts-opens, the-frame-shown-at-a-whole-second-is-the-one-tha."
+    },
+    {
+      "t": "2026-10-19T18:36:19.241Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-19T18:36:36.060Z",
+      "note": "Shipped the agent channel and MCP bridge (Sources/Photonz/Agent, Sources/PhotonzMCP, Scripts/install-mcp.sh, design in docs/design/agent-mcp.md) with 9 tools for listing, opening, reading, picturing (canvas, layer, region, video frame, contact sheet) and undo/redo; core schemas, protocol and read unit tested (34 tests, full suite 13807 green). Verified every tool on the probe by hand, undo/redo on a walk-drawn rectangle, relaunch after quit, install via claude mcp add, and the try path in a fresh claude -p session (audit 2026-10-19-agent-mcp-reach-read-see.json, transcript beside it)."
     }
-  ]
+  ],
+  "started": "2026-10-19T17:39:17.831Z",
+  "walks": [],
+  "completed": "2026-10-19T18:36:36.061Z"
 }

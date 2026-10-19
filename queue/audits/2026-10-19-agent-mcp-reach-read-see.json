@@ -1,0 +1,29 @@
+{
+  "feature": "An agent reaches the running app, reads the open document and sees it",
+  "epic": "agent-mcp",
+  "summary": "An agent session (Claude Code) with the Photonz MCP server can list the documents open in Photonz, open a file or a History item, read the front document as structured data, see it as a picture, a video frame or a contact sheet, and undo or redo, all in the app you have open.",
+  "setup": "Photonz Probe (or Dev, once rebuilt), release Next, no switch changed: the new switch 'Agents can work in Photonz' is on by default in Next. Install the server once with Scripts/install-mcp.sh (Scripts/install-mcp.sh --probe for the probe), then start a new Claude Code session.",
+  "switched": {},
+  "try": [
+    { "do": "Run Scripts/install-mcp.sh in the repo, then start a new Claude Code session." },
+    { "do": "Open a recording in Photonz, then ask the session: what is open in Photonz, and show me the frame 10 seconds in.", "shot": "2026-10-19-agent-mcp-frame-at-10s.png", "shotNote": "This is the picture the agent was handed (the video frame tool's PNG), not a capture of the window: the feature has nothing on screen of its own." },
+    { "do": "Ask: show me a contact sheet of the whole video.", "shot": "2026-10-19-agent-mcp-contact-sheet.png", "shotNote": "The contact sheet tool's PNG, as the agent sees it." },
+    { "do": "Draw a rectangle on a screenshot by hand, then ask the session to undo the last step. The rectangle goes; ask it to redo and it comes back." },
+    { "do": "Ask: open the newest item in my History and tell me what is in it." },
+    { "do": "Quit Photonz and ask again what is open: the server starts Photonz in the background and answers." }
+  ],
+  "evaluate": [
+    "Is one command from the repo the install you want for now, or should the server ship inside the app so a release user needs no repo?",
+    "When an agent opens a document, Photonz comes to the front with it, as if you had opened it. Is that right, or should agent work stay behind your current app?",
+    "Should agents be able to reach Photonz by default in Next (they can now), or only after you switch it on?",
+    "Is a 1024 pixel picture the right default for what the agent sees, given that bigger costs the session more?"
+  ],
+  "rough": [
+    "No mock covers this surface: it has no window of its own, so the pictures here are what the agent is handed, not window captures.",
+    "A recording handed to Photonz as it starts never opens (a picture does), so 'the probe open on a recording' was set up by opening it after launch. Filed as a-recording-handed-to-photonz-as-it-starts-opens.",
+    "The frame shown for exactly 10.000 s is stamped 9.967 s, one frame early; the canvas and export show the same frame. The agent spotted it on its own. Filed as the-frame-shown-at-a-whole-second-is-the-one-tha.",
+    "This slice has no editing tools yet, so undo was checked on a rectangle a scripted walk drew, then undone and redone through the server.",
+    "The very first session on a Mac, before Photonz has ever run with this switch, starts Photonz to learn its tool list; after that a session starts it only when a tool is called.",
+    "The install needs this repo and builds a small helper program the first time (about 4 seconds)."
+  ]
+}

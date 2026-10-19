@@ -333,6 +333,9 @@ public enum FeatureCatalog {
     /// The dock builds a section's settings only once they are near enough to
     /// be seen (`PanelBodyReach`).
     public static let panelBuildsWhatYouSeeFlag = "next-panel-builds-what-you-see"
+    /// An agent can reach the running app over its own socket and work in the
+    /// open documents (`docs/design/agent-mcp.md`).
+    public static let agentChannelFlag = "next-agent-channel"
 
     // MARK: - Definitions
 
@@ -1799,6 +1802,16 @@ public enum FeatureCatalog {
                     title: "The panel builds what you can see",
                     description: "On a video, panel sections far below the bottom of the panel are built when you scroll near them, so clicking from a clip to a cut answers sooner. Off builds every section at once.",
                     area: .panel,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: agentChannelFlag,
+                    title: "Agents can work in Photonz",
+                    description: "An agent on this Mac can list the open documents, read them, see them and undo, through the Photonz MCP server. Off, the app stops listening for agents from its next launch.",
+                    area: .app,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

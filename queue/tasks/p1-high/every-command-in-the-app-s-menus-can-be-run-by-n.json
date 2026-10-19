@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:21:48.057Z",
-  "updated": "2026-10-19T16:22:00.770Z",
+  "updated": "2026-10-19T18:36:19.305Z",
   "deps": [
     "an-agent-can-reach-the-running-app-read-the-open"
   ],
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-19T16:22:00.768Z",
       "note": "seq 3980 -> 22"
+    },
+    {
+      "t": "2026-10-19T18:36:19.304Z",
+      "note": "Slice 1 landed (an-agent-can-reach-the-running-app-read-the-open): the channel, the bridge and 9 tools. Add tools in PhotonzCore AgentTools (schema + AgentRequest case, tested) and carry them out in Sources/Photonz/Agent/AgentWork.swift; edits must go through EditorState.perform so one undo takes one agent step. Try path: Scripts/install-mcp.sh --probe, or claude -p --mcp-config with PHOTONZ_APP=probe Scripts/photonz-mcp.sh. Design and tool plan: docs/design/agent-mcp.md."
     }
   ]
 }

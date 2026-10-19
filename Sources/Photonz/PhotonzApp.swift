@@ -95,6 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             _ = Experiments.shared
             AppDelegate.coordinator?.start()
             if let coordinator = AppDelegate.coordinator { EditorWarmUp.run(coordinator: coordinator) }
+            if let coordinator = AppDelegate.coordinator { AgentChannel.startIfEnabled(coordinator: coordinator) }
             #if PHOTONZ_PLAYTEST
             // Non-shipping builds only; the probe alone acts on either of these.
             ProbeGrants.recordOnLaunch()
@@ -122,6 +123,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// update flow) means a user-cancelled quit never spawns a stray reopen.
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated {
+            AgentChannel.stop()
             guard let path = AppDelegate.coordinator?.pendingRelaunchBundlePath else { return }
             let relauncher = Process()
             relauncher.executableURL = URL(fileURLWithPath: "/bin/sh")

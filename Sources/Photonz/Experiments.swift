@@ -1008,6 +1008,7 @@ extension Experiments {
     /// hint pills and the advice on the end of a notice come back.
     var noticesSayWhatHappenedEnabled: Bool { isEnabled(FeatureCatalog.noticesSayWhatHappenedFlag) }
     var panelBuildsWhatYouSeeEnabled: Bool { isEnabled(FeatureCatalog.panelBuildsWhatYouSeeFlag) }
+    var agentChannelEnabled: Bool { isEnabled(FeatureCatalog.agentChannelFlag) }
 
     /// `next-cut-says-what-it-cannot-do`: whether ⌘X, ⌫, ⌥⌫ and the bucket
     /// refuse, out loud, when the marquee is over a layer no piece can be

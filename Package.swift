@@ -48,10 +48,24 @@ let package = Package(
             dependencies: ["PhotonzCore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
+        // Where each build of the app listens for agents, shared by the app and
+        // the MCP bridge (`docs/design/agent-mcp.md`). Its own module, Foundation
+        // only, so the bridge builds in seconds without the document model.
+        .target(
+            name: "PhotonzAgentLink",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        // The MCP bridge an agent runs (`Scripts/photonz-mcp.sh`): finds the
+        // running app, launches it if need be, and copies lines both ways.
+        .executableTarget(
+            name: "PhotonzMCP",
+            dependencies: ["PhotonzAgentLink"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
         // SwiftUI app shell. Assembled into Photonz.app by Scripts/build-app.sh.
         .executableTarget(
             name: "Photonz",
-            dependencies: ["PhotonzCore", "PhotonzRender", "PhotonzMedia"],
+            dependencies: ["PhotonzCore", "PhotonzRender", "PhotonzMedia", "PhotonzAgentLink"],
             // Docs that live next to the code they describe, not resources.
             exclude: [
                 "Releases/README.md",
@@ -77,7 +91,7 @@ let package = Package(
         // this rule and `Scripts/stale-build-drill.sh` shows why.
         .testTarget(
             name: "PhotonzCoreTests",
-            dependencies: ["PhotonzCore"]
+            dependencies: ["PhotonzCore", "PhotonzAgentLink"]
         ),
         .testTarget(
             name: "PhotonzRenderTests",
