@@ -4922,6 +4922,18 @@ final class EditorState {
         return true
     }
 
+    /// Runs `body` as ONE undo step, however many edits it lands: what an
+    /// agent's command comes back with (`AgentWork`, `History.squash`), so one
+    /// Command Z takes back one thing an agent did, the way it takes back one
+    /// click. Picking a clip first and then cutting it is one step, not two.
+    func asOneUndoStep(_ body: () -> Void) {
+        flushSelectionToHistory()
+        let mark = history?.mark
+        body()
+        flushSelectionToHistory()
+        if let mark { history?.squash(since: mark) }
+    }
+
     func perform(announcing: Bool = true, reportingLinkBreaks: Bool = true,
                  openingTheTimeline: Bool = true,
                  _ mutate: (inout PhotonzDocument) -> Void) {

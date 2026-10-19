@@ -35,12 +35,13 @@ Claude Code ──stdio (MCP JSON-RPC)──> photonz-mcp ──Unix socket─�
 Probe) listens on a Unix domain socket of its own:
 
 ```
-~/Library/Application Support/Photonz/Agent/<bundle id>.sock
+~/Library/Application Support/Photonz/Agent/<name>.sock
 ```
 
-so `com.dzearing.photonz.sock`, `com.dzearing.photonz.dev.sock` and
-`com.dzearing.photonz.probe.sock` sit side by side and the three apps never
-answer for each other (`AgentChannelAddress`, PhotonzCore). The socket is
+so `release.sock`, `dev.sock` and `probe.sock` sit side by side and the three
+apps never answer for each other (`AgentChannelAddress`, PhotonzAgentLink; a
+short name because a socket's whole path must fit in 103 bytes, and any other
+bundle id is used whole). The socket is
 created `0600`, inside the user's own Library: only programs running as you can
 connect, which is the same trust a script driving the app through the menu bar
 already has. The app speaks MCP itself, one JSON-RPC message per line, so the
@@ -155,11 +156,47 @@ guess.
 
 | Tool | What it does | Maps onto |
 | --- | --- | --- |
-| `list_commands` | Every command with its name, menu title, area, arguments, and whether it can run right now on the named document | a command table in PhotonzCore that the menu bar, the timeline right-click rows and the layer right-click rows read |
-| `run_command` | Run one by name with checked arguments; one run is one undo step | the same action the menu row calls, through `EditorState.perform` |
+| `list_commands` | Every command with its name, menu, area, what it needs, its arguments, whether it can run right now on the named document, and a toggle's state. `area` and `readyOnly` narrow it | `AppCommandTable` (PhotonzCore) |
+| `run_command` | Run one by name with checked arguments; one run is one undo step | `EditorState.run(_:)` (`Agent/AppCommandRunner.swift`), the switch the menu rows call |
 
-A coverage test lists every menu and right-click row and fails for any with no
-command name, apart from a written left-out list.
+**One table, one switch.** `AppCommandTable` names each command (`split_at_playhead`),
+with the words of its menu row, where it lives ("Clip > Speed"), an area
+(timeline, layers, edit, measure, view), when it can run in plain words, and its
+arguments. `EditorState.run(_:)` and `canRun(_:)` are an exhaustive switch over
+the names: each case calls exactly what its menu row used to call, and asks
+exactly what its row's dimming asked. The menu bar rows now call
+`editor?.run(.name)` and dim on `canRun(.name)`, so a row and an agent can never
+disagree. The ⌫ row's "what does Delete take" rule moved into
+`EditorState.deleteInHand` for the same reason.
+
+**Picking first.** A menu row acts on what is in hand. An agent cannot click,
+so a command declares what it can be told to pick first: `seconds` (moves the
+playhead, as a click on the ruler does), `layers` (ids from read_document),
+`piece` (one piece of a cut clip) and `track`. A toggle takes `on`; left out it
+flips. Then the command's own arguments, checked against their choices
+(`set_transition` `kind`, `set_speed` `percent`, `align` `edge`).
+
+**One undo step.** `run_command` runs inside `EditorState.asOneUndoStep`, which
+marks the history, runs, and folds whatever landed into one step
+(`History.squash(since:)`). Picking a clip and cutting it is one Command Z. The
+menu rows are not folded: they behave exactly as before.
+
+**Coverage** (`EveryMenuCommandHasANameTests`): the test reads every `Button`,
+`Toggle` and drawn row list in `EditorCommands.swift` and fails for any row whose
+action does not go through `run(.name)` unless it is in `leftOut` (on purpose,
+with the reason) or `notYet` (a list whose size is pinned, so it only shrinks).
+The timeline right-click rows are placed by an exhaustive switch over
+`TimelineMenuRow`; the layer right-click rows by title. Every other right-click
+row is a menu bar row under the same or other words
+(`EveryCommandIsInTheMenuBarTests`), so it is covered through that row. On
+2026-10-19: 283 menu bar rows, 149 named, 56 left out, 77 not yet; 37 of 65
+timeline right-click rows run a named command.
+
+Right-click rows mostly act on the thing they were opened on through functions
+that take it (`rollCutToPlayhead(at:)`, `duplicateLayer(id:)`). An agent reaches
+the same edit by picking that thing and running the in-hand command. The rows
+that were already "pick, then the in-hand call" now go through `run` too
+(split, speed, detach and re-attach, speed stops, transition length and curve).
 
 ### Slice 3 (`an-agent-can-draw-a-picture-with-shapes-paths-te`): pictures
 
@@ -211,7 +248,8 @@ The first slice's run of exactly that is in
 
 ## Not in this slice
 
-* Driving the menus (slice 2), drawing and video edits (slices 3 and 4).
+* Drawing and video edits (slices 3 and 4), and the menu rows still on slice
+  2's not-yet list (`the-rest-of-the-menu-commands-can-be-run-by-name`).
 * Notifications when the person changes the document while the agent works:
   the agent reads again when it needs to.
 * Shipping the bridge inside the app bundle so a release user needs no repo.

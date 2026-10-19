@@ -144,7 +144,7 @@ struct EditorCommands: Commands {
     /// every tool rather than only the one with the swatches.
     @ViewBuilder private var fillRows: some View {
         Button {
-            editor?.fillSelectedLayer(useBackground: false)
+            editor?.run(.fillWithForeground)
         } label: {
             Label { Text("Fill with Foreground") } icon: { Self.swatch(editor?.foregroundFillHex) }
         }
@@ -155,13 +155,13 @@ struct EditorCommands: Commands {
             answersThePress: Experiments.shared.menuKeysDoWhatTheySayEnabled)), modifiers: .option)
         .disabled(!(editor?.canFillWithFillColors ?? false))
         Button {
-            editor?.fillSelectedLayer(useBackground: true)
+            editor?.run(.fillWithBackground)
         } label: {
             Label { Text("Fill with Background") } icon: { Self.swatch(editor?.backgroundFillHex) }
         }
         .disabled(!(editor?.canFillWithFillColors ?? false))
-        Button("Swap Fill Colors") { editor?.swapFillColors() }
-            .disabled(editor == nil)
+        Button("Swap Fill Colors") { editor?.run(.swapFillColors) }
+            .disabled(!(editor?.canRun(.swapFillColors) ?? false))
     }
 
     /// Layer ▸ Delete Layer, on ⌘⌫.
@@ -181,7 +181,7 @@ struct EditorCommands: Commands {
             if live, let fieldEditor {
                 fieldEditor.doCommand(by: #selector(NSStandardKeyBindingResponding.deleteToBeginningOfLine(_:)))
             } else {
-                editor?.deleteSelectedLayers()
+                editor?.run(.deleteLayer)
             }
         }
         .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuRow(answersThePress: live)),
@@ -191,7 +191,7 @@ struct EditorCommands: Commands {
         // than the layer disappearing under one. A dimmed row declines the
         // press (`performKeyEquivalent` answers false for it, measured
         // 2026-09-28), so it goes on to whatever has the keyboard.
-        .disabled(!(editor?.canDeleteSelectedLayers ?? false))
+        .disabled(!(editor?.canRun(.deleteLayer) ?? false))
     }
 
     /// A menu row's colour chip. Drawn rather than tinted from a symbol because
@@ -512,19 +512,19 @@ struct EditorCommands: Commands {
             .disabled(editor == nil && fieldEditor == nil)
             Divider()
             Button("Select All") {
-                if let fieldEditor { fieldEditor.selectAll(nil) } else { editor?.selectAll() }
+                if let fieldEditor { fieldEditor.selectAll(nil) } else { editor?.run(.selectAll) }
             }
             .keyboardShortcut("a", modifiers: .command)
             .disabled(editor == nil && fieldEditor == nil)
             // ⌘D, Photoshop's Deselect (took it from Duplicate Layer, which
             // has no PS shortcut — ⌘J duplicates when nothing is marqueed).
-            Button("Deselect") { editor?.deselect() }
+            Button("Deselect") { editor?.run(.deselect) }
                 .keyboardShortcut("d", modifiers: .command)
-                .disabled(editor?.selection == nil)
+                .disabled(!(editor?.canRun(.deselect) ?? false))
             // Photoshop ⇧⌘I: everything outside the current region.
-            Button("Invert Selection") { editor?.invertSelection() }
+            Button("Invert Selection") { editor?.run(.invertSelection) }
                 .keyboardShortcut("i", modifiers: [.command, .shift])
-                .disabled(editor?.selection == nil)
+                .disabled(!(editor?.canRun(.invertSelection) ?? false))
             Divider()
             fillRows
             if Experiments.shared.proMenuBarEnabled {
@@ -682,28 +682,28 @@ struct EditorCommands: Commands {
 
     @ViewBuilder private var transportRows: some View {
         Button((editor?.isDocumentPlaying ?? false) ? "Pause" : "Play") {
-            editor?.toggleDocumentPlayback()
+            editor?.run(.playPause)
         }
         .keyboardShortcut(.space, modifiers: [])
-        Button("Play In to Out") { editor?.playInToOut() }
+        Button("Play In to Out") { editor?.run(.playInToOut) }
             .keyboardShortcut(.space, modifiers: [.command, .shift])
-            .disabled(!(editor?.canPlayInToOut ?? false))
-        Button("Play Backward") { editor?.shuttle(.reverse) }
+            .disabled(!(editor?.canRun(.playInToOut) ?? false))
+        Button("Play Backward") { editor?.run(.playBackward) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("j", modifiers: []) : nil)
-        Button("Stop") { editor?.shuttle(.stop) }
+        Button("Stop") { editor?.run(.stop) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("k", modifiers: []) : nil)
-            .disabled(!(editor?.isDocumentPlaying ?? false))
-        Button("Play Forward") { editor?.shuttle(.forward) }
+            .disabled(!(editor?.canRun(.stop) ?? false))
+        Button("Play Forward") { editor?.run(.playForward) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("l", modifiers: []) : nil)
     }
 
     @ViewBuilder private var editPointRows: some View {
-        Button("Go to Previous Edit") { editor?.goToEditPoint(forward: false) }
+        Button("Go to Previous Edit") { editor?.run(.goToPreviousEdit) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut(.upArrow, modifiers: []) : nil)
-            .disabled(!(editor?.canGoToEditPoint(forward: false) ?? false))
-        Button("Go to Next Edit") { editor?.goToEditPoint(forward: true) }
+            .disabled(!(editor?.canRun(.goToPreviousEdit) ?? false))
+        Button("Go to Next Edit") { editor?.run(.goToNextEdit) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut(.downArrow, modifiers: []) : nil)
-            .disabled(!(editor?.canGoToEditPoint(forward: true) ?? false))
+            .disabled(!(editor?.canRun(.goToNextEdit) ?? false))
     }
 
     // MARK: Cutting
@@ -719,52 +719,24 @@ struct EditorCommands: Commands {
         // Premiere's Add Edit, ⌘K, on the timeline, where B picks up
         // the Blade; the recording window keeps its B.
         Button("Split at Playhead") {
-            onTimeline ? editor?.splitClipAtPlayhead() : video?.cutAtPlayhead()
+            if onTimeline { editor?.run(.splitAtPlayhead) } else { video?.cutAtPlayhead() }
         }
         .keyboardShortcut(onTimeline ? KeyboardShortcut("k", modifiers: .command)
                                      : KeyboardShortcut("b", modifiers: []))
-        .disabled(!(onTimeline ? (editor?.canSplitClipAtPlayhead ?? false)
+        .disabled(!(onTimeline ? (editor?.canRun(.splitAtPlayhead) ?? false)
                                : (video?.canCutAtPlayhead ?? false)))
-        // Keys picked on a lane are the smaller and more recent thing
-        // in hand, so ⌫ takes those and leaves the clip alone
-        // (`EditorState+KeyLanes`).
-        let keysPicked = onTimeline && (editor?.canDeletePickedKeys ?? false)
-        // A range drawn on the ruler is in hand when nothing else is
-        // picked, and ⌫ lifts it (`EditorState+RulerRange`).
-        let rangeHeld = onTimeline && editor?.rulerRangeHeld != nil
-        // ...and so is a range on some tracks, or pieces a box picked
-        // (`EditorState+TrackRange`).
-        let trackHeld = onTimeline && !rangeHeld
-            && (editor?.trackRangeHeld != nil || editor?.timelinePicksHeld != nil)
-        let trackRange = trackHeld && editor?.trackRangeHeld != nil
-        // ...and a gap a click picked, which ⌫ closes (`EditorState+TimelineGap`).
-        let gapHeld = onTimeline && !rangeHeld && !trackHeld && editor?.timelineGapHeld != nil
-        // ...and a clip picked under a range, whose part of the range ⌫
-        // takes (`EditorState+RangeSection`).
-        let sectionHeld = onTimeline && !keysPicked && (editor?.sectionTakesTheDelete ?? false)
-        // Points picked on a sound's volume line go the way keys do.
-        let pointsPicked = keysPicked && (editor?.canDeletePickedSoundPoints ?? false)
-        // ...and a transition picked on a cut, which ⌫ takes off.
-        let transitionHeld = onTimeline && !keysPicked && !rangeHeld && !trackHeld && !gapHeld
-            && editor?.transitionHeldForDelete != nil
-        Button(pointsPicked ? "Delete Points" : keysPicked ? "Delete Keys" : transitionHeld ? "Delete Transition"
-               : sectionHeld ? "Delete Section" : rangeHeld || trackRange ? "Delete Range"
-               : trackHeld ? "Delete Pieces" : gapHeld ? "Delete Gap" : "Delete This Piece") {
-            if keysPicked {
-                editor?.deletePickedKeys()
-            } else if transitionHeld {
-                editor?.deleteTransitionInHand()
-            } else if sectionHeld {
-                editor?.deleteRangeSection()
-            } else if rangeHeld {
-                editor?.liftMarkedStretch()
-            } else if trackHeld {
-                editor?.liftTrackThing()
-            } else if gapHeld {
-                editor?.closeGapInHand()
-            } else {
-                onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
-            }
+        // What ⌫ takes, in the order it looks: keys (or points on a sound's
+        // line) picked on a lane, a transition picked on a cut, a clip's
+        // part of a range, a range on the ruler, a range on some tracks or
+        // pieces a box picked, a gap a click picked, else the piece in hand
+        // (`EditorState.deleteInHand`, the one rule the agent's `delete`
+        // runs too).
+        let inHand = onTimeline ? editor?.deleteInHand : nil
+        Button(inHand == .points ? "Delete Points" : inHand == .keys ? "Delete Keys"
+               : inHand == .transition ? "Delete Transition" : inHand == .section ? "Delete Section"
+               : inHand == .range || inHand == .trackRange ? "Delete Range"
+               : inHand == .pieces ? "Delete Pieces" : inHand == .gap ? "Delete Gap" : "Delete This Piece") {
+            if onTimeline { editor?.run(.delete) } else { video?.deleteSelectedPiece() }
         }
         // A MENU ROW carries U+0008 for ⌫, which is not the U+007F
         // the key sends: AppKit normalises the press to backspace
@@ -775,11 +747,7 @@ struct EditorCommands: Commands {
         // for the measurement, including the half that says a text
         // field with the keyboard still keeps the key.
         .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
-        .disabled(!(keysPicked || transitionHeld || sectionHeld || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
-                    || (trackHeld && (editor?.canTakeOutTrackThing ?? false))
-                    || (gapHeld && (editor?.canCloseGapInHand ?? false))
-                    || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
-                                              : (video?.canDeleteSelectedPiece ?? false))))
+        .disabled(!(onTimeline ? (editor?.canRun(.delete) ?? false) : (video?.canDeleteSelectedPiece ?? false)))
     }
 
     // Premiere's Ripple Delete, on its Mac key: what is picked goes
@@ -793,34 +761,34 @@ struct EditorCommands: Commands {
     @ViewBuilder private var rippleDeleteRow: some View {
         let pro = Experiments.shared.proMenuBarEnabled
         Button(editor?.sectionTakesTheDelete == true ? "Ripple Delete Section" : "Ripple Delete") {
-            editor?.rippleDeleteInHand()
+            editor?.run(.rippleDelete)
         }
             .keyboardShortcut(pro
                 ? (timelineKeys ? KeyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent),
                                                    modifiers: .shift) : nil)
                 : KeyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: .option))
-            .disabled(!(editor?.canRippleDeleteInHand ?? false))
+            .disabled(!(editor?.canRun(.rippleDelete) ?? false))
     }
 
     // Premiere's Add Edit to All Tracks.
     @ViewBuilder private var splitEverythingRow: some View {
         Button("Split Everything at Playhead") {
-            if let editor { editor.splitEverything(atMS: editor.documentTimeMS) }
+            editor?.run(.splitEverythingAtPlayhead)
         }
         .keyboardShortcut("k", modifiers: [.command, .shift])
-        .disabled(!(editor?.canSplitEverythingAtPlayhead ?? false))
+        .disabled(!(editor?.canRun(.splitEverythingAtPlayhead) ?? false))
     }
 
     // Premiere's Q and W. Plain letters, like I and O: the
     // timeline answers them while it has the keyboard, and on
     // the canvas W is still the Magic Wand.
     @ViewBuilder private var rippleTrimRows: some View {
-        Button("Ripple Trim Start to Playhead") { editor?.rippleTrimToPlayhead(.start) }
+        Button("Ripple Trim Start to Playhead") { editor?.run(.rippleTrimStart) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("q", modifiers: []) : nil)
-            .disabled(!(editor?.canRippleTrimToPlayhead(.start) ?? false))
-        Button("Ripple Trim End to Playhead") { editor?.rippleTrimToPlayhead(.end) }
+            .disabled(!(editor?.canRun(.rippleTrimStart) ?? false))
+        Button("Ripple Trim End to Playhead") { editor?.run(.rippleTrimEnd) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("w", modifiers: []) : nil)
-            .disabled(!(editor?.canRippleTrimToPlayhead(.end) ?? false))
+            .disabled(!(editor?.canRun(.rippleTrimEnd) ?? false))
     }
 
     // Final Cut's ⌘T: the default transition on the cut
@@ -828,9 +796,9 @@ struct EditorCommands: Commands {
     // Photoshop's Deselect here, and the canvas keeps it.
     @ViewBuilder private var applyDefaultTransitionRow: some View {
         if Experiments.shared.transitionsAtACutEnabled {
-            Button("Apply Default Transition") { editor?.applyDefaultTransition() }
+            Button("Apply Default Transition") { editor?.run(.applyDefaultTransition) }
                 .keyboardShortcut("t", modifiers: .command)
-                .disabled(!(editor?.canApplyDefaultTransition() ?? false))
+                .disabled(!(editor?.canRun(.applyDefaultTransition) ?? false))
         }
     }
 
@@ -841,9 +809,9 @@ struct EditorCommands: Commands {
         if Experiments.shared.transitionsAtACutEnabled {
             Toggle(TimelineMenuTable.title(.expandCut, playheadMS: 0) ?? "", isOn: Binding(
                 get: { editor?.isCutInHandExpanded ?? false },
-                set: { _ in editor?.toggleExpandedCut() }))
+                set: { _ in editor?.run(.expandCut) }))
                 .keyboardShortcut("e", modifiers: .option)
-                .disabled(!(editor?.canExpandCut ?? false))
+                .disabled(!(editor?.canRun(.expandCut) ?? false))
         }
     }
 
@@ -853,7 +821,7 @@ struct EditorCommands: Commands {
     @ViewBuilder private var snapRow: some View {
         Toggle(MenuToggleNames.snapInTimeline, isOn: Binding(
             get: { editor?.isTimelineSnapping ?? true },
-            set: { _ in editor?.toggleTimelineSnapping() }))
+            set: { _ in editor?.run(.snapInTimeline) }))
         .keyboardShortcut(timelineKeys ? KeyboardShortcut("s", modifiers: []) : nil)
     }
 
@@ -868,20 +836,20 @@ struct EditorCommands: Commands {
             if let fieldEditor {
                 fieldEditor.doCommand(by: #selector(NSStandardKeyBindingResponding.moveToLeftEndOfLine(_:)))
             } else {
-                editor?.nudgeClips(byFrames: -1)
+                editor?.run(.nudgeEarlier)
             }
         }
         .keyboardShortcut(timelineKeys ? KeyboardShortcut(.leftArrow, modifiers: .command) : nil)
-        .disabled(!(editor?.canNudgeClips ?? false))
+        .disabled(!(editor?.canRun(.nudgeEarlier) ?? false))
         Button("Nudge Later") {
             if let fieldEditor {
                 fieldEditor.doCommand(by: #selector(NSStandardKeyBindingResponding.moveToRightEndOfLine(_:)))
             } else {
-                editor?.nudgeClips(byFrames: 1)
+                editor?.run(.nudgeLater)
             }
         }
         .keyboardShortcut(timelineKeys ? KeyboardShortcut(.rightArrow, modifiers: .command) : nil)
-        .disabled(!(editor?.canNudgeClips ?? false))
+        .disabled(!(editor?.canRun(.nudgeLater) ?? false))
     }
 
     // Final Cut's Break Apart Clip Items, on its key, which is Photoshop's
@@ -890,7 +858,7 @@ struct EditorCommands: Commands {
     // holds it the rest of the time, so the two never print the same key.
     @ViewBuilder private var breakApartRow: some View {
         let breaks = editor?.canBreakApartInHand ?? false
-        Button("Break Apart") { editor?.breakApartInHand() }
+        Button("Break Apart") { editor?.run(.breakApart) }
             .keyboardShortcut(breaks ? KeyboardShortcut("g", modifiers: [.command, .shift]) : nil)
             .disabled(!breaks)
     }
@@ -915,30 +883,28 @@ struct EditorCommands: Commands {
             .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
         // A stretch whose picture a range took off (Hide Picture for Section).
         Button("Show Picture") {
-            if let hidden = editor?.hiddenPictureInHand {
-                editor?.showPicture(layerID: hidden.layerID, piece: hidden.piece)
-            }
+            editor?.run(.showPicture)
         }
-        .disabled(editor?.hiddenPictureInHand == nil)
+        .disabled(!(editor?.canRun(.showPicture) ?? false))
         Button("Change Speed\u{2026}") { editor?.openClipSpeed() }
             .keyboardShortcut("r", modifiers: .command)
             .disabled(!(editor?.canOpenClipSpeed ?? false))
         Menu("Speed") {
             ForEach(EditorState.clipSpeeds, id: \.self) { percent in
                 Button(ClipSpeed.title(percent)) {
-                    editor?.setClipSpeedInHand(percent)
+                    editor?.run(.setSpeed, ["percent": .number(Double(percent))])
                 }
-                .disabled(!(editor?.canSetClipSpeed(percent) ?? false))
+                .disabled(!(editor?.canRun(.setSpeed, ["percent": .number(Double(percent))]) ?? false))
             }
             // Speed stops (`EditorState+SpeedStops`): no key, since the
             // mock's A is Premiere's Track Select Forward (UX-PATTERNS §7).
             Divider()
-            Button(SpeedStopNames.add) { editor?.addSpeedStopInHand() }
-                .disabled(!(editor?.canAddSpeedStopInHand ?? false))
-            Button(SpeedStopNames.delete) { editor?.deleteSpeedStopInHand() }
-                .disabled(!(editor?.canDeleteSpeedStopInHand ?? false))
-            Button(SpeedStopNames.reset) { editor?.resetRampInHand() }
-                .disabled(!(editor?.canResetRampInHand ?? false))
+            Button(SpeedStopNames.add) { editor?.run(.addSpeedStop) }
+                .disabled(!(editor?.canRun(.addSpeedStop) ?? false))
+            Button(SpeedStopNames.delete) { editor?.run(.deleteSpeedStop) }
+                .disabled(!(editor?.canRun(.deleteSpeedStop) ?? false))
+            Button(SpeedStopNames.reset) { editor?.run(.resetRamp) }
+                .disabled(!(editor?.canRun(.resetRamp) ?? false))
         }
         .disabled(editor?.clipSpeedInHand == nil)
     }
@@ -949,24 +915,24 @@ struct EditorCommands: Commands {
     // asked for. K alone is still the Lens and, once the timeline
     // owns the keyboard, Premiere's Stop; the chords are free of it.
     @ViewBuilder private var keyNavigationRows: some View {
-        Button("Go to Next Key") { editor?.goToKey(forward: true) }
+        Button("Go to Next Key") { editor?.run(.goToNextKey) }
             .keyboardShortcut("k", modifiers: .shift)
-            .disabled(!(editor?.canGoToKey(forward: true) ?? false))
-        Button("Go to Previous Key") { editor?.goToKey(forward: false) }
+            .disabled(!(editor?.canRun(.goToNextKey) ?? false))
+        Button("Go to Previous Key") { editor?.run(.goToPreviousKey) }
             .keyboardShortcut("k", modifiers: .option)
-            .disabled(!(editor?.canGoToKey(forward: false) ?? false))
+            .disabled(!(editor?.canRun(.goToPreviousKey) ?? false))
     }
 
     // The mock's Animate commands (`video-move-wt.html`,
     // `#cmdMenu`). No K for Key at Playhead: K is the Lens on the
     // canvas and Premiere's Stop on the timeline.
     @ViewBuilder private var animateRows: some View {
-        Button("Key at Playhead") { editor?.keyAtPlayhead() }
-            .disabled(!(editor?.canKeyAtPlayhead ?? false))
+        Button("Key at Playhead") { editor?.run(.keyAtPlayhead) }
+            .disabled(!(editor?.canRun(.keyAtPlayhead) ?? false))
         Toggle(MenuToggleNames.curveThePath, isOn: Binding(
             get: { editor?.motionPathShape == .curved },
-            set: { editor?.setMotionPathShape($0 ? .curved : .straight) }))
-            .disabled(editor?.motionPathShape == nil)
+            set: { _ in editor?.run(.curveThePath) }))
+            .disabled(!(editor?.canRun(.curveThePath) ?? false))
         // The same list as Between the keys' Curve, acting on the
         // stretch under the playhead.
         Menu("Easing") {
@@ -994,41 +960,41 @@ struct EditorCommands: Commands {
     // on the canvas and the timeline's marks while it has the keyboard,
     // and X, the canvas's fill swap, is Premiere's Mark Clip there.
     @ViewBuilder private var markRows: some View {
-        Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }
+        Button("Add Marker") { editor?.run(.addMarker) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("m", modifiers: []) : nil)
-        Button("Set In") { if let editor { editor.setMarkIn(atMS: editor.documentTimeMS) } }
+        Button("Set In") { editor?.run(.setIn) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("i", modifiers: []) : nil)
-        Button("Set Out") { if let editor { editor.setMarkOut(atMS: editor.documentTimeMS) } }
+        Button("Set Out") { editor?.run(.setOut) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("o", modifiers: []) : nil)
-        Button("Mark Clip") { editor?.markClipAtPlayhead() }
+        Button("Mark Clip") { editor?.run(.markClip) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("x", modifiers: []) : nil)
-            .disabled(!(editor?.canMarkClipAtPlayhead ?? false))
-        Button("Go to In") { editor?.goToMark(in: true) }
+            .disabled(!(editor?.canRun(.markClip) ?? false))
+        Button("Go to In") { editor?.run(.goToIn) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("i", modifiers: .shift) : nil)
-            .disabled(editor?.document?.markInMS == nil)
-        Button("Go to Out") { editor?.goToMark(in: false) }
+            .disabled(!(editor?.canRun(.goToIn) ?? false))
+        Button("Go to Out") { editor?.run(.goToOut) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("o", modifiers: .shift) : nil)
-            .disabled(editor?.document?.markOutMS == nil)
-        Button("Clear In") { editor?.clearMarkIn() }
+            .disabled(!(editor?.canRun(.goToOut) ?? false))
+        Button("Clear In") { editor?.run(.clearIn) }
             .keyboardShortcut("i", modifiers: .option)
-            .disabled(editor?.document?.markInMS == nil)
-        Button("Clear Out") { editor?.clearMarkOut() }
+            .disabled(!(editor?.canRun(.clearIn) ?? false))
+        Button("Clear Out") { editor?.run(.clearOut) }
             .keyboardShortcut("o", modifiers: .option)
-            .disabled(editor?.document?.markOutMS == nil)
-        Button("Clear In and Out") { editor?.clearMarkInOut() }
+            .disabled(!(editor?.canRun(.clearOut) ?? false))
+        Button("Clear In and Out") { editor?.run(.clearInAndOut) }
             .keyboardShortcut("x", modifiers: .option)
-            .disabled(!(editor?.canClearMarkInOut ?? false))
+            .disabled(!(editor?.canRun(.clearInAndOut) ?? false))
     }
 
     // Premiere's Extract and Lift. Plain keys, like I and O: the
     // timeline answers them while it has the keyboard.
     @ViewBuilder private var extractLiftRows: some View {
-        Button("Extract") { editor?.extractMarkedStretch() }
+        Button("Extract") { editor?.run(.extract) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("'", modifiers: []) : nil)
-            .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
-        Button("Lift") { editor?.liftMarkedStretch() }
+            .disabled(!(editor?.canRun(.extract) ?? false))
+        Button("Lift") { editor?.run(.lift) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut(";", modifiers: []) : nil)
-            .disabled(!(editor?.canTakeOutMarkedStretch ?? false))
+            .disabled(!(editor?.canRun(.lift) ?? false))
     }
 
     // MARK: Reframing
@@ -1039,14 +1005,14 @@ struct EditorCommands: Commands {
     // on the picture. ⇧Z is the clickthrough's own key, and the only thing
     // ⇧Z means: the timeline fits itself on Premiere's \ instead.
     @ViewBuilder private var punchInRows: some View {
-        Button("Punch In") { editor?.punchInOnRegion() }
+        Button("Punch In") { editor?.run(.punchIn) }
             .keyboardShortcut("z", modifiers: [.shift])
-            .disabled(!(editor?.canPunchIn ?? false))
-        Button("Pull Back Out") { editor?.pullReframeBackOut() }
+            .disabled(!(editor?.canRun(.punchIn) ?? false))
+        Button("Pull Back Out") { editor?.run(.pullBackOut) }
             .keyboardShortcut("z", modifiers: [.shift, .option])
-            .disabled(!(editor?.canPullBackOut ?? false))
-        Button("Reset Reframe") { editor?.resetReframeInHand() }
-            .disabled(!(editor?.canResetReframe ?? false))
+            .disabled(!(editor?.canRun(.pullBackOut) ?? false))
+        Button("Reset Reframe") { editor?.run(.resetReframe) }
+            .disabled(!(editor?.canRun(.resetReframe) ?? false))
     }
 
     // MARK: Transitions
@@ -1059,42 +1025,42 @@ struct EditorCommands: Commands {
     // found by reading.
     @ViewBuilder private var transitionAtCutMenu: some View {
         Menu("Transition at Cut") {
-            Button("Hard Cut") { editor?.setClipTransitionInHand(nil) }
-                .disabled(editor?.cutInHand?.cut.transition == nil)
+            Button("Hard Cut") { editor?.run(.hardCut) }
+                .disabled(!(editor?.canRun(.hardCut) ?? false))
             // The panel menu's third row (`#propMenu`).
-            Button("Reset to Default Length") { editor?.resetClipTransitionLength() }
-                .disabled(!(editor?.canResetClipTransitionLength ?? false))
+            Button("Reset to Default Length") { editor?.run(.resetTransitionLength) }
+                .disabled(!(editor?.canRun(.resetTransitionLength) ?? false))
             // The cut's right-click offers these too, for the transition on it.
             let transition = editor?.cutInHand?.cut.drawnTransition
             Menu("Length") {
                 ForEach(editor?.clipTransitionLengthOffers ?? [], id: \.self) { ms in
                     Toggle(ClipTransitionCopy.lengthChoice(ms, of: transition?.kind ?? .dissolve),
                            isOn: Binding(get: { transition?.lengthMS == ms },
-                                         set: { _ in editor?.setClipTransitionLength(ms) }))
+                                         set: { _ in editor?.run(.setTransitionLength, ["milliseconds": .number(Double(ms))]) }))
                 }
             }
             .disabled(transition == nil)
             Menu("Curve") {
                 ForEach(Array(EasingCurve.named.prefix(EasingCurve.standardCount)), id: \.self) { curve in
                     Toggle(curve.title, isOn: Binding(get: { transition?.curve == curve },
-                                                      set: { _ in editor?.setClipTransitionCurve(curve) }))
+                                                      set: { _ in editor?.run(.setTransitionCurve, ["curve": .string(curve.title)]) }))
                 }
             }
             .disabled(transition == nil)
             Divider()
             ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
-                Button(kind.title) { editor?.setClipTransitionInHand(kind) }
-                    .disabled(!(editor?.cutInHand?.cut.canAfford(kind) ?? false))
+                Button(kind.title) { editor?.run(.setTransition, ["kind": .string(kind.rawValue)]) }
+                    .disabled(!(editor?.canRun(.setTransition, ["kind": .string(kind.rawValue)]) ?? false))
             }
             // The Transitions section's plus: the transition in hand (the
             // cut's, else the tile picked there) on every cut, or as ⌘T's.
             if Experiments.shared.proMenuBarEnabled, let kind = editor?.transitionKindInHand {
                 Divider()
-                Button("Apply to Every Cut") { editor?.putTransitionOnEveryCut(kind) }
+                Button("Apply to Every Cut") { editor?.run(.applyTransitionToEveryCut) }
                     .help("\(kind.title) on every cut")
-                Button("Set as Default Transition") { editor?.setDefaultTransition(kind) }
+                Button("Set as Default Transition") { editor?.run(.setDefaultTransition) }
                     .help("\(kind.title) on Command T")
-                    .disabled(editor?.defaultTransitionKind == kind)
+                    .disabled(!(editor?.canRun(.setDefaultTransition) ?? false))
             }
         }
         .disabled(!(editor?.canWorkWithClipTransitions ?? false)
@@ -1115,12 +1081,12 @@ struct EditorCommands: Commands {
     // Premiere's Link and Unlink are one row on ⌘L.
     @ViewBuilder private var detachAudioRow: some View {
         if editor?.canReattachSound == true {
-            Button("Re-attach Audio") { editor?.reattachSound() }
+            Button("Re-attach Audio") { editor?.run(.reattachAudio) }
                 .keyboardShortcut("d", modifiers: [.control, .shift])
         } else {
-            Button("Detach Audio") { editor?.detachSound() }
+            Button("Detach Audio") { editor?.run(.detachAudio) }
                 .keyboardShortcut("d", modifiers: [.control, .shift])
-                .disabled(!(editor?.canDetachSound ?? false))
+                .disabled(!(editor?.canRun(.detachAudio) ?? false))
         }
     }
 
@@ -1132,8 +1098,8 @@ struct EditorCommands: Commands {
     }
 
     @ViewBuilder private var flattenLevelRow: some View {
-        Button("Flatten Level") { editor?.clearSoundLevelPoints() }
-            .disabled((editor?.soundLevelInHand.points.isEmpty ?? true))
+        Button("Flatten Level") { editor?.run(.flattenLevel) }
+            .disabled(!(editor?.canRun(.flattenLevel) ?? false))
     }
 
     /// Insert Title Page ▸ and Insert Name Card ▸, each listing its presets,
@@ -1152,8 +1118,8 @@ struct EditorCommands: Commands {
     @ViewBuilder private var saveTitlePresetRow: some View {
         // Replay Title: the picked title's in, played again.
         if Experiments.shared.titleRestyleEnabled {
-            Button("Replay Title") { editor?.replayTitle() }
-                .disabled(editor?.titleInHandID == nil)
+            Button("Replay Title") { editor?.run(.replayTitle) }
+                .disabled(!(editor?.canRun(.replayTitle) ?? false))
         }
         Button("Save as Preset…") { editor?.beginSavingTitlePreset() }
             .disabled(editor?.titlePresetLayerInHand == nil)
@@ -1173,25 +1139,25 @@ struct EditorCommands: Commands {
     @ViewBuilder private var captionRows: some View {
         // Premiere's Transcribe: captions are made only when asked.
         if editor?.isWritingCaptions == true {
-            Button("Cancel Captions") { editor?.stopWritingCaptions() }
+            Button("Cancel Captions") { editor?.run(.cancelCaptions) }
         } else {
             Button(editor?.hasCaptions == true ? "Rewrite Captions" : "Add Captions") {
-                editor?.writeCaptions()
+                editor?.run(.addCaptions)
             }
-            .disabled(!(editor?.canWriteCaptions ?? false))
+            .disabled(!(editor?.canRun(.addCaptions) ?? false))
         }
         Button("Captions Later") {
-            editor?.nudgeCaptions(byMS: EditorState.captionNudgeMS)
+            editor?.run(.captionsLater)
         }
         .keyboardShortcut(.rightArrow, modifiers: [.option, .shift])
-        .disabled(!(editor?.canNudgeCaptions ?? false))
+        .disabled(!(editor?.canRun(.captionsLater) ?? false))
         Button("Captions Earlier") {
-            editor?.nudgeCaptions(byMS: -EditorState.captionNudgeMS)
+            editor?.run(.captionsEarlier)
         }
         .keyboardShortcut(.leftArrow, modifiers: [.option, .shift])
-        .disabled(!(editor?.canNudgeCaptions ?? false))
-        Button("Clear Captions") { editor?.clearCaptions() }
-            .disabled(!(editor?.canClearCaptions ?? false))
+        .disabled(!(editor?.canRun(.captionsEarlier) ?? false))
+        Button("Clear Captions") { editor?.run(.clearCaptions) }
+            .disabled(!(editor?.canRun(.clearCaptions) ?? false))
         Button("Export Captions as SRT…") { editor?.exportCaptions(as: .srt) }
             .disabled(!(editor?.canExportCaptions ?? false))
         Button("Export Captions as WebVTT…") { editor?.exportCaptions(as: .vtt) }
@@ -1202,8 +1168,8 @@ struct EditorCommands: Commands {
     // to the recording as it opened, in one undo step
     // (`EditorState+RevertRecording`).
     @ViewBuilder private var revertRecordingRow: some View {
-        Button("Revert to Original") { editor?.revertToOriginal() }
-            .disabled(!(editor?.canRevertToOriginal ?? false))
+        Button("Revert to Original") { editor?.run(.revertToOriginal) }
+            .disabled(!(editor?.canRun(.revertToOriginal) ?? false))
     }
 
     // MARK: Every command, in the menu bar too
@@ -1272,11 +1238,11 @@ struct EditorCommands: Commands {
         let selected = editor?.selectedLayerID
         Button("Rename Layer…") { editor?.renameLayerInHand() }
             .disabled(selected == nil)
-        Button("Select Pixels") { if let selected { editor?.selectLayerPixels(id: selected) } }
-            .disabled(selected == nil)
+        Button("Select Pixels") { editor?.run(.selectPixels) }
+            .disabled(!(editor?.canRun(.selectPixels) ?? false))
         if timed {
-            Button("Put on Timeline") { if let selected { editor?.putLayerOnTimeline(selected) } }
-                .disabled(!(selected.map { editor?.canPutOnTimeline($0) ?? false } ?? false))
+            Button("Put on Timeline") { editor?.run(.putOnTimeline) }
+                .disabled(!(editor?.canRun(.putOnTimeline) ?? false))
         }
     }
 
@@ -1312,7 +1278,7 @@ struct EditorCommands: Commands {
         let clip = editor?.clipInHandID
         Button("Rename…") { if let clip { editor?.beginRenamingClip(clip) } }
             .disabled(clip == nil)
-        Button("Select Forward") { if let clip { editor?.selectClipsForward(from: clip, onItsTrackOnly: false) } }
+        Button("Select Forward") { editor?.run(.selectForward) }
             .disabled(clip == nil)
         let clickClip = editor?.clipToAddClickTo
         Button("Add Click at Playhead\u{2026}") {
@@ -1324,33 +1290,26 @@ struct EditorCommands: Commands {
             let effectClip = editor?.clickEffectClip?.id
             Toggle("Show Click Effects", isOn: Binding(
                 get: { effectClip.map { editor?.clickEffect(ofClip: $0).isOn ?? false } ?? false },
-                set: { on in if let effectClip { editor?.setClickEffectOn(on, onClip: effectClip) } }))
-                .disabled(!(effectClip.map { editor?.hasClicksToShow(onClip: $0) ?? false } ?? false))
+                set: { on in editor?.run(AppCommandCall(.showClickEffects, on: on)) }))
+                .disabled(!(editor?.canRun(.showClickEffects) ?? false))
             // A tick's own verbs (`ClickTicksView`), for the click at the playhead.
             let clickNow = editor?.clickAtPlayhead
             Button(clickNow?.mark.isHidden == true ? "Show Click at Playhead" : "Hide Click at Playhead") {
                 // Asked again here: the row was drawn at the last boundary the
                 // playhead crossed, and the press is now.
-                if let clickNow = editor?.clickAtPlayhead {
-                    editor?.setClickHidden(!clickNow.mark.isHidden, clickID: clickNow.mark.id, onClip: clickNow.clip)
-                }
+                editor?.run(.hideClickAtPlayhead)
             }
-            .disabled(clickNow == nil)
-            let next = editor?.nextClickMS
-            Button("Next Click") { if let next = editor?.nextClickMS { editor?.moveDocumentPlayhead(toMS: next) } }
-                .disabled(next == nil)
+            .disabled(!(editor?.canRun(.hideClickAtPlayhead) ?? false))
+            Button("Next Click") { editor?.run(.nextClick) }
+                .disabled(!(editor?.canRun(.nextClick) ?? false))
         }
         if Experiments.shared.zoomRegionsEnabled {
-            let zoomClip = editor.flatMap { $0.clipToAddZoom(atMS: $0.documentTimeMS) }
             Button("Add Zoom") {
-                if let editor, let zoomClip = editor.clipToAddZoom(atMS: editor.documentTimeMS) {
-                    editor.addZoom(toClip: zoomClip, atMS: editor.documentTimeMS)
-                }
+                editor?.run(.addZoom)
             }
-            .disabled(zoomClip == nil)
-            let suggestClip = editor?.clipInHandID ?? zoomClip
-            Button("Suggest Zooms") { if let suggestClip { editor?.suggestZooms(onClip: suggestClip) } }
-                .disabled(!(suggestClip.map { editor?.canSuggestZooms(onClip: $0) ?? false } ?? false))
+            .disabled(!(editor?.canRun(.addZoom) ?? false))
+            Button("Suggest Zooms") { editor?.run(.suggestZooms) }
+                .disabled(!(editor?.canRun(.suggestZooms) ?? false))
             // The picked zooms' own verbs, as their bars' right-click has
             // them: every zoom picked at once.
             let zoomRefs = editor?.pickedZooms ?? []
@@ -1375,10 +1334,10 @@ struct EditorCommands: Commands {
 
     // Clip: a cut's Roll Edit and Join Through Edit, beside the transition rows.
     @ViewBuilder private var rollEditRow: some View {
-        Button("Roll Edit to Playhead") { editor?.rollCutInHand() }
-            .disabled(!(editor?.canRollCutInHand ?? false))
-        Button("Join Through Edit") { editor?.joinThroughEditInHand() }
-            .disabled(!(editor?.canJoinThroughEditInHand ?? false))
+        Button("Roll Edit to Playhead") { editor?.run(.rollEditToPlayhead) }
+            .disabled(!(editor?.canRun(.rollEditToPlayhead) ?? false))
+        Button("Join Through Edit") { editor?.run(.joinThroughEdit) }
+            .disabled(!(editor?.canRun(.joinThroughEdit) ?? false))
     }
 
     // Clip: the sound's gain, as its right-click and the Sound section have it.
@@ -1387,18 +1346,18 @@ struct EditorCommands: Commands {
         let ids = sound.map { editor?.soundLayers(actingOn: $0.id) ?? [] } ?? []
         Menu("Normalize") {
             Button("Peaks to -1 dB") {
-                if let editor { Task { await editor.normalizeSound(layers: ids) } }
+                editor?.run(.normalizePeaks)
             }
             Divider()
             ForEach(AudioNormalize.Target.allCases, id: \.self) { target in
                 Button(target.title) {
-                    if let editor { Task { await editor.normalizeSoundLoudness(layers: ids, to: target) } }
+                    editor?.run(.normalizeLoudness, ["target": .string(target.rawValue)])
                 }
             }
             Divider()
             Toggle("Clean Noise", isOn: Binding(
                 get: { editor?.normalizeCleansNoise ?? false },
-                set: { _ in editor?.normalizeCleansNoise.toggle() }))
+                set: { _ in editor?.run(.normalizeCleansNoise) }))
         }
         .disabled(ids.isEmpty)
         let cleaned = ids.contains {
@@ -1406,15 +1365,13 @@ struct EditorCommands: Commands {
                 || editor?.document?.layer(id: $0)?.hasSectionNoiseCleaning == true
         }
         Button(cleaned ? "Remove Noise Cleaning" : "Clean Noise") {
-            if cleaned { editor?.removeNoiseCleaning(layers: ids) }
-            else { editor?.setSoundNoiseReduction(.standard, layers: ids) }
+            editor?.run(.cleanNoise)
         }
         .disabled(ids.isEmpty)
-        let gained = ids.contains { (editor?.document?.layer(id: $0)?.soundLevel?.clipGainDB ?? 0) != 0 }
         Button("Reset Gain") {
-            editor?.setSoundClipGain(Dictionary(uniqueKeysWithValues: ids.map { ($0, 0.0) }))
+            editor?.run(.resetGain)
         }
-        .disabled(!gained)
+        .disabled(!(editor?.canRun(.resetGain) ?? false))
     }
 
     // Clip: Fade In ▸ and Fade Out ▸, on the picked clip, title or shape, the
@@ -1428,7 +1385,7 @@ struct EditorCommands: Commands {
                 ForEach(stops, id: \.self) { ms in
                     let row = Toggle(PictureFade.title(ms), isOn: Binding(
                         get: { now == ms },
-                        set: { _ in if let layer { editor?.choosePictureFade(end, ms: ms, layerID: layer.id) } }))
+                        set: { _ in editor?.run(.setFade, ["end": .string(end.rawValue), "milliseconds": .number(Double(ms))]) }))
                     if ms == EditorState.pictureFadeKeyMS {
                         let key = EditorState.pictureFadeKey(end)
                         row.keyboardShortcut(key.keyEquivalent, modifiers: key.modifiers)
@@ -1444,10 +1401,10 @@ struct EditorCommands: Commands {
     // Clip ▸ Animate: a title's time, and the keys and path of the picked layer.
     @ViewBuilder private var placedLayerRows: some View {
         let placed = editor?.placedLayerInHand
-        Button("Start at Playhead") { if let placed { editor?.startPlacedLayerHere(placed.id) } }
-            .disabled(!(placed.map { editor?.canStartPlacedLayerHere($0.id) ?? false } ?? false))
-        Button("End at Playhead") { if let placed { editor?.endPlacedLayerHere(placed.id) } }
-            .disabled(!(placed.map { editor?.canEndPlacedLayerHere($0.id) ?? false } ?? false))
+        Button("Start at Playhead") { editor?.run(.startAtPlayhead) }
+            .disabled(!(editor?.canRun(.startAtPlayhead) ?? false))
+        Button("End at Playhead") { editor?.run(.endAtPlayhead) }
+            .disabled(!(editor?.canRun(.endAtPlayhead) ?? false))
         // A title fades the way a clip does once picture fades are on: Clip ▸
         // Fade In and Fade Out (`pictureFadeRows`).
         if !Experiments.shared.pictureFadesEnabled {
@@ -1463,23 +1420,23 @@ struct EditorCommands: Commands {
         let animates = placed != nil && !(placed.map { editor?.isClipLocked($0.id) ?? true } ?? true)
         Menu("Animate In") {
             ForEach(TitleAnimation.allCases, id: \.self) { kind in
-                Button(kind.title) { if let placed { editor?.animate(kind, isIn: true, layerID: placed.id) } }
+                Button(kind.title) { editor?.run(.animateIn, ["kind": .string(kind.rawValue)]) }
             }
         }
         .disabled(!animates)
         Menu("Animate Out") {
             ForEach(TitleAnimation.allCases, id: \.self) { kind in
-                Button(kind.title) { if let placed { editor?.animate(kind, isIn: false, layerID: placed.id) } }
+                Button(kind.title) { editor?.run(.animateOut, ["kind": .string(kind.rawValue)]) }
             }
         }
         .disabled(!animates)
     }
 
     @ViewBuilder private var keyLaneRows: some View {
-        Button("Remove Key at Playhead") { editor?.removeKeyAtPlayhead() }
-            .disabled(!(editor?.canRemoveKeyAtPlayhead ?? false))
-        Button("Select All Keys") { editor?.selectAllKeysInHand() }
-            .disabled(!(editor?.canSelectAllKeys ?? false))
+        Button("Remove Key at Playhead") { editor?.run(.removeKeyAtPlayhead) }
+            .disabled(!(editor?.canRun(.removeKeyAtPlayhead) ?? false))
+        Button("Select All Keys") { editor?.run(.selectAllKeys) }
+            .disabled(!(editor?.canRun(.selectAllKeys) ?? false))
         let lane = editor?.keyLaneInHand
         Toggle("Show Graph", isOn: Binding(
             get: { lane.map { editor?.isKeyLaneGraphed($0.motionID) ?? false } ?? false },
@@ -1510,31 +1467,29 @@ struct EditorCommands: Commands {
     @ViewBuilder private var markerRows: some View {
         // Premiere's keys. ⇧M is the canvas's selection cycle until the
         // timeline has the keyboard; ⌘⇧M is nothing else's.
-        Button("Go to Next Marker") { editor?.goToMarker(forward: true) }
+        Button("Go to Next Marker") { editor?.run(.goToNextMarker) }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("m", modifiers: .shift) : nil)
-            .disabled(!(editor?.canGoToMarker(forward: true) ?? false))
-        Button("Go to Previous Marker") { editor?.goToMarker(forward: false) }
+            .disabled(!(editor?.canRun(.goToNextMarker) ?? false))
+        Button("Go to Previous Marker") { editor?.run(.goToPreviousMarker) }
             .keyboardShortcut(timed ? KeyboardShortcut("m", modifiers: [.command, .shift]) : nil)
-            .disabled(!(editor?.canGoToMarker(forward: false) ?? false))
-        let marker = editor?.markerAtPlayhead
-        Button("Remove Marker") { if let marker = editor?.markerAtPlayhead { editor?.removeMarker(marker) } }
-            .disabled(marker == nil)
-        Button("Clear All Markers") { editor?.removeAllMarkers() }
-            .disabled(editor?.document?.markers.isEmpty ?? true)
+            .disabled(!(editor?.canRun(.goToPreviousMarker) ?? false))
+        Button("Remove Marker") { editor?.run(.removeMarker) }
+            .disabled(!(editor?.canRun(.removeMarker) ?? false))
+        Button("Clear All Markers") { editor?.run(.clearAllMarkers) }
+            .disabled(!(editor?.canRun(.clearAllMarkers) ?? false))
     }
 
     // Sequence: what a range drawn on the ruler or across tracks does.
     @ViewBuilder private var rangeRows: some View {
-        let onTracks = editor?.trackRangeHeld != nil
         Button("Split at Range Edges") {
-            onTracks ? editor?.splitTrackRangeEdges() : editor?.splitAtRangeEdges()
+            editor?.run(.splitAtRangeEdges)
         }
-        .disabled(!(onTracks ? (editor?.canSplitTrackRangeEdges ?? false) : (editor?.canSplitAtRangeEdges ?? false)))
-        Button("Merge into One Clip") { editor?.mergeRangeIntoOneClip() }
-            .disabled(!(editor?.canMergeRange ?? false))
+        .disabled(!(editor?.canRun(.splitAtRangeEdges) ?? false))
+        Button("Merge into One Clip") { editor?.run(.mergeIntoOneClip) }
+            .disabled(!(editor?.canRun(.mergeIntoOneClip) ?? false))
         if Experiments.shared.captionsFromTheSoundEnabled {
-            Button("Add Captions for Range") { editor?.addCaptionsInRange() }
-                .disabled(!(editor?.canAddCaptionsInRange ?? false))
+            Button("Add Captions for Range") { editor?.run(.addCaptionsForRange) }
+                .disabled(!(editor?.canRun(.addCaptionsForRange) ?? false))
         }
         Button("Export Range…") { editor?.exportRange() }
             .disabled(editor?.document?.markedRangeMS == nil)
@@ -1552,15 +1507,14 @@ struct EditorCommands: Commands {
     /// a new track of each kind.
     @ViewBuilder private var trackMenu: some View {
         let track = editor?.trackInHand
-        let index = editor?.trackInHandIndex
         Menu("Track") {
-            Button("Add Video Track") { editor?.addTrack(.video) }
-            Button("Add Audio Track") { editor?.addTrack(.audio) }
-            Button("Add Captions Track") { editor?.addTrack(.captions) }
+            Button("Add Video Track") { editor?.run(.addVideoTrack) }
+            Button("Add Audio Track") { editor?.run(.addAudioTrack) }
+            Button("Add Captions Track") { editor?.run(.addCaptionsTrack) }
             Divider()
-            Button("Add Track Above") { if let track, let index { editor?.addTrack(track.kind, at: index) } }
+            Button("Add Track Above") { editor?.run(.addTrackAbove) }
                 .disabled(track == nil)
-            Button("Add Track Below") { if let track, let index { editor?.addTrack(track.kind, at: index + 1) } }
+            Button("Add Track Below") { editor?.run(.addTrackBelow) }
                 .disabled(track == nil)
             Divider()
             Button("Rename Track…") { editor?.renameTrackInHand() }
@@ -1568,26 +1522,26 @@ struct EditorCommands: Commands {
             if track?.kind == .audio {
                 Toggle("Mute Track", isOn: Binding(
                     get: { track?.isMuted ?? false },
-                    set: { _ in if let track { editor?.toggleTrackMuted(track.id) } }))
+                    set: { _ in editor?.run(.muteTrack) }))
             } else {
                 Toggle("Hide Track", isOn: Binding(
                     get: { track?.isHidden ?? false },
-                    set: { _ in if let track { editor?.toggleTrackHidden(track.id) } }))
+                    set: { _ in editor?.run(.hideTrack) }))
                 .disabled(track == nil)
             }
             Toggle("Solo Track", isOn: Binding(
                 get: { track?.isSolo ?? false },
-                set: { _ in if let track { editor?.toggleTrackSolo(track.id) } }))
+                set: { _ in editor?.run(.soloTrack) }))
             .disabled(track == nil)
             Toggle("Lock Track", isOn: Binding(
                 get: { track?.isLocked ?? false },
-                set: { _ in if let track { editor?.toggleTrackLocked(track.id) } }))
+                set: { _ in editor?.run(.lockTrack) }))
             .disabled(track == nil)
             Divider()
-            Button("Group Track") { if let track { editor?.groupTracks(from: track.id) } }
-                .disabled(track == nil || track?.groupID != nil)
-            Button("Ungroup Tracks") { if let group = track?.groupID { editor?.ungroupTracks(group) } }
-                .disabled(track?.groupID == nil)
+            Button("Group Track") { editor?.run(.groupTrack) }
+                .disabled(!(editor?.canRun(.groupTrack) ?? false))
+            Button("Ungroup Tracks") { editor?.run(.ungroupTracks) }
+                .disabled(!(editor?.canRun(.ungroupTracks) ?? false))
             Divider()
             // With tracks picked on their headers this row is what ⌫ does, so
             // it answers the key (U+0008, see `DeleteKeyCharacters`) for when
@@ -1596,19 +1550,19 @@ struct EditorCommands: Commands {
             // key there would take a track where ⌫ means the clip or the layer.
             let held = editor?.tracksInHand.count ?? 0
             Button(held > 1 ? "Delete \(held) Tracks" : "Delete Track", role: .destructive) {
-                if held > 0 { editor?.deleteTracksInHand() } else if let track { editor?.deleteTrack(track.id) }
+                editor?.run(.deleteTrack)
             }
             .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuRow(answersThePress: held > 0)), modifiers: [])
             .disabled(track == nil)
-            Button("Delete Empty Tracks", role: .destructive) { editor?.deleteEmptyTracks() }
-                .disabled(!(editor?.hasEmptyTracks ?? false))
+            Button("Delete Empty Tracks", role: .destructive) { editor?.run(.deleteEmptyTracks) }
+                .disabled(!(editor?.canRun(.deleteEmptyTracks) ?? false))
         }
     }
 
     // Sequence: the captions' own reset, and the word being said.
     @ViewBuilder private var captionEditRows: some View {
-        Button("Reset Captions") { editor?.resetCaptions() }
-            .disabled(!(editor?.canResetCaptions ?? false))
+        Button("Reset Captions") { editor?.run(.resetCaptions) }
+            .disabled(!(editor?.canRun(.resetCaptions) ?? false))
         let word = editor?.captionWordInHand
         Menu("Caption Word") {
             Button("Edit Word") { if let word { editor?.beginEditingCaptionWord(word, place: .canvas) } }
@@ -1631,13 +1585,13 @@ struct EditorCommands: Commands {
 
     // View: how the timeline's rows are looked at, and the captions' guides.
     @ViewBuilder private var timelineViewRows: some View {
-        Button("Compact Tracks") { editor?.resetTimelineRows() }
-            .disabled(editor?.timelineRowZoom.isCompact ?? true)
+        Button("Compact Tracks") { editor?.run(.compactTracks) }
+            .disabled(!(editor?.canRun(.compactTracks) ?? false))
         if Experiments.shared.captionsFromTheSoundEnabled {
             Toggle("Caption Safe Areas", isOn: Binding(
                 get: { EditorState.showsSafeAreas },
-                set: { _ in editor?.toggleSafeAreas() }))
-            .disabled(!(editor?.hasCaptions ?? false))
+                set: { _ in editor?.run(.captionSafeAreas) }))
+            .disabled(!(editor?.canRun(.captionSafeAreas) ?? false))
         }
     }
 
@@ -1887,23 +1841,21 @@ struct EditorCommands: Commands {
 
     @CommandsBuilder private var layerMenu: some Commands {
         CommandMenu("Layer") {
-            let selectedID = editor?.selectedLayerID
-            let hasLayerSelection = editor?.hasLayerSelection ?? false
             // New empty (transparent, canvas-sized) layer. The selection
             // region is preserved, so select → ⌘N → fill paints the region
             // onto the fresh layer (user decision 2026-07-05; New from
             // Clipboard moved to ⌥⌘N).
-            Button("New Layer") { editor?.newEmptyLayer() }
+            Button("New Layer") { editor?.run(.newLayer) }
                 .keyboardShortcut("n", modifiers: .command)
-                .disabled(editor?.document == nil)
+                .disabled(!(editor?.canRun(.newLayer) ?? false))
             // Photoshop ⌘J: copy the marquee selection to a new layer, or —
             // with no marquee — duplicate the selected layer. Which pixels the
             // marquee takes follows the copy rule (`newLayerViaCopy`): the
             // layer you picked when you picked one, everything flattened
             // together when you did not.
-            Button("New Layer via Copy") { editor?.newLayerViaCopy() }
+            Button("New Layer via Copy") { editor?.run(.newLayerViaCopy) }
             .keyboardShortcut("j", modifiers: .command)
-            .disabled(editor?.selection == nil && !hasLayerSelection)
+            .disabled(!(editor?.canRun(.newLayerViaCopy) ?? false))
             // Photoshop ⇧⌘J, and its twin: the same command with the piece
             // TAKEN rather than copied, and the space it came from filled in
             // from what was around it (`newLayerViaCut`). Directly under the
@@ -1914,34 +1866,34 @@ struct EditorCommands: Commands {
             let shiftJ = editor?.shiftCommandJ ?? .newLayerViaCut
             let shiftJKey = KeyboardShortcut("j", modifiers: [.command, .shift])
             if Experiments.shared.newLayerViaCutEnabled {
-                Button("New Layer via Cut") { editor?.newLayerViaCut() }
+                Button("New Layer via Cut") { editor?.run(.newLayerViaCut) }
                     .keyboardShortcut(shiftJ == .newLayerViaCut ? shiftJKey : nil)
-                    .disabled(!(editor?.canCutSelectionToLayer ?? false))
+                    .disabled(!(editor?.canRun(.newLayerViaCut) ?? false))
             }
-            Button("Blur Behind Selection") { editor?.blurBehindSelection() }
+            Button("Blur Behind Selection") { editor?.run(.blurBehindSelection) }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
-                .disabled(editor?.selection == nil)
+                .disabled(!(editor?.canRun(.blurBehindSelection) ?? false))
             Divider()
             // No shortcut (Photoshop parity: ⌘D is Deselect; ⌘J covers the
             // duplicate-selected-layer case when no region is marqueed).
-            Button("Duplicate Layer") { editor?.duplicateSelectedLayers() }
-                .disabled(!hasLayerSelection)
+            Button("Duplicate Layer") { editor?.run(.duplicateLayer) }
+                .disabled(!(editor?.canRun(.duplicateLayer) ?? false))
             // A copy reflected about the middle of its frame, so the second
             // half of a symmetrical icon is exact (`MirrorAcrossCenter.swift`).
             // Pictures and icons only: on a video ⇧⌘M is Go to Previous
             // Marker, and the row is absent there.
             if Experiments.shared.mirrorAcrossCenterEnabled && !timed {
-                Button(MirrorAcrossCenter.title) { editor?.mirrorSelectionAcrossCenter() }
+                Button(MirrorAcrossCenter.title) { editor?.run(.mirrorAcrossCenter) }
                     .keyboardShortcut("m", modifiers: [.command, .shift])
-                    .disabled(!(editor?.canMirrorSelectionAcrossCenter ?? false))
+                    .disabled(!(editor?.canRun(.mirrorAcrossCenter) ?? false))
             }
             // Beside it, as the icon mock's Layers panel menu has them: what is
             // picked moves, as one piece, onto the middle of its frame
             // (`CenterOnArtboard.swift`). No key: the mock's ⌥⌘C is Canvas
             // Size, as it is in Photoshop.
             if Experiments.shared.iconShapeCommandsEnabled && !timed {
-                Button(CenterOnArtboard.title) { editor?.centerSelectionOnArtboard() }
-                    .disabled(!(editor?.canCenterSelectionOnArtboard ?? false))
+                Button(CenterOnArtboard.title) { editor?.run(.centerOnArtboard) }
+                    .disabled(!(editor?.canRun(.centerOnArtboard) ?? false))
             }
             if Experiments.shared.proMenuBarEnabled {
                 layerListRows
@@ -1957,12 +1909,12 @@ struct EditorCommands: Commands {
             // Duplicate Layer, and on the layer's right click menu too, which
             // is where somebody coming from Photoshop looks for them.
             if Experiments.shared.copyALookEnabled {
-                Button("Copy Look") { editor?.copyLook() }
+                Button("Copy Look") { editor?.run(.copyLook) }
                     .keyboardShortcut("c", modifiers: [.command, .option, .shift])
-                    .disabled(!(editor?.canCopyLook ?? false))
-                Button("Paste Look") { editor?.pasteLook() }
+                    .disabled(!(editor?.canRun(.copyLook) ?? false))
+                Button("Paste Look") { editor?.run(.pasteLook) }
                     .keyboardShortcut("v", modifiers: [.command, .option, .shift])
-                    .disabled(!(editor?.canPasteLook ?? false))
+                    .disabled(!(editor?.canRun(.pasteLook) ?? false))
             }
             if Experiments.shared.proMenuBarEnabled {
                 effectRows
@@ -2002,9 +1954,9 @@ struct EditorCommands: Commands {
                     .keyboardShortcut(KeyEquivalent(MotionPivot.PlaceOnCanvas.key), modifiers: [])
                     .disabled(!(editor?.canPlaceMotionPivot ?? false))
             }
-            Button("Merge Down") { editor?.mergeDown() }
+            Button("Merge Down") { editor?.run(.mergeDown) }
                 .keyboardShortcut("e", modifiers: .command)
-                .disabled(!(editor?.canMergeDown ?? false))
+                .disabled(!(editor?.canRun(.mergeDown) ?? false))
             // The one command that makes a rectangle into an outline you can
             // pull the points of (`ShapeToPath.swift`). Right above Turn Into
             // Picture, because the two are the same kind of one-way turn and
@@ -2036,7 +1988,7 @@ struct EditorCommands: Commands {
             if Experiments.shared.penEnabled {
                 Menu(PathCombine.menuItem) {
                     ForEach(PathCombine.Operation.allCases, id: \.self) { operation in
-                        Button(operation.title) { editor?.combineSelection(operation) }
+                        Button(operation.title) { editor?.run(.combineShapes, ["operation": .string(operation.rawValue)]) }
                     }
                 }
                 .disabled(!(editor?.canCombineSelection ?? false))
@@ -2054,12 +2006,12 @@ struct EditorCommands: Commands {
             // (`OutlineStroke.swift`). Pictures and icons only, like the
             // panel menu's rows.
             if Experiments.shared.penEnabled && Experiments.shared.iconShapeCommandsEnabled && !timed {
-                Button(PathCombine.unionTitle) { editor?.unionSelection() }
+                Button(PathCombine.unionTitle) { editor?.run(.union) }
                     .keyboardShortcut("u", modifiers: [.command, .option])
-                    .disabled(!(editor?.canUnionSelection ?? false))
-                Button(OutlineStroke.title) { editor?.outlineSelectionStroke() }
+                    .disabled(!(editor?.canRun(.union) ?? false))
+                Button(OutlineStroke.title) { editor?.run(.outlineStroke) }
                     .keyboardShortcut("o", modifiers: [.command, .shift])
-                    .disabled(!(editor?.canOutlineSelectionStroke ?? false))
+                    .disabled(!(editor?.canRun(.outlineStroke) ?? false))
             }
             // The one command that makes a shape or a piece of text into pixels,
             // which is what a marquee needs before it can cut a piece out of it
@@ -2081,36 +2033,36 @@ struct EditorCommands: Commands {
             // when the flag is off, like every other flagged row.
             if Experiments.shared.separateIntoLayersEnabled {
                 Button("Separate into Layers") {
-                    if let selectedID { editor?.separateIntoLayers(id: selectedID) }
+                    editor?.run(.separateIntoLayers)
                 }
-                .disabled(!(selectedID.map { editor?.canSeparateIntoLayers(id: $0) ?? false } ?? false))
+                .disabled(!(editor?.canRun(.separateIntoLayers) ?? false))
                 // The step after it, in the same two places, under the same
                 // name: a picture of a run of text becomes words you can
                 // retype.
                 // Over everything picked, like Turn Into Picture above it, and
                 // over the whole group a big separation arrives in.
-                Button("Turn into Text") { editor?.turnIntoTextForSelection() }
-                .disabled(!(editor?.canTurnIntoTextSelection ?? false))
+                Button("Turn into Text") { editor?.run(.turnIntoText) }
+                .disabled(!(editor?.canRun(.turnIntoText) ?? false))
             }
-            Button("Arrange in Collage") { editor?.arrangeSelectionAsCollage() }
-                .disabled(!(editor?.canArrangeCollage ?? false))
-            Button("New Collage Layer") { editor?.newEmptyCollageLayer() }
-                .disabled(editor?.document == nil)
+            Button("Arrange in Collage") { editor?.run(.arrangeInCollage) }
+                .disabled(!(editor?.canRun(.arrangeInCollage) ?? false))
+            Button("New Collage Layer") { editor?.run(.newCollageLayer) }
+                .disabled(!(editor?.canRun(.newCollageLayer) ?? false))
             // Group and ungroup, on Photoshop's keys, directly above the
             // arrange commands so the structure commands sit together
             // (`docs/design/ui-building.md`). Flagged rows are absent, not
             // greyed, so nobody hunts for why a dead row is there.
             if Experiments.shared.layerGroupsEnabled {
                 Divider()
-                Button("Group") { editor?.groupSelection() }
+                Button("Group") { editor?.run(.group) }
                     .keyboardShortcut("g", modifiers: .command)
-                    .disabled(!(editor?.canGroupSelection ?? false))
+                    .disabled(!(editor?.canRun(.group) ?? false))
                 // ⇧⌘G goes to Clip ▸ Break Apart while a merged clip is in
                 // hand, so one key never sits on two rows.
-                Button("Ungroup") { editor?.ungroupSelection() }
+                Button("Ungroup") { editor?.run(.ungroup) }
                     .keyboardShortcut(Experiments.shared.proMenuBarEnabled && (editor?.canBreakApartInHand ?? false)
                                       ? nil : KeyboardShortcut("g", modifiers: [.command, .shift]))
-                    .disabled(!(editor?.canUngroupSelection ?? false))
+                    .disabled(!(editor?.canRun(.ungroup) ?? false))
             }
             // Groups that arrange their own contents (`next-auto-layout`),
             // right under Group, because a stack IS a group that arranges
@@ -2120,11 +2072,11 @@ struct EditorCommands: Commands {
             // is the same act with a column count, and a grid is picked far
             // less often than a row of things.
             if Experiments.shared.autoLayoutEnabled {
-                Button(LayersPanelHeader.MenuRow.stackTitle) { editor?.stackSelection(.stack) }
+                Button(LayersPanelHeader.MenuRow.stackTitle) { editor?.run(.stackSelection) }
                     .keyboardShortcut("g", modifiers: [.command, .control])
-                    .disabled(!(editor?.canStackSelection ?? false))
-                Button("Grid Selection") { editor?.stackSelection(.grid) }
-                    .disabled(!(editor?.canStackSelection ?? false))
+                    .disabled(!(editor?.canRun(.stackSelection) ?? false))
+                Button("Grid Selection") { editor?.run(.gridSelection) }
+                    .disabled(!(editor?.canRun(.gridSelection) ?? false))
                 // Telling a piece to take whatever room its stack has left is
                 // the answer people reach for most while building a bar, and
                 // until now it was only reachable two rows into a panel that
@@ -2187,8 +2139,8 @@ struct EditorCommands: Commands {
             if Experiments.shared.framesEnabled {
                 Button("New Frame…") { editor?.isNewFrameDialogPresented = true }
                     .disabled(editor?.document == nil)
-                Button("Frame Selection") { editor?.frameSelection() }
-                    .disabled(!(editor?.canFrameSelection ?? false))
+                Button("Frame Selection") { editor?.run(.frameSelection) }
+                    .disabled(!(editor?.canRun(.frameSelection) ?? false))
                 // The columns the selected screen is designed to, beside the
                 // rows that make a screen. No key: the canvas grid already has
                 // the obvious one, and two grid-ish chords a finger apart is
@@ -2208,9 +2160,9 @@ struct EditorCommands: Commands {
             // in their fingers, and Photoshop binds neither the command nor the
             // key, so there is nothing to be compatible with.
             if Experiments.shared.componentsEnabled {
-                Button("Make Component") { editor?.makeComponent() }
+                Button("Make Component") { editor?.run(.makeComponent) }
                     .keyboardShortcut("k", modifiers: [.command, .option])
-                    .disabled(!(editor?.canMakeComponent ?? false))
+                    .disabled(!(editor?.canRun(.makeComponent) ?? false))
                 // Insert Component takes no key: it is the keyboard way to do
                 // what a drag from the shelf already does, and the shelf has to
                 // be open with a component picked for it to mean anything.
@@ -2249,9 +2201,9 @@ struct EditorCommands: Commands {
                 // Photoshop binds neither the command nor the key. Select
                 // Original takes none: it is a way to get somewhere, not an
                 // edit, and the copy's own section has a button for it.
-                Button("Make Unique") { editor?.detachInstance() }
+                Button("Make Unique") { editor?.run(.makeUnique) }
                     .keyboardShortcut("b", modifiers: [.command, .option])
-                    .disabled(!(editor?.canDetachInstance ?? false))
+                    .disabled(!(editor?.canRun(.makeUnique) ?? false))
                 Button(OriginalSpaceCopy.menuEdit) { editor?.editPickedOriginal() }
                     .disabled(!(editor?.canEditPickedOriginal ?? false))
                 Button(OriginalSpaceCopy.menuDone) { editor?.finishEditingOriginal() }
@@ -2267,20 +2219,20 @@ struct EditorCommands: Commands {
                 Divider()
                 Menu("Align") {
                     ForEach(LayerAlignment.allCases, id: \.self) { alignment in
-                        Button(alignment.menuTitle) { editor?.alignSelection(alignment) }
+                        Button(alignment.menuTitle) { editor?.run(.align, ["edge": .string(alignment.rawValue)]) }
                             .keyboardShortcut(alignKey(alignment), modifiers: .option)
-                            .disabled(!(editor?.canAlignSelection(alignment) ?? false))
+                            .disabled(!(editor?.canRun(.align, ["edge": .string(alignment.rawValue)]) ?? false))
                     }
                 }
                 .disabled(!(editor?.canAlignSelection ?? false))
                 Menu("Space Evenly") {
                     ForEach(LayerDistribution.allCases, id: \.self) { axis in
                         Button(axis == .horizontal ? "Across" : "Down") {
-                            editor?.distributeSelection(axis)
+                            editor?.run(.spaceEvenly, ["axis": .string(axis.rawValue)])
                         }
                         .keyboardShortcut(axis == .horizontal ? "h" : "v",
                                           modifiers: [.control, .option])
-                        .disabled(!(editor?.canDistributeSelection ?? false))
+                        .disabled(!(editor?.canRun(.spaceEvenly, ["axis": .string(axis.rawValue)]) ?? false))
                     }
                 }
                 .disabled(!(editor?.canDistributeSelection ?? false))
@@ -2315,18 +2267,18 @@ struct EditorCommands: Commands {
             // The arrange commands, Duplicate and Delete act on the whole
             // selection: the multi-selection a shift-click, command-click or
             // marquee built, else the one selected layer.
-            Button("Bring to Front") { editor?.restackSelectedLayers(.toFront) }
+            Button("Bring to Front") { editor?.run(.bringToFront) }
                 .keyboardShortcut("]", modifiers: [.command, .shift])
-                .disabled(!hasLayerSelection)
-            Button("Bring Forward") { editor?.restackSelectedLayers(.forward) }
+                .disabled(!(editor?.canRun(.bringToFront) ?? false))
+            Button("Bring Forward") { editor?.run(.bringForward) }
                 .keyboardShortcut("]", modifiers: .command)
-                .disabled(!hasLayerSelection)
-            Button("Send Backward") { editor?.restackSelectedLayers(.backward) }
+                .disabled(!(editor?.canRun(.bringForward) ?? false))
+            Button("Send Backward") { editor?.run(.sendBackward) }
                 .keyboardShortcut("[", modifiers: .command)
-                .disabled(!hasLayerSelection)
-            Button("Send to Back") { editor?.restackSelectedLayers(.toBack) }
+                .disabled(!(editor?.canRun(.sendBackward) ?? false))
+            Button("Send to Back") { editor?.run(.sendToBack) }
                 .keyboardShortcut("[", modifiers: [.command, .shift])
-                .disabled(!hasLayerSelection)
+                .disabled(!(editor?.canRun(.sendToBack) ?? false))
             // Turning the picked layers in space (Next, `next-turn-in-depth`,
             // `video-depth.html`): Option with the arrange keys moves them
             // nearer and further rather than up and down the stack.
@@ -2358,7 +2310,6 @@ struct EditorCommands: Commands {
         // in Next's catalog, so Current never grows this menu.
         if Experiments.shared.measurePanelEnabled {
             CommandMenu("Measure") {
-                let count = editor?.measurementCount ?? 0
                 let visibleCount = editor?.visibleMeasurementCount ?? 0
                 let selectedCount = editor?.selectedMeasureLayerIDs.count ?? 0
                 Button("Measure Tool") { editor?.setTool(.measure) }
@@ -2367,10 +2318,10 @@ struct EditorCommands: Commands {
                 // Each is off when it would change nothing: Show All while
                 // every measurement is already showing, Hide All while none
                 // is. Either one is a single undo step.
-                Button("Show All Measurements") { editor?.setAllMeasurementsVisible(true) }
-                    .disabled(visibleCount == count)
-                Button("Hide All Measurements") { editor?.setAllMeasurementsVisible(false) }
-                    .disabled(visibleCount == 0)
+                Button("Show All Measurements") { editor?.run(.showAllMeasurements) }
+                    .disabled(!(editor?.canRun(.showAllMeasurements) ?? false))
+                Button("Hide All Measurements") { editor?.run(.hideAllMeasurements) }
+                    .disabled(!(editor?.canRun(.hideAllMeasurements) ?? false))
                 Divider()
                 // ⌃⌘C: the copy family's free chord. ⇧⌘C is Copy Merged,
                 // ⌥⌘C is Canvas Size and ⌥⇧⌘C is Content-Aware Scale, all
@@ -2388,8 +2339,8 @@ struct EditorCommands: Commands {
                 }
                 .disabled(selectedCount == 0)
                 Divider()
-                Button("Clear Measurements") { editor?.clearAllMeasurements() }
-                    .disabled(count == 0)
+                Button("Clear Measurements") { editor?.run(.clearMeasurements) }
+                    .disabled(!(editor?.canRun(.clearMeasurements) ?? false))
             }
         }
     }
@@ -2564,18 +2515,18 @@ struct EditorCommands: Commands {
             }
             .disabled(!hasDocument || (editor?.documentHasTime ?? false))
         }
-        Button("Zoom In") { editor?.zoomIn() }
+        Button("Zoom In") { editor?.run(.zoomIn) }
             .keyboardShortcut("=", modifiers: .command) // the ⌘+ key
-            .disabled(!hasDocument)
-        Button("Zoom Out") { editor?.zoomOut() }
+            .disabled(!(editor?.canRun(.zoomIn) ?? false))
+        Button("Zoom Out") { editor?.run(.zoomOut) }
             .keyboardShortcut("-", modifiers: .command)
-            .disabled(!hasDocument)
-        Button("Zoom to Fit") { editor?.zoomToFit() }
+            .disabled(!(editor?.canRun(.zoomOut) ?? false))
+        Button("Zoom to Fit") { editor?.run(.zoomToFit) }
             .keyboardShortcut("0", modifiers: .command)
-            .disabled(!hasDocument)
+            .disabled(!(editor?.canRun(.zoomToFit) ?? false))
         // ⌘1 is View mode on a document with time (`ViewEditMode`), so
         // there Actual Size takes Photoshop's older ⌥⌘0.
-        Button("Actual Size") { editor?.zoomToActualSize() }
+        Button("Actual Size") { editor?.run(.actualSize) }
             .keyboardShortcut((editor?.documentHasTime ?? false) ? "0" : "1",
                               modifiers: (editor?.documentHasTime ?? false) ? [.command, .option] : .command)
             .disabled(!hasDocument)
@@ -2583,9 +2534,9 @@ struct EditorCommands: Commands {
         // right-click has, on Premiere's \, which the timeline answers
         // while it has the keyboard (⇧Z is Punch In).
         if Experiments.shared.proMenuBarEnabled && timed {
-            Button("Zoom Timeline to Fit") { editor?.fitTimeline() }
+            Button("Zoom Timeline to Fit") { editor?.run(.zoomTimelineToFit) }
                 .keyboardShortcut(timelineKeys ? KeyboardShortcut("\\", modifiers: []) : nil)
-                .disabled(!(editor?.isTimelineOpenedOut ?? false))
+                .disabled(!(editor?.canRun(.zoomTimelineToFit) ?? false))
             timelineViewRows
         }
         // The camera the frame is seen through (Next, `next-turn-in-depth`):

@@ -1,0 +1,29 @@
+{
+  "feature": "An agent runs the app's menu commands by name",
+  "epic": "agent-api",
+  "summary": "An agent session with the Photonz MCP server can list the commands of the menu bar and the right-click menus (149 of them, each saying whether it can run right now) and run one by name, picking a moment, a clip or a track first. Each run is one undo step, so one Command Z takes back one thing the agent did.",
+  "setup": "Photonz Probe (or Dev, once rebuilt), release Next, no switch changed from its default. Server installed once with Scripts/install-mcp.sh (--probe for the probe). Transcript of the run: 2026-10-19-agent-commands-transcript.md.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording in Photonz.", "shot": "2026-10-19-agent-commands-1-before-the-agent.png" },
+    { "do": "In a new Claude Code session, ask: In Photonz, list the timeline commands, then cut the clip at 5 seconds." },
+    { "do": "Watch the window: the clip is cut at 0:05 and the panel says Piece 1 of 2.", "shot": "2026-10-19-agent-commands-2-after-the-agent.png" },
+    { "do": "Press Command Z once in Photonz. The recording is one clip again and the title reads saved.", "shot": "2026-10-19-agent-commands-3-after-one-command-z.png" },
+    { "do": "Ask the session to align two picked shapes left, or to put a dip to black on the cut, and press Command Z after each." },
+    { "do": "Use Clip, Sequence, Layer and View rows by hand as usual: they run through the same commands and should behave exactly as before." }
+  ],
+  "evaluate": [
+    "Is one Command Z for 'move the playhead, pick the clip, cut it' the right size of step, or would you expect the playhead move to stay put after the undo, as it does now?",
+    "The agent's list reads 'ready' for each command. Is that enough for it to choose well, or should it also say why one is not ready?",
+    "77 menu rows are not runnable yet (clipboard, renaming, effects, caption words, zooms, keys). Is the order in the follow-up task the order you want them in?",
+    "Are the 56 rows left out on purpose (the app's own windows, capture, tool picks, window layout, the old recording window) the right ones to keep away from an agent?"
+  ],
+  "rough": [
+    "No mock covers this surface: it has no window of its own; the pictures are the probe window during the run.",
+    "Count on 2026-10-19: 283 menu bar rows, 149 run a named command, 56 are left out with a reason, 77 are not named yet. 37 of the 65 timeline right-click rows run a named command; the rest are submenus or on the same not-yet list. The not-yet rows are the-rest-of-the-menu-commands-can-be-run-by-name.",
+    "Most right-click rows still call their own function on the thing they were opened on; an agent reaches the same edit by naming that thing and running the in-hand command. Only the rows that were already 'pick, then the in-hand call' now go through the command switch.",
+    "The playhead stays where the agent put it after an undo: the playhead is not part of the undo history for a person either.",
+    "The menu rows themselves are not folded into one step: a row that lands two edits still takes two Command Zs, as before. Only an agent's call is folded.",
+    "The walk that pressed Command Z took the front (the person was away), because a walk in the background has a frozen menu bar."
+  ]
+}

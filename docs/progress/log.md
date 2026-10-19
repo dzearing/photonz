@@ -21676,3 +21676,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A go loop runner that names no app is always sent to the probe (`GO_LOOP_PID`). A session with the server installed does not start Photonz until a tool is called (the app leaves its handshake beside its socket).
 - Try path passed in a fresh session: `queue/audits/2026-10-19-agent-mcp-transcript.md`. Filed: a recording handed to the app at launch never opens; the frame at a whole second is one frame early.
 - Next: `every-command-in-the-app-s-menus-can-be-run-by-n` (slice 2), see `docs/design/agent-mcp.md`.
+
+## 2026-10-19 — Agent MCP slice 2: every menu command by name
+
+- `AppCommandTable` (PhotonzCore) names 149 commands with their menu, area, needs and checked arguments; `EditorState.run/canRun` (`Agent/AppCommandRunner.swift`) is the one switch the menu bar rows, several right-click rows and the agent's `run_command` go through. `list_commands` and `run_command` added to `AgentTools`.
+- `History.squash(since:)` + `EditorState.asOneUndoStep`: one agent call is one undo step.
+- `EveryMenuCommandHasANameTests`: 283 menu bar rows, 149 named, 56 left out with reasons, 77 not yet (pinned, shrink only); timeline right-click rows placed by an exhaustive switch.
+- Try path run live in the probe (transcript in `queue/audits/2026-10-19-agent-commands-transcript.md`).
+- Next: `the-rest-of-the-menu-commands-can-be-run-by-name`.

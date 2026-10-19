@@ -1,0 +1,28 @@
+{
+  "id": "the-rest-of-the-menu-commands-can-be-run-by-name",
+  "title": "The rest of the menu commands can be run by name from an agent",
+  "goal": "An agent working in Photonz can run the menu commands it still cannot: the clipboard (cut, copy, paste), renaming, effects, saving, resizing the canvas, freeze frames, caption words, zooms and keys picked on the timeline, and the remaining Layer menu rows. Each runs exactly as its menu row does and lands as one undo step.",
+  "epic": "agent-api",
+  "priority": "p1-high",
+  "seq": 23,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T19:46:41.779Z",
+  "updated": "2026-10-19T19:46:41.782Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follows every-command-in-the-app-s-menus-can-be-run-by-n (slice 2). The table is Sources/PhotonzCore/AppCommands.swift, the switch is Sources/Photonz/Agent/AppCommandRunner.swift (EditorState.run/canRun), the coverage is Tests/PhotonzCoreTests/EveryMenuCommandHasANameTests.swift (notYet + notYetPin; lower the pin as rows get names). On 2026-10-19: 77 menu bar rows not yet, grouped: clipboard 10, caption words 9, keys/stretches on a lane 8, layer menu rows needing their own command 19, new documents 4, exports 4, renames 3, effects 3, zooms 3, arrows 3, file panels 2, size dialogs 2, and Save, Save to Capture History, Freeze Frame, Save as Preset, Add Click, title presets, Picked in Range. Timeline right-click rows on the not-yet side are listed in the same test (reach(_:)). Clipboard rows have a text-field branch in EditorCommands that must stay at the row.",
+  "acceptance": [
+    "The not-yet list in EveryMenuCommandHasANameTests is empty, or every row left on it has moved to the left-out list with a reason the user would accept",
+    "Commands that need something an agent cannot pick today (a caption word, a zoom, keys on a lane, a gap) take it as an argument, checked like the existing layers, piece and track picks",
+    "Each new command runs as one undo step, shown by a test",
+    "Scripts/test.sh passes and the walks for the menus touched pass at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T19:46:41.781Z",
+      "note": "created (manual)"
+    }
+  ]
+}

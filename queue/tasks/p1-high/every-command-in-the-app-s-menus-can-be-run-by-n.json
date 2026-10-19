@@ -5,11 +5,11 @@
   "epic": "agent-api",
   "priority": "p1-high",
   "seq": 22,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:21:48.057Z",
-  "updated": "2026-10-19T18:36:19.305Z",
+  "updated": "2026-10-19T19:47:31.995Z",
   "deps": [
     "an-agent-can-reach-the-running-app-read-the-open"
   ],
@@ -39,6 +39,31 @@
     {
       "t": "2026-10-19T18:36:19.304Z",
       "note": "Slice 1 landed (an-agent-can-reach-the-running-app-read-the-open): the channel, the bridge and 9 tools. Add tools in PhotonzCore AgentTools (schema + AgentRequest case, tested) and carry them out in Sources/Photonz/Agent/AgentWork.swift; edits must go through EditorState.perform so one undo takes one agent step. Try path: Scripts/install-mcp.sh --probe, or claude -p --mcp-config with PHOTONZ_APP=probe Scripts/photonz-mcp.sh. Design and tool plan: docs/design/agent-mcp.md."
+    },
+    {
+      "t": "2026-10-19T18:56:40.801Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T18:59:19.570Z",
+      "note": "Plan + adversarial review. No UI of its own; the person-facing risk is a menu row that changes behaviour when routed, so routed rows keep their titles, keys and dimming and only swap action+dimming for run/canRun of the same EditorState calls. Survey: 278 Button/Toggle rows in EditorCommands.swift. An agent cannot 'right-click a clip'; it names the clip (layer + piece) and the playhead (seconds) and the command acts on what is then in hand, which is exactly what each timeline right-click row does (select, then the in-hand action). One run = one undo step even when a command lands two edits: History gains squash(since:) so everything a run pushed collapses to one step. Commands that open a sheet (Export..., Resize Image...) or need the screen (Capture) are left out with reasons; the old recording window rows (VideoEditorState) are left out as retiring. Not everything moves this sitting: a not-yet list that may only shrink, rest filed as one p1 behind this."
+    },
+    {
+      "t": "2026-10-19T19:47:17.337Z",
+      "note": "owns these walks: menu-keys-do-what-they-say-walk, a-recording-opens-in-the-editor-at-defaults-walk, align-layers-walk, go-to-marker-menu-rows-walk, extract-a-marked-stretch-walk, delete-key-drops-a-timeline-piece-walk"
+    },
+    {
+      "t": "2026-10-19T19:47:31.994Z",
+      "note": "Shipped: AppCommandTable (149 commands) + EditorState.run/canRun switch; menu bar rows routed through it; list_commands/run_command; History.squash so an agent call is one undo step. Coverage: 283 menu bar rows, 149 named, 56 left out, 77 not yet (pinned) -> follow-up the-rest-of-the-menu-commands-can-be-run-by-name (p1, seq 23). Verified: Scripts/test.sh 13839 tests green; 19 menu walks ok (menu-keys-do-what-they-say, a-recording-opens-in-the-editor-at-defaults, align-layers, go-to-marker-menu-rows, extract-a-marked-stretch, delete-key-drops-a-timeline-piece, copy-a-look, layers-combine, mirror-across-center, ...); live try path in the probe: agent listed timeline commands and cut at 5 s in one run_command, one Command Z through Edit > Undo restored one clip with nothing left to undo. Pictures looked at: before (one clip), after (cut at 0:05, Piece 1 of 2), after undo (one clip, saved). Found the design doc named the sockets by bundle id; they are release/dev/probe.sock; doc fixed. Left rough (log only): a menu row that lands two edits still takes two undos (unchanged on purpose); playhead stays where the agent moved it after undo."
     }
+  ],
+  "started": "2026-10-19T18:56:40.800Z",
+  "walks": [
+    "menu-keys-do-what-they-say-walk",
+    "a-recording-opens-in-the-editor-at-defaults-walk",
+    "align-layers-walk",
+    "go-to-marker-menu-rows-walk",
+    "extract-a-marked-stretch-walk",
+    "delete-key-drops-a-timeline-piece-walk"
   ]
 }

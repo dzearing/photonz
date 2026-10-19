@@ -45,7 +45,7 @@ enum LayerCommandList {
             rows.append(.command("Split at Playhead", EditorState.TimelineMenuKeys.split,
                                  enabled: editorState.canSplitClip(id)) {
                 editorState.selectLayer(id)
-                editorState.splitClipAtPlayhead()
+                editorState.run(.splitAtPlayhead)
             })
             // ...and the two things you do to a PICTURE at a moment: hold it,
             // and push in on it. On the canvas the push aims at the spot you

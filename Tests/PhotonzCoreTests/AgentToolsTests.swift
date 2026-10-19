@@ -13,12 +13,39 @@ struct AgentToolsTests {
         try AgentJSON.parse(Data(json.utf8))
     }
 
-    @Test("The first slice offers exactly the reach, read, see and undo tools")
+    @Test("The first two slices offer the reach, read, see and undo tools, then the commands")
     func theSliceIsComplete() {
         #expect(AgentTools.all.map(\.name) == [
             "list_documents", "list_history", "open_document", "read_document",
             "render_picture", "video_frame", "contact_sheet", "undo", "redo",
+            "list_commands", "run_command",
         ])
+    }
+
+    @Test("list_commands filters by area and by what can run now")
+    func listCommands() throws {
+        let request = try AgentTools.request(tool: "list_commands",
+                                             arguments: Self.args(#"{"area": "timeline", "readyOnly": true}"#)).get()
+        #expect(request == .listCommands(document: nil, area: .timeline, readyOnly: true))
+        #expect(try AgentTools.request(tool: "list_commands", arguments: nil).get()
+                == .listCommands(document: nil, area: nil, readyOnly: false))
+        guard case .failure = AgentTools.request(tool: "list_commands", arguments: try Self.args(#"{"area": "sky"}"#))
+        else { Issue.record("an area that does not exist was accepted"); return }
+    }
+
+    @Test("run_command checks the command's own arguments before the app sees them")
+    func runCommand() throws {
+        let request = try AgentTools.request(
+            tool: "run_command",
+            arguments: Self.args(#"{"document": "d1", "command": "split_at_playhead", "arguments": {"seconds": 5}}"#)).get()
+        #expect(request == .runCommand(document: "d1", call: AppCommandCall(.splitAtPlayhead, atMS: 5000)))
+        guard case .failure(let error) = AgentTools.request(
+            tool: "run_command", arguments: try Self.args(#"{"command": "split_at_playhead", "arguments": {"secs": 5}}"#))
+        else { Issue.record("a misspelt argument was accepted"); return }
+        #expect(error.message.contains("secs is not an argument"))
+        #expect(!error.isUnknownTool, "a bad command is the tool's error, not the protocol's")
+        guard case .failure = AgentTools.request(tool: "run_command", arguments: nil)
+        else { Issue.record("run_command ran with no command"); return }
     }
 
     @Test("Every tool has a description and an object schema whose required arguments it declares")

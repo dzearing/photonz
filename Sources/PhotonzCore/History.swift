@@ -25,6 +25,10 @@ public struct History: Sendable {
     /// burst of arrow-key nudges collapses into one step. Anything else landing
     /// in the stack ends the run.
     private var runName: String?
+    /// How many steps have ever been pushed, and how many undos and redos
+    /// taken, so `squash` can tell what landed since its mark.
+    private var pushes = 0
+    private var steps = 0
     /// Whether an original that turns up in the picture is moved into the
     /// component library, with an instance left in its place
     /// (`ComponentLibrary.swift`). On for every document; off for the space
@@ -234,8 +238,38 @@ public struct History: Sendable {
         return true
     }
 
+    /// Where the stack stands, for `squash` to fold back to.
+    public struct Mark: Hashable, Sendable {
+        fileprivate let pushes: Int
+        fileprivate let steps: Int
+    }
+
+    public var mark: Mark { Mark(pushes: pushes, steps: steps) }
+
+    /// Folds every step recorded since `mark` into one, so a single command
+    /// that landed several edits (an agent's call that picks a clip and then
+    /// cuts it, or a command built from two smaller ones) comes back with one
+    /// undo, to where the stack stood at the mark. Nothing is folded when an
+    /// undo or redo happened since the mark, since the steps above it are then
+    /// not all the command's own. Returns how many steps were folded away.
+    @discardableResult
+    public mutating func squash(since mark: Mark) -> Int {
+        let added = pushes - mark.pushes
+        guard added > 1, steps == mark.steps, !undoStack.isEmpty else { return 0 }
+        // The first step the command pushed holds the state before it ran; a
+        // stack at its limit may have dropped it, and then the oldest left
+        // stands in for it.
+        let first = max(0, undoStack.count - added)
+        let folded = undoStack.count - first - 1
+        guard folded > 0 else { return 0 }
+        undoStack.removeSubrange((first + 1)...)
+        runName = nil
+        return folded
+    }
+
     public mutating func undo() {
         guard let previous = undoStack.popLast() else { return }
+        steps += 1
         redoStack.append(Step(document: current, selection: selection))
         current = previous.document
         selection = previous.selection
@@ -244,6 +278,7 @@ public struct History: Sendable {
 
     public mutating func redo() {
         guard let next = redoStack.popLast() else { return }
+        steps += 1
         undoStack.append(Step(document: current, selection: selection))
         current = next.document
         selection = next.selection
@@ -251,6 +286,7 @@ public struct History: Sendable {
     }
 
     private mutating func push(_ step: Step) {
+        pushes += 1
         undoStack.append(step)
         if undoStack.count > limit { undoStack.removeFirst() }
         runName = nil

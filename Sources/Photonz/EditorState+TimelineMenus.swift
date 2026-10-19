@@ -185,11 +185,11 @@ extension EditorState {
         if ramped {
             rows.append(.command(SpeedStopNames.delete) {
                 self.selectClipPiece(layerID: layerID, index: index)
-                self.deleteSpeedStopInHand()
+                self.run(.deleteSpeedStop)
             })
             rows.append(.command(SpeedStopNames.reset) {
                 self.selectClipPiece(layerID: layerID, index: index)
-                self.resetRampInHand()
+                self.run(.resetRamp)
             })
         }
         return rows.isEmpty ? [] : [.separator] + rows
@@ -227,7 +227,7 @@ extension EditorState {
             guard canSplitClip(layerID) else { return [] }
             return [.command(titled(.split), TimelineMenuKeys.split) {
                 self.selectLayer(layerID)
-                self.splitClipAtPlayhead()
+                self.run(.splitAtPlayhead)
             }]
         case .freezeFrame:
             guard picture, let piece = clip.piece else { return [] }
@@ -244,7 +244,7 @@ extension EditorState {
             let speeds: [MenuRow] = EditorState.clipSpeeds.map { percent in
                 .toggle(ClipSpeed.title(percent), isOn: piece.speedRamp == nil && piece.speedPercent == percent) {
                     self.selectClipPiece(layerID: layerID, index: index)
-                    self.setClipSpeedInHand(percent)
+                    self.run(.setSpeed, ["percent": .number(Double(percent))])
                 }
             }
             return [.submenu("Speed", speeds + speedStopMenuRows(layerID: layerID, piece: index, picture: picture))]
@@ -262,7 +262,7 @@ extension EditorState {
             if document?.canDetachSound(ofLayer: layerID) == true, clip.plan.offersDetachAudio {
                 return [.command("Detach Audio", TimelineMenuKeys.detachAudio) {
                     self.selectLayer(layerID)
-                    self.detachSound()
+                    self.run(.detachAudio)
                 }]
             }
             // Once the sound is a layer of its own, the same row on the
@@ -270,7 +270,7 @@ extension EditorState {
             if document?.canReattachSound(ofLayer: layerID) == true {
                 return [.command("Re-attach Audio", TimelineMenuKeys.detachAudio) {
                     self.selectLayer(layerID)
-                    self.reattachSound()
+                    self.run(.reattachAudio)
                 }]
             }
             return []
@@ -759,13 +759,13 @@ extension EditorState {
             .transitionLength: .submenu("Length", lengths.sorted().map { ms in
                 .toggle(ClipTransitionCopy.lengthChoice(ms, of: kind), isOn: ms == now) {
                     self.pickCut(place)
-                    self.setClipTransitionLength(ms)
+                    self.run(.setTransitionLength, ["milliseconds": .number(Double(ms))])
                 }
             }),
             .transitionCurve: .submenu("Curve", curves.map { curve in
                 .toggle(curve.title, isOn: curve == transition.curve) {
                     self.pickCut(place)
-                    self.setClipTransitionCurve(curve)
+                    self.run(.setTransitionCurve, ["curve": .string(curve.title)])
                 }
             }),
             .removeTransition: .command("Remove Transition") {

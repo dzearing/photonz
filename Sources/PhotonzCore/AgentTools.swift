@@ -33,6 +33,10 @@ public enum AgentRequest: Hashable, Sendable {
     case contactSheet(document: String?, fromMS: Int?, toMS: Int?, count: Int, columns: Int?, cellWidth: Int)
     case undo(document: String?, steps: Int)
     case redo(document: String?, steps: Int)
+    /// The command table, with whether each can run now on the document.
+    case listCommands(document: String?, area: AppCommand.Area?, readyOnly: Bool)
+    /// One command by name, its arguments already checked.
+    case runCommand(document: String?, call: AppCommandCall)
 }
 
 /// Why a call was refused, in one sentence a model can act on.
@@ -51,7 +55,8 @@ public struct AgentToolError: Error, Hashable, Sendable {
 /// The tools of the agent channel and the checking of a call against them.
 ///
 /// The first slice of the MCP ask: reach the app, read the open document, see
-/// it, and step back. Later slices add the command table, drawing and video
+/// it, and step back. The second runs every command of the menus by name
+/// (`AppCommandTable`). Later slices add drawing and video
 /// tools here, each with its schema and its tests.
 public enum AgentTools {
 
@@ -164,6 +169,23 @@ public enum AgentTools {
             name: "redo",
             description: "Redo what undo took back, exactly as Edit > Redo does.",
             inputSchema: schema(["document": documentProperty, "steps": stepsProperty("redo")])),
+        AgentTool(
+            name: "list_commands",
+            description: "The commands of the menu bar and the right-click menus, by name: their menu, what they need, the arguments they take, and whether each can run right now on the document.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "area": ["type": "string", "enum": .array(AppCommand.Area.allCases.map { .string($0.rawValue) }),
+                         "description": "Only commands about this: timeline, layers, edit, measure or view."],
+                "readyOnly": ["type": "boolean", "description": "Only the commands that can run right now."],
+            ])),
+        AgentTool(
+            name: "run_command",
+            description: "Run one command from list_commands by name, as its menu row does. It can pick a playhead time, layers, a piece or a track first. One run is one undo step.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "command": ["type": "string", "description": "The command's name from list_commands, such as split_at_playhead."],
+                "arguments": ["type": "object", "description": "The command's arguments, as list_commands gives them."],
+            ], required: ["command"])),
     ]
 
     public static func tool(named name: String) -> AgentTool? { all.first { $0.name == name } }
@@ -220,6 +242,13 @@ public enum AgentTools {
             return .success(.undo(document: document, steps: args["steps"]?.intValue ?? 1))
         case "redo":
             return .success(.redo(document: document, steps: args["steps"]?.intValue ?? 1))
+        case "list_commands":
+            return .success(.listCommands(document: document,
+                                          area: args["area"]?.stringValue.flatMap(AppCommand.Area.init(rawValue:)),
+                                          readyOnly: args["readyOnly"]?.boolValue ?? false))
+        case "run_command":
+            return AppCommandTable.call(args["command"]?.stringValue ?? "", arguments: args["arguments"])
+                .map { .runCommand(document: document, call: $0) }
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }
@@ -247,6 +276,15 @@ enum AgentSchema {
         }
         if let maximum = schema["maximum"]?.doubleValue, let number = value.doubleValue, number > maximum {
             return "\(name) is \(format(number)); it can be no more than \(format(maximum))."
+        }
+        if let choices = schema["enum"]?.arrayValue, !choices.contains(value) {
+            let said = choices.map { $0.stringValue ?? $0.doubleValue.map(format) ?? "?" }.joined(separator: ", ")
+            return "\(name) should be one of \(said)."
+        }
+        if let items = schema["items"], let array = value.arrayValue {
+            for (index, item) in array.enumerated() {
+                if let problem = problem(with: item, against: items, at: "\(name)[\(index)]") { return problem }
+            }
         }
         guard let object = value.objectValue else { return nil }
         let properties = schema["properties"]?.objectValue ?? [:]

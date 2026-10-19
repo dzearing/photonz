@@ -69,6 +69,10 @@ enum AgentWork {
             return try step(AgentDocuments.editor(id).get(), steps: steps, back: true)
         case .redo(let id, let steps):
             return try step(AgentDocuments.editor(id).get(), steps: steps, back: false)
+        case .listCommands(let id, let area, let readyOnly):
+            return try listCommands(AgentDocuments.editor(id).get(), area: area, readyOnly: readyOnly)
+        case .runCommand(let id, let call):
+            return try runCommand(AgentDocuments.editor(id).get(), call)
         }
     }
 
@@ -357,5 +361,120 @@ enum AgentWork {
                                : "There is nothing to redo in \(title(of: editor)).")
         }
         return answer
+    }
+
+    // MARK: Commands
+
+    /// The command table, each with whether it can run now on `editor` as it
+    /// stands, and a toggle's state.
+    private static func listCommands(_ editor: EditorState, area: AppCommand.Area?, readyOnly: Bool) throws -> Answer {
+        _ = try document(of: editor)
+        var listed: [AgentJSON] = []
+        for command in AppCommandTable.all where area == nil || command.area == area {
+            let ready = editor.canRun(.menu(command.id))
+            if readyOnly && !ready { continue }
+            var entry = AppCommandTable.listing(command, ready: ready).objectValue ?? [:]
+            if let on = editor.isOn(command.id) { entry["on"] = .bool(on) }
+            listed.append(.object(entry))
+        }
+        return Answer(content: [.text(AgentJSON.array(listed).encodedString())])
+    }
+
+    struct Ran: Encodable {
+        let ran: String
+        let title: String
+        let changed: Bool
+        let playheadSeconds: Double?
+        let picked: [String]
+        let canUndo: Bool
+        let canRedo: Bool
+    }
+
+    /// Picks what the call names, the way a person clicks it before choosing
+    /// the row, then runs the command as its row does, all as one undo step.
+    private static func runCommand(_ editor: EditorState, _ call: AppCommandCall) throws -> Answer {
+        guard let command = AppCommandTable.command(call.id) else {
+            throw Failure("There is no command called \(call.id.rawValue).")
+        }
+        let before = try document(of: editor)
+        if command.area == .timeline && !editor.documentHasTime {
+            throw Failure("\(command.name) works on a video, and \(title(of: editor)) is a picture.")
+        }
+        var refusal: String?
+        editor.asOneUndoStep {
+            do {
+                try pick(call, in: editor, document: before)
+            } catch let failure as Failure {
+                refusal = failure.message
+                return
+            } catch {
+                refusal = error.localizedDescription
+                return
+            }
+            guard editor.canRun(call) else {
+                refusal = "\(command.title) cannot run now: it needs \(command.needs)." + hint(for: call, in: editor)
+                return
+            }
+            editor.run(call)
+        }
+        if let refusal { throw Failure(refusal) }
+        let after = editor.document
+        return .json(Ran(ran: command.name, title: command.title, changed: after != before,
+                         playheadSeconds: editor.documentHasTime ? Double(editor.documentTimeMS) / 1000 : nil,
+                         picked: editor.actionableLayerIDs.map(\.uuidString).sorted(),
+                         canUndo: editor.canUndo, canRedo: editor.canRedo))
+    }
+
+    /// The choices a refused call could have made, where the app knows them
+    /// better than the table does.
+    private static func hint(for call: AppCommandCall, in editor: EditorState) -> String {
+        switch call.id {
+        case .setTransitionLength where !editor.clipTransitionLengthOffers.isEmpty:
+            " This cut offers " + editor.clipTransitionLengthOffers.map { "\($0)" }.joined(separator: ", ") + " ms."
+        case .setFade:
+            if let layer = editor.pictureFadeLayerInHand,
+               let end = call.word("end").flatMap(FadeEnd.init(rawValue:)) {
+                " It offers " + editor.pictureFadeStops(end, layer: layer).map { "\($0)" }.joined(separator: ", ") + " ms."
+            } else { "" }
+        default: ""
+        }
+    }
+
+    /// Puts the playhead, the track, the clips and the piece where the call
+    /// says, checking each exists first.
+    private static func pick(_ call: AppCommandCall, in editor: EditorState, document: PhotonzDocument) throws {
+        if let ms = call.atMS {
+            let length = document.documentDurationMS
+            guard document.hasTime else { throw Failure("seconds only means something on a video.") }
+            guard ms <= length else {
+                throw Failure("The video is \(AgentContactSheet.label(ms: length)) long; seconds must be inside it.")
+            }
+            editor.moveDocumentPlayhead(toMS: ms)
+        }
+        if let track = call.track {
+            guard let id = UUID(uuidString: track), document.track(id: id) != nil else {
+                throw Failure("There is no track \(track). read_document lists the track ids.")
+            }
+            editor.pickTrack(id, extending: false)
+        }
+        guard !call.layers.isEmpty else { return }
+        var ids: [UUID] = []
+        for layer in call.layers {
+            guard let id = UUID(uuidString: layer), document.layer(id: id) != nil else {
+                throw Failure("There is no layer \(layer). read_document lists the layer ids.")
+            }
+            ids.append(id)
+        }
+        if let piece = call.piece, let id = ids.first {
+            let count = document.layer(id: id)?.clipPieces?.count ?? 1
+            guard piece < count else {
+                throw Failure("That clip has \(count) piece\(count == 1 ? "" : "s"); piece goes from 0 to \(count - 1).")
+            }
+            editor.selectClipPiece(layerID: id, index: piece)
+        } else if ids.count == 1, let id = ids.first {
+            editor.selectLayer(id)
+        } else {
+            editor.selectLayers(Set(ids))
+        }
     }
 }
