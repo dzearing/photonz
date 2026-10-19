@@ -5,14 +5,14 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T05:16:47.373Z",
-  "updated": "2026-10-18T12:19:52.619Z",
+  "updated": "2026-10-19T02:20:04.060Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Carried from finishing-a-typed-title-on-a-video-never-stalls (2026-10-16), whose log has the traces. Numbers at its commit, markers down, three runs: after Command Return 64.2 / 64.6 / 54.5 ms (worst pass is either the commit's own pass, 55-62 ms, or an effect pane arriving ~0.5 s later, up to 80 ms once); tile 53.2 / 49.9 / 47.2 ms. Attribution (xctrace Time Profiler, attach to the probe, export time-profile, cut to the pass): commit pass = ~10 ms harness/window performKeyEquivalent walk + ~45 ms diffuse SwiftUI graph update (timeline gains a Title track, canvas, menu commands body, panel) + ~8 ms AX. Moving the hand-back to Select a turn later was tried and did NOT help (61.8 ms; the landing is the cost, not the pick). Effect panes: each shadow pane is ~8 rows built in one pass plus SwiftUI's AccessibilityNode.updateFocus walk over every focusable view in the window (20-80 ms, half of it swift_conformsToProtocol for new view types on first use); splitting a pane's rows across passes is the next lever. Tile pass: diffuse graph update after setTransition (document change, pickCut, playhead to the cut, picker closing); the transition form already arrives a pass later.",
+  "notes": "Carried from finishing-a-typed-title-on-a-video-never-stalls (2026-10-16), whose log has the traces. Numbers at its commit, markers down, three runs: after Command Return 64.2 / 64.6 / 54.5 ms (worst pass is either the commit's own pass, 55-62 ms, or an effect pane arriving ~0.5 s later, up to 80 ms once); tile 53.2 / 49.9 / 47.2 ms. Attribution (xctrace Time Profiler, attach to the probe, export time-profile, cut to the pass): commit pass = ~10 ms harness/window performKeyEquivalent walk + ~45 ms diffuse SwiftUI graph update (timeline gains a Title track, canvas, menu commands body, panel) + ~8 ms AX. Moving the hand-back to Select a turn later was tried and did NOT help (61.8 ms; the landing is the cost, not the pick). Effect panes: each shadow pane is ~8 rows built in one pass plus SwiftUI's AccessibilityNode.updateFocus walk over every focusable view in the window (20-80 ms, half of it swift_conformsToProtocol for new view types on first use); splitting a pane's rows across passes is the next lever. Tile pass: diffuse graph update after setTransition (document change, pickCut, playhead to the cut, picker closing); the transition form already arrives a pass later. | 2026-10-18 DONE. What landed: (1) EditorState.catchUpOnTheNextPass + readingALatePass/buildingALatePass (LookRowsReading.swift): for the pass of a marked edit, look rows (panel sections) and late-pass reads (TimelineTrackRow, its lane, ClipPiecesBar, CaptionCuesLayer, CaptionWordsLane, TimelineDock grid, InspectorPanel's section list) are told about the document a pass later; LateTrackRows holds the timeline's track list unchanged in that pass. Marked edits: new text block on a video (EditorState+Text) and the transition picker's tile (TransitionPicker). For every other edit the late-pass revision moves synchronously, so nothing else changes. (2) Menu bar reads document/history unwatched and watches menuDocumentRevision, bumped a pass later (EditorState+MenuPlayhead, Next's pro menu bar only). (3) setTransition(picksLater:) picks the cut + moves the playhead a pass later for the picker tile. (4) Effects list pieces: settings a pass after the effect's header rows, a shadow's Distance/Direction/Opacity a pass after those, effects spaced 3 passes apart. GOTCHAS: DispatchQueue.main.async does NOT reach the next pass (the run loop services the main queue before it sleeps); use NextRunLoopPass. Every earlier 'X a pass later, no gain' experiment (pick later, close picker later) was this bug. A marked edit makes several history changes (setTransition then the pick's selection flush), so the flag has to hold for the whole pass, not one change. Closing the picker alone costs ~38 ms of the ~50: a whole-window SwiftUI update floor, not any one view.",
   "acceptance": [
     "In an-editing-session-walk, the wait after Command Return on the typed title shows no single main thread pass over 50 ms, in three runs in a row",
     "Picking Cross dissolve from the At this cut tiles holds under 50 ms in three runs in a row",
@@ -34,9 +34,121 @@
     {
       "t": "2026-10-18T12:19:52.618Z",
       "note": "seq 50 -> 10"
+    },
+    {
+      "t": "2026-10-18T12:21:30.070Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T13:43:18.994Z",
+      "note": "2026-10-18 reproduced at 658c158b (an-editing-session-walk, no flags): tile 55.8 ms, wait after Command Return 66.7 ms. Per-pass log (temporary instrumentation) shows the 1 s after the commit is a chain: commit pass 55-78, then sections arriving 20-35 each, then each shadow pane 50-56 ms to build plus 45-52 ms for SwiftUI's accessibility/focus pass the frame after. Shadow pane: header rows <20 ms, the five slider rows ~10 ms each. Built so far: effect settings a pass after the effect's header rows, a shadow's Distance/Direction/Opacity a pass after Softness/Size, and the hand-back to Select after a new text block a pass later (Next video only). Effects passes now 35-48 ms. Commit first pass still 52-65: blanking panel -> ~47, timeline -> ~40, both -> 21-28. Tried, no gain: skipping PanelFieldRowLayout's width-0 measure, deferring the tile's pickCut/playhead, closing the picker popover a pass later."
+    },
+    {
+      "t": "2026-10-18T13:50:44.932Z",
+      "note": "runner failed (exit 1, attempt 1): Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T13:50:45.818Z",
+      "note": "ran out of turn with 13 file(s) still changed: Sources/Photonz/CanvasTextEditing.swift, Sources/Photonz/EditorState+ClipTransitions.swift, Sources/Photonz/EditorState+Text.swift, Sources/Photonz/EditorView.swift, Sources/Photonz/EffectsListInspector.swift, Sources/Photonz/InspectorPanel.swift, Sources/Photonz/InspectorSections.swift, Sources/Photonz/LayerEffectsInspector.swift, Sources/Photonz/PanelRowsArrival.swift, Sources/Photonz/Playtest/PlaytestHarness.swift, Sources/Photonz/TimelineDock.swift, Sources/Photonz/TransitionPicker.swift, Sources/Photonz/TTLog.swift. Put aside so the next task started clean; restore with `git stash apply df9f4348f3e3a1ebc6519a3611224814f89c51e0` before carrying on."
+    },
+    {
+      "t": "2026-10-18T13:51:17.406Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T13:51:17.412Z",
+      "note": "a previous attempt at this task left 13 file(s) changed; they are set aside. Restore them with `git stash apply df9f4348f3e3a1ebc6519a3611224814f89c51e0` and carry on, or start over and leave the stash alone."
+    },
+    {
+      "t": "2026-10-18T13:51:19.758Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T13:53:22.458Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T13:53:24.717Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T13:58:28.056Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T13:58:30.304Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T14:13:35.999Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T14:13:38.149Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T14:43:47.878Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T14:43:50.151Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T15:13:59.857Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T15:14:02.065Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T15:44:11.809Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T15:44:13.952Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T16:14:23.476Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T16:14:25.682Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T16:24:10.105Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T16:24:12.260Z",
+      "note": "runner could not sign in; handed back uncharged: Failed to authenticate: OAuth session expired and could not be refreshed"
+    },
+    {
+      "t": "2026-10-18T21:53:33.523Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-18T19:10:00.000Z",
+      "note": "restored stash df9f4348 and carried on. Acceptance, an-editing-session-walk at no flags with the claims tightened to 50 ms, three runs in a row on the clean build, all ok: tile 34.9 / 36.3 / 40.7 ms; wait after Command Return 42.5 / 43.7 / 43.9 ms (each the effect panes ~350 ms in; the commit pass itself 32-45). Also ran green: 7 transition-picker walks, 13 shadow/undo-menu walks, 13 title-on-video walks. Scripts/test.sh green (one pre-existing env-gated skip, PHOTONZ_LONG_SPEECH). Rough edges (menu one frame stale after an edit, the dissolve form a frame after the click, ~35 ms whole-window floor on any click) are in the audit and stay here: none is something a person would notice."
+    },
+    {
+      "t": "2026-10-19T02:20:04.058Z",
+      "note": "Both steps under 50 ms at Next defaults, three runs in a row of an-editing-session-walk with its claims tightened to 50: tile 34.9/36.3/40.7 ms, longest pass after Command Return 42.5/43.7/43.9 ms (from 50-63 and 55-64). The picture changes in the click's frame; timeline rows, panel sections, the pick and the menu bar follow a pass later (catchUpOnTheNextPass, readingALatePass, menuDocumentRevision, setTransition picksLater); effect panes arrive one piece per pass. Scripts/test.sh green; 33 related walks green. Audit queue/audits/2026-10-18-finishing-a-typed-title-and-picking-a-dissolve-l.json."
     }
   ],
   "walks": [
     "an-editing-session-walk"
-  ]
+  ],
+  "started": "2026-10-18T21:53:33.520Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-10-18T13:50:44.931Z",
+    "exit": 1,
+    "message": "Failed to authenticate: OAuth session expired and could not be refreshed"
+  },
+  "completed": "2026-10-19T02:20:04.059Z"
 }

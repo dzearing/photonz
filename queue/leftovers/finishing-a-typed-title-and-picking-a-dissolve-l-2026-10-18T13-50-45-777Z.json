@@ -1,0 +1,30 @@
+{
+  "id": "finishing-a-typed-title-and-picking-a-dissolve-l-2026-10-18T13-50-45-777Z",
+  "task": "finishing-a-typed-title-and-picking-a-dissolve-l",
+  "kind": "task",
+  "label": "Finishing a typed title and picking a dissolve land inside 50 ms",
+  "title": "Finishing a typed title and picking a dissolve land inside 50 ms",
+  "outcome": "failed",
+  "at": "2026-10-18T13:50:45.777Z",
+  "files": [
+    "Sources/Photonz/CanvasTextEditing.swift",
+    "Sources/Photonz/EditorState+ClipTransitions.swift",
+    "Sources/Photonz/EditorState+Text.swift",
+    "Sources/Photonz/EditorView.swift",
+    "Sources/Photonz/EffectsListInspector.swift",
+    "Sources/Photonz/InspectorPanel.swift",
+    "Sources/Photonz/InspectorSections.swift",
+    "Sources/Photonz/LayerEffectsInspector.swift",
+    "Sources/Photonz/PanelRowsArrival.swift",
+    "Sources/Photonz/Playtest/PlaytestHarness.swift",
+    "Sources/Photonz/TimelineDock.swift",
+    "Sources/Photonz/TransitionPicker.swift",
+    "Sources/Photonz/TTLog.swift"
+  ],
+  "count": 13,
+  "state": "stashed",
+  "stash": "df9f4348f3e3a1ebc6519a3611224814f89c51e0",
+  "restore": "git stash apply df9f4348f3e3a1ebc6519a3611224814f89c51e0",
+  "why": "",
+  "handed": "2026-10-18T13:51:17.411Z"
+}
