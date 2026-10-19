@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-19T14:40:26.988Z",
+  "updated": "2026-10-19T14:42:47.939Z",
   "focus": "video-editing",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -458,29 +458,47 @@
           "title": "One command surface: everything the UI does is one API call",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "A test lists every command the app can run (menus, panels, right-click menus) and fails for each one an agent cannot issue, with a short written list of the ones left out on purpose",
+            "Each agent step lands in the same undo history as a click, so one Command Z undoes one step"
+          ]
         },
         {
           "id": "agent-mcp",
           "title": "MCP plugin: the full command surface as agent tools",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "The MCP server installs with one command, drives the open document in the running app, and returns both a structured read of the document and a rendered picture or video frame so the model can check its work"
+          ]
         },
         {
           "id": "agent-skills",
           "title": "Skills for real workflows: capture, measure, spec, export",
           "note": "",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "The Photonz skill, used alone in a fresh session, gets the four user scenarios done without the person explaining how the app works"
+          ]
         },
         {
           "id": "agent-ask",
           "title": "Ask in-app: chat and command palette issue the same calls",
           "note": "",
-          "stage": "later",
-          "children": []
+          "stage": "now",
+          "children": [],
+          "success": [
+            "The Ask button and Command K take a plain request, show a readable plan of commands, run it on Run plan, and undo it with one Command Z, on a local model with networking off",
+            "No model choice appears anywhere in the ask flow; which models answer is set in Settings and works out of the box"
+          ]
         }
+      ],
+      "success": [
+        "From a fresh Claude Code session with only the Photonz skill and MCP server, the four scenarios in task claude-can-make-and-edit-pictures-and-videos-in finish end to end (the Case 1 to 5 montage, the box in a cloud icon, measurements on an open screenshot, a website design system rebuilt as Library components) and the user judges the results on a decision card",
+        "Ask in the app does the same kind of work on a local model, offline, with no model to pick while asking"
       ]
     },
     {

@@ -1,0 +1,39 @@
+{
+  "id": "ask-in-the-app-runs-on-a-local-model-with-no-mod",
+  "title": "Ask in the app runs on a local model with no model to pick",
+  "goal": "The Ask button (and Command K) in the editor takes a request in plain words and a model running on the Mac carries it out through the same commands the MCP server exposes, as an undoable plan the person can read before it runs. The person never chooses a model while asking; which models are used is set once in Settings, and works with a sensible default out of the box.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 26,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T14:42:33.582Z",
+  "updated": "2026-10-19T14:43:05.808Z",
+  "deps": [
+    "claude-can-make-and-edit-pictures-and-videos-in"
+  ],
+  "blockedBy": [],
+  "notes": "The user's words (2026-10-19, intake): 'eventually once we have the skills and mcp support, I'd like to actually have a local model be able to accept commands and do these things so that we can have the \"Ask\" button in the design experience in http://127.0.0.1:8791/#agent-generate-wt ... i don't want to have to select a model in the experience (though maybe in a settings page we could configure which models to use.)'\n\nDepends on claude-can-make-and-edit-pictures-and-videos-in (the MCP server and skill): the local model must drive the SAME command surface, not a second one. Do not start until that is done; the deps field holds it.\n\nDesign background: docs/design/creation-vision.md:85-102 (local model is the private default, schema is the safety rail, never couple to one vendor). Objective epics: agent-ask (now staged now for this task) and local-model with local-setup / local-edit (still later; this task is their first real piece, a runner may stage them now when it starts). The mock names Qwen on MLX as a direction, not a requirement; measure before choosing. Settings 'which models' is plural in the user's words: leaving room for more than one (for example a small fast one and a bigger one) is fine, but the ask surface never shows the choice.\n\nTraps: (1) The mock is the floor EXCEPT the two model-picker rows, which the user explicitly removed; do not edit the mock page itself. (2) Bundling a multi-gigabyte model into the app is not acceptable; a one-time download with consent is. (3) Release copy must never name Claude or Anthropic.",
+  "acceptance": [
+    "Built to the Ask flow of the mock at http://127.0.0.1:8791/#agent-generate-wt (docs/design/mocks/pages/agent-generate-wt.html): the Ask button in the title bar and Command K open the ask surface, a typed goal produces a readable plan of named commands in the Agent group of the dock, nothing runs until Run plan, and the whole batch undoes with one Command Z",
+    "No model choice anywhere in the ask experience: the Model row in the Agent group (mock line 344) and the Choose a model menu row (mock line 426) are NOT built. The user overrode the mock on 2026-10-19; this is the one departure from it, and nothing else in the flow is dropped",
+    "A Settings page (the app's own Settings window) says which local model answers Ask, and can change it; with nothing configured, Ask still works on the first try, either with a model already on the Mac or after a one-time setup the app walks the person through (download size and time stated up front). The audit says which runtime and model were picked as the default and why (speed and quality measured on the scenarios below, not assumed)",
+    "The model can only issue the MCP task's commands, schema-checked, so a bad plan is a no-op or an undo rather than broken pixels. It can look at the document as it stands (the same structured read and rendered picture the MCP gives Claude) to check its work",
+    "Works offline: with networking off, Ask runs end to end. Nothing about the request or the document leaves the Mac",
+    "Try paths, each run with networking off and recorded in the audit with the time it took: (1) the mock's 'Make a pricing section on brand' on a document with a design system; (2) 'annotate the ux with measurements around the major ui elements' on an open screenshot; (3) one simple video request, for example 'add a title page that says Case 1 before this clip'. Where the local model cannot manage a request a frontier model can, the audit says so plainly, and Ask tells the person in one short plain sentence rather than doing something half right",
+    "Plan latency is measured and in the audit: time from pressing Ask to the plan appearing, median of five, on this Mac",
+    "User-facing copy follows the repo rules: no Claude or Anthropic, no em dashes, short plain words",
+    "Audit under queue/audits/ with a short reel of the flow and a decision card linking it so the user judges it. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T14:42:33.584Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-19T14:42:47.883Z",
+      "note": "seq 3970 -> 26"
+    }
+  ]
+}
