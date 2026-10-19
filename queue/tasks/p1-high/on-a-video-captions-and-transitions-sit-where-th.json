@@ -1,23 +1,24 @@
 {
   "id": "on-a-video-captions-and-transitions-sit-where-th",
   "title": "On a video, Captions and Transitions sit where the user decides",
-  "goal": "On a video the right panel still stacks Captions and Transitions at the foot of the picked clip's own settings. The user chose a split panel with the lists in a pane at the bottom; this asks whether those two join that pane on a video, given that on a laptop window doing so pushes a picked sound's Fades below the fold.",
-  "epic": "ui-building",
+  "goal": "On a video the right panel should place Captions and Transitions where a video editor expects them in the panel the user asked for on 2026-10-18 (Layers on top, the picked clip next, the Library last), with transitions offered in one place rather than twice.",
+  "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 80,
-  "status": "blocked",
+  "seq": 60,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T03:26:52.669Z",
-  "updated": "2026-10-18T12:19:52.556Z",
+  "updated": "2026-10-19T12:42:47.237Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-right-panel-shows-only-what-the-picked-thing (2026-10-13). Measured on the laptop window (windowLaptop, sound picked): with Captions and Transitions in the pane at 40 per cent of a ~395pt column, the pick part was 235pt and Fades (244-352) fell under it; sound-fades-in-the-panel-walk step 12 and video-panel-order-walk step 45 failed. Both are forms the pane cannot shorten (not in DockMetrics.scrollingSections). Code: PanelListsPane.listSections (PhotonzCore), InspectorPanel.paneSplit.",
   "acceptance": [
-    "The card \"Do Captions and Transitions join the lists pane on a video?\" is answered",
-    "The panel on a video places Captions and Transitions as answered, and panel-shows-what-is-picked-video-walk checks it with expectSections lists",
-    "sound-fades-in-the-panel-walk and video-panel-order-walk still pass at Next defaults on the laptop window",
-    "UX-PATTERNS shell item 6 (Right dock) describes the panel as it now is: the pick on top, the lists pane under it with a grip between"
+    "Photograph a video panel at Next defaults on the laptop window with a clip picked and with a sound picked, and record where Captions, Transitions and the Library catalog sit today",
+    "Transitions are offered in one place on a video: the Transitions group or the catalog chip, not both, or the audit says in one line why both stay",
+    "A picked sound keeps its Fades on screen on the laptop window: sound-fades-in-the-panel-walk and video-panel-order-walk pass at Next defaults",
+    "panel-shows-what-is-picked-video-walk checks the order with expectSections",
+    "Ask a new card only if the new panel order leaves a real choice, with pictures of today's panel; UX-PATTERNS shell item 6 (Right dock) describes the panel as it now is"
   ],
   "log": [
     {
@@ -47,6 +48,30 @@
     {
       "t": "2026-10-18T12:19:52.555Z",
       "note": "seq 70 -> 80"
+    },
+    {
+      "t": "2026-10-19T12:41:38.652Z",
+      "note": "the question \"Do Captions and Transitions join the lists pane on a video?\" was taken down without an answer: Its options describe the panel before the 2026-10-19 reorder (pick on top, a lists pane at the bottom taking 40 per cent). Layers now sits on top and the Library last, by the user's word, so the choices on this card no longer exist. The task goes back to the queue to place Captions and Transitions in the new order and to stop Transitions showing twice.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-10-19T12:41:38.661Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-10-19T12:41:38.865Z",
+      "note": "digest 2026-10-19: card withdrawn because it described the panel before the reorder (23d55b26); goal and acceptance rewritten for the new order (Layers on top, pick next, Library last) and back to pending. Folded: Transitions twice in a video's dock (catalog chip + group)."
+    },
+    {
+      "t": "2026-10-19T12:41:38.932Z",
+      "note": "card withdrawn as overtaken by the panel reorder; requeued against the new panel order"
+    },
+    {
+      "t": "2026-10-19T12:41:50.142Z",
+      "note": "digest 2026-10-19: epic ui-building -> video-editing; it is about a video's panel, the focus."
+    },
+    {
+      "t": "2026-10-19T12:42:47.236Z",
+      "note": "seq 80 -> 60"
     }
   ],
   "walks": [

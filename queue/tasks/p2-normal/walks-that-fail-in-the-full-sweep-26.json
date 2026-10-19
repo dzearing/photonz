@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 410,
+  "seq": 25,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-10-19T11:33:48.712Z",
+  "updated": "2026-10-19T12:43:24.555Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-19T11:33:48Z: 968 of 978 walks passed in 278 minutes.\n\nFailing walks (10): animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  insert-a-title-before-a-clip-walk -> a-clip-or-title-held-as-an-insert-shows-what-mov (guessed from its wording, so read it before believing it)\n\n1 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 9: animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk\n\nStopped failing since the last sweep (1): view-to-edit-on-a-long-recording-walk\n\nFull output: queue/sweep/2026-10-18-235606.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: the-layers-and-library-pane-grows-into-any-room: The pane of lists now fills whatever the pick's sections leave, so any walk that clicks a fixed point in the panel's lower half may have moved (the-layers-and-library-pane-grows-into-any-room)\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -42,6 +42,26 @@
     {
       "t": "2026-10-19T11:33:48.711Z",
       "note": "sweep 2026-10-19T11:33:48Z: 10 failing (animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk); stopped failing: view-to-edit-on-a-long-recording-walk"
+    },
+    {
+      "t": "2026-10-19T12:34:49.356Z",
+      "note": "rotating check 2026-10-19T12:34:49Z, 34 walks run from 740 onward in the rotation: starter-shelf-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-19T12:41:08.277Z",
+      "note": "digest 2026-10-19: eight of the ten failures are one regression in the Library since the panel reorder and the new title pages; reproduced and moved to the-library-holds-still-under-a-click-and-every (p1). Left here: caption-lines-join-and-a-word-moves-back-walk (failing since the 2026-10-18 sweep, the last caption line offers Join with Next Line) and title-and-gfx-track-icons-walk (step 21 expects a clip called Title Page; reproduced, likely the shelf's first title page is no longer called that)."
+    },
+    {
+      "t": "2026-10-19T12:42:49.936Z",
+      "note": "seq 410 -> 380"
+    },
+    {
+      "t": "2026-10-19T12:43:24.484Z",
+      "note": "seq 380 -> 25"
+    },
+    {
+      "t": "2026-10-19T12:43:24.554Z",
+      "note": "digest 2026-10-19: moved from last in p2 to third (after the two lost-frame bugs, before the colour grade feature). Last in p2 it waited two days behind every feature while earlier standing tasks cleared within half a day, and what is left on it (the last caption line offering Join with Next Line, and a title page walk) are broken things in the focus, not loop chores."
     }
   ],
   "standing": "walk-sweep"

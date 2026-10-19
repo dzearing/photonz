@@ -4,12 +4,12 @@
   "goal": "An animated chart given a negative number, such as a quarter that lost money, draws that bar as a flat line on the baseline, so the chart says the value was nothing. Negative values should draw below the baseline the way any chart app draws them, and a row that wears the theme colour should show that colour in its swatch rather than a struck-through box that reads as no colour.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 310,
+  "seq": 270,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T12:19:30.558Z",
-  "updated": "2026-10-18T12:19:54.540Z",
+  "updated": "2026-10-19T12:42:49.186Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-10-17-animated-charts.json: \"Negative values draw as a flat bar on the baseline\" and \"A row wearing the theme colour shows a struck-through swatch in its colour well, which can read as no colour at all.\" Left in the charts task log as rough on 2026-10-18; filed by the digest because a chart that draws a wrong value is broken, not a nit. Charts shipped in commit 29761749 as a title kind with a Chart section. The open card animated-charts-you-can-drop-into-a-video-do-the-six-charts-build-in-and-l is about the look, not this.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-18T12:19:54.539Z",
       "note": "seq 249.9951171875 -> 310"
+    },
+    {
+      "t": "2026-10-19T12:42:49.185Z",
+      "note": "seq 310 -> 270"
     }
   ]
 }

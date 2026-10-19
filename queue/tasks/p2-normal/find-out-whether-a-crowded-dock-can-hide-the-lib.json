@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 270,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T02:00:41.439Z",
-  "updated": "2026-10-18T12:19:54.283Z",
+  "updated": "2026-10-19T12:41:08.411Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-17 while landing animated charts (the Animated Charts chip wraps the catalog's chips to a third row, as the mock's own chips do once a video holds pictures). Reproduction before the walk's leak was fixed: Scripts/playtest-all.sh --no-build video-library-catalog -> 'step 52 (press): scrolled 490pt and a press still could not land: \"Split Wipe\" is 62pt below the bottom of the part of its own scrolling area that is on screen, and that area would not scroll any further.' Split Wipe was in the second row only because two name cards saved by other walks led the shelf (fixed: forget all now covers saved title presets, PlaytestMemory.titlePresets). Picture of the state: dock with Captions, Transitions (squeezed) and Library at one tile row, Sections - 1 hidden. Not confirmed by hand: the harness says the shelf ScrollView's frame runs ~62pt below the dock's visible area (InspectorDockLayout squeezeFloor / LibraryShelfLayout.squeezeFloor). To reproduce: put two saved name cards on the probe (run title-pages-and-name-cards-walk with forget not covering titlePresets) then the catalog walk.",
@@ -25,6 +25,14 @@
     {
       "t": "2026-10-18T12:19:54.281Z",
       "note": "seq 249.84375 -> 270"
+    },
+    {
+      "t": "2026-10-19T12:41:08.344Z",
+      "note": "digest 2026-10-19: folded into the-library-holds-still-under-a-click-and-every, whose acceptance asks that every catalog tile in a crowded video dock on the laptop window can be scrolled into view and double clicked. The panel reorder moved the Library to the foot of the panel, which is where this question now lives."
+    },
+    {
+      "t": "2026-10-19T12:41:08.410Z",
+      "note": "folded into the-library-holds-still-under-a-click-and-every"
     }
   ]
 }

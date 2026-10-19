@@ -12698,3 +12698,70 @@
 {"t":"2026-10-19T12:20:27.181Z","ev":"task_note","id":"a-title-part-move-dragged-by-hand-on-the-timelin"}
 {"t":"2026-10-19T12:20:27.252Z","ev":"task_note","id":"a-title-part-move-dragged-by-hand-on-the-timelin"}
 {"t":"2026-10-19T12:20:43.821Z","ev":"task_done","id":"a-title-part-move-dragged-by-hand-on-the-timelin","from":"in_progress","note":"A title part's movement bar dragged by hand (and any key edited by hand) survives retiming another part, theme, font pair, energy and intensity; chart bars keep their own keys and added effects through new numbers and themes. Core: TitleHandMoves.swift + refitTitle + ChartPen.rebuilt. Verified by TitleHandKeysSurviveRestyleTests (9, full suite green) and a-dragged-part-bar-survives-a-restyle-walk at Next defaults (fails with the fix disabled). Audit queue/audits/2026-10-19-a-title-part-move-dragged-by-hand-on-the-timelin.json."}
+{"t":"2026-10-19T12:34:49.360Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-19T12:37:04.353Z","ev":"slice_pass","walks":34,"passed":33,"failed":1,"seconds":524,"of":979,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-19T12:40:50.557Z","ev":"task_created","id":"the-library-holds-still-under-a-click-and-every","priority":"p1-high","title":"The Library holds still under a click and every tile in it can be reached, with Layers now on top"}
+{"t":"2026-10-19T12:41:08.200Z","ev":"task_walks","id":"the-library-holds-still-under-a-click-and-every","walks":["video-library-catalog-walk","title-presets-library-shelf-walk","animated-charts-walk","insert-a-title-before-a-clip-walk","library-tile-click-latency-picture-walk","starter-shelf-walk","component-drag-lands-a-copy-walk","tutorial-add-a-second-clip-walk"]}
+{"t":"2026-10-19T12:41:08.280Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-19T12:41:08.346Z","ev":"task_note","id":"find-out-whether-a-crowded-dock-can-hide-the-lib"}
+{"t":"2026-10-19T12:41:08.412Z","ev":"task_dropped","id":"find-out-whether-a-crowded-dock-can-hide-the-lib","from":"pending","note":"folded into the-library-holds-still-under-a-click-and-every"}
+{"t":"2026-10-19T12:41:08.480Z","ev":"task_note","id":"a-clip-or-title-held-as-an-insert-shows-what-mov"}
+{"t":"2026-10-19T12:41:14.931Z","ev":"decision_withdrawn","id":"choose-when-the-pane-of-lists-makes-room-for-a-l-when-you-click-a-layer-in-the-la","taskId":"choose-when-the-pane-of-lists-makes-room-for-a-l","question":"When you click a layer in the Layers list and its settings need room above, when should the list make way?","reason":"Overtaken by the panel reorder of 2026-10-19 (commit 23d55b26, by the user's word): Layers now sits on top and a picked layer's settings come in below it, so nothing makes way above the list. The pointer hold this card asked about and its walk lists-pane-fills-the-room-walk were removed in that commit."}
+{"t":"2026-10-19T12:41:15.039Z","ev":"task_note","id":"choose-when-the-pane-of-lists-makes-room-for-a-l"}
+{"t":"2026-10-19T12:41:15.108Z","ev":"task_dropped","id":"choose-when-the-pane-of-lists-makes-room-for-a-l","from":"blocked","note":"question overtaken by the panel reorder (23d55b26); card withdrawn"}
+{"t":"2026-10-19T12:41:38.619Z","ev":"decision_withdrawn","id":"on-a-video-captions-and-transitions-sit-where-th-do-captions-and-transitions-join","taskId":"on-a-video-captions-and-transitions-sit-where-th","question":"Do Captions and Transitions join the lists pane on a video?","reason":"Its options describe the panel before the 2026-10-19 reorder (pick on top, a lists pane at the bottom taking 40 per cent). Layers now sits on top and the Library last, by the user's word, so the choices on this card no longer exist. The task goes back to the queue to place Captions and Transitions in the new order and to stop Transitions showing twice."}
+{"t":"2026-10-19T12:41:38.868Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
+{"t":"2026-10-19T12:41:38.935Z","ev":"task_pending","id":"on-a-video-captions-and-transitions-sit-where-th","from":"blocked","note":"card withdrawn as overtaken by the panel reorder; requeued against the new panel order"}
+{"t":"2026-10-19T12:41:50.144Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
+{"t":"2026-10-19T12:42:46.905Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":20,"to":10}
+{"t":"2026-10-19T12:42:46.970Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":30,"to":20}
+{"t":"2026-10-19T12:42:47.040Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":40,"to":30}
+{"t":"2026-10-19T12:42:47.107Z","ev":"task_resequenced","id":"a-picked-rounded-shape-is-ringed-round-its-box-a","from":50,"to":40}
+{"t":"2026-10-19T12:42:47.173Z","ev":"task_resequenced","id":"the-library-holds-still-under-a-click-and-every","from":55,"to":50}
+{"t":"2026-10-19T12:42:47.238Z","ev":"task_resequenced","id":"on-a-video-captions-and-transitions-sit-where-th","from":80,"to":60}
+{"t":"2026-10-19T12:42:47.303Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":60,"to":70}
+{"t":"2026-10-19T12:42:47.366Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":70,"to":80}
+{"t":"2026-10-19T12:42:47.435Z","ev":"task_resequenced","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo","from":50,"to":10}
+{"t":"2026-10-19T12:42:47.501Z","ev":"task_resequenced","id":"trimming-a-clip-start-into-a-speed-stop-freeze-k","from":315,"to":20}
+{"t":"2026-10-19T12:42:47.570Z","ev":"task_resequenced","id":"a-colour-grade-can-be-its-own-track-over-the-cli","from":60,"to":30}
+{"t":"2026-10-19T12:42:47.635Z","ev":"task_resequenced","id":"or-sits-beside-shorten-the-cut-the-way-the-trans","from":70,"to":40}
+{"t":"2026-10-19T12:42:47.701Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":80,"to":50}
+{"t":"2026-10-19T12:42:47.769Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":90,"to":60}
+{"t":"2026-10-19T12:42:47.844Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":100,"to":70}
+{"t":"2026-10-19T12:42:47.912Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":110,"to":80}
+{"t":"2026-10-19T12:42:47.979Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":120,"to":90}
+{"t":"2026-10-19T12:42:48.044Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":130,"to":100}
+{"t":"2026-10-19T12:42:48.108Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":140,"to":110}
+{"t":"2026-10-19T12:42:48.176Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":150,"to":120}
+{"t":"2026-10-19T12:42:48.238Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":160,"to":130}
+{"t":"2026-10-19T12:42:48.305Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":170,"to":140}
+{"t":"2026-10-19T12:42:48.374Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":180,"to":150}
+{"t":"2026-10-19T12:42:48.438Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":190,"to":160}
+{"t":"2026-10-19T12:42:48.504Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":200,"to":170}
+{"t":"2026-10-19T12:42:48.568Z","ev":"task_resequenced","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","from":210,"to":180}
+{"t":"2026-10-19T12:42:48.635Z","ev":"task_resequenced","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b","from":220,"to":190}
+{"t":"2026-10-19T12:42:48.703Z","ev":"task_resequenced","id":"delete-on-a-picked-through-edit-joins-it-as-in-p","from":230,"to":200}
+{"t":"2026-10-19T12:42:48.770Z","ev":"task_resequenced","id":"a-clip-or-title-held-as-an-insert-shows-what-mov","from":240,"to":210}
+{"t":"2026-10-19T12:42:48.838Z","ev":"task_resequenced","id":"a-title-or-picture-right-click-leads-with-animat","from":250,"to":220}
+{"t":"2026-10-19T12:42:48.912Z","ev":"task_resequenced","id":"the-panel-s-hold-takes-any-typed-length","from":260,"to":230}
+{"t":"2026-10-19T12:42:48.980Z","ev":"task_resequenced","id":"a-ramped-clip-s-bar-is-tinted-by-its-speed-bands","from":280,"to":240}
+{"t":"2026-10-19T12:42:49.048Z","ev":"task_resequenced","id":"a-picked-cut-opens-from-a-chevron-on-its-track-h","from":290,"to":250}
+{"t":"2026-10-19T12:42:49.118Z","ev":"task_resequenced","id":"words-on-a-curve-are-typed-on-the-curve-and-come","from":300,"to":260}
+{"t":"2026-10-19T12:42:49.187Z","ev":"task_resequenced","id":"a-chart-with-negative-numbers-draws-its-bars-bel","from":310,"to":270}
+{"t":"2026-10-19T12:42:49.255Z","ev":"task_resequenced","id":"a-title-part-row-shows-where-its-hand-dragged-mo","from":317.5,"to":280}
+{"t":"2026-10-19T12:42:49.323Z","ev":"task_resequenced","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","from":320,"to":290}
+{"t":"2026-10-19T12:42:49.395Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":330,"to":300}
+{"t":"2026-10-19T12:42:49.466Z","ev":"task_resequenced","id":"the-measuring-legend-says-something-useful-now-t","from":340,"to":310}
+{"t":"2026-10-19T12:42:49.537Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":350,"to":320}
+{"t":"2026-10-19T12:42:49.605Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":360,"to":330}
+{"t":"2026-10-19T12:42:49.672Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":370,"to":340}
+{"t":"2026-10-19T12:42:49.738Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":380,"to":350}
+{"t":"2026-10-19T12:42:49.803Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":390,"to":360}
+{"t":"2026-10-19T12:42:49.868Z","ev":"task_resequenced","id":"the-repeats-label-on-the-timing-strip-s-ruler-ne","from":400,"to":370}
+{"t":"2026-10-19T12:42:49.938Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-26","from":410,"to":380}
+{"t":"2026-10-19T12:42:50.006Z","ev":"task_note","id":"trimming-a-clip-start-into-a-speed-stop-freeze-k"}
+{"t":"2026-10-19T12:43:24.486Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-26","from":380,"to":25}
+{"t":"2026-10-19T12:43:24.556Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-19T12:44:09.260Z","ev":"task_note","id":"the-library-holds-still-under-a-click-and-every"}
+{"t":"2026-10-19T12:44:17.612Z","ev":"triage","summary":"filed 1 (Library regression, p1, reproduced), dropped 2 (crowded dock folded, pane card overtaken), withdrew 2 overtaken cards, requeued 1, moved 2 (trim freeze and standing walk task up in p2), retagged 1, renumbered p1 and p2; open 49 -> 48"}
+{"t":"2026-10-19T12:45:05.008Z","ev":"digest","file":"2026-10-19.md"}

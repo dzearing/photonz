@@ -330,6 +330,14 @@ reason instead of picking an option yourself:
 node queue/bin/queue.mjs withdraw <decisionId> "<why it stopped mattering>"
 ```
 
+Your own change can overtake a card on somebody else's task, too. When you move
+or rearrange a surface (the panel, the dock, a menu), search for open tasks that
+ask about it (`node queue/bin/queue.mjs search "<the surface>"`) and read their
+cards: a card whose options describe the layout you just replaced is taken down
+with that reason, and its task goes back to `pending` with its checklist
+rewritten for what is there now. On 2026-10-19 two cards about the right panel
+still asked about a pane at the bottom a day after Layers moved to the top.
+
 It leaves the dashboard without ever looking answered, and it does NOT start the
 work it was blocking: a task blocked with no question left stays blocked and
 says so. If the question is still live but worded wrong, open a new card rather

@@ -4,12 +4,12 @@
   "goal": "Someone who builds icons will try to open an existing SVG in Photonz, from File Open or from the Finder, and today it appears to do nothing: the app does not even list itself for SVG files in the Finder. Find out exactly what happens, then make opening an SVG give a document holding its drawing at its own size, the way a picture opens.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 320,
+  "seq": 290,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.488Z",
-  "updated": "2026-10-18T12:19:54.615Z",
+  "updated": "2026-10-19T12:42:49.322Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-10-16-svg-logo.json: 'Opening an SVG with no document open (Finder > Open With) still does nothing; only bringing one into an open document is covered.' NOT reproduced by the manager, hence p2 and the first checklist item. Evidence it is likely: the built probe's Info.plist CFBundleDocumentTypes lists png/jpeg/tiff/heic/gif, recordings and the Photonz document, no public.svg-image (plutil -p 'dist/Photonz Probe.app/Contents/Info.plist'). File Open allows [.image, photonzType] (Sources/Photonz/AppCoordinator.swift:992-1001) and .svg conforms to public.image, so File Open probably lists SVGs and then openWindow(.file(url)) tries to load it as a bitmap. Library import already keeps an SVG as VectorArt (Sources/Photonz/EditorState+LibraryImport.swift:20-25, 115-130): reuse that, do not write a second SVG reader. Whether the drawing should come in as editable shapes rather than one vector layer is a later question; one sharp vector layer is enough here. Info.plist source lives with Scripts/build-app.sh.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-10-18T12:19:54.613Z",
       "note": "seq 250 -> 320"
+    },
+    {
+      "t": "2026-10-19T12:42:49.320Z",
+      "note": "seq 320 -> 290"
     }
   ]
 }

@@ -1,0 +1,53 @@
+{
+  "id": "the-library-holds-still-under-a-click-and-every",
+  "title": "The Library holds still under a click and every tile in it can be reached, with Layers now on top",
+  "goal": "Since the right panel moved Layers to the top and the Library to the bottom, the Library on a video misbehaves: the first click on a title page tile moves the tile, so a double click lands beside it and nothing is added; the Library can sit out of view where nothing scrolls to it; and the add-a-second-clip tutorial points at a Library that is not on screen. Put the Library back where a person can see it, reach every tile, and double click one without it moving.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T12:40:50.553Z",
+  "updated": "2026-10-19T12:44:09.259Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Filed by the 2026-10-19 digest pass. The full sweep of 2026-10-19 (968 of 978) failed 8 walks that all passed in the 2026-10-18 sweep, all touching the Library: five fail with a Library tile moving between the clicks of a double click (Keynote Section 110pt in video-library-catalog-walk and title-presets-library-shelf-walk, Bar Chart 110pt in animated-charts-walk, Card 131pt in library-tile-click-latency-picture-walk, Keynote Section 6pt in insert-a-title-before-a-clip-walk), two with sectionHeaderInView(\"Library\") never happening (starter-shelf-walk step 29, component-drag-lands-a-copy-walk step 7), and tutorial-add-a-second-clip-walk with no panel.library among the names on screen (canvas, panel, panel.captions, panel.speed, panel.transitions, ...). Reproduced by the digest pass with Scripts/playtest.sh <walk> --no-build for video-library-catalog-walk, tutorial-add-a-second-clip-walk and starter-shelf-walk, same steps and same messages. Landed between the two sweeps: 23d55b26 (the panel reads top to bottom: Layers on top, Library last, Library waits to be turned on in Image and Icon via WindowMode.libraryWaitsToBeTurnedOn) and e3cf47e1 / 557f24a9 (ten new title pages lead the shelf). Picture: /tmp/photonz-playtest/video-library-catalog-walk/2-title-pages.png showed the Transitions grid filling the panel and the Library's title page tiles cut off at its foot. Where a walk only needs a new point or name because the layout moved by the user's word, update the walk; where a person would see the tile move or the tutorial point at nothing, fix the app.",
+  "acceptance": [
+    "Reproduce first at Next defaults: Scripts/playtest.sh Scripts/playtest/video-library-catalog-walk.json --no-build fails at step 30 with Keynote Section moving 110pt between the two clicks of a double click (seen 2026-10-19 by the digest pass), and tutorial-add-a-second-clip-walk fails at step 2 with no panel.library on screen",
+    "Double clicking any Library tile, on a video or on a picture with the Library turned on, adds it: MEASURED, the tile moves 0pt between the two clicks",
+    "On a video with Captions, Transitions and the catalog all showing, on the laptop window, every catalog tile can be scrolled into view and double clicked (this folds in the open question about a crowded dock hiding the shelf's second row)",
+    "The add-a-second-clip tutorial's media shelf step points at a Library a person can see at Next defaults",
+    "These walks pass at Next defaults with no flags: video-library-catalog-walk, title-presets-library-shelf-walk, animated-charts-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, component-drag-lands-a-copy-walk, tutorial-add-a-second-clip-walk, and panel-reads-top-to-bottom-walk still passes",
+    "Audit under queue/audits/ with a real picture of a video's panel with the Library in reach",
+    "UX-PATTERNS gains one line in the placement contract: a click never moves the control it landed on, so a second click lands on the same thing (the rule the walk harness already enforces, broken twice now: the lists pane on 2026-10-14 and Library tiles on 2026-10-19)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T12:40:50.555Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-19T12:41:08.197Z",
+      "note": "owns these walks: video-library-catalog-walk, title-presets-library-shelf-walk, animated-charts-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, component-drag-lands-a-copy-walk, tutorial-add-a-second-clip-walk"
+    },
+    {
+      "t": "2026-10-19T12:42:47.171Z",
+      "note": "seq 55 -> 50"
+    },
+    {
+      "t": "2026-10-19T12:44:09.258Z",
+      "note": "digest 2026-10-19: the card on a-video-document-shows-the-library-in-its-dock (open since 2026-09-23) decides whether a video shows the Library without View > Library; build to today's default and do not re-ask it here."
+    }
+  ],
+  "walks": [
+    "video-library-catalog-walk",
+    "title-presets-library-shelf-walk",
+    "animated-charts-walk",
+    "insert-a-title-before-a-clip-walk",
+    "library-tile-click-latency-picture-walk",
+    "starter-shelf-walk",
+    "component-drag-lands-a-copy-walk",
+    "tutorial-add-a-second-clip-walk"
+  ]
+}

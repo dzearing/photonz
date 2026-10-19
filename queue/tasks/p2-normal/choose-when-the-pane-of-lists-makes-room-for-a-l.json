@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 4070,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T18:42:04.213Z",
-  "updated": "2026-10-18T18:42:30.636Z",
+  "updated": "2026-10-19T12:41:15.107Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Built in the-layers-and-library-pane-grows-into-any-room (2026-10-18): InspectorPanel.pointerInListsPane holds the pane at its drawn height while the pointer is inside it (DockRevealScratch.heldWhilePointerInside), settling on the fold curve when the pointer leaves. Pictures: queue/audits/2026-10-18-lists-pane-fills-the-room-6.png (pointer in the list, sections hidden) and -7.png (pointer left, sections shown). The 2026-10-14 rule this protects: a click in the pane never moves what is under the pointer (lists-pane-holds-still-walk).",
@@ -29,6 +29,22 @@
     {
       "t": "2026-10-18T18:42:30.633Z",
       "note": "Waiting on the card: when the list makes way for a layer picked from it (option a is built)"
+    },
+    {
+      "t": "2026-10-19T12:41:14.964Z",
+      "note": "the question \"When you click a layer in the Layers list and its settings need room above, when should the list make way?\" was taken down without an answer: Overtaken by the panel reorder of 2026-10-19 (commit 23d55b26, by the user's word): Layers now sits on top and a picked layer's settings come in below it, so nothing makes way above the list. The pointer hold this card asked about and its walk lists-pane-fills-the-room-walk were removed in that commit.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-10-19T12:41:14.973Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-10-19T12:41:15.037Z",
+      "note": "digest 2026-10-19: card withdrawn. The panel reorder (23d55b26) put Layers on top with the pick's sections below and removed the pointer hold (InspectorPanel.pointerInListsPane) and lists-pane-fills-the-room-walk, so the question no longer describes the app. What remains (a clicked row must stay under the pointer when the Layers pane shrinks) is checked by layer-row-lifts-by-pointer-walk and lists-pane-holds-still-walk."
+    },
+    {
+      "t": "2026-10-19T12:41:15.106Z",
+      "note": "question overtaken by the panel reorder (23d55b26); card withdrawn"
     }
   ],
   "walks": [

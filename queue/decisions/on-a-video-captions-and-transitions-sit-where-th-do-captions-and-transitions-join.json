@@ -45,6 +45,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-10-14T03:27:02.896Z"
+  "status": "withdrawn",
+  "created": "2026-10-14T03:27:02.896Z",
+  "withdrawn": {
+    "reason": "Its options describe the panel before the 2026-10-19 reorder (pick on top, a lists pane at the bottom taking 40 per cent). Layers now sits on top and the Library last, by the user's word, so the choices on this card no longer exist. The task goes back to the queue to place Captions and Transitions in the new order and to stop Transitions showing twice.",
+    "at": "2026-10-19T12:41:38.617Z"
+  }
 }

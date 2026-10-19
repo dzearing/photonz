@@ -44,6 +44,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-10-18T18:42:18.827Z"
+  "status": "withdrawn",
+  "created": "2026-10-18T18:42:18.827Z",
+  "withdrawn": {
+    "reason": "Overtaken by the panel reorder of 2026-10-19 (commit 23d55b26, by the user's word): Layers now sits on top and a picked layer's settings come in below it, so nothing makes way above the list. The pointer hold this card asked about and its walk lists-pane-fills-the-room-walk were removed in that commit.",
+    "at": "2026-10-19T12:41:14.929Z"
+  }
 }

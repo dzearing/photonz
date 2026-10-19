@@ -4,12 +4,12 @@
   "goal": "On the timeline, a clip whose speed changes across it shows where it is slow, normal, fast or frozen on the clip bar itself, coloured the way the speed mock colours it, with the mock's small legend under the clip, so an editor reads the retime at a glance without opening the speed curve.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 280,
+  "seq": 240,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T04:37:35.648Z",
-  "updated": "2026-10-18T12:19:54.346Z",
+  "updated": "2026-10-19T12:42:48.979Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-speed.html .vs-cells/.vs-cell (48 sampled cells, gradients per band) and .seglegend. The bands per clip are SpeedCurve(clipPieces).bands (Sources/PhotonzCore/SpeedCurve.swift), already tested; the clip bar is ClipPiecesBar.swift. Filed from the-speed-curve-shows-under-a-clip-and-its-stops, whose audit lists both as mock differences.",
@@ -37,6 +37,10 @@
     {
       "t": "2026-10-18T12:19:54.345Z",
       "note": "seq 249.921875 -> 280"
+    },
+    {
+      "t": "2026-10-19T12:42:48.978Z",
+      "note": "seq 280 -> 240"
     }
   ],
   "walks": [
