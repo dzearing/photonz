@@ -313,7 +313,7 @@ extension EditorState {
 
     private func askBeforeRasterizing(title: String, message: String, confirm: String,
                                       cancel: String, ids: Set<UUID>) {
-        guard !Self.silencedQuestions.isSilenced(.turnIntoPicture) else {
+        guard !Self.silencedQuestions.isSilenced(.turnIntoPicture), !agentIsRunning else {
             applyRasterize(ids: ids)
             return
         }
@@ -591,7 +591,7 @@ extension EditorState {
 
     private func askBeforeTurningIntoPath(title: String, message: String, confirm: String,
                                           cancel: String, ids: Set<UUID>, joinOnly: Bool) {
-        guard !Self.silencedQuestions.isSilenced(.turnIntoPath) else {
+        guard !Self.silencedQuestions.isSilenced(.turnIntoPath), !agentIsRunning else {
             applyTurnIntoPath(ids: ids, joinOnly: joinOnly)
             return
         }
@@ -679,7 +679,7 @@ extension EditorState {
             sayWhatHappenedToPaths(.nothingClosed, orHint: PathEditHint.nothingClosed())
             return
         }
-        guard !Self.silencedQuestions.isSilenced(.turnIntoPath) else {
+        guard !Self.silencedQuestions.isSilenced(.turnIntoPath), !agentIsRunning else {
             applyClosePaths(ids: ids)
             return
         }

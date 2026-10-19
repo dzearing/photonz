@@ -123,7 +123,7 @@ enum AgentDrawingWork {
         guard let id = UUID(uuidString: layer), let was = document.layer(id: id) else {
             throw Failure("There is no layer \(layer) in this document. read_document lists the layer ids.")
         }
-        guard !was.isLocked else { throw Failure("\(was.name) is locked. Unlock it with run_command first.") }
+        guard !was.isLocked else { throw Failure("\(was.name) is locked. Unlock it with run_command lock_layer, on false.") }
         var changed = try AgentDrawing.applying(change, to: was, canvas: document.canvasSize).get()
         if change.changesTheWords, change.width == nil, change.height == nil, let words = changed.text,
            let before = was.text {

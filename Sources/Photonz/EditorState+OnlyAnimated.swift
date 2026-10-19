@@ -89,7 +89,11 @@ extension EditorState {
         guard !groups.isEmpty else { return nil }
         return .submenu("Animate", groups.map { entry in
             .section(entry.group.title, entry.properties.map { property in
-                .command(property.title(on: layer)) { self.animate(property, layerID: layerID) }
+                .command(property.title(on: layer)) {
+                    // The named command (`AppCommandRunner`), on this layer.
+                    if self.selectedLayerID != layerID { self.selectLayer(layerID) }
+                    self.run(.animateProperty, ["property": .string(property.title(on: layer))])
+                }
             })
         })
     }

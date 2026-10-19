@@ -72,7 +72,7 @@ enum AgentWork {
         case .listCommands(let id, let area, let readyOnly):
             return try listCommands(AgentDocuments.editor(id).get(), area: area, readyOnly: readyOnly)
         case .runCommand(let id, let call):
-            return try runCommand(AgentDocuments.editor(id).get(), call)
+            return try await runCommand(AgentDocuments.editor(id).get(), call)
         case .newPicture, .addShape, .addPath, .addText, .setLayer, .findElements,
              .addMeasurement, .listComponents, .placeComponent, .export:
             return try await AgentDrawingWork.answer(request)
@@ -395,7 +395,7 @@ enum AgentWork {
 
     /// Picks what the call names, the way a person clicks it before choosing
     /// the row, then runs the command as its row does, all as one undo step.
-    private static func runCommand(_ editor: EditorState, _ call: AppCommandCall) throws -> Answer {
+    private static func runCommand(_ editor: EditorState, _ call: AppCommandCall) async throws -> Answer {
         guard let command = AppCommandTable.command(call.id) else {
             throw Failure("There is no command called \(call.id.rawValue).")
         }
@@ -404,7 +404,9 @@ enum AgentWork {
             throw Failure("\(command.name) works on a video, and \(title(of: editor)) is a picture.")
         }
         var refusal: String?
-        editor.asOneUndoStep {
+        editor.agentIsRunning = true
+        defer { editor.agentIsRunning = false }
+        await editor.asOneUndoStepAwaiting {
             do {
                 try pick(call, in: editor, document: before)
             } catch let failure as Failure {
@@ -418,7 +420,7 @@ enum AgentWork {
                 refusal = "\(command.title) cannot run now: it needs \(command.needs)." + hint(for: call, in: editor)
                 return
             }
-            editor.run(call)
+            await editor.runAwaiting(call)
         }
         if let refusal { throw Failure(refusal) }
         let after = editor.document
@@ -438,6 +440,23 @@ enum AgentWork {
             if let layer = editor.pictureFadeLayerInHand,
                let end = call.word("end").flatMap(FadeEnd.init(rawValue:)) {
                 " It offers " + editor.pictureFadeStops(end, layer: layer).map { "\($0)" }.joined(separator: ", ") + " ms."
+            } else { "" }
+        case .fillTheStack: editor.flowFillCommand.reason.map { " " + $0 } ?? ""
+        case .surfaceBehind, .inFrontOfTheRest: editor.surfaceCommand.reason.map { " " + $0 } ?? ""
+        case .save where editor.saveAsksWhere:
+            " This document has no file to save back to yet; export writes it to a path."
+        case .insertTitle:
+            if let kind = call.word("kind").flatMap(TitleKind.init(rawValue:)) {
+                " The \(kind.name) styles are " + editor.titlePresetNames(kind).joined(separator: ", ") + "."
+            } else { "" }
+        case .animateProperty:
+            if let layer = editor.layerToAnimate {
+                " It can animate " + editor.animateGroups(layerID: layer.id).flatMap(\.properties)
+                    .map { $0.title(on: layer) }.joined(separator: ", ") + "."
+            } else { "" }
+        case .stopAnimating:
+            if let layer = editor.keyLayer, !editor.animatingRows.isEmpty {
+                " It is animating " + editor.animatingRows.map { $0.title(on: layer) }.joined(separator: ", ") + "."
             } else { "" }
         default: ""
         }
@@ -460,7 +479,11 @@ enum AgentWork {
             }
             editor.pickTrack(id, extending: false)
         }
-        guard !call.layers.isEmpty else { return }
+        if call.id == .section, let range = document.markedRangeMS { editor.rulerRangeInHand = range }
+        guard !call.layers.isEmpty else {
+            try pickWithin(call, in: editor, document: document)
+            return
+        }
         var ids: [UUID] = []
         for layer in call.layers {
             guard let id = UUID(uuidString: layer), document.layer(id: id) != nil else {
@@ -478,6 +501,26 @@ enum AgentWork {
             editor.selectLayer(id)
         } else {
             editor.selectLayers(Set(ids))
+        }
+        try pickWithin(call, in: editor, document: document)
+    }
+
+    /// What a command acts on inside what was picked, the way a click on it
+    /// picks it: the zoom at the playhead, or the gap at the playhead on the
+    /// track named.
+    private static func pickWithin(_ call: AppCommandCall, in editor: EditorState, document: PhotonzDocument) throws {
+        switch call.id {
+        case .followCursor, .setZoomAmount, .deleteZoom:
+            guard editor.pickZoomAtPlayhead() else {
+                throw Failure("There is no zoom at the playhead. read_document says how many zooms a clip "
+                              + "carries; seconds puts the playhead inside one.")
+            }
+        case .delete where call.track != nil && call.layers.isEmpty && call.atMS != nil:
+            guard let track = call.track.flatMap(UUID.init(uuidString:)), editor.pickGap(onTrack: track) else {
+                throw Failure("There is no gap at the playhead on that track: a gap is empty time between two clips.")
+            }
+        default:
+            break
         }
     }
 }

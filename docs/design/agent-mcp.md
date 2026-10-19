@@ -198,6 +198,38 @@ the same edit by picking that thing and running the in-hand command. The rows
 that were already "pick, then the in-hand call" now go through `run` too
 (split, speed, detach and re-attach, speed stops, transition length and curve).
 
+**The rest of the menu (`the-rest-of-the-menu-commands-can-be-run-by-name`).** The
+not-yet list is empty: 284 menu bar rows, 215 named, 68 left out with a reason,
+and 57 of 65 timeline right-click rows run a named command (214 commands). The
+rules that got the last 77 rows there:
+
+* *What a person is asked for, an agent says.* A row that opens a field, a
+  sheet, a popover or a file panel (Rename…, Resize Image…, Canvas Size…, New
+  Frame…, Freeze Frame…, Save as Preset…, Edit Word, Add Click…, Import Media…,
+  Add Media at Playhead…, Export Sound…, Export Captions…) runs its command with
+  the answer left out, and the command asks as it always did. The agent's schema
+  makes the answer required, so `run_command` never opens anything
+  (`AppCommandRunner+Asked.swift`).
+* *A question is not put to an agent.* Turn into Picture and Turn into Path ask
+  a person first; while an agent runs (`EditorState.agentIsRunning`) they do
+  not, since the agent's one undo step is its way back. Save that would need a
+  save box is refused with "export writes it to a path".
+* *Picks that were missing.* A caption word is the one being said at `seconds`
+  (and `read_document` now lists caption lines with each word's start); a zoom
+  is the one at `seconds` on the clip in `layers`; a gap is the one at
+  `seconds` on `track`, closed by `delete`; a stretch of keys is the one under
+  `seconds`; a value to animate or stop is named in its Animate row's words.
+* *Rows built as lists* (Insert Title Page, Animate ▸, Picked in Range) run
+  every row through the command (`insert_title`, `animate_property`,
+  `section`); the coverage test checks the builder does.
+* *Waiting.* Commands that read or write a file, or measure a sound, finish
+  before the answer comes back (`runAwaiting`), inside the one undo step.
+
+`Scripts/agent-commands-drill.mjs` drives the probe as an agent does and proves
+each command an agent can run is one undo step: it runs it, checks the document
+changed, undoes once and checks the document reads exactly as before (43 of 43
+on 2026-10-19). It never touches the clipboard, which is the person's.
+
 ### Slice 3 (`an-agent-can-draw-a-picture-with-shapes-paths-te`): pictures
 
 | Tool | What it does | Maps onto |
@@ -260,8 +292,7 @@ The first slice's run of exactly that is in
 
 ## Not in this slice
 
-* Video edits (slice 4), and the menu rows still on slice
-  2's not-yet list (`the-rest-of-the-menu-commands-can-be-run-by-name`).
+* Video edits (slice 4).
 * Notifications when the person changes the document while the agent works:
   the agent reads again when it needs to.
 * Shipping the bridge inside the app bundle so a release user needs no repo.

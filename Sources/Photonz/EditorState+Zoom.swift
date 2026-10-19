@@ -343,7 +343,7 @@ extension EditorState {
     }
 
     /// How far in a zoom can be set from its menu and the panel, in percent.
-    static let zoomScaleStops = [125, 150, 200, 250, 300, 400]
+    static let zoomScaleStops = AppCommandTable.zoomPercents
     /// How long a way in or out can be set to from the panel, in ms.
     static let zoomEaseStops = [0, 300, 500, 700, 1000, 1500, 2000]
 

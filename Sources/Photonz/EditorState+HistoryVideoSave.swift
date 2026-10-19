@@ -25,18 +25,24 @@ extension EditorState {
             == store.directory.standardizedFileURL.path
     }
 
-    /// Command S on a recording window. False when the recording is not one
-    /// history holds, which leaves the save box to ask where, as before.
-    func saveRecordingIntoHistory() -> Bool {
-        guard let document, let video = recordingURL, let captureStore = captureCenter?.store else {
-            return false
-        }
-        let situation = HistoryVideoSave.Situation(
+    /// Where this window's recording stands with history, for Command S.
+    var historySaveSituation: HistoryVideoSave.Situation? {
+        guard let document, let video = recordingURL, let captureStore = captureCenter?.store else { return nil }
+        return HistoryVideoSave.Situation(
             inHistory: Self.isInHistory(video, store: captureStore),
             fileThere: FileManager.default.fileExists(atPath: video.path) && !recordingStillLanding,
             untouched: document.untouchedRecording != nil,
             originalKept: VideoOriginals.exists(for: video),
             playsTheHistoryFile: MovieLibrary.shared.plays(video, in: document))
+    }
+
+    /// Command S on a recording window. False when the recording is not one
+    /// history holds, which leaves the save box to ask where, as before.
+    func saveRecordingIntoHistory() -> Bool {
+        guard let document, let video = recordingURL, let captureStore = captureCenter?.store,
+              let situation = historySaveSituation else {
+            return false
+        }
         switch HistoryVideoSave.plan(situation) {
         case .askWhere:
             return false

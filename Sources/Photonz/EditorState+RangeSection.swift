@@ -132,7 +132,7 @@ extension EditorState {
     }
 
     /// The decibel steps Lower Volume offers.
-    static let sectionLowerStepsDB: [Double] = [3, 6, 12, 20]
+    static let sectionLowerStepsDB: [Double] = AppCommandTable.lowerVolumeSteps.map(Double.init)
 
     /// Normalize Section: each picked sound's loudest peak inside the range
     /// brought to -1 dBFS, as a level over just that stretch. The level line
@@ -231,21 +231,20 @@ extension EditorState {
     /// two that take an amount. `keys` prints the shortcut where the row has
     /// one; nil where the row is a menu bar copy of a key printed elsewhere.
     private func sectionRow(_ operation: SectionOperation, enabled: Bool, keys: Bool) -> MenuRow {
+        // Every row runs the named command (`AppCommandRunner`), the one an
+        // agent's `section` runs too.
+        func row(_ title: String, percent: Int? = nil) -> MenuRow {
+            var options: [String: AgentJSON] = ["operation": .string(operation.rawValue)]
+            if let percent { options["percent"] = .number(Double(percent)) }
+            return .command(title, enabled: enabled) { self.run(.section, options) }
+        }
         switch operation {
-        case .muteSection:
-            return .command(operation.title, enabled: enabled) { self.muteRangeSection() }
         case .lowerVolume:
-            return .submenu(operation.title, Self.sectionLowerStepsDB.map { dB in
-                .command(String(format: "-%.0f dB", dB), enabled: enabled) { self.lowerRangeSection(byDB: dB) }
+            return .submenu(operation.title, AppCommandTable.lowerVolumeSteps.map { dB in
+                .command(String(format: "-%.0f dB", Double(dB)), enabled: enabled) {
+                    self.run(.section, ["operation": .string(operation.rawValue), "db": .number(Double(dB))])
+                }
             })
-        case .normalizeSection:
-            return .command(operation.title, enabled: enabled) { Task { await self.normalizeRangeSection() } }
-        case .cleanNoiseInSection:
-            return .command(operation.title, enabled: enabled) { self.cleanNoiseRangeSection() }
-        case .hidePictureForSection:
-            return .command(operation.title, enabled: enabled) { self.hidePictureRangeSection() }
-        case .splitAtRangeEdges:
-            return .command(operation.title, enabled: enabled) { self.splitRangeSection() }
         case .deleteSection:
             return .command(operation.title, keys ? TimelineMenuKeys.delete : nil, enabled: enabled) {
                 self.deleteRangeSection()
@@ -256,16 +255,39 @@ extension EditorState {
             }
         case .speedForSection:
             return .submenu(operation.title, ClipSpeed.stops.filter { $0 != ClipPiece.asRecordedPercent }.map { percent in
-                .command(ClipSpeed.menuTitle(percent), enabled: enabled) { self.setRangeSectionSpeed(percent) }
+                row(ClipSpeed.menuTitle(percent), percent: percent)
             })
-        case .freezeFrameForSection:
-            return .command(operation.title, enabled: enabled) { self.freezeRangeSection() }
-        case .addZoomOverRange:
-            return .command(operation.title, enabled: enabled) { self.addZoomOverRangeSection() }
-        case .trimToRange:
-            return .command(operation.title, enabled: enabled) { self.trimRangeSection() }
-        case .deleteKeysInRange:
-            return .command(operation.title, enabled: enabled) { self.deleteKeysInRangeSection() }
+        default:
+            return row(operation.title)
+        }
+    }
+
+    /// Picked in Range, by name: what each of its rows does to the clips
+    /// picked between in and out.
+    func doSection(_ operation: SectionOperation, db: Int?, percent: Int?) {
+        switch operation {
+        case .muteSection: muteRangeSection()
+        case .lowerVolume: if let db { lowerRangeSection(byDB: Double(db)) }
+        case .normalizeSection: Task { await self.normalizeRangeSection() }
+        case .cleanNoiseInSection: cleanNoiseRangeSection()
+        case .hidePictureForSection: hidePictureRangeSection()
+        case .splitAtRangeEdges: splitRangeSection()
+        case .deleteSection: deleteRangeSection()
+        case .rippleDeleteSection: rippleDeleteRangeSection()
+        case .speedForSection: if let percent { setRangeSectionSpeed(percent) }
+        case .freezeFrameForSection: freezeRangeSection()
+        case .addZoomOverRange: addZoomOverRangeSection()
+        case .trimToRange: trimRangeSection()
+        case .deleteKeysInRange: deleteKeysInRangeSection()
+        }
+    }
+
+    /// Whether `doSection` would do anything now, given what it was told.
+    func canDoSection(_ operation: SectionOperation, db: Int?, percent: Int?) -> Bool {
+        switch operation {
+        case .lowerVolume: return db != nil && canDo(operation)
+        case .speedForSection: return percent != nil && canDo(operation)
+        default: return canDo(operation)
         }
     }
 

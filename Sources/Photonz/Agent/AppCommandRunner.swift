@@ -38,7 +38,42 @@ extension EditorState {
         case .cleanNoise: soundInHandIsCleaned
         case .curveThePath: motionPathShape == .curved
         case .captionSafeAreas: Self.showsSafeAreas
+        case .followCursor: !pickedZooms.isEmpty && pickedZoomsReading.followsCursor == true
+        case .fillTheStack: flowFillCommand.isOn
+        case .surfaceBehind: surfaceCommand.isOn
+        case .inFrontOfTheRest: surfaceCommand.isFloating
+        case .lockLayer: selectedLayerID.flatMap { document?.layer(id: $0)?.isLocked } ?? false
+        case .showColumns: isShowingFrameColumns
         default: nil
+        }
+    }
+
+    /// Runs `call` and waits for the work it starts in the background (a file
+    /// read in or written out, a sound measured, a video copied) before
+    /// returning, so an agent's answer comes after the change has landed.
+    func runAwaiting(_ call: AppCommandCall) async {
+        if let wanted = call.on, let now = isOn(call.id), wanted == now { return }
+        let path = call.word("path").map { URL(fileURLWithPath: $0) }
+        switch call.id {
+        case .importMedia where path != nil:
+            if let path { await importMedia([path]) }
+        case .addMediaAtPlayhead where path != nil:
+            if let path { await addMedia(from: path) }
+        case .exportSound where path != nil:
+            if let path { await writeMix(to: path) }
+        case .normalizePeaks:
+            await normalizeSound(layers: soundIDsInHand)
+        case .normalizeLoudness:
+            if let target = call.word("target").flatMap(AudioNormalize.Target.init(rawValue:)) {
+                await normalizeSoundLoudness(layers: soundIDsInHand, to: target)
+            }
+        case .section where call.word("operation") == SectionOperation.normalizeSection.rawValue:
+            await normalizeRangeSection()
+        case .copyVideo, .copyAsGIF:
+            run(call)
+            await videoExportTask?.value
+        default:
+            run(call)
         }
     }
 
@@ -101,6 +136,30 @@ extension EditorState {
         case .clearCaptions: clearCaptions()
         case .resetCaptions: resetCaptions()
         case .revertToOriginal: revertToOriginal()
+        case .exportCaptions:
+            let format = call.word("format").flatMap(CaptionFileFormat.init(rawValue:)) ?? .srt
+            if let path = call.word("path") { writeCaptionsFile(as: format, to: URL(fileURLWithPath: path)) }
+            else { exportCaptions(as: format) }
+        case .renameTrack:
+            if let name = call.word("name"), let id = trackInHandID { renameTrack(id, to: name) }
+            else { renameTrackInHand() }
+        case .section: if let operation = call.word("operation").flatMap(SectionOperation.init(rawValue:)) {
+            doSection(operation, db: call.integer("db"), percent: call.integer("percent"))
+        }
+        // Sequence > Caption Word
+        case .editCaptionWord:
+            if let word = captionWordInHand {
+                if let text = call.word("text") { setCaptionWord(word, to: text) }
+                else { beginEditingCaptionWord(word, place: .canvas) }
+            }
+        case .splitCaptionWord: if let word = captionWordInHand { splitCaptionWord(word, atMS: documentTimeMS) }
+        case .mergeCaptionWord: if let word = captionWordInHand { mergeCaptionWordWithNext(word) }
+        case .deleteCaptionWord: if let word = captionWordInHand { deleteCaptionWord(word) }
+        case .moveWordToPreviousLine: if let word = captionWordInHand { moveCaptionWordToPreviousLine(word) }
+        case .moveWordToNextLine: if let word = captionWordInHand { moveCaptionWordToNextLine(word) }
+        case .joinWithNextLine: if let word = captionWordInHand { joinCaptionWithNextLine(word.cueID) }
+        case .playFromWord: if let word = captionWordInHand { playFromCaptionWord(word) }
+        case .goToCaptionStart: goToStartOfCaptionInHand()
         // Clip: cutting
         case .splitAtPlayhead: splitClipAtPlayhead()
         case .delete: deleteWhatIsInHand()
@@ -121,7 +180,35 @@ extension EditorState {
             if let clip = clickEffectClip?.id { setClickEffectOn(!clickEffect(ofClip: clip).isOn, onClip: clip) }
         case .addZoom: if let clip = clipToAddZoom(atMS: documentTimeMS) { addZoom(toClip: clip, atMS: documentTimeMS) }
         case .suggestZooms: if let clip = clipToSuggestZooms { suggestZooms(onClip: clip) }
+        case .renameClip:
+            if let clip = clipInHandID {
+                if let name = call.word("name") { renameClip(clip, to: name) } else { beginRenamingClip(clip) }
+            }
+        case .addClick:
+            if let clip = clipToAddClickTo {
+                if let x = call.amount("x"), let y = call.amount("y") {
+                    addClick(toClip: clip, at: CGPoint(x: x, y: y))
+                } else {
+                    beginPlacingClick(onClip: clip)
+                }
+            }
+        case .followCursor: setZoomFollowsCursor(pickedZooms, !(isOn(.followCursor) ?? false))
+        case .setZoomAmount: if let percent = call.integer("percent") { setZoomScale(pickedZooms, percent: percent) }
+        case .deleteZoom: removeZoomInHand()
+        case .addMediaAtPlayhead:
+            if let path = call.word("path") { Task { await addMedia(from: URL(fileURLWithPath: path)) } }
+            else { addMediaFromFile() }
+        case .insertTitle:
+            if let preset = titlePreset(call) { insertTitle(preset, onTrack: call.track.flatMap(UUID.init(uuidString:))) }
+        case .saveTitlePreset:
+            if let name = call.word("name") { saveTitlePresetInHand(named: name) } else { beginSavingTitlePreset() }
+        case .exportSound:
+            if let path = call.word("path") { Task { await writeMix(to: URL(fileURLWithPath: path)) } }
+            else { exportSound() }
         // Clip: time
+        case .freezeFrame:
+            if let ms = call.integer("milliseconds") { freezeFrameInHand(ms: ms, everyTrack: call.flag("everyTrack")) }
+            else { openFreezeFrame() }
         case .showPicture:
             if let hidden = hiddenPictureInHand { showPicture(layerID: hidden.layerID, piece: hidden.piece) }
         case .setSpeed: if let percent = call.integer("percent") { setClipSpeedInHand(percent) }
@@ -181,7 +268,42 @@ extension EditorState {
         case .curveThePath: setMotionPathShape(motionPathShape == .curved ? .straight : .curved)
         case .removeKeyAtPlayhead: removeKeyAtPlayhead()
         case .selectAllKeys: selectAllKeysInHand()
+        case .setEasing: if let curve = easingCurve(named: call.word("curve")) { curveBetweenKeys(curve) }
+        case .straightenStretch: straightenStretchInHand()
+        case .animateProperty:
+            if let layer = layerToAnimate, let property = propertyToAnimate(named: call.word("property")) {
+                animate(property, layerID: layer.id)
+            }
+        case .stopAnimating: if let property = propertyAnimating(named: call.word("property")) { toggleKeying(property) }
+        // File
+        case .save: performSave { _ in }
+        case .importMedia:
+            if let path = call.word("path") { Task { await importMedia([URL(fileURLWithPath: path)]) } }
+            else { importMediaFromPanel() }
+        // Image
+        case .resizeImage:
+            if let width = call.amount("width"), let height = call.amount("height") {
+                resizeDocument(to: CGSize(width: width.rounded(), height: height.rounded()))
+            } else {
+                isResizeDialogPresented = true
+            }
+        case .canvasSize:
+            if let width = call.amount("width"), let height = call.amount("height") {
+                setCanvasSize(to: CGSize(width: width.rounded(), height: height.rounded()),
+                              anchor: call.word("anchor").flatMap(CanvasAnchor.init(rawValue:)) ?? .center)
+            } else {
+                isCanvasSizeDialogPresented = true
+            }
         // Edit
+        case .cut: cutWhatIsInHand()
+        case .copy: copyWhatIsInHand()
+        case .copyMerged: copyMerged()
+        case .copySVG: copySVG(around: pickedLayerID)
+        case .copyVideo: copyVideo(as: .mp4)
+        case .copyAsGIF: copyVideo(as: .gif)
+        case .paste:
+            if let track = call.track.flatMap(UUID.init(uuidString:)), call.layers.isEmpty { paste(onTrack: track) }
+            else { pasteWhatIsOnTheClipboard() }
         case .selectAll: selectAll()
         case .deselect: deselect()
         case .invertSelection: invertSelection()
@@ -227,10 +349,49 @@ extension EditorState {
         case .sendBackward: restackSelectedLayers(.backward)
         case .sendToBack: restackSelectedLayers(.toBack)
         case .deleteLayer: deleteSelectedLayers()
+        case .renameLayer:
+            if let name = call.word("name"), let id = selectedLayerID { renameLayer(id: id, to: name) }
+            else { renameLayerInHand() }
+        case .lockLayer: if let id = selectedLayerID { toggleLayerLock(id: id) }
+        case .showColumns: toggleFrameColumns()
+        case .addEffect: if let kind = call.word("kind").flatMap(AddableEffect.init(rawValue:)) { addEffect(kind) }
+        case .addSavedEffect: if let style = savedEffect(named: call.word("style")) { addEffectStyle(styleID: style.id) }
+        case .removeEffect: if let row = effectRow(call.integer("index")) { removeEffect(row: row) }
+        case .setArrowStyle:
+            if let style = call.word("style").flatMap(ArrowStyle.init(rawValue:)) { setArrowStyle(ids: pickedArrowIDs, style) }
+        case .reshuffleArrows: reshuffleArrows(ids: pickedArrowIDs)
+        case .straightenArrows: straightenArrows(ids: pickedArrowIDs)
+        case .turnIntoPath: turnSelectionIntoPath()
+        case .putTextOnPath: putSelectionTextOnPath()
+        case .turnIntoPicture: rasterizeSelection()
+        case .bringIntoView: bringSelectionIntoView()
+        case .fillTheStack: toggleFillsTheFlow()
+        case .surfaceBehind: toggleSurface()
+        case .inFrontOfTheRest: toggleFloating()
+        case .newFrame:
+            if let width = call.amount("width"), let height = call.amount("height") {
+                addFrameInView(size: CGSize(width: width.rounded(), height: height.rounded()))
+            } else {
+                isNewFrameDialogPresented = true
+            }
+        case .addVariant:
+            _ = addComponentVersion()
+            // The new variant's name opens for a person to type over; an
+            // agent named nothing, and that field would land a step of its own.
+            if agentIsRunning { componentVersionAwaitingName = nil }
+        case .applyToOtherVersions: applyToOtherComponentVersions()
+        case .makeAlternatives: makeChoice()
+        case .editOriginal: editPickedOriginal()
+        case .doneEditingOriginal: finishEditingOriginal()
+        case .reset3DRotation: resetSpaceRotation()
+        case .bringNearer: pushDepth(nearer: true)
+        case .sendFurther: pushDepth(nearer: false)
         // Measure
         case .showAllMeasurements: setAllMeasurementsVisible(true)
         case .hideAllMeasurements: setAllMeasurementsVisible(false)
         case .clearMeasurements: clearAllMeasurements()
+        case .copySpecList: copyMeasureSpecList()
+        case .copyMeasurements: copySelectedMeasurements()
         // View
         case .zoomIn: zoomIn()
         case .zoomOut: zoomOut()
@@ -239,6 +400,7 @@ extension EditorState {
         case .zoomTimelineToFit: fitTimeline()
         case .compactTracks: resetTimelineRows()
         case .captionSafeAreas: toggleSafeAreas()
+        case .resetCamera: resetCamera()
         }
     }
 
@@ -248,6 +410,7 @@ extension EditorState {
         let timed = documentHasTime
         let track = trackInHand
         let placed = placedLayerInHand
+        let word = captionWordInHand
         switch call.id {
         case .playPause, .playBackward, .playForward: return timed
         case .playInToOut: return canPlayInToOut
@@ -281,6 +444,19 @@ extension EditorState {
         case .clearCaptions: return canClearCaptions
         case .resetCaptions: return canResetCaptions
         case .revertToOriginal: return canRevertToOriginal
+        case .exportCaptions: return canExportCaptions
+        case .renameTrack: return track != nil && call.word("name").map { !$0.isEmpty } != false
+        case .section:
+            guard let operation = call.word("operation").flatMap(SectionOperation.init(rawValue:)) else {
+                return rangeSection != nil && call.options.isEmpty
+            }
+            return canDoSection(operation, db: call.integer("db"), percent: call.integer("percent"))
+        case .editCaptionWord: return word != nil
+        case .splitCaptionWord: return (word.flatMap { captionWord($0) }?.text.count ?? 0) >= 2
+        case .mergeCaptionWord: return word.map { canMergeCaptionWord($0) } ?? false
+        case .deleteCaptionWord, .moveWordToNextLine, .playFromWord, .goToCaptionStart: return word != nil
+        case .moveWordToPreviousLine: return word.map { canMoveCaptionWordToPreviousLine($0) } ?? false
+        case .joinWithNextLine: return word.map { canJoinCaptionWithNextLine($0.cueID) } ?? false
         case .splitAtPlayhead: return canSplitClipAtPlayhead
         case .delete: return canDeleteWhatIsInHand
         case .rippleDelete: return canRippleDeleteInHand
@@ -294,6 +470,18 @@ extension EditorState {
         case .showClickEffects: return clickEffectClip.map { hasClicksToShow(onClip: $0.id) } ?? false
         case .addZoom: return clipToAddZoom(atMS: documentTimeMS) != nil
         case .suggestZooms: return clipToSuggestZooms.map { canSuggestZooms(onClip: $0) } ?? false
+        case .renameClip: return clipInHandID != nil && call.word("name").map { !$0.isEmpty } != false
+        case .addClick: return clipToAddClickTo != nil
+        case .followCursor: return !pickedZooms.isEmpty && canFollowCursor(pickedZooms)
+        case .setZoomAmount, .deleteZoom: return !pickedZooms.isEmpty
+        case .addMediaAtPlayhead: return timed
+        case .insertTitle:
+            guard canInsertTitle else { return false }
+            return call.options.isEmpty || titlePreset(call) != nil
+        case .saveTitlePreset: return titlePresetLayerInHand != nil && call.word("name").map { !$0.isEmpty } != false
+        case .exportSound: return documentHasAudio
+        case .freezeFrame:
+            return canHoldFrameAtPlayhead || (clipInHandID != nil && clipPieceInHandPiece?.isHeld == true)
         case .showPicture: return hiddenPictureInHand != nil
         case .setSpeed: return call.integer("percent").map { canSetClipSpeed($0) } ?? (clipSpeedInHand != nil)
         case .addSpeedStop: return canAddSpeedStopInHand
@@ -344,6 +532,23 @@ extension EditorState {
         case .curveThePath: return motionPathShape != nil
         case .removeKeyAtPlayhead: return canRemoveKeyAtPlayhead
         case .selectAllKeys: return canSelectAllKeys
+        case .setEasing:
+            guard betweenKeysCurve != nil else { return false }
+            return call.word("curve").map { easingCurve(named: $0) != nil } ?? true
+        case .straightenStretch: return curvedStretchInHand != nil
+        case .animateProperty:
+            guard let layer = layerToAnimate, !isClipLocked(layer.id), !animateGroups(layerID: layer.id).isEmpty else {
+                return false
+            }
+            return call.word("property").map { propertyToAnimate(named: $0) != nil } ?? true
+        case .stopAnimating: return propertyAnimating(named: call.word("property")) != nil
+        case .save: return saveAffordance.isSaveEnabled && !saveAsksWhere
+        case .importMedia: return canImportMedia
+        case .resizeImage, .canvasSize, .newFrame: return hasDocument
+        case .cut, .copy, .paste: return hasDocument
+        case .copyMerged: return hasDocument
+        case .copySVG: return canCopySVG(around: pickedLayerID)
+        case .copyVideo, .copyAsGIF: return canCopyVideo
         case .selectAll, .newLayer, .newCollageLayer: return hasDocument
         case .swapFillColors: return true
         case .deselect, .invertSelection, .blurBehindSelection: return selection != nil
@@ -375,13 +580,45 @@ extension EditorState {
                 ?? canAlignSelection
         case .spaceEvenly: return canDistributeSelection
         case .deleteLayer: return canDeleteSelectedLayers
+        case .renameLayer: return selectedLayerID != nil && call.word("name").map { !$0.isEmpty } != false
+        case .lockLayer: return selectedLayerID != nil
+        case .showColumns: return columnsTargetFrameID != nil
+        case .addEffect:
+            guard hasRestylableSelection else { return false }
+            guard let kind = call.word("kind").flatMap(AddableEffect.init(rawValue:)) else { return call.options.isEmpty }
+            return addableEffects.contains(kind) && canAddEffect(kind)
+        case .addSavedEffect:
+            guard hasRestylableSelection, !namedEffectStyles.isEmpty else { return false }
+            return call.word("style").map { savedEffect(named: $0) != nil } ?? true
+        case .removeEffect:
+            guard hasRestylableSelection, !layerEffectRows.isEmpty else { return false }
+            return call.integer("index").map { effectRow($0) != nil } ?? true
+        case .setArrowStyle: return !pickedArrowIDs.isEmpty
+        case .reshuffleArrows: return !reshufflableArrows(pickedArrowIDs).isEmpty
+        case .straightenArrows: return !straightenableArrows(pickedArrowIDs).isEmpty
+        case .turnIntoPath: return canTurnSelectionIntoPath
+        case .putTextOnPath: return canPutTextOnPath
+        case .turnIntoPicture: return canRasterizeSelection
+        case .bringIntoView: return canBringSelectionIntoView
+        case .fillTheStack: return flowFillCommand.isEnabled
+        case .surfaceBehind, .inFrontOfTheRest: return surfaceCommand.isEnabled
+        case .addVariant: return canAddComponentVersion
+        case .applyToOtherVersions: return canApplyToOtherComponentVersions
+        case .makeAlternatives: return canMakeChoice
+        case .editOriginal: return canEditPickedOriginal
+        case .doneEditingOriginal: return isEditingOriginal
+        case .reset3DRotation: return canResetSpaceRotation
+        case .bringNearer, .sendFurther: return canPushDepth
         case .showAllMeasurements: return visibleMeasurementCount != measurementCount
         case .hideAllMeasurements: return visibleMeasurementCount > 0
         case .clearMeasurements: return measurementCount > 0
+        case .copySpecList: return visibleMeasurementCount > 0
+        case .copyMeasurements: return !selectedMeasureLayerIDs.isEmpty
         case .zoomIn, .zoomOut, .zoomToFit, .actualSize: return hasDocument
         case .zoomTimelineToFit: return isTimelineOpenedOut
         case .compactTracks: return !timelineRowZoom.isCompact
         case .captionSafeAreas: return hasCaptions
+        case .resetCamera: return canResetCamera
         }
     }
 

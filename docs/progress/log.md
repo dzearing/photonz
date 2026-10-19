@@ -21691,3 +21691,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `find_elements` lists what a Size click would read (all ten controls of the settings fixture to the pixel, `AgentElementScanFixtureTests`), about 2 s in the app.
 - Scenario 2 (box in a cloud, SVG) and scenario 3 (redline a screenshot) run from fresh sessions; audit `queue/audits/2026-10-19-agent-drawing.json`.
 - Next: `an-agent-can-cut-a-video-from-history-clips-with` (slice 4).
+
+## 2026-10-19 — The rest of the menu commands by name (agent MCP, slice 2 finished)
+
+- 65 new named commands (214 in all): clipboard, save, import, resize and canvas size, renames, effects, arrows, path and picture turns, stacks, frames and columns, components (variant, alternatives, edit original), depth, caption words, zooms, freeze, titles, Picked in Range, easing, animate and stop animating, exports, lock. The not-yet list is empty (pin 0); 68 rows left out with reasons.
+- A row that asks a person runs the command without the answer and still asks; an agent must give it. Questions (Turn into Picture/Path) are not put to an agent (`agentIsRunning`). Add Variant no longer opens its name field for an agent (it landed a second undo step).
+- `read_document` lists caption lines with each word's start time; `delete` closes a gap picked by track and time; zoom commands pick the zoom at the playhead.
+- Proof: `Scripts/agent-commands-drill.mjs` (43 of 43 one undo step in the probe), 47 menu walks green, Scripts/test.sh 13,867 green.
+- Next: slice 4 (video tools: new_video, add_clip, export MP4).

@@ -64,6 +64,19 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case clearCaptions = "clear_captions"
     case resetCaptions = "reset_captions"
     case revertToOriginal = "revert_to_original"
+    case exportCaptions = "export_captions"
+    case renameTrack = "rename_track"
+    case section = "section"
+    // Sequence > Caption Word: the word being said at the playhead
+    case editCaptionWord = "edit_caption_word"
+    case splitCaptionWord = "split_caption_word"
+    case mergeCaptionWord = "merge_caption_word"
+    case deleteCaptionWord = "delete_caption_word"
+    case moveWordToPreviousLine = "move_word_to_previous_line"
+    case moveWordToNextLine = "move_word_to_next_line"
+    case joinWithNextLine = "join_with_next_line"
+    case playFromWord = "play_from_word"
+    case goToCaptionStart = "go_to_caption_start"
     // Clip: cutting
     case splitAtPlayhead = "split_at_playhead"
     case delete = "delete"
@@ -80,7 +93,17 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case showClickEffects = "show_click_effects"
     case addZoom = "add_zoom"
     case suggestZooms = "suggest_zooms"
+    case renameClip = "rename_clip"
+    case addClick = "add_click"
+    case followCursor = "follow_cursor"
+    case setZoomAmount = "set_zoom_amount"
+    case deleteZoom = "delete_zoom"
+    case addMediaAtPlayhead = "add_media_at_playhead"
+    case insertTitle = "insert_title"
+    case saveTitlePreset = "save_title_preset"
+    case exportSound = "export_sound"
     // Clip: time
+    case freezeFrame = "freeze_frame"
     case showPicture = "show_picture"
     case setSpeed = "set_speed"
     case addSpeedStop = "add_speed_stop"
@@ -123,7 +146,24 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case curveThePath = "curve_the_path"
     case removeKeyAtPlayhead = "remove_key_at_playhead"
     case selectAllKeys = "select_all_keys"
+    case setEasing = "set_easing"
+    case straightenStretch = "straighten_stretch"
+    case animateProperty = "animate_property"
+    case stopAnimating = "stop_animating"
+    // File
+    case save = "save"
+    case importMedia = "import_media"
+    // Image
+    case resizeImage = "resize_image"
+    case canvasSize = "canvas_size"
     // Edit
+    case cut = "cut"
+    case copy = "copy"
+    case copyMerged = "copy_merged"
+    case copySVG = "copy_svg"
+    case copyVideo = "copy_video"
+    case copyAsGIF = "copy_as_gif"
+    case paste = "paste"
     case selectAll = "select_all"
     case deselect = "deselect"
     case invertSelection = "invert_selection"
@@ -164,10 +204,37 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case sendBackward = "send_backward"
     case sendToBack = "send_to_back"
     case deleteLayer = "delete_layer"
+    case renameLayer = "rename_layer"
+    case lockLayer = "lock_layer"
+    case showColumns = "show_columns"
+    case addEffect = "add_effect"
+    case addSavedEffect = "add_saved_effect"
+    case removeEffect = "remove_effect"
+    case setArrowStyle = "set_arrow_style"
+    case reshuffleArrows = "reshuffle_arrows"
+    case straightenArrows = "straighten_arrows"
+    case turnIntoPath = "turn_into_path"
+    case putTextOnPath = "put_text_on_path"
+    case turnIntoPicture = "turn_into_picture"
+    case bringIntoView = "bring_into_view"
+    case fillTheStack = "fill_the_stack"
+    case surfaceBehind = "surface_behind"
+    case inFrontOfTheRest = "in_front_of_the_rest"
+    case newFrame = "new_frame"
+    case addVariant = "add_variant"
+    case applyToOtherVersions = "apply_to_other_versions"
+    case makeAlternatives = "make_alternatives"
+    case editOriginal = "edit_original"
+    case doneEditingOriginal = "done_editing_original"
+    case reset3DRotation = "reset_3d_rotation"
+    case bringNearer = "bring_nearer"
+    case sendFurther = "send_further"
     // Measure
     case showAllMeasurements = "show_all_measurements"
     case hideAllMeasurements = "hide_all_measurements"
     case clearMeasurements = "clear_measurements"
+    case copySpecList = "copy_spec_list"
+    case copyMeasurements = "copy_measurements"
     // View
     case zoomIn = "zoom_in"
     case zoomOut = "zoom_out"
@@ -176,6 +243,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case zoomTimelineToFit = "zoom_timeline_to_fit"
     case compactTracks = "compact_tracks"
     case captionSafeAreas = "caption_safe_areas"
+    case resetCamera = "reset_camera"
 }
 
 /// One thing a command can be told besides its name.
@@ -193,6 +261,10 @@ public struct AppCommandArgument: Hashable, Sendable {
         case layerIDs
         /// A track id from read_document.
         case trackID
+        /// Words: a name, a caption word, a path to a file.
+        case text
+        /// A measured amount, such as a width in points.
+        case amount(minimum: Double, maximum: Double)
     }
 
     public let name: String
@@ -229,8 +301,12 @@ public struct AppCommandArgument: Hashable, Sendable {
         case .layerIDs:
             schema["type"] = "array"
             schema["items"] = ["type": "string"]
-        case .trackID:
+        case .trackID, .text:
             schema["type"] = "string"
+        case let .amount(minimum, maximum):
+            schema["type"] = "number"
+            schema["minimum"] = .number(minimum)
+            schema["maximum"] = .number(maximum)
         }
         return .object(schema)
     }
@@ -253,6 +329,8 @@ public struct AppCommand: Hashable, Sendable {
         case measure
         /// How the window shows the document. Changes no pixels and no undo.
         case view
+        /// The document itself: saving it, its size, what comes into it.
+        case document
     }
 
     /// What a command can be told to pick before it runs, the way a person
@@ -352,12 +430,14 @@ public struct AppCommandCall: Hashable, Sendable {
 
     public func word(_ name: String) -> String? { options[name]?.stringValue }
     public func integer(_ name: String) -> Int? { options[name]?.intValue }
+    public func amount(_ name: String) -> Double? { options[name]?.doubleValue }
+    public func flag(_ name: String) -> Bool? { options[name]?.boolValue }
 }
 
 /// The table of every command, and the checking of a call against it.
 public enum AppCommandTable {
 
-    public static let all: [AppCommand] = timeline + clip + layers + edit + measure + view
+    public static let all: [AppCommand] = timeline + clip + layers + edit + measure + view + document
 
     private static let byID: [AppCommandID: AppCommand] = Dictionary(all.map { ($0.id, $0) },
                                                                      uniquingKeysWith: { first, _ in first })
@@ -387,10 +467,31 @@ public enum AppCommandTable {
     /// The speeds Clip > Speed offers, in percent.
     public static let speeds = ClipSpeed.stops
 
+    /// How far Clip > Zoom takes a zoom in, in percent.
+    public static let zoomPercents = [125, 150, 200, 250, 300, 400]
+
+    /// How far Picked in Range > Lower Volume takes a section down, in dB.
+    public static let lowerVolumeSteps = [3, 6, 12, 20]
+
+    /// What Picked in Range offers in the menu bar (Delete and Ripple Delete
+    /// are Clip > Delete and Ripple Delete, which say Section then).
+    public static let sectionOperations = SectionOperation.allCases.filter {
+        $0 != .deleteSection && $0 != .rippleDeleteSection
+    }
+
+    private static let pathArgument = AppCommandArgument(
+        "path", .text, "An absolute path to write, or to read from.", required: true)
+    private static let nameArgument = AppCommandArgument("name", .text, "The new name.", required: true)
+    private static func size(_ what: String) -> [AppCommandArgument] {
+        [.init("width", .amount(minimum: 1, maximum: 30_000), "The \(what) width, in points.", required: true),
+         .init("height", .amount(minimum: 1, maximum: 30_000), "The \(what) height, in points.", required: true)]
+    }
+
     // MARK: The table
 
     static let timeline: [AppCommand] = {
-        let seq = "Sequence", track = "Sequence > Track"
+        let seq = "Sequence", track = "Sequence > Track", word = "Sequence > Caption Word"
+        let wordSaid = "a caption word being said at the playhead"
         return [
             make(.playPause, "Play", seq, .timeline, needs: aVideo, also: ["Pause"]),
             make(.playInToOut, "Play In to Out", seq, .timeline, needs: marked),
@@ -448,18 +549,46 @@ public enum AppCommandTable {
             make(.clearCaptions, "Clear Captions", seq, .timeline, needs: "captions"),
             make(.resetCaptions, "Reset Captions", seq, .timeline, needs: "captions that were edited"),
             make(.revertToOriginal, "Revert to Original", seq, .timeline, needs: "a recording that was edited"),
+            make(.exportCaptions, "Export Captions as SRT\u{2026}", seq, .timeline, needs: "captions",
+                 options: [.init("format", .choice(CaptionFileFormat.allCases.map(\.rawValue)),
+                                 "srt or vtt (WebVTT).", required: true), pathArgument],
+                 also: ["Export Captions as WebVTT\u{2026}"]),
+            make(.renameTrack, "Rename Track\u{2026}", track, .timeline, needs: trackInHand, picks: .track,
+                 options: [nameArgument]),
+            make(.section, "Picked in Range", "Sequence > Picked in Range", .timeline,
+                 needs: "an in and an out set, and clips picked that run through them", picks: .layers,
+                 options: [.init("operation", .choice(sectionOperations.map(\.rawValue)),
+                                 "What to do to the picked clips between in and out.", required: true),
+                           .init("db", .number(lowerVolumeSteps), "lowerVolume: how far down, in dB."),
+                           .init("percent", .number(speeds.filter { $0 != ClipPiece.asRecordedPercent }),
+                                 "speedForSection: the speed, in percent of normal.")]),
+            make(.editCaptionWord, "Edit Word", word, .timeline, needs: wordSaid, picks: .playhead,
+                 options: [.init("text", .text, "The word as it should read.", required: true)]),
+            make(.splitCaptionWord, "Split Here", word, .timeline, needs: "a word of two letters or more being said",
+                 picks: .playhead),
+            make(.mergeCaptionWord, "Merge with Next", word, .timeline, needs: "a word being said with one after it",
+                 picks: .playhead),
+            make(.deleteCaptionWord, "Delete Word", word, .timeline, needs: wordSaid, picks: .playhead),
+            make(.moveWordToPreviousLine, "Move to Previous Line", word, .timeline,
+                 needs: "the first word of a caption with one before it", picks: .playhead),
+            make(.moveWordToNextLine, "Move to Next Line", word, .timeline, needs: wordSaid, picks: .playhead),
+            make(.joinWithNextLine, "Join with Next Line", word, .timeline, needs: "a caption with one after it",
+                 picks: .playhead),
+            make(.playFromWord, "Play from Here", word, .timeline, needs: wordSaid, picks: .playhead),
+            make(.goToCaptionStart, "Start Here", word, .timeline, needs: wordSaid, picks: .playhead),
         ]
     }()
 
     static let clip: [AppCommand] = {
         let clip = "Clip", animate = "Clip > Animate", cut = "Clip > Transition at Cut"
         let normalize = "Clip > Normalize"
+        let zoomHere = "a zoom at the playhead on the recording in hand"
         let soundPicked = "a sound picked, or a clip with sound under the playhead"
         return [
             make(.splitAtPlayhead, "Split at Playhead", clip, .timeline, needs: "a clip under the playhead",
                  picks: .clipAtPlayhead),
             make(.delete, "Delete This Piece", clip, .timeline,
-                 needs: "a piece, range, gap, transition or keys in hand", picks: .clipAtPlayhead,
+                 needs: "a piece, range, gap, transition or keys in hand", picks: [.playhead, .layers, .piece, .track],
                  also: ["Delete Points", "Delete Keys", "Delete Transition", "Delete Section", "Delete Range",
                         "Delete Pieces", "Delete Gap"]),
             make(.rippleDelete, "Ripple Delete", clip, .timeline, needs: "a piece in hand",
@@ -480,6 +609,36 @@ public enum AppCommandTable {
             make(.addZoom, "Add Zoom", clip, .timeline, needs: "a recording under the playhead", picks: .playhead),
             make(.suggestZooms, "Suggest Zooms", clip, .timeline, needs: "a recording in hand",
                  picks: [.playhead, .layers]),
+            make(.renameClip, "Rename\u{2026}", clip, .timeline, needs: clipInHand, picks: [.playhead, .layers],
+                 options: [nameArgument]),
+            make(.addClick, "Add Click at Playhead\u{2026}", clip, .timeline, needs: "a recording in hand",
+                 picks: [.playhead, .layers],
+                 options: [.init("x", .amount(minimum: -100_000, maximum: 100_000),
+                                 "Where the click lands across the canvas, in points.", required: true),
+                           .init("y", .amount(minimum: -100_000, maximum: 100_000),
+                                 "Where the click lands down the canvas, in points.", required: true)]),
+            make(.followCursor, "Follow Cursor", clip, .timeline, needs: zoomHere, picks: [.playhead, .layers],
+                 toggle: true),
+            make(.setZoomAmount, "Zoom", "Clip > Zoom", .timeline, needs: zoomHere, picks: [.playhead, .layers],
+                 options: [.init("percent", .number(zoomPercents), "How far in, in percent.", required: true)]),
+            make(.deleteZoom, "Delete Zoom", clip, .timeline, needs: zoomHere, picks: [.playhead, .layers]),
+            make(.addMediaAtPlayhead, "Add Media at Playhead\u{2026}", "Sequence", .timeline, needs: aVideo,
+                 picks: .playhead,
+                 options: [.init("path", .text, "An absolute path to a recording or a sound.", required: true)]),
+            make(.insertTitle, "Insert Title", "Sequence > Insert Title Page", .timeline,
+                 needs: "a video", picks: [.playhead, .track],
+                 options: [.init("kind", .choice(TitleKind.allCases.map(\.rawValue)), "Which kind of title.",
+                                 required: true),
+                           .init("preset", .text, "The style's name, as the Insert menu lists it.", required: true)]),
+            make(.saveTitlePreset, "Save as Preset\u{2026}", clip, .timeline, needs: "a title page or name card in hand",
+                 picks: [.playhead, .layers], options: [nameArgument]),
+            make(.exportSound, "Export Sound\u{2026}", "Sequence", .timeline, needs: "a video with sound",
+                 options: [pathArgument]),
+            make(.freezeFrame, "Freeze Frame\u{2026}", clip, .timeline, needs: "a picture clip under the playhead",
+                 picks: .clipAtPlayhead,
+                 options: [.init("milliseconds", .integer(minimum: 1, maximum: 3_600_000),
+                                 "How long the frame holds.", required: true),
+                           .init("everyTrack", .flag, "true holds every track while it holds; false holds only its own.")]),
             make(.showPicture, "Show Picture", clip, .timeline, needs: "a stretch whose picture was hidden",
                  picks: .clipAtPlayhead),
             make(.setSpeed, "Speed", "Clip > Speed", .timeline, needs: clipInHand, picks: .clipAtPlayhead,
@@ -568,6 +727,21 @@ public enum AppCommandTable {
                  picks: [.playhead, .layers]),
             make(.selectAllKeys, "Select All Keys", animate, .timeline, needs: "a layer with keys in hand",
                  picks: .layers),
+            make(.setEasing, "Easing", "Clip > Animate > Easing", .timeline,
+                 needs: "a layer in hand that is between two keys", picks: [.playhead, .layers],
+                 options: [.init("curve", .choice(EasingCurve.named.map(\.title)),
+                                 "How it speeds up and slows down between the keys.", required: true)]),
+            make(.straightenStretch, "Straighten This Stretch", animate, .timeline,
+                 needs: "a layer in hand whose path bends at the playhead", picks: [.playhead, .layers]),
+            make(.animateProperty, "Animate", animate, .timeline, needs: "a layer in hand with a value not animating",
+                 picks: [.playhead, .layers],
+                 options: [.init("property", .text,
+                                 "The value, in the words its Animate row uses: Position, Scale, Opacity.",
+                                 required: true)]),
+            make(.stopAnimating, "Stop Animating", animate, .timeline, needs: "a layer in hand with a value animating",
+                 picks: .layers,
+                 options: [.init("property", .text,
+                                 "The value to stop, in its row's words. Left out, the only one animating.")]),
         ]
     }()
 
@@ -613,7 +787,7 @@ public enum AppCommandTable {
             make(.gridSelection, "Grid Selection", layer, .layers, needs: "two or more layers picked",
                  picks: .layers),
             make(.frameSelection, "Frame Selection", layer, .layers, needs: layersPicked, picks: .layers),
-            make(.makeComponent, "Make Component", layer, .layers, needs: layersPicked, picks: .layers),
+            make(.makeComponent, "Make Component", layer, .layers, needs: "one group picked", picks: .layers),
             make(.makeUnique, "Make Unique", layer, .layers, needs: "a component copy picked", picks: .layers),
             make(.align, "Align", "Layer > Align", .layers, needs: layersPicked, picks: .layers,
                  options: [.init("edge", .choice(LayerAlignment.allCases.map(\.rawValue)),
@@ -628,12 +802,72 @@ public enum AppCommandTable {
             make(.sendBackward, "Send Backward", layer, .layers, needs: layersPicked, picks: .layers),
             make(.sendToBack, "Send to Back", layer, .layers, needs: layersPicked, picks: .layers),
             make(.deleteLayer, "Delete Layer", layer, .layers, needs: layersPicked, picks: .layers),
+            make(.renameLayer, "Rename Layer\u{2026}", layer, .layers, needs: "a layer picked", picks: .layers,
+                 options: [nameArgument]),
+            make(.lockLayer, MenuToggleNames.layerLocked, layer, .layers, needs: "a layer picked", picks: .layers,
+                 toggle: true),
+            make(.showColumns, MenuToggleNames.showColumns, layer, .layers, needs: "a frame picked", picks: .layers,
+                 toggle: true),
+            make(.addEffect, "Add Effect", "Layer > Add Effect", .layers, needs: layersPicked, picks: .layers,
+                 options: [.init("kind", .choice(AddableEffect.allCases.map(\.rawValue)), "The effect to add.",
+                                 required: true)]),
+            make(.addSavedEffect, "Saved Effects", "Layer > Add Effect", .layers,
+                 needs: "an effect saved by name, and layers picked", picks: .layers,
+                 options: [.init("style", .text, "The saved effect's name.", required: true)]),
+            make(.removeEffect, "Remove Effect", "Layer > Remove Effect", .layers, needs: "a layer with an effect picked",
+                 picks: .layers,
+                 options: [.init("index", .integer(minimum: 0, maximum: 99),
+                                 "Which effect, counting from 0 in the order read_document lists them.", required: true)]),
+            make(.setArrowStyle, ArrowStyle.menuTitle, "Layer > Arrow Style", .layers, needs: "an arrow picked",
+                 picks: .layers,
+                 options: [.init("style", .choice(ArrowStyle.allCases.map(\.rawValue)), "How the arrow is drawn.",
+                                 required: true)]),
+            make(.reshuffleArrows, ArrowStyle.reshuffleTitle, layer, .layers, needs: "a hand-drawn arrow picked",
+                 picks: .layers),
+            make(.straightenArrows, ArrowBend.straightenTitle, layer, .layers, needs: "a bent arrow picked",
+                 picks: .layers),
+            make(.turnIntoPath, TurnIntoPathPrompt.menuItem, layer, .layers, needs: "shapes or outlines picked",
+                 picks: .layers, also: [PathJoin.menuItem, PathClose.menuItem]),
+            make(.putTextOnPath, "Put Text on a Path", layer, .layers, needs: "a text layer and a path picked",
+                 picks: .layers),
+            make(.turnIntoPicture, RasterizePrompt.menuItem, layer, .layers, needs: "a shape or text picked",
+                 picks: .layers),
+            make(.bringIntoView, "Bring into View", layer, .layers, needs: "a layer picked outside its container",
+                 picks: .layers),
+            make(.fillTheStack, FlowFillCommand.defaultTitle, layer, .layers, needs: "a layer picked in a stack",
+                 picks: .layers, toggle: true),
+            make(.surfaceBehind, SurfaceCommand.menuTitle, layer, .layers, needs: "a layer picked in a stack",
+                 picks: .layers, toggle: true),
+            make(.inFrontOfTheRest, FloatingCommand.menuTitle, layer, .layers, needs: "a layer picked in a stack",
+                 picks: .layers, toggle: true),
+            make(.newFrame, "New Frame\u{2026}", layer, .layers, needs: "a document", options: size("frame's")),
+            make(.addVariant, "Add Variant", layer, .layers, needs: "a component's original picked", picks: .layers),
+            make(.applyToOtherVersions, "Apply to Other Variants", layer, .layers,
+                 needs: "a component copy picked that differs from its other variants", picks: .layers),
+            make(.makeAlternatives, "Make Alternatives", layer, .layers,
+                 needs: "shapes picked inside a component's original, being edited",
+                 picks: .layers),
+            make(.editOriginal, "Edit Original", layer, .layers, needs: "a component copy picked", picks: .layers),
+            make(.doneEditingOriginal, "Done Editing Original", layer, .layers, needs: "an original being edited"),
+            make(.reset3DRotation, "Reset 3D Rotation", layer, .layers, needs: "a layer turned in depth picked",
+                 picks: .layers),
+            make(.bringNearer, "Bring Nearer", layer, .layers, needs: layersPicked, picks: .layers),
+            make(.sendFurther, "Send Further", layer, .layers, needs: layersPicked, picks: .layers),
         ]
     }()
 
     static let edit: [AppCommand] = {
         let edit = "Edit"
+        let inHand = "something picked: layers, a clip, keys, a range or a transition"
         return [
+            make(.cut, "Cut", edit, .edit, needs: inHand, picks: .clipAtPlayhead),
+            make(.copy, "Copy", edit, .edit, needs: inHand, picks: .clipAtPlayhead),
+            make(.copyMerged, "Copy Merged", edit, .edit, needs: "a document"),
+            make(.copySVG, "Copy SVG", edit, .edit, needs: "a drawing: shapes, paths or text", picks: .layers),
+            make(.copyVideo, "Copy Video", edit, .edit, needs: aVideo),
+            make(.copyAsGIF, "Copy as GIF", edit, .edit, needs: aVideo),
+            make(.paste, "Paste", edit, .edit, needs: "something copied",
+                 picks: [.playhead, .layers, .track]),
             make(.selectAll, "Select All", edit, .edit, needs: "a document"),
             make(.deselect, "Deselect", edit, .edit, needs: "a selection"),
             make(.invertSelection, "Invert Selection", edit, .edit, needs: "a selection"),
@@ -651,6 +885,9 @@ public enum AppCommandTable {
             make(.showAllMeasurements, "Show All Measurements", menu, .measure, needs: "a hidden measurement"),
             make(.hideAllMeasurements, "Hide All Measurements", menu, .measure, needs: "a measurement shown"),
             make(.clearMeasurements, "Clear Measurements", menu, .measure, needs: "a measurement"),
+            make(.copySpecList, "Copy as Spec List", menu, .measure, needs: "a measurement shown"),
+            make(.copyMeasurements, "Copy Measurement", menu, .measure, needs: "a measurement picked",
+                 picks: .layers, also: ["Copy Measurements"]),
         ]
     }()
 
@@ -664,8 +901,20 @@ public enum AppCommandTable {
             make(.zoomTimelineToFit, "Zoom Timeline to Fit", menu, .view, needs: "a timeline zoomed in"),
             make(.compactTracks, "Compact Tracks", menu, .view, needs: "tracks drawn taller than compact"),
             make(.captionSafeAreas, "Caption Safe Areas", menu, .view, needs: "captions", toggle: true),
+            make(.resetCamera, "Reset Camera", menu, .layers, needs: "a camera moved"),
         ]
     }()
+
+    static let document: [AppCommand] = [
+        make(.save, "Save", "File", .document, needs: "changes, and a file or History item to save them to"),
+        make(.importMedia, "Import Media\u{2026}", "File", .document, needs: "a document with a Library",
+             options: [.init("path", .text, "An absolute path to a recording, a sound or a picture.", required: true)]),
+        make(.resizeImage, "Resize Image\u{2026}", "Image", .document, needs: "a document",
+             options: size("new")),
+        make(.canvasSize, "Canvas Size\u{2026}", "Image", .document, needs: "a document",
+             options: size("canvas's new") + [.init("anchor", .choice(CanvasAnchor.allCases.map(\.rawValue)),
+                                                    "Which edge or corner stays put. center when left out.")]),
+    ]
 
     // MARK: Checking a call
 

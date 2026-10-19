@@ -2832,6 +2832,10 @@ final class EditorState {
 
     /// The short id an agent names this window's document by (`AgentDocuments`).
     @ObservationIgnored var agentID: String?
+    /// True while an agent's command runs (`AgentWork.runCommand`). A command
+    /// that asks a person a question first (Turn into Picture, Turn into Path)
+    /// does not ask an agent: the agent's one undo step is its way back.
+    @ObservationIgnored var agentIsRunning = false
 
     /// Whether closing this window would lose work.
     var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }
@@ -4930,6 +4934,16 @@ final class EditorState {
         flushSelectionToHistory()
         let mark = history?.mark
         body()
+        flushSelectionToHistory()
+        if let mark { history?.squash(since: mark) }
+    }
+
+    /// The same, for a body that waits on work it starts (a file read in, a
+    /// mix written out), so what lands while it waits is folded in too.
+    func asOneUndoStepAwaiting(_ body: () async -> Void) async {
+        flushSelectionToHistory()
+        let mark = history?.mark
+        await body()
         flushSelectionToHistory()
         if let mark { history?.squash(since: mark) }
     }

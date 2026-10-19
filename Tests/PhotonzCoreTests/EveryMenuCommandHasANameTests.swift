@@ -29,7 +29,7 @@ struct EveryMenuCommandHasANameTests {
 
     /// How many menu bar rows are not named yet. Lower it as rows get names;
     /// never raise it to make room for a new row (give that row a name).
-    static let notYetPin = 77
+    static let notYetPin = 0
 
     /// A menu bar row: where it is (the `var` it is built in, then the words
     /// or expression its title is), the commands its action runs, and the
@@ -140,14 +140,31 @@ struct EveryMenuCommandHasANameTests {
                 i = labelEnd + 1
             }
         }
-        // Rows drawn from a list the app builds (`MenuRowsView`).
+        // Rows drawn from a list the app builds (`MenuRowsView`): named when
+        // the function that builds the list runs its rows through the command.
         for match in source.matches(of: /MenuRowsView\(rows:\s*([^)]*\))/) {
             let at = source.distance(from: source.startIndex, to: match.range.lowerBound)
-            rows.append(Row(key: "\(section(at)): MenuRowsView \(collapsed(match.output.1))", commands: [],
-                            title: "", line: lineNumber(at)))
+            let key = "\(section(at)): MenuRowsView \(collapsed(match.output.1))"
+            var named: [String] = []
+            if let (file, id) = drawnRows[key] {
+                let builder = try String(contentsOf: root.appendingPathComponent(file), encoding: .utf8)
+                if builder.contains("run(.\(id)") || builder.contains("AppCommandCall(.\(id)") { named = ["\(id)"] }
+            }
+            rows.append(Row(key: key, commands: named, title: "", line: lineNumber(at)))
         }
         return rows
     }
+
+    /// The rows the app builds as a list, and the file whose builder runs each
+    /// of them through the named command.
+    static let drawnRows: [String: (file: String, command: AppCommandID)] = [
+        "insertTitleRows: MenuRowsView editor.titlePresetRows(kind)":
+            ("Sources/Photonz/EditorState+TitlePresets.swift", .insertTitle),
+        "animatePropertyRows: MenuRowsView inner)":
+            ("Sources/Photonz/EditorState+OnlyAnimated.swift", .animateProperty),
+        "rangeRows: MenuRowsView editor?.rangeSectionMenuBarRows()":
+            ("Sources/Photonz/EditorState+RangeSection.swift", .section),
+    ]
 
     // MARK: The lists
 
@@ -264,164 +281,33 @@ struct EveryMenuCommandHasANameTests {
             "a guide drawn for a person's eye, or the snapping of a hand's drag; nothing an agent places is moved by it",
         "viewMenuRows: PlayerFullScreen.menuTitle(isFullScreen: editor?.isWindowFullScreen ?? false)":
             "how the window is laid out for a person; it changes nothing in the document",
+        "body: \"New Blank Canvas…\"":
+            "opens a new window for a person to pick a size in; new_picture makes a blank picture of any size",
+        "body: \"New Video…\"":
+            "opens a new window for a person to pick a size and length in; new_video (slice 4) makes a blank video",
+        "body: UIStarter.menuTitle":
+            "opens a new window holding a design starter; new_picture and place_component start one an agent names",
+        "body: \"New from Clipboard\"":
+            "opens a new window from what the person copied; paste puts the clipboard into a document an agent names",
+        "body: \"Save to Capture History\"":
+            "asks the person whether to replace the capture or keep both; save writes an edit back over the capture it came from, and export writes a copy to a path",
+        "body: \"Copy Image\"":
+            "shown only with Copy Merged switched off; at Next's defaults copy_merged copies the whole picture",
+        "animateRows: \"Draw a Curve\\u{2026}\"":
+            "a pad a person draws a curve on by hand; set_easing gives a stretch any named curve",
+        "animateRows: \"Copy Ease\"":
+            "carries the curve of a stretch picked on a key graph to others picked there; set_easing names each stretch's curve",
+        "animateRows: \"Paste Ease\"":
+            "carries the curve of a stretch picked on a key graph to others picked there; set_easing names each stretch's curve",
+        "keyLaneRows: \"Show Graph\"":
+            "how a lane is drawn for a person; it changes nothing in the document",
+        "rangeRows: \"Export Range…\"":
+            "opens the Export sheet for a person; export writes a video to a path (slice 4)",
+        "layerMenu: \"Insert Component\"":
+            "places the component picked in the Library panel; place_component places any component by name",
     ]
 
-    static let notYet: [String: String] = [
-        "body: \"New Blank Canvas…\"":
-            "a new document of a given size: new_picture and new_video (slices 3 and 4)",
-        "body: \"New Video…\"":
-            "a new document of a given size: new_picture and new_video (slices 3 and 4)",
-        "body: UIStarter.menuTitle":
-            "a new document of a given size: new_picture and new_video (slices 3 and 4)",
-        "body: \"New from Clipboard\"":
-            "a new document of a given size: new_picture and new_video (slices 3 and 4)",
-        "body: \"Import Media…\"":
-            "a file panel; add_clip takes a path (slice 4)",
-        "body: \"Save\"":
-            "save_document, saving to the document's own file",
-        "body: \"Save to Capture History\"":
-            "a command that files the picture in History",
-        "body: \"Copy Image\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "body: \"Cut\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "body: \"Copy\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "body: \"Copy Merged\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "body: \"Copy SVG\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "body: \"Copy Video\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "body: \"Copy as GIF\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "body: \"Paste\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "imageMenu: \"Resize Image…\"":
-            "a dialog of sizes; needs a command that takes the new size",
-        "imageMenu: \"Canvas Size…\"":
-            "a dialog of sizes; needs a command that takes the new size",
-        "freezeAndSpeedRows: \"Freeze Frame\\u{2026}\"":
-            "asks how long in a popover; needs a command that takes the length",
-        "animateRows: curve.title":
-            "acts on keys or stretches picked on a lane, which an agent cannot pick yet",
-        "animateRows: \"Draw a Curve\\u{2026}\"":
-            "acts on keys or stretches picked on a lane, which an agent cannot pick yet",
-        "animateRows: \"Copy Ease\"":
-            "acts on keys or stretches picked on a lane, which an agent cannot pick yet",
-        "animateRows: \"Paste Ease\"":
-            "acts on keys or stretches picked on a lane, which an agent cannot pick yet",
-        "addMediaRow: \"Add Media at Playhead…\"":
-            "a file panel; add_clip takes a path (slice 4)",
-        "saveTitlePresetRow: \"Save as Preset…\"":
-            "asks for a name; needs a command that takes it",
-        "exportSoundRow: \"Export Sound…\"":
-            "a save panel; export writes to a path (slice 4)",
-        "captionRows: \"Export Captions as SRT…\"":
-            "a save panel; export writes to a path (slice 4)",
-        "captionRows: \"Export Captions as WebVTT…\"":
-            "a save panel; export writes to a path (slice 4)",
-        "layerListRows: \"Rename Layer…\"":
-            "opens the name for typing in place; needs a command that takes the new name",
-        "effectRows: kind.title":
-            "effects: needs commands that add and remove an effect by name",
-        "effectRows: style.name":
-            "effects: needs commands that add and remove an effect by name",
-        "effectRows: row.title":
-            "effects: needs commands that add and remove an effect by name",
-        "clipItselfRows: \"Rename…\"":
-            "opens the name for typing in place; needs a command that takes the new name",
-        "clipItselfRows: \"Add Click at Playhead\\u{2026}\"":
-            "places a click by pointing at the canvas; needs a command that takes the point",
-        "clipItselfRows: \"Follow Cursor\"":
-            "acts on a zoom picked on its lane, which an agent cannot pick yet",
-        "clipItselfRows: \"\\(stop)%\"":
-            "acts on a zoom picked on its lane, which an agent cannot pick yet",
-        "clipItselfRows: \"Delete Zoom\"":
-            "acts on a zoom picked on its lane, which an agent cannot pick yet",
-        "keyLaneRows: \"Show Graph\"":
-            "acts on keys or stretches picked on a lane, which an agent cannot pick yet",
-        "keyLaneRows: \"Stop Animating\"":
-            "acts on a property picked on a lane, which an agent cannot pick yet",
-        "straightenRow: \"Straighten This Stretch\"":
-            "acts on keys or stretches picked on a lane, which an agent cannot pick yet",
-        "rangeRows: \"Export Range…\"":
-            "a save panel; export writes to a path (slice 4)",
-        "trackMenu: \"Rename Track…\"":
-            "opens the name for typing in place; needs a command that takes the new name",
-        "captionEditRows: \"Edit Word\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Split Here\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Merge with Next\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Delete Word\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Move to Previous Line\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Move to Next Line\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Join with Next Line\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Play from Here\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "captionEditRows: \"Start Here\"":
-            "acts on a caption word picked on the canvas or the timeline, which an agent cannot pick yet",
-        "layerMenu: style.title":
-            "arrows: drawing comes with slice 3",
-        "layerMenu: ArrowStyle.reshuffleTitle":
-            "arrows: drawing comes with slice 3",
-        "layerMenu: ArrowBend.straightenTitle":
-            "arrows: drawing comes with slice 3",
-        "layerMenu: editor?.turnSelectionIntoPathMenuItem ?? TurnIntoPathPrompt.menuItem":
-            "needs a command of its own",
-        "layerMenu: EditorState.putTextOnPathTitle":
-            "needs a command of its own",
-        "layerMenu: RasterizePrompt.menuItem":
-            "needs a command of its own",
-        "layerMenu: \"Bring into View\"":
-            "needs a command of its own",
-        "layerMenu: fill.title":
-            "needs a command of its own",
-        "layerMenu: SurfaceCommand.menuTitle":
-            "needs a command of its own",
-        "layerMenu: FloatingCommand.menuTitle":
-            "needs a command of its own",
-        "layerMenu: \"New Frame…\"":
-            "needs a command of its own",
-        "layerMenu: FrameColumnsCopy.menuItem":
-            "needs a command of its own",
-        "layerMenu: \"Insert Component\"":
-            "needs a command of its own",
-        "layerMenu: editor?.selectedComponentVariantWording.addCommand ?? \"Add Variant\"":
-            "needs a command of its own",
-        "layerMenu: title":
-            "needs a command of its own",
-        "layerMenu: \"Make Alternatives\"":
-            "needs a command of its own",
-        "layerMenu: OriginalSpaceCopy.menuEdit":
-            "needs a command of its own",
-        "layerMenu: OriginalSpaceCopy.menuDone":
-            "needs a command of its own",
-        "layerMenu: \"Reset 3D Rotation\"":
-            "needs a command of its own",
-        "layerMenu: \"Bring Nearer\"":
-            "needs a command of its own",
-        "layerMenu: \"Send Further\"":
-            "needs a command of its own",
-        "measureMenu: \"Copy as Spec List\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "measureMenu: selectedCount > 1 ? \"Copy Measurements\" : \"Copy Measurement\"":
-            "the clipboard: these rows also act on a text field being typed in, so their commands must say which",
-        "viewMenuRows: \"Reset Camera\"":
-            "needs a command of its own",
-        "insertTitleRows: MenuRowsView editor.titlePresetRows(kind)":
-            "the title presets, one row each: add_title (slice 4)",
-        "animatePropertyRows: MenuRowsView inner)":
-            "acts on a property picked on a lane, which an agent cannot pick yet",
-        "rangeRows: MenuRowsView editor?.rangeSectionMenuBarRows()":
-            "acts on a clip picked under a range, which an agent cannot pick yet",
-    ]
+    static let notYet: [String: String] = [:]
 
     // MARK: The timeline's right-click rows
 
@@ -439,7 +325,7 @@ struct EveryMenuCommandHasANameTests {
     static func reach(_ row: TimelineMenuRow) -> Reach {
         switch row {
         case .split: .command(.splitAtPlayhead)
-        case .freezeFrame: .notYet("asks how long in a popover")
+        case .freezeFrame: .command(.freezeFrame)
         case .speed: .command(.setSpeed)
         case .startAtPlayhead: .command(.startAtPlayhead)
         case .endAtPlayhead: .command(.endAtPlayhead)
@@ -451,8 +337,9 @@ struct EveryMenuCommandHasANameTests {
         case .resetGain: .command(.resetGain)
         case .animateIn: .command(.animateIn)
         case .animateOut: .command(.animateOut)
-        case .cut, .copy, .pasteKeys, .copyTransition, .pasteTransition, .pasteHere:
-            .notYet("the clipboard")
+        case .cut: .command(.cut)
+        case .copy, .copyTransition: .command(.copy)
+        case .pasteKeys, .pasteTransition, .pasteHere: .command(.paste)
         case .delete: .command(.delete)
         case .rippleDelete: .command(.rippleDelete)
         case .showPicture: .command(.showPicture)
@@ -462,19 +349,22 @@ struct EveryMenuCommandHasANameTests {
         case .punchIn: .command(.punchIn)
         case .addZoom: .command(.addZoom)
         case .suggestZooms: .command(.suggestZooms)
-        case .addClick: .notYet("places a click by pointing at the canvas")
-        case .animate: .notYet("the properties to animate, a list built from the layer")
+        case .addClick: .command(.addClick)
+        case .animate: .command(.animateProperty)
         case .addKey: .command(.keyAtPlayhead)
         case .breakApart: .command(.breakApart)
         case .replayTitle: .command(.replayTitle)
-        case .saveAsPreset: .notYet("asks for a name")
+        case .saveAsPreset: .command(.saveTitlePreset)
         case .addCaptions: .command(.addCaptions)
         case .selectForward: .command(.selectForward)
         case .duplicate: .command(.duplicateLayer)
-        case .rename, .editWords: .notYet("opens the words for typing in place")
+        case .rename, .editWords: .command(.renameClip)
         case .revealInFinder: .leftOut("shows the file in Finder, outside the app")
-        case .joinWithNextLine, .startHere: .notYet("acts on a caption word, which an agent cannot pick yet")
-        case .followCursor, .zoomAmount, .deleteZoom: .notYet("acts on a zoom, which an agent cannot pick yet")
+        case .joinWithNextLine: .command(.joinWithNextLine)
+        case .startHere: .command(.goToCaptionStart)
+        case .followCursor: .command(.followCursor)
+        case .zoomAmount: .command(.setZoomAmount)
+        case .deleteZoom: .command(.deleteZoom)
         case .applyDefaultTransition: .command(.applyDefaultTransition)
         case .transitionLength: .command(.setTransitionLength)
         case .transitionCurve: .command(.setTransitionCurve)
@@ -482,9 +372,9 @@ struct EveryMenuCommandHasANameTests {
         case .rollEdit: .command(.rollEditToPlayhead)
         case .joinThroughEdit: .command(.joinThroughEdit)
         case .expandCut: .command(.expandCut)
-        case .closeGap: .notYet("acts on a gap, which an agent cannot pick yet")
-        case .addTitlePage, .addNameCard: .notYet("the title presets: add_title (slice 4)")
-        case .addText, .addRectangle: .notYet("draws with a tool: add_text and add_shape (slice 3)")
+        case .closeGap: .command(.delete)
+        case .addTitlePage, .addNameCard: .command(.insertTitle)
+        case .addText, .addRectangle: .leftOut("draws with a tool; add_text and add_shape draw them")
         case .putLayerHere: .command(.putOnTimeline)
         case .zoomToFit: .command(.zoomTimelineToFit)
         case .compactTracks: .command(.compactTracks)
@@ -498,28 +388,21 @@ struct EveryMenuCommandHasANameTests {
         "\"Duplicate\"": .duplicateLayer,
         "\"Delete\"": .deleteLayer,
         "operation.title": .combineShapes,
+        "editorState.turnIntoPathMenuItem(id: id)": .turnIntoPath,
+        "\"Rename\"": .renameLayer,
+        "OriginalSpaceCopy.menuEdit": .editOriginal,
+        "editorState.selectedComponentVariantWording.addCommand": .addVariant,
+        "title": .applyToOtherVersions,
+        "MenuToggleNames.layerLocked": .lockLayer,
     ]
 
-    static let layerNotYet: [String: String] = [
-        "\"Copy SVG\"": "the clipboard",
-        "editorState.turnIntoPathMenuItem(id: id)": "needs a command of its own",
-        "EditorState.putTextOnPathTitle": "needs a command of its own",
-        "RasterizePrompt.menuItem": "asks first; needs a command of its own",
-        "\"Reset 3D Rotation\"": "needs a command of its own",
-        "\"Bring Nearer\"": "needs a command of its own",
-        "\"Send Further\"": "needs a command of its own",
-        "\"Bring into View\"": "needs a command of its own",
-        "\"Make \\(container) Fit\"": "needs a command of its own",
-        "\"Rename\"": "opens the name for typing in place",
-        "OriginalSpaceCopy.menuEdit": "needs a command of its own",
-        "editorState.selectedComponentVariantWording.addCommand": "needs a command of its own",
-        "title": "needs a command of its own",
-        "MenuToggleNames.layerVisible": "showing and hiding a layer: set_layer (slice 3)",
-        "MenuToggleNames.layerLocked": "locking a layer: set_layer (slice 3)",
-    ]
+    static let layerNotYet: [String: String] = [:]
 
     static let layerLeftOut: [String: String] = [
         "ExactPlacement.menuItem": "opens fields for a person to type a position and size into",
+        "MenuToggleNames.layerVisible": "set_layer's visible shows and hides a layer",
+        "\"Make \\(container) Fit\"":
+            "grows the box a layer was cut off by; set_layer sizes that box, and bring_into_view moves the layer back",
     ]
 
     static func layerRows() throws -> [String] {
@@ -560,7 +443,9 @@ struct EveryMenuCommandHasANameTests {
                     Issue.record("EditorCommands.swift:\(row.line) runs .\(name), which is not in the table")
                     continue
                 }
+                // Source text: an ellipsis may be written `\u{2026}`.
                 let words = EveryCommandIsInTheMenuBarTests.literals(in: row.title)
+                    .map { $0.replacingOccurrences(of: "\\u{2026}", with: "\u{2026}") }
                 if words.isEmpty { continue }
                 #expect(words.contains { command.titles.contains($0) },
                         "EditorCommands.swift:\(row.line) says \(words) but runs \(command.name), titled \(command.titles)")
@@ -635,6 +520,8 @@ struct EveryMenuCommandHasANameTests {
         case .union: "PathCombine.unionTitle"
         case .outlineStroke: "OutlineStroke.title"
         case .stackSelection: "LayersPanelHeader.MenuRow.stackTitle"
+        case .putTextOnPath: "EditorState.putTextOnPathTitle"
+        case .turnIntoPicture: "RasterizePrompt.menuItem"
         default: nil
         }
     }

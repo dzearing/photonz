@@ -24,7 +24,7 @@ struct AppCommandsTests {
     @Test("Names are short snake case an agent can type")
     func namesAreClean() {
         for command in AppCommandTable.all {
-            #expect(command.name.range(of: "^[a-z][a-z_]{1,40}$", options: .regularExpression) != nil,
+            #expect(command.name.range(of: "^[a-z][a-z0-9_]{1,40}$", options: .regularExpression) != nil,
                     "\(command.name)")
         }
     }
@@ -152,6 +152,80 @@ struct AppCommandsTests {
         }
         #expect(error.message.contains("list_commands"))
         #expect(error.message.contains("Did you mean split_"))
+    }
+
+    // MARK: What a person is asked for, an agent says
+
+    @Test("A row that asks a person for a name, a size, a length or a file takes it as a required argument")
+    func askedArgumentsAreRequired() throws {
+        let asked: [(AppCommandID, [String])] = [
+            (.renameLayer, ["name"]), (.renameClip, ["name"]), (.renameTrack, ["name"]),
+            (.resizeImage, ["width", "height"]), (.canvasSize, ["width", "height"]),
+            (.newFrame, ["width", "height"]), (.freezeFrame, ["milliseconds"]),
+            (.saveTitlePreset, ["name"]), (.editCaptionWord, ["text"]), (.addClick, ["x", "y"]),
+            (.importMedia, ["path"]), (.addMediaAtPlayhead, ["path"]), (.exportSound, ["path"]),
+            (.exportCaptions, ["format", "path"]),
+        ]
+        for (id, names) in asked {
+            let required = AppCommandTable.command(id)?.inputSchema["required"]?.arrayValue?.compactMap(\.stringValue)
+            #expect(Set(names).isSubset(of: Set(required ?? [])), "\(id.rawValue) requires \(required ?? [])")
+            guard case .failure(let error) = AppCommandTable.call(id.rawValue, arguments: nil) else {
+                Issue.record("\(id.rawValue) ran with nothing to say what a person would have typed"); continue
+            }
+            #expect(error.message.contains("is required"), "\(error.message)")
+        }
+    }
+
+    @Test("Words and amounts come through as typed")
+    func wordsAndAmounts() throws {
+        let rename = try AppCommandTable.call("rename_layer",
+                                              arguments: Self.args(#"{"layers": ["A"], "name": "Logo"}"#)).get()
+        #expect(rename.word("name") == "Logo")
+        let size = try AppCommandTable.call("canvas_size",
+                                            arguments: Self.args(#"{"width": 1200.5, "height": 800, "anchor": "top"}"#)).get()
+        #expect(size.amount("width") == 1200.5)
+        #expect(size.amount("height") == 800)
+        #expect(size.word("anchor") == "top")
+        let schema = AppCommandTable.command(.renameLayer)?.inputSchema["properties"]?["name"]
+        #expect(schema?["type"]?.stringValue == "string")
+        let width = AppCommandTable.command(.resizeImage)?.inputSchema["properties"]?["width"]
+        #expect(width?["type"]?.stringValue == "number")
+        #expect(width?["minimum"]?.doubleValue == 1)
+    }
+
+    @Test("A size of nothing is refused before the app sees it")
+    func noSizeIsRefused() throws {
+        guard case .failure = AppCommandTable.call("resize_image",
+                                                   arguments: try Self.args(#"{"width": 0, "height": 10}"#)) else {
+            Issue.record("a width of 0 was accepted"); return
+        }
+    }
+
+    @Test("Delete picks a gap by a track and a moment, as a click on the gap does")
+    func deletePicksAGap() throws {
+        let names = Set(AppCommandTable.command(.delete)?.arguments.map(\.name) ?? [])
+        #expect(names.isSuperset(of: ["seconds", "track", "layers"]))
+        let call = try AppCommandTable.call("delete", arguments: Self.args(#"{"track": "T", "seconds": 4}"#)).get()
+        #expect(call.track == "T")
+        #expect(call.atMS == 4000)
+    }
+
+    @Test("Caption words, zooms and stretches are picked by the playhead")
+    func playheadPicks() {
+        for id: AppCommandID in [.splitCaptionWord, .deleteCaptionWord, .joinWithNextLine, .deleteZoom,
+                                 .setZoomAmount, .followCursor, .straightenStretch, .setEasing] {
+            let names = Set(AppCommandTable.command(id)?.arguments.map(\.name) ?? [])
+            #expect(names.contains("seconds"), "\(id.rawValue) takes no seconds")
+        }
+    }
+
+    @Test("The clipboard commands are in Edit, beside Select All")
+    func clipboard() {
+        for id: AppCommandID in [.cut, .copy, .paste, .copyMerged, .copySVG] {
+            #expect(AppCommandTable.command(id)?.menu == "Edit", "\(id.rawValue)")
+        }
+        #expect(AppCommandTable.command(.paste)?.arguments.contains { $0.name == "track" } == true,
+                "Paste Here on an empty track pastes onto that track")
     }
 
     // MARK: Listing

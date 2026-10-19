@@ -12,6 +12,8 @@ import Foundation
 public struct AgentDocumentRead: Codable, Hashable, Sendable {
 
     public static let mostLayersListed = 400
+    /// Caption lines past this are counted, not listed.
+    public static let mostCaptionLinesListed = 300
     public static let longestText = 200
 
     /// What the app knows about the window that the document does not.
@@ -125,6 +127,22 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var zooms: Int?
     }
 
+    /// One word of a caption, and when it starts being said.
+    public struct CaptionWord: Codable, Hashable, Sendable {
+        public var text: String
+        public var atSeconds: Double
+    }
+
+    /// One caption line: its layer, its words, when it is up. A command on a
+    /// caption word picks the word being said at `seconds`.
+    public struct CaptionLine: Codable, Hashable, Sendable {
+        public var layer: String
+        public var text: String
+        public var inSeconds: Double
+        public var outSeconds: Double
+        public var words: [CaptionWord]
+    }
+
     public struct Track: Codable, Hashable, Sendable {
         public var id: String
         public var name: String
@@ -170,6 +188,10 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
     /// Every cut a transition can go on, in time order.
     public var cuts: [Cut]?
     public var markers: [Double]?
+    /// The caption lines in time order, when there are captions.
+    public var captions: [CaptionLine]?
+    /// Caption lines past `mostCaptionLinesListed`, counted and not listed.
+    public var captionLinesNotListed: Int?
 
     public func encoded() throws -> Data {
         let encoder = JSONEncoder()
@@ -210,6 +232,16 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         }
         read.cuts = cuts.isEmpty ? nil : cuts
         read.markers = document.markers.isEmpty ? nil : document.markers.map { seconds($0.atMS) }
+        let cues = document.captionLayers
+        if !cues.isEmpty {
+            read.captions = cues.prefix(mostCaptionLinesListed).compactMap { cue in
+                guard let time = cue.time, let words = document.captionWordsAsShown(of: cue.id) else { return nil }
+                return CaptionLine(layer: cue.id.uuidString, text: cut(words.map(\.text).joined(separator: " ")),
+                                   inSeconds: seconds(time.inMS), outSeconds: seconds(time.outMS),
+                                   words: words.map { CaptionWord(text: $0.text, atSeconds: seconds($0.startMS)) })
+            }
+            read.captionLinesNotListed = cues.count > mostCaptionLinesListed ? cues.count - mostCaptionLinesListed : nil
+        }
         return read
     }
 

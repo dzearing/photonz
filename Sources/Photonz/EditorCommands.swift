@@ -369,7 +369,7 @@ struct EditorCommands: Commands {
             // so the key is Import only while there is no marquee to invert;
             // with one up it stays Invert and Photoshop hands never notice.
             if Experiments.shared.libraryEnabled && Experiments.shared.droppingMedia {
-                Button("Import Media…") { editor?.importMediaFromPanel() }
+                Button("Import Media…") { editor?.run(.importMedia) }
                     .keyboardShortcut(editor?.selection == nil
                                       ? KeyboardShortcut("i", modifiers: [.command, .shift]) : nil)
                     .disabled(!(editor?.canImportMedia ?? false))
@@ -381,7 +381,10 @@ struct EditorCommands: Commands {
             // written into the capture file; for a recording it's the trim/crop
             // baked into the stored MP4 (the original is preserved alongside,
             // so it stays reversible).
-            Button("Save") { focusedSave?.editor.performSave { _ in } }
+            Button("Save") {
+                if let editor = focusedSave?.editor as? EditorState { editor.run(.save) }
+                else { focusedSave?.editor.performSave { _ in } }
+            }
             .keyboardShortcut("s", modifiers: .command)
             .disabled(!(focusedSave?.affordance.isSaveEnabled ?? false))
             // For a recording, "save a copy somewhere else" IS the export, so
@@ -460,7 +463,7 @@ struct EditorCommands: Commands {
                 if let fieldEditor {
                     fieldEditor.cut(nil)
                 } else {
-                    editor?.cutWhatIsInHand()
+                    editor?.run(.cut)
                 }
             }
             .keyboardShortcut("x", modifiers: .command)
@@ -469,7 +472,7 @@ struct EditorCommands: Commands {
                 if let fieldEditor {
                     fieldEditor.copy(nil)
                 } else {
-                    editor?.copyWhatIsInHand()
+                    editor?.run(.copy)
                 }
             }
             .keyboardShortcut("c", modifiers: .command)
@@ -478,7 +481,7 @@ struct EditorCommands: Commands {
             // Copy, so the one that takes the layer you picked and the one
             // that takes everything read as a pair.
             if Experiments.shared.copyPicksYourLayerEnabled {
-                Button("Copy Merged") { editor?.copyMerged() }
+                Button("Copy Merged") { editor?.run(.copyMerged) }
                     .keyboardShortcut("c", modifiers: [.command, .shift])
                     .disabled(editor?.document == nil)
             }
@@ -486,18 +489,18 @@ struct EditorCommands: Commands {
             // SVG, under the copies it sits beside. No key; dimmed on a
             // screenshot, which is pixels however it is written.
             if Experiments.shared.svgExportEnabled {
-                Button("Copy SVG") { editor?.copySVG(around: editor?.pickedLayerID) }
-                    .disabled(!(editor?.canCopySVG(around: editor?.pickedLayerID) ?? false))
+                Button("Copy SVG") { editor?.run(.copySVG) }
+                    .disabled(!(editor?.canRun(.copySVG) ?? false))
             }
             // The edit onto the clipboard as a file, to paste into a chat
             // without exporting one first: Current's recording window had
             // these on its own bar. Every Copy key with ⌘ and one or two of
             // ⇧ ⌥ ⌃ is taken, so ⌃⇧⌘, with G for the GIF.
             if Experiments.shared.videoExportEnabled {
-                Button("Copy Video") { editor?.copyVideo(as: .mp4) }
+                Button("Copy Video") { editor?.run(.copyVideo) }
                     .keyboardShortcut("c", modifiers: [.command, .shift, .control])
                     .disabled(!(editor?.canCopyVideo ?? false))
-                Button("Copy as GIF") { editor?.copyVideo(as: .gif) }
+                Button("Copy as GIF") { editor?.run(.copyAsGIF) }
                     .keyboardShortcut("g", modifiers: [.command, .shift, .control])
                     .disabled(!(editor?.canCopyVideo ?? false))
             }
@@ -505,7 +508,7 @@ struct EditorCommands: Commands {
                 if let fieldEditor {
                     fieldEditor.paste(nil)
                 } else {
-                    editor?.pasteWhatIsOnTheClipboard()
+                    editor?.run(.paste)
                 }
             }
             .keyboardShortcut("v", modifiers: .command)
@@ -669,10 +672,10 @@ struct EditorCommands: Commands {
 
     @CommandsBuilder private var imageMenu: some Commands {
         CommandMenu("Image") {
-            Button("Resize Image…") { editor?.isResizeDialogPresented = true }
+            Button("Resize Image…") { editor?.run(.resizeImage) }
                 .keyboardShortcut("i", modifiers: [.command, .option])
                 .disabled(editor?.document == nil)
-            Button("Canvas Size…") { editor?.isCanvasSizeDialogPresented = true }
+            Button("Canvas Size…") { editor?.run(.canvasSize) }
                 .keyboardShortcut("c", modifiers: [.command, .option])
                 .disabled(editor?.document == nil)
         }
@@ -878,7 +881,7 @@ struct EditorCommands: Commands {
     // row of its own above the list (`EditorState+SpeedKey`). Photoshop's ⌘R
     // is Rulers, which this app does not have.
     @ViewBuilder private var freezeAndSpeedRows: some View {
-        Button("Freeze Frame\u{2026}") { editor?.openFreezeFrame() }
+        Button("Freeze Frame\u{2026}") { editor?.run(.freezeFrame) }
             .keyboardShortcut("f", modifiers: [.option, .shift])
             .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
         // A stretch whose picture a range took off (Hide Picture for Section).
@@ -939,7 +942,7 @@ struct EditorCommands: Commands {
             ForEach(Array(EasingCurve.named.enumerated()), id: \.offset) { _, curve in
                 Toggle(curve.title, isOn: Binding(
                     get: { editor?.betweenKeysCurve == curve },
-                    set: { if $0 { editor?.curveBetweenKeys(curve) } }))
+                    set: { if $0 { editor?.run(.setEasing, ["curve": .string(curve.title)]) } }))
             }
         }
         .disabled(editor?.betweenKeysCurve == nil)
@@ -1093,7 +1096,7 @@ struct EditorCommands: Commands {
     /// A video or a sound, onto the timeline at the playhead: the menu's
     /// way in for a second clip, where Import Media only fills the Library.
     @ViewBuilder private var addMediaRow: some View {
-        Button("Add Media at Playhead…") { editor?.addMediaFromFile() }
+        Button("Add Media at Playhead…") { editor?.run(.addMediaAtPlayhead) }
             .disabled(!(editor?.documentHasTime ?? false))
     }
 
@@ -1121,12 +1124,12 @@ struct EditorCommands: Commands {
             Button("Replay Title") { editor?.run(.replayTitle) }
                 .disabled(!(editor?.canRun(.replayTitle) ?? false))
         }
-        Button("Save as Preset…") { editor?.beginSavingTitlePreset() }
+        Button("Save as Preset…") { editor?.run(.saveTitlePreset) }
             .disabled(editor?.titlePresetLayerInHand == nil)
     }
 
     @ViewBuilder private var exportSoundRow: some View {
-        Button("Export Sound…") { editor?.exportSound() }
+        Button("Export Sound…") { editor?.run(.exportSound) }
             .disabled(!(editor?.documentHasAudio ?? false))
     }
 
@@ -1158,9 +1161,9 @@ struct EditorCommands: Commands {
         .disabled(!(editor?.canRun(.captionsEarlier) ?? false))
         Button("Clear Captions") { editor?.run(.clearCaptions) }
             .disabled(!(editor?.canRun(.clearCaptions) ?? false))
-        Button("Export Captions as SRT…") { editor?.exportCaptions(as: .srt) }
+        Button("Export Captions as SRT…") { editor?.run(.exportCaptions, ["format": "srt"]) }
             .disabled(!(editor?.canExportCaptions ?? false))
-        Button("Export Captions as WebVTT…") { editor?.exportCaptions(as: .vtt) }
+        Button("Export Captions as WebVTT…") { editor?.run(.exportCaptions, ["format": "vtt"]) }
             .disabled(!(editor?.canExportCaptions ?? false))
     }
 
@@ -1236,7 +1239,12 @@ struct EditorCommands: Commands {
     // Layer: the verbs the layers list's right-click has.
     @ViewBuilder private var layerListRows: some View {
         let selected = editor?.selectedLayerID
-        Button("Rename Layer…") { editor?.renameLayerInHand() }
+        Button("Rename Layer…") { editor?.run(.renameLayer) }
+            .disabled(selected == nil)
+        // The Layers list's lock, here too (Photoshop's Layer ▸ Lock Layers).
+        Toggle(MenuToggleNames.layerLocked, isOn: Binding(
+            get: { editor?.isOn(.lockLayer) ?? false },
+            set: { _ in editor?.run(.lockLayer) }))
             .disabled(selected == nil)
         Button("Select Pixels") { editor?.run(.selectPixels) }
             .disabled(!(editor?.canRun(.selectPixels) ?? false))
@@ -1251,14 +1259,14 @@ struct EditorCommands: Commands {
         let canRestyle = editor?.hasRestylableSelection ?? false
         Menu("Add Effect") {
             ForEach(editor?.addableEffects ?? AddableEffect.allCases) { kind in
-                Button(kind.title) { editor?.addEffect(kind) }
+                Button(kind.title) { editor?.run(.addEffect, ["kind": .string(kind.rawValue)]) }
                     .disabled(!(editor?.canAddEffect(kind) ?? false))
             }
             let saved = editor?.namedEffectStyles ?? []
             if !saved.isEmpty {
                 Section("Saved effects") {
                     ForEach(saved) { style in
-                        Button(style.name) { editor?.addEffectStyle(styleID: style.id) }
+                        Button(style.name) { editor?.run(.addSavedEffect, ["style": .string(style.name)]) }
                     }
                 }
             }
@@ -1267,7 +1275,7 @@ struct EditorCommands: Commands {
         let effects = canRestyle ? (editor?.layerEffectRows ?? []) : []
         Menu("Remove Effect") {
             ForEach(effects) { row in
-                Button(row.title) { editor?.removeEffect(row: row) }
+                Button(row.title) { editor?.run(.removeEffect, ["index": .number(Double(row.index))]) }
             }
         }
         .disabled(effects.isEmpty)
@@ -1276,14 +1284,12 @@ struct EditorCommands: Commands {
     // Clip: the clip's own right-click verbs that were nowhere else.
     @ViewBuilder private var clipItselfRows: some View {
         let clip = editor?.clipInHandID
-        Button("Rename…") { if let clip { editor?.beginRenamingClip(clip) } }
+        Button("Rename…") { editor?.run(.renameClip) }
             .disabled(clip == nil)
         Button("Select Forward") { editor?.run(.selectForward) }
             .disabled(clip == nil)
         let clickClip = editor?.clipToAddClickTo
-        Button("Add Click at Playhead\u{2026}") {
-            if let clickClip = editor?.clipToAddClickTo { editor?.beginPlacingClick(onClip: clickClip) }
-        }
+        Button("Add Click at Playhead\u{2026}") { editor?.run(.addClick) }
         .disabled(clickClip == nil)
         if Experiments.shared.clickEffectsEnabled {
             // The Clicks switch on the clip's Properties (`ClickEffectRows`).
@@ -1316,15 +1322,15 @@ struct EditorCommands: Commands {
             let allFollow = editor.map { !zoomRefs.isEmpty && $0.pickedZoomsReading.followsCursor == true } ?? false
             Toggle("Follow Cursor", isOn: Binding(
                 get: { allFollow },
-                set: { on in editor?.setZoomFollowsCursor(zoomRefs, on) }))
+                set: { on in editor?.run(AppCommandCall(.followCursor, on: on)) }))
                 .disabled(zoomRefs.isEmpty || !(editor?.canFollowCursor(zoomRefs) ?? false))
             Menu("Zoom") {
                 ForEach(EditorState.zoomScaleStops, id: \.self) { stop in
-                    Button("\(stop)%") { editor?.setZoomScale(zoomRefs, percent: stop) }
+                    Button("\(stop)%") { editor?.run(.setZoomAmount, ["percent": .number(Double(stop))]) }
                 }
             }
             .disabled(zoomRefs.isEmpty)
-            Button("Delete Zoom") { editor?.removeZoomInHand() }
+            Button("Delete Zoom") { editor?.run(.deleteZoom) }
                 .disabled(zoomRefs.isEmpty)
         }
         let media = editor?.mediaURLInHand
@@ -1443,7 +1449,7 @@ struct EditorCommands: Commands {
             set: { _ in if let lane { editor?.toggleKeyGraph(lane.motionID) } }))
         .disabled(!(editor?.canGraphKeyLaneInHand ?? false))
         let property = editor?.animatingPropertyInHand
-        Button("Stop Animating") { if let property { editor?.toggleKeying(property) } }
+        Button("Stop Animating") { editor?.run(.stopAnimating) }
             .disabled(property == nil)
     }
 
@@ -1459,7 +1465,7 @@ struct EditorCommands: Commands {
     }
 
     @ViewBuilder private var straightenRow: some View {
-        Button("Straighten This Stretch") { editor?.straightenStretchInHand() }
+        Button("Straighten This Stretch") { editor?.run(.straightenStretch) }
             .disabled(editor?.curvedStretchInHand == nil)
     }
 
@@ -1517,7 +1523,7 @@ struct EditorCommands: Commands {
             Button("Add Track Below") { editor?.run(.addTrackBelow) }
                 .disabled(track == nil)
             Divider()
-            Button("Rename Track…") { editor?.renameTrackInHand() }
+            Button("Rename Track…") { editor?.run(.renameTrack) }
                 .disabled(track == nil)
             if track?.kind == .audio {
                 Toggle("Mute Track", isOn: Binding(
@@ -1565,20 +1571,20 @@ struct EditorCommands: Commands {
             .disabled(!(editor?.canRun(.resetCaptions) ?? false))
         let word = editor?.captionWordInHand
         Menu("Caption Word") {
-            Button("Edit Word") { if let word { editor?.beginEditingCaptionWord(word, place: .canvas) } }
-            Button("Split Here") { if let word { editor?.splitCaptionWord(word, atMS: editor?.documentTimeMS) } }
-                .disabled(!((word.flatMap { editor?.captionWord($0) }?.text.count ?? 0) >= 2))
-            Button("Merge with Next") { if let word { editor?.mergeCaptionWordWithNext(word) } }
-                .disabled(!(word.map { editor?.canMergeCaptionWord($0) ?? false } ?? false))
-            Button("Delete Word", role: .destructive) { if let word { editor?.deleteCaptionWord(word) } }
+            Button("Edit Word") { editor?.run(.editCaptionWord) }
+            Button("Split Here") { editor?.run(.splitCaptionWord) }
+                .disabled(!(editor?.canRun(.splitCaptionWord) ?? false))
+            Button("Merge with Next") { editor?.run(.mergeCaptionWord) }
+                .disabled(!(editor?.canRun(.mergeCaptionWord) ?? false))
+            Button("Delete Word", role: .destructive) { editor?.run(.deleteCaptionWord) }
             Divider()
-            Button("Move to Previous Line") { if let word { editor?.moveCaptionWordToPreviousLine(word) } }
-                .disabled(!(word.map { editor?.canMoveCaptionWordToPreviousLine($0) ?? false } ?? false))
-            Button("Move to Next Line") { if let word { editor?.moveCaptionWordToNextLine(word) } }
-            Button("Join with Next Line") { if let word { editor?.joinCaptionWithNextLine(word.cueID) } }
-                .disabled(!(word.map { editor?.canJoinCaptionWithNextLine($0.cueID) ?? false } ?? false))
-            Button("Play from Here") { if let word { editor?.playFromCaptionWord(word) } }
-            Button("Start Here") { editor?.goToStartOfCaptionInHand() }
+            Button("Move to Previous Line") { editor?.run(.moveWordToPreviousLine) }
+                .disabled(!(editor?.canRun(.moveWordToPreviousLine) ?? false))
+            Button("Move to Next Line") { editor?.run(.moveWordToNextLine) }
+            Button("Join with Next Line") { editor?.run(.joinWithNextLine) }
+                .disabled(!(editor?.canRun(.joinWithNextLine) ?? false))
+            Button("Play from Here") { editor?.run(.playFromWord) }
+            Button("Start Here") { editor?.run(.goToCaptionStart) }
         }
         .disabled(word == nil)
     }
@@ -1928,22 +1934,16 @@ struct EditorCommands: Commands {
                     ForEach(ArrowStyle.allCases, id: \.self) { style in
                         Toggle(style.title, isOn: Binding(
                             get: { editor?.pickedArrowStyle == style },
-                            set: { _ in
-                                if let editor { editor.setArrowStyle(ids: editor.pickedArrowIDs, style) }
-                            }))
+                            set: { _ in editor?.run(.setArrowStyle, ["style": .string(style.rawValue)]) }))
                     }
                 }
                 .disabled(editor?.pickedArrowIDs.isEmpty ?? true)
-                Button(ArrowStyle.reshuffleTitle) {
-                    if let editor { editor.reshuffleArrows(ids: editor.pickedArrowIDs) }
-                }
-                .disabled(editor.map { $0.reshufflableArrows($0.pickedArrowIDs).isEmpty } ?? true)
+                Button(ArrowStyle.reshuffleTitle) { editor?.run(.reshuffleArrows) }
+                    .disabled(!(editor?.canRun(.reshuffleArrows) ?? false))
             }
             if Experiments.shared.arrowBendEnabled {
-                Button(ArrowBend.straightenTitle) {
-                    if let editor { editor.straightenArrows(ids: editor.pickedArrowIDs) }
-                }
-                .disabled(editor.map { $0.straightenableArrows($0.pickedArrowIDs).isEmpty } ?? true)
+                Button(ArrowBend.straightenTitle) { editor?.run(.straightenArrows) }
+                    .disabled(!(editor?.canRun(.straightenArrows) ?? false))
             }
             // The Around menu's Somewhere else, where every command lives with
             // its key: the next press on the canvas puts the picked turn's
@@ -1973,7 +1973,7 @@ struct EditorCommands: Commands {
                 // and Close Path over one open outline on its own, which shuts
                 // it on its own two ends (`PathClosing.swift`).
                 Button(editor?.turnSelectionIntoPathMenuItem ?? TurnIntoPathPrompt.menuItem) {
-                    editor?.turnSelectionIntoPath()
+                    editor?.run(.turnIntoPath)
                 }
                 .keyboardShortcut(shiftJ == .closePath ? shiftJKey : nil)
                 .disabled(!(editor?.canTurnSelectionIntoPath ?? false))
@@ -1997,7 +1997,7 @@ struct EditorCommands: Commands {
             // other commands that turn what you drew into something new, and
             // dimmed until a text and a path are picked together.
             if Experiments.shared.textOnPathEnabled {
-                Button(EditorState.putTextOnPathTitle) { editor?.putSelectionTextOnPath() }
+                Button(EditorState.putTextOnPathTitle) { editor?.run(.putTextOnPath) }
                     .disabled(!(editor?.canPutTextOnPath ?? false))
             }
             // The two the icon mock's Layers panel menu puts together: Join
@@ -2018,7 +2018,7 @@ struct EditorCommands: Commands {
             // (`RasterizePrompt`, `RegionSliceRefusal`). Named the way the
             // refusal pill names it, not the way Photoshop does.
             Button(RasterizePrompt.menuItem) {
-                editor?.rasterizeSelection()
+                editor?.run(.turnIntoPicture)
             }
             // Its own key, so the refusal's way out is reachable by somebody
             // who never touches a pointer, and stays reachable after the pill
@@ -2095,11 +2095,11 @@ struct EditorCommands: Commands {
                 // where a glyph cannot. No key: this is a rescue you reach for
                 // once in a while, not a working command, and every free
                 // Photoshop-safe combination is worth more to one.
-                Button("Bring into View") { editor?.bringSelectionIntoView() }
+                Button("Bring into View") { editor?.run(.bringIntoView) }
                     .disabled(!(editor?.canBringSelectionIntoView ?? false))
                 let fill = editor?.flowFillCommand ?? .none
                 Toggle(fill.title, isOn: Binding(get: { fill.isOn },
-                                                 set: { _ in editor?.toggleFillsTheFlow() }))
+                                                 set: { _ in editor?.run(.fillTheStack) }))
                 .keyboardShortcut("f", modifiers: .option)
                 .disabled(!fill.isEnabled)
                 .help(fill.help)
@@ -2118,7 +2118,7 @@ struct EditorCommands: Commands {
                 let surface = editor?.surfaceCommand ?? .none
                 Toggle(SurfaceCommand.menuTitle,
                        isOn: Binding(get: { surface.isOn },
-                                     set: { _ in editor?.toggleSurface() }))
+                                     set: { _ in editor?.run(.surfaceBehind) }))
                 .disabled(!surface.isEnabled)
                 .help(surface.help)
                 // The same step out of the line, the opposite depth: out, and
@@ -2128,7 +2128,7 @@ struct EditorCommands: Commands {
                 // for the same reason the row above has one.
                 Toggle(FloatingCommand.menuTitle,
                        isOn: Binding(get: { surface.isFloating },
-                                     set: { _ in editor?.toggleFloating() }))
+                                     set: { _ in editor?.run(.inFrontOfTheRest) }))
                 .disabled(!surface.isEnabled)
                 .help(surface.reason ?? FloatingCommand.reason)
             }
@@ -2137,7 +2137,7 @@ struct EditorCommands: Commands {
             // frame tool, and the design-tool key for Frame Selection (⌥⌘G) is
             // Photoshop's Create Clipping Mask, which this app may want later.
             if Experiments.shared.framesEnabled {
-                Button("New Frame…") { editor?.isNewFrameDialogPresented = true }
+                Button("New Frame…") { editor?.run(.newFrame) }
                     .disabled(editor?.document == nil)
                 Button("Frame Selection") { editor?.run(.frameSelection) }
                     .disabled(!(editor?.canRun(.frameSelection) ?? false))
@@ -2152,7 +2152,7 @@ struct EditorCommands: Commands {
                 // the half of the feature the menu does not carry.
                 Toggle(FrameColumnsCopy.menuItem, isOn: Binding(
                     get: { editor?.isShowingFrameColumns ?? false },
-                    set: { _ in editor?.toggleFrameColumns() }))
+                    set: { _ in editor?.run(.showColumns) }))
                 .disabled(editor?.columnsTargetFrameID == nil)
             }
             // The component commands form their own group under the structure
@@ -2172,7 +2172,7 @@ struct EditorCommands: Commands {
                 // per look, from the original's own Properties list, and a key
                 // for it would be a key nobody could name.
                 Button(editor?.selectedComponentVariantWording.addCommand ?? "Add Variant") {
-                    editor?.addComponentVersion()
+                    editor?.run(.addVariant)
                 }
                     .disabled(!(editor?.canAddComponentVersion ?? false))
                 // Apply to Other Variants is ABSENT unless the selected piece
@@ -2185,7 +2185,7 @@ struct EditorCommands: Commands {
                 // and every key a design tool user has in their fingers for
                 // this belongs to something else.
                 if let title = editor?.applyToOtherComponentVersionsTitle {
-                    Button(title) { editor?.applyToOtherComponentVersions() }
+                    Button(title) { editor?.run(.applyToOtherVersions) }
                         .disabled(!(editor?.canApplyToOtherComponentVersions ?? false))
                 }
                 // Make Alternatives is ABSENT rather than dimmed when the
@@ -2195,7 +2195,7 @@ struct EditorCommands: Commands {
                 // row on every other selection is a row people hunt the reason
                 // for. It appears the moment it would work.
                 if editor?.canMakeChoice ?? false {
-                    Button("Make Alternatives") { editor?.makeChoice() }
+                    Button("Make Alternatives") { editor?.run(.makeAlternatives) }
                 }
                 // Option Command B is the design-tool key for detaching, and
                 // Photoshop binds neither the command nor the key. Select
@@ -2204,9 +2204,9 @@ struct EditorCommands: Commands {
                 Button("Make Unique") { editor?.run(.makeUnique) }
                     .keyboardShortcut("b", modifiers: [.command, .option])
                     .disabled(!(editor?.canRun(.makeUnique) ?? false))
-                Button(OriginalSpaceCopy.menuEdit) { editor?.editPickedOriginal() }
+                Button(OriginalSpaceCopy.menuEdit) { editor?.run(.editOriginal) }
                     .disabled(!(editor?.canEditPickedOriginal ?? false))
-                Button(OriginalSpaceCopy.menuDone) { editor?.finishEditingOriginal() }
+                Button(OriginalSpaceCopy.menuDone) { editor?.run(.doneEditingOriginal) }
                     .disabled(!(editor?.isEditingOriginal ?? false))
             }
             // Lining the selection up with itself (`next-align-layers`). Two
@@ -2284,12 +2284,12 @@ struct EditorCommands: Commands {
             // nearer and further rather than up and down the stack.
             if Experiments.shared.turnInDepthEnabled {
                 Divider()
-                Button("Reset 3D Rotation") { editor?.resetSpaceRotation() }
+                Button("Reset 3D Rotation") { editor?.run(.reset3DRotation) }
                     .disabled(!(editor?.canResetSpaceRotation ?? false))
-                Button("Bring Nearer") { editor?.pushDepth(nearer: true) }
+                Button("Bring Nearer") { editor?.run(.bringNearer) }
                     .keyboardShortcut("]", modifiers: [.command, .option])
                     .disabled(!(editor?.canPushDepth ?? false))
-                Button("Send Further") { editor?.pushDepth(nearer: false) }
+                Button("Send Further") { editor?.run(.sendFurther) }
                     .keyboardShortcut("[", modifiers: [.command, .option])
                     .disabled(!(editor?.canPushDepth ?? false))
             }
@@ -2328,14 +2328,14 @@ struct EditorCommands: Commands {
                 // Photoshop keys.
                 // Only visible rows are listed, so with every row hidden the
                 // item is off rather than copying a bare header.
-                Button("Copy as Spec List") { editor?.copyMeasureSpecList() }
+                Button("Copy as Spec List") { editor?.run(.copySpecList) }
                     .keyboardShortcut("c", modifiers: [.command, .control])
                     .disabled(visibleCount == 0)
                 // Plain ⌘C on a selected measurement already carries its spec
                 // line as text beside the layer payload; this is the text-only
                 // form, and the one that copies a multi-selection's lines.
                 Button(selectedCount > 1 ? "Copy Measurements" : "Copy Measurement") {
-                    editor?.copySelectedMeasurements()
+                    editor?.run(.copyMeasurements)
                 }
                 .disabled(selectedCount == 0)
                 Divider()
@@ -2546,7 +2546,7 @@ struct EditorCommands: Commands {
             Divider()
             Button("Show Camera Settings") { editor?.showCameraSettings() }
                 .disabled(editor?.document == nil)
-            Button("Reset Camera") { editor?.resetCamera() }
+            Button("Reset Camera") { editor?.run(.resetCamera) }
                 .disabled(!(editor?.canResetCamera ?? false))
         }
         // The grid you build against (Next, `next-canvas-grid`), on the key

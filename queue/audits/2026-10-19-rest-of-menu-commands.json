@@ -1,0 +1,29 @@
+{
+  "feature": "The rest of the menu commands can be run by name from an agent",
+  "epic": "agent-api",
+  "summary": "Every menu bar row is now a command an agent can run by name, or is left out with a stated reason. 214 commands in all; rename, resize, freeze, caption words, zooms, effects, titles, arrows, components and the rest each land as one undo step.",
+  "setup": "Photonz (Probe) or Photonz Dev, release Next, no flag changed from its default. An agent connected with Scripts/install-mcp.sh. Scripts/agent-commands-drill.mjs runs every check below against the probe on its own.",
+  "switched": {},
+  "try": [
+    { "do": "In a fresh agent session, ask it to open a screenshot, rename a layer to Card and give it a shadow (rename_layer, add_effect)." },
+    { "do": "Press Command Z once: the shadow goes; once more: the name goes." },
+    { "do": "On a recording, ask the agent to freeze the frame at 2 seconds for 1.5 seconds (freeze_frame with milliseconds)." },
+    { "do": "After Add Captions, ask it to fix the third word of the first line (edit_caption_word at that word's time, from read_document's captions list)." },
+    { "do": "Ask it to close the gap left after a Lift (delete with a track and a time inside the gap)." },
+    { "do": "Open Layer in the menu bar with a layer picked: Locked now sits under Rename Layer.", "shot": "2026-10-19-rest-of-menu-commands-layer-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it, so rows read dimmed." },
+    { "do": "Choose Layer > Rename Layer… yourself: the name still opens for typing, exactly as before." }
+  ],
+  "evaluate": [
+    "Does every menu row you use still do exactly what it did, with the same key and the same dimming?",
+    "Is Locked in the Layer menu where you would look for it, or should it read Lock Layer?",
+    "Are the rows left out (new windows, Draw a Curve, Copy and Paste Ease, Show Graph, Export Range, Insert Component, Save to Capture History) ones you are happy an agent cannot run?",
+    "When an agent edits a caption word, is picking it by the time it is said natural enough?"
+  ],
+  "rough": [
+    "No mock covers this: it is the agent's command surface, and the one visible change is the Locked row in the Layer menu, which the Layers list and the layer's right click already had.",
+    "Cut, Copy, Paste and the Copy rows were not run live: the clipboard is the person's, so the drill leaves it alone. They call exactly what their menu rows called.",
+    "Follow Cursor, Straighten This Stretch, Straighten Arrow, Bring into View, Apply to Other Variants, Saved Effects, Reset 3D Rotation, Reset Camera and Move to Previous Line were not in the live drill (each needs a document set up a particular way); they are the same one-call routes the drilled ones are.",
+    "Save to Capture History is left out: it asks the person whether to replace the capture or keep both, and an agent has save and export for those.",
+    "New Video is left out until slice 4's new_video exists (an-agent-can-cut-a-video-from-history-clips-with)."
+  ]
+}

@@ -91,12 +91,18 @@ extension EditorState {
 
     /// One kind's presets, the person's own first, as menu rows.
     func titlePresetRows(_ kind: TitleKind, onTrack trackID: UUID? = nil) -> [MenuRow] {
+        // Each row runs the named command (`AppCommandRunner`), the one an
+        // agent's `insert_title` runs too.
+        func insert(_ name: String) {
+            run(AppCommandCall(.insertTitle, track: trackID?.uuidString,
+                               options: ["kind": .string(kind.rawValue), "preset": .string(name)]))
+        }
         let own = TitlePresetStore.shared.presets(of: kind).map { saved in
-            MenuRow.command(saved.name) { self.insertTitle(saved: saved, onTrack: trackID) }
+            MenuRow.command(saved.name) { insert(saved.name) }
         }
         let presets = TitlePreset.builtIn(of: kind, movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
         func row(_ preset: TitlePreset) -> MenuRow {
-            MenuRow.command(preset.name) { self.insertTitle(preset, onTrack: trackID) }
+            MenuRow.command(preset.name) { insert(preset.name) }
         }
         // The pages the calm set replaced wait one level down, under More
         // Styles (the user's answer, 2026-10-18).

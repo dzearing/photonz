@@ -126,6 +126,27 @@ struct AgentDocumentReadTests {
         let layer = try #require(read.layers.first { $0.id == first.id.uuidString })
         #expect(layer.time == .init(inSeconds: 0, outSeconds: 10))
         #expect(layer.kind == "clip")
+        #expect(read.captions == nil, "no captions, no list")
+    }
+
+    @Test("Captions read as their lines, each with its words and when each starts, so a word can be picked by time")
+    func captions() throws {
+        var (document, _, _) = Self.video()
+        func word(_ text: String, _ startMS: Int, _ endMS: Int) -> TranscribedWord {
+            TranscribedWord(text, startMS: startMS, endMS: endMS, confidence: 0.9)
+        }
+        document.landCaptions([
+            CaptionCue(words: [word("Hello", 1_000, 1_400), word("there", 1_400, 2_000)], inMS: 1_000, outMS: 2_200),
+            CaptionCue(words: [word("Second", 3_000, 3_500), word("line", 3_500, 4_000)], inMS: 3_000, outMS: 4_100),
+        ])
+        let read = AgentDocumentRead.make(document, context: Self.context)
+        let lines = try #require(read.captions)
+        #expect(lines.count == 2)
+        #expect(lines[0].text == "Hello there")
+        #expect(lines[0].inSeconds == 1 && lines[0].outSeconds == 2.2)
+        #expect(lines[0].words.map(\.text) == ["Hello", "there"])
+        #expect(lines[0].words.map(\.atSeconds) == [1, 1.4])
+        #expect(lines[1].layer == document.captionLayers[1].id.uuidString)
     }
 }
 
