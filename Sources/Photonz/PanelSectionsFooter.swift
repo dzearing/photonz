@@ -204,23 +204,11 @@ struct PanelSectionsList: View {
             .controlSize(.mini)
             .playtestControl("\(section.title) section switch",
                              detail: "shows or hides that section of the panel")
-            // Only a row you have answered for offers the way back, because
-            // only that row has anything to go back to.
-            if editorState.panelChoices.isCustom(row.section) {
-                Button {
-                    editorState.useAutomaticPanelSection(section)
-                } label: {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 18, height: 18)
-                        .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .panelHelp("Back to automatic")
-                .playtestControl("\(section.title) back to automatic",
-                                 detail: "lets the automatic rule decide this section again")
-            }
+            // A plain switch and nothing beside it. Each row used to carry a
+            // circular arrow "back to automatic" once it had been switched,
+            // which read as an undo for a switch (the user, 2026-10-18:
+            // "there's no need to undo toggling a switch"). Use Automatic for
+            // All, under the list, is the one way back to automatic.
         }
     }
 

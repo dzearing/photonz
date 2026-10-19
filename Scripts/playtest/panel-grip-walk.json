@@ -23,12 +23,12 @@
     { "do": "panel", "stage": "long-list" },
     { "do": "snapshot", "name": "2-long-list" },
 
-    { "comment": "In the pane of lists the Layers list has no grab bar of its own: it fills the room the pane holds, and the pane's grip sets that room.", "do": "dragHandle", "area": "Layers", "expect": "absent" },
+    { "comment": "In the Layers pane on top the list has no grab bar of its own: the divider under the pane sets its room, and dragged down it grows Layers.", "do": "dragHandle", "area": "Layers", "expect": "absent" },
     { "do": "dragHandle", "area": "Lists", "by": 90, "hold": "3-grip-held" },
     { "do": "snapshot", "name": "4-taller" },
     { "do": "dragHandle", "area": "Lists", "by": -140 },
     { "do": "snapshot", "name": "5-shorter" },
-    { "do": "dragHandle", "area": "Lists", "by": 400 },
+    { "comment": "Dragged far past its last row, the divider stops at Canvas: no blank band can be dragged open under the list.", "do": "dragHandle", "area": "Lists", "by": 400 },
     { "do": "snapshot", "name": "6-all-the-way-open" },
 
     { "comment": "The Library holds this document's own pictures (since 2026-09-23), not the capture folder, so four are dropped in to give it more than one row.", "do": "dropImage", "file": "fixtures/photonz-grip-tile-1.png", "at": [200, 200] },
@@ -39,12 +39,12 @@
     { "do": "action", "action": "showLibrary" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "panel", "stage": "library" },
-    { "comment": "The shelf has no grab bar of its own in the pane either: it fills what the pane's grip gives it.", "do": "dragHandle", "area": "Library", "expect": "absent" },
-    { "do": "dragHandle", "area": "Lists", "by": -40 },
+    { "comment": "The Library comes last, under the picked layer's sections, and keeps its own grab bar there.", "do": "expectSections", "lists": ["Layers"] },
+    { "do": "dragHandle", "area": "Library", "by": -30 },
     { "do": "snapshot", "name": "7-library-shorter" },
-    { "do": "dragHandle", "area": "Lists", "by": 400 },
-    { "do": "snapshot", "name": "8-library-open" },
+    { "do": "dragHandle", "area": "Lists", "by": -100 },
+    { "do": "snapshot", "name": "8-layers-shorter-with-library" },
 
-    { "do": "describe", "stage": "end", "note": "neither the Layers list nor the Library shelf has a grab bar of its own in the pane; each fills whatever room the pane grip gives it" }
+    { "do": "describe", "stage": "end", "note": "the Layers list fills the pane on top and the divider under it sets its height; the Library, last under the pick, has its own grab bar" }
   ]
 }

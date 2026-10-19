@@ -16,7 +16,10 @@ extension EditorState {
     /// one per fact.
     var panelSectionSituation: PanelSectionVisibility.Situation {
         var situation = PanelSectionVisibility.Situation()
-        situation.isLibraryAskedFor = isLibraryVisible
+        // A picture's window keeps the Library out until it is turned on
+        // there, whatever the app-wide switch says
+        // (`WindowMode.libraryWaitsToBeTurnedOn`).
+        situation.isLibraryAskedFor = activeWindowMode?.libraryAsked(isLibraryVisible) ?? isLibraryVisible
         guard let document else { return situation }
         // Walked rather than flattened. `Document.allLayers` builds a new array
         // holding a copy of every layer in the document, and this is asked on
@@ -42,5 +45,22 @@ extension EditorState {
         }
         scan(document.layers)
         return situation
+    }
+
+    /// Whether the Library may be offered to the panel at all: the app-wide
+    /// switch is on, or this window's mode has had it turned on by hand. The
+    /// panel's visibility rule then has the last word (`isLibraryShown`).
+    var libraryMayShow: Bool {
+        isLibraryVisible
+            || panelChoices.choice(for: InspectorSectionID.library.rawValue) == true
+    }
+
+    /// Whether this window's panel is showing the Library: what View ▸
+    /// Library ticks, and what everything that brings the shelf forward asks.
+    var isLibraryShown: Bool {
+        guard Experiments.shared.libraryEnabled, hasDocument, libraryMayShow else { return false }
+        guard Experiments.shared.panelSectionsEnabled else { return true }
+        return PanelSectionVisibility.isShown(InspectorSectionID.library.rawValue,
+                                              choices: panelChoices, in: panelSectionSituation)
     }
 }

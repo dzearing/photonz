@@ -47,10 +47,7 @@
         "Measure Tool",
         "Canvas"
       ],
-      "lists": [
-        "Layers",
-        "Library"
-      ]
+      "lists": ["Layers"]
     },
     {
       "do": "describe",
@@ -100,10 +97,7 @@
       "absent": [
         "Measure Tool"
       ],
-      "lists": [
-        "Layers",
-        "Library"
-      ]
+      "lists": ["Layers"]
     },
     {
       "do": "describe",
@@ -117,7 +111,7 @@
     {
       "do": "dragHandle",
       "area": "Lists",
-      "by": 120,
+      "by": -80,
       "expect": "moves"
     },
     {
@@ -126,19 +120,16 @@
     },
     {
       "do": "expectSections",
-      "lists": [
-        "Layers",
-        "Library"
-      ]
+      "lists": ["Layers"]
     },
     {
       "do": "snapshot",
-      "name": "02b-lists-pane-taller"
+      "name": "02b-lists-pane-shorter"
     },
     {
       "do": "dragHandle",
       "area": "Lists",
-      "by": -120,
+      "by": 80,
       "expect": "moves"
     },
     {
@@ -297,8 +288,7 @@
       ],
       "lists": [
         "Layers",
-        "Measurements",
-        "Library"
+        "Measurements"
       ]
     },
     {
@@ -432,8 +422,7 @@
       ],
       "lists": [
         "Layers",
-        "Measurements",
-        "Library"
+        "Measurements"
       ]
     },
     {

@@ -8241,11 +8241,16 @@ private final class Run {
         // to just past the middle of the section being passed: the line that
         // one moves aside on.
         let goingDown = landing.frame.midY > carried.frame.midY
-        let from = carried.frame.minY + 14
-        let to = switch stop {
+        // The frames are the panel's; a carry is measured in the scroller of
+        // the part the section is drawn in, the Layers pane or the part
+        // under the divider.
+        let origin = (probe.lists.contains(carried.id) ? probe.listsBand : probe.belowBand)?.lowerBound ?? 0
+        let from = carried.frame.minY + 14 - origin
+        let landingAt: CGFloat = switch stop {
         case .middle: landing.frame.midY + (goingDown ? 4 : -4)
         case .touching: goingDown ? landing.frame.minY + 4 : landing.frame.maxY - 4
         }
+        let to = landingAt - origin
         let steps = 12
         for i in 1...steps {
             let y = from + (to - from) * CGFloat(i) / CGFloat(steps)
@@ -8813,9 +8818,9 @@ private final class Run {
                 + "there is \(probe.names.isEmpty ? "none at all, so is the panel on screen?" : probe.names.joined(separator: ", "))")
         }
         let start = handle.reading
-        // Every grab bar grows its area pulled down, except the line over the
-        // pane of lists, which grows it pulled up (`PanelListsPane`).
-        let direction = (by < 0) == (area != "Lists") ? "up" : "down"
+        // Every grab bar grows its area pulled down, the divider under the
+        // Layers pane too (`PanelListsPane`).
+        let direction = by < 0 ? "up" : "down"
         func pt(_ value: CGFloat) -> String { "\(Int(value.rounded()))pt" }
         func measurements(_ reading: PanelAreaHandleReading) -> String {
             "\(pt(reading.height)) tall, content \(pt(reading.contentHeight)), "
@@ -8868,11 +8873,7 @@ private final class Run {
                                                       contentHeight: after.contentHeight,
                                                       minHeight: after.minHeight,
                                                       maxAllowedHeight: after.maxAllowedHeight)
-        // The pane of lists is never drawn shorter than the room the pick's
-        // sections leave empty, so pulled down into that room it stops at it
-        // (`PanelListsPane.drawnHeight`, 2026-10-18).
-        let allowed = max(by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow),
-                          min(after.roomLeft ?? 0, after.maxAllowedHeight))
+        let allowed = by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow)
         guard abs(after.height - allowed) <= 1 else {
             throw Failure(description: "\(area) was \(pt(start.height)) tall, "
                 + "the bar was dragged \(pt(abs(by))) \(direction), "
@@ -8895,7 +8896,9 @@ private final class Run {
     private func rememberedCeiling(for area: String) -> CGFloat {
         let key = area.caseInsensitiveCompare("Library") == .orderedSame
             ? LibraryPanel.heightKey
-            : area == "Lists" ? InspectorPanel.listsPaneHeightKey : LayersListView.heightKey
+            : area == "Lists"
+                ? InspectorPanel.listsPaneHeightKey(forKind: editor?.windowMode.id ?? WindowModes.imageID)
+                : LayersListView.heightKey
         return CGFloat(UserDefaults.standard.double(forKey: key))
     }
 
@@ -12628,18 +12631,27 @@ private final class Run {
                                lists: [String]? = nil) throws -> String {
         let probe = InspectorLayoutProbe.shared
         let all = probe.visible.map(\.title)
-        // The pane at the bottom: exactly these lists, in this order, and
-        // nothing of the pick's in it (`PanelListsPane`).
+        // The pane on top: exactly these lists, in this order, and nothing
+        // of the pick's in it (`PanelListsPane`).
         var paneSays: String?
         if let lists {
             let pane = probe.lists.map(\.title)
             guard pane == lists else {
                 throw Failure(description: lists.isEmpty
-                    ? "the panel has a pane of lists at the bottom (\(pane.joined(separator: ", "))), and the walk said it would not"
-                    : "the pane at the bottom of the panel holds \(pane.isEmpty ? "nothing" : pane.joined(separator: ", ")), "
+                    ? "the panel has a Layers pane on top (\(pane.joined(separator: ", "))), and the walk said it would not"
+                    : "the pane at the top of the panel holds \(pane.isEmpty ? "nothing" : pane.joined(separator: ", ")), "
                         + "not \(lists.joined(separator: ", ")); all of the panel: \(all.joined(separator: ", "))")
             }
-            paneSays = lists.isEmpty ? "no pane of lists" : "the pane at the bottom holds \(lists.joined(separator: ", "))"
+            // ...and it really is ON TOP: the part under the divider, where
+            // every other section scrolls, starts at or below the pane's foot.
+            if !probe.lists.isEmpty, let pane = probe.listsBand, let below = probe.belowBand,
+               below.lowerBound < pane.upperBound - 0.5 {
+                throw Failure(description: "the sections under the divider start at "
+                    + "\(Int(below.lowerBound.rounded())), above the Layers pane's foot at "
+                    + "\(Int(pane.upperBound.rounded())); the panel reads "
+                    + probe.measured.map(\.title).joined(separator: ", "))
+            }
+            paneSays = lists.isEmpty ? "no pane of lists" : "the pane on top holds \(lists.joined(separator: ", "))"
         }
         // Always: no tool's settings with another tool in hand (the user,
         // 2026-10-13, Measure Tool showing while a rectangle was picked with
@@ -12681,24 +12693,26 @@ private final class Run {
             + (shown.count > leading.count ? ", then \(shown.dropFirst(leading.count).joined(separator: ", "))" : "")
     }
 
-    /// Whether the pane of lists meets the last section of the pick's part,
-    /// with no empty panel between them (`PanelListsPane.drawnHeight`).
+    /// Whether the Layers pane hugs its lists, with no empty panel under them
+    /// before the divider (`PanelListsPane.height`).
     private func checkPaneGap(atMost: CGFloat) throws -> String {
         let probe = InspectorLayoutProbe.shared
         guard let gap = probe.paneGap, let band = probe.listsBand else {
-            throw Failure(description: "there is no pane of lists at the bottom of the panel to measure; "
+            throw Failure(description: "there is no Layers pane at the top of the panel to measure; "
                 + "it shows: \(probe.measured.map(\.title).joined(separator: ", "))")
         }
-        let pick = probe.measured.filter { !probe.lists.contains($0.id) }
-        let above = pick.map { "\($0.title) \(Int($0.frame.minY.rounded()))-\(Int($0.frame.maxY.rounded()))" }
+        let inPane = probe.measured.filter { probe.lists.contains($0.id) }
+        let holds = inPane.map { "\($0.title) \(Int($0.frame.minY.rounded()))-\(Int($0.frame.maxY.rounded()))" }
+        let below = probe.measured.first { !probe.lists.contains($0.id) }
         let says = "pane \(Int(band.lowerBound.rounded()))-\(Int(band.upperBound.rounded())), "
-            + "\(Int((band.upperBound - band.lowerBound).rounded()))pt tall, under "
-            + (above.isEmpty ? "nothing" : above.joined(separator: ", "))
+            + "\(Int((band.upperBound - band.lowerBound).rounded()))pt tall, holding "
+            + (holds.isEmpty ? "nothing" : holds.joined(separator: ", "))
+            + (below.map { "; first section below: \($0.title) at \(Int($0.frame.minY.rounded()))" } ?? "")
         guard gap <= atMost else {
-            throw Failure(description: "\(Int(gap.rounded()))pt of empty panel sits between the last section "
-                + "and the pane of lists (at most \(atMost) allowed); \(says)")
+            throw Failure(description: "\(Int(gap.rounded()))pt of empty panel sits under the last list "
+                + "in the Layers pane (at most \(atMost) allowed); \(says)")
         }
-        return "the pane meets the last section (\(gap < -0.5 ? "the part above scrolls, \(String(format: "%.1f", -gap))pt more than it has" : "gap \(String(format: "%.1f", max(gap, 0)))pt")); \(says)"
+        return "the pane hugs its lists (\(gap < -0.5 ? "they scroll, \(String(format: "%.1f", -gap))pt more than it has" : "gap \(String(format: "%.1f", max(gap, 0)))pt")); \(says)"
     }
 
     private func checkSectionFits(_ title: String) throws -> String {

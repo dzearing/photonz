@@ -2502,9 +2502,9 @@ struct EditorCommands: Commands {
         // not there when the flag is off.
         if Experiments.shared.libraryEnabled {
             Toggle(MenuToggleNames.library, isOn: Binding(
-                get: { editor?.isLibraryVisible ?? false },
+                get: { editor?.isLibraryShown ?? false },
                 set: { _ in
-                    if let editor { editor.setLibraryVisible(!editor.isLibraryVisible) }
+                    if let editor { editor.setLibraryVisible(!editor.isLibraryShown) }
                 }))
             .disabled(!hasDocument)
         }

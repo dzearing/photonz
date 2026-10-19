@@ -1,0 +1,30 @@
+{
+  "feature": "The panel reads top to bottom",
+  "epic": "ui-building",
+  "summary": "Layers now sits at the top of the right panel, with a visible divider under it you can drag up and down and double click to reset. The picked layer's sections come right under it with no gap, and the Library comes last. In pictures the Library stays hidden until you turn it on, and the Sections list has plain switches with no reset arrow.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screenshot.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot with nothing picked. Layers is at the top and is the only thing in the panel; no Library.", "shot": "2026-10-18-panel-top-to-bottom-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click a layer row. Its Appearance, Effects and Motion arrive under Layers, right under the short list, with no blank band.", "shot": "2026-10-18-panel-top-to-bottom-2.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Duplicate the layer a few times (Command J), then drag the small grabber under Layers up or down.", "shot": "2026-10-18-panel-top-to-bottom-3.png", "shotNote": "Taken with the pointer holding the divider; photographed with the window behind another app, so controls show their background look." },
+    { "do": "Close the document and open another screenshot: the divider is where you left it. Double click it to put it back.", "shot": "2026-10-18-panel-top-to-bottom-4.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Sections at the foot of the panel and switch the Library on: each row is a name, a state and a switch, nothing else.", "shot": "2026-10-18-panel-top-to-bottom-5.png", "shotNote": "Photographed with the window behind another app, so the switches show their grey background look." },
+    { "do": "Close the list: the Library is last, under the picked layer's sections.", "shot": "2026-10-18-panel-top-to-bottom-6.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Switch the window to Design (the chip at top left), choose View > Library, then switch back to Image: the Library is gone again in the picture." }
+  ],
+  "evaluate": [
+    "Does the panel now read in the order you expect: Layers, then what you picked, then the Library?",
+    "Is the grabber under Layers easy enough to find and grab, or should the whole line be thicker?",
+    "Is it right that the divider stops at the last layer row when you drag it down, rather than opening empty space?",
+    "With nothing picked, Layers takes the whole panel and a folded Layers opens itself. Is that what you want?",
+    "Turning the Library on in a picture marks the window chip 'Image, edited'. Is that fine, or should the Library not count as editing the mode?"
+  ],
+  "rough": [
+    "No mock page draws this arrangement of the panel; your own word on 2026-10-18 reverses your 2026-10-13 card answer 'Pick on top, lists in a pane at the bottom', and the UX-PATTERNS Inspector row now says so.",
+    "The divider is remembered per window mode (Image, Icon, Design, Video) rather than per file type; a picture in Icon mode keeps its own height.",
+    "The Library now scrolls with the picked layer's sections and keeps its own grab bar, instead of sitting in a fixed pane; on a long pick you scroll down to reach it.",
+    "Turning the Library on in Image or Icon counts as changing that mode, so its chip reads 'Image, edited' until Use Automatic for All.",
+    "Opening a closed group in Layers grows the pane (up to where the divider was left), which pushes the sections below down; before, the list kept room for every row a group could reveal."
+  ]
+}

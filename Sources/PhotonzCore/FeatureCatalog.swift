@@ -666,8 +666,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: listsPaneFlag,
-                    title: "Lists in a pane under the pick",
-                    description: "The right hand panel shows what you picked on top, and Layers, Measurements and the Library in a pane at the bottom that keeps its height. Off means one scrolling column with Layers at the top.",
+                    title: "Layers in a pane over the pick",
+                    description: "The right hand panel shows Layers and Measurements in a pane at the top with a divider you can drag, then what you picked, then the Library. Off means one scrolling column with Layers at the top.",
                     area: .panel,
                     isEnabled: false,
                     parameters: []),

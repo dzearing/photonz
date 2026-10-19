@@ -85,15 +85,10 @@
       "name": "shelf-3-back"
     },
     {
-      "comment": "In the pane of lists the shelf has no grab bar of its own: it fills the room the pane holds, and the pane's grip sets that room.",
+      "comment": "The shelf sits last, under the divider, with its own grab bar: pulled up it caps short of its rows and scrolls on its own.",
       "do": "dragHandle",
       "area": "Library",
-      "expect": "absent"
-    },
-    {
-      "do": "dragHandle",
-      "area": "Lists",
-      "by": -30
+      "by": -60
     },
     {
       "do": "wait",
@@ -102,7 +97,7 @@
     {
       "do": "describe",
       "stage": "4-capped",
-      "note": "the pane's grip pulled down: the shelf still runs to the pane's foot, caps short of its rows and scrolls on its own"
+      "note": "the shelf's grab bar pulled up: it caps short of its rows and scrolls on its own"
     },
     {
       "do": "snapshot",
@@ -110,7 +105,7 @@
     },
     {
       "do": "dragHandle",
-      "area": "Lists",
+      "area": "Library",
       "by": 130
     },
     {
@@ -120,7 +115,7 @@
     {
       "do": "describe",
       "stage": "5-restored",
-      "note": "pulling the grip back up gives the pane more room, and the shelf grows with it to show more of its rows"
+      "note": "pulling the grab bar back down gives the shelf its rows again"
     },
     {
       "do": "snapshot",

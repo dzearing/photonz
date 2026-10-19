@@ -21648,3 +21648,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - an-editing-session-walk's dissolve and Command Return claims were 50 ms on a 6 ms margin and failed about one run in four WITHOUT this change (A/B, truncated copy, 4 runs each: tile 51.9 ms once at baseline); all three timed claims there (with the new Position one) are 60 ms, which still catches the 55-70 ms these steps used to read.
 - Tried, not shipped: the panel's and the dock's whole bodies read a pass late (no further gain); Time Profiler of the remaining pass is diffuse SwiftUI update, panel layout and accessibility, the ~35 ms floor any edit pays.
 - Next: that floor. Opening Animate a property, which changes no document, costs 38 ms.
+
+## 2026-10-18 — The panel reads top to bottom (go loop)
+
+- Right panel (Next): Layers (and Measurements) in a pane on top, a visible draggable divider remembered per window mode (double click resets), then the pick's sections, Library last. Pane hugs short or folded lists; with nothing picked Layers fills the panel. Reverses the 2026-10-13 "pick on top" card by the user's word; UX-PATTERNS Inspector row updated.
+- Library is hidden in Image and Icon windows until turned on there (`WindowMode.libraryWaitsToBeTurnedOn`); design work no longer leaks it into pictures. Sections list lost the per-row reset arrow.
+- Walks: `panel-reads-top-to-bottom-walk`, `layers-divider-drags-by-pointer-walk` (new); four walks updated, `lists-pane-fills-the-room-walk` removed.
+- Next: user's reaction to the audit (`queue/audits/2026-10-18-the-panel-reads-top-to-bottom-the-way-the-user-e.json`).

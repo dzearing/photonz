@@ -495,11 +495,6 @@ struct DockBudgetScratch: Equatable {
     /// and where it sits in the panel, for a walk.
     var drawnPaneHeight: CGFloat?
     var paneBand: ClosedRange<CGFloat>?
-    /// The height the pane is kept at while the pointer is inside it, so a
-    /// click on a row that changes what the pick needs never moves the list
-    /// under the pointer; it settles once the pointer leaves, the way a
-    /// browser's tabs wait for the pointer to leave the tab bar.
-    var heldWhilePointerInside: CGFloat?
     /// A reveal in this scroller only brings a section's header into view
     /// rather than all of it: true for the pane of lists.
     var revealsHeaderOnly = false
@@ -588,7 +583,7 @@ struct DockBudgetScratch: Equatable {
     /// the measured frame, once layout has one.
     func requestLibrary() {
         guard editorState.pendingLibraryReveal,
-              Experiments.shared.libraryEnabled, editorState.isLibraryVisible else { return }
+              Experiments.shared.libraryEnabled, editorState.isLibraryShown else { return }
         // A collapsed shelf scrolled into view is a header and nothing else,
         // which is not "you can see it". Instantly, without the collapse
         // spring, so the reveal scrolls to a height that has stopped moving.

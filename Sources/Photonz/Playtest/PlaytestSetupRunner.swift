@@ -74,9 +74,11 @@ extension PlaytestMemory {
              // Details. (The parts list no longer folds: a switched on part
              // shows its settings straight away.)
              MeasureInspector.detailsOpenKey,
-             LayersListView.heightKey, LibraryPanel.heightKey,
-             // ...and how tall the pane of lists under the pick was left.
-             InspectorPanel.listsPaneHeightKey,
+             LayersListView.heightKey, LibraryPanel.heightKey]
+            // ...and where the divider under the Layers pane was left, for
+            // every kind of document.
+            + InspectorPanel.listsPaneHeightKeys
+            + [
              // ...and which of the optional sections have been pinned on or
              // turned off by hand, which decides what the dock draws at all
              // (`next-panel-sections`).

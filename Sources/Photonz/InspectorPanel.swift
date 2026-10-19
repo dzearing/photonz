@@ -200,19 +200,14 @@ struct InspectorPanel: View {
     /// Goes up when a fold changes how much height the dock's lists get, which
     /// is the one thing about a fold this panel has to draw.
     @State private var foldBudgetPass = 0
-    /// How tall you left the pane of lists at the bottom of the panel
-    /// (`PanelListsPane`), kept between launches.
-    /// Zero until the grip has been moved, and then the pane takes its share
-    /// of the panel (`PanelListsPane.defaultShare`).
-    @StoredSetting(InspectorPanel.listsPaneHeightKey) private var listsPaneStored = 0.0
-    static let listsPaneHeightKey = "inspector.listsPaneHeight"
-    /// The height the pick and that pane share, nil until laid out.
+    /// Bumped when the divider under the Layers pane writes where it was
+    /// left, so the panel reads the new height (`listsPaneStored`).
+    @State private var listsPaneStoredPass = 0
+    /// The height the Layers pane and the sections under it share, nil until
+    /// laid out.
     @State private var listsColumnHeight: CGFloat?
-    /// The height the pane holds until the grip is moved, so a fold or a
-    /// Library scope switch never moves it (`PanelListsPane.Hold`).
-    @State private var listsPaneHold: PanelListsPane.Hold?
-    /// The pane's own measurements, for its Library reveal and its reorder,
-    /// by reference for the reason `reveal` is.
+    /// The pane's own measurements, for its reorder, by reference for the
+    /// reason `reveal` is.
     @State private var listsReveal: DockRevealScratch = {
         let scratch = DockRevealScratch()
         scratch.revealsHeaderOnly = true
@@ -366,14 +361,17 @@ struct InspectorPanel: View {
         let lingering = departures.draw(sections, pick: editorState.selectedLayerID,
                                         lingers: holdsBodiesOutOfSight)
         let _ = departures.releaseNextPass { departurePass &+= 1 }
-        // The pick on top, the lists in a pane at the bottom (Next,
-        // `next-lists-pane`): one part each, and with the pane off the pick's
-        // part is every section, exactly the dock it always was.
+        // Layers in a pane on top, the pick and the Library under it (Next,
+        // `next-lists-pane`): one part each, and with the pane off the lower
+        // part is every section, exactly the dock it always was. `pick` is
+        // the part under the divider.
         let split = paneSplit(sections)
         let lingerSplit = paneSplit(lingering)
-        let paneHeight = listsPaneHeight(for: split.lists, under: split.pick,
-                                         pickIsEmptyNotice: wanted.isEmpty && !showsLayersList
-                                             && !Experiments.shared.noticesSayWhatHappenedEnabled)
+        // Nothing under the divider (nothing picked): Layers fills the panel.
+        // Read off what the selection ASKS for, so the pass a click's sections
+        // are held back does not draw the pane full for a frame.
+        let belowIsEmpty = paneSplit(wanted).pick.isEmpty
+        let paneHeight = listsPaneHeight(for: split.lists, belowIsEmpty: belowIsEmpty)
         let listsCeilings = split.lists.isEmpty
             ? [:] : listsLayout(paneHeight).ceilings(for: split.lists)
         // How tall each list section may be drawn, so that the forms under it
@@ -416,6 +414,26 @@ struct InspectorPanel: View {
         // scroll to find is not a way back.
         VStack(spacing: 0) {
           VStack(spacing: 0) {
+            if !split.lists.isEmpty {
+                listsPane(split.lists, lingering: lingerSplit.lists, ceilings: ceilings)
+                    .frame(height: paneHeight)
+                // The divider: drag it down to give Layers more of the
+                // panel, up to give the sections under it more. It runs from
+                // the pane's first header to the last row its lists have, so
+                // no blank band can be dragged open under them. Nothing under
+                // it, no divider: Layers is the whole panel then.
+                if !belowIsEmpty {
+                    let floor = listsPaneFloor(split.lists)
+                    let most = max(PanelListsPane.gripCeiling(column: listsColumnHeight,
+                                                              listsNeed: sectionsNeed(split.lists),
+                                                              floor: floor), paneHeight)
+                    ListsPaneGrip(height: paneHeight,
+                                  contentHeight: most,
+                                  floor: floor,
+                                  maxAllowedHeight: most,
+                                  stored: listsPaneStored)
+                }
+            }
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -468,6 +486,11 @@ struct InspectorPanel: View {
                 // Where the dock sits in the window. Only a scripted walk reads
                 // it, to put a pointer on a section; it is a no-op in the
                 // shipping build.
+                // ...and where it sits in the panel, the band its sections
+                // are seen in under the Layers pane.
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(inspectorPanelSpace)) } action: {
+                    recordInspectorBelowBand($0.minY...$0.maxY)
+                }
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
                     recordInspectorDockFrame($0)
                     // The edge every icon on the right of the panel is measured
@@ -475,7 +498,7 @@ struct InspectorPanel: View {
                     // than a window coordinate that means nothing on its own.
                     recordPanelEdgeFrame($0)
                 }
-                .inspectorLayoutProbe(sections: split.pick + split.lists)
+                .inspectorLayoutProbe(sections: split.lists + split.pick)
                 // A section the selection asked for that has not been built yet
                 // gets a later pass to itself, one section per pass, top down.
                 // Departures are already on screen by now (they leave in the
@@ -493,10 +516,9 @@ struct InspectorPanel: View {
                 // and then this panel is born with the request already waiting.
                 // With the lists in their own pane, the shelf is there and
                 // the pane brings it into view instead.
-                .onChange(of: editorState.pendingLibraryReveal) {
-                    if !listsPaneIsOn { revealer(proxy).requestLibrary() }
-                }
-                .onAppear { if !listsPaneIsOn { revealer(proxy).requestLibrary() } }
+                // The Library is always in this part, last, never in the pane.
+                .onChange(of: editorState.pendingLibraryReveal) { revealer(proxy).requestLibrary() }
+                .onAppear { revealer(proxy).requestLibrary() }
                 // ⌘R asked for the speeds of the piece in hand: the Time
                 // section open and on screen, so its Speed list can drop open
                 // from it (`EditorState+SpeedKey`). On appear too, for a panel
@@ -538,24 +560,6 @@ struct InspectorPanel: View {
                 .onChange(of: editorState.selectedLayerID) { revealer(proxy).requestPick() }
                 .onChange(of: editorState.multiSelectedLayerIDs) { revealer(proxy).requestPick() }
             }
-            if !split.lists.isEmpty {
-                // The pane keeps whatever height it is given, so the grip
-                // runs from the pane's floor to the most the pick can spare,
-                // whatever its lists hold; or, when the pick needs less than
-                // that and the pane has grown into the rest, to where it is.
-                let paneMax = max(PanelListsPane.maxAllowedHeight(
-                    column: listsColumnHeight, floor: listsPaneFloor(split.lists)), paneHeight)
-                ListsPaneGrip(height: paneHeight,
-                              contentHeight: paneMax,
-                              floor: listsPaneFloor(split.lists),
-                              maxAllowedHeight: paneMax,
-                              chosen: listsPaneChosen(for: split.lists),
-                              roomLeft: listsPaneRoomLeft(under: split.pick),
-                              stored: $listsPaneStored,
-                              onCarry: { listsReveal.heldWhilePointerInside = nil })
-                listsPane(split.lists, lingering: lingerSplit.lists, ceilings: ceilings)
-                    .frame(height: paneHeight)
-            }
           }
           // The height the pick and the lists share, which the pane is
           // measured against so the pick always keeps room of its own.
@@ -572,13 +576,10 @@ struct InspectorPanel: View {
           .onChange(of: split.lists, initial: true) { _, lists in
               if lists.isEmpty { recordInspectorListsPane([], band: nil) }
           }
-          // The pane's starting height, held once its lists are measured.
-          .onChange(of: PanelListsPane.hold(listsPaneHold, column: listsColumnHeight,
-                                            lists: split.lists.map(\.rawValue),
-                                            fit: layout.leastHeight(of: split.lists,
-                                                                    asIfFull: true)),
-                    initial: true) { _, hold in
-              if hold != listsPaneHold { listsPaneHold = hold }
+          // Nothing picked: Layers fills the panel, so a Layers left folded
+          // opens rather than leaving a header over an empty panel.
+          .onChange(of: belowIsEmpty && split.lists.contains(.layers), initial: true) { _, alone in
+              if alone, isCollapsed(.layers) { expand(.layers) }
           }
             if Experiments.shared.panelSectionsEnabled, editorState.document != nil {
                 PanelSectionsFooter(offered: offeredOptionalSections,
@@ -622,13 +623,13 @@ struct InspectorPanel: View {
             },
             end: { endSectionDrag(in: drag.section.map(split.lists.contains) == true ? split.lists : split.pick) },
             cancel: cancelSectionDrag,
-            sections: split.pick + split.lists)
+            sections: split.lists + split.pick)
     }
 
-    // MARK: The pane of lists under the pick
+    // MARK: The pane of lists on top of the pick
 
-    /// Whether the panel splits into the pick on top and its lists in a pane
-    /// at the bottom (Next, `next-lists-pane`).
+    /// Whether the panel splits into Layers in a pane on top and the pick
+    /// under it (Next, `next-lists-pane`).
     private var listsPaneIsOn: Bool { Experiments.shared.listsPaneEnabled }
 
     /// The sections drawn in each part. With the pane off, all of them are
@@ -637,7 +638,7 @@ struct InspectorPanel: View {
         -> (pick: [InspectorSectionID], lists: [InspectorSectionID]) {
         guard listsPaneIsOn else { return (sections, []) }
         let split = PanelListsPane.split(sections.map(\.rawValue))
-        return (split.pick.compactMap(InspectorSectionID.init(rawValue:)),
+        return (split.below.compactMap(InspectorSectionID.init(rawValue:)),
                 split.lists.compactMap(InspectorSectionID.init(rawValue:)))
     }
 
@@ -648,80 +649,69 @@ struct InspectorPanel: View {
         return header + DockMetrics.sectionDividerHeight + 2 * DockMetrics.listTopPadding
     }
 
-    /// How tall the pane is drawn: the height chosen for it, or all the room
-    /// the pick's sections leave, whichever is more (`PanelListsPane.drawnHeight`),
-    /// held where it is while the pointer is inside it.
-    /// `pickIsEmptyNotice` is the one line the pick's part can show that is
-    /// not a section, and while it shows the pane keeps its chosen height.
-    private func listsPaneHeight(for lists: [InspectorSectionID], under pick: [InspectorSectionID],
-                                 pickIsEmptyNotice: Bool = false) -> CGFloat {
+    /// The settings key the divider's height is kept under for this window's
+    /// kind of document (`PanelListsPane.heightKey(forKind:)`).
+    static func listsPaneHeightKey(forKind kind: String) -> String {
+        PanelListsPane.heightKey(forKind: kind)
+    }
+
+    /// Every key the divider has ever been kept under, for a walk to forget.
+    static var listsPaneHeightKeys: [String] {
+        WindowModes.all.map { listsPaneHeightKey(forKind: $0.id) } + ["inspector.listsPaneHeight"]
+    }
+
+    /// Where the divider was left for this kind of document, written as the
+    /// divider is dragged and nought when it never was (or was double
+    /// clicked back).
+    private var listsPaneStored: Binding<Double> {
+        let key = Self.listsPaneHeightKey(forKind: editorState.windowMode.id)
+        let _ = listsPaneStoredPass
+        return Binding(
+            get: { UserDefaults.standard.double(forKey: key) },
+            set: { value in
+                UserDefaults.standard.set(value, forKey: key)
+                listsPaneStoredPass &+= 1
+            })
+    }
+
+    /// How tall the Layers pane is drawn: where the divider was left, or less
+    /// when its lists need less, or the whole panel with nothing under it
+    /// (`PanelListsPane.height`).
+    private func listsPaneHeight(for lists: [InspectorSectionID], belowIsEmpty: Bool) -> CGFloat {
         guard !lists.isEmpty else { return 0 }
-        let drawn = PanelListsPane.drawnHeight(
-            chosen: listsPaneChosen(for: lists),
+        let stored = listsPaneStored.wrappedValue
+        return PanelListsPane.height(
+            chosen: PanelListsPane.chosenHeight(stored: stored > 0 ? CGFloat(stored) : nil,
+                                                column: listsColumnHeight),
             column: listsColumnHeight,
-            pickNeeds: pickIsEmptyNotice ? nil : pickNeeds(pick),
-            foldedHeight: lists.allSatisfy(isCollapsed)
-                ? PanelListsPane.contentHeight(lists.map { (budget.headers[$0], nil) },
-                                               padding: DockMetrics.listTopPadding,
-                                               divider: DockMetrics.sectionDividerHeight)
-                : nil)
-        guard let held = listsReveal.heldWhilePointerInside else { return drawn }
-        return min(max(held, listsPaneFloor(lists)), listsColumnHeight ?? held)
+            listsNeed: sectionsNeed(lists),
+            belowIsEmpty: belowIsEmpty,
+            floor: listsPaneFloor(lists))
     }
 
-    /// The height chosen for the pane: where the grip left it, else the
-    /// starting height it holds (`PanelListsPane.height`).
-    private func listsPaneChosen(for lists: [InspectorSectionID]) -> CGFloat {
-        PanelListsPane.height(stored: listsPaneStored > 0 ? CGFloat(listsPaneStored) : nil,
-                              held: listsPaneHold,
-                              column: listsColumnHeight,
-                              lists: lists.map(\.rawValue),
-                              floor: listsPaneFloor(lists),
-                              fit: layout.leastHeight(of: lists))
-    }
-
-    /// The pick's part drawn whole, from what each of its sections measured
-    /// itself at: nil until every open one has been.
-    private func pickNeeds(_ pick: [InspectorSectionID]) -> CGFloat? {
-        var sections: [(header: CGFloat?, body: CGFloat?)] = []
-        for id in pick {
+    /// A run of sections drawn whole, from what each measured itself at:
+    /// nil until every open one has been.
+    private func sectionsNeed(_ sections: [InspectorSectionID]) -> CGFloat? {
+        var parts: [(header: CGFloat?, body: CGFloat?)] = []
+        for id in sections {
             if isCollapsed(id) {
-                sections.append((budget.headers[id], nil))
+                parts.append((budget.headers[id], nil))
                 continue
             }
             guard let body = budget.bodies[id] else { return nil }
-            sections.append((budget.headers[id], body + (budget.listExtras[id] ?? 0)))
+            // A list that sizes itself reports its rows and chrome, not the
+            // padding every body is drawn with under it.
+            let padding = Self.boundsItself(id) ? DockMetrics.bodyBottomPadding : 0
+            parts.append((budget.headers[id], body + (budget.listExtras[id] ?? 0) + padding))
         }
-        return PanelListsPane.contentHeight(sections, padding: DockMetrics.listTopPadding,
+        return PanelListsPane.contentHeight(parts, padding: DockMetrics.listTopPadding,
                                             divider: DockMetrics.sectionDividerHeight)
     }
 
-    /// The room the pick leaves empty under its sections, nil until known.
-    private func listsPaneRoomLeft(under pick: [InspectorSectionID]) -> CGFloat? {
-        guard let column = listsColumnHeight, let needs = pickNeeds(pick) else { return nil }
-        return column - needs
-    }
-
-    /// The pointer came into the pane or left it. Coming in holds the pane at
-    /// the height it is drawn; leaving lets it settle, on the fold's curve.
-    private func pointerInListsPane(_ inside: Bool) {
-        if inside {
-            listsReveal.heldWhilePointerInside = listsReveal.drawnPaneHeight
-            return
-        }
-        guard listsReveal.heldWhilePointerInside != nil else { return }
-        listsReveal.heldWhilePointerInside = nil
-        let lists = listsReveal.drawnSections
-        guard !lists.isEmpty,
-              listsPaneHeight(for: lists, under: reveal.drawnSections) != listsReveal.drawnPaneHeight
-        else { return }
-        withAnimation(foldMotion) { foldBudgetPass += 1 }
-    }
-
-    /// The height arithmetic for the pick's part: with the pane under it,
-    /// the part is the column less the pane, worked out in the same pass the
-    /// pane is, so a fold that moves the pane shares the part out at its new
-    /// height rather than the one it was last measured at.
+    /// The height arithmetic for the part under the divider: the column less
+    /// the pane, worked out in the same pass the pane is, so a fold that
+    /// moves the pane shares the part out at its new height rather than the
+    /// one it was last measured at.
     private func pickLayout(_ lists: [InspectorSectionID], paneHeight: CGFloat) -> InspectorDockLayout {
         guard !lists.isEmpty, let column = listsColumnHeight else { return layout }
         var pick = budget
@@ -737,8 +727,8 @@ struct InspectorPanel: View {
         return InspectorDockLayout(budget: pane, collapsed: isCollapsed)
     }
 
-    /// The pane of lists: its own scroller, so picking a row in a list never
-    /// moves the list, whatever the pick brings into the part above.
+    /// The pane of lists on top: its own scroller, so picking a row in a list
+    /// never moves the list, whatever the pick brings into the part below.
     private func listsPane(_ lists: [InspectorSectionID], lingering: [InspectorSectionID],
                            ceilings: [InspectorSectionID: CGFloat]) -> some View {
         ScrollViewReader { proxy in
@@ -757,7 +747,6 @@ struct InspectorPanel: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 listsReveal.viewportHeight = $0
             }
-            .playtestHover("lists pane", perform: pointerInListsPane)
             // Where the pane sits in the panel, for a walk reading what is
             // in view in it.
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(inspectorPanelSpace)) } action: {
@@ -767,12 +756,6 @@ struct InspectorPanel: View {
             .onChange(of: lists, initial: true) { _, lists in
                 recordInspectorListsPane(lists, band: listsReveal.paneBand)
             }
-            // The app opened the Library for you: put it where you can see
-            // it, in the pane it lives in.
-            .onChange(of: editorState.pendingLibraryReveal) {
-                revealer(proxy, scratch: listsReveal).requestLibrary()
-            }
-            .onAppear { revealer(proxy, scratch: listsReveal).requestLibrary() }
         }
     }
 
@@ -851,7 +834,6 @@ struct InspectorPanel: View {
             $0.frame(in: .named(inspectorDockSpace))
         } action: { frame in
             guard !isLingering else { return }
-            if !inListsPane { recordInspectorSection(id, title: sectionTitle(id), frame: frame) }
             scratch.sectionFrames[id] = frame
             if !inListsPane, bodies.comesNear(id, top: frame.minY, viewport: scratch.viewportHeight) {
                 buildBodies()
@@ -865,13 +847,13 @@ struct InspectorPanel: View {
             scratch.libraryFrame = frame
             if scratch.isPending { revealer(proxy, scratch: scratch).applyLibrary() }
         }
-        // A list in the pane at the bottom is measured against its own
-        // scroller above, for its reveal and its reorder. A walk reads it
-        // against the whole panel, so "in view" means inside the pane.
+        // Each part measures its sections against its own scroller, for its
+        // reveal and its reorder. A walk reads every section against the
+        // whole panel, so "in view" means inside the part it is drawn in.
         .onGeometryChange(for: CGRect.self) {
             $0.frame(in: .named(inspectorPanelSpace))
         } action: { frame in
-            guard inListsPane, !isLingering else { return }
+            guard !isLingering else { return }
             recordInspectorSection(id, title: sectionTitle(id), frame: frame)
         }
         // A section in your hand is off the surface: it wears a
@@ -1273,7 +1255,7 @@ struct InspectorPanel: View {
         // The Library shelf (step B3, `next-library`): an ordinary panel group,
         // present only once View ▸ Show Library has asked for it. With it
         // off the dock is exactly the dock someone who only redlines has today.
-        if Experiments.shared.libraryEnabled, editorState.isLibraryVisible,
+        if Experiments.shared.libraryEnabled, editorState.libraryMayShow,
            editorState.document != nil {
             set.insert(.library)
             // ...and the picked tile's own section, the way a picked layer
@@ -2159,7 +2141,7 @@ struct InspectorPanel: View {
     private func checkFoldBudget() {
         let sections = reveal.drawnSections
         let lists = listsReveal.drawnSections
-        let height = listsPaneHeight(for: lists, under: sections)
+        let height = listsPaneHeight(for: lists, belowIsEmpty: sections.isEmpty)
         let now = pickLayout(lists, paneHeight: height).ceilings(for: sections)
         let drawn = reveal.drawnCeilings
         if sections.contains(where: { !isCollapsed($0) && now[$0] != drawn[$0] }) {
@@ -2449,31 +2431,23 @@ private struct PanelTimeFactsWatcher: View {
 }
 
 
-/// The line between the pick and the pane of lists under it
-/// (`PanelListsPane`): drag it up to give the lists more of the panel, down
-/// to give the pick more. A hairline with a grab strip either side of it, the
-/// way a Mac split view divides two panes, and the resize cursor on it.
+/// The divider under the Layers pane (`PanelListsPane`): drag it down to give
+/// Layers more of the panel, up to give the sections under it more, double
+/// click it to put it back. A visible grabber on a hairline, the resize
+/// cursor on it, so it reads as something to drag (the user, 2026-10-18: "i
+/// can't drag the pane up and down"; it was a bare hairline until then).
 private struct ListsPaneGrip: View {
-    /// What the line takes from the column; the grab strip spills past it.
-    static let thickness: CGFloat = 1
-    static let grabHeight: CGFloat = 9
+    /// What the divider takes from the column; the grab strip spills past it.
+    static let thickness: CGFloat = 9
+    static let grabHeight: CGFloat = 13
 
     let height: CGFloat
     let contentHeight: CGFloat
     let floor: CGFloat
     let maxAllowedHeight: CGFloat
-    /// The height chosen for the pane, and the room the pick leaves empty:
-    /// a pane drawn taller than chosen has grown into that room, and pulling
-    /// it down there gives the pick nothing (`PanelListsPane.gripChoice`).
-    let chosen: CGFloat
-    let roomLeft: CGFloat?
-    @Binding var stored: Double
-    /// Called on every move of the grip, so the pane follows it even with
-    /// the pointer inside the pane.
-    let onCarry: () -> Void
+    let stored: Binding<Double>
 
     @State private var dragStartHeight: CGFloat?
-    @State private var dragStartChosen: CGFloat?
     @State private var isHovering = false
 
     private var isShown: Bool {
@@ -2482,56 +2456,61 @@ private struct ListsPaneGrip: View {
     }
 
     var body: some View {
-        Divider()
-            .frame(height: Self.thickness)
-            .overlay {
-                if isShown {
-                    Color.clear
-                        .frame(height: Self.grabHeight)
-                        .contentShape(Rectangle())
-                        .playtestHover { inside in
-                            guard inside != isHovering else { return }
-                            isHovering = inside
-                            if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
-                        }
-                        .onDisappear {
-                            if isHovering { isHovering = false; NSCursor.pop() }
-                        }
-                        // GLOBAL space: the line moves with the drag, so a
-                        // local translation would be measured against itself.
-                        // Up grows the pane.
-                        .gesture(DragGesture(coordinateSpace: .global)
-                            .onChanged { carry(-$0.translation.height) }
-                            .onEnded { _ in end() })
-                        .panelHelp("Drag to resize the lists")
-                }
+        ZStack {
+            Divider().opacity(0.6)
+            Capsule()
+                .fill(.tertiary)
+                .frame(width: 32, height: 4)
+                .opacity(isShown ? (isHovering || dragStartHeight != nil ? 1 : 0.7) : 0)
+        }
+        .frame(height: Self.thickness)
+        .frame(maxWidth: .infinity)
+        .overlay {
+            if isShown {
+                Color.clear
+                    .frame(height: Self.grabHeight)
+                    .contentShape(Rectangle())
+                    .playtestHover { inside in
+                        guard inside != isHovering else { return }
+                        isHovering = inside
+                        if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+                    }
+                    .onDisappear {
+                        if isHovering { isHovering = false; NSCursor.pop() }
+                    }
+                    // GLOBAL space: the line moves with the drag, so a
+                    // local translation would be measured against itself.
+                    // Down grows the pane.
+                    .gesture(DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                        .onChanged { carry($0.translation.height) }
+                        .onEnded { _ in end() })
+                    .simultaneousGesture(TapGesture(count: 2).onEnded { stored.wrappedValue = 0 })
+                    .panelHelp("Drag to resize Layers. Double click to reset.")
+                    // The height in the words, so a walk can claim the divider
+                    // came back where it was left.
+                    .playtestControl("Layers divider", detail: "Layers \(Int(height.rounded())) pt tall")
             }
-            .zIndex(1)
-            .panelAreaHandleProbe(
-                PanelAreaHandleReading(area: "Lists", isShown: isShown, height: height,
-                                       contentHeight: contentHeight, minHeight: floor,
-                                       maxAllowedHeight: maxAllowedHeight, roomLeft: roomLeft),
-                carry: carry, end: end)
+        }
+        .zIndex(1)
+        .panelAreaHandleProbe(
+            PanelAreaHandleReading(area: "Lists", isShown: isShown, height: height,
+                                   contentHeight: contentHeight, minHeight: floor,
+                                   maxAllowedHeight: maxAllowedHeight, roomLeft: nil),
+            carry: carry, end: end)
     }
 
     /// The pane has been pulled `grow` points taller than it was when the
-    /// pointer took hold, one for one, between its floor and its content.
+    /// pointer took hold, one for one, between its floor and its lists.
     private func carry(_ grow: CGFloat) {
         let base = dragStartHeight ?? height
         if dragStartHeight == nil { dragStartHeight = height }
-        let startChosen = dragStartChosen ?? chosen
-        if dragStartChosen == nil { dragStartChosen = chosen }
-        onCarry()
-        let dragged = PanelAreaResize.storedCeiling(base: base, translation: grow,
-                                                    contentHeight: contentHeight,
-                                                    minHeight: floor,
-                                                    maxAllowedHeight: maxAllowedHeight)
-        stored = Double(PanelListsPane.gripChoice(dragged: dragged, startChosen: startChosen,
-                                                  roomLeft: roomLeft))
+        stored.wrappedValue = Double(PanelAreaResize.storedCeiling(base: base, translation: grow,
+                                                                   contentHeight: contentHeight,
+                                                                   minHeight: floor,
+                                                                   maxAllowedHeight: maxAllowedHeight))
     }
 
     private func end() {
         dragStartHeight = nil
-        dragStartChosen = nil
     }
 }

@@ -146,3 +146,39 @@ struct ModesFollowTheDocumentTests {
                 == WindowModeArrangements())
     }
 }
+
+/// The Library is mostly for video and design, so a picture's window keeps it
+/// out of the panel until the person turns it on there (the user, 2026-10-18:
+/// "library was expanded by default. I think for image editing it should be
+/// hidden").
+@Suite("The Library waits to be turned on in a picture")
+struct LibraryWaitsInAPictureTests {
+
+    @Test("Image and Icon keep the Library hidden until it is turned on there")
+    func picturesKeepItHidden() {
+        #expect(WindowModes.image.libraryWaitsToBeTurnedOn)
+        #expect(WindowModes.mode("icon")?.libraryWaitsToBeTurnedOn == true)
+    }
+
+    @Test("Design and the video setup keep their own default")
+    func designAndVideoKeepTheirs() {
+        #expect(WindowModes.mode("design")?.libraryWaitsToBeTurnedOn == false)
+        #expect(WindowModes.mode(WindowModes.videoID)?.libraryWaitsToBeTurnedOn == false)
+    }
+
+    @Test("Waiting means automatic says no whatever the app-wide Library switch says")
+    func automaticSaysNo() {
+        let asked = PanelSectionVisibility.Situation(isLibraryAskedFor: true)
+        let picture = PanelSectionVisibility.Situation(
+            isLibraryAskedFor: WindowModes.image.libraryAsked(asked.isLibraryAskedFor))
+        #expect(!PanelSectionVisibility.isShown("library", choices: .init(), in: picture))
+        // Turned on in the Sections list: shown.
+        var on = PanelSectionVisibility.Choices()
+        on.set("library", shown: true)
+        #expect(PanelSectionVisibility.isShown("library", choices: on, in: picture))
+        // Design follows the switch as it always did.
+        let design = PanelSectionVisibility.Situation(
+            isLibraryAskedFor: WindowModes.mode("design")?.libraryAsked(true) ?? false)
+        #expect(PanelSectionVisibility.isShown("library", choices: .init(), in: design))
+    }
+}

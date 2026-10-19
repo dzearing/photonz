@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/layers-divider-drags-by-pointer",
+  "seed": "The divider under the Layers pane works the way a hand uses it (the user, 2026-10-18: \"i can't drag the pane up and down\"). Real mouse events posted to the window: the divider is pressed on its face and pulled up 80 points, and Layers follows; a double click on it puts it back to its share of the panel. Next defaults, no flag set.",
+  "setup": {
+    "front": true,
+    "forget": ["panel", "groups", "tools", "measure"]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "action", "action": "showInspector" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "selectRow", "row": "Background" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "action", "action": "duplicateLayer" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Layers divider", "reads": "Layers 333 pt tall" },
+    { "do": "snapshot", "name": "1-before" },
+    { "do": "move", "at": [1180, 363], "space": "window" },
+    { "do": "windowDrag", "from": [1180, 363], "to": [1180, 283], "steps": 12, "hold": "2-in-hand" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Layers divider", "reads": "Layers 253 pt tall" },
+    { "do": "snapshot", "name": "3-after-drag" },
+    { "do": "windowClick", "at": [1180, 283], "count": 2 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Layers divider", "reads": "Layers 333 pt tall" },
+    { "do": "snapshot", "name": "4-double-clicked-back" }
+  ]
+}

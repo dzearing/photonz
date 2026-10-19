@@ -428,8 +428,28 @@ final class EditorState {
     /// it opens the dock too, because a shelf inside a hidden dock is a menu
     /// item that appears to do nothing; hiding it drops any tile that was
     /// picked, so the inspector is not left describing something off screen.
+    ///
+    /// In a picture's window (Image, Icon) the Library waits to be turned on
+    /// there, so this writes that window mode's own choice and leaves the
+    /// app-wide switch alone: design work opening the shelf no longer leaves
+    /// it open in every picture after (`WindowMode.libraryWaitsToBeTurnedOn`,
+    /// the user, 2026-10-18). Elsewhere it is the app-wide switch, and a
+    /// choice in the Sections list that says otherwise is handed back to it,
+    /// so the menu always does what it says.
     func setLibraryVisible(_ visible: Bool) {
-        isLibraryVisible = visible
+        if activeWindowMode?.libraryWaitsToBeTurnedOn == true {
+            if visible {
+                setPanelSection(.library, shown: true)
+            } else {
+                useAutomaticPanelSection(.library)
+            }
+        } else {
+            isLibraryVisible = visible
+            if let chosen = panelChoices.choice(for: InspectorSectionID.library.rawValue),
+               chosen != visible {
+                useAutomaticPanelSection(.library)
+            }
+        }
         if visible {
             setInspectorVisible(true)
             // ...and ask the dock to scroll it into view. The dock is one tall
@@ -501,9 +521,9 @@ final class EditorState {
     /// cap existed, a drop on a 900 point window scrolled the new component's
     /// section from 169 to -101 and you scrolled back up to it every time.
     func askForLibraryAfterFetching(produced: InspectorSectionID?) {
-        guard Experiments.shared.libraryEnabled, isLibraryVisible else { return }
+        guard Experiments.shared.libraryEnabled, isLibraryShown else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.libraryFetchRevealDelay) {
-            guard self.isLibraryVisible else { return }
+            guard self.isLibraryShown else { return }
             // Named before the reveal is armed, never after: the dock reads it
             // the instant the flag turns over. A fetch that never gets this far
             // leaves nothing behind for the NEXT reveal to be capped by.

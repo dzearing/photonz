@@ -382,8 +382,13 @@ struct LayersListView: View {
         // The area is sized to every row a twist COULD reveal, not to the rows
         // showing right now, so opening a group scrolls inside the list rather
         // than growing it and pushing the controls under it off the panel.
+        // In the Layers pane on top the list asks for the rows it shows: the
+        // pane hugs it, and room kept for rows a closed group could reveal
+        // read as a blank band under Canvas (the user, 2026-10-18). Opening
+        // a group grows the pane, up to where the divider was left.
         let reserved = LayerListMetrics.naturalHeight(
-            rowCount: editorState.layerListReservedRowCount(visibleRowCount: displays.count),
+            rowCount: inListsPane ? displays.count
+                : editorState.layerListReservedRowCount(visibleRowCount: displays.count),
             rowHeight: rowHeight,
             canvasRowHeight: canvasRowHeight)
         // The height the list is actually given, which is also the height of

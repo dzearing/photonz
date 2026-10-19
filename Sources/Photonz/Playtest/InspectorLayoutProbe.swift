@@ -25,19 +25,21 @@ import SwiftUI
 
     /// The sections currently in the dock, in the order they are drawn.
     var visible: [InspectorSectionID] = []
-    /// Every section's frame in the scroll viewport's coordinates, so a
-    /// negative `minY` means scrolled off the top and a `maxY` past the
-    /// viewport height means below the fold.
+    /// Every section's frame in the panel's coordinates (down from the top of
+    /// the Layers pane), so a section is in view when it is inside the band
+    /// of the part it is drawn in (`band(of:)`).
     var frames: [InspectorSectionID: Section] = [:]
     /// How tall the scrolling area is.
     var viewportHeight: CGFloat = 0
-    /// The sections in the pane at the bottom of the panel, under the pick's
+    /// The sections in the pane at the top of the panel, over the pick's
     /// own, in order (`PanelListsPane`). Empty when there is no pane.
     var lists: [InspectorSectionID] = []
-    /// Where that pane is seen, in the same coordinates as `frames` (measured
-    /// down from the top of the pick's scrolling area), so a list section is
-    /// in view when it is inside the PANE rather than inside the part above.
+    /// Where that pane is seen, in the same coordinates as `frames`, so a list
+    /// section is in view when it is inside the PANE.
     var listsBand: ClosedRange<CGFloat>?
+    /// Where the part under the divider is seen: the pick's sections and the
+    /// Library.
+    var belowBand: ClosedRange<CGFloat>?
     /// Where the scrolling area sits in the WINDOW, so a step that has to put
     /// a pointer on a section can turn a section's frame into a point the
     /// window understands.
@@ -129,21 +131,22 @@ import SwiftUI
         visible.compactMap { frames[$0] }
     }
 
-    /// The empty panel between the last section of the pick's part and the
-    /// pane of lists under it: the pane's top less where that section ends,
-    /// the part's padding and the grip's hairline. Zero when they meet,
-    /// below zero when the part above scrolls; nil with no pane.
+    /// The empty panel inside the Layers pane under its last list: the
+    /// pane's foot less where that list ends and the pane's padding. Zero
+    /// when the pane hugs its lists (the sections below meet it), below zero
+    /// when its lists scroll; nil with no pane.
     var paneGap: CGFloat? {
         guard let band = listsBand, !lists.isEmpty else { return nil }
-        let pickEnd = measured.filter { !lists.contains($0.id) }.map(\.frame.maxY).max()
-            ?? DockMetrics.listTopPadding
-        return band.lowerBound - (pickEnd + DockMetrics.listTopPadding + 1)
+        let listsEnd = measured.filter { lists.contains($0.id) }.map(\.frame.maxY).max()
+            ?? band.lowerBound + DockMetrics.listTopPadding
+        return band.upperBound - (listsEnd + DockMetrics.listTopPadding)
     }
 
-    /// The band a section can be seen in: the pane at the bottom for one of
-    /// its lists, the scrolling area above it for everything else.
+    /// The band a section can be seen in: the pane on top for one of its
+    /// lists, the scrolling part under the divider for everything else.
     func band(of section: Section) -> ClosedRange<CGFloat>? {
         if lists.contains(section.id) { return listsBand }
+        if let belowBand { return belowBand }
         return viewportHeight > 0 ? 0...viewportHeight : nil
     }
 
@@ -174,6 +177,10 @@ import SwiftUI
 
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {
     InspectorLayoutProbe.shared.dockFrame = frame
+}
+
+@MainActor func recordInspectorBelowBand(_ band: ClosedRange<CGFloat>) {
+    InspectorLayoutProbe.shared.belowBand = band
 }
 
 @MainActor func recordInspectorListsPane(_ lists: [InspectorSectionID], band: ClosedRange<CGFloat>?) {
@@ -225,6 +232,7 @@ extension View {
 @MainActor func recordInspectorSection(_ id: InspectorSectionID, title: String, frame: CGRect) {}
 @MainActor func recordInspectorViewportHeight(_ height: CGFloat) {}
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {}
+@MainActor func recordInspectorBelowBand(_ band: ClosedRange<CGFloat>) {}
 @MainActor func recordInspectorListsPane(_ lists: [InspectorSectionID], band: ClosedRange<CGFloat>?) {}
 @MainActor func recordInspectorCarrying(_ title: String?) {}
 @MainActor func recordEffectReveal(_ id: String, frame: CGRect,

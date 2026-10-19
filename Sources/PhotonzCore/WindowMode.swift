@@ -71,11 +71,27 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
     /// last pick. Read through `startingMember(of:)`.
     public let toolStripMembers: [ToolGroup: Tool]
 
+    /// The Library stays out of this mode's panel until the person turns it
+    /// on here (the Sections list or View ▸ Library), whatever the app-wide
+    /// Library switch says. True for the picture modes: the shelf is mostly
+    /// for video and design, and design work turning the switch on used to
+    /// leave it open in every picture after (the user, 2026-10-18: "library
+    /// was expanded by default. I think for image editing it should be
+    /// hidden"). Design and the video setup keep their own default.
+    public let libraryWaitsToBeTurnedOn: Bool
+
+    /// What the automatic rule may take as "the Library was asked for" in
+    /// this mode, given the app-wide switch.
+    public func libraryAsked(_ switchIsOn: Bool) -> Bool {
+        switchIsOn && !libraryWaitsToBeTurnedOn
+    }
+
     public init(id: String, title: String, summary: String, symbol: String,
                 preset: PanelSectionVisibility.Choices,
                 toolStrip: [[ToolBarLayout.Entry]]? = nil,
                 toolStripPriority: [ToolBarLayout.Entry]? = nil,
-                toolStripMembers: [ToolGroup: Tool] = [:]) {
+                toolStripMembers: [ToolGroup: Tool] = [:],
+                libraryWaitsToBeTurnedOn: Bool = false) {
         self.id = id
         self.title = title
         self.summary = summary
@@ -84,6 +100,7 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
         self.toolStrip = toolStrip
         self.toolStripPriority = toolStripPriority
         self.toolStripMembers = toolStripMembers
+        self.libraryWaitsToBeTurnedOn = libraryWaitsToBeTurnedOn
     }
 
     /// The member `group`'s slot starts on in this mode, or nil when the mode
@@ -125,7 +142,8 @@ public enum WindowModes {
             title: "Image",
             summary: "Editing a picture or a screenshot.",
             symbol: "photo",
-            preset: choices([:])),
+            preset: choices([:]),
+            libraryWaitsToBeTurnedOn: true),
         WindowMode(
             id: "icon",
             title: "Icon",
@@ -134,7 +152,8 @@ public enum WindowModes {
             // Motion stays: an icon that moves is the point of the icon work.
             // Component stays: an icon becomes a component, which is the chain
             // this whole direction rests on.
-            preset: choices(["measurements": false, "library": false, "columns": false])),
+            preset: choices(["measurements": false, "library": false, "columns": false]),
+            libraryWaitsToBeTurnedOn: true),
         WindowMode(
             id: "design",
             title: "Design",

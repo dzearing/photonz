@@ -72,18 +72,18 @@ extension EditorState: TutorialHost {
         case .showPanel:
             if !isInspectorShown { setInspectorVisible(true) }
         case .showLibrary:
-            if !isLibraryVisible { setLibraryVisible(true) }
+            if !isLibraryShown { setLibraryVisible(true) }
         case .showComponentShelf:
             // The scope the shelf is on is remembered across launches and
             // starts as the captures you have taken, so a step about a button
             // would otherwise ring a shelf of screenshots. Same two lines Make
             // Component runs for the same reason.
-            if !isLibraryVisible { setLibraryVisible(true) }
+            if !isLibraryShown { setLibraryVisible(true) }
             showComponentsInLibrary()
         case .showMediaShelf:
             // The recordings and sounds this document holds, which is what a
             // video guide about bringing a clip in is pointing at.
-            if !isLibraryVisible { setLibraryVisible(true) }
+            if !isLibraryShown { setLibraryVisible(true) }
             setLibraryScope(.media)
         case .revealTarget:
             break // the controller drives this one through the registry
