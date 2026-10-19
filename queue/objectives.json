@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-24T12:17:14.824Z",
+  "updated": "2026-10-19T14:40:26.988Z",
   "focus": "video-editing",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -451,27 +451,27 @@
       "id": "agent-drivable",
       "title": "Make Photonz completely drivable by an AI agent",
       "note": "The UI == API == agent thesis made real: every command the UI can issue is one call an agent can issue, exposed through skills and an MCP plugin. The Ask surface (command palette = agent chat) is the in-app face of the same calls.",
-      "stage": "later",
+      "stage": "now",
       "children": [
         {
           "id": "agent-api",
           "title": "One command surface: everything the UI does is one API call",
           "note": "",
-          "stage": "later",
+          "stage": "now",
           "children": []
         },
         {
           "id": "agent-mcp",
           "title": "MCP plugin: the full command surface as agent tools",
           "note": "",
-          "stage": "later",
+          "stage": "now",
           "children": []
         },
         {
           "id": "agent-skills",
           "title": "Skills for real workflows: capture, measure, spec, export",
           "note": "",
-          "stage": "later",
+          "stage": "now",
           "children": []
         },
         {
