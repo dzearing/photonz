@@ -3407,6 +3407,10 @@ private final class Run {
         case .expectFrameSharp(let within):
             note(number, step.name, try await checkFrameSharp(within: within), state: describe())
 
+        case .expectInk(let at, let thickness, let within):
+            note(number, step.name, try checkInk(at: at, thickness: thickness, within: within),
+                 state: describe())
+
         case .expectWaveform(let clip, let within, let cleanedAt, let rawAt):
             note(number, step.name, try await checkWaveform(clip: clip, within: within,
                                                             cleanedAt: cleanedAt, rawAt: rawAt),
@@ -9628,6 +9632,44 @@ private final class Run {
         }
         let darkNote = onDark.isEmpty ? "" : " (\(list(onDark)) on the dark chip)"
         return "icon previews for \"\(named)\" at \(list(showing))\(darkNote), as claimed"
+    }
+
+    /// How thick the ink is through one document point of the document as it
+    /// renders at 1x, counted up and down from it (`expectInk`). Read off the
+    /// picture rather than the model, because a line pulled from 4 to 26 once
+    /// held 26 in the model and drew 4 (`PlaytestInk`).
+    private func checkInk(at point: CGPoint, thickness: Double, within: Double) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document,
+              let image = DocumentRenderer().render(document, store: editor.store, scale: 1) else {
+            throw Failure(description: "the document did not render")
+        }
+        let width = image.width, height = image.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let drew = bytes.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(data: buffer.baseAddress, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: width * 4,
+                                          space: CGColorSpace(name: CGColorSpace.sRGB)
+                                              ?? CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drew else { throw Failure(description: "the rendered document could not be read") }
+        let x = Int(point.x.rounded(.down)), y = Int(point.y.rounded(.down))
+        guard let measured = PlaytestInk.thickness(rgba: bytes, width: width, height: height,
+                                                   x: x, y: y) else {
+            throw Failure(description: "(\(x), \(y)) is off the \(width)x\(height) rendered document")
+        }
+        let i = (y * width + x) * 4
+        let colour = String(format: "#%02X%02X%02X", bytes[i], bytes[i + 1], bytes[i + 2])
+        let said = "the ink through (\(x), \(y)) is \(measured)px thick, in \(colour)"
+        guard abs(Double(measured) - thickness) <= within else {
+            throw Failure(description: "\(said), where it should be \(Int(thickness))px"
+                          + (within > 0 ? " give or take \(Int(within))" : ""))
+        }
+        return said
     }
 
     /// Whether the canvas is showing the picture drawn at the size it is being

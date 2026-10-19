@@ -3907,6 +3907,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the playhead moved. Waits up to `within` seconds (three unless said
     /// otherwise), since a frame is read off the main actor.
     case expectFrameSharp(within: Double)
+    /// CLAIMS how thick the ink is through the document point `at`, read off
+    /// the document rendered at 1x, counted straight up and down from it:
+    /// `thickness` pixels, give or take `within` (one unless said otherwise).
+    /// The panel's number and the model can both be right while the picture
+    /// is wrong, which is exactly what a line pulled from 4 to 26 did on
+    /// 2026-10-19 (`PlaytestInk`).
+    case expectInk(at: CGPoint, thickness: Double, within: Double)
     /// CLAIMS that the bar of the clip named `clip` on the timeline is drawing
     /// the shape of its sound, waiting up to `within` seconds (one unless said
     /// otherwise) for it to land. The shape is read off the file in the
@@ -4434,7 +4441,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4553,6 +4560,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectPenMarks: "expectPenMarks"
         case .expectSharp: "expectSharp"
         case .expectFrameSharp: "expectFrameSharp"
+        case .expectInk: "expectInk"
         case .expectWaveform: "expectWaveform"
         case .expectLevel: "expectLevel"
         case .expectClipPictures: "expectClipPictures"
@@ -5496,6 +5504,20 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
             }
             self = .expectSharp(absent: absent, within: within)
+        case "expectInk":
+            let at = try f.point("at")
+            guard at.space == .document else {
+                throw f.invalid("space", "ink is read off the rendered document, so \"at\" is a document point")
+            }
+            let thickness = try f.number("thickness")
+            guard thickness >= 0 else {
+                throw f.invalid("thickness", "a thickness in pixels is zero or more, not \(thickness)")
+            }
+            let within = try f.optionalNumber("within") ?? 1
+            guard within >= 0 else {
+                throw f.invalid("within", "how far off it may be is zero or more, not \(within)")
+            }
+            self = .expectInk(at: at.point, thickness: thickness, within: within)
         case "expectFrameSharp":
             let within = try f.optionalNumber("within") ?? 3
             guard within >= 0 else {

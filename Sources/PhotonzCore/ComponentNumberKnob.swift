@@ -221,10 +221,11 @@ extension Layer {
         guard var annotation else { return }
         let paint = outlinePaint
         if drawsItsOwnOutline {
-            // A line and an arrow ARE their stroke, so the number is its width.
-            annotation.strokeWidth = max(0, width)
+            // A line and an arrow ARE their stroke, so the number is its width,
+            // and the box they are drawn in grows with it (`OutlineWidth.swift`).
             annotation.paint = paint
             content = .annotation(annotation)
+            setOwnStrokeWidth(width)
         } else {
             // A box or an oval wears its edge as a Border in the Effects list,
             // so the number is that border's (`OutlineRetirement.swift`). The

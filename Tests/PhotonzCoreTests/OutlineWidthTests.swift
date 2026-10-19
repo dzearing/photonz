@@ -300,4 +300,51 @@ struct OutlineWidthTests {
         let doc = document([box])
         #expect(doc.outlineThicknessSelection(layerIDs: [box.id]).reading.value == 6)
     }
+    // MARK: - A thicker line has room to be drawn
+
+    /// A line and an arrow are drawn inside their own box, so the box has to
+    /// grow with the line. Thickness used to change the number and leave the
+    /// box at the old width, and a 4 pixel line pulled to 26 was drawn at 4
+    /// because everything past the box was cut off (reported 2026-10-19).
+    @Test(arguments: [AnnotationShape.line, .arrow])
+    func thickeningALineGrowsTheBoxItIsDrawnIn(shape: AnnotationShape) throws {
+        let tail = CGPoint(x: 200, y: 300), tip = CGPoint(x: 700, y: 300)
+        let drawn = AnnotationBuilder.layer(content: AnnotationContent(shape: shape, strokeWidth: 4),
+                                            from: tail, to: tip)
+        var doc = document([drawn])
+        // The top of the slider, where an arrow's head outgrows its box too.
+        let wide = AnnotationStyles.strokeWidthRange.upperBound
+        #expect(doc.setOutlineWidth(layerIDs: [drawn.id], to: wide) == 1)
+        let thick = try #require(doc.layer(id: drawn.id))
+        #expect(thick.annotation?.strokeWidth == wide)
+        // Exactly the box the tool would have drawn it in at that width.
+        let fresh = AnnotationBuilder.layer(content: AnnotationContent(shape: shape, strokeWidth: wide),
+                                            from: tail, to: tip)
+        #expect(thick.frame == fresh.frame)
+        #expect(thick.frame.height >= wide)
+        // ...and the ends stay exactly where they were drawn.
+        #expect(thick.annotationEndpoint(.start) == tail)
+        #expect(thick.annotationEndpoint(.end) == tip)
+
+        // Thinner again, and the box comes back with it.
+        #expect(doc.setOutlineWidth(layerIDs: [drawn.id], to: 4) == 1)
+        #expect(doc.layer(id: drawn.id)?.frame == drawn.frame)
+    }
+
+    /// A width keyed in a video plays back the same way: a line keyed from 4
+    /// to 40 is drawn 40 thick at the end, not cut down to the box it was
+    /// drawn in.
+    @Test func aKeyedWidthGetsRoomAsItPlays() throws {
+        let tail = CGPoint(x: 200, y: 300), tip = CGPoint(x: 700, y: 300)
+        var line = AnnotationBuilder.layer(content: AnnotationContent(shape: .line, strokeWidth: 4),
+                                           from: tail, to: tip)
+        line.motions = [LayerMotion(property: .strokeWidth, from: .number(4), to: .number(40),
+                                    timing: MotionTiming(startMS: 0, durationMS: 1000),
+                                    curve: .linear, repeats: .once)]
+        let played = line.moved(toMotionTimeMS: 1000, cycleMS: 1000)
+        #expect(played.annotation?.strokeWidth == 40)
+        #expect(played.frame.height >= 40)
+        #expect(played.annotationEndpoint(.start) == tail)
+        #expect(played.annotationEndpoint(.end) == tip)
+    }
 }

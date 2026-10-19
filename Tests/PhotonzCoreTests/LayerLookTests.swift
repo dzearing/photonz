@@ -118,7 +118,13 @@ struct LayerLookTests {
         let look = doc.look(ofLayer: doc.layers[0].id)!
         doc.applyLook(look, to: [doc.layers[1].id])
 
-        #expect(doc.layers[1].frame == before.frame)
+        // Where a line is and how long it is are its two ends. Its box is
+        // only room to draw it in, and grows with the thicker line the look
+        // gives it, or the line would be cut down to the old width
+        // (`OutlineWidth.swift`, reported 2026-10-19).
+        #expect(doc.layers[1].annotationEndpoint(.start) == before.annotationEndpoint(.start))
+        #expect(doc.layers[1].annotationEndpoint(.end) == before.annotationEndpoint(.end))
+        #expect(doc.layers[1].frame.height >= doc.layers[1].outlineWidth)
         #expect(doc.layers[1].transform == before.transform)
         #expect(doc.layers[1].annotation?.shape == .line)
     }

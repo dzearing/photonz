@@ -1,0 +1,53 @@
+{
+  "feature": "Thickness in Appearance makes a drawn line thicker",
+  "epic": "measure-redline",
+  "summary": "Raising Thickness on a line, an arrow or a Pen path now thickens it on the canvas, live, by dragging or typing, and one Command Z puts it back. Before, the number changed and the line stayed as thin as it was drawn.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: outline-width-walk (picture, slider clicks) and line-thickness-typed-walk (typed numbers, the next line, a video).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Before the fix: draw a line with the Line tool, pick it, click the Thickness track. The panel says 26 and the line is still 4 pixels thick (counted on the render: 4px before, 4px after).",
+      "shot": "2026-10-19-line-thickness-1-before.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Now: draw a line, pick it, click or drag the Thickness track to 26. The line on the canvas is 26 pixels thick (measured on the render: 4px to 26px).",
+      "shot": "2026-10-19-line-thickness-2-after.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once. The line is back to 4 pixels; Shift Command Z takes it to 26 again."
+    },
+    {
+      "do": "Click the Thickness number, type 12 and press Return. The line is drawn 12 pixels thick (measured 4px to 12px).",
+      "shot": "2026-10-19-line-thickness-3-typed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw another line with the Line tool. It starts at 12 (measured 12px).",
+      "shot": "2026-10-19-line-thickness-4-next-line.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw an arrow and a Pen path and raise their Thickness. The arrow shaft measures 40px at the top of the slider, the path 26px.",
+      "shot": "2026-10-19-line-thickness-5-arrow-and-path.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "On a new video (File, New Video), draw a line, type 30 into Thickness. The line on the canvas measures 30px.",
+      "shot": "2026-10-19-line-thickness-video-panel-squeezed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does a line you thicken now look the way you expected the first time you tried it?",
+    "Does the next line starting at the width you just chose feel right, or should each line start at the stock 4?",
+    "At the top of the slider, does the arrowhead look big enough for the shaft, or should the head grow more with the line?"
+  ],
+  "rough": [
+    "No mock covers this: the fix changes what the canvas draws, not the panel, which is unchanged.",
+    "At 40 the arrowhead is only a little wider than its shaft (the head grows at 0.6 of the line width). That is the existing head sizing, with Head Size beside it to grow it; written in this task log rather than filed.",
+    "On a 1400x900 video window with the line picked, Appearance is squeezed to a sliver above the Library pane, so Thickness is off screen (last picture). Folded into on-a-video-captions-and-transitions-sit-where-th, which owns that panel layout.",
+    "The new pixel check a walk uses (expectInk) has not yet been watched on a locked screen; it renders the document the way the render step does, so it is listed as lock safe by reading."
+  ]
+}

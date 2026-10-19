@@ -54,6 +54,25 @@ extension Layer {
 
     /// The one flat colour it stands for.
     var outlineColorHex: String { outlinePaint.hex }
+
+    /// A line or an arrow at a new width, with its ends left where they are
+    /// and its box padded round the new width, exactly as the tool would have
+    /// drawn it at that width.
+    ///
+    /// The box matters because a line is drawn INSIDE it: setting the width
+    /// alone left a 4 point line pulled to 26 in a 4 point box, and everything
+    /// past the box was cut off, so the panel said 26 and the canvas still
+    /// showed 4 (reported 2026-10-19). Every way of setting the width comes
+    /// through here: the Thickness row, a number knob on a copy, and a keyed
+    /// width playing back.
+    mutating func setOwnStrokeWidth(_ width: CGFloat) {
+        guard var annotation, drawsItsOwnOutline,
+              let start = annotationEndpoint(.start),
+              let end = annotationEndpoint(.end) else { return }
+        annotation.strokeWidth = max(0, width)
+        content = .annotation(annotation)
+        self = AnnotationBuilder.updating(self, start: start, end: end)
+    }
 }
 
 extension ShapeSelection.Member {

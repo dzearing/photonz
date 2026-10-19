@@ -1902,9 +1902,8 @@ extension Layer {
             content = .path(path)
             return
         }
-        if var annotation, drawsItsOwnOutline {
-            annotation.strokeWidth = width
-            content = .annotation(annotation)
+        if annotation != nil, drawsItsOwnOutline {
+            setOwnStrokeWidth(width)
             return
         }
         style.borderWidth = width

@@ -188,6 +188,10 @@ public enum PlaytestLockSafety {
         // as expectSharp, never a name. A guide walk has to be lock safe, so
         // the first locked sweep is its watch; if it refuses there, take it out.
         "expectFrameSharp",
+        // Added 2026-10-19 by reading, NOT yet watched under a lock: it renders
+        // the document exactly as `render` does and counts pixels in it, so it
+        // needs no window and no name. If a locked sweep refuses it, take it out.
+        "expectInk",
         // Added 2026-09-26 by reading, NOT yet watched under a lock: it asks a
         // clip's timeline bar what it last drew, which the bar tells the
         // harness itself, never a name. The second-clip guide walk reads it,
