@@ -2,15 +2,18 @@
   "id": "claude-can-make-and-edit-pictures-and-videos-in",
   "title": "Claude can make and edit pictures and videos in Photonz through an MCP server and a skill",
   "goal": "Photonz comes with an MCP server and a Claude skill that teaches Claude to use it, so a person can ask Claude in plain words to build a video montage from their history, draw an icon, mark up an open screenshot, or rebuild a website's design system, and Claude does all of it in the app with every tool the app has. Claude can also see the picture or video exactly as it currently stands, so it can check its own work and correct it.",
-  "epic": "agent-mcp",
+  "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 25,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T14:40:27.096Z",
-  "updated": "2026-10-19T14:40:37.284Z",
-  "deps": [],
+  "updated": "2026-10-19T16:21:57.476Z",
+  "deps": [
+    "an-agent-can-draw-a-picture-with-shapes-paths-te",
+    "an-agent-can-cut-a-video-from-history-clips-with"
+  ],
   "blockedBy": [],
   "notes": "The user's words (2026-10-19, intake): 'i want an mcp server support and a claude skill to use it accompanying photonz. I'd like to be able to use claude to create and manipulate images and videos.' Their four scenarios are quoted in the acceptance. 'Consider that we'd want to have access to all of the tools, but also the model might need to access the image as it currently is for evaluation or validation.'\n\nExisting thinking: docs/design/creation-vision.md:85-102 (the command API is the contract; the MCP server is the frontier path; schema-checked undoable commands are the safety rail; never couple to one model). Objective epic agent-drivable with children agent-api, agent-mcp, agent-skills was staged 'later' with no tasks; this task is why it is now 'now' (agent-ask stays later). Mock: docs/design/mocks/pages/agent.html.\n\nWhat exists to build on, not confirmed in depth: the document model is pure Codable Swift in PhotonzCore (good for a structured read); DocumentRenderer in PhotonzRender renders offscreen; SVGExporter (Sources/PhotonzRender/SVGExporter.swift); VideoExporter and DocumentMovieWriter (Sources/PhotonzMedia); FeatureCatalog (Sources/PhotonzCore/FeatureCatalog.swift) may already list the app's features and could seed the coverage test; EditorCommands.swift; History.perform is the only mutation path (CLAUDE.md invariant). The playtest harness (Sources/Photonz/Playtest/PlaytestHarness.swift, PlaytestScript in Core) already drives the probe app from JSON, but it is compiled out of release and works by clicking controls by name, so it is a reference for reaching app state, NOT the server's transport: the MCP must work in the shipping app and must not depend on control names (a locked screen takes those away, see CLAUDE.md).\n\nTraps: (1) Do not build the server as a headless re-implementation that edits document files behind the app's back; the user wants to watch it happen in the open document and undo it. (2) Recommended zooms already exist for recordings (EditorState+Zoom.swift, ZoomLane.swift); reuse that, do not invent a second zoom picker. (3) Scenario 4 depends on Library components (ui-building epic); if components cannot yet be made from outside the UI, that is a gap to file, not to fake with flat pictures. (4) The task is large: the runner may land it in slices (design doc, transport plus the read and render tools, then tool areas one by one, then the scenarios), keeping this task open and logging progress, or split the remaining areas into tasks sequenced right behind it, each still p1 and source user. (5) A runner cannot drive Claude Code against the real app on a locked screen if the transport needs the screen; say which in the design. (6) Never put Claude or Anthropic in user-facing app copy (repo rule); the skill and server are developer-facing and may name them.",
   "acceptance": [
@@ -34,6 +37,10 @@
     {
       "t": "2026-10-19T14:40:37.282Z",
       "note": "seq 3970 -> 25"
+    },
+    {
+      "t": "2026-10-19T16:21:57.476Z",
+      "note": "manager pass 2026-10-19: split into four slices that claim first, in order: an-agent-can-reach-the-running-app-read-the-open (channel, read, picture), every-command-in-the-app-s-menus-can-be-run-by-n (every menu command by name, coverage test), then an-agent-can-draw-a-picture-with-shapes-paths-te (pictures, scenarios 2 and 3) and an-agent-can-cut-a-video-from-history-clips-with (video, scenario 1). This task now waits on them and finishes the ask: the skill, scenario 4 (a website design system rebuilt as Library components), all four scenarios rerun from a fresh session, the coverage count and the decision card. Its checklist is unchanged; items the slices already met are checked off by pointing at their audits. Epic moved to agent-skills, whose success list is these scenarios."
     }
   ]
 }

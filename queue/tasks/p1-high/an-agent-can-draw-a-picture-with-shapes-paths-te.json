@@ -1,0 +1,41 @@
+{
+  "id": "an-agent-can-draw-a-picture-with-shapes-paths-te",
+  "title": "An agent can draw a picture with shapes, paths, text, measurements and components",
+  "goal": "Claude can build a picture in Photonz out of real, editable layers: shapes, paths, text, the app's own measurements and Library components, then export it as PNG or SVG. The user's icon and screenshot scenarios run end to end. This is the third slice of the user's MCP ask.",
+  "epic": "agent-mcp",
+  "priority": "p1-high",
+  "seq": 23,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T16:21:48.159Z",
+  "updated": "2026-10-19T16:22:00.840Z",
+  "deps": [
+    "every-command-in-the-app-s-menus-can-be-run-by-n"
+  ],
+  "blockedBy": [],
+  "notes": "Split out of claude-can-make-and-edit-pictures-and-videos-in (2026-10-19 manager pass); scenarios 2 and 3 are quoted from the user's words there. Builds on the command table from every-command-in-the-app-s-menus-can-be-run-by-n. Measurements: the app's own Measure tool model (PhotonzCore Measurement types), never drawn lines. SVG: SVGExporter (PhotonzRender/SVGExporter.swift). Library components: the ui-building epic's component model; if components cannot be placed from outside the UI that is a gap to file.",
+  "acceptance": [
+    "Typed tools where a menu command cannot carry the arguments: add a shape with its frame and style, a path from points, text with font, size and colour, set a layer's frame and style, place a size or gap measurement between two boxes, place a Library component, export PNG and SVG",
+    "Each tool lands as one undo step and leaves a normal layer a person can edit by hand afterwards",
+    "Scenario 2 from a fresh Claude Code session with only the server: 'Create a product icon svg of a box inside of a cloud.' The icon is built from shapes and paths in a Photonz document (never a pasted SVG string) and exported as SVG; the SVG and a render go in the audit",
+    "Scenario 3: with a UI screenshot open, 'annotate the ux with measurements around the major ui elements'. Before and after pictures go in the audit, with how many measurements were placed and how many land on a real edge, measured against the pixels",
+    "A capability either scenario needs that the app lacks is filed as its own p1 task (source user), not faked",
+    "Unit tests for the new tool schemas; Scripts/test.sh passes",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T16:21:48.161Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-19T16:21:57.476Z",
+      "note": "deps: every-command-in-the-app-s-menus-can-be-run-by-n"
+    },
+    {
+      "t": "2026-10-19T16:22:00.838Z",
+      "note": "seq 3990 -> 23"
+    }
+  ]
+}

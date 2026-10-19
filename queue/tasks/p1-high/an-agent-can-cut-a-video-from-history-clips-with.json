@@ -1,0 +1,40 @@
+{
+  "id": "an-agent-can-cut-a-video-from-history-clips-with",
+  "title": "An agent can cut a video from History clips with titles, transitions and zooms",
+  "goal": "Claude can make a video in Photonz from recordings in the person's History: lay the clips in order, put title pages in front of them in the app's own title styles, add transitions at the cuts, apply the zooms the app recommends, and export an MP4. The user's montage scenario runs end to end. This is the fourth slice of the user's MCP ask.",
+  "epic": "agent-mcp",
+  "priority": "p1-high",
+  "seq": 24,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T16:21:48.259Z",
+  "updated": "2026-10-19T16:22:00.908Z",
+  "deps": [
+    "every-command-in-the-app-s-menus-can-be-run-by-n"
+  ],
+  "blockedBy": [],
+  "notes": "Split out of claude-can-make-and-edit-pictures-and-videos-in (2026-10-19 manager pass). Reuse the recommended zooms (EditorState+Zoom.swift, ZoomLane.swift), never a second zoom picker. Title pages: the Add Title Page path and the title style catalog the Library uses. Insert a title before a clip: done task insert-a-title-before-a-clip-on-its-track-and-ch (commit 53d02c72). Export: VideoExportDialog / RecordingExport (RecordingExport.swift). History: CaptureStore (Capture/CaptureStore.swift:22).",
+  "acceptance": [
+    "Typed tools: a new video from History items in order, place, trim, cut and move clips, add a title page in one of the app's title styles before a clip with its words, add a transition at a cut, apply the app's recommended zooms to a clip, export an MP4 at a chosen size",
+    "Each tool lands as one undo step",
+    "Scenario 1 from a fresh Claude Code session with only the server and five recordings in History: 'I made 5 clips in my history. Take the last 5, and create a video montage which has a title page, and subtitle pages per clip with nice consistent layout and transitions. I want to see clips with recommended zooms. Each subtitle should show Case N where n is the clip number (1 through 5)'. The result is one video document and an MP4; a contact sheet and the MP4 go in the audit",
+    "A capability the scenario needs that the app lacks is filed as its own p1 task (source user)",
+    "Unit tests for the new tool schemas; Scripts/test.sh passes; an-editing-session-walk still passes",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T16:21:48.261Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-19T16:21:57.476Z",
+      "note": "deps: every-command-in-the-app-s-menus-can-be-run-by-n"
+    },
+    {
+      "t": "2026-10-19T16:22:00.906Z",
+      "note": "seq 4000 -> 24"
+    }
+  ]
+}

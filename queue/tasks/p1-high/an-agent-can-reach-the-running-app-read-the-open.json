@@ -1,0 +1,35 @@
+{
+  "id": "an-agent-can-reach-the-running-app-read-the-open",
+  "title": "An agent can reach the running app, read the open document and see it",
+  "goal": "Claude, through a Photonz MCP server installed with one command, connects to the Photonz the person has open, lists its open documents, reads the one in front as plain structured data, and gets back a picture of it (or a video frame, or a strip of frames) so it can see what it is working on. Undo and redo work from the agent. This is the first slice of the user's MCP ask: the commands, the picture tools, the video tools and the four scenarios follow in the tasks after it.",
+  "epic": "agent-mcp",
+  "priority": "p1-high",
+  "seq": 21,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T16:21:47.951Z",
+  "updated": "2026-10-19T16:22:00.697Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of claude-can-make-and-edit-pictures-and-videos-in by the 2026-10-19 manager pass, so each slice fits one runner session. Its notes and traps apply here (watch it happen in the open document, never a headless re-implementation; never name a vendor in app copy).\n\nWhat exists (surveyed 2026-10-19): no IPC of any kind today, the only outside entry is .onOpenURL opening files (EditorView.swift:402). The playtest harness is compiled out of release (#if PHOTONZ_PLAYTEST, PlaytestHarness.swift:11; Scripts/build-app.sh:123) and reads its script once from --playtest at launch, so it is a reference, not the transport. EditorState is @MainActor (EditorState.swift:23); mutation is EditorState.perform (EditorState.swift:4917) over History.perform (PhotonzCore/History.swift:81). Only the harness keeps a list of open editors (PlaytestHarness.register, EditorState.swift:2505); the app needs its own. Render: DocumentRenderer.render (PhotonzRender/DocumentRenderer.swift:406), ImageCodec.encode(.png) (ImageCodec.swift:68). Frames: DocumentFrames.frame(atMS:) and png(atMS:) (EditorState+VideoExport.swift:523-614). PhotonzDocument is Codable (Document.swift:7) and round-trips as JSON (PackageIO.swift:24), but there is no slimmer summary type; build one in Core. History list: CaptureStore.entries (Capture/CaptureStore.swift:22); CaptureEntry is not Codable.",
+  "acceptance": [
+    "docs/design/agent-mcp.md is written first: how the server reaches a running Photonz (launching it if needed), the channel chosen and why, how it picks the document, what works on a locked screen, and the tool list grouped by area for this slice and the three after it, with how each tool maps onto commands the app already runs",
+    "The channel lives in the app itself (Dev, Probe and release builds), not in the playtest harness, and never finds anything by a control's name",
+    "Tools in this slice: list open documents, open a file or a History item, a structured read of the front document (layers with frames, text and styles; on a video the tracks, clips, times and transitions) small enough to read in one go, a PNG of the canvas or one layer or one region, a video frame at a time, a contact sheet of frames across a range, undo and redo",
+    "The server installs with one command from this repo (a Claude Code plugin or an mcp config entry), and the design doc says the command",
+    "Unit tests cover the tool schemas and the structured read (PhotonzCore, test first); Scripts/test.sh passes",
+    "Try path: in a fresh Claude Code session with the server installed and the probe app open on a recording, ask 'what is open in Photonz, and show me the frame 10 seconds in'. The answer and the picture go in the audit",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T16:21:47.955Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-19T16:22:00.695Z",
+      "note": "seq 3970 -> 21"
+    }
+  ]
+}

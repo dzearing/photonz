@@ -1,0 +1,33 @@
+{
+  "id": "a-chart-or-title-keeps-what-you-set-by-hand-when",
+  "title": "A chart or title keeps what you set by hand when you change its numbers or style",
+  "goal": "Changing an animated chart's numbers or theme lays its bars out again and throws away any key or effect the person set by hand on a bar, and restyling a chart or title puts back the theme's version of an effect the person had edited. The person loses work without being told. Keep hand-set keys and edited effects through a change of numbers or style, the way hand-dragged title bars are now kept.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 26,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T16:22:21.166Z",
+  "updated": "2026-10-19T16:22:37.819Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From two audit rough lines nobody filed: queue/audits/2026-10-17-animated-charts.json ('Changing the data or the theme lays the chart's pieces out again: a key or an effect set by hand on one bar is lost (the pieces keep their ids, and a part's retimed in and out are kept)') and queue/audits/2026-10-19-a-title-part-move-dragged-by-hand-on-the-timelin.json ('On a chart, an effect the drawing gave a bar and that you then edited (rather than added) still goes back to the theme's on a restyle; only effects you added are kept'). The model to copy is commit 56d7c8e5 (hand-dragged title part bars survive a restyle). Not reproduced by the manager, so p2 with reproduction as the first item.",
+  "acceptance": [
+    "Reproduced first at Next defaults: drop a Bar chart on a video, key one bar's opacity by hand and edit its shadow, then change one number, then the theme; what was lost goes in this task's log",
+    "After a change of numbers or theme, a key set by hand on a bar stays on that bar, and an effect the person edited keeps their values; a bar that goes away (its row removed) takes its own keys with it and nothing else",
+    "The same on a title: an effect the person edited, not only one they added, survives a theme, font pair or energy change",
+    "A walk at Next defaults proves both and joins the rotating set; unit tests in PhotonzCore for the merge; Scripts/test.sh passes",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T16:22:21.168Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-19T16:22:37.818Z",
+      "note": "seq 23.75 -> 26"
+    }
+  ]
+}

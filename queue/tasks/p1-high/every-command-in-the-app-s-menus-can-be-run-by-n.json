@@ -1,0 +1,40 @@
+{
+  "id": "every-command-in-the-app-s-menus-can-be-run-by-n",
+  "title": "Every command in the app's menus can be run by name from an agent",
+  "goal": "Every command a person reaches from the menu bar and the right-click menus gets a stable name that an agent can list and run, with its arguments checked, and each run lands as one undo step exactly like a click. A test counts the commands and fails for any an agent cannot run, apart from a short written list left out on purpose. This is the second slice of the user's MCP ask.",
+  "epic": "agent-api",
+  "priority": "p1-high",
+  "seq": 22,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T16:21:48.057Z",
+  "updated": "2026-10-19T16:22:00.770Z",
+  "deps": [
+    "an-agent-can-reach-the-running-app-read-the-open"
+  ],
+  "blockedBy": [],
+  "notes": "Split out of claude-can-make-and-edit-pictures-and-videos-in (2026-10-19 manager pass). Meets the agent-api success list in queue/objectives.json.\n\nToday (surveyed 2026-10-19): no registry. EditorCommands (EditorCommands.swift:73) is a SwiftUI Commands struct whose ~242 Buttons and 37 Toggles call EditorState through @FocusedValue(\\.editorState) (:75); menus Capture :647, Image :671, Clip :1651, Sequence :1712, Video :1755, Layer :1889, Measure :2360, View :2420, plus CommandGroups. Timeline right-click: TimelineMenuThing / TimelineMenuRow (PhotonzCore/TimelineMenuTable.swift:18,44,68) with actions in EditorState+TimelineMenus.swift:155-220. Layer right-click: LayerCommandList.rows (LayerCommandMenu.swift:23); MenuRow is a closure (MenuRow.swift:65). Timeline keys: perform(timelineCommand:) (EditorState+TimelineKeys.swift:76). Menu actions target the focused editor; an agent call names its document instead.\n\nIf every menu cannot move in one sitting: land the table, the two tools and the coverage test with a not-yet list that may only shrink (a ratchet test), and file the remaining menus as one p1 task sequenced right behind this one.",
+  "acceptance": [
+    "One table of the app's commands (name, menu title, area, arguments, when it is available) lives in PhotonzCore and is unit tested first; the menu bar, the timeline right-click rows and the layer right-click rows reach their actions through it, or the audit says why a row cannot",
+    "MCP tools list the commands (saying which can run right now on the named document) and run one; a run is one undo step, shown by a test and by one Command Z in the probe after an agent step",
+    "A coverage test lists every menu and right-click row and fails for each one with no command name, with an explicit left-out list giving the reason for each; the audit gives the count",
+    "The menus look and behave as before: the walks that drive them pass at Next defaults (the audit names them) and Scripts/test.sh passes",
+    "Try path: in Claude Code with the server, on a recording open in the probe, 'list the timeline commands, then cut the clip at 5 seconds'; one Command Z in the app puts it back. Transcript in the audit",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T16:21:48.059Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-19T16:21:57.476Z",
+      "note": "deps: an-agent-can-reach-the-running-app-read-the-open"
+    },
+    {
+      "t": "2026-10-19T16:22:00.768Z",
+      "note": "seq 3980 -> 22"
+    }
+  ]
+}

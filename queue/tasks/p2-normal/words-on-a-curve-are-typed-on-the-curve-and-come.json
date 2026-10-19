@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-18T11:56:45.518Z",
-  "updated": "2026-10-19T12:42:49.117Z",
+  "updated": "2026-10-19T16:22:27.699Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from a-title-s-words-can-follow-a-curved-path (2026-10-18). Today: CanvasTextEditing opens the inline editor in the curve box with the words straight; DocumentRenderer skips reveal pieces when text.onPath != nil and InspectorPanel hides the Reveal section for curved words; TextRasterizer.rasterizeOnPath draws text.fillPaint flat (colorHex). Placement maths is TextOnPathLayout/PathWalk in PhotonzCore; TextRasterizer.pathLetters gives each glyph its place.",
@@ -17,6 +17,8 @@
     "Double-clicking words on a curve puts the caret on the curve and the letters stay on it while typing, as Illustrator types on a path",
     "The Reveal section shows for words on a curve and a letter-at-a-time reveal brings each letter in where it stands on the curve, in the canvas, playback and an export",
     "A colour ramp through the letters runs along the curve instead of being drawn flat",
+    "Clicking any letter of words on a curve picks the words, including letters standing outside the curve's box on the outer side of a bend",
+    "A command in the Layer menu and on the words' right-click (named in the audit) takes the words off the curve again, straight and in their box, as one undo step",
     "A walk at Next defaults proves all three, with a reel",
     "Measured bar: while typing, every letter's centre stays within 2 pt of the curve and turned to it within 5 degrees; half way through a letter-at-a-time reveal, the letters shown are the first half, each within 2 pt of where it stands when whole. Today's version (words drawn straight in a box while typing, and arriving whole) fails both"
   ],
@@ -36,6 +38,10 @@
     {
       "t": "2026-10-19T12:42:49.115Z",
       "note": "seq 300 -> 260"
+    },
+    {
+      "t": "2026-10-19T16:22:27.669Z",
+      "note": "manager pass 2026-10-19: two more rough lines from queue/audits/2026-10-18-text-on-a-path.json fold in here: (1) the selection box is the curve's box, so a letter standing outside it on the outer side of a bend cannot be clicked to pick the words; (2) nothing takes words off a curve again, only Undo does. Both added to the checklist."
     }
   ],
   "walks": [

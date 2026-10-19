@@ -1,0 +1,33 @@
+{
+  "id": "playing-a-five-minute-captioned-recording-never",
+  "title": "Playing a five minute captioned recording never holds the app over 50 ms",
+  "goal": "The video focus promises that on a five minute recording with its captions written, no frame of playback keeps the app busy for more than 50 ms, so a click or key during playback answers at once. Nothing has ever measured that while the video plays. Measure it, fix any frame that holds the app longer, and keep a walk that turns red if it ever comes back.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 35,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T16:22:21.058Z",
+  "updated": "2026-10-19T16:22:37.886Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Third success item of video-beats-premiere in queue/objectives.json. Open thread in the manager reports of 2026-10-15 and 2026-10-16. Checked 2026-10-19: a-long-captioned-recording-walk.json measures the longest pass after key presses (longestUnderMS 80, lines 22-42) and after captions land (150, line 14) but never plays; a-captioned-recording-sits-quiet-walk measures idle busy time (busyUnderMS 400). The step is PlaytestStep.wait(seconds:onTheClock:longestUnderMS:busyUnderMS:) (PhotonzCore/PlaytestScript.swift:2713-2723). Frame lateness while playing is already guarded by playing-a-recording-never-blinks-walk (done tasks a-full-screen-retina-recording-keeps-up-while-it, a-full-screen-recording-keeps-up-as-it-plays-acr); this task is about the main thread, not frame supply.",
+  "acceptance": [
+    "Measured first at Next defaults, no flags changed: open the five minute captioned talk that a-long-captioned-recording-walk uses, write its captions with Add Captions, play 20 seconds from the start and 20 seconds across a cut; the longest single main thread pass and how many passes went over 50 ms go in this task's log",
+    "The walk harness measures main thread passes while the video plays (the clock wait with longestUnderMS may already do it; add what is missing), and a-long-captioned-recording-walk or a new walk in the rotating set fails when any pass during playback goes over 50 ms",
+    "If today's numbers fail, the cause is fixed and the before and after numbers are in the audit; if they already pass, the walk is the deliverable and the audit says so plainly",
+    "playing-a-recording-never-blinks-walk and an-editing-session-walk stay green; Scripts/test.sh passes; a perf note in the commit if the render path changes",
+    "Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T16:22:21.060Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-19T16:22:37.885Z",
+      "note": "seq 22.5 -> 35"
+    }
+  ]
+}
