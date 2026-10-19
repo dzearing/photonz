@@ -8828,8 +8828,10 @@ private final class Run {
                 + "there is \(probe.names.isEmpty ? "none at all, so is the panel on screen?" : probe.names.joined(separator: ", "))")
         }
         let start = handle.reading
-        // Every grab bar grows its area pulled down, the divider under the
-        // Layers pane too (`PanelListsPane`).
+        // `by` is how much taller the area is asked to be: every grab bar
+        // under its area grows it pulled down, the divider under the Layers
+        // pane too (`PanelListsPane`), and the divider OVER the Library's pane
+        // takes it the other way round (`PanelShelfPane`).
         let direction = by < 0 ? "up" : "down"
         func pt(_ value: CGFloat) -> String { "\(Int(value.rounded()))pt" }
         func measurements(_ reading: PanelAreaHandleReading) -> String {
@@ -8883,7 +8885,11 @@ private final class Run {
                                                       contentHeight: after.contentHeight,
                                                       minHeight: after.minHeight,
                                                       maxAllowedHeight: after.maxAllowedHeight)
-        let allowed = by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow)
+        // The Library's pane is never drawn shorter than the room the pick's
+        // sections leave empty, so made smaller into that room it stops at it
+        // (`PanelShelfPane.drawnHeight`).
+        let allowed = max(by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow),
+                          min(after.roomLeft ?? 0, after.maxAllowedHeight))
         guard abs(after.height - allowed) <= 1 else {
             throw Failure(description: "\(area) was \(pt(start.height)) tall, "
                 + "the bar was dragged \(pt(abs(by))) \(direction), "

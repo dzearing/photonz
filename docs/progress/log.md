@@ -21661,3 +21661,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Released v0.18.0 (https://github.com/dzearing/photonz/releases/tag/v0.18.0, latest, Photonz.dmg 23.6 MB). Leads with the microphone fix: the shipped app now carries com.apple.security.device.audio-input (verified on the downloaded DMG: Developer ID, hardened runtime, notarized, Gatekeeper accepted), so recording with sound works in the released app. Also keys and curves, the attached audio row, ripple trim and Join Through Edit, speed stops, title parts and sub-layer rows, the Apple-level title pages, the video Library catalog and charts, the blue measurement look, Layers on top with a draggable divider, Image mode.
 - Full local suite green first try (13,740 tests); Release run 1h12m, first try.
 - The repo is public again: the site's latest download returns content and version.json reads 0.18.0.
+
+## 2026-10-19 — The Library holds still under a click (go loop)
+
+- Right panel (Next): the Library left the foot of the pick's scroller for a pane of its own at the foot of the panel, with a divider over it (`PanelShelfPane`, rules restored from the pre-2026-10-18 pane: holds its starting height, grows into room the pick leaves, held while the pointer is in it and for a double click after a tile is picked, never shorter than its first row of tiles). Layers stays on top. Fixes eight walks the 2026-10-19 sweep found: tiles sliding 6 to 131pt between the clicks of a double click, the Library out of view with a clip or title picked, and the add-a-second-clip guide pointing at nothing.
+- `PanelListsPane.split` now returns the shelf as a third part; a guide asking for the Library before its sample has opened writes the app-wide switch (`setLibraryVisible`).
+- Walks: `library-last-tile-reachable-walk` (new), `library-shelf-height-walk` drags the Library divider; the harness's `dragHandle` honours the room the pick leaves again. UX-PATTERNS gains "A click never moves the control it landed on".
+- Next: user's reaction to `queue/audits/2026-10-19-library-holds-still.json`.

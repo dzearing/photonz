@@ -436,8 +436,13 @@ final class EditorState {
     /// the user, 2026-10-18). Elsewhere it is the app-wide switch, and a
     /// choice in the Sections list that says otherwise is handed back to it,
     /// so the menu always does what it says.
+    ///
+    /// With no document yet the window's mode is not known (a guide asks for
+    /// the shelf while its sample recording is still opening, and the window
+    /// reads as a picture's until it arrives), so the ask goes to the
+    /// app-wide switch, which a picture's window does not read anyway.
     func setLibraryVisible(_ visible: Bool) {
-        if activeWindowMode?.libraryWaitsToBeTurnedOn == true {
+        if hasDocument, activeWindowMode?.libraryWaitsToBeTurnedOn == true {
             if visible {
                 setPanelSection(.library, shown: true)
             } else {
@@ -4711,8 +4716,25 @@ final class EditorState {
     /// through the layer selection so the canvas, the layers list and the
     /// inspector all agree on what is selected.
     func selectLibraryItem(_ id: String?) {
+        if id != nil { shelfPickedAt = ProcessInfo.processInfo.systemUptime }
         selectLayer(nil)             // ...which clears any tile in its didSet
         selectedLibraryItemID = id   // ...so this is the only thing selected
+    }
+
+    /// When a Library tile was last picked, so the shelf's pane can hold
+    /// still for a double click (`shelfHoldsStill`). Not observed: the panel
+    /// reads it in the pass the pick redraws anyway.
+    @ObservationIgnored private var shelfPickedAt: TimeInterval = -.infinity
+
+    /// How long the shelf holds still after a tile is picked: a double click,
+    /// and a little more for the hand.
+    static var shelfHoldSeconds: TimeInterval { NSEvent.doubleClickInterval + 0.15 }
+
+    /// Whether a tile was picked a double click ago or less. Picking a tile
+    /// lets go of the picked layer, and the sections that leave the panel
+    /// with it must not move the shelf the second click is about to land on.
+    var shelfHoldsStill: Bool {
+        ProcessInfo.processInfo.systemUptime - shelfPickedAt < Self.shelfHoldSeconds
     }
 
     /// Puts the picked Library picture into the open document as a new layer,

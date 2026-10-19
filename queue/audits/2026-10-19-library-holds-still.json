@@ -1,0 +1,27 @@
+{
+  "feature": "The Library holds still under a click",
+  "epic": "video-editing",
+  "summary": "The Library now sits in a pane of its own at the foot of the right panel, under Layers and whatever is picked. A double click on any tile adds it, because nothing the first click changes moves the tile, and the shelf stays on screen however tall the picked thing's sections are.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default. Open the tutorial sample recording on a laptop sized window.",
+  "switched": {},
+  "try": [
+    { "do": "Choose View > Library, then press Catalog and the Title Pages chip.", "shot": "2026-10-19-library-holds-still-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Double click Keynote Section. It lands at the playhead and its title is picked." },
+    { "do": "Press the Backgrounds chip, scroll the shelf to Grid Horizon and double click it.", "shot": "2026-10-19-library-holds-still-2.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the divider over the Library up and down; double click it to put it back." },
+    { "do": "In a picture, start the tutorial The Library from the Help menu and drop the Fill colour on the shelf, naming it Brand.", "shot": "2026-10-19-library-holds-still-3.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Start the tutorial Add a second clip from the Help menu: its first card rings the Library." }
+  ],
+  "evaluate": [
+    "Does every double click on a tile add it the first time, with or without a clip or title picked?",
+    "Is the Library tall enough on your laptop window when it first opens, or do you reach for the divider straight away?",
+    "With a title picked, do you miss its sections being taller now that the Library keeps its own room at the foot?",
+    "Does the divider over the Library read as the same thing as the one under Layers?"
+  ],
+  "rough": [
+    "With Layers, a picked layer and the Library all showing in a short window, the picked layer's sections get what is left, down to one header, so the shelf's first row of tiles is never cut. The Library's place at the foot in a pane that keeps its height is your card answer of 2026-10-13 (the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit, option b); Layers on top is your word of 2026-10-18.",
+    "The Library pane starts at 40 per cent of the room under Layers, or what its first row of tiles needs, rather than the mock's 104 to 140pt Library group: a shorter shelf cuts its tiles' names off (your card answer of 2026-10-13, the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit).",
+    "On a video the clip's sections, Captions and Transitions share the scrolling part above the Library, so on a laptop window the Transitions grid sits below the fold until you scroll; where Captions and Transitions belong is the open task on-a-video-captions-and-transitions-sit-where-th.",
+    "The Library's divider is held still while the pointer is over the shelf and for a double click after a tile is picked, then settles; a slow second click after that can still find the shelf a little taller or shorter."
+  ]
+}

@@ -85,10 +85,10 @@
       "name": "shelf-3-back"
     },
     {
-      "comment": "The shelf sits last, under the divider, with its own grab bar: pulled up it caps short of its rows and scrolls on its own.",
+      "comment": "The shelf sits last, in a pane of its own with a divider over it: made smaller, it still runs to the panel's foot, caps short of its rows and scrolls on its own; it is never drawn shorter than the room the sections above leave.",
       "do": "dragHandle",
       "area": "Library",
-      "by": -60
+      "by": -30
     },
     {
       "do": "wait",
@@ -97,7 +97,7 @@
     {
       "do": "describe",
       "stage": "4-capped",
-      "note": "the shelf's grab bar pulled up: it caps short of its rows and scrolls on its own"
+      "note": "the Library's divider asked for a smaller shelf: the shelf still runs to the panel's foot and scrolls its rows on its own"
     },
     {
       "do": "snapshot",
@@ -115,7 +115,7 @@
     {
       "do": "describe",
       "stage": "5-restored",
-      "note": "pulling the grab bar back down gives the shelf its rows again"
+      "note": "the divider asked for a taller shelf: it grows to show more of its rows, up to what the panel can spare"
     },
     {
       "do": "snapshot",

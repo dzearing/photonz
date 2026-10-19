@@ -1,0 +1,163 @@
+{
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording",
+      "comment": "Every tile in the catalog can be reached and added on a laptop window with a recording's Time, Captions and Transitions showing: the Library sits in a pane of its own at the foot of the panel, its shelf scrolls on its own, and a double click on a tile lands on that tile twice. Here the last tile of Backgrounds, scrolled to, with a title picked so the sections above the shelf are as tall as they get."
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "View > Library, the way a person turns the shelf on.",
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionHeaderInView",
+      "value": "Library",
+      "timeout": 4
+    },
+    {
+      "do": "press",
+      "control": "Catalog"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Title Pages"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "A title on the timeline, picked: its sections fill the part above the shelf.",
+      "do": "press",
+      "control": "Keynote Section",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "count": 1
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionHeaderInView",
+      "value": "Library",
+      "timeout": 4
+    },
+    {
+      "comment": "All of it: every kind, a group each, the backgrounds near the foot.",
+      "do": "press",
+      "control": "All"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-all-with-a-title-picked",
+      "note": "A title picked on a recording: Time, Captions, Transitions and the title's own sections above, the Library in its own pane at the foot with the whole catalog in it"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-all-with-a-title-picked"
+    },
+    {
+      "comment": "Backgrounds, the kind with the deepest shelf of tiles after the titles, picked by the pointer.",
+      "do": "press",
+      "control": "Backgrounds"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Aurora",
+      "present": true
+    },
+    {
+      "comment": "Scrolled down the shelf the way a hand does, from its first tile: the tiles are built as they come near.",
+      "do": "scrollPanel",
+      "row": "Aurora",
+      "by": -600
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Grid Horizon"
+    },
+    {
+      "comment": "THE TEST: the last background, near the very foot of the catalog, scrolled to and double clicked. The press step fails if the tile moves between the two clicks.",
+      "do": "press",
+      "control": "Grid Horizon",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Grid Horizon",
+      "count": 1
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionHeaderInView",
+      "value": "Library",
+      "timeout": 4
+    },
+    {
+      "do": "describe",
+      "stage": "2-deepest-tile-added",
+      "note": "Grid Horizon, the last background, scrolled to on the shelf and double clicked, is on the timeline, and the Library is still on screen"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-deepest-tile-added"
+    }
+  ]
+}

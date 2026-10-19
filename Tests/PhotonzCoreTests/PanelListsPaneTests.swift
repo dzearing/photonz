@@ -12,31 +12,39 @@ struct PanelListsPaneTests {
 
     // MARK: Which section goes where
 
-    @Test("A rectangle picked: Layers on top, its sections below, the Library last")
+    @Test("A rectangle picked: Layers on top, its sections below, the Library in its own pane last")
     func rectangleSplits() {
         let split = PanelListsPane.split(["layers", "color", "effects", "motion", "library"])
         #expect(split.lists == ["layers"])
-        #expect(split.below == ["color", "effects", "motion", "library"])
+        #expect(split.below == ["color", "effects", "motion"])
+        #expect(split.shelf == ["library"])
     }
 
     @Test("Layers comes first and Measurements second, whatever order the dock had them in")
     func layersThenMeasurements() {
         let split = PanelListsPane.split(["measureTool", "measurements", "color", "layers", "library"])
         #expect(split.lists == ["layers", "measurements"])
-        #expect(split.below == ["measureTool", "color", "library"])
+        #expect(split.below == ["measureTool", "color"])
+        #expect(split.shelf == ["library"])
     }
 
-    @Test("The Library is last below, even when the dock order had it higher")
+    /// A click on a tile picks it, and picking brings the tile's own section.
+    /// Drawn above the shelf in one scroller, that section pushed every tile
+    /// 110pt down between the two clicks of a double click (2026-10-19). With
+    /// the shelf in its own pane, the section stays with the pick.
+    @Test("The Library is in its own part however high the dock had it, its picked tile's section with the pick")
     func libraryIsLast() {
         let split = PanelListsPane.split(["layers", "library", "libraryItem", "color", "effects"])
-        #expect(split.below == ["libraryItem", "color", "effects", "library"])
+        #expect(split.below == ["libraryItem", "color", "effects"])
+        #expect(split.shelf == ["library"])
     }
 
-    @Test("On a video the timeline is the layer list: nothing on top, the Library after the pick")
+    @Test("On a video the timeline is the layer list: nothing on top, the Library under the pick")
     func videoHasNoPaneOnTop() {
         let split = PanelListsPane.split(["keys", "speed", "color", "captions", "transitions", "library"])
         #expect(split.lists.isEmpty)
-        #expect(split.below == ["keys", "speed", "color", "captions", "transitions", "library"])
+        #expect(split.below == ["keys", "speed", "color", "captions", "transitions"])
+        #expect(split.shelf == ["library"])
     }
 
     @Test("Nothing picked: Layers on top and nothing below")
@@ -44,6 +52,7 @@ struct PanelListsPaneTests {
         let split = PanelListsPane.split(["layers"])
         #expect(split.lists == ["layers"])
         #expect(split.below.isEmpty)
+        #expect(split.shelf.isEmpty)
     }
 
     // MARK: How tall the pane on top is drawn

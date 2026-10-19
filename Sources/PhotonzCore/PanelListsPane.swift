@@ -8,7 +8,7 @@ import CoreGraphics
 /// sits in a pane at the top, and Measurements under it when the document has
 /// any. A divider the person can see and drag sits under that pane. Below it
 /// the picked thing's sections scroll, and the Library, when it is shown at
-/// all, comes last. This reverses the 2026-10-13 card answer "Pick on top,
+/// all, comes last, in a pane of its own at the foot (`PanelShelfPane`). This reverses the 2026-10-13 card answer "Pick on top,
 /// lists in a pane at the bottom" by the user's later word.
 ///
 /// There are no empty bands. The pane is the height the divider was left at,
@@ -30,7 +30,8 @@ public enum PanelListsPane {
     public static var listSections: Set<String> { Set(listOrder) }
 
     /// The shelf. A list too, but a thing you go and fetch from rather than
-    /// the document's own tree, so it comes last, under the pick.
+    /// the document's own tree, so it comes last, under the pick, in its own
+    /// pane so a click in it never moves it (`PanelShelfPane`).
     public static let shelfSection = "library"
 
     /// How much of the panel the pane takes before anybody has moved the
@@ -45,13 +46,15 @@ public enum PanelListsPane {
     /// to show.
     public static let belowFloor: CGFloat = 160
 
-    /// The panel's draw order split into the pane on top (Layers, then
-    /// Measurements) and everything below it in the order it came, with the
-    /// Library moved to the end.
-    public static func split(_ order: [String]) -> (lists: [String], below: [String]) {
+    /// The panel's draw order split into its three parts: the pane on top
+    /// (Layers, then Measurements), the pick's sections in the order they
+    /// came, and the shelf in a pane of its own at the foot
+    /// (`PanelShelfPane`). The picked tile's own section is about the pick,
+    /// so it stays with the pick's sections; nothing it does moves the shelf.
+    public static func split(_ order: [String]) -> (lists: [String], below: [String], shelf: [String]) {
         let lists = listOrder.filter(order.contains)
         let below = order.filter { !listSections.contains($0) && $0 != shelfSection }
-        return (lists, order.contains(shelfSection) ? below + [shelfSection] : below)
+        return (lists, below, order.contains(shelfSection) ? [shelfSection] : [])
     }
 
     /// The settings key the divider's height is kept under for one kind of

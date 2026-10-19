@@ -40,6 +40,9 @@ import SwiftUI
     /// Where the part under the divider is seen: the pick's sections and the
     /// Library.
     var belowBand: ClosedRange<CGFloat>?
+    /// Where the Library's own pane at the foot is seen
+    /// (`PanelShelfPane`), nil with no such pane.
+    var shelfBand: ClosedRange<CGFloat>?
     /// Where the scrolling area sits in the WINDOW, so a step that has to put
     /// a pointer on a section can turn a section's frame into a point the
     /// window understands.
@@ -146,6 +149,7 @@ import SwiftUI
     /// lists, the scrolling part under the divider for everything else.
     func band(of section: Section) -> ClosedRange<CGFloat>? {
         if lists.contains(section.id) { return listsBand }
+        if section.id == .library, let shelfBand { return shelfBand }
         if let belowBand { return belowBand }
         return viewportHeight > 0 ? 0...viewportHeight : nil
     }
@@ -181,6 +185,10 @@ import SwiftUI
 
 @MainActor func recordInspectorBelowBand(_ band: ClosedRange<CGFloat>) {
     InspectorLayoutProbe.shared.belowBand = band
+}
+
+@MainActor func recordInspectorShelfPane(_ band: ClosedRange<CGFloat>?) {
+    InspectorLayoutProbe.shared.shelfBand = band
 }
 
 @MainActor func recordInspectorListsPane(_ lists: [InspectorSectionID], band: ClosedRange<CGFloat>?) {
@@ -234,6 +242,7 @@ extension View {
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {}
 @MainActor func recordInspectorBelowBand(_ band: ClosedRange<CGFloat>) {}
 @MainActor func recordInspectorListsPane(_ lists: [InspectorSectionID], band: ClosedRange<CGFloat>?) {}
+@MainActor func recordInspectorShelfPane(_ band: ClosedRange<CGFloat>?) {}
 @MainActor func recordInspectorCarrying(_ title: String?) {}
 @MainActor func recordEffectReveal(_ id: String, frame: CGRect,
                                    room: CGFloat, action: DockReveal.Action) {}

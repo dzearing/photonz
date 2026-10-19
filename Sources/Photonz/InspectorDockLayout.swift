@@ -495,6 +495,11 @@ struct DockBudgetScratch: Equatable {
     /// and where it sits in the panel, for a walk.
     var drawnPaneHeight: CGFloat?
     var paneBand: ClosedRange<CGFloat>?
+    /// For the Library's pane at the foot (`PanelShelfPane`): the height it
+    /// is held at while the pointer is inside it, nil when it is not, and the
+    /// height it would be drawn at if nothing held it.
+    var heldWhilePointerInside: CGFloat?
+    var unheldPaneHeight: CGFloat?
     /// A reveal in this scroller only brings a section's header into view
     /// rather than all of it: true for the pane of lists.
     var revealsHeaderOnly = false
