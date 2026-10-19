@@ -2,6 +2,42 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.18.0 — 2026-10-19
+
+**Recording with sound works in the downloaded app.** In 0.17.0, macOS turned down the microphone for Photonz without ever asking, and the app never showed up under Privacy & Security > Microphone. That meant the released app could not record your voice at all. Now the first recording with the microphone on brings up the usual macOS prompt. Allow it once and your voice is recorded from then on.
+
+**Keys you can see, pick and type.** Every key dot is picked with one click, and Backspace deletes it. Clicking a key opens a small popover just above it where you type that key's exact value, with a Reset at the bottom. A layer's track lists only the values that are actually animated. Once a layer has keys, any change you make to it keys itself. Pick a row by its name and drag the layer on the canvas, and the whole animation moves together. Width and height in the Info popover now keep their proportion, and a chain link turns that off.
+
+**Curves you shape segment by segment.** On the value graph, a click picks a point or the stretch between two points. Command-click adds a point without changing the line's shape, and a plain click never adds one. Each segment has its own curve, set from its right-click menu or from Easing in the timeline bar, which also handles a mix of picked points and segments together. Option and the scroll wheel zoom the graph's values, and a double click fits them again. Camera keys now ease in and out like every other key.
+
+**Sound stays with its picture.** A recording's own sound sits on a row just under its video and is joined to it, so adding, deleting or reordering tracks never pulls the two apart. Detach Audio moves the sound to an Audio track, and Re-attach brings it back. A sound clip opens a menu when you right-click it. Its volume line follows the same rules as the value graph: click to pick, Command-click to add, a curve for each segment, and a separate menu for each part.
+
+**Ripple trim and Join Through Edit.** Hold Command while you drag a clip's edge and everything after it follows, so no gap opens. A cut that took nothing out joins back into one piece with Join Through Edit. Copy a transition from one cut and paste it onto others, or onto every cut inside a range. A cut with no spare frames offers to shorten itself so a dissolve fits. Option E opens a cut into its two clips on their own rows, showing exactly where both are on screen during the overlap.
+
+**Speed that changes across a clip.** Add Speed Stops to a clip and its speed can ramp or hold between them. The speed curve shows under the clip, and you can drag its stops along and up and down while you watch the picture. A stop can become a freeze that holds its frame for as long as you like, and cutting a clip inside a freeze splits the hold between the two halves.
+
+**More timeline editing.** Freeze Frame now asks how long the freeze should be and only holds that clip's track, unless you tick Freeze every track. Clean Noise and Hide Picture work on just one stretch of a clip, and a cleaned stretch eases in and out with no click at its edges. Right-click menus on the timeline are short and laid out the same way everywhere. A right-click never moves the playhead, and scrolling along time stays smooth.
+
+**Titles with parts you can time.** Open a title on the timeline and Background, Headline, Subtitle and each other part gets its own row. Drag a row's ends to change when that part comes in and goes out. Anything made of parts, like a group, a name card or a component, opens into rows the same way the Layers list does. Double-click a title page while a recording is picked and the page goes right before the clip on the same track, joined by a real cross dissolve you can change, shorten or remove.
+
+**Title pages that look like Apple made them.** Ten new title pages lead the shelf, each with careful type, calm colour and gentle motion. The older styles now sit under More Styles and have been toned down: one move per part, slower and quieter backgrounds, lighter headlines. Title text can have tracking, leading, the New York typeface and a gradient that sweeps through the words. Put Text on a Path lays a title's words along a curve you draw with the Pen, and you can animate them along it.
+
+**A Library built for video, with charts.** In a video, the Library is a catalog grouped by kind: title pages, name cards, moving backgrounds, transitions, charts and your own media, all searchable. A moving background lands full frame with a double click or a drag. Six animated charts drop straight into a video: bars that grow, lines that draw, donuts that sweep and numbers that count up. You edit their data in the panel or paste it from a spreadsheet.
+
+**Logos and pictures in a video.** PNG, JPEG, HEIC and SVG files come in through Import Media or a drop, just like footage. An SVG logo stays sharp at any size, even blown up on a 4K frame. Titles land on tracks named Title and pictures on tracks named Gfx, each with its own icon.
+
+**Measuring in one blue.** Size, Gap and Distance now share one look, blue by default, and whatever colour you change one to, the next measurement of any kind starts with it. Gap measures the space the pointer is actually in, reading lines of text as whole lines. After a Size or Gap click, Measure stays in your hand so the next click measures the next thing. A picked Size measurement resizes by the box it measures, and a copied measurement is named for what it measures. A zoom callout tints the band between its two lines.
+
+**A panel that reads top to bottom, and windows that know what they hold.** Layers sit at the top of the panel above a divider you can drag (double-click it to reset). Whatever you picked comes next, and the Library comes last. Pictures leave the Library off until you turn it on, and the panel uses plain switches. A picture opens in Image mode and is offered only the modes that fit it, while a video needs no mode at all.
+
+**Icons and shapes.** Inside an icon, shapes snap to whole units, keylines, edges and centres, and a small readout names the spot. Hold Option to draw a box or circle out from its centre. Adding Rotation to a ring or arc makes it spin, and the timing strip says how long one turn takes. Copy SVG puts an icon's code on the clipboard as text you can paste into a code editor. A recent document's card offers Copy.
+
+**Colour grade a clip.** Color Grade is now in Add Effect, with Temperature, Tint, Exposure, Contrast and Saturation. Each one is a slider you can key, and it starts on a warm grade.
+
+**Next is where all of this lives.** Open Experiments from the app menu to switch between Current and Next. Both ship in the same app, so there is nothing extra to install, and switching takes a relaunch. The microphone fix applies to both.
+
+**Fixes worth naming.** Finishing a typed title and keying a value on a video no longer make the app pause. Picking a title no longer makes the picture jump in size. Command E on a video keeps the clip. A recording that opens straight into Edit fits above the tool bar and the timeline. A lower third's caption plate keeps its gradient when you change its colour. Words that move into a title are never cut off at their box. A moved layer stays under whatever covers it for the whole drag. On small layers or layers turned in 3D, a press lands on what you aimed at.
+
 ## 0.17.0 — 2026-10-13
 
 **Layers can turn in depth.** Any layer can now tilt, flip and move nearer or further away, seen through a camera with real perspective. Pick a layer and its 3D grippers are already on it: a flat arc swings it, a tall arc tips it, and an arrow off its pivot pushes it into the distance. Hold Shift to step by 15 degrees, and a small label shows the value as you drag. The same values sit in the panel, and older documents open exactly as they were.
