@@ -96,7 +96,11 @@ struct ClipPiecesBar: View {
     /// a grip you cannot help but hit is worse than no grip at all.
     private static let smallestGrabbablePiece: CGFloat = 14
 
-    var body: some View {
+    // A pass late for an edit marked to catch up next pass
+    // (`readingALatePass`), exactly as before for every other.
+    var body: some View { readingALatePass { lateBody } }
+
+    private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.clipBar)
         #endif

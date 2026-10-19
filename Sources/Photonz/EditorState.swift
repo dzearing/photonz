@@ -28,6 +28,7 @@ final class EditorState {
             let has = history != nil
             if hasDocument != has { hasDocument = has }
             noteWhatTheLookRowsSee()
+            noteWhatTheMenuSees()
         }
     }
     /// Moves on only when the document changes in a way the panel's look
@@ -37,6 +38,18 @@ final class EditorState {
     private(set) var lookRowsRevision = 0
     /// The document `lookRowsRevision` last answered for.
     @ObservationIgnored private var lookRowsSaw: PhotonzDocument?
+    /// Set for the pass of an edit marked by `catchUpOnTheNextPass`.
+    @ObservationIgnored private var followsAPassLater = false
+    /// True in the pass of an edit marked by `catchUpOnTheNextPass`.
+    var isCatchingUpOnTheNextPass: Bool { followsAPassLater }
+    /// A change the look sections could show came in that pass.
+    @ObservationIgnored private var lookRowsOwed = false
+    /// Moves on with every change to the document, a pass late for an edit
+    /// marked by `catchUpOnTheNextPass`. What a read inside
+    /// `readingALatePass` watches instead of the document.
+    private(set) var latePassRevision = 0
+    /// True while `readingALatePass` runs.
+    static var readsALatePass = false
     /// Which pictures in the document are one flat colour, by bitmap id, with
     /// the bitmap each answer was read off (`flatColorsRemembered`). Copy
     /// SVG's menu rows ask on every redraw, and a blank canvas is only known
@@ -49,13 +62,41 @@ final class EditorState {
 
     private func noteWhatTheLookRowsSee() {
         let now = history?.current
+        let later = followsAPassLater
         switch (lookRowsSaw, now) {
         case (nil, nil): return
         case let (saw?, now?) where saw.sameApartFromPlacementKeys(now): break
-        default: lookRowsRevision &+= 1
+        default:
+            if later { lookRowsOwed = true } else { lookRowsRevision &+= 1 }
         }
         lookRowsSaw = now
+        if !later { latePassRevision &+= 1 }
     }
+
+    /// Every change to the document in this pass reaches the panel's look
+    /// sections and whatever reads inside `readingALatePass` (the timeline's
+    /// tracks) in the next pass (`NextRunLoopPass`), along with a pick made
+    /// then. For an edit that hands the pick to something new a pass after it
+    /// lands: what is built for the edit would be built again for the pick a
+    /// frame later, so the edit's own frame draws the picture and the rest
+    /// follows in the next. Finishing a new title on a video redrew the
+    /// clip's Time, Captions and Transitions sections and every track row in
+    /// Command Return's own pass (`an-editing-session-walk`, 2026-10-18).
+    func catchUpOnTheNextPass() {
+        guard !followsAPassLater else { return }
+        followsAPassLater = true
+        Task { @MainActor [weak self] in
+            await NextRunLoopPass.start()
+            guard let self else { return }
+            self.followsAPassLater = false
+            if self.lookRowsOwed {
+                self.lookRowsOwed = false
+                self.lookRowsRevision &+= 1
+            }
+            self.latePassRevision &+= 1
+        }
+    }
+
     /// Whether a document is open, changing only when that answer does. The
     /// window's shell asks this in a dozen places; asking `document != nil`
     /// instead made every edit (a mark, a nudge) re-run the whole editor
@@ -1613,6 +1654,11 @@ final class EditorState {
     /// one of those answers changes (`EditorState+MenuPlayhead`).
     var menuPlayhead = MenuPlayhead()
     @ObservationIgnored var watchesMenuPlayhead = false
+    /// What the menu bar watches instead of the document while its body is
+    /// built, moving on in the pass after the document does
+    /// (`noteWhatTheMenuSees`).
+    var menuDocumentRevision = 0
+    @ObservationIgnored var menuDocumentCatchUpAsked = false
     /// Whether the document is playing.
     var isDocumentPlaying = false
     /// True while this window holds a recording opened the moment it was
@@ -2171,10 +2217,28 @@ final class EditorState {
             _ = lookRowsRevision
             return _history?.current
         }
+        if Self.readsALatePass {
+            _ = latePassRevision
+            return _history?.current
+        }
+        // The menu bar reads the document as it is, and is told it changed
+        // a pass later (`EditorState+MenuPlayhead`, `menuDocumentRevision`).
+        if Self.readingForTheMenu {
+            _ = menuDocumentRevision
+            return _history?.current
+        }
         return history?.current
     }
-    var canUndo: Bool { history?.canUndo ?? false }
-    var canRedo: Bool { history?.canRedo ?? false }
+    /// The undo history, read without being watched while the menu bar's
+    /// body is built (it watches `menuDocumentRevision` then,
+    /// `EditorState+MenuPlayhead`), and watched everywhere else.
+    private var menuReadsHistory: History? {
+        guard Self.readingForTheMenu else { return history }
+        _ = menuDocumentRevision
+        return _history
+    }
+    var canUndo: Bool { menuReadsHistory?.canUndo ?? false }
+    var canRedo: Bool { menuReadsHistory?.canRedo ?? false }
 
     /// The .photonz package backing this document; nil until first save (or
     /// always, for plain-image documents the user hasn't saved as a package).

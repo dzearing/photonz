@@ -401,10 +401,32 @@ extension EditorState {
                 layer.time = span
             }
             let placing = placesDrawingsInTime
+            let handsBackLater = documentHasTime && Experiments.shared.panelBuildsWhatYouSeeEnabled
+            if handsBackLater { catchUpOnTheNextPass() }
             perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing) }
             // Re-editing existing text already runs with Select active, so only
             // the new-block path hands the editor back.
-            finishCreating(layer.id)
+            //
+            // A pass later (`NextRunLoopPass`), so the words landing and the
+            // editor picking them up are drawn in two frames rather than one.
+            // On a video the new block also brings a Title track into the
+            // timeline, and the pick redraws the timeline's bars, the canvas's
+            // handles and the panel on top of that: in one pass Command
+            // Return held the window 55 to 78 ms (`an-editing-session-walk`,
+            // 2026-10-18). With the pick, the tracks, the panel's sections and
+            // the menu bar following a pass later (`catchUpOnTheNextPass`,
+            // `noteWhatTheMenuSees`) the commit's own pass is 32 to 45 ms.
+            // Next's videos only, with the rest of building in pieces
+            // (`next-panel-builds-what-you-see`).
+            if handsBackLater {
+                let id = layer.id
+                Task { @MainActor [weak self] in
+                    await NextRunLoopPass.start()
+                    self?.finishCreating(id)
+                }
+            } else {
+                finishCreating(layer.id)
+            }
         }
     }
 

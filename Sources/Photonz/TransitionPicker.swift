@@ -55,7 +55,13 @@ struct TransitionPicker: View {
         let isOn = cut?.transition?.kind == kind
         let isDefault = editorState.defaultTransitionKind == kind
         Button {
-            editorState.setTransition(kind, at: place)
+            // The cut wears it in the click's frame, and the pick of the
+            // cut, the timeline's tracks, the panel's sections and the menu
+            // bar catch up in the next: in one pass the click held the window
+            // 47 to 63 ms (`an-editing-session-walk`, 2026-10-18).
+            let later = Experiments.shared.panelBuildsWhatYouSeeEnabled
+            if later { editorState.catchUpOnTheNextPass() }
+            editorState.setTransition(kind, at: place, picksLater: later)
             editorState.closeTransitionPicker()
         } label: {
             VideoKit.Tile(name: kind.title,

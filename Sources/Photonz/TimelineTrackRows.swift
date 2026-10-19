@@ -40,7 +40,11 @@ struct TimelineTrackRow: View {
 
     private var track: DocumentTrack { row.track }
 
-    var body: some View {
+    // A pass late for an edit marked to catch up next pass
+    // (`readingALatePass`), exactly as before for every other.
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.trackRow)
         #endif
@@ -49,7 +53,7 @@ struct TimelineTrackRow: View {
                 header
                 // The lane follows the timeline's window and the header does
                 // not, so a scroll along time redraws the lane alone.
-                DrawnOnItsOwn { lane }
+                DrawnOnItsOwn { readingALatePass { lane } }
             }
             .frame(height: laneHeight)
             .playtestField("Track \(track.name)")

@@ -21631,3 +21631,12 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Measured against the mock: `TitleCalmMockTests` (gated, `PHOTONZ_REEL=1`) draws each page beside the mock's own frames at 0/25/50/100% of the in and the hold: mean difference 0.2 to 2.8 of 255 for nine; Editorial 5.6 because the Mac draws New York at 128pt in its headline cut (CoreText already picks the optical size from the type size; the mock's browser used a smaller cut). Reel and sheet in `queue/audits/2026-10-18-apple-titles-*`.
 - Fixed on the way: re-wording a title's words no longer adds an auto-contrast halo to words that had none (`commitTextEdit`), which the relayout then grew into the title's two big shadows.
 - Open: approval card `title-pages-that-look-like-apple-designed-them-the-ten-title-pages-are-built-fr` (Editorial's serif cut); the old set's toning down is `the-existing-title-pages-are-toned-down-to-calm`.
+
+## 2026-10-18 — finishing a title and picking a dissolve inside 50 ms (go loop)
+
+- Command Return on a new title over a video, and the transition picker's tiles, mark their pass (`EditorState.catchUpOnTheNextPass`): the picture changes in the click's frame, and the timeline's track rows, the panel's sections and the pick follow in the next (`readingALatePass`, `LateTrackRows`, `setTransition(picksLater:)`).
+- On Next the menu bar follows document edits a pass late (`menuDocumentRevision`), as it already followed the playhead.
+- A title's effect panes arrive one piece per pass, three passes per effect.
+- an-editing-session-walk, three runs: tile 35-41 ms, wait after Command Return 42-44 ms; claims tightened to 50 ms.
+- Gotcha: `DispatchQueue.main.async` runs in the same run-loop pass; `NextRunLoopPass` is the only real "next frame".
+- Next: the ~35 ms whole-window update floor on any click is where further time is.

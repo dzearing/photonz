@@ -350,7 +350,9 @@ struct InspectorPanel: View {
         // this pass. They are the same list except in the pass right after a
         // click that brings new sections in, when the canvas gets the frame to
         // itself and the panel follows in the next one.
-        let wanted = orderedAvailableSections
+        // A section an edit marked to catch up next pass brings arrives
+        // then (`readingALatePass`).
+        let wanted = readingALatePass { orderedAvailableSections }
         // Sliding in with Edit mode, the dock waits its turn (`EditModeArrival`).
         let sections = arrivals.showing(wanted) {
             !editorState.editArrival.panelMayFill || editorState.secondsUntilTheSlideLands > 0

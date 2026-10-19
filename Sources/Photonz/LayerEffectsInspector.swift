@@ -104,6 +104,14 @@ struct ShadowInspector: View {
     /// you add to; the Shadow section of the old panel only ever means the
     /// first one.
     var index = 0
+    /// Distance, Direction and Opacity built a pass after the rows above
+    /// them (`PanelRowsArrival`). Each slider row is a track and a typing box
+    /// of AppKit's, about ten milliseconds to build and as much again for
+    /// SwiftUI's accessibility pass over it the frame after, so a shadow's
+    /// five in one pass held the window 50 ms (`an-editing-session-walk`,
+    /// 2026-10-18). The Effects list asks for it; the shadow on its own does
+    /// not.
+    var lowerRowsArrive = false
 
     var body: some View {
         readingForTheLookRows { lookBody }
@@ -216,28 +224,43 @@ struct ShadowInspector: View {
                                  range: 0...80) { style, v in
                     style.updateShadow(at: at) { $0.spread = CGFloat(v) }
                 }
-                LayerStyleSlider(layerIDs: ids, label: "Distance",
-                                 reading: shadows.number { $0.shadow(at: at)?.distance ?? 0 },
-                                 range: 0...40) { style, v in
-                    // Each layer keeps the way its own shadow points; only how
-                    // far it is thrown is set from here.
-                    style.updateShadow(at: at) { $0.setDistance(CGFloat(v)) }
+                if lowerRowsArrive {
+                    PanelRowsArrival(after: 1, remembering: "shadow \(at) lower rows",
+                                     waitsForReach: false) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            lowerRows(shadows, ids: ids, at: at)
+                        }
+                    }
+                } else {
+                    lowerRows(shadows, ids: ids, at: at)
                 }
-                LayerStyleSlider(layerIDs: ids, label: "Direction",
-                                 reading: shadows.number { $0.shadow(at: at)?.directionDegrees ?? 90 },
-                                 range: 0...360, typing: .degrees) { style, v in
-                    style.updateShadow(at: at) { $0.setDirectionDegrees(CGFloat(v)) }
-                }
-                LayerStyleSlider(layerIDs: ids, label: "Opacity",
-                                 reading: shadows.reading { $0.shadow(at: at)?.opacity ?? 0 },
-                                 range: 0...1, typing: .percent) { style, v in
-                    style.updateShadow(at: at) { $0.opacity = v }
-                }
-                SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows, at: at) : nil])
             }
         }
         .padding(.horizontal, inset ? 14 : 0)
         .padding(.vertical, inset ? 8 : 0)
+    }
+
+    /// Distance, Direction and Opacity, and the note under them.
+    @ViewBuilder private func lowerRows(_ shadows: LayerStyleSelection, ids: [UUID],
+                                        at: Int) -> some View {
+        LayerStyleSlider(layerIDs: ids, label: "Distance",
+                         reading: shadows.number { $0.shadow(at: at)?.distance ?? 0 },
+                         range: 0...40) { style, v in
+            // Each layer keeps the way its own shadow points; only how
+            // far it is thrown is set from here.
+            style.updateShadow(at: at) { $0.setDistance(CGFloat(v)) }
+        }
+        LayerStyleSlider(layerIDs: ids, label: "Direction",
+                         reading: shadows.number { $0.shadow(at: at)?.directionDegrees ?? 90 },
+                         range: 0...360, typing: .degrees) { style, v in
+            style.updateShadow(at: at) { $0.setDirectionDegrees(CGFloat(v)) }
+        }
+        LayerStyleSlider(layerIDs: ids, label: "Opacity",
+                         reading: shadows.reading { $0.shadow(at: at)?.opacity ?? 0 },
+                         range: 0...1, typing: .percent) { style, v in
+            style.updateShadow(at: at) { $0.opacity = v }
+        }
+        SelectionStyleNotes(notes: [showsColor ? shadowColorNote(shadows, at: at) : nil])
     }
 
     /// Said only where this section reaches SOME of the picked layers, which is

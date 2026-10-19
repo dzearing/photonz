@@ -77,6 +77,20 @@ extension MenuPlayhead {
 }
 #endif
 
+// MARK: What the menu bar knows about the document
+//
+// The same goes for the document, a pass late rather than on a boundary.
+// Every edit re-ran the commands body in the edit's own pass, and SwiftUI
+// handed the whole bar back to AppKit with it: about 7 ms of the pass after
+// Command Return finished a typed title on a video, and 10 ms of a click on
+// the Cross dissolve tile (`an-editing-session-walk`, Time Profiler,
+// 2026-10-18). Nobody is looking at the menu bar in that frame. So while the
+// body is built, the document and the undo history are read as they are but
+// not watched, and the body watches `menuDocumentRevision` instead, which
+// moves on in the pass after the document does (`NextRunLoopPass`): the edit is
+// drawn in one frame and the bar catches up in the next. Several edits in one
+// turn are one catch-up.
+
 extension EditorState {
     /// True while the menu bar's commands body is being built: reading the
     /// playhead then is not watched (`documentTimeMS`).
@@ -101,6 +115,20 @@ extension EditorState {
 
     static func endMenuRead() {
         readingForTheMenu = false
+    }
+
+    /// The document changed: the menu bar hears about it in the next pass,
+    /// once however many edits this one makes.
+    func noteWhatTheMenuSees() {
+        // Only where the menu reads unwatched (`beginMenuRead`).
+        guard Experiments.shared.proMenuBarEnabled, !menuDocumentCatchUpAsked else { return }
+        menuDocumentCatchUpAsked = true
+        Task { @MainActor [weak self] in
+            await NextRunLoopPass.start()
+            guard let self else { return }
+            self.menuDocumentCatchUpAsked = false
+            self.menuDocumentRevision &+= 1
+        }
     }
 
     /// Works the answers out, watching everything they read, and does it again

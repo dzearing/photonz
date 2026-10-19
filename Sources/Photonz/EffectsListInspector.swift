@@ -66,7 +66,14 @@ struct EffectsListInspector: View {
                     // Command Return finished a typed title on a video
                     // (`an-editing-session-walk`, 2026-10-16). In pieces, each
                     // pays for its own (`PanelRowsArrival`).
-                    PanelRowsArrival(after: row.index + 1, remembering: "effect \(row.index)",
+                    //
+                    // Each one's settings come a pass after its first rows,
+                    // and a shadow's lower rows a pass after those
+                    // (`EffectRowView`), so the effects are spaced three
+                    // passes apart and no two pieces share a pass: two in one
+                    // held it 43 ms and the accessibility pass over them 51
+                    // more the frame after (2026-10-18).
+                    PanelRowsArrival(after: 3 * row.index + 1, remembering: "effect \(row.index)",
                                      waitsForReach: false) {
                         EffectRowView(row: row,
                                       onExtent: { panes[row.index] = $0 },
@@ -198,6 +205,22 @@ private struct EffectRowView: View {
         // every entry that paints a colour asks for it in the same place, in
         // the same words, with the same saved colours behind it.
         EffectColorRow(row: row)
+        // The rest a pass later. A shadow is eight rows, and built in one
+        // pass it held the window 50 to 56 ms, and SwiftUI's accessibility
+        // and focus pass over the controls it brought held it 45 to 52 more
+        // in the next, after Command Return finished a typed title on a
+        // video, whose title wears two shadows (`an-editing-session-walk`,
+        // 2026-10-18). In two pieces, each pays for half.
+        PanelRowsArrival(after: 1, remembering: "effect \(row.index) settings",
+                         waitsForReach: false) {
+            // The same gap `OwnedSettings` puts between the rows above.
+            VStack(alignment: .leading, spacing: 6) {
+                kindSettings
+            }
+        }
+    }
+
+    @ViewBuilder private var kindSettings: some View {
         switch row.kind {
         case .shadow:
             let index = row.shadowIndex ?? 0
@@ -207,7 +230,8 @@ private struct EffectRowView: View {
             ShadowKindRow(index: index, ids: row.switchIDs)
             // Everything else about the shadow except the tick, which is up on
             // the row, and the colour, which is the row above this one.
-            ShadowInspector(showsSwitch: false, showsColor: false, inset: false, index: index)
+            ShadowInspector(showsSwitch: false, showsColor: false, inset: false, index: index,
+                            lowerRowsArrive: true)
         case .border:
             // On a label, WHAT the ring goes round comes before everything
             // else: it changes what the rest of the settings even describe.

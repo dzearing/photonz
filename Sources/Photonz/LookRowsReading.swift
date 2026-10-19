@@ -2,6 +2,7 @@
 // (task `keying-a-value-redraws-only-what-the-key-changes`).
 
 import PhotonzCore
+import SwiftUI
 
 /// Builds a look section's body so that the document it reads tells it about
 /// a change only when the change is one it could show.
@@ -35,4 +36,26 @@ func readingForTheLookRows<Content>(_ build: () -> Content) -> Content {
     EditorState.readsForTheLookRows = true
     defer { EditorState.readsForTheLookRows = was }
     return build()
+}
+
+/// Reads the document as it is, and is told it changed by
+/// `EditorState.latePassRevision`, which moves on with every change except
+/// that an edit marked by `EditorState.catchUpOnTheNextPass` reaches it in
+/// the next pass (`NextRunLoopPass`). So for every other edit a read in here is
+/// watched exactly as one outside it, and for that one edit what it builds
+/// follows a frame after the picture.
+@MainActor
+func readingALatePass<Content>(_ build: () -> Content) -> Content {
+    let was = EditorState.readsALatePass
+    EditorState.readsALatePass = true
+    defer { EditorState.readsALatePass = was }
+    return build()
+}
+
+/// `readingALatePass` for a view built in a closure SwiftUI runs later (a
+/// `GeometryReader`'s, a `ScrollView`'s), which runs outside the body that
+/// wrapped it.
+@MainActor
+func buildingALatePass<Content: View>(@ViewBuilder _ build: () -> Content) -> Content {
+    readingALatePass(build)
 }

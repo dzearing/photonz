@@ -40,7 +40,11 @@ struct CaptionWordsLane: View {
         .frame(width: TimelineDock.gutter, alignment: .leading)
     }
 
-    var body: some View {
+    // A pass late for an edit marked to catch up next pass
+    // (`readingALatePass`), exactly as before for every other.
+    var body: some View { readingALatePass { lateBody } }
+
+    @ViewBuilder private var lateBody: some View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.wordsLane)
         #endif

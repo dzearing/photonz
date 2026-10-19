@@ -39,6 +39,9 @@ struct TimelineDock: View {
     /// The transport and the timeline's bar, measured: the part of the dock a
     /// drag on its edge never changes.
     @State private var transportHeight: CGFloat = 0
+    /// The tracks as last drawn, for the pass of an edit that catches up on
+    /// the next one (`LateTrackRows`).
+    @State private var lateTrackRows = LateTrackRows()
     @State private var localBarHeight: CGFloat = 0
     /// How tall the tracks' scroller is, so the empty space under the last
     /// track reaches its foot and a box can start anywhere in it.
@@ -388,7 +391,7 @@ struct TimelineDock: View {
         // (`EditModeArrival`); its height is the tracks' own, so nothing moves.
         return Group {
         if editorState.editArrival.showsTimeline {
-        GeometryReader { geo in
+        GeometryReader { geo in buildingALatePass {
             // The rows' scroller lives in the dock's right hand margin, always,
             // so it coming and going never narrows the lanes.
             let laneWidth = max(1, geo.size.width - Self.lanesLeading)
@@ -413,7 +416,11 @@ struct TimelineDock: View {
                             .padding(.top, Self.rowSpacing)
                     }
                     ScrollView(.vertical) {
-                        let order = editorState.timelineTrackRows.map(\.id)
+                        // The tracks a new title brings arrive a frame after
+                        // its words (`readingALatePass`).
+                        let (order, trackRows) = lateTrackRows.read(editorState) {
+                            (editorState.timelineTrackRows.map(\.id), editorState.timelineRows)
+                        }
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
                             let rows = editorState.timelineRowZoom
                             // Edit mode arriving from View draws its rows a
@@ -421,7 +428,7 @@ struct TimelineDock: View {
                             // (`EditModeArrival`).
                             let carry = editorState.trackRowDrag
                             let drawn = editorState.editArrival.showsTrackRows
-                                ? editorState.timelineRows : []
+                                ? trackRows : []
                             // While captions are being written, their stand-in
                             // row stands where the Captions track will land:
                             // under the picture, over the sound.
@@ -557,7 +564,7 @@ struct TimelineDock: View {
                     .frame(height: Self.scrollerStrip, alignment: .bottom)
             }
             .panelReadout(editorState.timelineRowsReading)
-        }
+        } }
         } else {
             Color.clear
         }
@@ -1648,3 +1655,24 @@ private struct TimelinePlayheadLine: View {
     }
 }
 
+
+/// The tracks the timeline last drew, drawn again unchanged in the pass of an
+/// edit marked by `EditorState.catchUpOnTheNextPass`, so a track that edit
+/// brings (a new title's) arrives in the next pass with the rest of the
+/// timeline rather than in the edit's own frame. Reading inside
+/// `readingALatePass` alone does not hold it: the grid is drawn again in
+/// that pass for other reasons too (the text editor closing), and a read
+/// there sees the document as it is.
+@MainActor final class LateTrackRows {
+    private var last: ([UUID], [TimelineRowModel])?
+
+    func read(_ editorState: EditorState,
+              _ fresh: () -> ([UUID], [TimelineRowModel])) -> ([UUID], [TimelineRowModel]) {
+        // Watched in every case, so the pass after brings the tracks round.
+        _ = editorState.latePassRevision
+        if editorState.isCatchingUpOnTheNextPass, let last { return last }
+        let now = readingALatePass(fresh)
+        last = now
+        return now
+    }
+}

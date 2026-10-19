@@ -149,7 +149,11 @@ extension EditorState {
     /// for it, else the usual length. **Clamped here, at the gesture, and
     /// refused by the model**: the surface knows what was meant and can say
     /// what it did; the model never guesses.
-    func setTransition(_ kind: ClipTransitionKind?, at place: TimelineCutPlace) {
+    ///
+    /// `picksLater`: the cut is picked and the playhead goes to it in the
+    /// next pass rather than this one (the picker's tiles, below).
+    func setTransition(_ kind: ClipTransitionKind?, at place: TimelineCutPlace,
+                       picksLater: Bool = false) {
         guard Experiments.shared.transitionsAtACutEnabled,
               let cut = document?.documentCut(at: place)?.cut else { return }
         pauseDocument()
@@ -160,9 +164,26 @@ extension EditorState {
         }
         guard let transition = cut.fitted(kind) else { return }
         perform { $0.setTransition(transition, at: place) }
+        guard picksLater else {
+            goToTheCut(place)
+            return
+        }
+        // A pass later: the transition lands on the cut in the click's frame
+        // and the pick, the playhead and everything they redraw (the panel's
+        // form for the cut, the canvas at the cut) in the next. In one pass a
+        // click on a tile held the window 47 to 63 ms; picking a pass later
+        // took the click's own pass to 38 to 45 (`an-editing-session-walk`,
+        // 2026-10-18).
+        Task { @MainActor [weak self] in
+            await NextRunLoopPass.start()
+            self?.goToTheCut(place)
+        }
+    }
+
+    /// Picks the cut and puts the playhead on it, so the canvas shows what
+    /// was just put on it: both shots at once, or the colour it dips through.
+    private func goToTheCut(_ place: TimelineCutPlace) {
         pickCut(place)
-        // The playhead goes to the cut, so the canvas shows what was just put
-        // on it: both shots at once, or the colour it dips through.
         if let at = document?.documentCut(at: place)?.atMS {
             documentTimeMS = min(max(0, at), lastDocumentTimeMS)
         }

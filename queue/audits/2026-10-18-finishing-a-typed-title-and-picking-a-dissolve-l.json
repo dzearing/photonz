@@ -1,0 +1,28 @@
+{
+  "feature": "Finishing a title and picking a dissolve land inside 50 ms",
+  "epic": "video-beats-premiere",
+  "summary": "Command Return on a typed title over a video and a click on the Cross dissolve tile at a cut now each hold the window under 50 ms, so neither drops a frame you can feel. The picture changes in the click's frame; the timeline, the panel and the menu bar catch up in the next.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording and click Edit." },
+    { "do": "Click the join between two pieces of the recording on V1, then click Cross dissolve in the picker.", "shot": "2026-10-18-dissolve-under-50ms.png" },
+    { "do": "Press T, click on the picture and type a title." },
+    { "do": "Press Command Return.", "shot": "2026-10-18-title-commit-under-50ms.png" },
+    { "do": "Watch the timeline as the title lands: its Title track comes in a frame after the words." },
+    { "do": "Right after either step, open the Edit menu and check Undo names what you just did." }
+  ],
+  "evaluate": [
+    "Does Command Return on a title now feel instant?",
+    "Does the Cross dissolve tile answer the moment you click it?",
+    "Does anything flicker as the Title track, the panel's sections and the title's effects arrive one after another?",
+    "Is the menu bar ever out of date when you reach for it right after an edit?"
+  ],
+  "rough": [
+    "Before and after, an-editing-session-walk, three runs in a row each: longest pass after Command Return 55-64 ms before, 42.5 / 43.7 / 43.9 ms after; Cross dissolve tile 50-63 ms before, 34.9 / 36.3 / 40.7 ms after. The walk's two claims are now 50 ms.",
+    "The worst pass left after Command Return is no longer the commit (now 32-45 ms) but a title's effect panes arriving about 350 ms later, each followed by SwiftUI's accessibility pass over the new controls. It has the least margin of the three.",
+    "The menu bar now follows every document edit a frame late on Next (as it already followed the playhead), so for one frame after an edit a menu row's dimming can be one edit behind.",
+    "Picking a dissolve tile now picks the cut and moves the playhead one frame after the cut wears the transition, so the panel's form for the cut lands a frame after the click.",
+    "The tile's own pass still carries about 35 ms that no single view owns: SwiftUI's whole-window update, layout and accessibility focus after any change at all. Closing the picker without changing anything costs nearly as much as the full pick."
+  ]
+}
