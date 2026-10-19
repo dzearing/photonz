@@ -1,0 +1,36 @@
+{
+  "id": "thickness-in-appearance-makes-a-drawn-line-thick",
+  "title": "Thickness in Appearance makes a drawn line thicker",
+  "goal": "Someone draws a line with the Line tool, picks it, and drags or types a bigger Thickness in Appearance. The line on the canvas gets thicker as they drag and stays that way, and Command Z puts it back. Today the user reports nothing happens to the line.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-19T15:37:19.101Z",
+  "updated": "2026-10-19T15:37:24.595Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user's words (2026-10-19, intake): 'i draw a line. I make the line thicker in the appearance settings. does not affect it.' Not said: picture or video document, drag or typed number, whether the number moved.\n\nNOT reproduced in intake; the model path looks right on paper, so reproduce before believing any of these suspects:\n- Appearance's Thickness for a part is ShapePartSettings.swift:118 (ShapeSlider reach .partThickness(row.id), preview/commit go to EditorState.previewOutlineWidth / commitOutlineWidth, EditorState+Annotations.swift:830 and :846). The non-parts row is AnnotationInspector.swift:99. Both call PhotonzDocument.setOutlineWidth (Sources/PhotonzCore/OutlineWidth.swift:99), which skips any layer without hasOutlineThickness (a .line annotation has it, :125). Suspect 1: the ids the slider passes ($0, from partRowReach in PanelReach.swift:57) are not the line's id, so outlineWidthTargets comes back empty and nothing is written. Check what partRowReach returns for a line's part row.\n- Suspect 2: the write lands but the renderer draws a line from a different field than Layer.setOutlineWidth writes (an annotation's own strokeWidth versus a style border), so the model changes and the picture does not. Compare what setOutlineWidth sets for a .line with what the line renderer reads.\n- Suspect 3 (video only): a keyed or motion width wins over the static one (LayerMotion.swift:1744 setOutlineWidthForMotion), so a still value never shows while a motion track exists.\n- Suspect 4: editingLooksHere / performLooksHere in those handlers route the edit to a component master or look rather than the picked layer.\nFix the cause, not the symptom: do not add a second write path just for lines.",
+  "acceptance": [
+    "Reproduced first, at Next defaults in the probe, on a picture document AND on a video document: draw a line with the Line tool, pick it, raise Thickness in Appearance. The task log says exactly what happens (the number changes and the line does not, the row is disabled, the row reaches a different layer, the line changes then snaps back) before any fix",
+    "After the fix, dragging Thickness thickens the line live, letting go keeps it, and one Command Z returns it to its old width. MEASURED: the drawn line's width in pixels on the canvas before and after (for example 4 to 12) is in the audit, read from the rendered picture, not from the model",
+    "Typing a number into Thickness does the same as dragging",
+    "The next line drawn starts at the new thickness, as the row's own comment promises",
+    "The same check passes for an arrow and for a path drawn with the Pen, so the fix does not move the bug to a neighbour",
+    "A walk (extend Scripts/playtest/outline-width-walk.json, which covers a box and an oval but, as far as intake could see, no line from the Line tool) draws a line, raises Thickness, and fails on the canvas pixels if the line did not get thicker; it fails on today's build",
+    "A unit test pins the cause in PhotonzCore if it lives there; Scripts/test.sh passes",
+    "Audit under queue/audits/ with before and after pictures. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-19T15:37:19.103Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-19T15:37:24.594Z",
+      "note": "seq 3970 -> 15"
+    }
+  ]
+}
