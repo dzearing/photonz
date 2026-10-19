@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T14:19:16.459Z",
-  "updated": "2026-10-18T12:19:52.825Z",
+  "updated": "2026-10-19T12:20:43.820Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-17 by a core probe (Tests, deleted after): Keynote title, headline opacity motion retimed 3520->3220 ms via LayerMotion.retimed, then doc.retimeTitlePart(layerID:index:2,grab:.start,byMS:300): headline opacity back at MotionTiming(startMS: 3520, durationMS: 400). Cause: restyleTitle -> refitTitle recompiles every part (applyTitleDesign replaces motions for every property the design moves), so a direct edit of compiled keys is lost. Predates a-title-page-s-parts-each-have-their-own-labelle (any restyle did it), which makes it easier to hit. Options: store per-part overrides in the recipe, or route bar drags on a title part's compiled motions into the design (a part's in/out builds), or recompile only the part that changed.",
@@ -31,7 +31,35 @@
     {
       "t": "2026-10-18T12:19:52.824Z",
       "note": "seq 245 -> 40"
+    },
+    {
+      "t": "2026-10-19T11:33:48.972Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T12:20:03.918Z",
+      "note": "walks none -> a-dragged-part-bar-survives-a-restyle-walk"
+    },
+    {
+      "t": "2026-10-19T12:20:27.112Z",
+      "note": "review before: a Premiere/AE user expects a keyframe bar they dragged to stay put when they restyle; the risk was a trim being mistaken for a hand drag (a trim leaves keys where they were), so the recipe now records the stretch it was keyed over (keyedOver) and hand moves are read against that. Slides key absolute positions, so keeping a dragged motion whole would strand it after a relayout: a timing-only edit re-applies its timing to the freshly compiled keys; any other key edit is kept whole."
+    },
+    {
+      "t": "2026-10-19T12:20:27.179Z",
+      "note": "built: Sources/PhotonzCore/TitleHandMoves.swift (handMoves/putBack, LayerMotion.movesLike), refitTitle wires it, ChartPen.rebuilt carries a bar's own keys and the effects its old drawing did not give it. Tests: TitleHandKeysSurviveRestyleTests (9), full suite 13750 green. Walk a-dragged-part-bar-survives-a-restyle-walk green; with putBack disabled it fails at the Subtitle drag (keys back at 3500-3920). expectRowKeys gained keptSince. Related walks green: title-part-rows-retime, title-knobs-restyle, title-set-keynote-clean, picked-row-drag-moves-whole-path. animated-charts-walk fails at a Library double click, already failing in the 2026-10-19 sweep and owned by walks-that-fail-in-the-full-sweep-26."
+    },
+    {
+      "t": "2026-10-19T12:20:27.250Z",
+      "note": "left rough: on a chart an effect the drawing gave a bar that the person then edited (not added) still goes back to the theme's on restyle; nobody asked, so it stays here. Looked at 3-restyled-sc.png: Sunset theme, Punchy, Intensity 35 in the panel, title restyled. Filed a-title-part-row-shows-where-its-hand-dragged-mo for the part row still drawn from the design."
+    },
+    {
+      "t": "2026-10-19T12:20:43.818Z",
+      "note": "A title part's movement bar dragged by hand (and any key edited by hand) survives retiming another part, theme, font pair, energy and intensity; chart bars keep their own keys and added effects through new numbers and themes. Core: TitleHandMoves.swift + refitTitle + ChartPen.rebuilt. Verified by TitleHandKeysSurviveRestyleTests (9, full suite green) and a-dragged-part-bar-survives-a-restyle-walk at Next defaults (fails with the fix disabled). Audit queue/audits/2026-10-19-a-title-part-move-dragged-by-hand-on-the-timelin.json."
     }
   ],
-  "walks": []
+  "walks": [
+    "a-dragged-part-bar-survives-a-restyle-walk"
+  ],
+  "started": "2026-10-19T11:33:48.971Z",
+  "completed": "2026-10-19T12:20:43.819Z"
 }

@@ -9,10 +9,10 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-10-18T12:19:55.191Z",
+  "updated": "2026-10-19T11:33:48.712Z",
   "deps": [],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-18T11:02:13Z: 971 of 973 walks passed in 271 minutes.\n\nFailing walks (2): caption-lines-join-and-a-word-moves-back-walk, view-to-edit-on-a-long-recording-walk\n\nOwned by a task that is waiting on a card, so this task takes them until it is answered (1):\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (waiting on a card, so no runner would pick it up there)\n\nThis task owns 2: caption-lines-join-and-a-word-moves-back-walk, view-to-edit-on-a-long-recording-walk\n\nStopped failing since the last sweep (1): timeline-right-click-menus-walk\n\nFull output: queue/sweep/2026-10-17-233123.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-19T11:33:48Z: 968 of 978 walks passed in 278 minutes.\n\nFailing walks (10): animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  insert-a-title-before-a-clip-walk -> a-clip-or-title-held-as-an-insert-shows-what-mov (guessed from its wording, so read it before believing it)\n\n1 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 9: animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk\n\nStopped failing since the last sweep (1): view-to-edit-on-a-long-recording-walk\n\nFull output: queue/sweep/2026-10-18-235606.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: the-layers-and-library-pane-grows-into-any-room: The pane of lists now fills whatever the pick's sections leave, so any walk that clicks a fixed point in the panel's lower half may have moved (the-layers-and-library-pane-grows-into-any-room)\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
   "acceptance": [
     "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
     "Each one is run on its own and passes twice in a row",
@@ -38,6 +38,10 @@
     {
       "t": "2026-10-18T12:19:55.190Z",
       "note": "seq 4070 -> 410"
+    },
+    {
+      "t": "2026-10-19T11:33:48.711Z",
+      "note": "sweep 2026-10-19T11:33:48Z: 10 failing (animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk); stopped failing: view-to-edit-on-a-long-recording-walk"
     }
   ],
   "standing": "walk-sweep"
