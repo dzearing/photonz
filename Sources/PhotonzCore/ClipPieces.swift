@@ -279,7 +279,32 @@ public struct ClipPiece: Hashable, Codable, Sendable {
                                   transitionIn: transitionIn, push: push, speedRamp: speedRamp)),
                 marking(ClipPiece(sourceInMS: sourceMS(atOffsetMS: offset),
                                   lengthMS: lengthMS - offset, speedPercent: speedPercent, push: push,
-                                  speedRamp: speedRamp)))
+                                  speedRamp: speedRampCarriedOn(fromOffsetMS: offset))))
+    }
+
+    /// The stops a piece carrying straight on from `offset` into this one
+    /// plays by: the same stops, except that a freeze the offset lands part
+    /// way through holds only what is left of it. A hold is spent on the frame
+    /// a piece starts from, so a tail given the whole of it would freeze over
+    /// again and run out of timeline before the recording's last frame.
+    func speedRampCarriedOn(fromOffsetMS offset: Int) -> SpeedRamp? {
+        guard let speedRamp, !isHeld else { return speedRamp }
+        let frame = sourceMS(atOffsetMS: offset)
+        guard let index = speedRamp.index(ofStopAtSourceMS: frame) else { return speedRamp }
+        let stop = speedRamp.stops[index]
+        guard stop.holdMS > 0 else { return speedRamp }
+        let reached = speedRamp.timelineMS(fromSourceMS: Double(sourceInMS), toSourceMS: Double(frame))
+        let spent = min(max(0, Int((Double(offset) - reached).rounded())), stop.holdMS)
+        return speedRamp.replacing(stop: index, with: stop.holding(stop.holdMS - spent)) ?? speedRamp
+    }
+
+    /// Whether `next` plays on exactly where this piece stops: the same
+    /// stretch of recording at the same speed, under the stops this one would
+    /// hand a piece cut off its end. Two halves of one split always do.
+    func carriesOn(into next: ClipPiece) -> Bool {
+        !isHeld && !next.isHeld && speedPercent == next.speedPercent
+            && sourceOutMS == next.sourceInMS
+            && next.speedRamp == speedRampCarriedOn(fromOffsetMS: lengthMS)
     }
 
     /// The same piece with its start edge moved later into the recording by
@@ -309,8 +334,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// nil where the second one arrives on a transition, which is a cut
     /// somebody put something on.
     func joined(with next: ClipPiece) -> ClipPiece? {
-        guard !isHeld, !next.isHeld, speedPercent == next.speedPercent, speedRamp == next.speedRamp,
-              next.transitionIn == nil, sourceOutMS == next.sourceInMS,
+        guard carriesOn(into: next), next.transitionIn == nil,
               pictureHidden == next.pictureHidden, noiseReduction == next.noiseReduction else { return nil }
         return marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + next.lengthMS,
                                  speedPercent: speedPercent, transitionIn: transitionIn, speedRamp: speedRamp))

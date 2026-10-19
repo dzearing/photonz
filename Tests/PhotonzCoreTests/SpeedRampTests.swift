@@ -220,6 +220,93 @@ struct SpeedRampTests {
         #expect(clip.totalLengthMS == whole.totalLengthMS)
     }
 
+    // MARK: - Cutting through a freeze
+
+    /// The ramp to 4x with its stop frozen for a second: down from 1x to a
+    /// standstill over three seconds of recording is 2 × 3000 / 1 = 6000 ms,
+    /// the hold is 6000 to 7000, and back up over the last five is 10000 ms.
+    static func frozenForASecond() -> ClipPieces {
+        var clip = rampedToFour()
+        _ = clip.freezeSpeedStop(ofPiece: 0, stop: 1, holdMS: 1000)
+        return clip
+    }
+
+    @Test func aFrozenStopHoldsBetweenTheTwoRamps() {
+        let clip = Self.frozenForASecond()
+        #expect(clip.totalLengthMS == 17000)
+        #expect(clip.sourceMS(atMS: 6000) == 3000)
+        #expect(clip.sourceMS(atMS: 7000) == 3000)
+        #expect(clip.sourceMS(atMS: 17000) == 8000)
+    }
+
+    @Test func aCutPartWayThroughAFreezeSharesTheHoldBetweenTheHalves() throws {
+        var clip = Self.frozenForASecond()
+        let frames = stride(from: 0, through: 17000, by: 100).map { clip.sourceMS(atMS: $0) }
+        let r = clip.split(atMS: 6500)
+        #expect(r)
+        #expect(clip.count == 2)
+        #expect(clip.totalLengthMS == 17000)
+        let head = try #require(clip.piece(at: 0))
+        let tail = try #require(clip.piece(at: 1))
+        #expect(head.lengthMS == 6500)
+        #expect(tail.sourceInMS == 3000)
+        // The tail holds only the half second that was left of the freeze...
+        #expect(tail.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 500)
+        // ...and still runs to the recording's last frame.
+        #expect(tail.sourceOutMS == 8000)
+        let after = stride(from: 0, through: 17000, by: 100).map { clip.sourceMS(atMS: $0) }
+        #expect(after == frames)
+    }
+
+    @Test func aCutWhereAFreezeEndsLeavesTheTailNothingToHold() throws {
+        var clip = Self.frozenForASecond()
+        let frames = stride(from: 0, through: 17000, by: 100).map { clip.sourceMS(atMS: $0) }
+        _ = clip.split(atMS: 7000)
+        let tail = try #require(clip.piece(at: 1))
+        #expect(tail.sourceInMS == 3000)
+        #expect(tail.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 0)
+        #expect(tail.sourceOutMS == 8000)
+        #expect(clip.sourceMS(atMS: 7100) != 3000)
+        let after = stride(from: 0, through: 17000, by: 100).map { clip.sourceMS(atMS: $0) }
+        #expect(after == frames)
+    }
+
+    @Test func aCutWhereAFreezeBeginsLeavesTheWholeHoldToTheTail() throws {
+        var clip = Self.frozenForASecond()
+        _ = clip.split(atMS: 6000)
+        let tail = try #require(clip.piece(at: 1))
+        #expect(tail.speedRamp == clip.piece(at: 0)?.speedRamp)
+        #expect(tail.sourceOutMS == 8000)
+        #expect(clip.totalLengthMS == 17000)
+    }
+
+    @Test func aCutThroughAFreezeJoinsBackIntoTheClipItWas() {
+        var clip = Self.frozenForASecond()
+        let whole = clip
+        _ = clip.split(atMS: 6500)
+        #expect(clip.cut(at: 1)?.isContinuous == true)
+        let r = clip.joinThroughEdit(atCut: 1)
+        #expect(r)
+        #expect(clip == whole)
+    }
+
+    @Test func twoCutsInsideOneFreezeJoinBackIntoTheClipItWas() throws {
+        var clip = Self.frozenForASecond()
+        let whole = clip
+        let frames = stride(from: 0, through: 17000, by: 100).map { clip.sourceMS(atMS: $0) }
+        _ = clip.split(atMS: 6200)
+        _ = clip.split(atMS: 6700)
+        #expect(clip.count == 3)
+        #expect(clip.piece(at: 1)?.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 800)
+        #expect(clip.piece(at: 2)?.speedRamp?.stops.first { $0.sourceMS == 3000 }?.holdMS == 300)
+        #expect(clip.piece(at: 2)?.sourceOutMS == 8000)
+        let after = stride(from: 0, through: 17000, by: 100).map { clip.sourceMS(atMS: $0) }
+        #expect(after == frames)
+        _ = clip.joinThroughEdit(atCut: 2)
+        _ = clip.joinThroughEdit(atCut: 1)
+        #expect(clip == whole)
+    }
+
     @Test func aTrimPulledInAndBackOutLandsOnTheSameFrame() throws {
         var clip = Self.rampedToFour()
         let r18 = clip.trimStart(ofPiece: 0, byMS: 500)

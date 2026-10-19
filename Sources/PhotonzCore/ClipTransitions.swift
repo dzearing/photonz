@@ -377,10 +377,7 @@ public struct ClipCut: Hashable, Sendable {
     /// Said out loud rather than quietly allowed, because a feature that looks
     /// broken on the first press is worse than one that is not there.
     public var isContinuous: Bool {
-        readsOneRecording && !outgoing.isHeld && !incoming.isHeld
-            && outgoing.speedPercent == incoming.speedPercent
-            && outgoing.speedRamp == incoming.speedRamp
-            && outgoing.sourceOutMS == incoming.sourceInMS
+        readsOneRecording && outgoing.carriesOn(into: incoming)
     }
 
     /// The longest a transition of this kind may be here, placed where it
