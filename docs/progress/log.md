@@ -21684,3 +21684,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `EveryMenuCommandHasANameTests`: 283 menu bar rows, 149 named, 56 left out with reasons, 77 not yet (pinned, shrink only); timeline right-click rows placed by an exhaustive switch.
 - Try path run live in the probe (transcript in `queue/audits/2026-10-19-agent-commands-transcript.md`).
 - Next: `the-rest-of-the-menu-commands-can-be-run-by-name`.
+
+## 2026-10-19 — An agent can draw a picture and redline a screenshot (agent MCP slice 3)
+
+- Ten tools (`new_picture`, `add_shape`, `add_path`, `add_text`, `set_layer`, `find_elements`, `add_measurement`, `list_components`, `place_component`, `export`); pure half in `PhotonzCore/AgentDrawing.swift`, app half in `Agent/AgentDrawingWork.swift`. Each lands the matching tool's own layer as one undo step.
+- `find_elements` lists what a Size click would read (all ten controls of the settings fixture to the pixel, `AgentElementScanFixtureTests`), about 2 s in the app.
+- Scenario 2 (box in a cloud, SVG) and scenario 3 (redline a screenshot) run from fresh sessions; audit `queue/audits/2026-10-19-agent-drawing.json`.
+- Next: `an-agent-can-cut-a-video-from-history-clips-with` (slice 4).
