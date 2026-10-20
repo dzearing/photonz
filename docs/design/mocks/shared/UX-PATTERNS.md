@@ -14,7 +14,9 @@ where to look for everything.
 **How to use it.** Before you add or move a control, ask *which purpose does it
 serve?* and put it in the row that owns that purpose. Useful is not a reason to
 put it anywhere else. A control that fits no row, or seems to fit two, is a
-decision card for the user, never a guess. Where older text further down this
+call you make and log, never a silent guess: pick the nearest row, write
+`Chose ... because ...` in the task log, and move on (cards are rare since
+2026-10-19, `queue/bin/runner-prompt.md`). Where older text further down this
 document disagrees with this table, the table wins.
 
 | Area | Its one purpose | What goes there | What never does |
@@ -116,9 +118,9 @@ left as drawn.
 build.** When a request names a system look or material (Liquid Glass, "the
 Mac's own control", "like Finder's"), build it once, then film the system's own
 version beside ours in the same place, light and dark, at rest and moving, and
-put both films on one decision card before building any other variant. Neither
+put both films side by side in the audit before building any other variant. Neither
 side wins by default: the system control is not automatically right, and ours
-is not either; the user picks from the films. Why: on 2026-09-29 and 30 the
+is not either; choose from the films, log why, and the user can overrule it. Why: on 2026-09-29 and 30 the
 segmented control was built five ways in two days (a lighter glass thumb, a
 gliding thumb, one pane of system glass, the system glass thumb everywhere,
 then the Mac's own control, commits `dbf9de22` to `5a81d5a3`), and the user
@@ -133,7 +135,7 @@ background, a transition, an entrance) is held to a number the weak version
 fails, set by measuring today's version: frames half a second apart differ
 visibly for a background that should move; a headline shows under a tenth of
 its ink at its first frame for an entrance. It ships with a reel (a short video
-and a contact sheet) on a decision card, and whoever closes it opens those
+and a contact sheet) named in its audit, and whoever closes it opens those
 pictures and checks them against the goal: a picture that still shows the weak
 version means it is not done. Why: on 2026-10-11 seven title tasks closed done
 on rule checks while their own frames showed flat backgrounds and headlines
