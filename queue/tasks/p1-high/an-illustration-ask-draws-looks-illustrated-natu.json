@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 8.3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T18:33:37.238Z",
-  "updated": "2026-10-20T19:51:56.631Z",
+  "updated": "2026-10-20T20:54:34.423Z",
   "deps": [
     "ask-draws-a-dog-you-can-tell-is-a-dog"
   ],
@@ -46,6 +46,23 @@
     {
       "t": "2026-10-20T19:51:56.630Z",
       "note": "from ask-draws-a-dog (2026-10-20): Ask now draws a thing with ONE add_drawing call (built-in Twemoji set first, else the model's own whole SVG, read into editable layers by SVGArtwork) and looks at it with llama3.2-vision before handing back, redrawing at most twice (AskDrawingCheck, AskSession.look). Off the set, qwen3:30b's own SVGs are the weak spot: a lighthouse was seen as 'a square', 'pencil sharpener', 'matchstick' and a windmill as 'a red rectangle', 'a stick figure', 'a bow tie' over three tries each, then Ask gave up (run 20261020-185749-ask, temporary cases zz-lighthouse/zz-windmill, not in the history). The look-and-redraw loop is there to reuse; what it needs is better drawing, which is this task."
+    },
+    {
+      "t": "2026-10-20T20:51:46.882Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T20:54:34.263Z",
+      "note": "technique study of the user's board (studied, nothing copied): (1) one-colour silhouettes where snow caps and ridge highlights are NEGATIVE space, white wedges cut down from each peak along the light side; (2) sun rays as an even radial burst of tapered strokes from a half sun on the horizon, gaps equal; (3) the scene clipped into a circle with a heavier frame line, the ground running out flat at the bottom of the circle; (4) treelines from ONE pine silhouette (stacked tiers, trunk) repeated at varied heights, taller at the edges; (5) a lake as stacked horizontal strokes that shorten as they go down (reflection), under the horizon; (6) layered sunset ridges: 4-6 ridge bands stepping in value from pale far to dark near under a vertical gradient sky, sun as a pale disc low behind the far ranges; (7) line art: outline heaviest, interior ridge and shadow hatching lighter."
+    },
+    {
+      "t": "2026-10-20T20:54:34.337Z",
+      "note": "adversarial review: a small local model writing a whole illustration SVG cannot hold light direction, value order and ridge noise at once (the dog task's lighthouse/windmill failed 3 of 3), so Ask should only make the narrow choices (subject, style words, time of day) and the craft lives in code, built in the eight passes, each a pure function with a checkable output. Grown-up tool check: an Illustrator user expects named groups (Sky, Far ridge, Far ridge shadow, Sun), real gradient fills they can edit, and an SVG that opens cleanly; masks do not export to SVG here, so clipping (badge circle, poster edge) is done in the geometry rather than with a mask."
+    },
+    {
+      "t": "2026-10-20T20:54:34.422Z",
+      "note": "Chose: extend add_drawing with a style argument (free words: line art, silhouette, badge/circle, sunset, flat, illustration) over a separate add_illustration tool, because the look-and-redraw loop, the undo step and the change row already hang off add_drawing. A scene (mountains, forest, lighthouse, skyline, a named style, the word illustration) goes to the illustration engine; a single thing or an icon stays on the built-in set. SVGArtwork learns real linear and radial gradients so the parts carry the app's own gradient fills."
     }
-  ]
+  ],
+  "started": "2026-10-20T20:51:46.879Z"
 }
