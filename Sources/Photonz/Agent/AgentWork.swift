@@ -275,7 +275,24 @@ enum AgentWork {
         let frames = DocumentFrames(document: document, store: store,
                                     movieURLs: MovieLibrary.shared.urls(in: document), size: size)
         defer { frames.putTheStoreBack() }
-        return await frames.frame(atMS: ms)
+        return await frames.frame(atMS: ms).flatMap(onBlack)
+    }
+
+    /// A video frame as the file holds it: a movie has no see-through, so
+    /// where nothing is drawn (a page fading in over the end of a clip) the
+    /// file shows black. Handed back with its see-through left in, the frame
+    /// read as white in any picture viewer, and an agent checking a fade saw
+    /// a white flash the film does not have.
+    static func onBlack(_ picture: CGImage) -> CGImage? {
+        guard let context = CGContext(data: nil, width: picture.width, height: picture.height,
+                                      bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return picture }
+        let box = CGRect(x: 0, y: 0, width: picture.width, height: picture.height)
+        context.setFillColor(CGColor(gray: 0, alpha: 1))
+        context.fill(box)
+        context.draw(picture, in: box)
+        return context.makeImage() ?? picture
     }
 
     private static func videoDocument(_ editor: EditorState) throws -> PhotonzDocument {
@@ -325,6 +342,9 @@ enum AgentWork {
             // The sheet's rectangles are top-left; the context's are bottom-left.
             let box = layout.pictures[index]
             let flipped = CGRect(x: box.minX, y: height - box.maxY, width: box.width, height: box.height)
+            // On black, as the file shows a frame (`onBlack`).
+            context.setFillColor(CGColor(gray: 0, alpha: 1))
+            context.fill(flipped)
             if let picture = await frames.frame(atMS: ms) { context.draw(picture, in: flipped) }
             let label = layout.labels[index]
             draw(AgentContactSheet.label(ms: ms), in: context,

@@ -127,7 +127,7 @@ extension AgentTools {
             ], required: ["seconds"])),
         AgentTool(
             name: "trim",
-            description: "Keep only part of a clip's recording, as dragging its ends does. Times are on the recording's own clock, 0 being its first frame. The clip keeps its start; with ripple, everything after it moves up to close the gap (or along to make room). One undo step.",
+            description: "Keep only part of a clip's recording, as dragging its ends does. Times are on the recording's own clock, 0 being its first frame; for a title or shape, which has no recording, they say when it arrives and goes from its own first frame, so toSeconds alone sets how long it lasts. The clip keeps its start; with ripple, everything after it moves up to close the gap (or along to make room). One undo step.",
             inputSchema: videoSchema([
                 "document": videoDocument,
                 "clip": clipProperty,
@@ -399,9 +399,11 @@ extension PhotonzDocument {
     /// cannot.
     public mutating func agentTrim(_ clipID: UUID, keepFromMS: Int?, keepToMS: Int?,
                                    ripple: Bool) -> String? {
-        guard let clip = layer(id: clipID), var session = ClipTrimSession(layer: clip) else {
-            return "That layer is not a clip with time."
+        guard let clip = layer(id: clipID), clip.time != nil else { return "That layer is not on the timeline." }
+        if clip.movie == nil, clip.startIsFree {
+            return agentRetime(clipID, fromMS: keepFromMS, toMS: keepToMS, ripple: ripple)
         }
+        guard var session = ClipTrimSession(layer: clip) else { return "That layer is not a clip with time." }
         let whole = session.wholeLengthMS
         let from = keepFromMS ?? session.keepInMS
         let to = keepToMS ?? session.keepOutMS
@@ -431,6 +433,35 @@ extension PhotonzDocument {
         if inDelta != 0, !rippleTrimClipEdge(clipID, .clipStart, byMS: inDelta) {
             return "The clip's start would not move that far."
         }
+        return nil
+    }
+
+    /// A title, a shape or words placed in time: nothing is behind it to
+    /// trim into, so `fromMS` and `toMS` say when it arrives and goes, from
+    /// its own first frame, as dragging the ends of its bar does
+    /// (`moveLayerStart`, `moveLayerEnd`). With `ripple` a longer or shorter
+    /// end moves what follows on every track by the difference.
+    private mutating func agentRetime(_ id: UUID, fromMS: Int?, toMS: Int?, ripple: Bool) -> String? {
+        guard let time = layer(id: id)?.time else { return "That layer is not on the timeline." }
+        if isClipOnLockedTrack(id) { return "\(layer(id: id)?.name ?? "It") is on a locked track." }
+        let start = time.inMS + (fromMS ?? 0)
+        let end = toMS.map { time.inMS + $0 } ?? time.outMS
+        guard end - start >= LayerTime.shortestMS else { return "That keeps too little of it." }
+        guard start != time.inMS || end != time.outMS else { return "It already runs exactly that long." }
+        if ripple {
+            if start != time.inMS { return "ripple moves the end of a title or shape; leave fromSeconds out." }
+            let gained = end - time.outMS
+            if gained < 0 {
+                extractStretch(fromMS: end, toMS: time.outMS, exceptLayers: [id])
+            } else {
+                rippleTime(atMS: time.outMS, byMS: gained, exceptLayer: id, sparingLocked: true)
+            }
+            updateLayer(id: id) { $0.time = LayerTime(inMS: time.inMS, outMS: end, sourceInMS: time.sourceInMS) }
+            refreshDuration()
+            return nil
+        }
+        if end != time.outMS { _ = moveLayerEnd(id, toMS: end) }
+        if start != time.inMS { _ = moveLayerStart(id, toMS: start) }
         return nil
     }
 }

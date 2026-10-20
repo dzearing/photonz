@@ -181,4 +181,27 @@ struct AgentVideoTests {
         #expect(doc.layer(id: next)?.time?.inMS == 2 * page.lengthMS + 12_000)
         #expect(doc.trackID(ofClip: opening.layerID) == doc.trackID(ofClip: take))
     }
+
+    @Test("A title page or a shape has no recording behind it: trim sets how long it lasts, from its own first frame")
+    func trimsAPlacedLayer() throws {
+        var (doc, take, _) = Self.edit()
+        let page = try #require(TitlePreset.builtIn(of: .titlePage, movingBackdrops: false).first)
+        let inserted = doc.insertTitle(page, beforeClip: take)
+        let title = try #require(inserted).layerID
+        #expect(doc.agentTrim(title, keepFromMS: nil, keepToMS: 6000, ripple: true) == nil)
+        #expect(doc.layer(id: title)?.time?.inMS == 0)
+        #expect(doc.layer(id: title)?.time?.outMS == 6000)
+        #expect(doc.layer(id: take)?.time?.inMS == 6000, "ripple carried the clip after the page along")
+
+        var plain = Self.edit()
+        let shape = Layer(name: "Box", content: .annotation(AnnotationContent(shape: .rectangle, colorHex: "#000000")),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        var timed = shape
+        timed.time = LayerTime(inMS: 2000, outMS: 5000)
+        plain.doc.addLayer(timed)
+        #expect(plain.doc.agentTrim(timed.id, keepFromMS: 0, keepToMS: 10_000, ripple: false) == nil)
+        #expect(plain.doc.layer(id: timed.id)?.time?.inMS == 2000)
+        #expect(plain.doc.layer(id: timed.id)?.time?.outMS == 12_000)
+        #expect(plain.doc.layer(id: plain.next)?.time?.inMS == 12_000, "a plain trim moved nothing else")
+    }
 }
