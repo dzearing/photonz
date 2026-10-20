@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 16,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T01:24:56.955Z",
-  "updated": "2026-10-20T01:25:13.430Z",
+  "updated": "2026-10-20T13:26:00.303Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's words (2026-10-19, intake): 'Today i wanted to make a video pause at sections have some arrows fade in and out. It was annoying to make it do that. I had to select each one, add a fade in, then add a fade out' and then 'at minimum i wish it remembered the transitions from the previous object'. The remembering is the floor; many-at-once and one step for both ends are the rest of the complaint.\n\nWhere it lives (read, not reproduced): Fade In / Fade Out rows on the timeline right-click come from TimelineMenuTable (Sources/PhotonzCore/TimelineMenuTable.swift:123, under More since 2026-10-17, a further two clicks) through fadeRows (EditorState+TimelineMenus.swift:413), which goes to pictureFadeMenuRows (EditorState+PictureFade.swift:74, one layer) or, with the picture fades switch off, placedLayerFadeRows (EditorState+TitleTime.swift:119, one Fade submenu, one layer). Other menus already act on every pick when the clicked one is among them (soundLayers(actingOn:), EditorState+TimelineMenus.swift:424); follow that pattern. Drawn-object defaults are remembered in AnnotationStyles (rememberAnnotationDefaults, EditorState+Annotations.swift, around line 870); a fade default belongs beside them, per kind, and must apply only on a document with time.\n\nTraps: (1) Fade In and Out are under More since the menu table task (f26565da); if the one-step row should sit at the top level, the table's ten-row limit applies, so change the table, not a one-off. (2) An arrow drawn during a freeze is placed in time by the freeze's span; the remembered fade must not make it longer or shorter. (3) Check whether the app already offers a fade on its Appearance or motion panel; one fade, reached from every place, not two that disagree.\n\nThe user, a minute later: 'so then if i make another arrow, it retains the styling' and 'same goes for other things'. So the remembering is the WHOLE look per kind, not only fades. AnnotationStyles already remembers colour, stroke width, arrowhead scale and corner radii per shape (rememberAnnotationDefaults); intake did not check shadow, ending, caption look, text styling, measurement styling or motion entrances, so the before column of the table is the first job. Retitled from 'Arrows on a video fade in and out without setting each one by hand'.",
@@ -31,6 +31,40 @@
     {
       "t": "2026-10-20T01:25:13.429Z",
       "note": "seq 65 -> 16"
+    },
+    {
+      "t": "2026-10-20T11:59:08.154Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T12:38:58.491Z",
+      "note": "owns these walks: the-next-arrow-fades-like-the-last-walk"
+    },
+    {
+      "t": "2026-10-20T13:25:23.937Z",
+      "note": "walks the-next-arrow-fades-like-the-last-walk -> the-next-arrow-fades-like-the-last-walk, the-whole-look-carries-over-walk"
+    },
+    {
+      "t": "2026-10-20T13:25:34.751Z",
+      "note": "Adversarial pass before building: a first-time user looks for the fade on the arrow's own right-click, where it was two levels down (More > Fade In > 1s, then again for Out). Premiere's answer is ⇧D (default transitions at both ends of the selection); chose ⌃⌥F instead because a plain shifted letter fires while typing. Trap 2 checked: the remembered fade never moves a bar's ends (unit test on a freeze). Trap 3 checked: the panel's Time section, the Clip menu, the keys and the right-click all go through the one fade, and all now act on every pick."
+    },
+    {
+      "t": "2026-10-20T13:25:34.816Z",
+      "note": "Found by the whole-look walk and fixed in this task: an arrow's and a line's ends, and a Pen path's ends, corners, dashes and edge side were never remembered; text, title, Pen path and picture effects were not either. Pictures remember only on a video (chose that over everywhere so pasting into a screenshot stays as it was). Walk setup's forget list now clears the new memory (found when a rerun's first arrow arrived pre-faded)."
+    },
+    {
+      "t": "2026-10-20T13:25:34.882Z",
+      "note": "Pictures checked before closing: the contact sheet and reel show the three arrows at 0, rising, full, sinking and gone across the 0:02 still; 3-half-way-in shows all three at half strength; every-kind-twice shows matching ramps on each pair of bars. Left rough, not filed: measurements not walked (measure drag caught no edges on open video), noted in the audit."
+    },
+    {
+      "t": "2026-10-20T13:26:00.301Z",
+      "note": "Shipped in Next (d8d95e13, f7a5ded8): every kind of drawn thing remembers its fade, line and effects (RememberedLooks), the next one drawn on a video arrives looking the same and its bar never moves; fade rows act on every pick in one undo; Fade In and Out (⌃⌥F) at the top of a picture's right-click, in the Clip menu and a clip's More. Verified: 29 unit tests + full suite (13,967) green; the-next-arrow-fades-like-the-last-walk passes at Next defaults (all six arrows half way up mid fade, three at once, one undo) and fails on the previous build; the-whole-look-carries-over-walk: 26 settings did not carry before, 0 now. Try path: 48 clicks before, 2 after (or one key). Audit, reel and contact sheet: queue/audits/2026-10-20-next-arrow-keeps-the-last-look*."
     }
-  ]
+  ],
+  "started": "2026-10-20T11:59:08.153Z",
+  "walks": [
+    "the-next-arrow-fades-like-the-last-walk",
+    "the-whole-look-carries-over-walk"
+  ],
+  "completed": "2026-10-20T13:26:00.302Z"
 }
