@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-20T17:43:20.532Z",
+  "updated": "2026-10-20T19:51:56.705Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-20T17:43:20.531Z",
       "note": "eval landed: cases pricing-section and settings-measurements. Ask baseline 2026-10-20: pricing 29.6 (judge 1.6: one card, words beside it), measurements 58 (judge 3, crowded readouts). The skill scores 82.4 and 62.8: measurements crowd for the skill too (judge 3.8), so some of it may be the Measure tool's own readout placement rather than Ask's choice of boxes. Scripts/ask-eval.sh run --engine ask --cases pricing-section,settings-measurements --tag '<change>'."
+    },
+    {
+      "t": "2026-10-20T19:51:56.703Z",
+      "note": "from ask-draws-a-dog (2026-10-20): a look step exists now for drawings: AskSession.look renders what a step made, asks llama3.2-vision (AskModels.vision, AskDrawingCheck.visionBody, 4k window) and on a miss undoes and replans with what was seen (AskConversation.revise). Reuse it for the pricing section and the measurements rather than building a second one. Pin num_ctx on every Ollama call: left out, Ollama loads at 128k and swaps the planner out on every look."
     }
   ],
   "walks": [

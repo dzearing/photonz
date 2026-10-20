@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 8,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:37:04.148Z",
-  "updated": "2026-10-20T18:33:47.742Z",
+  "updated": "2026-10-20T19:52:31.892Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s"
   ],
@@ -64,7 +64,35 @@
     {
       "t": "2026-10-20T18:33:47.740Z",
       "note": "intake 2026-10-20 11:35: the user ran sun over mountains and called flat triangles bad (queue/audits/2026-10-20-user-ask-sun-over-mountains.png). Illustration craft (natural ridges, light and shadow, depth) is its own task right after this one, an-illustration-ask-draws-looks-illustrated-natu; do not widen this task for it, but do not pick a route that makes it impossible (for example only flat emoji art for every request)."
+    },
+    {
+      "t": "2026-10-20T19:50:47.349Z",
+      "note": "owns these walks: ask-draws-a-dog-walk"
+    },
+    {
+      "t": "2026-10-20T19:51:56.853Z",
+      "note": "Adversarial review before building: a first-time user types 'draw a dog' and expects a dog they would show someone, not a set of shapes to fix; a Photoshop user would expect a placed, editable vector (like a library shape or a pasted SVG), grouped and undoable in one step, which is what add_drawing makes. What the old route could not deliver: a text-only model placing shapes blind (smiley eyes above the head). Risk: a built-in set looks like emoji; accepted because the user's bar is 'recognizable at a glance' and every part stays editable, and it is in the audit's evaluate list."
+    },
+    {
+      "t": "2026-10-20T19:51:56.927Z",
+      "note": "Chose the built-in drawing over the model's own SVG when both exist (builtIn true by default) because the set's drawings are vetted and the model's are the weak part; the model can still ask for its own with builtIn false. Chose to name only face parts automatically (FaceParts, from position) over naming every part because nothing names a dog's ear without a model; faces are what the checklist checks. Chose 'I couldn't make a clear drawing of that. Nothing was changed.' over leaving the last try, per the checklist."
+    },
+    {
+      "t": "2026-10-20T19:51:57.001Z",
+      "note": "Pictures looked at: queue/audits/2026-10-20-ask-drawings-before-after.png (13 pairs: before a bear-shaped block, a suitcase house, a sword rocket; after the Twemoji dog, cat, house, tree, car, bicycle, cup, fish, bird, rocket, daisy, sunrise over mountains, smiley), 1-dog-sc.png (Dog group of 12 parts picked over the blank canvas, Agent row 'Drew a drawing'), 3-smiley-icon-sc.png (512 x 512 icon frame with keylines, face on the circle keyline, previews 16 to 64). Exported SVG of the icon: ellipses plus one path, no bitmap."
+    },
+    {
+      "t": "2026-10-20T19:51:57.077Z",
+      "note": "left rough (no task: small, folded or by design): the Agent row says 'Drew a drawing' not the thing; built-in non-face parts are numbered (Dog 1..12); the coffee cup's third blind look said 'hot coffee', which the case's names (cup, mug, teacup) do not take; first look after idle costs ~12 s while llama3.2-vision loads; the eval history briefly held two trial runs of mine (3 and 3 cases), which I removed so they do not stand as the best."
+    },
+    {
+      "t": "2026-10-20T19:52:31.890Z",
+      "note": "Ask draws a thing in one add_drawing call: a built-in set of 992 Twemoji drawings (CC-BY 4.0, credited in Open Source Notices) or the model's own SVG, read into one named group of editable layers (SVGArtwork); icon on a blank picture becomes a 512 pt icon frame on its keylines; Ask looks with llama3.2-vision and redraws at most twice or says it could not. Eval 13 drawing cases: 35.4 -> 92, named blind 1 -> 13 of 13, median 18.4 s. Verified: 14052 tests green, ask-draws-a-dog-walk ok at Next defaults (one Command Z removes the dog; smiley icon 512x512 with eyes and mouth inside the face), icon exports as clean SVG. Commit 402dc64f. Audit queue/audits/2026-10-20-ask-draws-a-dog-you-can-tell-is-a-dog.json."
     }
   ],
-  "started": "2026-10-20T17:55:57.410Z"
+  "started": "2026-10-20T17:55:57.410Z",
+  "walks": [
+    "ask-draws-a-dog-walk"
+  ],
+  "completed": "2026-10-20T19:52:31.891Z"
 }

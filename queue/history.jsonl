@@ -13175,3 +13175,20 @@
 {"t":"2026-10-20T17:43:20.610Z","ev":"task_walks","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","walks":[]}
 {"t":"2026-10-20T17:43:33.401Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
 {"t":"2026-10-20T17:43:54.244Z","ev":"task_done","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","from":"in_progress","note":"Scripts/ask-eval.sh (Scripts/ask-eval/, README there): 17 cases run one at a time on the probe through Ask or the skill, read and rendered over MCP, scored by document rules (14 node tests), a fixed-rubric picture judge (claude-opus-5-5, 3 looks, median) and blind naming; history in queue/evals/ask-eval-history.jsonl with compare against the best, seconds per case. Judge agrees with the user (messes 1.8/1.8/1.4, hand-made clean sheet 7.6). Baselines: Ask 37.8 in 10.5 min, skill 83.9 in 24.5 min. Audit queue/audits/2026-10-20-ask-eval.json with both contact sheets. Scripts/test.sh 14008 green."}
+{"t":"2026-10-20T17:55:57.239Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":554,"of":989,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-20T17:55:57.418Z","ev":"task_started","id":"ask-draws-a-dog-you-can-tell-is-a-dog","title":"Ask draws a dog, or a smiley face icon, you can tell at a glance","priority":"p1-high"}
+{"t":"2026-10-20T18:04:19.312Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T18:33:37.242Z","ev":"task_created","id":"an-illustration-ask-draws-looks-illustrated-natu","priority":"p1-high","title":"An illustration Ask draws looks illustrated: natural shapes, light and shadow, depth"}
+{"t":"2026-10-20T18:33:37.355Z","ev":"task_created","id":"asking-always-shows-the-agent-area-even-from-a-c","priority":"p1-high","title":"Asking always shows the Agent area, even from a closed panel or a video in View"}
+{"t":"2026-10-20T18:33:47.593Z","ev":"task_resequenced","id":"asking-always-shows-the-agent-area-even-from-a-c","from":42.5,"to":8.2}
+{"t":"2026-10-20T18:33:47.669Z","ev":"task_resequenced","id":"an-illustration-ask-draws-looks-illustrated-natu","from":35,"to":8.3}
+{"t":"2026-10-20T18:33:47.743Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T19:50:47.351Z","ev":"task_walks","id":"ask-draws-a-dog-you-can-tell-is-a-dog","walks":["ask-draws-a-dog-walk"]}
+{"t":"2026-10-20T19:51:56.632Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
+{"t":"2026-10-20T19:51:56.706Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-20T19:51:56.781Z","ev":"task_note","id":"opening-an-svg-file-gives-you-its-drawing-to-edi"}
+{"t":"2026-10-20T19:51:56.855Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T19:51:56.929Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T19:51:57.003Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T19:51:57.079Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T19:52:31.893Z","ev":"task_done","id":"ask-draws-a-dog-you-can-tell-is-a-dog","from":"in_progress","note":"Ask draws a thing in one add_drawing call: a built-in set of 992 Twemoji drawings (CC-BY 4.0, credited in Open Source Notices) or the model's own SVG, read into one named group of editable layers (SVGArtwork); icon on a blank picture becomes a 512 pt icon frame on its keylines; Ask looks with llama3.2-vision and redraws at most twice or says it could not. Eval 13 drawing cases: 35.4 -> 92, named blind 1 -> 13 of 13, median 18.4 s. Verified: 14052 tests green, ask-draws-a-dog-walk ok at Next defaults (one Command Z removes the dog; smiley icon 512x512 with eyes and mouth inside the face), icon exports as clean SVG. Commit 402dc64f. Audit queue/audits/2026-10-20-ask-draws-a-dog-you-can-tell-is-a-dog.json."}

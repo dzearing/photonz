@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T18:33:37.238Z",
-  "updated": "2026-10-20T18:34:54.582Z",
+  "updated": "2026-10-20T19:51:56.631Z",
   "deps": [
     "ask-draws-a-dog-you-can-tell-is-a-dog"
   ],
@@ -42,6 +42,10 @@
     {
       "t": "2026-10-20T18:34:54.582Z",
       "note": "intake: draw in a graphic artist's eight passes, each checkable"
+    },
+    {
+      "t": "2026-10-20T19:51:56.630Z",
+      "note": "from ask-draws-a-dog (2026-10-20): Ask now draws a thing with ONE add_drawing call (built-in Twemoji set first, else the model's own whole SVG, read into editable layers by SVGArtwork) and looks at it with llama3.2-vision before handing back, redrawing at most twice (AskDrawingCheck, AskSession.look). Off the set, qwen3:30b's own SVGs are the weak spot: a lighthouse was seen as 'a square', 'pencil sharpener', 'matchstick' and a windmill as 'a red rectangle', 'a stick figure', 'a bow tie' over three tries each, then Ask gave up (run 20261020-185749-ask, temporary cases zz-lighthouse/zz-windmill, not in the history). The look-and-redraw loop is there to reuse; what it needs is better drawing, which is this task."
     }
   ]
 }
