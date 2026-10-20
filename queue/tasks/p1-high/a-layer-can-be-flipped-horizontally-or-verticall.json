@@ -4,12 +4,12 @@
   "goal": "A person can flip what is picked left to right or top to bottom the way Photoshop and Figma let them: from the right-click menu, from the menu bar, and by dragging a side handle past the opposite side. Today there is no way at all.",
   "epic": "interaction-foundations",
   "priority": "p1-high",
-  "seq": 3970,
+  "seq": 8.05,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:30:51.248Z",
-  "updated": "2026-10-20T22:30:51.251Z",
+  "updated": "2026-10-20T22:30:58.261Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'there's no way to flip a layer. I tried resizing it and dragging to reverse it but that didn't work. no right click to reverse horiz/vert either.'\n\nThe model and renderer already carry it: LayerTransform.flipHorizontal and flipVertical (Sources/PhotonzCore/LayerTransform.swift:14, applied in affineTransform at :33), drawn by DocumentRenderer.swift:2845, exported as an SVG matrix (SVGExport.swift:1935-1943). The only thing that sets them today is Mirror Across Center (MirrorAcrossCenter.swift, behind its own switch, which makes a mirrored COPY, not a flip). So this is mostly a missing command and a handle drag that clamps at zero; NOT confirmed by running the app, reproduce first. Check that a resize past zero turns into a flip of the transform, not a negative frame (frames stay standardized). Check the video path draws the flip during playback and export.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-10-20T22:30:51.250Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T22:30:58.259Z",
+      "note": "seq 3970 -> 8.05"
     }
   ]
 }
