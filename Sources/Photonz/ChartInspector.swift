@@ -9,6 +9,11 @@ import SwiftUI
 /// rows (label, value, colour) with a paste button for rows copied out of a
 /// spreadsheet, and segments for the decimals. Above Title, because the data
 /// is what a person came to change; the look is Title's.
+///
+/// A chart holds later sets of numbers along its clip (`ChartData.swift`).
+/// The table shows the set the playhead is in, the diamond in the Data row
+/// adds one at the playhead the way a key is added, and the Set row, shown
+/// once there are two, steps the playhead from one set to the next.
 struct ChartInspector: View {
     @Environment(EditorState.self) private var editorState
 
@@ -18,6 +23,7 @@ struct ChartInspector: View {
         VStack(alignment: .leading, spacing: 6) {
             if let chart = editorState.chartInHand {
                 kind(chart.spec)
+                if chart.spec.setCount > 1 { sets(chart.spec) }
                 table(chart.id, chart.spec)
                 unit(chart.spec)
                 decimals(chart.spec)
@@ -40,15 +46,53 @@ struct ChartInspector: View {
         .panelHelp("Bars, a line, a donut, one big number or cards side by side.")
     }
 
+    // MARK: Sets
+
+    /// Which set of numbers the playhead is in; picking one moves the
+    /// playhead to where it has arrived. The minus takes the set in view
+    /// away (the first stays: it is the rows themselves).
+    private func sets(_ spec: ChartSpec) -> some View {
+        let current = editorState.chartSetInHand
+        return PanelFieldRow("Set") {
+            HStack(spacing: 6) {
+                SegmentedControl("Set", selection: current,
+                                 options: (0..<spec.setCount).map { .init($0, "\($0 + 1)") },
+                                 size: .small) { editorState.showChartSet($0) }
+                Button { editorState.removeChartSetInHand() } label: {
+                    Image(systemName: "minus").font(.system(size: 10))
+                }
+                .buttonStyle(.borderless)
+                .disabled(current == 0)
+                .panelHelp("Remove this set of numbers.")
+                .accessibilityLabel("Remove Set")
+                .playtestControl("Remove Set", detail: "Chart")
+            }
+        }
+        .panelReadout("\(current + 1) of \(spec.setCount)")
+        .playtestField("Chart Set")
+        .panelHelp("Each set is the numbers the chart moves to at its moment.")
+    }
+
     // MARK: Data
 
     private func table(_ id: UUID, _ spec: ChartSpec) -> some View {
         let canRemove = spec.rows.count > spec.kind.rowLimit.lowerBound
         let canAdd = spec.rows.count < spec.kind.rowLimit.upperBound
+        let set = editorState.chartSetInHand
+        let values = editorState.chartValuesInHand
+        let colours = editorState.chartRowColoursInHand
         return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 PanelRowLabel(text: "Data")
                 Spacer(minLength: 4)
+                Button { editorState.addChartSetAtPlayhead() } label: {
+                    Image(systemName: "plus.diamond").font(.system(size: 11))
+                }
+                .buttonStyle(.borderless)
+                .disabled(!editorState.canAddChartSetAtPlayhead)
+                .panelHelp("New numbers at the playhead. The chart moves to them.")
+                .accessibilityLabel("Add Set")
+                .playtestControl("Add Set", detail: "Chart")
                 Button { editorState.pasteChartRows() } label: {
                     Image(systemName: "doc.on.clipboard").font(.system(size: 11))
                 }
@@ -70,14 +114,18 @@ struct ChartInspector: View {
                 HStack(spacing: 4) {
                     ChartCellField(text: row.label, prompt: "Label", name: "Row \(index + 1) Label",
                                    identity: "\(id)-\(index)") { editorState.setChartLabel(index, $0) }
-                    ChartCellField(text: Self.typed(row.value), prompt: "0", name: "Row \(index + 1) Value",
-                                   identity: "\(id)-\(index)", alignment: .trailing) {
+                    ChartCellField(text: Self.typed(index < values.count ? values[index] : row.value), prompt: "0",
+                                   name: "Row \(index + 1) Value", identity: "\(id)-\(set)-\(index)",
+                                   alignment: .trailing, takesTheAsk: index == 0) {
                         editorState.setChartValue(index, $0)
                     }
                     .frame(width: 64)
-                    ColorWellButton(hex: row.colorHex ?? (editorState.titleRecipeInHand?.theme.accent ?? "#FFFFFF"),
+                    // The colour it is drawn in, its own or the theme's: a
+                    // struck-through box read as no colour at all.
+                    ColorWellButton(hex: row.colorHex ?? (index < colours.count ? colours[index]
+                                        : editorState.titleRecipeInHand?.theme.accent ?? "#FFFFFF"),
                                     name: "Row \(index + 1)", size: 14,
-                                    wellKey: "chart.row.\(index)", isNone: row.colorHex == nil,
+                                    wellKey: "chart.row.\(index)",
                                     onNone: { editorState.setChartColour(index, nil) }) {
                         editorState.setChartColour(index, $0)
                     }
@@ -146,8 +194,12 @@ struct ChartCellField: View {
     /// Which row of which chart it speaks for: a new one starts a fresh draft.
     let identity: String
     var alignment: TextAlignment = .leading
+    /// Whether this is the cell a chart just added puts the keyboard in
+    /// (`EditorState.askForChartData`).
+    var takesTheAsk = false
     let commit: (String) -> Void
 
+    @Environment(EditorState.self) private var editorState
     @State private var draft = ""
     @State private var editing = false
     @FocusState private var focused: Bool
@@ -179,6 +231,19 @@ struct ChartCellField: View {
                 if isFocused { editing = true } else if editing { land() }
             }
             .onDisappear { if editing { land() } }
+            .onChange(of: editorState.chartDataRequest) { takeTheAsk() }
+            .onAppear { takeTheAsk() }
+    }
+
+    /// The keyboard, when a chart just added asked for its first value: a
+    /// beat later, once the panel has brought the section into view.
+    private func takeTheAsk() {
+        guard takesTheAsk, editorState.chartFirstValueWaiting else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            guard editorState.chartFirstValueWaiting else { return }
+            editorState.chartFirstValueWaiting = false
+            focused = true
+        }
     }
 
     private func land() {

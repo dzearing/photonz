@@ -1,0 +1,334 @@
+{
+  "out": "/tmp/photonz-playtest/chart-from-pasted-data-walk",
+  "seed": "A chart is your data, given to it the obvious way (task a-chart-is-your-data-given-to-it-the-obvious-way), at Next defaults with no flag set. The sample recording is opened and four rows are put on the clipboard as a spreadsheet would put them (a header row, then a label and a number on each line, tab separated). Command V on the video lands a bar chart of exactly those rows at the playhead: titled by the header, Q2's -25 drawn as a bar running down from the zero line. With the playhead at 3s the diamond in the Chart section's Data row, clicked by the pointer, adds a second set of numbers there with the keyboard in its first value; typed numbers change that set only. At 2s the chart and the table show the first set, at 3s the second, and played from the start the bars move from one to the other. Finally a CSV file of revenue by region let go on the video lands as a second chart, titled Revenue and written in dollars.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "THE FIRST TEST: four rows copied out of a spreadsheet (a header, then a label and a number on each line, tab separated) and pasted on the video with Command V make a chart of exactly those rows.",
+      "do": "clipboardText",
+      "text": "Quarter\tSignups\nQ1\t40\nQ2\t-25\nQ3\t60\nQ4\t30"
+    },
+    {
+      "do": "shortcut",
+      "key": "v",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Paste"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Bar Chart",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "field": "Chart Kind",
+      "reads": "Bar Chart"
+    },
+    {
+      "do": "expect",
+      "field": "Row 1 Label",
+      "reads": "Q1"
+    },
+    {
+      "do": "expect",
+      "field": "Row 2 Value",
+      "reads": "-25"
+    },
+    {
+      "do": "expect",
+      "field": "Row 4 Label",
+      "reads": "Q4"
+    },
+    {
+      "do": "expect",
+      "field": "Row 4 Value",
+      "reads": "30"
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Signups",
+      "opacity": 1.0
+    },
+    {
+      "comment": "The -25 is drawn as a bar running down from the zero line, its number under it.",
+      "do": "expectDrawn",
+      "layer": "-25",
+      "opacity": 1.0
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Bar 2",
+      "shown": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-pasted",
+      "note": "A bar chart titled Signups with Q1 40, Q2 -25 below the zero line, Q3 60 and Q4 30, and the Chart section in view with the four rows"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-pasted"
+    },
+    {
+      "comment": "THE SECOND TEST: a second set of numbers at 3s, added with the diamond in the Data row clicked by the pointer. The keyboard lands in its first value.",
+      "do": "clickRuler",
+      "seconds": 3.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Add Set"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "field": "Chart Set",
+      "reads": "2 of 2"
+    },
+    {
+      "do": "type",
+      "text": "20"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Row 1 Value",
+      "reads": "20"
+    },
+    {
+      "do": "focus",
+      "field": "Row 2 Value"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "15"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "focus",
+      "field": "Row 4 Value"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "55"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Row 2 Value",
+      "reads": "15"
+    },
+    {
+      "do": "expect",
+      "field": "Row 4 Value",
+      "reads": "55"
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "55",
+      "opacity": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-second-set",
+      "note": "At 3s the chart shows the second set: Q1 20, Q2 15 now above the line, Q3 60, Q4 55; the Set row reads 2 of 2"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-second-set"
+    },
+    {
+      "comment": "THE THIRD TEST: at 2s the chart still shows the first set, and the table shows the first set's numbers.",
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Chart Set",
+      "reads": "1 of 2"
+    },
+    {
+      "do": "expect",
+      "field": "Row 4 Value",
+      "reads": "30"
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Bar 4",
+      "shown": true
+    },
+    {
+      "do": "snapshot",
+      "name": "3-first-set"
+    },
+    {
+      "comment": "Half way through the change the bars are between the two sets.",
+      "do": "clickRuler",
+      "seconds": 2.55
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Bar 4",
+      "shown": true
+    },
+    {
+      "do": "snapshot",
+      "name": "4-changing"
+    },
+    {
+      "comment": "THE FOURTH TEST: played from the start, the chart is in the picture throughout and moves from one set to the next at 3s.",
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPlaybackShows",
+      "layer": "Bar 4",
+      "name": "5-playing",
+      "seconds": 4.0,
+      "moments": 8
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "THE FIFTH TEST: a CSV file let go on the video lands as a chart of it, titled by its header, in dollars because every value was written in dollars.",
+      "do": "dropImage",
+      "file": "fixtures/Revenue by region.csv",
+      "at": [
+        640,
+        400
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Bar Chart",
+      "count": 2
+    },
+    {
+      "do": "expect",
+      "field": "Row 1 Label",
+      "reads": "North"
+    },
+    {
+      "do": "expect",
+      "field": "Row 4 Value",
+      "reads": "1640"
+    },
+    {
+      "do": "expect",
+      "field": "Chart Unit",
+      "reads": "$ Dollars"
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Revenue",
+      "opacity": 1.0
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "$2,050",
+      "opacity": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "6-csv-dropped"
+    }
+  ]
+}

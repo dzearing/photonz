@@ -74,6 +74,20 @@ struct AnimatedChartRenderTests {
         #expect(held > 500, "\(kind.name) puts almost nothing on the picture")
         #expect(Double(first) < Double(held) * 0.1, "\(kind.name) is already there at its first frame")
         #expect(Double(midway) > Double(held) * 0.05, "\(kind.name) has not started half way through its in")
+        if kind == .comparison {
+            // A comparison's build is its numbers counting: its faint cards
+            // only fade up (task `a-chart-is-your-data-given-to-it-the-
+            // obvious-way`: nothing moves that is not data), so most of its
+            // ink is there early and its last number is not.
+            let spec = try #require(doc.chartSpec(layerID: id))
+            let last = spec.rows.count
+            let shown = doc.drawn(atTimeMS: arrived / 2).layer(id: id)
+                .flatMap { TitleDesign.find("Number \(last)", in: $0) }
+            let reading = shown?.style.opacity == 0 ? 0
+                : (shown?.text?.string).flatMap(CountedNumber.init(parsing:))?.value ?? 0
+            #expect(reading < spec.rows[last - 1].value * 0.7, "Comparison's last number has already counted")
+            return
+        }
         guard kind == .bigNumber else {
             #expect(Double(midway) < Double(held) * 0.95, "\(kind.name) has fully arrived half way through its in")
             return

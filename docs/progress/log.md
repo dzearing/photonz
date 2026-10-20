@@ -21729,3 +21729,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `setPictureFades`: one end or both on several layers in one undo step. Fade rows (right-click, Clip menu, panel, ⌃⌥I/⌃⌥O) act on every pick; new **Fade In and Out** (⌃⌥F) leads a picture's/title's right-click, Add Transition moved under More.
 - Walks: `the-next-arrow-fades-like-the-last-walk`, `the-whole-look-carries-over-walk` (+ `look-carries-over.py`): 26 settings failed to carry on the previous build, 0 now.
 - Next: measurements are not walked (the measure drag landed nothing on open video).
+
+## 2026-10-20: A chart is your data, and it moves when your numbers do (Next)
+
+- Reproduced first: the Chart section was on screen but squeezed under Properties with the Library open (Q4 cut in half, Unit and Decimals below the fold) and nothing asked for numbers.
+- `ChartData.swift` (PhotonzCore): `ChartTable` reads a spreadsheet's copy or a CSV (tabs, quoted commas, semicolons, $ € £ % K M B, `(25)`, year headers); later number columns are later SETS (`ChartStep`) on the chart's own clock. A frame is laid out from the numbers of its moment (`chartsShown` in `drawn(atTimeMS:)`, ~1ms a frame), against one axis over every set. Negatives are drawn from a zero line. Chart builds only fade words; the data is the only thing that moves.
+- App: Command V on a video with a table lands a chart (or replaces the picked chart's numbers); a .csv/.tsv dropped on the video does too. A chart just added scrolls its Chart section into view and puts the keyboard in its first value. The Data row's diamond adds a set at the playhead; the Set row jumps between sets; the table edits the set the playhead is in.
+- Walks: `chart-from-pasted-data-walk` (new), `animated-charts-walk` (numbers first). Walk step `expectDrawn` takes `height`. Reel and measured bar: `queue/audits/2026-10-20-chart-data*` (bars end within 0.23% of the axis).
+- Left rough: no mark on the timeline where a chart's numbers change; no right-click Add Set Here; whether the Energy knob reintroduces rises on a chart's words.

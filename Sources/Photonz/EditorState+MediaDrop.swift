@@ -23,7 +23,12 @@ extension EditorState {
     /// Nil where the file is neither, which leaves every other drop exactly
     /// where it was.
     func mediaDropAnswer(for url: URL, atMS ms: Int? = nil) -> MediaDrop.Answer? {
-        guard Experiments.shared.droppingMedia, let kind = MediaFiles.kind(of: url) else { return nil }
+        guard Experiments.shared.droppingMedia else { return nil }
+        // A table lands as a chart of it (`EditorState+Charts`).
+        if Experiments.shared.animatedChartsEnabled, MediaFiles.isTable(url) {
+            return MediaDrop.tableAnswer(named: url.lastPathComponent, documentHasTime: takesChartFiles)
+        }
+        guard let kind = MediaFiles.kind(of: url) else { return nil }
         return MediaDrop.answer(for: kind, named: url.lastPathComponent,
                                 documentHasTime: document?.hasTime ?? false,
                                 atMS: ms ?? documentTimeMS,
@@ -48,6 +53,8 @@ extension EditorState {
             raiseCanvasNotice(.mediaWouldNotOpen(name: url.lastPathComponent))
         case .openDocument:
             openRecordingInItsOwnWindow?(url)
+        case .chart:
+            if !addChart(fromFile: url) { raiseCanvasNotice(.mediaWouldNotOpen(name: url.lastPathComponent)) }
         case .soundLayer:
             let at = documentTimeMS
             Task { [weak self] in

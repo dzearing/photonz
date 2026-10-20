@@ -207,6 +207,12 @@ final class EditorState {
     /// Opened over a picture still drawn at the old moment, the field sat
     /// where a sliding card started and the words landed off the frame.
     @ObservationIgnored var typeInOnceShown: (layerID: UUID, atMS: Int)?
+    /// A chart just landed: the panel brings its Chart section into view and
+    /// puts the keyboard in its first value (`EditorState+Charts`). Counts
+    /// up once per ask; `chartFirstValueWaiting` is cleared by the cell that
+    /// took the keyboard.
+    var chartDataRequest = 0
+    @ObservationIgnored var chartFirstValueWaiting = false
     /// The last few composites of a document with time: how long each took to
     /// draw and how long from the ask to the picture. A walk reads them to say
     /// what a scrub costs (`expectScrubSmooth`).

@@ -240,6 +240,12 @@ extension PhotonzDocument {
         // In a document that finishes, the lap IS the document: four seconds in
         // is four seconds in, never four seconds modulo something.
         let cycle = max(1, documentDurationMS)
+        // A chart with more than one set of numbers is laid out from the
+        // numbers of this moment, before its keys are read
+        // (`ChartData.swift`).
+        if hasChartSets {
+            shown.layers = shown.layers.map { chartsShown($0, atDocumentTimeMS: moment) }
+        }
         shown.layers = shown.layers.map {
             $0.movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
         }

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/animated-charts-walk",
-  "seed": "Animated charts you can drop into a video (task animated-charts-you-can-drop-into-a-video), at Next defaults with no flag set. The sample recording is opened and View > Library shown; Catalog then the Animated Charts chip, pressed by the pointer, show the six charts as playing tiles. A double click on Bar Chart lands one at the playhead, picked, with the Chart section in the panel. Four rows are put on the clipboard as a spreadsheet would put them (a label and a number, tab separated) and Paste Rows pressed: the chart now has four bars, Bar 4 the tallest. On its own clock the bars arrive one after another: at 0.6 s Bar 1 is fully up while Bar 4 has not started, at 2.0 s every bar is up. The Unit dropdown, clicked by the pointer, puts the values in dollars, and the Kind dropdown turns the same rows into horizontal bars. Played from the start, the chart shows while it plays.",
+  "seed": "Animated charts you can drop into a video (task animated-charts-you-can-drop-into-a-video), at Next defaults with no flag set. The sample recording is opened and View > Library shown; Catalog then the Animated Charts chip, pressed by the pointer, show the six charts as playing tiles. A double click on Bar Chart lands one at the playhead, picked, with the Chart section in view and the keyboard in its first value: 5000 typed straight away lands in Q1. Four rows are put on the clipboard as a spreadsheet would put them (a label and a number, tab separated) and Paste Rows pressed: the chart now has four bars, Bar 4 the tallest. On its own clock the bars arrive one after another: at 0.6 s Bar 1 is fully up while Bar 4 has not started, at 2.0 s every bar is up. The Unit dropdown, clicked by the pointer, puts the values in dollars, and the Kind dropdown turns the same rows into horizontal bars. Played from the start, the chart shows while it plays.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -100,6 +100,28 @@
       "do": "expect",
       "field": "Chart Kind",
       "reads": "Bar Chart"
+    },
+    {
+      "comment": "The numbers come first: the Chart section is in view whole, and the keyboard is already in the first value.",
+      "do": "expectInView",
+      "field": "Chart Row 4"
+    },
+    {
+      "do": "type",
+      "text": "5000"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Row 1 Value",
+      "reads": "5000"
     },
     {
       "do": "snapshot",

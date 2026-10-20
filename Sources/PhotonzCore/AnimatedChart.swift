@@ -175,16 +175,23 @@ public struct ChartSpec: Hashable, Codable, Sendable {
     public var rows: [ChartRow]
     public var format: ChartNumberFormat
     public var delta: String?
+    /// Its later sets of numbers along its clip, nil for a chart of one set
+    /// (`ChartData.swift`). Nil on every chart written before there were any.
+    public var steps: [ChartStep]?
+    /// The axis a chart drawn at a moment keeps, which is the whole chart's
+    /// rather than that moment's (`shown(atMS:)`). Nil on every chart saved.
+    var axis: ClosedRange<Double>?
 
     public static let maxRows = 12
 
     public init(kind: ChartKind, title: String, rows: [ChartRow], format: ChartNumberFormat = ChartNumberFormat(),
-                delta: String? = nil) {
+                delta: String? = nil, steps: [ChartStep]? = nil) {
         self.kind = kind
         self.title = title
         self.rows = rows
         self.format = format
         self.delta = delta
+        self.steps = steps
     }
 
     /// What a chart says when it lands, before anybody types their own.
@@ -227,6 +234,7 @@ public struct ChartSpec: Hashable, Codable, Sendable {
         if spec.rows.isEmpty { spec.rows = [ChartRow(label: "Item", value: 1)] }
         while spec.rows.count < limit.lowerBound, let last = spec.rows.last { spec.rows.append(last) }
         spec.format = ChartNumberFormat(prefix: format.prefix, suffix: format.suffix, decimals: format.decimals)
+        spec.steps = spec.tidiedSteps()
         return spec
     }
 
@@ -234,65 +242,27 @@ public struct ChartSpec: Hashable, Codable, Sendable {
 
     /// Rows out of pasted text: a line per row, cells split by tabs (a
     /// spreadsheet's copy), or commas with quotes (a CSV), or semicolons.
-    /// The first cell is the label and the first number after it the value;
-    /// a cell like `#FF9500` is the row's colour. A line with no number in it
-    /// (a header) is skipped. Money, percents and thousands read as numbers.
+    /// The first cell is the label and the first column of numbers the
+    /// value; a cell like `#FF9500` is the row's colour. A header is
+    /// skipped. Money, percents and thousands read as numbers
+    /// (`ChartTable.reading`).
     public static func rows(pasted text: String) -> [ChartRow] {
-        let lines = text.replacingOccurrences(of: "\r\n", with: "\n")
-            .replacingOccurrences(of: "\r", with: "\n")
-            .split(separator: "\n", omittingEmptySubsequences: true)
-        var rows: [ChartRow] = []
-        for line in lines {
-            let cells = Self.cells(String(line)).map { $0.trimmingCharacters(in: .whitespaces) }
-            guard !cells.isEmpty else { continue }
-            let colour = cells.first(where: Self.isColour).map { $0.hasPrefix("#") ? $0.uppercased() : "#" + $0.uppercased() }
-            let rest = cells.filter { !Self.isColour($0) }
-            guard !rest.isEmpty else { continue }
-            if rest.count == 1 {
-                guard let value = number(in: rest[0]) else { continue }
-                rows.append(ChartRow(label: "", value: value, colorHex: colour))
-                continue
-            }
-            guard let value = rest.dropFirst().lazy.compactMap(Self.number(in:)).first else { continue }
-            rows.append(ChartRow(label: rest[0], value: value, colorHex: colour))
-        }
-        return rows
+        ChartTable.reading(text)?.rows ?? []
     }
 
-    /// A cell as a number, where it is one: "$1,200", "42%", "-3.5", "12K".
+    /// A cell as a number, where it is one: "$1,200", "42%", "-3.5", "12K",
+    /// and "(25)", the way an account writes minus 25.
     public static func number(in cell: String) -> Double? {
         var cleaned = cell.trimmingCharacters(in: .whitespaces)
+        if cleaned.hasPrefix("("), cleaned.hasSuffix(")"), cleaned.count > 2 {
+            return number(in: String(cleaned.dropFirst().dropLast())).map { -abs($0) }
+        }
         for mark in ["$", "€", "£", "%", ",", "\u{00A0}", " "] { cleaned = cleaned.replacingOccurrences(of: mark, with: "") }
         cleaned = cleaned.replacingOccurrences(of: "\u{2212}", with: "-")
         // A unit letter after it ("12K") is the unit, not part of the value.
         if let last = cleaned.last, "kKmMbBxX".contains(last), cleaned.count > 1 { cleaned.removeLast() }
         guard !cleaned.isEmpty, let value = Double(cleaned), value.isFinite else { return nil }
         return value
-    }
-
-    private static func isColour(_ cell: String) -> Bool {
-        let digits = cell.hasPrefix("#") ? cell.dropFirst() : Substring(cell)
-        return cell.hasPrefix("#") && digits.count == 6 && digits.allSatisfy(\.isHexDigit)
-    }
-
-    private static func cells(_ line: String) -> [String] {
-        if line.contains("\t") { return line.components(separatedBy: "\t") }
-        let separator: Character = line.contains(",") ? "," : (line.contains(";") ? ";" : "\t")
-        var cells: [String] = []
-        var current = ""
-        var quoted = false
-        for character in line {
-            if character == "\"" {
-                quoted.toggle()
-            } else if character == separator, !quoted {
-                cells.append(current)
-                current = ""
-            } else {
-                current.append(character)
-            }
-        }
-        cells.append(current)
-        return cells
     }
 
     // MARK: Reading the canvas back
@@ -470,31 +440,44 @@ struct ChartPen {
 
     // MARK: Bars
 
+    /// Bars standing on a zero line: up for a value over nought, down for one
+    /// under it, every one to the same scale. The scale is the biggest and
+    /// the least number any set of the chart shows, so a bar that grows from
+    /// one set to the next really grows.
     private func bars(_ spec: ChartSpec) -> [Layer] {
         let rows = spec.rows
         let base = canvas.height - u(200)
         let top = u(300)
-        let tallest = max(rows.map(\.value).max() ?? 1, Double.leastNonzeroMagnitude)
+        let (lo, hi) = spec.valueRange
+        let span = max(hi - lo, Double.leastNonzeroMagnitude)
+        // Room above for the numbers over the bars, and below for the ones
+        // under bars that run down.
+        let headroom = hi > 0 || lo == 0 ? u(64) : 0
+        let footroom = lo < 0 ? u(64) : 0
+        let room = base - top - headroom - footroom
+        let zero = (top + headroom + room * CGFloat(hi / span)).rounded()
         let slot = (right - left) / CGFloat(rows.count)
         let width = min(slot * 0.58, u(200))
-        let room = base - top - u(64)
         var pieces: [Layer] = []
         var values: [Layer] = []
         var labels: [Layer] = []
         for (index, row) in rows.enumerated() {
             let middle = left + slot * (CGFloat(index) + 0.5)
-            let height = max(u(4), (room * CGFloat(max(0, row.value) / tallest)).rounded())
-            let box = CGRect(x: (middle - width / 2).rounded(), y: base - height, width: width.rounded(), height: height)
+            let height = max(u(4), (room * CGFloat(abs(row.value) / span)).rounded())
+            let below = row.value < 0
+            let box = CGRect(x: (middle - width / 2).rounded(), y: below ? zero : zero - height,
+                             width: width.rounded(), height: height)
             pieces.append(pen.box("Bar \(index + 1)", box, fill: Paint(hex: colour(spec, index)), radius: u(10)))
             var value = words("Value \(index + 1)", spec.format.string(row.value), size: 40, display: true,
                               weight: .semibold, color: theme.primary, x: middle, top: 0, align: .center,
                               width: slot)
-            value.frame.origin.y = (box.minY - u(12) - value.frame.height).rounded()
+            value.frame.origin.y = below ? (box.maxY + u(12)).rounded()
+                : (box.minY - u(12) - value.frame.height).rounded()
             values.append(value)
             labels.append(words("Label \(index + 1)", row.label, size: 30, display: false, color: theme.secondary,
                                 x: middle, top: base + u(22), align: .center, width: slot))
         }
-        return [baseline(at: base)] + pieces + values + labels
+        return [baseline(at: zero)] + pieces + values + labels
     }
 
     private func horizontalBars(_ spec: ChartSpec) -> [Layer] {
@@ -504,9 +487,15 @@ struct ChartPen {
         let slot = (bottom - top) / CGFloat(rows.count)
         let thickness = min(slot * 0.58, u(72))
         let start = left + u(360)
-        let room = right - start - u(170)
-        let longest = max(rows.map(\.value).max() ?? 1, Double.leastNonzeroMagnitude)
-        var axis = pen.box("Baseline", CGRect(x: start - u(2), y: top, width: u(2), height: bottom - top),
+        let (lo, hi) = spec.valueRange
+        let span = max(hi - lo, Double.leastNonzeroMagnitude)
+        // Room to the right for the numbers past the bars, and to the left of
+        // nought for the ones past bars that run left.
+        let rightRoom = hi > 0 || lo == 0 ? u(170) : 0
+        let leftRoom = lo < 0 ? u(170) : 0
+        let room = right - start - rightRoom - leftRoom
+        let zero = (start + leftRoom + room * CGFloat(-lo / span)).rounded()
+        var axis = pen.box("Baseline", CGRect(x: zero - u(2), y: top, width: u(2), height: bottom - top),
                            fill: Paint(hex: theme.secondary))
         axis.style.opacity = 0.45
         var pieces: [Layer] = []
@@ -514,11 +503,15 @@ struct ChartPen {
         var labels: [Layer] = []
         for (index, row) in rows.enumerated() {
             let middle = top + slot * (CGFloat(index) + 0.5)
-            let length = max(u(4), (room * CGFloat(max(0, row.value) / longest)).rounded())
-            let box = CGRect(x: start, y: (middle - thickness / 2).rounded(), width: length, height: thickness.rounded())
+            let length = max(u(4), (room * CGFloat(abs(row.value) / span)).rounded())
+            let left = row.value < 0
+            let box = CGRect(x: left ? zero - length : zero, y: (middle - thickness / 2).rounded(), width: length,
+                             height: thickness.rounded())
             pieces.append(pen.box("Bar \(index + 1)", box, fill: Paint(hex: colour(spec, index)), radius: u(10)))
             var value = words("Value \(index + 1)", spec.format.string(row.value), size: 38, display: true,
-                              weight: .semibold, color: theme.primary, x: box.maxX + u(18), top: 0)
+                              weight: .semibold, color: theme.primary,
+                              x: left ? box.minX - u(18) : box.maxX + u(18), top: 0, align: left ? .right : .left,
+                              width: left ? u(170) : nil)
             value.frame.origin.y = (middle - value.frame.height / 2).rounded()
             values.append(value)
             var label = words("Label \(index + 1)", row.label, size: 32, display: false, color: theme.secondary,
@@ -536,12 +529,15 @@ struct ChartPen {
         let base = canvas.height - u(200)
         let top = u(330)
         let inset = u(60)
-        let lo = min(0, rows.map(\.value).min() ?? 0)
-        let hi = max(rows.map(\.value).max() ?? 1, lo + 1)
+        let (lo, high) = spec.valueRange
+        let hi = max(high, lo + 1)
         let points = rows.enumerated().map { index, row in
             CGPoint(x: (left + inset + (right - left - inset * 2) * CGFloat(index) / CGFloat(max(1, rows.count - 1))).rounded(),
                     y: (base - (base - top) * CGFloat((row.value - lo) / (hi - lo))).rounded())
         }
+        // The line it sits on is nought, under the lowest point when every
+        // number is over it, and between them where some are not.
+        let zero = (base - (base - top) * CGFloat(-lo / (hi - lo))).rounded()
         let stroke = u(6)
         let frame = CGRect(x: left, y: top - stroke * 2, width: right - left, height: base - top + stroke * 4)
         let anchors = points.enumerated().map { index, point -> PathAnchor in
@@ -566,12 +562,13 @@ struct ChartPen {
                                  fill: Paint(hex: colour(spec, index))))
             var value = words("Value \(index + 1)", spec.format.string(rows[index].value), size: 30, display: true,
                               weight: .semibold, color: theme.primary, x: point.x, top: 0, align: .center, width: slot)
-            value.frame.origin.y = (point.y - u(24) - value.frame.height).rounded()
+            value.frame.origin.y = rows[index].value < 0 ? (point.y + u(24)).rounded()
+                : (point.y - u(24) - value.frame.height).rounded()
             values.append(value)
             labels.append(words("Label \(index + 1)", rows[index].label, size: 30, display: false,
                                 color: theme.secondary, x: point.x, top: base + u(22), align: .center, width: slot))
         }
-        return [baseline(at: base), path] + dots + values + labels
+        return [baseline(at: zero), path] + dots + values + labels
     }
 
     // MARK: Donut
@@ -697,6 +694,13 @@ struct ChartPen {
     /// How a chart of this data comes in and goes off: the background, then
     /// the title, then its data one row after another, each row's number
     /// counting up as its bar grows; leaving in reverse, quicker.
+    ///
+    /// **Every move is a value arriving.** Bars grow to their values, the
+    /// line draws through its points, the donut sweeps its shares and the
+    /// numbers count. Words, dots, keys and cards only fade in: a title
+    /// rising or a key bouncing was movement for its own sake, which the
+    /// user turned down on 2026-10-19 ("having some elements that move on
+    /// the screen is not what i expected").
     static func design(_ spec: ChartSpec) -> TitleDesign {
         typealias B = TitleBuild
         let spec = spec.tidied
@@ -708,7 +712,7 @@ struct ChartPen {
         ]
         if spec.kind != .bigNumber, !spec.title.isEmpty {
             parts.append(TitlePart(path: "Title", role: .headline,
-                                   in: B(.rise, delayMS: 150, lengthMS: 700, amount: 30, curve: .easeOutQuint),
+                                   in: B(.fade, delayMS: 150, lengthMS: 500, curve: .easeOut),
                                    out: .off(.fade, delayMS: 300, lengthMS: 300), name: "Title"))
         }
         // Rows a beat apart, the beat shrinking so a dozen still arrive in
@@ -740,8 +744,7 @@ struct ChartPen {
                                  in: B(.countUp, delayMS: start + 100, lengthMS: 800, curve: .easeOut),
                                  out: leaving(index)))
                 parts.append(row("Label", index, role: .subtitle,
-                                 in: B(.rise, delayMS: max(0, start - 50), lengthMS: 500, amount: 12,
-                                       curve: .easeOutQuint),
+                                 in: B(.fade, delayMS: max(0, start - 50), lengthMS: 400, curve: .easeOut),
                                  out: leaving(index)))
             }
         case .line:
@@ -755,7 +758,7 @@ struct ChartPen {
             for index in 0..<n {
                 let reached = 500 + draw * index / max(1, n - 1)
                 parts.append(row("Dot", index, role: .accent,
-                                 in: B(.springPop, delayMS: max(0, reached - 60), lengthMS: 420, amount: 40),
+                                 in: B(.fade, delayMS: max(0, reached - 60), lengthMS: 200, curve: .easeOut),
                                  out: leaving(index)))
                 parts.append(row("Value", index, role: .kicker,
                                  in: B(.countUp, delayMS: reached, lengthMS: 500, curve: .easeOut),
@@ -783,10 +786,9 @@ struct ChartPen {
             for index in 0..<n {
                 let start = 600 + index * min(150, beat)
                 parts.append(row("Key", index, role: .accent,
-                                 in: B(.springPop, delayMS: start, lengthMS: 450, amount: 40), out: leaving(index)))
+                                 in: B(.fade, delayMS: start, lengthMS: 300, curve: .easeOut), out: leaving(index)))
                 parts.append(row("Label", index, role: .subtitle,
-                                 in: B(.rise, delayMS: start + 60, lengthMS: 500, amount: 16, direction: .left,
-                                       curve: .easeOutQuint),
+                                 in: B(.fade, delayMS: start + 60, lengthMS: 400, curve: .easeOut),
                                  out: leaving(index)))
                 parts.append(row("Value", index, role: .kicker,
                                  in: B(.countUp, delayMS: start + 60, lengthMS: 700, curve: .easeOut),
@@ -795,28 +797,27 @@ struct ChartPen {
         case .bigNumber:
             parts.append(TitlePart(path: "Number", role: .headline,
                                    in: B(.countUp, delayMS: 200, lengthMS: 1500, curve: .easeOut),
-                                   hold: TitleHold(.push, amount: 1.5),
                                    out: .off(.fade, delayMS: 150, lengthMS: 350), name: "Number"))
             parts.append(TitlePart(path: "Label", role: .subtitle,
-                                   in: B(.rise, delayMS: 650, lengthMS: 600, amount: 20, curve: .easeOutQuint),
+                                   in: B(.fade, delayMS: 650, lengthMS: 500, curve: .easeOut),
                                    out: .off(.fade, delayMS: 250, lengthMS: 300), name: "Label"))
             if let delta = spec.delta, !delta.isEmpty {
                 parts.append(TitlePart(path: "Delta", role: .accent,
-                                       in: B(.springPop, delayMS: 1500, lengthMS: 500, amount: 70),
+                                       in: B(.fade, delayMS: 1500, lengthMS: 400, curve: .easeOut),
                                        out: .off(.fade, delayMS: 300, lengthMS: 250), name: "Delta"))
             }
         case .comparison:
-            // Each card rises out of its own foot, then its number counts.
+            // Each card fades up, one after another, and its number counts.
             for index in 0..<n {
-                let start = 300 + index * 350
+                let start = 300 + index * 500
                 parts.append(row("Card", index, role: .accent,
-                                 in: B(.wipe, delayMS: start, lengthMS: 800, direction: .up, curve: .easeInOut),
-                                 out: leaving(index, .wipe, direction: .down)))
+                                 in: B(.fade, delayMS: start, lengthMS: 700, curve: .easeInOut),
+                                 out: leaving(index)))
                 parts.append(row("Number", index, role: .kicker,
                                  in: B(.countUp, delayMS: start + 300, lengthMS: 1100, curve: .easeOut),
                                  out: leaving(index)))
                 parts.append(row("Label", index, role: .subtitle,
-                                 in: B(.rise, delayMS: start + 500, lengthMS: 500, amount: 12, curve: .easeOutQuint),
+                                 in: B(.fade, delayMS: start + 500, lengthMS: 400, curve: .easeOut),
                                  out: leaving(index)))
             }
         }
@@ -859,7 +860,7 @@ extension PhotonzDocument {
         let spec = (spec ?? .sample(kind)).tidied
         let chartPen = ChartPen(canvas: canvasSize, theme: kind.theme, fonts: kind.fonts, overFootage: false)
         let layer = chartPen.group(spec, look: kind.look)
-        guard let inserted = landTitle(layer, kind: .chart, lengthMS: TitleKind.chart.lengthMS, sourceInMS: 0,
+        guard let inserted = landTitle(layer, kind: .chart, lengthMS: spec.clipLengthMS, sourceInMS: 0,
                                        atTimeMS: ms, landing: landing) else { return nil }
         let design = ChartPen.design(spec)
         applyTitleDesign(design, layerID: inserted.layerID)

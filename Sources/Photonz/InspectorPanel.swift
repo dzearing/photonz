@@ -558,6 +558,9 @@ struct InspectorPanel: View {
                 }
                 // Ask opened its plan: the Agent group open and on screen.
                 .onChange(of: editorState.ask.revealPass) { showAgentSection(proxy) }
+                // A chart just landed and asks for its numbers: its Chart
+                // section open and at the top of the view (`EditorState+Charts`).
+                .onChange(of: editorState.chartDataRequest) { showChartSection(proxy) }
                 .onAppear { if editorState.pendingClipSpeedChoices { showTimeSection(proxy) } }
                 // You opened an effect, or added one: put the settings that just
                 // appeared where you can see them. This is the LAST reveal the dock
@@ -2338,6 +2341,20 @@ struct InspectorPanel: View {
             guard !inView else { return }
             withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
                 proxy.scrollTo(InspectorSectionID.agent, anchor: .top)
+            }
+        }
+    }
+
+    /// The Chart section opened and put at the top of the view, so its
+    /// table is on screen whole rather than under the fold.
+    private func showChartSection(_ proxy: ScrollViewProxy) {
+        expand(.chart)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            if let frame = reveal.sectionFrames[.chart], frame.minY >= 0, frame.maxY <= reveal.viewportHeight {
+                return
+            }
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                proxy.scrollTo(InspectorSectionID.chart, anchor: .top)
             }
         }
     }

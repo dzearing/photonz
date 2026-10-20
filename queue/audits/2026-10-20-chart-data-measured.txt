@@ -1,0 +1,5 @@
+Axis (70): 221px
+Q1: 40 to 55; end 174px, value says 174.2px, off by 0.08% of the axis; half way 164px
+Q2: -25 to 15; end 48px, value says 47.5px, off by 0.23% of the axis; half way 19px
+Q3: 60 to 45; end 143px, value says 142.5px, off by 0.23% of the axis; half way 153px
+Q4: 30 to 70; end 222px, value says 221.7px, off by 0.15% of the axis; half way 193px

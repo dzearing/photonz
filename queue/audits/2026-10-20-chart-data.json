@@ -1,0 +1,34 @@
+{
+  "feature": "A chart is your data, and it moves when your numbers do",
+  "epic": "video-editing",
+  "summary": "Paste rows from a spreadsheet on a video, or drop a CSV, and you get a chart of exactly those numbers. A chart can hold a second (or eighth) set of numbers along its clip and moves from one to the next: bars grow and shrink, the line redraws, every number counts from old to new.",
+  "setup": "Photonz Dev, release Next, a recording open, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "In Numbers, Excel or Sheets, copy a header and four rows (a label and a number each, one of them negative). Click the video and press Command V.", "shot": "2026-10-20-chart-data-1-pasted.png" },
+    { "do": "Check the negative row: its bar runs down from the zero line with its number under it." },
+    { "do": "Move the playhead to 3s and click the diamond at the right of the Data row in the Chart section. Type a new first number and press Return.", "shot": "2026-10-20-chart-data-2-second-set.png" },
+    { "do": "Type new numbers into the other rows. The Set row now reads 1 and 2; click 1 to jump back to the first set." },
+    { "do": "Press Home, then Space. Watch the bars travel to the new numbers just before 3s.", "shot": "2026-10-20-chart-data-3-changing.png" },
+    { "do": "Copy a table with two number columns (Quarter, 2025, 2026) and paste it: one chart that shows 2025 and then moves to 2026." },
+    { "do": "Drag a .csv file from the Finder onto the video.", "shot": "2026-10-20-chart-data-4-csv-dropped.png" },
+    { "do": "Add a chart from the Library (double click Bar Chart) and type a number straight away: it goes into the first value.", "shot": "2026-10-20-chart-data-0-numbers-first.png" }
+  ],
+  "evaluate": [
+    "Is the diamond in the Data row where you would look to give a chart its next set of numbers, the way you add a key?",
+    "Does the change from one set to the next read as the data moving, and is 0.9s the right length for it?",
+    "Is it right that the table shows the set the playhead is in, so typing at 4s changes the numbers at 4s?",
+    "Should a pasted table with several number columns spread its sets over the clip the way it does (first change at 3.6s, then every 2.4s)?",
+    "Is a chart now quiet enough: titles, labels, dots and cards only fade in, and only the data moves?"
+  ],
+  "rough": [
+    "Reel and contact sheet: 2026-10-20-chart-data-bar.mp4 / .gif, -line.mp4 / .gif, -bigNumber.mp4 / .gif and 2026-10-20-chart-data-contact.png (before, 25%, half, 75%, arrived).",
+    "Measured bar (2026-10-20-chart-data-measured.txt, real renderer pixels): each bar ends its change within 0.23% of the axis of its new value (bar Q4 30 to 70 ends 222px, value says 221.7px) and half way it sits between old and new. Before this task a chart had no second set, so this could not pass.",
+    "The sets are not drawn on the timeline: the chart's clip shows no mark where its numbers change. The Set row and the Data diamond are the only way to see them. No mock covers charts on the timeline; left in this task's log rather than filed.",
+    "There is no right-click 'Add Set Here' on a chart's clip yet; the panel diamond is the one way in. Left in this task's log.",
+    "The axis is the biggest and least number any set shows, so a chart whose later set is far bigger draws its first set shorter. Chose that over rescaling per set because a bar that grows has to visibly grow.",
+    "The Energy knob still swaps a title's builds; on a chart Punchy may bring back a rise or a pop on its words. Not checked in this task.",
+    "Pictures were taken with the probe's window behind another app, the way a walk leaves it: blue buttons and picked controls show their background look.",
+    "No mock draws the Chart section (UX-PATTERNS §4 panel controls are used: Set is a segmented control, the add is a diamond like a key)."
+  ]
+}

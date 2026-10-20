@@ -20,6 +20,9 @@ public enum CanvasFileDrop: Equatable, Sendable {
     /// answers that, and the drag says the answer out loud rather than drawing
     /// a box, because neither of these has a box to draw.
     case media(MediaDrop.Kind)
+    /// A CSV or tab separated file: a chart of its numbers on a video, which
+    /// `MediaDrop.tableAnswer` decides and says, like a sound.
+    case table
     /// A text file, an archive, a folder, a picture too broken to read: there
     /// is nothing the canvas can make of it, so the drag refuses it.
     case unsupported
@@ -35,6 +38,7 @@ public enum CanvasFileDrop: Equatable, Sendable {
         // poster frame out of some movie containers and a recording that came
         // back as a still picture would land as one.
         if takingMedia, let media = MediaFiles.kind(of: url) { return .media(media) }
+        if takingMedia, MediaFiles.isTable(url) { return .table }
         // An SVG is a picture where media comes in (a video, Next), drawn at
         // whatever size it lands at (`VectorArt`); its size is the one it says.
         if MediaFiles.isVector(url) {
@@ -50,6 +54,10 @@ public enum CanvasFileDrop: Equatable, Sendable {
         if case .media(let kind) = self { return kind }
         return nil
     }
+
+    /// Whether the drop answers in words rather than with a box: a sound, a
+    /// recording or a table.
+    public var answersInWords: Bool { media != nil || self == .table }
 
     /// Whether the canvas could do anything with a file of this KIND. The
     /// pointer says no when this is false.

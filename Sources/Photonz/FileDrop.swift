@@ -24,7 +24,8 @@ enum FileDrop {
     /// is in the list because that is the type the file itself arrives as:
     /// without it the drop is handed a picture with no name and no path, and a
     /// Photonz document could not be opened.
-    static let types: [UTType] = [.fileURL, .image, .audio, .movie, EditorState.photonzType]
+    static let types: [UTType] = [.fileURL, .image, .audio, .movie, .commaSeparatedText, .tabSeparatedText,
+                                  EditorState.photonzType]
 
     /// Whether this drag is carrying something the app can actually place.
     ///
@@ -40,6 +41,10 @@ enum FileDrop {
         // usable even on a window holding nothing.
         if info.hasItemsConforming(to: [.movie]) { return true }
         if info.hasItemsConforming(to: [.audio]) { return editorState?.documentHasTime == true }
+        // A table lands as a chart, on a video (`EditorState+Charts`).
+        if info.hasItemsConforming(to: [.commaSeparatedText, .tabSeparatedText]) {
+            return editorState?.takesChartFiles == true
+        }
         return false
     }
 

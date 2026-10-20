@@ -3028,8 +3028,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the canvas right now, in the document the canvas was handed at the
     /// playhead: `opacity` nought to one, within half a percent; `shown`
     /// whether it is on the canvas at all there, which a stretch whose
-    /// picture is hidden (Hide Picture for Section) is not. At least one.
-    case expectDrawn(layer: String, opacity: Double?, shown: Bool? = nil)
+    /// picture is hidden (Hide Picture for Section) is not; `height` how
+    /// tall its box is drawn there, in document points, within two: a
+    /// chart's bar at the numbers of that moment (`ChartData.swift`). At
+    /// least one.
+    case expectDrawn(layer: String, opacity: Double?, shown: Bool? = nil, height: Double? = nil)
     /// CLAIMS how the volume line of the clip named `clip` stands, and FAILS
     /// when it does not: `curves` is each segment's curve in order, as its
     /// right-click names it ("Linear", "Ease out", "Hold"); `pickedPoints`
@@ -5039,11 +5042,12 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectDrawn":
             let opacity = try f.optionalNumber("opacity")
             let shown = try f.optionalFlag("shown")
-            guard opacity != nil || shown != nil, opacity.map({ (0...1).contains($0) }) ?? true else {
+            let height = try f.optionalNumber("height")
+            guard opacity != nil || shown != nil || height != nil, opacity.map({ (0...1).contains($0) }) ?? true else {
                 throw f.invalid("opacity", "expectDrawn claims the opacity the canvas draws the layer at, 0 to 1, "
-                    + "or whether it is \"shown\" at all")
+                    + "whether it is \"shown\" at all, or the \"height\" it is drawn")
             }
-            self = .expectDrawn(layer: try f.string("layer"), opacity: opacity, shown: shown)
+            self = .expectDrawn(layer: try f.string("layer"), opacity: opacity, shown: shown, height: height)
         case "expectSoundLine":
             let curves = f.has("curves") ? try f.optionalStrings("curves") : nil
             func places(_ field: String) throws -> [Int]? {

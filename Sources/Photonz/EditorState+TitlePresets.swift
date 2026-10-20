@@ -132,10 +132,15 @@ extension EditorState {
 
     /// A chart at the playhead, picked, with the playhead where its data has
     /// all arrived, and the Chart section ready for its numbers rather than
-    /// a caret in its title.
-    func insertChart(_ kind: ChartKind, onTrack trackID: UUID? = nil) {
+    /// a caret in its title: in view, with the keyboard in its first value
+    /// when it landed with sample numbers, or only in view when it landed
+    /// with somebody's own (`spec`, a pasted table or a dropped file).
+    func insertChart(_ kind: ChartKind, spec: ChartSpec? = nil, onTrack trackID: UUID? = nil) {
         let blurs = Experiments.shared.motionBlurEnabled
-        landTitle(onTrack: trackID, typing: false) { $0.insertTitle(chart: kind, atTimeMS: $1, motionBlur: blurs) }
+        landTitle(onTrack: trackID, typing: false) {
+            $0.insertTitle(chart: kind, spec: spec, atTimeMS: $1, motionBlur: blurs)
+        }
+        askForChartData(typing: spec == nil)
     }
 
     func insertTitle(_ preset: BuiltInTitle, onTrack trackID: UUID? = nil) {

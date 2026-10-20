@@ -3502,7 +3502,7 @@ struct PlaytestScriptTests {
         guard case .expectKeyValues(let gone, let noRows, _) = script.steps[1] else { Issue.record("gone"); return }
         #expect(!gone)
         #expect(noRows == nil)
-        guard case .expectDrawn(let layer, let opacity, _) = script.steps[2] else { Issue.record("expectDrawn"); return }
+        guard case .expectDrawn(let layer, let opacity, _, _) = script.steps[2] else { Issue.record("expectDrawn"); return }
         #expect(layer == "Ship it")
         #expect(opacity == 0.4)
         #expect(PlaytestStep.names.contains("expectKeyValues"))
@@ -5510,7 +5510,7 @@ struct PlaytestScriptTests {
         }
         #expect(cleanedAt == [4.5])
         #expect(rawAt == [2])
-        guard case .expectDrawn(let layer, let opacity, let shown) = script.steps[1] else {
+        guard case .expectDrawn(let layer, let opacity, let shown, _) = script.steps[1] else {
             Issue.record("expectDrawn"); return
         }
         #expect(layer == "Talk")

@@ -109,7 +109,7 @@ extension CanvasNSView {
         // A sound or a recording never lands as a picture and never fills a
         // collage slot: what it becomes is the editor's call, out of the very
         // answer this view drew its sentence from (`MediaDrop`).
-        if file.media != nil {
+        if file.answersInWords {
             guard mediaDropAnswer(url)?.lands == true else { return false }
             onDropMediaURL(url, viewport.map { $0.documentPoint(fromView: point) })
             return true
@@ -286,7 +286,7 @@ extension CanvasNSView {
         // going, and where it cannot the sentence says why and names the one
         // move that works. A pointer on its own can only shrug
         // (`MediaDrop`, `UX-PATTERNS` §refusals).
-        if draggedFile(url, sequence: sender.draggingSequenceNumber).media != nil,
+        if draggedFile(url, sequence: sender.draggingSequenceNumber).answersInWords,
            let answer = mediaDropAnswer(url) {
             dropLanding = nil
             hoverSlot = nil

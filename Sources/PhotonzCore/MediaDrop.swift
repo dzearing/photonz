@@ -43,6 +43,14 @@ public enum MediaFiles {
     public static func isVector(_ url: URL) -> Bool {
         vectorExtensions.contains(url.pathExtension.lowercased())
     }
+
+    /// Tables: a CSV or a tab separated file, which lands on a video as a
+    /// chart of its numbers (`ChartTable`).
+    public static let tableExtensions: Set<String> = ["csv", "tsv"]
+
+    public static func isTable(_ url: URL) -> Bool {
+        tableExtensions.contains(url.pathExtension.lowercased())
+    }
 }
 
 /// What letting go of a sound or a recording over an open document would do,
@@ -77,6 +85,9 @@ public enum MediaDrop {
         /// let go on a picture opens rather than landing there, which is what
         /// a `.photonz` dropped on a canvas has always done.
         case openDocument
+        /// On the timeline at the playhead, as a chart of the table the file
+        /// holds (`ChartTable`).
+        case chart
         /// Nothing lands. `note` says why and what to do instead.
         case refused
     }
@@ -135,6 +146,17 @@ public enum MediaDrop {
             return Answer(landing: .soundLayer,
                           note: "\(title) lands on the timeline at \(moment)")
         }
+    }
+}
+
+extension MediaDrop {
+
+    /// What a table file let go on a window does: on a video it lands as a
+    /// chart; anywhere else it is refused, saying where it would go.
+    public static func tableAnswer(named name: String, documentHasTime: Bool) -> Answer {
+        let title = (name as NSString).deletingPathExtension
+        guard documentHasTime else { return Answer(landing: .refused, note: "Charts go on a video") }
+        return Answer(landing: .chart, note: "\(title) lands as a chart")
     }
 }
 

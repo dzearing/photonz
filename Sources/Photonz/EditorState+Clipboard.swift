@@ -342,6 +342,12 @@ extension EditorState {
         if let data = pasteboard.data(forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)),
            let transfer = try? JSONDecoder().decode(LayerTransfer.self, from: data) {
             landed = pasteLayer(transfer)
+        } else if pasteTableAsChart() {
+            // Rows out of a spreadsheet, on a video: a chart of them. Asked
+            // before the picture, because Numbers and Excel put a picture of
+            // the cells on the clipboard beside their text
+            // (`EditorState+Charts`).
+            return
         } else if let image = NSImage(pasteboard: pasteboard)?
             .cgImage(forProposedRect: nil, context: nil, hints: nil) {
             landed = pasteImage(image)

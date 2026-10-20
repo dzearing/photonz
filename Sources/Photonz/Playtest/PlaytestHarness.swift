@@ -2589,7 +2589,7 @@ private final class Run {
                                           : "the key popover is closed",
                  state: describe())
 
-        case .expectDrawn(let query, let opacity, let shown):
+        case .expectDrawn(let query, let opacity, let shown, let height):
             let editor = try requireEditor()
             guard let drawn = editor.shownDrawnDocument ?? editor.document else {
                 throw Failure(description: "there is no document on the canvas")
@@ -2601,6 +2601,18 @@ private final class Run {
             if let shown, layer.isVisible != shown {
                 throw Failure(description: "the canvas \(layer.isVisible ? "shows" : "does not show") \"\(query)\" "
                               + "at \(at), and the walk expected it \(shown ? "shown" : "off")")
+            }
+            if let height {
+                let drawnHeight = layer.frame.standardized.height
+                guard abs(drawnHeight - height) <= 2 else {
+                    throw Failure(description: "the canvas draws \"\(query)\" \(String(format: "%.1f", drawnHeight))pt tall at "
+                                  + "\(at), and the walk expected \(String(format: "%.1f", height))pt")
+                }
+                if opacity == nil {
+                    note(number, step.name, "the canvas draws \"\(query)\" \(String(format: "%.1f", drawnHeight))pt "
+                         + "tall at \(at)", state: describe())
+                    break
+                }
             }
             let reading = String(format: "%.1f%%", layer.style.opacity * 100)
             guard let opacity else {
