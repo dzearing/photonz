@@ -1,0 +1,35 @@
+{
+  "id": "a-request-typed-while-ask-is-working-waits-its-t",
+  "title": "A request typed while Ask is working waits its turn, and can be cancelled before it starts",
+  "goal": "When a person sends a second request while Ask is still on the first, Ask keeps it in line and runs it next, instead of doing nothing with it. Each waiting request shows as a row in the Agent area with a way to cancel it before it starts, and the one that is running can be stopped too.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 8.07,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T22:31:23.418Z",
+  "updated": "2026-10-20T22:31:29.428Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20: 'if I type a message while its working, it doesn't queue the message. It should queue and let me cancel in the agent ux if it hasn't started.'\n\nSeen in code, not run: AskSession.ask (Sources/Photonz/Agent/AskSession.swift:85) opens with guard !words.isEmpty, !isBusy else { return }, so a send while busy is silently ignored; the words stay in the field. The change rows from ask-makes-the-change-straight-away-and-each-chan (AskChanges.swift) are where waiting rows belong. work is a Task, so stop can cancel it; check what a cancel mid-run leaves in the document and in History. Also the send button and Return are disabled while busy (AskViews.swift:96 and :225), which is why nothing appears to happen.",
+  "acceptance": [
+    "Reproduce first at Next defaults: send a request, and while it is planning send another; record what happens to the second (the before)",
+    "A request sent while Ask is busy is kept: it shows at once as a waiting row in the Agent area with its words and a cancel control, and runs as soon as the one before it finishes, in the order sent",
+    "Cancelling a waiting row removes it and nothing of it ever runs; the running request has a stop that ends it and leaves the document as it was before that request (one row, nothing half applied)",
+    "Each request still becomes its own change row when done (switch and delete), and one Command Z still takes back the latest finished request whole",
+    "A request that waits plans against the document as the one before it left it, not as it was when typed",
+    "Waiting requests belong to their document: closing the document drops them, and asking in another window has its own line",
+    "Walks for queue, cancel waiting, and stop running, with pictures in an audit under queue/audits/. Copy short and plain, no em dashes. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T22:31:23.420Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T22:31:29.427Z",
+      "note": "seq 35 -> 8.07"
+    }
+  ]
+}
