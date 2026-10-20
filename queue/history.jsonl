@@ -13164,3 +13164,14 @@
 {"t":"2026-10-20T16:22:29.987Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
 {"t":"2026-10-20T16:22:31.058Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
 {"t":"2026-10-20T16:22:36.240Z","ev":"task_done","id":"ask-makes-the-change-straight-away-and-each-chan","from":"in_progress","note":"Ask runs the moment the model is done (no Run Plan, no step list); each request is one row in the Agent group with a plain sentence, a switch (off/on via a three-way merge that keeps later edits; blocked with a one-line note when a later edit builds on it), a delete, right-click and click-to-pick. Core AskChanges.swift + AskChangesTests; full suite green; three Ask walks pass at Next defaults checking the document at run, undo, redo, off, on, delete, undo of delete. Audit queue/audits/2026-10-20-ask-rows.json."}
+{"t":"2026-10-20T16:42:02.220Z","ev":"slice_pass","walks":27,"passed":25,"failed":0,"seconds":984,"of":989,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-20T16:42:02.427Z","ev":"task_started","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","title":"A scored test set for what Ask and the Photonz skill make, so we can climb it","priority":"p1-high"}
+{"t":"2026-10-20T16:56:13.709Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
+{"t":"2026-10-20T16:56:13.775Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
+{"t":"2026-10-20T17:43:20.309Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T17:43:20.383Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-20T17:43:20.461Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-20T17:43:20.533Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-20T17:43:20.610Z","ev":"task_walks","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","walks":[]}
+{"t":"2026-10-20T17:43:33.401Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
+{"t":"2026-10-20T17:43:54.244Z","ev":"task_done","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","from":"in_progress","note":"Scripts/ask-eval.sh (Scripts/ask-eval/, README there): 17 cases run one at a time on the probe through Ask or the skill, read and rendered over MCP, scored by document rules (14 node tests), a fixed-rubric picture judge (claude-opus-5-5, 3 looks, median) and blind naming; history in queue/evals/ask-eval-history.jsonl with compare against the best, seconds per case. Judge agrees with the user (messes 1.8/1.8/1.4, hand-made clean sheet 7.6). Baselines: Ask 37.8 in 10.5 min, skill 83.9 in 24.5 min. Audit queue/audits/2026-10-20-ask-eval.json with both contact sheets. Scripts/test.sh 14008 green."}
