@@ -50,7 +50,10 @@
 //                                            it with `status <id> done|dropped|blocked` also ends the hold
 //   node queue/bin/queue.mjs priority <id> <p0-critical|p1-high|p2-normal|p3-low>
 //   node queue/bin/queue.mjs seq <id> <number>   set sort order within the priority (decimals fine)
-//   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> [context] [recommended]
+//   node queue/bin/queue.mjs decision <taskId> <question> <optionsJSON> <context> <recommended> <shot>
+//                                            <shot> is a marked screenshot under queue/audits/ (required);
+//                                            an option may carry its own "shot" too. Refused while
+//                                            MAX_OPEN_DECISIONS (3) cards already wait: decide it yourself
 //   node queue/bin/queue.mjs resolve <decisionId> <choiceId> [note]
 //   node queue/bin/queue.mjs withdraw <decisionId> <reason>
 //                                            take a card down that no longer needs an answer (a
@@ -317,9 +320,13 @@ try {
     case 'seq':
       out(q.setSeq(args[0], Number(args[1])).id);
       break;
-    case 'decision':
-      out(q.addDecision({ taskId: args[0], question: args[1], options: JSON.parse(args[2] || '[]'), context: args[3] || '', recommended: args[4] || '' }).id);
+    case 'decision': {
+      const fields = { taskId: args[0], question: args[1], options: JSON.parse(args[2] || '[]'), context: args[3] || '', recommended: args[4] || '', shot: args[5] || '' };
+      const refusal = q.decisionRefusal(fields);
+      if (refusal) throw new Error(refusal);
+      out(q.addDecision(fields).id);
       break;
+    }
     case 'resolve':
       out(q.resolveDecision(args[0], args[1], args.slice(2).join(' ')).id);
       break;

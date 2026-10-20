@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 300,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T08:55:55.575Z",
-  "updated": "2026-10-19T12:42:49.394Z",
+  "updated": "2026-10-20T01:33:28.551Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/ui-entry-wt.html ~300-330 (.filmcard .acts: Copy, Edit, Pin, Delete). Built: Sources/Photonz/FrontDoorView.swift FrontDoorRecentCard.actions (document case: Edit, Show in Finder, Remove from Recent; capture case keeps the history strip's Copy, Edit, Show in Finder, Delete; no Pin anywhere in the app). Copy for a .photonz could copy its preview (PackageIO.readPreview). From the-front-door-s-recent-lists-documents-you-open. | 2026-10-15 runner: Copy built for document cards (FrontDoorCopy: .photonz rendered whole off main via PackageIO.read + DocumentRenderer, picture file via CaptureStore.copyToPasteboard, recording via ClipboardWriter.writeFile); row and menu read FrontDoor.actions. Walk front-door-recent-card-actions-walk (startFromFrontDoor rest/first/gone) proves Copy, Edit, Remove from Recent by pointer at Next defaults. Show in Finder is deliberately not clicked by the walk: it activates Finder over the person. Remaining: Pin (not in the app at all) and what the last button does, on the decision card.",
@@ -98,6 +98,10 @@
     {
       "t": "2026-10-19T12:42:49.393Z",
       "note": "seq 330 -> 300"
+    },
+    {
+      "t": "2026-10-20T01:33:28.550Z",
+      "note": "decision \"A saved document's card under Recent: should it offer Pin, and should Delete throw the file away?\" resolved: Copy, Edit, Pin, Remove from Recent (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "walks": [

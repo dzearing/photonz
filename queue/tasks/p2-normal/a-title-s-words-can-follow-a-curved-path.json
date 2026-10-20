@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.583Z",
-  "updated": "2026-10-18T12:04:56.068Z",
+  "updated": "2026-10-20T01:21:23.039Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-motion.html line 210 command 'Put text on a path'; lines 464-468 'Text on a path / Follow the curve: A headline flows along any vector path... the type reflows as you reshape the curve.' Noted as cut without asking in the 2026-10-15 manager report's open threads. Code today: MotionPath.swift moves a whole layer along a path; TextRasterizer.swift:495-502 places glyphs on straight lines only. Glyph placement along a path belongs in PhotonzRender with the arc-length maths in PhotonzCore (pure, tested first). 'Stagger children' on the same mock line is not this task. Perf note if it touches the composite path.",
@@ -57,6 +57,10 @@
     {
       "t": "2026-10-18T12:04:56.066Z",
       "note": "Put Text on a Path (Layer menu + right-click) sets a title along a Pen curve, letters turned to it; points reshape live; Start keyable so words travel; canvas, playback and MP4. Commit f71f2ec2. Verified by unit tests, full suite, two walks at Next defaults, measured bar 0.03 deg/0.3 pt, export frames. Audit queue/audits/2026-10-18-text-on-a-path.json, reel + decision card on the arrival look."
+    },
+    {
+      "t": "2026-10-20T01:21:23.038Z",
+      "note": "decision \"Do words travelling along a curve look the way you want as they arrive?\" resolved: Keep it: letters pop on at the curve start"
     }
   ],
   "started": "2026-10-18T11:02:13.677Z",

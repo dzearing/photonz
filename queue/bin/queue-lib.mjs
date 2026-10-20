@@ -1373,7 +1373,36 @@ export function readDecisionBrief(id) {
 // to say which it is - "Copy as text only, no button" is a no to one control but
 // still a yes to the task, while "Skip alignment checks for now" ends the task.
 // Only whoever wrote the card knows the difference.
-export function addDecision({ taskId, question, context = '', options = [], recommended = '' }) {
+// How many questions may wait on the user at once. On 2026-10-19 there were
+// 38, every one with a recommended answer, and the user said it was too much:
+// most did not matter and they could not tell what most were about, because
+// none showed a picture of the thing it asked about. All 38 were taken as
+// recommended that evening. A runner now decides for itself unless one of
+// these few places is free, and a card it does open must show the thing.
+export const MAX_OPEN_DECISIONS = 3;
+
+// Why a runner may not open this card, or null when it may. `queue.mjs
+// decision` asks this; the library call itself stays open for the drills.
+export function decisionRefusal({ shot = '', options = [], pending = null, auditsDir = AUDITS } = {}) {
+  const open = pending ?? readDecisions().filter((d) => d.status === 'pending').length;
+  if (open >= MAX_OPEN_DECISIONS) {
+    return `${open} questions are already waiting on the user, and ${MAX_OPEN_DECISIONS} is the most there may be. `
+      + 'Decide this one yourself: build the option you would have recommended, and write one line in the task log, '
+      + '"Chose <what> over <what> because <why>", so the user can change it later by saying so.';
+  }
+  const shots = [shot, ...(options || []).map((o) => o && o.shot).filter(Boolean)];
+  if (!shot) {
+    return 'A card needs a picture: a screenshot of the app with the thing it asks about marked (an arrow or a box drawn on it), '
+      + 'saved under queue/audits/ and passed as the card\'s shot. The user cannot answer a question about something they cannot see.';
+  }
+  for (const name of shots) {
+    if (!/^[a-z0-9._-]+\.(png|jpg|jpeg)$/i.test(name)) return `shot "${name}" must be a file name under queue/audits/ (png or jpg)`;
+    if (!existsSync(join(auditsDir, name))) return `shot "${name}" is not in queue/audits/`;
+  }
+  return null;
+}
+
+export function addDecision({ taskId, question, context = '', options = [], recommended = '', shot = '' }) {
   ensureDirs();
   const qslug = slug(question).slice(0, 32).replace(/-+$/, '');
   let id = `${taskId}-${qslug}`;
@@ -1382,6 +1411,7 @@ export function addDecision({ taskId, question, context = '', options = [], reco
   while (existing.has(id)) id = `${taskId}-${qslug}-${n++}`;
   const opts = (options || []).map((o) => (o && o.declines ? { ...o, declines: true } : o));
   const d = { id, taskId, question, context, options: opts, recommended, status: 'pending', created: now() };
+  if (shot) d.shot = shot;
   writeJSON(join(DECISIONS, `${id}.json`), d);
   appendEvent('decision_opened', { id, taskId, question });
   return d;

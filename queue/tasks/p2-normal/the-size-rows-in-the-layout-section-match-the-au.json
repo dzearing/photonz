@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 360,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T17:22:51.629Z",
-  "updated": "2026-10-19T12:42:49.802Z",
+  "updated": "2026-10-20T01:33:29.171Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised by a-screen-can-hug-what-it-holds (2026-10-08): its audit compares the shipped Width/Height rows against ui-autolayout.html lines ~281-288 (Frame size: Hug | Narrow | Wide). The group rows have had this shape since auto layout landed; no decision ever settled it. Sources/Photonz/ArrangementInspector.swift sizeRows.",
@@ -86,6 +86,10 @@
     {
       "t": "2026-10-19T12:42:49.801Z",
       "note": "seq 390 -> 360"
+    },
+    {
+      "t": "2026-10-20T01:33:29.170Z",
+      "note": "decision \"How should the Layout section let you size a frame or group: Width and Height rows, or one Frame size row like the mock?\" resolved: Keep Width and Height rows (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ]
 }

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.351Z",
-  "updated": "2026-10-16T21:30:01.713Z",
+  "updated": "2026-10-20T01:33:28.300Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-10-title-words-reveal.json rough: 'A piece rising from below can be cut at the bottom edge of the text's own box while it travels.' The later done task text-that-swings-flips-or-flies-in-from-depth-is loosened clipping only for depth flips; look at how it did that (TextRevealRasterizer in PhotonzRender) and extend it. Model checklist for a look task: title-text-visibly-comes-in-and-every-built-in-t. Renderer change: perf note in the commit (composite path).",
@@ -63,6 +63,10 @@
     {
       "t": "2026-10-16T21:30:01.711Z",
       "note": "Travelling title words (rise, track in, blur, flips, mask margin) are drawn whole past their text box: TextRevealCompositor.reach(of:reveal:eyeDistance:) follows each piece through its move, the renderer grows the frame by it (cached). Bar measured in TextRevealUnclippedTests: Keynote Clean 69% -> 100%, Minimal Underline 50% -> 100%, every entrance x unit x direction 100%. Reel + card for the look, audit 2026-10-16, walks green, 13377 tests green, perf unchanged (flip by letter 1080p ~9 ms). Commit 2c6d218b."
+    },
+    {
+      "t": "2026-10-20T01:33:28.299Z",
+      "note": "decision \"Do words that rise, track or flip into a title now look whole the whole way in?\" resolved: Keep words whole (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "started": "2026-10-16T20:48:16.460Z",

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 310,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T21:51:15.337Z",
-  "updated": "2026-10-19T12:42:49.465Z",
+  "updated": "2026-10-20T01:33:28.727Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows every-measurement-shares-one-remembered-look-blu (2026-10-13): MeasureStyles keeps ONE colour set for every role, so measureLegendEntries (EditorState+Measure.swift, near the end) lists Size and Spacing each swatched in its top-most measurement ink, which is now the same #3774D5 by default. The legend is behind next-measure-roles (on at Next defaults); legend-corner-slots walk covers its placement. The redline mock (docs/design/mocks/pages/redline.html) draws Size red and Spacing blue with this legend; the user overrode the colour split on 2026-10-13 (\"gap vs size shouldn't be different\").",
@@ -66,6 +66,10 @@
     {
       "t": "2026-10-19T12:42:49.464Z",
       "note": "seq 340 -> 310"
+    },
+    {
+      "t": "2026-10-20T01:33:28.726Z",
+      "note": "decision \"With Size and Spacing now the same blue, what should the little key in the picture's corner do while you measure?\" resolved: Take the key away (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "walks": [

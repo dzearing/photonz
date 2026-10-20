@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T12:04:49.851Z",
-  "updated": "2026-10-19T12:42:48.237Z",
+  "updated": "2026-10-20T01:33:29.860Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the daily digest 2026-10-06 from the docs and the audits, not by running anything new. File drop overwrites: docs/design/video-audio.md 'Let go on the TIMELINE instead', Overwrite by default, Command inserts. Paste goes up a track: queue/audits/2026-10-05-paste-a-clip-at-the-playhead.json rough ('this one puts the copy on a new track over it when the track is busy'). Option-drag goes up a track: queue/audits/2026-10-05-option-drag-copies-a-clip.json, whose evaluate question already asks the user this for Option-drag alone. Dragging a clip is refused: queue/audits/2026-10-06-refused-drop-says-why.json ('no room on V2') and 2026-10-05-several-clips-change-track. Add Media at Playhead lands on a free track or a new one on top (2026-10-05-add-media-at-playhead). Premiere overwrites in every one of these cases. The landing rule lives in ClipLanding.swift and the paste rule reuses Add Media's (a48ef47a), so one rule is a small change once chosen.",
@@ -95,6 +95,10 @@
     {
       "t": "2026-10-19T12:42:48.236Z",
       "note": "seq 160 -> 130"
+    },
+    {
+      "t": "2026-10-20T01:33:29.859Z",
+      "note": "decision \"When a clip lands on a spot that already holds a clip, what should happen?\" resolved: It covers what is there, every way in (Premiere) (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T00:20:57.150Z",
-  "updated": "2026-10-19T12:42:48.567Z",
+  "updated": "2026-10-20T01:33:28.989Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-clip-s-own-sound-always-sits-right-under-its-v (2026-10-13), whose acceptance listed the same tint family among the join affordances. Picture fill: VideoKit.ClipKind.video gradient 0x12C2E9 to 0x7C4DFF; sound: ClipKind.audio dark green 0x26463A, waveform/level tint VideoKit.Palette.soundTrack (cyan, purple). The join drawn today: SoundJoin and SoundRowMark in Sources/Photonz/TimelineTrackRows.swift. Mock: docs/design/mocks/pages/video-audio.html colours sound lanes cyan and purple on dark green.",
@@ -58,6 +58,10 @@
     {
       "t": "2026-10-19T12:42:48.566Z",
       "note": "seq 210 -> 180"
+    },
+    {
+      "t": "2026-10-20T01:33:28.988Z",
+      "note": "decision \"Should a recording's own sound bar take its picture's colours, so the two read as one clip?\" resolved: Keep sound green, joined by a staple (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "walks": [

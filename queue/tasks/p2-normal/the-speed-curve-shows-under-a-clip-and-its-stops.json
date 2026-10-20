@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.090Z",
-  "updated": "2026-10-18T05:13:37.235Z",
+  "updated": "2026-10-20T01:33:27.874Z",
   "deps": [
     "a-clip-s-speed-can-change-across-its-length-with"
   ],
@@ -64,6 +64,10 @@
     {
       "t": "2026-10-18T05:13:37.233Z",
       "note": "A clip with speed stops shows its Speed curve under it (SpeedCurveLane, SpeedCurve in core): mock scale 3x/1x/0, bands tinted with the mock's swatches, stops drag along and up/down as one undo, Command-click adds (shared line rule), right-click Freeze/Delete. Freeze is a zero stop that holds its frame (holdMS), first in the stop's Speed list, its second zero drags the hold. Commit b88134ed. Verified: 21 new core tests, full suite 13664 green; the-speed-curve-shows-under-a-clip-walk green at Next defaults with every band read at its exact mock swatch and the 1x line within a point; neighbouring walks green. Audit queue/audits/2026-10-17-speed-curve.json with reel, contact sheet and app-beside-mock; look card open. Follow-ups: a-ramped-clip-s-bar-is-tinted-by-its-speed-bands, cutting-a-clip-in-the-middle-of-a-speed-stop-fre."
+    },
+    {
+      "t": "2026-10-20T01:33:27.873Z",
+      "note": "decision \"Does the speed curve under a clip look and move the way you want?\" resolved: strip (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "started": "2026-10-18T03:22:59.878Z",

@@ -14,11 +14,11 @@ Feature work dominates. Foundational work earns its place by unblocking the feat
 
 **Every area has one purpose.** The title bar, tool bar, inspector, transport, timeline, menus and right-click menus each do one kind of job: the placement contract at the top of `docs/design/mocks/shared/UX-PATTERNS.md` is the table, and every control you add or move is placed by it. Ask which purpose the control serves and put it in that row; a control goes in the area whose purpose it shares, or it confuses people however useful it is. A placement the table does not cover (it fits no row, or two) is a decision card for the user, never a guess. Every command is also in the menu bar with its shortcut. The bar is elegant and easy for an end user to understand, not complete.
 
-**A request that names a system look gets one filmed card, not a second build.** When a task names Liquid Glass, the Mac's own control or another system look, build it once, film the system's version beside ours, and put both on one decision card before building any other variant (UX-PATTERNS.md, under the placement contract). The system's version does not win by default: the user sent the Mac's own segmented control back on 2026-09-30, after five builds of it in two days.
+**A request that names a system look gets one filmed comparison, not a second build.** When a task names Liquid Glass, the Mac's own control or another system look, build it once, film the system's version beside ours, and put both side by side in the audit before building any other variant (UX-PATTERNS.md, under the placement contract). Choose between them yourself and log why; the user will say if it is wrong. The system's version does not win by default: the user sent the Mac's own segmented control back on 2026-09-30, after five builds of it in two days.
 
 **A key clash is settled by the rule, not a card.** The key Photoshop (on a picture) or Premiere (on a video) gives a command wins; the command that is not theirs moves to a free key, and a key a mock prints that clashes follows the same rule (UX-PATTERNS §7, "How a key is chosen"). Build it, change the moved command's tooltip, menu row and any walk that pressed the old key, and name the move in the audit's `rough` list with "(UX-PATTERNS §7)" in the line. Open a card only when the rule does not decide it: the key lands where both tools apply and they disagree, the key belongs to neither tool and two asks want it, or the move would take a key the user named themselves. Why: the user settled this on 2026-07-05 and again on 2026-10-11, and runners kept asking anyway; two of the October cards quoted the rule in their own options.
 
-**Work about how something looks or moves is judged by a measured bar and a reel, never by rule checks.** When a task's value is a look or a motion (titles, backgrounds, transitions, entrances, animation, polish), its checklist carries a measured bar that the current weak version would FAIL: the mean pixel difference between two frames half a second apart for a background that should move, how much of a headline's ink is visible at its first frame against its hold for an entrance, and so on. Pick the threshold by measuring today's version and setting the bar where it fails. It also carries a reel, a short video (MP4 or GIF) and a contact sheet of frames under `queue/audits/`, and a decision card that links the reel so the user judges the look. Building does not wait on the answer. If you file visual work, write it that way; if you claim visual work without such a bar, write one into its checklist first. Why: on 2026-10-11 seven title tasks closed done on rule checks while their own audit pictures showed flat backgrounds and headlines already fully on screen at the "in" frame, and the user called the result boring. The rework (`title-backgrounds-that-are-alive-auroras-energy`, `title-text-visibly-comes-in-and-every-built-in-t`) is what such a checklist looks like.
+**Work about how something looks or moves is judged by a measured bar and a reel, never by rule checks.** When a task's value is a look or a motion (titles, backgrounds, transitions, entrances, animation, polish), its checklist carries a measured bar that the current weak version would FAIL: the mean pixel difference between two frames half a second apart for a background that should move, how much of a headline's ink is visible at its first frame against its hold for an entrance, and so on. Pick the threshold by measuring today's version and setting the bar where it fails. It also carries a reel, a short video (MP4 or GIF) and a contact sheet of frames under `queue/audits/`, named in the audit so the user can look when they want to. It is not a decision card: a reel is something to see, not a question (cards are rare, see below). If you file visual work, write it that way; if you claim visual work without such a bar, write one into its checklist first. Why: on 2026-10-11 seven title tasks closed done on rule checks while their own audit pictures showed flat backgrounds and headlines already fully on screen at the "in" frame, and the user called the result boring. The rework (`title-backgrounds-that-are-alive-auroras-energy`, `title-text-visibly-comes-in-and-every-built-in-t`) is what such a checklist looks like.
 
 **Text is always legible. No exceptions.** No white on white, no black on black, no label on a background it cannot be read against, in any state, scheme or backdrop (the user, 2026-09-30: "I do not want white on white or black on black cases EVER"). Any text you add or restyle is checked against what is actually drawn behind it, in light and dark, including over glass and over arbitrary screenshots. The bar is legible, not a number: the system's own pairings (white on the accent, system label colours on glass) are legible as they are, so never alter a system colour to chase a ratio.
 
@@ -283,12 +283,37 @@ This applies to tasks you CREATE and to the task you are running: if the task yo
    - `node queue/bin/queue.mjs status <id> dropped "<why it should not be done>"`
    Never exit leaving the task `in_progress`.
 
-## When you hit a product or UX ambiguity you cannot safely decide
+## When you hit a product or UX ambiguity
 
-Do not guess on anything the user would want to weigh in on (visual direction, scope, destructive changes, feature behavior). Instead:
+**Decide it yourself.** Pick the option you would have recommended, build it,
+and write one line in the task log: `Chose <what> over <what> because <why>`.
+The user changes it later by saying so, and that costs far less than a question.
+On 2026-10-19 thirty-eight cards were waiting, every one with a recommended
+answer; the user said it was too much, that most of them did not matter, and
+that most of the time they did not know what the cards were talking about,
+because there were no pictures pointing at the thing. All 38 were taken as
+recommended that evening.
 
+A card is for the rare question where a wrong guess is expensive: it deletes or
+overwrites the person's work, it would take more than a day to undo, or the
+user's own words (or two of their mocks) plainly say opposite things. Taste,
+spacing, wording, which menu a row sits in, key choices, and "does this look
+right" are never cards: decide, log it, and put the pictures in the audit.
+
+`queue.mjs decision` enforces this: it refuses while three cards already wait
+(decide yours then), and it refuses a card with no picture. When you do open
+one:
+
+0. **Picture first.** Screenshot the app (the probe) at the thing in question
+   and mark it: an arrow or a box drawn on the picture round exactly what the
+   question is about, using the app's own annotation tools or any image tool.
+   Save it under `queue/audits/` and pass its file name as the card's shot. When
+   the options look different, give each option its own marked picture as
+   `"shot"` in its JSON. Words in the question say what the picture shows in
+   the user's terms ("the three round handles above the picked button"), never
+   a name from the code.
 1. Open a decision:
-   `node queue/bin/queue.mjs decision <taskId> "<the question>" '<optionsJSON>' "<context>" "<recommended option id>"`
+   `node queue/bin/queue.mjs decision <taskId> "<the question>" '<optionsJSON>' "<context>" "<recommended option id>" "<shot.png>"`
    where each option in the JSON array has this shape:
    `{"id":"a","label":"Short name","summary":"One or two plain sentences: what the user would see and do.","pros":["..."],"cons":["..."],"mitigation":"How the main con gets softened."}`
    Give 2 to 4 real options and always recommend one.
@@ -371,7 +396,7 @@ Write the findings into the task log. A mock assumption the app cannot deliver b
 
 **Two checks every UI task must pass before `done`:**
 1. **Default config.** At least one walk reaches the feature with NO `flags` in its setup, i.e. exactly as a person running Next gets it. A walk that forces a flag proves nothing about what the user sees. **The queue checks this for you:** name the task's walks (`queue.mjs walks <id> <walk> ...`) and `queue.mjs status <id> done` on an app task is refused, naming the walk and the switch, when every walk it names switches ON something that is off at Next defaults. The defaults are read from `FeatureCatalog.swift` itself (`node queue/bin/flag-defaults.mjs` lists them), so the fix is to turn the switch on by default there or to name a walk that needs no switch, never to reword anything. A feature that is genuinely meant to stay off by default says so in words first: `queue.mjs off-by-default <id> "<why>"`.
-2. **Side by side with the mock.** Put a picture of the shipped surface next to the matching mock frame (name the page and section) and list every difference in the audit. Differences in layout, colour, control type, spacing or copy length are defects to fix in this task or to file as p1, not notes. A criterion that needs a person's judgement becomes a decision card for the user; a runner never ticks it. **The queue checks this for you too:** every `rough` line in your audit that describes a difference from a mock has to name what settles it, in the line itself: the id of a decision card (open or answered) or of the task that covers it, the user's own answer with its date ("your call on 2026-09-29"), or the written rule ("UX-PATTERNS §7"). "Filed as its own task" with no id names nothing. Until each one does, `queue.mjs status <id> done` is refused, naming the audit line. Lines that say no mock covers the surface, that the app goes further than the mock, that it matches, or that a long mock line moved behind the question mark are not differences. `node queue/bin/queue.mjs mock-check <id>` shows what the gate will read before you try.
+2. **Side by side with the mock.** Put a picture of the shipped surface next to the matching mock frame (name the page and section) and list every difference in the audit. Differences in layout, colour, control type, spacing or copy length are defects to fix in this task or to file as p1, not notes. A criterion that needs a person's judgement is your call, logged as `Chose ... because ...` with its pictures in the audit; a runner never ticks it as if it had been measured. **The queue checks this for you too:** every `rough` line in your audit that describes a difference from a mock has to name what settles it, in the line itself: the id of a decision card (open or answered) or of the task that covers it, the user's own answer with its date ("your call on 2026-09-29"), or the written rule ("UX-PATTERNS §7"). "Filed as its own task" with no id names nothing. Until each one does, `queue.mjs status <id> done` is refused, naming the audit line. Lines that say no mock covers the surface, that the app goes further than the mock, that it matches, or that a long mock line moved behind the question mark are not differences. `node queue/bin/queue.mjs mock-check <id>` shows what the gate will read before you try.
 
 ## When a feature is ready: write its audit
 

@@ -108,6 +108,7 @@
   #dashboard .db-brief .db-md{border-top:1px solid var(--line-soft);padding-top:var(--s3);margin-top:var(--s2)}
   #dashboard .db-decide .db-q{font-size:13px;font-weight:640;letter-spacing:-.01em;display:flex;gap:var(--gap-sm);align-items:flex-start}
   #dashboard .db-decide .db-q .ic{color:var(--warn);flex:none;margin-top:1px}
+  #dashboard .db-decide .db-shot{display:block;max-width:100%;max-height:340px;margin:var(--s3) 0 0 var(--s5);border-radius:6px;border:1px solid var(--line);cursor:zoom-in;object-fit:contain}
   #dashboard .db-decide .db-ctx{font-size:11px;color:var(--dim);line-height:1.5;margin:var(--s2) 0 0 var(--s5);white-space:pre-wrap}
   #dashboard .db-decide .db-task{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-left:var(--s5);margin-top:var(--s3)}
   #dashboard .db-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--gap-sm);margin:var(--s3) 0 0 var(--s5)}
@@ -726,6 +727,9 @@
   function decCard(d) {
     var h = '<div class="db-decide" data-decision="' + esc(d.id) + '">';
     h += '<div class="db-q"><i class="ic ic-help"></i><span>' + esc(d.question) + '</span></div>';
+    // The thing the question is about, marked, first: the user could not
+    // answer cards that only described it in words (2026-10-19).
+    if (d.shot) h += '<img class="db-shot" src="/api/audit-shot/' + encodeURIComponent(d.shot) + '" alt="" loading="lazy">';
     if (d.context) h += '<div class="db-ctx">' + esc(d.context) + '</div>';
     h += '<div class="db-opts">';
     var opts = (d.options || []).slice().sort(function (a, b) { return (b.id === d.recommended) - (a.id === d.recommended); });
@@ -739,6 +743,7 @@
       h += '<div class="db-opt' + (rec ? ' db-rec' : '') + (stop ? ' db-stop' : '') + '">';
       h += '<div class="db-opt-t">' + esc(o.label) + (rec ? ' <span class="db-rec-k">(Recommended)</span>' : '') + '</div>';
       var summary = o.summary || o.detail;
+      if (o.shot) h += '<img class="db-shot" src="/api/audit-shot/' + encodeURIComponent(o.shot) + '" alt="" loading="lazy">';
       if (summary) h += '<p class="db-opt-s">' + esc(summary) + '</p>';
       var pc = '';
       (o.pros || []).forEach(function (p) { pc += '<span class="pro">' + esc(p) + '</span>'; });
@@ -2276,7 +2281,7 @@
   window.__holdReload = function () { return !!lb; };
   root.addEventListener('click', function (e) {
     var t = e.target;
-    if (t && t.tagName === 'IMG' && t.closest('.db-asec, .db-md')) { e.preventDefault(); e.stopPropagation(); open(t.currentSrc || t.src, t.alt); }
+    if (t && t.tagName === 'IMG' && t.closest('.db-asec, .db-md, .db-decide')) { e.preventDefault(); e.stopPropagation(); open(t.currentSrc || t.src, t.alt); }
   }, true);
 })();
 </script>

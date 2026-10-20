@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:03.901Z",
-  "updated": "2026-10-17T12:44:14.310Z",
+  "updated": "2026-10-20T01:33:28.214Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html line 515 (Effects list 'Warm grade · adjust'), line 570 (add-effect menu 'Color grade', ic-sliders), line 1071 (keyable Saturation, 0-300%, still 100). video-compositing.html lines 262/306/346 show a grade as its own layer with a blend mode and a matte; that layer form and the 'grade.look' Library preset are NOT this task (open thread). Code today: the only colour effects are lens kinds Greyscale, Invert, Brightness (Sources/PhotonzCore/Lens.swift:13-21, LensFilter.swift:52-63); Add Effect menu at Sources/Photonz/EffectsListInspector.swift:759-792. Model the effect in PhotonzCore (pure, Codable, tested first) and its CIFilter chain in PhotonzRender (CITemperatureAndTint, CIExposureAdjust, CIColorControls). TDD for Core and Render. Perf note in the commit: the composite path, target under 16 ms for a 12 MP frame. Copy: Mac title case, no em dashes, label controls, no sentences in the panel.",
@@ -60,6 +60,10 @@
     {
       "t": "2026-10-17T12:44:14.308Z",
       "note": "Color Grade in the Effects plus on Next defaults (next-color-grade on): Temperature, Tint, Exposure, Contrast, Saturation, each slider + number box + key diamond, arriving as the mock's Warm grade. Core ColorGradeEffect + five keyable values (Saturation offered on every picture), PhotonzRender ColorGradeFilter. Verified: unit, render and real-MP4 export tests, full suite 13,458 green; walk color-grade-warms-a-clip-walk at defaults: warm end +67.6 red over blue (bar 30), all middles identical pixel for pixel, keys and lane. Audit queue/audits/2026-10-17-color-grade.json with contact sheet + reel; card on the look open. Commit 462efa64."
+    },
+    {
+      "t": "2026-10-20T01:33:28.213Z",
+      "note": "decision \"Is this the Color Grade you want on a clip?\" resolved: Keep it: Color Grade arrives warm, fixed at the top of Effects (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "started": "2026-10-17T11:29:51.562Z",

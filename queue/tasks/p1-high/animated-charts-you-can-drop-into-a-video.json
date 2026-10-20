@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:10:09.994Z",
-  "updated": "2026-10-18T02:08:34.505Z",
+  "updated": "2026-10-20T01:33:27.955Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17), naming the video catalog's kinds: \"Like title page, name plates, animated charts, etc.\" No chart content exists in Photonz today (none found in the Library or title presets). Build on the title model (PhotonzCore TitleDesign / TitleRestyle, text reveal, motion blur, live backgrounds) rather than a separate system. Companion: 'In a video, the Library is a catalog of things built for video, grouped by kind' (its Animated Charts category stays hidden until this ships). Memory: visual work needs a measured bar and a reel.",
@@ -64,6 +64,10 @@
     {
       "t": "2026-10-18T02:08:34.503Z",
       "note": "Six animated charts (Bar, Horizontal Bars, Line, Donut, Big Number, Comparison) as a title kind, in the video Library's Animated Charts chip and Sequence > Insert Chart, with a Chart section (rows, paste from a spreadsheet, unit, decimals) and a Count Up build; commit 29761749. Verified: 25 core tests + render tests (ink 0 at first frame, part way half way in; 5.1 to 10.3 ms medians at 1080p), animated-charts-walk green at Next defaults, touched walks green, full suite 13,615 passing. Reel + decision card for the look; audit queue/audits/2026-10-17-animated-charts.json."
+    },
+    {
+      "t": "2026-10-20T01:33:27.954Z",
+      "note": "the question \"Do the six charts build in and look the way you want in a video?\" was taken down without an answer: Superseded: the user said charts must take their data first (task a-chart-is-your-data-given-to-it-the-obvious-way), which this look question does not ask. Nobody chose anything, so nothing here was decided."
     }
   ],
   "started": "2026-10-18T00:36:19.356Z",

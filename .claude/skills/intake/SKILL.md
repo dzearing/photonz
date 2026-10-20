@@ -74,8 +74,9 @@ and pass `"$(cat /tmp/x.json)"`, or the shell will mangle it.
   measured bar that today's weak version would FAIL (for example the mean pixel
   difference between frames half a second apart, or how much of the headline is
   visible at the first frame against the hold), plus a reel (a short MP4 or GIF
-  and a contact sheet under `queue/audits/`) and a decision card linking it so
-  the user judges the look. Rule checks alone let seven title tasks close done
+  and a contact sheet under `queue/audits/`) named in the audit so the user can
+  look. Not a decision card: cards are rare, capped at three, and must show a
+  marked picture (`queue/bin/runner-prompt.md`). Rule checks alone let seven title tasks close done
   on 2026-10-11 with flat, already-visible titles in their own pictures. When the
   user complains about a shipped look, open that task's audit frames first and
   check them against the complaint.

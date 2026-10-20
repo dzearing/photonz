@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 80,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T18:52:37.115Z",
-  "updated": "2026-10-19T12:42:47.365Z",
+  "updated": "2026-10-20T01:33:29.079Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Align row (task a-drawn-path-takes-an-outline-inside-centred-or, 2026-10-08). Mock: docs/design/mocks/pages/icon-draw-wt.html ~line 411 (#secStroke: Width select reading 1.75, Caps seg Butt/Round/Square with Round on, Align select Center). App: Sources/Photonz/ShapePartSettings.swift .stroke slot (thickness slider labelled Thickness) and Sources/Photonz/PathLineStylePickers.swift (Pattern, Ends, Corners picture segments, Align dropdown). Ends is hidden on a closed solid path by design (PathContent.showsLineEnds) while the mock always shows Caps. Thickness and Ends are the words lines and arrows use too, so renaming for paths alone splits the vocabulary: that is a card for the user, not a runner guess. Pattern and Corners go further than the mock and are not differences.",
@@ -86,6 +86,10 @@
     {
       "t": "2026-10-19T12:42:47.363Z",
       "note": "seq 70 -> 80"
+    },
+    {
+      "t": "2026-10-20T01:33:29.078Z",
+      "note": "decision \"The icon mock calls a path's line settings Width and Caps, and the app calls them Thickness and Ends everywhere. Which words and controls should the outline settings use?\" resolved: Width and Caps on every shape, Caps as words (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "started": "2026-10-08T19:08:27.440Z",

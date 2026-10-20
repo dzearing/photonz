@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T02:14:36.504Z",
-  "updated": "2026-10-19T12:42:48.373Z",
+  "updated": "2026-10-20T01:33:29.433Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found auditing a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa (2026-10-07). App: ClipPiecesBar.fill returns kind.fill, VideoKit ClipKind.audio fill is the DS .clip.aud gradient #26463A to #1C3A30 (photonz-ds.css:927, used by video.html). video-audio.html ~44 .lane.alane background var(--panel-2) with a clip rect fill rgba(255,255,255,.03) stroke col at .35 (~500), and .cliptag (~65, left 8 top 6, 9px 640 white on black .4). The name half of this was settled in the same task: a sound on its own track now wears the mock's .cliptag (ClipPiecesBar.soundTag), and a linked sound carries no words on purpose. Searched: cliptag, sound clip name, lane ground, clip.aud (--all); nothing covered it.",
@@ -98,6 +98,10 @@
     {
       "t": "2026-10-19T12:42:48.371Z",
       "note": "seq 180 -> 150"
+    },
+    {
+      "t": "2026-10-20T01:33:29.432Z",
+      "note": "decision \"Which background should a sound clip wear on the timeline?\" resolved: Panel colour, coloured waveform (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
     }
   ],
   "walks": [

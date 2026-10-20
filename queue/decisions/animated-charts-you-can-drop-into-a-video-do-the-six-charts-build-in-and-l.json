@@ -45,6 +45,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-10-18T02:01:05.448Z"
+  "status": "withdrawn",
+  "created": "2026-10-18T02:01:05.448Z",
+  "withdrawn": {
+    "reason": "Superseded: the user said charts must take their data first (task a-chart-is-your-data-given-to-it-the-obvious-way), which this look question does not ask",
+    "at": "2026-10-20T01:33:27.917Z"
+  }
 }

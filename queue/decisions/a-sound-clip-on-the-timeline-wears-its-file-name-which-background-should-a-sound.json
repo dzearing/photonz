@@ -35,6 +35,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-10-08T05:05:53.617Z"
+  "status": "resolved",
+  "created": "2026-10-08T05:05:53.617Z",
+  "answer": {
+    "choice": "a",
+    "note": "Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result",
+    "resolved": "2026-10-20T01:33:29.394Z"
+  }
 }
