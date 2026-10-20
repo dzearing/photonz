@@ -1,0 +1,126 @@
+{
+  "out": "/tmp/photonz-playtest/ask-adds-a-title-page-walk",
+  "seed": "Ask on a video at Next defaults: the sample recording open, the title bar's Ask button, 'add a title page that says Case 1 before this clip', the plan in the Agent group with nothing run, Run Plan puts a title page reading Case 1 in front of the clip, and one undo takes it back. Needs Ollama with a model Ask plans with (docs/design/ask.md).",
+  "clock": 420,
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "add a title page that says Case 1 before this clip"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "describe",
+      "stage": "plan-or-refusal",
+      "note": "where planning ended"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-plan",
+      "note": "the plan is in the Agent group and nothing has run"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-plan"
+    },
+    {
+      "do": "press",
+      "control": "Run Plan"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 120
+    },
+    {
+      "do": "describe",
+      "stage": "run-ended",
+      "note": "where the run ended"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-ran",
+      "note": "a title page reading Case 1 in front of the clip"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-ran"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "one undo took it back"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-undone"
+    }
+  ]
+}

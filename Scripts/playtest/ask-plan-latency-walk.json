@@ -1,0 +1,228 @@
+{
+  "out": "/tmp/photonz-playtest/ask-plan-latency-walk",
+  "seed": "How long Ask takes, at Next defaults: the screenshot request asked five times from the title bar's Ask button, each plan's time from Ask to the plan on screen read off the Agent group's state, then Settings opened to show which model answers. Needs Ollama with a model Ask plans with (docs/design/ask.md).",
+  "clock": 900,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 200
+    },
+    {
+      "do": "describe",
+      "stage": "plan-1",
+      "note": "plan 1 of 5: planSeconds is Ask to the plan on screen"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 200
+    },
+    {
+      "do": "describe",
+      "stage": "plan-2",
+      "note": "plan 2 of 5: planSeconds is Ask to the plan on screen"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 200
+    },
+    {
+      "do": "describe",
+      "stage": "plan-3",
+      "note": "plan 3 of 5: planSeconds is Ask to the plan on screen"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 200
+    },
+    {
+      "do": "describe",
+      "stage": "plan-4",
+      "note": "plan 4 of 5: planSeconds is Ask to the plan on screen"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 200
+    },
+    {
+      "do": "describe",
+      "stage": "plan-5",
+      "note": "plan 5 of 5: planSeconds is Ask to the plan on screen"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "plan-5"
+    },
+    {
+      "do": "shortcut",
+      "key": ",",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Settings…"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "snapshot",
+      "name": "settings-ask",
+      "window": "Settings"
+    }
+  ]
+}

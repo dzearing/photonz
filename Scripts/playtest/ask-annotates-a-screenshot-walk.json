@@ -1,0 +1,161 @@
+{
+  "out": "/tmp/photonz-playtest/ask-annotates-a-screenshot-walk",
+  "clock": 420,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-composer",
+      "note": "the Ask button opened the composer over the canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-composer"
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-typed"
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "3-planning"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "describe",
+      "stage": "plan-or-refusal",
+      "note": "where planning ended"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-plan",
+      "note": "the plan is in the Agent group and nothing has run"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "4-plan"
+    },
+    {
+      "do": "press",
+      "control": "Run Plan"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 120
+    },
+    {
+      "do": "describe",
+      "stage": "run-ended",
+      "note": "where the run ended"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-ran",
+      "note": "every plan line checked off, measurements on the screenshot"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 4
+    },
+    {
+      "do": "snapshot",
+      "name": "5-ran"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-undone",
+      "note": "one undo took the whole batch back"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "6-undone"
+    }
+  ]
+}

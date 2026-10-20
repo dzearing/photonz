@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T14:42:33.582Z",
-  "updated": "2026-10-20T02:53:27.908Z",
+  "updated": "2026-10-20T06:01:03.195Z",
   "deps": [
     "claude-can-make-and-edit-pictures-and-videos-in"
   ],
@@ -42,6 +42,49 @@
     {
       "t": "2026-10-20T02:53:27.908Z",
       "note": "intake: user asked for a working Ask soon; first slice must be usable end to end; card line replaced by audit reel"
+    },
+    {
+      "t": "2026-10-20T02:53:42.683Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T06:00:24.243Z",
+      "note": "owns these walks: ask-annotates-a-screenshot-walk, ask-adds-a-title-page-walk, ask-makes-a-pricing-section-walk, ask-plan-latency-walk"
+    },
+    {
+      "t": "2026-10-20T06:01:02.763Z",
+      "note": "Adversarial review before building: a person never picks a model (Settings only); a local model reads no pictures, so it plans from read_document and find_elements boxes; plan-first means a step cannot refer to a layer that does not exist yet, so steps name earlier ones as $N and Run Plan swaps in real ids; the mock's Command K is Premiere's Add Edit on a video (UX-PATTERNS §7), so there Ask is the button and the Edit menu row."
+    },
+    {
+      "t": "2026-10-20T06:01:02.836Z",
+      "note": "Model measured, not assumed (M4 Max, Ollama 0.20.2): qwen3:30b planned every request; gpt-oss:20b ignored think:false and gave up after 122 s; community Qwen3 2507 wrote broken text tool calls (now read anyway); Apple FoundationModels cannot fit the ~5,800 token tool list in 4,096. Default qwen3:30b; Automatic falls back through qwen3 32b/14b/8b."
+    },
+    {
+      "t": "2026-10-20T06:01:02.908Z",
+      "note": "Built: PhotonzCore/AskPlanning.swift (AskTools, AskConversation, AskPlan, AskStep, AskElements, AskModels; 29 tests); app Agent/AskSession.swift, AskLocalModel.swift (Ollama on 127.0.0.1 only, own ephemeral session), AskViews.swift (title bar Ask, composer overlay, Agent dock group), AskSettingsSection.swift (Settings: Model, Automatic default, download with size stated); flag next-ask on in Next; Edit > Ask… with Command K on a picture; walk condition askPhase and ask state in describe; docs/design/ask.md."
+    },
+    {
+      "t": "2026-10-20T06:01:02.977Z",
+      "note": "Chose passing over a step the app refuses (it changed nothing) over stopping the whole run, unless a later step names what it would make; then the run stops and what landed is undone. Chose handing the Library's components, styles and (on a video) title styles to the model up front over letting it look, because it skipped looking and refused ('blank image') or invented a style name. Chose one nudge before a refusal is accepted, and temperature 0."
+    },
+    {
+      "t": "2026-10-20T06:01:03.048Z",
+      "note": "False lead, recorded so nobody repeats it: a pricing walk looked hung in 'planning'; the walk log's last state was from the moment after Send. The model had answered 'I can't'. Walks now wait for planned|stopped and describe before claiming."
+    },
+    {
+      "t": "2026-10-20T06:01:03.120Z",
+      "note": "Verified: four walks green at Next defaults (no flags): screenshot (12 measurements, one undo removes all), title page Case 1 in front of the clip, pricing section (Card + words), latency median of five 24.5 s. Probe and Ollama connections during planning were all 127.0.0.1. Scripts/test.sh 13,927 green. Pictures looked at: composer, plan, ran, undone, title page, pricing, settings, contact sheet; the pricing result is visibly weak and the audit says so."
+    },
+    {
+      "t": "2026-10-20T06:01:03.194Z",
+      "note": "Left rough, filed: ask-on-the-local-model-makes-results-that-look-f (pricing half right, crowded measurements, say so when it cannot finish); typing-in-ask-lists-the-commands-you-can-run (/ commands, Last change rows, composer staying up). Not tested with networking off (the user's Mac); the audit asks the user to try it. The Ollama-missing path in Settings was not walked (Ollama is installed here)."
     }
+  ],
+  "started": "2026-10-20T02:53:42.682Z",
+  "walks": [
+    "ask-annotates-a-screenshot-walk",
+    "ask-adds-a-title-page-walk",
+    "ask-makes-a-pricing-section-walk",
+    "ask-plan-latency-walk"
   ]
 }

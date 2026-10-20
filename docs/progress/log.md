@@ -21716,3 +21716,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Proof: `Scripts/agent-design-drill.mjs` 18 of 18 one undo step; Scripts/test.sh 13,898 green; all four scenarios from fresh sessions with only the skill and the server, audit `queue/audits/2026-10-19-agent-skill.json`.
 - Filed: words can be underlined (p2, ui-components). No decision card: the user's 2026-10-19 rule puts looks in the audit.
 - Next: the focus (video editing); the agent install shipping inside the app is still open in the design doc.
+
+## 2026-10-19 (late): Ask runs on a local model (Next)
+
+- Ask in the editor: title bar Ask button, Edit > Ask… (Command K on a picture), a composer over the window, and an Agent group in the dock with the plan and Run Plan. A model on this Mac (qwen3:30b through Ollama, measured against gpt-oss 20B, a community Qwen build and Apple's on-device model) plans with the MCP task's own tools; looking tools run while planning, editing tools only go into the plan; Run Plan is one undo step. Settings has Ask: Model, Automatic by default, with the download offered when there is none. Design: docs/design/ask.md. Audit: queue/audits/2026-10-19-ask.json.
+- Next: ask-on-the-local-model-makes-results-that-look-f (results that look finished), typing-in-ask-lists-the-commands-you-can-run (/ commands, Last change rows).
+- Open question: whether to try a vision model for Ask's look-then-fix step (llama3.2-vision is on this Mac).

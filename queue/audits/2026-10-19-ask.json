@@ -1,0 +1,66 @@
+{
+  "feature": "Ask, planned and run on this Mac",
+  "epic": "agent-ask",
+  "summary": "The Ask button in the title bar (and Command K on a picture) takes a request in plain words. A model on this Mac writes a plan of named commands into the Agent group in the panel, nothing runs until Run Plan, and one Command Z takes the whole run back. The model is chosen once in Settings, never while asking.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Needs Ollama running with qwen3:30b (this Mac has it; Settings offers the download otherwise). Walks: ask-annotates-a-screenshot-walk, ask-adds-a-title-page-walk, ask-makes-a-pricing-section-walk, ask-plan-latency-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a UI screenshot and click Ask in the title bar (or press Command K).",
+      "shot": "2026-10-19-ask-1-composer-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type: annotate the ux with measurements around the major ui elements, and press Return.",
+      "shot": "2026-10-19-ask-2-plan-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the plan in the Agent group, then click Run Plan.",
+      "shot": "2026-10-19-ask-3-ran-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: every measurement goes.",
+      "shot": "2026-10-19-ask-4-undone-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a recording, click Ask, type: add a title page that says Case 1 before this clip, then Run Plan.",
+      "shot": "2026-10-19-ask-5-title-page-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "New blank canvas, click Ask, type: Make a pricing section on brand, then Run Plan.",
+      "shot": "2026-10-19-ask-6-pricing-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open Settings (Command comma) and look at Ask: which model answers.",
+      "shot": "2026-10-19-ask-7-settings-sc.png"
+    },
+    {
+      "do": "Turn Wi-Fi off and ask again: it should plan and run the same."
+    }
+  ],
+  "evaluate": [
+    "Watch the reel (2026-10-19-ask-reel.mp4, frames in 2026-10-19-ask-contact-sheet.png): does Ask feel like part of the editor rather than a chat bolted on?",
+    "Is about 25 seconds to a plan for the screenshot request acceptable, given it runs on this Mac?",
+    "Is a plan of tool names (add_measurement size 84 × 48) readable enough, or should lines read in plain words?",
+    "Should a refused step be passed over and marked (today) or stop the whole run?",
+    "With Wi-Fi off, does Ask still plan and run?"
+  ],
+  "rough": [
+    "Times on this Mac (M4 Max, qwen3:30b, Ollama, from Ask to the plan on screen): screenshot request median of five 24.5 s (23.1, 23.2, 24.5, 26.2, 28.7); title page 7.2 to 10.4 s; pricing section 8.9 to 16.6 s.",
+    "Model choice, measured not assumed: qwen3:30b planned every request. gpt-oss:20b thought for 122 s and gave up; a community Qwen3 2507 build wrote its calls as broken text; Apple's on-device model cannot fit the tool list (about 5,800 tokens against its 4,096). Details in docs/design/ask.md.",
+    "The pricing section is half right: one Card component (a real linked copy), with the plan names and prices laid beside it instead of inside it. The local model plans before anything exists, so it cannot word a copy's own text, and it reads no pictures. Covered by ask-on-the-local-model-makes-results-that-look-f, which also asks Ask to say so in one sentence when it cannot finish.",
+    "The screenshot measurements land on real controls and cards but crowd near the switches, and the two big cards are measured; covered by ask-on-the-local-model-makes-results-that-look-f.",
+    "The mock's Model row and Choose a model menu row are not built: the user's own call on 2026-10-19, the one departure the task allows.",
+    "The mock's / command list in the composer and its Last change rows are not in this slice: typing-in-ask-lists-the-commands-you-can-run.",
+    "The mock prints Command K for Ask; on a video Command K is Premiere's Add Edit (Split at Playhead), so there Ask is the button and the Edit menu row only (UX-PATTERNS §7).",
+    "The mock's line under Run plan ('You read the plan before anything happens, and every line undoes on its own') is past the panel budget, so it moved behind the Agent group's question mark (UX-PATTERNS §4), worded to what ships: one undo for the whole run, as the task's own checklist asks.",
+    "The composer closes when you ask and the plan shows in the dock; the mock keeps its overlay up beside the plan until Run plan. Kept as a step of typing-in-ask-lists-the-commands-you-can-run, the task that brings the composer the rest of the way to the mock.",
+    "Offline: not tested with networking switched off (this is the user's Mac, and the loop runs on it). Checked instead: over a full planning run the app's only connections were to 127.0.0.1:11434, and Ollama's own were all on 127.0.0.1. The last try step asks you to check it.",
+    "If Ollama is not installed, Settings links its download and Ask says 'Ask needs Ollama. See Settings.'; that path was not walked, since this Mac has Ollama."
+  ]
+}

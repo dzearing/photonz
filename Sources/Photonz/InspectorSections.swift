@@ -220,6 +220,9 @@ enum InspectorSectionID: String, CaseIterable {
     // Headed Transitions rather than the mock's Effects, because a picked clip
     // already brings the layer's own Effects section.
     case transitions
+    // Ask's plan (Next, `next-ask`), where the mock puts its Agent group:
+    // under the property sections, over the Library.
+    case agent
     // The shelf sits under the property sections, where the mock puts it: it is
     // where you go to fetch something, not what the thing you have selected is.
     case library
@@ -273,6 +276,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .captions: "Captions"
         case .shadow: "Shadow"
         case .transitions: "Transitions"
+        case .agent: "Agent"
         case .library: "Library"
         // Replaced at draw time by the scope's own noun; this is the fallback.
         case .libraryItem: "Library Item"

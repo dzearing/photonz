@@ -802,6 +802,8 @@ struct FeatureAreaTests {
     private let appChrome: Set<String> = [
         // The door agents come in by: the whole app, not one part of it.
         FeatureCatalog.agentChannelFlag,
+        // Ask: the title bar's button, Command K and Settings, in every window.
+        FeatureCatalog.askFlag,
         FeatureCatalog.releaseTagFlag,
         FeatureCatalog.tutorialsFlag,
         FeatureCatalog.setupTakesNoForAnAnswerFlag,

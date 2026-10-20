@@ -36,6 +36,10 @@ struct SettingsDialog: View {
                         }
                     }
                 }
+                // Which model answers Ask (Next, `next-ask`).
+                if Experiments.shared.askEnabled {
+                    AskSettingsSection()
+                }
             }
             .formStyle(.grouped)
         }

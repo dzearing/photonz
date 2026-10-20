@@ -1009,6 +1009,7 @@ extension Experiments {
     var noticesSayWhatHappenedEnabled: Bool { isEnabled(FeatureCatalog.noticesSayWhatHappenedFlag) }
     var panelBuildsWhatYouSeeEnabled: Bool { isEnabled(FeatureCatalog.panelBuildsWhatYouSeeFlag) }
     var agentChannelEnabled: Bool { isEnabled(FeatureCatalog.agentChannelFlag) }
+    var askEnabled: Bool { isEnabled(FeatureCatalog.askFlag) }
 
     /// `next-cut-says-what-it-cannot-do`: whether ⌘X, ⌫, ⌥⌫ and the bucket
     /// refuse, out loud, when the marquee is over a layer no piece can be

@@ -41,6 +41,9 @@ struct PanelMenusAreDrawnDropdownsTests {
         // The tool settings capsule floating over the canvas.
         "ToolSettingsCapsule.swift",
         "RecordingSetupController.swift",
+        // The Settings window's Ask section, a system Form like the rest of
+        // Settings.
+        "AskSettingsSection.swift",
         // The kit's own fallback for a bar too narrow for its words.
         "SegmentedControl.swift",
     ]

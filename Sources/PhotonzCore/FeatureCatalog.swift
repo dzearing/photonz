@@ -336,6 +336,9 @@ public enum FeatureCatalog {
     /// An agent can reach the running app over its own socket and work in the
     /// open documents (`docs/design/agent-mcp.md`).
     public static let agentChannelFlag = "next-agent-channel"
+    /// Ask in the editor: a request in plain words, planned by a model on this
+    /// Mac with the agent tools, run as one undo step (`docs/design/ask.md`).
+    public static let askFlag = "next-ask"
 
     // MARK: - Definitions
 
@@ -1811,6 +1814,16 @@ public enum FeatureCatalog {
                     name: agentChannelFlag,
                     title: "Agents can work in Photonz",
                     description: "An agent on this Mac can list the open documents, read them, see them and undo, through the Photonz MCP server. Off, the app stops listening for agents from its next launch.",
+                    area: .app,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: askFlag,
+                    title: "Ask",
+                    description: "An Ask button in the title bar and Command K take a request in plain words; a model on this Mac plans it, shows the plan, and runs it as one undo step. Nothing leaves the Mac.",
                     area: .app,
                     isEnabled: false,
                     parameters: []),

@@ -1,0 +1,36 @@
+{
+  "id": "ask-on-the-local-model-makes-results-that-look-f",
+  "title": "Ask on the local model makes results that look finished",
+  "goal": "What Ask builds on this Mac should look like a person made it: a pricing section whose card words replace the card's own placeholder text and sit in a tidy row, and screenshot measurements that read cleanly instead of crowding. Today the plan runs but the result is rough.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 3980,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T05:14:41.231Z",
+  "updated": "2026-10-20T06:00:53.037Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
+  "acceptance": [
+    "Ask 'Make a pricing section on brand' on a blank canvas: each plan's words land inside the placed cards (their own text, not new text laid over them), the cards sit in one evenly spaced row, and no text overlaps another layer, checked against the read document",
+    "Ask 'annotate the ux with measurements around the major ui elements' on the settings screenshot: every measured box is a control or card (no full-width rows), no two readouts overlap, and every size lands on real edges",
+    "Ask looks at its own result before it hands back (a picture through a model that can see, or a check of the read document) and fixes what it finds, or says in one short sentence what it could not do",
+    "Audit with before and after pictures for both requests, run with no switch changed"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T05:14:41.233Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T06:00:53.036Z",
+      "note": "walks ask-makes-a-pricing-section-walk, ask-annotates-a-screenshot-walk -> ask-makes-a-pricing-section-walk, ask-annotates-a-screenshot-walk"
+    }
+  ],
+  "walks": [
+    "ask-makes-a-pricing-section-walk",
+    "ask-annotates-a-screenshot-walk"
+  ]
+}

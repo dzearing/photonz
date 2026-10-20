@@ -18463,6 +18463,7 @@ private final class Run {
         case .soundSettled: SoundLibrary.shared.cleaningTasks.isEmpty && editor.soundsBeingNormalized == 0
         case .clipCopyBadge: editor.clipBarCopyCursorShown && Self.cursorName() == "dragCopy"
         case .clipRippleLook: editor.clipRippleLookShown
+        case .askPhase(let phases): phases.split(separator: "|").contains { $0 == editor.ask.phase.name }
         case .panelMenuOpen(let label): VideoKit.DropdownButton.isHeldOpenForAWalk(label)
         case .zoomControl(let shown): editor.canvasZoomControl.isShown == shown
         case .displayZoom(let percent): Int((editor.displayZoom * 100).rounded()) == percent
@@ -19973,6 +19974,17 @@ private final class Run {
             // Whether an edge grip is in Premiere's ripple yellow: ⌘ over it,
             // or a ripple drag on it (`RippleEdgeDrag.swift`).
             "clipRippleLook": editor.clipRippleLookShown,
+            // Ask (`AskSession`): its phase, the plan's lines, how many ran,
+            // and how long the plan took from Ask to the panel.
+            "ask": [
+                "phase": editor.ask.phase.name,
+                "steps": editor.ask.plan.map { plan in plan.steps.indices.map { "\(plan.line($0 + 1).name) \(plan.line($0 + 1).detail)" } } ?? [],
+                "stepsRun": editor.ask.stepsRun,
+                "planSeconds": editor.ask.lastPlanSeconds ?? -1,
+                "says": editor.ask.phase.sentence ?? "",
+                "trace": editor.ask.trace,
+                "skipped": editor.ask.skipped.map { "\($0.key): \($0.value)" }.sorted(),
+            ] as [String: Any],
             // ...and what the canvas thinks is under the pointer, which is the
             // other half: these two disagreeing means the cue was right and the
             // pointer did not follow it.

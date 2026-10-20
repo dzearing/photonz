@@ -556,6 +556,8 @@ struct InspectorPanel: View {
                 .onChange(of: editorState.pendingClipSpeedChoices) { _, asked in
                     if asked { showTimeSection(proxy) }
                 }
+                // Ask opened its plan: the Agent group open and on screen.
+                .onChange(of: editorState.ask.revealPass) { showAgentSection(proxy) }
                 .onAppear { if editorState.pendingClipSpeedChoices { showTimeSection(proxy) } }
                 // You opened an effect, or added one: put the settings that just
                 // appeared where you can see them. This is the LAST reveal the dock
@@ -1468,6 +1470,11 @@ struct InspectorPanel: View {
         // The Library shelf (step B3, `next-library`): an ordinary panel group,
         // present only once View ▸ Show Library has asked for it. With it
         // off the dock is exactly the dock someone who only redlines has today.
+        // Ask's Agent group (`next-ask`): there once this window has asked,
+        // the way the Library is there once it was asked for.
+        if Experiments.shared.askEnabled, editorState.ask.hasAsked, editorState.document != nil {
+            set.insert(.agent)
+        }
         if Experiments.shared.libraryEnabled, editorState.libraryMayShow,
            editorState.document != nil {
             set.insert(.library)
@@ -1714,6 +1721,7 @@ struct InspectorPanel: View {
         case .editPoint: EditPointInspector.sectionHelp
         case .transition: TransitionInspector.sectionHelp
         case .transitions: TransitionsGroup.sectionHelp
+        case .agent: AskCopy.helpLine
         default: nil
         }
     }
@@ -1746,6 +1754,8 @@ struct InspectorPanel: View {
         case .measurements:
             text = DockGroupHeader.countChip(editorState.measurementCount)
             return text.map { .init(text: $0, field: "Measurements Count") }
+        case .agent:
+            return editorState.ask.chip.map { .init(text: $0, field: "Agent State") }
         case .soundEffects:
             text = DockGroupHeader.countChip(editorState.soundLevelInHand.effectRows.count)
             return text.map { .init(text: $0, field: "Audio Effects Count") }
@@ -2086,6 +2096,8 @@ struct InspectorPanel: View {
             CaptionsInspector()
         case .shadow:
             ShadowInspector()
+        case .agent:
+            AgentPanel()
         case .library:
             // Deliberately NOT `.equatable()`. A shelf saying it is the same
             // as any other shelf was true of the value and false of what it
@@ -2315,6 +2327,21 @@ struct InspectorPanel: View {
 
     /// The Time section opened if it was folded and scrolled on screen if it
     /// was not, without moving one that is already in view.
+    private func showAgentSection(_ proxy: ScrollViewProxy) {
+        expand(.agent)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            guard let frame = reveal.sectionFrames[.agent] else {
+                proxy.scrollTo(InspectorSectionID.agent, anchor: .top)
+                return
+            }
+            let inView = frame.minY >= 0 && frame.maxY <= reveal.viewportHeight
+            guard !inView else { return }
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                proxy.scrollTo(InspectorSectionID.agent, anchor: .top)
+            }
+        }
+    }
+
     private func showTimeSection(_ proxy: ScrollViewProxy) {
         expand(.speed)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {

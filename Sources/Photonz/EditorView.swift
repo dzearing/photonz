@@ -276,6 +276,11 @@ struct EditorView: View {
             // (`KeyValuesPopover`): over the whole window, so a key near the
             // top of the timeline can open it over the canvas's foot.
             .overlay(alignment: .topLeading) { KeyValuesPopover() }
+            // Ask's composer over the window (Next, `next-ask`), the mock's
+            // `.askpal`: it dims the canvas and the dock, not the title bar.
+            .overlay {
+                if Experiments.shared.askEnabled { AskComposerOverlay() }
+            }
             // The panel's toggle, in the window's own title bar rather than in
             // the panel or on the canvas, so the way back never moves and
             // never goes away with the thing it collapses. Only with a

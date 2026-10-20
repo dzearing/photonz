@@ -553,6 +553,15 @@ struct EditorCommands: Commands {
             Button("Redo") { editor?.redo() }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .disabled(!(editor?.canRedo ?? false))
+            // Ask (Next, `next-ask`), in Edit beside the Mac's own Writing
+            // Tools. ⌘K as the mock prints it, except on a video, where ⌘K
+            // is Premiere's Add Edit (Split at Playhead, UX-PATTERNS §7).
+            if Experiments.shared.askEnabled {
+                Divider()
+                Button("Ask…") { editor?.ask.openComposer() }
+                    .keyboardShortcut(timed ? nil : KeyboardShortcut("k", modifiers: .command))
+                    .disabled(!(editor?.hasDocument ?? false))
+            }
         }
 
         documentMenus

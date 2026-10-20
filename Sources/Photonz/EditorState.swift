@@ -2836,6 +2836,9 @@ final class EditorState {
     /// that asks a person a question first (Turn into Picture, Turn into Path)
     /// does not ask an agent: the agent's one undo step is its way back.
     @ObservationIgnored var agentIsRunning = false
+    /// Ask in this window: the composer, the plan and running it
+    /// (`AskSession`, `docs/design/ask.md`). Observed through its own fields.
+    @ObservationIgnored let ask = AskSession()
 
     /// Whether closing this window would lose work.
     var hasUnsavedChanges: Bool { saveAffordance.asksBeforeClosing }

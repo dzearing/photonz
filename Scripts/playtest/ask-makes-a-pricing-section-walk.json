@@ -1,0 +1,128 @@
+{
+  "out": "/tmp/photonz-playtest/ask-makes-a-pricing-section-walk",
+  "seed": "Ask on a blank canvas at Next defaults, the mock's own request (agent-generate-wt.html): 'Make a pricing section on brand'. The plan lands in the Agent group with nothing run, Run Plan builds it from the Library's components and styles where it can, and one undo takes the whole section back. Needs Ollama with a model Ask plans with (docs/design/ask.md).",
+  "clock": 420,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 900,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Make a pricing section on brand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned|stopped",
+      "timeout": 150
+    },
+    {
+      "do": "describe",
+      "stage": "plan-or-refusal",
+      "note": "where planning ended"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planned",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-plan",
+      "note": "the plan is in the Agent group and nothing has run"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-plan"
+    },
+    {
+      "do": "press",
+      "control": "Run Plan"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 120
+    },
+    {
+      "do": "describe",
+      "stage": "run-ended",
+      "note": "where the run ended"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-ran",
+      "note": "the pricing section on the canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-ran"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "one undo took it back"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "3-undone"
+    }
+  ]
+}

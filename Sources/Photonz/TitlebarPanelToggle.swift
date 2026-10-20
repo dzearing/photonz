@@ -141,11 +141,20 @@ struct TitlebarPanelToggle: View {
     static let trailingInset: CGFloat = 10
     /// The title bar's own height. The button is centred in it.
     static let barHeight: CGFloat = 28
-    /// The whole accessory: the button and the room to its right.
-    static let boxWidth: CGFloat = diameter + trailingInset
+    /// The whole accessory: the button and the room to its right, and Ask
+    /// to their left when it is on.
+    static var boxWidth: CGFloat {
+        diameter + trailingInset + (offersAsk ? AskTitlebarButton.width + TitlebarViewEditSwitch.gap : 0)
+    }
+    @MainActor static var offersAsk: Bool { Experiments.shared.askEnabled }
 
     var body: some View {
         HStack(spacing: TitlebarViewEditSwitch.gap) {
+            // Ask (Next, `next-ask`), the mock's `.askbtn` in the title bar's
+            // right slot. Read at launch, like the box's width.
+            if Self.offersAsk {
+                AskTitlebarButton()
+            }
             if editorState.documentHasTime {
                 TitlebarViewEditSwitch()
             }
