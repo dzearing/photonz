@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T14:42:33.582Z",
-  "updated": "2026-10-20T06:01:03.195Z",
+  "updated": "2026-10-20T06:01:16.190Z",
   "deps": [
     "claude-can-make-and-edit-pictures-and-videos-in"
   ],
@@ -78,6 +78,10 @@
     {
       "t": "2026-10-20T06:01:03.194Z",
       "note": "Left rough, filed: ask-on-the-local-model-makes-results-that-look-f (pricing half right, crowded measurements, say so when it cannot finish); typing-in-ask-lists-the-commands-you-can-run (/ commands, Last change rows, composer staying up). Not tested with networking off (the user's Mac); the audit asks the user to try it. The Ollama-missing path in Settings was not walked (Ollama is installed here)."
+    },
+    {
+      "t": "2026-10-20T06:01:16.188Z",
+      "note": "First slice of Ask, usable end to end at Next defaults: title bar Ask (Command K on a picture), composer, plan in the Agent group, Run Plan, one undo; model qwen3:30b via Ollama on 127.0.0.1, chosen once in Settings (Automatic), measured against gpt-oss 20B, a community Qwen build and Apple's on-device model. Verified by four walks (screenshot measurements, Case 1 title page, pricing section, latency median of five 24.5 s), Scripts/test.sh 13,927 green, connections checked local. Audit queue/audits/2026-10-19-ask.json with reel. Not met here and filed: result quality and saying so when it cannot finish (ask-on-the-local-model-makes-results-that-look-f), / commands and Last change rows (typing-in-ask-lists-the-commands-you-can-run); networking-off run left to the user (audit try step 8). Commit 8238a30a."
     }
   ],
   "started": "2026-10-20T02:53:42.682Z",
@@ -86,5 +90,6 @@
     "ask-adds-a-title-page-walk",
     "ask-makes-a-pricing-section-walk",
     "ask-plan-latency-walk"
-  ]
+  ],
+  "completed": "2026-10-20T06:01:16.189Z"
 }
