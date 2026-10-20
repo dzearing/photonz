@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.299Z",
-  "updated": "2026-10-20T17:43:33.400Z",
+  "updated": "2026-10-20T17:43:54.243Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'i would like to hill climb the skill. is there a way we can develop an eval that can adjust the quality of output for drawing and component creation?' and on the component sheet: 'this is a complete mess. there is no table, no alignment, no titles, no clean design. The output should always be clean and beautiful and with consistent typography, alignment, and follow the user's requests as closely as possible.'\n\nWhat the sheet run did (screenshot saved): place_component Badge, Nav Bar, Card, Text Field, Button, then add_text 'Badge', 'Navigation Bar', 'Card Content', 'Enter text here', 'Click me' laid OVER the components at random sizes; no rows, no state columns, no headers. That is what rule scores must catch.\n\nEngines: Ask goes through the app (AskPlanning.swift, qwen3:30b via Ollama). The skill engine is a headless Claude Code session with only plugin/skills/photonz and the MCP server (Scripts/install-mcp.sh), the way the agent-skill audit ran its four scenarios (queue/audits/2026-10-19-agent-skill-transcript.md). The judge is dev tooling, never in the app; it may use a cloud model. App copy never names Claude or Anthropic.\n\nKeep the run bounded (CLAUDE.md: never leave the machine loaded): one case at a time, a time limit per case, the probe quit at the end. This is the measuring stick only; the climbing is the tasks that depend on it (the dog task, the component sheet task).",
@@ -53,8 +53,13 @@
     {
       "t": "2026-10-20T17:43:33.399Z",
       "note": "Follow-ups: none filed. Every rough line is covered: Ask's drawings by ask-draws-a-dog-you-can-tell-is-a-dog, its sheets by asking-for-a-sheet-of-components-gives-a-clean-t and asking-for-base-components-builds-the-real-set-w, pricing and measurement crowding by ask-on-the-local-model-makes-results-that-look-f (baselines and commands folded into each). Left rough here: the judge is the skill engine's own model (a fresh session that sees only the picture; calibration passed but no third maker's picture is in the set yet); a runner must run in --minutes pieces; measurement readouts crowd for the skill too (folded into the local-model task, may be the Measure tool's placement)."
+    },
+    {
+      "t": "2026-10-20T17:43:54.241Z",
+      "note": "Scripts/ask-eval.sh (Scripts/ask-eval/, README there): 17 cases run one at a time on the probe through Ask or the skill, read and rendered over MCP, scored by document rules (14 node tests), a fixed-rubric picture judge (claude-opus-5-5, 3 looks, median) and blind naming; history in queue/evals/ask-eval-history.jsonl with compare against the best, seconds per case. Judge agrees with the user (messes 1.8/1.8/1.4, hand-made clean sheet 7.6). Baselines: Ask 37.8 in 10.5 min, skill 83.9 in 24.5 min. Audit queue/audits/2026-10-20-ask-eval.json with both contact sheets. Scripts/test.sh 14008 green."
     }
   ],
   "started": "2026-10-20T16:42:02.415Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-10-20T17:43:54.242Z"
 }
