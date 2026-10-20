@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-14T03:26:52.669Z",
-  "updated": "2026-10-19T17:21:37.610Z",
+  "updated": "2026-10-20T07:10:19.117Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-right-panel-shows-only-what-the-picked-thing (2026-10-13). Measured on the laptop window (windowLaptop, sound picked): with Captions and Transitions in the pane at 40 per cent of a ~395pt column, the pick part was 235pt and Fades (244-352) fell under it; sound-fades-in-the-panel-walk step 12 and video-panel-order-walk step 45 failed. Both are forms the pane cannot shorten (not in DockMetrics.scrollingSections). Code: PanelListsPane.listSections (PhotonzCore), InspectorPanel.paneSplit.",
@@ -81,6 +81,10 @@
     {
       "t": "2026-10-19T17:21:37.608Z",
       "note": "also happens for a picked GRAPHIC, not only a sound: a 1400x900 video window with a line from the Line tool picked shows Properties, Time, then APPEARANCE squeezed to a ~10pt sliver above the Library pane, so Thickness and the colour row are off screen (line-thickness-typed-walk step 3-video, picture queue/audits/2026-10-19-line-thickness-video-panel-squeezed.png, after e746181a put the Library in its own pane at the foot). Found by thickness-in-appearance-makes-a-drawn-line-thick."
+    },
+    {
+      "t": "2026-10-20T07:10:19.116Z",
+      "note": "From a-video-document-shows-the-library-in-its-dock (2026-10-20): a video now shows the Library at Next defaults, folded at the foot (one 33pt header). Opened, its pane takes about 40 per cent of the column and squeezes Transitions to one row of tiles; the video mock caps the opened Library body at 118px so it does not split the column (video.html line 64, #gLibrary). Picture: queue/audits/2026-10-20-video-library-folded-2-library-opened-sc.png"
     }
   ],
   "walks": [

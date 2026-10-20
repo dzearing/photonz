@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T21:55:35.854Z",
-  "updated": "2026-10-20T07:03:30.954Z",
+  "updated": "2026-10-20T07:10:40.622Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by recordings-and-sounds-in-a-document-sit-on-the-l (2026-09-23): its walk has to run the showLibrary action (the same as View > Library) before any tile exists. Rule lives in PanelSectionVisibility.isShownAutomatically (case library: situation.isLibraryAskedFor, with the user quote) and InspectorPanel (isLibraryVisible gate). Mock: video.html line ~62 (Library keeps its header, the media pool is still one click away) and #gLibrary collapsed at line ~528. | 2026-10-20 build: WindowMode.libraryShowsUntilTurnedOff (video only) + libraryOffered(switchIsOn:chosen:); PanelSectionFolds.startFolded = [library], stored as '+library' once opened; EditorState.setLibraryVisible writes the video mode's own no / hands back to automatic; bringLibraryForward() for guides so a folded shelf opens. Walk: video-library-folded-walk (front: true, because a header click only lands with the app in front).",
@@ -121,10 +121,15 @@
     {
       "t": "2026-10-20T07:03:30.953Z",
       "note": "Chose a fold that starts folded and is remembered by OPENING ('+library') over a one-time fold seeded when a video first opens, because it needs no timing hook and the user also said on 2026-10-18 the Library should not arrive expanded. Chose to leave the shelf pane's pointer hold alone: I suspected it froze the pane at header height on click, but the walk passes with and without a change to it once the app is in front, so the failure was the background click, not the hold."
+    },
+    {
+      "t": "2026-10-20T07:10:40.620Z",
+      "note": "A recording now shows the Library folded at the foot of the dock at Next defaults; one click opens it with the recording's tile; View > Library turns it off and on for videos only; pictures still keep it out. Verified by video-library-folded-walk (no flags, real click with the app in front, 3 real captures in the audit), 52 other Library/video-dock/header walks green, Scripts/test.sh 13936 passed. Commit a9944834. Opened-shelf height vs the mock's 118px cap folded into on-a-video-captions-and-transitions-sit-where-th."
     }
   ],
   "started": "2026-10-20T06:19:04.807Z",
   "walks": [
     "video-library-folded-walk"
-  ]
+  ],
+  "completed": "2026-10-20T07:10:40.621Z"
 }
