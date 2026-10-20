@@ -1,0 +1,13 @@
+{
+  "request": "create a smiley face icon",
+  "group": "drawing",
+  "from": "The user, word for word, 2026-10-20 07:44 (queue/audits/2026-10-20-user-ask-smiley-icon.png)",
+  "start": { "blank": [1440, 1024] },
+  "names": ["smiley", "smile", "smiling", "happy face", "emoji", "emoticon", "grin"],
+  "expect": {
+    "words": false,
+    "icon": true,
+    "parts": [{ "name": "eye", "count": 2 }, { "name": "mouth|smile|grin" }],
+    "inside": [["eye|mouth|smile|grin", "face|head|circle|smiley"]]
+  }
+}

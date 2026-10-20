@@ -1,0 +1,8 @@
+{
+  "request": "draw a picture of a dog.",
+  "group": "drawing",
+  "from": "The user, word for word, 2026-10-20 07:35 (queue/audits/2026-10-20-user-ask-dog.png)",
+  "start": { "blank": [1440, 1024] },
+  "names": ["dog", "puppy", "hound", "terrier", "retriever", "beagle", "corgi", "dachshund", "poodle", "labrador", "spaniel"],
+  "expect": { "words": false, "touch": [["ear|leg|snout|tail|nose|paw", "body|head|torso"]] }
+}

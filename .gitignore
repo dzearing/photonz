@@ -32,3 +32,4 @@ queue/leftovers/.before.json
 # pid to every other checkout, and a hold is a thing you put down BY PID.
 queue/.loop-awake.pid
 .build-mcp/
+.ask-eval/

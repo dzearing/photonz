@@ -1,0 +1,26 @@
+{
+  "request": "create a table of apple like quality base components that show different states and text",
+  "group": "sheet",
+  "from": "The user, word for word, 2026-10-20 07:38 (queue/audits/2026-10-20-user-ask-component-sheet-mess.png)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "expect": {
+    "title": true,
+    "headers": [
+      "default|normal|rest|enabled",
+      "hover",
+      "pressed|active|down",
+      "disabled",
+      "focus",
+      "selected|on|checked"
+    ],
+    "headersAtLeast": 3,
+    "minCells": 8,
+    "rowLabels": true
+  },
+  "skillTimeout": 480
+}

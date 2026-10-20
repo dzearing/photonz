@@ -1,0 +1,8 @@
+{
+  "request": "draw a picture of a car",
+  "group": "drawing",
+  "from": "The dog task's drawing set (ask-draws-a-dog-you-can-tell-is-a-dog)",
+  "start": { "blank": [1440, 1024] },
+  "names": ["car", "automobile", "sedan", "vehicle", "hatchback", "coupe"],
+  "expect": { "words": false }
+}

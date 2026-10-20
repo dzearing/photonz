@@ -1,0 +1,8 @@
+{
+  "request": "draw a picture of a bicycle",
+  "group": "drawing",
+  "from": "The dog task's drawing set (ask-draws-a-dog-you-can-tell-is-a-dog)",
+  "start": { "blank": [1440, 1024] },
+  "names": ["bicycle", "bike", "cycle"],
+  "expect": { "words": false }
+}

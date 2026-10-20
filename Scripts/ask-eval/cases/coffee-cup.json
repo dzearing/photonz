@@ -1,0 +1,8 @@
+{
+  "request": "draw a picture of a coffee cup",
+  "group": "drawing",
+  "from": "The dog task's drawing set (ask-draws-a-dog-you-can-tell-is-a-dog)",
+  "start": { "blank": [1440, 1024] },
+  "names": ["cup", "mug", "teacup"],
+  "expect": { "words": false }
+}

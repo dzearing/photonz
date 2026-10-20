@@ -1,0 +1,23 @@
+{
+  "request": "Make a component sheet for a website's design system: buttons, text fields, cards and navigation, each labelled, with a title.",
+  "group": "sheet",
+  "from": "The eval task's own case: a component sheet for a website's design system",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "expect": {
+    "title": true,
+    "labels": [
+      "button",
+      "field|input",
+      "card",
+      "nav|navigation|menu"
+    ],
+    "minCells": 4,
+    "rowLabels": true
+  },
+  "skillTimeout": 480
+}

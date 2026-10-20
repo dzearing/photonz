@@ -1,0 +1,74 @@
+{
+  "rubric": "da1c5771",
+  "judgeModel": "claude-opus-5-5",
+  "at": "2026-10-20T16:55:57.629Z",
+  "agrees": true,
+  "results": [
+    {
+      "picture": "user-dog.png",
+      "case": "dog",
+      "want": "low",
+      "judge": 1.8,
+      "lines": {
+        "clean": 3,
+        "typography": 2,
+        "aligned": 2,
+        "designed": 1,
+        "didWhatWasAsked": 1
+      },
+      "named": [
+        "dog",
+        "brown blob",
+        "dog"
+      ],
+      "ok": true
+    },
+    {
+      "picture": "user-smiley-icon.png",
+      "case": "smiley-icon",
+      "want": "low",
+      "judge": 1.8,
+      "lines": {
+        "clean": 2,
+        "typography": null,
+        "aligned": 2,
+        "designed": 2,
+        "didWhatWasAsked": 1
+      },
+      "named": [
+        "smiley face",
+        "Smiley face",
+        "smiley face"
+      ],
+      "ok": true
+    },
+    {
+      "picture": "user-component-sheet-mess.png",
+      "case": "component-table",
+      "want": "low",
+      "judge": 1.4,
+      "lines": {
+        "clean": 1,
+        "typography": 2,
+        "aligned": 1,
+        "designed": 2,
+        "didWhatWasAsked": 1
+      },
+      "ok": true
+    },
+    {
+      "picture": "clean-component-sheet.png",
+      "case": "component-table",
+      "want": "high",
+      "judge": 7.6,
+      "lines": {
+        "clean": 8,
+        "typography": 8,
+        "aligned": 8,
+        "designed": 7,
+        "didWhatWasAsked": 7
+      },
+      "ok": true
+    }
+  ]
+}

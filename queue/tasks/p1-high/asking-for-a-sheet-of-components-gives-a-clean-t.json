@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-20T14:44:22.953Z",
+  "updated": "2026-10-20T17:43:20.382Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-20T14:42:52.130Z",
       "note": "seq 42.5 -> 9"
+    },
+    {
+      "t": "2026-10-20T17:43:20.381Z",
+      "note": "eval landed: cases component-table (the user's words) and design-system-sheet. Baselines 2026-10-20: Ask 39.2 and 55.6 (judge 2.4 and 3.6 of 10); skill 75.2 and 72 (judge 7.6 and 6). The skill's table leaves most of the canvas empty and its hover looks like default. Rules read the document: title, state headers, labelled rows, alignment, type sizes, words over controls. Run: Scripts/ask-eval.sh run --engine ask|skill --cases component-table,design-system-sheet --tag '<change>'."
     }
   ]
 }

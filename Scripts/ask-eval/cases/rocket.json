@@ -1,0 +1,8 @@
+{
+  "request": "draw a picture of a rocket",
+  "group": "drawing",
+  "from": "The dog task's drawing set (ask-draws-a-dog-you-can-tell-is-a-dog)",
+  "start": { "blank": [1440, 1024] },
+  "names": ["rocket", "spaceship", "spacecraft"],
+  "expect": { "words": false }
+}

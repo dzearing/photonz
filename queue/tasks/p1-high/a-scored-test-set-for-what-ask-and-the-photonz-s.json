@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 7,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.299Z",
-  "updated": "2026-10-20T15:16:21.630Z",
+  "updated": "2026-10-20T17:43:33.400Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'i would like to hill climb the skill. is there a way we can develop an eval that can adjust the quality of output for drawing and component creation?' and on the component sheet: 'this is a complete mess. there is no table, no alignment, no titles, no clean design. The output should always be clean and beautiful and with consistent typography, alignment, and follow the user's requests as closely as possible.'\n\nWhat the sheet run did (screenshot saved): place_component Badge, Nav Bar, Card, Text Field, Button, then add_text 'Badge', 'Navigation Bar', 'Card Content', 'Enter text here', 'Click me' laid OVER the components at random sizes; no rows, no state columns, no headers. That is what rule scores must catch.\n\nEngines: Ask goes through the app (AskPlanning.swift, qwen3:30b via Ollama). The skill engine is a headless Claude Code session with only plugin/skills/photonz and the MCP server (Scripts/install-mcp.sh), the way the agent-skill audit ran its four scenarios (queue/audits/2026-10-19-agent-skill-transcript.md). The judge is dev tooling, never in the app; it may use a cloud model. App copy never names Claude or Anthropic.\n\nKeep the run bounded (CLAUDE.md: never leave the machine loaded): one case at a time, a time limit per case, the probe quit at the end. This is the measuring stick only; the climbing is the tasks that depend on it (the dog task, the component sheet task).",
@@ -33,6 +33,28 @@
     {
       "t": "2026-10-20T15:16:21.628Z",
       "note": "manager 2026-10-20: record how long each case takes as well as its score (Ask took 24.5 s median for the screenshot plan on 2026-10-19), so a change that buys quality with a minute of waiting shows up in the comparison and is not kept by accident."
+    },
+    {
+      "t": "2026-10-20T16:42:02.416Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T16:56:13.707Z",
+      "note": "Adversarial review before building: (1) a judge that is the same model family as the skill engine could flatter it; mitigated by a fresh tool-limited session that sees only the picture, never the transcript, and by calibrating on the user's own verdicts first. (2) Blind naming leaks when a drawing writes its own name (the user's dog had 'Dog' over it, and the namer said dog 2 of 3): naming counts 0 when the drawing's words contain the name. (3) Rule scores from frames alone can be gamed by a tidy grid of nonsense; that is why they are only 30-40% of a case and the judge holds the rest. (4) The skill engine is told one sentence about what is open (Ask knows it from the app); recorded in the README. (5) Under a locked screen Ask is found by name, so the ask engine cannot run then; the run stops and says so."
+    },
+    {
+      "t": "2026-10-20T16:56:13.773Z",
+      "note": "Judge calibration passed on rubric first try: user dog 1.8, user smiley 1.8, user component sheet 1.4 (all 4 or under), clean sheet made by hand through the MCP tools 7.6 (7 or over). Judge: claude-opus-5-5, fresh claude -p session with only Read, no settings, no MCP, 3 looks, median per line."
+    },
+    {
+      "t": "2026-10-20T17:43:20.608Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-20T17:43:33.399Z",
+      "note": "Follow-ups: none filed. Every rough line is covered: Ask's drawings by ask-draws-a-dog-you-can-tell-is-a-dog, its sheets by asking-for-a-sheet-of-components-gives-a-clean-t and asking-for-base-components-builds-the-real-set-w, pricing and measurement crowding by ask-on-the-local-model-makes-results-that-look-f (baselines and commands folded into each). Left rough here: the judge is the skill engine's own model (a fresh session that sees only the picture; calibration passed but no third maker's picture is in the set yet); a runner must run in --minutes pieces; measurement readouts crowd for the skill too (folded into the local-model task, may be the Measure tool's placement)."
     }
-  ]
+  ],
+  "started": "2026-10-20T16:42:02.415Z",
+  "walks": []
 }

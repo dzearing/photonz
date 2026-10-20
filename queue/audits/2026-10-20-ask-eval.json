@@ -1,0 +1,31 @@
+{
+  "feature": "A scored test set for what Ask and the Photonz skill make",
+  "epic": "agent-skills",
+  "summary": "One command runs 17 fixed requests (13 drawings, two component sheets, measurements on a screenshot, a pricing section) through Ask or the Photonz skill on the probe, scores each from the document and from a picture judge, and keeps every run's scores so a change is kept or thrown away on a number. First baselines: Ask 37.8, the skill 83.9, out of 100.",
+  "setup": "Dev tooling, nothing in the app changed. Scripts/ask-eval.sh in a terminal at the repo, the probe app (never the dev app), Ollama with qwen3:30b for Ask, the claude command for the skill and the judge. No switch changed from Next's defaults. How it scores: Scripts/ask-eval/README.md.",
+  "switched": {},
+  "try": [
+    { "do": "Run Scripts/ask-eval.sh history to see the two baselines.", "shot": "2026-10-20-ask-eval-ask-baseline.png", "shotNote": "Not a window capture: the eval's contact sheet of Ask's 17 results, each canvas drawn by Photonz's own renderer with its score under it." },
+    { "do": "Open the skill's contact sheet beside it.", "shot": "2026-10-20-ask-eval-skill-baseline.png", "shotNote": "Not a window capture: the eval's contact sheet of the skill's 17 results, drawn by Photonz's renderer." },
+    { "do": "Run Scripts/ask-eval.sh compare 20261020-170738-skill --with 20261020-165619-ask to read them case by case, with each case's seconds." },
+    { "do": "Run Scripts/ask-eval.sh calibrate: your three messes score under 4, the clean sheet made by hand over 7.", "shot": "2026-10-20-ask-eval-clean-sheet.png", "shotNote": "The clean component sheet made by hand through the agent tools, the judge's high mark (7.6)." },
+    { "do": "Change something in Ask or the skill, then run Scripts/ask-eval.sh run --engine ask --tag \"what I changed\" and read the last line: BETTER: keep it, or WORSE: throw it away." },
+    { "do": "Add a request of your own: one small file in Scripts/ask-eval/cases/, then run it alone with --cases <its name>." }
+  ],
+  "evaluate": [
+    "Do the scores on the two contact sheets put the pictures in the order you would?",
+    "Is the skill's component table (75.2) and its wide empty canvas scored about right, or should a sheet that leaves most of the page empty lose more?",
+    "Both engines score lowest on the measurements (Ask 58, skill 62.8) because the judge calls the readouts crowded: is that your verdict too?",
+    "Is 11 minutes for an Ask run and 24 for a skill run short enough to run after every change?"
+  ],
+  "rough": [
+    "No mock covers this: it is a developer's command with no surface in the app.",
+    "Baselines, 2026-10-20: Ask (qwen3:30b) total 37.8: drawings 35.4, sheets 47.4, pricing 29.6, measurements 58; the car is the only drawing named right blind (the dog reads as a bear, the house as a suitcase, the rocket as a mailbox). The skill (claude-opus-5-5) total 83.9: drawings 87.2 with all 13 named right, sheets 73.6, pricing 82.4, measurements 62.8.",
+    "Time: Ask's 17 cases took 10.5 minutes of wall clock and 358 s of Ask's own time (median 18.9 s a case); the skill's took 24.5 minutes and 1253 s of session time (median 52 s; the component table 308 s, the pricing section 190 s) and about 9 dollars of model time. Each case's seconds are in the history so a slower change shows up beside its score.",
+    "The judge is the same model as the skill engine (a fresh session that sees only the picture), so it could favour that model's taste. Calibration on your own verdicts passed, but no picture from a third maker is in the set yet.",
+    "A run has to be done in pieces of a few cases (--minutes, then --resume), because a go loop runner's commands stop at ten minutes; a person can run it in one go.",
+    "The screen must be unlocked: Ask is found by its name, which a locked screen hides. A run that meets a lock stops and resumes later.",
+    "The rules are deliberately crude for drawings (on the canvas, centred, no stray words, parts in their place when the parts are named); the judge and blind naming carry drawings, and the rules carry sheets.",
+    "One blind look is ten points on a drawing case, so a change of two or three points on the total is noise; the README says so."
+  ]
+}

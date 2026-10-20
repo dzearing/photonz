@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:37:04.148Z",
-  "updated": "2026-10-20T15:16:21.555Z",
+  "updated": "2026-10-20T17:43:20.308Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s"
   ],
@@ -48,6 +48,10 @@
     {
       "t": "2026-10-20T15:16:21.553Z",
       "note": "manager 2026-10-20: ask-on-the-local-model-makes-results-that-look-f asks for the same look-and-fix step. Build it once: whichever lands first owns it, the other reuses it."
+    },
+    {
+      "t": "2026-10-20T17:43:20.306Z",
+      "note": "eval landed (a-scored-test-set-for-what-ask-and-the-photonz-s): Scripts/ask-eval.sh run --engine ask --cases dog,smiley-icon,cat,house,tree,car,bicycle,coffee-cup,fish,bird,rocket,flower,sun-over-mountains --tag '<change>' then compare. Ask baseline 2026-10-20 (run 20261020-165619-ask): drawings 35.4/100, named right blind 1 of 13 (car; dog read as bear, house as suitcase, rocket as mailbox, cat as teddy bear; fish and tree wrote their own names). Skill baseline 87.2, 13 of 13 named. Two Ask drawings (cat, sun over mountains) placed a starter Card component inside the drawing."
     }
   ]
 }

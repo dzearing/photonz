@@ -1,0 +1,8 @@
+{
+  "request": "draw the sun over mountains",
+  "group": "drawing",
+  "from": "The dog task's drawing set (ask-draws-a-dog-you-can-tell-is-a-dog)",
+  "start": { "blank": [1440, 1024] },
+  "names": ["mountain", "sunrise", "sunset", "landscape"],
+  "expect": { "words": false }
+}

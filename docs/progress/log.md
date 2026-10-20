@@ -21745,3 +21745,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Core: `AskChanges.swift` records each request as before/after and takes it out or puts it back with a three-way merge over the saved form; later edits elsewhere stay, a later edit to the same thing blocks with a one-line note. Tests: `AskChangesTests`.
 - Walks: the three Ask try-path walks now check run, undo, redo, off, on, delete and undo of delete. Audit: `queue/audits/2026-10-20-ask-rows.json`.
 - Next: the `/` command list in the composer; the video panel drawing under the title bar (its own task).
+
+## 2026-10-20: A scored test set for Ask and the Photonz skill
+
+- `Scripts/ask-eval.sh` (`Scripts/ask-eval/`, README there): 17 cases (the user's three failures word for word, the dog task's other eleven drawings, a design-system sheet, measurements on the settings screenshot, a pricing section), run one at a time on the probe through Ask (a walk) or the skill (headless `claude -p` with only the plugin and the probe server), read and rendered over the MCP bridge, scored by document rules (`rules.mjs`, 14 node tests) and a picture judge (`rubric.md`, claude-opus-5-5, three looks, median) plus blind naming for drawings.
+- Calibrated on the user's verdicts: their dog, smiley and component sheet 1.8, 1.8, 1.4; a clean sheet made by hand through the tools 7.6.
+- Baselines in `queue/evals/ask-eval-history.jsonl`: Ask 37.8 (10.5 min a run), skill 83.9 (24.5 min). Audit `queue/audits/2026-10-20-ask-eval.json`.
+- Next: the dog, component sheet, base components and local-model tasks climb this.

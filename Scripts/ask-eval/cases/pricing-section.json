@@ -1,0 +1,17 @@
+{
+  "request": "Make a pricing section on brand",
+  "group": "layout",
+  "from": "The mock's own request (docs/design/mocks/pages/agent-generate-wt.html), ask-makes-a-pricing-section-walk",
+  "start": {
+    "blank": [
+      1440,
+      900
+    ]
+  },
+  "expect": {
+    "title": true,
+    "prices": 2,
+    "minCells": 3
+  },
+  "skillTimeout": 480
+}

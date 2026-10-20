@@ -1,0 +1,8 @@
+{
+  "request": "annotate the ux with measurements around the major ui elements",
+  "group": "redline",
+  "from": "The Ask audit's screenshot request, 2026-10-19 (ask-annotates-a-screenshot-walk)",
+  "start": { "open": "Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png" },
+  "context": "a screenshot of a settings screen",
+  "expect": { "minMeasurements": 4, "maxMeasurements": 24 }
+}
