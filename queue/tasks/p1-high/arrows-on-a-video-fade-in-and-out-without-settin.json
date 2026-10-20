@@ -1,0 +1,36 @@
+{
+  "id": "arrows-on-a-video-fade-in-and-out-without-settin",
+  "title": "The next arrow you draw keeps the last one's look, fades included",
+  "goal": "Someone styles an arrow (colour, thickness, ending, head size, shadow, caption look, and on a video its fade in and fade out) and then draws another. The new one comes out looking exactly like the last one they styled, and the same is true for every kind of thing they draw. On a video they also can set a fade on several picked objects at once, and fade both ends in one step, instead of picking each one and setting a fade in, then a fade out.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 16,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T01:24:56.955Z",
+  "updated": "2026-10-20T01:25:13.430Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user's words (2026-10-19, intake): 'Today i wanted to make a video pause at sections have some arrows fade in and out. It was annoying to make it do that. I had to select each one, add a fade in, then add a fade out' and then 'at minimum i wish it remembered the transitions from the previous object'. The remembering is the floor; many-at-once and one step for both ends are the rest of the complaint.\n\nWhere it lives (read, not reproduced): Fade In / Fade Out rows on the timeline right-click come from TimelineMenuTable (Sources/PhotonzCore/TimelineMenuTable.swift:123, under More since 2026-10-17, a further two clicks) through fadeRows (EditorState+TimelineMenus.swift:413), which goes to pictureFadeMenuRows (EditorState+PictureFade.swift:74, one layer) or, with the picture fades switch off, placedLayerFadeRows (EditorState+TitleTime.swift:119, one Fade submenu, one layer). Other menus already act on every pick when the clicked one is among them (soundLayers(actingOn:), EditorState+TimelineMenus.swift:424); follow that pattern. Drawn-object defaults are remembered in AnnotationStyles (rememberAnnotationDefaults, EditorState+Annotations.swift, around line 870); a fade default belongs beside them, per kind, and must apply only on a document with time.\n\nTraps: (1) Fade In and Out are under More since the menu table task (f26565da); if the one-step row should sit at the top level, the table's ten-row limit applies, so change the table, not a one-off. (2) An arrow drawn during a freeze is placed in time by the freeze's span; the remembered fade must not make it longer or shorter. (3) Check whether the app already offers a fade on its Appearance or motion panel; one fade, reached from every place, not two that disagree.\n\nThe user, a minute later: 'so then if i make another arrow, it retains the styling' and 'same goes for other things'. So the remembering is the WHOLE look per kind, not only fades. AnnotationStyles already remembers colour, stroke width, arrowhead scale and corner radii per shape (rememberAnnotationDefaults); intake did not check shadow, ending, caption look, text styling, measurement styling or motion entrances, so the before column of the table is the first job. Retitled from 'Arrows on a video fade in and out without setting each one by hand'.",
+  "acceptance": [
+    "Every style setting carries over, not just some: an audit table lists, for each kind of thing drawn (arrow, line, box, oval, highlight, text, Pen path, measurement, picture placed on a video), every setting the panel offers it, and whether the next one drawn inherits it TODAY and AFTER the fix. Each is checked by drawing, styling, drawing again and reading the new layer, not by reading the code. After the fix every row inherits, or the table says in one line why that setting should not (for example the words of a caption, or its place)",
+    "Remembered: on a video, set Fade In and Fade Out on one arrow, then draw another arrow. The new arrow comes out with the same fade in and fade out lengths, with nothing else touched. The same holds for every other drawn object on a video (boxes, ovals, lines, text, pictures): each new one starts with the fades last set on its kind, the way thickness and colour already carry over to the next one drawn. Undoing the fade on the first one does not undo it on the second",
+    "Many at once: pick three arrows and choose a fade from the right-click menu (and from the menu bar and the panel, wherever a fade is offered). All three get it, in one undo step. Today the right-click row acts on the clicked one only (choosePictureFade takes one layer id, EditorState+PictureFade.swift:74)",
+    "One step for both ends: a single command fades the picked objects in AND out at the remembered length (named plainly, for example Fade In and Out), so the common case is one click, not two submenus",
+    "Try path, timed: freeze the tutorial recording at two moments, put three arrows on each, give them all a fade in and out. Count the clicks and keystrokes before and after; the audit gives both numbers, and after must be far fewer (the user's own words: they had to select each one, add a fade in, then add a fade out)",
+    "A walk runs that try path at Next defaults and checks each arrow's fade in the rendered frames (the arrow is part way to full at the middle of its fade in), failing on today's build",
+    "Unit tests pin the remembered fade per kind and the multi-pick fade in PhotonzCore where the logic lives; Scripts/test.sh passes",
+    "Audit under queue/audits/ with a short reel of the arrows fading in and out over the freeze. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T01:24:56.958Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T01:25:13.429Z",
+      "note": "seq 65 -> 16"
+    }
+  ]
+}
