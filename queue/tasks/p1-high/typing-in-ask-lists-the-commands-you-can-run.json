@@ -4,12 +4,12 @@
   "goal": "In the Ask composer, typing / turns it into the command list the mock shows: every menu command by name, filtered as you type, and Return runs the one picked, so a sentence you ask and a command you run go through the same box. After a run, the Agent group lists what changed, and clicking a change picks that layer on the canvas.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8,
+  "seq": 11,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:48.425Z",
-  "updated": "2026-10-20T14:37:09.357Z",
+  "updated": "2026-10-20T14:42:52.281Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of the first Ask slice (ask-in-the-app-runs-on-a-local-model-with-no-mod). Mock: docs/design/mocks/pages/agent-generate-wt.html (#agentChanges, .askcmd .cplist in docs/design/mocks/shared/dist/photonz-ds.js askPalHTML). Commands: AppCommandTable (PhotonzCore) with EditorState.run(_:) and canRun. Composer: AskComposerOverlay in Sources/Photonz/Agent/AskViews.swift; Agent group: AgentPanel.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-10-20T14:37:09.356Z",
       "note": "seq 7 -> 8"
+    },
+    {
+      "t": "2026-10-20T14:42:52.280Z",
+      "note": "seq 8 -> 11"
     }
   ]
 }

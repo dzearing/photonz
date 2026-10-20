@@ -1,0 +1,39 @@
+{
+  "id": "asking-for-a-sheet-of-components-gives-a-clean-t",
+  "title": "Asking for a sheet of components gives a clean, titled table of them in their states",
+  "goal": "When a person asks for a set of components shown in their states, Ask and the Photonz skill lay them out as a tidy table: a title, a header for each state, one row per component, every cell lined up, one type scale throughout, and the components' own words changed rather than new words laid over them. It should look like a page from Apple's design kit.",
+  "epic": "agent-skills",
+  "priority": "p1-high",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T14:42:40.412Z",
+  "updated": "2026-10-20T14:42:52.132Z",
+  "deps": [
+    "a-scored-test-set-for-what-ask-and-the-photonz-s"
+  ],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20 07:38 (screenshot queue/audits/2026-10-20-user-ask-component-sheet-mess.png): 'this is a complete mess. there is no table, no alignment, no titles, no clean design.' The run placed five components at their default spots and laid five add_text calls over them at body size.\n\nLikely ways in, decide and log: a layout tool the model can call (a grid or table: rows, columns, gap, the layout engine set_layout already uses) so the model names cells instead of coordinates; a component sheet as a built-in recipe; the skill's instructions saying how a sheet is built; giving the model the components' variants and text fields up front. Climb with the eval: keep a change only if the score goes up.",
+  "acceptance": [
+    "The request 'create a table of apple like quality base components that show different states and text' on a blank picture gives: a sheet title, column headers for the states (for example Default, Hover, Pressed, Disabled), a row label per component, each component in each state placed in its cell, cells on one grid with equal gaps, and no text over another layer",
+    "States are real: each cell is the component in that state (its own variant or look), not the same component copied with a label",
+    "Type follows one scale: at most four sizes on the sheet, headers and labels share one style each",
+    "Scored with the eval (a-scored-test-set-for-what-ask-and-the-photonz-s): the component sheet cases reach at least 8 of 10 on every rubric line, for Ask on this Mac and for the skill, and the before and after scores are in the audit",
+    "Audit under queue/audits/ with the before (queue/audits/2026-10-20-user-ask-component-sheet-mess.png) and after pictures. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T14:42:40.415Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T14:42:51.817Z",
+      "note": "intake: waits on the eval task so the climb is measured"
+    },
+    {
+      "t": "2026-10-20T14:42:52.130Z",
+      "note": "seq 42.5 -> 9"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T01:26:18.618Z",
-  "updated": "2026-10-20T13:58:24.733Z",
+  "updated": "2026-10-20T14:02:45.323Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's words (2026-10-19, intake): 'also i find the charts totally useless because i can't give it data and have it animate. Having some elements that move on the screen is not what i expected.'\n\nThe shipped task animated-charts-you-can-drop-into-a-video (done 2026-10-17) PROMISED 'Data entry is simple: a small table in the panel ... that also accepts pasted tab or comma separated text'. The code is there: ChartInspector.swift (Kind, a row table with a paste button, unit, decimals, delta), shown when EditorState.chartInHand is set (EditorState+Charts.swift:14, needs the next-animated-charts flag and a title in hand), section .chart in InspectorSections.swift:75 / InspectorPanel.swift:1393. So either the user could not reach it today or it did not read as where the data goes. Reproduce before deciding which; intake did not. The model is ChartSpec in Sources/PhotonzCore/AnimatedChart.swift (kind, title, rows, max 12 rows), one set of rows per chart; data that changes over time is new model work.\n\nRelated, do not undo: a-chart-or-title-keeps-what-you-set-by-hand-when (p2, pending) and a-chart-with-negative-numbers-draws-its-bars-bel (p2, pending) touch the same model; fold or sequence them, do not fight them. A decision card is still open on the old task ('Do the six charts build in and look the way you want in a video?', keep as is vs bolder bars); the user's complaint is that the charts are not data first, which that card does not ask. Withdraw it with that reason when this task's own card goes up.\n\nTrap: Command V on the canvas already pastes pictures and layers; text that parses as a table becomes a chart only on a video document and only when it is clearly tabular (two or more rows with a number column), otherwise paste behaves as today.",
@@ -45,6 +45,15 @@
     {
       "t": "2026-10-20T13:58:24.732Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-10-20T14:01:17.288Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T14:02:45.320Z",
+      "note": "Reproduced at Next defaults (animated-charts-walk, probe, real capture /tmp/photonz-playtest/animated-charts-walk/2-bar-chart-landed-sc.png): a Bar Chart double-clicked from the Library lands picked and the Chart section IS on screen under Properties, but with the Library open below it the section gets about 190pt: Kind, the Data header and three rows show, row Q4 is cut in half, and Unit/Decimals are below the fold inside the section's own scroll. The walk itself needs a 'reveal' to reach Paste Rows. Rows wearing the theme colour show a struck-through swatch. Nothing in the chart or panel asks for numbers: the sample data (Signups by Quarter) looks finished, so a first-time user sees a moving decoration, not a place to put their data. Diagnosis: reachable but buried, and not presented as the first thing to do."
     }
-  ]
+  ],
+  "started": "2026-10-20T14:01:17.287Z"
 }

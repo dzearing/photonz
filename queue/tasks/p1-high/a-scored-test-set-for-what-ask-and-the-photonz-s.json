@@ -1,0 +1,34 @@
+{
+  "id": "a-scored-test-set-for-what-ask-and-the-photonz-s",
+  "title": "A scored test set for what Ask and the Photonz skill make, so we can climb it",
+  "goal": "One command runs a fixed set of requests (drawings, component sheets, redlines) through Ask and through the Photonz skill, photographs each result and scores it for cleanness, typography, alignment and how closely it did what was asked, so every change to the prompt, the skill or the tools can be kept or thrown away on a number instead of a guess.",
+  "epic": "agent-skills",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T14:42:40.299Z",
+  "updated": "2026-10-20T14:42:51.970Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20: 'i would like to hill climb the skill. is there a way we can develop an eval that can adjust the quality of output for drawing and component creation?' and on the component sheet: 'this is a complete mess. there is no table, no alignment, no titles, no clean design. The output should always be clean and beautiful and with consistent typography, alignment, and follow the user's requests as closely as possible.'\n\nWhat the sheet run did (screenshot saved): place_component Badge, Nav Bar, Card, Text Field, Button, then add_text 'Badge', 'Navigation Bar', 'Card Content', 'Enter text here', 'Click me' laid OVER the components at random sizes; no rows, no state columns, no headers. That is what rule scores must catch.\n\nEngines: Ask goes through the app (AskPlanning.swift, qwen3:30b via Ollama). The skill engine is a headless Claude Code session with only plugin/skills/photonz and the MCP server (Scripts/install-mcp.sh), the way the agent-skill audit ran its four scenarios (queue/audits/2026-10-19-agent-skill-transcript.md). The judge is dev tooling, never in the app; it may use a cloud model. App copy never names Claude or Anthropic.\n\nKeep the run bounded (CLAUDE.md: never leave the machine loaded): one case at a time, a time limit per case, the probe quit at the end. This is the measuring stick only; the climbing is the tasks that depend on it (the dog task, the component sheet task).",
+  "acceptance": [
+    "One command (for example Scripts/ask-eval.sh run --engine ask|skill --tag \"<what changed>\") runs every case on the probe at Next defaults, saves each result's picture and read document, and prints a score per case and a total. A run appends to a score history file, and the command can compare any run with the best so far, case by case",
+    "Cases at start, each a request plus the document it starts on: the user's two failures word for word (\"draw a picture of a dog\"; a table of Apple-quality base components showing their states and text, with titles), the twelve drawings of ask-draws-a-dog-you-can-tell-is-a-dog, a component sheet for a website's design system, measurements on the settings screenshot, and a pricing section on brand. Adding a case is one file",
+    "Rule scores read from the document, not the picture: text overlapping text or another layer, things meant to line up that do not (distinct left edges and row tops in a grid, gaps between siblings that differ), how many type sizes and weights are used (a sheet with more than four sizes loses points), every asked-for item present and labelled, nothing off the canvas",
+    "A judge scores the picture with a fixed written rubric (clean, consistent typography, aligned, looks designed, did what was asked), 1 to 10 each. The judge is a strong model that can see and did not make the result, the same model and rubric every run, three runs and the median. Drawings are also named blind, as the dog task describes",
+    "The judge agrees with the user: the two screenshots the user called a mess (queue/audits/2026-10-20-user-ask-dog.png, queue/audits/2026-10-20-user-ask-component-sheet-mess.png) score low, and a clean component sheet made by hand to the mock's look scores high. If the judge cannot tell them apart, the rubric is fixed before anything else uses it",
+    "The audit has the first run's scores for both engines as the baseline, a contact sheet of every case, and how long a whole run takes. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T14:42:40.301Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T14:42:51.969Z",
+      "note": "seq 35 -> 7"
+    }
+  ]
+}
