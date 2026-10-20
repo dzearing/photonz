@@ -13153,3 +13153,14 @@
 {"t":"2026-10-20T15:19:13.547Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-10-20T15:19:22.155Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
 {"t":"2026-10-20T15:19:54.888Z","ev":"manager","filed":4,"readyBefore":50,"readyAfter":53,"report":"queue/manager/2026-10-20-0819.md"}
+{"t":"2026-10-20T15:20:13.853Z","ev":"manager_pass","exit":0,"ready":53}
+{"t":"2026-10-20T15:20:13.927Z","ev":"task_started","id":"ask-makes-the-change-straight-away-and-each-chan","title":"Ask makes the change straight away, and each change is one row you can turn off or delete","priority":"p1-high"}
+{"t":"2026-10-20T16:07:38.046Z","ev":"task_walks","id":"ask-makes-the-change-straight-away-and-each-chan","walks":["ask-annotates-a-screenshot-walk","ask-adds-a-title-page-walk","ask-makes-a-pricing-section-walk"]}
+{"t":"2026-10-20T16:22:26.169Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
+{"t":"2026-10-20T16:22:26.749Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
+{"t":"2026-10-20T16:22:27.505Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
+{"t":"2026-10-20T16:22:28.179Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
+{"t":"2026-10-20T16:22:29.154Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
+{"t":"2026-10-20T16:22:29.987Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
+{"t":"2026-10-20T16:22:31.058Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
+{"t":"2026-10-20T16:22:36.240Z","ev":"task_done","id":"ask-makes-the-change-straight-away-and-each-chan","from":"in_progress","note":"Ask runs the moment the model is done (no Run Plan, no step list); each request is one row in the Agent group with a plain sentence, a switch (off/on via a three-way merge that keeps later edits; blocked with a one-line note when a later edit builds on it), a delete, right-click and click-to-pick. Core AskChanges.swift + AskChangesTests; full suite green; three Ask walks pass at Next defaults checking the document at run, undo, redo, off, on, delete, undo of delete. Audit queue/audits/2026-10-20-ask-rows.json."}

@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.532Z",
-  "updated": "2026-10-20T14:42:51.895Z",
+  "updated": "2026-10-20T16:22:36.239Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'when I ask the agent to do something, I want it to auto run, but i need a way to undo the changes easily in the agent history. I don't need to see all the actions taken, i just need a row that explains the change and a way to toggle it or delete it.'\n\nThis overrides the mock agent-generate-wt.html (Run plan at line 345, the numbered plan rows) and the shipped Ask task ask-in-the-app-runs-on-a-local-model-with-no-mod, whose acceptance said nothing runs until Run plan. The user wins; the mock's Last change idea (line 558) is the closest thing to keep.\n\nToggle is the hard part: a change can add layers (hide or remove them) and also edit existing ones (set_layer, restyles). Think of each request as a recorded patch, the layers it added plus the before and after of every layer it edited, so it can be taken out and put back while later edits to other layers stay. Edits through History.perform as always. Decide how rows persist (with the document or for the session) and log why.",
@@ -29,6 +29,49 @@
     {
       "t": "2026-10-20T14:42:51.894Z",
       "note": "seq 46.25 -> 6"
+    },
+    {
+      "t": "2026-10-20T15:20:13.920Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T16:07:38.044Z",
+      "note": "owns these walks: ask-annotates-a-screenshot-walk, ask-adds-a-title-page-walk, ask-makes-a-pricing-section-walk"
+    },
+    {
+      "t": "2026-10-20T16:22:26.746Z",
+      "note": "Adversarial pass before building: a person who asks expects it done (Photoshop actions run, they do not show a script first); the hard part is toggling one request while later edits stay. Chose a recorded before/after per request, taken out or put back by a three-way merge over the document's saved form, over replaying steps, because replay cannot keep later hand edits and the merge covers layers, styles, tracks and clips alike."
+    },
+    {
+      "t": "2026-10-20T16:22:27.500Z",
+      "note": "Chose rows for the window's session over saving them in the file, because each row holds whole document snapshots and leans on the undo history, which is also per session."
+    },
+    {
+      "t": "2026-10-20T16:22:28.175Z",
+      "note": "Chose: a later change that edited what this request made blocks its switch (row says 'A later change builds on this.') rather than guessing; that includes hand edits to agent-made layers. Command Z still takes it back."
+    },
+    {
+      "t": "2026-10-20T16:22:29.149Z",
+      "note": "Chose a switch plus a trash button on each row, with Turn Off/On and Delete also on right-click, and a click on the words picks what it made (the mock's Last change). Words wrap to two lines rather than being shortened. After a run or a switch the Agent group is scrolled back into view: a picked title page had filled the panel and pushed the row off screen (dock readout: Agent 794-900 in a 649 tall view)."
+    },
+    {
+      "t": "2026-10-20T16:22:29.985Z",
+      "note": "Verified: AskChangesTests (16) and the full suite (14,007 tests) pass; ask-annotates-a-screenshot-walk, ask-adds-a-title-page-walk, ask-makes-a-pricing-section-walk pass at Next defaults with qwen3:30b, each checking the document on run, undo, redo, switch off, on, delete and undo of the delete; the title walk also checks a row click picks Title Page. Pictures looked at: 1-ran, 3-off, 4-on of all three walks: rows read 'Added 12 measurements', 'Added the title “Case 1”', 'Added 5 texts and placed a component', and the canvas empties and refills with the switch."
+    },
+    {
+      "t": "2026-10-20T16:22:31.055Z",
+      "note": "left rough: the pricing request's result is still loose text over a card (model quality, not this task); a panel-under-title-bar glitch on video was folded into on-a-video-the-ask-button-never-sits-on-top-of-t. ask-plan-latency-walk was updated to wait for ran but not rerun (five model runs; not needed to prove this change)."
+    },
+    {
+      "t": "2026-10-20T16:22:36.234Z",
+      "note": "Ask runs the moment the model is done (no Run Plan, no step list); each request is one row in the Agent group with a plain sentence, a switch (off/on via a three-way merge that keeps later edits; blocked with a one-line note when a later edit builds on it), a delete, right-click and click-to-pick. Core AskChanges.swift + AskChangesTests; full suite green; three Ask walks pass at Next defaults checking the document at run, undo, redo, off, on, delete, undo of delete. Audit queue/audits/2026-10-20-ask-rows.json."
     }
-  ]
+  ],
+  "started": "2026-10-20T15:20:13.919Z",
+  "walks": [
+    "ask-annotates-a-screenshot-walk",
+    "ask-adds-a-title-page-walk",
+    "ask-makes-a-pricing-section-walk"
+  ],
+  "completed": "2026-10-20T16:22:36.238Z"
 }
