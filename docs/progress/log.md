@@ -21699,3 +21699,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `read_document` lists caption lines with each word's start time; `delete` closes a gap picked by track and time; zoom commands pick the zoom at the playhead.
 - Proof: `Scripts/agent-commands-drill.mjs` (43 of 43 one undo step in the probe), 47 menu walks green, Scripts/test.sh 13,867 green.
 - Next: slice 4 (video tools: new_video, add_clip, export MP4).
+
+## 2026-10-19 — An agent can cut a video from History clips (agent MCP slice 4)
+
+- Eleven video tools (`new_video` from clips, `add_clip`, `cut`, `trim`, `move_clip`, `set_transition`, `add_title`, `list_titles`, `recommended_zooms`, `apply_zooms`, `set_playhead`) and `export` as MP4 at the Export sheet's sizes. Pure half `PhotonzCore/AgentVideo.swift` (11 tests), app half `Agent/AgentVideoWork.swift`.
+- Fixed on the way: a clip added at the very end of a video landed a millisecond early and never met the clip before it (the playhead stops on the last frame), now `placeTimelineFile(_:atMS:onTrack:)`; video frames handed to an agent come back on black as the film holds them (a see-through fade read as a white flash); `set_layer` re-words a centred title line keeping it centred.
+- Proof: `Scripts/agent-video-drill.mjs` 14 of 14 one undo step; scenario 1 (Case 1 to 5 montage) run three times from fresh sessions, the last with no workarounds; audit `queue/audits/2026-10-19-agent-video.json`; Scripts/test.sh 13,878 green.
+- Filed: the Keynote Clean starfield draws hard rectangles (p1, reproduced); whether a new video should keep its length once a title goes on it (p2).
+- Next: `claude-can-make-and-edit-pictures-and-videos-in` (the skill, scenario 4, the four scenarios rerun).

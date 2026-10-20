@@ -1,0 +1,27 @@
+{
+  "id": "the-keynote-clean-title-page-draws-its-starfield",
+  "title": "The Keynote Clean title page draws its starfield without square blocks around the glows",
+  "goal": "The Keynote Clean title page background shows hard-edged dark rectangles around many of its soft glows, at 1920 by 1080 and at Retina size, in the picture the exporter draws. The glows should fade into the background with no visible boxes.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 3970,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T00:01:55.999Z",
+  "updated": "2026-10-20T00:01:56.002Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the agent MCP montage scenario (an-agent-can-cut-a-video-from-history-clips-with) and reproduced by the runner on 2026-10-19 through the agent tools on the probe:\n  new_video {width:1920,height:1080,seconds:6}; add_title {seconds:0, style:\"Keynote Clean\", text:\"Hello\"}; video_frame {seconds:2.5, region:{x:0,y:0,width:1000,height:560}}\nOutput: queue/audits/2026-10-19-keynote-clean-blocks-1080p.png (blocks plainly visible). Same at 3456x2234: queue/audits/2026-10-19-keynote-clean-blocks-retina.png. video_frame draws through DocumentFrames, the code the video exporter writes frames with, so the exported file carries it too. Likely a per-glow blur or gradient cropped to its own extent (a CIGaussianBlur not clamped / cropped to the input rect) in the live backdrop renderer; unconfirmed.",
+  "acceptance": [
+    "A frame of a Keynote Clean page 2.5 seconds in, drawn as export draws it, shows no rectangle edges around any glow at 1920 by 1080 or at 3456 by 2234",
+    "An exported MP4 of a Keynote Clean page shows the same",
+    "Other moving title backgrounds checked the same way and named in the log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T00:01:56.001Z",
+      "note": "created (runner)"
+    }
+  ]
+}

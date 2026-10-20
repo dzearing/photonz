@@ -5,11 +5,11 @@
   "epic": "agent-mcp",
   "priority": "p1-high",
   "seq": 24,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:21:48.259Z",
-  "updated": "2026-10-19T18:36:19.431Z",
+  "updated": "2026-10-20T00:48:06.219Z",
   "deps": [
     "every-command-in-the-app-s-menus-can-be-run-by-n"
   ],
@@ -39,6 +39,40 @@
     {
       "t": "2026-10-19T18:36:19.430Z",
       "note": "Slice 1 landed (an-agent-can-reach-the-running-app-read-the-open): the channel, the bridge and 9 tools. Add tools in PhotonzCore AgentTools (schema + AgentRequest case, tested) and carry them out in Sources/Photonz/Agent/AgentWork.swift; edits must go through EditorState.perform so one undo takes one agent step. Try path: Scripts/install-mcp.sh --probe, or claude -p --mcp-config with PHOTONZ_APP=probe Scripts/photonz-mcp.sh. Design and tool plan: docs/design/agent-mcp.md."
+    },
+    {
+      "t": "2026-10-19T23:10:48.718Z",
+      "note": "From the-rest-of-the-menu-commands: File > New Video and Export Range are left out of the command table pointing at this slice's new_video and MP4 export; when those land, the coverage test's leftOut reasons in EveryMenuCommandHasANameTests should still read true. read_document now lists caption lines with word times; delete closes a gap by track + seconds."
+    },
+    {
+      "t": "2026-10-19T23:21:45.815Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T23:25:16.218Z",
+      "note": "Adversarial review before building. (1) A Premiere editor making a montage starts from New Sequence from Clip: new_video takes the clips and sizes the frame to the first, so the agent never guesses a size and gets letterboxing. (2) Most edits already run by name (split, set_transition, insert_title, suggest_zooms) but each needs a playhead plus a pick; typed tools name the clip and the cut directly, the way a person clicks them, and answer with the ids the next call needs. (3) Title words: insert_title opens a caret for a person; an agent says its words, so add_title rewrites the Title and Subtitle parts with the same measure and relayout typing does (commitTextEdit + relayOutTitle), centred boxes stay centred. (4) A cross dissolve between two whole recordings has no spare frames to pay with; set_transition must say so and name a kind that fits (dip to black) rather than silently doing nothing. (5) Recommended zooms come only from recorded clicks (.photonzpointer beside each recording); a clip without clicks gets none, and the answer says why. (6) Export MP4 has no save box for an agent; it writes straight to a path through writeVideo, the call the sheet ends in. Nothing here is a person-facing surface, so no mock frame applies; the try path is scenario 1."
+    },
+    {
+      "t": "2026-10-20T00:11:53.345Z",
+      "note": "Built: 11 typed video tools plus mp4 on export (Sources/PhotonzCore/AgentVideo.swift, Sources/Photonz/Agent/AgentVideoWork.swift), 10 unit tests (AgentVideoTests), Scripts/agent-video-drill.mjs proves each is one undo step (14 of 14). Scenario 1 run 1 from a fresh claude -p session succeeded end to end (one video, 3:00 MP4, 15 zooms, 10 dissolves) and reported 5 problems; fixed here: sample lines (Session 3, Chapter 2, Design Engineer) left in titles, a page could not go in front of another page, recommended_zooms ended a zoom before it started when it eased past the clip's end, add_title did not say a busy track sent it to a new one. Found by the drill: clips appended at the end landed 1 ms early (the playhead stops on the last frame) and never met, so no edit point; add_clip now lands at an exact moment. Filed the-keynote-clean-title-page-draws-its-starfield (reproduced via video_frame). Full suite 13877 tests green; an-editing-session-walk, add-media-at-playhead-walk, library-clip-onto-a-track-walk, tutorial-add-a-second-clip-walk ok."
+    },
+    {
+      "t": "2026-10-20T00:11:53.411Z",
+      "note": "owns these walks: an-editing-session-walk, add-media-at-playhead-walk"
+    },
+    {
+      "t": "2026-10-20T00:27:53.897Z",
+      "note": "Scenario run 2 (after the first fixes) also succeeded end to end, and found two more things, both fixed in 4d35f1a1: video_frame and contact_sheet returned frames with see-through where a page fades in over a clip's end, which reads as a white flash in any viewer (the MP4 is black there: checked with ffmpeg at 5.55s, rgb 5,6,18), so the agent built a black backdrop shape to hide it; and trim could not lengthen a title or shape. Left rough, not filed: Insert Title Page puts the default transition only on the join from the page into its clip, not on the cut from the clip before into the page (the person's rule from insert-a-title-before-a-clip-on-its-track-and-ch; an agent sets the other with set_transition). Filed: the-keynote-clean-title-page-draws-its-starfield (p1, reproduced), find-out-whether-a-new-video-should-keep-the-len (p2, a new 6 s video became 4 s when a title went on it)."
+    },
+    {
+      "t": "2026-10-20T00:48:06.217Z",
+      "note": "Eleven typed video tools plus MP4 export (Sources/PhotonzCore/AgentVideo.swift, Sources/Photonz/Agent/AgentVideoWork.swift): new_video from History clips, add_clip, cut, trim (plain, ripple, and titles/shapes), move_clip, set_transition, add_title/list_titles (page in front of a clip or page, words typed in, sample lines taken out), recommended_zooms/apply_zooms, set_playhead, export mp4 at full/1080p/720p/480p. Each is one undo step (Scripts/agent-video-drill.mjs, 14 of 14). Scenario 1 run three times from fresh claude -p sessions with only the probe server; each produced one video and a 3:00 MP4, the third with no workarounds after fixing what runs 1 and 2 found (transcript, contact sheets and a 480p copy of the MP4 in queue/audits/2026-10-19-agent-video*). Also fixed: clips appended at the end now meet (no 1 ms gap), agent video frames come back on black as the film holds them. 11 AgentVideoTests; Scripts/test.sh 13878 green; an-editing-session-walk and the three Add at Playhead walks ok. No capability the scenario needed was left missing; filed the Keynote Clean starfield blocks (p1, reproduced) and the new-video length question (p2)."
     }
-  ]
+  ],
+  "started": "2026-10-19T23:21:45.812Z",
+  "walks": [
+    "an-editing-session-walk",
+    "add-media-at-playhead-walk"
+  ],
+  "completed": "2026-10-20T00:48:06.218Z"
 }

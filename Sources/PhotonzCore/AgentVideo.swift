@@ -127,7 +127,7 @@ extension AgentTools {
             ], required: ["seconds"])),
         AgentTool(
             name: "trim",
-            description: "Keep only part of a clip's recording, as dragging its ends does. Times are on the recording's own clock, 0 being its first frame; for a title or shape, which has no recording, they say when it arrives and goes from its own first frame, so toSeconds alone sets how long it lasts. The clip keeps its start; with ripple, everything after it moves up to close the gap (or along to make room). One undo step.",
+            description: "Keep part of a clip's recording, as dragging its ends does. Times are on the recording's own clock, 0 its first frame; on a title or shape they count from its own first frame, so toSeconds alone sets how long it lasts. The clip keeps its start; with ripple, everything after it moves up to close the gap (or along to make room). One undo step.",
             inputSchema: videoSchema([
                 "document": videoDocument,
                 "clip": clipProperty,

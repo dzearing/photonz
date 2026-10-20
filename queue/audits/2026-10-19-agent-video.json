@@ -1,0 +1,29 @@
+{
+  "feature": "An agent cuts a video from History clips",
+  "epic": "agent-mcp",
+  "summary": "An agent (Claude Code with the Photonz server) can now make a video from your History recordings in the Photonz you have open: clips in order, title pages in the app's styles with its words, transitions at the cuts, the zooms Photonz recommends, and an MP4. Each step is one Command Z.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Run Scripts/install-mcp.sh once, then start a fresh `claude` session in any folder. The montage scenario's three runs and the full transcript of the last one are in 2026-10-19-agent-video-transcript.md.",
+  "switched": {},
+  "try": [
+    { "do": "In a fresh claude session, say: I made 5 clips in my history. Take the last 5, and create a video montage which has a title page, and subtitle pages per clip with nice consistent layout and transitions. I want to see clips with recommended zooms. Each subtitle should show Case N where n is the clip number (1 through 5).", "shot": "2026-10-19-agent-video-1-opening.png", "shotNote": "A frame of the exported MP4 at 0:02.5, drawn by Photonz from the file, not a capture of the window." },
+    { "do": "Watch a new window open with the five recordings laid end to end on V1, then the pages appear in front of each one.", "shot": "2026-10-19-agent-video-2-first-30s.png", "shotNote": "The first 30 seconds of the exported file: the opening page, Case 1, its zoomed recording, Case 2, Case 3." },
+    { "do": "Press Command Z once after any single step the agent took (a page, a transition, the zooms) and see exactly that step come off." },
+    { "do": "Scrub across a cut between a recording and the next Case page: it dissolves.", "shot": "2026-10-19-agent-video-3-last-22s.png", "shotNote": "The last 22 seconds of the exported file: Case 4, Case 5 and the zooms on their recordings." },
+    { "do": "Open the MP4 the agent wrote (the 480p copy is 2026-10-19-agent-video-montage.mp4) and play it through." },
+    { "do": "Ask the agent to make Case 3 shorter and export again; it trims with ripple so the pages after it move up." }
+  ],
+  "evaluate": [
+    "Does the montage read as one consistent piece: the same page style for every case, the same dissolve at every cut?",
+    "Is putting a page in front of each clip, with everything after it moving along, what you expected the agent to do?",
+    "When the agent leaves a style's second line out, should the page lose that line (as now) or keep a line of the agent's choosing?",
+    "Is the agent's choice of the newest five recordings, oldest first as Case 1, the order you meant by the last 5?"
+  ],
+  "rough": [
+    "No mock covers the agent tools: they have no surface of their own, and every step lands in the editor exactly as the menu row it maps onto does.",
+    "No window capture: the pictures are frames of the exported MP4 drawn by Photonz's own decoder (video_frame on the opened file), because what the agent made is the film.",
+    "The Keynote Clean background draws hard rectangles around its glows (visible in every page here). Filed as the-keynote-clean-title-page-draws-its-starfield.",
+    "Inserting a page puts the default transition only on the join from the page into its clip; the cut from the clip before into the page stays a hard cut until the agent sets one (it did, with set_transition). That is the person's Insert Title Page rule.",
+    "A new video given a length shrinks to its title when the title is all that is on it (a 6 second video became 4). Filed as find-out-whether-a-new-video-should-keep-the-len.",
+    "The full-size MP4 was 366 MB at 3456 by 2234; the copy here is the agent's 480p export re-encoded with ffmpeg to 6.4 MB."
+  ]
+}

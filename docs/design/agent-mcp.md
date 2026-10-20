@@ -129,7 +129,11 @@ An agent checks what it made by looking. Two kinds of answer:
   megapixel screenshot does not eat the model's context. A video frame is
   drawn by `DocumentFrames`, the code the video exporter writes frames with, so
   the frame the agent sees is the frame the file would hold. A contact sheet is
-  a grid of evenly spaced frames, each labelled with its time.
+  a grid of evenly spaced frames, each labelled with its time. Video frames
+  come back on black, as the MP4 holds them: a movie has no see-through, and
+  a frame handed back with its see-through in (a page fading in over the end
+  of a clip) read as a white flash in a picture viewer that the film does
+  not have.
 
 ## Tools
 
@@ -261,7 +265,7 @@ The try paths: scenario 2 (a box in a cloud, as SVG) and scenario 3 (measurement
 | `new_video` | A new video in its own window; with `clips` (History indexes or paths) they are laid end to end on V1, the frame takes the first clip's size, and the length follows what is on it | `AppCoordinator.newBlankVideoWindow` (File > New Video), then `placeTimelineFile` per clip: Premiere's New Sequence from Clip |
 | `add_clip` | A recording on a picture track, straight after the last clip unless `seconds` says where, overwriting what is there | `EditorState.placeTimelineFile(_:atMS:onTrack:)`, the overwrite Add at Playhead runs |
 | `cut` | The blade at a moment on a clip (or the clip under it on the highest picture track) | `splitClipAtPlayhead` (B, Split at Playhead) |
-| `trim` | Keep `fromSeconds` to `toSeconds` of a clip's recording, on the recording's own clock; `ripple` closes or opens the gap on every track | `ClipTrimSession` + `applyTrim` (the trim handles); `rippleTrimClipEdge` (⌘ on an edge) |
+| `trim` | Keep `fromSeconds` to `toSeconds` of a clip's recording, on the recording's own clock; `ripple` closes or opens the gap on every track. On a title or shape (no recording behind it) the two say when it arrives and goes from its own first frame | `ClipTrimSession` + `applyTrim` (the trim handles); `rippleTrimClipEdge` (⌘ on an edge); `moveLayerStart`/`moveLayerEnd` (a title bar's ends) |
 | `move_clip` | Slide a clip to a time, or onto another track; refused where it would land over a clip | `moveClip(_:toInMS:)`, `moveClip(_:toTrack:)` (dragging the bar) |
 | `set_transition` | A kind (or `none`) and a length on the cut at `seconds`, from read_document's `cuts`; a kind the cut cannot pay for is refused with the kinds it can take | `setTransition(_:at:)` (the transition picker), `withLength` (Length) |
 | `add_title`, `list_titles` | A title page or name card in one of the Insert menu's styles, with its words; with `clip`, a page in front of that clip, the clip and what follows moving along, the default transition on the join | `insertTitleBeforeClip`, `insertTitle` (Sequence > Insert Title Page), then `commitTextEdit` + `relayOutTitle` per line, as typing does |
