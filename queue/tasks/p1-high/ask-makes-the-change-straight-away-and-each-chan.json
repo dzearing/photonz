@@ -9,13 +9,14 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.532Z",
-  "updated": "2026-10-20T16:22:36.239Z",
+  "updated": "2026-10-20T16:31:01.946Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "The user, 2026-10-20: 'when I ask the agent to do something, I want it to auto run, but i need a way to undo the changes easily in the agent history. I don't need to see all the actions taken, i just need a row that explains the change and a way to toggle it or delete it.'\n\nThis overrides the mock agent-generate-wt.html (Run plan at line 345, the numbered plan rows) and the shipped Ask task ask-in-the-app-runs-on-a-local-model-with-no-mod, whose acceptance said nothing runs until Run plan. The user wins; the mock's Last change idea (line 558) is the closest thing to keep.\n\nToggle is the hard part: a change can add layers (hide or remove them) and also edit existing ones (set_layer, restyles). Think of each request as a recorded patch, the layers it added plus the before and after of every layer it edited, so it can be taken out and put back while later edits to other layers stay. Edits through History.perform as always. Decide how rows persist (with the document or for the session) and log why.",
+  "notes": "The user, 2026-10-20: 'when I ask the agent to do something, I want it to auto run, but i need a way to undo the changes easily in the agent history. I don't need to see all the actions taken, i just need a row that explains the change and a way to toggle it or delete it.'\n\nThis overrides the mock agent-generate-wt.html (Run plan at line 345, the numbered plan rows) and the shipped Ask task ask-in-the-app-runs-on-a-local-model-with-no-mod, whose acceptance said nothing runs until Run plan. The user wins; the mock's Last change idea (line 558) is the closest thing to keep.\n\nToggle is the hard part: a change can add layers (hide or remove them) and also edit existing ones (set_layer, restyles). Think of each request as a recorded patch, the layers it added plus the before and after of every layer it edited, so it can be taken out and put back while later edits to other layers stay. Edits through History.perform as always. Decide how rows persist (with the document or for the session) and log why.\n\nThe user, 2026-10-20: 'when i ask something, but the left pane is minimized or a video is not in edit mode, we need to reveal what we need to in order for the agent pane to be visible.' (They said left pane; the Agent group lives in the right panel. Reveal whichever pane holds it.) Today AskSession.ask bumps revealPass (Sources/Photonz/Agent/AskSession.swift:95) and only InspectorPanel.swift:560 listens, scrolling to the Agent section, which does nothing when the panel is not on screen. Note too: AskSession.ask already runs the plan straight after planning (run(plan...) at about line 104), so the auto-run part may be mostly there; the rows, switch and delete are the work.",
   "acceptance": [
     "Sending a request runs it with no Run plan step and no list of commands on screen",
     "Each request leaves one row in the Agent area: a short plain sentence of what changed (for example 'Drew a dog' or 'Added 8 measurements'), newest at the top",
+    "Asking always shows the Agent area: if the panel is closed it opens, if a video is in View it switches to Edit (or the Agent area shows in View too, decide and log), and if the Agent group is folded or scrolled away it unfolds and scrolls into view. Tried from each of those starting states at Next defaults, on a picture and on a video, with a picture of each in the audit",
     "The row's switch turns that change off (the document looks as if it was never made) and back on, without touching changes made after it; when a later change depends on it, the row says so in one short sentence instead of breaking anything",
     "The row's delete removes the change for good. One Command Z still takes back the latest request whole",
     "Tried at Next defaults with the try paths of the Ask audit (screenshot measurements, the Case 1 title page, the pricing section), each turned off, on and deleted, and checked against the read document each time",
@@ -65,6 +66,10 @@
     {
       "t": "2026-10-20T16:22:36.234Z",
       "note": "Ask runs the moment the model is done (no Run Plan, no step list); each request is one row in the Agent group with a plain sentence, a switch (off/on via a three-way merge that keeps later edits; blocked with a one-line note when a later edit builds on it), a delete, right-click and click-to-pick. Core AskChanges.swift + AskChangesTests; full suite green; three Ask walks pass at Next defaults checking the document at run, undo, redo, off, on, delete, undo of delete. Audit queue/audits/2026-10-20-ask-rows.json."
+    },
+    {
+      "t": "2026-10-20T16:31:01.946Z",
+      "note": "intake: reveal the Agent area when asking from a closed panel or a video in View"
     }
   ],
   "started": "2026-10-20T15:20:13.919Z",
