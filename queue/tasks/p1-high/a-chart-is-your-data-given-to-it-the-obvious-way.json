@@ -1,0 +1,37 @@
+{
+  "id": "a-chart-is-your-data-given-to-it-the-obvious-way",
+  "title": "A chart is your data, given to it the obvious way, and it moves when your numbers do",
+  "goal": "A chart on a video exists to show someone's own numbers. Putting the numbers in has to be the first, obvious thing: pasting a table from a spreadsheet or dropping a CSV file gives you a chart of it, and a chart you just added asks for its numbers right away. And the motion has to come from the data: bars grow to the values, and when the numbers change partway through the video (this quarter, then next quarter) the chart moves from one set to the next. Today the user found the charts useless: they could not give one data, and what they got was some elements moving on the screen.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 17,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T01:26:18.618Z",
+  "updated": "2026-10-20T01:26:18.735Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user's words (2026-10-19, intake): 'also i find the charts totally useless because i can't give it data and have it animate. Having some elements that move on the screen is not what i expected.'\n\nThe shipped task animated-charts-you-can-drop-into-a-video (done 2026-10-17) PROMISED 'Data entry is simple: a small table in the panel ... that also accepts pasted tab or comma separated text'. The code is there: ChartInspector.swift (Kind, a row table with a paste button, unit, decimals, delta), shown when EditorState.chartInHand is set (EditorState+Charts.swift:14, needs the next-animated-charts flag and a title in hand), section .chart in InspectorSections.swift:75 / InspectorPanel.swift:1393. So either the user could not reach it today or it did not read as where the data goes. Reproduce before deciding which; intake did not. The model is ChartSpec in Sources/PhotonzCore/AnimatedChart.swift (kind, title, rows, max 12 rows), one set of rows per chart; data that changes over time is new model work.\n\nRelated, do not undo: a-chart-or-title-keeps-what-you-set-by-hand-when (p2, pending) and a-chart-with-negative-numbers-draws-its-bars-bel (p2, pending) touch the same model; fold or sequence them, do not fight them. A decision card is still open on the old task ('Do the six charts build in and look the way you want in a video?', keep as is vs bolder bars); the user's complaint is that the charts are not data first, which that card does not ask. Withdraw it with that reason when this task's own card goes up.\n\nTrap: Command V on the canvas already pastes pictures and layers; text that parses as a table becomes a chart only on a video document and only when it is clearly tabular (two or more rows with a number column), otherwise paste behaves as today.",
+  "acceptance": [
+    "Reproduced first, at Next defaults in the probe on a video: add a chart from the Library and from Sequence > Insert Chart, pick it on the canvas and on the timeline, and say in the task log whether the Chart section with its data table is on screen without scrolling, below the fold, collapsed, or missing. The 2026-10-17 audit (queue/audits/2026-10-17-charts-3-pasted.png) shows it right under Properties; the panel was reordered on 2026-10-19 (Layers on top), so check whether that pushed it out of reach",
+    "The numbers come first: adding a chart opens its data with the first value ready to type, in place on the chart or in the Chart section in view, never behind a scroll",
+    "Paste makes a chart: with a video open and rows copied from Numbers, Excel or Google Sheets (tab separated) or a CSV, Command V on the canvas puts a chart of that data on the timeline at the playhead, with the first column as labels and the first number column as values, and with the header row as its title when there is one. Dropping a .csv file does the same",
+    "Data that changes over time: a chart can hold more than one set of numbers along its clip (for example Q1 to Q4 for 2025, then for 2026) and moves from one set to the next. Bars grow or shrink to the new values, the line redraws, the big number counts from old to new. Setting a second set is one obvious action at the playhead, and it is editable and undoable like a key",
+    "Every bit of motion is driven by the data: no decorative movement that is not a value arriving or changing. The background may stay, but it is a background, not the chart",
+    "Visual bar, MEASURED in the audit: in a reel of a bar chart that changes from one set to another, each bar's height at the end of the change matches its new value to within 1% of the axis, and halfway through it is between old and new. Today's charts have no second set, so this fails on today's build",
+    "A walk: paste four rows from a spreadsheet as text onto a video, check a chart of exactly those labels and values lands; add a second set at 3s, play, check the bars change at 3s",
+    "Unit tests in PhotonzCore for parsing pasted and CSV data (tabs, commas, quoted fields, thousands separators, %, $) and for interpolating between sets; Scripts/test.sh passes",
+    "Audit under queue/audits/ with a reel and contact sheet, and a decision card linking it so the user judges it. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T01:26:18.620Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T01:26:18.733Z",
+      "note": "seq 65 -> 17"
+    }
+  ]
+}
