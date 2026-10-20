@@ -256,11 +256,44 @@ The try paths: scenario 2 (a box in a cloud, as SVG) and scenario 3 (measurement
 
 ### Slice 4 (`an-agent-can-cut-a-video-from-history-clips-with`): video
 
-`new_video`, `add_clip` (from History or a file, onto a track at a time),
-`cut` (blade at a time), `trim`, `move_clip`, `set_transition` (the picker's
-kinds and lengths), `add_title` (the built-in title styles), `recommended_zooms`
-and `apply_zooms` (the zoom lane's own suggestions), `set_playhead`, `export`
-(MP4). Scenario 1 (the Case 1 to 5 montage) is its try path.
+| Tool | What it does | Maps onto |
+| --- | --- | --- |
+| `new_video` | A new video in its own window; with `clips` (History indexes or paths) they are laid end to end on V1, the frame takes the first clip's size, and the length follows what is on it | `AppCoordinator.newBlankVideoWindow` (File > New Video), then `placeTimelineFile` per clip: Premiere's New Sequence from Clip |
+| `add_clip` | A recording on a picture track, straight after the last clip unless `seconds` says where, overwriting what is there | `EditorState.placeTimelineFile(_:atMS:onTrack:)`, the overwrite Add at Playhead runs |
+| `cut` | The blade at a moment on a clip (or the clip under it on the highest picture track) | `splitClipAtPlayhead` (B, Split at Playhead) |
+| `trim` | Keep `fromSeconds` to `toSeconds` of a clip's recording, on the recording's own clock; `ripple` closes or opens the gap on every track | `ClipTrimSession` + `applyTrim` (the trim handles); `rippleTrimClipEdge` (⌘ on an edge) |
+| `move_clip` | Slide a clip to a time, or onto another track; refused where it would land over a clip | `moveClip(_:toInMS:)`, `moveClip(_:toTrack:)` (dragging the bar) |
+| `set_transition` | A kind (or `none`) and a length on the cut at `seconds`, from read_document's `cuts`; a kind the cut cannot pay for is refused with the kinds it can take | `setTransition(_:at:)` (the transition picker), `withLength` (Length) |
+| `add_title`, `list_titles` | A title page or name card in one of the Insert menu's styles, with its words; with `clip`, a page in front of that clip, the clip and what follows moving along, the default transition on the join | `insertTitleBeforeClip`, `insertTitle` (Sequence > Insert Title Page), then `commitTextEdit` + `relayOutTitle` per line, as typing does |
+| `recommended_zooms`, `apply_zooms` | The zooms the app recommends from each recording's kept clicks, on the video's clock; then put them on, one step for every clip | `addSuggestedZooms` on a copy; `suggestZooms(onClip:)` (Suggest Zooms) |
+| `set_playhead` | Move the playhead | `moveDocumentPlayhead` |
+| `export` | `format: mp4` with `size` (full, 1080p, 720p, 480p) and `quality` (high, standard, small), written straight to a path; answers once the file is there | `EditorState.writeVideo`, the write the Export sheet ends in |
+
+**Times.** Every answer gives times exactly as read_document does
+(milliseconds as seconds, never rounded), so a time handed back finds the cut
+or clip it was read from (`agentCut(nearMS:)` allows 60 ms either way).
+
+**The end of the video.** The playhead stops on the last frame, a millisecond
+short of the end, so a clip added "at the playhead" at the end landed a
+millisecond early, overwrote the last frame of the clip before it, and left
+the two not quite meeting (no edit point, so no transition). `add_clip` lands
+at a moment named outright instead (`placeTimelineFile(_:atMS:onTrack:)`).
+
+**Words.** A title's lines are re-worded with the measure typing uses
+(`TextBlockMetrics.roomyBox`): the centred line's box is four fifths of the
+frame wide and stays that wide, so the words stay centred. A style's sample
+second line the agent did not word is taken out rather than left reading "A
+short line about it".
+
+**Zooms come from clicks.** A recording made by Photonz keeps where the
+pointer went beside it (`.photonzpointer`); the recommendations are built from
+its clicks. A clip with none gets none, and `recommended_zooms` says so.
+
+`Scripts/agent-video-drill.mjs` drives the probe as an agent does over two
+short History recordings (copied, with their clicks, into a scratch folder)
+and proves each edit is one undo step and the MP4 is written: 14 of 14 on
+2026-10-19. Scenario 1, the Case 1 to 5 montage from a fresh session, is in
+`queue/audits/2026-10-19-agent-video-transcript.md`.
 
 ### After the slices (`claude-can-make-and-edit-pictures-and-videos-in`)
 
@@ -292,7 +325,6 @@ The first slice's run of exactly that is in
 
 ## Not in this slice
 
-* Video edits (slice 4).
 * Notifications when the person changes the document while the agent works:
   the agent reads again when it needs to.
 * Shipping the bridge inside the app bundle so a release user needs no repo.

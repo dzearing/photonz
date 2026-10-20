@@ -302,7 +302,7 @@ struct EveryMenuCommandHasANameTests {
         "keyLaneRows: \"Show Graph\"":
             "how a lane is drawn for a person; it changes nothing in the document",
         "rangeRows: \"Export Range…\"":
-            "opens the Export sheet for a person; export writes a video to a path (slice 4)",
+            "opens the Export sheet for a person; an agent's export writes the whole video to a path as an MP4 (slice 4)",
         "layerMenu: \"Insert Component\"":
             "places the component picked in the Library panel; place_component places any component by name",
     ]

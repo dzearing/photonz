@@ -48,6 +48,20 @@ public enum AgentRequest: Hashable, Sendable {
     case listComponents(document: String?)
     case placeComponent(document: String?, component: String, center: CGPoint)
     case export(document: String?, format: AgentExportFormat, path: String, scale: Double, background: Bool)
+    // Slice 4: video (`AgentVideo.swift`).
+    case newVideo(AgentNewVideo)
+    case addClip(document: String?, clip: AgentClipSource, atMS: Int?, track: String?)
+    case cut(document: String?, atMS: Int, clip: String?)
+    case trim(document: String?, clip: String, keepFromMS: Int?, keepToMS: Int?, ripple: Bool)
+    case moveClip(document: String?, clip: String, toMS: Int?, track: String?)
+    /// Nil `kind` is a plain cut.
+    case setTransition(document: String?, atMS: Int, kind: ClipTransitionKind?, lengthMS: Int?)
+    case addTitle(document: String?, title: AgentTitle)
+    case listTitles(document: String?)
+    case recommendedZooms(document: String?, clip: String?)
+    case applyZooms(document: String?, clip: String?)
+    case setPlayhead(document: String?, atMS: Int)
+    case exportVideo(document: String?, path: String, size: VideoExportSize, quality: VideoExportQuality)
 }
 
 /// Why a call was refused, in one sentence a model can act on.
@@ -69,8 +83,9 @@ public struct AgentToolError: Error, Hashable, Sendable {
 /// it, and step back. The second runs every command of the menus by name
 /// (`AppCommandTable`). The third draws: shapes, paths, text, the Measure
 /// tool's own measurements and Library components, and exports the result
-/// (`AgentDrawing.swift`). The video slice adds its tools here, each with its
-/// schema and its tests.
+/// (`AgentDrawing.swift`). The fourth cuts a video from History recordings
+/// with titles, transitions and recommended zooms, and writes an MP4
+/// (`AgentVideo.swift`).
 public enum AgentTools {
 
     /// How big a picture comes back unless asked otherwise: big enough to read
@@ -232,7 +247,7 @@ public enum AgentTools {
                 "command": ["type": "string", "description": "The command's name from list_commands, such as split_at_playhead."],
                 "arguments": ["type": "object", "description": "The command's arguments, as list_commands gives them."],
             ], required: ["command"])),
-    ] + drawingTools
+    ] + drawingTools + videoTools
 
     /// Slice 3: build a picture out of real layers and export it.
     static let drawingTools: [AgentTool] = [
@@ -345,14 +360,18 @@ public enum AgentTools {
             ], required: ["component", "x", "y"])),
         AgentTool(
             name: "export",
-            description: "Write the picture to a file as File > Export does: PNG, or SVG with shapes, paths and text kept as vectors.",
+            description: "Write the document to a file as File > Export does: a picture as PNG, or SVG with shapes, paths and text kept as vectors; a video as MP4, everything on the timeline drawn as it plays, with its sound. Answers once the file is written.",
             inputSchema: schema([
                 "document": documentProperty,
                 "format": ["type": "string", "enum": .array(AgentExportFormat.allCases.map { .string($0.rawValue) }),
-                           "description": "png or svg."],
-                "path": ["type": "string", "description": "An absolute path to write, ending .png or .svg."],
+                           "description": "png or svg for a picture, mp4 for a video."],
+                "path": ["type": "string", "description": "An absolute path to write, ending .png, .svg or .mp4."],
                 "scale": ["type": "number", "minimum": .number(0.1), "maximum": 8, "description": "PNG only: 2 doubles the pixels. 1 when left out."],
-                "background": ["type": "boolean", "description": "Keep the canvas colour behind the drawing. True when left out; false leaves it see-through."],
+                "background": ["type": "boolean", "description": "PNG and SVG: keep the canvas colour behind the drawing. True when left out; false leaves it see-through."],
+                "size": ["type": "string", "enum": .array(AgentVideoSize.allCases.map { .string($0.rawValue) }),
+                         "description": "MP4 only: full keeps the video's own frame; 1080p, 720p and 480p shrink a bigger one. full when left out."],
+                "quality": ["type": "string", "enum": .array(VideoExportQuality.allCases.map { .string($0.rawValue) }),
+                            "description": "MP4 only: high (smoothest, biggest), standard or small. high when left out."],
             ], required: ["format", "path"])),
     ]
 
@@ -420,6 +439,8 @@ public enum AgentTools {
         case "new_picture", "add_shape", "add_path", "add_text", "set_layer", "find_elements",
              "add_measurement", "list_components", "place_component", "export":
             return drawingRequest(name, args, document: document)
+        case _ where videoToolNames.contains(name):
+            return videoRequest(name, args, document: document)
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }
@@ -573,6 +594,8 @@ public enum AgentTools {
             guard path.pathExtension.lowercased() == format.rawValue else {
                 return fail("a \(format.rawValue) file's path ends .\(format.rawValue).")
             }
+            if format == .mp4 { return videoExportRequest(args, document: document, path: path.expandingTildeInPath) }
+            if args["size"] != nil || args["quality"] != nil { return fail("size and quality are for an MP4.") }
             if format == .svg, args["scale"] != nil { return fail("scale only applies to a PNG.") }
             return .success(.export(document: document, format: format, path: path.expandingTildeInPath,
                                     scale: args["scale"]?.doubleValue ?? 1,

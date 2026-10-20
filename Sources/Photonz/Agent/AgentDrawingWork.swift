@@ -39,6 +39,7 @@ enum AgentDrawingWork {
         case .placeComponent(let id, let component, let center):
             return try placeComponent(AgentDocuments.editor(id).get(), component: component, at: center)
         case .export(let id, let format, let path, let scale, let background):
+            guard format != .mp4 else { throw Failure("export: an MP4 is written from a video.") }
             return try await export(AgentDocuments.editor(id).get(), format: format, path: path,
                                     scale: scale, background: background)
         default:
@@ -124,17 +125,27 @@ enum AgentDrawingWork {
             throw Failure("There is no layer \(layer) in this document. read_document lists the layer ids.")
         }
         guard !was.isLocked else { throw Failure("\(was.name) is locked. Unlock it with run_command lock_layer, on false.") }
-        var changed = try AgentDrawing.applying(change, to: was, canvas: document.canvasSize).get()
-        if change.changesTheWords, change.width == nil, change.height == nil, let words = changed.text,
-           let before = was.text {
-            // A box that hugged its words keeps hugging them; one set to a
-            // width keeps that width and wraps.
-            let hugged = was.frame.width >= TextRasterizer.naturalSize(before).width - 1
-            let natural = TextRasterizer.naturalSize(words, maxWidth: hugged ? .greatestFiniteMagnitude : was.frame.width)
-            changed.frame.size = CGSize(width: hugged ? natural.width : was.frame.width, height: natural.height)
-        }
+        let changed = try AgentDrawing.applying(change, to: was, canvas: document.canvasSize).get()
+        let title = document.titleLayerID(containing: id)
         editor.asOneUndoStep {
-            editor.perform { $0.updateLayer(id: id) { $0 = changed } }
+            if change.changesTheWords, change.width == nil, change.height == nil, let words = changed.text?.string {
+                // The words go in the way typing them does: a box made roomier
+                // than its words keeps its room (a centred title line stays
+                // centred), one hugging its words re-hugs them.
+                var rest = changed
+                rest.content = was.content
+                rest.frame = CGRect(origin: changed.frame.origin, size: was.frame.size)
+                editor.perform { $0.updateLayer(id: id) { $0 = rest } }
+                if var content = rest.text, let size = changed.text?.fontSize {
+                    content.fontSize = size
+                    editor.perform { $0.updateLayer(id: id) { $0.content = .text(content) } }
+                }
+                AgentVideoWork.reword(id, to: words, in: editor)
+            } else {
+                editor.perform { $0.updateLayer(id: id) { $0 = changed } }
+            }
+            // A line of a title moves the rest of it, as typing into it does.
+            if let title { editor.perform { _ = $0.relayOutTitle(layerID: title) } }
         }
         return drawn(id, in: editor)
     }
@@ -350,6 +361,8 @@ enum AgentDrawingWork {
                               width: Int(document.canvasSize.width), height: Int(document.canvasSize.height),
                               asPictures: written.fallbacks.isEmpty ? nil
                                   : written.fallbacks.map { "\($0.layerName): \($0.reason)" })
+        case .mp4:
+            throw Failure("export: an MP4 is written from a video.")
         }
         return .json(answer)
     }

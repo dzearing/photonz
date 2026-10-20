@@ -76,6 +76,9 @@ enum AgentWork {
         case .newPicture, .addShape, .addPath, .addText, .setLayer, .findElements,
              .addMeasurement, .listComponents, .placeComponent, .export:
             return try await AgentDrawingWork.answer(request)
+        case .newVideo, .addClip, .cut, .trim, .moveClip, .setTransition, .addTitle, .listTitles,
+             .recommendedZooms, .applyZooms, .setPlayhead, .exportVideo:
+            return try await AgentVideoWork.answer(request)
         }
     }
 

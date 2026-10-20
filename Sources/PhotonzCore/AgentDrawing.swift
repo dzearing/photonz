@@ -204,6 +204,8 @@ public enum AgentMeasurement: Hashable, Sendable {
 public enum AgentExportFormat: String, CaseIterable, Hashable, Sendable {
     case png
     case svg
+    /// A video, written as it plays (`AgentVideo.swift`).
+    case mp4
 }
 
 // MARK: - Building the layers

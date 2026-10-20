@@ -174,9 +174,16 @@ extension EditorState {
     /// already cut is ever covered by a double click.
     @discardableResult
     func placeTimelineFileAtPlayhead(_ url: URL) async -> UUID? {
+        await placeTimelineFile(url, atMS: documentTimeMS,
+                                onTrack: selectedTrackIDs.count == 1 ? selectedTrackIDs.first : nil)
+    }
+
+    /// The same overwrite at a moment named outright rather than read off the
+    /// playhead: an agent's add_clip, which can put a clip at the very end of
+    /// the video, where the playhead never stands (it stops on the last frame).
+    @discardableResult
+    func placeTimelineFile(_ url: URL, atMS at: Int, onTrack picked: UUID?) async -> UUID? {
         guard Experiments.shared.droppingMedia, let kind = MediaFiles.kind(of: url) else { return nil }
-        let at = documentTimeMS
-        let picked = selectedTrackIDs.count == 1 ? selectedTrackIDs.first : nil
         return await landTimelineFile(TimelineFileInAir(url: url, kind: kind)) { [weak self] inAir in
             guard let document = self?.document, let length = inAir.lengthMS else { return nil }
             return document.clipLanding(kind: inAir.trackKind, lengthMS: length, atMS: at,
