@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 8.2,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T18:33:37.351Z",
-  "updated": "2026-10-20T20:38:11.178Z",
+  "updated": "2026-10-20T20:38:38.558Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'when i ask something, but the left pane is minimized or a video is not in edit mode, we need to reveal what we need to in order for the agent pane to be visible.' (They said left; the Agent group is in the right panel. Reveal whichever pane holds it.) Filed at first as an acceptance line on ask-makes-the-change-straight-away-and-each-chan, but that task closed nine minutes earlier, so it gets its own task. Today AskSession.ask bumps revealPass (Sources/Photonz/Agent/AskSession.swift) and only InspectorPanel.swift:560 listens, scrolling to the Agent section, which does nothing when the panel is not on screen.",
@@ -58,6 +58,10 @@
     {
       "t": "2026-10-20T20:38:11.176Z",
       "note": "Looked at audit pictures 2, 4, 6, 8, 9: each shows the Agent group with its Working row on screen; 8 and 9 show the window in Edit. Picture 6 has a blank band at the top of Appearance that also shows with no ask: filed as find-out-whether-panel-rows-go-blank-after-the-p (p2, not reproduced by hand). Title bar crowding on a video folded into on-a-video-the-ask-button-never-sits-on-top-of-t (already covers it)."
+    },
+    {
+      "t": "2026-10-20T20:38:38.556Z",
+      "note": "Asking now always shows the Agent group with its working row: a closed panel comes out (this window only, the person's choice for new windows untouched), a folded group unfolds, a scrolled-away one scrolls back, a video in View switches to Edit. AskReveal rule in PhotonzCore with tests; EditorState+AskReveal and a retrying InspectorPanel reveal. Five ask-shows-the-agent-group walks green at Next defaults, Scripts/test.sh 14057 passed, audit queue/audits/2026-10-20-ask-reveal.json. Commit ee9fc70b."
     }
   ],
   "started": "2026-10-20T20:07:30.950Z",
@@ -67,5 +71,6 @@
     "ask-shows-the-agent-group-when-scrolled-away-walk",
     "ask-shows-the-agent-group-from-a-video-in-view-walk",
     "ask-shows-the-agent-group-from-a-video-in-view-with-the-panel-closed-walk"
-  ]
+  ],
+  "completed": "2026-10-20T20:38:38.557Z"
 }
