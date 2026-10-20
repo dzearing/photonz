@@ -13105,3 +13105,34 @@
 {"t":"2026-10-20T13:58:49.653Z","ev":"task_resequenced","id":"find-out-whether-grid-settings-is-hard-to-read-i","from":20,"to":20}
 {"t":"2026-10-20T13:59:31.956Z","ev":"triage","summary":"merged 2 (sound lane background into sound lane height; chart negatives into the user chart task), closed 5 whose card answer left nothing to build, filed 1 doc scrub, reset 0, groomed 22 (card items rewritten to the answers taken 2026-10-20, 6 retitled), moved 2 (music longer than the edit up in p2, Captions and Transitions up in p1), renumbered p1 and p2; open 53 -> 47"}
 {"t":"2026-10-20T14:00:56.150Z","ev":"digest","file":"2026-10-20.md"}
+{"t":"2026-10-20T14:01:17.294Z","ev":"task_started","id":"a-chart-is-your-data-given-to-it-the-obvious-way","title":"A chart is your data, given to it the obvious way, and it moves when your numbers do","priority":"p1-high"}
+{"t":"2026-10-20T14:02:45.324Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:35:49.331Z","ev":"task_resequenced","id":"ask-on-the-local-model-makes-results-that-look-f","from":30,"to":6}
+{"t":"2026-10-20T14:35:49.402Z","ev":"task_resequenced","id":"typing-in-ask-lists-the-commands-you-can-run","from":40,"to":7}
+{"t":"2026-10-20T14:37:04.152Z","ev":"task_created","id":"ask-draws-a-dog-you-can-tell-is-a-dog","priority":"p1-high","title":"Ask draws a dog you can tell is a dog"}
+{"t":"2026-10-20T14:37:09.213Z","ev":"task_resequenced","id":"ask-draws-a-dog-you-can-tell-is-a-dog","from":35,"to":6}
+{"t":"2026-10-20T14:37:09.285Z","ev":"task_resequenced","id":"ask-on-the-local-model-makes-results-that-look-f","from":6,"to":7}
+{"t":"2026-10-20T14:37:09.358Z","ev":"task_resequenced","id":"typing-in-ask-lists-the-commands-you-can-run","from":7,"to":8}
+{"t":"2026-10-20T14:42:40.303Z","ev":"task_created","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","priority":"p1-high","title":"A scored test set for what Ask and the Photonz skill make, so we can climb it"}
+{"t":"2026-10-20T14:42:40.417Z","ev":"task_created","id":"asking-for-a-sheet-of-components-gives-a-clean-t","priority":"p1-high","title":"Asking for a sheet of components gives a clean, titled table of them in their states"}
+{"t":"2026-10-20T14:42:40.536Z","ev":"task_created","id":"ask-makes-the-change-straight-away-and-each-chan","priority":"p1-high","title":"Ask makes the change straight away, and each change is one row you can turn off or delete"}
+{"t":"2026-10-20T14:42:51.896Z","ev":"task_resequenced","id":"ask-makes-the-change-straight-away-and-each-chan","from":46.25,"to":6}
+{"t":"2026-10-20T14:42:51.971Z","ev":"task_resequenced","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","from":35,"to":7}
+{"t":"2026-10-20T14:42:52.046Z","ev":"task_resequenced","id":"ask-draws-a-dog-you-can-tell-is-a-dog","from":6,"to":8}
+{"t":"2026-10-20T14:42:52.133Z","ev":"task_resequenced","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":42.5,"to":9}
+{"t":"2026-10-20T14:42:52.208Z","ev":"task_resequenced","id":"ask-on-the-local-model-makes-results-that-look-f","from":7,"to":10}
+{"t":"2026-10-20T14:42:52.282Z","ev":"task_resequenced","id":"typing-in-ask-lists-the-commands-you-can-run","from":8,"to":11}
+{"t":"2026-10-20T14:44:10.569Z","ev":"task_created","id":"asking-for-base-components-builds-the-real-set-w","priority":"p1-high","title":"Asking for base components builds the real set, with their states, not the five starters"}
+{"t":"2026-10-20T14:44:10.693Z","ev":"task_created","id":"ask-can-mock-a-web-page-from-its-address-and-loo","priority":"p1-high","title":"Ask can mock a web page from its address and look things up, and nothing on the web can steer it"}
+{"t":"2026-10-20T14:44:23.035Z","ev":"task_resequenced","id":"asking-for-base-components-builds-the-real-set-w","from":35,"to":8.5}
+{"t":"2026-10-20T14:44:23.107Z","ev":"task_resequenced","id":"ask-can-mock-a-web-page-from-its-address-and-loo","from":42.5,"to":9.5}
+{"t":"2026-10-20T14:57:56.945Z","ev":"task_walks","id":"a-chart-is-your-data-given-to-it-the-obvious-way","walks":["chart-from-pasted-data-walk","animated-charts-walk"]}
+{"t":"2026-10-20T14:58:23.912Z","ev":"task_note","id":"a-chart-or-title-keeps-what-you-set-by-hand-when"}
+{"t":"2026-10-20T14:58:35.082Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:58:35.153Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:58:35.225Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:58:35.296Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:58:35.368Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:58:35.442Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:58:35.515Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
+{"t":"2026-10-20T14:59:13.829Z","ev":"task_done","id":"a-chart-is-your-data-given-to-it-the-obvious-way","from":"in_progress","note":"Paste a spreadsheet table (Command V) or drop a CSV on a video and a chart of exactly those rows lands; a chart holds later sets of numbers along its clip and moves between them (bars, line, counts), drawn from each frame's numbers; negatives drawn from a zero line; only data moves; a new chart opens its numbers with the first value focused. Verified: Scripts/test.sh 13,992 green, chart-from-pasted-data-walk and animated-charts-walk complete at Next defaults, reel + measured bar (0.23% of axis) in queue/audits/2026-10-20-chart-data.json. Commit cc0ab1c1."}

@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T01:26:18.618Z",
-  "updated": "2026-10-20T14:02:45.323Z",
+  "updated": "2026-10-20T14:59:13.828Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's words (2026-10-19, intake): 'also i find the charts totally useless because i can't give it data and have it animate. Having some elements that move on the screen is not what i expected.'\n\nThe shipped task animated-charts-you-can-drop-into-a-video (done 2026-10-17) PROMISED 'Data entry is simple: a small table in the panel ... that also accepts pasted tab or comma separated text'. The code is there: ChartInspector.swift (Kind, a row table with a paste button, unit, decimals, delta), shown when EditorState.chartInHand is set (EditorState+Charts.swift:14, needs the next-animated-charts flag and a title in hand), section .chart in InspectorSections.swift:75 / InspectorPanel.swift:1393. So either the user could not reach it today or it did not read as where the data goes. Reproduce before deciding which; intake did not. The model is ChartSpec in Sources/PhotonzCore/AnimatedChart.swift (kind, title, rows, max 12 rows), one set of rows per chart; data that changes over time is new model work.\n\nRelated, do not undo: a-chart-or-title-keeps-what-you-set-by-hand-when (p2, pending) and a-chart-with-negative-numbers-draws-its-bars-bel (p2, pending) touch the same model; fold or sequence them, do not fight them. A decision card is still open on the old task ('Do the six charts build in and look the way you want in a video?', keep as is vs bolder bars); the user's complaint is that the charts are not data first, which that card does not ask. Withdraw it with that reason when this task's own card goes up.\n\nTrap: Command V on the canvas already pastes pictures and layers; text that parses as a table becomes a chart only on a video document and only when it is clearly tabular (two or more rows with a number column), otherwise paste behaves as today.",
@@ -53,7 +53,48 @@
     {
       "t": "2026-10-20T14:02:45.320Z",
       "note": "Reproduced at Next defaults (animated-charts-walk, probe, real capture /tmp/photonz-playtest/animated-charts-walk/2-bar-chart-landed-sc.png): a Bar Chart double-clicked from the Library lands picked and the Chart section IS on screen under Properties, but with the Library open below it the section gets about 190pt: Kind, the Data header and three rows show, row Q4 is cut in half, and Unit/Decimals are below the fold inside the section's own scroll. The walk itself needs a 'reveal' to reach Paste Rows. Rows wearing the theme colour show a struck-through swatch. Nothing in the chart or panel asks for numbers: the sample data (Signups by Quarter) looks finished, so a first-time user sees a moving decoration, not a place to put their data. Diagnosis: reachable but buried, and not presented as the first thing to do."
+    },
+    {
+      "t": "2026-10-20T14:57:56.942Z",
+      "note": "owns these walks: chart-from-pasted-data-walk, animated-charts-walk"
+    },
+    {
+      "t": "2026-10-20T14:58:35.080Z",
+      "note": "Adversarial review before building: a first-time user sees the sample chart (Signups by Quarter) as finished and never finds the data table, which sat squeezed under Properties with the Library open. A Keynote or Premiere user expects to paste a table straight in, and expects 'change over time' to be a key at the playhead. Spreadsheets put a picture of the cells on the clipboard beside the text, so paste would land a screenshot unless the table is read first. A fixed axis is needed or a chart whose numbers all double would not move at all."
+    },
+    {
+      "t": "2026-10-20T14:58:35.151Z",
+      "note": "Chose: a later set of numbers is a key on the chart's own clock (its numbers have fully ARRIVED at the key; the change runs 0.9s before it, ease in-out) over a change that starts at the key, because then the playhead at the key shows the numbers being typed. Chose a fixed axis across every set over rescaling per set, because a bar that grows has to visibly grow. Chose the table showing the set the playhead is in (a set whose change has begun) over a separate set picker, the way a value typed at a key edits that key."
+    },
+    {
+      "t": "2026-10-20T14:58:35.222Z",
+      "note": "Chose: a pasted table's later number columns become later sets (first at 3.6s, then every 2.4s, clip lengthened to hold them); a header names the chart; a unit every value was written with becomes its unit. Command V with a chart picked replaces that chart's numbers; with nothing chart-like picked on a video it lands a new chart. Paste reads the table only when it is clearly one (split by tab, comma or semicolon, two rows or more, a number column), otherwise paste does what it did."
+    },
+    {
+      "t": "2026-10-20T14:58:35.294Z",
+      "note": "Shipped: ChartData.swift (ChartTable reader: tabs, quoted CSV with escaped quotes, semicolons, money, thousands, percents, K/M/B, (25) negatives, year headers; ChartStep sets; ChartSpec.shown(atMS:); PhotonzDocument.chartsShown posing a chart from the numbers of each frame inside drawn(atTimeMS:), about 1ms a frame for 12 rows in debug). Negative bars, horizontal bars and line points drawn from a zero line. Chart builds now only fade words, dots, keys and cards; Big Number no longer pushes while held. Panel: Set row, Add Set diamond, swatches in their drawn colour, Chart section scrolled into view and first value focused when a chart lands. CSV/TSV drop on canvas and panel. Walk step expectDrawn gained a height claim."
+    },
+    {
+      "t": "2026-10-20T14:58:35.366Z",
+      "note": "Bug found and fixed on the way: posing a bar by setting its frame drew the box at its old size clipped by the new frame, so bars going up stayed put while every frame read correct. Now resized(to:). Guarded by ChartDataRenderTests (pixels against frames), which runs in the suite."
+    },
+    {
+      "t": "2026-10-20T14:58:35.439Z",
+      "note": "Verified: Scripts/test.sh 13,992 tests pass. chart-from-pasted-data-walk (new, Next defaults, no flags: paste, negative bar, Add Set at 3s by pointer, typing into the set, 2s vs 3s, playback, CSV drop) and animated-charts-walk (extended: Chart section in view and typing goes straight into Q1) both complete with real window captures. Reel and contact sheet under queue/audits/2026-10-20-chart-data-*; measured bar within 0.23% of the axis. Pictures looked at: 1-pasted, 2-second-set, 3-changing (24, 6, 60, 49 mid change), 4-csv-dropped, 0-numbers-first, contact sheet; each shows the data moving, not a still."
+    },
+    {
+      "t": "2026-10-20T14:58:35.513Z",
+      "note": "left rough (did not clear the follow-up bar as separate tasks, no open task covers them yet): the timeline shows no mark on a chart clip where its numbers change; there is no right-click 'Add Set Here' on a chart clip; the Energy knob may still swap a chart's word builds for a rise or pop (unchecked). If any comes up again it earns a task."
+    },
+    {
+      "t": "2026-10-20T14:59:13.826Z",
+      "note": "Paste a spreadsheet table (Command V) or drop a CSV on a video and a chart of exactly those rows lands; a chart holds later sets of numbers along its clip and moves between them (bars, line, counts), drawn from each frame's numbers; negatives drawn from a zero line; only data moves; a new chart opens its numbers with the first value focused. Verified: Scripts/test.sh 13,992 green, chart-from-pasted-data-walk and animated-charts-walk complete at Next defaults, reel + measured bar (0.23% of axis) in queue/audits/2026-10-20-chart-data.json. Commit cc0ab1c1."
     }
   ],
-  "started": "2026-10-20T14:01:17.287Z"
+  "started": "2026-10-20T14:01:17.287Z",
+  "walks": [
+    "chart-from-pasted-data-walk",
+    "animated-charts-walk"
+  ],
+  "completed": "2026-10-20T14:59:13.827Z"
 }
