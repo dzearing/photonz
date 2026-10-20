@@ -77,7 +77,7 @@ struct TimelineMenuTableTests {
         let all = Set(TimelineMenuTable.groups(for: thing).flatMap { $0 }
             + TimelineMenuTable.moreGroups(for: thing).flatMap { $0 })
         let picture: Set<Row> = [.freezeFrame, .punchIn, .addZoom, .suggestZooms, .addClick, .addTransition,
-                                 .fadeIn, .fadeOut, .animate, .addKey, .animateIn, .animateOut]
+                                 .fadeIn, .fadeOut, .fadeInAndOut, .animate, .addKey, .animateIn, .animateOut]
         #expect(all.isDisjoint(with: picture))
         #expect(TimelineMenuTable.groups(for: thing)[1].first == .detachAudio)
     }
@@ -89,6 +89,27 @@ struct TimelineMenuTableTests {
         let groups = TimelineMenuTable.groups(for: thing)
         #expect(groups[0] == [.split, .startAtPlayhead, .endAtPlayhead])
         #expect(groups[1].contains(.animateIn) && groups[1].contains(.animateOut))
+    }
+
+    /// The user, 2026-10-19: "I had to select each one, add a fade in, then
+    /// add a fade out." Fading both ends is the first thing a placed picture
+    /// or title offers after when it is on screen, one click from the
+    /// right-click; each end on its own stays one level down, and so does Add
+    /// Transition, which only acts where two of them meet.
+    @Test(arguments: [TimelineMenuThing.title, .picture])
+    func somethingPlacedInTimeFadesInAndOutInOneClick(_ thing: TimelineMenuThing) {
+        let groups = TimelineMenuTable.groups(for: thing)
+        #expect(groups[1].first == .fadeInAndOut)
+        let more = TimelineMenuTable.moreGroups(for: thing).flatMap { $0 }
+        #expect(more.contains(.fadeIn) && more.contains(.fadeOut) && more.contains(.addTransition))
+        #expect(groups.flatMap { $0 }.count <= TimelineMenuTable.mostTopLevelRows)
+    }
+
+    /// A clip fades both ends from the same row as its single ends, one level
+    /// down, where its top level has no room.
+    @Test func aVideoClipFadesInAndOutBesideItsSingleEnds() {
+        let fades = TimelineMenuTable.moreGroups(for: .videoClip).first { $0.contains(.fadeIn) } ?? []
+        #expect(fades.prefix(3) == [.fadeInAndOut, .fadeIn, .fadeOut])
     }
 
     /// The things that are not clips have short menus of their own.

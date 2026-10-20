@@ -34,6 +34,7 @@ extension EditorState {
         case .lockTrack: trackInHand?.isLocked ?? false
         case .showClickEffects: clickEffectClip.map { clickEffect(ofClip: $0.id).isOn } ?? false
         case .expandCut: isCutInHandExpanded
+        case .fadeInAndOut: fadesInAndOut(pictureFadeTargetsInHand)
         case .normalizeCleansNoise: normalizeCleansNoise
         case .cleanNoise: soundInHandIsCleaned
         case .curveThePath: motionPathShape == .curved
@@ -219,10 +220,10 @@ extension EditorState {
         case .pullBackOut: pullReframeBackOut()
         case .resetReframe: resetReframeInHand()
         case .setFade:
-            if let end = call.word("end").flatMap(FadeEnd.init(rawValue:)), let ms = call.integer("milliseconds"),
-               let layer = pictureFadeLayerInHand {
-                choosePictureFade(end, ms: ms, layerID: layer.id)
+            if let end = call.word("end").flatMap(FadeEnd.init(rawValue:)), let ms = call.integer("milliseconds") {
+                choosePictureFadeInHand(end, ms: ms)
             }
+        case .fadeInAndOut: fadeInAndOut(pictureFadeTargetsInHand)
         // Clip > Transition at Cut
         case .setTransition:
             if let kind = call.word("kind").flatMap(ClipTransitionKind.init(rawValue:)) { setClipTransitionInHand(kind) }
@@ -495,6 +496,7 @@ extension EditorState {
                   let end = call.word("end").flatMap(FadeEnd.init(rawValue:)),
                   let ms = call.integer("milliseconds") else { return pictureFadeLayerInHand != nil && call.options.isEmpty }
             return pictureFadeStops(end, layer: layer).contains(ms)
+        case .fadeInAndOut: return !pictureFadeTargetsInHand.isEmpty
         case .setTransition:
             guard canWorkWithClipTransitions else { return false }
             guard let kind = call.word("kind").flatMap(ClipTransitionKind.init(rawValue:)) else {

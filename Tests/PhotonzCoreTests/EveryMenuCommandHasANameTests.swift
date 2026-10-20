@@ -348,6 +348,7 @@ struct EveryMenuCommandHasANameTests {
         case .rippleTrimStart: .command(.rippleTrimStart)
         case .rippleTrimEnd: .command(.rippleTrimEnd)
         case .fadeIn, .fadeOut: .command(.setFade)
+        case .fadeInAndOut: .command(.fadeInAndOut)
         case .punchIn: .command(.punchIn)
         case .addZoom: .command(.addZoom)
         case .suggestZooms: .command(.suggestZooms)

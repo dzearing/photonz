@@ -988,6 +988,10 @@ final class EditorState {
     /// Styling for new annotations, set from the style popover. Persisted so
     /// the user's color/width survive relaunches.
     var annotationStyles: AnnotationStyles = EditorState.loadAnnotationStyles()
+    /// The fade each kind of drawn thing was last left with, and the effects
+    /// of the kinds `annotationStyles` does not cover (`RememberedLooks`).
+    /// Persisted beside it, so the next arrow fades in the morning too.
+    var rememberedLooks: RememberedLooks = EditorState.loadRememberedLooks()
     /// The hand the next arrow is drawn with (`HandMadeArrow.swift`). Fresh
     /// every launch and moved on after every arrow, so two arrows drawn one
     /// after the other never wobble alike; the drag preview and the arrow it

@@ -1393,6 +1393,14 @@ struct EditorCommands: Commands {
     // rows its right-click has. The one-second row of each carries its key.
     @ViewBuilder private var pictureFadeRows: some View {
         let layer = editor?.pictureFadeLayerInHand
+        // Both ends in one step, on every pick, at the lengths the last of
+        // its kind faded at.
+        let both = Toggle("Fade In and Out", isOn: Binding(
+            get: { editor.map { $0.fadesInAndOut($0.pictureFadeTargetsInHand) } ?? false },
+            set: { _ in editor?.run(.fadeInAndOut) }))
+        both.keyboardShortcut(EditorState.fadeInAndOutKey.keyEquivalent,
+                              modifiers: EditorState.fadeInAndOutKey.modifiers)
+            .disabled(!(editor?.canRun(.fadeInAndOut) ?? false))
         ForEach(FadeEnd.allCases, id: \.self) { end in
             let now = layer?.pictureFadeMS(end) ?? 0
             let stops = layer.map { editor?.pictureFadeStops(end, layer: $0) ?? [] } ?? PictureFade.stopsMS

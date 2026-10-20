@@ -71,7 +71,8 @@ struct SpeedInspector: View {
                     choices: .picking(stops.contains(now) ? stops : stops + [now], current: now,
                                       title: PictureFade.title,
                                       isEnabled: { _ in true }) { ms in
-                        editorState.setPictureFade(end, toMS: ms, layerID: layer.id)
+                        editorState.setPictureFade(end, toMS: ms,
+                                                   layerIDs: editorState.pictureFadeTargetsInHand)
                     })
                 .playtestField(end.title)
                 .panelHelp(end == .in ? "How long the picture takes to come up" : "How long the picture takes to go down")

@@ -113,6 +113,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case pullBackOut = "pull_back_out"
     case resetReframe = "reset_reframe"
     case setFade = "set_fade"
+    case fadeInAndOut = "fade_in_and_out"
     // Clip > Transition at Cut
     case setTransition = "set_transition"
     case hardCut = "hard_cut"
@@ -661,6 +662,8 @@ public enum AppCommandTable {
                            .init("milliseconds", .integer(minimum: 0, maximum: 10_000),
                                  "How long the fade lasts; 0 takes it off.", required: true)],
                  also: ["Fade Out"]),
+            make(.fadeInAndOut, "Fade In and Out", clip, .timeline, needs: "a picture or title in hand",
+                 picks: [.playhead, .layers], toggle: true),
             make(.setTransition, "Transition at Cut", cut, .timeline, needs: cutInHand, picks: .clipAtPlayhead,
                  options: [.init("kind", .choice(ClipTransitionKind.allCases.map(\.rawValue)),
                                  "The transition to put on the cut.", required: true)]),

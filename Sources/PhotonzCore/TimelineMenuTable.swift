@@ -50,7 +50,7 @@ public enum TimelineMenuRow: String, CaseIterable, Sendable {
     case cut, copy, delete, rippleDelete
     // One level down
     case more, track
-    case showPicture, rippleTrimStart, rippleTrimEnd, fadeIn, fadeOut, punchIn, addZoom, suggestZooms, addClick
+    case showPicture, rippleTrimStart, rippleTrimEnd, fadeInAndOut, fadeIn, fadeOut, punchIn, addZoom, suggestZooms, addClick
     case animate, addKey, pasteKeys, breakApart, replayTitle, saveAsPreset, addCaptions
     case selectForward, duplicate, rename, revealInFinder
     // A caption
@@ -85,9 +85,13 @@ public enum TimelineMenuTable {
              [.detachAudio, .normalize, .cleanNoise, .resetGain],
              [.cut, .copy, .delete, .rippleDelete],
              [.more]]
+        // Fade In and Out leads what it does: the user, 2026-10-19, had to
+        // pick each arrow, add a fade in, then add a fade out. Add Transition,
+        // which only acts where two of them meet, went one level down to make
+        // the room.
         case .title, .picture:
             [[.split, .startAtPlayhead, .endAtPlayhead],
-             [.animateIn, .animateOut, .addTransition],
+             [.fadeInAndOut, .animateIn, .animateOut],
              [.cut, .copy, .delete, .rippleDelete],
              [.more]]
         case .caption:
@@ -120,7 +124,7 @@ public enum TimelineMenuTable {
         switch thing {
         case .videoClip:
             [[.showPicture, .rippleTrimStart, .rippleTrimEnd],
-             [.fadeIn, .fadeOut, .punchIn, .addZoom, .suggestZooms, .addClick],
+             [.fadeInAndOut, .fadeIn, .fadeOut, .punchIn, .addZoom, .suggestZooms, .addClick],
              [.animate, .addKey, .pasteKeys],
              [.breakApart, .selectForward, .duplicate, .rename, .revealInFinder]]
         case .linkedSound, .soundClip:
@@ -128,7 +132,7 @@ public enum TimelineMenuTable {
              [.addCaptions],
              [.breakApart, .selectForward, .duplicate, .rename, .revealInFinder]]
         case .title, .picture:
-            [[.fadeIn, .fadeOut, .animate, .addKey, .pasteKeys],
+            [[.fadeIn, .fadeOut, .addTransition, .animate, .addKey, .pasteKeys],
              [.replayTitle, .saveAsPreset],
              [.selectForward, .duplicate, .rename]]
         case .caption:

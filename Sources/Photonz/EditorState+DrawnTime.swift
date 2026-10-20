@@ -19,21 +19,34 @@ extension EditorState {
     /// One undo step adding `layer` drawn at the playhead: onto the screen it
     /// was drawn on, for the hold it was drawn on, and, on a video, from the
     /// playhead to the end of the shot.
-    func addDrawnLayer(_ layer: Layer) {
+    ///
+    /// It arrives with the fade the last of its kind was left with
+    /// (`RememberedLooks`), unless `remembering` is off: a paste is a copy of
+    /// the thing it came from, not a new one drawn.
+    func addDrawnLayer(_ layer: Layer, remembering: Bool = true) {
         let moment = documentTimeMS
         let placing = placesDrawingsInTime
-        perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing) }
+        let fade = remembering ? rememberedFade(for: layer) : nil
+        perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing, fade: fade) }
     }
 
     /// `layer` with the stretch a drawing made at the playhead is given, for
     /// the routes that add a layer some other way (a measurement, a drop on the
-    /// layers list). Unchanged on a picture, or where it already has one.
+    /// layers list), and the fade the last of its kind was left with.
+    /// Unchanged on a picture, or where it already has a stretch.
     func placedInTimeIfDrawnOnVideo(_ layer: Layer) -> Layer {
         guard placesDrawingsInTime, layer.time == nil,
               let span = document?.drawnSpan(atTimeMS: documentTimeMS) else { return layer }
         var placed = layer
         placed.time = span
-        return placed
+        return rememberedLooks.fading(placed)
+    }
+
+    /// The fade a new `layer` arrives with on a video: the one the last of its
+    /// kind was left with, where fades are on at all.
+    func rememberedFade(for layer: Layer) -> PictureFade? {
+        guard Experiments.shared.pictureFadesEnabled, let kind = DrawnKind(layer) else { return nil }
+        return rememberedLooks.fade(for: kind)
     }
 
     // MARK: The key diamond on a row's header

@@ -342,6 +342,10 @@ extension EditorState {
         case .fadeIn, .fadeOut:
             // How the picture comes up at the start and goes down at the end.
             return clip.onTheSound ? [] : fadeRows(row == .fadeIn ? .in : .out, layer: layer)
+        case .fadeInAndOut:
+            // Both ends at once, on every pick it was opened among.
+            guard !clip.onTheSound, Experiments.shared.pictureFadesEnabled else { return [] }
+            return fadeInAndOutMenuRow(layerID: layerID)
         case .punchIn:
             return picture ? punchInMenuRows(layerID: layerID, around: nil) : []
         case .addZoom, .suggestZooms:

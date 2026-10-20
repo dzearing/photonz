@@ -403,7 +403,10 @@ extension EditorState {
             let placing = placesDrawingsInTime
             let handsBackLater = documentHasTime && Experiments.shared.panelBuildsWhatYouSeeEnabled
             if handsBackLater { catchUpOnTheNextPass() }
-            perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing) }
+            // The effects the last words of this kind were styled with.
+            layer = rememberedLooks.wearing(layer, as: isTitle ? .title : .text, startsWith: layer.style)
+            let fade = rememberedFade(for: layer)
+            perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing, fade: fade) }
             // Re-editing existing text already runs with Select active, so only
             // the new-block path hands the editor back.
             //

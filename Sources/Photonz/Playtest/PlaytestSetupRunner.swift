@@ -31,7 +31,11 @@ extension PlaytestMemory {
             [EditorState.recentColorsKey, EditorState.foregroundFillKey, EditorState.backgroundFillKey,
              DesignedColorPicker.scopeKey]
         case .shapes:
-            [EditorState.annotationStylesKey, EditorState.calloutStylesKey]
+            // ...and the fade and effects each kind of drawn thing remembers
+            // (`RememberedLooks`): left behind, the first arrow of a walk
+            // arrives faded the way the last walk's arrows were.
+            [EditorState.annotationStylesKey, EditorState.calloutStylesKey,
+             EditorState.rememberedLooksKey]
         case .measure:
             [EditorState.measureModeKey, EditorState.measureStylesKey]
         case .tools:

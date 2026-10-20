@@ -434,8 +434,9 @@ extension EditorState {
         discardDragPreview()
         // Pasted over a screen means pasted ONTO it: the layer keeps the spot
         // it looks like it landed on and becomes part of that screen, the same
-        // way a shape drawn there does.
-        addDrawnLayer(layer)
+        // way a shape drawn there does. A copy keeps the fade it was copied
+        // with rather than taking the one its kind last had.
+        addDrawnLayer(layer, remembering: false)
         selectedLayerID = layer.id
         recordPaste(layer.id, at: layer.frame)
         return layer.id

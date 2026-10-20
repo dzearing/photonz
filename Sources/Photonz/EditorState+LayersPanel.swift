@@ -485,6 +485,22 @@ extension EditorState {
             saveAnnotationStyles()
         } else if layer.measure != nil {
             updateMeasureStyles { $0.layerStyle = layer.style }
+        } else if let words = layer.text {
+            // Words, and on a video a title: each remembers the effects it was
+            // last styled with, beside the style it started from so a shadow
+            // nobody touched still suits the next one's colour.
+            let title = usesTitleLook
+            var standard = LayerStyle()
+            if title {
+                standard.shadows = TitleLook.shadows(forColorHex: words.colorHex, fontSize: words.fontSize)
+            } else {
+                standard.shadow = TextBuilder.autoContrastShadow(forColorHex: words.colorHex)
+            }
+            rememberedLooks.rememberStyle(layer.style, for: title ? .title : .text, startedWith: standard)
+            saveRememberedLooks()
+        } else if layer.path != nil {
+            rememberedLooks.rememberStyle(layer.style, for: .path)
+            saveRememberedLooks()
         }
     }
 
