@@ -46,16 +46,22 @@ when it can act.
 
 | Thing | Top level | More ▸ |
 | --- | --- | --- |
-| **Video clip** (a recording, a video, clips merged into one) | [Split at t ⌘K] · [Freeze Frame at t ▸] · [Speed ▸] / [Add Transition ▸] · [Detach Audio ⌃⇧D] · [Audio ▸] / Cut ⌘X · Copy ⌘C · Delete ⌫ · Ripple Delete ⇧⌫ / More ▸ | [Show Picture] · [Ripple Trim Start to Playhead Q] · [Ripple Trim End to Playhead W] / [Fade In ▸] · [Fade Out ▸] · [Punch In ▸] · [Add Zoom] · [Suggest Zooms] · [Add Click at t…] / [Animate ▸] · [Add Key at t] · [Paste Keys] / [Break Apart] · Select Forward · Duplicate ⌘J · Rename… · [Reveal in Finder] |
+| **Video clip** (a recording, a video, clips merged into one) | [Split at t ⌘K] · [Freeze Frame at t ▸] · [Speed ▸] / [Add Transition ▸] · [Detach Audio ⌃⇧D] · [Audio ▸] / Cut ⌘X · Copy ⌘C · Delete ⌫ · Ripple Delete ⇧⌫ / More ▸ | [Show Picture] · [Ripple Trim Start to Playhead Q] · [Ripple Trim End to Playhead W] / [Fade In and Out ⌃⌥F] · [Fade In ▸] · [Fade Out ▸] · [Punch In ▸] · [Add Zoom] · [Suggest Zooms] · [Add Click at t…] / [Animate ▸] · [Add Key at t] · [Paste Keys] / [Break Apart] · Select Forward · Duplicate ⌘J · Rename… · [Reveal in Finder] |
 | **A video's sound** (linked, under its picture) | [Split at t] · [Speed ▸] / [Detach Audio] · [Normalize ▸] · [Clean Noise] · [Reset Gain] / Cut · Copy · Delete · Ripple Delete / More ▸ | [Ripple Trim Start] · [Ripple Trim End] / [Add Captions] / Select Forward · Duplicate · Rename… · [Reveal in Finder] |
 | **Sound clip** (music, a voice-over, a detached sound) | as a video's sound, Re-attach Audio in Detach Audio's place once detached | as a video's sound, and [Break Apart] |
-| **Title** (a title page or a name card) | [Split at t] · [Start at t] · [End at t] / [Animate In ▸] · [Animate Out ▸] · [Add Transition ▸] / Cut · Copy · Delete · Ripple Delete / More ▸ | [Fade In ▸] · [Fade Out ▸] · [Animate ▸] · [Add Key at t] · [Paste Keys] / [Replay Title] · [Save as Preset…] / Select Forward · Duplicate · Rename… |
+| **Title** (a title page or a name card) | [Split at t] · [Start at t] · [End at t] / [Fade In and Out ⌃⌥F] · [Animate In ▸] · [Animate Out ▸] / Cut · Copy · Delete · Ripple Delete / More ▸ | [Fade In ▸] · [Fade Out ▸] · [Add Transition ▸] · [Animate ▸] · [Add Key at t] · [Paste Keys] / [Replay Title] · [Save as Preset…] / Select Forward · Duplicate · Rename… |
 | **Picture** (a picture, a shape, clip art) | as a title | as a title |
 | **Caption** | Edit Words · [Join with Next Line] · Start Here / Delete / More ▸ | the Captions track's own rows: Rewrite Captions, Timing ▸, Export Subtitles ▸, Safe Areas, [Reset Captions], [Clear Captions] |
 | **Zoom bar** | [Follow Cursor] · Zoom ▸ / Delete Zoom ⌫ | none |
 | **Join** (a cut in a clip, or the edit point between two) | with no transition: Apply Default Transition ⌘T · Add Transition ▸; with one: Change Transition ▸ · Length ▸ · Curve ▸ · Remove Transition; then Expand the Cut ⌥E (a toggle) / [Copy Transition] · [Paste Transition] / [Roll Edit to t] · [Join Through Edit] | none |
 | **Gap** | Ripple Delete ⇧⌫ / [Zoom to Fit] · [Compact Tracks] / Track ▸ | the track header's own menu |
 | **Empty space** | on an empty picture track: Add Title Page ▸ · Add Name Card ▸ · Add Text · Add Rectangle · [Put Layer Here ▸] · [Paste Here]; on the Captions track its rows / [Zoom to Fit] · [Compact Tracks] / Track ▸ | the track header's own menu |
+
+Fade In and Out leads a placed thing's second group since 2026-10-20 (the user:
+"I had to select each one, add a fade in, then add a fade out"); Add Transition,
+which only acts where two of them meet, went under More to keep the top level
+at its limit. Every fade row acts on all the picks when the clicked one is among
+them.
 
 Empty space with nothing to put there or take out (a busy track, at the default
 zoom) shows the header's rows themselves: a menu holding only Track ▸ would be a

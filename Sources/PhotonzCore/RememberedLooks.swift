@@ -58,7 +58,9 @@ public enum DrawnKind: String, Codable, CaseIterable, Sendable {
 
     /// The kinds whose effects are remembered here. A shape keeps its own in
     /// `AnnotationStyles` (edge and all), and a measurement in its own styles.
-    public var remembersItsEffectsHere: Bool { self == .text || self == .title || self == .path }
+    public var remembersItsEffectsHere: Bool {
+        self == .text || self == .title || self == .path || self == .picture
+    }
 }
 
 /// What the next thing of each kind starts with, beyond what `AnnotationStyles`
@@ -71,6 +73,19 @@ public struct RememberedLooks: Equatable, Codable, Sendable {
     /// The style the layer those effects were read off STARTED with, so a
     /// shadow nobody touched is told from one somebody chose.
     private var standards: [String: LayerStyle] = [:]
+    /// How the last arrow's and the last line's ends were left.
+    private var lineEnds: [String: PathLineEnd] = [:]
+    /// How the last Pen path's line was left: ends, corners, dashes and
+    /// which side of the edge it sits on.
+    private var pathLine: PathLineLook?
+
+    /// The kind of line a Pen path is drawn with.
+    public struct PathLineLook: Equatable, Codable, Sendable {
+        public var lineEnd: PathLineEnd
+        public var lineCorner: PathLineCorner
+        public var linePattern: PathLinePattern
+        public var strokePosition: BorderPosition
+    }
 
     public init() {}
 
@@ -79,6 +94,8 @@ public struct RememberedLooks: Equatable, Codable, Sendable {
         fades = try c.decodeIfPresent([String: PictureFade].self, forKey: .fades) ?? [:]
         styles = try c.decodeIfPresent([String: LayerStyle].self, forKey: .styles) ?? [:]
         standards = try c.decodeIfPresent([String: LayerStyle].self, forKey: .standards) ?? [:]
+        lineEnds = try c.decodeIfPresent([String: PathLineEnd].self, forKey: .lineEnds) ?? [:]
+        pathLine = try c.decodeIfPresent(PathLineLook.self, forKey: .pathLine)
     }
 
     // MARK: The fade
@@ -157,6 +174,37 @@ public struct RememberedLooks: Equatable, Codable, Sendable {
         return worn
     }
 
+    // MARK: The line
+
+    /// The next arrow, line or Pen path is drawn with the line `layer` has
+    /// now: its ends, and on a path its corners, dashes and edge side.
+    public mutating func rememberLine(of layer: Layer) {
+        if let shape = layer.annotation, shape.hasEnds, let kind = DrawnKind(layer) {
+            lineEnds[kind.rawValue] = shape.lineEnd
+        } else if let path = layer.path {
+            pathLine = PathLineLook(lineEnd: path.lineEnd, lineCorner: path.lineCorner,
+                                    linePattern: path.linePattern, strokePosition: path.strokePosition)
+        }
+    }
+
+    /// `layer`, a new arrow, line or Pen path, drawn with the line the last
+    /// of its kind was left with.
+    public func wearingLine(_ layer: Layer) -> Layer {
+        var worn = layer
+        if var shape = layer.annotation, shape.hasEnds, let kind = DrawnKind(layer),
+           let end = lineEnds[kind.rawValue] {
+            shape.lineEnd = end
+            worn.content = .annotation(shape)
+        } else if var path = layer.path, let look = pathLine {
+            path.lineEnd = look.lineEnd
+            path.lineCorner = look.lineCorner
+            path.linePattern = look.linePattern
+            path.strokePosition = look.strokePosition
+            worn.content = .path(path)
+        }
+        return worn
+    }
+
     /// `layer`, just given a bar on the timeline some way other than
     /// `addLayerDrawn`, with the fade its kind was last left with, where it
     /// brought none of its own.
@@ -221,4 +269,11 @@ extension PhotonzDocument {
         }
         addLayerDrawn(drawn, atTimeMS: ms)
     }
+}
+
+private extension AnnotationContent {
+    /// An arrow or a line: the shapes with two ends. A hand-made arrow hides
+    /// its Ends row (`showsLineEnds`) but keeps the value, so the ends come
+    /// back as they were the moment it is drawn clean again.
+    var hasEnds: Bool { shape == .arrow || shape == .line }
 }

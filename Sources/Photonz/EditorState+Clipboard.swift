@@ -524,7 +524,12 @@ extension EditorState {
         // gives two rows you can tell apart instead of the same word twice.
         let name = PlacedImageNaming.layerName(named: baseName,
                                                taken: Set(document.allLayers.map(\.name)))
-        let layer = placedInTimeIfDrawnOnVideo(Layer(name: name, content: .image(ref), frame: frame))
+        var placed = Layer(name: name, content: .image(ref), frame: frame)
+        // On a video a picture is placed like a drawing, so it arrives looking
+        // like the last one placed there. A screenshot pasted into a picture
+        // arrives as itself: redlining is never second-guessed.
+        if documentHasTime { placed = rememberedLooks.wearing(placed) }
+        let layer = placedInTimeIfDrawnOnVideo(placed)
         discardDragPreview()
         let moment = documentTimeMS
         let placing = placesDrawingsInTime

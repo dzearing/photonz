@@ -23,6 +23,7 @@ extension EditorState {
         guard !ids.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setPathLineEnd(layerIDs: ids, to: end) }
+        rememberLines(of: ids)
     }
 
     /// How the line turns a corner.
@@ -30,6 +31,7 @@ extension EditorState {
         guard !ids.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setPathLineCorner(layerIDs: ids, to: corner) }
+        rememberLines(of: ids)
     }
 
     /// Solid, dashed or dotted.
@@ -37,6 +39,7 @@ extension EditorState {
         guard !ids.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setPathLinePattern(layerIDs: ids, to: pattern) }
+        rememberLines(of: ids)
     }
 
     /// Inside, centred on or outside the edge, on every picked closed path.
@@ -44,6 +47,7 @@ extension EditorState {
         guard !ids.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setPathStrokePosition(layerIDs: ids, to: position) }
+        rememberLines(of: ids)
     }
 
     /// What the ends of a LINE or an ARROW look like. The same three answers
@@ -52,6 +56,17 @@ extension EditorState {
         guard !ids.isEmpty else { return }
         discardDragPreview()
         perform { _ = $0.setShapeLineEnd(layerIDs: ids, to: end) }
+        rememberLines(of: ids)
+    }
+
+    /// The next arrow, line or path of each picked kind is drawn with the
+    /// line these were just given (`RememberedLooks`).
+    private func rememberLines(of ids: [UUID]) {
+        guard let document else { return }
+        for id in ids {
+            if let layer = document.layer(id: id) { rememberedLooks.rememberLine(of: layer) }
+        }
+        saveRememberedLooks()
     }
 
     /// What the three pickers read across the picked layers: the paths among

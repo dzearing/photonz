@@ -20,12 +20,15 @@ extension EditorState {
     /// was drawn on, for the hold it was drawn on, and, on a video, from the
     /// playhead to the end of the shot.
     ///
-    /// It arrives with the fade the last of its kind was left with
-    /// (`RememberedLooks`), unless `remembering` is off: a paste is a copy of
+    /// It arrives with the fade, line and effects the last of its kind was
+    /// left with (`RememberedLooks`), unless `remembering` is off: a paste is a copy of
     /// the thing it came from, not a new one drawn.
     func addDrawnLayer(_ layer: Layer, remembering: Bool = true) {
         let moment = documentTimeMS
         let placing = placesDrawingsInTime
+        // ...and the line and effects it was last left with: a Pen path's
+        // shadow, an arrow's square ends.
+        let layer = remembering ? rememberedLooks.wearingLine(rememberedLooks.wearing(layer)) : layer
         let fade = remembering ? rememberedFade(for: layer) : nil
         perform { $0.addLayerDrawn(layer, atTimeMS: moment, placingInTime: placing, fade: fade) }
     }

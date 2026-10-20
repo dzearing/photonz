@@ -1,0 +1,1329 @@
+{
+ "out": "/tmp/photonz-playtest/the-whole-look-carries-over-walk",
+ "seed": "The tutorial recording at Next defaults, nothing switched. For each kind of thing that can be drawn or placed on it (arrow, line, box, oval, highlight, Pen path, words, picture) the first one is drawn and styled from the panel: Opacity 60, Thickness 9 where it has one, a Shadow, Fade In 0.5s and Fade Out 0.25s, and on the arrow the Marker style, square ends and an open head. A second of the same kind is drawn straight after with nothing set on it. The document is saved and the two compared field by field (Scripts/playtest/look-carries-over.py): the audit table for 'The next arrow you draw keeps the last one's look' is read off it.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 1.0
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "comment": "arrow: draw, style, draw another",
+   "do": "describe",
+   "stage": "arrow",
+   "note": "arrow"
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    120,
+    120
+   ],
+   "to": [
+    220,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "focus",
+   "field": "Thickness"
+  },
+  {
+   "do": "type",
+   "text": "9"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "reveal",
+   "control": "Square"
+  },
+  {
+   "do": "press",
+   "control": "Square"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Open head"
+  },
+  {
+   "do": "press",
+   "control": "Open head"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Head Size"
+  },
+  {
+   "do": "type",
+   "text": "2"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "reveal",
+   "control": "Arrow style Hand-drawn"
+  },
+  {
+   "do": "press",
+   "control": "Arrow style Hand-drawn"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "arrow-styled",
+   "note": "The first arrow, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    120,
+    420
+   ],
+   "to": [
+    220,
+    500
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "line: draw, style, draw another",
+   "do": "describe",
+   "stage": "line",
+   "note": "line"
+  },
+  {
+   "do": "tool",
+   "tool": "line"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "line"
+  },
+  {
+   "do": "drag",
+   "from": [
+    260,
+    120
+   ],
+   "to": [
+    360,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "focus",
+   "field": "Thickness"
+  },
+  {
+   "do": "type",
+   "text": "9"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "reveal",
+   "control": "Square"
+  },
+  {
+   "do": "press",
+   "control": "Square"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "line-styled",
+   "note": "The first line, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "line"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "line"
+  },
+  {
+   "do": "drag",
+   "from": [
+    260,
+    420
+   ],
+   "to": [
+    360,
+    500
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "rectangle: draw, style, draw another",
+   "do": "describe",
+   "stage": "rectangle",
+   "note": "rectangle"
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    400,
+    120
+   ],
+   "to": [
+    500,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "focus",
+   "field": "Corner Radius"
+  },
+  {
+   "do": "type",
+   "text": "12"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "rectangle-styled",
+   "note": "The first rectangle, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    400,
+    420
+   ],
+   "to": [
+    500,
+    500
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "ellipse: draw, style, draw another",
+   "do": "describe",
+   "stage": "ellipse",
+   "note": "ellipse"
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    540,
+    120
+   ],
+   "to": [
+    640,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "ellipse-styled",
+   "note": "The first ellipse, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    540,
+    420
+   ],
+   "to": [
+    640,
+    500
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "highlight: draw, style, draw another",
+   "do": "describe",
+   "stage": "highlight",
+   "note": "highlight"
+  },
+  {
+   "do": "tool",
+   "tool": "highlight"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "highlight"
+  },
+  {
+   "do": "drag",
+   "from": [
+    680,
+    120
+   ],
+   "to": [
+    780,
+    200
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "highlight-styled",
+   "note": "The first highlight, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "highlight"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "highlight"
+  },
+  {
+   "do": "drag",
+   "from": [
+    680,
+    420
+   ],
+   "to": [
+    780,
+    500
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "describe",
+   "stage": "path",
+   "note": "path"
+  },
+  {
+   "do": "tool",
+   "tool": "pen"
+  },
+  {
+   "do": "click",
+   "at": [
+    820,
+    120
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    900,
+    200
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    960,
+    130
+   ]
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "focus",
+   "field": "Thickness"
+  },
+  {
+   "do": "type",
+   "text": "9"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "reveal",
+   "control": "Square"
+  },
+  {
+   "do": "press",
+   "control": "Square"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Dashed"
+  },
+  {
+   "do": "press",
+   "control": "Dashed"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "path-styled",
+   "note": "The first path, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "pen"
+  },
+  {
+   "do": "click",
+   "at": [
+    820,
+    420
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    900,
+    500
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    960,
+    430
+   ]
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "describe",
+   "stage": "text",
+   "note": "text"
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    1050,
+    140
+   ],
+   "space": "document"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "type",
+   "text": "First words"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "text-styled",
+   "note": "The first text, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    1050,
+    560
+   ],
+   "space": "document"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "type",
+   "text": "Next words"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "describe",
+   "stage": "picture",
+   "note": "picture"
+  },
+  {
+   "do": "dropImage",
+   "file": "fixtures/Plain white tile 200x140.png",
+   "at": [
+    600,
+    620
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "focus",
+   "field": "Opacity"
+  },
+  {
+   "do": "type",
+   "text": "60"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade In",
+   "choose": "0.5s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Fade Out",
+   "choose": "0.25s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "picture-styled",
+   "note": "The first picture, styled: opacity 60, a shadow, fade in 0.5s and out 0.25s"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "dropImage",
+   "file": "fixtures/Plain white tile 200x140.png",
+   "at": [
+    900,
+    620
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "every-kind-twice"
+  },
+  {
+   "do": "action",
+   "action": "saveProjectAs"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  }
+ ]
+}

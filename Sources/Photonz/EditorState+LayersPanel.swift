@@ -501,6 +501,9 @@ extension EditorState {
         } else if layer.path != nil {
             rememberedLooks.rememberStyle(layer.style, for: .path)
             saveRememberedLooks()
+        } else if DrawnKind(layer) == .picture, documentHasTime {
+            rememberedLooks.rememberStyle(layer.style, for: .picture)
+            saveRememberedLooks()
         }
     }
 

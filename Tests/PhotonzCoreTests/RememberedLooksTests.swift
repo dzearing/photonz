@@ -345,4 +345,51 @@ struct RememberedLooksTests {
         #expect(looks.fading(placed).pictureFade == PictureFade(inMS: 500, outMS: 500))
         #expect(looks.fading(measured).pictureFade == nil)
     }
+
+    // MARK: - Line ends, corners and dashes
+
+    /// Found by the-whole-look-carries-over-walk on 2026-10-20: an arrow set
+    /// to square ends drew the next arrow round.
+    @Test func anArrowsEndsAreRememberedForTheNextArrow() {
+        var looks = RememberedLooks()
+        var squared = Self.arrow()
+        var shape = squared.annotation ?? AnnotationContent(shape: .arrow, colorHex: "#FF3B30")
+        shape.lineEnd = .square
+        squared.content = .annotation(shape)
+        looks.rememberLine(of: squared)
+        #expect(looks.wearingLine(Self.arrow()).annotation?.lineEnd == .square)
+        // A hand-made arrow keeps the ends for when it is drawn clean again.
+        var handMade = AnnotationContent(shape: .arrow, colorHex: "#FF3B30")
+        handMade.arrowStyle = .handDrawn
+        let sketched = Layer(name: "Arrow", content: .annotation(handMade), frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(looks.wearingLine(sketched).annotation?.lineEnd == .square)
+        let line = Layer(name: "Line", content: .annotation(AnnotationContent(shape: .line, colorHex: "#FF3B30")),
+                         frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(looks.wearingLine(line).annotation?.lineEnd == AnnotationContent(shape: .line, colorHex: "#FF3B30").lineEnd)
+    }
+
+    @Test func aPathsLineIsRememberedForTheNextPath() {
+        var looks = RememberedLooks()
+        var drawn = PathContent(anchors: [])
+        drawn.lineEnd = .square
+        drawn.lineCorner = .round
+        drawn.linePattern = .dashed
+        let path = Layer(name: "Path", content: .path(drawn), frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        looks.rememberLine(of: path)
+        let next = looks.wearingLine(Layer(name: "Path", content: .path(PathContent(anchors: [])),
+                                           frame: CGRect(x: 0, y: 0, width: 10, height: 10)))
+        #expect(next.path?.lineEnd == .square)
+        #expect(next.path?.lineCorner == .round)
+        #expect(next.path?.linePattern == .dashed)
+    }
+
+    @Test func aPictureRemembersItsEffects() {
+        var looks = RememberedLooks()
+        var style = LayerStyle()
+        style.opacity = 0.6
+        looks.rememberStyle(style, for: .picture)
+        let picture = Layer(name: "Picture", content: .image(ImageRef(pixelSize: CGSize(width: 10, height: 10))),
+                            frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+        #expect(looks.wearing(picture).style.opacity == 0.6)
+    }
 }

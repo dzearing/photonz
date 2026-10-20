@@ -37,8 +37,7 @@ extension EditorState {
         content.strokeWidth = startingPathStrokeWidth(
             armed: content.strokeWidth,
             drawnAt: CGPoint(x: content.bounds.midX, y: content.bounds.midY))
-        // Shadow and the rest, the way the last path was styled.
-        let layer = rememberedLooks.wearing(PenSession.layer(from: content))
+        let layer = PenSession.layer(from: content)
         addDrawnLayer(layer)
         finishCreating(layer.id,
                        tool: ArrowCaptionEntry.toolAfterLanding(activeTool,
