@@ -57,6 +57,9 @@ final class AskSession {
     private(set) var hasAsked = false
     /// Bumped to ask the panel to open the Agent group and bring it into view.
     private(set) var revealPass = 0
+    /// True from an ask until the panel has the Agent group on screen, so a
+    /// panel the ask just brought out does the reveal when it appears.
+    @ObservationIgnored var isRevealPending = false
     /// How long the last plan took, from Ask to the plan on screen.
     private(set) var lastPlanSeconds: Double?
 
@@ -92,6 +95,11 @@ final class AskSession {
         hasAsked = true
         isComposerShown = false
         phase = .planning
+        // Whatever hides the Agent group comes out first: a video in View, a
+        // closed panel. The panel may only be built after this, so the reveal
+        // waits for it (`isRevealPending`).
+        editor.bringAgentAreaForward()
+        isRevealPending = true
         revealPass &+= 1
         let started = Date()
         trace = []

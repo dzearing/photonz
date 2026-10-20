@@ -1,0 +1,117 @@
+{
+  "out": "/tmp/photonz-playtest/ask-shows-the-agent-group-from-a-closed-panel-walk",
+  "clock": 180,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "hideInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Request",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "1-panel-closed"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "add a red box"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-asked-panel-came-out",
+      "note": "asked with the panel closed: it came out with the Agent group and its working row on screen"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Working"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Request"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-asked-panel-came-out"
+    },
+    {
+      "do": "press",
+      "control": "Agent Stop"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "idle",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "hideInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-closed-again",
+      "note": "closing it again closes it, as the title bar toggle does"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Request",
+      "present": false
+    }
+  ]
+}

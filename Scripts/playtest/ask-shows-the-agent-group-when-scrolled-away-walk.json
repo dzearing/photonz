@@ -1,0 +1,186 @@
+{
+  "out": "/tmp/photonz-playtest/ask-shows-the-agent-group-when-scrolled-away-walk",
+  "clock": 180,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 560
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        88,
+        330
+      ],
+      "to": [
+        400,
+        410
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make the box blue"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-first-ask",
+      "note": "a box picked and a first ask: the Agent group joins the panel under the box's sections"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Working"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Request"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-first-ask"
+    },
+    {
+      "do": "press",
+      "control": "Agent Stop"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "idle",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "scrollPanel",
+      "by": 900,
+      "row": "Blending"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-scrolled-away",
+      "note": "the panel scrolled back up to the box's own sections, the Agent group out of sight below"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Request",
+      "out": true
+    },
+    {
+      "do": "snapshot",
+      "name": "2-scrolled-away"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make the box green"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-asked-while-scrolled-away",
+      "note": "asked again from the title bar: the panel scrolled the Agent group back into view with its working row"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Working"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Request"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-asked-while-scrolled-away"
+    },
+    {
+      "do": "press",
+      "control": "Agent Stop"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "idle",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}

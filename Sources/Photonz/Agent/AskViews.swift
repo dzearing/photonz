@@ -128,8 +128,10 @@ struct AgentPanel: View {
                     Text(AskCopy.workingLine).font(.system(size: 11.5))
                     Spacer()
                     Button(AskCopy.stop) { ask.stop() }.controlSize(.small)
+                        .playtestControl("Agent Stop", detail: AskCopy.stop)
                 }
                 .help(ask.asked)
+                .playtestControl("Agent Working", detail: AskCopy.workingLine)
             case .stopped(let sentence):
                 Text(sentence)
                     .font(.system(size: 11.5))

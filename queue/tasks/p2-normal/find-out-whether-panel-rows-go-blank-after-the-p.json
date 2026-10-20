@@ -1,0 +1,27 @@
+{
+  "id": "find-out-whether-panel-rows-go-blank-after-the-p",
+  "title": "Find out whether panel rows go blank after the panel is scrolled back",
+  "goal": "After the right panel is scrolled down and back up, the rows at the top of a section (Opacity, Blending under Appearance) can come back as an empty band. Seen only in walks that scroll the panel directly, so find out whether a person scrolling with a trackpad sees it too, and fix it if so.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T20:37:25.808Z",
+  "updated": "2026-10-20T20:37:25.811Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-20 while building asking-always-shows-the-agent-area-even-from-a-c. Repro: open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png at 1280x560, R and drag a box (88,330)->(400,410), ask once (the Agent group scrolls into view, Appearance goes off the top), Stop, then scrollPanel row Blending by 900 then by -900. Picture: the Appearance header is drawn, then an empty band where Opacity and Blending should be, then Masked by. The same blank band shows when the second move is an ask scrolling the Agent group back (queue/audits/2026-10-20-ask-reveal-6-scrolled-back.png), so it is not the ask reveal. The harness says the wheel did nothing (probe in the background) so it scrolled the clip view directly: that may be the whole cause. Not reproduced by a real wheel or trackpad, hence p2.",
+  "acceptance": [
+    "A person scrolling the panel down and back up with a trackpad either sees every row drawn, or the blank band is reproduced by hand and fixed",
+    "A walk covers scrolling the panel back and checks the top rows of the section are drawn"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T20:37:25.810Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

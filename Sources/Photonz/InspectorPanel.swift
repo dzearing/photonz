@@ -558,6 +558,9 @@ struct InspectorPanel: View {
                 }
                 // Ask asked, or its change landed: the Agent group open and on screen.
                 .onChange(of: editorState.ask.revealPass) { showAgentSection(proxy) }
+                // ...and for a panel the ask itself just brought out, or a
+                // video's panel arriving with Edit (`AskReveal`).
+                .onAppear { if editorState.ask.isRevealPending { showAgentSection(proxy) } }
                 // A chart just landed and asks for its numbers: its Chart
                 // section open and at the top of the view (`EditorState+Charts`).
                 .onChange(of: editorState.chartDataRequest) { showChartSection(proxy) }
@@ -2328,22 +2331,41 @@ struct InspectorPanel: View {
         }
     }
 
-    /// The Time section opened if it was folded and scrolled on screen if it
+    /// The Agent group opened if it was folded and scrolled on screen if it
     /// was not, without moving one that is already in view.
+    ///
+    /// Looked at a few times, a beat apart: a panel the ask has just brought
+    /// out, or one sliding in with Edit, builds its sections over several
+    /// passes, and a look before the Agent group exists scrolls to nothing. A
+    /// later look does nothing once the group is on screen.
     private func showAgentSection(_ proxy: ScrollViewProxy) {
         expand(.agent)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-            guard let frame = reveal.sectionFrames[.agent] else {
-                proxy.scrollTo(InspectorSectionID.agent, anchor: .top)
-                return
-            }
-            let inView = frame.minY >= 0 && frame.maxY <= reveal.viewportHeight
-            guard !inView else { return }
-            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
-                proxy.scrollTo(InspectorSectionID.agent, anchor: .top)
+        for wait in Self.agentRevealLooks {
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                guard editorState.ask.isRevealPending || wait == Self.agentRevealLooks.first else { return }
+                expand(.agent)
+                guard let frame = reveal.sectionFrames[.agent] else {
+                    proxy.scrollTo(InspectorSectionID.agent, anchor: .top)
+                    return
+                }
+                let inView = frame.minY >= 0 && frame.maxY <= reveal.viewportHeight
+                guard !inView else {
+                    editorState.ask.isRevealPending = false
+                    return
+                }
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                    proxy.scrollTo(InspectorSectionID.agent, anchor: .top)
+                }
             }
         }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (Self.agentRevealLooks.last ?? 0) + 0.1) {
+            editorState.ask.isRevealPending = false
+        }
     }
+
+    /// When the Agent reveal looks, after the ask: the first for a panel
+    /// already up, the later ones for a panel still arriving.
+    private static let agentRevealLooks: [Double] = [0.08, 0.3, 0.7, 1.2]
 
     /// The Chart section opened and put at the top of the view, so its
     /// table is on screen whole rather than under the fold.
@@ -2359,6 +2381,8 @@ struct InspectorPanel: View {
         }
     }
 
+    /// The Time section opened if it was folded and scrolled on screen if it
+    /// was not, without moving one that is already in view.
     private func showTimeSection(_ proxy: ScrollViewProxy) {
         expand(.speed)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {

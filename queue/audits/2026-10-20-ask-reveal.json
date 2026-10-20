@@ -1,0 +1,48 @@
+{
+  "feature": "Asking always shows the Agent area",
+  "epic": "agent-ask",
+  "summary": "Sending a request to Ask now always shows the Agent group with its working row: a closed panel comes out, a folded Agent group unfolds, one scrolled out of sight scrolls back, and a video in View switches to Edit.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask needs Ollama with a model, as before. Walks: ask-shows-the-agent-group-from-a-closed-panel-walk, -when-folded-walk, -when-scrolled-away-walk, -from-a-video-in-view-walk, -from-a-video-in-view-with-the-panel-closed-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screenshot and close the panel with the title bar's panel button.",
+      "shot": "2026-10-20-ask-reveal-1-panel-closed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Ask in the title bar, type a request and press Return: the panel comes out with the Agent group and its Working row.",
+      "shot": "2026-10-20-ask-reveal-2-panel-came-out.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Agent header to fold it, then ask again from the title bar: it unfolds.",
+      "shot": "2026-10-20-ask-reveal-4-unfolded.png"
+    },
+    {
+      "do": "With a box picked on a short window, scroll the panel up so the Agent group is out of sight, then ask again: it scrolls back into view.",
+      "shot": "2026-10-20-ask-reveal-6-scrolled-back.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a recording (it opens in View) and ask from the title bar: the window switches to Edit and the Agent group is on screen.",
+      "shot": "2026-10-20-ask-reveal-8-video-edit.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Close the panel again with the title bar button, then open a new window: the panel stays closed, as you left it."
+    }
+  ],
+  "evaluate": [
+    "When you ask from View on a video, is switching to Edit what you expected, rather than the Agent area showing over the player?",
+    "With the panel closed, does it feel right that the panel comes out on its own when you ask?",
+    "When you close the panel again after an ask, does a new window still open the way you chose (closed)?"
+  ],
+  "rough": [
+    "No mock covers this: the mock's Agent group is drawn already open in Edit, so there is no frame to compare against.",
+    "A video in View switches to Edit rather than showing the Agent area in View: View has no panel at all, and every other edit made from View already switches to Edit. Logged as the choice in the task.",
+    "The Ask button's title bar neighbours crowd it on a video (the Generate label sits half under it in the video pictures); that is on-a-video-the-ask-button-never-sits-on-top-of-t.",
+    "In the scrolled-back picture the top of Appearance (Opacity, Blending) is an empty band; the same happens with no ask at all after the walk scrolls the panel directly, so it is not this change: find-out-whether-panel-rows-go-blank-after-the-p.",
+    "The folded walk needs the window in front (a header click only folds in the app in front), so it waits for nobody to be at the Mac."
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "out": "/tmp/photonz-playtest/ask-shows-the-agent-group-when-folded-walk",
+  "clock": 180,
+  "setup": {
+    "front": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "add a red box"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-first-ask",
+      "note": "the first ask: the Agent group joins the panel"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Working"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Request"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-first-ask"
+    },
+    {
+      "do": "press",
+      "control": "Agent Stop"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "idle",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Agent section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Request",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "2-agent-folded"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make the title blue"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-asked-while-folded",
+      "note": "asked again with the Agent group folded: it unfolded, its working row on screen"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Working"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Request"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-asked-while-folded"
+    },
+    {
+      "do": "press",
+      "control": "Agent Stop"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "idle",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}

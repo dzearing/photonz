@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 8.2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T18:33:37.351Z",
-  "updated": "2026-10-20T18:33:47.592Z",
+  "updated": "2026-10-20T20:38:11.178Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'when i ask something, but the left pane is minimized or a video is not in edit mode, we need to reveal what we need to in order for the agent pane to be visible.' (They said left; the Agent group is in the right panel. Reveal whichever pane holds it.) Filed at first as an acceptance line on ask-makes-the-change-straight-away-and-each-chan, but that task closed nine minutes earlier, so it gets its own task. Today AskSession.ask bumps revealPass (Sources/Photonz/Agent/AskSession.swift) and only InspectorPanel.swift:560 listens, scrolling to the Agent section, which does nothing when the panel is not on screen.",
@@ -26,6 +26,46 @@
     {
       "t": "2026-10-20T18:33:47.591Z",
       "note": "seq 42.5 -> 8.2"
+    },
+    {
+      "t": "2026-10-20T20:07:30.952Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T20:37:40.254Z",
+      "note": "owns these walks: ask-shows-the-agent-group-from-a-closed-panel-walk, ask-shows-the-agent-group-when-folded-walk, ask-shows-the-agent-group-when-scrolled-away-walk, ask-shows-the-agent-group-from-a-video-in-view-walk, ask-shows-the-agent-group-from-a-video-in-view-with-the-panel-closed-walk"
+    },
+    {
+      "t": "2026-10-20T20:38:10.803Z",
+      "note": "Reproduced first: a walk that closes the panel, asks, and looks for the Agent group failed with the group nowhere in the window (the composer closed, the panel stayed shut). The old reveal only scrolled a panel that was already up."
+    },
+    {
+      "t": "2026-10-20T20:38:10.878Z",
+      "note": "Chose switching a video in View to Edit over showing the Agent area in View because View has no panel by design and every other edit made from View (setInspectorVisible, switchToEditForAnEdit) already switches to Edit."
+    },
+    {
+      "t": "2026-10-20T20:38:10.953Z",
+      "note": "Chose bringing the panel out for this window only (isLayersPanelVisible, never inspectorPreferredVisible) so a person who keeps it closed gets a closed panel in the next window; closing it again writes their choice as before. Rule in PhotonzCore/AskReveal.swift, tested in AskRevealTests."
+    },
+    {
+      "t": "2026-10-20T20:38:11.029Z",
+      "note": "Built: EditorState+AskReveal.swift brings the area out; AskSession.ask calls it and arms isRevealPending; InspectorPanel reveals on appear too and looks four times (0.08 to 1.2s) so a panel still arriving with Edit is caught. Named the working row and Stop (Agent Working, Agent Stop) for walks."
+    },
+    {
+      "t": "2026-10-20T20:38:11.104Z",
+      "note": "Five walks, all green: closed panel, folded (front: true, a header click only folds in front), scrolled away (1280x560 with a box picked), video in View, video in View with the panel closed. Scripts/test.sh: 14057 tests passed."
+    },
+    {
+      "t": "2026-10-20T20:38:11.176Z",
+      "note": "Looked at audit pictures 2, 4, 6, 8, 9: each shows the Agent group with its Working row on screen; 8 and 9 show the window in Edit. Picture 6 has a blank band at the top of Appearance that also shows with no ask: filed as find-out-whether-panel-rows-go-blank-after-the-p (p2, not reproduced by hand). Title bar crowding on a video folded into on-a-video-the-ask-button-never-sits-on-top-of-t (already covers it)."
     }
+  ],
+  "started": "2026-10-20T20:07:30.950Z",
+  "walks": [
+    "ask-shows-the-agent-group-from-a-closed-panel-walk",
+    "ask-shows-the-agent-group-when-folded-walk",
+    "ask-shows-the-agent-group-when-scrolled-away-walk",
+    "ask-shows-the-agent-group-from-a-video-in-view-walk",
+    "ask-shows-the-agent-group-from-a-video-in-view-with-the-panel-closed-walk"
   ]
 }

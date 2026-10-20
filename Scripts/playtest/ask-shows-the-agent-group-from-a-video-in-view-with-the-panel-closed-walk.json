@@ -1,0 +1,100 @@
+{
+  "out": "/tmp/photonz-playtest/ask-shows-the-agent-group-from-a-video-in-view-with-the-panel-closed-walk",
+  "clock": 180,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expectTimeline",
+      "mode": "view"
+    },
+    {
+      "do": "action",
+      "action": "hideInspector"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "1-video-in-view"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "add a title that says Hello"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-asked-from-view",
+      "note": "asked from View with the panel closed: Edit, the panel out, the Agent group on screen"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Working"
+    },
+    {
+      "do": "expectInView",
+      "field": "Agent Request"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-asked-from-view"
+    },
+    {
+      "do": "expectTimeline",
+      "mode": "edit"
+    },
+    {
+      "do": "press",
+      "control": "Agent Stop"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "idle",
+      "timeout": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}

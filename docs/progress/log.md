@@ -21767,3 +21767,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Eval, 13 drawing cases: 35.4 → 92, named blind 1 → 13 of 13, median 18.4 s.
 - Next: things outside the set (lighthouse, windmill) still fail the look; that
   is `an-illustration-ask-draws-looks-illustrated-natu`.
+
+## 2026-10-20 — Asking always shows the Agent area
+
+- An ask now brings out whatever hides the Agent group: a video in View switches to Edit, a closed panel comes out (for this window only, the person's choice for new windows is untouched), a folded group unfolds and one scrolled away scrolls back. Rule in `PhotonzCore/AskReveal.swift`, app side in `EditorState+AskReveal.swift` and `InspectorPanel.showAgentSection` (now looks four times so a panel still arriving is caught).
+- Five `ask-shows-the-agent-group-*` walks; audit `queue/audits/2026-10-20-ask-reveal.json`.
+- Open: rows at the top of a section can draw blank after the walk scrolls the panel directly (`find-out-whether-panel-rows-go-blank-after-the-p`, p2).
