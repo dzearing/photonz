@@ -1,0 +1,35 @@
+{
+  "id": "find-the-misalignments-marks-every-inconsistent",
+  "title": "\"Find the misalignments\" marks every inconsistent edge, padding and gap on a screenshot",
+  "goal": "A person opens a UI screenshot, asks 'find the misalignments', and Photonz marks what a sharp-eyed designer would: edges that almost line up but miss, padding or border widths that differ between things that should match, and gaps in a repeated pattern that are not equal. Each mark says what is off and by how much, and nothing that is fine gets marked.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 8.045,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T23:29:32.175Z",
+  "updated": "2026-10-20T23:29:37.089Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20: 'i would love to say \"Find the misalignments\" on a ux that has inconsistent alignment on things, or inconsistent border/padding widths or gaps in between repeated patterns. I can spot these visually, but i would love the model to be really good at adding annotations for the inconsistent ux things.' This is the user's main use of Photonz (UX redlining).\n\nWhat exists: find_elements (Sources/PhotonzCore/AgentTools.swift) returns the Measure tool's boxes; ElementBounds.swift, EdgeMap.swift, EdgeRun.swift, MeasurePlan.swift, MeasureSizeGroup.swift, MeasureLabelPlacement.swift (placement that keeps readouts off what they measure). Retina screenshots are 2x: report points, decide 1 pt faults on pixel evidence. Text: compare baselines and cap heights, not box tops, since glyph boxes vary. Do not let the model guess numbers; every number shown comes from the code. The earlier Ask measurement crowding (ask-on-the-local-model-makes-results-that-look-f) is a related task; reuse its placement fixes.",
+  "acceptance": [
+    "Detection is code, not the model: from the boxes the Measure tool finds (and the edges under them), group things that should agree (a column of left edges, a row of tops or baselines or centres, the cards of a repeated list, the insides of matching controls) and flag the ones that miss by 1 to 8 points, the gaps in a run that differ, and padding or border widths that differ between siblings. The model only chooses what is worth showing, words it, and answers follow-ups",
+    "Measured on test screenshots with KNOWN planted faults: at least 20 pictures (made from real app and web UIs with offsets of 1, 2 and 3 points, uneven gaps, one card with different padding, a 1 vs 2 point border) where the right answer is written down. Precision and recall go in the audit, each at least 0.9 on the 2 to 3 point faults and at least 0.75 on 1 point; clean screenshots get no more than one false mark",
+    "Each finding is a redline annotation in the app's own measurement look: the two edges or gaps compared, both numbers ('16 vs 18'), and a short label ('Gap 2 pt wider than the others'); a group's agreeing members get a quiet guide line so the outlier reads at once; marks never sit over what they point at",
+    "The findings are one Ask change row ('Found 6 misalignments') with the usual switch and delete, and each mark is its own layer you can delete",
+    "'Find the misalignments' and close phrasings ('check the spacing', 'what is inconsistent here') route to it at Next defaults; on a screenshot with nothing wrong it says so in one short sentence",
+    "Works through the Photonz skill too, so an outside agent can run the same check",
+    "Audit under queue/audits/ with before and after pictures for five real screenshots, the precision and recall table, and timings. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T23:29:32.178Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T23:29:37.088Z",
+      "note": "seq 3970 -> 8.045"
+    }
+  ]
+}
