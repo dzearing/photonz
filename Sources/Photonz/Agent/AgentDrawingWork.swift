@@ -25,6 +25,8 @@ enum AgentDrawingWork {
         case .addPath(let id, let path):
             let editor = try AgentDocuments.editor(id).get()
             return try add(AgentDrawing.layer(for: path), to: editor)
+        case .addDrawing(let id, let call):
+            return try addDrawing(call, to: AgentDocuments.editor(id).get())
         case .addText(let id, let text):
             let editor = try AgentDocuments.editor(id).get()
             return try addText(text, to: editor)
@@ -103,6 +105,82 @@ enum AgentDrawingWork {
             throw Failure("Photonz could not add that layer to \(AgentWork.title(of: editor)).")
         }
         return drawn(layer.id, in: editor)
+    }
+
+    struct DrawnDrawing: Encodable {
+        let layer: String
+        let name: String
+        let frame: Box
+        /// "built-in: dog", or "your svg".
+        let from: String
+        let parts: Int
+        let canUndo: Bool
+    }
+
+    /// A thing drawn in one go: the built-in drawing of it when the set has
+    /// one, else the agent's own SVG, as a named group (an icon frame for an
+    /// icon) of layers a person can edit, picked, as one undo step.
+    private static func addDrawing(_ call: AgentDrawingCall, to editor: EditorState) throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        let drawing: SVGArtwork
+        let from: String
+        if call.builtIn, let entry = DrawingSet.shared?.match(call.subject), case .success(let found) = entry.drawing() {
+            drawing = found
+            from = "built-in: \(entry.name)"
+        } else if let svg = call.svg {
+            switch SVGArtwork.parse(svg) {
+            case .success(let read): drawing = read
+            case .failure(let trouble): throw Failure("add_drawing: \(trouble.message)")
+            }
+            from = "your svg"
+        } else {
+            throw Failure(AgentDrawingCall.noBuiltIn(call.subject))
+        }
+        var made: UUID?
+        editor.asOneUndoStep {
+            if call.icon {
+                let blank = isBlank(document, in: editor)
+                editor.perform { made = $0.addDrawing(drawing, named: call.layerName, icon: true, box: call.frame, blank: blank) }
+            } else {
+                let group = drawing.group(named: call.layerName,
+                                          fitting: AgentDrawingPlacement.box(call.frame, on: document.canvasSize))
+                editor.addDrawnLayer(group, remembering: false)
+                made = group.id
+            }
+            if let made { editor.selectLayer(made) }
+        }
+        guard let made, let layer = editor.document?.layer(id: made) else {
+            throw Failure("Photonz could not add that drawing to \(AgentWork.title(of: editor)).")
+        }
+        return .json(DrawnDrawing(layer: made.uuidString, name: layer.name, frame: Box(AgentDrawing.box(of: layer)),
+                                  from: from, parts: drawing.parts.count, canUndo: editor.canUndo))
+    }
+
+    /// Whether the picture holds nothing anybody made: no layers, or only a
+    /// locked background of one flat colour, which is what a new blank
+    /// picture is. A screenshot's background is not flat, so it never counts.
+    private static func isBlank(_ document: PhotonzDocument, in editor: EditorState) -> Bool {
+        document.layers.allSatisfy { layer in
+            guard layer.isLocked, let ref = layer.imageRef, let image = editor.store.image(for: ref) else { return false }
+            return isFlat(image)
+        }
+    }
+
+    /// Nine pixels across the picture, all the same colour.
+    private static func isFlat(_ image: CGImage) -> Bool {
+        let side = 3
+        var pixels = [UInt8](repeating: 0, count: side * side * 4)
+        let drawn = pixels.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(data: buffer.baseAddress, width: side, height: side, bitsPerComponent: 8,
+                                          bytesPerRow: side * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            context.interpolationQuality = .none
+            context.draw(image, in: CGRect(x: 0, y: 0, width: side, height: side))
+            return true
+        }
+        guard drawn else { return false }
+        let first = Array(pixels[0..<4])
+        return stride(from: 0, to: pixels.count, by: 4).allSatisfy { Array(pixels[$0..<($0 + 4)]) == first }
     }
 
     private static func addText(_ text: AgentText, to editor: EditorState) throws -> Answer {

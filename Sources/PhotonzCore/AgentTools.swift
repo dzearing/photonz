@@ -41,6 +41,7 @@ public enum AgentRequest: Hashable, Sendable {
     case newPicture(width: Int, height: Int)
     case addShape(document: String?, shape: AgentShape)
     case addPath(document: String?, path: AgentPath)
+    case addDrawing(document: String?, drawing: AgentDrawingCall)
     case addText(document: String?, text: AgentText)
     case setLayer(document: String?, layer: String, change: AgentLayerChange)
     case findElements(document: String?, region: CGRect?, limit: Int)
@@ -297,6 +298,18 @@ public enum AgentTools {
                 "name": ["type": "string", "description": "The layer's name in the Layers list."],
             ]) { $1 }, required: ["points"])),
         AgentTool(
+            name: "add_drawing",
+            description: "Draw a thing (a dog, a house, a coffee cup, a smiley face) as one clean drawing made of editable layers, grouped and named. Photonz has its own clean drawings of about a thousand everyday things and uses one when it has it; otherwise it draws the svg you give. Better than many add_shape and add_path calls for any picture of a thing. One undo step.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "subject": ["type": "string", "description": "What it is, in a word or two: dog, coffee cup, smiley face, sun over mountains."],
+                "svg": ["type": "string", "description": "Your own drawing of it as one complete SVG, used when Photonz has no drawing of the subject: a viewBox, a few flat colours, curves and ellipses where the thing is round, every part touching the part it belongs to, an id on each shape naming its part (head, left-ear, body). No text."],
+                "icon": ["type": "boolean", "description": "Make it an icon: a 512 point square icon frame with the drawing on its keylines. On a blank picture the picture becomes that frame."],
+                "frame": boxProperty("Where the drawing goes, fitted and centred in this box. Centred on the canvas, 60 per cent of its shorter side, when left out."),
+                "name": ["type": "string", "description": "The group's name in the Layers list. The subject when left out."],
+                "builtIn": ["type": "boolean", "description": "Use Photonz's own drawing when it has one. true when left out; false draws your svg instead."],
+            ], required: ["subject"])),
+        AgentTool(
             name: "add_text",
             description: "Set words with the Text tool, their top left at x and y. The box is measured to fit them. One undo step.",
             inputSchema: schema([
@@ -445,7 +458,7 @@ public enum AgentTools {
         case "run_command":
             return AppCommandTable.call(args["command"]?.stringValue ?? "", arguments: args["arguments"])
                 .map { .runCommand(document: document, call: $0) }
-        case "new_picture", "add_shape", "add_path", "add_text", "set_layer", "find_elements",
+        case "new_picture", "add_shape", "add_path", "add_drawing", "add_text", "set_layer", "find_elements",
              "add_measurement", "list_components", "place_component", "export":
             return drawingRequest(name, args, document: document)
         case _ where videoToolNames.contains(name):
@@ -536,6 +549,16 @@ public enum AgentTools {
                 .addPath(document: document, path: AgentPath(points: points, closed: closed, look: $0,
                                                              name: args["name"]?.stringValue))
             }
+        case "add_drawing":
+            let subject = (args["subject"]?.stringValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !subject.isEmpty else { return fail("subject is empty: say what to draw, in a word or two.") }
+            if let frame = region(args["frame"]), frame.width < 1 || frame.height < 1 {
+                return fail("the frame needs a width and height of at least 1.")
+            }
+            let svg = args["svg"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+            return .success(.addDrawing(document: document, drawing: AgentDrawingCall(
+                subject: subject, svg: svg, icon: args["icon"]?.boolValue ?? false, frame: region(args["frame"]),
+                name: args["name"]?.stringValue, builtIn: args["builtIn"]?.boolValue ?? true)))
         case "add_text":
             let words = args["text"]?.stringValue ?? ""
             guard !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return fail("text is empty.") }

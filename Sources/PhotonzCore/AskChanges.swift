@@ -256,6 +256,7 @@ public enum AskChangeWords {
         switch tool {
         case "add_measurement": Kind(verb: "Added", one: "a measurement", many: "measurements")
         case "add_shape", "add_path": Kind(verb: "Drew", one: "a shape", many: "shapes")
+        case "add_drawing": Kind(verb: "Drew", one: "a drawing", many: "drawings")
         case "add_text": Kind(verb: "Added", one: "text", many: "texts")
         case "add_title": Kind(verb: "Added", one: "a title", many: "titles")
         case "place_component": Kind(verb: "Placed", one: "a component", many: "components")

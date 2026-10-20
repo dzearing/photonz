@@ -21,7 +21,7 @@ public enum AskTools {
     /// window, writes a file or steps the history, so the whole plan lands in
     /// the asking document's own undo history as one step.
     public static let doing: [String] = [
-        "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "place_component",
+        "add_drawing", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "place_component",
         "add_style", "apply_style", "set_layout", "run_command",
         "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
     ]
@@ -244,8 +244,13 @@ public struct AskConversation: Sendable {
 
     /// `components` and `styles` are list_components' and list_styles'
     /// answers, handed over up front so "on brand" never starts from nothing.
+    /// The built-in drawings add_drawing draws from, so a thing the set does
+    /// not have goes back to the model for its own SVG while it still plans.
+    private let drawings: DrawingLibrary?
+
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
-                titles: String = "") {
+                titles: String = "", drawings: DrawingLibrary? = nil) {
+        self.drawings = drawings
         canvasWidth = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]?["width"]?.doubleValue ?? 0
         var instructions = Self.instructions(documentRead: documentRead)
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
@@ -309,6 +314,10 @@ public struct AskConversation: Sendable {
                     tell(name, "Not planned: \(Self.mostMeasurements) measurements is the most a picture reads well with. Plan nothing more of them; finish.")
                     continue
                 }
+                if name == "add_drawing", let problem = drawingProblem(arguments) {
+                    tell(name, "Not planned. \(problem)")
+                    continue
+                }
                 if let earlier = repeated(step) {
                     tell(name, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
                     continue
@@ -326,6 +335,30 @@ public struct AskConversation: Sendable {
             }
         }
         return .again(looks: looks)
+    }
+
+    /// Why an add_drawing call cannot draw, or nil when it can: a thing the
+    /// set has not got needs the model's own SVG, and that SVG has to read.
+    func drawingProblem(_ arguments: AgentJSON) -> String? {
+        let subject = arguments["subject"]?.stringValue ?? ""
+        let builtIn = arguments["builtIn"]?.boolValue ?? true
+        let svg = arguments["svg"]?.stringValue ?? ""
+        if builtIn, let drawings, drawings.match(subject) != nil { return nil }
+        guard !svg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return drawings == nil ? nil : AgentDrawingCall.noBuiltIn(subject)
+        }
+        if case .failure(let trouble) = SVGArtwork.parse(svg) {
+            return "add_drawing: \(trouble.message) Write the whole svg again."
+        }
+        return nil
+    }
+
+    /// The drawing did not read as `subject` to a model that could see it
+    /// (`AskDrawingCheck`): the plan starts again, told what was seen.
+    public mutating func revise(subject: String, seen: String) {
+        steps = []
+        rounds = 0
+        messages.append(["role": "user", "content": .string(AskDrawingCheck.revisionNote(subject: subject, seen: seen))])
     }
 
     /// The step already planned that this one repeats: the same call, or a
@@ -435,6 +468,11 @@ public struct AskConversation: Sendable {
         first. The major elements are the controls (switches, fields, buttons), each measured once, \
         plus at most two cards. Skip rows and strips. Add a gap between a \
         few neighbouring controls. 6 to 12 measurements in all, never the same box twice.
+        - To draw a thing (a dog, a house, a coffee cup, a smiley face, the sun over mountains), call \
+        add_drawing once with its subject, and icon true when an icon was asked for. Photonz has clean drawings \
+        of about a thousand everyday things; when it has none of yours it says so, and you call add_drawing \
+        again with svg, your own drawing as one complete SVG. Never build a drawing from add_shape or add_path, \
+        and put no words, components or backdrop on it unless they were asked for.
         - "On brand" means the document's saved styles and the Library's components, both listed \
         below (the Library always offers starters such as a Card and a Button). Use them: place \
         components rather than drawing look-alikes, and paint with the saved styles. An empty canvas is a place to build, not a reason to refuse.
@@ -495,8 +533,89 @@ public enum AskElements {
     }
 }
 
+/// Ask looking at a drawing it made before it hands back (`docs/design/ask.md`,
+/// "Drawing a thing"): the drawing is shown to a model on this Mac that can
+/// see, with no hint of what was asked, and what it names is checked against
+/// what was asked. A drawing that does not read is drawn again, twice at most.
+public enum AskDrawingCheck {
+
+    /// How many times a drawing that did not read is drawn again.
+    public static let mostRevisions = 2
+
+    /// The plan's drawings: which step, and what it was asked to be.
+    public static func drawings(in plan: AskPlan) -> [(step: Int, subject: String)] {
+        plan.steps.enumerated().compactMap { index, step in
+            guard step.tool == "add_drawing", let subject = step.arguments["subject"]?.stringValue else { return nil }
+            return (index + 1, subject)
+        }
+    }
+
+    public static let visionContextWindow = 4096
+
+    public static let seePrompt = "What does this drawing show? Answer with just the name of the thing, in one to three words."
+
+    /// The request to the model that sees: the picture and the question, nothing more.
+    public static func visionBody(model: String, png: Data) -> AgentJSON {
+        // A small window of its own: one picture and one question. Left out,
+        // Ollama loads the model at its own default, as big as 128k, which
+        // pushes the planning model out of memory on every look.
+        ["model": .string(model), "stream": false, "keep_alive": "30m",
+         "options": ["temperature": 0, "num_ctx": .number(Double(visionContextWindow))],
+         "messages": [["role": "user", "content": .string(seePrompt), "images": [.string(png.base64EncodedString())]]]]
+    }
+
+    /// Words that name no particular thing.
+    static let generic: Set<String> = ["face", "thing", "object", "picture", "drawing", "shape", "icon", "symbol",
+                                       "logo", "image", "illustration", "cartoon", "simple", "emoji", "vector"]
+
+    /// True when what was seen names the thing or a word it is known by; nil
+    /// when it shares no word with it, which the planning model then judges
+    /// (a "puppy" is plainly a dog, a "mouse" plainly not, and a "hound" is
+    /// for a model to say).
+    public static func reads(_ seen: String, as subject: String, library: DrawingLibrary?) -> Bool? {
+        var known = Set(DrawingLibrary.words(subject))
+        if let entry = library?.match(subject) {
+            for label in [entry.name] + entry.aliases + entry.words { known.formUnion(DrawingLibrary.words(label)) }
+        }
+        let saw = Set(DrawingLibrary.words(seen)).subtracting(generic)
+        return saw.isDisjoint(with: known.subtracting(generic)) ? nil : true
+    }
+
+    /// The planning model asked whether what was seen is the thing.
+    public static func judgeBody(model: String, subject: String, seen: String) -> AgentJSON {
+        let question = "Someone was shown a drawing and said it shows: \"\(seen)\". Would most people say it is a drawing of \(subject)? Answer only yes or no."
+        // The planning model's own window, so asking it does not reload it.
+        return ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
+                "options": ["temperature": 0, "num_ctx": .number(Double(AskConversation.contextWindow))],
+                "messages": [["role": "user", "content": .string(question)]]]
+    }
+
+    public static func judged(_ answer: String) -> Bool {
+        AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("yes")
+    }
+
+    static func revisionNote(subject: String, seen: String) -> String {
+        """
+        Someone who could not see this request looked at the drawing and said it shows: "\(seen)". It has to read \
+        at a glance as \(subject), and it was taken back. Draw it again: call add_drawing with subject \
+        "\(subject)", builtIn false, and a new svg. Use bigger, simpler shapes and the parts that make \
+        \(subject) recognisable, in the colours it really has, every part touching the part it belongs to.
+        """
+    }
+}
+
 /// Which model on this Mac answers Ask.
 public enum AskModels {
+
+    /// Models that can see, best first, for Ask's look at a drawing.
+    public static let preferredVision = ["llama3.2-vision:latest", "llama3.2-vision", "llama3.2-vision:11b",
+                                         "qwen2.5vl:7b", "gemma3:12b", "gemma3:27b", "llava:latest"]
+
+    /// The first model on the Mac that can see, or nil (Ask then hands back
+    /// without looking).
+    public static func vision(installed: [String]) -> String? {
+        preferredVision.first { installed.contains($0) }
+    }
 
     /// The default, measured on the user's three try paths (`docs/design/ask.md`):
     /// the first of these the Mac has, in order.

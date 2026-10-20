@@ -21752,3 +21752,18 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Calibrated on the user's verdicts: their dog, smiley and component sheet 1.8, 1.8, 1.4; a clean sheet made by hand through the tools 7.6.
 - Baselines in `queue/evals/ask-eval-history.jsonl`: Ask 37.8 (10.5 min a run), skill 83.9 (24.5 min). Audit `queue/audits/2026-10-20-ask-eval.json`.
 - Next: the dog, component sheet, base components and local-model tasks climb this.
+
+## 2026-10-20 — Ask draws a thing you can tell at a glance
+
+- New agent tool `add_drawing` (Ask and MCP): a thing by name lands as one named
+  group of editable layers, from a built-in set of 992 Twemoji drawings
+  (CC-BY 4.0, `Resources/Drawings`, built by `Scripts/make-drawings.mjs`,
+  credited in Open Source Notices) or from the model's own whole SVG.
+  `SVGArtwork` (PhotonzCore) reads SVG into ovals, boxes and Pen paths;
+  `DrawingLibrary` finds a drawing by everyday words; an icon on a blank picture
+  becomes a 512 point icon frame on its keylines.
+- Ask looks at each drawing with llama3.2-vision before handing back and redraws
+  at most twice (`AskDrawingCheck`), else says it could not and changes nothing.
+- Eval, 13 drawing cases: 35.4 → 92, named blind 1 → 13 of 13, median 18.4 s.
+- Next: things outside the set (lighthouse, windmill) still fail the look; that
+  is `an-illustration-ask-draws-looks-illustrated-natu`.

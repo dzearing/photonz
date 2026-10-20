@@ -1,0 +1,40 @@
+{
+  "feature": "Ask draws a thing you can tell at a glance",
+  "epic": "agent-ask",
+  "summary": "Ask a blank picture for a dog, a cat, a coffee cup or a smiley face icon and you get a clean, recognizable drawing made of editable layers, one group named for the thing. Ask looks at the drawing with a model that can see before it hands back, and draws it again (twice at most) or says it could not.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Needs Ollama with qwen3:30b (Ask's planner) and llama3.2-vision (the look); both are on this Mac. Walk: Scripts/playtest/ask-draws-a-dog-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "File > New Blank Canvas, Desktop size, then press Ask.", "shot": "2026-10-20-ask-draws-a-dog-1-dog-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: draw a picture of a dog. Press Return and wait about 20 seconds." },
+    { "do": "Open the Dog group in Layers and pick an ear or a leg: each part is its own shape." },
+    { "do": "Press Command Z once: the whole dog goes." },
+    { "do": "Press Ask again and type: create a smiley face icon.", "shot": "2026-10-20-ask-draws-a-dog-3-smiley-icon-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Export the icon as SVG and open it: ellipses for the face and eyes, one path for the smile." },
+    { "do": "Ask for something less everyday, a lighthouse, and see what it says." },
+    { "do": "Look at the before and after sheet of all thirteen requests.", "shot": "2026-10-20-ask-drawings-before-after.png" }
+  ],
+  "evaluate": [
+    "Would you show the dog, the cat and the smiley to someone without apologising?",
+    "Is borrowing a clean built-in drawing for an everyday thing what you want, or do you expect Ask to draw it from scratch every time?",
+    "On a blank picture, is turning the whole picture into the 512 point icon frame the right answer to 'make an icon'?",
+    "For a thing it cannot draw well (the lighthouse), is 'I couldn't make a clear drawing of that. Nothing was changed.' better than leaving its best try?",
+    "Is about 18 seconds from Ask to the drawing fast enough?"
+  ],
+  "measured": {
+    "eval": "Scripts/ask-eval.sh, the 13 drawing cases, each on a blank 1440 x 1024 picture at Next defaults, judged blind by a model that did not draw it (3 looks each)",
+    "before": { "run": "20261020-165619-ask", "drawingScore": 35.4, "namedBlind": "1 of 13 (2 by a majority of the three looks)", "medianSeconds": 18.9 },
+    "after": { "run": "20261020-190551-ask", "drawingScore": 92, "namedBlind": "13 of 13 (coffee cup 2 of 3: the third look said hot coffee)", "medianSeconds": 18.4, "secondsEach": { "dog": 19.8, "smiley-icon": 16.8, "cat": 24, "house": 18.5, "tree": 15.7, "car": 20.8, "bicycle": 20.4, "coffee-cup": 25.2, "fish": 18.4, "bird": 14.2, "rocket": 17.8, "flower": 16.3, "sun-over-mountains": 16.3 } },
+    "rules": "Every after case scored 10 of 10 on the read document: on the canvas, centred, no stray words; the smiley icon has 2 eyes and a mouth, each inside the face, on a square canvas.",
+    "offTheSet": "Things the built-in set lacks (run 20261020-185749-ask, not kept in the history): a giraffe wearing a scarf read right first time; a lighthouse and a windmill were drawn three times by the model and refused by the look each time, so Ask said it could not and changed nothing (179 s and 107 s)."
+  },
+  "rough": [
+    "No mock covers what a drawing looks like; the Ask panel and composer are unchanged apart from the closing sentence when a drawing does not read.",
+    "Things outside the built-in set are still weak: the local model's own SVG of a lighthouse or a windmill never read as one, and three tries take up to three minutes before Ask gives up. Folded into an-illustration-ask-draws-looks-illustrated-natu, which already asks for a lighthouse and a fox drawn with craft.",
+    "Everyday things come from Twemoji's drawings (CC-BY 4.0, credited in Open Source Notices), so a dog looks like the emoji dog. They are full drawings made of shapes, recolourable part by part, not pictures.",
+    "The Agent row reads 'Drew a drawing' rather than naming the thing.",
+    "Parts of a built-in drawing are named only for faces (Face, Left eye, Right eye, Mouth); a dog's parts are Dog 1 to Dog 12.",
+    "The first look after the Mac has been idle takes about 12 seconds while the seeing model loads; after that a look is a few seconds.",
+    "Networking off was checked by construction, not by pulling the cable: Ask calls only 127.0.0.1 (Ollama), and the drawings ship inside the app. The eval's judge needs the network, Ask does not."
+  ]
+}

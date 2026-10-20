@@ -102,6 +102,51 @@ change click.
 Rows last for the window's session, beside the undo history they lean on:
 they hold whole document snapshots, which have no place in the saved file.
 
+## Drawing a thing
+
+"Draw a dog", "create a smiley face icon": one `add_drawing` call, never a
+pile of `add_shape` and `add_path` calls placed blind (that is what drew the
+user's dog as brown shards on 2026-10-20, and the smiley with its eyes above its
+head).
+
+* **The built-in set first.** `Resources/Drawings/drawings.json` holds 992 clean
+  flat drawings of everyday things: the Twemoji graphics (CC-BY 4.0, credited in
+  Open Source Notices, licence beside the file), named and given the words
+  people use from Unicode's CLDR, plus a hand list of everyday words where the
+  name is not one ("car" is "automobile", a coffee cup is "hot beverage").
+  `Scripts/make-drawings.mjs` builds it; `DrawingLibrary.match` finds in it.
+* **The model's own SVG otherwise.** When the set has nothing, the call goes
+  back to the model while it is still planning and it writes ONE whole SVG
+  (a model writes a picture far better at once than as twenty separate shapes).
+* **As layers, never a picture.** `SVGArtwork` reads the SVG (paths with every
+  command and arcs, circles, ellipses, rects, polygons, groups, transforms,
+  fill rules, a gradient's first colour): circles and ellipses become oval
+  layers, boxes rectangles, the rest Pen paths with their curves and holes. The
+  parts go in one group named for the thing; a face's parts are named Face,
+  Left eye, Right eye, Mouth from where they sit (`FaceParts`). One Command Z
+  takes the lot.
+* **Placed.** Centred, 60 per cent of the canvas's shorter side, or in the box
+  asked for, kept on the canvas. An icon is a 512 point icon frame with the
+  drawing on its live area (the keylines); on a blank picture (nothing but its
+  flat background) the picture becomes that frame.
+* **Looked at before it hands back** (`AskDrawingCheck`). The drawing is
+  rendered and shown, with no hint of the request, to a model on this Mac that
+  can see (`llama3.2-vision`, first of `AskModels.preferredVision`). If what it
+  names shares a word with the thing, it reads; if not, the planning model says
+  yes or no. A miss is taken back and drawn again, told what was seen, at most
+  twice; then Ask says "I couldn't make a clear drawing of that. Nothing was
+  changed." No model that can see: Ask hands back without looking.
+
+Both models are asked with their window size pinned (32k planning, 4k
+looking): left out, Ollama loads them at its own default (128k), which swaps
+the planning model out on every look.
+
+Measured 2026-10-20 (M4 Max, 64 GB, `Scripts/ask-eval.sh`, the 13 drawing
+cases): drawing score 35.4 before, 92 after; named right blind 1 of 13 before,
+13 of 13 after; median 18.4 s from Ask to the finished drawing. Things the set
+does not have are where it is still weak: a lighthouse and a windmill were
+each drawn three times by the model and refused by the look.
+
 ## The model
 
 Runtime: **Ollama**, on its loopback port (`127.0.0.1:11434`), the only address
@@ -132,6 +177,8 @@ Agent group.
   "add a title page that says Case 1 before this clip".
 * `Scripts/playtest/ask-makes-a-pricing-section-walk.json`: a blank canvas,
   "Make a pricing section on brand".
+* `Scripts/playtest/ask-draws-a-dog-walk.json`: a blank canvas, "draw a picture
+  of a dog." (one Command Z takes it back), then "create a smiley face icon".
 
 Each presses the Ask button, types, sends, waits for `ran`, then undoes and
 redoes the request, turns its row off and on with the switch, deletes it, and

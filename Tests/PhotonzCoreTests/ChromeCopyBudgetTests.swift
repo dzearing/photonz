@@ -48,7 +48,7 @@ struct ChromeCopyBudgetTests {
     static func isChromeFile(_ name: String) -> Bool {
         guard name.hasSuffix(".swift"), !PanelCopyBudgetTests.isPanelFile(name) else { return false }
         let plumbing = ["EditorState", "Dialog", "Store", "Experiments", "AppCoordinator", "Updater",
-                        "UpdateChecker", "OpenSourceNotices", "AppInfo", "AppRelauncher", "WindowController",
+                        "UpdateChecker", "OpenSourceNotices", "DrawingSetNotice", "AppInfo", "AppRelauncher", "WindowController",
                         "PhotonzApp", "WindowCloseConfirmation", "EditorCommands", "VideoEditorState",
                         "MainMenuState"]
         return !plumbing.contains { name.hasPrefix($0) || name.contains($0) }
