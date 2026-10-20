@@ -366,6 +366,21 @@ settle_leftovers() { # $1 = kind (task|digest|manager), $2 = task id or "-", $3 
   return 0
 }
 
+# The queue's own records (task status and logs, cards, history) are written by
+# queue.mjs all through a task and nothing committed them, so they sat in the
+# tree for hours: on 2026-10-19 the user saw "9 files changed" while the loop
+# said "between tasks" and took it for stuck work. Commit them once the task is
+# settled, so a dirty tree between tasks only ever means real leftovers.
+commit_queue_records() { # $1 = label
+  (( SANDBOX == 0 )) || return 0
+  local paths=(queue/tasks queue/decisions queue/history.jsonl)
+  git add -A -- "${paths[@]}" >> "$LOG" 2>&1 || return 0
+  git diff --cached --quiet -- "${paths[@]}" && return 0
+  git commit -q -m "queue: task records after ${1:-a pass}" -- "${paths[@]}" >> "$LOG" 2>&1 \
+    && echo "[go-loop] $(date +%T) committed the queue's task records" | tee -a "$LOG"
+  return 0
+}
+
 # ---- holding the Mac awake for as long as the loop is working --------------
 #
 # The user answered a card on 2026-09-20 asking whether the loop should stop
@@ -795,6 +810,7 @@ TASK FILE: $TASK_FILE" "$SESSION"
   # ...and this catches anything it left CHANGED. Before the next task is
   # claimed, so that task starts from a tree it owns.
   settle_leftovers task "$TASK_ID" "$OUTCOME" "$TASK_TITLE"
+  commit_queue_records "$TASK_TITLE"
   keep_sweep_size_true
   # Runners push their own commits; this catches anything they left behind.
   [[ $SANDBOX == 0 ]] && { git push -q origin main >> "$LOG" 2>&1 || true; }
