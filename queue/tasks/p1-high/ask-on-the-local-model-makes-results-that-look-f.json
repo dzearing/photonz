@@ -9,15 +9,14 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-20T19:51:56.705Z",
+  "updated": "2026-10-20T23:30:20.564Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
   "acceptance": [
     "Ask 'Make a pricing section on brand' on a blank canvas: each plan's words land inside the placed cards (their own text, not new text laid over them), the cards sit in one evenly spaced row, and no text overlaps another layer, checked against the read document",
-    "Ask 'annotate the ux with measurements around the major ui elements' on the settings screenshot: every measured box is a control or card (no full-width rows), no two readouts overlap, and every size lands on real edges",
     "Ask looks at its own result before it hands back (a picture through a model that can see, or a check of the read document) and fixes what it finds, or says in one short sentence what it could not do",
-    "Audit with before and after pictures for both requests, run with no switch changed"
+    "Audit with before and after pictures for the pricing request, run with no switch changed"
   ],
   "log": [
     {
@@ -63,6 +62,10 @@
     {
       "t": "2026-10-20T19:51:56.703Z",
       "note": "from ask-draws-a-dog (2026-10-20): a look step exists now for drawings: AskSession.look renders what a step made, asks llama3.2-vision (AskModels.vision, AskDrawingCheck.visionBody, 4k window) and on a miss undoes and replans with what was seen (AskConversation.revise). Reuse it for the pricing section and the measurements rather than building a second one. Pin num_ctx on every Ollama call: left out, Ollama loads at 128k and swaps the planner out on every look."
+    },
+    {
+      "t": "2026-10-20T23:30:20.564Z",
+      "note": "intake: the measurements half moved to measuring-a-ui-gives-a-calm-redline-each-kind-of (the user called it way too noisy); this task keeps the pricing section"
     }
   ],
   "walks": [

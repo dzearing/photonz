@@ -1,0 +1,34 @@
+{
+  "id": "measuring-a-ui-gives-a-calm-redline-each-kind-of",
+  "title": "Measuring a UI gives a calm redline: each kind of thing measured once, readouts that never collide",
+  "goal": "Asking to 'annotate the ux with measurements around the major ui elements' should give what a designer would hand a developer: one measurement of each kind of control, the spacing that matters (outer padding, row height, the gap between sections and between buttons), readouts placed in the margins on clean leader lines, and nothing stacked or repeated. Today it measures the same toggle four times and piles readouts on top of each other.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 8.046,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T23:30:13.542Z",
+  "updated": "2026-10-20T23:30:20.630Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20 (queue/audits/2026-10-20-user-ask-measurements-noisy.png): 'when you say \"annotate the ux with measurements around the major ui elements\", it is way too noisey.' Seen in the picture: 12 measurements; the 42 x 24 toggle measured four times; readouts '42 px' stacked on '42 px' and '24 px' on '44 px'; two 656 px full-width lines; 220 px on both fields; dimension boxes running past the content to the right edge; readouts sitting over the toggles and the field.\n\nThe eval already shows it is not only the model: the skill on a frontier model scored the same case 62.8 with the judge at 3.8 for crowding (queue/evals/ask-eval-history.jsonl). So the fix belongs in code: MeasurePlan.swift (what to measure), MeasureSizeGroup.swift (repeats), MeasureLabelPlacement.swift (where readouts go). Moved here from ask-on-the-local-model-makes-results-that-look-f, which keeps the pricing half. Shares grouping with find-the-misalignments-marks-every-inconsistent (runs just before): reuse its 'things that should agree' groups to pick one of each.",
+  "acceptance": [
+    "Repeated things are measured once: the four toggles, the two fields, the rows of a list each get one size readout (on the first one, or the clearest), and a repeat that differs is left to 'find the misalignments' rather than measured again",
+    "What is measured follows a redline order: one of each kind of control (size), then the spacing that defines the layout (outer padding, row height or rhythm, section gap, gap between neighbouring buttons, label to control inset). No full-width rows, no measurement of a whole card's width unless asked. About 6 to 10 marks on the settings screenshot, chosen by code from the Measure tool's boxes, the model only confirming",
+    "Zero readouts overlap each other or sit over text or a control, measured from the read document; readouts sit outside the content where there is room, on leader lines that do not cross each other; dimension lines never draw stray boxes past what they measure (the user's picture shows lines running off to the right edge)",
+    "Units match the picture: points on a 2x screenshot unless the person asked for pixels, said once in the row",
+    "The user's picture (queue/audits/2026-10-20-user-ask-measurements-noisy.png) scores 3 or lower on clean in the eval; the settings measurements case reaches 8 or more on clean and aligned for Ask and for the skill",
+    "The same placement serves the Measure tool when a person places many measurements by hand. Audit under queue/audits/ with before and after on the settings screenshot and two more real screenshots. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T23:30:13.544Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T23:30:20.629Z",
+      "note": "seq 3970 -> 8.046"
+    }
+  ]
+}
