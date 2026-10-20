@@ -1817,6 +1817,11 @@
       if (!byId[a.id]) { byId[a.id] = { area: a, rows: [] }; groups.push(byId[a.id]); }
       byId[a.id].rows.push(row);
     });
+    // The part of the app in focus leads, whatever landed last: on 2026-10-20
+    // the user found no AI reports here because a dozen video ones sat above
+    // them. The rest keep newest-first order.
+    var focusArea = S.objectives && S.objectives.focus ? areaOf(map, S.objectives.focus).id : null;
+    groups.sort(function (x, y) { return (y.area.id === focusArea) - (x.area.id === focusArea); });
     var h = '';
     groups.forEach(function (g) {
       h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-layers"></i><h3>' + esc(g.area.title) + '</h3>' +

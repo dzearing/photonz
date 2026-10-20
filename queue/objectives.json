@@ -1,6 +1,6 @@
 {
-  "updated": "2026-10-19T14:42:47.939Z",
-  "focus": "video-editing",
+  "updated": "2026-10-20T14:35:29.544Z",
+  "focus": "agent-drivable",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
     "Every area of the window has one purpose, and everything in it serves that purpose. Putting a control in an area whose purpose it does not share (zoom in the tool bar, a meter in the timeline bar, a sentence in the chrome) confuses people, however useful the control is. Elegant, easy to understand and sensible to an end user beats complete. (The user, 2026-09-29.)",
@@ -12,6 +12,75 @@
     "A feature exists only if a person running Next with default settings can reach it. A walk that forces a flag proves nothing about what the user sees."
   ],
   "epics": [
+    {
+      "id": "agent-drivable",
+      "title": "Make Photonz completely drivable by an AI agent",
+      "note": "The UI == API == agent thesis made real: every command the UI can issue is one call an agent can issue, exposed through skills and an MCP plugin. The Ask surface (command palette = agent chat) is the in-app face of the same calls.",
+      "stage": "now",
+      "children": [
+        {
+          "id": "agent-api",
+          "title": "One command surface: everything the UI does is one API call",
+          "note": "",
+          "stage": "now",
+          "children": [],
+          "success": [
+            "A test lists every command the app can run (menus, panels, right-click menus) and fails for each one an agent cannot issue, with a short written list of the ones left out on purpose",
+            "Each agent step lands in the same undo history as a click, so one Command Z undoes one step"
+          ]
+        },
+        {
+          "id": "agent-mcp",
+          "title": "MCP plugin: the full command surface as agent tools",
+          "note": "",
+          "stage": "now",
+          "children": [],
+          "success": [
+            "The MCP server installs with one command, drives the open document in the running app, and returns both a structured read of the document and a rendered picture or video frame so the model can check its work"
+          ]
+        },
+        {
+          "id": "agent-skills",
+          "title": "Skills for real workflows: capture, measure, spec, export",
+          "note": "",
+          "stage": "now",
+          "children": [],
+          "success": [
+            "The Photonz skill, used alone in a fresh session, gets the four user scenarios done without the person explaining how the app works"
+          ]
+        },
+        {
+          "id": "agent-ask",
+          "title": "Ask in-app: chat and command palette issue the same calls",
+          "note": "",
+          "stage": "now",
+          "children": [],
+          "success": [
+            "The Ask button and Command K take a plain request, show a readable plan of commands, run it on Run plan, and undo it with one Command Z, on a local model with networking off",
+            "No model choice appears anywhere in the ask flow; which models answer is set in Settings and works out of the box"
+          ]
+        }
+      ],
+      "success": [
+        "From a fresh Claude Code session with only the Photonz skill and MCP server, the four scenarios in task claude-can-make-and-edit-pictures-and-videos-in finish end to end (the Case 1 to 5 montage, the box in a cloud icon, measurements on an open screenshot, a website design system rebuilt as Library components) and the results are in an audit with pictures the user can look at",
+        "Ask in the app does the same kind of work on a local model, offline, with no model to pick while asking",
+        "A person can press Ask in the app and get a real change made to whatever is open (a picture, a video, a screenshot, a page of components) and it looks right, not half done"
+      ],
+      "spec": {
+        "mocks": [
+          "agent-generate-wt.html: the Ask flow, title bar Ask and Command K, plan in the Agent group of the dock, Run plan, one undo (built WITHOUT the model picker rows, the user overrode those on 2026-10-19)",
+          "agent.html, agent-edit.html, agent-variations.html: the agent surfaces",
+          "comp-agent.html: the agent controls as components"
+        ],
+        "competitors": [
+          "Figma Make and Figma AI: describe a page and get editable layers on your own design system",
+          "Canva Magic Design and Magic Edit: a plain request changes what is open",
+          "Photoshop generative fill and the Firefly assistant: a request lands as ordinary, undoable layers",
+          "Claude Code with an MCP server: the external agent path, which must do everything a click can"
+        ],
+        "workflow": "Open a screenshot and press Ask: \"annotate the ux with measurements around the major ui elements\". Then on a video: \"add a title page that says Case 1 before this clip\". Then on a blank picture with a design system: \"make a pricing section on brand\". Run each plan, judge whether the result is what a person would have made, undo it with one Command Z. Count the steps and note every place it stalls, refuses, or does something half right."
+      }
+    },
     {
       "id": "interaction-foundations",
       "title": "Interaction foundations: the primitives everything sits on",
@@ -446,60 +515,6 @@
         ],
         "workflow": "Capture a region of a window, measure a button's size and the gap to its neighbour, add an arrow with a caption, redact a value, and copy the spec list and the picture to hand off."
       }
-    },
-    {
-      "id": "agent-drivable",
-      "title": "Make Photonz completely drivable by an AI agent",
-      "note": "The UI == API == agent thesis made real: every command the UI can issue is one call an agent can issue, exposed through skills and an MCP plugin. The Ask surface (command palette = agent chat) is the in-app face of the same calls.",
-      "stage": "now",
-      "children": [
-        {
-          "id": "agent-api",
-          "title": "One command surface: everything the UI does is one API call",
-          "note": "",
-          "stage": "now",
-          "children": [],
-          "success": [
-            "A test lists every command the app can run (menus, panels, right-click menus) and fails for each one an agent cannot issue, with a short written list of the ones left out on purpose",
-            "Each agent step lands in the same undo history as a click, so one Command Z undoes one step"
-          ]
-        },
-        {
-          "id": "agent-mcp",
-          "title": "MCP plugin: the full command surface as agent tools",
-          "note": "",
-          "stage": "now",
-          "children": [],
-          "success": [
-            "The MCP server installs with one command, drives the open document in the running app, and returns both a structured read of the document and a rendered picture or video frame so the model can check its work"
-          ]
-        },
-        {
-          "id": "agent-skills",
-          "title": "Skills for real workflows: capture, measure, spec, export",
-          "note": "",
-          "stage": "now",
-          "children": [],
-          "success": [
-            "The Photonz skill, used alone in a fresh session, gets the four user scenarios done without the person explaining how the app works"
-          ]
-        },
-        {
-          "id": "agent-ask",
-          "title": "Ask in-app: chat and command palette issue the same calls",
-          "note": "",
-          "stage": "now",
-          "children": [],
-          "success": [
-            "The Ask button and Command K take a plain request, show a readable plan of commands, run it on Run plan, and undo it with one Command Z, on a local model with networking off",
-            "No model choice appears anywhere in the ask flow; which models answer is set in Settings and works out of the box"
-          ]
-        }
-      ],
-      "success": [
-        "From a fresh Claude Code session with only the Photonz skill and MCP server, the four scenarios in task claude-can-make-and-edit-pictures-and-videos-in finish end to end (the Case 1 to 5 montage, the box in a cloud icon, measurements on an open screenshot, a website design system rebuilt as Library components) and the user judges the results on a decision card",
-        "Ask in the app does the same kind of work on a local model, offline, with no model to pick while asking"
-      ]
     },
     {
       "id": "image-editing",
