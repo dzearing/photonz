@@ -1,0 +1,34 @@
+{
+  "feature": "The Photonz skill: an agent makes and edits pictures and videos in Photonz",
+  "epic": "agent-skills",
+  "summary": "Photonz now ships a skill beside its MCP server, so an agent in a fresh session, told nothing about the app, did all four of your scenarios in the open Photonz: the Case 1 to 5 montage, the box in a cloud SVG, measurements on an open screenshot, and GOV.UK's design system as Library components with Hacker News rebuilt in it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Run Scripts/install-mcp.sh once (it registers the server and links the skill), then start a fresh claude session in any folder. Or, without installing: claude --plugin-dir <repo>/plugin. Every run's transcript is in 2026-10-19-agent-skill-transcript.md.",
+  "switched": {},
+  "try": [
+    { "do": "In a fresh session, say: I made 5 clips in my history. Take the last 5, and create a video montage which has a title page, and subtitle pages per clip with nice consistent layout and transitions. I want to see clips with recommended zooms. Each subtitle should show Case N where n is the clip number (1 through 5).", "shot": "2026-10-19-agent-skill-1-first-36s.jpg", "shotNote": "Frames of the MP4 the agent exported, one every 1.5 s over the first 36 s, not a capture of the window. The film is 2026-10-19-agent-skill-1-montage.mp4 (480p copy)." },
+    { "do": "Say: Create a product icon svg of a box inside of a cloud.", "shot": "2026-10-19-agent-skill-2-icon-rendered.png", "shotNote": "The SVG the agent exported (2026-10-19-agent-skill-2-icon.svg), drawn by Quick Look, not by Photonz." },
+    { "do": "Open a UI screenshot in Photonz, then say: annotate the ux with measurements around the major ui elements.", "shot": "2026-10-19-agent-skill-3-measure-after.png", "shotNote": "The canvas drawn by Photonz's own renderer after the agent's run; the screenshot before it is 2026-10-19-agent-skill-3-measure-before.png." },
+    { "do": "Pick any of the agent's measurements in the Layers list and drag its end: it is an ordinary measurement, editable like one you placed." },
+    { "do": "Say: Here is a website: https://www.gov.uk. Build out the components you see on it and recreate its design system in Photonz. Then rebuild https://news.ycombinator.com in that design language.", "shot": "2026-10-19-agent-skill-4-design-system.png", "shotNote": "The agent's export of its board. The page it read is 2026-10-19-agent-skill-4-source-govuk.png." },
+    { "do": "Open the Library on Components and Styles: the eight components and the GOV.UK colours and type are there by name.", "shot": "2026-10-19-agent-skill-4-hacker-news-top.png", "shotNote": "The top of the agent's rebuilt Hacker News page, exported by the agent; the whole page is 2026-10-19-agent-skill-4-hacker-news-page.png." },
+    { "do": "Press Command Z once after any single step the agent took and see exactly that step come off." }
+  ],
+  "evaluate": [
+    "Does the montage read as one designed piece, the same page style and dissolve throughout, or would you want a calmer page style than Keynote Clean as the agent's default?",
+    "Is the box in a cloud icon the quality you would expect from asking for a product icon?",
+    "Do the eight measurements on the settings screenshot pick the elements you would have measured, and are the readouts placed where you can read them?",
+    "Does the Hacker News rebuild look like GOV.UK built it, and are the components the ones you would have made from that page?",
+    "Would you install this with one command from the repo, or do you want it shipped inside the app before you use it?"
+  ],
+  "rough": [
+    "No mock covers the agent tools or the skill: they have no surface of their own, and every step lands in the editor as the menu row or panel control it maps onto does.",
+    "No window captures: every picture here is a file the agent exported or a canvas drawn by Photonz's own renderer, because what an agent makes is the file. Scenario 3's earlier window captures are in 2026-10-19-agent-drawing.json.",
+    "The montage's pages use Keynote Clean, whose background still draws hard rectangles round its glows; that is the-keynote-clean-title-page-draws-its-starfield.",
+    "Measurement readouts crowd beside the two buttons and down the right edge when several elements are measured at once; that is the Measure tool's own readout placement, the same for a person (logged on an-agent-can-draw-a-picture-with-shapes-paths-te).",
+    "Text cannot be underlined, so the agent drew 1 pt lines under GOV.UK's links; they will not follow the words if they change. Filed as words-can-be-underlined-and-the-underline-follow.",
+    "Scenario 4's run detached its thirty list rows from the List Row component to word them (setting words inside a copy silently did nothing then). Fixed after the run: words now land on that copy alone and it keeps following its original; Scripts/agent-design-drill.mjs proves it, but scenario 4 was not run a second time.",
+    "GOV.UK's own font is not on the Mac, so the system is set in Arial, the fallback gov.uk's stylesheet names.",
+    "The install is a developer's: it needs this repo checked out. Shipping the bridge and skill inside the app is not done (design doc, Not in this slice).",
+    "Coverage: 284 menu bar rows, 215 run by name, 68 left out on purpose with their reasons, none still to do; 57 of 65 timeline right-click rows run a named command; 214 named commands plus 34 typed tools. Panel controls are reached through the typed tools (set_layer, set_layout, apply_style, set_transition and the rest) but no test counts them yet."
+  ]
+}

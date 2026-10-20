@@ -1086,6 +1086,14 @@ extension EditorState {
         if let instance { selectLayer(instance, inGroup: document?.parentID(of: instance)) }
     }
 
+    /// An agent's words over a piece (`set_layer` text): the same landing,
+    /// with Make Adjustable pressed first when the original has no knob for
+    /// it, since an agent cannot press it (`agentWordCopyPiece`).
+    func commitPieceWordingForAgent(of id: UUID, to string: String) {
+        guard componentsEnabled else { return }
+        perform(announcing: false) { _ = $0.agentWordCopyPiece(id, to: string) }
+    }
+
     /// Whether Make Its Wording a Property would do anything for this piece.
     func canExposePieceWording(of id: UUID) -> Bool {
         guard componentsEnabled else { return false }

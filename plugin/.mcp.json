@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "photonz": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/../Scripts/photonz-mcp.sh"
+    }
+  }
+}

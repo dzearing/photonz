@@ -83,10 +83,10 @@ enum AgentDrawingWork {
         let canUndo: Bool
     }
 
-    private static func drawn(_ id: UUID, in editor: EditorState) -> Answer {
+    static func drawn(_ id: UUID, in editor: EditorState) -> Answer {
         let layer = editor.document?.layer(id: id)
         // A group's stored size is unused; its box is what it holds.
-        let box = layer.map { $0.isGroup ? $0.localBounds.offsetBy(dx: $0.frame.minX, dy: $0.frame.minY) : $0.frame }
+        let box = layer.map(AgentDrawing.box(of:))
         return .json(Drawn(layer: id.uuidString, name: layer?.name ?? "",
                            frame: Box(box ?? .zero), canUndo: editor.canUndo))
     }
@@ -125,6 +125,26 @@ enum AgentDrawingWork {
             throw Failure("There is no layer \(layer) in this document. read_document lists the layer ids.")
         }
         guard !was.isLocked else { throw Failure("\(was.name) is locked. Unlock it with run_command lock_layer, on false.") }
+        // A piece inside a component copy is rebuilt from its original after
+        // every edit, so writing onto it would answer "done" and change
+        // nothing. Its words land where typing over it lands; anything else
+        // about it is the original's.
+        if let piece = document.componentPiece(of: id) {
+            let onlyWords = change.text != nil && !change.movesOrSizes && change.name == nil && change.visible == nil
+                && change.fontSize == nil && change.look == AgentLook()
+            let original = document.mainComponent(componentID: piece.componentID)?.name ?? "its original"
+            guard onlyWords, let words = change.text else {
+                throw Failure("\(was.name) is part of a copy of \(original), and everything but its words follows the original. Change the original with run_command edit_original (every copy follows), or run_command make_unique on the copy to stop it following.")
+            }
+            var trial = document
+            switch trial.agentWordCopyPiece(id, to: words) {
+            case .refused(let why): throw Failure(why)
+            case .notAPiece: break
+            case .landed:
+                editor.asOneUndoStep { editor.commitPieceWordingForAgent(of: id, to: words) }
+                return drawn(id, in: editor)
+            }
+        }
         let changed = try AgentDrawing.applying(change, to: was, canvas: document.canvasSize).get()
         let title = document.titleLayerID(containing: id)
         editor.asOneUndoStep {

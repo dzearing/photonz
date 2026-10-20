@@ -27,7 +27,7 @@ public enum AgentRequest: Hashable, Sendable {
     case listDocuments
     case listHistory(limit: Int)
     case openDocument(OpenTarget)
-    case readDocument(document: String?)
+    case readDocument(document: String?, layer: String?)
     case renderPicture(document: String?, layer: String?, region: CGRect?, maxSize: Int)
     case videoFrame(document: String?, atMS: Int, region: CGRect?, maxSize: Int)
     case contactSheet(document: String?, fromMS: Int?, toMS: Int?, count: Int, columns: Int?, cellWidth: Int)
@@ -62,6 +62,11 @@ public enum AgentRequest: Hashable, Sendable {
     case applyZooms(document: String?, clip: String?)
     case setPlayhead(document: String?, atMS: Int)
     case exportVideo(document: String?, path: String, size: VideoExportSize, quality: VideoExportQuality)
+    // Design systems (`AgentDesign.swift`)
+    case listStyles(document: String?)
+    case addStyle(document: String?, style: AgentNewStyle)
+    case applyStyle(document: String?, style: String, layers: [String], part: AgentStylePart?)
+    case setLayout(document: String?, layer: String, change: AgentLayoutChange)
 }
 
 /// Why a call was refused, in one sentence a model can act on.
@@ -85,7 +90,8 @@ public struct AgentToolError: Error, Hashable, Sendable {
 /// tool's own measurements and Library components, and exports the result
 /// (`AgentDrawing.swift`). The fourth cuts a video from History recordings
 /// with titles, transitions and recommended zooms, and writes an MP4
-/// (`AgentVideo.swift`).
+/// (`AgentVideo.swift`). The fifth builds a design system: named colours and
+/// type on the Styles shelf, and the spacing groups keep (`AgentDesign.swift`).
 public enum AgentTools {
 
     /// How big a picture comes back unless asked otherwise: big enough to read
@@ -188,8 +194,11 @@ public enum AgentTools {
             ])),
         AgentTool(
             name: "read_document",
-            description: "The document as structured data: canvas, layers top first with frames, text and styles, and on a video the tracks with each clip's times, the cuts with their transitions, markers and the playhead. Times are in seconds.",
-            inputSchema: schema(["document": documentProperty])),
+            description: "The document as structured data: canvas, layers top first with frames (a group's is the box it covers; the layers inside a group are measured from the group's top left), text, styles and a group's layout, and on a video the tracks with each clip's times, the cuts with their transitions, markers and the playhead. Times are in seconds.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "layer": ["type": "string", "description": "Only this layer and everything inside it, listed in full. Use it for a group or component when the whole read stops listing (past 400 layers)."],
+            ])),
         AgentTool(
             name: "render_picture",
             description: "A PNG of the canvas as it is now (a video at its playhead), or of one layer alone in place, or of one region. Use it to check your work.",
@@ -247,7 +256,7 @@ public enum AgentTools {
                 "command": ["type": "string", "description": "The command's name from list_commands, such as split_at_playhead."],
                 "arguments": ["type": "object", "description": "The command's arguments, as list_commands gives them."],
             ], required: ["command"])),
-    ] + drawingTools + videoTools
+    ] + drawingTools + videoTools + designTools
 
     /// Slice 3: build a picture out of real layers and export it.
     static let drawingTools: [AgentTool] = [
@@ -407,7 +416,7 @@ public enum AgentTools {
                 return .failure(AgentToolError("open_document: give either path or historyIndex, not both and not neither."))
             }
         case "read_document":
-            return .success(.readDocument(document: document))
+            return .success(.readDocument(document: document, layer: args["layer"]?.stringValue))
         case "render_picture":
             return .success(.renderPicture(document: document, layer: args["layer"]?.stringValue,
                                            region: region(args["region"]), maxSize: maxSize))
@@ -441,6 +450,8 @@ public enum AgentTools {
             return drawingRequest(name, args, document: document)
         case _ where videoToolNames.contains(name):
             return videoRequest(name, args, document: document)
+        case _ where designToolNames.contains(name):
+            return designRequest(name, args, document: document)
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }
@@ -613,10 +624,23 @@ public enum AgentTools {
 }
 
 /// The small part of JSON Schema the tools use: types, required properties,
-/// no extra properties, and numeric bounds.
+/// no extra properties, numeric bounds, and anyOf.
 enum AgentSchema {
     static func problem(with value: AgentJSON, against schema: AgentJSON, at path: String) -> String? {
         let name = path.isEmpty ? "the arguments" : path
+        // One of several shapes (a padding that is one number or four sides,
+        // a size that is points or hug): it has to fit at least one.
+        if let options = schema["anyOf"]?.arrayValue {
+            guard options.allSatisfy({ problem(with: value, against: $0, at: path) != nil }) else { return nil }
+            let said = options.map { option -> String in
+                if let words = option["enum"]?.arrayValue?.compactMap(\.stringValue), !words.isEmpty {
+                    return words.joined(separator: " or ")
+                }
+                let type = option["type"]?.stringValue ?? "value"
+                return "\(article(type)) \(type)"
+            }
+            return "\(name) should be \(said.joined(separator: " or "))."
+        }
         if let type = schema["type"]?.stringValue, !matches(value, type) {
             return "\(name) should be \(article(type)) \(type), not \(article(value.typeName)) \(value.typeName)."
         }

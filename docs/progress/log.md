@@ -21707,3 +21707,12 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Proof: `Scripts/agent-video-drill.mjs` 14 of 14 one undo step; scenario 1 (Case 1 to 5 montage) run three times from fresh sessions, the last with no workarounds; audit `queue/audits/2026-10-19-agent-video.json`; Scripts/test.sh 13,878 green.
 - Filed: the Keynote Clean starfield draws hard rectangles (p1, reproduced); whether a new video should keep its length once a title goes on it (p2).
 - Next: `claude-can-make-and-edit-pictures-and-videos-in` (the skill, scenario 4, the four scenarios rerun).
+
+## 2026-10-19 — The Photonz skill, the design-system tools, and the four scenarios (agent MCP finished)
+
+- Four design tools: `list_styles`, `add_style`, `apply_style` (named colours and text styles on the Library's Styles shelf, put on layers by name) and `set_layout` (a group as a stack or grid with gap, padding and size). Pure half `PhotonzCore/AgentDesign.swift`, app half `Agent/AgentDesignWork.swift`; `read_document` shows a group's layout and takes a `layer` to read one subtree in full.
+- Fixed for agents: a group was read as its unused 0 x 0 frame and answered at twice its position; words set inside a component copy answered "done" and changed nothing (now they land on that copy's own wording answer, as typing does).
+- The skill is `plugin/skills/photonz/SKILL.md` in a Claude Code plugin (`plugin/`); `Scripts/install-mcp.sh` registers the server and links the skill. `Scripts/agent-transcript.mjs` turns a run into an audit transcript.
+- Proof: `Scripts/agent-design-drill.mjs` 18 of 18 one undo step; Scripts/test.sh 13,898 green; all four scenarios from fresh sessions with only the skill and the server, audit `queue/audits/2026-10-19-agent-skill.json`.
+- Filed: words can be underlined (p2, ui-components). No decision card: the user's 2026-10-19 rule puts looks in the audit.
+- Next: the focus (video editing); the agent install shipping inside the app is still open in the design doc.

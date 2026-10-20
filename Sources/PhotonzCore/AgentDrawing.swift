@@ -179,7 +179,7 @@ public struct AgentLayerChange: Hashable, Sendable {
         self.fontSize = fontSize
     }
 
-    var movesOrSizes: Bool { x != nil || y != nil || width != nil || height != nil }
+    public var movesOrSizes: Bool { x != nil || y != nil || width != nil || height != nil }
     /// Whether the words or their size changed, so the box has to be measured again.
     public var changesTheWords: Bool { text != nil || fontSize != nil }
 }
@@ -304,12 +304,19 @@ public enum AgentDrawing {
 
     /// A set_layer call landed on `layer`, or the sentence saying why it cannot.
     /// The words of a text layer are changed here; the app measures their box.
+    /// Where a layer is, in its parent's space: a leaf's frame, a group's
+    /// box (what it holds plus its padding, from its anchor; a group's stored
+    /// size is unused). `localBounds` is already in the parent's space, so it
+    /// is never shifted by the anchor again.
+    public static func box(of layer: Layer) -> CGRect {
+        layer.isGroup ? layer.localBounds : layer.frame
+    }
+
     public static func applying(_ change: AgentLayerChange, to layer: Layer,
                                 canvas: CGSize?) -> Result<Layer, AgentToolError> {
         var layer = layer
         if change.movesOrSizes {
-            let box = layer.isGroup ? layer.localBounds.offsetBy(dx: layer.frame.minX, dy: layer.frame.minY)
-                                    : layer.frame
+            let box = box(of: layer)
             let frame = CGRect(x: change.x ?? box.minX, y: change.y ?? box.minY,
                                width: change.width ?? box.width, height: change.height ?? box.height)
             guard frame.width > 0, frame.height > 0 else {

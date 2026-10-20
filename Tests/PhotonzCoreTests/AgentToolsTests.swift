@@ -13,7 +13,7 @@ struct AgentToolsTests {
         try AgentJSON.parse(Data(json.utf8))
     }
 
-    @Test("The four slices offer the reach, read, see and undo tools, the commands, drawing, then video")
+    @Test("The slices offer the reach, read, see and undo tools, the commands, drawing, video, then design")
     func theSliceIsComplete() {
         #expect(AgentTools.all.map(\.name) == [
             "list_documents", "list_history", "open_document", "read_document",
@@ -23,6 +23,7 @@ struct AgentToolsTests {
             "add_measurement", "list_components", "place_component", "export",
             "new_video", "add_clip", "cut", "trim", "move_clip", "set_transition", "add_title",
             "list_titles", "recommended_zooms", "apply_zooms", "set_playhead",
+            "list_styles", "add_style", "apply_style", "set_layout",
         ])
     }
 
@@ -66,7 +67,7 @@ struct AgentToolsTests {
                         "\(tool.name) requires \(required) without declaring it")
             }
             for (name, property) in properties {
-                #expect(property["type"] != nil, "\(tool.name).\(name) has no type")
+                #expect(property["type"] != nil || property["anyOf"] != nil, "\(tool.name).\(name) has no type")
                 let words = property["description"]?.stringValue ?? ""
                 #expect(words.isEmpty == false, "\(tool.name).\(name) has no description")
             }
@@ -94,7 +95,7 @@ struct AgentToolsTests {
     func defaults() throws {
         #expect(try AgentTools.request(tool: "list_documents", arguments: nil).get() == .listDocuments)
         #expect(try AgentTools.request(tool: "read_document", arguments: .object([:])).get()
-                == .readDocument(document: nil))
+                == .readDocument(document: nil, layer: nil))
         #expect(try AgentTools.request(tool: "render_picture", arguments: nil).get()
                 == .renderPicture(document: nil, layer: nil, region: nil, maxSize: AgentTools.defaultMaxSize))
         #expect(try AgentTools.request(tool: "undo", arguments: nil).get() == .undo(document: nil, steps: 1))

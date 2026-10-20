@@ -1,0 +1,6 @@
+{
+  "name": "photonz",
+  "version": "0.1.0",
+  "description": "Make and edit pictures and videos in the Photonz you have open: draw, measure, build a design system and components, cut and title videos, and export, one undo step per call.",
+  "author": { "name": "dzearing" }
+}

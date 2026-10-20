@@ -299,11 +299,73 @@ and proves each edit is one undo step and the MP4 is written: 14 of 14 on
 2026-10-19. Scenario 1, the Case 1 to 5 montage from a fresh session, is in
 `queue/audits/2026-10-19-agent-video-transcript.md`.
 
-### After the slices (`claude-can-make-and-edit-pictures-and-videos-in`)
+### Design systems (`claude-can-make-and-edit-pictures-and-videos-in`)
 
-The skill that teaches an agent the house look and the look-then-fix loop,
-Library components from outside (scenario 4), the four scenarios rerun from a
-fresh session, and the coverage count.
+Scenario 4 rebuilds a website's design system as a Library. Components were
+already reachable (draw, `group`, `make_component`, `place_component`); what an
+agent could not say was the system itself: named colours and type, and the
+spacing a component keeps.
+
+| Tool | What it does | Maps onto |
+| --- | --- | --- |
+| `list_styles` | The Styles shelf: colours (name, hex) and text styles (font, size, weight, colour), with ids | `colorStyles`, `textStyles` |
+| `add_style` | A colour or a text style saved by name. Refused when the name is taken | the colour picker's Save style (`saveColorStyle(hex:name:)`); a text style straight onto the shelf (`addTextStyle`), since the Style row only saves from picked words |
+| `apply_style` | A style put on layers by name: a text style re-sets the words and re-measures their boxes; a colour paints `fill`, `stroke` or `text` (the inside, else the ink, when unsaid) | dropping a text style's tile on words (`dropTextStyle`); choosing a colour style in a colour row (`bindColorStyle`) |
+| `set_layout` | A group or frame as a `stack` (row or column), `grid` or `free`, with gap, row gap, columns, padding (one number or four sides), width and height (points or `hug`), spread and wrap | the inspector's Layout section: `setGroupLayout(id:kind:)` then `updateGroupLayout` |
+
+A button is a group of a box and its words, made a padded row stack, with the
+box made its surface (`run_command surface_behind`, Layer > Surface Behind the
+Rest): painted to the group's edges, the words laid out on top. That is how the
+starter Button is built, and `Scripts/agent-design-drill.mjs` builds one that
+way through the bridge and proves each step is one undo step (16 of 16 on
+2026-10-19). `read_document` shows a group's `layout`.
+
+**Where a group is.** A group's stored size is unused; its box is
+`localBounds`, which is already in its parent's space. `read_document` used to
+hand an agent the stored 0 x 0 frame, and `set_layer` and every tool answer
+shifted the box by the group's anchor a second time (a group at 100, 100
+answered 200, 200). Both now go through `AgentDrawing.box(of:)`; the layers
+inside a group are still measured from the group's top left, and the
+`read_document` description says so.
+
+**Words inside a copy.** A copy's pieces are rebuilt from its original after
+every edit, so `set_layer` writing words straight onto one answered "done"
+and changed nothing (scenario 4's first run detached thirty list rows with
+make_unique to get round it). Words now land where typing over the piece
+lands (`ComponentPieceEditing`): on the copy's own answer to the original's
+wording knob, after giving the original one when it has none, which is the
+inspector's Make Adjustable that an agent cannot press
+(`PhotonzDocument.agentWordCopyPiece`). Anything else set on a piece is refused
+with the two ways forward (edit_original, make_unique).
+
+**Reading one layer.** `read_document` lists 400 layers at most, top first; a
+board with a page of thirty rows runs past that and the rows below stop being
+listed. `layer` reads one group, frame or component and everything inside it
+with the whole budget.
+
+### The skill and the plugin
+
+`plugin/` is a Claude Code plugin: the Photonz skill
+(`plugin/skills/photonz/SKILL.md`) and the server (`plugin/.mcp.json`, which
+runs `Scripts/photonz-mcp.sh`). The skill is the part an agent reads before it
+starts: the do, look, fix loop (read, do one thing, render it, judge it against
+the ask, fix), which tool serves which area, the facts that cost a wasted step
+when missed (top-left points, a group's children measured from its corner,
+the Text tool's legibility shadow, absolute export paths), the house look (one
+8 point grid, one of each: accent, radius, stroke, family; the app's own title
+styles and transitions, the same throughout; legible always) and a recipe for
+each of the user's four scenarios.
+
+`Scripts/install-mcp.sh` registers the server and links the skill into the
+user's skills folder (`~/.claude/skills/photonz`, a link so it follows the
+repo); `--remove` takes both out, and only a link it made. For one session
+without installing anything: `claude --plugin-dir <repo>/plugin`. The scenario
+runs use the plugin for the skill and `--strict-mcp-config` with the probe
+server, so a session has exactly the skill and the server.
+
+A website is seen through headless Chrome (the skill gives the command, with a
+time budget so animated pages settle), opened in Photonz as a picture and read
+with `render_picture` regions and `find_elements`.
 
 ## Answers and errors
 

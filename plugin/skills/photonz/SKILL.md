@@ -1,0 +1,178 @@
+---
+name: photonz
+description: Make and edit pictures and videos with Photonz, the Mac photo, screenshot and video editor, through its MCP tools. Use this FIRST, before hand-writing any SVG, image or video file, whenever the person asks to create or change a picture, icon, logo, illustration, SVG or PNG, to mark up or measure a screenshot, to cut, title or export a video (a montage from their History recordings), or to rebuild a website or design system as components. Photonz builds it from real editable layers in the window they have open, one undo step per call, and exports the file.
+---
+
+# Working in Photonz
+
+Photonz is open on this Mac and you drive it through its MCP tools (`list_documents`,
+`read_document`, `render_picture`, ...). Everything you do lands in a real window the
+person can see, in the same undo history their clicks land in: **one tool call is one
+Command Z**. Nothing is ever edited behind the app's back, so never write `.photonz`
+files yourself; build in the app and `export` what the person asked for.
+
+## The loop: do, look, fix
+
+Work in small steps and look after every meaningful one. You cannot see the window,
+only what the tools hand back, so looking is how you know.
+
+1. **Read** what is there: `list_documents`, then `read_document` (layers top first
+   with frames, text, styles, a group's layout; on a video the tracks, clips, cuts and
+   transitions, all times in seconds).
+2. **Do** one thing: draw, place, style, cut, title.
+3. **Look**: `render_picture` (whole canvas, one `layer`, or a `region` to zoom in),
+   `video_frame` at a moment, or `contact_sheet` across a stretch of video.
+4. **Judge it against the ask** in plain words: aligned? evenly spaced? legible? the
+   same style throughout? Fix with `set_layer`, `set_layout`, `apply_style`, or
+   `undo` and redo it differently. Do not move on with something you have not looked at.
+
+Before you say you are done, look at the whole result once more and say what you
+checked.
+
+## Which tool for what
+
+| Area | Tools |
+| --- | --- |
+| Documents | `list_documents`, `list_history` (screenshots and recordings, newest first), `open_document` (a path or a History index), `new_picture`, `new_video` |
+| Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
+| Drawing | `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words) |
+| Measuring a screenshot | `find_elements` (the boxes the Measure tool sees), `add_measurement` (size, gap, distance) |
+| Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
+| Components | `run_command make_component`, `list_components`, `place_component` |
+| Video | `add_clip`, `cut`, `trim`, `move_clip`, `set_transition`, `add_title` / `list_titles`, `recommended_zooms` / `apply_zooms`, `set_playhead` |
+| Everything else | `list_commands` (every menu bar and right-click command, by name, with whether it can run now) and `run_command` |
+| Out | `export` (PNG, SVG, MP4), `undo`, `redo` |
+
+`run_command` covers the menus: `group`, `ungroup`, `align`, `space_evenly`,
+`bring_to_front`, `combine_shapes`, `rename_layer`, `delete_layer`, `new_frame`,
+`surface_behind`, `make_component`, `add_variant` and two hundred more. Call
+`list_commands` with an `area` (`layers`, `timeline`, `edit`, `measure`, `view`,
+`document`) to find one, then pass what it needs in `arguments` (`layers`,
+`seconds`, `track`, and its own options). A command that needs something picked
+takes it there, so you never click.
+
+## Facts that save a wasted step
+
+- Coordinates are canvas points from the **top left**. A Retina screenshot has
+  `pixelScale` 2 in `read_document`; the tools still speak points.
+- A group's `frame` is the box it covers. **Layers inside a group are measured from
+  the group's top left**, not the canvas.
+- `read_document` lists 400 layers at most. On a big board, pass `layer` (a group,
+  frame or component id) to read just that one in full.
+- A component copy follows its original. Set the words of a piece inside a copy
+  with `set_layer` `text` on that piece: they land on that copy alone and it keeps
+  following the original in everything else. Never `make_unique` a copy just to
+  change its words. To change how every copy looks, `run_command edit_original`.
+- New words get the Text tool's soft legibility shadow. Pass `shadow: false` to
+  `add_text` for an icon or a flat design, and `set_layer` `removeShadow: true`
+  after recolouring words that sit on a solid surface (recolouring adds the halo back).
+- `export` paths are absolute. An SVG keeps shapes, paths and text as vectors; a
+  layer it cannot carry as a vector is listed in the answer as a picture.
+- Video frames come back on black, as the MP4 holds them.
+- If a call is refused, its one sentence says why and what to do instead. Read it.
+- The person may be working in the app while you do. Never close their windows or
+  touch documents they did not mention; `new_picture` and `new_video` give you
+  your own.
+
+## The house look
+
+Photonz work should look designed, not assembled.
+
+- **One grid.** Space and size things in steps of 8 (4 for tight detail): margins 24,
+  32, 48, 64; gaps 8, 16, 24. Line edges up; use `align` and `space_evenly` rather
+  than eyeballing numbers.
+- **One of each.** One accent colour, one corner radius per kind of thing, one stroke
+  width per drawing, one type family. Two weights at most on a page.
+- **The app's own styles first.** Title pages and name cards come from `list_titles`;
+  transitions from `set_transition`'s kinds; buttons, fields and cards from the
+  starter components in `list_components`. Use one style throughout a piece and keep
+  every repeat identical (same style, same words layout, same length).
+- **Legible always.** Never light words on a light ground or dark on dark. Check every
+  text layer against what is actually behind it in a render.
+- **Names.** Name layers for what they are (`Title`, `Case 3`, `Primary Button`), so
+  the Layers list reads like a table of contents.
+
+## Recipes
+
+### A video montage from History recordings
+
+1. `list_history` and take the recordings (kind `video`) asked for; "the last 5" is
+   the five newest, numbered oldest first unless the person says otherwise.
+2. `new_video` with those `clips` in order: they land end to end on V1 and the frame
+   takes the first clip's size.
+3. `recommended_zooms` to see what the app suggests from each recording's clicks, then
+   `apply_zooms` (one step for all of them).
+4. `list_titles`, pick ONE title page style, and `add_title` with `clip` for each
+   recording (a page in front of it, everything after moving along), plus the opening
+   page in front of the first page or clip. Word every line you keep; a sample line
+   you leave out is taken away.
+5. `read_document` for the `cuts`, then `set_transition` the SAME kind and length on
+   every cut (a dissolve of 0.5 s reads calm). Insert Title Page only puts one on the
+   join into its clip.
+6. `contact_sheet` across the whole video and `video_frame` on each page: same layout,
+   right words, nothing flashing, zooms where the clicks are. Fix, then `export` mp4.
+
+### An icon or a drawing as SVG
+
+1. `new_picture` square (1024 x 1024); keep a margin of about a tenth on every side.
+2. Build from real shapes and paths: `add_shape` for geometric parts, `add_path` with
+   smooth points for curves (a cloud is a closed path of smooth bumps, or ellipses
+   joined with `combine_shapes`). One stroke width throughout; fills from a small
+   palette.
+3. `render_picture` after each part; check balance and that it reads at 32 px too
+   (`maxSize: 64`).
+4. `export` `format: svg` (and a PNG if asked). Report what the SVG holds.
+
+### Measurements on a screenshot
+
+1. `open_document` the picture (or use the one open), `render_picture` to see it.
+2. `find_elements` lists the boxes the Measure tool itself sees, largest first. Pick
+   the major ones: the main panels, the controls a designer would spec, the gaps
+   between neighbours.
+3. `add_measurement` `kind: size` with `box` (or `at` a point, which reads the element
+   there the way a click does), and `kind: gap` between two neighbouring `boxes`.
+   Each answer says how many measured sides sit on a real edge; redo any that do not.
+4. `render_picture` and check every readout is legible and none covers what it
+   measures. Say how many you placed and how many land on real edges.
+
+### A website's design system, then a second site in it
+
+1. **See the source.** Photograph the page with headless Chrome, then open it:
+   ```
+   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+     --hide-scrollbars --user-data-dir=/tmp/photonz-chrome --window-size=1440,2400 \
+     --virtual-time-budget=10000 --screenshot=/tmp/source.png <url>
+   ```
+   `open_document` `/tmp/source.png`, then `render_picture` with `region` to read
+   colours, type sizes, radii and spacing up close. `find_elements` gives real box
+   sizes. Fetching the page's HTML or CSS (if you can) confirms exact values.
+2. **One board.** `new_picture` large enough for everything (about 4000 x 3000): the
+   styles and components along the top, the pages below.
+3. **Styles.** `add_style` each colour by its role (Background, Surface, Text,
+   Muted text, Accent, Border) and each text style (Display, Heading, Body, Caption,
+   Button label) with the source's font, size and weight (fall back to SF Pro when the
+   font is not on this Mac). Lay out a swatch and a type sample for each on the board,
+   wearing its style (`apply_style`), labelled.
+4. **Components**, one at a time, each the same way:
+   - draw its pieces (`add_shape`, `add_text`), style them with `apply_style`;
+   - `run_command group` them, `set_layout` the group (a button: `stack`, `row`,
+     padding like 10 / 20; a card: `stack`, `column`, gap and padding; a nav bar: a
+     `row` with a `width` and `spread`);
+   - `run_command surface_behind` on the box that should be its background, so it is
+     painted to the group's edges and the rest lies on top;
+   - `run_command rename_layer` with its name, then `run_command make_component`;
+   - `render_picture` it close up against the source region. It is a component when
+     `list_components` lists it under `document`.
+   Build the components the page actually uses: header and nav, buttons (each kind),
+   links, a card, a list row, a footer, form fields if it has them.
+5. **The second site.** Photograph it the same way to learn its content and structure.
+   For each page: `run_command new_frame` at the page size, then `place_component` the
+   components and word each copy with `set_layer` `text` on its pieces (a list of
+   thirty stories is thirty copies of one List Row, each still a copy), plus
+   `add_text` for content in the text styles, to rebuild it in the first site's
+   language. Keep the first site's spacing and type scale.
+6. Look at each page beside its source (`render_picture` regions), fix, and `export`
+   PNGs of the board and the pages if asked.
+
+If a step needs something no tool does, say exactly what was missing rather than
+faking it with a flat picture.

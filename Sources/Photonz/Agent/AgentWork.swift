@@ -50,10 +50,17 @@ enum AgentWork {
             return try listHistory(limit: limit)
         case .openDocument(let target):
             return try await open(target)
-        case .readDocument(let id):
+        case .readDocument(let id, let layer):
             let editor = try AgentDocuments.editor(id).get()
             let document = try document(of: editor)
-            let read = AgentDocumentRead.make(document, context: context(of: editor))
+            var only: UUID?
+            if let layer {
+                guard let found = UUID(uuidString: layer), document.layer(id: found) != nil else {
+                    throw Failure("There is no layer \(layer) in this document. read_document with no layer lists them.")
+                }
+                only = found
+            }
+            let read = AgentDocumentRead.make(document, context: context(of: editor), only: only)
             return Answer(content: [.text(String(decoding: try read.encoded(), as: UTF8.self))])
         case .renderPicture(let id, let layer, let region, let maxSize):
             let editor = try AgentDocuments.editor(id).get()
@@ -79,6 +86,8 @@ enum AgentWork {
         case .newVideo, .addClip, .cut, .trim, .moveClip, .setTransition, .addTitle, .listTitles,
              .recommendedZooms, .applyZooms, .setPlayhead, .exportVideo:
             return try await AgentVideoWork.answer(request)
+        case .listStyles, .addStyle, .applyStyle, .setLayout:
+            return try await AgentDesignWork.answer(request)
         }
     }
 

@@ -109,7 +109,46 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var shape: Shape?
         public var path: Path?
         public var time: Time?
+        /// How a group arranges its contents, when it does.
+        public var layout: Layout?
         public var children: [Layer]?
+    }
+
+    /// A group's Layout section: how it arranges what is inside and the room
+    /// it keeps. Only what differs from a group that arranges nothing.
+    public struct Layout: Codable, Hashable, Sendable {
+        /// stack, grid or free.
+        public var arrange: String
+        /// row or column, on a stack.
+        public var direction: String?
+        public var gap: Double?
+        public var rowGap: Double?
+        public var columns: Int?
+        /// The same room on all four sides.
+        public var padding: Double?
+        /// Top, right, bottom, left, when the sides differ.
+        public var paddingSides: [Double]?
+        public var width: Double?
+        public var height: Double?
+        public var spread: Bool?
+        public var wraps: Bool?
+
+        static func make(_ layout: GroupLayout) -> Layout {
+            let pad = layout.padding
+            let sides = [pad.top, pad.right, pad.bottom, pad.left].map(tidy)
+            let uniform = Set(sides).count == 1
+            let arranges = layout.kind != nil
+            return Layout(
+                arrange: layout.kind?.rawValue ?? "free",
+                direction: layout.kind == .stack ? layout.direction.rawValue : nil,
+                gap: arranges ? tidy(layout.gap) : nil,
+                rowGap: layout.kind == .grid || layout.wraps ? tidy(layout.rowGap) : nil,
+                columns: layout.kind == .grid ? layout.columns : nil,
+                padding: uniform ? (sides[0] == 0 ? nil : sides[0]) : nil,
+                paddingSides: uniform ? nil : sides,
+                width: layout.width.map(tidy), height: layout.height.map(tidy),
+                spread: layout.spreadsGap ? true : nil, wraps: layout.wraps ? true : nil)
+        }
     }
 
     public struct Clip: Codable, Hashable, Sendable {
@@ -201,10 +240,14 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
 
     // MARK: Making one
 
-    public static func make(_ document: PhotonzDocument, context: Context) -> AgentDocumentRead {
+    /// The read, or with `only` just that layer and its contents, listed with
+    /// the whole budget (a board of hundreds of layers stops listing long
+    /// before the group an agent is working on).
+    public static func make(_ document: PhotonzDocument, context: Context, only: UUID? = nil) -> AgentDocumentRead {
         let hasTime = document.hasTime
         var budget = mostLayersListed
-        let layers = summarize(document.layers, budget: &budget)
+        let layers = only.flatMap(document.layer(id:)).map { [summarize($0, budget: &budget)] }
+            ?? summarize(document.layers, budget: &budget)
         let count = document.allLayers.count
         var read = AgentDocumentRead(
             id: context.id, title: context.title, file: context.file,
@@ -215,7 +258,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             playheadSeconds: hasTime ? seconds(context.playheadMS) : nil,
             canUndo: context.canUndo, canRedo: context.canRedo,
             layerCount: count, layers: layers,
-            layersNotListed: count > mostLayersListed ? count - mostLayersListed : nil)
+            layersNotListed: only == nil && count > mostLayersListed ? count - mostLayersListed : nil)
         guard hasTime else { return read }
         let byID = Dictionary(document.layers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         read.tracks = document.timelineTracks.map { track in
@@ -269,10 +312,11 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
     private static func summarize(_ layer: PhotonzCore.Layer, budget: inout Int) -> Layer {
         let style = layer.style
         let degrees = Double(layer.transform.rotation) * 180 / .pi
+        // A group's stored size is unused: its frame here is the box it covers.
+        let box = AgentDrawing.box(of: layer)
         var node = Layer(
             id: layer.id.uuidString, name: layer.name, kind: kind(of: layer),
-            frame: Rect(x: tidy(layer.frame.minX), y: tidy(layer.frame.minY),
-                        width: tidy(layer.frame.width), height: tidy(layer.frame.height)),
+            frame: Rect(x: tidy(box.minX), y: tidy(box.minY), width: tidy(box.width), height: tidy(box.height)),
             hidden: layer.isVisible ? nil : true,
             locked: layer.isLocked ? true : nil,
             opacity: style.opacity < 1 ? (style.opacity * 100).rounded() / 100 : nil,
@@ -294,6 +338,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             node.path = Path(anchors: path.anchors.count, closed: path.isClosed, stroke: path.colorHex,
                              strokeWidth: tidy(path.strokeWidth), fill: path.fillColorHex)
         case .group(let group):
+            node.layout = group.layout.map(Layout.make)
             let children = summarize(group.children, budget: &budget)
             node.children = children.isEmpty ? nil : children
         case .zoomCallout, .lens, .measure, .collage, .sound:
