@@ -9,9 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-20T14:42:52.132Z",
+  "updated": "2026-10-20T14:44:22.953Z",
   "deps": [
-    "a-scored-test-set-for-what-ask-and-the-photonz-s"
+    "a-scored-test-set-for-what-ask-and-the-photonz-s",
+    "asking-for-base-components-builds-the-real-set-w"
   ],
   "blockedBy": [],
   "notes": "The user, 2026-10-20 07:38 (screenshot queue/audits/2026-10-20-user-ask-component-sheet-mess.png): 'this is a complete mess. there is no table, no alignment, no titles, no clean design.' The run placed five components at their default spots and laid five add_text calls over them at body size.\n\nLikely ways in, decide and log: a layout tool the model can call (a grid or table: rows, columns, gap, the layout engine set_layout already uses) so the model names cells instead of coordinates; a component sheet as a built-in recipe; the skill's instructions saying how a sheet is built; giving the model the components' variants and text fields up front. Climb with the eval: keep a change only if the score goes up.",
