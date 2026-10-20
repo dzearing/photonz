@@ -5,11 +5,11 @@
   "epic": "agent-api",
   "priority": "p1-high",
   "seq": 22,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:21:48.057Z",
-  "updated": "2026-10-19T19:47:31.995Z",
+  "updated": "2026-10-19T19:47:48.286Z",
   "deps": [
     "an-agent-can-reach-the-running-app-read-the-open"
   ],
@@ -55,6 +55,10 @@
     {
       "t": "2026-10-19T19:47:31.994Z",
       "note": "Shipped: AppCommandTable (149 commands) + EditorState.run/canRun switch; menu bar rows routed through it; list_commands/run_command; History.squash so an agent call is one undo step. Coverage: 283 menu bar rows, 149 named, 56 left out, 77 not yet (pinned) -> follow-up the-rest-of-the-menu-commands-can-be-run-by-name (p1, seq 23). Verified: Scripts/test.sh 13839 tests green; 19 menu walks ok (menu-keys-do-what-they-say, a-recording-opens-in-the-editor-at-defaults, align-layers, go-to-marker-menu-rows, extract-a-marked-stretch, delete-key-drops-a-timeline-piece, copy-a-look, layers-combine, mirror-across-center, ...); live try path in the probe: agent listed timeline commands and cut at 5 s in one run_command, one Command Z through Edit > Undo restored one clip with nothing left to undo. Pictures looked at: before (one clip), after (cut at 0:05, Piece 1 of 2), after undo (one clip, saved). Found the design doc named the sockets by bundle id; they are release/dev/probe.sock; doc fixed. Left rough (log only): a menu row that lands two edits still takes two undos (unchanged on purpose); playhead stays where the agent moved it after undo."
+    },
+    {
+      "t": "2026-10-19T19:47:48.284Z",
+      "note": "AppCommandTable (149 named commands) + EditorState.run/canRun switch that the menu bar rows and simple right-click rows now go through; MCP list_commands/run_command; one agent call = one undo step (History.squash). Coverage test: 283 menu rows, 149 named, 56 left out, 77 not yet (pinned; follow-up the-rest-of-the-menu-commands-can-be-run-by-name). Verified: Scripts/test.sh green (13839), 19 menu walks ok at Next defaults, live try path in the probe (cut at 5 s by an agent, one Command Z restored it). Audit queue/audits/2026-10-19-agent-commands.json. Commit 83bcea7f."
     }
   ],
   "started": "2026-10-19T18:56:40.800Z",
@@ -65,5 +69,6 @@
     "go-to-marker-menu-rows-walk",
     "extract-a-marked-stretch-walk",
     "delete-key-drops-a-timeline-piece-walk"
-  ]
+  ],
+  "completed": "2026-10-19T19:47:48.285Z"
 }

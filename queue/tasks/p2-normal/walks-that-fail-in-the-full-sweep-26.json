@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-10-19T12:43:24.555Z",
+  "updated": "2026-10-20T01:03:40.301Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-19T11:33:48Z: 968 of 978 walks passed in 278 minutes.\n\nFailing walks (10): animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  insert-a-title-before-a-clip-walk -> a-clip-or-title-held-as-an-insert-shows-what-mov (guessed from its wording, so read it before believing it)\n\n1 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 9: animated-charts-walk, caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk\n\nStopped failing since the last sweep (1): view-to-edit-on-a-long-recording-walk\n\nFull output: queue/sweep/2026-10-18-235606.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: the-layers-and-library-pane-grows-into-any-room: The pane of lists now fills whatever the pick's sections leave, so any walk that clicks a fixed point in the panel's lower half may have moved (the-layers-and-library-pane-grows-into-any-room)\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -62,6 +62,10 @@
     {
       "t": "2026-10-19T12:43:24.554Z",
       "note": "digest 2026-10-19: moved from last in p2 to third (after the two lost-frame bugs, before the colour grade feature). Last in p2 it waited two days behind every feature while earlier standing tasks cleared within half a day, and what is left on it (the last caption line offering Join with Next Line, and a title page walk) are broken things in the focus, not loop chores."
+    },
+    {
+      "t": "2026-10-20T01:03:40.300Z",
+      "note": "rotating check 2026-10-20T01:03:40Z, 33 walks run from 945 onward in the rotation: view-to-edit-on-a-long-recording-walk (owned by edit-mode-s-contents-come-in-with-the-slide-not, which is waiting on a card) failing. This is a slice, not a sweep: the rest of the set is unchecked."
     }
   ],
   "standing": "walk-sweep"

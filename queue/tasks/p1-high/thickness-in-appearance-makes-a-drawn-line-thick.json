@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T15:37:19.101Z",
-  "updated": "2026-10-19T15:37:24.595Z",
+  "updated": "2026-10-19T17:22:31.687Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's words (2026-10-19, intake): 'i draw a line. I make the line thicker in the appearance settings. does not affect it.' Not said: picture or video document, drag or typed number, whether the number moved.\n\nNOT reproduced in intake; the model path looks right on paper, so reproduce before believing any of these suspects:\n- Appearance's Thickness for a part is ShapePartSettings.swift:118 (ShapeSlider reach .partThickness(row.id), preview/commit go to EditorState.previewOutlineWidth / commitOutlineWidth, EditorState+Annotations.swift:830 and :846). The non-parts row is AnnotationInspector.swift:99. Both call PhotonzDocument.setOutlineWidth (Sources/PhotonzCore/OutlineWidth.swift:99), which skips any layer without hasOutlineThickness (a .line annotation has it, :125). Suspect 1: the ids the slider passes ($0, from partRowReach in PanelReach.swift:57) are not the line's id, so outlineWidthTargets comes back empty and nothing is written. Check what partRowReach returns for a line's part row.\n- Suspect 2: the write lands but the renderer draws a line from a different field than Layer.setOutlineWidth writes (an annotation's own strokeWidth versus a style border), so the model changes and the picture does not. Compare what setOutlineWidth sets for a .line with what the line renderer reads.\n- Suspect 3 (video only): a keyed or motion width wins over the static one (LayerMotion.swift:1744 setOutlineWidthForMotion), so a still value never shows while a motion track exists.\n- Suspect 4: editingLooksHere / performLooksHere in those handlers route the edit to a component master or look rather than the picked layer.\nFix the cause, not the symptom: do not add a second write path just for lines.",
@@ -31,6 +31,36 @@
     {
       "t": "2026-10-19T15:37:24.594Z",
       "note": "seq 3970 -> 15"
+    },
+    {
+      "t": "2026-10-19T16:23:36.023Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T16:55:33.475Z",
+      "note": "Reproduced at Next defaults in the probe, picture AND video: draw a line with the Line tool, pick it, click the Thickness track (or type 30). The NUMBER changes (panel reads 26 / 30, selection outline grows) and the line on the canvas stays 4px, counted on the 1x render. Cause (suspect 2, close): Layer.setOutlineWidth (ComponentNumberKnob.swift) wrote annotation.strokeWidth but never re-padded the layer frame, and AnnotationRasterizer draws a line INSIDE its frame (504x4 for a 4px line), so everything past the box was clipped. The older AnnotationBuilder.restyled path re-pads; the Thickness row stopped using it. Arrows clip the same way past ~32px (head pad hides it below). Keyed stroke-width motion (setOutlineWidthForMotion) had the same hole. Pen paths pad at render time and were fine."
+    },
+    {
+      "t": "2026-10-19T16:55:33.582Z",
+      "note": "owns these walks: outline-width-walk, line-thickness-typed-walk"
+    },
+    {
+      "t": "2026-10-19T17:22:16.620Z",
+      "note": "Fix: Layer.setOwnStrokeWidth (OutlineWidth.swift) sets a line/arrow width and rebuilds its frame round the unchanged endpoints (AnnotationBuilder.updating), used by Layer.setOutlineWidth (Thickness row, number knobs, looks) and setOutlineWidthForMotion (keyed widths). Tests: OutlineWidthTests thickeningALineGrowsTheBoxItIsDrawnIn (line+arrow at 40, failed before: frame 504x4 / 532x32), aKeyedWidthGetsRoomAsItPlays (failed before: 4 tall); LayerLookTests now pins endpoints not frame (a look thickening a line must grow its box). New walk step expectInk (PlaytestInk.swift, PlaytestInkTests) counts ink pixels on the 1x render. outline-width-walk FAILED on the old build at step 57 (ink 4px where 26 claimed) and passes now; line-thickness-typed-walk's video part FAILED on the old build (ink 4px, typed 30) and passes now. Neighbour walks (14, incl. arrow-endings, pick-leaves-settings-alone, copy-a-look, pen-path-thickness) all ok. Scripts/test.sh: 13775 tests pass."
+    },
+    {
+      "t": "2026-10-19T17:22:16.689Z",
+      "note": "left rough: at 40 the arrowhead is barely wider than the shaft (Geometry.arrowheadHalfWidth = max(base*scale, 0.6*width)); existing sizing with Head Size beside it, not filed. Video panel squeeze folded into on-a-video-captions-and-transitions-sit-where-th. Audit rough items: all either folded or kept here."
+    },
+    {
+      "t": "2026-10-19T17:22:31.685Z",
+      "note": "Thickness now thickens a line, arrow and Pen path on the canvas, dragged or typed, picture and video; one undo puts it back. Cause: Layer.setOutlineWidth set the stroke without re-padding the box the line is drawn in, so it was clipped (measured 4px before, 26px after on the render). Fix in OutlineWidth.swift (setOwnStrokeWidth), also for keyed widths. Unit tests pin it; new expectInk walk step; outline-width-walk and line-thickness-typed-walk failed on the old build and pass now; 14 neighbour walks ok; Scripts/test.sh green. Audit queue/audits/2026-10-19-line-thickness.json. Commit 08c54134."
     }
-  ]
+  ],
+  "started": "2026-10-19T16:23:36.022Z",
+  "walks": [
+    "outline-width-walk",
+    "line-thickness-typed-walk"
+  ],
+  "completed": "2026-10-19T17:22:31.686Z"
 }

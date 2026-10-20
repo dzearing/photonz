@@ -5,11 +5,11 @@
   "epic": "agent-mcp",
   "priority": "p1-high",
   "seq": 23,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:21:48.159Z",
-  "updated": "2026-10-19T18:36:19.368Z",
+  "updated": "2026-10-19T21:37:03.364Z",
   "deps": [
     "every-command-in-the-app-s-menus-can-be-run-by-n"
   ],
@@ -40,6 +40,33 @@
     {
       "t": "2026-10-19T18:36:19.366Z",
       "note": "Slice 1 landed (an-agent-can-reach-the-running-app-read-the-open): the channel, the bridge and 9 tools. Add tools in PhotonzCore AgentTools (schema + AgentRequest case, tested) and carry them out in Sources/Photonz/Agent/AgentWork.swift; edits must go through EditorState.perform so one undo takes one agent step. Try path: Scripts/install-mcp.sh --probe, or claude -p --mcp-config with PHOTONZ_APP=probe Scripts/photonz-mcp.sh. Design and tool plan: docs/design/agent-mcp.md."
+    },
+    {
+      "t": "2026-10-19T20:00:16.016Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T21:36:45.730Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-19T21:36:45.796Z",
+      "note": "Review before building: the scenarios need an agent to find UI elements and snap to them, which the Measure tool already does by point (Size and Gap clicks), so add_measurement takes a point as well as boxes, and find_elements lists what a Size click would read. A Photoshop user expects shapes, paths and text to stay editable: every tool lands the tool's own layer, a box's line as a Border. Nothing either scenario needed was missing, so no prerequisite was filed."
+    },
+    {
+      "t": "2026-10-19T21:36:45.859Z",
+      "note": "Review after: three fresh-session runs of scenario 3. Run 1 floated distances beside elements (5 of 13 on edges) and read fields at their inner border; fixed find_elements (Size mode's reader, band rows) and the tool wording. Final run 11 of 13 on edges, all numbers equal to Size clicks. Then matched the canvas's neighbour gathering for Size readouts (AgentMeasurePlan.sizeNeighbors)."
+    },
+    {
+      "t": "2026-10-19T21:36:45.922Z",
+      "note": "left rough: readouts crowd near the top right switch and the fields when an agent measures every control (the Measure tool's own readout planner; a click places them the same way now); not filed, no person report yet. Icon house look and the skill belong to claude-can-make-and-edit-pictures-and-videos-in. CanvasMeasure.neighbors could call AgentMeasurePlan.sizeNeighbors instead of its own copy; left alone to keep the canvas untouched."
+    },
+    {
+      "t": "2026-10-19T21:37:03.362Z",
+      "note": "Ten drawing tools (new_picture, add_shape, add_path, add_text, set_layer, find_elements, add_measurement, list_components, place_component, export PNG/SVG) in PhotonzCore/AgentDrawing.swift + Agent/AgentDrawingWork.swift, each the matching tool's own layer as one undo step. Verified: 13,860 tests green (new AgentDrawingTests, AgentElementScanFixtureTests on a real screenshot); scenario 2 from a fresh session gave a 10-layer icon and a 953-byte vector SVG; scenario 3 placed 13 measurements, 11 wholly on real edges, with before/after window captures. Commit 5912b809; audit queue/audits/2026-10-19-agent-drawing.json."
     }
-  ]
+  ],
+  "started": "2026-10-19T20:00:16.015Z",
+  "walks": [],
+  "completed": "2026-10-19T21:37:03.363Z"
 }

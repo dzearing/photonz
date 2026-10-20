@@ -5,11 +5,11 @@
   "epic": "agent-api",
   "priority": "p1-high",
   "seq": 23,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T19:46:41.779Z",
-  "updated": "2026-10-19T19:46:41.782Z",
+  "updated": "2026-10-19T23:10:49.261Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows every-command-in-the-app-s-menus-can-be-run-by-n (slice 2). The table is Sources/PhotonzCore/AppCommands.swift, the switch is Sources/Photonz/Agent/AppCommandRunner.swift (EditorState.run/canRun), the coverage is Tests/PhotonzCoreTests/EveryMenuCommandHasANameTests.swift (notYet + notYetPin; lower the pin as rows get names). On 2026-10-19: 77 menu bar rows not yet, grouped: clipboard 10, caption words 9, keys/stretches on a lane 8, layer menu rows needing their own command 19, new documents 4, exports 4, renames 3, effects 3, zooms 3, arrows 3, file panels 2, size dialogs 2, and Save, Save to Capture History, Freeze Frame, Save as Preset, Add Click, title presets, Picked in Range. Timeline right-click rows on the not-yet side are listed in the same test (reach(_:)). Clipboard rows have a text-field branch in EditorCommands that must stay at the row.",
@@ -23,6 +23,40 @@
     {
       "t": "2026-10-19T19:46:41.781Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-19T21:47:55.562Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-19T21:52:53.927Z",
+      "note": "Review before building. No surface of its own: the person-facing risk is a menu row that changes behaviour once routed. Rule: a row that asks a person for something (a name, a size, a length, a file, a point) runs the command WITHOUT that argument and the command asks as it always did; an agent's schema makes the argument required, so an agent call never opens a panel, a popover or a sheet. A question a command asks first (Turn into Picture, Turn into Path) is not put to an agent: the agent's one undo step is its way back. Picks that were missing: a caption word is the word being said at the playhead (seconds), a zoom is the zoom under the playhead on the clip named (seconds + layers), a gap is the gap at the playhead on the track named (seconds + track, through delete), a stretch is the one under the playhead on the layer named; a property is named in the words its Animate row uses. Rows that go to left-out: new-window rows (new_picture / new_video make documents), Copy Image (hidden at Next defaults behind Copy Merged), Draw a Curve and Copy/Paste Ease (a hand-drawn pad and a graph pick; set_easing names a stretch's curve), Show Graph and Show Columns (drawn for the eye), Export Range (the Export sheet; slice 4's export), Insert Component (place_component), Add Text/Rectangle on a track (add_text, add_shape). Nothing in the mocks is touched."
+    },
+    {
+      "t": "2026-10-19T23:10:21.951Z",
+      "note": "owns these walks: freeze-frame-asks-how-long-walk, timeline-right-click-menus-walk, new-layer-takes-your-layer-walk, every-command-in-the-menu-bar-walk, caption-words-pop-walk, a-gap-between-clips-closes-walk"
+    },
+    {
+      "t": "2026-10-19T23:10:48.784Z",
+      "note": "Built: 65 commands (core table + EditorState.run/canRun + runAwaiting for file/sound work), menu rows routed, AppCommandRunner+Asked.swift for answers a dialog used to ask, read_document captions, Layer > Locked row (lock_layer: set_layer's own error told agents to unlock with run_command and no such command existed). Found and fixed: Add Variant's name field landed a second undo step for an agent (cleared while agentIsRunning). Proof: Scripts/agent-commands-drill.mjs 43/43 one undo step; 47 walks green (two batches + 3 menu walks incl. pro-menu-bar, every-command-in-the-menu-bar); Scripts/test.sh 13,867 green. Picture looked at: newlayer-layer-menu-sc.png shows Locked under Rename Layer (rows dimmed, window behind). Commit 528b6965."
+    },
+    {
+      "t": "2026-10-19T23:10:48.847Z",
+      "note": "left rough (log only): caption-lines-join-and-a-word-moves-back-walk fails at step 9 (last line's Join row absent, not greyed) in an untouched file; already on the sweep's failing list owned by walks-that-fail-in-the-full-sweep-26. Not proven for a person: whether Add Variant's name field also lands a no-op step when a person clicks away; no person report, not filed. Clipboard commands not run live (person's clipboard). Rough items in the audit stay in this log."
+    },
+    {
+      "t": "2026-10-19T23:10:49.259Z",
+      "note": "65 new named commands (214 total); the not-yet list is empty and 68 rows are left out with reasons. Rows that ask a person still ask; an agent gives the answer as an argument. Caption words, zooms, gaps and stretches are picked by time (and track); read_document lists caption words. Verified: test.sh 13,867 green, agent-commands-drill 43/43 one undo step in the probe, 47 menu walks green at Next defaults. Audit queue/audits/2026-10-19-rest-of-menu-commands.json. Commit 528b6965."
     }
-  ]
+  ],
+  "started": "2026-10-19T21:47:55.561Z",
+  "walks": [
+    "freeze-frame-asks-how-long-walk",
+    "timeline-right-click-menus-walk",
+    "new-layer-takes-your-layer-walk",
+    "every-command-in-the-menu-bar-walk",
+    "caption-words-pop-walk",
+    "a-gap-between-clips-closes-walk"
+  ],
+  "completed": "2026-10-19T23:10:49.260Z"
 }

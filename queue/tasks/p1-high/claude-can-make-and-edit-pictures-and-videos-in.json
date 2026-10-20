@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T14:40:27.096Z",
-  "updated": "2026-10-19T16:21:57.476Z",
+  "updated": "2026-10-20T02:34:47.547Z",
   "deps": [
     "an-agent-can-draw-a-picture-with-shapes-paths-te",
     "an-agent-can-cut-a-video-from-history-clips-with"
@@ -41,6 +41,45 @@
     {
       "t": "2026-10-19T16:21:57.476Z",
       "note": "manager pass 2026-10-19: split into four slices that claim first, in order: an-agent-can-reach-the-running-app-read-the-open (channel, read, picture), every-command-in-the-app-s-menus-can-be-run-by-n (every menu command by name, coverage test), then an-agent-can-draw-a-picture-with-shapes-paths-te (pictures, scenarios 2 and 3) and an-agent-can-cut-a-video-from-history-clips-with (video, scenario 1). This task now waits on them and finishes the ask: the skill, scenario 4 (a website design system rebuilt as Library components), all four scenarios rerun from a fresh session, the coverage count and the decision card. Its checklist is unchanged; items the slices already met are checked off by pointing at their audits. Epic moved to agent-skills, whose success list is these scenarios."
+    },
+    {
+      "t": "2026-10-20T01:05:55.035Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T01:55:13.268Z",
+      "note": "Adversarial review before building: the four slices covered reach/read/see, every menu command, drawing and video, but scenario 4 could not be said: no tool saved a named colour or text style, put one on layers, or set a group's spacing (stack/grid, gap, padding). Reading the code also showed agents were handed a group's unused 0x0 frame and answers put a group at twice its position (confirmed live: a group at 100,100 answered 200,200)."
+    },
+    {
+      "t": "2026-10-20T01:55:13.336Z",
+      "note": "Built (commit 885134e1): list_styles/add_style/apply_style/set_layout (PhotonzCore/AgentDesign.swift, Agent/AgentDesignWork.swift), read_document shows a group's layout, group frames fixed (AgentDrawing.box(of:)), schema checker learned anyOf. The skill is plugin/skills/photonz/SKILL.md inside a Claude Code plugin (plugin/), linked by Scripts/install-mcp.sh beside the server (tested against a throwaway CLAUDE_CONFIG_DIR, the person's own config left untouched). Scripts/agent-design-drill.mjs 16/16 one undo step; Scripts/test.sh 13,894 green."
+    },
+    {
+      "t": "2026-10-20T01:55:13.404Z",
+      "note": "Scenario runs from fresh claude -p sessions with only the plugin's skill and the probe server (--plugin-dir plugin --strict-mcp-config): S2 run 1 hand-wrote the SVG with the shell first and only loaded the skill when refused, so the skill's description now says to use it first; S2 run 2 loaded the skill first, 938-byte vector SVG, 1m13s. S3: 8 measurements on the settings screenshot, all on real edges, 1m38s. S1: Case 1-5 montage, one title style, same 0.5 s dissolve on all 10 joins, 15 zooms, 3:00 MP4, 3m24s."
+    },
+    {
+      "t": "2026-10-20T02:33:46.485Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-20T02:34:47.276Z",
+      "note": "Scenario 4 (fresh session, skill + server + headless Chrome): GOV.UK design system as 14 colour styles from its own CSS, 9 text styles, 8 Library components, and the Hacker News front page rebuilt from 30 List Row copies plus header, button, search and footer copies; 589 turns, 17m43s. It found: words set inside a component copy silently did nothing (fixed: agentWordCopyPiece, drill 18/18), read_document stopped listing past 400 layers (fixed: read_document layer), text cannot be underlined (filed words-can-be-underlined-and-the-underline-follow, p2, ui-components). Scenario 4 was not rerun after the copy fix; the drill proves it."
+    },
+    {
+      "t": "2026-10-20T02:34:47.348Z",
+      "note": "Chose no decision card over the checklist's card for the montage and icon, because the user's rule of 2026-10-19 (runner prompt, commit 624a8e3a) says 'does this look right' is never a card: the MP4, contact sheets, icon SVG and render are in the audit with evaluate questions instead. Coverage count is in the audit: 284 menu bar rows, 215 by name, 68 left out with reasons, 0 to do; 57 of 65 timeline right-click rows; panel controls reached through typed tools but not counted by a test."
+    },
+    {
+      "t": "2026-10-20T02:34:47.423Z",
+      "note": "Left rough, log only: measurement readouts crowd near the buttons and the right edge (Measure tool's own planner, already logged on the drawing slice); the agent nudged single-digit badge numbers with a leading space to centre them (a text alignment inside a fixed round box; no person report); recolouring words adds the legibility halo, which the skill now tells an agent to remove on a solid surface; the montage used Keynote Clean whose starfield bug is already filed. Pictures looked at: the montage's first 36 s sheet (six identical page layouts, dissolves, zoomed clips), both icons, the measured screenshot, the design-system board, the source page and the rebuilt Hacker News page top and middle."
+    },
+    {
+      "t": "2026-10-20T02:34:47.545Z",
+      "note": "Shipped the Photonz skill (plugin/skills/photonz/SKILL.md, a Claude Code plugin with the server; Scripts/install-mcp.sh links it), design-system tools (list_styles, add_style, apply_style, set_layout), read_document by layer, and fixes for group frames and words in component copies. All four user scenarios ran from fresh sessions with only the skill and server: montage MP4, vector icon SVG, 8 measurements on real edges, GOV.UK design system + Hacker News rebuild. Verified: Scripts/test.sh 13,898 green, agent-design-drill 18/18 one undo step. Audit queue/audits/2026-10-19-agent-skill.json. Commit 26470872."
     }
-  ]
+  ],
+  "started": "2026-10-20T01:05:55.034Z",
+  "walks": [],
+  "completed": "2026-10-20T02:34:47.546Z"
 }
