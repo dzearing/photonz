@@ -41,18 +41,18 @@
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned|stopped",
+      "value": "ran|stopped",
       "timeout": 200
     },
     {
       "do": "describe",
       "stage": "plan-1",
-      "note": "plan 1 of 5: planSeconds is Ask to the plan on screen"
+      "note": "plan 1 of 5: planSeconds is Ask to the plan ready, which then runs"
     },
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned",
+      "value": "ran",
       "timeout": 1
     },
     {
@@ -78,18 +78,18 @@
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned|stopped",
+      "value": "ran|stopped",
       "timeout": 200
     },
     {
       "do": "describe",
       "stage": "plan-2",
-      "note": "plan 2 of 5: planSeconds is Ask to the plan on screen"
+      "note": "plan 2 of 5: planSeconds is Ask to the plan ready, which then runs"
     },
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned",
+      "value": "ran",
       "timeout": 1
     },
     {
@@ -115,18 +115,18 @@
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned|stopped",
+      "value": "ran|stopped",
       "timeout": 200
     },
     {
       "do": "describe",
       "stage": "plan-3",
-      "note": "plan 3 of 5: planSeconds is Ask to the plan on screen"
+      "note": "plan 3 of 5: planSeconds is Ask to the plan ready, which then runs"
     },
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned",
+      "value": "ran",
       "timeout": 1
     },
     {
@@ -152,18 +152,18 @@
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned|stopped",
+      "value": "ran|stopped",
       "timeout": 200
     },
     {
       "do": "describe",
       "stage": "plan-4",
-      "note": "plan 4 of 5: planSeconds is Ask to the plan on screen"
+      "note": "plan 4 of 5: planSeconds is Ask to the plan ready, which then runs"
     },
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned",
+      "value": "ran",
       "timeout": 1
     },
     {
@@ -189,18 +189,18 @@
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned|stopped",
+      "value": "ran|stopped",
       "timeout": 200
     },
     {
       "do": "describe",
       "stage": "plan-5",
-      "note": "plan 5 of 5: planSeconds is Ask to the plan on screen"
+      "note": "plan 5 of 5: planSeconds is Ask to the plan ready, which then runs"
     },
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned",
+      "value": "ran",
       "timeout": 1
     },
     {

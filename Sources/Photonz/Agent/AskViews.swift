@@ -3,7 +3,8 @@ import SwiftUI
 
 // The three places Ask shows (`docs/design/ask.md`, the mock
 // `agent-generate-wt.html`): the Ask button in the title bar, the composer it
-// opens over the canvas, and the Agent group in the dock that holds the plan.
+// opens over the canvas, and the Agent group in the dock that holds a row for
+// each change.
 // No model is chosen anywhere here: that lives in Settings (the user,
 // 2026-10-19).
 
@@ -110,109 +111,99 @@ struct AskComposerOverlay: View {
     }
 }
 
-/// The Agent group in the dock: what was asked, the plan, and Run Plan.
+/// The Agent group in the dock: one row a request, newest at the top, each
+/// saying what changed, with a switch to turn it off and on and a delete. The
+/// steps themselves are never shown (the user, 2026-10-20).
 struct AgentPanel: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
         let ask = editorState.ask
-        VStack(alignment: .leading, spacing: 8) {
-            if !ask.asked.isEmpty {
-                Text(ask.asked)
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .help(ask.asked)
-            }
+        let rows = ask.changes.shown
+        VStack(alignment: .leading, spacing: 6) {
             switch ask.phase {
-            case .idle:
-                Text(AskCopy.empty).font(.system(size: 11.5)).foregroundStyle(.secondary)
-            case .planning:
+            case .planning, .running:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text(AskCopy.planningLine).font(.system(size: 11.5))
+                    Text(AskCopy.workingLine).font(.system(size: 11.5))
                     Spacer()
                     Button(AskCopy.stop) { ask.stop() }.controlSize(.small)
                 }
+                .help(ask.asked)
             case .stopped(let sentence):
                 Text(sentence)
                     .font(.system(size: 11.5))
                     .fixedSize(horizontal: false, vertical: true)
                     .playtestControl("Ask Says", detail: sentence)
-            case .planned, .running, .ran:
-                planList(ask)
-                runRow(ask)
+            case .idle, .ran:
+                if rows.isEmpty {
+                    Text(AskCopy.empty).font(.system(size: 11.5)).foregroundStyle(.secondary)
+                }
+            }
+            if !rows.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                            changeRow(row, number: index + 1, ask: ask)
+                        }
+                    }
+                }
+                .frame(maxHeight: 240)
+                .fixedSize(horizontal: false, vertical: rows.count <= 8)
             }
             chatIn(ask)
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
+        .animation(.spring(duration: 0.24, bounce: 0.1), value: rows.map(\.id))
     }
 
-    @ViewBuilder
-    private func planList(_ ask: AskSession) -> some View {
-        if let plan = ask.plan {
-            Text(AskCopy.planHeader)
-                .font(.system(size: 11, weight: .semibold))
-            ScrollView {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(Array(plan.steps.enumerated()), id: \.offset) { index, step in
-                        planRow(index + 1, plan.line(index + 1), done: index < ask.stepsRun,
-                                skipped: ask.skipped[index + 1])
-                    }
+    private func changeRow(_ row: AskChangeList.Row, number: Int, ask: AskSession) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                // The mock's Last change click: the words pick what it made.
+                Button { ask.pickChange(row.id, in: editorState) } label: {
+                    Text(row.sentence)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(row.isOn ? .primary : .secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
+                .help(row.asked)
+                .playtestControl("Agent Change \(number) Words", detail: row.sentence)
+                Toggle("", isOn: Binding(get: { row.isOn },
+                                         set: { ask.setChange(row.id, on: $0, in: editorState) }))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .help(row.isOn ? AskCopy.turnOff : AskCopy.turnOn)
+                    .playtestControl("Agent Change \(number) Switch", detail: row.isOn ? "on" : "off")
+                Button { ask.deleteChange(row.id, in: editorState) } label: {
+                    Image(systemName: "trash").font(.system(size: 10.5))
+                }
+                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
+                .toolTip(AskCopy.deleteTooltip)
+                .playtestControl("Agent Change \(number) Delete", detail: AskCopy.deleteTooltip)
             }
-            .frame(maxHeight: 240)
-            .fixedSize(horizontal: false, vertical: plan.steps.count <= 10)
-        }
-    }
-
-    private func planRow(_ number: Int, _ line: AskStep.Line, done: Bool, skipped: String?) -> some View {
-        HStack(spacing: 6) {
-            Text("\(number)")
-                .font(.system(size: 10, weight: .semibold).monospacedDigit())
-                .frame(width: 18, height: 18)
-                .background(.quaternary, in: .rect(cornerRadius: 6))
-            Text(line.name)
-                .font(.system(size: 10.5, design: .monospaced))
-                .fixedSize()
-            Text(line.detail)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-            Spacer(minLength: 0)
-            if let skipped {
-                Image(systemName: "minus")
-                    .font(.system(size: 10, weight: .bold))
+            if let note = row.note {
+                Text(note)
+                    .font(.system(size: 10.5))
                     .foregroundStyle(.secondary)
-                    .help("\(AskCopy.skippedTip) \(skipped)")
-            } else if done {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.green)
+                    .playtestControl("Agent Change \(number) Note", detail: note)
             }
         }
-        .frame(height: 22)
-        .playtestControl("Ask Step \(number)", detail: "\(line.name) \(line.detail)\(skipped != nil ? ", passed over" : done ? ", done" : "")")
-    }
-
-    @ViewBuilder
-    private func runRow(_ ask: AskSession) -> some View {
-        PanelFieldRow("Run") {
-            switch ask.phase {
-            case .running:
-                Button(AskCopy.stop) { ask.stop() }.controlSize(.small)
-            case .ran:
-                EmptyView()
-            default:
-                Button { ask.runPlan(in: editorState) } label: {
-                    Label(AskCopy.runPlan, systemImage: "play.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .playtestControl("Run Plan", detail: "the Agent group's Run Plan button")
+        .padding(.vertical, 3)
+        .contentShape(.rect)
+        .contextMenu {
+            Button(row.isOn ? AskCopy.turnOff : AskCopy.turnOn) {
+                ask.setChange(row.id, on: !row.isOn, in: editorState)
             }
+            Button(AskCopy.delete) { ask.deleteChange(row.id, in: editorState) }
         }
+        .playtestControl("Agent Change \(number)", detail: "\(row.sentence), \(row.isOn ? "on" : "off")")
     }
 
     /// The mock's `.chat-in`: ask again from the dock.

@@ -19986,7 +19986,7 @@ private final class Run {
             // Whether an edge grip is in Premiere's ripple yellow: ⌘ over it,
             // or a ripple drag on it (`RippleEdgeDrag.swift`).
             "clipRippleLook": editor.clipRippleLookShown,
-            // Ask (`AskSession`): its phase, the plan's lines, how many ran,
+            // Ask (`AskSession`): its phase, the steps it ran, how many,
             // and how long the plan took from Ask to the panel.
             "ask": [
                 "phase": editor.ask.phase.name,
@@ -19996,6 +19996,10 @@ private final class Run {
                 "says": editor.ask.phase.sentence ?? "",
                 "trace": editor.ask.trace,
                 "skipped": editor.ask.skipped.map { "\($0.key): \($0.value)" }.sorted(),
+                // The Agent group's rows, newest first: what changed, on or off.
+                "changes": editor.ask.changes.shown.map {
+                    "\($0.sentence) (\($0.isOn ? "on" : "off"))\($0.note.map { ": \($0)" } ?? "")"
+                },
             ] as [String: Any],
             // ...and what the canvas thinks is under the pointer, which is the
             // other half: these two disagreeing means the cue was right and the

@@ -21737,3 +21737,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - App: Command V on a video with a table lands a chart (or replaces the picked chart's numbers); a .csv/.tsv dropped on the video does too. A chart just added scrolls its Chart section into view and puts the keyboard in its first value. The Data row's diamond adds a set at the playhead; the Set row jumps between sets; the table edits the set the playhead is in.
 - Walks: `chart-from-pasted-data-walk` (new), `animated-charts-walk` (numbers first). Walk step `expectDrawn` takes `height`. Reel and measured bar: `queue/audits/2026-10-20-chart-data*` (bars end within 0.23% of the axis).
 - Left rough: no mark on the timeline where a chart's numbers change; no right-click Add Set Here; whether the Energy knob reintroduces rises on a chart's words.
+
+## 2026-10-20 — Ask makes the change straight away, one row per change
+
+- Ask no longer shows a plan or Run Plan: the steps run the moment the model is done, as one undo step.
+- The Agent group holds one row per request ("Added 12 measurements"), with a switch to turn it off and on, a delete, right-click Turn Off/On and Delete, and a click on the words picks what it made.
+- Core: `AskChanges.swift` records each request as before/after and takes it out or puts it back with a three-way merge over the saved form; later edits elsewhere stay, a later edit to the same thing blocks with a one-line note. Tests: `AskChangesTests`.
+- Walks: the three Ask try-path walks now check run, undo, redo, off, on, delete and undo of delete. Audit: `queue/audits/2026-10-20-ask-rows.json`.
+- Next: the `/` command list in the composer; the video panel drawing under the title bar (its own task).

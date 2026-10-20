@@ -5214,6 +5214,8 @@ final class EditorState {
         history?.undo()
         restoreSelectionFromHistory()
         rerender()
+        // Ask's rows read whether their change is in the document now.
+        ask.follow(document)
         // Stepping over an edit to a shared original is still an edit to it
         // everywhere: taking it back here takes it back in every document.
         publishSharedComponents(changedFrom: before)
@@ -5243,6 +5245,7 @@ final class EditorState {
         history?.redo()
         restoreSelectionFromHistory()
         rerender()
+        ask.follow(document)
         // Stepping over an edit to a shared original is still an edit to it
         // everywhere: taking it back here takes it back in every document.
         publishSharedComponents(changedFrom: before)

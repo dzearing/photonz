@@ -67,51 +67,13 @@
     {
       "do": "waitFor",
       "condition": "askPhase",
-      "value": "planned|stopped",
+      "value": "ran|stopped",
       "timeout": 300
     },
     {
       "do": "describe",
-      "stage": "plan-or-refusal",
-      "note": "where planning ended"
-    },
-    {
-      "do": "waitFor",
-      "condition": "askPhase",
-      "value": "planned",
-      "timeout": 1
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
-    },
-    {
-      "do": "describe",
-      "stage": "4-plan",
-      "note": "the plan is in the Agent group and nothing has run"
-    },
-    {
-      "do": "expectLayers",
-      "count": 1
-    },
-    {
-      "do": "snapshot",
-      "name": "4-plan"
-    },
-    {
-      "do": "press",
-      "control": "Run Plan"
-    },
-    {
-      "do": "waitFor",
-      "condition": "askPhase",
-      "value": "ran|stopped",
-      "timeout": 120
-    },
-    {
-      "do": "describe",
       "stage": "run-ended",
-      "note": "where the run ended"
+      "note": "where the request ended: it runs as soon as the model is done, with no Run Plan"
     },
     {
       "do": "waitFor",
@@ -121,12 +83,27 @@
     },
     {
       "do": "wait",
-      "seconds": 0.6
+      "seconds": 0.8
     },
     {
       "do": "describe",
-      "stage": "5-ran",
-      "note": "every plan line checked off, measurements on the screenshot"
+      "stage": "1-ran",
+      "note": "measurements on the screenshot, and one row in the Agent group saying what changed"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Step 1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Run Plan",
+      "present": false
     },
     {
       "do": "expectLayers",
@@ -134,7 +111,7 @@
     },
     {
       "do": "snapshot",
-      "name": "5-ran"
+      "name": "1-ran"
     },
     {
       "do": "action",
@@ -142,12 +119,56 @@
     },
     {
       "do": "wait",
-      "seconds": 0.4
+      "seconds": 0.5
     },
     {
       "do": "describe",
-      "stage": "6-undone",
-      "note": "one undo took the whole batch back"
+      "stage": "2-undone",
+      "note": "one Command Z took the whole request back, and its row reads off"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Switch",
+      "reads": "off"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Switch",
+      "reads": "on"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 4
+    },
+    {
+      "do": "press",
+      "control": "Agent Change 1 Switch"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-off",
+      "note": "the row's switch turned the change off: the document reads as before the request"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Switch",
+      "reads": "off"
     },
     {
       "do": "expectLayers",
@@ -155,7 +176,81 @@
     },
     {
       "do": "snapshot",
-      "name": "6-undone"
+      "name": "3-off"
+    },
+    {
+      "do": "press",
+      "control": "Agent Change 1 Switch"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-on",
+      "note": "the switch put the change back"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Switch",
+      "reads": "on"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 4
+    },
+    {
+      "do": "snapshot",
+      "name": "4-on"
+    },
+    {
+      "do": "press",
+      "control": "Agent Change 1 Delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-deleted",
+      "note": "delete took the change out and the row went"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": false
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "5-deleted"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-delete-undone",
+      "note": "undoing the delete brought the change and its row back"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 4
     }
   ]
 }

@@ -556,7 +556,7 @@ struct InspectorPanel: View {
                 .onChange(of: editorState.pendingClipSpeedChoices) { _, asked in
                     if asked { showTimeSection(proxy) }
                 }
-                // Ask opened its plan: the Agent group open and on screen.
+                // Ask asked, or its change landed: the Agent group open and on screen.
                 .onChange(of: editorState.ask.revealPass) { showAgentSection(proxy) }
                 // A chart just landed and asks for its numbers: its Chart
                 // section open and at the top of the view (`EditorState+Charts`).

@@ -1,0 +1,53 @@
+{
+  "feature": "Ask makes the change straight away, one row per change",
+  "epic": "agent-ask",
+  "summary": "Ask now makes the change as soon as the model on this Mac is done: no plan to read, no Run Plan. Each request leaves one row in the Agent group saying what changed, with a switch to turn it off and on and a delete.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default. Needs Ollama with qwen3:30b (the default). Walks: ask-annotates-a-screenshot-walk, ask-adds-a-title-page-walk, ask-makes-a-pricing-section-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a settings screenshot, press Ask in the title bar, type \"annotate the ux with measurements around the major ui elements\" and press Return.",
+      "shot": "2026-10-20-ask-rows-1-measured-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Flip the row's switch off: the measurements go and the screenshot is as it was.",
+      "shot": "2026-10-20-ask-rows-2-off-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Flip it back on: they come back exactly where they were.",
+      "shot": "2026-10-20-ask-rows-3-on-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z: the whole request goes and its row reads off. Shift Command Z puts it back."
+    },
+    {
+      "do": "Open the sample recording, ask \"add a title page that says Case 1 before this clip\", then flip its row off and on.",
+      "shot": "2026-10-20-ask-rows-4-title-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "On a blank canvas ask \"Make a pricing section on brand\", then press the row's trash button: the change goes and so does the row. Command Z brings both back.",
+      "shot": "2026-10-20-ask-rows-6-pricing-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click a row's words: what that change made is picked on the canvas, so you can keep going by hand. Right-click the row for Turn Off (or Turn On) and Delete."
+    }
+  ],
+  "evaluate": [
+    "Does the row's sentence tell you what the request did without reading anything else?",
+    "Is a switch plus a trash button the right pair, or would you rather delete live only in the right-click menu?",
+    "When a later edit built on a change, the switch refuses and the row says \"A later change builds on this.\" Is that clear enough, or should it offer to take both out?",
+    "Rows last for the window's session and are not saved with the file. Is that what you expect?"
+  ],
+  "rough": [
+    "This goes against the mock's Plan list and Run plan button (agent-generate-wt.html, the Agent group): the user's own words on 2026-10-20 replaced them, recorded in this task (ask-makes-the-change-straight-away-and-each-chan). The row keeps the mock's Last change idea.",
+    "Matches the mock's Last change click: clicking a row's words picks what it made on the canvas (the layers it added, or the ones it edited).",
+    "A later hand edit to something the agent made (moving a drawn measurement, say) also counts as building on it, so that change can no longer be switched off; it can still be taken back with Command Z.",
+    "What the model builds is unchanged by this task: the pricing section still lands as loose text over a card rather than a tidy section.",
+    "Every picture shows the window behind another app, so the switch shows grey instead of the accent colour."
+  ]
+}

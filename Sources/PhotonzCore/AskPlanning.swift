@@ -5,8 +5,8 @@ import Foundation
 // model on this Mac into a plan of the agent tools (`AgentTools`), the same
 // commands the MCP server offers. The model may LOOK (the read-only tools
 // answer at once) but every editing call is only written into the plan,
-// checked against its schema first, and nothing runs until the person presses
-// Run plan. The plan then runs as one undo step.
+// checked against its schema first, and runs, as one undo step, once the
+// model is done. Nothing half planned ever touches the document.
 
 /// Which agent tools Ask offers its model, and how they are shown to it.
 public enum AskTools {
@@ -17,7 +17,7 @@ public enum AskTools {
         "recommended_zooms", "list_commands",
     ]
 
-    /// Edits: written into the plan, run only by Run plan. Nothing here opens a
+    /// Edits: written into the plan, run once it is complete. Nothing here opens a
     /// window, writes a file or steps the history, so the whole plan lands in
     /// the asking document's own undo history as one step.
     public static let doing: [String] = [
@@ -172,7 +172,7 @@ public struct AskStep: Hashable, Sendable {
     }
 }
 
-/// A plan the person reads before anything runs.
+/// The steps the model wrote, run together once it is done.
 public struct AskPlan: Hashable, Sendable {
     public let steps: [AskStep]
     /// The model's one sentence saying what the plan does.
@@ -426,7 +426,7 @@ public struct AskConversation: Sendable {
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
         a request about the document in front of them. Turn it into a plan of tool calls on that document.
         - Looking tools (\(AskTools.looking.joined(separator: ", "))) answer right away. Use them when you need facts.
-        - Editing tools are NOT run now. Each call is written into a plan the person reads first, and is \
+        - Editing tools are NOT run now. Each call is written into a plan that runs when you finish, and is \
         answered "Planned as step N". Call them in the order they should run, with every argument filled \
         in. To name the layer, clip or title a planned step makes, write "$N" where its id goes.
         - Coordinates are points from the top left of the canvas. Keep everything inside the canvas, \

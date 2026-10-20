@@ -2,14 +2,16 @@ import Foundation
 import Observation
 import PhotonzCore
 
-/// Ask in one editor window (`docs/design/ask.md`): what was asked, the plan
-/// the model on this Mac wrote for it, and running that plan.
+/// Ask in one editor window (`docs/design/ask.md`): what was asked, the model
+/// on this Mac working it out, and the change it made, one row a request.
 ///
 /// Planning only looks: the read-only tools run, every editing call is written
-/// into the plan. Run plan runs the steps through the same tools the MCP
-/// server offers, inside one undo step, so one Command Z takes the whole batch
-/// back. A step that fails takes back what already ran, so a bad plan leaves
-/// the document as it was.
+/// down. The moment the model is done, the steps run through the same tools
+/// the MCP server offers, inside one undo step, so one Command Z takes the
+/// whole request back (the user, 2026-10-20: "when I ask the agent to do
+/// something, I want it to auto run"). A step that fails takes back what
+/// already ran, so a bad plan leaves the document as it was. What landed is
+/// one row in `changes`, which turns off, on again, or is deleted.
 @MainActor
 @Observable
 final class AskSession {
@@ -17,7 +19,6 @@ final class AskSession {
     enum Phase: Equatable {
         case idle
         case planning
-        case planned
         case running
         case ran
         /// The model wrote no plan, or Ask could not reach it: one sentence why.
@@ -28,7 +29,6 @@ final class AskSession {
             switch self {
             case .idle: "idle"
             case .planning: "planning"
-            case .planned: "planned"
             case .running: "running"
             case .ran: "ran"
             case .stopped: "stopped"
@@ -44,8 +44,10 @@ final class AskSession {
     private(set) var phase: Phase = .idle
     /// The words in the composer.
     var draft = ""
-    /// What was last asked, shown over its plan.
+    /// What was last asked.
     private(set) var asked = ""
+    /// Every request that changed something, newest first.
+    private(set) var changes = AskChangeList()
     private(set) var plan: AskPlan?
     /// How many of the plan's steps have run.
     private(set) var stepsRun = 0
@@ -65,16 +67,10 @@ final class AskSession {
 
     var isBusy: Bool { phase == .planning || phase == .running }
 
-    /// The short state the Agent group's header carries.
+    /// The short state the Agent group's header carries: working while it
+    /// works, else how many changes it holds.
     var chip: String? {
-        switch phase {
-        case .idle: nil
-        case .planning: AskCopy.planningChip
-        case .planned: AskCopy.stepsChip(plan?.steps.count ?? 0)
-        case .running: AskCopy.runningChip
-        case .ran: AskCopy.ranChip(stepsRun - skipped.count, of: stepsRun)
-        case .stopped: nil
-        }
+        isBusy ? AskCopy.workingChip : DockGroupHeader.countChip(changes.shown.count)
     }
 
     func openComposer() {
@@ -107,7 +103,7 @@ final class AskSession {
             switch outcome {
             case .success(let plan):
                 self.plan = plan
-                phase = .planned
+                run(plan, asked: words, in: editor)
             case .failure(let trouble):
                 phase = .stopped(trouble.sentence)
             }
@@ -125,9 +121,12 @@ final class AskSession {
     /// changed nothing, so the rest ran without it.
     private(set) var skipped: [Int: String] = [:]
 
-    /// Runs the plan as one undo step.
-    func runPlan(in editor: EditorState) {
-        guard phase == .planned, let plan, let document = editor.agentID else { return }
+    /// Runs the plan as one undo step, and records what it changed as a row.
+    private func run(_ plan: AskPlan, asked words: String, in editor: EditorState) {
+        guard let document = editor.agentID, let before = editor.document else {
+            phase = .stopped(AskCopy.noDocumentSentence)
+            return
+        }
         phase = .running
         stepsRun = 0
         skipped = [:]
@@ -135,6 +134,7 @@ final class AskSession {
             guard let editor else { return }
             var failure: String?
             var landed = 0
+            var landedSteps: [AskStep] = []
             await editor.asOneUndoStepAwaiting {
                 var made: [Int: String] = [:]
                 for (index, step) in plan.steps.enumerated() {
@@ -151,6 +151,7 @@ final class AskSession {
                             refusal = text
                         } else {
                             landed += 1
+                            landedSteps.append(step)
                             if let id = AskStep.madeID(fromAnswer: text) { made[number] = id }
                         }
                     }
@@ -176,9 +177,63 @@ final class AskSession {
             } else if landed == 0 {
                 phase = .stopped(AskCopy.nothingRan)
             } else {
+                if let after = editor.document {
+                    changes.record(asked: words, sentence: AskChangeWords.sentence(landedSteps),
+                                   before: before, after: after)
+                }
                 phase = .ran
+                revealRows()
             }
         }
+    }
+
+    // MARK: The rows
+
+    /// Turns a request's change off or on, as one undo step. When something
+    /// later builds on it, nothing moves and the row says so.
+    func setChange(_ id: UUID, on: Bool, in editor: EditorState) {
+        guard let document = editor.document else { return }
+        land(changes.setOn(on, id: id, in: document), in: editor)
+    }
+
+    /// Deletes a request's row, taking its change out first when it is on.
+    func deleteChange(_ id: UUID, in editor: EditorState) {
+        guard let document = editor.document else { return }
+        land(changes.delete(id: id, in: document), in: editor)
+    }
+
+    /// Picks on the canvas what a row's change made, the mock's Last change
+    /// click: the selection jumps there so the person can keep going by hand.
+    func pickChange(_ id: UUID, in editor: EditorState) {
+        guard let row = changes.row(id), row.isOn, let document = editor.document else { return }
+        let ids = row.change.madeLayerIDs(in: document)
+        guard !ids.isEmpty else { return }
+        editor.selectLayers(Set(ids))
+    }
+
+    private func land(_ outcome: AskRecordedChange.Outcome, in editor: EditorState) {
+        guard case .changed(let next) = outcome else { return }
+        editor.perform { $0 = next }
+        revealRows()
+    }
+
+    /// A change landing picks a layer or drops one, and the panel fills with
+    /// that layer's sections or loses them, a frame or two later: the Agent
+    /// group is brought back into view now and once more when that settles,
+    /// so the row a person just pressed stays under their pointer.
+    private func revealRows() {
+        revealPass &+= 1
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(350))
+            self?.revealPass &+= 1
+        }
+    }
+
+    /// After an undo or a redo stepped the document, each row reads whether
+    /// its change is in it now.
+    func follow(_ document: PhotonzDocument?) {
+        guard let document, !changes.rows.isEmpty else { return }
+        changes.follow(document)
     }
 
     /// The model's turns, until it stops calling tools.
@@ -259,20 +314,16 @@ enum AskCopy {
     static let composerHeader = "Agent"
     static let onDevice = "on-device"
     static let empty = "Ask for something"
-    static let planHeader = "Plan"
-    static let runPlan = "Run Plan"
     static let stop = "Stop"
-    static let planningChip = "planning"
-    static let runningChip = "running"
-    static func stepsChip(_ n: Int) -> String { n == 1 ? "1 step" : "\(n) steps" }
-    static func ranChip(_ n: Int, of all: Int) -> String {
-        n == all ? (n == 1 ? "ran 1 step" : "ran \(n) steps") : "ran \(n) of \(all)"
-    }
-    static let nothingRan = "None of the plan could run. Nothing was changed."
-    static let skippedTip = "Passed over: it would have changed nothing."
-    static let planningLine = "Planning…"
+    static let workingChip = "working"
+    static let nothingRan = "None of it could run. Nothing was changed."
+    static let workingLine = "Working…"
+    static let turnOff = "Turn Off"
+    static let turnOn = "Turn On"
+    static let delete = "Delete"
+    static let deleteTooltip = "Delete this change"
     static let stoppedSentence = "Stopped. Nothing was changed."
     static let noDocumentSentence = "Open a picture or video first."
     static func stepFailed(_ n: Int) -> String { "Step \(n) failed. Nothing was changed." }
-    static let helpLine = "You read the plan before anything happens. The whole run undoes with one Command Z."
+    static let helpLine = "Each request is one row. Its switch turns the change off and on, and one Command Z takes back the latest."
 }

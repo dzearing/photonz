@@ -746,9 +746,8 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// pointer on it, or it is the edge in a ripple drag
     /// (`RippleEdgeDrag.swift`).
     case clipRippleLook
-    /// Ask in the window has reached a phase: idle, planning, planned,
-    /// running, ran or stopped (`AskSession`), or any of several written
-    /// `planned|stopped`. A plan comes from a model on the Mac, so a walk
+    /// Ask in the window has reached a phase: idle, planning, running, ran
+    /// or stopped (`AskSession`), or any of several written `ran|stopped`. A plan comes from a model on the Mac, so a walk
     /// waits on the phase rather than on a clock.
     case askPhase(String)
     /// A dialog is up (or has gone), named by the words at the top of it:
