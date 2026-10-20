@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T13:07:19.900Z",
-  "updated": "2026-10-20T01:33:30.279Z",
+  "updated": "2026-10-20T13:48:54.941Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-04 digest design review. Audits queue/audits/2026-10-03-title-presets.json and 2026-10-03-title-tiles.json both say they depart from video-title-wt (step 10: Lower third and End card as linked components with variant counts and the violet mark on the Comps shelf). The runner chose copies because a component dropped on a recording brings its original with it on a second track (checked in the app). Both tasks finished before the mock-difference gate (ccb6fc6b) landed, so nothing made them name a card. The users words for the feature: presets are great but with high flexibility to make your own.",
@@ -95,6 +95,11 @@
     {
       "t": "2026-10-20T01:33:30.278Z",
       "note": "decision \"When you put a name card or title page on a video, should it be a copy you own, or linked so one change updates every copy?\" resolved: Keep them as copies (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:48:54.939Z",
+      "note": "digest 2026-10-20: the card kept name cards and title pages as copies you own, so nothing is built. The departure from the mock's linked component is settled by that answer (written here, where search finds it). The end card item is met: End Card ships among the ten title pages added on 2026-10-18 (title-pages-that-look-like-apple-designed-them)."
     }
-  ]
+  ],
+  "completed": "2026-10-20T13:48:54.940Z"
 }

@@ -4,12 +4,12 @@
   "goal": "A chart on a video exists to show someone's own numbers. Putting the numbers in has to be the first, obvious thing: pasting a table from a spreadsheet or dropping a CSV file gives you a chart of it, and a chart you just added asks for its numbers right away. And the motion has to come from the data: bars grow to the values, and when the numbers change partway through the video (this quarter, then next quarter) the chart moves from one set to the next. Today the user found the charts useless: they could not give one data, and what they got was some elements moving on the screen.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 17,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T01:26:18.618Z",
-  "updated": "2026-10-20T01:26:18.735Z",
+  "updated": "2026-10-20T13:58:24.733Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's words (2026-10-19, intake): 'also i find the charts totally useless because i can't give it data and have it animate. Having some elements that move on the screen is not what i expected.'\n\nThe shipped task animated-charts-you-can-drop-into-a-video (done 2026-10-17) PROMISED 'Data entry is simple: a small table in the panel ... that also accepts pasted tab or comma separated text'. The code is there: ChartInspector.swift (Kind, a row table with a paste button, unit, decimals, delta), shown when EditorState.chartInHand is set (EditorState+Charts.swift:14, needs the next-animated-charts flag and a title in hand), section .chart in InspectorSections.swift:75 / InspectorPanel.swift:1393. So either the user could not reach it today or it did not read as where the data goes. Reproduce before deciding which; intake did not. The model is ChartSpec in Sources/PhotonzCore/AnimatedChart.swift (kind, title, rows, max 12 rows), one set of rows per chart; data that changes over time is new model work.\n\nRelated, do not undo: a-chart-or-title-keeps-what-you-set-by-hand-when (p2, pending) and a-chart-with-negative-numbers-draws-its-bars-bel (p2, pending) touch the same model; fold or sequence them, do not fight them. A decision card is still open on the old task ('Do the six charts build in and look the way you want in a video?', keep as is vs bolder bars); the user's complaint is that the charts are not data first, which that card does not ask. Withdraw it with that reason when this task's own card goes up.\n\nTrap: Command V on the canvas already pastes pictures and layers; text that parses as a table becomes a chart only on a video document and only when it is clearly tabular (two or more rows with a number column), otherwise paste behaves as today.",
@@ -22,7 +22,8 @@
     "Visual bar, MEASURED in the audit: in a reel of a bar chart that changes from one set to another, each bar's height at the end of the change matches its new value to within 1% of the axis, and halfway through it is between old and new. Today's charts have no second set, so this fails on today's build",
     "A walk: paste four rows from a spreadsheet as text onto a video, check a chart of exactly those labels and values lands; add a second set at 3s, play, check the bars change at 3s",
     "Unit tests in PhotonzCore for parsing pasted and CSV data (tabs, commas, quoted fields, thousands separators, %, $) and for interpolating between sets; Scripts/test.sh passes",
-    "Audit under queue/audits/ with a reel and contact sheet, and a decision card linking it so the user judges it. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+    "Audit under queue/audits/ with a reel and contact sheet named in it, so the user can judge the motion when they want to (no decision card: cards are rare now). Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not",
+    "Negative numbers are drawn honestly: a Bar or Horizontal Bars chart draws a negative value as a bar running the other way from a visible baseline, to scale with the positive bars (within 2 px at 1080p), a Line chart's point goes below its baseline, and the Big Number counts to a negative number with its minus sign. A row whose colour comes from the theme shows that colour in its swatch, not a struck-through box. Today a -25 draws as a flat line on the baseline (folded in from a-chart-with-negative-numbers-draws-its-bars-bel; a walk builds 40, -25, 60 and measures the -25 bar below the line)"
   ],
   "log": [
     {
@@ -32,6 +33,18 @@
     {
       "t": "2026-10-20T01:26:18.733Z",
       "note": "seq 65 -> 17"
+    },
+    {
+      "t": "2026-10-20T13:55:43.192Z",
+      "note": "digest 2026-10-20: folded in a-chart-with-negative-numbers-draws-its-bars-bel (a -25 draws as a flat line on the baseline, and a theme-coloured row shows a struck-through swatch); the audit item no longer asks for a decision card"
+    },
+    {
+      "t": "2026-10-20T13:56:30.181Z",
+      "note": "seq 17 -> 10"
+    },
+    {
+      "t": "2026-10-20T13:58:24.732Z",
+      "note": "seq 10 -> 10"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "id": "copying-an-icon-carries-the-white-canvas-the-exp",
-  "title": "Copying an icon carries the white canvas the export no longer does",
+  "title": "Copying an icon leaves its blank canvas behind, the way its export does",
   "goal": "Draw an icon on a blank canvas, press Copy (Shift Command C) and paste it somewhere dark, and the white canvas comes with it as solid pixels. Exporting the same icon as a PNG now leaves that canvas out, so the two ways of handing an icon over disagree: the one you save is see-through and the one you paste is not.",
   "epic": "icon-export",
   "priority": "p2-normal",
@@ -9,14 +9,15 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-17T05:51:54.319Z",
-  "updated": "2026-10-20T01:33:30.538Z",
+  "updated": "2026-10-20T13:58:45.680Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing an-icon-exported-as-a-picture-can-come-out-with (2026-09-17). Repro of the composite that Copy puts on the clipboard: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/tmp-png-bg-forced.json --no-build wrote png-export-background-3-file-with-canvas.png, which is the same render EditorState.copyCompositeToClipboard uses (previewRenderer.render(document, store:), no background answer anywhere on that path), and reading its corner back gave top-left (5,5) rgba [255, 255, 255, 255]. The export path in the same walk wrote [0, 0, 0, 0]. The smallest fix is to let the copy take the same SVGExport.Background answer the sheet holds, through PhotonzDocument.drawn(with:flatImages:) (PhotonzCore) the way ExportSizer does; the open question is whether a copy should ask at all or simply always leave a flat canvas out, which is a UX call worth a decision card rather than a guess. PNG and TIFF both go on the pasteboard and both hold alpha.",
   "acceptance": [
     "Copying an icon drawn on a blank canvas and pasting it into an app that shows transparency gives an icon with nothing behind it",
     "Copying a screenshot or a captured screen still carries its background exactly as it does today",
-    "A walk proves the copied picture is see-through in every corner"
+    "A walk proves the copied picture is see-through in every corner",
+    "Copy with the canvas, for when the white is wanted, is a row of its own under Copy Merged (the key card, settled on 2026-10-20 when the waiting cards were taken as recommended)"
   ],
   "log": [
     {
@@ -234,6 +235,18 @@
     {
       "t": "2026-10-20T01:33:30.537Z",
       "note": "decision \"Copy with the canvas: Option Shift Command C is already Copy Look. Where does it go?\" resolved: A row of its own under Copy Merged (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:56:32.830Z",
+      "note": "seq 330 -> 320"
+    },
+    {
+      "t": "2026-10-20T13:57:17.594Z",
+      "note": "digest 2026-10-20: retitled to the outcome (the title described the problem), and the card's answer on where Copy with the canvas goes added to the checklist"
+    },
+    {
+      "t": "2026-10-20T13:58:45.678Z",
+      "note": "seq 320 -> 330"
     }
   ],
   "started": "2026-09-30T10:33:28.595Z",

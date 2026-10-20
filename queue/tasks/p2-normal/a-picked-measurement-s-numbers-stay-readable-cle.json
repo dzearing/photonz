@@ -4,12 +4,12 @@
   "goal": "Picking a size measurement puts the turn knob and its arrows on top of its numbers, covering what the person picked it to read, and a measurement close to the bottom of a screenshot puts its width number below the canvas where nobody can see it. A measurement's numbers should stay in view and clear of every handle.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 255,
+  "seq": 280,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.268Z",
-  "updated": "2026-10-19T16:22:37.955Z",
+  "updated": "2026-10-20T13:58:45.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From two audit rough lines nobody filed: queue/audits/2026-10-16-size-steps-and-resizes.json ('The turn knob and its arrows sit over the picked measurement, as they do for every picked group') and queue/audits/2026-10-16-copied-size-measurement-name.json ('the copy's bottom edge sits about 20 px above the canvas's bottom, and its chip lands below the canvas'). The user's rule (2026-10-13): nothing may cover the thing being manipulated. Earlier fix for one edge: done task a-measurement-near-the-edge-of-a-capture-should; read it before changing the placement. Not reproduced by the manager, so p2 with reproduction as the first item.",
@@ -28,6 +28,14 @@
     {
       "t": "2026-10-19T16:22:37.954Z",
       "note": "seq 4080 -> 255"
+    },
+    {
+      "t": "2026-10-20T13:56:32.489Z",
+      "note": "seq 255 -> 270"
+    },
+    {
+      "t": "2026-10-20T13:58:45.361Z",
+      "note": "seq 270 -> 280"
     }
   ]
 }

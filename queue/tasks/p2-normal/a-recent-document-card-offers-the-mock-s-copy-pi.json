@@ -1,7 +1,7 @@
 {
   "id": "a-recent-document-card-offers-the-mock-s-copy-pi",
-  "title": "A recent document card offers the mock's Copy, Pin and Delete",
-  "goal": "Under the front door's Recent, the mock gives every card Copy, Edit, Pin and Delete when you point at it. A document you saved shows Edit, Show in Finder and Remove from Recent instead, because nothing in the app can pin yet and Delete on a document would throw away your own file from a launcher. Decide with the user what a document card should offer, then build it.",
+  "title": "A saved document's card under Recent offers Copy, Edit, Pin and Remove from Recent",
+  "goal": "Under the front door's Recent, the mock gives every card Copy, Edit, Pin and Delete when you point at it. A document you saved shows Edit, Show in Finder and Remove from Recent instead. A saved document's card should offer Copy, Edit, Pin and Remove from Recent, so nothing on the front door can throw a file away (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 300,
@@ -9,13 +9,13 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-10T08:55:55.575Z",
-  "updated": "2026-10-20T01:33:28.551Z",
+  "updated": "2026-10-20T13:58:45.487Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/ui-entry-wt.html ~300-330 (.filmcard .acts: Copy, Edit, Pin, Delete). Built: Sources/Photonz/FrontDoorView.swift FrontDoorRecentCard.actions (document case: Edit, Show in Finder, Remove from Recent; capture case keeps the history strip's Copy, Edit, Show in Finder, Delete; no Pin anywhere in the app). Copy for a .photonz could copy its preview (PackageIO.readPreview). From the-front-door-s-recent-lists-documents-you-open. | 2026-10-15 runner: Copy built for document cards (FrontDoorCopy: .photonz rendered whole off main via PackageIO.read + DocumentRenderer, picture file via CaptureStore.copyToPasteboard, recording via ClipboardWriter.writeFile); row and menu read FrontDoor.actions. Walk front-door-recent-card-actions-walk (startFromFrontDoor rest/first/gone) proves Copy, Edit, Remove from Recent by pointer at Next defaults. Show in Finder is deliberately not clicked by the walk: it activates Finder over the person. Remaining: Pin (not in the app at all) and what the last button does, on the decision card.",
   "acceptance": [
-    "A decision card asks the user whether a document card's Delete removes the file or only the card, and whether Pin is wanted",
-    "The document card's hover row and right-click menu offer what the user picked",
+    "Pointing at a saved document's card shows Copy, Edit, Pin and Remove from Recent; Remove from Recent never deletes the file",
+    "Pin keeps a card at the front of Recent across a relaunch until it is unpinned, and the card shows that it is pinned",
     "A walk points at a document card and clicks each action by pointer, green at Next defaults"
   ],
   "log": [
@@ -102,6 +102,22 @@
     {
       "t": "2026-10-20T01:33:28.550Z",
       "note": "decision \"A saved document's card under Recent: should it offer Pin, and should Delete throw the file away?\" resolved: Copy, Edit, Pin, Remove from Recent (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:55:42.121Z",
+      "note": "digest 2026-10-20: goal and checklist rewritten to build the card's answer; the card items are gone, since the answer is in"
+    },
+    {
+      "t": "2026-10-20T13:56:32.624Z",
+      "note": "seq 300 -> 290"
+    },
+    {
+      "t": "2026-10-20T13:57:17.666Z",
+      "note": "digest 2026-10-20: retitled to the card's answer"
+    },
+    {
+      "t": "2026-10-20T13:58:45.485Z",
+      "note": "seq 290 -> 300"
     }
   ],
   "walks": [

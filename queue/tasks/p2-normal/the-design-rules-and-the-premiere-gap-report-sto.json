@@ -1,0 +1,32 @@
+{
+  "id": "the-design-rules-and-the-premiere-gap-report-sto",
+  "title": "The design rules and the Premiere gap report stop pointing at cards that are already answered",
+  "goal": "On 2026-10-19 every waiting card was taken as recommended and cards became rare, but the design rules runners read and the report that measures Photonz against Premiere still say some questions are open cards. A runner reading them is told to wait for, or open, a card that no longer exists, and the gap report reads further behind than the app is.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-20T13:58:02.156Z",
+  "updated": "2026-10-20T13:58:43.722Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-10-20 digest's rule review. The cards were taken as recommended in 624a8e3a; runner-prompt.md and manager-prompt.md were updated then, the design documents were not. Docs only: no app code, so no walk check is started by it.",
+  "acceptance": [
+    "UX-PATTERNS' Inspector row (docs/design/mocks/shared/UX-PATTERNS.md, line 28) says one main action per section is the rule, instead of calling it the open card 'How many buttons may the right hand panel keep?'",
+    "UX-PATTERNS' 'A request that names a system look gets one filmed card' paragraph (around line 117) and the 'decision card before it is built' line (around line 1295) say what runner-prompt.md now says: film both side by side in the audit, choose, and log why",
+    "docs/design/video-vs-premiere.md no longer lists the Library on a video as waiting on a card (it shipped on 2026-10-20, a9944834), and row 10 and any other row that says 'waiting on the user's answer' either names the answer taken on 2026-10-20 or is marked closed",
+    "grep -n -i 'open card\\|waiting on the card\\|waiting on the user' over docs/design and docs/design/mocks/shared finds nothing that refers to a card no longer open; the task log pastes the command and its output"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T13:58:02.158Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-20T13:58:43.721Z",
+      "note": "seq 25 -> 30"
+    }
+  ]
+}

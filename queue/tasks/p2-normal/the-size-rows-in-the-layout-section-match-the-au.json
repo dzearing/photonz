@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 360,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T17:22:51.629Z",
-  "updated": "2026-10-20T01:33:29.171Z",
+  "updated": "2026-10-20T13:48:54.797Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised by a-screen-can-hug-what-it-holds (2026-10-08): its audit compares the shipped Width/Height rows against ui-autolayout.html lines ~281-288 (Frame size: Hug | Narrow | Wide). The group rows have had this shape since auto layout landed; no decision ever settled it. Sources/Photonz/ArrangementInspector.swift sizeRows.",
@@ -90,6 +90,11 @@
     {
       "t": "2026-10-20T01:33:29.170Z",
       "note": "decision \"How should the Layout section let you size a frame or group: Width and Height rows, or one Frame size row like the mock?\" resolved: Keep Width and Height rows (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:48:54.795Z",
+      "note": "digest 2026-10-20: the card kept Width and Height rows, and this task's own checklist says that answer closes it with nothing built. Left rough, not filed: the manager's 2026-10-09 note that the mock's Selected child Resizing row and Distribute row also differ from the app; no one has asked for them, so it stays in this log."
     }
-  ]
+  ],
+  "completed": "2026-10-20T13:48:54.796Z"
 }

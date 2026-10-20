@@ -1,21 +1,20 @@
 {
   "id": "rounding-corners-works-the-same-way-on-a-rectang",
   "title": "Rounding corners works the same way on a rectangle and on a drawn shape",
-  "goal": "Pulling a corner handle on a rectangle rounds just that corner and Option rounds all four, but pulling the new corner knob on a shape drawn with the Pen rounds every corner and Option rounds just one. Someone who learns one gets the other backwards. Make both work the same way, the way the user picks.",
+  "goal": "Pulling a corner handle on a rectangle rounds just that corner and Option rounds all four, but pulling the corner knob on a shape drawn with the Pen rounds every corner and Option rounds just one. Someone who learns one gets the other backwards. Make both work like Photoshop's live shapes: a plain pull rounds every corner and Option rounds only the one pulled, so the rectangle changes to match (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 350,
+  "seq": 340,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T12:51:27.995Z",
-  "updated": "2026-10-20T01:33:30.025Z",
+  "updated": "2026-10-20T13:58:45.742Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-10-05 digest's design review, from two audits. Rectangle: drag-a-shapes-corner-to-round-it (2026-09-09, PhotonzCore/CornerRadiusHandles.swift) pulls one corner, Option for all four; its runner noted at the time that this is the reverse of Photoshop and Figma and built it as the task asked. Drawn shape: round-a-path-s-corners-by-pulling-a-knob-in-from (2026-10-05, the user's ask, PathCornerRounding.swift, CanvasPathEdit) pulls all, Option for one; its audit queue/audits/2026-10-04-round-a-path-s-corners.json asks in evaluate whether the two should agree. Photoshop live shape corners, Figma and Illustrator live corners all round every corner on a plain drag and isolate one with Option/Alt.",
   "acceptance": [
-    "The user has picked one way on the decision card",
-    "A rectangle's corner handles and a drawn shape's corner knobs round the same corners for a plain pull and for an Option pull, at Next defaults",
+    "A rectangle's corner handles and a drawn shape's corner knobs both round every corner on a plain pull and only the pulled corner on an Option pull, at Next defaults",
     "The Corner Radius row in Appearance still reads one number or Mixed afterwards, for both",
     "The walks that pull corners (corner-drag-rounds-walk, round-a-path-s-corners-walk) are updated to the chosen way and pass, and an audit shows both with the pill reading the radius"
   ],
@@ -95,6 +94,18 @@
     {
       "t": "2026-10-20T01:33:30.024Z",
       "note": "decision \"When you pull a corner to round it, should it round every corner or just that one?\" resolved: Every corner on a plain pull, Option for one; rectangles change to match (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:55:42.245Z",
+      "note": "digest 2026-10-20: goal and checklist rewritten to build the card's answer; the card items are gone, since the answer is in"
+    },
+    {
+      "t": "2026-10-20T13:56:32.902Z",
+      "note": "seq 350 -> 330"
+    },
+    {
+      "t": "2026-10-20T13:58:45.741Z",
+      "note": "seq 330 -> 340"
     }
   ]
 }

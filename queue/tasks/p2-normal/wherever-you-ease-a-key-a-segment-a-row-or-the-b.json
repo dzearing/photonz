@@ -1,22 +1,21 @@
 {
   "id": "wherever-you-ease-a-key-a-segment-a-row-or-the-b",
   "title": "Wherever you ease a key, a segment, a row or the bar, you see one list of curves",
-  "goal": "Today a key right-click offers six Premiere eases (Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier) while a segment, a row and the timeline bar with a segment picked offer the ten named curves plus Hold and Draw a Curve, and the two lists use the same words for opposite things. The user decides whether keys move onto the one list the animate mock draws or keep their own.",
+  "goal": "Today a key's right-click offers six Premiere eases while a segment, a row and the timeline bar with a segment picked offer the ten named curves plus Hold and Draw a Curve, and the two lists use the same words for opposite things. Make it one list everywhere, the one the animate mock draws: a key's right-click shows the ten curves, Hold and Draw a Curve, and Ease In, Ease Out and Bezier leave the key menu (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 190,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T21:03:39.436Z",
-  "updated": "2026-10-20T01:33:28.907Z",
+  "updated": "2026-10-20T13:58:44.797Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-timeline-bar-easing-sets-picked-segments-too (its checklist item 4). Mock docs/design/mocks/pages/video-animate.html (2026-10-12) line 406: Right-click a key or a segment: the easing list (the same ten curves everywhere, then Draw a Curve), Hold, Copy Ease, Paste Ease; its key carries the curve LEAVING it (k.e). User-sourced tasks of 2026-09-23 (keyframe-anything-and-see-and-shape-the-keys-on, move-a-layer-from-a-to-b-grow-it-shrink-it-fade) asked for Right-click a key: Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier. Name clash: curve Ease in = slow START (CSS); KeyEase Ease In = slow ARRIVAL at the key (Premiere), i.e. the opposite end of the stretch. Code: KeyEase.allCases in EditorState+KeyLanes.keyMenuRows, EditorState+ClipKeys.clipKeyMenuRows, TimelineDock.easingMenu (keys alone); EasingCurve list in segmentCurveRows / CurveRow.menu. Core helper PhotonzDocument.segmentsInHand(layerID:points:segments:) already maps a picked point to the segment it starts (last key: the one arriving), so one list on keys can reuse curveStretches. newKeyEase (bar remembers an ease for new keys) would need a curve equivalent. Walks expecting the key list: key-lanes-menu-walk, keyframe-anything-walk, timeline-bar-labels-only-walk, title-flies-in-grows-and-fades-out-walk, a-zoom-follows-the-cursor-walk, curves-on-a-zoom-and-a-dissolve-walk, pick-several-zooms-walk, every-title-dropdown-opens-on-a-click-walk.",
   "acceptance": [
-    "The user has answered the decision card on which list a key shows",
-    "If one list: a key right-click, a clip diamond right-click and the timeline bar with keys picked show the ten curves, Hold and Draw a Curve, and a curve on a key sets the segment it starts",
-    "If keys keep their own list: each list says on its face which it is, so the same word never means two things in two menus",
+    "A key right-click, a clip diamond right-click and the timeline bar with keys picked show the ten curves, Hold and Draw a Curve, and a curve on a key sets the segment it starts",
+    "No word means two different things in two menus: Ease In, Ease Out and Bezier are gone from the key menu",
     "A walk at Next defaults eases a key and a segment from their right-clicks and reads the result in the bar"
   ],
   "log": [
@@ -59,6 +58,18 @@
     {
       "t": "2026-10-20T01:33:28.906Z",
       "note": "decision \"Should a key's right-click show the same ten curves as a segment's, or keep Premiere's six?\" resolved: One list everywhere: keys show the ten curves, Hold and Draw a Curve; Ease In, Ease Out and Bezier leave the key menu (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:55:42.311Z",
+      "note": "digest 2026-10-20: goal and checklist rewritten to build the card's answer; the card items are gone, since the answer is in"
+    },
+    {
+      "t": "2026-10-20T13:56:31.982Z",
+      "note": "seq 190 -> 190"
+    },
+    {
+      "t": "2026-10-20T13:58:44.796Z",
+      "note": "seq 190 -> 200"
     }
   ]
 }

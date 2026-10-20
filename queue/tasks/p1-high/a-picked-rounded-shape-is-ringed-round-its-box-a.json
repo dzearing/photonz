@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T02:20:00.934Z",
-  "updated": "2026-10-20T01:33:28.821Z",
+  "updated": "2026-10-20T13:48:54.725Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/shared/components/selection.css .sel-ring + the block at its foot (\"hug the bounds, 2px hairline radius, never trace the object's shape\"). App: CanvasDisplay.refreshLayerSelectionDisplay passes chromeLayer.selectionOutlineRadii(box:) into SelectionOutlineShape.path, which rounds the ring by the shape's own corner radius; that was a deliberate fix on 2026-09-08 (SelectionOutlineShape.swift doc comment: straight lines looked like they cut across every corner). The two conflict, so it is a card, not a quiet change. Found while making the ring solid (a-picked-layer-wears-the-solid-accent-ring-the-m, 2026-10-14): with a solid accent ring the curve reads even more like a border of the shape. Reproduce: draw a rectangle, set Corner Radius 40, pick it, snapshot.",
@@ -69,11 +69,16 @@
     {
       "t": "2026-10-20T01:33:28.820Z",
       "note": "decision \"When you pick a rounded rectangle, should the ring round it be a near-square frame round its box, or curve with the shape's corners?\" resolved: Square frame round the box, handles on its corners (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:48:54.723Z",
+      "note": "digest 2026-10-20: the card was answered A (square frame round the box), which the task log says closes it as is: the mock's ring has shipped at Next defaults since 552fadd6. Re-ran a-picked-rounded-shape-hugs-its-box-walk with --no-build today: ok. The ring's colour with the window in front was never photographed; nobody has complained, so it is left here rather than filed."
     }
   ],
   "started": "2026-10-15T02:33:59.551Z",
   "walks": [
     "a-picked-rounded-shape-hugs-its-box-walk",
     "selection-outline-rounds-walk"
-  ]
+  ],
+  "completed": "2026-10-20T13:48:54.724Z"
 }

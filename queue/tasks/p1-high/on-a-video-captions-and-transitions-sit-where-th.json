@@ -1,6 +1,6 @@
 {
   "id": "on-a-video-captions-and-transitions-sit-where-th",
-  "title": "On a video, Captions and Transitions sit where the user decides",
+  "title": "On a video, Captions and Transitions sit where a video editor expects them",
   "goal": "On a video the right panel should place Captions and Transitions where a video editor expects them in the panel the user asked for on 2026-10-18 (Layers on top, the picked clip next, the Library last), with transitions offered in one place rather than twice.",
   "epic": "video-editing",
   "priority": "p1-high",
@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-14T03:26:52.669Z",
-  "updated": "2026-10-20T07:10:19.117Z",
+  "updated": "2026-10-20T13:58:25.076Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-right-panel-shows-only-what-the-picked-thing (2026-10-13). Measured on the laptop window (windowLaptop, sound picked): with Captions and Transitions in the pane at 40 per cent of a ~395pt column, the pick part was 235pt and Fades (244-352) fell under it; sound-fades-in-the-panel-walk step 12 and video-panel-order-walk step 45 failed. Both are forms the pane cannot shorten (not in DockMetrics.scrollingSections). Code: PanelListsPane.listSections (PhotonzCore), InspectorPanel.paneSplit.",
@@ -18,7 +18,7 @@
     "Transitions are offered in one place on a video: the Transitions group or the catalog chip, not both, or the audit says in one line why both stay",
     "A picked sound keeps its Fades on screen on the laptop window: sound-fades-in-the-panel-walk and video-panel-order-walk pass at Next defaults",
     "panel-shows-what-is-picked-video-walk checks the order with expectSections",
-    "Ask a new card only if the new panel order leaves a real choice, with pictures of today's panel; UX-PATTERNS shell item 6 (Right dock) describes the panel as it now is",
+    "Where the new panel order leaves a choice, the runner makes it and logs 'Chose X over Y because Z'; UX-PATTERNS shell item 6 (Right dock) describes the panel as it now is",
     "A picked graphic (a line from the Line tool) on a 1400x900 video window shows its Appearance rows, Thickness included, without the Library pane squeezing them to a sliver (line-thickness-typed-walk, step 3-video)"
   ],
   "log": [
@@ -85,6 +85,26 @@
     {
       "t": "2026-10-20T07:10:19.116Z",
       "note": "From a-video-document-shows-the-library-in-its-dock (2026-10-20): a video now shows the Library at Next defaults, folded at the foot (one 33pt header). Opened, its pane takes about 40 per cent of the column and squeezes Transitions to one row of tiles; the video mock caps the opened Library body at 118px so it does not split the column (video.html line 64, #gLibrary). Picture: queue/audits/2026-10-20-video-library-folded-2-library-opened-sc.png"
+    },
+    {
+      "t": "2026-10-20T13:55:43.003Z",
+      "note": "digest 2026-10-20: retitled (the title said 'where the user decides'); a remaining choice is the runner's, logged"
+    },
+    {
+      "t": "2026-10-20T13:56:30.671Z",
+      "note": "seq 60 -> 80"
+    },
+    {
+      "t": "2026-10-20T13:58:08.640Z",
+      "note": "seq 80 -> 55"
+    },
+    {
+      "t": "2026-10-20T13:58:08.714Z",
+      "note": "digest 2026-10-20: moved ahead of the other focus p1 work (seq 80 -> 55). Three audits in one day folded their worst picture into this task: the Library pane squeezing Transitions to half-cut tiles (2026-10-20-video-library-folded-2-library-opened-sc.png), Appearance and Thickness squeezed off screen for a picked line (2026-10-19-line-thickness), and the Transitions grid below the fold (2026-10-19-library-holds-still). Also seen in 2026-10-20-next-arrow-keeps-the-last-look-2-arrive-faded.png: with an arrow picked on a video, the document's Captions section sits under the arrow's own sections, though captions are not a setting of the arrow (UX-PATTERNS Inspector row: a section shows only when it applies to the picked thing)"
+    },
+    {
+      "t": "2026-10-20T13:58:25.075Z",
+      "note": "seq 55 -> 60"
     }
   ],
   "walks": [

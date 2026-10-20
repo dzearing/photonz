@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T04:57:34.253Z",
-  "updated": "2026-10-20T01:33:28.382Z",
+  "updated": "2026-10-20T13:55:41.995Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html #rowForce (irow, Or + btn secondary sm with ic-swap). App: TransitionInspector.shorten(_:), a VideoKit.FieldRow with a .fixedSize() button, so PanelFieldRowLayout stacks it under Or when the 76pt label column plus the ~173pt button exceeds the row (~236pt at default dock width). Without the icon at 10.5pt it is ~145pt, which would fit beside. Picture: queue/audits/2026-10-15-shorten-the-cut-1b-the-offer-sc.png.",
@@ -46,9 +46,14 @@
     {
       "t": "2026-10-20T01:33:28.381Z",
       "note": "decision \"At a cut with no spare frames, how should the Or row with Shorten the cut sit in Properties?\" resolved: Or on its own line, full button under it (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:55:41.993Z",
+      "note": "digest 2026-10-20: the card picked 'Or on its own line, full button under it', which is the layout that already ships, so nothing is built. shorten-the-cut-for-a-dissolve-walk passed in the 2026-10-20 full sweep (982 of 986). Re-running it this morning was deferred because the person was at the Mac."
     }
   ],
   "walks": [
     "shorten-the-cut-for-a-dissolve-walk"
-  ]
+  ],
+  "completed": "2026-10-20T13:55:41.994Z"
 }

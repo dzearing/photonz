@@ -1,7 +1,7 @@
 {
   "id": "the-measuring-legend-says-something-useful-now-t",
-  "title": "The measuring legend says something useful now that Size and Gap share one colour",
-  "goal": "While the Measure tool is on, a small key in the corner of the picture lists Size and Spacing with a colour swatch each. Since every measurement now starts in the same blue, both rows show the same swatch, so the key no longer tells them apart. Decide with the user whether the key goes, tells the roles apart some other way, or stays.",
+  "title": "The measuring key goes now that Size and Spacing share one colour",
+  "goal": "While the Measure tool is on, a small key in the corner of the picture lists Size and Spacing with a colour swatch each. Every measurement now starts in the same blue, so both rows show the same swatch and the key tells nothing apart. Take the key away (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 310,
@@ -9,14 +9,14 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-13T21:51:15.337Z",
-  "updated": "2026-10-20T01:33:28.727Z",
+  "updated": "2026-10-20T13:58:45.551Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows every-measurement-shares-one-remembered-look-blu (2026-10-13): MeasureStyles keeps ONE colour set for every role, so measureLegendEntries (EditorState+Measure.swift, near the end) lists Size and Spacing each swatched in its top-most measurement ink, which is now the same #3774D5 by default. The legend is behind next-measure-roles (on at Next defaults); legend-corner-slots walk covers its placement. The redline mock (docs/design/mocks/pages/redline.html) draws Size red and Spacing blue with this legend; the user overrode the colour split on 2026-10-13 (\"gap vs size shouldn't be different\").",
   "acceptance": [
-    "A decision card offers the user what the key should do now that Size and Spacing share one look, with keep, drop and a different marker as options, and drop marked as the recommendation if the key no longer earns its corner",
-    "Whatever the user picks is built and a walk at Next defaults shows the key (or its absence) with a Size and a Gap on the picture",
-    "No two rows of the key ever show identical swatches with nothing else telling them apart"
+    "With the Measure tool on and a Size and a Gap on the picture, no key is drawn in the corner, at Next defaults",
+    "A walk at Next defaults places a Size and a Gap with the Measure tool on, photographs the picture and checks the key is gone",
+    "Any walk that read the key is updated and passes"
   ],
   "log": [
     {
@@ -70,6 +70,18 @@
     {
       "t": "2026-10-20T01:33:28.726Z",
       "note": "decision \"With Size and Spacing now the same blue, what should the little key in the picture's corner do while you measure?\" resolved: Take the key away (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:55:42.182Z",
+      "note": "digest 2026-10-20: goal and checklist rewritten to build the card's answer; the card items are gone, since the answer is in"
+    },
+    {
+      "t": "2026-10-20T13:56:32.695Z",
+      "note": "seq 310 -> 300"
+    },
+    {
+      "t": "2026-10-20T13:58:45.550Z",
+      "note": "seq 300 -> 310"
     }
   ],
   "walks": [

@@ -4,12 +4,12 @@
   "goal": "A cut with nothing removed can now be joined back into one piece, but only from the cut's right-click. A Premiere editor picks such a cut and presses Delete, and here that does not join it, so the quickest way they know does nothing they expect. Make Delete on a picked cut with nothing removed join it, the same as Join Through Edit.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 200,
+  "seq": 210,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:01:09.195Z",
-  "updated": "2026-10-19T12:42:48.702Z",
+  "updated": "2026-10-20T13:58:44.863Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-10-17-a-cut-with-nothing-removed-can-be-joined-back-in.json: 'Delete on a picked through edit does not join it, as it does in Premiere; the task asked not to change Delete without a card, so it is left as it was.' No card was ever opened, so the gap would sit unseen. Premiere: select a through edit (the dashed edit line) and press Delete to join it. Reuse the Join Through Edit action from task a-cut-with-nothing-removed-can-be-joined-back-in; do not write a second join. Filed by the digest of 2026-10-17.",
@@ -17,7 +17,7 @@
     "Reproduced first: what Delete and Forward Delete do today with a through edit picked on a video, pasted into this task's log with the walk or steps that show it",
     "With a cut that removed nothing picked, Delete joins the two pieces into one, exactly as Join Through Edit does, in one undo",
     "Delete on a cut where something was removed (a jump cut) keeps doing what it does today",
-    "If the cut carries a transition and it is not clear whether Delete should take the transition off or join the pieces, a decision card asks the user with both outcomes named, and the rest ships",
+    "If the cut carries a transition, the runner picks what Delete does the way Premiere does it and logs 'Chose X over Y because Z'",
     "Try path, no flag changed from Next defaults: open the sample recording, press Command K at 4 s, click the cut, press Delete; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
@@ -36,6 +36,18 @@
     {
       "t": "2026-10-19T12:42:48.701Z",
       "note": "seq 230 -> 200"
+    },
+    {
+      "t": "2026-10-20T13:55:43.130Z",
+      "note": "digest 2026-10-20: the checklist item that would open a card now asks the runner to decide and log, per the 2026-10-19 rule that cards are rare"
+    },
+    {
+      "t": "2026-10-20T13:56:32.045Z",
+      "note": "seq 200 -> 200"
+    },
+    {
+      "t": "2026-10-20T13:58:44.860Z",
+      "note": "seq 200 -> 210"
     }
   ]
 }

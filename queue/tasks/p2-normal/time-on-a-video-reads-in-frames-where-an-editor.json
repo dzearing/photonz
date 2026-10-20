@@ -1,24 +1,24 @@
 {
   "id": "time-on-a-video-reads-in-frames-where-an-editor",
   "title": "Time on a video reads in frames where an editor expects frames",
-  "goal": "A Premiere or Final Cut editor thinks in frames: they trim a transition to 12 frames and park the playhead at 00:00:04:12. Photonz says 0:04 on the transport and 0.8s beside a transition you drag, so an editor cannot land on a frame they can name. Show time the way an editor reads it wherever a length or a position is set by hand.",
+  "goal": "A Premiere or Final Cut editor thinks in frames: they trim a transition to 12 frames and park the playhead at 00:00:04:12. Photonz says 0:04 on the transport and 0.8s beside a transition you drag, so an editor cannot land on a frame they can name. Time stays in seconds by default, and a Timecode choice in the View menu switches every readout and length field to frames (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 70,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T12:30:45.465Z",
-  "updated": "2026-10-20T01:33:30.446Z",
+  "updated": "2026-10-20T13:58:44.420Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen twice now, so it is filed. First: docs/design/video-vs-premiere.md, 'Seen, not filed: No frames in the time readout. The transport says 0:04 and the ruler counts seconds; Premiere shows 00:00:04:12.' Second: queue/audits/2026-09-29-transition-edge-follows-the-pointer.json rough list: 'The bubble shows tenths of a second (0.8s), and hundredths only once the ruler is zoomed in far enough. It does not show frames.' Serves the video-beats-premiere success criterion that the ruler, playhead, clips and captions agree to the frame at every zoom. Update the gap report's line when this closes.",
   "acceptance": [
     "Reproduced first: the transport readout, the ruler at its closest zoom and a transition's length bubble are photographed at Next defaults and what each says is written in the log",
-    "Whether frames show everywhere or behind a choice (Premiere offers one) is put to the user on a decision card with pictures of both before anything visible changes",
+    "View has a Timecode choice, off by default and remembered; on, the transport, the ruler's closest labels, the transition length bubble and the panel's Length row read in timecode (00:00:04:12); off, they read seconds as today",
     "Once answered: the transport, the ruler's closest labels, the transition length bubble and the panel's Length row all say the same time for the same moment, to the frame",
     "Typing a length in frames (12) or in timecode (00:00:00:12) into a length field gives the same result",
-    "A walk at Next defaults drags a transition to a whole number of frames and reads it back from the bubble and the panel"
+    "A walk at Next defaults turns Timecode on from the View menu, drags a transition to a whole number of frames and reads it back from the bubble and the panel"
   ],
   "log": [
     {
@@ -138,6 +138,18 @@
     {
       "t": "2026-10-20T01:33:30.445Z",
       "note": "decision \"Should video time read in frames (timecode) everywhere, or stay in seconds with timecode as a choice in the View menu?\" resolved: Seconds, with Timecode in the View menu (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:55:42.437Z",
+      "note": "digest 2026-10-20: goal and checklist rewritten to build the card's answer; the card items are gone, since the answer is in"
+    },
+    {
+      "t": "2026-10-20T13:56:31.582Z",
+      "note": "seq 70 -> 130"
+    },
+    {
+      "t": "2026-10-20T13:58:44.419Z",
+      "note": "seq 130 -> 140"
     }
   ],
   "started": "2026-10-02T07:23:54.886Z",

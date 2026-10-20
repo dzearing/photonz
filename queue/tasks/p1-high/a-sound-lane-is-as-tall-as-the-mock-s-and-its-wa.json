@@ -4,12 +4,12 @@
   "goal": "On the timeline a sound segment is a 36 point strip with its waveform drawn as a row of thin bars, so a fade or a quiet stretch is hard to read and the level line has little room. The audio mock draws each sound lane about 84 points tall with the waveform as one smooth filled shape. Draw it that way.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 30,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T23:10:38.768Z",
-  "updated": "2026-10-20T01:33:29.515Z",
+  "updated": "2026-10-20T13:58:25.217Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing a-sound-s-waveform-grows-and-shrinks-with-its-fa (2026-10-07). Mock: docs/design/mocks/pages/video-audio.html ~41 `.lane.alane{height:84px}` (~73 72px narrow), ~506-514 the waveform as one SVG path (top edge then bottom edge, fill-opacity .55). App: Sources/Photonz/MotionStripView.swift ~44 soundBarHeight 36, soundLaneHeight 42; Sources/Photonz/SoundLane.swift SoundWaveform draws one rect per column. Heights already come from Waveform.drawnHeights (PhotonzCore), so the shape only changes how they are drawn. Searched: waveform smooth, waveform filled path, sound lane taller, audio lane height, lane is taller (with --all); nothing covered it.",
@@ -18,6 +18,7 @@
     "The waveform is one filled shape mirrored about the middle, in the track's colour, as video-audio.html draws it, still following the level and the fades",
     "The level line is drawn in the lane's own colour (cyan on the first sound track, purple on the second), as video-audio.html strokes it",
     "The level line keeps its full range of travel in the taller lane, and a drag on it still lands under the pointer",
+    "The sound segment sits on the panel colour with a thin edge in the lane's own colour, so the waveform is the coloured shape, as video-audio.html draws it (the background card, settled on 2026-10-20, when the waiting cards were taken as recommended: panel colour, coloured waveform). Name, waveform and level line stay legible on it in light and dark. A recording's own sound keeps the green family rather than its picture's tint (the tint card, same day: keep sound green, joined by a staple). Folded in from a-sound-clip-on-the-timeline-wears-its-file-name",
     "Try path at Next defaults: open the talk sample and look at its sound under V1. A walk photographs it beside video-audio.html's lanes; audit written under queue/audits/"
   ],
   "log": [
@@ -100,6 +101,18 @@
     {
       "t": "2026-10-20T01:33:29.514Z",
       "note": "decision \"How tall should a sound's lane be on the timeline?\" resolved: 84 points, as the audio mock: the timeline grows 50 points and the picture shrinks by that on every recording with sound (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T13:55:43.260Z",
+      "note": "digest 2026-10-20: folded in a-sound-clip-on-the-timeline-wears-its-file-name, found while auditing this task: the lane's background goes to the panel colour with the waveform as the coloured shape (that card's answer). Its notes: ClipPiecesBar.fill returns kind.fill, ClipKind.audio uses the .clip.aud gradient; video-audio.html ~44 .lane.alane uses var(--panel-2), clip rect stroke col at .35 (~500)"
+    },
+    {
+      "t": "2026-10-20T13:56:30.602Z",
+      "note": "seq 30 -> 70"
+    },
+    {
+      "t": "2026-10-20T13:58:25.216Z",
+      "note": "seq 70 -> 80"
     }
   ],
   "walks": [

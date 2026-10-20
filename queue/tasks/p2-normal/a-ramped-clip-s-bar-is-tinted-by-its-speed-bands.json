@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-18T04:37:35.648Z",
-  "updated": "2026-10-19T12:42:48.979Z",
+  "updated": "2026-10-20T13:58:45.057Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-speed.html .vs-cells/.vs-cell (48 sampled cells, gradients per band) and .seglegend. The bands per clip are SpeedCurve(clipPieces).bands (Sources/PhotonzCore/SpeedCurve.swift), already tested; the clip bar is ClipPiecesBar.swift. Filed from the-speed-curve-shows-under-a-clip-and-its-stops, whose audit lists both as mock differences.",
@@ -17,7 +17,7 @@
     "A clip with speed stops draws the mock's band cells along its bar: Slow-mo #12c2e9, Normal #9a5cff, Fast #ff5d8f, Freeze hatched amber, where the stops put them",
     "The mock's legend (Slow-mo, Normal, Fast, Freeze, held) shows under a ramped clip while its speed curve is open, and nowhere else",
     "The clip name stays legible over every band in light and dark",
-    "The speed curve's title placement is settled against the mock (the mock heads the plot with SPEED CURVE above it; the app labels it in the track gutter like its other lanes): a decision card if the gutter is kept",
+    "The speed curve's title is placed as the mock heads it (SPEED CURVE above the plot), or the runner keeps the app's track-gutter label and logs 'Chose X over Y because Z'",
     "On a 1280 by 800 window, opening a clip's speed curve leaves the clip's own bar and the curve both in view at once (measured in a walk on the laptop window)",
     "Measured bar: a pixel sampled at the middle of each band on the clip bar is within 10 of the mock's colour for that band in each channel, and a clip with no stops samples the same as today. Today's bar (one colour whatever the speed) fails it"
   ],
@@ -41,6 +41,18 @@
     {
       "t": "2026-10-19T12:42:48.978Z",
       "note": "seq 280 -> 240"
+    },
+    {
+      "t": "2026-10-20T13:55:43.067Z",
+      "note": "digest 2026-10-20: the checklist item that would open a card now asks the runner to decide and log, per the 2026-10-19 rule that cards are rare"
+    },
+    {
+      "t": "2026-10-20T13:56:32.234Z",
+      "note": "seq 240 -> 230"
+    },
+    {
+      "t": "2026-10-20T13:58:45.056Z",
+      "note": "seq 230 -> 240"
     }
   ],
   "walks": [

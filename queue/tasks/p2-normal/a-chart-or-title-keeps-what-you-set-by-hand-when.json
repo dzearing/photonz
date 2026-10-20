@@ -4,12 +4,12 @@
   "goal": "Changing an animated chart's numbers or theme lays its bars out again and throws away any key or effect the person set by hand on a bar, and restyling a chart or title puts back the theme's version of an effect the person had edited. The person loses work without being told. Keep hand-set keys and edited effects through a change of numbers or style, the way hand-dragged title bars are now kept.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 26,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.166Z",
-  "updated": "2026-10-19T16:22:37.819Z",
+  "updated": "2026-10-20T13:58:44.039Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From two audit rough lines nobody filed: queue/audits/2026-10-17-animated-charts.json ('Changing the data or the theme lays the chart's pieces out again: a key or an effect set by hand on one bar is lost (the pieces keep their ids, and a part's retimed in and out are kept)') and queue/audits/2026-10-19-a-title-part-move-dragged-by-hand-on-the-timelin.json ('On a chart, an effect the drawing gave a bar and that you then edited (rather than added) still goes back to the theme's on a restyle; only effects you added are kept'). The model to copy is commit 56d7c8e5 (hand-dragged title part bars survive a restyle). Not reproduced by the manager, so p2 with reproduction as the first item.",
@@ -28,6 +28,14 @@
     {
       "t": "2026-10-19T16:22:37.818Z",
       "note": "seq 23.75 -> 26"
+    },
+    {
+      "t": "2026-10-20T13:56:31.195Z",
+      "note": "seq 26 -> 70"
+    },
+    {
+      "t": "2026-10-20T13:58:44.038Z",
+      "note": "seq 70 -> 80"
     }
   ]
 }

@@ -1,26 +1,39 @@
 {
   "id": "find-out-whether-a-new-video-should-keep-the-len",
-  "title": "Find out whether a new video should keep the length it was given once a title goes on it",
-  "goal": "A video started with File > New Video at a length of its own (say 10 seconds) drops to 4 seconds the moment a title page is put on it, because the title is all there is on it. Decide whether the chosen length should hold until something longer lands, and make it so if it should.",
+  "title": "A new video keeps the length it was given until something longer lands on it",
+  "goal": "A video started with File > New Video at a length of its own (say 10 seconds) drops to 4 seconds the moment a title page is put on it, because the title is all there is on it. The person chose 10 seconds, so the video should stay 10 seconds until something longer lands, and the export should be 10 seconds too. The runner may decide otherwise, logging 'Chose X over Y because Z'.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 24.375,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T00:12:12.028Z",
-  "updated": "2026-10-20T00:12:12.031Z",
+  "updated": "2026-10-20T13:58:43.975Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-19 by the runner through the agent tools on the probe: new_video {width:1920,height:1080,seconds:6} answered durationSeconds 6; add_title {seconds:0, style:\"Keynote Clean\", text:\"Hello\"} answered durationSeconds 4. Cause: PhotonzDocument.landTitle calls refreshDuration(), which sets durationMS to the latest out point whenever a duration is written. Not checked through the menu by a person; it may be meant (a video is as long as what is on it, the rule a trim follows). Found during an-agent-can-cut-a-video-from-history-clips-with.",
   "acceptance": [
-    "The behaviour a person gets is decided and written in the task log",
-    "If the length should hold: a 10 second new video with a 4 second title page put on it is still 10 seconds long, and a walk shows it"
+    "A 10 second new video with a 4 second title page put on it is still 10 seconds long on the timeline, in the title bar and in the Export sheet",
+    "Something longer than 10 seconds landing on it makes it longer, and removing it goes back to 10, not 4",
+    "A walk at Next defaults shows both"
   ],
   "log": [
     {
       "t": "2026-10-20T00:12:12.030Z",
       "note": "created (runner)"
+    },
+    {
+      "t": "2026-10-20T13:55:42.941Z",
+      "note": "digest 2026-10-20: retitled from a question to the outcome. Cards are rare now (2026-10-19) and a runner decides and logs; the person chose a length, so the default is to keep it"
+    },
+    {
+      "t": "2026-10-20T13:56:31.133Z",
+      "note": "seq 24.375 -> 60"
+    },
+    {
+      "t": "2026-10-20T13:58:43.974Z",
+      "note": "seq 60 -> 70"
     }
   ]
 }
