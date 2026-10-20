@@ -441,12 +441,24 @@ final class EditorState {
     /// the shelf while its sample recording is still opening, and the window
     /// reads as a picture's until it arrives), so the ask goes to the
     /// app-wide switch, which a picture's window does not read anyway.
+    ///
+    /// A video's window shows the shelf until it is turned off there
+    /// (`WindowMode.libraryShowsUntilTurnedOff`), so the other way round:
+    /// hiding writes that mode's own no, showing hands it back to automatic,
+    /// and the app-wide switch is left alone, so starting a video no longer
+    /// turns the shelf on for design work after it.
     func setLibraryVisible(_ visible: Bool) {
         if hasDocument, activeWindowMode?.libraryWaitsToBeTurnedOn == true {
             if visible {
                 setPanelSection(.library, shown: true)
             } else {
                 useAutomaticPanelSection(.library)
+            }
+        } else if hasDocument, activeWindowMode?.libraryShowsUntilTurnedOff == true {
+            if visible {
+                useAutomaticPanelSection(.library)
+            } else {
+                setPanelSection(.library, shown: false)
             }
         } else {
             isLibraryVisible = visible
@@ -485,6 +497,18 @@ final class EditorState {
     /// A recording or a sound is held over the Library shelf, which will keep
     /// it: the shelf wears its ring while this is true.
     var isLibraryTakingFiles = false
+
+    /// Bring the shelf forward for something that points at it: shown if it
+    /// is not, and opened and scrolled into view if it is there folded, which
+    /// a video's Library is until somebody opens it.
+    func bringLibraryForward() {
+        guard isLibraryShown else {
+            setLibraryVisible(true)
+            return
+        }
+        setInspectorVisible(true)
+        pendingLibraryReveal = true
+    }
 
     func libraryRevealHandled() {
         pendingLibraryReveal = false

@@ -1,0 +1,27 @@
+{
+  "feature": "A video shows the Library in its dock, folded",
+  "epic": "video-editing",
+  "task": "a-video-document-shows-the-library-in-its-dock",
+  "summary": "Open a recording and the Library header now sits folded at the foot of the dock, so your clips are one click away without going to View > Library. Pictures still keep the Library out until you ask for it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/video-library-folded-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open any screen recording (or File > New Video).", "shot": "2026-10-20-video-library-folded-1-library-folded-sc.png" },
+    { "do": "Look at the foot of the right panel: LIBRARY Media, folded." },
+    { "do": "Click the LIBRARY header.", "shot": "2026-10-20-video-library-folded-2-library-opened-sc.png" },
+    { "do": "Drag the recording's tile onto a track." },
+    { "do": "Choose View > Library to turn the shelf off in this video, and again to bring it back." },
+    { "do": "Open a picture: no Library until View > Library.", "shot": "2026-10-20-video-library-folded-4-picture-keeps-it-out-sc.png" }
+  ],
+  "evaluate": [
+    "Would a Premiere editor find their bin where the folded LIBRARY header sits?",
+    "Is one folded row at the foot of a recording's dock worth it, or does it feel like clutter?",
+    "When you open it, is the shelf tall enough for your clips without taking too much room from Transitions?",
+    "Once you have opened or folded the Library, does it stay the way you left it?"
+  ],
+  "rough": [
+    "Opened, the shelf takes about 40 per cent of the panel and squeezes Transitions to one row of tiles; the mock caps the opened Library at 118 px so it does not split the column (video.html #gLibrary). Covered by on-a-video-captions-and-transitions-sit-where-th, which already owns the Library pane squeezing a video's panel.",
+    "The Library now starts folded everywhere until you open it once. In a picture or design that only shows when the shelf is turned on from the Sections list, because View > Library and every command that fills the shelf open it as they reveal it.",
+    "Turning the shelf off in a video is remembered for videos only and never touches pictures or design, and starting a new video no longer turns the Library on for design work after it."
+  ]
+}

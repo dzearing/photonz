@@ -70,6 +70,64 @@ struct PanelSectionFoldsTests {
         #expect(before.flipped(from: before).isEmpty)
     }
 
+    // MARK: A section that starts folded
+
+    // The Library shows itself in a video without being asked, folded, so the
+    // media pool costs one row until it is opened (the decision on
+    // `a-video-document-shows-the-library-in-its-dock`, 2026-10-19, and the
+    // user's own complaint on 2026-10-18 that the Library "was expanded by
+    // default"). Folded is where it starts, not a fold anybody made, so it
+    // has to be remembered the other way round: by the person OPENING it.
+
+    @Test("The Library starts folded with nothing stored")
+    func libraryStartsFolded() {
+        #expect(PanelSectionFolds.startFolded == ["library"])
+        let folds = PanelSectionFolds(stored: nil)
+        #expect(folds.contains("library"))
+        #expect(!folds.contains("time"))
+        #expect(folds.stored == "")
+    }
+
+    @Test("Opening the Library is remembered, and survives a round trip")
+    func openingTheLibraryIsKept() {
+        var folds = PanelSectionFolds(stored: "time")
+        let opened = folds.open("library")
+        #expect(opened)
+        #expect(!folds.contains("library"))
+        #expect(folds.stored == "+library,time")
+        let read = PanelSectionFolds(stored: folds.stored)
+        #expect(!read.contains("library"))
+        #expect(read.contains("time"))
+        #expect(read == folds)
+    }
+
+    @Test("Folding the Library again goes back to where it starts, storing nothing")
+    func foldingTheLibraryAgain() {
+        var folds = PanelSectionFolds(stored: "+library")
+        folds.toggle("library")
+        #expect(folds.contains("library"))
+        #expect(folds.stored == "")
+        folds.toggle("library")
+        #expect(!folds.contains("library"))
+        #expect(folds.stored == "+library")
+    }
+
+    @Test("An older build's folded Library stays folded")
+    func olderFoldedLibrary() {
+        let folds = PanelSectionFolds(stored: "library,time")
+        #expect(folds.contains("library"))
+        #expect(folds == PanelSectionFolds(stored: "time"))
+    }
+
+    @Test("Opening the Library is a flip of the Library and nothing else")
+    func openingFlipsTheLibrary() {
+        let before = PanelSectionFolds(stored: "time")
+        var after = before
+        after.open("library")
+        #expect(after.flipped(from: before) == ["library"])
+        #expect(before.flipped(from: after) == ["library"])
+    }
+
     // MARK: Telling a stored setting's own change from anybody else's
 
     @Test("The same stored value read twice is not a change")

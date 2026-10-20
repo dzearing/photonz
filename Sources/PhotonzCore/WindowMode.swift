@@ -80,10 +80,28 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
     /// hidden"). Design and the video setup keep their own default.
     public let libraryWaitsToBeTurnedOn: Bool
 
+    /// The Library is in this mode's panel without being asked, folded at
+    /// the foot of the dock (`PanelSectionFolds.startFolded`), until the
+    /// person turns it off here. True for the video setup only: the video
+    /// mock keeps the media pool one click away, and somebody who knows
+    /// Premiere looks for their bin there rather than in the View menu
+    /// (decision on `a-video-document-shows-the-library-in-its-dock`, taken
+    /// as recommended on 2026-10-19).
+    public let libraryShowsUntilTurnedOff: Bool
+
     /// What the automatic rule may take as "the Library was asked for" in
     /// this mode, given the app-wide switch.
     public func libraryAsked(_ switchIsOn: Bool) -> Bool {
-        switchIsOn && !libraryWaitsToBeTurnedOn
+        if libraryShowsUntilTurnedOff { return true }
+        return switchIsOn && !libraryWaitsToBeTurnedOn
+    }
+
+    /// Whether this mode's panel is offered the Library at all, given the
+    /// app-wide switch and this mode's own choice for the section (nil when
+    /// it has none). The visibility rule then has the last word.
+    public func libraryOffered(switchIsOn: Bool, chosen: Bool?) -> Bool {
+        if libraryShowsUntilTurnedOff { return chosen != false }
+        return switchIsOn || chosen == true
     }
 
     public init(id: String, title: String, summary: String, symbol: String,
@@ -91,7 +109,8 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
                 toolStrip: [[ToolBarLayout.Entry]]? = nil,
                 toolStripPriority: [ToolBarLayout.Entry]? = nil,
                 toolStripMembers: [ToolGroup: Tool] = [:],
-                libraryWaitsToBeTurnedOn: Bool = false) {
+                libraryWaitsToBeTurnedOn: Bool = false,
+                libraryShowsUntilTurnedOff: Bool = false) {
         self.id = id
         self.title = title
         self.summary = summary
@@ -101,6 +120,7 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
         self.toolStripPriority = toolStripPriority
         self.toolStripMembers = toolStripMembers
         self.libraryWaitsToBeTurnedOn = libraryWaitsToBeTurnedOn
+        self.libraryShowsUntilTurnedOff = libraryShowsUntilTurnedOff
     }
 
     /// The member `group`'s slot starts on in this mode, or nil when the mode
@@ -169,7 +189,8 @@ public enum WindowModes {
             summary: "Cutting and arranging a recording.",
             symbol: "film",
             preset: choices(["measurements": false, "columns": false,
-                             "placement": false])),
+                             "placement": false]),
+            libraryShowsUntilTurnedOff: true),
     ]
 
     /// The tools for building screens, as the UI entry mock draws them

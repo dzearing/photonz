@@ -48,11 +48,16 @@ extension EditorState {
     }
 
     /// Whether the Library may be offered to the panel at all: the app-wide
-    /// switch is on, or this window's mode has had it turned on by hand. The
-    /// panel's visibility rule then has the last word (`isLibraryShown`).
+    /// switch is on, or this window's mode has had it turned on by hand, or
+    /// it is a video's, which shows the shelf until it is turned off
+    /// (`WindowMode.libraryShowsUntilTurnedOff`). The panel's visibility rule
+    /// then has the last word (`isLibraryShown`).
     var libraryMayShow: Bool {
-        isLibraryVisible
-            || panelChoices.choice(for: InspectorSectionID.library.rawValue) == true
+        let chosen = panelChoices.choice(for: InspectorSectionID.library.rawValue)
+        guard hasDocument, let mode = activeWindowMode else {
+            return isLibraryVisible || chosen == true
+        }
+        return mode.libraryOffered(switchIsOn: isLibraryVisible, chosen: chosen)
     }
 
     /// Whether this window's panel is showing the Library: what View ▸

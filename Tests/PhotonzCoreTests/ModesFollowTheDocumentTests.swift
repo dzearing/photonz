@@ -181,4 +181,46 @@ struct LibraryWaitsInAPictureTests {
             isLibraryAskedFor: WindowModes.mode("design")?.libraryAsked(true) ?? false)
         #expect(PanelSectionVisibility.isShown("library", choices: .init(), in: design))
     }
+
+    // A document with a timeline shows the Library without being asked, so
+    // the media pool is one click away the way the video mock keeps it in
+    // the dock (decision on `a-video-document-shows-the-library-in-its-dock`,
+    // taken 2026-10-19). Only the video setup does.
+
+    @Test("Only the video setup shows the Library until it is turned off")
+    func onlyVideoShowsItUnasked() {
+        #expect(WindowModes.mode(WindowModes.videoID)?.libraryShowsUntilTurnedOff == true)
+        for id in ["image", "icon", "design"] {
+            #expect(WindowModes.mode(id)?.libraryShowsUntilTurnedOff == false)
+        }
+    }
+
+    @Test("A video shows the Library with the app-wide switch off")
+    func videoShowsItWithTheSwitchOff() throws {
+        let video = try #require(WindowModes.mode(WindowModes.videoID))
+        #expect(video.libraryAsked(false))
+        #expect(video.libraryOffered(switchIsOn: false, chosen: nil))
+        let situation = PanelSectionVisibility.Situation(isLibraryAskedFor: video.libraryAsked(false))
+        #expect(PanelSectionVisibility.isShown("library", choices: .init(), in: situation))
+    }
+
+    @Test("Turned off in a video, the Library stays off")
+    func videoTurnedOff() throws {
+        let video = try #require(WindowModes.mode(WindowModes.videoID))
+        var off = PanelSectionVisibility.Choices()
+        off.set("library", shown: false)
+        #expect(!video.libraryOffered(switchIsOn: true, chosen: false))
+        let situation = PanelSectionVisibility.Situation(isLibraryAskedFor: video.libraryAsked(true))
+        #expect(!PanelSectionVisibility.isShown("library", choices: off, in: situation))
+    }
+
+    @Test("A picture is offered the Library only once it is asked for")
+    func pictureOfferedOnlyWhenAsked() {
+        #expect(!WindowModes.image.libraryOffered(switchIsOn: false, chosen: nil))
+        #expect(WindowModes.image.libraryOffered(switchIsOn: false, chosen: true))
+        #expect(WindowModes.image.libraryOffered(switchIsOn: true, chosen: nil))
+        let design = WindowModes.mode("design")
+        #expect(design?.libraryOffered(switchIsOn: false, chosen: nil) == false)
+        #expect(design?.libraryOffered(switchIsOn: true, chosen: nil) == true)
+    }
 }

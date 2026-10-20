@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/video-library-folded-walk",
+  "seed": "A document with a timeline shows the Library header in the dock without being asked, folded, so the media pool is one click away (video.html: the Library keeps its header, #gLibrary collapsed). One click on the header, a real click on its face with the app in front, opens the shelf with the recording on it. A picture keeps the Library out until View > Library. At Next defaults, no flag set, and nothing runs showLibrary.",
+  "setup": {
+    "front": true,
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Library section", "present": true },
+    { "do": "expect", "control": "Tutorial Sample.mp4", "present": false },
+    { "do": "describe", "stage": "1-library-folded", "note": "THE FIRST TEST: an eight second recording opened at Next defaults, nothing asked for. The dock ends in the LIBRARY header, folded, and no tile is drawn under it" },
+    { "do": "snapshot", "name": "1-library-folded" },
+
+    { "do": "press", "control": "Library section" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "reveal", "control": "Tutorial Sample.mp4" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "control": "Tutorial Sample.mp4", "present": true },
+    { "do": "describe", "stage": "2-library-opened", "note": "THE SECOND TEST: one click on the Library header opens the shelf, and the recording is on it as Tutorial Sample.mp4" },
+    { "do": "snapshot", "name": "2-library-opened" },
+
+    { "do": "action", "action": "hideLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Library section", "present": false },
+    { "do": "describe", "stage": "3-library-turned-off", "note": "THE THIRD TEST: View > Library turns the shelf off in a video too, and on again" },
+    { "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Library section", "present": true },
+
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expect", "control": "Library section", "present": false },
+    { "do": "describe", "stage": "4-picture-keeps-it-out", "note": "THE FOURTH TEST: a picture still keeps the Library out until View > Library, as before" },
+    { "do": "snapshot", "name": "4-picture-keeps-it-out" }
+  ]
+}

@@ -1,18 +1,18 @@
 {
   "id": "a-video-document-shows-the-library-in-its-dock",
   "title": "A video document shows the Library in its dock",
-  "goal": "The video mock keeps the Library in the dock so the media pool is one click away, but the app hides the Library until View > Library is chosen, because the user said the Library would almost never be used for pictures. Decide whether a document with a timeline shows it without being asked.",
+  "goal": "Someone editing a video finds the Library, with their recordings and sounds, already in the right panel: folded at the foot so it costs one row, opened with one click. Pictures keep the Library out until View > Library, as before.",
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-09-23T21:55:35.854Z",
-  "updated": "2026-10-20T01:33:30.978Z",
+  "updated": "2026-10-20T07:03:30.954Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Found by recordings-and-sounds-in-a-document-sit-on-the-l (2026-09-23): its walk has to run the showLibrary action (the same as View > Library) before any tile exists. Rule lives in PanelSectionVisibility.isShownAutomatically (case library: situation.isLibraryAskedFor, with the user quote) and InspectorPanel (isLibraryVisible gate). Mock: video.html line ~62 (Library keeps its header, the media pool is still one click away) and #gLibrary collapsed at line ~528.",
+  "notes": "Found by recordings-and-sounds-in-a-document-sit-on-the-l (2026-09-23): its walk has to run the showLibrary action (the same as View > Library) before any tile exists. Rule lives in PanelSectionVisibility.isShownAutomatically (case library: situation.isLibraryAskedFor, with the user quote) and InspectorPanel (isLibraryVisible gate). Mock: video.html line ~62 (Library keeps its header, the media pool is still one click away) and #gLibrary collapsed at line ~528. | 2026-10-20 build: WindowMode.libraryShowsUntilTurnedOff (video only) + libraryOffered(switchIsOn:chosen:); PanelSectionFolds.startFolded = [library], stored as '+library' once opened; EditorState.setLibraryVisible writes the video mode's own no / hands back to automatic; bringLibraryForward() for guides so a folded shelf opens. Walk: video-library-folded-walk (front: true, because a header click only lands with the app in front).",
   "acceptance": [
     "The user has answered the decision card on this task",
     "A walk at Next defaults opens a recording and finds the Library where the answer says it is",
@@ -105,6 +105,26 @@
     {
       "t": "2026-10-20T01:33:30.977Z",
       "note": "decision \"Should a video document show the Library in the dock without being asked?\" resolved: Show it, folded, for video (Taken as recommended: the user, 2026-10-19, said there were too many cards, most did not matter and they could not follow them. Change it later only if they complain about the result)"
+    },
+    {
+      "t": "2026-10-20T06:19:04.808Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T07:03:30.797Z",
+      "note": "owns these walks: video-library-folded-walk"
+    },
+    {
+      "t": "2026-10-20T07:03:30.877Z",
+      "note": "Reproduced first: video-library-folded-walk on the HEAD probe failed at step 6, no 'Library section' in a recording's panel at Next defaults. Adversarial pass: a Premiere editor expects the bin in view; the risk is a dock already long on a recording, so the shelf arrives folded (one row). Guides that point at the shelf used to skip it when it was already 'shown', which a folded shelf would have broken, so they now open it (bringLibraryForward)."
+    },
+    {
+      "t": "2026-10-20T07:03:30.953Z",
+      "note": "Chose a fold that starts folded and is remembered by OPENING ('+library') over a one-time fold seeded when a video first opens, because it needs no timing hook and the user also said on 2026-10-18 the Library should not arrive expanded. Chose to leave the shelf pane's pointer hold alone: I suspected it froze the pane at header height on click, but the walk passes with and without a change to it once the app is in front, so the failure was the background click, not the hold."
     }
+  ],
+  "started": "2026-10-20T06:19:04.807Z",
+  "walks": [
+    "video-library-folded-walk"
   ]
 }
