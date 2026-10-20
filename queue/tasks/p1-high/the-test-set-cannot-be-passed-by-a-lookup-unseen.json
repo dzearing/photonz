@@ -1,0 +1,33 @@
+{
+  "id": "the-test-set-cannot-be-passed-by-a-lookup-unseen",
+  "title": "The test set cannot be passed by a lookup: unseen requests, real ones, and the user's own reactions",
+  "goal": "Ask scored 92 of 100 on drawings while the user found it drew one cat for every cat request. The test set has to measure what a person feels: requests the climbing runner never sees, requests taken from what people really type (poses, scenes, styles, edits), and the user's own thumbs on Ask's rows feeding back in as cases.",
+  "epic": "agent-skills",
+  "priority": "p1-high",
+  "seq": 8.04,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T22:50:50.819Z",
+  "updated": "2026-10-20T22:50:58.324Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20: 'i really don't think this model is great. i'm wondering what the process looks like on making it better?' Score history (queue/evals/ask-eval-history.jsonl): Ask on qwen3:30b 37.8 vs the skill on a frontier model 83.9 on the same tools (drawing 35 vs 87, sheet 47 vs 74, layout 30 vs 82); the dog task then climbed Ask's drawings to 92 mostly with a built-in Twemoji set looked up by noun, which is exactly what the user then found wrong. Classic overfitting to a small visible set. Runs before the model bake-off so the bake-off is measured on the honest set.",
+  "acceptance": [
+    "A held-out set of at least 40 requests lives apart from the cases a runner climbs on, and a runner working on Ask reports both scores but may only read the held-out cases' results in total, never one by one, so a fix cannot be shaped to them. It includes poses, scenes, styles, edits of an existing drawing, and the user's own failures to date",
+    "The rubric's didWhatWasAsked is judged against every word of the request: a stock drawing that ignores 'curled up sleeping' scores 2 or lower however clean it is. The user's cat pictures (queue/audits/2026-10-20-user-ask-cat-sleeping-same-cat.png, queue/audits/2026-10-20-user-ask-cat-playing-piano.png) score low on today's build",
+    "Each Ask change row gets a quiet thumbs up and down; a thumbs down saves the request, the document before and the result as a new held-out case, so the set grows from real use",
+    "The eval reports, per run, how often the result came from a stored drawing or a coded template versus drawn for the request, so climbing by lookup shows up as a number",
+    "Today's build scored on the new set in the audit as the honest baseline. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T22:50:50.822Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T22:50:58.323Z",
+      "note": "seq 35 -> 8.04"
+    }
+  ]
+}

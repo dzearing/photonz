@@ -1,0 +1,35 @@
+{
+  "id": "try-drawing-with-a-local-picture-model-then-turn",
+  "title": "Try drawing with a local picture model, then turning the picture into editable layers",
+  "goal": "Language models are poor at drawing by writing shapes; picture models are good at exactly what Ask gets wrong (a cat curled up asleep, a cat at a piano, a named style). Try generating the picture with a local picture model on this Mac and turning it into clean, editable vector layers, and keep it only if it beats today's way on the held-out test set.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 8.15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T22:50:50.934Z",
+  "updated": "2026-10-20T22:50:58.397Z",
+  "deps": [
+    "the-test-set-cannot-be-passed-by-a-lookup-unseen"
+  ],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20: 'would it be a good idea to get reference images from the web to understand the intent better? Or use a better model, or something? what is the real fix to make it feel more seamless?'\n\nWhy this route: the current illustration work puts the craft in code (Sources/PhotonzCore/Illustrator.swift, IllustrationPieces.swift, IllustrationPasses.swift) and the single-thing route is a stored drawing set (DrawingLibrary.swift); both score well on cases they were built for and cannot draw what they were not built for, which is the one-cat problem. A picture model handles pose, scene and style for free, and tracing gives layers. Candidates to look at, not decided: FLUX or Stable Diffusion family through MLX or Apple's Core ML Stable Diffusion; for tracing, a library such as vtracer or potrace (check licences: potrace is GPL, which may rule it out). Waits on the held-out test set task.",
+  "acceptance": [
+    "A local picture model runs on this Mac offline (the runner picks one that fits 64 GB beside the app, checks its licence allows use in a shipped app, and says why in the audit), drawing in flat vector-friendly styles from the request plus the style asked for",
+    "The picture becomes editable layers: colours reduced to a small palette, each region a named, filled path with curves, small specks dropped, a clean SVG export, under 300 paths for an icon-sized drawing. A tracing library may be used if its licence allows",
+    "Measured on the held-out set against today's Ask drawings: total, didWhatWasAsked, crafted, seconds per drawing, memory. It becomes the way Ask draws only if it wins on didWhatWasAsked without losing on clean and designed; otherwise the audit says by how much it lost and it stays off",
+    "An edit after the fact still works on the layers ('make the cat black', 'move the sun left'), since they are real layers",
+    "Audit under queue/audits/ with contact sheets of both ways for the same requests. Models downloaded for the try are removed again if it loses. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T22:50:50.936Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T22:50:58.396Z",
+      "note": "seq 42.5 -> 8.15"
+    }
+  ]
+}
