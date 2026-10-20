@@ -1,0 +1,36 @@
+{
+  "id": "on-a-small-picked-object-the-3d-turn-handles-are",
+  "title": "On a small picked object the 3D turn handles are each easy to hit, and only the one under the pointer lights",
+  "goal": "When someone picks a small object, like a button about 140 by 45 points, its 3D turn handles (Rotation X, Rotation Y and Depth) are squeezed into the space above it, on top of the component badge, the resize squares and the turn knob. Hovering one makes all of them react, and it is hard to grab the one you mean. Each handle should have room and its own clear target, and only the handle under the pointer should respond.",
+  "epic": "interaction-foundations",
+  "priority": "p1-high",
+  "seq": 18,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T01:32:52.032Z",
+  "updated": "2026-10-20T01:32:52.141Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user's words (2026-10-19, intake, with a screenshot of three 'Get started' component buttons, one picked with the Rotation X name showing): 'the hit targets on these 3d orbit things... not great with small selections. i hover over 1 and they all react'.\n\nWhere it lives (read, not reproduced): the handles are SpaceHandle .swing (Rotation Y), .tip (Rotation X), .depth (HandleHover.swift:107). Hit test: SpaceHandles.hit (Sources/PhotonzCore/SpaceEditing.swift:201) with grabReach 9pt off the drawing and drawnReach 4pt over the body (:56, :61), nearer wins, and a resize square or mark nearer than the handle takes the press. App side: CanvasSpaceHandles.swift:200 spaceHandleHit. Hover look: CanvasHandleHover.swift:167 styleSpaceHandles lights the hovered one (wider line) and DIMS the other two (dimmedSpaceOpacity), and widens the dark rim under all of them. That dimming plus the rim may be what reads as 'they all react'; or the 9pt reach over arcs drawn a few points apart may make the lit one flip between them as the pointer moves. Suspects, not causes: reproduce.\n\nTraps: (1) docs/design/canvas-hit-order.md sets which of the canvas's handles win a press; change it there, not with a one-off. (2) The never-cover rule (memory: overlays never sit over the picked object or its handles) applies to the component badge too. (3) Growing grabReach alone makes the overlap worse on small picks; the handles need space, not just slack.",
+  "acceptance": [
+    "Reproduced first, at Next defaults in the probe: three copies of a component button about 140 by 45 points on a picture, one picked, as in the user's screenshot (queue/audits gets a copy). Pointer over each 3D handle in turn and over the resize squares, the turn knob and the component badge beside them. The task log says, for each spot, which handle lit, which dimmed, which name showed, and what a press there would drag",
+    "Only one thing reacts: resting on a handle lights that handle alone; the others stay as they were at rest (or the audit says why dimming them is right, and the user's report says it is not). Nothing else on the canvas moves or changes when the pointer crosses from one handle to the next",
+    "Every handle has a target of its own on a small pick: MEASURED in the audit, for picks of 140 by 45, 60 by 24 and 24 by 24 points at 100% zoom, the area each of Rotation X, Rotation Y, Depth, every resize square, the turn knob and the component badge answers to, and the overlap between any two. Overlap is zero, and each 3D handle answers to at least a 16 by 16 point area. Today's build fails this on the 140 by 45 button",
+    "On a pick too small for all of them to fit round it, the 3D handles move clear of the box (outside its edge, or further out) rather than shrinking onto it, the way a pro Mac editor keeps handles usable on a tiny selection; the audit shows the three sizes before and after",
+    "The component badge and the 3D handles never sit on top of each other",
+    "A walk picks the small button and presses each handle in turn (Rotation X, Rotation Y, Depth, a resize corner, the turn knob) and checks that the press dragged that one and only that one; it fails on today's build",
+    "Unit tests in PhotonzCore for the handle layout and hit test on small boxes (SpaceEditing.swift, HandleHover.swift); Scripts/test.sh passes",
+    "Audit under queue/audits/ with before and after pictures at each size. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T01:32:52.035Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T01:32:52.140Z",
+      "note": "seq 3980 -> 18"
+    }
+  ]
+}
