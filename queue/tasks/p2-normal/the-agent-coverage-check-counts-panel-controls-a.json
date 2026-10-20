@@ -1,0 +1,34 @@
+{
+  "id": "the-agent-coverage-check-counts-panel-controls-a",
+  "title": "The agent coverage check counts panel controls and every right-click row",
+  "goal": "The check that says how much of Photonz an agent can reach covers what a person can click in the panel and in every right-click menu, not only the menu bar, so nothing a person can do is out of an agent's reach without a written reason. Today panel controls are not counted at all and eight timeline right-click rows have no name.",
+  "epic": "agent-api",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T15:19:05.617Z",
+  "updated": "2026-10-20T15:19:13.481Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Focus success gap: agent-api success item 1 names menus, panels and right-click menus. Today Tests/PhotonzCoreTests/EveryMenuCommandHasANameTests.swift reads menu bar rows (leftOut list :171-310), timeline right-click rows (:314-380, 57 of 65 named per queue/audits/2026-10-19-agent-skill.json) and layer right-click rows by title (:387+); other right-click rows only as 'a menu bar row under other words' (:17-19). Panel controls reach agents through typed tools (set_layer, set_layout, apply_style, set_transition; Sources/PhotonzCore/AgentTools.swift) and the agent-skill audit says no test counts them. The-panel-shows-what-the-picked-thing-is-and-its moves one-shot panel buttons into right-click and the menus, so those rows must land on this list whichever lands first. Keep the test in PhotonzCore reading source text as today, or put a registry of panel controls in Core if that reads cleaner; log which.",
+  "acceptance": [
+    "The test lists every panel control (each setting in each panel section, for a picture and for a video) and the agent tool and field that sets it, and fails for any control with neither a mapping nor a line on a left-out list with its reason",
+    "Every right-click menu (timeline, layer, canvas, Library tile, measurement and any other) is listed directly, not inferred as a menu bar row under other words; the timeline rows with no name today are named or left out with a reason",
+    "Adding a control with no mapping fails the test, shown in the audit with the failing output",
+    "The test prints named, left out and missing for each surface; the numbers go in the audit and in the coverage section of docs/design/agent-mcp.md",
+    "A control found out of reach whose fix is a one-line mapping is fixed here; anything bigger is filed if it clears the follow-up bar (queue/bin/follow-up-bar.md) and written into this task's log if it does not",
+    "No visible app change, so no flag; audit written under queue/audits/ with the counts"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T15:19:05.619Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-20T15:19:13.480Z",
+      "note": "seq 7.5 -> 6"
+    }
+  ]
+}

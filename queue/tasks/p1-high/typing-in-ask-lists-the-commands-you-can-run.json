@@ -9,16 +9,18 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:48.425Z",
-  "updated": "2026-10-20T14:42:52.281Z",
-  "deps": [],
+  "updated": "2026-10-20T15:16:13.165Z",
+  "deps": [
+    "ask-makes-the-change-straight-away-and-each-chan"
+  ],
   "blockedBy": [],
   "notes": "Left out of the first Ask slice (ask-in-the-app-runs-on-a-local-model-with-no-mod). Mock: docs/design/mocks/pages/agent-generate-wt.html (#agentChanges, .askcmd .cplist in docs/design/mocks/shared/dist/photonz-ds.js askPalHTML). Commands: AppCommandTable (PhotonzCore) with EditorState.run(_:) and canRun. Composer: AskComposerOverlay in Sources/Photonz/Agent/AskViews.swift; Agent group: AgentPanel.",
   "acceptance": [
     "In the Ask composer (title bar Ask button or Command K), typing / shows a filtered list of commands with their menu names, as the mock agent-generate-wt.html step 1 shows",
     "Return or a click on a row runs that command on the document, one undo step, and the list closes",
-    "After Run Plan, the Agent group shows the mock's Last change rows (one per change, what changed and to what); clicking one picks that layer on the canvas and in Layers",
+    "Clicking a request's row in the Agent group (the rows ask-makes-the-change-straight-away-and-each-chan builds) picks what it changed on the canvas and in Layers",
     "A walk proves both with the pointer, at Next defaults",
-    "The composer stays up over the window after Ask, showing what was asked and the plan's state as the mock's chat does, without covering the Agent group's Run Plan (today it closes as soon as you ask)"
+    "The composer stays up over the window after Ask, showing what was asked and whether it is still working, as the mock's chat does, without covering the Agent group (today it closes as soon as you ask)"
   ],
   "log": [
     {
@@ -44,6 +46,10 @@
     {
       "t": "2026-10-20T14:42:52.280Z",
       "note": "seq 8 -> 11"
+    },
+    {
+      "t": "2026-10-20T15:16:13.164Z",
+      "note": "manager 2026-10-20: the user overrode Run Plan this morning (ask-makes-the-change-straight-away-and-each-chan). That task owns the one-row-per-request list in the Agent group and runs first (deps set). Read this task's Run Plan and Last change lines as: the / list and its Return run, plus clicking a row picks what it changed. The composer staying up is still yours."
     }
   ]
 }

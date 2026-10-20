@@ -1,0 +1,34 @@
+{
+  "id": "on-a-video-the-ask-button-never-sits-on-top-of-t",
+  "title": "On a video the Ask button never sits on top of the panel",
+  "goal": "On a video in Edit, the Ask button lands on top of the right panel: it covers the Transitions search field, and once the panel scrolls, rows such as Intensity slide up underneath Ask and the View and Edit switch with nothing between them. A person reads two things on top of each other and cannot click the field under Ask. Ask, View and Edit should sit in a title bar strip of their own, and the panel's rows should start below it or pass under it the way content passes under a Mac toolbar.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T15:18:48.491Z",
+  "updated": "2026-10-20T15:19:13.291Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the manager 2026-10-20 08:16: Scripts/playtest-all.sh --no-build ask-adds-a-title-page passed, and its pictures /tmp/photonz-playtest/ask-adds-a-title-page-walk/1-plan-sc.png and 2-ran-sc.png show the overlap (crops saved under queue/manager/shots/). The Ask button came with 8238a30a: Sources/Photonz/TitlebarPanelToggle.swift:147-156 widens the right slot by AskTitlebarButton.width when offersAsk; AskTitlebarButton in Sources/Photonz/Agent/AskViews.swift:11. On a video the panel runs to the window top (the View and Edit switch already floated over it before Ask); on a picture Layers starts below the title bar. Placement contract: the title bar row (docs/design/mocks/shared/UX-PATTERNS.md, line 24 and section 1 line 322) owns Ask, the mode and the panel toggle; the panel starts under it. Check whether the video panel's top inset counts the wider right slot.",
+  "acceptance": [
+    "Reproduce first with ask-adds-a-title-page-walk at Next defaults: its plan shot shows Ask over the Transitions search field, its ran shot shows the Intensity row under Ask and View and Edit (queue/manager/shots/2026-10-20-video-ask-over-panel-search.png and 2026-10-20-video-ask-over-panel-rows.png)",
+    "On a video in Edit, nothing in the panel is drawn under Ask, View and Edit or the panel toggle at rest, and every panel control the title bar row covered (the Transitions search field first) can be clicked",
+    "Scrolled panel content passes under the title bar the way it does on a picture, with the same edge treatment, never as text drawn straight under the buttons",
+    "A walk proves it: it scrolls the panel on a video and checks that no panel control's frame meets the title bar controls' frames, and that the Transitions search field takes a click",
+    "Pictures, icons and designs are unchanged (photograph a picture's title bar before and after)",
+    "Ships at Next defaults (next-ask is on); audit written under queue/audits/ with before and after crops. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T15:18:48.493Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-20T15:19:13.290Z",
+      "note": "seq 42.5 -> 12"
+    }
+  ]
+}

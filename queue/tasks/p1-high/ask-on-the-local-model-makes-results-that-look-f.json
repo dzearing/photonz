@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-20T14:42:52.207Z",
+  "updated": "2026-10-20T15:19:13.546Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -47,6 +47,14 @@
     {
       "t": "2026-10-20T14:42:52.206Z",
       "note": "seq 7 -> 10"
+    },
+    {
+      "t": "2026-10-20T15:16:21.479Z",
+      "note": "manager 2026-10-20: ask-draws-a-dog-you-can-tell-is-a-dog also asks Ask to look at its result and revise at most twice. Build that look step once: whichever of the two lands first owns it, the other reuses it, never a second copy."
+    },
+    {
+      "t": "2026-10-20T15:19:13.545Z",
+      "note": "manager 2026-10-20 08:17, ask-makes-a-pricing-section-walk on the current probe at Next defaults: still one Card with 'Basic Plan' and '$9.99' laid over its picture area and over each other (queue/manager/shots/2026-10-20-ask-makes-a-pricing-section-walk-ran.png). The screenshot walk still measures the two whole cards (1312 x 264) and crowds the switches (2026-10-20-ask-annotates-a-screenshot-walk-ran.png). Both walks report ok, so the walks check that a plan ran, not that it looks right."
     }
   ],
   "walks": [

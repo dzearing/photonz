@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:44:10.565Z",
-  "updated": "2026-10-20T14:44:23.034Z",
+  "updated": "2026-10-20T15:19:22.154Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'when i say components, it only seems to know the placeholder components. it should be able to research what base components might include.' The screenshot queue/audits/2026-10-20-user-ask-component-sheet-mess.png shows Badge, Nav Bar, Card, Text Field, Button: the app's starters.\n\nSuspect, NOT confirmed: Ask's tool list (Sources/PhotonzCore/AskPlanning.swift line 24) does include run_command, so make_component and add_variant are reachable in principle; the model may not know they exist, or what goes in them, because the prompt hands it the Library's starters up front (the Ask task chose that on 2026-10-20). Reproduce before fixing. The skill can (plugin/skills/photonz/SKILL.md line 41) but its text points at the starters (line 88). 'Research' without the web is the built-in list; looking things up on the web is the separate web task, which this one does not wait on. Runs before the component sheet task, which lays these out as a table.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-20T14:44:23.033Z",
       "note": "seq 35 -> 8.5"
+    },
+    {
+      "t": "2026-10-20T15:19:22.153Z",
+      "note": "manager 2026-10-20: Ask's guidance lives in AskPlanning.swift (system prompt from :426) and the skill's in plugin/skills/photonz/SKILL.md. Put the built-in kit list in one file both read, not a copy in each."
     }
   ]
 }

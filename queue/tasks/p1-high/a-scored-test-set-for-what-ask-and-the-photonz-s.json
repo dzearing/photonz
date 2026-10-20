@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.299Z",
-  "updated": "2026-10-20T14:44:42.475Z",
+  "updated": "2026-10-20T15:16:21.630Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'i would like to hill climb the skill. is there a way we can develop an eval that can adjust the quality of output for drawing and component creation?' and on the component sheet: 'this is a complete mess. there is no table, no alignment, no titles, no clean design. The output should always be clean and beautiful and with consistent typography, alignment, and follow the user's requests as closely as possible.'\n\nWhat the sheet run did (screenshot saved): place_component Badge, Nav Bar, Card, Text Field, Button, then add_text 'Badge', 'Navigation Bar', 'Card Content', 'Enter text here', 'Click me' laid OVER the components at random sizes; no rows, no state columns, no headers. That is what rule scores must catch.\n\nEngines: Ask goes through the app (AskPlanning.swift, qwen3:30b via Ollama). The skill engine is a headless Claude Code session with only plugin/skills/photonz and the MCP server (Scripts/install-mcp.sh), the way the agent-skill audit ran its four scenarios (queue/audits/2026-10-19-agent-skill-transcript.md). The judge is dev tooling, never in the app; it may use a cloud model. App copy never names Claude or Anthropic.\n\nKeep the run bounded (CLAUDE.md: never leave the machine loaded): one case at a time, a time limit per case, the probe quit at the end. This is the measuring stick only; the climbing is the tasks that depend on it (the dog task, the component sheet task).",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-20T14:42:51.969Z",
       "note": "seq 35 -> 7"
+    },
+    {
+      "t": "2026-10-20T15:16:21.628Z",
+      "note": "manager 2026-10-20: record how long each case takes as well as its score (Ask took 24.5 s median for the screenshot plan on 2026-10-19), so a change that buys quality with a minute of waiting shows up in the comparison and is not kept by accident."
     }
   ]
 }

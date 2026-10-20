@@ -56,7 +56,7 @@
           "stage": "now",
           "children": [],
           "success": [
-            "The Ask button and Command K take a plain request, show a readable plan of commands, run it on Run plan, and undo it with one Command Z, on a local model with networking off",
+            "The Ask button and Command K take a plain request and make the change straight away, on a model on this Mac with networking off; each request leaves one plain row in the Agent group that turns the change off and on or deletes it, and one Command Z takes back the latest request whole (the user, 2026-10-20, over the mock's Run plan)",
             "No model choice appears anywhere in the ask flow; which models answer is set in Settings and works out of the box"
           ]
         }

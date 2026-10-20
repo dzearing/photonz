@@ -13136,3 +13136,20 @@
 {"t":"2026-10-20T14:58:35.442Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
 {"t":"2026-10-20T14:58:35.515Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
 {"t":"2026-10-20T14:59:13.829Z","ev":"task_done","id":"a-chart-is-your-data-given-to-it-the-obvious-way","from":"in_progress","note":"Paste a spreadsheet table (Command V) or drop a CSV on a video and a chart of exactly those rows lands; a chart holds later sets of numbers along its clip and moves between them (bars, line, counts), drawn from each frame's numbers; negatives drawn from a zero line; only data moves; a new chart opens its numbers with the first value focused. Verified: Scripts/test.sh 13,992 green, chart-from-pasted-data-walk and animated-charts-walk complete at Next defaults, reel + measured bar (0.23% of axis) in queue/audits/2026-10-20-chart-data.json. Commit cc0ab1c1."}
+{"t":"2026-10-20T15:14:01.016Z","ev":"slice_pass","walks":23,"passed":23,"failed":0,"seconds":418,"of":989,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-20T15:16:05.944Z","ev":"objectives_updated","by":"manager","change":"agent-ask success item 1 rewritten to the user 2026-10-20 ask: Ask runs straight away, one row per request to turn off, on or delete; no Run plan step"}
+{"t":"2026-10-20T15:16:13.166Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-10-20T15:16:21.481Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-20T15:16:21.556Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
+{"t":"2026-10-20T15:16:21.631Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
+{"t":"2026-10-20T15:17:59.930Z","ev":"task_created","id":"ask-works-on-a-mac-that-has-nothing-else-install","priority":"p1-high","title":"Ask works on a Mac that has nothing else installed"}
+{"t":"2026-10-20T15:18:48.495Z","ev":"task_created","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","priority":"p1-high","title":"On a video the Ask button never sits on top of the panel"}
+{"t":"2026-10-20T15:19:05.518Z","ev":"task_created","id":"the-agent-server-and-skill-come-inside-photonz-a","priority":"p2-normal","title":"The agent server and skill come inside Photonz and install with one command"}
+{"t":"2026-10-20T15:19:05.621Z","ev":"task_created","id":"the-agent-coverage-check-counts-panel-controls-a","priority":"p2-normal","title":"The agent coverage check counts panel controls and every right-click row"}
+{"t":"2026-10-20T15:19:13.292Z","ev":"task_resequenced","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","from":42.5,"to":12}
+{"t":"2026-10-20T15:19:13.358Z","ev":"task_resequenced","id":"ask-works-on-a-mac-that-has-nothing-else-install","from":35,"to":13}
+{"t":"2026-10-20T15:19:13.420Z","ev":"task_resequenced","id":"the-agent-server-and-skill-come-inside-photonz-a","from":5,"to":5}
+{"t":"2026-10-20T15:19:13.482Z","ev":"task_resequenced","id":"the-agent-coverage-check-counts-panel-controls-a","from":7.5,"to":6}
+{"t":"2026-10-20T15:19:13.547Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-20T15:19:22.155Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-20T15:19:54.888Z","ev":"manager","filed":4,"readyBefore":50,"readyAfter":53,"report":"queue/manager/2026-10-20-0819.md"}
