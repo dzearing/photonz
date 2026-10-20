@@ -4,12 +4,12 @@
   "goal": "What Ask builds on this Mac should look like a person made it: a pricing section whose card words replace the card's own placeholder text and sit in a tidy row, and screenshot measurements that read cleanly instead of crowding. Today the plan runs but the result is rough.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 6,
+  "seq": 7,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-20T14:35:49.330Z",
+  "updated": "2026-10-20T14:37:09.284Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-10-20T14:35:49.329Z",
       "note": "seq 30 -> 6"
+    },
+    {
+      "t": "2026-10-20T14:37:09.283Z",
+      "note": "seq 6 -> 7"
     }
   ],
   "walks": [

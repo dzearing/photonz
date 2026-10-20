@@ -1,0 +1,33 @@
+{
+  "id": "ask-draws-a-dog-you-can-tell-is-a-dog",
+  "title": "Ask draws a dog you can tell is a dog",
+  "goal": "When a person asks for a drawing (a dog, a house, a coffee cup), Ask makes a clean, recognizable picture out of editable shapes, the kind a person would be happy to show. Today it stacks straight-edged brown shards that nobody would call a dog.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T14:37:04.148Z",
+  "updated": "2026-10-20T14:37:09.212Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20 07:35, Ask on a blank picture: 'draw a picture of a dog.' Plan ran 9 steps: add_path Dog Body, Dog Head, Dog Snout, Dog Ear x2, Dog Leg x2, Dog Snout again, add_text \"Dog\". Result: one brown angular blob with spiky triangles off it and the word Dog above. User: 'this is so embarrassing. what can we do to improve the drawing capabilities'.\n\nWhy it is bad (suspects, check them first):\n- The default Ask model is qwen3:30b (Ollama), which is TEXT ONLY, so it plans every coordinate blind and never sees the result. gemma-4-31B on this Mac (ollama list) can take a picture; see what Ollama on this Mac offers that can see.\n- add_path supports smooth points and handles (Sources/PhotonzCore/AgentTools.swift:283) but the model used only corners. A small model is poor at writing many separate coordinate calls; models are much better at writing ONE SVG for the whole drawing.\n- AskPlanning.swift builds the prompt (:426); there is no draw, look, revise loop.\n\nWays in, the runner picks and logs why (do not stop to ask):\n1. Let Ask write one SVG for a drawing and bring it in as editable layers. That needs SVG to come in as layers: queue task opening-an-svg-file-gives-you-its-drawing-to-edi is pending at p2, and this task can do the importing part it needs.\n2. A draw, look, revise loop with a model that can see (on this Mac, offline).\n3. A built-in set of simple drawings (an openly licensed illustration or icon set, licence checked and recorded) Ask can place and restyle when it is asked for a common thing, drawing from scratch only otherwise.\n4. Some mix of these. Measure, do not assume: the blind naming score decides.\n\nThe Claude Code route (MCP plus skill) drew the box in a cloud icon well yesterday (queue/audits/2026-10-19-agent-skill-2-icon-rendered.png); that is the bar for what these tools can make when the model is strong. App copy never names Claude or Anthropic.",
+  "acceptance": [
+    "MEASURED BAR, run in the audit: twelve requests on a blank picture at Next defaults (a dog, a cat, a house, a tree, a car, a bicycle, a coffee cup, a fish, a bird, a rocket, a flower, the sun over mountains). Each render is shown, with no hint, to a model that can see and did not draw it, which is asked what it shows. At least 10 of 12 must be named correctly. Today's dog fails this; the audit runs today's build first and records its score as the before",
+    "Drawings use curves and ovals where the thing is round (a dog's head, ears, body), not only straight corners, and every part stays an editable, named layer that one Command Z removes",
+    "Ask looks at what it drew before it hands back: it renders the result, a model that can see judges it, and it revises at most twice. If it still cannot make the thing, it says so in one short plain sentence instead of leaving a mess",
+    "Runs on this Mac with networking off, and the time from Ask to the finished drawing is measured (median of five) and in the audit",
+    "Audit under queue/audits/ with a contact sheet of all twelve before and after, the blind naming results and the times. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T14:37:04.150Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T14:37:09.211Z",
+      "note": "seq 35 -> 6"
+    }
+  ]
+}
