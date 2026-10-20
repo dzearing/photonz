@@ -21722,3 +21722,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Ask in the editor: title bar Ask button, Edit > Ask… (Command K on a picture), a composer over the window, and an Agent group in the dock with the plan and Run Plan. A model on this Mac (qwen3:30b through Ollama, measured against gpt-oss 20B, a community Qwen build and Apple's on-device model) plans with the MCP task's own tools; looking tools run while planning, editing tools only go into the plan; Run Plan is one undo step. Settings has Ask: Model, Automatic by default, with the download offered when there is none. Design: docs/design/ask.md. Audit: queue/audits/2026-10-19-ask.json.
 - Next: ask-on-the-local-model-makes-results-that-look-f (results that look finished), typing-in-ask-lists-the-commands-you-can-run (/ commands, Last change rows).
 - Open question: whether to try a vision model for Ask's look-then-fix step (llama3.2-vision is on this Mac).
+
+## 2026-10-20 — The next arrow keeps the last one's look, fades included
+
+- `RememberedLooks` (PhotonzCore): per kind of drawn thing, the fade it was last left with, line ends (arrow, line), the Pen's ends/corners/dashes/edge side, and the effects of words, titles, Pen paths and pictures on a video. Applied where drawn layers are added (`addDrawnLayer`, text, `placeImage`).
+- `setPictureFades`: one end or both on several layers in one undo step. Fade rows (right-click, Clip menu, panel, ⌃⌥I/⌃⌥O) act on every pick; new **Fade In and Out** (⌃⌥F) leads a picture's/title's right-click, Add Transition moved under More.
+- Walks: `the-next-arrow-fades-like-the-last-walk`, `the-whole-look-carries-over-walk` (+ `look-carries-over.py`): 26 settings failed to carry on the previous build, 0 now.
+- Next: measurements are not walked (the measure drag landed nothing on open video).
