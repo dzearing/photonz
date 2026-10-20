@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:37:04.148Z",
-  "updated": "2026-10-20T17:43:20.308Z",
+  "updated": "2026-10-20T18:33:47.742Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s"
   ],
@@ -52,6 +52,19 @@
     {
       "t": "2026-10-20T17:43:20.306Z",
       "note": "eval landed (a-scored-test-set-for-what-ask-and-the-photonz-s): Scripts/ask-eval.sh run --engine ask --cases dog,smiley-icon,cat,house,tree,car,bicycle,coffee-cup,fish,bird,rocket,flower,sun-over-mountains --tag '<change>' then compare. Ask baseline 2026-10-20 (run 20261020-165619-ask): drawings 35.4/100, named right blind 1 of 13 (car; dog read as bear, house as suitcase, rocket as mailbox, cat as teddy bear; fish and tree wrote their own names). Skill baseline 87.2, 13 of 13 named. Two Ask drawings (cat, sun over mountains) placed a starter Card component inside the drawing."
+    },
+    {
+      "t": "2026-10-20T17:55:57.412Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-20T18:04:19.309Z",
+      "note": "Measured before choosing (2026-10-20 runner): qwen3:30b asked for ONE whole SVG per subject (not many add_path calls) drew smiley, house, tree, car, bird, sun over mountains recognizably; dog and cat read as a mouse, cup as a jar, bicycle as a box. Twemoji (graphics CC-BY 4.0) has all 13 cleanly; llama3.2-vision:latest (on this Mac, 6s a look) named all 13 Twemoji renders right and caught qwen's dog and cat as 'mouse'. Chose a mix (way 4): a built-in drawing set from Twemoji first, a whole model-written SVG when the set has no match, and a look-and-revise step with llama3.2-vision, over SVG-only because SVG-only still fails the animals and the bicycle blind; over a library-only because a library alone cannot draw anything it lacks. gemma-4-31B here has no vision projector (ollama show: completion, tools, thinking)."
+    },
+    {
+      "t": "2026-10-20T18:33:47.740Z",
+      "note": "intake 2026-10-20 11:35: the user ran sun over mountains and called flat triangles bad (queue/audits/2026-10-20-user-ask-sun-over-mountains.png). Illustration craft (natural ridges, light and shadow, depth) is its own task right after this one, an-illustration-ask-draws-looks-illustrated-natu; do not widen this task for it, but do not pick a route that makes it impossible (for example only flat emoji art for every request)."
     }
-  ]
+  ],
+  "started": "2026-10-20T17:55:57.410Z"
 }

@@ -16,7 +16,6 @@
   "acceptance": [
     "Sending a request runs it with no Run plan step and no list of commands on screen",
     "Each request leaves one row in the Agent area: a short plain sentence of what changed (for example 'Drew a dog' or 'Added 8 measurements'), newest at the top",
-    "Asking always shows the Agent area: if the panel is closed it opens, if a video is in View it switches to Edit (or the Agent area shows in View too, decide and log), and if the Agent group is folded or scrolled away it unfolds and scrolls into view. Tried from each of those starting states at Next defaults, on a picture and on a video, with a picture of each in the audit",
     "The row's switch turns that change off (the document looks as if it was never made) and back on, without touching changes made after it; when a later change depends on it, the row says so in one short sentence instead of breaking anything",
     "The row's delete removes the change for good. One Command Z still takes back the latest request whole",
     "Tried at Next defaults with the try paths of the Ask audit (screenshot measurements, the Case 1 title page, the pricing section), each turned off, on and deleted, and checked against the read document each time",
@@ -70,6 +69,10 @@
     {
       "t": "2026-10-20T16:31:01.946Z",
       "note": "intake: reveal the Agent area when asking from a closed panel or a video in View"
+    },
+    {
+      "t": "2026-10-20T18:33:47.522Z",
+      "note": "intake: the reveal line added after this closed was moved to its own task, asking-always-shows-the-agent-area-even-from-a-c"
     }
   ],
   "started": "2026-10-20T15:20:13.919Z",

@@ -1,0 +1,31 @@
+{
+  "id": "asking-always-shows-the-agent-area-even-from-a-c",
+  "title": "Asking always shows the Agent area, even from a closed panel or a video in View",
+  "goal": "When a person sends a request to Ask, they always see the Agent area with its new row: a closed panel opens, a folded Agent group unfolds and scrolls into view, and a video in View shows it too.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 8.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T18:33:37.351Z",
+  "updated": "2026-10-20T18:33:47.592Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20: 'when i ask something, but the left pane is minimized or a video is not in edit mode, we need to reveal what we need to in order for the agent pane to be visible.' (They said left; the Agent group is in the right panel. Reveal whichever pane holds it.) Filed at first as an acceptance line on ask-makes-the-change-straight-away-and-each-chan, but that task closed nine minutes earlier, so it gets its own task. Today AskSession.ask bumps revealPass (Sources/Photonz/Agent/AskSession.swift) and only InspectorPanel.swift:560 listens, scrolling to the Agent section, which does nothing when the panel is not on screen.",
+  "acceptance": [
+    "Asking from each of these at Next defaults brings the Agent group into view with the new row: panel closed, Agent group folded, Agent group scrolled away, a video in View (switch to Edit, or show the Agent area in View; decide and log), on a picture and on a video",
+    "Nothing else about the layout the person chose changes for good: closing the panel again keeps it closed next time",
+    "A walk per starting state, with a picture of each in the audit under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T18:33:37.353Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T18:33:47.591Z",
+      "note": "seq 42.5 -> 8.2"
+    }
+  ]
+}

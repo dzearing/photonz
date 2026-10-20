@@ -1,0 +1,35 @@
+{
+  "id": "an-illustration-ask-draws-looks-illustrated-natu",
+  "title": "An illustration Ask draws looks illustrated: natural shapes, light and shadow, depth",
+  "goal": "When a person asks for an illustration (a sun over mountains, a landscape, an animal), Ask draws it the way an illustrator would: natural outlines instead of plain triangles and circles, a light side and a shadow side that agree with where the light comes from, soft gradients, and depth from layers that fade into the distance. An icon request stays simple and bold; an illustration request gets the craft.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 8.3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-20T18:33:37.238Z",
+  "updated": "2026-10-20T18:33:47.668Z",
+  "deps": [
+    "ask-draws-a-dog-you-can-tell-is-a-dog"
+  ],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20 11:32 (queue/audits/2026-10-20-user-ask-sun-over-mountains.png): 'the sun over mountains test produces such bad results. mountains aren't triangles, they are natural shapes with shadowing and such. I think if you're drawing an svg illustration of sun over mountains it should be more elaborate.' The picture: a flat yellow circle, two flat green triangles and a third green wedge clipped by the box on the right, no shading, no sky.\n\nWaits on ask-draws-a-dog-you-can-tell-is-a-dog (in progress, going the one-SVG-per-drawing route with Twemoji as a built-in set and llama3.2-vision to look). Twemoji-style flat art is right for icons and emoji-like requests but is not this bar. Paint has linear and radial gradients (Sources/PhotonzCore/Paint.swift). Ways in, decide and log: an illustration brief in the prompt (light direction, value layers, ridge noise), a two-pass draw (forms first, then a light pass that adds shadow faces), and the look-and-revise loop judged on crafted. Rubric: Scripts/ask-eval/rubric.md.",
+  "acceptance": [
+    "'draw an svg illustration of a sun over mountains' on a blank picture gives mountains with irregular ridgelines and curves (no straight-sided triangles), each with a lit face and a shadow face that agree with where the sun is, at least three ranges that get lighter and bluer into the distance, a sky gradient, and nothing poking past the picture by accident (the user's result had a stray green wedge off the right edge)",
+    "The eval's rubric gets a 'crafted' line for illustrations (natural forms, light and shadow, depth, finish), and the user's picture (queue/audits/2026-10-20-user-ask-sun-over-mountains.png) scores 3 or lower on it",
+    "Five illustration cases in the eval (sun over mountains, a forest at dusk, a lighthouse on a cliff, a fox, a city skyline at night) reach 7 or more on crafted and designed for Ask on this Mac, before and after in the audit; the thirteen drawing cases of the dog task do not go down",
+    "Every part stays editable and named (ridges, shadow faces, sky, sun), uses the app's own gradient fills, and exports as clean SVG",
+    "Audit under queue/audits/ with a contact sheet before and after and the scores. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-20T18:33:37.240Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-20T18:33:47.666Z",
+      "note": "seq 35 -> 8.3"
+    }
+  ]
+}
