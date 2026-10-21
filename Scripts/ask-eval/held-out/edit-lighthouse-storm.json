@@ -1,0 +1,16 @@
+{
+  "request": "add a storm: dark clouds, rain and big waves",
+  "group": "drawing",
+  "from": "an edit of a drawing Ask made, saved by a thumbs vote (held-out, 2026-10-20)",
+  "start": {
+    "open": "Scripts/ask-eval/held-out/starts/lighthouse.photonz"
+  },
+  "context": "an illustration of a lighthouse on a cliff",
+  "names": [
+    "lighthouse",
+    "storm"
+  ],
+  "expect": {
+    "words": false
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "request": "make an app icon for a weather app: a sun peeking out from behind a cloud",
+  "group": "drawing",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "sun",
+    "cloud",
+    "weather"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true
+  }
+}

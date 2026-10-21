@@ -1,0 +1,1047 @@
+{
+  "canvasSize" : [
+    1440,
+    1024
+  ],
+  "layers" : [
+    {
+      "content" : {
+        "image" : {
+          "_0" : {
+            "id" : "80E6F4D4-019E-4F88-AE1B-C30383994B84",
+            "pixelSize" : [
+              1440,
+              1024
+            ]
+          }
+        }
+      },
+      "frame" : [
+        [
+          0,
+          0
+        ],
+        [
+          1440,
+          1024
+        ]
+      ],
+      "id" : "3429702F-3E7E-4067-BEE5-91F07E4960A9",
+      "isLocked" : true,
+      "isVisible" : true,
+      "name" : "Background",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "group" : {
+          "_0" : {
+            "children" : [
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "handleIn" : [
+                            5.13789044396204,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            46.514867969250986,
+                            148.84757750160344
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            -5.13789044396204,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            9.302973593850197,
+                            148.84757750160344
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            0,
+                            5.13789044396204
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            139.54460390775324
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            0,
+                            -5.13789044396204
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            9.302973593850254
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -5.13789044396204,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            9.302973593850197,
+                            0
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            5.13789044396204,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            46.514867969250986,
+                            0
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            0,
+                            -5.13789044396204
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            55.81784156310118,
+                            9.302973593850254
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            0,
+                            5.13789044396204
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            55.81784156310118,
+                            139.54460390775324
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#A0041E",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#A0041E",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    80.8242345833707,
+                    87.48890648245327
+                  ],
+                  [
+                    55.81784156310118,
+                    148.84757750160344
+                  ]
+                ],
+                "id" : "A7BB8419-3FE1-420C-8AD5-E2990F715C9D",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 1",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            241.8773134401055
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            241.87731344010558,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            483.75462688021116,
+                            241.8773134401055
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            483.75462688021116,
+                            558.1784156310127
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            558.1784156310127
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#FFE8B6",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#FFE8B6",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    46.51486796925104,
+                    18.60968999358633
+                  ],
+                  [
+                    483.75462688021116,
+                    558.1784156310127
+                  ]
+                ],
+                "id" : "0F951C9C-80B1-4886-95A0-F32D9813903D",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 2",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            18.605947187700394,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            18.605947187700394,
+                            297.6951550032069
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            297.6951550032069
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#FFCC4D",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#FFCC4D",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    288.3921814093566,
+                    260.4870034336918
+                  ],
+                  [
+                    18.605947187700394,
+                    297.6951550032069
+                  ]
+                ],
+                "id" : "B03F3CF9-DCDB-4AF0-947C-D587480BE6F6",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 3",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "handleIn" : [
+                            7.53301910410104,
+                            0.016640044571808402
+                          ],
+                          "handleOut" : [
+                            -4.935423715141409,
+                            0.005098406462404433
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            502.3577643577371,
+                            279.0929506213923
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            3.4849925013818663,
+                            3.4947475598446758
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            489.20335969603275,
+                            273.64140809539606
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            260.4804509176315,
+                            44.91849931699471
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            -7.2649770877623245,
+                            7.2649770877623245
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            31.757542139230168,
+                            273.64140809539606
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            7.2649770877623245,
+                            7.2649770877623245
+                          ],
+                          "handleOut" : [
+                            -7.2649770877623245,
+                            -7.2649770877623245
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            5.4487328158217565,
+                            273.64140809539606
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -7.2649770877623245,
+                            7.2649770877623245
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            5.4487328158217565,
+                            247.3325987719877
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            3.48670681084057,
+                            -3.492640653195294
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            247.32604625592728,
+                            5.4552853318821235
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -4.935145703737066,
+                            0
+                          ],
+                          "handleOut" : [
+                            4.935145703737066,
+                            0
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            260.4804509176315,
+                            0
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -3.48670681084057,
+                            -3.492640653195294
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            273.63485557933564,
+                            5.4552853318821235
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            5.3387476453987945,
+                            5.314548644295461
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            515.5121690194412,
+                            247.3325987719877
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            2.8825509566519245,
+                            -6.959709311180943
+                          ],
+                          "handleOut" : [
+                            -2.8825509566519907,
+                            6.959709311180943
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            519.5715093295905,
+                            267.6181851519846
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#66757F",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#66757F",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    27.91173049172511,
+                    0
+                  ],
+                  [
+                    520.9867167554473,
+                    279.0929962924616
+                  ]
+                ],
+                "id" : "7E273F43-198C-4092-A55E-B1ACCE2B5322",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 4",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "handleIn" : [
+                            4.935423715141409,
+                            0.005098406462404433
+                          ],
+                          "handleOut" : [
+                            -7.53301910410104,
+                            0.016640044571808402
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            18.62895239771035,
+                            158.14774138527912
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            2.8825509566519907,
+                            6.959709311180943
+                          ],
+                          "handleOut" : [
+                            -2.8825509566519907,
+                            -6.959709311180943
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            1.4152074258566927,
+                            146.67297591587146
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -5.33874764539886,
+                            5.314548644295461
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            5.474547736006116,
+                            126.38738953587443
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            7.2649770877623245,
+                            -7.264977087762292
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            126.4132044560589,
+                            5.4487328158217
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -7.2649770877623245,
+                            -7.2649770877623245
+                          ],
+                          "handleOut" : [
+                            7.2649770877623245,
+                            7.2649770877623245
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            152.72201377946737,
+                            5.4487328158217
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            7.2649770877623245,
+                            -7.2649770877623245
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            152.72201377946737,
+                            31.75754213923011
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            -3.4849925013818663,
+                            3.4947475598446758
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            31.78335705941447,
+                            152.6961988592829
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#66757F",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#66757F",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    269.7632290116463,
+                    120.94520923611316
+                  ],
+                  [
+                    158.17074659528922,
+                    158.14778705634848
+                  ]
+                ],
+                "id" : "5A0F5313-0547-49F6-8359-87840D16A97C",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 5",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            74.42378875080169,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            74.42378875080169,
+                            111.6356831262026
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            111.6356831262026
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#C1694F",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#C1694F",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    139.54460390775324,
+                    446.5464753106961
+                  ],
+                  [
+                    74.42378875080169,
+                    111.6356831262026
+                  ]
+                ],
+                "id" : "C9D61465-5150-4E2F-A144-FB1A6D80C920",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 6",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            74.42378875080169,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            74.42378875080169,
+                            74.42378875080175
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            74.42378875080175
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            232.57433984625527,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            306.9981285970571,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            306.9981285970571,
+                            74.42378875080175
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            232.57433984625527,
+                            74.42378875080175
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            232.57433984625527,
+                            167.45352468930383
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            306.9981285970571,
+                            167.45352468930383
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            306.9981285970571,
+                            241.87731344010552
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            232.57433984625527,
+                            241.87731344010552
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#55ACEE",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#55ACEE",
+                      "ringStarts" : [
+                        4,
+                        8
+                      ],
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    139.54460390775324,
+                    279.0929506213923
+                  ],
+                  [
+                    306.9981285970571,
+                    241.87731344010552
+                  ]
+                ],
+                "id" : "2446A2F7-3031-417F-B10E-FC15D0DB7B57",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 7",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "handleIn" : [
+                            0,
+                            -15.413671331886155
+                          ],
+                          "handleOut" : [
+                            0,
+                            15.413671331886155
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            576.7843628187134,
+                            27.90892078155059
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            15.413671331886155,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            548.8754420371627,
+                            55.8178415631013
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            -15.41367133188613,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            27.90892078155065,
+                            55.8178415631013
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            0,
+                            15.413671331886155
+                          ],
+                          "handleOut" : [
+                            0,
+                            -15.413671331886155
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            0,
+                            27.90892078155059
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -15.41367133188613,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            27.90892078155065,
+                            0
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            15.413671331886155,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            548.8754420371627,
+                            0
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#5C913B",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#5C913B",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    0,
+                    558.1821584368987
+                  ],
+                  [
+                    576.7843628187134,
+                    55.8178415631013
+                  ]
+                ],
+                "id" : "8FDCB328-F180-4488-B80C-6BE650E155FC",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "House 8",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              }
+            ]
+          }
+        }
+      },
+      "frame" : [
+        [
+          431.6078185906434,
+          205
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "id" : "0EC5A957-7790-48B9-907C-D86201A7211C",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "House",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    }
+  ],
+  "pixelScale" : 1
+}

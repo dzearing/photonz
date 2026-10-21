@@ -1,0 +1,18 @@
+{
+  "request": "make a camera icon",
+  "group": "drawing",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "camera"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true
+  }
+}

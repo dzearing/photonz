@@ -1,0 +1,19 @@
+{
+  "request": "draw a cat curled up sleeping",
+  "group": "drawing",
+  "from": "the user, word for word, 2026-10-20 15:37 (queue/audits/2026-10-20-user-ask-cat-sleeping-same-cat.png): 'same cat'",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "cat",
+    "kitten",
+    "kitty"
+  ],
+  "expect": {
+    "words": false
+  }
+}

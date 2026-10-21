@@ -23,9 +23,14 @@ Score each line from 1 to 10.
 - designed: it looks made by a designer: a considered palette, consistent
   corner radius and spacing, a clear hierarchy, recognisable forms with curves
   where the thing is round. A drawing reads at a glance as the thing asked for.
-- didWhatWasAsked: every part of the request is there and right (for example
-  each asked-for item present and labelled, states shown as real different
-  looks, an icon that is an icon), and nothing unasked for is in the way.
+- didWhatWasAsked: judged against EVERY word of the request, not just its
+  noun: the subject, and also each pose, action, view, mood, colour, count,
+  setting, style and relationship it names ("curled up sleeping", "seen from
+  behind", "playing it", "in watercolour", "at sunset"), each asked-for item
+  present and labelled, states shown as real different looks, an icon that is
+  an icon. A plain stock drawing of the subject that ignores a pose, action,
+  relationship or style the request asked for scores 2 or lower, however clean
+  it is. Something unasked for that is in the way counts against it too.
 
 Read the picture at {{picture}} first. Then answer with ONE line of JSON and
 nothing else:

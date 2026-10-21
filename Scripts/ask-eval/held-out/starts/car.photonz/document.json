@@ -1,0 +1,652 @@
+{
+  "canvasSize" : [
+    1440,
+    1024
+  ],
+  "layers" : [
+    {
+      "content" : {
+        "image" : {
+          "_0" : {
+            "id" : "AC6DF766-04E7-45BB-8A4F-DFB23F04D7A9",
+            "pixelSize" : [
+              1440,
+              1024
+            ]
+          }
+        }
+      },
+      "frame" : [
+        [
+          0,
+          0
+        ],
+        [
+          1440,
+          1024
+        ]
+      ],
+      "id" : "6ED3BDA8-8686-4012-965D-F2C37F18C243",
+      "isLocked" : true,
+      "isVisible" : true,
+      "name" : "Background",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    },
+    {
+      "content" : {
+        "group" : {
+          "_0" : {
+            "children" : [
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            221.72222222222217,
+                            307
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            562.8333333333334,
+                            307
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            0,
+                            68.22222222222223
+                          ],
+                          "handleOut" : [
+                            0,
+                            -34.111111111111114
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            614,
+                            238.77777777777783
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            17.055555555555557,
+                            17.055555555555557
+                          ],
+                          "handleOut" : [
+                            -17.055555555555557,
+                            -17.055555555555557
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            596.9444444444445,
+                            119.38888888888891
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            51.16666666666667,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            409.33333333333337,
+                            0
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            -51.16666666666667,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            307,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            136.44444444444446,
+                            119.38888888888891
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            68.22222222222223,
+                            136.44444444444446
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            0,
+                            -34.111111111111114
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            17.055555555555543,
+                            187.6111111111112
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            17.055555555555543,
+                            238.77777777777783
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            0,
+                            -27.612944444444445
+                          ],
+                          "handleOut" : [
+                            0,
+                            34.84449999999999
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            0,
+                            272.15549999999996
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            34.111111111111086,
+                            307
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#DD2E44",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#DD2E44",
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    614,
+                    307
+                  ]
+                ],
+                "id" : "51878570-509C-4FE6-8467-9F6D3DDA98DA",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Car 1",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "path" : {
+                    "_0" : {
+                      "anchors" : [
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            170.55555555555554,
+                            0
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            -34.111111111111114,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            136.44444444444446,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            0,
+                            102.33333333333337
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -85.32894444444446,
+                            4.366222222222166
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            170.55555555555554,
+                            93.4815000000001
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            17.055555555555557,
+                            17.055555555555557
+                          ],
+                          "handleOut" : [
+                            -17.055555555555557,
+                            -17.055555555555557
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            341.1111111111112,
+                            51.166666666666686
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            34.111111111111114,
+                            0
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            221.72222222222229,
+                            0
+                          ]
+                        },
+                        {
+                          "kind" : "corner",
+                          "point" : [
+                            204.66666666666674,
+                            0
+                          ]
+                        },
+                        {
+                          "handleOut" : [
+                            68.40983333333332,
+                            -3.4793333333333445
+                          ],
+                          "kind" : "corner",
+                          "point" : [
+                            204.66666666666674,
+                            91.74183333333332
+                          ]
+                        },
+                        {
+                          "handleIn" : [
+                            -7.12922222222221,
+                            0
+                          ],
+                          "handleOut" : [
+                            17.055555555555557,
+                            0
+                          ],
+                          "kind" : "smooth",
+                          "point" : [
+                            341.1111111111112,
+                            85.27777777777777
+                          ]
+                        }
+                      ],
+                      "closed" : true,
+                      "fill" : "#BBDDF5",
+                      "fillRule" : "nonZero",
+                      "lineCorner" : "sharp",
+                      "lineEnd" : "round",
+                      "linePattern" : "solid",
+                      "paint" : "#BBDDF5",
+                      "ringStarts" : [
+                        4
+                      ],
+                      "strokePosition" : "center",
+                      "strokeWidth" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    170.55555555555554,
+                    34.111111111111086
+                  ],
+                  [
+                    353.9027777777778,
+                    102.33333333333337
+                  ]
+                ],
+                "id" : "64AE7342-8940-4613-9094-DBF63D9882BB",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Car 2",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "annotation" : {
+                    "_0" : {
+                      "arrowStyle" : "clean",
+                      "arrowheadScale" : 1,
+                      "arrowheadStyle" : "triangle",
+                      "captionFontSize" : 20,
+                      "captionPinned" : false,
+                      "captionRoundness" : 1,
+                      "colorHex" : "#292F33",
+                      "cornerRadius" : 0,
+                      "end" : [
+                        136.44444444444446,
+                        136.44444444444446
+                      ],
+                      "fillColorHex" : "#292F33",
+                      "headColorHex" : "#292F33",
+                      "lineEnd" : "round",
+                      "shape" : "ellipse",
+                      "start" : [
+                        0,
+                        0
+                      ],
+                      "strokePosition" : "inside",
+                      "strokeWidth" : 0,
+                      "styleSeed" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    102.33333333333337,
+                    221.72222222222229
+                  ],
+                  [
+                    136.44444444444446,
+                    136.44444444444446
+                  ]
+                ],
+                "id" : "9F62FD20-E34B-4A64-ADC4-ED7426685038",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Car 3",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "annotation" : {
+                    "_0" : {
+                      "arrowStyle" : "clean",
+                      "arrowheadScale" : 1,
+                      "arrowheadStyle" : "triangle",
+                      "captionFontSize" : 20,
+                      "captionPinned" : false,
+                      "captionRoundness" : 1,
+                      "colorHex" : "#CCD6DD",
+                      "cornerRadius" : 0,
+                      "end" : [
+                        68.22222222222229,
+                        68.22222222222217
+                      ],
+                      "fillColorHex" : "#CCD6DD",
+                      "headColorHex" : "#CCD6DD",
+                      "lineEnd" : "round",
+                      "shape" : "ellipse",
+                      "start" : [
+                        0,
+                        0
+                      ],
+                      "strokePosition" : "inside",
+                      "strokeWidth" : 0,
+                      "styleSeed" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    136.44444444444446,
+                    255.83333333333337
+                  ],
+                  [
+                    68.22222222222229,
+                    68.22222222222217
+                  ]
+                ],
+                "id" : "64FA61FF-BDC0-49F6-9A24-E63B03331918",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Car 4",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "annotation" : {
+                    "_0" : {
+                      "arrowStyle" : "clean",
+                      "arrowheadScale" : 1,
+                      "arrowheadStyle" : "triangle",
+                      "captionFontSize" : 20,
+                      "captionPinned" : false,
+                      "captionRoundness" : 1,
+                      "colorHex" : "#292F33",
+                      "cornerRadius" : 0,
+                      "end" : [
+                        136.44444444444446,
+                        136.44444444444446
+                      ],
+                      "fillColorHex" : "#292F33",
+                      "headColorHex" : "#292F33",
+                      "lineEnd" : "round",
+                      "shape" : "ellipse",
+                      "start" : [
+                        0,
+                        0
+                      ],
+                      "strokePosition" : "inside",
+                      "strokeWidth" : 0,
+                      "styleSeed" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    392.2777777777778,
+                    221.72222222222229
+                  ],
+                  [
+                    136.44444444444446,
+                    136.44444444444446
+                  ]
+                ],
+                "id" : "5FBF2EFB-B5A4-43D3-BCD4-033A40197F11",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Car 5",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              },
+              {
+                "content" : {
+                  "annotation" : {
+                    "_0" : {
+                      "arrowStyle" : "clean",
+                      "arrowheadScale" : 1,
+                      "arrowheadStyle" : "triangle",
+                      "captionFontSize" : 20,
+                      "captionPinned" : false,
+                      "captionRoundness" : 1,
+                      "colorHex" : "#CCD6DD",
+                      "cornerRadius" : 0,
+                      "end" : [
+                        68.22222222222217,
+                        68.22222222222217
+                      ],
+                      "fillColorHex" : "#CCD6DD",
+                      "headColorHex" : "#CCD6DD",
+                      "lineEnd" : "round",
+                      "shape" : "ellipse",
+                      "start" : [
+                        0,
+                        0
+                      ],
+                      "strokePosition" : "inside",
+                      "strokeWidth" : 0,
+                      "styleSeed" : 0
+                    }
+                  }
+                },
+                "frame" : [
+                  [
+                    426.3888888888889,
+                    255.83333333333337
+                  ],
+                  [
+                    68.22222222222217,
+                    68.22222222222217
+                  ]
+                ],
+                "id" : "83CAAFBF-91A0-4F00-820E-BCB33169BD22",
+                "isLocked" : false,
+                "isVisible" : true,
+                "name" : "Car 6",
+                "style" : {
+                  "blendMode" : "normal",
+                  "blurRadius" : 0,
+                  "borderColorHex" : "#000000",
+                  "borderWidth" : 0,
+                  "cornerRadius" : 0,
+                  "opacity" : 1,
+                  "ringIsAnEffect" : true
+                },
+                "transform" : {
+                  "flipHorizontal" : false,
+                  "flipVertical" : false,
+                  "rotation" : 0,
+                  "skewX" : 0,
+                  "skewY" : 0
+                }
+              }
+            ]
+          }
+        }
+      },
+      "frame" : [
+        [
+          413,
+          332.91666666666663
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "id" : "D717EB8E-D1AC-4089-9305-7FBB4C79D0DA",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Car",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "opacity" : 1,
+        "ringIsAnEffect" : true
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    }
+  ],
+  "pixelScale" : 1
+}

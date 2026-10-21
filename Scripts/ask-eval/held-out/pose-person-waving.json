@@ -1,0 +1,25 @@
+{
+  "request": "draw a person waving hello",
+  "group": "drawing",
+  "from": "a pose: what people type once the plain noun works (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "person",
+    "man",
+    "woman",
+    "boy",
+    "girl",
+    "kid",
+    "child",
+    "figure",
+    "people"
+  ],
+  "expect": {
+    "words": false
+  }
+}

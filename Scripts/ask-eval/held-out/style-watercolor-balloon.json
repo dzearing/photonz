@@ -1,0 +1,19 @@
+{
+  "request": "draw a watercolor hot air balloon",
+  "group": "drawing",
+  "from": "a style named in the request (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "balloon",
+    "hot air balloon",
+    "hot-air balloon"
+  ],
+  "expect": {
+    "words": false
+  }
+}

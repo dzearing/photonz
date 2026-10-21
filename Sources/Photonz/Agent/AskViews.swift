@@ -176,6 +176,7 @@ struct AgentPanel: View {
                 .buttonStyle(.plain)
                 .help(row.asked)
                 .playtestControl("Agent Change \(number) Words", detail: row.sentence)
+                voteButtons(row, number: number, ask: ask)
                 Toggle("", isOn: Binding(get: { row.isOn },
                                          set: { ask.setChange(row.id, on: $0, in: editorState) }))
                     .labelsHidden()
@@ -204,8 +205,31 @@ struct AgentPanel: View {
                 ask.setChange(row.id, on: !row.isOn, in: editorState)
             }
             Button(AskCopy.delete) { ask.deleteChange(row.id, in: editorState) }
+            Divider()
+            Toggle(AskCopy.goodResult, isOn: Binding(get: { row.verdict == .up },
+                                                     set: { _ in ask.vote(.up, on: row.id, in: editorState) }))
+            Toggle(AskCopy.badResult, isOn: Binding(get: { row.verdict == .down },
+                                                    set: { _ in ask.vote(.down, on: row.id, in: editorState) }))
         }
         .playtestControl("Agent Change \(number)", detail: "\(row.sentence), \(row.isOn ? "on" : "off")")
+    }
+
+    /// A quiet thumbs up and down, faint until picked. A thumbs down keeps
+    /// the request as a test case the eval has never seen.
+    private func voteButtons(_ row: AskChangeList.Row, number: Int, ask: AskSession) -> some View {
+        HStack(spacing: 0) {
+            ForEach([AskVerdict.up, .down], id: \.self) { verdict in
+                let picked = row.verdict == verdict
+                let name = verdict == .up ? "Up" : "Down"
+                Button { ask.vote(verdict, on: row.id, in: editorState) } label: {
+                    Image(systemName: "hand.thumbs\(verdict == .up ? "up" : "down")\(picked ? ".fill" : "")")
+                        .font(.system(size: 10.5))
+                }
+                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: picked ? .primary : Color.secondary.opacity(0.7)))
+                .toolTip(verdict == .up ? AskCopy.goodResult : AskCopy.badResult)
+                .playtestControl("Agent Change \(number) Thumbs \(name)", detail: picked ? "picked" : "not picked")
+            }
+        }
     }
 
     /// The mock's `.chat-in`: ask again from the dock.

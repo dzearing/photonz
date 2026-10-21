@@ -1,0 +1,19 @@
+{
+  "request": "draw a tired cat yawning",
+  "group": "drawing",
+  "from": "a pose: what people type once the plain noun works (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "cat",
+    "kitten",
+    "kitty"
+  ],
+  "expect": {
+    "words": false
+  }
+}

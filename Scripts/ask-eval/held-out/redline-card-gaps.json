@@ -1,0 +1,13 @@
+{
+  "request": "measure the gaps between the cards",
+  "group": "redline",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "open": "Tests/PhotonzRenderTests/Fixtures/gap-cards-2x.png"
+  },
+  "context": "a screenshot of a row of cards",
+  "expect": {
+    "minMeasurements": 1,
+    "maxMeasurements": 10
+  }
+}

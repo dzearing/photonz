@@ -87,7 +87,7 @@ const median = (values) => {
 /// The rubric, `runs` times at once: each line's median, and their mean.
 export async function judgePicture({ picture, request, context, runs = 3, crafted = false }) {
   const prompt = rubricFor({ crafted }).replaceAll("{{request}}", request)
-    .replaceAll("{{context}}", context ? `It was made on ${context}; judge what was added to it, not the picture underneath.` : "");
+    .replaceAll("{{context}}", context ? `It was made on ${context}: judge what the request did to it, not the picture underneath.` : "");
   const answers = (await Promise.all(Array.from({ length: runs }, () => ask(picture, prompt)))).filter(Boolean);
   if (!answers.length) return { score: null, lines: {}, why: "the judge gave no answer", answers };
   const lines = {};

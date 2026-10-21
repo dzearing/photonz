@@ -1,0 +1,17 @@
+{
+  "request": "put a party hat on the dog",
+  "group": "drawing",
+  "from": "an edit of a drawing Ask made, saved by a thumbs vote (held-out, 2026-10-20)",
+  "start": {
+    "open": "Scripts/ask-eval/held-out/starts/dog.photonz"
+  },
+  "context": "a picture with a drawing of a dog on it",
+  "names": [
+    "dog",
+    "puppy",
+    "pup"
+  ],
+  "expect": {
+    "words": false
+  }
+}

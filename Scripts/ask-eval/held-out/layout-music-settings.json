@@ -1,0 +1,14 @@
+{
+  "request": "make a settings screen for a music app with a few toggles",
+  "group": "layout",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "expect": {
+    "title": true
+  }
+}

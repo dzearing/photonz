@@ -1,0 +1,19 @@
+{
+  "request": "draw a cat in a minimal line art style",
+  "group": "drawing",
+  "from": "a style named in the request (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "cat",
+    "kitten",
+    "kitty"
+  ],
+  "expect": {
+    "words": false
+  }
+}

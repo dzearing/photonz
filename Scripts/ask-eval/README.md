@@ -13,6 +13,9 @@ Scripts/ask-eval.sh run --engine ask --cases dog,smiley-icon --tag "..."   # jus
 Scripts/ask-eval.sh compare                  # the last run against the best before it
 Scripts/ask-eval.sh compare <run> --with <run>
 Scripts/ask-eval.sh history
+Scripts/ask-eval.sh run --engine ask --set held-out --tag "..."   # the held-out set, totals only, about 20 minutes
+Scripts/ask-eval.sh report                   # the latest climb and held-out totals, and the lookup line
+Scripts/ask-eval.sh feedback                 # thumbs down from the apps become held-out cases
 Scripts/ask-eval.sh calibrate                # the judge against the user's own verdicts
 Scripts/ask-eval.sh rescore <run> [--cases a,b]   # score saved results again
 Scripts/ask-eval.sh sheet <run>              # draw a run's contact sheet again
@@ -84,13 +87,63 @@ it up.
   (the user's dog had "Dog" written over it).
 
 A drawing's score is 3 x rules + 4 x judge + 3 x named; anything else is
-4 x rules + 6 x judge. Nothing made scores 0. The run's total is the mean of
+4 x rules + 6 x judge (and a drawing with no `names` to check, one saved from
+a vote, too). **Then, when the judge's didWhatWasAsked is under 7, the whole
+score is scaled by didWhatWasAsked / 7** (`scoring.mjs`): the stock cat drawn
+for "a cat curled up sleeping" is clean, aligned and named "cat" blind, and
+without this scored about 85 while doing nothing the request asked. Nothing
+made scores 0. The run's total is the mean of
 its cases. One blind look is ten points on a drawing case, so read a change of
 two or three points on the total as noise.
 
 The rubric, the naming prompt and the judge model together have an id
 (`rubric` in the history). Runs are only compared with runs of the same engine
 on the same id; change the rubric and the old runs stop being the bar.
+
+## The held-out set
+
+`held-out/` is 42 requests a runner never climbs on (2026-10-20, after Ask
+reached 92 on the drawing cases mostly by looking nouns up in its built-in
+set, while the user found it drew one cat for every cat request):
+
+* the user's own failures to date ("draw a cat curled up sleeping", "draw a
+  piano with a cartoon cat playing it");
+* poses, scenes (things doing something together), styles named in the
+  request;
+* edits of an existing drawing, started from a document Ask made and saved by
+  a thumbs vote (`held-out/starts/*.photonz`);
+* icons, layouts and redlines on screenshots;
+* and every thumbs down a person gives one of Ask's rows: the app saves the
+  request, the document before and what it made under
+  `~/Library/Application Support/<bundle id>/Ask feedback/`, and `feedback`
+  (run by itself at the start of every held-out run) copies each new one in as
+  `held-out/use-<when>-<request>.json` started from that very document. The
+  probe's own votes are walks, not people, and are left out. A thumbs up is
+  counted, not added.
+
+**The rule: a runner reads the held-out set in total only.** A held-out run
+prints no case, its request or its score, draws no contact sheet, refuses
+`--cases`, and goes into the history as a total, its groups and its lookup
+line with no per-case scores. Its pictures are kept in
+`.ask-eval/held-out-runs/<run>/` for a person to look at (`sheet <run>` draws
+them); a runner never opens that folder or `held-out/`, and never moves a
+held-out request into `cases/`. Work on Ask reports both numbers
+(`report`); a climb that does not move the held-out total did not make Ask
+better.
+
+## Where the drawings came from
+
+Every run counts where each drawing came from, out of the app's own answer to
+add_drawing (`lookups.mjs`, tests in `lookups.test.mjs`): **stored** (a
+built-in drawing looked up by name), **template** (a coded illustration), or
+**drawn** for the request (the model's own svg, shapes or paths). The run
+prints and records it as one line, so climbing by lookup is a number:
+
+```
+drawings 31 stored, 6 template, 3 drawn for the request (93% looked up); 33 of 35 cases answered by lookup alone
+```
+
+The skill engine is counted the same way from its transcript.
 
 ## Calibration
 
@@ -102,6 +155,12 @@ mess must score 4 or under and the clean sheet 7 or over; if it does not, the
 rubric is fixed before anything uses it. First calibration, 2026-10-20: dog
 1.8, smiley 1.8, component sheet 1.4, clean sheet 7.6
 (`calibration/last-calibration.json`).
+
+Since 2026-10-20 it also judges the user's two cat pictures (the standing
+built-in cat for "a cat curled up sleeping", and the same cat pasted over a
+piano for "a piano with a cartoon cat playing it"): each must get
+didWhatWasAsked 2 or lower and a case score under 40 even with every rule
+met, however clean the drawing is.
 
 ## Adding a case
 
@@ -118,8 +177,10 @@ One file in `cases/`, named for the case:
 }
 ```
 
-`group` is `drawing`, `sheet`, `layout` or `redline`. `start` is
-`{ "blank": [width, height] }` or `{ "open": "<repo-relative file>" }` (give it
+Put it in `cases/` to climb on it, or in `held-out/` to keep it unseen;
+never both. `group` is `drawing`, `sheet`, `layout` or `redline`. `start` is
+`{ "blank": [width, height] }` or `{ "open": "<repo-relative file>" }` (a
+picture or a `.photonz` document) (give it
 a `context` line, "a screenshot of a settings screen", for the judge and the
 agent). `timeout` and `skillTimeout` are in seconds. A new case changes the set,
 so compare the next run with the next run, not with the old best.

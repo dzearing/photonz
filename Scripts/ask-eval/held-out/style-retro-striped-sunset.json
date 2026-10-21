@@ -1,0 +1,19 @@
+{
+  "request": "draw a retro 70s style sunset with stripes",
+  "group": "drawing",
+  "from": "a style named in the request (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "sunset",
+    "sun",
+    "sunrise"
+  ],
+  "expect": {
+    "words": false
+  }
+}

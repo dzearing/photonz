@@ -166,6 +166,10 @@ public struct AskChangeList: Hashable, Sendable {
         public internal(set) var isDeleted = false
         /// Why the last switch did nothing, when it could not.
         public internal(set) var note: String?
+        /// Where each drawing the request made came from, in step order.
+        public internal(set) var sources: [AskDrawingSource] = []
+        /// The person's thumbs on it, if any.
+        public internal(set) var verdict: AskVerdict?
     }
 
     public static let laterChangeNote = "A later change builds on this."
@@ -181,10 +185,10 @@ public struct AskChangeList: Hashable, Sendable {
     /// Records a request that ran. A request that changed nothing leaves no row.
     @discardableResult
     public mutating func record(asked: String, sentence: String, before: PhotonzDocument,
-                                after: PhotonzDocument) -> UUID? {
+                                after: PhotonzDocument, sources: [AskDrawingSource] = []) -> UUID? {
         guard before != after else { return nil }
         let row = Row(id: UUID(), asked: asked, sentence: sentence,
-                      change: AskRecordedChange(before: before, after: after))
+                      change: AskRecordedChange(before: before, after: after), sources: sources)
         rows.insert(row, at: 0)
         return row.id
     }
@@ -219,6 +223,15 @@ public struct AskChangeList: Hashable, Sendable {
         rows[index].isDeleted = true
         rows[index].note = nil
         return outcome
+    }
+
+    /// Puts the person's thumbs on a row: the same thumbs again takes it
+    /// back, the other one swaps. What the row holds afterwards.
+    @discardableResult
+    public mutating func vote(_ verdict: AskVerdict, id: UUID) -> AskVerdict? {
+        guard let index = rows.firstIndex(where: { $0.id == id }) else { return nil }
+        rows[index].verdict = rows[index].verdict == verdict ? nil : verdict
+        return rows[index].verdict
     }
 
     /// Reads each row's state off `document` after an undo or a redo stepped

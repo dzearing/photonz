@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import PhotonzCore
+import PhotonzRender
 
 /// Ask in one editor window (`docs/design/ask.md`): what was asked, the model
 /// on this Mac working it out, and the change it made, one row a request.
@@ -67,6 +68,14 @@ final class AskSession {
     /// What the last plan did, a line a turn and a line a look, for a walk
     /// and for anybody finding out why a plan went the way it did.
     @ObservationIgnored private(set) var trace: [String] = []
+    /// Where each drawing of the last run came from (stored, template or
+    /// drawn), so the eval can count lookups.
+    @ObservationIgnored private(set) var lastSources: [AskDrawingSource] = []
+    /// The model the last request ran on.
+    @ObservationIgnored private(set) var lastModel: String?
+    /// Where each voted row's case was saved, so taking the vote back takes
+    /// the case away too.
+    @ObservationIgnored private var savedVotes: [UUID: URL] = [:]
 
     var isBusy: Bool { phase == .planning || phase == .running }
 
@@ -103,6 +112,7 @@ final class AskSession {
         revealPass &+= 1
         let started = Date()
         trace = []
+        lastSources = []
         work = Task { [weak self, weak editor] in
             guard let editor else { return }
             await self?.carryOut(words, in: editor, started: started)
@@ -118,7 +128,9 @@ final class AskSession {
         }
         let model: String
         switch await AskLocalModel.model() {
-        case .success(let found): model = found
+        case .success(let found):
+            model = found
+            lastModel = found
         case .failure(let trouble):
             phase = .stopped(trouble.sentence)
             return
@@ -159,7 +171,7 @@ final class AskSession {
             }
             if let after = editor.document {
                 changes.record(asked: words, sentence: AskChangeWords.sentence(ran.landed),
-                               before: ran.before, after: after)
+                               before: ran.before, after: after, sources: ran.sources)
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
@@ -185,6 +197,7 @@ final class AskSession {
         let landed: [AskStep]
         /// What each step made, by step number.
         let made: [Int: String]
+        let sources: [AskDrawingSource]
     }
 
     /// Runs the plan as one undo step. Nil when nothing is left changed: the
@@ -200,6 +213,7 @@ final class AskSession {
         var failure: String?
         var landed: [AskStep] = []
         var made: [Int: String] = [:]
+        var sources: [AskDrawingSource] = []
         await editor.asOneUndoStepAwaiting {
             for (index, step) in plan.steps.enumerated() {
                 let number = index + 1
@@ -216,6 +230,7 @@ final class AskSession {
                     } else {
                         landed.append(step)
                         if let id = AskStep.madeID(fromAnswer: text) { made[number] = id }
+                        if let source = AskDrawingSource.of(tool: step.tool, answer: text) { sources.append(source) }
                     }
                 }
                 if let refusal {
@@ -241,7 +256,8 @@ final class AskSession {
             phase = .stopped(AskCopy.nothingRan)
             return nil
         }
-        return Ran(before: before, landed: landed, made: made)
+        lastSources = sources
+        return Ran(before: before, landed: landed, made: made, sources: sources)
     }
 
     /// The first drawing the plan made that a model that can see does not
@@ -285,6 +301,35 @@ final class AskSession {
         guard let document = editor.document else { return }
         land(changes.setOn(on, id: id, in: document), in: editor)
     }
+
+    /// Puts the person's thumbs on a row (the same thumbs again takes it
+    /// back). The request, the document before it and what it made are saved
+    /// beside the vote, so a thumbs down becomes a case the eval has never
+    /// seen (`Scripts/ask-eval/README.md`, "The held-out set").
+    func vote(_ verdict: AskVerdict, on id: UUID, in editor: EditorState) {
+        let now = changes.vote(verdict, id: id)
+        guard let now, let row = changes.row(id) else {
+            if let folder = savedVotes.removeValue(forKey: id) { try? FileManager.default.removeItem(at: folder) }
+            return
+        }
+        guard let root = AskFeedbackFolder.root() else { return }
+        let folder = savedVotes[id] ?? root.appendingPathComponent(
+            AskFeedbackCase.folderName(request: row.asked, at: Date()), isDirectory: true)
+        let saved = AskFeedbackCase(
+            request: row.asked, verdict: now, at: ISO8601DateFormatter().string(from: Date()),
+            sentence: row.sentence, sources: row.sources,
+            canvas: [Double(row.change.before.canvasSize.width), Double(row.change.before.canvasSize.height)],
+            model: lastModel, app: Bundle.main.bundleIdentifier ?? "Photonz")
+        do {
+            try AskFeedbackFolder.write(saved, before: row.change.before, after: row.change.after,
+                                        editor: editor, into: folder, documentsToo: savedVotes[id] == nil)
+            savedVotes[id] = folder
+        } catch {
+            note("vote: could not save the case: \(error)")
+        }
+    }
+
+    private func note(_ line: String) { trace.append(line) }
 
     /// Deletes a request's row, taking its change out first when it is on.
     func deleteChange(_ id: UUID, in editor: EditorState) {
@@ -412,10 +457,45 @@ enum AskCopy {
     static let turnOn = "Turn On"
     static let delete = "Delete"
     static let deleteTooltip = "Delete this change"
+    static let goodResult = "Good Result"
+    static let badResult = "Bad Result"
     static let stoppedSentence = "Stopped. Nothing was changed."
     static let noDocumentSentence = "Open a picture or video first."
     static func stepFailed(_ n: Int) -> String { "Step \(n) failed. Nothing was changed." }
     /// A drawing that still did not read after being drawn again.
     static let couldNotDraw = "I couldn't make a clear drawing of that. Nothing was changed."
     static let helpLine = "Each request is one row. Its switch turns the change off and on, and one Command Z takes back the latest."
+}
+
+/// Where a vote on one of Ask's rows is saved:
+/// `~/Library/Application Support/<bundle id>/Ask feedback/<time-request>/`,
+/// holding `case.json`, `before.photonz`, `after.photonz` and `after.png`.
+enum AskFeedbackFolder {
+
+    static func root() -> URL? {
+        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        else { return nil }
+        return support.appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.dzearing.photonz", isDirectory: true)
+            .appendingPathComponent("Ask feedback", isDirectory: true)
+    }
+
+    /// Writes the case; the documents only the first time, since a swapped
+    /// vote changes nothing but the verdict.
+    @MainActor
+    static func write(_ saved: AskFeedbackCase, before: PhotonzDocument, after: PhotonzDocument,
+                      editor: EditorState, into folder: URL, documentsToo: Bool) throws {
+        let fm = FileManager.default
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        if documentsToo {
+            try PackageIO.write(before, store: editor.store, to: folder.appendingPathComponent("before.photonz"))
+            try PackageIO.write(after, store: editor.store, to: folder.appendingPathComponent("after.photonz"))
+            if let picture = editor.previewRenderer.render(after, store: editor.store),
+               let png = ImageCodec.encode(picture, format: .png) {
+                try png.write(to: folder.appendingPathComponent("after.png"))
+            }
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(saved).write(to: folder.appendingPathComponent("case.json"), options: .atomic)
+    }
 }

@@ -1,0 +1,19 @@
+{
+  "request": "draw a piano with a cartoon cat playing it",
+  "group": "drawing",
+  "from": "the user, word for word, 2026-10-20 15:35 (queue/audits/2026-10-20-user-ask-cat-playing-piano.png): 'It stuffed a cat on top of some keys. horrible.'",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "cat",
+    "piano",
+    "kitten"
+  ],
+  "expect": {
+    "words": false
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "request": "measure the height of each text field and the space between them",
+  "group": "redline",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "open": "Tests/PhotonzRenderTests/Fixtures/dark-fields-2x.png"
+  },
+  "context": "a screenshot of some dark text fields",
+  "expect": {
+    "minMeasurements": 2,
+    "maxMeasurements": 16
+  }
+}

@@ -1,26 +1,27 @@
 {
-  "rubric": "6ea6482b",
+  "rubric": "ebbf2873",
   "judgeModel": "claude-opus-5-5",
-  "at": "2026-10-20T21:36:27.755Z",
+  "at": "2026-10-21T00:54:54.415Z",
   "agrees": true,
   "results": [
     {
       "picture": "user-dog.png",
       "case": "dog",
       "want": "low",
-      "judge": 1.6,
+      "judge": 1.8,
       "lines": {
-        "clean": 2,
+        "clean": 3,
         "typography": 2,
         "aligned": 2,
         "designed": 1,
         "didWhatWasAsked": 1
       },
       "named": [
-        "brown shape",
-        "brown blob",
+        "brown abstract shape",
+        "brown dog",
         "dog"
       ],
+      "atBest": 8.2,
       "ok": true
     },
     {
@@ -36,10 +37,11 @@
         "didWhatWasAsked": 1
       },
       "named": [
-        "smiley face",
+        "Smiley face",
         "smiley face",
         "smiley face"
       ],
+      "atBest": 9.6,
       "ok": true
     },
     {
@@ -54,20 +56,22 @@
         "designed": 2,
         "didWhatWasAsked": 1
       },
+      "atBest": 6.9,
       "ok": true
     },
     {
       "picture": "clean-component-sheet.png",
       "case": "component-table",
       "want": "high",
-      "judge": 7.8,
+      "judge": 8,
       "lines": {
         "clean": 8,
         "typography": 8,
         "aligned": 8,
         "designed": 8,
-        "didWhatWasAsked": 7
+        "didWhatWasAsked": 8
       },
+      "atBest": 88,
       "ok": true
     },
     {
@@ -85,10 +89,53 @@
         "crafted": 1
       },
       "named": [
-        "mountains and sun",
+        "Mountains and sun",
         "Mountains and sun",
         "Mountains and sun"
       ],
+      "atBest": 39.3,
+      "ok": true
+    },
+    {
+      "picture": "user-cat-curled-up-sleeping.png",
+      "case": "user-cat-curled-up-sleeping",
+      "want": "ignored",
+      "asked": 2,
+      "judge": 2.5,
+      "lines": {
+        "clean": 2,
+        "typography": null,
+        "aligned": 3,
+        "designed": 4,
+        "didWhatWasAsked": 1
+      },
+      "named": [
+        "cat and piano",
+        "Cat and piano",
+        "cat"
+      ],
+      "atBest": 10,
+      "ok": true
+    },
+    {
+      "picture": "user-cat-playing-piano.png",
+      "case": "user-cartoon-cat-playing-piano",
+      "want": "ignored",
+      "asked": 2,
+      "judge": 2,
+      "lines": {
+        "clean": 2,
+        "typography": 2,
+        "aligned": 2,
+        "designed": 3,
+        "didWhatWasAsked": 1
+      },
+      "named": [
+        "Cat",
+        "Orange tabby cat",
+        "Orange tabby cat"
+      ],
+      "atBest": 9.7,
       "ok": true
     }
   ]

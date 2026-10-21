@@ -1,0 +1,14 @@
+{
+  "request": "make a sign up form with name, email and password fields and a button",
+  "group": "layout",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "expect": {
+    "title": true
+  }
+}

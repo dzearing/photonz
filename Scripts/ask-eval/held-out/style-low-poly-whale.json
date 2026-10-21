@@ -1,0 +1,17 @@
+{
+  "request": "draw a geometric low poly whale",
+  "group": "drawing",
+  "from": "a style named in the request (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "whale"
+  ],
+  "expect": {
+    "words": false
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/ask-row-thumbs-walk",
+  "seed": "the-test-set-cannot-be-passed-by-a-lookup-unseen: a thumbs down on an Ask row, at Next defaults with no flag touched, picked by the pointer and saved as a held-out case",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "draw a cat curled up sleeping" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-ran", "note": "the row Ask left, and where its drawing came from (ask.sources)" },
+    { "do": "snapshot", "name": "1-row" },
+    { "do": "press", "control": "Agent Change 1 Thumbs Down" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Agent Change 1 Thumbs Down", "reads": "picked" },
+    { "do": "expect", "control": "Agent Change 1 Thumbs Up", "reads": "not picked" },
+    { "do": "snapshot", "name": "2-voted-down" },
+    { "do": "describe", "stage": "2-voted", "note": "the thumbs down stays on the row after the pointer leaves; the case is saved under the probe's Application Support, Ask feedback" }
+  ]
+}

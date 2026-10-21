@@ -1,0 +1,18 @@
+{
+  "request": "draw a cute kawaii strawberry with a face",
+  "group": "drawing",
+  "from": "a style named in the request (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "strawberry",
+    "berry"
+  ],
+  "expect": {
+    "words": false
+  }
+}

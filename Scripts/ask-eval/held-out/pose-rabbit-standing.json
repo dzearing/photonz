@@ -1,0 +1,19 @@
+{
+  "request": "draw a rabbit standing up on its hind legs with its ears up",
+  "group": "drawing",
+  "from": "a pose: what people type once the plain noun works (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "rabbit",
+    "bunny",
+    "hare"
+  ],
+  "expect": {
+    "words": false
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "request": "make a weekly calendar with three meetings on it",
+  "group": "layout",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "expect": {}
+}

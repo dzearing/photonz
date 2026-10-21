@@ -1,0 +1,22 @@
+{
+  "request": "draw a dog sleeping in its kennel",
+  "group": "drawing",
+  "from": "a scene: things doing something together (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "dog",
+    "puppy",
+    "pup",
+    "kennel",
+    "doghouse",
+    "dog house"
+  ],
+  "expect": {
+    "words": false
+  }
+}

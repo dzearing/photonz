@@ -1,0 +1,13 @@
+{
+  "request": "mark the padding inside the panel and the spacing between the rows",
+  "group": "redline",
+  "from": "a real request beyond drawings (held-out, 2026-10-20)",
+  "start": {
+    "open": "Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png"
+  },
+  "context": "a screenshot of a people panel",
+  "expect": {
+    "minMeasurements": 2,
+    "maxMeasurements": 16
+  }
+}

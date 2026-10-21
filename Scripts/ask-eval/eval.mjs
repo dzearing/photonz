@@ -2,22 +2,32 @@
 // The scored test set for what Ask and the Photonz skill make
 // (Scripts/ask-eval/README.md). Run it through Scripts/ask-eval.sh.
 //
-//   run --engine ask|skill --tag "<what changed>" [--cases a,b] [--resume <run>]
-//       [--minutes N] [--no-build] [--judge-runs 3]
+//   run --engine ask|skill --tag "<what changed>" [--set climb|held-out] [--cases a,b]
+//       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 3]
 //   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
+//   report [--engine ask]                   the latest climb and held-out totals side by side
 //   history                                 every finished run, newest last
 //   calibrate                               the judge against the user's own verdicts
+//   feedback                                take the thumbs down saved in the apps into the held-out set
 //   sheet <run>                             (re)draw a run's contact sheet
 //   rescore <run>                           re-run the rules and judge on saved results
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { score as ruleScore } from "./rules.mjs";
 import { judgePicture, nameBlind, JUDGE_MODEL, RUBRIC_ID, run } from "./judge.mjs";
 import { repo, runAsk, runSkill, quitProbe, SKILL_MODEL } from "./engines.mjs";
+import { combine } from "./scoring.mjs";
+import { tally, describe } from "./lookups.mjs";
 
 const here = path.join(repo, "Scripts/ask-eval");
 const runsDir = path.join(repo, ".ask-eval/runs");
+/// Held-out runs live apart, and nothing here prints one of their cases.
+const heldOutRunsDir = path.join(repo, ".ask-eval/held-out-runs");
+const SETS = { climb: "cases", "held-out": "held-out" };
+const runDirOf = (id, set) => path.join(set === "held-out" ? heldOutRunsDir : runsDir, id);
+const findRunDir = (id) => [runsDir, heldOutRunsDir].map((d) => path.join(d, id)).find((d) => existsSync(path.join(d, "run.json")));
 const historyFile = path.join(repo, "queue/evals/ask-eval-history.jsonl");
 
 const argv = process.argv.slice(2);
@@ -26,18 +36,13 @@ const option = (name, fallback) => { const at = argv.indexOf(`--${name}`); retur
 const flag = (name) => argv.includes(`--${name}`);
 const positional = argv.slice(1).find((a, i, all) => !a.startsWith("--") && !(i > 0 && all[i - 1].startsWith("--") && !["--no-build"].includes(all[i - 1])));
 
-export function loadCases() {
-  const dir = path.join(here, "cases");
+/// The climb set (cases/) is the one a runner works on and reads case by case.
+/// The held-out set (held-out/) is read only in total (README, "The
+/// held-out set").
+export function loadCases(set = "climb") {
+  if (!SETS[set]) throw new Error(`--set climb or --set held-out, not ${set}`);
+  const dir = path.join(here, SETS[set]);
   return readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => ({ id: f.replace(/\.json$/, ""), ...JSON.parse(readFileSync(path.join(dir, f), "utf8")) }));
-}
-
-/// A case's score, 0 to 100. A drawing: 30% rules, 40% judge, 30% named blind.
-/// Anything else: 40% rules, 60% judge. Nothing made is 0.
-export function combine(testCase, rules, judge, named) {
-  if (!rules || rules.score === 0) return 0;
-  const j = judge?.score ?? 0;
-  const value = testCase.group === "drawing" ? 3 * rules.score + 4 * j + 3 * (named?.score ?? 0) : 4 * rules.score + 6 * j;
-  return Math.round(value * 10) / 10;
 }
 
 const groupsOf = (results) => {
@@ -87,17 +92,23 @@ function saveMeta(runDir, meta) {
   meta.total = mean(scores);
   meta.groups = groupsOf(meta.cases);
   meta.wallSeconds = Math.round(Object.values(meta.cases).reduce((s, r) => s + (r.caseSeconds ?? 0), 0));
+  meta.lookups = tally(meta.cases);
   writeFileSync(path.join(runDir, "run.json"), JSON.stringify(meta, null, 2));
 }
 
 function historyLine(meta) {
-  return {
-    run: meta.id, engine: meta.engine, tag: meta.tag, commit: meta.commit, started: meta.started, finished: new Date().toISOString(),
+  const line = {
+    run: meta.id, engine: meta.engine, set: meta.set ?? "climb", tag: meta.tag, commit: meta.commit, started: meta.started, finished: new Date().toISOString(),
     wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
-    total: meta.total, groups: meta.groups,
+    total: meta.total, groups: meta.groups, lookups: meta.lookups, caseCount: Object.keys(meta.cases).length,
+  };
+  // A held-out run is recorded in total only, so no case can be climbed on.
+  if (meta.set === "held-out") return line;
+  return {
+    ...line,
     cases: Object.fromEntries(Object.entries(meta.cases).map(([id, r]) => [id, {
       score: r.score, rules: r.rules?.score ?? null, judge: r.judge?.score ?? null, named: r.named ? `${r.named.right}/${r.named.of}` : undefined,
-      seconds: r.seconds, unrun: r.unrun,
+      seconds: r.seconds, unrun: r.unrun, sources: r.sources,
     }])),
   };
 }
@@ -105,8 +116,13 @@ function historyLine(meta) {
 async function commandRun() {
   const engine = option("engine");
   if (!["ask", "skill"].includes(engine)) throw new Error("--engine ask or --engine skill");
-  const all = loadCases();
+  const resume = option("resume");
+  const set = resume ? JSON.parse(readFileSync(path.join(findRunDir(resume) ?? runDirOf(resume, "climb"), "run.json"), "utf8")).set ?? "climb" : option("set", "climb");
+  const sealed = set === "held-out";
+  if (sealed && !resume) importFeedback({ quiet: true });
+  const all = loadCases(set);
   const wanted = option("cases")?.split(",");
+  if (sealed && wanted) throw new Error("the held-out set runs whole: it is read in total, never case by case");
   const cases = wanted ? all.filter((c) => wanted.includes(c.id)) : all;
   if (wanted && cases.length !== wanted.length) throw new Error(`no such case: ${wanted.filter((w) => !all.some((c) => c.id === w)).join(", ")}`);
   const judgeRuns = Number(option("judge-runs", 3));
@@ -115,19 +131,20 @@ async function commandRun() {
 
   let meta;
   let runDir;
-  const resume = option("resume");
   if (resume) {
-    runDir = path.join(runsDir, resume);
+    runDir = findRunDir(resume);
     meta = JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"));
     if (meta.engine !== engine) throw new Error(`${resume} is a ${meta.engine} run`);
   } else {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
-    meta = { id: `${stamp}-${engine}`, engine, tag: option("tag") ?? "untagged", commit: commit(), started: new Date().toISOString(),
+    meta = { id: `${stamp}-${engine}${sealed ? "-held-out" : ""}`, engine, set, tag: option("tag") ?? "untagged", commit: commit(), started: new Date().toISOString(),
              caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {} };
-    runDir = path.join(runsDir, meta.id);
+    runDir = runDirOf(meta.id, set);
     mkdirSync(runDir, { recursive: true });
   }
-  console.log(`==> ${meta.id}: ${engine}, "${meta.tag}", ${meta.caseIDs.length} cases, judged by ${JUDGE_MODEL} (rubric ${RUBRIC_ID}), ${judgeRuns} looks each`);
+  console.log(`==> ${meta.id}: ${engine}, ${set} set, "${meta.tag}", ${meta.caseIDs.length} cases, judged by ${JUDGE_MODEL} (rubric ${RUBRIC_ID}), ${judgeRuns} looks each`);
+  if (sealed) console.log("    held out: each case is scored and kept, but only the total is printed or recorded");
+  let done = Object.values(meta.cases).filter((r) => !r.unrun).length;
   let build = !flag("no-build");
   for (const testCase of all.filter((c) => meta.caseIDs.includes(c.id))) {
     if (meta.cases[testCase.id] && !meta.cases[testCase.id].unrun) continue;
@@ -139,7 +156,7 @@ async function commandRun() {
     const dir = path.join(runDir, testCase.id);
     mkdirSync(dir, { recursive: true });
     const caseStarted = Date.now();
-    process.stdout.write(`--> ${testCase.id}: "${testCase.request.slice(0, 60)}" ... `);
+    process.stdout.write(sealed ? `--> held-out case ${done + 1} of ${meta.caseIDs.length} ... ` : `--> ${testCase.id}: "${testCase.request.slice(0, 60)}" ... `);
     let got;
     try {
       got = engine === "ask" ? await runAsk(testCase, dir, { build }) : await runSkill(testCase, dir, { build });
@@ -161,18 +178,22 @@ async function commandRun() {
       group: testCase.group, score: scored.score, rules: scored.rules, judge: scored.judge, named: scored.named,
       seconds: got.engine?.seconds ? Math.round(got.engine.seconds * 10) / 10 : null,
       caseSeconds: Math.round((Date.now() - caseStarted) / 100) / 10,
-      engine: got.engine, error: got.error,
+      engine: got.engine, error: got.error, sources: got.engine?.sources ?? [],
     };
     meta.cases[testCase.id] = result;
     writeFileSync(path.join(dir, "score.json"), JSON.stringify(result, null, 2));
     saveMeta(runDir, meta);
+    done += 1;
+    if (sealed) { console.log("scored"); continue; }
     console.log(`${result.score}  (rules ${result.rules?.score ?? "-"}, judge ${result.judge?.score ?? "-"}${result.named ? `, named ${result.named.right}/${result.named.of} as ${result.named.said.join(" / ")}${result.named.note ? " (spelled out, not counted)" : ""}` : ""}, ${result.seconds ?? "-"}s${got.error ? `, ${got.error}` : ""})`);
   }
   saveMeta(runDir, meta);
   const finished = meta.caseIDs.every((id) => meta.cases[id] && !meta.cases[id].unrun);
-  const sheet = await drawSheet(runDir, meta);
+  const sheet = sealed ? null : await drawSheet(runDir, meta);
   console.log(`==> ${meta.id}: total ${meta.total} over ${Object.keys(meta.cases).length} cases (${Object.entries(meta.groups).map(([g, v]) => `${g} ${v}`).join(", ")}), ${Math.round(meta.wallSeconds / 60)} min of cases`);
-  console.log(`    contact sheet ${sheet}`);
+  console.log(`    ${describe(meta.lookups)}`);
+  if (sheet) console.log(`    contact sheet ${sheet}`);
+  else console.log("    no contact sheet: a person who wants to see the held-out pictures runs `Scripts/ask-eval.sh sheet <run>` themselves");
   if (finished && !meta.recorded) {
     mkdirSync(path.dirname(historyFile), { recursive: true });
     appendFileSync(historyFile, JSON.stringify(historyLine(meta)) + "\n");
@@ -193,9 +214,16 @@ function history() {
 /// A run against another (the best before it of the same engine and rubric
 /// when none is named), case by case, with the time each took.
 function compare(current, other) {
-  const past = history().filter((h) => h.engine === current.engine && h.rubric === current.rubric && h.run !== current.run);
+  const setOf = (h) => h.set ?? "climb";
+  const past = history().filter((h) => h.engine === current.engine && h.rubric === current.rubric && h.run !== current.run
+    && setOf(h) === setOf(current) && h.caseCount === current.caseCount);
   const base = other ?? past.sort((a, b) => b.total - a.total)[0];
-  if (!base) { console.log("    nothing to compare with yet: this is the first run of this engine on this rubric"); return; }
+  if (!base) { console.log("    nothing to compare with yet: this is the first run of this engine on this set and rubric"); return; }
+  if (setOf(current) === "held-out" || setOf(base) === "held-out") {
+    console.log(`\n${"held-out total".padEnd(24)}${String(current.total).padStart(10)}${String(base.total).padStart(10)}   ${(current.total - base.total).toFixed(1).padStart(6)}`);
+    console.log(`    ${describe(current.lookups)}\n    against "${base.tag}": ${describe(base.lookups)}`);
+    return;
+  }
   console.log(`\n${"case".padEnd(24)}${current.run.padStart(24)}${base.run.padStart(24)}   change   seconds`);
   for (const id of Object.keys({ ...current.cases, ...base.cases })) {
     const a = current.cases[id], b = base.cases[id];
@@ -218,7 +246,7 @@ function findRun(id) {
 async function calibrate() {
   // The user's own verdicts (2026-10-20): the three pictures they called a mess
   // must score low, the clean sheet made by hand to the mock's look high.
-  const cases = Object.fromEntries(loadCases().map((c) => [c.id, c]));
+  const cases = Object.fromEntries([...loadCases(), ...loadCases("held-out")].map((c) => [c.id, c]));
   const items = [
     { picture: "user-dog.png", case: "dog", want: "low" },
     { picture: "user-smiley-icon.png", case: "smiley-icon", want: "low" },
@@ -227,7 +255,14 @@ async function calibrate() {
     // 2026-10-20: "the sun over mountains test produces such bad results.
     // mountains aren't triangles" - flat clip art scores 3 or lower on crafted.
     { picture: "user-sun-over-mountains.png", case: "illustration-sun-over-mountains", want: "low", crafted: 3 },
+    // 2026-10-20: "it only seems to know how to draw 1 cat" and "It stuffed a
+    // cat on top of some keys. horrible." Clean stock cats that ignore what
+    // was asked: didWhatWasAsked 2 or lower, and the case under 40 even with
+    // perfect rules, however clean the drawing is.
+    { picture: "user-cat-curled-up-sleeping.png", case: "user-cat-curled-up-sleeping", want: "ignored", asked: 2 },
+    { picture: "user-cat-playing-piano.png", case: "user-cartoon-cat-playing-piano", want: "ignored", asked: 2 },
   ];
+  const wanted = { low: "4 or under", high: "7 or over", ignored: "asked 2 or under, case under 40" };
   let agrees = true;
   const results = [];
   for (const item of items) {
@@ -237,11 +272,14 @@ async function calibrate() {
       judgePicture({ picture, request: testCase.request, context: testCase.context, runs: 3, crafted: !!testCase.crafted }),
       testCase.group === "drawing" ? nameBlind({ picture, names: testCase.names, runs: 3 }) : null,
     ]);
-    const ok = (item.want === "low" ? judge.score <= 4 : judge.score >= 7)
+    // The best the case could score: every rule met.
+    const atBest = combine(testCase, { score: 10 }, judge, named);
+    const ok = (item.want === "low" ? judge.score <= 4 : item.want === "high" ? judge.score >= 7
+      : (judge.lines.didWhatWasAsked ?? 10) <= item.asked && atBest < 40)
       && (item.crafted === undefined || (judge.lines.crafted ?? 10) <= item.crafted);
     agrees &&= ok;
-    results.push({ ...item, judge: judge.score, lines: judge.lines, named: named?.said, ok });
-    console.log(`${ok ? "ok  " : "MISS"} ${item.picture.padEnd(34)} judge ${judge.score} (want ${item.want === "low" ? "4 or under" : "7 or over"})  ${Object.entries(judge.lines).map(([k, v]) => `${k} ${v}`).join(", ")}${named ? `  named: ${named.said.join(" / ")}` : ""}`);
+    results.push({ ...item, judge: judge.score, lines: judge.lines, named: named?.said, atBest, ok });
+    console.log(`${ok ? "ok  " : "MISS"} ${item.picture.padEnd(34)} judge ${judge.score}, case at best ${atBest} (want ${wanted[item.want]})  ${Object.entries(judge.lines).map(([k, v]) => `${k} ${v}`).join(", ")}${named ? `  named: ${named.said.join(" / ")}` : ""}`);
     console.log(`     ${judge.why[0] ?? ""}`);
   }
   writeFileSync(path.join(here, "calibration/last-calibration.json"), JSON.stringify({ rubric: RUBRIC_ID, judgeModel: JUDGE_MODEL, at: new Date().toISOString(), agrees, results }, null, 2) + "\n");
@@ -250,9 +288,11 @@ async function calibrate() {
 }
 
 async function rescore(id) {
-  const runDir = path.join(runsDir, id);
+  const runDir = findRunDir(id);
+  if (!runDir) throw new Error(`no run ${id}`);
   const meta = JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"));
-  const cases = Object.fromEntries(loadCases().map((c) => [c.id, c]));
+  const sealed = meta.set === "held-out";
+  const cases = Object.fromEntries(loadCases(meta.set ?? "climb").map((c) => [c.id, c]));
   const only = option("cases")?.split(",");
   for (const [caseID, r] of Object.entries(meta.cases)) {
     if (r.unrun || (only && !only.includes(caseID))) continue;
@@ -260,10 +300,11 @@ async function rescore(id) {
     const read = JSON.parse(readFileSync(path.join(dir, "read.json"), "utf8"));
     const scored = await scoreCase(cases[caseID], dir, { read, picture: path.join(dir, "result.png") }, 3);
     Object.assign(r, { score: scored.score, rules: scored.rules, judge: scored.judge, named: scored.named });
-    console.log(`${caseID.padEnd(24)} ${r.score}`);
+    writeFileSync(path.join(dir, "score.json"), JSON.stringify(r, null, 2));
+    if (!sealed) console.log(`${caseID.padEnd(24)} ${r.score}`);
   }
   saveMeta(runDir, meta);
-  await drawSheet(runDir, meta);
+  if (!sealed) await drawSheet(runDir, meta);
   // A recorded run's line is replaced, and says it was rescored.
   if (meta.recorded) {
     const line = { ...historyLine(meta), rescored: new Date().toISOString() };
@@ -271,6 +312,62 @@ async function rescore(id) {
     writeFileSync(historyFile, history().map((h) => JSON.stringify(h.run === meta.id ? line : h)).join("\n") + "\n");
   }
   console.log(`==> total ${meta.total} (rescored on rubric ${RUBRIC_ID})`);
+  console.log(`    ${describe(meta.lookups)}`);
+}
+
+/// Where the apps keep the cases a person's thumbs saved
+/// (`AskFeedbackFolder` in the app): every Photonz bundle on this Mac.
+function feedbackFolders() {
+  const support = path.join(os.homedir(), "Library/Application Support");
+  if (!existsSync(support)) return [];
+  return readdirSync(support).filter((b) => /^com\.dzearing\.photonz/.test(b))
+    .map((b) => path.join(support, b, "Ask feedback")).filter((d) => existsSync(d))
+    .flatMap((d) => readdirSync(d).map((f) => path.join(d, f)))
+    .filter((d) => existsSync(path.join(d, "case.json")) && existsSync(path.join(d, "before.photonz")));
+}
+
+/// A thumbs down becomes a held-out case: the request word for word, started
+/// from the document as it was before Ask touched it. Thumbs up are counted,
+/// not added (they say the result was fine, not what to test). Only the probe's
+/// own votes are left out: those are walks, not people.
+function importFeedback({ quiet = false } = {}) {
+  const into = path.join(here, "held-out");
+  const kept = path.join(into, "from-use");
+  let added = 0, ups = 0, already = 0;
+  for (const folder of feedbackFolders()) {
+    if (folder.includes("com.dzearing.photonz.probe")) continue;
+    const saved = JSON.parse(readFileSync(path.join(folder, "case.json"), "utf8"));
+    if (saved.verdict !== "down") { ups += 1; continue; }
+    const name = path.basename(folder);
+    const file = path.join(into, `use-${name}.json`);
+    if (existsSync(file)) { already += 1; continue; }
+    mkdirSync(path.join(kept, name), { recursive: true });
+    cpSync(path.join(folder, "before.photonz"), path.join(kept, name, "before.photonz"), { recursive: true });
+    if (existsSync(path.join(folder, "after.png"))) cpSync(path.join(folder, "after.png"), path.join(kept, name, "what-it-made.png"));
+    const drawing = /\b(draw|drawing|illustrat|sketch|paint|icon|picture of|cartoon)/i.test(saved.request);
+    writeFileSync(file, JSON.stringify({
+      request: saved.request,
+      group: drawing ? "drawing" : "layout",
+      from: `a thumbs down in ${saved.app}, ${saved.at} (Ask had made: ${saved.sentence}${saved.sources?.length ? `, from ${saved.sources.join(", ")}` : ""})`,
+      start: { open: path.relative(repo, path.join(kept, name, "before.photonz")) },
+      context: "the person's own document as it was before they asked",
+      expect: {},
+    }, null, 2) + "\n");
+    added += 1;
+  }
+  if (!quiet || added) console.log(`==> feedback: ${added} new held-out case${added === 1 ? "" : "s"} from thumbs down, ${already} already in, ${ups} thumbs up counted (not cases)`);
+  return added;
+}
+
+/// The two numbers a runner reports: the latest climb run and the latest
+/// held-out run of an engine on the current rubric.
+function report() {
+  const engine = option("engine", "ask");
+  const mine = history().filter((h) => h.engine === engine && h.rubric === RUBRIC_ID);
+  const climb = mine.filter((h) => (h.set ?? "climb") === "climb").at(-1);
+  const held = mine.filter((h) => h.set === "held-out").at(-1);
+  const line = (name, h) => h ? `${name.padEnd(9)} ${String(h.total).padStart(5)}  (${h.caseCount ?? Object.keys(h.cases ?? {}).length} cases, ${h.run}, "${h.tag}")\n          ${describe(h.lookups)}` : `${name.padEnd(9)}     -  (no run on rubric ${RUBRIC_ID} yet)`;
+  console.log(`${engine} on rubric ${RUBRIC_ID}:\n${line("climb", climb)}\n${line("held-out", held)}`);
 }
 
 try {
@@ -281,10 +378,12 @@ try {
     const w = option("with");
     compare(current, w && w !== "best" ? findRun(w) : undefined);
   } else if (command === "history") {
-    for (const h of history()) console.log(`${h.run}  ${h.engine.padEnd(5)}  total ${String(h.total).padStart(5)}  ${Object.entries(h.groups).map(([g, v]) => `${g} ${v}`).join(", ")}  ${Math.round(h.wallSeconds / 60)} min  "${h.tag}"`);
+    for (const h of history()) console.log(`${h.run}  ${h.engine.padEnd(5)}  ${(h.set ?? "climb").padEnd(8)}  total ${String(h.total).padStart(5)}  ${Object.entries(h.groups).map(([g, v]) => `${g} ${v}`).join(", ")}  ${Math.round(h.wallSeconds / 60)} min  "${h.tag}"`);
   } else if (command === "calibrate") await calibrate();
+  else if (command === "feedback") importFeedback();
+  else if (command === "report") report();
   else if (command === "sheet") {
-    const runDir = path.join(runsDir, positional);
+    const runDir = findRunDir(positional);
     console.log(await drawSheet(runDir, JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"))));
   } else if (command === "rescore") await rescore(positional);
   else {

@@ -1,0 +1,20 @@
+{
+  "request": "make a flat vector icon of a robot",
+  "group": "drawing",
+  "from": "a style named in the request (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "robot",
+    "bot",
+    "android"
+  ],
+  "expect": {
+    "words": false,
+    "icon": true
+  }
+}

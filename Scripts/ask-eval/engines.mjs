@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { connect } from "./mcp.mjs";
 import { run } from "./judge.mjs";
+import { sourcesFromTranscript } from "./lookups.mjs";
 
 export const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 export const SKILL_MODEL = process.env.ASK_EVAL_SKILL_MODEL ?? "claude-opus-5-5";
@@ -90,6 +91,8 @@ export async function runAsk(testCase, dir, { build }) {
     wallSeconds: (Date.now() - started) / 1000,
     model: ended?.trace?.find((t) => / model /.test(t))?.match(/model ([^\s,]+)/)?.[1] ?? null,
     steps: ended?.steps ?? [], skipped: ended?.skipped ?? [], says: ended?.says ?? "",
+    // Where each drawing came from: stored, template or drawn for the request.
+    sources: ended?.sources ?? [],
   };
   if (walked.code === 3 || walked.code === 6) return { engine, unrun: walked.code === 3 ? "screen locked" : "deferred: person at the Mac" };
   const got = await collect(dir);
@@ -135,6 +138,7 @@ export async function runSkill(testCase, dir, { build }) {
     seconds: (Date.now() - started) / 1000, timedOut: session.timedOut, model: SKILL_MODEL,
     turns: result.num_turns ?? null, costUSD: result.total_cost_usd ?? null,
     said: String(result.result ?? "").slice(0, 400), calls: calls.length, skillLoaded: calls.includes("Skill"),
+    sources: sourcesFromTranscript(lines),
   };
   const got = await collect(dir, before);
   await quitProbe();

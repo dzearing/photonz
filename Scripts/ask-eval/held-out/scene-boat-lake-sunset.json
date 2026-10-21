@@ -1,0 +1,22 @@
+{
+  "request": "draw a sailboat on a lake at sunset",
+  "group": "drawing",
+  "from": "a scene: things doing something together (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "boat",
+    "sailboat",
+    "sail",
+    "sunset",
+    "lake"
+  ],
+  "crafted": true,
+  "expect": {
+    "words": false
+  }
+}

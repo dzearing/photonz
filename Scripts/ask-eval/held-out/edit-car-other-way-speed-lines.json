@@ -1,0 +1,17 @@
+{
+  "request": "make the car face the other way and add speed lines behind it",
+  "group": "drawing",
+  "from": "an edit of a drawing Ask made, saved by a thumbs vote (held-out, 2026-10-20)",
+  "start": {
+    "open": "Scripts/ask-eval/held-out/starts/car.photonz"
+  },
+  "context": "a picture with a drawing of a car on it",
+  "names": [
+    "car",
+    "automobile",
+    "vehicle"
+  ],
+  "expect": {
+    "words": false
+  }
+}

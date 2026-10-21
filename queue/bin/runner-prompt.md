@@ -223,6 +223,18 @@ The machine you run on is the user's. Anything you start, you finish.
 - One task per run. Do not claim or start other tasks. Work you discover goes through the follow-up bar at the end of this prompt: it has to be something a person would notice and not already covered by an open task, and you search the queue and fold into the nearest existing task before filing a new one. What clears the bar is filed with the structured form so it is legible to a human; what does not goes in your own task's log instead of being thrown away:
   `node queue/bin/queue.mjs addjson '{"title":"...","goal":"...","epic":"<objective id this serves>","acceptance":["...","..."],"priority":"p2-normal","notes":"..."}'`
 
+- **Ask's held-out cases are never read one by one.** Work on Ask (its prompt,
+  its tools, its drawings) climbs on the eval's climb set
+  (`Scripts/ask-eval/cases/`) and reports BOTH numbers, the climb total and the
+  held-out total, from `Scripts/ask-eval.sh report`. Never open
+  `Scripts/ask-eval/held-out/` or `.ask-eval/held-out-runs/`, never run the
+  held-out set with anything but the whole set, and never add a held-out
+  request to the climb set or shape a fix to one: those requests exist so a
+  score cannot be climbed by looking things up (on 2026-10-20 Ask scored 92 on
+  drawings while it drew one cat for every cat request). The held-out total and
+  the lookup line under it are the honest number; a climb that does not move
+  the held-out total did not make Ask better.
+
 ### A bug you file must be reproduced, not just read
 
 Filing work is cheap and the top of the queue is expensive: a p1 bug takes the

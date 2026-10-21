@@ -1,0 +1,17 @@
+{
+  "request": "make it night, with a moon and stars instead of the sun",
+  "group": "drawing",
+  "from": "an edit of a drawing Ask made, saved by a thumbs vote (held-out, 2026-10-20)",
+  "start": {
+    "open": "Scripts/ask-eval/held-out/starts/sun-over-mountains.photonz"
+  },
+  "context": "an illustration of a sun over mountains",
+  "names": [
+    "mountain",
+    "moon",
+    "night"
+  ],
+  "expect": {
+    "words": false
+  }
+}

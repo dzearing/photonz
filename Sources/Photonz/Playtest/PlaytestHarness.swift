@@ -19996,6 +19996,10 @@ private final class Run {
                 "says": editor.ask.phase.sentence ?? "",
                 "trace": editor.ask.trace,
                 "skipped": editor.ask.skipped.map { "\($0.key): \($0.value)" }.sorted(),
+                // Where each drawing of the last run came from: stored (a
+                // built-in looked up by name), template (a coded
+                // illustration) or drawn for the request.
+                "sources": editor.ask.lastSources.map(\.rawValue),
                 // The Agent group's rows, newest first: what changed, on or off.
                 "changes": editor.ask.changes.shown.map {
                     "\($0.sentence) (\($0.isOn ? "on" : "off"))\($0.note.map { ": \($0)" } ?? "")"

@@ -1,0 +1,19 @@
+{
+  "request": "draw an astronaut planting a flag on the moon",
+  "group": "drawing",
+  "from": "a scene: things doing something together (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "astronaut",
+    "spaceman",
+    "moon"
+  ],
+  "expect": {
+    "words": false
+  }
+}

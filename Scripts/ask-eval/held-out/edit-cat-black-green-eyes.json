@@ -1,0 +1,17 @@
+{
+  "request": "make the cat black with green eyes",
+  "group": "drawing",
+  "from": "an edit of a drawing Ask made, saved by a thumbs vote (held-out, 2026-10-20)",
+  "start": {
+    "open": "Scripts/ask-eval/held-out/starts/cat.photonz"
+  },
+  "context": "a picture with a drawing of a ginger cat on it",
+  "names": [
+    "cat",
+    "kitten",
+    "kitty"
+  ],
+  "expect": {
+    "words": false
+  }
+}

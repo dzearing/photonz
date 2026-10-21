@@ -1,0 +1,21 @@
+{
+  "request": "draw a dinosaur like a child's crayon drawing",
+  "group": "drawing",
+  "from": "a style named in the request (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "dinosaur",
+    "dino",
+    "t-rex",
+    "trex",
+    "rex"
+  ],
+  "expect": {
+    "words": false
+  }
+}

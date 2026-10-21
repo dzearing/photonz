@@ -1,0 +1,18 @@
+{
+  "request": "draw a squirrel holding an acorn on a tree stump",
+  "group": "drawing",
+  "from": "a scene: things doing something together (held-out, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "squirrel",
+    "chipmunk"
+  ],
+  "expect": {
+    "words": false
+  }
+}
