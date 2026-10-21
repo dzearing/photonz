@@ -36,6 +36,10 @@ enum AgentDrawingWork {
             return try await findElements(AgentDocuments.editor(id).get(), region: region, limit: limit)
         case .addMeasurement(let id, let measurement):
             return try await addMeasurement(AgentDocuments.editor(id).get(), measurement)
+        case .findMeasurements(let id, let region):
+            return try await findMeasurements(AgentDocuments.editor(id).get(), region: region)
+        case .markMeasurements(let id, let region, let marks):
+            return try await markMeasurements(AgentDocuments.editor(id).get(), region: region, ids: marks)
         case .findMisalignments(let id, let region):
             return try await findMisalignments(AgentDocuments.editor(id).get(), region: region)
         case .markMisalignments(let id, let region, let findings):
@@ -292,6 +296,47 @@ enum AgentDrawingWork {
         }.value
         return .json(Found(count: found.count, readsThePicture: !read.edges.isEmpty,
                            elements: found.map(Box.init)))
+    }
+
+    // MARK: A redline
+
+    /// The redline of the picture, chosen in code off its layout
+    /// (`RedlinePlan`): the same picture and region read the same every time,
+    /// so the ids a look handed out name the same marks when they are laid.
+    private static func redline(_ editor: EditorState, region: CGRect?) async throws -> (marks: [RedlineMark], obstacles: [CGRect]) {
+        let document = try AgentWork.document(of: editor)
+        let read = await analysis(of: editor)
+        guard !read.luma.isEmpty else {
+            throw Failure("There is no picture to measure. find_measurements reads a screenshot.")
+        }
+        let scale = document.pixelScale
+        let luma = read.luma
+        return await Task.detached(priority: .userInitiated) {
+            let nodes = LayoutRead.read(luma, pixelScale: scale, region: region)
+            let canvas = region ?? CGRect(x: 0, y: 0, width: luma.width, height: luma.height)
+            return (RedlinePlan.marks(in: nodes, canvas: canvas, pixelScale: scale),
+                    RedlinePlan.obstacles(in: nodes, canvas: canvas, pixelScale: scale))
+        }.value
+    }
+
+    private static func findMeasurements(_ editor: EditorState, region: CGRect?) async throws -> Answer {
+        let found = try await redline(editor, region: region)
+        return .json(RedlinePlan.report(found.marks, pixelScale: try AgentWork.document(of: editor).pixelScale))
+    }
+
+    private static func markMeasurements(_ editor: EditorState, region: CGRect?, ids: [String]) async throws -> Answer {
+        let found = try await redline(editor, region: region)
+        let unknown = ids.filter { id in !found.marks.indices.contains { RedlinePlan.id($0) == id } }
+        guard unknown.isEmpty else {
+            throw Failure("There is no mark \(unknown.joined(separator: ", ")). find_measurements lists them.")
+        }
+        let chosen = found.marks.enumerated().filter { ids.contains(RedlinePlan.id($0.offset)) }
+        let before = Set(editor.document?.layers.map(\.id) ?? [])
+        editor.setTool(.measure)
+        editor.asOneUndoStep { editor.addRedline(chosen.map(\.element), obstacles: found.obstacles) }
+        let added = (editor.document?.layers ?? []).filter { !before.contains($0.id) }
+        guard !added.isEmpty else { throw Failure("Photonz could not lay those measurements.") }
+        return .json(Marked(layers: added.map(\.id.uuidString), marked: chosen.map { RedlinePlan.id($0.offset) }))
     }
 
     // MARK: Misalignments

@@ -81,7 +81,7 @@ enum AgentWork {
         case .runCommand(let id, let call):
             return try await runCommand(AgentDocuments.editor(id).get(), call)
         case .newPicture, .addShape, .addPath, .addDrawing, .addText, .setLayer, .findElements,
-             .addMeasurement, .findMisalignments, .markMisalignments, .listComponents, .placeComponent, .export:
+             .addMeasurement, .findMeasurements, .markMeasurements, .findMisalignments, .markMisalignments, .listComponents, .placeComponent, .export:
             return try await AgentDrawingWork.answer(request)
         case .newVideo, .addClip, .cut, .trim, .moveClip, .setTransition, .addTitle, .listTitles,
              .recommendedZooms, .applyZooms, .setPlayhead, .exportVideo:

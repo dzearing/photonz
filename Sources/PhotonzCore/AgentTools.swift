@@ -46,6 +46,8 @@ public enum AgentRequest: Hashable, Sendable {
     case setLayer(document: String?, layer: String, change: AgentLayerChange)
     case findElements(document: String?, region: CGRect?, limit: Int)
     case addMeasurement(document: String?, measurement: AgentMeasurement)
+    case findMeasurements(document: String?, region: CGRect?)
+    case markMeasurements(document: String?, region: CGRect?, marks: [String])
     case findMisalignments(document: String?, region: CGRect?)
     case markMisalignments(document: String?, region: CGRect?, findings: [String])
     case listComponents(document: String?)
@@ -371,6 +373,23 @@ public enum AgentTools {
                          "description": "distance: which way it reads. The longer way when left out."],
             ], required: ["kind"])),
         AgentTool(
+            name: "find_measurements",
+            description: "The redline a designer would hand a developer for a UI screenshot, chosen in code off its pixels: one size of each kind of control (a repeated switch or field is measured once, on the first), then the spacing that defines the layout (margin, padding, row height, section gap, the gap between neighbouring controls, a button's label inset). Each mark has an id, what it is and its reading in points.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "region": regionProperty,
+            ])),
+        AgentTool(
+            name: "mark_measurements",
+            description: "Lays marks from find_measurements on the picture with the Measure tool: a size as one group of a width and a height, spacing as one caliper, every readout placed clear of words, controls and the other readouts. One editable layer a mark, one undo step.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "region": regionProperty,
+                "marks": ["type": "array", "minItems": 1,
+                          "description": "The ids from find_measurements to lay, such as r1. Normally all of them.",
+                          "items": ["type": "string"]],
+            ], required: ["marks"])),
+        AgentTool(
             name: "find_misalignments",
             description: "Checks a UI screenshot for what a designer would mark as inconsistent: edges that almost line up but miss by 1 to 8 points, uneven gaps in a repeated run, padding or border widths that differ between matching things. Every number is measured off the pixels. Each finding has an id, what is off with both numbers, and its box.",
             inputSchema: schema([
@@ -479,8 +498,8 @@ public enum AgentTools {
             return AppCommandTable.call(args["command"]?.stringValue ?? "", arguments: args["arguments"])
                 .map { .runCommand(document: document, call: $0) }
         case "new_picture", "add_shape", "add_path", "add_drawing", "add_text", "set_layer", "find_elements",
-             "add_measurement", "find_misalignments", "mark_misalignments", "list_components", "place_component",
-             "export":
+             "add_measurement", "find_measurements", "mark_measurements", "find_misalignments", "mark_misalignments",
+             "list_components", "place_component", "export":
             return drawingRequest(name, args, document: document)
         case _ where videoToolNames.contains(name):
             return videoRequest(name, args, document: document)
@@ -636,6 +655,12 @@ public enum AgentTools {
             default:
                 return fail("kind is required.")
             }
+        case "find_measurements":
+            return .success(.findMeasurements(document: document, region: region(args["region"])))
+        case "mark_measurements":
+            let ids = (args["marks"]?.arrayValue ?? []).compactMap(\.stringValue)
+            guard !ids.isEmpty else { return fail("marks needs at least one id from find_measurements.") }
+            return .success(.markMeasurements(document: document, region: region(args["region"]), marks: ids))
         case "find_misalignments":
             return .success(.findMisalignments(document: document, region: region(args["region"])))
         case "mark_misalignments":

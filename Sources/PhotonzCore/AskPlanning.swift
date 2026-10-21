@@ -13,7 +13,7 @@ public enum AskTools {
 
     /// Read-only: run while planning, their answers go back to the model.
     public static let looking: [String] = [
-        "read_document", "find_elements", "find_misalignments", "list_components", "list_styles", "list_titles",
+        "read_document", "find_elements", "find_measurements", "find_misalignments", "list_components", "list_styles", "list_titles",
         "recommended_zooms", "list_commands",
     ]
 
@@ -21,7 +21,7 @@ public enum AskTools {
     /// window, writes a file or steps the history, so the whole plan lands in
     /// the asking document's own undo history as one step.
     public static let doing: [String] = [
-        "add_drawing", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "mark_misalignments",
+        "add_drawing", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "mark_measurements", "mark_misalignments",
         "place_component",
         "add_style", "apply_style", "set_layout", "run_command",
         "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
@@ -509,10 +509,10 @@ public struct AskConversation: Sendable {
         in. To name the layer, clip or title a planned step makes, write "$N" where its id goes.
         - Coordinates are points from the top left of the canvas. Keep everything inside the canvas, \
         lined up on an 8 point grid, using the document's own styles and components when it has them.
-        - To measure a screenshot, call find_elements. Each box says what it looksLike, controls \
-        first. The major elements are the controls (switches, fields, buttons), each measured once, \
-        plus at most two cards. Skip rows and strips. Add a gap between a \
-        few neighbouring controls. 6 to 12 measurements in all, never the same box twice.
+        - To measure or redline a screenshot ("annotate with measurements", "measure the major \
+        elements", "spec this"), call find_measurements, then mark_measurements once with the ids \
+        of every mark, normally all of them. Never place those yourself. Only when the person names \
+        one particular thing to measure, call find_elements and add_measurement for it.
         - To check a screenshot for what is inconsistent (misalignments, uneven spacing or gaps, padding \
         or borders that differ, "check the spacing", "what is inconsistent here"), call find_misalignments, \
         then mark_misalignments once with the ids of every finding worth showing. Never measure them \

@@ -305,6 +305,45 @@ extension EditorState {
         finishCreating(layer.id)
     }
 
+    /// A redline of the picture (`RedlinePlan`), laid out as one piece
+    /// (`RedlineLayout`) so no readout sits on another, on another mark's line,
+    /// or on any word or control in `obstacles`. A size lands as the same
+    /// group a Size click makes, spacing as the caliper a Gap click makes, each
+    /// in its role's style. The caller makes them one undo step.
+    func addRedline(_ marks: [RedlineMark], obstacles: [CGRect]) {
+        guard let document, !marks.isEmpty else { return }
+        var size = measureStyles.content(for: .size)
+        size.madeBy = namedMode(.size)
+        var spacing = measureStyles.content(for: .spacing)
+        spacing.madeBy = namedMode(.gap)
+        let drawn = RedlineLayout.lay(marks, obstacles: obstacles, canvas: document.canvasSize,
+                                      size: size, spacing: spacing, placed: placedReadoutRects())
+        for piece in drawn {
+            var calipers = piece.calipers.map { c -> Layer in
+                var layer = MeasureBuilder.layer(content: c, from: c.start, to: c.end)
+                layer.style = measureStyles.layerStyle
+                // Spacing is named for what it is, so the list reads as a
+                // spec: "Row height 44", "Padding 16".
+                if piece.mark.box == nil { layer.name = piece.mark.what }
+                return layer
+            }
+            if let box = piece.mark.box, calipers.count == 2, Experiments.shared.layerGroupsEnabled {
+                let group = placedInTimeIfDrawnOnVideo(
+                    MeasureSizeGroup.group(measuring: box, width: calipers[0], height: calipers[1],
+                                           boxColorHex: measureStyles.sizeBoxColorHex,
+                                           boxOpacity: measureStyles.sizeBoxOpacity,
+                                           pixelScale: document.pixelScale))
+                var named = group
+                named.name = piece.mark.what
+                perform { $0.addLayer(named) }
+                continue
+            }
+            calipers = calipers.map(placedInTimeIfDrawnOnVideo)
+            perform { doc in calipers.forEach { doc.addLayer($0) } }
+        }
+        recordRecentColor(hex: size.strokeColorHex)
+    }
+
     /// What "find the misalignments" found, marked one layer a finding in the
     /// Measure tool's look (`MisalignmentMark`): a guide down the line the
     /// others share with the miss bracketed, or a caliper across the gap,

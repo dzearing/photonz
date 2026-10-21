@@ -248,6 +248,8 @@ on 2026-10-19). It never touches the clipboard, which is the person's.
 | `find_misalignments` | What is inconsistent on a UI screenshot: edges 1 to 8 points off, uneven gaps, padding and borders that differ, each with an id and both numbers | `LayoutRead` + `MisalignmentScan` |
 | `mark_misalignments` | Those findings as redline layers, one each, one undo step | `MisalignmentMark`, `EditorState.addMisalignmentMarks` |
 | `add_measurement` | `size` of a box or of the element at a point, `gap` between two boxes or around a point, `distance` between two points; answers with the names ("Size 220 × 26") and how many measured sides sit on a real edge | `addElementSize`, `addGapMeasure`, `addMeasure` (Size, Gap and Distance modes) |
+| `find_measurements` | The redline of a UI screenshot chosen in code: one size of each kind of control (repeats measured once), then margin, padding, row height, section gap, neighbour gap, label inset; each mark with an id and its reading in points | `RedlinePlan` over `LayoutRead` |
+| `mark_measurements` | Lays the ids: a size as one group, spacing as one caliper, every readout clear of words, controls, other readouts and lines, no leader crossing anything; a mark with no clean spot is left out | `RedlineLayout`, `EditorState.addRedline` |
 | `list_components` / `place_component` | The Library's components (the document's, the shared shelf's, the starters) and a copy of one centred on a point | `componentEntries`, `placeComponent` (dragging a tile) |
 | `export` | PNG (scale, background on or off) or SVG to a path | `ExportSizer.data`, `SVGExporter.data` (File > Export) |
 

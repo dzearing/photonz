@@ -36,7 +36,7 @@ checked.
 | Documents | `list_documents`, `list_history` (screenshots and recordings, newest first), `open_document` (a path or a History index), `new_picture`, `new_video` |
 | Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
 | Drawing | `add_drawing` (a thing by name, from about a thousand built-in drawings, or your own SVG, as editable layers; `icon` for an icon frame; a scene with `style` is drawn by Photonz itself in an illustrator's passes), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words) |
-| Measuring a screenshot | `find_elements` (the boxes the Measure tool sees), `add_measurement` (size, gap, distance) |
+| Measuring a screenshot | `find_measurements` (the redline code chooses: one size of each kind of control, then the spacing), `mark_measurements` (lays the ids you pick, readouts kept clear); `find_elements` and `add_measurement` for one particular thing |
 | Checking a screenshot's consistency | `find_misalignments` (edges that miss by 1 to 8 points, uneven gaps, padding or borders that differ, every number measured), `mark_misalignments` (redlines for the ids you pick) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
 | Components | `run_command make_component`, `list_components`, `place_component` |
@@ -132,15 +132,22 @@ Photonz work should look designed, not assembled.
 
 ### Measurements on a screenshot
 
-1. `open_document` the picture (or use the one open), `render_picture` to see it.
-2. `find_elements` lists the boxes the Measure tool itself sees, largest first. Pick
-   the major ones: the main panels, the controls a designer would spec, the gaps
-   between neighbours.
-3. `add_measurement` `kind: size` with `box` (or `at` a point, which reads the element
-   there the way a click does), and `kind: gap` between two neighbouring `boxes`.
-   Each answer says how many measured sides sit on a real edge; redo any that do not.
-4. `render_picture` and check every readout is legible and none covers what it
-   measures. Say how many you placed and how many land on real edges.
+"Annotate with measurements", "measure the major elements", "redline this":
+
+1. `open_document` the picture (or use the one open). A Retina capture reads in
+   points at 2x.
+2. `find_measurements` reads the picture's layout in code and hands back the
+   redline a designer would: one size of each kind of control (four matching
+   switches are measured once, on the first), then the margin, a card's
+   padding, the row height, the gap between sections, the gap between
+   neighbouring buttons and a button's label inset. Each mark has an id.
+3. `mark_measurements` with the ids, normally all of them. Never place these
+   yourself: every readout is laid clear of words, controls and the other
+   readouts, which hand-placed measurements are not.
+4. Only when the person names one particular thing to measure, `find_elements`
+   then `add_measurement` (`kind: size` with `box`, `kind: gap` between two
+   `boxes`).
+5. `render_picture` and say how many you placed.
 
 ### Finding the misalignments on a screenshot
 
