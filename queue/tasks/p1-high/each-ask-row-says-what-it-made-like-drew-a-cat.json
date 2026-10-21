@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:32:52.034Z",
-  "updated": "2026-10-21T12:40:29.406Z",
+  "updated": "2026-10-21T14:13:44.508Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20 15:32 (queue/audits/2026-10-20-user-ask-rows-undescriptive.png): 'i ask it to draw a cat but the agent history is undescriptive ... it should say \"Drew a cat\"'. Rows shown: Changed a layer; Drew a drawing (A later change builds on this.); Drew 2 shapes; Drew a drawing; Drew a drawing.\n\nCause, from code: AskChanges.sentence (Sources/PhotonzCore/AskChanges.swift:278) builds the row from the tool steps only. add_drawing maps to 'Drew a drawing' (:259) and only names a look when IllustrationBrief.make returns a brief, which it does not for a plain subject that is not a scene or an asked-for illustration (IllustrationBrief.swift:110-127), so 'a cat' falls back to 'a drawing'. set_layer is always 'Changed a layer' (:263). The request words (AskSession's asked) are never used.\n\nThe illustration task (an-illustration-ask-draws-looks-illustrated-natu) is running now and works in IllustrationBrief; pull before starting and build on what it left.",
@@ -32,6 +32,43 @@
     {
       "t": "2026-10-21T12:40:29.405Z",
       "note": "seq 8.06 -> 20"
+    },
+    {
+      "t": "2026-10-21T13:41:48.962Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-21T13:44:45.432Z",
+      "note": "Chose rule-built rows (request words past-tensed, the drawing's own subject, the changed layer's name) over the model's own summary because the local model's closing sentence varies run to run and cannot be checked over every eval case, while rules can; the model summary stays unused."
+    },
+    {
+      "t": "2026-10-21T13:54:30.356Z",
+      "note": "owns these walks: ask-rows-say-what-they-made-walk"
+    },
+    {
+      "t": "2026-10-21T14:13:21.413Z",
+      "note": "Review before building: a first-time user reads the row to find which request it was, so the person's own words beat a tool summary; risks were chatty requests (please, can you, thanks), questions, long sheet requests and drawing requests whose subject the model shortens. Each is a test in AskRowWordsTests."
+    },
+    {
+      "t": "2026-10-21T14:13:21.482Z",
+      "note": "Built: AskChangeWords moved to Sources/PhotonzCore/AskChangeWords.swift. sentence(steps, asked:, before:, after:): one described drawing keeps the person's words (cut at a natural break that still names the subject), steps that all name what they made (drawings, texts, titles, marks) use the rule words, anything else says the request back as done ('make the title bigger' -> 'Made the title bigger'; long asks for a thing cut to 'Made a component sheet'), and the fallback names the layers by name with a verb from what set_layer set (Recoloured, Resized, Moved, Hid, Flipped...). AskSession passes the request and both documents."
+    },
+    {
+      "t": "2026-10-21T14:13:21.553Z",
+      "note": "Verified: AskRowWordsTests (every climb-set eval case checked for form and subject; rows: Drew a cat/dog/bicycle..., Drew a city skyline at night, Drew a smiley face icon, Created a table, Made a component sheet, Made a pricing section on brand, Added 8 measurements). Full suite 14188 passed. Walk ask-rows-say-what-they-made-walk ok, 23 steps, Next defaults, real model: rows read 'Made the cat bigger' over 'Drew a cat'. Looked at both pictures (1-cat-row, 2-two-rows): the rows show those words. First walk run timed out on the second request while the full test suite ran beside it; rerun alone took 14s."
+    },
+    {
+      "t": "2026-10-21T14:13:21.623Z",
+      "note": "Rough items, none filed: measurements not saying where they went (stays here, nobody has asked); request said back even if the model did otherwise (a choice, in the audit for the user to react to); the walk timeout under load (not a defect, my own test run loaded the machine)."
+    },
+    {
+      "t": "2026-10-21T14:13:44.506Z",
+      "note": "Rows in the Agent group name what a request made in the person's words: 'Drew a cat', 'Made the cat bigger', 'Drew a smiley face icon', 'Made a component sheet', and name the layer ('Resized Cat Ear') when the request is not an instruction. Sources/PhotonzCore/AskChangeWords.swift, unit tested over every climb-set eval request (AskRowWordsTests); full suite 14188 passed; walk ask-rows-say-what-they-made-walk ok at Next defaults on the real model; audit queue/audits/2026-10-21-each-ask-row-says-what-it-made-like-drew-a-cat.json. Commit 7f760796."
     }
-  ]
+  ],
+  "started": "2026-10-21T13:41:48.959Z",
+  "walks": [
+    "ask-rows-say-what-they-made-walk"
+  ],
+  "completed": "2026-10-21T14:13:44.507Z"
 }
