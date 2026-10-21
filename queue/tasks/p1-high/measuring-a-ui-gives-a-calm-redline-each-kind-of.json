@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 8.046,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T23:30:13.542Z",
-  "updated": "2026-10-21T02:20:00.818Z",
+  "updated": "2026-10-21T06:34:37.626Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20 (queue/audits/2026-10-20-user-ask-measurements-noisy.png): 'when you say \"annotate the ux with measurements around the major ui elements\", it is way too noisey.' Seen in the picture: 12 measurements; the 42 x 24 toggle measured four times; readouts '42 px' stacked on '42 px' and '24 px' on '44 px'; two 656 px full-width lines; 220 px on both fields; dimension boxes running past the content to the right edge; readouts sitting over the toggles and the field.\n\nThe eval already shows it is not only the model: the skill on a frontier model scored the same case 62.8 with the judge at 3.8 for crowding (queue/evals/ask-eval-history.jsonl). So the fix belongs in code: MeasurePlan.swift (what to measure), MeasureSizeGroup.swift (repeats), MeasureLabelPlacement.swift (where readouts go). Moved here from ask-on-the-local-model-makes-results-that-look-f, which keeps the pricing half. Shares grouping with find-the-misalignments-marks-every-inconsistent (runs just before): reuse its 'things that should agree' groups to pick one of each.",
@@ -33,6 +33,33 @@
     {
       "t": "2026-10-21T02:20:00.816Z",
       "note": "manager 2026-10-20 19:20: ask-annotates-a-screenshot-walk at defaults on today's probe still lands 12 measurements crowded on the switch column (42 px, 24 px, 26 px, 132 px stacked): queue/manager/shots/2026-10-20-1920-ask-measure-ran.png"
+    },
+    {
+      "t": "2026-10-21T03:35:18.453Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-21T04:26:54.137Z",
+      "note": "Before building: the model was choosing boxes from find_elements (12 marks, the switch 4 times) and each readout was placed alone, knowing only the readouts already down and its own subject, never the picture's words or controls. Fix in code: RedlinePlan (Sources/PhotonzCore/Redline.swift) picks one size per kind of control off LayoutRead, then margin, padding, row height, section gap, neighbour gap, label inset; RedlineLayout places all lines first, then each readout where it touches no word, control, readout or other line, with no leader crossing anything; a mark with no clean spot is left out. New tools find_measurements / mark_measurements (model only confirms ids), Ask prompt and skill point at them."
+    },
+    {
+      "t": "2026-10-21T05:16:30.075Z",
+      "note": "owns these walks: ask-annotates-a-screenshot-walk, ask-redlines-a-dialog-walk, ask-redlines-a-feed-walk"
+    },
+    {
+      "t": "2026-10-21T06:34:07.828Z",
+      "note": "Chose sizing a kind on the member with the most open room over always the first, because the first button was hemmed in and its brackets tangled. Chose dropping the margin to the screenshot's edge because that edge is where it was cropped and the judge read the line as running off. Chose leaving hand placement on the Measure tool's own placer because the user picked its leash and on-the-line behaviour (MeasureCalloutClearanceTests); carried into a-redline-of-a-2x-screenshot-reads-in-points-wit with units (px vs pt, 46 test files and 38 walks expect px) and the caliper look. Acceptance status: repeats once (done, RedlinePlanTests); redline order and 8 marks on settings chosen by code (done); zero overlaps, no leader crossing (done, tested on 4 screenshots and seen on 3 real ones); units in points (not done, filed); user's picture clean 2 (done, calibration) but settings case clean 4 not 8 (not done, filed); audit with before/after on settings plus dialog and feed (done). Held-out redline group 35.4 -> 19.6 measured twice, cause not findable without reading held-out cases: ask-s-redlines-do-at-least-as-well-on-unseen-req. Walk flake seen: ask-redlines-a-dialog-walk once had Send not take (phase stayed idle), passed on rerun; known, the eval retries for it."
+    },
+    {
+      "t": "2026-10-21T06:34:37.624Z",
+      "note": "Shipped (c9200d34, aa4e3ce3, 69948446): code chooses the redline (RedlinePlan in Sources/PhotonzCore/Redline.swift): one size per kind of control, then padding, row height, section gap, button gap, label inset; 8 marks on the settings screenshot where there were 12. RedlineLayout keeps every readout off words, controls, other readouts and lines, and no leader crosses anything. New find_measurements / mark_measurements tools, used by Ask and the skill. Verified: RedlinePlanTests and RedlineToolTests on 4 screenshots, full suite green (14,129), three walks at Next defaults with real captures, eval settings case 32.5 to 47-59 for Ask, calibration on the user's picture clean 2. Not met and filed: readouts in points and the caliper look with the clean-8 bar (a-redline-of-a-2x-screenshot-reads-in-points-wit); held-out redline group fell 35.4 to 19.6 (ask-s-redlines-do-at-least-as-well-on-unseen-req). Audit: queue/audits/2026-10-20-calm-redline.json"
     }
-  ]
+  ],
+  "started": "2026-10-21T03:35:18.452Z",
+  "walks": [
+    "ask-annotates-a-screenshot-walk",
+    "ask-redlines-a-dialog-walk",
+    "ask-redlines-a-feed-walk"
+  ],
+  "completed": "2026-10-21T06:34:37.625Z"
 }

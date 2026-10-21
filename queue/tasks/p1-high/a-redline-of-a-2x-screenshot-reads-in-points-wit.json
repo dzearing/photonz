@@ -1,0 +1,33 @@
+{
+  "id": "a-redline-of-a-2x-screenshot-reads-in-points-wit",
+  "title": "A redline of a 2x screenshot reads in points, with dimension lines a designer reads at a glance",
+  "goal": "Measurements on a Retina screenshot say their numbers in points (\"124 pt\" for a button 248 pixels wide) instead of a \"px\" that reads as wrong, and each dimension line shows plainly what it spans, so a redline Ask makes reads as a finished spec rather than a tangle.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 3970,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-21T05:16:19.351Z",
+  "updated": "2026-10-21T06:33:53.433Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
+  "acceptance": [
+    "On a 2x screenshot every measurement readout and the Measurements list say pt unless the person chose pixels, and every walk and test that expected px on a 2x picture is updated in the same change",
+    "A dimension line shows where it starts and stops (end ticks or the Measure tool's equivalent), so a judge or a person can tell what each number spans",
+    "The settings measurements case scores 8 or more on clean and aligned in the eval for Ask and for the skill (Scripts/ask-eval.sh run --cases settings-measurements)",
+    "A person placing many measurements by hand gets readouts kept off words, controls and other measurement lines the way an Ask redline does, without undoing the leash and on-the-line choices the user already made (MeasureCalloutClearanceTests, MeasureLabelPlacementTests)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-21T05:16:19.353Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-21T06:33:53.432Z",
+      "note": "owns no walks; the ones it names are examples"
+    }
+  ],
+  "walks": []
+}
