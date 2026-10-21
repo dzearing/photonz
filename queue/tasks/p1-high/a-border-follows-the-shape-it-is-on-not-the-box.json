@@ -5,11 +5,11 @@
   "epic": "interaction-foundations",
   "priority": "p1-high",
   "seq": 8.048,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T00:08:37.826Z",
-  "updated": "2026-10-21T07:49:10.451Z",
+  "updated": "2026-10-21T07:49:36.736Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20, on Ask's 'package in some clouds' drawing: 'i wanted a border around the box. I selected the product package. added a border effect. It created a box border, and not one that followed the outline of the shape. Ideally, we follow the outline of the shape. Same thing for arrows. borders are borders, not always boxes.' In the picture the package is a group of 8 paths and the 2 px Outside border is the group's frame rectangle.\n\nCause, from code: Sources/PhotonzCore/BorderFollows.swift:20-22 says only a label has letters to follow and everything else (picture, shape, frame, group) 'has a box and nothing else, so its rings follow the box whatever this says and the panel never asks (Layer.boxBorders)'. That rule was written for labels on 2026-09-08 and never revisited for drawn shapes. Reuse the label's choice (BorderFollows: letters or box) as shape or box. The renderer has ContourTracer (Sources/PhotonzRender) and OutlineStroke.swift. Watch the composite path's cost (CLAUDE.md perf note) and the SVG exporter's border path.",
@@ -70,11 +70,16 @@
     {
       "t": "2026-10-21T07:49:10.450Z",
       "note": "walks border-follows-the-shape-walk -> border-follows-the-shape-walk, border-follows-the-path-walk"
+    },
+    {
+      "t": "2026-10-21T07:49:36.734Z",
+      "note": "A Border on a group, arrow, line or cut-out picture follows the shape (union of parts, shaft+head, alpha edge); opaque pictures/rectangles/frames stay boxed; each row offers Follows: Shape/Box; SVG matches. Commit c285edbc. Verified: 14153 tests green incl. new ShapeOutline/PictureEdge/ShapeBorderRender tests; walk border-follows-the-shape at Next defaults (6 real window captures); Width drag 8.3 ms median at 2x. Audit queue/audits/2026-10-21-border-follows-the-shape.json."
     }
   ],
   "started": "2026-10-21T06:45:28.267Z",
   "walks": [
     "border-follows-the-shape-walk",
     "border-follows-the-path-walk"
-  ]
+  ],
+  "completed": "2026-10-21T07:49:36.735Z"
 }
