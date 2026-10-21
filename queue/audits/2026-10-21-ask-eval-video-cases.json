@@ -1,0 +1,30 @@
+{
+  "feature": "The Ask test set scores video requests",
+  "epic": "agent-ask",
+  "summary": "Ask and the skill are now scored on five video requests (and three held-out ones) as well as pictures, from frames of the video as it actually plays, so a change that makes video asks worse shows in the number. Baselines on this Mac: Ask's video cases average 53.4 (whole climb set 74, held-out 18.2 with video 12.5); the skill averages 84 on the same five.",
+  "setup": "Scripts/ask-eval.sh on the probe (never the dev app), at Next defaults with no switch changed. Each video case opens the sample recording (eight seconds of a folder being copied), sometimes with its two clicks, two more copies laid after it, or a made-up History.",
+  "switched": {},
+  "try": [
+    { "do": "Open the Case 1 title sheet: Ask put a white on black Case 1 page before the clip (84.4, 10 s).", "shot": "2026-10-21-video-eval-ask-title-page-case-1.png" },
+    { "do": "Open the Case 1 to 3 sheet: one page before each of three clips, one look (Ask 85.6 in 12.7 s, skill 88 in 38.3 s).", "shot": "2026-10-21-video-eval-ask-case-titles-before-three-clips.png" },
+    { "do": "Open the zoom sheet: the card grows in around the clicks at 2 s (Ask 80.8 in 10.7 s, skill 82 in 17 s).", "shot": "2026-10-21-video-eval-ask-zooms-on-the-clicks.png" },
+    { "do": "Compare the dissolve sheets: Ask changed nothing (8.6, 10.7 s), the skill cut at 2 s with a dissolve (85, 28.2 s); the header lists the cuts.", "shot": "2026-10-21-video-eval-skill-dissolve-where-the-copy-starts.png" },
+    { "do": "Compare the History sheets: Ask has no way to add a clip and left the video as it was (7.5, 19.3 s); the skill put Recording 0002 after it (80.8, 14 s).", "shot": "2026-10-21-video-eval-skill-latest-recording-after-this-one.png" },
+    { "do": "Run Scripts/ask-eval.sh report to see the climb and held-out totals with the new video line." }
+  ],
+  "evaluate": [
+    "Do the five climb requests sound like what you would ask of a screen recording, or is a common ask missing?",
+    "Is a sheet of frames every half second, with the cuts listed in its header, enough for you to judge an edit at a glance?",
+    "Should a title page bare for a moment before its words come in count as a blank frame? (Today it does not, unless it lasts half a second.)",
+    "Do the judge's scores for the title pages (about 7.5 of 10, 'plain white on black') match your own eye?"
+  ],
+  "rough": [
+    "No mock covers this: it is eval tooling, not app UI.",
+    "The History case's newest recording is a copy of the sample itself, so its frames cannot show it is a different recording; the rules read the clip's name and place instead.",
+    "A dissolve across a cut inside one unbroken recording joins a moment to itself and shows nothing, so the judge takes it from the sheet's header rather than the frames.",
+    "Ask fails the History and dissolve cases today; filed as ask-puts-a-recording-from-history-on-the-timelin.",
+    "The skill was run on the five video cases only, not the whole climb set, so its climb total (84) is a video-only number.",
+    "The rubric id changed (now f5ae1562), so runs before 2026-10-21 16:00 no longer compare with new ones; both totals were run again on it.",
+    "The held-out run's own sheet, for a person only, is at .ask-eval/held-out-runs/20261021-154921-ask-held-out/contact-sheet.png."
+  ]
+}
