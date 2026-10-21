@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 8.04,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:50:50.819Z",
-  "updated": "2026-10-21T01:04:49.026Z",
+  "updated": "2026-10-21T02:01:39.559Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'i really don't think this model is great. i'm wondering what the process looks like on making it better?' Score history (queue/evals/ask-eval-history.jsonl): Ask on qwen3:30b 37.8 vs the skill on a frontier model 83.9 on the same tools (drawing 35 vs 87, sheet 47 vs 74, layout 30 vs 82); the dog task then climbed Ask's drawings to 92 mostly with a built-in Twemoji set looked up by noun, which is exactly what the user then found wrong. Classic overfitting to a small visible set. Runs before the model bake-off so the bake-off is measured on the honest set.",
@@ -36,7 +36,47 @@
     {
       "t": "2026-10-21T01:04:49.024Z",
       "note": "intake 2026-10-20: the user ruled out hardcoded anything. Count code that draws a named subject (IllustrationPieces.swift: fox, lighthouse, skyline, mountains...) in the stored-or-coded share, not only the stored Twemoji set, and pick held-out subjects none of that code covers."
+    },
+    {
+      "t": "2026-10-21T01:25:14.394Z",
+      "note": "Adversarial review before building: (1) a held-out set a runner can read is not held out, so the eval itself must refuse to print held-out cases, and the runner contract must forbid opening them; (2) a stricter rubric line alone does not fix the score: a clean stock cat that ignores 'sleeping' still scored about 85 because rules, three other judge lines and a blind look saying 'cat' carry it, so the score must be gated on didWhatWasAsked; (3) the user's own failures were already filed as climb cases on the scene task, which would leak them out of the held-out set; (4) thumbs that only show on hover cannot be proven by a background walk and are harder to find."
+    },
+    {
+      "t": "2026-10-21T01:25:14.468Z",
+      "note": "Reproduced the user's report on today's build first: the walk asked 'draw a cat curled up sleeping' and got the standing built-in cat, named 'Sleeping Cat', source 'stored' (ask-row-thumbs-walk, /tmp/photonz-playtest/ask-row-thumbs-walk/1-row-sc.png)."
+    },
+    {
+      "t": "2026-10-21T01:25:14.539Z",
+      "note": "Built: PhotonzCore AskFeedback.swift (AskDrawingSource read from each add_drawing answer's from; AskVerdict; AskFeedbackCase + folderName), AskChangeList rows carry sources and a verdict with vote() (tests: AskFeedbackTests, 8). App: AskSession records lastSources/lastModel and vote(_:on:in:) writes case.json, before.photonz, after.photonz, after.png to ~/Library/Application Support/<bundle>/Ask feedback/<time-request>/; the walk state shows ask.sources; AskViews puts thumbs up/down in each row and Good Result / Bad Result in its right-click menu."
+    },
+    {
+      "t": "2026-10-21T01:25:14.609Z",
+      "note": "Chose always-visible faint thumbs (secondary at 70%, filled and primary when picked) over hover-revealed ones because the hover version could not be pressed by a walk running behind other apps (first walk run failed: 'reads not picked') and a person has to find them to use them."
+    },
+    {
+      "t": "2026-10-21T01:25:14.678Z",
+      "note": "Eval: Scripts/ask-eval/held-out/ holds 42 cases (user's 2 cat failures, 7 poses, 8 scenes, 9 styles, 8 edits of drawings Ask made, saved as held-out/starts/*.photonz by thumbs votes, 2 icons, 3 layouts, 3 redlines). run --set held-out prints only totals, refuses --cases, draws no sheet, records no per-case scores; report prints climb and held-out side by side; feedback imports thumbs down (not the probe's) as use-*.json cases started from the saved before.photonz; lookups.mjs tallies stored/template/drawn for both engines (tests lookups.test.mjs, 6). Rubric didWhatWasAsked judged on every word, and scoring.mjs scales a case by didWhatWasAsked/7 when under 7."
+    },
+    {
+      "t": "2026-10-21T01:25:14.746Z",
+      "note": "Calibration on the new rubric (ebbf2873) agrees with the user on all 7 pictures: the user's sleeping cat didWhatWasAsked 1 (case at best 10), the piano cat didWhatWasAsked 1 (case at best 9.7), the clean sheet still 8."
+    },
+    {
+      "t": "2026-10-21T01:25:14.829Z",
+      "note": "Moved the user's two cat requests out of a-scene-of-things-doing-something-together-is-dr's climb list (now a rabbit curled up asleep, a cat playing a guitar) and logged why there. ask-draws-any-subject-well-with-nothing-stored-o (filed by the user while this ran) asks for held-out contact sheets in its audit: allowed once, after the last change, in runner-prompt and README."
+    },
+    {
+      "t": "2026-10-21T02:01:28.492Z",
+      "note": "owns these walks: ask-row-thumbs-walk"
+    },
+    {
+      "t": "2026-10-21T02:01:39.555Z",
+      "note": "Ask rows carry a faint thumbs up/down (and Good/Bad Result in the right-click menu); a vote saves request + before/after documents + picture under Application Support/<bundle>/Ask feedback, and Scripts/ask-eval.sh feedback turns thumbs down into held-out cases (ask-row-thumbs-walk, pointer press at Next defaults, case.json verified). Scripts/ask-eval/held-out: 42 unseen cases incl. the user's two cat failures, poses, scenes, styles, 8 edits of saved drawings, icons, layouts, redlines; --set held-out prints/records totals only; report shows climb and held-out side by side; runner-prompt forbids reading held-out cases. Lookups counted per run (stored/template/drawn) for both engines. Rubric judges every word; cases under 7 on didWhatWasAsked are scaled down; calibration agrees on all 7 user pictures (both cats didWhatWasAsked 1, case at best ~10). Baseline rubric ebbf2873: held-out 20.1 (85% of drawings looked up), climb 78.2 (100%). Tests: Scripts/test.sh 14094 passed; node --test lookups.test.mjs 6, rules.test.mjs 14. Audit queue/audits/2026-10-20-the-test-set-cannot-be-passed-by-a-lookup-unseen.json. Follow-up: find-out-why-ask-sometimes-waits-five-minutes-fo (p2)."
     }
   ],
-  "started": "2026-10-21T00:30:03.215Z"
+  "started": "2026-10-21T00:30:03.215Z",
+  "walks": [
+    "ask-row-thumbs-walk"
+  ],
+  "completed": "2026-10-21T02:01:39.558Z"
 }

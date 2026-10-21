@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-21T01:04:33.989Z",
-  "updated": "2026-10-21T01:04:49.108Z",
+  "updated": "2026-10-21T01:24:44.908Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen",
     "ask-runs-on-the-best-model-this-mac-can-hold-pic",
@@ -32,6 +32,10 @@
     {
       "t": "2026-10-21T01:04:49.105Z",
       "note": "seq 42.5 -> 8.2"
+    },
+    {
+      "t": "2026-10-21T01:24:44.907Z",
+      "note": "The held-out set and the stored-or-coded count are in (commit 936aa3d7): Scripts/ask-eval.sh run --engine ask --set held-out prints the total and a line 'drawings N stored, N template, N drawn for the request (X% looked up)'; Scripts/ask-eval.sh report shows the latest climb and held-out totals. 'stored' = the built-in drawing set, 'template' = Illustrator's coded scenes; your 0 share means both counts at 0. Held-out cases are never read one by one while you change Ask (runner-prompt, Hard rules): draw the held-out contact sheet (Scripts/ask-eval.sh sheet <run>) only for the audit after your last change. The baseline held-out run is 20261021-010309-ask-held-out."
     }
   ]
 }
