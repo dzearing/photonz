@@ -268,6 +268,7 @@ public enum AskChangeWords {
     private static func kind(_ tool: String) -> Kind? {
         switch tool {
         case "add_measurement": Kind(verb: "Added", one: "a measurement", many: "measurements")
+        case "mark_misalignments": Kind(verb: "Found", one: "a misalignment", many: "misalignments")
         case "add_shape", "add_path": Kind(verb: "Drew", one: "a shape", many: "shapes")
         case "add_drawing": Kind(verb: "Drew", one: "a drawing", many: "drawings")
         case "add_text": Kind(verb: "Added", one: "text", many: "texts")
@@ -306,7 +307,10 @@ public enum AskChangeWords {
         }.map(\.element)
 
         func phrase(_ group: (key: String, kind: Kind, steps: [AskStep]), room: Int) -> String {
-            let count = group.steps.count
+            // One mark_misalignments step marks each finding it names.
+            let count = group.steps.reduce(0) { n, step in
+                n + (step.tool == "mark_misalignments" ? max(1, step.arguments["findings"]?.arrayValue?.count ?? 1) : 1)
+            }
             if count > 1 { return "\(count) \(group.kind.many)" }
             if group.kind.one == "a drawing", let subject = group.steps[0].arguments["subject"]?.stringValue,
                let brief = IllustrationBrief.make(subject: subject, style: group.steps[0].arguments["style"]?.stringValue,

@@ -119,6 +119,49 @@ built-in, illustration, your svg); Ask keeps it per run (`AskDrawingSource`),
 the walk state shows it as `ask.sources`, and the eval counts it, so a score
 climbed by looking things up shows as a share of lookups.
 
+## Finding the misalignments
+
+"Find the misalignments", "check the spacing", "what is inconsistent here": the
+model calls `find_misalignments` (a looking tool) and then `mark_misalignments`
+once with the ids worth showing. Detection is code, never the model
+(`LayoutRead` and `MisalignmentScan` in PhotonzCore):
+
+* **Reading the picture** (`LayoutRead`). The page colour is the one round the
+  rim; whatever differs from it is ink, and ink that touches is one piece. A
+  piece that is mostly one flat colour, or a thin ring round flat space, is a
+  box (card, button, field, switch) and is read again inside against its own
+  fill; a piece with no one fill is a picture. Other ink joins into lines of
+  words by how close the letters sit (each line's baseline is read off its
+  busiest rows), and icon pieces within 3.5 points join into one mark.
+* **What should agree.** The children of one box, or of twin boxes (siblings of
+  one width for left and right, one height for top and bottom), compared by
+  their inset from their own box; words with words, shapes with shapes. A
+  member 1 to 8 points off what most share is marked, unless it agrees on its
+  centre (a narrow icon among wide ones). Words agree within a point (an A sits
+  further left in its box than an L) and are marked from 1.5 points.
+* **Gaps.** Runs of three or more like things in a row or column, the runs of
+  one box pooled. Two gaps off by opposite amounts round one thing mean the
+  thing moved, and that thing is marked instead.
+* **Padding and borders.** A box whose members are all off by one amount has
+  different padding; chips and buttons of one height compare their insets;
+  twin boxes of one fill compare border widths.
+* **Words and what they belong to.** A caption under a picture, a label beside
+  its control: each pair should sit the same way.
+
+Each finding is one measurement layer in the Measure tool's look
+(`MisalignmentMark`): an edge is an alignment guide down the line the others
+share, ticked where they agree with a bracket round the miss; a gap, padding or
+border is a caliper. The readout is the finding (`MeasureContent.finding`,
+"Gap 2 pt wider: 18 vs 16", 30 characters at most), the layer is named for it,
+and the readout keeps off what it points at. The row reads "Found 3
+misalignments". On a picture with nothing off the model says so in one sentence
+and nothing changes.
+
+Scored by `MisalignmentCorpusTests` on 62 screenshots of web UIs rendered at 2x
+with planted faults (`Scripts/misalign-corpus/make-corpus.mjs`): a climb set and
+a held-out set written after the detector was tuned. Walks:
+`ask-finds-the-misalignments-walk`, `ask-finds-nothing-off-walk`.
+
 ## Drawing a thing
 
 "Draw a dog", "create a smiley face icon": one `add_drawing` call, never a

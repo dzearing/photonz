@@ -1,0 +1,919 @@
+{
+ "scale": 2,
+ "cases": [
+  {
+   "name": "settings-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "settings-label-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 98,
+      "y": 560,
+      "width": 216.4375,
+      "height": 36
+     }
+    }
+   ]
+  },
+  {
+   "name": "settings-label-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 100,
+      "y": 252,
+      "width": 244.53125,
+      "height": 36
+     }
+    }
+   ]
+  },
+  {
+   "name": "settings-switch-3pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 3,
+     "axis": "x",
+     "box": {
+      "x": 854,
+      "y": 246,
+      "width": 84,
+      "height": 48
+     }
+    }
+   ]
+  },
+  {
+   "name": "settings-card-padding",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "padding",
+     "pt": 2,
+     "box": {
+      "x": 64,
+      "y": 444,
+      "width": 912,
+      "height": 268
+     }
+    }
+   ]
+  },
+  {
+   "name": "settings-three-faults",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 100,
+      "y": 252,
+      "width": 244.53125,
+      "height": 36
+     }
+    },
+    {
+     "kind": "edge",
+     "pt": 3,
+     "axis": "x",
+     "box": {
+      "x": 854,
+      "y": 336,
+      "width": 84,
+      "height": 48
+     }
+    },
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 586,
+      "y": 554,
+      "width": 360,
+      "height": 48
+     }
+    }
+   ]
+  },
+  {
+   "name": "feed-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "feed-gap-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 2,
+     "axis": "y",
+     "box": {
+      "x": 48,
+      "y": 336,
+      "width": 824,
+      "height": 28
+     }
+    }
+   ]
+  },
+  {
+   "name": "feed-gap-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 1,
+     "axis": "y",
+     "box": {
+      "x": 48,
+      "y": 496,
+      "width": 824,
+      "height": 26
+     }
+    }
+   ]
+  },
+  {
+   "name": "feed-title-3pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 3,
+     "axis": "x",
+     "box": {
+      "x": 186,
+      "y": 390,
+      "width": 141.25,
+      "height": 40
+     }
+    }
+   ]
+  },
+  {
+   "name": "feed-avatar-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 78,
+      "y": 548,
+      "width": 80,
+      "height": 80
+     }
+    }
+   ]
+  },
+  {
+   "name": "feed-card-padding",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "padding",
+     "pt": 2,
+     "box": {
+      "x": 48,
+      "y": 200,
+      "width": 824,
+      "height": 144
+     }
+    }
+   ]
+  },
+  {
+   "name": "pricing-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "pricing-card-top-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "y",
+     "box": {
+      "x": 400,
+      "y": 52,
+      "width": 320,
+      "height": 452
+     }
+    }
+   ]
+  },
+  {
+   "name": "pricing-border-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "border",
+     "pt": 1,
+     "box": {
+      "x": 752,
+      "y": 48,
+      "width": 320,
+      "height": 452
+     }
+    }
+   ]
+  },
+  {
+   "name": "pricing-button-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 444,
+      "y": 394,
+      "width": 236,
+      "height": 64
+     }
+    }
+   ]
+  },
+  {
+   "name": "pricing-gap-3pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 3,
+     "axis": "x",
+     "box": {
+      "x": 716,
+      "y": 48,
+      "width": 38,
+      "height": 452
+     }
+    }
+   ]
+  },
+  {
+   "name": "toolbar-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "toolbar-button-top-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "y",
+     "box": {
+      "x": 304,
+      "y": 74,
+      "width": 64,
+      "height": 64
+     }
+    }
+   ]
+  },
+  {
+   "name": "toolbar-gap-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 368,
+      "y": 72,
+      "width": 20,
+      "height": 64
+     }
+    }
+   ]
+  },
+  {
+   "name": "toolbar-gap-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 208,
+      "y": 72,
+      "width": 18,
+      "height": 64
+     }
+    }
+   ]
+  },
+  {
+   "name": "form-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "form-field-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 268,
+      "y": 300,
+      "width": 440,
+      "height": 48
+     }
+    }
+   ]
+  },
+  {
+   "name": "form-field-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 266,
+      "y": 140,
+      "width": 440,
+      "height": 48
+     }
+    }
+   ]
+  },
+  {
+   "name": "form-label-right-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 44,
+      "y": 228,
+      "width": 192,
+      "height": 32
+     }
+    }
+   ]
+  },
+  {
+   "name": "sidebar-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "sidebar-label-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 92,
+      "y": 236,
+      "width": 90.6875,
+      "height": 32
+     }
+    }
+   ]
+  },
+  {
+   "name": "sidebar-icon-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 42,
+      "y": 364,
+      "width": 32,
+      "height": 32
+     }
+    }
+   ]
+  },
+  {
+   "name": "sidebar-icon-3pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 3,
+     "axis": "x",
+     "box": {
+      "x": 46,
+      "y": 172,
+      "width": 32,
+      "height": 32
+     }
+    }
+   ]
+  },
+  {
+   "name": "chips-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "chips-gap-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 486.0625,
+      "y": 64,
+      "width": 18,
+      "height": 60
+     }
+    }
+   ]
+  },
+  {
+   "name": "chips-padding-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "padding",
+     "pt": 2,
+     "box": {
+      "x": 199.90625,
+      "y": 64,
+      "width": 129.375,
+      "height": 60
+     }
+    }
+   ]
+  },
+  {
+   "name": "chips-border-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "border",
+     "pt": 1,
+     "box": {
+      "x": 639.125,
+      "y": 64,
+      "width": 116.90625,
+      "height": 64
+     }
+    }
+   ]
+  },
+  {
+   "name": "dialog-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "dialog-body-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 84,
+      "y": 184,
+      "width": 720,
+      "height": 36
+     }
+    }
+   ]
+  },
+  {
+   "name": "dialog-button-top-3pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 3,
+     "axis": "y",
+     "box": {
+      "x": 472.1875,
+      "y": 270,
+      "width": 147.21875,
+      "height": 56
+     }
+    }
+   ]
+  },
+  {
+   "name": "dialog-button-gap-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 615.40625,
+      "y": 264,
+      "width": 24,
+      "height": 56
+     }
+    }
+   ]
+  },
+  {
+   "name": "tiles-clean",
+   "set": "climb",
+   "faults": []
+  },
+  {
+   "name": "tiles-tile-2pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 332,
+      "y": 292,
+      "width": 256,
+      "height": 168
+     }
+    },
+    {
+     "kind": "gap",
+     "pt": 2,
+     "axis": "x",
+     "alternative": true,
+     "box": {
+      "x": 588,
+      "y": 292,
+      "width": 20,
+      "height": 168
+     }
+    }
+   ]
+  },
+  {
+   "name": "tiles-tile-top-1pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "y",
+     "box": {
+      "x": 608,
+      "y": 50,
+      "width": 256,
+      "height": 168
+     }
+    }
+   ]
+  },
+  {
+   "name": "tiles-caption-3pt",
+   "set": "climb",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 3,
+     "axis": "x",
+     "box": {
+      "x": 334,
+      "y": 228,
+      "width": 256,
+      "height": 32
+     }
+    }
+   ]
+  },
+  {
+   "name": "mail-clean",
+   "set": "held-out",
+   "faults": []
+  },
+  {
+   "name": "mail-date-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 884.5,
+      "y": 179,
+      "width": 111.5,
+      "height": 30
+     }
+    }
+   ]
+  },
+  {
+   "name": "mail-sender-1pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 78,
+      "y": 386,
+      "width": 814.28125,
+      "height": 36
+     }
+    }
+   ]
+  },
+  {
+   "name": "mail-dot-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "y",
+     "box": {
+      "x": 40,
+      "y": 532,
+      "width": 16,
+      "height": 16
+     }
+    }
+   ]
+  },
+  {
+   "name": "stats-clean",
+   "set": "held-out",
+   "faults": []
+  },
+  {
+   "name": "stats-card-left-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 468,
+      "y": 292,
+      "width": 400,
+      "height": 228
+     }
+    },
+    {
+     "kind": "gap",
+     "pt": 2,
+     "axis": "x",
+     "alternative": true,
+     "box": {
+      "x": 440,
+      "y": 292,
+      "width": 28,
+      "height": 228
+     }
+    }
+   ]
+  },
+  {
+   "name": "stats-padding-3pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "padding",
+     "pt": 3,
+     "box": {
+      "x": 464,
+      "y": 40,
+      "width": 400,
+      "height": 228
+     }
+    }
+   ]
+  },
+  {
+   "name": "stats-number-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "y",
+     "box": {
+      "x": 72,
+      "y": 372,
+      "width": 336,
+      "height": 68
+     }
+    }
+   ]
+  },
+  {
+   "name": "login-clean",
+   "set": "held-out",
+   "faults": []
+  },
+  {
+   "name": "login-field-width-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 120,
+      "y": 288,
+      "width": 596,
+      "height": 64
+     }
+    }
+   ]
+  },
+  {
+   "name": "login-field-gap-1pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 1,
+     "axis": "y",
+     "box": {
+      "x": 120,
+      "y": 352,
+      "width": 600,
+      "height": 26
+     }
+    }
+   ]
+  },
+  {
+   "name": "login-button-1pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 122,
+      "y": 464,
+      "width": 600,
+      "height": 68
+     }
+    }
+   ]
+  },
+  {
+   "name": "player-clean",
+   "set": "held-out",
+   "faults": []
+  },
+  {
+   "name": "player-button-top-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "y",
+     "box": {
+      "x": 480,
+      "y": 84,
+      "width": 88,
+      "height": 88
+     }
+    }
+   ]
+  },
+  {
+   "name": "player-gap-1pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "gap",
+     "pt": 1,
+     "axis": "x",
+     "box": {
+      "x": 208,
+      "y": 80,
+      "width": 34,
+      "height": 88
+     }
+    }
+   ]
+  },
+  {
+   "name": "tabbar-clean",
+   "set": "held-out",
+   "faults": []
+  },
+  {
+   "name": "tabbar-label-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 492.34375,
+      "y": 154,
+      "width": 73.3125,
+      "height": 26
+     }
+    }
+   ]
+  },
+  {
+   "name": "tabbar-icon-top-1pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 1,
+     "axis": "y",
+     "box": {
+      "x": 291,
+      "y": 100,
+      "width": 48,
+      "height": 48
+     }
+    }
+   ]
+  },
+  {
+   "name": "table-clean",
+   "set": "held-out",
+   "faults": []
+  },
+  {
+   "name": "table-cell-2pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 2,
+     "axis": "x",
+     "box": {
+      "x": 301.03125,
+      "y": 200,
+      "width": 89.90625,
+      "height": 32
+     }
+    }
+   ]
+  },
+  {
+   "name": "table-cell-3pt",
+   "set": "held-out",
+   "faults": [
+    {
+     "kind": "edge",
+     "pt": 3,
+     "axis": "x",
+     "box": {
+      "x": 440.9375,
+      "y": 274,
+      "width": 67.1875,
+      "height": 32
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -13,7 +13,7 @@ public enum AskTools {
 
     /// Read-only: run while planning, their answers go back to the model.
     public static let looking: [String] = [
-        "read_document", "find_elements", "list_components", "list_styles", "list_titles",
+        "read_document", "find_elements", "find_misalignments", "list_components", "list_styles", "list_titles",
         "recommended_zooms", "list_commands",
     ]
 
@@ -21,7 +21,8 @@ public enum AskTools {
     /// window, writes a file or steps the history, so the whole plan lands in
     /// the asking document's own undo history as one step.
     public static let doing: [String] = [
-        "add_drawing", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "place_component",
+        "add_drawing", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "mark_misalignments",
+        "place_component",
         "add_style", "apply_style", "set_layout", "run_command",
         "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
     ]
@@ -512,6 +513,10 @@ public struct AskConversation: Sendable {
         first. The major elements are the controls (switches, fields, buttons), each measured once, \
         plus at most two cards. Skip rows and strips. Add a gap between a \
         few neighbouring controls. 6 to 12 measurements in all, never the same box twice.
+        - To check a screenshot for what is inconsistent (misalignments, uneven spacing or gaps, padding \
+        or borders that differ, "check the spacing", "what is inconsistent here"), call find_misalignments, \
+        then mark_misalignments once with the ids of every finding worth showing. Never measure them \
+        yourself. When it finds nothing, call no editing tool and say so in one short sentence.
         - To draw a thing (a dog, a house, a coffee cup, a smiley face), call \
         add_drawing once with its subject, and icon true when an icon was asked for. Photonz has clean drawings \
         of about a thousand everyday things; when it has none of yours it says so, and you call add_drawing \

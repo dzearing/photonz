@@ -305,6 +305,36 @@ extension EditorState {
         finishCreating(layer.id)
     }
 
+    /// What "find the misalignments" found, marked one layer a finding in the
+    /// Measure tool's look (`MisalignmentMark`): a guide down the line the
+    /// others share with the miss bracketed, or a caliper across the gap,
+    /// padding or border that differs. Each readout is the finding's words and
+    /// measured numbers, kept off what it points at and off the marks already
+    /// placed. The caller makes them one undo step.
+    func addMisalignmentMarks(_ findings: [Misalignment]) {
+        guard let document else { return }
+        let scale = document.pixelScale
+        for finding in findings {
+            guard let mark = MisalignmentMark(finding, pixelScale: scale) else { continue }
+            var content = measureStyle
+            content.mode = mark.mode
+            content.finding = mark.chip
+            if let check = mark.alignment {
+                content.alignment = check
+                content.headOffset = 0
+            } else {
+                content.headOffset = MeasureBuilder.clearingHeadOffset(content: content, from: mark.start,
+                                                                       to: mark.end, canvas: document.canvasSize)
+            }
+            planReadout(&content, from: mark.start, to: mark.end, describing: mark.subjects)
+            var layer = MeasureBuilder.layer(content: content, from: mark.start, to: mark.end)
+            layer.name = mark.name
+            layer.style = measureStyles.layerStyle
+            perform { $0.addLayer(layer) }
+        }
+        if !findings.isEmpty { recordRecentColor(hex: measureStyle.strokeColorHex) }
+    }
+
     /// Raise (or re-raise) the "Copied" notice after text landed on the
     /// clipboard. Never called when a copy did nothing: the copy paths guard
     /// before they get here. Re-raising restarts the clock, so two quick

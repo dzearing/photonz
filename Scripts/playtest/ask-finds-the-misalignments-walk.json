@@ -1,0 +1,181 @@
+{
+  "out": "/tmp/photonz-playtest/ask-finds-the-misalignments-walk",
+  "clock": 420,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/misalign/settings-three-faults.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "find the misalignments"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-ran",
+      "note": "where the request ended, what the Agent group says, and the marks on the picture"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 1
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3
+    },
+    {
+      "do": "snapshot",
+      "name": "1-marked"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-undone",
+      "note": "one Command Z took every mark back"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3
+    },
+    {
+      "do": "press",
+      "control": "Agent Change 1 Switch"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Switch",
+      "reads": "off"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "press",
+      "control": "Agent Change 1 Switch"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3
+    },
+    {
+      "do": "press",
+      "control": "Agent Change 1 Delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": false
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3
+    },
+    {
+      "do": "snapshot",
+      "name": "2-back"
+    }
+  ]
+}

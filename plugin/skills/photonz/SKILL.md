@@ -37,6 +37,7 @@ checked.
 | Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
 | Drawing | `add_drawing` (a thing by name, from about a thousand built-in drawings, or your own SVG, as editable layers; `icon` for an icon frame; a scene with `style` is drawn by Photonz itself in an illustrator's passes), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words) |
 | Measuring a screenshot | `find_elements` (the boxes the Measure tool sees), `add_measurement` (size, gap, distance) |
+| Checking a screenshot's consistency | `find_misalignments` (edges that miss by 1 to 8 points, uneven gaps, padding or borders that differ, every number measured), `mark_misalignments` (redlines for the ids you pick) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
 | Components | `run_command make_component`, `list_components`, `place_component` |
 | Video | `add_clip`, `cut`, `trim`, `move_clip`, `set_transition`, `add_title` / `list_titles`, `recommended_zooms` / `apply_zooms`, `set_playhead` |
@@ -140,6 +141,19 @@ Photonz work should look designed, not assembled.
    Each answer says how many measured sides sit on a real edge; redo any that do not.
 4. `render_picture` and check every readout is legible and none covers what it
    measures. Say how many you placed and how many land on real edges.
+
+### Finding the misalignments on a screenshot
+
+"Find the misalignments", "check the spacing", "what is inconsistent here":
+
+1. `open_document` the screenshot (a Retina capture reads in points at 2x).
+2. `find_misalignments` reads the picture in code and lists each finding with an
+   id, what is off with both numbers ("Gap 2 pt wider: 18 vs 16") and its box.
+   Never measure these yourself and never change its numbers: they come off the
+   pixels.
+3. `mark_misalignments` with the ids worth showing (normally all of them). Each
+   becomes its own editable redline layer, all in one undo step.
+4. When it finds nothing, say so in one short sentence and mark nothing.
 
 ### A website's design system, then a second site in it
 

@@ -46,6 +46,8 @@ public enum AgentRequest: Hashable, Sendable {
     case setLayer(document: String?, layer: String, change: AgentLayerChange)
     case findElements(document: String?, region: CGRect?, limit: Int)
     case addMeasurement(document: String?, measurement: AgentMeasurement)
+    case findMisalignments(document: String?, region: CGRect?)
+    case markMisalignments(document: String?, region: CGRect?, findings: [String])
     case listComponents(document: String?)
     case placeComponent(document: String?, component: String, center: CGPoint)
     case export(document: String?, format: AgentExportFormat, path: String, scale: Double, background: Bool)
@@ -369,6 +371,23 @@ public enum AgentTools {
                          "description": "distance: which way it reads. The longer way when left out."],
             ], required: ["kind"])),
         AgentTool(
+            name: "find_misalignments",
+            description: "Checks a UI screenshot for what a designer would mark as inconsistent: edges that almost line up but miss by 1 to 8 points, uneven gaps in a repeated run, padding or border widths that differ between matching things. Every number is measured off the pixels. Each finding has an id, what is off with both numbers, and its box.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "region": regionProperty,
+            ])),
+        AgentTool(
+            name: "mark_misalignments",
+            description: "Marks findings from find_misalignments on the picture as redlines in the Measure tool's look: a guide where edges should line up, a caliper across a gap, padding or border that differs, each readout carrying the measured numbers. One editable layer a finding, one undo step.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "region": regionProperty,
+                "findings": ["type": "array", "minItems": 1,
+                             "description": "The ids from find_misalignments to mark, such as m1. Every finding worth showing.",
+                             "items": ["type": "string"]],
+            ], required: ["findings"])),
+        AgentTool(
             name: "list_components",
             description: "The components in the Library: the document's own, the shared shelf's and the app's starters, with the id place_component takes.",
             inputSchema: schema(["document": documentProperty])),
@@ -460,7 +479,8 @@ public enum AgentTools {
             return AppCommandTable.call(args["command"]?.stringValue ?? "", arguments: args["arguments"])
                 .map { .runCommand(document: document, call: $0) }
         case "new_picture", "add_shape", "add_path", "add_drawing", "add_text", "set_layer", "find_elements",
-             "add_measurement", "list_components", "place_component", "export":
+             "add_measurement", "find_misalignments", "mark_misalignments", "list_components", "place_component",
+             "export":
             return drawingRequest(name, args, document: document)
         case _ where videoToolNames.contains(name):
             return videoRequest(name, args, document: document)
@@ -616,6 +636,12 @@ public enum AgentTools {
             default:
                 return fail("kind is required.")
             }
+        case "find_misalignments":
+            return .success(.findMisalignments(document: document, region: region(args["region"])))
+        case "mark_misalignments":
+            let ids = (args["findings"]?.arrayValue ?? []).compactMap(\.stringValue)
+            guard !ids.isEmpty else { return fail("findings needs at least one id from find_misalignments.") }
+            return .success(.markMisalignments(document: document, region: region(args["region"]), findings: ids))
         case "list_components":
             return .success(.listComponents(document: document))
         case "place_component":

@@ -36,6 +36,10 @@ enum AgentDrawingWork {
             return try await findElements(AgentDocuments.editor(id).get(), region: region, limit: limit)
         case .addMeasurement(let id, let measurement):
             return try await addMeasurement(AgentDocuments.editor(id).get(), measurement)
+        case .findMisalignments(let id, let region):
+            return try await findMisalignments(AgentDocuments.editor(id).get(), region: region)
+        case .markMisalignments(let id, let region, let findings):
+            return try await markMisalignments(AgentDocuments.editor(id).get(), region: region, ids: findings)
         case .listComponents(let id):
             return try listComponents(AgentDocuments.editor(id).get())
         case .placeComponent(let id, let component, let center):
@@ -288,6 +292,47 @@ enum AgentDrawingWork {
         }.value
         return .json(Found(count: found.count, readsThePicture: !read.edges.isEmpty,
                            elements: found.map(Box.init)))
+    }
+
+    // MARK: Misalignments
+
+    /// What is inconsistent in the picture, read in code off its pixels
+    /// (`MisalignmentScan`): the same picture and region read the same every
+    /// time, so the ids a look handed out name the same findings when the
+    /// marks are made.
+    private static func misalignments(_ editor: EditorState, region: CGRect?) async throws -> [Misalignment] {
+        let document = try AgentWork.document(of: editor)
+        let read = await analysis(of: editor)
+        guard !read.luma.isEmpty else {
+            throw Failure("There is no picture to check. find_misalignments reads a screenshot.")
+        }
+        let scale = document.pixelScale
+        return await Task.detached(priority: .userInitiated) {
+            MisalignmentScan.findings(luma: read.luma, pixelScale: scale, region: region)
+        }.value
+    }
+
+    private static func findMisalignments(_ editor: EditorState, region: CGRect?) async throws -> Answer {
+        .json(MisalignmentScan.report(try await misalignments(editor, region: region)))
+    }
+
+    struct Marked: Encodable {
+        let layers: [String]
+        let marked: [String]
+    }
+
+    private static func markMisalignments(_ editor: EditorState, region: CGRect?, ids: [String]) async throws -> Answer {
+        let found = try await misalignments(editor, region: region)
+        let chosen = found.enumerated().filter { ids.contains(MisalignmentScan.id($0.offset)) }
+        let unknown = ids.filter { id in !found.indices.contains { MisalignmentScan.id($0) == id } }
+        guard unknown.isEmpty else {
+            throw Failure("There is no finding \(unknown.joined(separator: ", ")). find_misalignments lists them.")
+        }
+        let before = Set(editor.document?.layers.map(\.id) ?? [])
+        editor.asOneUndoStep { editor.addMisalignmentMarks(chosen.map(\.element)) }
+        let added = (editor.document?.layers ?? []).filter { !before.contains($0.id) }
+        guard !added.isEmpty else { throw Failure("Photonz could not mark those findings.") }
+        return .json(Marked(layers: added.map(\.id.uuidString), marked: chosen.map { MisalignmentScan.id($0.offset) }))
     }
 
     // MARK: Measuring

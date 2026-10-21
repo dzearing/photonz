@@ -1,0 +1,85 @@
+{
+  "out": "/tmp/photonz-playtest/ask-finds-nothing-off-walk",
+  "clock": 420,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/misalign/settings-clean.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "check the spacing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 5
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-ran",
+      "note": "where the request ended, what the Agent group says, and the marks on the picture"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "stopped",
+      "timeout": 1
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "1-nothing-off"
+    }
+  ]
+}

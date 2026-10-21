@@ -245,6 +245,8 @@ on 2026-10-19). It never touches the clipboard, which is the person's.
 | `add_text` | Words at a point, font, size, weight, colour, alignment, wrap width; `shadow: false` drops the Text tool's legibility shadow so an SVG keeps the words as text | `TextBuilder.layer` measured by `TextRasterizer.naturalSize` |
 | `set_layer` | Frame, name, visibility, fill, line, thickness, corners, opacity, shadow, a text layer's words and size (its box re-measured) | `Layer.geometrySet` (the Position and Size fields), the Effects list's Border and Shadow |
 | `find_elements` | The boxes the Measure tool sees in the picture plus every drawn layer, largest first | `ElementBounds.ladder` per probe (`AgentElementScan`) |
+| `find_misalignments` | What is inconsistent on a UI screenshot: edges 1 to 8 points off, uneven gaps, padding and borders that differ, each with an id and both numbers | `LayoutRead` + `MisalignmentScan` |
+| `mark_misalignments` | Those findings as redline layers, one each, one undo step | `MisalignmentMark`, `EditorState.addMisalignmentMarks` |
 | `add_measurement` | `size` of a box or of the element at a point, `gap` between two boxes or around a point, `distance` between two points; answers with the names ("Size 220 × 26") and how many measured sides sit on a real edge | `addElementSize`, `addGapMeasure`, `addMeasure` (Size, Gap and Distance modes) |
 | `list_components` / `place_component` | The Library's components (the document's, the shared shelf's, the starters) and a copy of one centred on a point | `componentEntries`, `placeComponent` (dragging a tile) |
 | `export` | PNG (scale, background on or off) or SVG to a path | `ExportSizer.data`, `SVGExporter.data` (File > Export) |

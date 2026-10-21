@@ -164,6 +164,12 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// field existed, and for calipers the release without mode names makes:
     /// those keep the names they always had.
     public var madeBy: MeasureToolMode?
+    /// What a misalignment check found here, in its own words and numbers
+    /// ("Gap 2 pt wider: 18 vs 16", `Misalignment.chip`). When set, it is
+    /// the readout, in place of the measured distance or verdict: the
+    /// numbers in it were measured off the picture when the mark was made.
+    /// Nil for every other measurement.
+    public var finding: String?
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
@@ -295,6 +301,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         case alignment
         case labelPlacement, labelNudge, labelCrossReach, labelPinned
         case madeBy
+        case finding
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         case chipBorderColorHex, chipBorderWidth
         // Legacy keys from the pre-caliper measure model (decode-only) and the
@@ -337,6 +344,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encode(labelCrossReach, forKey: .labelCrossReach)
         // Only when known, so a document with no mode names saves unchanged.
         try c.encodeIfPresent(madeBy, forKey: .madeBy)
+        try c.encodeIfPresent(finding, forKey: .finding)
     }
 
     /// Decodes new caliper payloads directly and **migrates** legacy measures
@@ -383,6 +391,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         labelPinned = try c.decodeIfPresent(Bool.self, forKey: .labelPinned) ?? false
         labelCrossReach = try c.decodeIfPresent(CGFloat.self, forKey: .labelCrossReach) ?? 0
         madeBy = try c.decodeIfPresent(MeasureToolMode.self, forKey: .madeBy)
+        finding = try c.decodeIfPresent(String.self, forKey: .finding)
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
         let modeString = try c.decodeIfPresent(String.self, forKey: .mode)
@@ -473,6 +482,10 @@ extension MeasureContent {
     /// Measurements row, the spec line). The chip on the canvas has no name
     /// beside it, so it says more: `chipText`.
     public func label(pixelScale: CGFloat) -> String {
+        // Beside its name a finding's value is its numbers: "18 vs 16".
+        if let finding {
+            return finding.components(separatedBy: ": ").dropFirst().first ?? finding
+        }
         if let alignment {
             guard let verdict = alignment.verdict else { return "no edges" }
             guard !verdict.isAligned else { return "aligned" }
@@ -499,6 +512,7 @@ extension MeasureContent {
     /// aligned", "Left edges, off 4 px", or "No edges" when there were fewer
     /// than two edges to compare and so no edge to name.
     public func chipText(pixelScale: CGFloat) -> String {
+        if let finding { return finding }
         guard let alignment, let edges = alignmentEdgesPhrase else { return label(pixelScale: pixelScale) }
         guard let verdict = alignment.verdict else { return "No edges" }
         guard !verdict.isAligned else { return "\(edges) aligned" }

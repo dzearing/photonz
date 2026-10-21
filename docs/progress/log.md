@@ -21803,3 +21803,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `Scripts/ask-eval/held-out/`: 42 unseen requests, run with `--set held-out`, printed and recorded in total only. The rubric judges every word of a request and a case under 7 on didWhatWasAsked is scaled down (`scoring.mjs`). Calibration adds the user's two cat pictures (both didWhatWasAsked 1).
 - Baseline on rubric ebbf2873: climb 78.2 (100% of drawings looked up), held-out 20.1 (85% looked up, 27 of 33 drawing cases by lookup alone).
 - Next: ask-draws-any-subject-well-with-nothing-stored-o is measured on the held-out total and the lookup line. Open question: find-out-why-ask-sometimes-waits-five-minutes-fo (three held-out cases where the model never answered).
+
+## 2026-10-20 — Find the misalignments
+
+- Ask "find the misalignments" / "check the spacing" now marks edges 1 to 8 pt off, uneven gaps, and padding or borders that differ, each as its own measurement layer whose readout carries both measured numbers ("Gap 2 pt wider: 18 vs 16"). Detection is code: `LayoutRead` (pixel-exact layout of a screenshot) and `MisalignmentScan` in PhotonzCore; the model only picks ids via `find_misalignments` / `mark_misalignments`, which the MCP skill offers too.
+- Corpus: 62 Chrome-rendered 2x web UIs with planted faults (`Scripts/misalign-corpus/make-corpus.mjs`, `MisalignmentCorpusTests`). All: P 1.00, R 0.94 (1 pt) / 1.00 (2-3 pt). Held-out first untouched run P 0.48; after general fixes P 1.00.
+- Next: real app captures in the corpus and the false mark on busy app screenshots (`find-the-misalignments-stays-quiet-on-busy-app-s`).
