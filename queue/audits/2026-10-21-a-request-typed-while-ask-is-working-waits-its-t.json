@@ -1,0 +1,28 @@
+{
+  "feature": "Requests wait their turn while Ask works",
+  "epic": "agent-ask",
+  "summary": "A request you send while Ask is still working now waits in line as a row in the Agent area and runs as soon as the one before it finishes. You can cancel a waiting row before it starts, and Stop ends the one at work and leaves nothing of it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, a model installed for Ask. Walks: ask-queues-a-request-walk, ask-cancels-a-waiting-request-walk, ask-stops-a-running-request-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Before this change: a second request sent while Ask planned stayed stuck in the field with Ask greyed out, and never ran.", "shot": "2026-10-21-ask-queue-0-before.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "On a blank picture press Command K, type \"add a blue rectangle\" and press Return.", "shot": "2026-10-21-ask-queue-1-waiting.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "While it works, press Command K again, type \"make the rectangle red\" and press Return: it shows as a waiting row with a clock and an X above the working one." },
+    { "do": "Wait: the red request runs on the rectangle the first one made, and each is its own row.", "shot": "2026-10-21-ask-queue-2-both-ran.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: only the red goes back, the rectangle stays.", "shot": "2026-10-21-ask-queue-3-undo.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Send three requests quickly, then click the X on the lower waiting row: it leaves the line and never runs.", "shot": "2026-10-21-ask-queue-5-cancelled.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With a request waiting, press Stop on the working row: it ends with nothing changed and the waiting one starts.", "shot": "2026-10-21-ask-queue-6-stopped.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Is waiting rows sitting above the working one, newest at the top like the change rows, the order you expect, or would you rather read the next to run at the top?",
+    "Does the working row naming its request (instead of \"Working…\") make it clear which request Stop will end?",
+    "Should Stop end only the request at work, as it does now, or also clear everything waiting behind it?",
+    "Is the X on a waiting row enough, or do you also want to edit a waiting request before it runs?"
+  ],
+  "rough": [
+    "No mock covers waiting rows or the working row's words; the layout follows the change rows under them (one line, quiet secondary text, a 20 point icon button at the right).",
+    "Closing a window drops its waiting requests and stops the one at work (the editor's close hook calls it), but no walk closes a window, so that part was checked by reading the code, not by watching it.",
+    "Stop during the moment the steps are landing was not caught by a walk: landing takes a few milliseconds. That path takes back whatever ran, as it did before; Stop while Ask looks at a drawing it made now takes the drawing back too (before, it was kept).",
+    "Pictures show the window behind another app, so the Ask button and switches show their background look."
+  ]
+}

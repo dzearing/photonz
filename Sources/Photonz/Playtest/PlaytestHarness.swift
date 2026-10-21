@@ -18498,6 +18498,7 @@ private final class Run {
         case .clipCopyBadge: editor.clipBarCopyCursorShown && Self.cursorName() == "dragCopy"
         case .clipRippleLook: editor.clipRippleLookShown
         case .askPhase(let phases): phases.split(separator: "|").contains { $0 == editor.ask.phase.name }
+        case .askSettled: !editor.ask.isBusy && editor.ask.line.isEmpty
         case .panelMenuOpen(let label): VideoKit.DropdownButton.isHeldOpenForAWalk(label)
         case .zoomControl(let shown): editor.canvasZoomControl.isShown == shown
         case .displayZoom(let percent): Int((editor.displayZoom * 100).rounded()) == percent
@@ -20012,6 +20013,10 @@ private final class Run {
             // and how long the plan took from Ask to the panel.
             "ask": [
                 "phase": editor.ask.phase.name,
+                // The request at work, and those waiting behind it in the
+                // order they will run.
+                "asked": editor.ask.current ?? "",
+                "waiting": editor.ask.line.waiting.map(\.words),
                 "steps": editor.ask.plan.map { plan in plan.steps.indices.map { "\(plan.line($0 + 1).name) \(plan.line($0 + 1).detail)" } } ?? [],
                 "stepsRun": editor.ask.stepsRun,
                 "planSeconds": editor.ask.lastPlanSeconds ?? -1,

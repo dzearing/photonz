@@ -4897,6 +4897,20 @@ struct PlaytestScriptTests {
         #expect(gone == .zoomControl(shown: false) && timeout == 7)
     }
 
+    /// Ask with nothing at work and nothing waiting: what a walk that sent
+    /// several requests waits on, since `ran` lasts only an instant when the
+    /// next request starts straight after.
+    @Test func waitForReadsAskSettled() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "askSettled", "timeout": 300 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, let timeout) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .askSettled && timeout == 300)
+    }
+
     /// Anything but shown or hidden is a walk with a typo in it.
     @Test func waitForRefusesAZoomControlStateItDoesNotKnow() {
         let json = """

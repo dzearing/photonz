@@ -119,6 +119,27 @@ built-in, illustration, your svg); Ask keeps it per run (`AskDrawingSource`),
 the walk state shows it as `ask.sources`, and the eval counts it, so a score
 climbed by looking things up shows as a share of lookups.
 
+## Requests sent while Ask works
+
+A request sent while one is at work waits its turn (the user, 2026-10-20).
+`AskSession.ask` puts it in `line` (`AskRequestLine`, PhotonzCore) when
+`isBusy`, which is true from the send until the work Task has wound down, a
+stopped one included. When that Task ends, `finished` starts the next in
+line, so a waiting request reads the document as the one before it left it.
+
+- Waiting rows sit above the working row, newest at the top like the change
+  rows, so a request moves down the list as it goes and never jumps. Each has
+  a cancel (X, and Cancel on right-click); a cancelled request never runs.
+- The working row names its request; Stop ends only that one and the next
+  waiting one starts. A stop while planning leaves `idle`; a stop while the
+  steps land, or while Ask looks at a drawing it made, takes back what ran.
+- Each window has its own line. Closing the window (`EditorView.onDisappear`)
+  clears it and stops the request at work.
+- Walks wait on `askSettled` (nothing at work, nothing waiting), since `ran`
+  lasts an instant when the next request starts straight after. Walks:
+  `ask-queues-a-request-walk`, `ask-cancels-a-waiting-request-walk`,
+  `ask-stops-a-running-request-walk`.
+
 ## Finding the misalignments
 
 "Find the misalignments", "check the spacing", "what is inconsistent here": the

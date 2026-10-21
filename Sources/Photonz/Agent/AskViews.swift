@@ -93,7 +93,7 @@ struct AskComposerOverlay: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .disabled(ask.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || ask.isBusy)
+                .disabled(ask.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .playtestControl("Ask Send", detail: "the Ask composer's Ask button")
             }
         }
@@ -113,32 +113,43 @@ struct AskComposerOverlay: View {
 
 /// The Agent group in the dock: one row a request, newest at the top, each
 /// saying what changed, with a switch to turn it off and on and a delete. The
-/// steps themselves are never shown (the user, 2026-10-20).
+/// steps themselves are never shown (the user, 2026-10-20). Requests sent
+/// while one works sit above it, newest first, each with a cancel, so a
+/// request moves down the list as it goes and never jumps.
 struct AgentPanel: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
         let ask = editorState.ask
         let rows = ask.changes.shown
+        let waiting = ask.line.shown
         VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(waiting.enumerated()), id: \.element.id) { index, request in
+                // Numbered in the order they will run: 1 is next.
+                waitingRow(request, number: waiting.count - index, ask: ask)
+            }
             switch ask.phase {
             case .planning, .running:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text(AskCopy.workingLine).font(.system(size: 11.5))
-                    Spacer()
+                    Text(ask.asked.isEmpty ? AskCopy.workingLine : ask.asked)
+                        .font(.system(size: 11.5))
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Button(AskCopy.stop) { ask.stop() }.controlSize(.small)
+                        .toolTip(AskCopy.stopTooltip)
                         .playtestControl("Agent Stop", detail: AskCopy.stop)
                 }
                 .help(ask.asked)
-                .playtestControl("Agent Working", detail: AskCopy.workingLine)
+                .playtestControl("Agent Working", detail: ask.asked)
             case .stopped(let sentence):
                 Text(sentence)
                     .font(.system(size: 11.5))
                     .fixedSize(horizontal: false, vertical: true)
                     .playtestControl("Ask Says", detail: sentence)
             case .idle, .ran:
-                if rows.isEmpty {
+                if rows.isEmpty && waiting.isEmpty {
                     Text(AskCopy.empty).font(.system(size: 11.5)).foregroundStyle(.secondary)
                 }
             }
@@ -158,6 +169,38 @@ struct AgentPanel: View {
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
         .animation(.spring(duration: 0.24, bounce: 0.1), value: rows.map(\.id))
+        .animation(.spring(duration: 0.24, bounce: 0.1), value: waiting.map(\.id))
+    }
+
+    /// A request waiting its turn: its words, quiet, and a cancel.
+    private func waitingRow(_ request: AskRequestLine.Request, number: Int, ask: AskSession) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "clock")
+                .font(.system(size: 10.5))
+                .foregroundStyle(.secondary)
+                .frame(width: 16)
+                .toolTip(AskCopy.waiting)
+            Text(request.words)
+                .font(.system(size: 11.5))
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .playtestControl("Agent Waiting \(number) Words", detail: request.words)
+            Button { ask.cancelWaiting(request.id) } label: {
+                Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
+            }
+            .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
+            .toolTip(AskCopy.cancelWaitingTooltip)
+            .playtestControl("Agent Waiting \(number) Cancel", detail: AskCopy.cancelWaitingTooltip)
+        }
+        .padding(.vertical, 1)
+        .contentShape(.rect)
+        .contextMenu {
+            Button(AskCopy.cancelWaiting) { ask.cancelWaiting(request.id) }
+        }
+        .transition(.opacity.combined(with: .move(edge: .top)))
+        .playtestControl("Agent Waiting \(number)", detail: "\(request.words), waiting")
     }
 
     private func changeRow(_ row: AskChangeList.Row, number: Int, ask: AskSession) -> some View {
@@ -246,7 +289,7 @@ struct AgentPanel: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
-            .disabled(ask.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || ask.isBusy)
+            .disabled(ask.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             .toolTip(AskCopy.buttonTooltip)
         }
         .padding(.top, 2)

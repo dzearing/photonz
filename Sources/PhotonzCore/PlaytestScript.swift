@@ -750,6 +750,9 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// or stopped (`AskSession`), or any of several written `ran|stopped`. A plan comes from a model on the Mac, so a walk
     /// waits on the phase rather than on a clock.
     case askPhase(String)
+    /// Ask in the window has nothing at work and nothing waiting in line
+    /// (`AskSession`): every request sent has run, stopped or been cancelled.
+    case askSettled
     /// A dialog is up (or has gone), named by the words at the top of it:
     /// "Resize Image", "Export", "New Frame", "Blank Canvas", "Canvas Size".
     ///
@@ -4854,6 +4857,7 @@ public enum PlaytestStep: Sendable, Equatable {
             case "clipCopyBadge": .clipCopyBadge
             case "clipRippleLook": .clipRippleLook
             case "askPhase": .askPhase(try f.string("value"))
+            case "askSettled": .askSettled
             case "dialogUp": .dialog(try f.string("value"), up: true)
             case "dialogGone": .dialog(try f.string("value"), up: false)
             case "panelMenuOpen": .panelMenuOpen(try f.string("value"))
@@ -4864,7 +4868,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 case let other: throw f.invalid("value", "zoomControl is \"shown\" or \"hidden\", not \"\(other)\"")
                 }
             case "displayZoom": .displayZoom(Int(try f.number("value")))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, askSettled, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

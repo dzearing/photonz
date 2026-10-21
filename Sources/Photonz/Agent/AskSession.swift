@@ -13,6 +13,11 @@ import PhotonzRender
 /// something, I want it to auto run"). A step that fails takes back what
 /// already ran, so a bad plan leaves the document as it was. What landed is
 /// one row in `changes`, which turns off, on again, or is deleted.
+///
+/// A request sent while one is working waits in `line` and runs when the one
+/// before it is finished, so it plans against the document that one left. A
+/// waiting request can be cancelled before it starts; closing the window
+/// drops the line.
 @MainActor
 @Observable
 final class AskSession {
@@ -49,6 +54,11 @@ final class AskSession {
     private(set) var asked = ""
     /// Every request that changed something, newest first.
     private(set) var changes = AskChangeList()
+    /// Requests sent while one was working, waiting their turn.
+    private(set) var line = AskRequestLine()
+    /// The words of the request being worked on, from the send until its
+    /// work has wound down, a stopped one included.
+    private(set) var current: String?
     private(set) var plan: AskPlan?
     /// How many of the plan's steps have run.
     private(set) var stepsRun = 0
@@ -77,7 +87,8 @@ final class AskSession {
     /// the case away too.
     @ObservationIgnored private var savedVotes: [UUID: URL] = [:]
 
-    var isBusy: Bool { phase == .planning || phase == .running }
+    /// A request is being worked on: a send now waits in `line`.
+    var isBusy: Bool { current != nil }
 
     /// The short state the Agent group's header carries: working while it
     /// works, else how many changes it holds.
@@ -93,30 +104,63 @@ final class AskSession {
         isComposerShown = false
     }
 
-    /// Hands the composer's words to the model.
+    /// Hands the composer's words to the model, or while it works on one,
+    /// puts them in line behind it.
     func ask(in editor: EditorState) {
         let words = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !words.isEmpty, !isBusy else { return }
-        asked = words
+        guard !words.isEmpty else { return }
         draft = ""
-        plan = nil
-        stepsRun = 0
         hasAsked = true
         isComposerShown = false
-        phase = .planning
         // Whatever hides the Agent group comes out first: a video in View, a
         // closed panel. The panel may only be built after this, so the reveal
         // waits for it (`isRevealPending`).
         editor.bringAgentAreaForward()
         isRevealPending = true
         revealPass &+= 1
+        if isBusy {
+            line.add(words)
+            return
+        }
+        start(words, in: editor)
+    }
+
+    private func start(_ words: String, in editor: EditorState) {
+        asked = words
+        current = words
+        plan = nil
+        stepsRun = 0
+        phase = .planning
         let started = Date()
         trace = []
         lastSources = []
         work = Task { [weak self, weak editor] in
-            guard let editor else { return }
-            await self?.carryOut(words, in: editor, started: started)
+            if let editor {
+                await self?.carryOut(words, in: editor, started: started)
+            }
+            self?.finished(in: editor)
         }
+    }
+
+    /// A request's work has ended, however it ended: the next in line starts,
+    /// on the document as this one left it.
+    private func finished(in editor: EditorState?) {
+        current = nil
+        work = nil
+        guard let editor, let next = line.next() else { return }
+        start(next.words, in: editor)
+    }
+
+    /// Takes a waiting request out of line before it starts.
+    func cancelWaiting(_ id: UUID) {
+        line.cancel(id)
+    }
+
+    /// The window is going: nothing waiting runs, and the request at work
+    /// stops (its run, if part way, is taken back).
+    func windowClosed() {
+        line.clear()
+        stop()
     }
 
     /// Plans, runs, and for a drawing looks at what it made, drawing it again
@@ -127,7 +171,9 @@ final class AskSession {
             self?.trace.append(String(format: "%.1fs ", Date().timeIntervalSince(began)) + line)
         }
         let model: String
-        switch await AskLocalModel.model() {
+        let found = await AskLocalModel.model()
+        guard !Task.isCancelled else { return }
+        switch found {
         case .success(let found):
             model = found
             lastModel = found
@@ -135,7 +181,9 @@ final class AskSession {
             phase = .stopped(trouble.sentence)
             return
         }
-        guard var talk = await Self.conversation(words, in: editor, model: model, note: note) else {
+        let opened = await Self.conversation(words, in: editor, model: model, note: note)
+        guard !Task.isCancelled else { return }
+        guard var talk = opened else {
             phase = .stopped(AskCopy.noDocumentSentence)
             return
         }
@@ -153,7 +201,16 @@ final class AskSession {
             }
             self.plan = plan
             guard let ran = await run(plan, in: editor) else { return }
-            if let miss = await look(at: plan, made: ran.made, in: editor, model: model, note: note) {
+            let miss = await look(at: plan, made: ran.made, in: editor, model: model, note: note)
+            if Task.isCancelled {
+                // Stopped while it looked at what it drew: what ran comes
+                // back off, so a stop leaves the document as it was.
+                editor.undo()
+                stepsRun = 0
+                phase = .stopped(AskCopy.stoppedSentence)
+                return
+            }
+            if let miss {
                 // What was drawn does not read as what was asked: it comes
                 // back off, and is drawn again or owned up to.
                 editor.undo()
@@ -451,6 +508,10 @@ enum AskCopy {
     static let onDevice = "on-device"
     static let empty = "Ask for something"
     static let stop = "Stop"
+    static let stopTooltip = "Stop this request"
+    static let waiting = "Waiting"
+    static let cancelWaiting = "Cancel"
+    static let cancelWaitingTooltip = "Cancel this request"
     static let workingChip = "working"
     static let nothingRan = "None of it could run. Nothing was changed."
     static let workingLine = "Working…"
@@ -465,7 +526,7 @@ enum AskCopy {
     static func stepFailed(_ n: Int) -> String { "Step \(n) failed. Nothing was changed." }
     /// A drawing that still did not read after being drawn again.
     static let couldNotDraw = "I couldn't make a clear drawing of that. Nothing was changed."
-    static let helpLine = "Each request is one row. Its switch turns the change off and on, and one Command Z takes back the latest."
+    static let helpLine = "Each request is one row. Its switch turns the change off and on, and one Command Z takes back the latest. A request sent while one is working waits its turn."
 }
 
 /// Where a vote on one of Ask's rows is saved:

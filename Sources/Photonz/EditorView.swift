@@ -411,6 +411,8 @@ struct EditorView: View {
             editorState.noteRecordingPlace()
             // A window that has gone is not listening to anything.
             editorState.forgetCaptionsInFlight()
+            // Nor asking: what waited for Ask in it never runs.
+            editorState.ask.windowClosed()
         }
         .sheet(isPresented: $editorState.isResizeDialogPresented) {
             if let document = editorState.document {

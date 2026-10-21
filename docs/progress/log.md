@@ -21829,3 +21829,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Agents: `run_command flip_horizontal|flip_vertical`, `set_layer` `flip`, `read_document` reports `flipped`.
 - Walks: `flip-a-layer-walk`, `flip-by-dragging-a-handle-walk`, `flip-a-title-on-a-video-walk`. Audit `queue/audits/2026-10-21-a-layer-can-be-flipped-horizontally-or-verticall.json`.
 - Open: magnets off past the other side; 3D turns not mirrored.
+
+## 2026-10-21 — Ask: requests sent while it works wait their turn
+
+- A request sent while Ask is at work waits in line (`AskRequestLine`, PhotonzCore, tested) and shows as a row above the working one with a cancel; it runs when the one before finishes, on the document that one left. The working row names its request; Stop ends only it and the next starts. Closing a window drops its line.
+- New walk condition `askSettled`; walks `ask-queues-a-request-walk`, `ask-cancels-a-waiting-request-walk`, `ask-stops-a-running-request-walk`. Audit `queue/audits/2026-10-21-a-request-typed-while-ask-is-working-waits-its-t.json`.
+- Open: no walk closes a window, so the drop-on-close path is checked by reading only.
