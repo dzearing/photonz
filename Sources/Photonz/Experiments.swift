@@ -834,6 +834,13 @@ extension Experiments {
         iconFramesEnabled && isEnabled(FeatureCatalog.iconPreviewsFlag)
     }
 
+    /// `next-flip-layers`: whether Flip Horizontal and Flip Vertical are
+    /// offered (Edit ▸ Transform, a layer's right-click menu) and whether a
+    /// side handle dragged past the other side flips the layer.
+    var flipLayersEnabled: Bool {
+        isEnabled(FeatureCatalog.flipLayersFlag)
+    }
+
     /// `next-mirror-across-center`: whether Mirror Across Center is offered in
     /// the Layer menu, the Layers panel menu and a shape's right-click menu.
     /// It needs nothing else: a shape on no frame mirrors about the canvas.

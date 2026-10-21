@@ -187,15 +187,15 @@ extension EditorState {
     /// as it was before the drag — `submit` renders without touching history —
     /// so a hundred mouse-moves compose into one clean scale rather than a
     /// hundred stacked ones.
-    func previewCanvasFrame(id: UUID, frame: CGRect) {
+    func previewCanvasFrame(id: UUID, frame: CGRect, flipping flips: Set<FlipAxis> = []) {
         guard let parent = storedCanvasFrame(frame, of: id) else { return }
-        previewLayerFrame(id: id, frame: parent)
+        previewLayerFrame(id: id, frame: parent, flipping: flips)
     }
 
     /// Mouse-up from the canvas, in canvas coordinates: one undo step.
-    func commitCanvasFrame(id: UUID, frame: CGRect) {
+    func commitCanvasFrame(id: UUID, frame: CGRect, flipping flips: Set<FlipAxis> = []) {
         guard let parent = storedCanvasFrame(frame, of: id) else { return }
-        commitLayerFrame(id: id, frame: parent)
+        commitLayerFrame(id: id, frame: parent, flipping: flips)
     }
 
     /// Mouse-up on a DRAG, in canvas coordinates: the same one undo step, plus

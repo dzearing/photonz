@@ -142,6 +142,17 @@ struct EditorCommands: Commands {
     /// wears it as a tooltip. X itself lives on an invisible stand-in in the
     /// tool bar, the same idiom the tool letters use, so it answers under
     /// every tool rather than only the one with the swatches.
+    /// Edit ▸ Transform: Flip Horizontal and Flip Vertical, on what is picked
+    /// (`EditorState+Flip.swift`).
+    private var transformMenu: some View {
+        Menu("Transform") {
+            Button(FlipAxis.horizontal.title) { editor?.run(.flipHorizontal) }
+                .disabled(!(editor?.canRun(.flipHorizontal) ?? false))
+            Button(FlipAxis.vertical.title) { editor?.run(.flipVertical) }
+                .disabled(!(editor?.canRun(.flipVertical) ?? false))
+        }
+    }
+
     @ViewBuilder private var fillRows: some View {
         Button {
             editor?.run(.fillWithForeground)
@@ -530,6 +541,12 @@ struct EditorCommands: Commands {
                 .disabled(!(editor?.canRun(.invertSelection) ?? false))
             Divider()
             fillRows
+            // Photoshop's Edit ▸ Transform, under Fill where Photoshop keeps
+            // it, with the pair it gives no keys (UX-PATTERNS §7).
+            if Experiments.shared.flipLayersEnabled {
+                Divider()
+                transformMenu
+            }
             if Experiments.shared.proMenuBarEnabled {
                 Divider()
                 toolsMenu

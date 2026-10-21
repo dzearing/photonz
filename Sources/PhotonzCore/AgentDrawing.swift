@@ -164,10 +164,13 @@ public struct AgentLayerChange: Hashable, Sendable {
     public var look: AgentLook
     public var text: String?
     public var fontSize: CGFloat?
+    /// Mirror it about its own middle, as Edit ▸ Transform ▸ Flip does: once
+    /// per axis named.
+    public var flip: Set<FlipAxis>
 
     public init(x: CGFloat? = nil, y: CGFloat? = nil, width: CGFloat? = nil, height: CGFloat? = nil,
                 name: String? = nil, visible: Bool? = nil, look: AgentLook = AgentLook(),
-                text: String? = nil, fontSize: CGFloat? = nil) {
+                text: String? = nil, fontSize: CGFloat? = nil, flip: Set<FlipAxis> = []) {
         self.x = x
         self.y = y
         self.width = width
@@ -177,6 +180,7 @@ public struct AgentLayerChange: Hashable, Sendable {
         self.look = look
         self.text = text
         self.fontSize = fontSize
+        self.flip = flip
     }
 
     public var movesOrSizes: Bool { x != nil || y != nil || width != nil || height != nil }
@@ -345,6 +349,14 @@ public enum AgentDrawing {
         }
         if let problem = refusal(change.look, for: layer) { return .failure(AgentToolError("set_layer: \(problem)")) }
         apply(change.look, keepingPaint: false, to: &layer)
+        if !change.flip.isEmpty {
+            guard layer.canBeMirrored else {
+                return .failure(AgentToolError("set_layer: \(layer.name) is a reading of the picture, which a flip would point at something else."))
+            }
+            for axis in FlipAxis.allCases where change.flip.contains(axis) {
+                layer = layer.flipped(axis, at: axis.mid(layer.flipBox))
+            }
+        }
         return .success(layer)
     }
 

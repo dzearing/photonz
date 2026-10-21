@@ -177,6 +177,10 @@ struct CanvasView: NSViewRepresentable {
     let onDragBegin: (UUID) -> Void
     let onFramePreview: (UUID, CGRect) -> Void
     let onFrameCommit: (UUID, CGRect) -> Void
+    /// A resize whose handle went past the side opposite: the frame, and the
+    /// ways the layer is mirrored inside it.
+    let onFlippedFramePreview: (UUID, CGRect, Set<FlipAxis>) -> Void
+    let onFlippedFrameCommit: (UUID, CGRect, Set<FlipAxis>) -> Void
     /// A layer let go of at the end of a DRAG, as opposed to resized or nudged:
     /// the only move that can also change which screen holds it.
     var onDropCommit: (UUID, CGRect) -> Void = { _, _ in }
@@ -476,6 +480,8 @@ struct CanvasView: NSViewRepresentable {
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
+        view.onFlippedFramePreview = onFlippedFramePreview
+        view.onFlippedFrameCommit = onFlippedFrameCommit
         view.onDropCommit = onDropCommit
         view.onMoveSelectionPreview = onMoveSelectionPreview
         view.onMoveSelectionCommit = onMoveSelectionCommit
@@ -639,6 +645,8 @@ final class CanvasNSView: NSView {
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }
     var onFrameCommit: ((UUID, CGRect) -> Void) = { _, _ in }
+    var onFlippedFramePreview: ((UUID, CGRect, Set<FlipAxis>) -> Void) = { _, _, _ in }
+    var onFlippedFrameCommit: ((UUID, CGRect, Set<FlipAxis>) -> Void) = { _, _, _ in }
     var onDropCommit: ((UUID, CGRect) -> Void) = { _, _ in }
     var onMoveSelectionPreview: (([UUID: CGPoint]) -> Void) = { _ in }
     var onMoveSelectionCommit: (([UUID: CGPoint], Bool) -> Void) = { _, _ in }
@@ -1836,6 +1844,10 @@ final class CanvasNSView: NSView {
         /// draws the same yellow lines a move does, because it is lining up
         /// with the same things.
         var snapped = Snapping.FrameResult(frame: .zero)
+        /// The ways the handle has been taken past the side opposite: the
+        /// layer is drawn mirrored on those axes, inside its own box, and
+        /// mouse-up keeps it so (`Handles.resizeFlipping`).
+        var flips: Set<FlipAxis> = []
     }
     var resizeDrag: ResizeDrag?
 
@@ -1977,7 +1989,8 @@ final class CanvasNSView: NSView {
                               gridOrigin: CGPoint = .zero,
                               gridAxes: CanvasGridAxes = .columnsAndRows,
                               guides: [CanvasGuide] = [],
-                              holding held: SnapHold = .none)
+                              holding held: SnapHold = .none,
+                              flips: Set<FlipAxis> = [])
         -> Snapping.FrameResult {
         // A layer seen in space resizes along its own plane: the pointer is
         // read off the card it is drawn on, and the edge you are not holding
@@ -1998,6 +2011,27 @@ final class CanvasNSView: NSView {
             return Snapping.FrameResult(frame: spaced)
         }
         let local = handleSpacePoint(p, layer: layer)
+        // Past the side opposite: worked out as the plain drag on the near
+        // side of that side, then reflected across it, with no magnets (the
+        // lines they would catch are on the other side). See
+        // `Handles.resizeFlipping`.
+        if !flips.isEmpty {
+            let near = Handles.reflectedPointer(local, handle: handle, in: start, flips: flips)
+            var frame = layer.map {
+                ZoomCalloutBuilder.draggedFrame($0, from: start, handle: handle, to: near,
+                                                keepingShape: preserveAspect)
+            } ?? Handles.resize(start, dragging: handle, to: near, preserveAspect: preserveAspect)
+            if let layer, layer.resizeWidthOnly, layer.text != nil {
+                frame = layer.textResized(from: start, to: frame, handle: handle,
+                                          givingRoom: Experiments.shared.placementEnabled)
+            }
+            frame = Handles.reflectedFrame(frame, handle: handle, in: start, flips: flips)
+            if let layer {
+                frame = Handles.anchoredFrame(start: start, proposed: frame, handle: handle,
+                                              transform: layer.transform, flips: flips)
+            }
+            return Snapping.FrameResult(frame: frame)
+        }
         var frame = layer.map {
             ZoomCalloutBuilder.draggedFrame($0, from: start, handle: handle, to: local,
                                             keepingShape: preserveAspect)

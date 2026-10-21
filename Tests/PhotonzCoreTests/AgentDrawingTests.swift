@@ -189,6 +189,28 @@ struct AgentDrawingTests {
         #expect(sized.frame == CGRect(x: 10, y: 10, width: 80, height: 60))
     }
 
+    @Test("set_layer flips a layer about its own middle, as Edit > Transform > Flip does")
+    func setLayerFlip() throws {
+        let line = AgentDrawing.layer(for: AgentShape(kind: .arrow, from: CGPoint(x: 10, y: 10),
+                                                      to: CGPoint(x: 50, y: 30)))
+        let flipped = try AgentDrawing.applying(AgentLayerChange(flip: [.horizontal]), to: line, canvas: nil).get()
+        #expect(flipped.frame == line.frame)
+        #expect(flipped.annotation?.start == line.annotation.map { CGPoint(x: line.frame.width - $0.start.x, y: $0.start.y) })
+        let back = try AgentDrawing.applying(AgentLayerChange(flip: [.horizontal]), to: flipped, canvas: nil).get()
+        #expect(back == line)
+        guard case .success(.setLayer(_, _, let change)) = AgentTools.request(
+            tool: "set_layer", arguments: try AgentToolsTests.args(#"{"layer": "x", "flip": "both"}"#)) else {
+            Issue.record("set_layer did not read flip")
+            return
+        }
+        #expect(change.flip == [.horizontal, .vertical])
+        guard case .failure = AgentTools.request(
+            tool: "set_layer", arguments: try AgentToolsTests.args(#"{"layer": "x", "flip": "sideways"}"#)) else {
+            Issue.record("set_layer took a flip that is not one")
+            return
+        }
+    }
+
     @Test("set_layer paints a box's inside and edge, and takes a shadow off")
     func setLayerLook() throws {
         var box = AgentDrawing.layer(for: AgentShape(kind: .rectangle, frame: CGRect(x: 0, y: 0, width: 40, height: 20)))

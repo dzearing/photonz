@@ -79,7 +79,9 @@ extension EditorState {
     /// a CA preview active the canvas already shows the move, so this only
     /// records state; otherwise it renders the new frame without touching
     /// history.
-    func previewLayerFrame(id: UUID, frame: CGRect) {
+    /// `flips` are the ways a handle dragged past the side opposite mirrors
+    /// the layer inside its new box (`Handles.resizeFlipping`).
+    func previewLayerFrame(id: UUID, frame: CGRect, flipping flips: Set<FlipAxis> = []) {
         let origin = document?.parentOrigin(of: id) ?? .zero
         previewMoves = [id: frame.offsetBy(dx: origin.x, dy: origin.y)]
         // A RESIZE (size change) of a layer whose look is sized in fixed points —
@@ -94,6 +96,9 @@ extension EditorState {
            frame.size != layer.frame.size, !layer.resizeScalesUniformly {
             discardDragPreview()
         }
+        // A floated sprite can be stretched but not mirrored, so a flipped
+        // drag is drawn for real on every move, as a fixed-size look is.
+        if !flips.isEmpty, dragPreview?.layerID == id { discardDragPreview() }
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
         // A card that has been turned swings about the middle of what is in
@@ -104,7 +109,7 @@ extension EditorState {
         let byHand = Experiments.shared.placementEnabled
         foldingIntoKeys(id, in: &doc, onTheCanvas: true) { doc in
             doc.holdingTurnedPivots(above: id) { doc in
-                doc.updateLayer(id: id) { $0 = $0.resized(to: frame, chosenByHand: byHand) }
+                doc.updateLayer(id: id) { $0 = $0.resized(to: frame, chosenByHand: byHand).mirroredInPlace(flips) }
             }
         }
         submit(doc)
@@ -118,7 +123,8 @@ extension EditorState {
     /// nudge that parks the tail at the picture's edge would otherwise carry
     /// the label off the picture, and one dragged back into the open gets its
     /// default spot behind the tail again. Captionless layers pass through.
-    func commitLayerFrame(id: UUID, frame: CGRect, joiningScreens: Bool = false) {
+    func commitLayerFrame(id: UUID, frame: CGRect, joiningScreens: Bool = false,
+                          flipping flips: Set<FlipAxis> = []) {
         previewMoves = [:]
         dragPreviewGeneration += 1 // cancels an in-flight preview session
         clearPreviewAfterNextFrame = dragPreview != nil
@@ -138,7 +144,7 @@ extension EditorState {
                 document.holdingTurnedPivots(above: id) { document in
                     document.updateLayer(id: id) {
                         $0 = AnnotationBuilder.planningCaption(
-                            $0.resized(to: frame, chosenByHand: byHand), canvas: canvas,
+                            $0.resized(to: frame, chosenByHand: byHand).mirroredInPlace(flips), canvas: canvas,
                             captionPillSize: $0.measuredCaptionPillSize)
                     }
                 }

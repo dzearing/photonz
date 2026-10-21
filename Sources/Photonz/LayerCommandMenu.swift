@@ -211,6 +211,15 @@ enum LayerCommandList {
         rows.append(.command("Bring Forward", .command("]")) { editorState.bringLayerForward(id: id) })
         rows.append(.command("Send Backward", .command("[")) { editorState.sendLayerBackward(id: id) })
         rows.append(.command("Send to Back", .commandShift("[")) { editorState.sendLayerToBack(id: id) })
+        // Flip, beside the other commands that change where a thing faces,
+        // flat as Figma's right-click has them. No keys: Photoshop gives its
+        // Edit ▸ Transform pair none (UX-PATTERNS §7). On the whole selection
+        // when the layer is part of it, about the middle of all of it.
+        if editorState.canFlipRow(id: id) {
+            rows.append(.separator)
+            rows.append(.command(FlipAxis.horizontal.title) { editorState.flipRow(id: id, .horizontal) })
+            rows.append(.command(FlipAxis.vertical.title) { editorState.flipRow(id: id, .vertical) })
+        }
         // Turning it in space (`video-depth.html`, "Right-click a layer: the
         // same three" as the Layer menu), on the whole selection when the
         // layer is part of it.

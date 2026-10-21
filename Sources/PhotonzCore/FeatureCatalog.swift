@@ -139,6 +139,8 @@ public enum FeatureCatalog {
 
     public static let mirrorAcrossCenterFlag = "next-mirror-across-center"
 
+    public static let flipLayersFlag = "next-flip-layers"
+
     public static let iconShapeCommandsFlag = "next-icon-shape-commands"
 
     public static let libraryFlag = "next-library"
@@ -1425,6 +1427,16 @@ public enum FeatureCatalog {
                     title: "See an icon at the size it will be used",
                     description: "Working in an icon frame shows it at 16 to 64 pixels in the corner of the canvas, playing when it moves. Off means no preview row.",
                     area: .icons,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: flipLayersFlag,
+                    title: "Flip a layer",
+                    description: "Flip Horizontal and Flip Vertical in Edit ▸ Transform and on a layer's right-click menu, and a side handle dragged past the other side flips what it holds. Off means no way to flip a layer.",
+                    area: .selecting,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

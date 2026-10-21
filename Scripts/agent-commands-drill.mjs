@@ -135,6 +135,8 @@ async function component() {
 const cases = [
   ["rename_layer", picture, (p) => ["rename_layer", { layers: [p.box], name: "Card" }]],
   ["lock_layer", picture, (p) => ["lock_layer", { layers: [p.box], on: true }]],
+  ["flip_horizontal", picture, (p) => ["flip_horizontal", { layers: [p.text] }]],
+  ["flip_vertical", picture, (p) => ["flip_vertical", { layers: [p.box, p.arrow] }]],
   ["add_effect", picture, (p) => ["add_effect", { layers: [p.box], kind: "shadow" }]],
   ["remove_effect", async () => {
     const p = await picture();

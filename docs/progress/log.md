@@ -21822,3 +21822,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Core: `ShapeOutline.swift` (`Layer.followedOutline`, `shapeToFollow`), `PictureEdge.swift`. Render: `PictureEdges.swift` cache, per-border routing in `DocumentRenderer.borderEffects`, merged outlines cached per drawing. SVG rings route the same way.
 - Perf: Width drag on an 8-part package, 1440x1024 at 2x, 8.3 ms median per frame.
 - Next: a label in a group still counts as its box; cropped pictures ring their box.
+
+## 2026-10-21 — A layer can be flipped (go loop)
+
+- Flip Horizontal / Flip Vertical: Edit > Transform (no keys, as Photoshop), a layer's right-click menu, and a side handle dragged past the opposite side (Next switch `next-flip-layers`, on by default in Next). Core in `Sources/PhotonzCore/LayerFlip.swift`; Mirror Across Center now shares its reflect.
+- Agents: `run_command flip_horizontal|flip_vertical`, `set_layer` `flip`, `read_document` reports `flipped`.
+- Walks: `flip-a-layer-walk`, `flip-by-dragging-a-handle-walk`, `flip-a-title-on-a-video-walk`. Audit `queue/audits/2026-10-21-a-layer-can-be-flipped-horizontally-or-verticall.json`.
+- Open: magnets off past the other side; 3D turns not mirrored.

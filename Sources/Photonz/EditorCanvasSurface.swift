@@ -106,6 +106,8 @@ struct EditorCanvasSurface: View {
                    onDragBegin: { editorState.beginLayerDrag(id: $0) },
                    onFramePreview: { editorState.previewCanvasFrame(id: $0, frame: $1) },
                    onFrameCommit: { editorState.commitCanvasFrame(id: $0, frame: $1) },
+                   onFlippedFramePreview: { editorState.previewCanvasFrame(id: $0, frame: $1, flipping: $2) },
+                   onFlippedFrameCommit: { editorState.commitCanvasFrame(id: $0, frame: $1, flipping: $2) },
                    onDropCommit: { editorState.commitCanvasDrop(id: $0, frame: $1) },
                    onMoveSelectionPreview: { editorState.previewCanvasOrigins($0) },
                    onMoveSelectionCommit: { editorState.commitCanvasOrigins($0, joiningScreens: $1) },

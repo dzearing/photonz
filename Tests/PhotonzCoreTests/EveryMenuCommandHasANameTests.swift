@@ -518,6 +518,8 @@ struct EveryMenuCommandHasANameTests {
     func constantName(of command: AppCommand) -> String? {
         switch command.id {
         case .mirrorAcrossCenter: "MirrorAcrossCenter.title"
+        case .flipHorizontal: "FlipAxis.horizontal.title"
+        case .flipVertical: "FlipAxis.vertical.title"
         case .centerOnArtboard: "CenterOnArtboard.title"
         case .combineShapes: "PathCombine.menuItem"
         case .union: "PathCombine.unionTitle"

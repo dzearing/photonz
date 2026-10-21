@@ -311,6 +311,8 @@ extension EditorState {
         case .fillWithForeground: fillSelectedLayer(useBackground: false)
         case .fillWithBackground: fillSelectedLayer(useBackground: true)
         case .swapFillColors: swapFillColors()
+        case .flipHorizontal: flipSelection(.horizontal)
+        case .flipVertical: flipSelection(.vertical)
         // Layer
         case .newLayer: newEmptyLayer()
         case .newLayerViaCopy: newLayerViaCopy()
@@ -553,6 +555,7 @@ extension EditorState {
         case .copyVideo, .copyAsGIF: return canCopyVideo
         case .selectAll, .newLayer, .newCollageLayer: return hasDocument
         case .swapFillColors: return true
+        case .flipHorizontal, .flipVertical: return canFlipSelection
         case .deselect, .invertSelection, .blurBehindSelection: return selection != nil
         case .fillWithForeground, .fillWithBackground: return canFillWithFillColors
         case .newLayerViaCopy: return selection != nil || hasLayerSelection

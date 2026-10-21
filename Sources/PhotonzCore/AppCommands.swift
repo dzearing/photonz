@@ -171,6 +171,8 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case fillWithForeground = "fill_with_foreground"
     case fillWithBackground = "fill_with_background"
     case swapFillColors = "swap_fill_colors"
+    case flipHorizontal = "flip_horizontal"
+    case flipVertical = "flip_vertical"
     // Layer
     case newLayer = "new_layer"
     case newLayerViaCopy = "new_layer_via_copy"
@@ -879,6 +881,10 @@ public enum AppCommandTable {
             make(.fillWithBackground, "Fill with Background", edit, .edit, needs: "a selection or a layer picked",
                  picks: .layers),
             make(.swapFillColors, "Swap Fill Colors", edit, .edit, needs: "a document"),
+            make(.flipHorizontal, FlipAxis.horizontal.title, "Edit > Transform", .edit,
+                 needs: "a layer picked", picks: .layers),
+            make(.flipVertical, FlipAxis.vertical.title, "Edit > Transform", .edit,
+                 needs: "a layer picked", picks: .layers),
         ]
     }()
 

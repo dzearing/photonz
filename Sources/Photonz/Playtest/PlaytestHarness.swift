@@ -3070,6 +3070,10 @@ private final class Run {
             note(number, step.name, try checkTilt(layerName, atLeast: atLeast, flat: flat),
                  state: describe())
 
+        case .expectFlip(let layerName, let horizontal, let vertical):
+            note(number, step.name, try checkFlip(layerName, horizontal: horizontal, vertical: vertical),
+                 state: describe())
+
         case .expectCallout(let layerName, let keepsShape, let magnification, let unstretched, let within,
                             let band):
             note(number, step.name,
@@ -12185,6 +12189,24 @@ private final class Run {
         }
         if let depth, depth != depthDrawn {
             throw Failure(description: reads + ", not the arrow " + (depth ? "drawn" : "away") + " claimed")
+        }
+        return reads + ", as claimed"
+    }
+
+    private func checkFlip(_ layerName: String?, horizontal: Bool, vertical: Bool) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else { throw Failure(description: "no document open") }
+        let found = layerName.map { name in document.allLayers.last { $0.name == name } }
+            ?? editor.selectedLayerID.flatMap { document.layer(id: $0) }
+        guard let layer = found else {
+            throw Failure(description: layerName.map { "no layer called \"\($0)\"" } ?? "nothing is picked")
+        }
+        func said(_ on: Bool, _ axis: FlipAxis) -> String { (on ? "" : "not ") + axis.rawValue }
+        let reads = "\(layer.name) is flipped \(said(layer.transform.flipHorizontal, .horizontal)), "
+            + "\(said(layer.transform.flipVertical, .vertical)), frame \(layer.frame)"
+        guard layer.transform.flipHorizontal == horizontal, layer.transform.flipVertical == vertical else {
+            throw Failure(description: "\(reads); the step claimed \(said(horizontal, .horizontal)), "
+                + said(vertical, .vertical))
         }
         return reads + ", as claimed"
     }

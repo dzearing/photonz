@@ -1,0 +1,30 @@
+{
+  "feature": "Flip a layer",
+  "epic": "interaction-foundations",
+  "summary": "You can now flip what is picked left to right or top to bottom: Flip Horizontal and Flip Vertical are on its right-click menu and in Edit > Transform, and dragging a side handle past the opposite side flips it and keeps going. Before, the right-click menu had no flip and the drag stopped at a box 1 point wide.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Before: a rectangle's right-click menu had no Flip row, and dragging its right handle past its left edge left it 1 point wide.", "shot": "2026-10-21-flip-0-before-right-click.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drop a picture on a canvas, right-click it and choose Flip Horizontal.", "shot": "2026-10-21-flip-1-right-click.png" },
+    { "do": "Choose Edit > Transform > Flip Vertical, then press Command Z: only the second flip comes off." },
+    { "do": "Type some words, pick them and choose Edit > Transform > Flip Horizontal: they read mirrored.", "shot": "2026-10-21-flip-2-words.png" },
+    { "do": "Pick the picture and drag its right handle past its left edge, then keep going.", "shot": "2026-10-21-flip-3-drag.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick two layers and flip them together: they swap sides about the middle of both." },
+    { "do": "On a video, type a title, right-click it and choose Flip Horizontal, then step a second on: it is still mirrored, and the export is too.", "shot": "2026-10-21-flip-4-video.png" }
+  ],
+  "evaluate": [
+    "Is the right-click menu the right home for the pair, in their own section under Send to Back, or would you rather have them in a Transform submenu?",
+    "Does dragging a handle past the other side feel like Photoshop's Free Transform, with the picture mirrored the moment the edge crosses?",
+    "With several layers picked, is flipping about the middle of all of them (they swap sides) what you expected, rather than each one flipping in place?",
+    "Should Flip have keys? Photoshop gives the pair none, so none here; Figma uses Shift H and Shift V."
+  ],
+  "rough": [
+    "No mock covers flipping; the placement follows Photoshop (Edit > Transform, no keys, UX-PATTERNS §7) and Figma's flat right-click rows.",
+    "While a handle drag is past the other side the magnets (grid, guides, other layers' edges) do not pull; they pull again once it comes back.",
+    "A picture being dragged past its other side is redrawn on every move instead of floated, so a very large picture can feel a little heavier during that part of the drag.",
+    "Words flip about their stored box, which carries a few points of room on the far side, so mirrored words sit a couple of points off their outline.",
+    "A layer turned in 3D (Bring Nearer, a tilt) is flipped in its own plane; its 3D turn is left as it was rather than mirrored.",
+    "A shape, a line or a path is mirrored in its own points, so read_document shows no flip on it; a picture, words or a component copy report flipped."
+  ]
+}

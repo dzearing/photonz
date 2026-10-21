@@ -346,6 +346,8 @@ public enum AgentTools {
                 "visible": ["type": "boolean", "description": "Show or hide it."],
                 "text": ["type": "string", "description": "A text layer's new words."],
                 "fontSize": ["type": "number", "minimum": 4, "maximum": 1000, "description": "A text layer's new size."],
+                "flip": ["type": "string", "enum": ["horizontal", "vertical", "both"],
+                         "description": "Mirror it about its own middle, as Edit > Transform > Flip does: horizontal left to right, vertical top to bottom. Each call flips again, so twice puts it back. Mirror Across Center makes a mirrored copy instead."],
             ]) { $1 }, required: ["layer"])),
         AgentTool(
             name: "find_elements",
@@ -617,11 +619,22 @@ public enum AgentTools {
                 shadow: args["shadow"]?.boolValue ?? true)))
         case "set_layer":
             let layer = args["layer"]?.stringValue ?? ""
+            let flip: Set<FlipAxis>
+            switch args["flip"]?.stringValue {
+            case nil: flip = []
+            case "both": flip = [.horizontal, .vertical]
+            case let word?:
+                guard let axis = FlipAxis(rawValue: word) else {
+                    return fail("flip is horizontal, vertical or both.")
+                }
+                flip = [axis]
+            }
             return look(args, name).flatMap { look in
                 let change = AgentLayerChange(x: cg(args["x"]), y: cg(args["y"]), width: cg(args["width"]),
                                               height: cg(args["height"]), name: args["name"]?.stringValue,
                                               visible: args["visible"]?.boolValue, look: look,
-                                              text: args["text"]?.stringValue, fontSize: cg(args["fontSize"]))
+                                              text: args["text"]?.stringValue, fontSize: cg(args["fontSize"]),
+                                              flip: flip)
                 guard change != AgentLayerChange() else { return fail("say what to change.") }
                 return .success(.setLayer(document: document, layer: layer, change: change))
             }

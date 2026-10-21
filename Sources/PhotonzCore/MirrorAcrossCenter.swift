@@ -45,55 +45,10 @@ extension Layer {
 
     /// This layer reflected left to right about the vertical line `x = axis`,
     /// with `axis` stated in the same space as `frame` (the parent's). Same
-    /// identity: making it a copy is the caller's business.
-    ///
-    /// What can be reflected in its own numbers is: a path point for point,
-    /// handles and all; a mark's two ends and the bend between them; a box's
-    /// left and right corners. A picture or a line of words cannot be, and is
-    /// flipped instead, which draws the same reflection. A turn turns the other
-    /// way, because a reflection runs every angle backwards.
-    ///
-    /// The look is left as it is: a shadow cast down and to the right stays
-    /// down and to the right, as every copy in a set of icons lit from one
-    /// side should.
+    /// identity: making it a copy is the caller's business. The one case of
+    /// `reflected(across:at:)` the mirror needs (`LayerFlip.swift`).
     public func reflected(acrossX axis: CGFloat) -> Layer {
-        var reflected = self
-        reflected.transform.rotation = -transform.rotation
-        reflected.transform.skewX = -transform.skewX
-        reflected.transform.skewY = -transform.skewY
-        if let group, isGroup {
-            if group.isFrame || group.layout != nil || isComponentInstance {
-                // A box that is not just its contents: the box moves, and what
-                // is inside it is reflected about its own middle, or, where
-                // something else places the contents (a stack, the original
-                // of a copy), the whole of it is flipped.
-                let box = localBounds
-                reflected.frame.origin.x += (2 * axis - box.maxX) - box.minX
-                if group.isFrame {
-                    let middle = frame.standardized.width / 2
-                    reflected.children = children.map { $0.reflected(acrossX: middle) }
-                } else {
-                    reflected.transform.flipHorizontal.toggle()
-                }
-            } else {
-                // A plain group's box is wherever its contents are, so the
-                // contents move and its anchor stays put.
-                let local = axis - frame.origin.x
-                reflected.children = children.map { $0.reflected(acrossX: local) }
-            }
-            return reflected
-        }
-        let box = frame.standardized
-        reflected.frame.origin.x = 2 * axis - box.maxX
-        let width = box.width
-        if let content = content.reflected(width: width) {
-            reflected.content = content
-            reflected.crop = crop.map { CGRect(x: width - $0.maxX, y: $0.minY,
-                                               width: $0.width, height: $0.height) }
-        } else {
-            reflected.transform.flipHorizontal.toggle()
-        }
-        return reflected
+        reflected(across: .horizontal, at: axis)
     }
 
     /// Whether Mirror Across Center means anything for this layer. A reading
@@ -104,41 +59,6 @@ extension Layer {
         switch content {
         case .image, .text, .annotation, .path, .collage, .group: true
         case .zoomCallout, .lens, .measure, .sound: false
-        }
-    }
-}
-
-extension LayerContent {
-
-    /// The content reflected inside its own box of `width`, or nil where it
-    /// cannot be stated reflected and has to be flipped instead.
-    func reflected(width: CGFloat) -> LayerContent? {
-        switch self {
-        case .path(let path):
-            return .path(path.transformed(by: CGAffineTransform(a: -1, b: 0, c: 0, d: 1,
-                                                                tx: width, ty: 0)))
-        case .annotation(var mark):
-            switch mark.shape {
-            case .arrow, .line:
-                // A line runs from one end to the other, so both ends move.
-                mark.start.x = width - mark.start.x
-                mark.end.x = width - mark.end.x
-                // The bend is stated against the line from tail to tip, on
-                // its left; reflected, the same bow is on its right.
-                if let bend = mark.bend {
-                    mark.bend = ArrowBend(along: bend.along, across: -bend.across)
-                }
-            case .rectangle, .ellipse, .highlight:
-                // A box fills its frame whichever corner it was dragged from,
-                // so only a corner rounded unlike its neighbour changes side.
-                let corners = mark.cornerRadii
-                mark.cornerRadii = CornerRadii(topLeft: corners.topRight, topRight: corners.topLeft,
-                                               bottomRight: corners.bottomLeft,
-                                               bottomLeft: corners.bottomRight)
-            }
-            return .annotation(mark)
-        case .image, .text, .collage, .zoomCallout, .lens, .measure, .group, .sound:
-            return nil
         }
     }
 }

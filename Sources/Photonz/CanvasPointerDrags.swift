@@ -1073,6 +1073,10 @@ extension CanvasNSView {
             // Same rule as a move: a piece on a slant has nothing to say to the
             // grid or the rulers, which are drawn upright.
             let slant = isOnASlant(drag.layerID)
+            // Taken past the side opposite, the drag flips the layer and
+            // keeps going (Photoshop's Free Transform, Figma). Never a layer
+            // seen in space, whose drag is read off its card's own plane.
+            drag.flips = resizeFlips(for: layer, start: drag.startFrame, handle: drag.handle, pointer: p)
             drag.snapped = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
                                         pointer: p, preserveAspect: aspect,
                                         peers: snapping ? drag.peers : [],
@@ -1081,14 +1085,19 @@ extension CanvasNSView {
                                         gridOrigin: canvasSnapOrigin,
                                         gridAxes: canvasSnapAxes,
                                         guides: slant ? [] : canvasSnapGuides,
-                                        holding: snapping ? held : .none)
+                                        holding: snapping ? held : .none,
+                                        flips: drag.flips)
             // The lit grid line counts as a line the drag is standing on, so it
             // holds through a wobble exactly as a guide does.
             snapHold.caught(x: drag.snapped.guideX ?? drag.snapped.gridX,
                             y: drag.snapped.guideY ?? drag.snapped.gridY)
             drag.frame = drag.snapped.frame
             resizeDrag = drag
-            onFramePreview(drag.layerID, drag.frame)
+            if drag.flips.isEmpty {
+                onFramePreview(drag.layerID, drag.frame)
+            } else {
+                onFlippedFramePreview(drag.layerID, drag.frame, drag.flips)
+            }
             refreshOverlays()
         } else if var drag = moveDrag {
             let proposed = CGPoint(x: u.x - drag.grabOffset.x, y: u.y - drag.grabOffset.y)
@@ -1515,7 +1524,10 @@ extension CanvasNSView {
             refreshOverlays()
         } else if let drag = resizeDrag {
             resizeDrag = nil
-            if drag.frame != drag.startFrame {
+            if !drag.flips.isEmpty {
+                selectedLayerFrame = drag.frame
+                onFlippedFrameCommit(drag.layerID, drag.frame, drag.flips)
+            } else if drag.frame != drag.startFrame {
                 selectedLayerFrame = drag.frame
                 holdSpriteUntilRender = true
                 onFrameCommit(drag.layerID, drag.frame)

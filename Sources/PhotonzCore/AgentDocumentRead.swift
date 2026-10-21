@@ -102,6 +102,10 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var opacity: Double?
         /// Degrees, clockwise.
         public var rotation: Double?
+        /// horizontal and or vertical, where it wears a flip (Edit ▸
+        /// Transform ▸ Flip, or set_layer's flip). A path, a line or a box is
+        /// mirrored in its own points instead, and reads unflipped.
+        public var flipped: [String]?
         public var cornerRadius: Double?
         public var effects: [String]?
         public var pixels: Size?
@@ -324,6 +328,8 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             cornerRadius: style.cornerRadius > 0 ? tidy(style.cornerRadius) : nil,
             effects: style.effects.isEmpty ? nil : style.effects.map(\.kind.rawValue),
             time: layer.time.map { Time(inSeconds: seconds($0.inMS), outSeconds: seconds($0.outMS)) })
+        let flips = FlipAxis.allCases.filter { layer.transform.isFlipped($0) }.map(\.rawValue)
+        if !flips.isEmpty { node.flipped = flips }
         switch layer.content {
         case .image(let ref):
             node.pixels = Size(width: tidy(ref.pixelSize.width), height: tidy(ref.pixelSize.height))

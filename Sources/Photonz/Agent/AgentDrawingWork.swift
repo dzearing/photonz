@@ -225,7 +225,7 @@ enum AgentDrawingWork {
         // nothing. Its words land where typing over it lands; anything else
         // about it is the original's.
         if let piece = document.componentPiece(of: id) {
-            let onlyWords = change.text != nil && !change.movesOrSizes && change.name == nil && change.visible == nil
+            let onlyWords = change.text != nil && !change.movesOrSizes && change.name == nil && change.visible == nil && change.flip.isEmpty
                 && change.fontSize == nil && change.look == AgentLook()
             let original = document.mainComponent(componentID: piece.componentID)?.name ?? "its original"
             guard onlyWords, let words = change.text else {
