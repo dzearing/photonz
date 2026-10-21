@@ -1,0 +1,30 @@
+{
+  "id": "every-illustration-ask-draws-reaches-the-crafted",
+  "title": "Every illustration Ask draws reaches the crafted bar: forest, lighthouse, fox, skyline, line art, silhouette badge",
+  "goal": "Ask now draws scenes in an illustrator's passes, and the sun over mountains and the layered sunset look finished, but the forest, the lighthouse, the fox, the city skyline, the line art and the silhouette badge still look like neat clip art: trees are stacked triangles, the fox is stiff, buildings are plain boxes, the cliff is a flat slab, clouds are flat lenses. Bring each up to the user's reference board.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 35,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-21T00:13:56.430Z",
+  "updated": "2026-10-21T00:13:56.433Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follows an-illustration-ask-draws-looks-illustrated-natu (2026-10-20). Code: Sources/PhotonzCore/Illustrator.swift (composition, passes), IllustrationPasses.swift (inks per style, details, checks), IllustrationPieces.swift (pine, fox, skyline, lighthouse, cliff). Preview loop: PHOTONZ_ILLUSTRATION_PREVIEW=/tmp/x Scripts/test.sh --filter IllustrationPreviewTests writes each pass as SVG; render with headless Chrome. Build the probe with Scripts/build-app.sh --probe before an eval run (the in-walk build failed twice with no document open), then Scripts/ask-eval.sh run --engine ask --no-build --cases ... Judge notes from run 20261020-234936-ask: forest trees need branch structure and rim light that reads; fox legs and head too simple; skyline needs building variety (rooftops, setbacks, a lit facade) and reflections that follow the lit windows; cliff needs rock planes; silhouette badge mountains meet the inner ring abruptly and lake lines run behind the pines; clouds need volume. Related: try-drawing-with-a-local-picture-model-then-turn tries a different route (a picture model, then vector layers).",
+  "acceptance": [
+    "Scripts/ask-eval.sh scores illustration-forest-at-dusk, illustration-lighthouse-on-a-cliff, illustration-fox, illustration-city-skyline-at-night, style-line-art and style-silhouette-badge at 7 or more on both crafted and designed (2026-10-20 they were 5/7, 6/7, 5/7, 5/7, 6/7, 4/5)",
+    "illustration-sun-over-mountains and style-layered-sunset stay at 7 or more on both, and the thirteen drawing cases do not go down",
+    "The audit has a before and after contact sheet of the six scenes, from the app's own renders"
+  ],
+  "log": [
+    {
+      "t": "2026-10-21T00:13:56.432Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "ask-draws-an-illustration-walk"
+  ]
+}

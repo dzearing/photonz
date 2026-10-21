@@ -13204,3 +13204,35 @@
 {"t":"2026-10-20T20:38:11.106Z","ev":"task_note","id":"asking-always-shows-the-agent-area-even-from-a-c"}
 {"t":"2026-10-20T20:38:11.179Z","ev":"task_note","id":"asking-always-shows-the-agent-area-even-from-a-c"}
 {"t":"2026-10-20T20:38:38.559Z","ev":"task_done","id":"asking-always-shows-the-agent-area-even-from-a-c","from":"in_progress","note":"Asking now always shows the Agent group with its working row: a closed panel comes out (this window only, the person's choice for new windows untouched), a folded group unfolds, a scrolled-away one scrolls back, a video in View switches to Edit. AskReveal rule in PhotonzCore with tests; EditorState+AskReveal and a retrying InspectorPanel reveal. Five ask-shows-the-agent-group walks green at Next defaults, Scripts/test.sh 14057 passed, audit queue/audits/2026-10-20-ask-reveal.json. Commit ee9fc70b."}
+{"t":"2026-10-20T20:51:46.713Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":614,"of":995,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-20T20:51:46.889Z","ev":"task_started","id":"an-illustration-ask-draws-looks-illustrated-natu","title":"An illustration Ask draws looks illustrated: natural shapes, light and shadow, depth","priority":"p1-high"}
+{"t":"2026-10-20T20:54:34.265Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
+{"t":"2026-10-20T20:54:34.339Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
+{"t":"2026-10-20T20:54:34.424Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
+{"t":"2026-10-20T22:27:41.991Z","ev":"task_created","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","priority":"p1-high","title":"Ask runs on the best model this Mac can hold, picked by the scores"}
+{"t":"2026-10-20T22:27:45.625Z","ev":"task_resequenced","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","from":35,"to":8.1}
+{"t":"2026-10-20T22:27:51.930Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
+{"t":"2026-10-20T22:30:51.252Z","ev":"task_created","id":"a-layer-can-be-flipped-horizontally-or-verticall","priority":"p1-high","title":"A layer can be flipped horizontally or vertically"}
+{"t":"2026-10-20T22:30:58.262Z","ev":"task_resequenced","id":"a-layer-can-be-flipped-horizontally-or-verticall","from":3970,"to":8.05}
+{"t":"2026-10-20T22:31:23.422Z","ev":"task_created","id":"a-request-typed-while-ask-is-working-waits-its-t","priority":"p1-high","title":"A request typed while Ask is working waits its turn, and can be cancelled before it starts"}
+{"t":"2026-10-20T22:31:29.429Z","ev":"task_resequenced","id":"a-request-typed-while-ask-is-working-waits-its-t","from":35,"to":8.07}
+{"t":"2026-10-20T22:32:52.038Z","ev":"task_created","id":"each-ask-row-says-what-it-made-like-drew-a-cat","priority":"p1-high","title":"Each Ask row says what it made, like \"Drew a cat\""}
+{"t":"2026-10-20T22:32:56.553Z","ev":"task_resequenced","id":"each-ask-row-says-what-it-made-like-drew-a-cat","from":35,"to":8.06}
+{"t":"2026-10-20T22:36:52.450Z","ev":"task_created","id":"a-scene-of-things-doing-something-together-is-dr","priority":"p1-high","title":"A scene of things doing something together is drawn as one scene: a cat playing a piano"}
+{"t":"2026-10-20T22:36:57.978Z","ev":"task_resequenced","id":"a-scene-of-things-doing-something-together-is-dr","from":35,"to":8.35}
+{"t":"2026-10-20T22:50:50.824Z","ev":"task_created","id":"the-test-set-cannot-be-passed-by-a-lookup-unseen","priority":"p1-high","title":"The test set cannot be passed by a lookup: unseen requests, real ones, and the user's own reactions"}
+{"t":"2026-10-20T22:50:50.938Z","ev":"task_created","id":"try-drawing-with-a-local-picture-model-then-turn","priority":"p1-high","title":"Try drawing with a local picture model, then turning the picture into editable layers"}
+{"t":"2026-10-20T22:50:58.325Z","ev":"task_resequenced","id":"the-test-set-cannot-be-passed-by-a-lookup-unseen","from":35,"to":8.04}
+{"t":"2026-10-20T22:50:58.398Z","ev":"task_resequenced","id":"try-drawing-with-a-local-picture-model-then-turn","from":42.5,"to":8.15}
+{"t":"2026-10-20T23:29:32.180Z","ev":"task_created","id":"find-the-misalignments-marks-every-inconsistent","priority":"p1-high","title":"\"Find the misalignments\" marks every inconsistent edge, padding and gap on a screenshot"}
+{"t":"2026-10-20T23:29:37.090Z","ev":"task_resequenced","id":"find-the-misalignments-marks-every-inconsistent","from":3970,"to":8.045}
+{"t":"2026-10-20T23:30:13.546Z","ev":"task_created","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of","priority":"p1-high","title":"Measuring a UI gives a calm redline: each kind of thing measured once, readouts that never collide"}
+{"t":"2026-10-20T23:30:20.631Z","ev":"task_resequenced","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of","from":3970,"to":8.046}
+{"t":"2026-10-21T00:08:37.831Z","ev":"task_created","id":"a-border-follows-the-shape-it-is-on-not-the-box","priority":"p1-high","title":"A border follows the shape it is on, not the box around it"}
+{"t":"2026-10-21T00:08:42.895Z","ev":"task_resequenced","id":"a-border-follows-the-shape-it-is-on-not-the-box","from":3970,"to":8.048}
+{"t":"2026-10-21T00:13:56.434Z","ev":"task_created","id":"every-illustration-ask-draws-reaches-the-crafted","priority":"p1-high","title":"Every illustration Ask draws reaches the crafted bar: forest, lighthouse, fox, skyline, line art, silhouette badge"}
+{"t":"2026-10-21T00:14:00.687Z","ev":"task_walks","id":"an-illustration-ask-draws-looks-illustrated-natu","walks":["ask-draws-an-illustration-walk"]}
+{"t":"2026-10-21T00:14:12.715Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
+{"t":"2026-10-21T00:14:12.780Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
+{"t":"2026-10-21T00:14:12.845Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
+{"t":"2026-10-21T00:14:39.549Z","ev":"task_done","id":"an-illustration-ask-draws-looks-illustrated-natu","from":"in_progress","note":"Shipped (a2585b65): scenes and named styles go to a new pass-based illustrator (PhotonzCore Illustrator, 8 checked passes, reusable pieces, real gradients, named groups, clean SVG); Ask routes and labels the look. Verified: 14,087 tests green, walks ask-draws-an-illustration-walk and ask-draws-a-dog-walk ok at Next defaults, eval illustration cases 40.4 -> 88.1, user's picture crafted 1. NOT fully met: only sun over mountains and layered sunset reach crafted 7 and designed 8; line art, silhouette badge, forest, lighthouse, fox and skyline (crafted 4 to 6) carried to every-illustration-ask-draws-reaches-the-crafted (p1). Audit: queue/audits/2026-10-20-an-illustration-ask-draws-looks-illustrated-natu.json"}

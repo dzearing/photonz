@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 8.3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T18:33:37.238Z",
-  "updated": "2026-10-20T20:54:34.423Z",
+  "updated": "2026-10-21T00:14:39.548Z",
   "deps": [
     "ask-draws-a-dog-you-can-tell-is-a-dog"
   ],
@@ -62,7 +62,31 @@
     {
       "t": "2026-10-20T20:54:34.422Z",
       "note": "Chose: extend add_drawing with a style argument (free words: line art, silhouette, badge/circle, sunset, flat, illustration) over a separate add_illustration tool, because the look-and-redraw loop, the undo step and the change row already hang off add_drawing. A scene (mountains, forest, lighthouse, skyline, a named style, the word illustration) goes to the illustration engine; a single thing or an icon stays on the built-in set. SVGArtwork learns real linear and radial gradients so the parts carry the app's own gradient fills."
+    },
+    {
+      "t": "2026-10-21T00:14:00.685Z",
+      "note": "owns these walks: ask-draws-an-illustration-walk"
+    },
+    {
+      "t": "2026-10-21T00:14:12.713Z",
+      "note": "Chose: the craft in code (Illustrator, eight pure passes with checks, IllustrationPieces) over a better prompt for the model's own svg, because the model's svgs for a lighthouse failed 3 of 3 and the before run made nothing for 4 of 8 scenes. Chose: one light direction for the whole picture (every shadow on the side away from the sun's side) over per-peak shadows, because the judge read per-peak flips as inconsistent twice. Chose: clipping to the badge circle and poster box in the geometry over a mask, because masks do not export to SVG. Chose: Ask's blind look skips illustrations and built-in drawings, because a misread built-in tree ('a mushroom') was swapped for the model's green blob (judge 3.5)."
+    },
+    {
+      "t": "2026-10-21T00:14:12.778Z",
+      "note": "Measured: before 40.4 (run 20261020-213639-ask), after 88.1 on the 8 illustration cases (run 20261020-234936-ask, total 89.4 over 21). Bar met by sun over mountains (crafted 7, designed 8) and layered sunset (7, 8); not met by line art 6/7, lighthouse 6/7, forest 5/7, fox 5/7, skyline 5/7, silhouette badge 4/5. Calibration: the user's triangles picture scores crafted 1. Drawings held except coffee cup (same built-in, namer said 'hot coffee') and rocket (judge -0.5 on the same built-in)."
+    },
+    {
+      "t": "2026-10-21T00:14:12.843Z",
+      "note": "Pictures looked at: passes sheet (blank frame, blocking with focal dot and horizon, grey value bands, grey shapes, grey light, colour, finish, critique), critique sheet (32 pt thumbnail still reads, black silhouette shows broken lopsided ridges), before/after (blank or emoji before, illustrations after), both walk captures. Rough items: the craft gap is filed as every-illustration-ask-draws-reaches-the-crafted (p1, user's bar); the rest are notes in the audit. Bug found and fixed on the way: RGBA.relativeLuminance is not linearised, so value studies use IllustrationColor.value (CIE L*)."
+    },
+    {
+      "t": "2026-10-21T00:14:39.546Z",
+      "note": "Shipped (a2585b65): scenes and named styles go to a new pass-based illustrator (PhotonzCore Illustrator, 8 checked passes, reusable pieces, real gradients, named groups, clean SVG); Ask routes and labels the look. Verified: 14,087 tests green, walks ask-draws-an-illustration-walk and ask-draws-a-dog-walk ok at Next defaults, eval illustration cases 40.4 -> 88.1, user's picture crafted 1. NOT fully met: only sun over mountains and layered sunset reach crafted 7 and designed 8; line art, silhouette badge, forest, lighthouse, fox and skyline (crafted 4 to 6) carried to every-illustration-ask-draws-reaches-the-crafted (p1). Audit: queue/audits/2026-10-20-an-illustration-ask-draws-looks-illustrated-natu.json"
     }
   ],
-  "started": "2026-10-20T20:51:46.879Z"
+  "started": "2026-10-20T20:51:46.879Z",
+  "walks": [
+    "ask-draws-an-illustration-walk"
+  ],
+  "completed": "2026-10-21T00:14:39.547Z"
 }
