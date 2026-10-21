@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 8.045,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T23:29:32.175Z",
-  "updated": "2026-10-20T23:29:37.089Z",
+  "updated": "2026-10-21T03:24:37.659Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'i would love to say \"Find the misalignments\" on a ux that has inconsistent alignment on things, or inconsistent border/padding widths or gaps in between repeated patterns. I can spot these visually, but i would love the model to be really good at adding annotations for the inconsistent ux things.' This is the user's main use of Photonz (UX redlining).\n\nWhat exists: find_elements (Sources/PhotonzCore/AgentTools.swift) returns the Measure tool's boxes; ElementBounds.swift, EdgeMap.swift, EdgeRun.swift, MeasurePlan.swift, MeasureSizeGroup.swift, MeasureLabelPlacement.swift (placement that keeps readouts off what they measure). Retina screenshots are 2x: report points, decide 1 pt faults on pixel evidence. Text: compare baselines and cap heights, not box tops, since glyph boxes vary. Do not let the model guess numbers; every number shown comes from the code. The earlier Ask measurement crowding (ask-on-the-local-model-makes-results-that-look-f) is a related task; reuse its placement fixes.",
@@ -30,6 +30,40 @@
     {
       "t": "2026-10-20T23:29:37.088Z",
       "note": "seq 3970 -> 8.045"
+    },
+    {
+      "t": "2026-10-21T02:20:55.118Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-21T03:23:52.807Z",
+      "note": "owns these walks: ask-finds-the-misalignments-walk, ask-finds-nothing-off-walk"
+    },
+    {
+      "t": "2026-10-21T03:24:06.448Z",
+      "note": "Adversarial review before building: a small local model cannot measure pixels, so detection is code and the model only picks ids; find_elements boxes are deduped within 4+ px and cannot show a 1 pt fault, so a pixel-exact layout read (LayoutRead) was built instead; letter side bearings move a line's ink by up to a point, so words agree within 1 pt and are marked from 1.5 pt; a narrow icon centred among wide ones and left-aligned labels of different lengths are by design and excused."
+    },
+    {
+      "t": "2026-10-21T03:24:06.513Z",
+      "note": "Process note: the detector was prototyped against the corpus in a standalone harness before its unit tests were written (MisalignmentTests came after the first working version), not strictly test-first."
+    },
+    {
+      "t": "2026-10-21T03:24:06.576Z",
+      "note": "Chose an alignment guide (dashed line on the others' edge, bracket round the miss) for edge findings over a caliper between two edges, because the Measure tool already draws exactly that and it shows the agreeing members as a quiet line. Chose to report the held-out set's first untouched score (P 0.48) beside the post-fix score (P 1.00)."
+    },
+    {
+      "t": "2026-10-21T03:24:06.641Z",
+      "note": "left rough: 1 pt shifts of text lines are often missed (glyph bearings); people-panel's 8 pt indent not marked (edge of the range); one false mark on app-window-2x (filed find-the-misalignments-stays-quiet-on-busy-app-s); in a label/dot row pair the label can be blamed for the dot (held-out mail-dot first run). Send in a walk needs a 0.5 s pause after typing or it does not take (both new walks have it)."
+    },
+    {
+      "t": "2026-10-21T03:24:37.657Z",
+      "note": "Ask 'find the misalignments' / 'check the spacing' marks edges 1-8 pt off, uneven gaps, padding and border differences as one redline layer each with both measured numbers; one Ask row 'Found N misalignments' with switch and delete. Detection is code (LayoutRead + MisalignmentScan, PhotonzCore); model picks ids via find_misalignments/mark_misalignments, also in the MCP skill. Corpus of 62 Chrome-rendered 2x UIs with planted faults: P 1.00, R 0.94 (1 pt) / 1.00 (2-3 pt), clean pages 0 marks; held-out first untouched run P 0.48 (reported). Verified: full suite 14116 tests green, walks ask-finds-the-misalignments-walk and ask-finds-nothing-off-walk pass at Next defaults with qwen3:30b, five real screenshots before/after in queue/audits/2026-10-20-find-misalignments.json. Commit 506e00a8."
     }
-  ]
+  ],
+  "started": "2026-10-21T02:20:55.117Z",
+  "walks": [
+    "ask-finds-the-misalignments-walk",
+    "ask-finds-nothing-off-walk"
+  ],
+  "completed": "2026-10-21T03:24:37.658Z"
 }

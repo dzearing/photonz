@@ -13262,3 +13262,12 @@
 {"t":"2026-10-21T02:20:00.755Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-10-21T02:20:00.819Z","ev":"task_note","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of"}
 {"t":"2026-10-21T02:20:38.037Z","ev":"manager","filed":1,"readyBefore":63,"readyAfter":63,"report":"queue/manager/2026-10-20-1920.md"}
+{"t":"2026-10-21T02:20:55.052Z","ev":"manager_pass","exit":0,"ready":63}
+{"t":"2026-10-21T02:20:55.124Z","ev":"task_started","id":"find-the-misalignments-marks-every-inconsistent","title":"\"Find the misalignments\" marks every inconsistent edge, padding and gap on a screenshot","priority":"p1-high"}
+{"t":"2026-10-21T03:23:52.809Z","ev":"task_walks","id":"find-the-misalignments-marks-every-inconsistent","walks":["ask-finds-the-misalignments-walk","ask-finds-nothing-off-walk"]}
+{"t":"2026-10-21T03:23:52.875Z","ev":"task_created","id":"find-the-misalignments-stays-quiet-on-busy-app-s","priority":"p2-normal","title":"Find the misalignments stays quiet on busy app screenshots and is scored on real captures"}
+{"t":"2026-10-21T03:24:06.450Z","ev":"task_note","id":"find-the-misalignments-marks-every-inconsistent"}
+{"t":"2026-10-21T03:24:06.515Z","ev":"task_note","id":"find-the-misalignments-marks-every-inconsistent"}
+{"t":"2026-10-21T03:24:06.578Z","ev":"task_note","id":"find-the-misalignments-marks-every-inconsistent"}
+{"t":"2026-10-21T03:24:06.643Z","ev":"task_note","id":"find-the-misalignments-marks-every-inconsistent"}
+{"t":"2026-10-21T03:24:37.660Z","ev":"task_done","id":"find-the-misalignments-marks-every-inconsistent","from":"in_progress","note":"Ask 'find the misalignments' / 'check the spacing' marks edges 1-8 pt off, uneven gaps, padding and border differences as one redline layer each with both measured numbers; one Ask row 'Found N misalignments' with switch and delete. Detection is code (LayoutRead + MisalignmentScan, PhotonzCore); model picks ids via find_misalignments/mark_misalignments, also in the MCP skill. Corpus of 62 Chrome-rendered 2x UIs with planted faults: P 1.00, R 0.94 (1 pt) / 1.00 (2-3 pt), clean pages 0 marks; held-out first untouched run P 0.48 (reported). Verified: full suite 14116 tests green, walks ask-finds-the-misalignments-walk and ask-finds-nothing-off-walk pass at Next defaults with qwen3:30b, five real screenshots before/after in queue/audits/2026-10-20-find-misalignments.json. Commit 506e00a8."}
