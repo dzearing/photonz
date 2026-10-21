@@ -21795,3 +21795,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
   triangles picture scores crafted 1 in calibration.
 - Preview while tuning: `PHOTONZ_ILLUSTRATION_PREVIEW=<dir> Scripts/test.sh --filter IllustrationPreviewTests`
   writes every case's passes as SVG.
+
+## 2026-10-20 — Ask's test set cannot be passed by a lookup
+
+- Each Ask row has a faint thumbs up and down (and Good Result / Bad Result in its right-click menu). A vote saves the request, the document before and after, and a picture under `~/Library/Application Support/<bundle>/Ask feedback/`; `Scripts/ask-eval.sh feedback` turns thumbs down into held-out cases. Walk: `ask-row-thumbs-walk`.
+- Ask records where each drawing came from (stored, template, drawn); the eval tallies it per run for both engines (`Scripts/ask-eval/lookups.mjs`).
+- `Scripts/ask-eval/held-out/`: 42 unseen requests, run with `--set held-out`, printed and recorded in total only. The rubric judges every word of a request and a case under 7 on didWhatWasAsked is scaled down (`scoring.mjs`). Calibration adds the user's two cat pictures (both didWhatWasAsked 1).
+- Baseline on rubric ebbf2873: climb 78.2 (100% of drawings looked up), held-out 20.1 (85% looked up, 27 of 33 drawing cases by lookup alone).
+- Next: ask-draws-any-subject-well-with-nothing-stored-o is measured on the held-out total and the lookup line. Open question: find-out-why-ask-sometimes-waits-five-minutes-fo (three held-out cases where the model never answered).

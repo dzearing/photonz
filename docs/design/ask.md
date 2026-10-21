@@ -102,6 +102,23 @@ change click.
 Rows last for the window's session, beside the undo history they lean on:
 they hold whole document snapshots, which have no place in the saved file.
 
+### Thumbs up and down
+
+Each row carries a quiet thumbs up and thumbs down between its words and its
+switch (faint until picked; also Good Result and Bad Result in its right-click
+menu; the same thumbs again takes the vote back). No mock covers them; they
+sit in the row because the row is what they judge. A vote saves the request,
+the document before, the document after and a picture of it under
+`~/Library/Application Support/<bundle id>/Ask feedback/<time-request>/`
+(`AskFeedbackFolder`, `AskFeedbackCase` in PhotonzCore), with where each
+drawing came from. `Scripts/ask-eval.sh feedback` turns each thumbs down into
+a case of the eval's held-out set, started from that very document
+(`Scripts/ask-eval/README.md`, "The held-out set"), so the set grows from real
+use. Every add_drawing answer says where the drawing came from (`from`:
+built-in, illustration, your svg); Ask keeps it per run (`AskDrawingSource`),
+the walk state shows it as `ask.sources`, and the eval counts it, so a score
+climbed by looking things up shows as a share of lookups.
+
 ## Drawing a thing
 
 "Draw a dog", "create a smiley face icon": one `add_drawing` call, never a

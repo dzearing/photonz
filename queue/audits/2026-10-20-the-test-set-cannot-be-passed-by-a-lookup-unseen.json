@@ -1,0 +1,47 @@
+{
+  "feature": "Ask's score you can trust: an unseen test set, thumbs on rows, lookups counted",
+  "epic": "agent-skills",
+  "summary": "Each of Ask's rows now has a quiet thumbs up and down; a thumbs down saves that request and its document as a test the eval has never seen. The eval has 42 such unseen requests (your two cat failures, poses, scenes, styles, edits, icons, layouts, redlines), reports them only as a total, judges every word of a request, and says how many drawings were looked up rather than drawn. Today's honest number: 20.1 on the unseen set, against 78.2 on the set runners climbed on.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask needs the local model it already uses.",
+  "switched": {},
+  "try": [
+    {
+      "do": "On a blank picture press Ask, type \"draw a cat curled up sleeping\" and press the Ask button.",
+      "shot": "2026-10-20-held-out-1-sleeping-cat-request.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the Agent group, click the faint thumbs down at the right of the row \"Drew a drawing\".",
+      "shot": "2026-10-20-held-out-3-row-thumbs.png"
+    },
+    {
+      "do": "See the thumbs down stay filled; click it again to take the vote back, or right-click the row for Good Result and Bad Result.",
+      "shot": "2026-10-20-held-out-2-thumbs-down.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In Terminal run Scripts/ask-eval.sh feedback: your thumbs down becomes a new unseen case."
+    },
+    {
+      "do": "Run Scripts/ask-eval.sh report to see the climb and unseen totals side by side, with the share of drawings looked up."
+    },
+    {
+      "do": "Compare: this sheet is the set runners climbed on (78.2, every drawing stored or a coded scene); the unseen set's own sheet is at .ask-eval/held-out-runs/20261021-010309-ask-held-out/contact-sheet.png, kept out of queue/audits so runners never read it.",
+      "shot": "2026-10-20-held-out-4-climb-set-sheet.png"
+    }
+  ],
+  "evaluate": [
+    "Do the faint thumbs sit well in the row, or would you rather they appear only under the pointer?",
+    "Does 20.1 on the unseen set against 78.2 on the climbed set match how good Ask feels to you today?",
+    "Is \"85% of drawings looked up, 27 of 33 drawing cases answered by lookup alone\" the number you want every Ask change to report?",
+    "Are the 42 unseen requests the kinds of things you would actually type, and is anything you type missing?"
+  ],
+  "rough": [
+    "No mock covers the thumbs: they sit between the row's words and its switch because the row is what they judge, faint until picked (the hover-only version could not be clicked by a walk running behind other apps).",
+    "Three of the 42 unseen requests sat five minutes with the local model never answering and count as nothing made; filed as find-out-why-ask-sometimes-waits-five-minutes-fo.",
+    "In about one case in thirty a walk's click on Send did not start Ask; the eval now notices within 15 seconds and runs the case again.",
+    "A thumbs up is saved and counted but not turned into a test; only thumbs down become unseen cases.",
+    "The unseen set is held apart by a rule runners follow and by the eval never printing a case, not by anything that stops a determined reader opening the files.",
+    "The two cat requests the scene task listed as its climbing cases now belong to the unseen set, so that task climbs on a rabbit curled up asleep and a cat playing a guitar instead."
+  ]
+}

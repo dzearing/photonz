@@ -127,7 +127,11 @@ prints no case, its request or its score, draws no contact sheet, refuses
 line with no per-case scores. Its pictures are kept in
 `.ask-eval/held-out-runs/<run>/` for a person to look at (`sheet <run>` draws
 them); a runner never opens that folder or `held-out/`, and never moves a
-held-out request into `cases/`. Work on Ask reports both numbers
+held-out request into `cases/`. The one exception is an audit for the user:
+after the last change is made and measured, the final run's sheet may be
+drawn where it is and its path named in the audit (never copied into
+`queue/audits/`, which every runner reads), and nothing is changed after
+looking at it. Work on Ask reports both numbers
 (`report`); a climb that does not move the held-out total did not make Ask
 better.
 

@@ -235,7 +235,12 @@ The machine you run on is the user's. Anything you start, you finish.
   score cannot be climbed by looking things up (on 2026-10-20 Ask scored 92 on
   drawings while it drew one cat for every cat request). The held-out total and
   the lookup line under it are the honest number; a climb that does not move
-  the held-out total did not make Ask better.
+  the held-out total did not make Ask better. The one exception is the audit:
+  once your last change to Ask is made and measured, you may draw the final
+  held-out run's contact sheet (`Scripts/ask-eval.sh sheet <run>`) where it
+  is, under `.ask-eval/held-out-runs/`, and name its path in the audit for the
+  user. Never copy it into `queue/audits/`, which every runner reads, and
+  change nothing after looking at it.
 
 ### A bug you file must be reproduced, not just read
 

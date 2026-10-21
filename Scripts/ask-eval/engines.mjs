@@ -70,13 +70,28 @@ async function collect(dir, before = []) {
   }
 }
 
+/// One go of Ask on the case; a go whose Send never started Ask is tried
+/// once more, and then left unrun rather than scored as nothing made.
 export async function runAsk(testCase, dir, { build }) {
+  const first = await runAskOnce(testCase, dir, { build });
+  if (first.unrun || first.engine.phase !== "idle") return first;
+  await quitProbe();
+  const second = await runAskOnce(testCase, dir, { build: false });
+  if (second.unrun || second.engine.phase !== "idle") return second;
+  await quitProbe();
+  return { engine: second.engine, unrun: "Ask never started: the walk's Send did not take, twice" };
+}
+
+async function runAskOnce(testCase, dir, { build }) {
   const limit = testCase.timeout ?? 300;
   const steps = [
     ...startSteps(testCase),
     { do: "press", control: "Ask" }, { do: "wait", seconds: 0.5 },
     { do: "type", text: testCase.request }, { do: "wait", seconds: 0.3 },
     { do: "press", control: "Ask Send" },
+    // Ask starts at once: a Send that did not take is found in seconds, not
+    // after the whole limit (two held-out cases sat 300 s idle, 2026-10-20).
+    { do: "waitFor", condition: "askPhase", value: "planning|running|ran|stopped", timeout: 15 },
     { do: "waitFor", condition: "askPhase", value: "ran|stopped", timeout: limit },
     { do: "wait", seconds: 0.8 },
     { do: "describe", stage: "ended", note: "where the request ended" },
@@ -95,6 +110,7 @@ export async function runAsk(testCase, dir, { build }) {
     sources: ended?.sources ?? [],
   };
   if (walked.code === 3 || walked.code === 6) return { engine, unrun: walked.code === 3 ? "screen locked" : "deferred: person at the Mac" };
+  if (engine.phase === "idle") return { engine };
   const got = await collect(dir);
   await quitProbe();
   return { engine, ...got };
