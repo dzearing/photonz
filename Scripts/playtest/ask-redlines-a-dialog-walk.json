@@ -1,0 +1,75 @@
+{
+  "out": "/tmp/photonz-playtest/ask-redlines-a-dialog-walk",
+  "clock": 420,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/misalign/dialog-clean.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-redlined",
+      "note": "the dialog screenshot redlined: one size of each kind of control, then its spacing, no readout on another or on words"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3
+    },
+    {
+      "do": "snapshot",
+      "name": "1-redlined"
+    }
+  ]
+}

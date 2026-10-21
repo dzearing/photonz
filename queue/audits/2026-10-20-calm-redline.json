@@ -1,0 +1,51 @@
+{
+  "feature": "A calm redline of a UI screenshot",
+  "epic": "measure-redline",
+  "summary": "Asking Ask to \"annotate the ux with measurements around the major ui elements\" now lays the redline a designer hands a developer: one size of each kind of control, then the spacing that defines the layout, with no readout on another readout, on words or on a control. Code chooses the marks off the picture; the model only confirms them.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: ask-annotates-a-screenshot-walk (the settings screenshot), ask-redlines-a-dialog-walk, ask-redlines-a-feed-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png. This was your picture before: twelve measurements, the switch measured four times, readouts stacked.",
+      "shot": "2026-10-20-user-ask-measurements-noisy.png"
+    },
+    {
+      "do": "Press Ask, type \"annotate the ux with measurements around the major ui elements\" and send.",
+      "shot": "2026-10-20-calm-redline-settings-after-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the Measurements list: Switch, Field and Button once each, then Padding, Row height, Section gap, Gap and Label inset."
+    },
+    {
+      "do": "Look for two readouts touching, or a readout on a label, a switch or a field."
+    },
+    {
+      "do": "Press Command Z once: the whole redline goes in one step."
+    },
+    {
+      "do": "Open Tests/PhotonzRenderTests/Fixtures/misalign/dialog-clean.png and ask the same: one button size for the row of three, padding, gap and label inset.",
+      "shot": "2026-10-20-calm-redline-dialog-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open Tests/PhotonzRenderTests/Fixtures/misalign/feed-clean.png and ask the same: the avatar once, padding, the gap between cards, avatar to name.",
+      "shot": "2026-10-20-calm-redline-feed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Is one size per kind of control (on whichever has the most room) what you want, or should the size always sit on the first one?",
+    "Is this the spacing you would mark: padding, row height, the gap between sections and between buttons, a button's label inset?",
+    "Does any readout still read as belonging to the wrong thing?",
+    "Is leaving out the margin to the screenshot's own edge right? It is where the picture was cropped, not part of the design."
+  ],
+  "rough": [
+    "Readouts still say px on a 2x screenshot (42 for the 84 pixel switch is points, labelled px as the Measure tool always has). The eval's judge reads \"124 px\" on a 248 pixel button as wrong. Filed as a-redline-of-a-2x-screenshot-reads-in-points-wit.",
+    "The settings case scores 47 to 59 for Ask (32.5 before; the same picture moved 12 points between two judgings) and the judge gives clean 4, not the 8 the task asked for. Its remaining complaints are the caliper look: no end ticks, Size brackets that do not plainly show what they span. Same follow-up: a-redline-of-a-2x-screenshot-reads-in-points-wit. The skill engine lays the identical redline (judge 4.2; its old 62.8 was on the previous rubric).",
+    "Eval totals for Ask: climb 79.1 (was 78.2), held-out 19.5 (was 20.1, inside the noise). But the held-out redline group fell from 35.4 to 19.6, twice in a row, and the rules keep a runner from reading those cases. Filed as ask-s-redlines-do-at-least-as-well-on-unseen-req; the final held-out run's pictures are at .ask-eval/held-out-runs/20261021-055152-ask-held-out/contact-sheet.png for you to look at.",
+    "Measurements placed by hand still use the Measure tool's own placer, whose leash and on-the-line behaviour you chose; the redline placer shares its candidates and the one label placer but adds hard rules. Bringing those rules to hand placement is in a-redline-of-a-2x-screenshot-reads-in-points-wit.",
+    "A mark with no clean spot for its readout is left out rather than stacked, down to three marks; below that the rest land as the Measure tool would place them.",
+    "No mock covers this surface: the redline uses the Measure tool's existing look."
+  ]
+}
