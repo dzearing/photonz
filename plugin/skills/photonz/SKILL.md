@@ -35,7 +35,7 @@ checked.
 | --- | --- |
 | Documents | `list_documents`, `list_history` (screenshots and recordings, newest first), `open_document` (a path or a History index), `new_picture`, `new_video` |
 | Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
-| Drawing | `add_drawing` (a thing by name, from about a thousand built-in drawings, or your own SVG, as editable layers; `icon` for an icon frame), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words) |
+| Drawing | `add_drawing` (a thing by name, from about a thousand built-in drawings, or your own SVG, as editable layers; `icon` for an icon frame; a scene with `style` is drawn by Photonz itself in an illustrator's passes), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words) |
 | Measuring a screenshot | `find_elements` (the boxes the Measure tool sees), `add_measurement` (size, gap, distance) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
 | Components | `run_command make_component`, `list_components`, `place_component` |
@@ -116,7 +116,10 @@ Photonz work should look designed, not assembled.
 
 0. For a picture of an everyday thing (a dog, a cup, a smiley), try `add_drawing` with
    its `subject` (and `icon: true` for an icon) first: it lands a clean drawing as
-   editable layers. Build it by hand, below, when you want your own drawing.
+   editable layers. For an illustration of a scene (the sun over mountains, a forest at
+   dusk, a lighthouse on a cliff) pass the scene as `subject` and the look asked for as
+   `style` (line art, silhouette, badge, sunset, flat, or illustration): Photonz draws it
+   with light, shadow and depth. Build it by hand, below, when you want your own drawing.
 1. `new_picture` square (1024 x 1024); keep a margin of about a tenth on every side.
 2. Build from real shapes and paths: `add_shape` for geometric parts, `add_path` with
    smooth points for curves (a cloud is a closed path of smooth bumps, or ellipses

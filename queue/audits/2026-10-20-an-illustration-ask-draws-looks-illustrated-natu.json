@@ -1,0 +1,32 @@
+{
+  "feature": "Ask draws illustrations, not clip art",
+  "epic": "agent-ask",
+  "summary": "Ask a scene (the sun over mountains, a forest at dusk, a lighthouse on a cliff, a city skyline, a fox) and Photonz draws it the way an illustrator works, in eight passes: broken ridgelines, a lit side and a shadow side on every peak from one light, planes that get lighter into the distance, a gradient sky. Name a look (line art, silhouette, badge, sunset, flat) and you get it; name none and the Agent row says which it picked.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Needs Ollama with qwen3:30b, like the rest of Ask.",
+  "switched": {},
+  "try": [
+    { "do": "On a new blank picture press Ask (Command K), type: draw an svg illustration of a sun over mountains, and send.", "shot": "2026-10-20-illustration-1-sun-over-mountains-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open the Sun over mountains group in Layers: Sky, Sun, Clouds, each range with its Ridge, Shadow face and Ridge light." },
+    { "do": "Press Command Z once: the whole illustration goes." },
+    { "do": "Ask: draw the sun over mountains as a black silhouette badge with pines.", "shot": "2026-10-20-illustration-3-silhouette-badge-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Try: draw the sun over mountains as line art, then as a layered sunset." },
+    { "do": "Try: draw an illustration of a lighthouse on a cliff (and a forest at dusk, a fox, a city skyline at night)." },
+    { "do": "Look at the eight passes and the critique's tests for the sun over mountains.", "shot": "2026-10-20-illustration-passes.png" },
+    { "do": "Compare before and after for all eight illustration requests.", "shot": "2026-10-20-illustration-before-after.png" }
+  ],
+  "evaluate": [
+    "Does the sun over mountains now look like something from your reference board rather than triangles?",
+    "Is the silhouette badge close enough to the board's circle badges to keep, or does it need the pines and lake handled differently?",
+    "Is 'Drew a sunset illustration' on the Agent row enough to tell you which look it picked?",
+    "Is it right that a scene always goes to the illustrator (never the model's own drawing), even when you did not say illustration?"
+  ],
+  "rough": [
+    "Measured (Scripts/ask-eval.sh, judge claude-opus-5-5, run 20261020-234936-ask against before 20261020-213639-ask): illustration cases 40.4 before (four of eight made nothing, three got the emoji sunrise) and 88.1 after.",
+    "Only two cases reach the bar of 7 on both crafted and designed: sun over mountains (crafted 7, designed 8) and the layered sunset (7, 8). Line art is 6 and 7; lighthouse 6 and 7; forest, fox and skyline 5 and 7; the silhouette badge 4 and 5. Carried on in task every-illustration-ask-draws-reaches-the-crafted.",
+    "The judge's standing complaints: trees read as stacked triangles, the fox is stiff, buildings are plain boxes, the cliff is a flat slab, clouds are flat lenses, and on the badge the mountains meet the ring abruptly.",
+    "The thirteen drawing cases held (bicycle 94 to 95.2, flower 89.2 to 92, dog, car, house, smiley, sun over mountains equal) except coffee cup 80.1 to 60 and rocket 91.2 to 88, both the same built-in drawing as before: the blind namer said 'hot coffee' three times (the case wants cup or mug), and the judge moved half a point on the rocket.",
+    "Ask's blind look no longer looks at a drawing from the built-in set: in one run it called the built-in tree a mushroom and swapped it for the model's own green blob (judge 3.5).",
+    "Pass pictures 1 to 8 and the critique sheet are drawn from the illustrator's own SVG in a browser, not by the app; the before and after and walk pictures are the app's own renders.",
+    "No mock covers this surface: Ask's drawings have no mock page; the user's reference board (queue/audits/2026-10-20-user-sun-mountains-reference-board.png) is the bar, studied and not copied."
+  ]
+}

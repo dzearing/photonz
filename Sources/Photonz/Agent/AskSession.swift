@@ -249,7 +249,7 @@ final class AskSession {
     /// Mac can see, or nothing was drawn).
     private func look(at plan: AskPlan, made: [Int: String], in editor: EditorState, model: String,
                       note: (String) -> Void) async -> (subject: String, seen: String)? {
-        let drawings = AskDrawingCheck.drawings(in: plan)
+        let drawings = AskDrawingCheck.drawings(in: plan, library: DrawingSet.shared)
         guard !drawings.isEmpty, let document = editor.agentID else { return nil }
         guard let eyes = AskModels.vision(installed: await AskLocalModel.installed() ?? []) else {
             note("look skipped: no model on this Mac can see")

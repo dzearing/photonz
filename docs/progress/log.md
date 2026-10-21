@@ -21773,3 +21773,25 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - An ask now brings out whatever hides the Agent group: a video in View switches to Edit, a closed panel comes out (for this window only, the person's choice for new windows is untouched), a folded group unfolds and one scrolled away scrolls back. Rule in `PhotonzCore/AskReveal.swift`, app side in `EditorState+AskReveal.swift` and `InspectorPanel.showAgentSection` (now looks four times so a panel still arriving is caught).
 - Five `ask-shows-the-agent-group-*` walks; audit `queue/audits/2026-10-20-ask-reveal.json`.
 - Open: rows at the top of a section can draw blank after the walk scrolls the panel directly (`find-out-whether-panel-rows-go-blank-after-the-p`, p2).
+
+## 2026-10-20 — An illustration Ask draws looks illustrated (an-illustration-ask-draws-looks-illustrated-natu)
+
+- New in PhotonzCore: `IllustrationBrief` (pass 1: subject, style, time of day,
+  elements from the words), `Illustrator` + `IllustrationWork` (passes 2 to 8,
+  each a picture and checks; the critique revises), `IllustrationPieces` (ridge,
+  shadow face, ridge light, snow cap, pine/treeline, ray burst, glitter,
+  reflection, hills, cloud streak, stars, birds, skyline, lighthouse, cottage,
+  fox), `IllustrationGeometry` (paths, clipping to a circle or rounded box in the
+  geometry, clean SVG), `IllustrationColor` (CIE lightness, re-lighting, the
+  palettes).
+- `add_drawing` takes `style`; a scene or a named style goes to the illustrator;
+  Ask adds the look words the person typed; the change row names the look;
+  Ask's blind look skips illustrations.
+- `SVGArtwork` reads linear and radial gradients as real paints, and keeps
+  `<g id>` groups when asked (`keepingGroups`).
+- Gotcha: `RGBA.relativeLuminance` is NOT linearised (gamma values weighted);
+  value studies need `IllustrationColor.value` (CIE L*).
+- Eval: eight `"crafted": true` cases and `rubric-crafted.md`; the user's
+  triangles picture scores crafted 1 in calibration.
+- Preview while tuning: `PHOTONZ_ILLUSTRATION_PREVIEW=<dir> Scripts/test.sh --filter IllustrationPreviewTests`
+  writes every case's passes as SVG.

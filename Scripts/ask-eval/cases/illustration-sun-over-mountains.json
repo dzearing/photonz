@@ -1,0 +1,22 @@
+{
+  "request": "draw an svg illustration of a sun over mountains",
+  "group": "drawing",
+  "crafted": true,
+  "from": "an-illustration-ask-draws-looks-illustrated-natu (the user, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "mountain",
+    "sunrise",
+    "sunset",
+    "landscape",
+    "sun"
+  ],
+  "expect": {
+    "words": false
+  }
+}

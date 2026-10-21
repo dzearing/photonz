@@ -11,8 +11,9 @@ import Foundation
 // It reads the part of SVG drawings are made of: path, circle, ellipse, rect,
 // line, polyline, polygon and g, with fill, stroke, stroke-width, opacity,
 // fill-rule, transform, display and a style attribute saying any of those. A
-// gradient paints with its first colour. Text, images, filters, masks and
-// clips are left out.
+// linear or radial gradient fill becomes the app's own gradient paint (a
+// stroke paints with its first colour). Text, images, filters, masks and clips
+// are left out.
 
 /// Why an SVG could not be read as a drawing, in one plain sentence.
 public struct SVGArtworkError: Error, Hashable, Sendable {
@@ -47,6 +48,12 @@ public struct SVGArtwork: Hashable, Sendable {
         public var stroke: String?
         public var strokeWidth: CGFloat
         public var opacity: Double
+        /// The fill as a gradient, when the SVG filled it with one; `fill`
+        /// is then its first colour.
+        public var fillPaint: Paint?
+        /// The named groups it sits in, outermost first: only read when the
+        /// drawing is parsed keeping its groups.
+        public var groups: [String] = []
     }
 
     public let viewBox: CGRect?
@@ -64,7 +71,9 @@ public struct SVGArtwork: Hashable, Sendable {
 
     // MARK: Reading
 
-    public static func parse(_ text: String) -> Result<SVGArtwork, SVGArtworkError> {
+    /// `keepingGroups` keeps each `<g id>` as a group of layers (an
+    /// illustration's Sky, Far range, Sun) instead of one flat group.
+    public static func parse(_ text: String, keepingGroups: Bool = false) -> Result<SVGArtwork, SVGArtworkError> {
         guard let start = text.range(of: "<svg") else {
             return .failure(SVGArtworkError("That is not an SVG: it has no <svg> element."))
         }
@@ -73,6 +82,7 @@ public struct SVGArtwork: Hashable, Sendable {
             return .failure(SVGArtworkError("That SVG could not be read: its XML is broken."))
         }
         var reader = SVGReader(root: root)
+        reader.keepsGroups = keepingGroups
         reader.read()
         guard !reader.parts.isEmpty else {
             return .failure(SVGArtworkError("That SVG draws nothing Photonz can draw: no paths or shapes."))
@@ -149,6 +159,9 @@ public struct SVGArtwork: Hashable, Sendable {
                 if part.fill == nil, var annotation = layer.annotation {
                     annotation.fill = nil
                     layer.content = .annotation(annotation)
+                } else if let paint = part.fillPaint, var annotation = layer.annotation {
+                    annotation.fill = paint
+                    layer.content = .annotation(annotation)
                 }
             case .path(let outline):
                 let anchors = outline.rings.flatMap { $0 }.map { anchor in
@@ -162,7 +175,7 @@ public struct SVGArtwork: Hashable, Sendable {
                 let content = PathContent(anchors: anchors, isClosed: outline.closed,
                                           ringStarts: Self.ringStarts(outline.rings),
                                           paint: Paint(hex: ink), strokeWidth: strokeWidth,
-                                          fill: outline.closed ? part.fill.map { Paint(hex: $0) } : nil,
+                                          fill: outline.closed ? (part.fillPaint ?? part.fill.map { Paint(hex: $0) }) : nil,
                                           fillRule: outline.evenOdd ? .evenOdd : .nonZero)
                 layer = PathBuilder.layer(content, at: content.bounds.origin, name: partName)
             }
@@ -171,9 +184,14 @@ public struct SVGArtwork: Hashable, Sendable {
         }
     }
 
-    /// The drawing as one group named `name`, fitted into `box`.
+    /// The drawing as one group named `name`, fitted into `box`; parts read
+    /// keeping their groups sit in groups of their own inside it.
     public func group(named name: String, fitting box: CGRect) -> Layer {
         let parts = layers(named: name, fitting: box)
+        if self.parts.contains(where: { !$0.groups.isEmpty }) {
+            return Self.nest(name: name, Array(zip(parts, self.parts.map(\.groups))), depth: 0)
+                ?? Layer(name: name, content: .group(GroupContent(children: [])), frame: CGRect(origin: box.origin, size: .zero))
+        }
         let union = parts.reduce(CGRect.null) { $0.union($1.localBounds) }
         let origin = union.isNull ? box.origin : union.origin
         let children = parts.map { part -> Layer in
@@ -183,6 +201,47 @@ public struct SVGArtwork: Hashable, Sendable {
         }
         return Layer(name: name, content: .group(GroupContent(children: children)),
                      frame: CGRect(origin: origin, size: .zero))
+    }
+
+    /// Layers (in canvas points) with the groups they sit in, made into a
+    /// group named `name` holding a group for each run of parts that share
+    /// their next group, bottom first.
+    private static func nest(name: String, _ items: [(Layer, [String])], depth: Int) -> Layer? {
+        var children: [Layer] = []
+        var index = 0
+        while index < items.count {
+            let groups = items[index].1
+            guard depth < groups.count else {
+                children.append(items[index].0)
+                index += 1
+                continue
+            }
+            let inner = groups[depth]
+            var run: [(Layer, [String])] = []
+            while index < items.count, depth < items[index].1.count, items[index].1[depth] == inner,
+                  items[index].1.prefix(depth) == groups.prefix(depth) {
+                run.append(items[index])
+                index += 1
+            }
+            if let group = nest(name: inner, run, depth: depth + 1) { children.append(group) }
+        }
+        let union = children.reduce(CGRect.null) { $0.union(Self.canvasBox(of: $1)) }
+        guard !union.isNull else { return nil }
+        let placed = children.map { child -> Layer in
+            var moved = child
+            moved.frame = child.frame.offsetBy(dx: -union.minX, dy: -union.minY)
+            return moved
+        }
+        return Layer(name: name, content: .group(GroupContent(children: placed)), frame: CGRect(origin: union.origin, size: .zero))
+    }
+
+    /// Where a layer built here sits on the canvas: a group's box is what it holds.
+    private static func canvasBox(of layer: Layer) -> CGRect {
+        if case .group(let group) = layer.content {
+            let inside = group.children.reduce(CGRect.null) { $0.union(canvasBox(of: $1)) }
+            return inside.isNull ? .null : inside.offsetBy(dx: layer.frame.minX, dy: layer.frame.minY)
+        }
+        return layer.localBounds
     }
 
     /// The drawing as an icon: a square frame of `side` points with the
@@ -239,6 +298,9 @@ private struct SVGReader {
     var viewBox: CGRect?
     /// Gradient ids to their first colour.
     var gradients: [String: String] = [:]
+    /// Gradient ids to the paint they are.
+    var paints: [String: Paint] = [:]
+    var keepsGroups = false
     /// How many unnamed parts each group name has handed out.
     private var groupCounts: [String: Int] = [:]
     private var groupTotals: [String: Int] = [:]
@@ -255,6 +317,8 @@ private struct SVGReader {
         var evenOdd = false
         var transform = CGAffineTransform.identity
         var groupName: String?
+        var fillPaint: Paint?
+        var groups: [String] = []
     }
 
     mutating func read() {
@@ -270,6 +334,10 @@ private struct SVGReader {
     }
 
     private mutating func collectGradients(_ node: SVGTree) {
+        if node.name == "linearGradient" || node.name == "radialGradient", let id = node.attributes["id"],
+           let paint = Self.gradientPaint(node) {
+            paints[id] = paint
+        }
         if node.name == "linearGradient" || node.name == "radialGradient", let id = node.attributes["id"] {
             let style = Self.style(of: node)
             let stop = node.children.first { $0.name == "stop" }
@@ -282,6 +350,53 @@ private struct SVGReader {
             }
         }
         for child in node.children { collectGradients(child) }
+    }
+
+    /// A gradient element as the app's paint, with its stops, its direction
+    /// and (for a radial one) its middle, read in the shape's own box.
+    static func gradientPaint(_ node: SVGTree) -> Paint? {
+        func unit(_ key: String, _ fallback: CGFloat) -> CGFloat {
+            guard let text = node.attributes[key]?.trimmingCharacters(in: .whitespaces) else { return fallback }
+            if text.hasSuffix("%"), let value = Double(text.dropLast()) { return CGFloat(value / 100) }
+            return SVGNumbers.length(text) ?? fallback
+        }
+        var stops: [(String, CGFloat, Double)] = []
+        for stop in node.children where stop.name == "stop" {
+            let style = style(of: stop)
+            guard let colour = (style["stop-color"] ?? stop.attributes["stop-color"]).flatMap(SVGColor.hex) else { continue }
+            let offsetText = (stop.attributes["offset"] ?? "0").trimmingCharacters(in: .whitespaces)
+            let offset: CGFloat = offsetText.hasSuffix("%") ? CGFloat(Double(offsetText.dropLast()) ?? 0) / 100
+                : (SVGNumbers.length(offsetText) ?? 0)
+            let alpha = (style["stop-opacity"] ?? stop.attributes["stop-opacity"]).flatMap(SVGNumbers.length).map(Double.init) ?? 1
+            stops.append((colour, min(max(offset, 0), 1), min(max(alpha, 0), 1)))
+        }
+        guard stops.count >= 2, let first = stops.first else { return nil }
+        func hex(_ colour: String, _ alpha: Double) -> String {
+            alpha >= 0.999 ? colour : colour + String(format: "%02X", Int((alpha * 255).rounded()))
+        }
+        if node.name == "radialGradient" {
+            let cx = unit("cx", 0.5), cy = unit("cy", 0.5), r = unit("r", 0.5)
+            // The app's ramp reaches the box's furthest corner.
+            let corners = [CGPoint(x: 0, y: 0), CGPoint(x: 1, y: 0), CGPoint(x: 0, y: 1), CGPoint(x: 1, y: 1)]
+            let reach = corners.map { hypot($0.x - cx, $0.y - cy) }.max() ?? 1
+            let scale = reach > 0 ? r / reach : 1
+            return Paint(hex: first.0, kind: .radial,
+                         stops: stops.map { GradientStop(hex: hex($0.0, $0.2), position: Double($0.1 * scale)) },
+                         center: CGPoint(x: cx, y: cy))
+        }
+        let x1 = unit("x1", 0), y1 = unit("y1", 0), x2 = unit("x2", 1), y2 = unit("y2", 0)
+        let dx = x2 - x1, dy = y2 - y1
+        let length = hypot(dx, dy)
+        guard length > 0 else { return Paint(hex: first.0) }
+        let d = CGPoint(x: dx / length, y: dy / length)
+        // 0 degrees runs up the box, 90 to the right (`Paint.angle`).
+        let angle = atan2(d.x, -d.y) * 180 / .pi
+        let span = abs(d.x) + abs(d.y)
+        let start = ((x1 - 0.5) * d.x + (y1 - 0.5) * d.y) / span + 0.5
+        let positions = stops.map { start + $0.1 * length / span }
+        return Paint(hex: first.0, kind: .linear,
+                     stops: zip(stops, positions).map { GradientStop(hex: hex($0.0, $0.2), position: Double($1)) },
+                     angle: Double(angle < 0 ? angle + 360 : angle))
     }
 
     private static let skipped: Set<String> = [
@@ -309,7 +424,10 @@ private struct SVGReader {
         func value(_ key: String) -> String? { style[key] ?? node.attributes[key] }
         if value("display") == "none" || value("visibility") == "hidden" { return }
         var state = given
-        if let fill = value("fill") { state.fill = paint(fill) }
+        if let fill = value("fill") {
+            state.fill = paint(fill)
+            state.fillPaint = gradient(fill)
+        }
         if let stroke = value("stroke") { state.stroke = paint(stroke) }
         if let width = value("stroke-width").flatMap(SVGNumbers.length) { state.strokeWidth = width }
         if let o = value("opacity").flatMap(SVGNumbers.length) { state.opacity *= o }
@@ -322,13 +440,30 @@ private struct SVGReader {
         let id = node.attributes["id"].map(Self.readable)
         switch node.name {
         case "svg", "g", "a", "switch":
-            if node.name == "g", let id { state.groupName = id }
+            if node.name == "g", let id {
+                state.groupName = id
+                if keepsGroups { state.groups.append(id) }
+            }
             for child in node.children { walk(child, state) }
         case "path", "circle", "ellipse", "rect", "line", "polyline", "polygon":
             add(node, state, id: id)
         default:
             return
         }
+    }
+
+    /// The gradient a `url(#id)` fill names, following links to its stops.
+    private func gradient(_ text: String) -> Paint? {
+        let word = text.trimmingCharacters(in: .whitespaces)
+        guard word.hasPrefix("url(") else { return nil }
+        let inside = word.dropFirst(4).prefix { $0 != ")" }
+        var id = String(inside.trimmingCharacters(in: CharacterSet(charactersIn: "#'\" ")))
+        for _ in 0..<4 {
+            if let paint = paints[id] { return paint }
+            guard let found = gradients[id], found.hasPrefix("link:") else { return nil }
+            id = String(found.dropFirst(5))
+        }
+        return nil
     }
 
     private func paint(_ text: String) -> String? {
@@ -410,6 +545,14 @@ private struct SVGReader {
         let strokeWidth = state.strokeWidth * sqrt(abs(t.a * t.d - t.b * t.c))
         guard fill != nil || (stroke != nil && strokeWidth > 0) else { return }
         let opacity = state.opacity * (fill != nil ? state.fillOpacity : state.strokeOpacity)
+        let before = parts.count
+        defer {
+            let paint = node.name == "line" ? nil : state.fillPaint
+            for index in before..<parts.count {
+                if parts[index].fill != nil { parts[index].fillPaint = paint }
+                parts[index].groups = state.groups
+            }
+        }
         var name = id
         if name == nil, let group = state.groupName {
             let total = groupTotals[group] ?? 0

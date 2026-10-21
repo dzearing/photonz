@@ -20,15 +20,26 @@ public struct AgentDrawingCall: Hashable, Sendable {
     public var name: String?
     /// Use the built-in drawing when the set has one.
     public var builtIn: Bool
+    /// The look an illustration is drawn in, in the person's words: line
+    /// art, silhouette, badge, sunset, flat, or just illustration.
+    public var style: String?
 
     public init(subject: String, svg: String? = nil, icon: Bool = false, frame: CGRect? = nil,
-                name: String? = nil, builtIn: Bool = true) {
+                name: String? = nil, builtIn: Bool = true, style: String? = nil) {
+        self.style = style
         self.subject = subject
         self.svg = svg
         self.icon = icon
         self.frame = frame
         self.name = name
         self.builtIn = builtIn
+    }
+
+    /// The illustration this asks for, or nil when it asks for a thing: a
+    /// scene (mountains, a forest, a lighthouse, a skyline) or a named style
+    /// is drawn by the illustrator (`Illustrator`), never by the model.
+    public var illustration: IllustrationBrief? {
+        IllustrationBrief.make(subject: subject, style: style, icon: icon)
     }
 
     /// What the agent is told when the set has no drawing of the thing and it
@@ -63,6 +74,25 @@ public enum AgentDrawingPlacement {
         let kept = asked.intersection(CGRect(origin: .zero, size: canvas))
         guard !kept.isNull, kept.width >= 16, kept.height >= 16 else { return box(on: canvas) }
         return kept
+    }
+
+    /// The box an illustration of `size` fills: fitted into the box asked
+    /// for, or centred on the canvas at four fifths of it.
+    public static func box(_ asked: CGRect?, fitting size: CGSize, on canvas: CGSize) -> CGRect {
+        let room: CGRect
+        // A box that is the whole canvas is a model's habit, not a choice:
+        // an illustration that reaches every edge has no margin to sit in.
+        let canvasArea = canvas.width * canvas.height
+        if let asked, asked.width * asked.height < canvasArea * 0.85 {
+            room = box(asked, on: canvas)
+        } else {
+            room = CGRect(x: canvas.width * 0.1, y: canvas.height * 0.1, width: canvas.width * 0.8, height: canvas.height * 0.8)
+        }
+        guard size.width > 0, size.height > 0 else { return room }
+        let scale = min(room.width / size.width, room.height / size.height)
+        let fitted = CGSize(width: (size.width * scale).rounded(), height: (size.height * scale).rounded())
+        return CGRect(x: (room.midX - fitted.width / 2).rounded(), y: (room.midY - fitted.height / 2).rounded(),
+                      width: fitted.width, height: fitted.height)
     }
 
     /// The box a drawing fills when the call names none: a square in the

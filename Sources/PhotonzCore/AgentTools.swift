@@ -299,7 +299,7 @@ public enum AgentTools {
             ]) { $1 }, required: ["points"])),
         AgentTool(
             name: "add_drawing",
-            description: "Draw a thing (a dog, a house, a coffee cup, a smiley face) as one clean drawing made of editable layers, grouped and named. Photonz has its own clean drawings of about a thousand everyday things and uses one when it has it; otherwise it draws the svg you give. Better than many add_shape and add_path calls for any picture of a thing. One undo step.",
+            description: "Draw a thing (a dog, a coffee cup, a smiley face) or a scene (the sun over mountains, a lighthouse on a cliff) as one drawing of editable layers, grouped and named. Photonz has clean drawings of about a thousand things and draws scenes itself, with light and depth, in the style asked for; otherwise it draws the svg you give. Better than many add_shape and add_path calls. One undo step.",
             inputSchema: schema([
                 "document": documentProperty,
                 "subject": ["type": "string", "description": "What it is, in a word or two: dog, coffee cup, smiley face, sun over mountains."],
@@ -308,6 +308,7 @@ public enum AgentTools {
                 "frame": boxProperty("Where the drawing goes, fitted and centred in this box. Centred on the canvas, 60 per cent of its shorter side, when left out."),
                 "name": ["type": "string", "description": "The group's name in the Layers list. The subject when left out."],
                 "builtIn": ["type": "boolean", "description": "Use Photonz's own drawing when it has one. true when left out; false draws your svg instead."],
+                "style": ["type": "string", "description": "For an illustration or a scene (a landscape, the sun over mountains, a forest, a lighthouse, a skyline, an animal in its setting): the look asked for, in the person's words: line art, silhouette, badge, sunset, flat, or illustration when they named none. Photonz draws it in passes, with light, shadow and depth; send no svg."],
             ], required: ["subject"])),
         AgentTool(
             name: "add_text",
@@ -558,7 +559,8 @@ public enum AgentTools {
             let svg = args["svg"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
             return .success(.addDrawing(document: document, drawing: AgentDrawingCall(
                 subject: subject, svg: svg, icon: args["icon"]?.boolValue ?? false, frame: region(args["frame"]),
-                name: args["name"]?.stringValue, builtIn: args["builtIn"]?.boolValue ?? true)))
+                name: args["name"]?.stringValue, builtIn: args["builtIn"]?.boolValue ?? true,
+                style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 })))
         case "add_text":
             let words = args["text"]?.stringValue ?? ""
             guard !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return fail("text is empty.") }

@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/ask-draws-an-illustration-walk",
+  "seed": "an-illustration-ask-draws-looks-illustrated-natu: the user's own request on a blank picture at Next defaults, no flag touched, then the same scene as a silhouette badge",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "draw an svg illustration of a sun over mountains" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-sun-over-mountains", "note": "the illustration Ask drew: one group with Sky, Sun, the ranges and their shadow faces, over the blank picture's background" },
+    { "do": "snapshot", "name": "1-sun-over-mountains" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-undone", "note": "one Command Z took the whole illustration back" },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "draw the sun over mountains as a black silhouette badge with pines" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-silhouette-badge", "note": "the same scene as a black silhouette badge: a circle with a frame line, snow cut out as paper, a row of pines" },
+    { "do": "snapshot", "name": "3-silhouette-badge" }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "request": "draw an illustration of a fox",
+  "group": "drawing",
+  "crafted": true,
+  "from": "an-illustration-ask-draws-looks-illustrated-natu (the user, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "fox"
+  ],
+  "expect": {
+    "words": false
+  }
+}

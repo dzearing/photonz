@@ -1,23 +1,23 @@
 {
-  "rubric": "da1c5771",
+  "rubric": "6ea6482b",
   "judgeModel": "claude-opus-5-5",
-  "at": "2026-10-20T16:55:57.629Z",
+  "at": "2026-10-20T21:36:27.755Z",
   "agrees": true,
   "results": [
     {
       "picture": "user-dog.png",
       "case": "dog",
       "want": "low",
-      "judge": 1.8,
+      "judge": 1.6,
       "lines": {
-        "clean": 3,
+        "clean": 2,
         "typography": 2,
         "aligned": 2,
         "designed": 1,
         "didWhatWasAsked": 1
       },
       "named": [
-        "dog",
+        "brown shape",
         "brown blob",
         "dog"
       ],
@@ -37,7 +37,7 @@
       },
       "named": [
         "smiley face",
-        "Smiley face",
+        "smiley face",
         "smiley face"
       ],
       "ok": true
@@ -60,14 +60,35 @@
       "picture": "clean-component-sheet.png",
       "case": "component-table",
       "want": "high",
-      "judge": 7.6,
+      "judge": 7.8,
       "lines": {
         "clean": 8,
         "typography": 8,
         "aligned": 8,
-        "designed": 7,
+        "designed": 8,
         "didWhatWasAsked": 7
       },
+      "ok": true
+    },
+    {
+      "picture": "user-sun-over-mountains.png",
+      "case": "illustration-sun-over-mountains",
+      "want": "low",
+      "crafted": 3,
+      "judge": 2.2,
+      "lines": {
+        "clean": 2,
+        "typography": null,
+        "aligned": 2,
+        "designed": 2,
+        "didWhatWasAsked": 4,
+        "crafted": 1
+      },
+      "named": [
+        "mountains and sun",
+        "Mountains and sun",
+        "Mountains and sun"
+      ],
       "ok": true
     }
   ]

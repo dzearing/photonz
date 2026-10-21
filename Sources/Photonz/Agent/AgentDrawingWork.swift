@@ -124,7 +124,16 @@ enum AgentDrawingWork {
         let document = try AgentWork.document(of: editor)
         let drawing: SVGArtwork
         let from: String
-        if call.builtIn, let entry = DrawingSet.shared?.match(call.subject), case .success(let found) = entry.drawing() {
+        var fitted: CGRect?
+        if let brief = call.illustration {
+            let scene = Illustrator.draw(brief)
+            switch SVGArtwork.parse(scene.svg(), keepingGroups: true) {
+            case .success(let read): drawing = read
+            case .failure(let trouble): throw Failure("add_drawing: \(trouble.message)")
+            }
+            from = "illustration: \(brief.lookTitle)\(brief.styleNamed ? "" : " (picked)")"
+            fitted = AgentDrawingPlacement.box(call.frame, fitting: scene.size, on: document.canvasSize)
+        } else if call.builtIn, let entry = DrawingSet.shared?.match(call.subject), case .success(let found) = entry.drawing() {
             drawing = found
             from = "built-in: \(entry.name)"
         } else if let svg = call.svg {
@@ -143,7 +152,7 @@ enum AgentDrawingWork {
                 editor.perform { made = $0.addDrawing(drawing, named: call.layerName, icon: true, box: call.frame, blank: blank) }
             } else {
                 let group = drawing.group(named: call.layerName,
-                                          fitting: AgentDrawingPlacement.box(call.frame, on: document.canvasSize))
+                                          fitting: fitted ?? AgentDrawingPlacement.box(call.frame, on: document.canvasSize))
                 editor.addDrawnLayer(group, remembering: false)
                 made = group.id
             }

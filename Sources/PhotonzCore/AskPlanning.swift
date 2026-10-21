@@ -247,10 +247,13 @@ public struct AskConversation: Sendable {
     /// The built-in drawings add_drawing draws from, so a thing the set does
     /// not have goes back to the model for its own SVG while it still plans.
     private let drawings: DrawingLibrary?
+    /// What the person typed, read for the look they named.
+    private let request: String
 
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
                 titles: String = "", drawings: DrawingLibrary? = nil) {
         self.drawings = drawings
+        self.request = request
         canvasWidth = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]?["width"]?.doubleValue ?? 0
         var instructions = Self.instructions(documentRead: documentRead)
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
@@ -308,15 +311,19 @@ public struct AskConversation: Sendable {
             if AskTools.looking.contains(name) {
                 looks.append(AskLook(tool: name, arguments: arguments))
             } else if AskTools.doing.contains(name) {
-                let step = AskStep(tool: name, arguments: arguments)
+                var step = AskStep(tool: name, arguments: arguments)
                 if name == "add_measurement",
                    steps.filter({ $0.tool == "add_measurement" }).count >= Self.mostMeasurements {
                     tell(name, "Not planned: \(Self.mostMeasurements) measurements is the most a picture reads well with. Plan nothing more of them; finish.")
                     continue
                 }
+                let arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
                     tell(name, "Not planned. \(problem)")
                     continue
+                }
+                if name == "add_drawing" {
+                    step = AskStep(tool: name, arguments: Self.withStyleWords(arguments, from: request))
                 }
                 if let earlier = repeated(step) {
                     tell(name, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
@@ -343,6 +350,9 @@ public struct AskConversation: Sendable {
         let subject = arguments["subject"]?.stringValue ?? ""
         let builtIn = arguments["builtIn"]?.boolValue ?? true
         let svg = arguments["svg"]?.stringValue ?? ""
+        let styled = Self.withStyleWords(arguments, from: request)
+        if IllustrationBrief.make(subject: subject, style: styled["style"]?.stringValue,
+                                  icon: arguments["icon"]?.boolValue ?? false) != nil { return nil }
         if builtIn, let drawings, drawings.match(subject) != nil { return nil }
         guard !svg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return drawings == nil ? nil : AgentDrawingCall.noBuiltIn(subject)
@@ -351,6 +361,40 @@ public struct AskConversation: Sendable {
             return "add_drawing: \(trouble.message) Write the whole svg again."
         }
         return nil
+    }
+
+    /// An add_drawing call with the look words the person typed added to its
+    /// style, so "as line art" or "a badge" reaches the illustrator even when
+    /// the model left it out.
+    static func withStyleWords(_ arguments: AgentJSON, from request: String) -> AgentJSON {
+        var typed = IllustrationBrief.lookWords(in: request)
+        guard var object = arguments.objectValue else { return arguments }
+        let subject = object["subject"]?.stringValue ?? ""
+        // What else the person put in the scene ("with pines"), when the
+        // subject is a scene the model shortened.
+        if IllustrationBrief.make(subject: subject, style: nil) != nil {
+            let named = Set(IllustrationBrief.words(subject))
+            typed += IllustrationBrief.sceneWords(in: request).filter { !named.contains($0) }
+        }
+        // A badge is not an icon: a scene stays an illustration unless the
+        // person said icon.
+        if object["icon"]?.boolValue == true, !IllustrationBrief.words(request).contains("icon"),
+           IllustrationBrief.make(subject: subject, style: (object["style"]?.stringValue ?? "") + " " + typed.joined(separator: " ")) != nil {
+            object["icon"] = nil
+        }
+        if typed.isEmpty, object["style"] != nil,
+           IllustrationBrief.make(subject: subject, style: nil, icon: object["icon"]?.boolValue ?? false) == nil {
+            // A look the person never asked for, on a thing that is no scene
+            // ("a picture of a bird"), is the model's guess: the thing stays a thing.
+            object["style"] = nil
+            return .object(object)
+        }
+        guard !typed.isEmpty else { return .object(object) }
+        let given = object["style"]?.stringValue ?? ""
+        let missing = typed.filter { !given.lowercased().contains($0) }
+        guard !missing.isEmpty else { return arguments }
+        object["style"] = .string(([given] + missing).filter { !$0.isEmpty }.joined(separator: " "))
+        return .object(object)
     }
 
     /// The drawing did not read as `subject` to a model that could see it
@@ -468,11 +512,15 @@ public struct AskConversation: Sendable {
         first. The major elements are the controls (switches, fields, buttons), each measured once, \
         plus at most two cards. Skip rows and strips. Add a gap between a \
         few neighbouring controls. 6 to 12 measurements in all, never the same box twice.
-        - To draw a thing (a dog, a house, a coffee cup, a smiley face, the sun over mountains), call \
+        - To draw a thing (a dog, a house, a coffee cup, a smiley face), call \
         add_drawing once with its subject, and icon true when an icon was asked for. Photonz has clean drawings \
         of about a thousand everyday things; when it has none of yours it says so, and you call add_drawing \
         again with svg, your own drawing as one complete SVG. Never build a drawing from add_shape or add_path, \
         and put no words, components or backdrop on it unless they were asked for.
+        - To draw an illustration or a scene (the sun over mountains, a forest at dusk, a lighthouse on a cliff, \
+        a city skyline, a fox in its setting), call add_drawing once with the scene as its subject and style \
+        set to the look asked for (line art, silhouette, badge, sunset, flat), or "illustration" when none \
+        was named. Photonz draws it itself; send no svg.
         - "On brand" means the document's saved styles and the Library's components, both listed \
         below (the Library always offers starters such as a Card and a Button). Use them: place \
         components rather than drawing look-alikes, and paint with the saved styles. An empty canvas is a place to build, not a reason to refuse.
@@ -543,9 +591,17 @@ public enum AskDrawingCheck {
     public static let mostRevisions = 2
 
     /// The plan's drawings: which step, and what it was asked to be.
-    public static func drawings(in plan: AskPlan) -> [(step: Int, subject: String)] {
+    public static func drawings(in plan: AskPlan, library: DrawingLibrary? = nil) -> [(step: Int, subject: String)] {
         plan.steps.enumerated().compactMap { index, step in
             guard step.tool == "add_drawing", let subject = step.arguments["subject"]?.stringValue else { return nil }
+            // An illustration is the illustrator's, checked by its own
+            // critique pass; it is never taken back for the model's own svg.
+            if IllustrationBrief.make(subject: subject, style: step.arguments["style"]?.stringValue,
+                                      icon: step.arguments["icon"]?.boolValue ?? false) != nil { return nil }
+            // A drawing from the built-in set is known to read; a small model
+            // misreading it ("a mushroom" for the tree) must not swap it for
+            // the planning model's own svg.
+            if step.arguments["builtIn"]?.boolValue != false, let library, library.match(subject) != nil { return nil }
             return (index + 1, subject)
         }
     }

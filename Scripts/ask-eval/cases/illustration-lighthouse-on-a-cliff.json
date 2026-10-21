@@ -1,0 +1,18 @@
+{
+  "request": "draw an illustration of a lighthouse on a cliff",
+  "group": "drawing",
+  "crafted": true,
+  "from": "an-illustration-ask-draws-looks-illustrated-natu (the user, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "lighthouse"
+  ],
+  "expect": {
+    "words": false
+  }
+}

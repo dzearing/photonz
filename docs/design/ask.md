@@ -147,6 +147,59 @@ cases): drawing score 35.4 before, 92 after; named right blind 1 of 13 before,
 does not have are where it is still weak: a lighthouse and a windmill were
 each drawn three times by the model and refused by the look.
 
+## Drawing an illustration
+
+"Draw an svg illustration of a sun over mountains" once gave three flat green
+triangles and a yellow circle, one triangle poking past its own box (the user,
+2026-10-20, `queue/audits/2026-10-20-user-ask-sun-over-mountains.png`). A
+small model on this Mac cannot hold the light direction, the value order and a
+broken ridgeline at once, so for a scene it makes only the narrow choices and
+Photonz does the craft.
+
+* **What counts.** `add_drawing` with a scene as its subject (mountains, hills,
+  a forest, a lake, the sea, a cliff, a lighthouse, a city skyline) or with a
+  `style`, or a lone animal asked for as an illustration (`IllustrationBrief`).
+  A thing by itself (a dog, a tree, a cup) and any icon stay on the built-in
+  set. Ask adds the look words the person typed ("as line art", "a badge") to
+  the call's `style` when the model leaves them out.
+* **Styles.** painted (light and shadow faces, depth haze), sunset (ridge bands
+  stepping in value under a sunset sky), flat (two tones a form, no ramps), line
+  art (ink lines, outline heaviest), silhouette (one ink, snow and ridge light
+  cut out as paper), and badge (any of them in a circle with a frame line).
+  With none named the illustrator picks one and the change row says which:
+  "Drew a sunset illustration", "Drew a silhouette badge".
+* **Eight passes, each checked** (`Illustrator`, `IllustrationWork`):
+  1. brief (subject, style, time of day); 2. composition (frame, a focal point
+  off centre, the horizon off the middle, planes blocked in as overlapping
+  boxes); 3. values (three to five planes in grey, nearest darkest); 4. shape
+  (lopsided peaks, broken ridgelines by midpoint displacement, one pine
+  repeated at varied heights); 5. light (one light; every peak split along a
+  broken crease into a lit side and a shadow face away from it, ridge light on
+  the lit side, cast shadows away from it); 6. colour (one palette per time of
+  day, every plane re-lit to its planned value, distance lighter and bluer, a
+  sky gradient); 7. detail and finish (snow caps with a ragged edge, birds near
+  the focus, reflections and glitter on water, windows, the lamp's beams, line
+  weights, everything cut to the frame in its geometry, so no masks); 8.
+  critique (values, the squint, light agreement, nothing past the frame, the
+  focus big enough to read at 32 points). A failed check revises the tuning
+  (more value contrast, another seed) and draws again, twice at most.
+* **Pieces** (`IllustrationPieces`): a ridge, its shadow face, ridge light, a
+  snow cap, a pine and a treeline, a ray burst, glitter, ripples, a reflection,
+  rolling hills, a streak of cloud, stars, birds, a skyline, a lighthouse and
+  cottage, a sitting fox. A scene is composed from them.
+* **As layers.** The scene is written as one clean SVG (a `<g id>` per part of
+  the picture, an id on every shape, gradients in defs) and read with
+  `SVGArtwork.parse(keepingGroups: true)`: a group per part (Sky, Sun, Far
+  range, Middle range...), each shape a layer named for what it is (Ridge,
+  Shadow face, Snow, Ridge light), gradients as the app's own linear and radial
+  paints. Fitted whole at four fifths of the canvas.
+* **Not looked at.** Ask's blind look (below) skips an illustration: a miss
+  would send it back to the model's own SVG, which is exactly what it replaces.
+
+`Scripts/ask-eval.sh` has eight illustration cases (`"crafted": true`), judged
+on the extra "crafted" line in `Scripts/ask-eval/rubric-crafted.md`; the
+user's own picture scores crafted 1 in calibration.
+
 ## The model
 
 Runtime: **Ollama**, on its loopback port (`127.0.0.1:11434`), the only address

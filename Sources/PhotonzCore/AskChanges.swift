@@ -295,6 +295,12 @@ public enum AskChangeWords {
         func phrase(_ group: (key: String, kind: Kind, steps: [AskStep]), room: Int) -> String {
             let count = group.steps.count
             if count > 1 { return "\(count) \(group.kind.many)" }
+            if group.kind.one == "a drawing", let subject = group.steps[0].arguments["subject"]?.stringValue,
+               let brief = IllustrationBrief.make(subject: subject, style: group.steps[0].arguments["style"]?.stringValue,
+                                                  icon: group.steps[0].arguments["icon"]?.boolValue ?? false) {
+                // Which look it was drawn in, whether asked for or picked.
+                return brief.badge ? "a \(brief.lookTitle)" : "a \(brief.lookTitle) illustration"
+            }
             if group.kind.one == "a title" || group.kind.one == "text",
                let words = group.steps[0].arguments["text"]?.stringValue?
                    .replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces),

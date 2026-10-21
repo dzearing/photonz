@@ -13,9 +13,20 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const JUDGE_MODEL = process.env.ASK_EVAL_JUDGE_MODEL ?? "claude-opus-5-5";
 export const RUBRIC = readFileSync(path.join(here, "rubric.md"), "utf8");
 const NAMING = readFileSync(path.join(here, "naming.md"), "utf8");
+/// The extra line an illustration is judged on (a case with "crafted": true),
+/// added to the rubric for those cases only, so every other case is asked
+/// exactly what it was asked before.
+export const CRAFTED = readFileSync(path.join(here, "rubric-crafted.md"), "utf8").trim();
 /// Which rubric scored a run: a run scored by another rubric is not compared.
-export const RUBRIC_ID = createHash("sha256").update(RUBRIC + NAMING + JUDGE_MODEL).digest("hex").slice(0, 8);
-export const LINES = ["clean", "typography", "aligned", "designed", "didWhatWasAsked"];
+export const RUBRIC_ID = createHash("sha256").update(RUBRIC + NAMING + CRAFTED + JUDGE_MODEL).digest("hex").slice(0, 8);
+export const LINES = ["clean", "typography", "aligned", "designed", "didWhatWasAsked", "crafted"];
+
+/// The rubric for one case: with the crafted line for an illustration.
+export function rubricFor({ crafted }) {
+  if (!crafted) return RUBRIC;
+  return RUBRIC.replace("\nRead the picture at", `${CRAFTED}\n\nRead the picture at`)
+    .replace('"didWhatWasAsked": n,', '"didWhatWasAsked": n, "crafted": n,');
+}
 
 /// Runs a command with a time limit, killing its whole process group when it
 /// runs over, so nothing is left behind.
@@ -74,13 +85,14 @@ const median = (values) => {
 };
 
 /// The rubric, `runs` times at once: each line's median, and their mean.
-export async function judgePicture({ picture, request, context, runs = 3 }) {
-  const prompt = RUBRIC.replaceAll("{{request}}", request)
+export async function judgePicture({ picture, request, context, runs = 3, crafted = false }) {
+  const prompt = rubricFor({ crafted }).replaceAll("{{request}}", request)
     .replaceAll("{{context}}", context ? `It was made on ${context}; judge what was added to it, not the picture underneath.` : "");
   const answers = (await Promise.all(Array.from({ length: runs }, () => ask(picture, prompt)))).filter(Boolean);
   if (!answers.length) return { score: null, lines: {}, why: "the judge gave no answer", answers };
   const lines = {};
   for (const line of LINES) {
+    if (line === "crafted" && !crafted) continue;
     const values = answers.map((a) => a[line]);
     // A line every answer left null (typography on a wordless drawing) is out.
     lines[line] = values.every((v) => v === null || v === undefined) ? null : median(values.map((v) => (v === null ? undefined : Number(v))));

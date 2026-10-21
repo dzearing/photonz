@@ -51,7 +51,7 @@ async function scoreCase(testCase, dir, got, judgeRuns) {
   if (!got.read || !got.picture) return { rules: null, judge: null, named: null, score: 0 };
   const rules = ruleScore(got.read, testCase);
   const [judge, named] = await Promise.all([
-    rules.score === 0 ? null : judgePicture({ picture: got.picture, request: testCase.request, context: testCase.context, runs: judgeRuns }),
+    rules.score === 0 ? null : judgePicture({ picture: got.picture, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted }),
     testCase.group === "drawing" && rules.score !== 0 ? nameBlind({ picture: got.picture, names: testCase.names ?? [], runs: judgeRuns }) : null,
   ]);
   // A drawing that spells out what it is gets named from its words, not its
@@ -224,6 +224,9 @@ async function calibrate() {
     { picture: "user-smiley-icon.png", case: "smiley-icon", want: "low" },
     { picture: "user-component-sheet-mess.png", case: "component-table", want: "low" },
     { picture: "clean-component-sheet.png", case: "component-table", want: "high" },
+    // 2026-10-20: "the sun over mountains test produces such bad results.
+    // mountains aren't triangles" - flat clip art scores 3 or lower on crafted.
+    { picture: "user-sun-over-mountains.png", case: "illustration-sun-over-mountains", want: "low", crafted: 3 },
   ];
   let agrees = true;
   const results = [];
@@ -231,10 +234,11 @@ async function calibrate() {
     const picture = path.join(here, "calibration", item.picture);
     const testCase = cases[item.case];
     const [judge, named] = await Promise.all([
-      judgePicture({ picture, request: testCase.request, context: testCase.context, runs: 3 }),
+      judgePicture({ picture, request: testCase.request, context: testCase.context, runs: 3, crafted: !!testCase.crafted }),
       testCase.group === "drawing" ? nameBlind({ picture, names: testCase.names, runs: 3 }) : null,
     ]);
-    const ok = item.want === "low" ? judge.score <= 4 : judge.score >= 7;
+    const ok = (item.want === "low" ? judge.score <= 4 : judge.score >= 7)
+      && (item.crafted === undefined || (judge.lines.crafted ?? 10) <= item.crafted);
     agrees &&= ok;
     results.push({ ...item, judge: judge.score, lines: judge.lines, named: named?.said, ok });
     console.log(`${ok ? "ok  " : "MISS"} ${item.picture.padEnd(34)} judge ${judge.score} (want ${item.want === "low" ? "4 or under" : "7 or over"})  ${Object.entries(judge.lines).map(([k, v]) => `${k} ${v}`).join(", ")}${named ? `  named: ${named.said.join(" / ")}` : ""}`);

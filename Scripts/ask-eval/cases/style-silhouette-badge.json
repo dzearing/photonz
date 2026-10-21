@@ -1,0 +1,25 @@
+{
+  "request": "draw the sun over mountains as a black silhouette badge with pines",
+  "group": "drawing",
+  "crafted": true,
+  "from": "an-illustration-ask-draws-looks-illustrated-natu (the user, 2026-10-20)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "mountain",
+    "sunrise",
+    "sunset",
+    "landscape",
+    "sun",
+    "badge",
+    "emblem",
+    "logo"
+  ],
+  "expect": {
+    "words": false
+  }
+}
