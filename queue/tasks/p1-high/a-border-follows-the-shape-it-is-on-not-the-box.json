@@ -1,0 +1,35 @@
+{
+  "id": "a-border-follows-the-shape-it-is-on-not-the-box",
+  "title": "A border follows the shape it is on, not the box around it",
+  "goal": "A Border on a drawing, a shape, a path, an arrow, a group or a cut-out picture runs round the thing itself, the way a Stroke does in Photoshop and Figma: round the package's outline, along the arrow. A plain box round the layer is still available when that is what the person wants, but it is no longer the only kind.",
+  "epic": "interaction-foundations",
+  "priority": "p1-high",
+  "seq": 8.048,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-21T00:08:37.826Z",
+  "updated": "2026-10-21T00:08:42.894Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-20, on Ask's 'package in some clouds' drawing: 'i wanted a border around the box. I selected the product package. added a border effect. It created a box border, and not one that followed the outline of the shape. Ideally, we follow the outline of the shape. Same thing for arrows. borders are borders, not always boxes.' In the picture the package is a group of 8 paths and the 2 px Outside border is the group's frame rectangle.\n\nCause, from code: Sources/PhotonzCore/BorderFollows.swift:20-22 says only a label has letters to follow and everything else (picture, shape, frame, group) 'has a box and nothing else, so its rings follow the box whatever this says and the panel never asks (Layer.boxBorders)'. That rule was written for labels on 2026-09-08 and never revisited for drawn shapes. Reuse the label's choice (BorderFollows: letters or box) as shape or box. The renderer has ContourTracer (Sources/PhotonzRender) and OutlineStroke.swift. Watch the composite path's cost (CLAUDE.md perf note) and the SVG exporter's border path.",
+  "acceptance": [
+    "Reproduce first at Next defaults: pick the drawn package (a group of paths), add a Border, and record the rectangle it draws (queue/audits/2026-10-20-user-border-is-a-box.png is the user's)",
+    "On a shape, path, arrow, line or group, a Border follows the outline: Outside, Inside and Centre mean what they mean in Photoshop's Stroke, round corners stay round, an arrow's shaft and head are outlined as one shape, and a group is outlined as the union of its parts (one ring round the whole package, not one per face)",
+    "On a picture with transparency (a cut-out, a sticker, a PNG with an alpha edge) it follows the visible edge, traced from the alpha (ContourTracer exists); on an opaque rectangular picture or screenshot it is the box, as today",
+    "Each Border row says which it follows (the shape, or the box) where both make sense, the way a label's border already offers its letters or its box, and the default is the shape for anything that is not a rectangle",
+    "Width, offset, colour and position act on the followed outline; multiple borders stack outward in order; it draws the same on the canvas, in PNG, in SVG (as a real stroke or an outline path) and in MP4, compared by render",
+    "Performance: dragging the Width slider on the package stays inside a frame (16 ms) on this Mac, measured",
+    "A walk for a group, an arrow, a cut-out picture and a plain screenshot, and an audit under queue/audits/ with before and after. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-21T00:08:37.829Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-21T00:08:42.893Z",
+      "note": "seq 3970 -> 8.048"
+    }
+  ]
+}
