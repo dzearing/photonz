@@ -9,17 +9,17 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-20T22:37:31.607Z",
+  "updated": "2026-10-21T01:04:48.954Z",
   "deps": [
-    "an-illustration-ask-draws-looks-illustrated-natu"
+    "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
   "blockedBy": [],
-  "notes": "The user, 2026-10-20 15:35 (queue/audits/2026-10-20-user-ask-cat-playing-piano.png): asked 'draw a piano with a cartoon cat playing it'. Ask made two add_drawing steps (row 'Drew 2 drawings'): a built-in cat drawing (Twemoji-style, the dog task's built-in set) placed over most of a built-in upright piano, which shows only as a dark edge behind the cat. User: 'It stuffed a cat on top of some keys. horrible. but it makes some logical sense.'\n\nCause, likely: the planner splits a scene into nouns and calls add_drawing per noun (Sources/PhotonzCore/AskPlanning.swift, instructions around :504 say add_drawing once with its subject); nothing plans the relationship, pose or placement. Waits on the illustration task (in progress), whose passes (composition, shapes, light) are where a scene belongs.\n\nSecond report, 2026-10-20 15:37: 'it only seems to know how to draw 1 cat. if i ask it to draw a cat curled up sleeping, same cat.' The built-in set (from ask-draws-a-dog-you-can-tell-is-a-dog, Twemoji) is looked up by the noun and drops every modifier. The fix is the same as for the piano: plan the subject with its pose and relations first, then pick a built-in only if it matches the plan, else draw it.",
+  "notes": "The user, 2026-10-20 15:35 (queue/audits/2026-10-20-user-ask-cat-playing-piano.png): asked 'draw a piano with a cartoon cat playing it'. Ask made two add_drawing steps (row 'Drew 2 drawings'): a built-in cat drawing (Twemoji-style, the dog task's built-in set) placed over most of a built-in upright piano, which shows only as a dark edge behind the cat. User: 'It stuffed a cat on top of some keys. horrible. but it makes some logical sense.'\n\nCause, likely: the planner splits a scene into nouns and calls add_drawing per noun (Sources/PhotonzCore/AskPlanning.swift, instructions around :504 say add_drawing once with its subject); nothing plans the relationship, pose or placement. Waits on the illustration task (in progress), whose passes (composition, shapes, light) are where a scene belongs.\n\nSecond report, 2026-10-20 15:37: 'it only seems to know how to draw 1 cat. if i ask it to draw a cat curled up sleeping, same cat.' The built-in set (from ask-draws-a-dog-you-can-tell-is-a-dog, Twemoji) is looked up by the noun and drops every modifier. The fix is the same as for the piano: plan the subject with its pose and relations first, then pick a built-in only if it matches the plan, else draw it.\n\nThe user, 2026-10-20: 'the cat task is just an example ... i don't want a hardcoded anything.' Every case named in this task is an example of the bar. Coding a cat, a piano or a pose for them breaks the hard rule in queue/bin/runner-prompt.md.",
   "acceptance": [
     "'draw a piano with a cartoon cat playing it' on a blank picture gives a cat seated or standing at the piano, facing the keys, paws on the keys, the piano in a view where the keys show, the two at believable relative sizes, nothing of one hidden by the other by accident, in one shared style and palette",
-    "A pose, action, view, colour or mood in the request changes the drawing: 'a cat curled up sleeping' is a cat curled into a ball with its eyes shut and tail wrapped round, not the standing cat. The built-in drawing is used only when it already shows what was asked (the user's picture: queue/audits/2026-10-20-user-ask-cat-sleeping-same-cat.png). Eval cases: a cat curled up sleeping, a cat jumping, a black cat seen from behind, a happy dog sitting, an angry bird, each judged on didWhatWasAsked at 7 or more",
+    "A pose, action, view, colour or mood in the request changes the drawing: 'a cat curled up sleeping' is a cat curled into a ball with its eyes shut and tail wrapped round, not the standing cat. Nothing is looked up from a stored set (the user's picture: the user's picture: queue/audits/2026-10-20-user-ask-cat-sleeping-same-cat.png). Eval cases: a cat curled up sleeping, a cat jumping, a black cat seen from behind, a happy dog sitting, an angry bird, each judged on didWhatWasAsked at 7 or more",
     "The relationship is planned before drawing (who, where, doing what, which parts touch, what is in front), and the plan is checked from the read document: the paws' layers touch the keys' layer, the cat overlaps the piano only where the plan says",
-    "The built-in drawings are used only when they can be posed for the scene (for example a cat that can sit and reach); otherwise the scene is drawn as one illustration in the artist's passes of an-illustration-ask-draws-looks-illustrated-natu",
+    "No stored or coded subject is used for any part of a scene: the scene is planned (who, where, doing what) and drawn by the general route of ask-draws-any-subject-well-with-nothing-stored-o. The cases here are examples of the bar, not things to code",
     "Six scene cases join the eval (a cat playing a piano, a dog chasing a ball, a fox sleeping under a tree, a robot watering a plant, a bird on a branch singing, a child flying a kite), each scoring 7 or more on didWhatWasAsked and designed; the user's picture (queue/audits/2026-10-20-user-ask-cat-playing-piano.png) scores 3 or lower on didWhatWasAsked",
     "The row names the scene ('Drew a cat playing a piano'), and the whole scene is one change. Audit under queue/audits/ with before and after contact sheets and scores. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
   ],
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-20T22:37:31.607Z",
       "note": "intake: poses and modifiers folded in (a cat curled up sleeping came out as the standing cat)"
+    },
+    {
+      "t": "2026-10-21T01:04:48.954Z",
+      "note": "intake: retargeted: no stored or coded subjects; waits on ask-draws-any-subject-well-with-nothing-stored-o"
     }
   ]
 }

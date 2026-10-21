@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-20T14:35:29.544Z",
+  "updated": "2026-10-21T01:04:16.041Z",
   "focus": "agent-drivable",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -9,7 +9,8 @@
     "Delight and ease are acceptance criteria, not aspirations. If a feature works but feels clumsy, it is not done.",
     "Only epics staged now may hold open tasks. Anything serving a later epic waits, so we ship something finished instead of everything half-built.",
     "Ask the grown-up-tool question every time: would someone who knows Premiere (for video) or Photoshop (for pictures) find this where they expect it, and is it easier here? Actions live where you click: a right-click menu on the thing, not a tool or a panel button for everything.",
-    "A feature exists only if a person running Next with default settings can reach it. A walk that forces a flag proves nothing about what the user sees."
+    "A feature exists only if a person running Next with default settings can reach it. A walk that forces a flag proves nothing about what the user sees.",
+    "Nothing Ask or the Photonz skill makes comes from stored or hand-coded subjects: no stored drawings, no code for a particular subject, no template for a kind of request or an eval case. Quality comes from the model, the prompt, general techniques that work on any subject, and material looked up at request time. Tools yes, content no. (The user, 2026-10-20.)"
   ],
   "epics": [
     {

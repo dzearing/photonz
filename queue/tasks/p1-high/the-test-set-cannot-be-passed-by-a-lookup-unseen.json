@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 8.04,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:50:50.819Z",
-  "updated": "2026-10-20T22:50:58.324Z",
+  "updated": "2026-10-21T01:04:49.026Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'i really don't think this model is great. i'm wondering what the process looks like on making it better?' Score history (queue/evals/ask-eval-history.jsonl): Ask on qwen3:30b 37.8 vs the skill on a frontier model 83.9 on the same tools (drawing 35 vs 87, sheet 47 vs 74, layout 30 vs 82); the dog task then climbed Ask's drawings to 92 mostly with a built-in Twemoji set looked up by noun, which is exactly what the user then found wrong. Classic overfitting to a small visible set. Runs before the model bake-off so the bake-off is measured on the honest set.",
@@ -28,6 +28,15 @@
     {
       "t": "2026-10-20T22:50:58.323Z",
       "note": "seq 35 -> 8.04"
+    },
+    {
+      "t": "2026-10-21T00:30:03.217Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-21T01:04:49.024Z",
+      "note": "intake 2026-10-20: the user ruled out hardcoded anything. Count code that draws a named subject (IllustrationPieces.swift: fox, lighthouse, skyline, mountains...) in the stored-or-coded share, not only the stored Twemoji set, and pick held-out subjects none of that code covers."
     }
-  ]
+  ],
+  "started": "2026-10-21T00:30:03.215Z"
 }

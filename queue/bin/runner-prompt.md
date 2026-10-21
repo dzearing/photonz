@@ -47,6 +47,8 @@ The machine you run on is the user's. Anything you start, you finish.
 
 ## Hard rules
 
+- **Nothing Ask or the skill makes comes from stored or hand-coded subjects.** No stored drawings (an emoji or clip art set looked up by name), no code that draws a particular subject (a fox, a lighthouse, a mountain range, a pricing card, a component sheet), no template keyed to a request or to an eval case. Quality comes from the model, the prompt, general techniques that work on any subject (a light pass on whatever shapes exist, path smoothing, layout engines, a look-and-revise loop) and material looked up at request time. Tools are fine; content is not: a gradient fill or a grid layout is a tool, a coded cat is content. The test: would it still work, just as well, for a subject nobody thought of? The user, 2026-10-20: "I want to be able to say make x without having to have a bunch of static cat examples. nothing hardcoded ... i don't want a hardcoded anything." A runner that climbs an eval by coding its cases has not climbed it.
+
 - **`dist/Photonz Dev.app` is the user's app. Never build, sign, kill or relaunch it.** That is the exact app they playtest with. Replacing the binary ends their session, and because a screen-capture client that changes on disk must be re-authorized, it also makes macOS demand the Screen Recording permission again. That has already happened to them once. `Scripts/build-app.sh` now refuses to rebuild it while `queue/playtest.lock` exists, but no script can stop you from killing it by hand, so never write `pkill -f "Photonz Dev"` or `open "dist/Photonz Dev.app"` at all.
 
 - **When you need a running app, use the loop's own copy:**
