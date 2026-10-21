@@ -1,0 +1,27 @@
+{
+  "feature": "Each Ask row says what it made",
+  "epic": "agent-ask",
+  "summary": "A row in the Agent group now names what the request did in your words: \"Drew a cat\", \"Made the cat bigger\", \"Drew a smiley face icon\", instead of \"Drew a drawing\" or \"Changed a layer\".",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask needs Ollama with a model, as before. Walk: ask-rows-say-what-they-made-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a blank picture and press Ask (Command K).", "shot": "2026-10-21-ask-rows-say-what-they-made-1-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type: draw a picture of a cat, and press Return. The row reads Drew a cat." },
+    { "do": "Ask: make the cat bigger. The new row reads Made the cat bigger.", "shot": "2026-10-21-ask-rows-say-what-they-made-2-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Ask: create a smiley face icon. The row reads Drew a smiley face icon." },
+    { "do": "Ask for something long, such as: make a component sheet for a website's design system: buttons, text fields, cards and navigation. The row keeps the thing and drops the rest: Made a component sheet." },
+    { "do": "Ask something that is not an instruction, such as: hmm the ear looks off. The row names the layer it changed instead, such as Recoloured Cat Ear." }
+  ],
+  "evaluate": [
+    "Does each row tell you which request it was without reading the request again?",
+    "Is saying the request back as done (Made the cat bigger) right, or would you rather see what actually changed (Resized Cat)?",
+    "When a long request is cut short (Made a component sheet), is what is left enough?",
+    "Do you miss the look in a drawing's row (it used to say Drew a line art illustration; now it says what was drawn, and keeps the look only when your words fit)?"
+  ],
+  "rough": [
+    "A change row says the request back as done, so when the model did something other than what was asked the row still says what was asked. Chose this because the request is the person's own words and the acceptance asked for them; the layer form (Resized Cat Ear) is the fallback when the request is not an instruction or does not fit.",
+    "Measurements still read as a count (Added 8 measurements); where they went (to the toolbar) is not in the row yet, because the steps do not say where in words.",
+    "No mock draws the row words: the one row per request with a switch and a delete is your call on 2026-10-20, over the mock's Run plan list on agent.html, and the words were the open question.",
+    "The first run of the walk timed out on the second request while the full test suite was running beside it; run alone it took 14 seconds."
+  ]
+}

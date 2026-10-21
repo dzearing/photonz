@@ -72,13 +72,13 @@ struct AskIllustrationTests {
         #expect(text.contains("style"))
     }
 
-    @Test("The change row says which look an illustration was drawn in")
-    func rowSaysTheLook() {
+    @Test("The change row says what an illustration is of, whatever look it was drawn in")
+    func rowSaysTheSubject() {
         func row(_ args: AgentJSON) -> String { AskChangeWords.sentence([AskStep(tool: "add_drawing", arguments: args)]) }
-        #expect(row(["subject": "sun over mountains", "style": "line art"]) == "Drew a line art illustration")
-        #expect(row(["subject": "sun over mountains", "style": "silhouette badge"]) == "Drew a silhouette badge")
-        #expect(row(["subject": "sun over mountains"]) == "Drew a sunset illustration")
-        #expect(row(["subject": "dog"]) == "Drew a drawing")
+        #expect(row(["subject": "sun over mountains", "style": "line art"]) == "Drew a sun over mountains")
+        #expect(row(["subject": "sun over mountains", "style": "silhouette badge"]) == "Drew a sun over mountains")
+        #expect(row(["subject": "sun over mountains"]) == "Drew a sun over mountains")
+        #expect(row(["subject": "dog"]) == "Drew a dog")
         for words in [row(["subject": "sun over mountains", "style": "line art"]), row(["subject": "lighthouse on a cliff"])] {
             #expect(words.count <= AskChangeWords.budget)
         }

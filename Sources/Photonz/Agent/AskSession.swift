@@ -170,7 +170,8 @@ final class AskSession {
                 continue
             }
             if let after = editor.document {
-                changes.record(asked: words, sentence: AskChangeWords.sentence(ran.landed),
+                changes.record(asked: words, sentence: AskChangeWords.sentence(ran.landed, asked: words,
+                                                                              before: ran.before, after: after),
                                before: ran.before, after: after, sources: ran.sources)
             }
             lastPlanSeconds = Date().timeIntervalSince(started)

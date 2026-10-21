@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/ask-rows-say-what-they-made-walk",
+  "seed": "each-ask-row-says-what-it-made-like-drew-a-cat: the user's own cat request and a change to it on a blank picture at Next defaults, no flag touched; each row names what it made in the person's words",
+  "clock": 720,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "draw a picture of a cat" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Agent Change 1 Words", "reads": "Drew a cat" },
+    { "do": "describe", "stage": "1-cat", "note": "the row for the cat names the cat, not 'a drawing'" },
+    { "do": "snapshot", "name": "1-cat-row" },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "make the cat bigger" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Agent Change 1 Words", "reads": "Made the cat bigger" },
+    { "do": "expect", "control": "Agent Change 2 Words", "reads": "Drew a cat" },
+    { "do": "describe", "stage": "2-bigger", "note": "the change row says the change in the person's words, above the cat's row" },
+    { "do": "snapshot", "name": "2-two-rows" }
+  ]
+}
