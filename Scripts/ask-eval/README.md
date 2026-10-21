@@ -100,9 +100,41 @@ The rubric, the naming prompt and the judge model together have an id
 (`rubric` in the history). Runs are only compared with runs of the same engine
 on the same id; change the rubric and the old runs stop being the bar.
 
+## Video cases
+
+A `video` case (since 2026-10-21) starts on the sample recording, eight
+seconds of a folder being copied (quiet until 2 s, copying until 6 s, quiet
+again), and is scored from what plays, never the document alone:
+
+* `start` is `{ "sample": "recording" }`, with `"clicks": true` for the
+  pointer and two clicks a recorder keeps (at 2 s and 2.6 s, what zooms are
+  suggested from), and `"copies": n` to lay the sample n more times end to end
+  (over the bridge, before Ask is asked). A case's `setup` goes into the walk's:
+  `{ "history": 6 }` gives History six made-up captures, the newest recording
+  being "Recording 0002", two pictures newer than it.
+* After the run, a small frame every quarter second (`video_frame`, drawn the
+  way export draws) is marked blank or not by `frame-stats.swift`, and kept in
+  `read.json` as `playback`. `result.png` is a contact sheet of frames spread
+  across the video and at the start, middle and end of every transition, each
+  labelled with its time, the header listing the cuts and their transitions.
+* **Rules** for a video: on the canvas; `plays`, no blank frame while it plays
+  (each costs 3: a blank on a recording outside a transition, at a moment
+  nothing plays, or a title bare for half a second; a title's bare background
+  for a moment before its words come in is fine); and what was asked (`expect`):
+  `recordings` (how many play), `titles` (title pages or cards with those
+  words, in that order), `titlesBefore` (title i just before recording i),
+  `sameLook` (the titles share every style but their words), `cut`
+  (`near`, `within`, `transition`: a cut inside a recording), `zooms`,
+  `after` (`clip` starts once `follows` ends), and `length` ([shortest,
+  longest] in seconds).
+* **The judge** reads the sheet against `rubric-video.md`: clean,
+  typography, flow (in place of aligned), designed, didWhatWasAsked. There is
+  no blind naming. The score is 4 x rules + 6 x judge, scaled by
+  didWhatWasAsked like everything else.
+
 ## The held-out set
 
-`held-out/` is 42 requests a runner never climbs on (2026-10-20, after Ask
+`held-out/` is 45 requests a runner never climbs on (2026-10-20, after Ask
 reached 92 on the drawing cases mostly by looking nouns up in its built-in
 set, while the user found it drew one cat for every cat request):
 
@@ -113,6 +145,7 @@ set, while the user found it drew one cat for every cat request):
 * edits of an existing drawing, started from a document Ask made and saved by
   a thumbs vote (`held-out/starts/*.photonz`);
 * icons, layouts and redlines on screenshots;
+* video edits of the sample recording (2026-10-21);
 * and every thumbs down a person gives one of Ask's rows: the app saves the
   request, the document before and what it made under
   `~/Library/Application Support/<bundle id>/Ask feedback/`, and `feedback`
@@ -186,9 +219,9 @@ One file in `cases/`, named for the case:
 ```
 
 Put it in `cases/` to climb on it, or in `held-out/` to keep it unseen;
-never both. `group` is `drawing`, `sheet`, `layout` or `redline`. `start` is
-`{ "blank": [width, height] }` or `{ "open": "<repo-relative file>" }` (a
-picture or a `.photonz` document) (give it
+never both. `group` is `drawing`, `sheet`, `layout`, `redline` or `video`. `start` is
+`{ "blank": [width, height] }`, `{ "open": "<repo-relative file>" }` (a
+picture or a `.photonz` document) or `{ "sample": "recording" }` (above) (give it
 a `context` line, "a screenshot of a settings screen", for the judge and the
 agent). `timeout` and `skillTimeout` are in seconds. A new case changes the set,
 so compare the next run with the next run, not with the old best.

@@ -1,0 +1,8 @@
+{
+  "request": "add a title page that says Case 1 before this clip",
+  "group": "video",
+  "from": "The Ask title walk (ask-adds-a-title-page-walk) and the video eval task, 2026-10-21",
+  "start": { "sample": "recording" },
+  "context": "an eight second screen recording of a folder being copied: two quiet seconds, the copy from 2s to 6s, two quiet seconds",
+  "expect": { "recordings": 1, "titles": ["Case 1"], "titlesBefore": true }
+}

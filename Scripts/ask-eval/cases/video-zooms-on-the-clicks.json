@@ -1,0 +1,8 @@
+{
+  "request": "zoom in on the clicks",
+  "group": "video",
+  "from": "The video eval task, 2026-10-21: zooms on the clicks",
+  "start": { "sample": "recording", "clicks": true },
+  "context": "an eight second screen recording of a folder being copied: two quiet seconds, the copy from 2s to 6s, two quiet seconds, with two clicks kept while it was recorded, at 2s and 2.6s",
+  "expect": { "recordings": 1, "zooms": 1 }
+}

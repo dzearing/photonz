@@ -1,0 +1,8 @@
+{
+  "request": "zoom in where I click, and add a name card for Dana, Support lead",
+  "group": "video",
+  "from": "The video eval task, 2026-10-21 (held out)",
+  "start": { "sample": "recording", "clicks": true },
+  "context": "an eight second screen recording of a folder being copied: two quiet seconds, the copy from 2s to 6s, two quiet seconds, with two clicks kept while it was recorded",
+  "expect": { "recordings": 1, "zooms": 1, "titles": ["Dana"] }
+}

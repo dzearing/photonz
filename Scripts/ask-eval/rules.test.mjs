@@ -133,3 +133,86 @@ test("a backdrop over the whole canvas is not the drawing's size", () => {
     shape("Wheel", 400, 400, 240, 240), shape("Wheel", 800, 400, 240, 240), shape("Ground", 0, 0, 1440, 1024, "rectangle")] }]), { group: "drawing", expect: {} });
   assert.equal(result.rules.composed.score, 10, result.rules.composed.note);
 });
+
+// MARK: Video cases: read from the timeline and from the frames it plays.
+
+const frame = { x: 0, y: 0, width: 1280, height: 800 };
+const recording = (id, name, inSeconds, outSeconds, extra = {}) => ({ layer: { id, name, kind: "clip", frame, time: { inSeconds, outSeconds } }, clip: { inSeconds, outSeconds, kind: "clip", layer: id, name, ...extra } });
+const titlePage = (id, words, inSeconds, outSeconds, { size = 123, color = "#F5F5F7", fill = "#000000" } = {}) => ({
+  layer: { id, name: "Title Page", kind: "group", frame, time: { inSeconds, outSeconds }, children: [
+    { id: `${id}-t`, name: "Title", kind: "text", frame: { x: 129, y: 276, width: 1024, height: 151 }, text: { string: words, size, weight: "semibold", font: "SF Pro", color } },
+    { id: `${id}-b`, name: "Background", kind: "shape", frame, shape: { shape: "rectangle", fill } }] },
+  clip: { inSeconds, outSeconds, kind: "group", layer: id, name: "Title Page" } });
+const video = (parts, { cuts = [], frames } = {}) => ({
+  kind: "video", canvas: { width: 1280, height: 800 }, durationSeconds: Math.max(...parts.map((p) => p.clip.outSeconds)),
+  layers: parts.map((p) => p.layer), cuts,
+  tracks: [{ id: "v1", kind: "video", name: "V1", clips: parts.map((p) => p.clip) }, { id: "a1", kind: "audio", name: "V1 sound", clips: [] }],
+  ...(frames ? { playback: { frames } } : {}) });
+const everyQuarter = (to, blankAt = []) => Array.from({ length: Math.round(to * 4) }, (_, i) => ({ seconds: i / 4, blank: blankAt.includes(i / 4) }));
+
+const titleCase = { group: "video", expect: { recordings: 1, titles: ["Case 1"], titlesBefore: true } };
+
+test("a title page saying Case 1 in front of the recording passes", () => {
+  const result = score(video([titlePage("t1", "Case 1", 0, 4), recording("r", "Tutorial Sample", 4, 12)], { frames: everyQuarter(12, [0]) }), titleCase);
+  assert.equal(result.rules.asked.score, 10, result.rules.asked.note);
+  // The title's first frame, before its words come in, is not a blank frame.
+  assert.equal(result.rules.plays.score, 10, result.rules.plays.note);
+});
+
+test("a title laid over the recording instead of before it fails what was asked", () => {
+  const over = video([titlePage("t1", "Case 1", 0, 4), recording("r", "Tutorial Sample", 0, 8)]);
+  over.tracks = [{ id: "v2", kind: "video", name: "V2", clips: [over.tracks[0].clips[0]] }, { id: "v1", kind: "video", name: "V1", clips: [over.tracks[0].clips[1]] }];
+  const result = score(over, titleCase);
+  assert.match(result.rules.asked.note, /MISS "Case 1" ends at 4s, after its recording starts at 0s/);
+});
+
+test("a video left as it was scores nothing on what was asked", () => {
+  const result = score(video([recording("r", "Tutorial Sample", 0, 8)]), titleCase);
+  assert.equal(result.rules.asked.score, 5, result.rules.asked.note);
+  assert.match(result.rules.asked.note, /MISS no title says "Case 1"/);
+});
+
+test("a blank stretch on a recording, or a hole with nothing playing, costs points", () => {
+  const holed = video([recording("r", "Tutorial Sample", 0, 4), recording("r2", "Tutorial Sample", 5, 9)], { frames: everyQuarter(9, [2, 4.25, 4.5]) });
+  const result = score(holed, { group: "video", expect: { recordings: 2 } });
+  assert.equal(result.rules.plays.score, 1, result.rules.plays.note);
+  assert.match(result.rules.plays.note, /3 of 36 frames blank/);
+});
+
+test("titles Case 1 to 3 before three clips in one look pass, and a different look fails", () => {
+  const each = { group: "video", expect: { recordings: 3, titles: ["Case 1", "Case 2", "Case 3"], titlesBefore: true, sameLook: true } };
+  const parts = [titlePage("t1", "Case 1", 0, 3), recording("r1", "Tutorial Sample", 3, 11), titlePage("t2", "Case 2", 11, 14),
+    recording("r2", "Tutorial Sample", 14, 22), titlePage("t3", "Case 3", 22, 25), recording("r3", "Tutorial Sample", 25, 33)];
+  assert.equal(score(video(parts), each).rules.asked.score, 10, score(video(parts), each).rules.asked.note);
+  parts[4] = titlePage("t3", "Case 3", 22, 25, { size: 80, fill: "#FFFFFF", color: "#000000" });
+  const odd = score(video(parts), each);
+  assert.match(odd.rules.asked.note, /MISS the titles have 2 looks/);
+  // All three titles before the first clip is not one before each.
+  const bunched = [titlePage("t1", "Case 1", 0, 3), titlePage("t2", "Case 2", 3, 6), titlePage("t3", "Case 3", 6, 9),
+    recording("r1", "Tutorial Sample", 9, 17), recording("r2", "Tutorial Sample", 17, 25), recording("r3", "Tutorial Sample", 25, 33)];
+  assert.match(score(video(bunched), each).rules.asked.note, /MISS "Case 2" starts at 3s, before the recording ahead of it ends at 17s/);
+});
+
+test("a dissolve across a cut inside the recording, near the moment asked for", () => {
+  const cutCase = { group: "video", expect: { recordings: 1, cut: { near: 2, within: 1, transition: "dissolve" } } };
+  const doc = (cuts) => video([recording("r", "Tutorial Sample", 0, 8, { pieces: 2 })], { cuts });
+  assert.equal(score(doc([{ atSeconds: 2.1, from: "Tutorial Sample", to: "Tutorial Sample", transition: { kind: "dissolve", seconds: 0.5 } }]), cutCase).rules.asked.score, 10);
+  assert.match(score(doc([{ atSeconds: 2.1, from: "Tutorial Sample", to: "Tutorial Sample" }]), cutCase).rules.asked.note, /MISS a cut at 2.1s with no dissolve/);
+  assert.match(score(doc([{ atSeconds: 6, from: "Tutorial Sample", to: "Tutorial Sample", transition: { kind: "dissolve", seconds: 0.5 } }]), cutCase).rules.asked.note, /MISS the cut at 6s is not within 1s of 2s/);
+  assert.match(score(doc([]), cutCase).rules.asked.note, /MISS no cut inside a recording/);
+});
+
+test("zooms are counted on the recordings, and a later recording must follow the first", () => {
+  const zoomed = video([recording("r", "Tutorial Sample", 0, 8, { zooms: 1 })]);
+  assert.equal(score(zoomed, { group: "video", expect: { recordings: 1, zooms: 1 } }).rules.asked.score, 10);
+  const after = { group: "video", expect: { recordings: 2, after: { clip: "Recording 0002", follows: "Tutorial Sample" } } };
+  assert.equal(score(video([recording("r", "Tutorial Sample", 0, 8), recording("r2", "Recording 0002", 8, 16)]), after).rules.asked.score, 10);
+  assert.match(score(video([recording("r", "Tutorial Sample", 4, 12), recording("r2", "Recording 0002", 0, 4)]), after).rules.asked.note, /MISS Recording 0002 starts at 0s, before Tutorial Sample ends at 12s/);
+  assert.match(score(video([recording("r", "Tutorial Sample", 0, 8)]), after).rules.asked.note, /MISS no Recording 0002 on the timeline/);
+});
+
+test("a trim is read from how long the video now runs", () => {
+  const trimmed = { group: "video", expect: { recordings: 1, length: [5, 6.5] } };
+  assert.equal(score(video([recording("r", "Tutorial Sample", 0, 6)]), trimmed).rules.asked.score, 10);
+  assert.match(score(video([recording("r", "Tutorial Sample", 0, 8)]), trimmed).rules.asked.note, /MISS 8s long \(5 to 6.5s wanted\)/);
+});

@@ -56,7 +56,7 @@ async function scoreCase(testCase, dir, got, judgeRuns) {
   if (!got.read || !got.picture) return { rules: null, judge: null, named: null, score: 0 };
   const rules = ruleScore(got.read, testCase);
   const [judge, named] = await Promise.all([
-    rules.score === 0 ? null : judgePicture({ picture: got.picture, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted }),
+    rules.score === 0 ? null : judgePicture({ picture: got.picture, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted, video: testCase.group === "video" }),
     testCase.group === "drawing" && rules.score !== 0 ? nameBlind({ picture: got.picture, names: testCase.names ?? [], runs: judgeRuns }) : null,
   ]);
   // A drawing that spells out what it is gets named from its words, not its

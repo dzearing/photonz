@@ -1,0 +1,9 @@
+{
+  "request": "put my latest recording after this one",
+  "group": "video",
+  "from": "The video eval task, 2026-10-21: a request that needs a clip from the recording history",
+  "start": { "sample": "recording" },
+  "setup": { "history": 6 },
+  "context": "an eight second screen recording of a folder being copied: two quiet seconds, the copy from 2s to 6s, two quiet seconds; History holds two pictures taken after the newest recording",
+  "expect": { "recordings": 2, "after": { "clip": "Recording 0002", "follows": "Tutorial Sample" } }
+}

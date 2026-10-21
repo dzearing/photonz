@@ -272,6 +272,133 @@ function asked(nodes, read, expect) {
   return { score: 10 * passed / checks.length, note: checks.map((c) => `${c.ok ? "ok" : "MISS"} ${c.note}`).join("; ") };
 }
 
+function askedOfVideoRule(read, expect, clips) {
+  const checks = [];
+  askedOfVideo(read, expect, clips, (ok, note) => checks.push({ ok: Boolean(ok), note }));
+  if (!checks.length) return null;
+  const passed = checks.filter((c) => c.ok).length;
+  return { score: 10 * passed / checks.length, note: checks.map((c) => `${c.ok ? "ok" : "MISS"} ${c.note}`).join("; ") };
+}
+
+// MARK: Video
+//
+// A video case is read from its timeline (read_document's tracks and cuts)
+// and from the frames it plays (`playback`, added by the eval: a frame every
+// quarter second, each marked blank or not by frame-stats.swift). Words on a
+// title page and a recording play at different times, so the rules about
+// words over things on a picture do not apply.
+
+/// Seconds: a transition over a join may run this far into either side.
+const SLACK = 0.5;
+const secs = (s) => `${Math.round(s * 100) / 100}s`;
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
+
+/// What plays, in time order: every clip on a picture track with its times,
+/// whether it plays a recording, and the words it shows.
+export function timeline(read) {
+  const nodes = flatten(read.layers);
+  const byID = new Map(nodes.map((n) => [n.layer.id, n]));
+  const wordsIn = (node) => nodes.filter((n) => n.layer.kind === "text" && (n === node || ancestors(n).has(node))).map(words).join(" ");
+  const out = [];
+  for (const track of read.tracks ?? []) {
+    if (track.kind !== "video") continue;
+    for (const clip of track.clips ?? []) {
+      const node = byID.get(clip.layer);
+      const pieces = node ? nodes.filter((n) => n === node || ancestors(n).has(node)) : [];
+      out.push({ ...clip, track: track.name, recording: clip.kind === "clip", words: node ? wordsIn(node) : "", pieces });
+    }
+  }
+  return out.sort((a, b) => a.inSeconds - b.inSeconds);
+}
+
+/// A title's look: everything about its pieces but their words and where the
+/// words fall, so "Case 1" and "Case 2" in one style read the same.
+function lookOf(clip) {
+  return JSON.stringify(clip.pieces.map(({ layer }) => ({
+    kind: layer.kind, name: layer.name, effects: layer.effects ?? null, shape: layer.shape ?? null,
+    text: layer.text ? { ...layer.text, string: undefined } : null,
+  })).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))));
+}
+
+/// No blank frame while it plays. A blank frame on a recording (outside a
+/// transition, where a dip may pass through black), or at a moment nothing
+/// plays at all, is a defect. A title page may open on its bare background
+/// for a moment before its words come in, so a blank on a title counts only
+/// when it lasts half a second.
+function plays(read, clips) {
+  const frames = read.playback?.frames;
+  if (!frames?.length) return null;
+  const at = (t) => clips.filter((c) => t >= c.inSeconds - 0.001 && t < c.outSeconds - 0.001);
+  const inTransition = (t) => (read.cuts ?? []).some((c) => c.transition && Math.abs(t - c.atSeconds) <= (c.transition.seconds ?? 0) + 0.05);
+  const step = frames.length > 1 ? frames[1].seconds - frames[0].seconds : 0.25;
+  const bad = frames.filter((f, i) => {
+    if (!f.blank) return false;
+    const here = at(f.seconds);
+    if (!here.length) return true;
+    if (here.some((c) => c.recording)) return !inTransition(f.seconds);
+    const run = [frames[i - 1], frames[i + 1]].filter((g) => g?.blank).length;
+    return run >= 1 && step * (run + 1) >= 0.5;
+  });
+  return { score: Math.max(0, 10 - 3 * bad.length),
+           note: bad.length ? `${bad.length} of ${frames.length} frames blank, at ${bad.slice(0, 6).map((f) => secs(f.seconds)).join(", ")}` : `none of ${frames.length} frames blank` };
+}
+
+/// What a video case asked for, read from its timeline.
+function askedOfVideo(read, expect, clips, check) {
+  const recordings = clips.filter((c) => c.recording);
+  if (expect.recordings) check(recordings.length >= expect.recordings, `${recordings.length} recordings play (${expect.recordings} wanted)`);
+  const titles = [];
+  for (const wanted of expect.titles ?? []) {
+    const pattern = new RegExp(`(^|\\W)${escape(wanted)}($|\\W)`, "i");
+    const found = clips.find((c) => !c.recording && pattern.test(c.words) && !titles.includes(c));
+    check(found, found ? `"${wanted}" plays from ${secs(found.inSeconds)} to ${secs(found.outSeconds)}` : `no title says "${wanted}"`);
+    if (found) titles.push(found);
+  }
+  if (expect.titlesBefore && titles.length) {
+    titles.forEach((title, i) => {
+      const next = recordings[i], previous = recordings[i - 1];
+      if (!next) { check(false, `no recording after "${title.words}"`); return; }
+      if (title.outSeconds > next.inSeconds + SLACK) { check(false, `"${title.words}" ends at ${secs(title.outSeconds)}, after its recording starts at ${secs(next.inSeconds)}`); return; }
+      if (previous && title.inSeconds < previous.outSeconds - SLACK) { check(false, `"${title.words}" starts at ${secs(title.inSeconds)}, before the recording ahead of it ends at ${secs(previous.outSeconds)}`); return; }
+      check(true, `"${title.words}" comes just before recording ${i + 1}`);
+    });
+  }
+  if (expect.sameLook && titles.length > 1) {
+    const looks = new Set(titles.map(lookOf));
+    check(looks.size === 1, looks.size === 1 ? `the ${titles.length} titles share one look` : `the titles have ${looks.size} looks`);
+  }
+  if (expect.cut) {
+    const { near, within = 1, transition } = expect.cut;
+    const inside = (read.cuts ?? []).filter((c) => recordings.some((r) => c.atSeconds > r.inSeconds + 0.05 && c.atSeconds < r.outSeconds - 0.05));
+    const kind = transition ? new RegExp(transition, "i") : null;
+    const good = (c) => (!kind || kind.test(c.transition?.kind ?? "")) && (near === undefined || Math.abs(c.atSeconds - near) <= within);
+    const best = inside.find(good) ?? [...inside].sort((a, b) => Math.abs(a.atSeconds - (near ?? a.atSeconds)) - Math.abs(b.atSeconds - (near ?? b.atSeconds)))[0];
+    if (!best) check(false, "no cut inside a recording");
+    else if (good(best)) check(true, `a cut at ${secs(best.atSeconds)}${best.transition ? ` with a ${best.transition.kind}` : ""}`);
+    else if (kind && !kind.test(best.transition?.kind ?? "")) check(false, `a cut at ${secs(best.atSeconds)} with no ${transition}${best.transition ? ` (a ${best.transition.kind})` : ""}`);
+    else check(false, `the cut at ${secs(best.atSeconds)} is not within ${within}s of ${secs(near)}`);
+  }
+  if (expect.length) {
+    const [shortest, longest] = expect.length;
+    const length = read.durationSeconds ?? 0;
+    check(length >= shortest && length <= longest, `${secs(length)} long (${shortest} to ${longest}s wanted)`);
+  }
+  if (expect.zooms) {
+    const count = recordings.reduce((s, r) => s + (r.zooms ?? 0), 0);
+    check(count >= expect.zooms, `${count} zooms on the recordings (${expect.zooms} wanted)`);
+  }
+  if (expect.after) {
+    const named = (c, name) => new RegExp(`^${escape(name)}`, "i").test(c.name ?? "");
+    const later = recordings.find((r) => named(r, expect.after.clip));
+    const first = recordings.find((r) => named(r, expect.after.follows) && r !== later);
+    if (!later) check(false, `no ${expect.after.clip} on the timeline`);
+    else if (!first) check(false, `no ${expect.after.follows} left on the timeline`);
+    else check(later.inSeconds >= first.outSeconds - SLACK,
+      later.inSeconds >= first.outSeconds - SLACK ? `${later.name} follows ${first.name} at ${secs(later.inSeconds)}`
+        : `${later.name} starts at ${secs(later.inSeconds)}, before ${first.name} ends at ${secs(first.outSeconds)}`);
+  }
+}
+
 /// The rule scores for one case: { score, rules: { name: { score, note } } }.
 export function score(read, testCase) {
   const expect = testCase.expect ?? {};
@@ -280,13 +407,16 @@ export function score(read, testCase) {
   const nodes = flatten(mine);
   const drawing = testCase.group === "drawing";
   const laidOut = testCase.group === "sheet" || testCase.group === "layout";
+  const video = testCase.group === "video";
+  const clips = video ? timeline(read) : [];
   const rules = {
     onCanvas: onCanvas(nodes, read),
-    noOverlap: drawing ? null : noOverlap(nodes),
+    noOverlap: drawing || video ? null : noOverlap(nodes),
     typeScale: laidOut ? typeScale(nodes) : null,
     alignment: laidOut ? alignment(nodes) : null,
     composed: drawing ? composed(nodes, read) : null,
-    asked: asked(nodes, read, expect),
+    plays: video ? plays(read, clips) : null,
+    asked: video ? askedOfVideoRule(read, expect, clips) : asked(nodes, read, expect),
   };
   for (const key of Object.keys(rules)) if (rules[key] === null) delete rules[key];
   for (const rule of Object.values(rules)) rule.score = Math.round(rule.score * 10) / 10;

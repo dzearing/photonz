@@ -150,6 +150,9 @@ struct AskRowWordsTests {
     static let pastVerbs: Set<String> = [
         "Drew", "Made", "Added", "Created", "Placed", "Changed", "Recoloured", "Resized", "Moved", "Found",
         "Restyled", "Laid", "Ran", "Trimmed", "Saved", "Hid", "Showed", "Flipped", "Renamed",
+        // A video request's own verbs: "Put my latest recording after this
+        // one", "Zoomed in on the clicks", "Cut this clip where...".
+        "Put", "Zoomed", "Cut",
     ]
 
     static func checkForm(_ row: String, _ context: String) {
@@ -186,6 +189,8 @@ struct AskRowWordsTests {
                 steps = [Self.drawing(found.names?.first ?? "thing", icon: found.request.contains("icon"))]
             case "redline":
                 steps = Array(repeating: AskStep(tool: "add_measurement", arguments: [:]), count: 8)
+            case "video":
+                steps = ["cut", "set_transition", "add_title"].map { AskStep(tool: $0, arguments: [:]) }
             default:
                 steps = ["place_component", "place_component", "add_text", "add_text", "add_text", "apply_style", "set_layout"]
                     .map { AskStep(tool: $0, arguments: [:]) }

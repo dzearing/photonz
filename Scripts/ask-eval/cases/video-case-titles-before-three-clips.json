@@ -1,0 +1,9 @@
+{
+  "request": "put a title page before each of the three clips saying Case 1, Case 2 and Case 3, all in the same style",
+  "group": "video",
+  "from": "The video eval task, 2026-10-21: subtitle pages Case 1 to 3 between three clips with one consistent look",
+  "start": { "sample": "recording", "copies": 2 },
+  "context": "three eight second screen recordings of a folder being copied, end to end",
+  "expect": { "recordings": 3, "titles": ["Case 1", "Case 2", "Case 3"], "titlesBefore": true, "sameLook": true },
+  "timeout": 360
+}
