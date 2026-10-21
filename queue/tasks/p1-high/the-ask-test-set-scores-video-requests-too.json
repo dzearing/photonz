@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T02:19:50.855Z",
-  "updated": "2026-10-21T12:40:38.276Z",
+  "updated": "2026-10-21T16:48:31.180Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager 2026-10-20 19:30. Scripts/ask-eval/cases/ and held-out/ hold no video case at all (25 climbing cases: drawings, sheets, pricing, settings measurements). ask-runs-on-the-best-model-this-mac-can-hold-pic asks for a per-category table including video, which cannot be filled without these cases, so it now depends on this task. Video tools Ask has: add_title, cut, trim, move_clip, set_transition, apply_zooms (Sources/PhotonzCore/AskPlanning.swift AskTools.doing); missing from Ask but on the server: add_clip, new_video, export, set_playhead, video_frame (AgentVideo.swift). Frames for the sheet: the server video_frame / contact_sheet tools (AgentContactSheet.swift) or Scripts/ask-eval/contact-sheet.swift. Walk ask-adds-a-title-page-walk passes today (26 s) with a plain white on black Case 1 page: queue/manager/shots/2026-10-20-1920-ask-title-ran.png. No stored subjects or per-request templates (runner-prompt Hard rules): the cases are tests, the fix for any of them is a general technique.",
@@ -37,6 +37,41 @@
     {
       "t": "2026-10-21T12:40:38.275Z",
       "note": "digest 2026-10-21: kept ahead of the user's asks (seq 40) on purpose: ask-runs-on-the-best-model-this-mac-can-hold-pic, the user's ask right behind it, depends on it and cannot start until it is done."
+    },
+    {
+      "t": "2026-10-21T15:16:28.188Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-21T16:48:22.252Z",
+      "note": "Five video cases in the climb set and three held out, scored from frames of the video as it plays (blank-frame rule, timeline rules, judge on a time-labelled contact sheet with rubric-video.md). Baselines: Ask climb 74 / video 53.4, held-out 18.2 / video 12.5; skill video 84; per case with seconds in the audit queue/audits/2026-10-21-ask-eval-video-cases.json. Ask fails the History case (no add_clip) and the dissolve; filed ask-puts-a-recording-from-history-on-the-timelin."
+    },
+    {
+      "t": "2026-10-21T16:48:30.854Z",
+      "note": "Built: video group in Scripts/ask-eval (engines.mjs sample start with clicks/copies/setup.history, playback frames + blank marks via frame-stats.swift, time-labelled contact sheet with cuts in its header; rules.mjs plays + video asked checks with 8 node tests; rubric-video.md with flow in place of aligned). 5 climb cases, 3 held-out. AskRowWordsTests taught the video verbs (Put, Zoomed, Cut)."
+    },
+    {
+      "t": "2026-10-21T16:48:30.918Z",
+      "note": "Chose listing the cuts in the sheet header over judging transitions from frames alone because a dissolve across a cut inside one unbroken recording joins a moment to itself and no frame can show it; the skill's correct dissolve was judged 1 before this."
+    },
+    {
+      "t": "2026-10-21T16:48:30.985Z",
+      "note": "Baselines (rubric f5ae1562): Ask climb 74 over 30 (video 53.4), held-out 18.2 over 45 (video 12.5). Ask per video case: titles x3 85.6 (12.7s), dissolve 8.6 (10.7s), latest recording 7.5 (19.3s), Case 1 84.4 (10s), zooms 80.8 (10.7s). Skill: 88 (38.3s), 85 (28.2s), 80.8 (14s), 84.4 (19.6s), 82 (17s), total 84. History case: Ask has no add_clip and ran run_command add_video_track, nothing added; that is the baseline. Follow-up filed: ask-puts-a-recording-from-history-on-the-timelin."
+    },
+    {
+      "t": "2026-10-21T16:48:31.052Z",
+      "note": "left rough (unconfirmed, not filed): on title-to-clip dissolves the frame at the cut (4.0s, 16.0s, 28.0s in the three-titles sheet) is fully black, so the 0.4s dissolve reads as a dip through black; seen on contact sheets only, never checked against an export."
+    },
+    {
+      "t": "2026-10-21T16:48:31.116Z",
+      "note": "left rough: the zoom case judge said the zoom seems to snap back between 3.5s and 4s; the sheet samples every 0.5s so it cannot tell a fast ease from a snap; not filed."
+    },
+    {
+      "t": "2026-10-21T16:48:31.179Z",
+      "note": "owns no walks; the ones it names are examples"
     }
-  ]
+  ],
+  "started": "2026-10-21T15:16:28.187Z",
+  "completed": "2026-10-21T16:48:22.254Z",
+  "walks": []
 }
