@@ -1,0 +1,32 @@
+{
+  "feature": "A border follows the shape it is on",
+  "epic": "interaction-foundations",
+  "summary": "A Border on a group, an arrow, a line or a cut-out picture now runs round the thing itself, the way a Stroke does in Photoshop: one ring round a whole group, along the arrow's shaft and round its head, round a sticker's visible edge. Each Border row has Follows: Shape or Box, so the rectangle is still there when you want it.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Walk: Scripts/playtest/border-follows-the-shape-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "Before: a 2px Outside Border on a group of shapes, an arrow and a cut-out star each drew a rectangle round the layer's box.", "shot": "2026-10-21-border-follows-the-shape-before.png" },
+    { "do": "Draw two overlapping ovals and a box, select them, Group, then Add Effect > Border, Outside.", "shot": "2026-10-21-border-follows-the-shape-1-group-outside-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Set Position to Inside: the ring eats into the merged shape, with no line where the parts meet.", "shot": "2026-10-21-border-follows-the-shape-1b-group-inside-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Box in the Follows row: the ring goes round the group's box instead.", "shot": "2026-10-21-border-follows-the-shape-1c-group-box-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw an arrow and add a Border: it outlines the shaft and the head as one shape.", "shot": "2026-10-21-border-follows-the-shape-2-arrow-outside-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drop a PNG sticker with a transparent background and add a Border: it follows the visible edge.", "shot": "2026-10-21-border-follows-the-shape-3-cut-out-outside-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drop an opaque picture and add a Border: still a box with square corners, and no Follows row.", "shot": "2026-10-21-border-follows-the-shape-4-opaque-picture-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "After, all four on one canvas, and the star's edge enlarged 4x.", "shot": "2026-10-21-border-follows-the-shape-after.png" }
+  ],
+  "evaluate": [
+    "On your Ask package, does the border now run round the package the way you expected?",
+    "Is Follows: Shape / Box the right words for the choice, sitting above Position?",
+    "Should an opaque screenshot with rounded window corners follow its rounded edge (it does, since its corners are see-through), or always be a box?",
+    "Is a border on a group going round each part's own outside border too (as Photoshop does) what you want?"
+  ],
+  "rough": [
+    "No mock covers a border's Follows choice; it reuses the label's Letters / Box row, saying Shape / Box on everything else.",
+    "Several borders on one shape still overlap at the same edge rather than stacking outward; Offset is how a second ring stands off the first, same as on a box (unchanged).",
+    "A label inside a group counts as its box, not its letters, when the group's border goes round it.",
+    "A cropped picture or one zoomed in on a clip gets the box, not its edge.",
+    "A picture's edge is traced at up to 768 pixels on its long side, so a very large cut-out's ring is a fraction of a point less exact.",
+    "Performance: a full 1440x1024 canvas at 2x redraws in 8.3 ms median (9.0 ms worst) per Width step on the 8-part package, the same as a box ring; the group's outline is merged once per drag.",
+    "Fixed an existing walk on the way: border-follows-the-path added a second border to a line that already wore the remembered one."
+  ]
+}

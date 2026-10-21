@@ -103,6 +103,20 @@ public final class DocumentRenderer: @unchecked Sendable {
     private var ringOrder: [RingKey] = []
     private var maskCache: [MaskKey: CIImage] = [:]
     private var maskOrder: [MaskKey] = []
+    /// The outline a Border that follows the shape goes round, per drawing
+    /// (`Layer.followedOutline`). Merging a group's parts into one outline is
+    /// Core Graphics area arithmetic, which is too dear to redo on every frame
+    /// of a Width drag and never changes during one, since the border's own
+    /// numbers are not part of what is drawn underneath it.
+    private struct FollowKey: Hashable {
+        let content: LayerContent
+        let size: CGSize
+        let scale: CGFloat
+    }
+    private var followCache: [FollowKey: PathContent?] = [:]
+    /// How many outlines have been merged rather than read back: what a test
+    /// watches to know a Width drag is not redoing the arithmetic each frame.
+    private(set) var followedOutlinesMerged = 0
     private var maskPixels = 0
     /// How big a ring is still worth keeping. Past this it is cheaper to draw
     /// again than to hold 32 of them: a ring is mostly empty pixels, and one
@@ -901,7 +915,9 @@ public final class DocumentRenderer: @unchecked Sendable {
 
         image = rounded(image, box: box, radii: layer.style.cornerRadii)
         image = borderEffects(image, box: box, radii: layer.style.cornerRadii,
-                              borders: layer.boxBorders)
+                              outline: followedOutline(of: layer, contentScale: contentScale,
+                                                       store: store),
+                              scale: contentScale, borders: layer.ringedBorders)
         // Blurring a group blurs the card it makes — surface, corner and ring
         // as one — and its halo escapes the group's box the way its shadow
         // does. A group is always a drawn thing, never a photograph.
@@ -1518,8 +1534,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         // words above, and drawing those again as a box would put a frame round
         // a label nobody asked for (`BorderFollows.swift`).
         image = borderEffects(image, box: box, radii: ringRadii, shape: ringShape,
-                              outline: layer.path, scale: contentScale,
-                              borders: layer.boxBorders)
+                              outline: followedOutline(of: layer, contentScale: contentScale,
+                                                       store: store),
+                              scale: contentScale, borders: layer.ringedBorders)
 
         // Style: blur, after the paint rather than before it, so the softness
         // takes the whole layer — what it draws, its rounded corner and its
@@ -1773,6 +1790,9 @@ public final class DocumentRenderer: @unchecked Sendable {
                                shape: RingShape = .box, outline: PathContent? = nil,
                                scale: CGFloat = 1, borders: [BorderEffect]) -> CIImage {
         guard !borders.isEmpty else { return image }
+        // Each ring goes round what its own row says it follows: the shape
+        // (the outline, or the oval) or the box (`BorderFollows.swift`). A
+        // layer that is only a box has neither, and every ring is its box.
         // An OPEN outline is a line rather than a shape: two sides and nothing
         // between them, so Inside, Center and Outside all name the one band
         // running down the middle of it, which is the answer the layer's own
@@ -1784,9 +1804,12 @@ public final class DocumentRenderer: @unchecked Sendable {
         let openLine = outline.map { !$0.isClosed } ?? false
         var result = image
         for border in borders.reversed() {
-            result = ringed(result, box: box, radii: radii, shape: shape, outline: outline,
+            let followsShape = border.follows == .shape
+            result = ringed(result, box: box, radii: radii,
+                            shape: followsShape ? shape : .box,
+                            outline: followsShape ? outline : nil,
                             scale: scale, width: border.width,
-                            outset: border.ringOutset(aroundOpenLine: openLine),
+                            outset: border.ringOutset(aroundOpenLine: followsShape && openLine),
                             paint: border.paint)
         }
         return result
@@ -1823,20 +1846,21 @@ public final class DocumentRenderer: @unchecked Sendable {
         // An outline too big to bake falls through to the box below rather than
         // being skipped: a ring that quietly vanished on a big shape would be
         // worse than one drawn round its box.
-        if let outline, outline.anchors.count >= 2,
-           let outer = pathSilhouette(outline, reaching: outset, box: box,
-                                      scale: scale, in: outerRect) {
-            let inner = pathSilhouette(outline, reaching: outset - width, box: box,
-                                       scale: scale, in: outerRect)
-            var band = outer
-            if let inner {
-                band = outer.applyingFilter("CISourceOutCompositing",
-                                            parameters: [kCIInputBackgroundImageKey: inner])
+        if let outline, outline.anchors.count >= 2 {
+            // What a part of a group or an arrow's head draws can reach a
+            // little past the box it is measured from, and the ring goes round
+            // all of it rather than stopping at the box.
+            let ink = outline.bounds
+            let drawn = CGRect(x: box.minX + ink.minX * scale, y: box.maxY - ink.maxY * scale,
+                               width: ink.width * scale, height: ink.height * scale)
+            let reach = max(0, outset)
+            let ringRect = drawn.isNull || drawn.isEmpty
+                ? outerRect : outerRect.union(drawn.insetBy(dx: -reach, dy: -reach))
+            if let ringed = ringedOutline(image, outline: outline, box: box, scale: scale,
+                                          width: width, outset: outset, paint: paint,
+                                          in: ringRect) {
+                return ringed
             }
-            band = paint.isGradient ? poured(paint, through: band, in: outerRect)
-                                    : tinted(band, ciColor(hex: paint.hex))
-            return laid(band, outerMask: outer, innerMask: inner,
-                        opacity: paintOpacity(paint), over: image, outerRect: outerRect)
         }
         // An oval has no corners to round, so it is drawn as an oval rather
         // than as a rounded rect that would have to be a capsule to come close
@@ -2045,6 +2069,64 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Drawn through Core Graphics rather than generated, for the reason
     /// `roundedRectMask` gives: `laid` shares a pixel out by area, and that
     /// only works when both sides measure the same edge.
+    /// One ring swept round `outline`, baked over `rect`; nil when the
+    /// outline is too big to bake, so the caller falls back to the box.
+    private func ringedOutline(_ image: CIImage, outline: PathContent, box: CGRect,
+                               scale: CGFloat, width: CGFloat, outset: CGFloat, paint: Paint,
+                               in rect: CGRect) -> CIImage? {
+        guard let outer = pathSilhouette(outline, reaching: outset, box: box,
+                                         scale: scale, in: rect) else { return nil }
+        let inner = pathSilhouette(outline, reaching: outset - width, box: box,
+                                   scale: scale, in: rect)
+        var band = outer
+        if let inner {
+            band = outer.applyingFilter("CISourceOutCompositing",
+                                        parameters: [kCIInputBackgroundImageKey: inner])
+        }
+        band = paint.isGradient ? poured(paint, through: band, in: rect)
+                                : tinted(band, ciColor(hex: paint.hex))
+        return laid(band, outerMask: outer, innerMask: inner,
+                    opacity: paintOpacity(paint), over: image, outerRect: rect)
+    }
+
+    /// The outline a Border that follows the shape goes round on `layer`, in
+    /// its own top-left points (`Layer.followedOutline`), or nil where its box
+    /// is the answer. Only asked when a ring is there to draw.
+    ///
+    /// A path is its own outline and costs nothing. A picture's edge is kept
+    /// by `PictureEdges` against the pixels themselves. Everything else is
+    /// kept here against what it draws, so moving a group or dragging its
+    /// border's Width merges its parts once rather than on every frame.
+    private func followedOutline(of layer: Layer, contentScale: CGFloat,
+                                 store: ImageStore) -> PathContent? {
+        guard layer.ringedBorders.contains(where: { $0.follows == .shape }) else { return nil }
+        let edge: (ImageRef) -> CGPath? = { PictureEdges.edge(for: $0, store: store) }
+        switch layer.content {
+        case .path(let path):
+            return path
+        case .text, .zoomCallout, .lens, .measure, .collage, .sound:
+            return nil
+        case .image:
+            return layer.followedOutline(contentScale: contentScale, pictureEdge: edge)
+        case .annotation(let annotation) where annotation.shape != .arrow && annotation.shape != .line:
+            return nil
+        case .annotation, .group:
+            let key = FollowKey(content: layer.content, size: layer.localBounds.size,
+                                scale: contentScale)
+            cacheLock.lock()
+            let hit = followCache[key]
+            cacheLock.unlock()
+            if let hit { return hit }
+            let outline = layer.followedOutline(contentScale: contentScale, pictureEdge: edge)
+            cacheLock.lock()
+            if followCache.count >= 64 { followCache.removeAll() }
+            followCache[key] = .some(outline)
+            followedOutlinesMerged += 1
+            cacheLock.unlock()
+            return outline
+        }
+    }
+
     private func pathSilhouette(_ content: PathContent, reaching: CGFloat, box: CGRect,
                                 scale: CGFloat, in rect: CGRect) -> CIImage? {
         let bounds = rect.integral

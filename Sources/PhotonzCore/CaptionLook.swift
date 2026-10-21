@@ -736,7 +736,7 @@ extension CaptionLayers {
         }
         if let stroke = look.strokeHex {
             effects.append(.border(BorderEffect(width: max(1, (font * 0.07).rounded()), colorHex: stroke,
-                                                position: .outside, follows: .letters)))
+                                                position: .outside, follows: .shape)))
         }
         return effects
     }

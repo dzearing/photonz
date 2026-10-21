@@ -317,31 +317,33 @@ private struct EffectColorRow: View {
     }
 }
 
-/// What one added ring round a LABEL goes round: its letters, or the box the
-/// words sit in.
+/// What one added ring goes round: the thing the layer draws (a label's
+/// letters, a shape's outline, a cut-out's edge) or the box it sits in.
 ///
-/// Only a label is asked. Everything else has a box and nothing else, so the
-/// row is not there at all rather than being there greyed out: a question with
-/// one possible answer is a question in the way.
+/// Only a layer with something besides its box is asked. A rectangle, a
+/// screenshot or a frame has a box and nothing else, so the row is not there at
+/// all rather than being there greyed out: a question with one possible answer
+/// is a question in the way.
 ///
 /// It sits at the top of the border's settings because it changes what the two
-/// rows under it mean — a line round each letter has no inside and no outside,
-/// so the Position popup goes away with it (`BorderFollows.swift`).
+/// rows under it mean: a line round each letter has no inside and no outside,
+/// so on a label the Position popup goes away with it (`BorderFollows.swift`).
 private struct BorderFollowsRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
     var body: some View {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
-        if borders.hasLettersEverywhere {
+        if let kind = borders.shapeToFollowEverywhere {
             let ids = borders.layerIDs
             EffectChoiceRow(
                 name: "Follows",
-                reading: borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters },
-                otherwise: .letters,
-                options: [.init(.letters, BorderFollows.letters.title,
-                                help: "Draws round each letter, so words stay readable over anything"),
-                          .init(.box, BorderFollows.box.title, help: "Draws round the label's frame")],
+                reading: borders.reading { $0.borderEffect(at: row.index)?.follows ?? .shape },
+                otherwise: .shape,
+                options: [.init(.shape, BorderFollows.shape.title(on: kind),
+                                help: BorderFollows.shape.summary(on: kind)),
+                          .init(.box, BorderFollows.box.title(on: kind),
+                                help: BorderFollows.box.summary(on: kind))],
                 isEnabled: !ids.isEmpty) { new in
                     editorState.setBorderEffectFollows(at: row.index, ids: ids, to: new)
                 }
@@ -379,7 +381,7 @@ private struct BorderPositionRow: View {
     private var isAboutAnEdge: Bool {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
         guard borders.hasLettersEverywhere else { return true }
-        let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
+        let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .shape }
         return !reading.isMixed && reading.value == .box
     }
 
@@ -492,7 +494,7 @@ private struct BorderOffsetRow: View {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
         if borders.isOpenLineEverywhere { return false }
         guard borders.hasLettersEverywhere else { return true }
-        let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
+        let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .shape }
         return !reading.isMixed && reading.value == .box
     }
 

@@ -309,7 +309,10 @@ extension EditorState {
     /// than snapping back to what is on disk between frames.
     var layerStyleSelection: LayerStyleSelection {
         guard let document else { return LayerStyleSelection(members: [], selectionCount: 0) }
-        return document.layerStyleSelection(layerIDs: colorStyleTargetIDs) { layer in
+        let store = store
+        return document.layerStyleSelection(
+            layerIDs: colorStyleTargetIDs,
+            pictureHasEdge: { PictureEdges.hasEdge($0, store: store) }) { layer in
             self.previewedStyle(of: layer.id) ?? layer.style
         }
     }
@@ -702,7 +705,8 @@ extension EditorState {
 
     /// The Follows popup on one border entry: whether that ring goes round a
     /// label's letters or round the box the words sit in
-    /// (`BorderFollows.swift`). Only a label is ever asked.
+    /// (`BorderFollows.swift`). Only a layer with a shape besides its box is
+    /// ever asked.
     func setBorderEffectFollows(at index: Int, ids: [UUID], to follows: BorderFollows) {
         guard !ids.isEmpty else { return }
         stylePreview = nil

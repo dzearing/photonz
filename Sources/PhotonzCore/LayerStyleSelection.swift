@@ -60,10 +60,12 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// Thickness row and the Border row leaves it alone. See
         /// `OutlineWidth.swift`.
         public let hasItsOwnThickness: Bool
-        /// True on a label, the one layer whose border has two things it could
-        /// go round (`BorderFollows.swift`). Everything else has a box and
-        /// nothing else, so its Border row never asks the question.
-        public let hasLetters: Bool
+        /// What a border on this layer can follow besides its box: a label's
+        /// letters, a shape's outline, or nothing (`BorderFollows.swift`). A
+        /// layer that is only a box never has its Border row ask the question.
+        public let shapeToFollow: ShapeToFollow
+        /// True on a label, whose border can go round its letters.
+        public var hasLetters: Bool { shapeToFollow == .letters }
         /// True when how this layer mixes is not a choice anybody has: a
         /// highlight mark always mixes with the words under it
         /// (`Layer.mixingIsFixed`). The Blending row leaves those out.
@@ -86,6 +88,7 @@ public struct LayerStyleSelection: Hashable, Sendable {
         public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
                     hasItsOwnThickness: Bool = false,
                     hasLetters: Bool = false,
+                    shapeToFollow: ShapeToFollow? = nil,
                     hasFixedMixing: Bool = false,
                     hasOpenLine: Bool = false,
                     hasPixelsToKey: Bool = false,
@@ -94,7 +97,7 @@ public struct LayerStyleSelection: Hashable, Sendable {
             self.style = style
             self.cornerRadiusLimit = cornerRadiusLimit
             self.hasItsOwnThickness = hasItsOwnThickness
-            self.hasLetters = hasLetters
+            self.shapeToFollow = shapeToFollow ?? (hasLetters ? .letters : .none)
             self.hasFixedMixing = hasFixedMixing
             self.hasOpenLine = hasOpenLine
             self.hasPixelsToKey = hasPixelsToKey
@@ -128,6 +131,17 @@ public struct LayerStyleSelection: Hashable, Sendable {
     /// would do nothing to it (`BorderFollows.swift`).
     public var hasLettersEverywhere: Bool {
         !members.isEmpty && members.allSatisfy(\.hasLetters)
+    }
+
+    /// What every layer this row speaks for can follow besides its box, which
+    /// decides whether the Border row asks Shape or Box (Letters or Box on
+    /// labels), or nil where any of them is only a box: the answer would do
+    /// nothing to that one, so the question is not asked
+    /// (`BorderFollows.swift`). A label among shapes is asked about its shape
+    /// like the rest, since its letters are its shape.
+    public var shapeToFollowEverywhere: ShapeToFollow? {
+        guard !members.isEmpty, members.allSatisfy({ $0.shapeToFollow != .none }) else { return nil }
+        return members.allSatisfy(\.hasLetters) ? .letters : .outline
     }
 
     /// Whether every layer this row speaks for is an OPEN LINE, which is what
@@ -298,10 +312,14 @@ extension PhotonzDocument {
     /// in, and locked ones are left out for the same reason the color rows
     /// leave them out.
     ///
+    /// `pictureHasEdge` says whether a picture has a see-through edge, which
+    /// only whoever holds its pixels can (`PictureEdge`).
+    ///
     /// `style` is how a caller reads one layer's look: the panel hands in the
     /// style a slider drag is previewing, so the rows read what is on screen
     /// rather than what is on disk.
     public func layerStyleSelection(layerIDs: [UUID],
+                                    pictureHasEdge: (ImageRef) -> Bool = { _ in false },
                                     style: (Layer) -> LayerStyle = { $0.style })
     -> LayerStyleSelection {
         var members: [LayerStyleSelection.Member] = []
@@ -321,7 +339,7 @@ extension PhotonzDocument {
                 id: id, style: resolved,
                 cornerRadiusLimit: max(1, Double(min(bounds.width, bounds.height) / 2)),
                 hasItsOwnThickness: layer.hasOutlineThickness,
-                hasLetters: layer.hasLetters,
+                shapeToFollow: layer.shapeToFollow(pictureHasEdge: pictureHasEdge),
                 hasFixedMixing: layer.mixingIsFixed,
                 hasOpenLine: layer.ringsAnOpenLine,
                 hasPixelsToKey: layer.canBeKeyed,

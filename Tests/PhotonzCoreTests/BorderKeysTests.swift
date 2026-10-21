@@ -151,7 +151,7 @@ struct BorderKeysTests {
         #expect(middle.width > 0.5 && middle.width < 11.5)
         // Everything else about the ring is left as it was drawn.
         #expect(late.colorHex == "#000000")
-        #expect(late.follows == .letters)
+        #expect(late.follows == .shape)
         // Nothing baked in: the stored border is still the one set.
         #expect(doc.layer(id: id)?.style.borderEffects.first?.width == 0)
     }

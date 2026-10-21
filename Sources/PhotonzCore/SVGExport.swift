@@ -83,6 +83,11 @@ public enum SVGExport {
     /// outlined.
     public typealias TextOutliner = @Sendable (_ layer: Layer, _ text: TextContent) -> String?
 
+    /// Asked for the see-through edge of a picture, in fractions of the
+    /// picture from its top-left corner (`PictureEdge`). Nil where the
+    /// picture is solid to its edges, so a ring round it is its box.
+    public typealias PictureEdger = @Sendable (_ picture: ImageRef) -> CGPath?
+
     /// What the labels the app draws FOR ITSELF need from whoever owns the type
     /// engine: how big the words come out, and what their outline is.
     ///
@@ -152,6 +157,7 @@ public enum SVGExport {
                              animation: Animation = .still,
                              picture: PictureMaker? = nil,
                              outlineText: TextOutliner? = nil,
+                             pictureEdge: PictureEdger? = nil,
                              typeSetter: TypeSetter? = nil,
                              flatImages: [UUID: RGBA] = [:],
                              background: Background = .keep) -> Result {
@@ -159,6 +165,7 @@ public enum SVGExport {
             ? backdrop(in: document, flatImages: flatImages)?.layerID
             : nil
         var writer = Writer(picture: picture, outlineText: outlineText,
+                            pictureEdge: pictureEdge,
                             type: typeSetter,
                             animation: animation, flatImages: flatImages,
                             omitLayer: omit)
@@ -395,7 +402,7 @@ public enum SVGExport {
             // so it is not a ring this can draw round the box.
             if layer.style.effects.contains(where: {
                 guard case .border(let border) = $0 else { return false }
-                return border.isOn && border.width > 0 && border.follows == .letters
+                return border.isOn && border.width > 0 && border.follows == .shape
             }) {
                 return .picture("its letters wear a line of their own")
             }
@@ -670,6 +677,8 @@ private extension LayerContent {
 private struct Writer {
     let picture: SVGExport.PictureMaker?
     let outlineText: SVGExport.TextOutliner?
+    /// Where a picture's see-through edge runs, for a ring that follows it.
+    let pictureEdge: SVGExport.PictureEdger?
     /// How the labels the app draws for itself are measured and outlined.
     let type: SVGExport.TypeSetter?
     var animation: SVGExport.Animation = .still
@@ -1732,8 +1741,8 @@ private struct Writer {
             + "<title>\(SVGExport.escaped(text.string))</title></path>"]
     }
 
-    /// Every ring round the layer's box, from the foot of the Effects list up,
-    /// which is the order the canvas paints them in.
+    /// Every ring round the layer's box or its outline, from the foot of the
+    /// Effects list up, which is the order the canvas paints them in.
     mutating func rings(of layer: Layer, level: Int) -> [String] {
         let isLabel = layer.content.isText
         let borders = layer.style.effects.compactMap { effect -> BorderEffect? in
@@ -1741,21 +1750,56 @@ private struct Writer {
             else { return nil }
             // On a label, a ring that goes round the LETTERS is painted into
             // the words rather than round the box (`BorderFollows.swift`).
-            if isLabel, border.follows == .letters { return nil }
+            if isLabel, border.follows == .shape { return nil }
             return border
         }
-        guard !borders.isEmpty, layer.frame.width > 0, layer.frame.height > 0 else { return [] }
-        let box = CGRect(origin: .zero, size: layer.frame.size)
+        // The layer's own box in the space its drawing is written in: the
+        // frame for a leaf, and for a group the box its contents make, stated
+        // from the anchor the group's children are measured from.
+        let bounds = layer.localBounds
+        let box = CGRect(x: bounds.minX - layer.frame.minX, y: bounds.minY - layer.frame.minY,
+                         width: bounds.width, height: bounds.height)
+        guard !borders.isEmpty, box.width > 0, box.height > 0 else { return [] }
+        // A ring that follows the SHAPE rides the outline of what the layer
+        // draws, swept the way the canvas sweeps it (`DocumentRenderer.ringed`):
+        // a path's own outline, an arrow's shaft and head, everything in a
+        // group merged into one. A file that wrote the box instead came out as
+        // a chevron in a picture frame.
+        let edge = pictureEdge
+        let followed = layer.followedOutline(pictureEdge: { ref in edge?(ref) })?
+            .offsetBy(dx: box.minX, dy: box.minY)
+        let oval = layer.ringShape == .ellipse
+        var lines: [String] = []
+        // Painted in runs of the same kind, foot first, so a box ring and a
+        // shape ring on one layer keep the order their rows are in.
+        var run: [BorderEffect] = []
+        var runFollows = false
+        func flush() {
+            guard !run.isEmpty else { return }
+            if runFollows, let followed, followed.anchors.count >= 2 {
+                lines.append(contentsOf: pathRings(run, outline: followed, level: level))
+            } else {
+                lines.append(contentsOf: boxRings(run, of: layer, box: box,
+                                                  oval: runFollows && oval, level: level))
+            }
+            run = []
+        }
+        for border in borders.reversed() {
+            let follows = border.follows == .shape && (followed != nil || oval)
+            if follows != runFollows { flush(); runFollows = follows }
+            // `pathRings` and `boxRings` paint foot first themselves, so each
+            // run is handed over top first, the way the list holds it.
+            run.insert(border, at: 0)
+        }
+        flush()
+        return lines
+    }
+
+    /// Rings round the layer's box, or round the oval inscribed in it.
+    mutating func boxRings(_ borders: [BorderEffect], of layer: Layer, box: CGRect,
+                           oval: Bool, level: Int) -> [String] {
         let shapeRadii = layer.annotation?.boxCornerRadii(in: layer.frame.size) ?? .none
         let radii = shapeRadii.isRound ? shapeRadii : layer.style.cornerRadii
-        let oval = layer.ringShape == .ellipse
-        // A PATH has a silhouette of its own, and the canvas rings it by
-        // sweeping that outline rather than by drawing a box round it
-        // (`DocumentRenderer.ringed`). A file that wrote the box instead came
-        // out as a chevron in a picture frame.
-        if let outline = layer.path, outline.anchors.count >= 2 {
-            return pathRings(borders, outline: outline, level: level)
-        }
         var lines: [String] = []
         for border in borders.reversed() {
             let outset = border.ringOutset

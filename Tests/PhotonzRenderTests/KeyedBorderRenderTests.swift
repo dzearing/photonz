@@ -111,7 +111,7 @@ struct KeyedBorderRenderTests {
                           content: .text(TextContent(string: "HI", fontSize: 60, colorHex: "#FFFFFF")),
                           frame: CGRect(x: 40, y: 10, width: 120, height: 80))
         title.time = LayerTime(inMS: 0, outMS: 4000)
-        title.style.effects = [.border(BorderEffect(width: 1, colorHex: "#FF0000", follows: .letters))]
+        title.style.effects = [.border(BorderEffect(width: 1, colorHex: "#FF0000", follows: .shape))]
         var document = PhotonzDocument(canvasSize: Self.canvas, layers: [ground, title])
         document.durationMS = 4000
         document.startKeying(layerID: title.id, .motion(.borderWidth), atDocumentTimeMS: 1000, ease: .linear)

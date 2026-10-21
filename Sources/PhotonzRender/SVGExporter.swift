@@ -32,6 +32,7 @@ public enum SVGExporter {
                             else { return nil }
                             return SVGExport.pathData(outline)
                         },
+                        pictureEdge: { ref in PictureEdges.edge(for: ref, store: store) },
                         typeSetter: typeSetter,
                         flatImages: FlatBitmap.colors(in: document, store: store),
                         background: background)

@@ -21815,3 +21815,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - "Annotate the ux with measurements" is chosen in code now: `RedlinePlan` (Sources/PhotonzCore/Redline.swift, over `LayoutRead`) picks one size per kind of control (on the member with the most room), then padding, row height, section gap, neighbour gap and a button's label inset. No margin to the screenshot's crop edge. `RedlineLayout` lays all lines first, then each readout where it touches no word, control, other readout or line and no leader (computed as `MeasurePlan.make` draws it) crosses anything; card edges are a tie-breaker; a mark with no clean spot is left out, never below three marks. Tools `find_measurements` / `mark_measurements`; Ask and the skill use them.
 - Settings case for Ask: 32.5 before, 47 to 59 now (the same picture judged twice moved 12 points); judge clean 4. Calibration judges the user's noisy picture (clean 2). Climb 79.1 (was 78.2), held-out 19.5 (was 20.1).
 - Open: the held-out redline group fell from 35.4 to 19.6 (`ask-s-redlines-do-at-least-as-well-on-unseen-req`); readouts in points and the caliper look (`a-redline-of-a-2x-screenshot-reads-in-points-wit`).
+
+## 2026-10-21 — A border follows the shape it is on
+
+- A Border on a group, arrow, line or cut-out picture now runs round the thing itself (one ring round a group's union, the arrow's shaft and head, a picture's alpha edge traced by marching squares). Each Border row offers Follows: Shape / Box (Letters / Box on labels); saved files keep the word `letters`.
+- Core: `ShapeOutline.swift` (`Layer.followedOutline`, `shapeToFollow`), `PictureEdge.swift`. Render: `PictureEdges.swift` cache, per-border routing in `DocumentRenderer.borderEffects`, merged outlines cached per drawing. SVG rings route the same way.
+- Perf: Width drag on an 8-part package, 1440x1024 at 2x, 8.3 ms median per frame.
+- Next: a label in a group still counts as its box; cropped pictures ring their box.

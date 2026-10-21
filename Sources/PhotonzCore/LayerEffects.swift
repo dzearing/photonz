@@ -307,9 +307,10 @@ public struct BorderEffect: Hashable, Codable, Sendable {
     /// from, so the number is kept but not applied and no control is offered
     /// for it (`BorderPosition.appliesOffset`).
     public var offset: CGFloat = 0
-    /// What the ring goes round on a LABEL: its letters, or the box the words
-    /// sit in (`BorderFollows.swift`). Nothing but a label has letters, so on
-    /// every other layer the ring follows the box whatever this says.
+    /// What the ring goes round: the thing the layer draws (a label's letters,
+    /// a shape's outline, a cut-out's edge) or the box it sits in
+    /// (`BorderFollows.swift`). A layer that is only a box follows the box
+    /// whatever this says.
     public var follows: BorderFollows
     /// Whether it paints at all. Off keeps every number on it, exactly as a
     /// shadow's tick does.
@@ -330,7 +331,7 @@ public struct BorderEffect: Hashable, Codable, Sendable {
                 colorHex: String = "#000000",
                 position: BorderPosition = .outside,
                 offset: CGFloat = 0,
-                follows: BorderFollows = .letters,
+                follows: BorderFollows = .shape,
                 isOn: Bool = true) {
         self.width = width
         self.paint = Paint(hex: colorHex)
@@ -354,7 +355,7 @@ public struct BorderEffect: Hashable, Codable, Sendable {
         // A file written before the choice existed says nothing, and every
         // border it holds on a label was drawn round the letters, so that is
         // what it opens as (`BorderFollows.swift`).
-        follows = try c.decodeIfPresent(BorderFollows.self, forKey: .follows) ?? .letters
+        follows = try c.decodeIfPresent(BorderFollows.self, forKey: .follows) ?? .shape
         isOn = try c.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
         // The flat colour is where it has always been; the ramp goes in beside
         // it, and only when there is one.
@@ -378,7 +379,7 @@ public struct BorderEffect: Hashable, Codable, Sendable {
         if offset != 0 { try c.encode(offset, forKey: .offset) }
         // Only the answer that is not the ordinary one, so a label bordered
         // today opens in an older build drawing exactly what it drew before.
-        if follows != .letters { try c.encode(follows, forKey: .follows) }
+        if follows != .shape { try c.encode(follows, forKey: .follows) }
         try c.encode(isOn, forKey: .isOn)
     }
 

@@ -5,11 +5,11 @@
   "epic": "interaction-foundations",
   "priority": "p1-high",
   "seq": 8.048,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T00:08:37.826Z",
-  "updated": "2026-10-21T00:08:42.894Z",
+  "updated": "2026-10-21T07:49:10.451Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20, on Ask's 'package in some clouds' drawing: 'i wanted a border around the box. I selected the product package. added a border effect. It created a box border, and not one that followed the outline of the shape. Ideally, we follow the outline of the shape. Same thing for arrows. borders are borders, not always boxes.' In the picture the package is a group of 8 paths and the 2 px Outside border is the group's frame rectangle.\n\nCause, from code: Sources/PhotonzCore/BorderFollows.swift:20-22 says only a label has letters to follow and everything else (picture, shape, frame, group) 'has a box and nothing else, so its rings follow the box whatever this says and the panel never asks (Layer.boxBorders)'. That rule was written for labels on 2026-09-08 and never revisited for drawn shapes. Reuse the label's choice (BorderFollows: letters or box) as shape or box. The renderer has ContourTracer (Sources/PhotonzRender) and OutlineStroke.swift. Watch the composite path's cost (CLAUDE.md perf note) and the SVG exporter's border path.",
@@ -30,6 +30,51 @@
     {
       "t": "2026-10-21T00:08:42.893Z",
       "note": "seq 3970 -> 8.048"
+    },
+    {
+      "t": "2026-10-21T06:45:28.280Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-21T06:49:57.677Z",
+      "note": "Reproduced at Next defaults with Scripts/playtest/border-follows-the-shape-walk.json (no flags): a 2px Outside Border on a group of 2 ovals + a box, on an arrow, and on a cut-out star PNG each draws a rectangle round the layer's box (queue/audits/2026-10-20-border-follows-the-shape-before.png). Paths and ovals already follow their outline (layer.path / ringShape .ellipse)."
+    },
+    {
+      "t": "2026-10-21T06:49:57.741Z",
+      "note": "owns these walks: border-follows-the-shape-walk"
+    },
+    {
+      "t": "2026-10-21T07:49:10.055Z",
+      "note": "Adversarial review before building: a Photoshop user expects Stroke to follow the layer's pixels, a group's stroke to go round the union of its parts, and Inside to eat into the shape with no seams between parts; Figma has no group stroke, so Photoshop is the model. Risk found: overlapping parts drawn in opposite directions cancel to holes under the winding rule, so parts are merged with real unions, not normalised together."
+    },
+    {
+      "t": "2026-10-21T07:49:10.122Z",
+      "note": "Chose to reuse the label's choice (BorderFollows) as Shape/Box rather than a new setting: the saved word stays 'letters' so every file opens as before, and every non-rectangle defaults to the shape. Chose vector outlines (union of parts, arrow shaft+head, marching-squares trace of a picture's alpha) fed to the existing path-ring baker over an image-space dilation, because it is exact, matches SVG export, and costs the same as a box ring."
+    },
+    {
+      "t": "2026-10-21T07:49:10.190Z",
+      "note": "Measured: Width drag on an 8-part package, full 1440x1024 canvas at 2x: 8.3 ms median, 9.0 ms worst per frame (box ring 8.3 ms); outline merged once per drag (ShapeBorderDragCostTests). Scripts/test.sh: 14153 tests passed. Walks green: border-follows-the-shape (new), label-border-follows, two-way-effect-setting-reads-mixed, appearance-and-effects-dropdowns-open-on-a-click, border-off-keeps-its-row, copy-a-look, ellipse-border, border-effect, border-offset, effects-say-their-reach, a-border-on-a-full-frame-picture-shows, border-follows-the-path."
+    },
+    {
+      "t": "2026-10-21T07:49:10.256Z",
+      "note": "border-follows-the-path walk failed at step 46 on the code WITHOUT this change too (stashed Sources, rebuilt probe, same failure): a new shape is drawn in the last look, so the line already wore the triangle's border and adding one made two Width sliders. Fixed the walk, not the app."
+    },
+    {
+      "t": "2026-10-21T07:49:10.321Z",
+      "note": "Looked at the pictures: before (boxes round group, arrow, star), after doc render (one ring round the cloud, along the arrow, round the star, box round the opaque tile), all six window captures, and the star edge at 4x (first trace was a half-pixel staircase wobble; replaced the whole-pixel trace with marching squares and it is now smooth and flush)."
+    },
+    {
+      "t": "2026-10-21T07:49:10.386Z",
+      "note": "left rough (not filed, no person-visible defect yet): a label inside a group counts as its box for the group's ring; a cropped or clip-zoomed picture rings its box; several borders overlap rather than stack outward (unchanged behaviour, Offset stacks them); open path with Follows: Box still hides Position."
+    },
+    {
+      "t": "2026-10-21T07:49:10.450Z",
+      "note": "walks border-follows-the-shape-walk -> border-follows-the-shape-walk, border-follows-the-path-walk"
     }
+  ],
+  "started": "2026-10-21T06:45:28.267Z",
+  "walks": [
+    "border-follows-the-shape-walk",
+    "border-follows-the-path-walk"
   ]
 }

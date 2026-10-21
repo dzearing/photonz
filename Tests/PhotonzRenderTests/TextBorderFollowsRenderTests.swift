@@ -95,15 +95,15 @@ struct TextBorderFollowsRenderTests {
     /// And the one that was there all along still goes round the letters, with
     /// nothing round the frame.
     @Test func aBorderThatFollowsTheLettersLeavesTheFrameBare() {
-        let drawn = rendered(label([border(4, "#0000FF", .letters)]))
+        let drawn = rendered(label([border(4, "#0000FF", .shape)]))
         #expect(blueOutsideTheFrame(drawn) == 0)
     }
 
     /// Both at once, which is the whole point: a fat dark halo on the words and
     /// a thin blue box round the label.
     @Test func aLabelCanWearBothAtOnce() {
-        let lettersOnly = rendered(label([border(6, "#000000", .letters)]))
-        let both = rendered(label([border(6, "#000000", .letters),
+        let lettersOnly = rendered(label([border(6, "#000000", .shape)]))
+        let both = rendered(label([border(6, "#000000", .shape),
                                    border(4, "#0000FF", .box)]))
         #expect(darkInsideTheFrame(lettersOnly) > 0)
         #expect(blueOutsideTheFrame(lettersOnly) == 0)
@@ -117,10 +117,10 @@ struct TextBorderFollowsRenderTests {
     /// unchanged: the border it holds says nothing about what it follows, and
     /// the picture is the one it was saved with.
     @Test func aLabelSavedBeforeTheChoiceDrawsExactlyAsItDid() throws {
-        let saved = label([border(6, "#000000", .letters)])
+        let saved = label([border(6, "#000000", .shape)])
         let data = try JSONEncoder().encode(saved)
         let opened = try JSONDecoder().decode(Layer.self, from: data)
-        #expect(opened.style.borderEffects.first?.follows == .letters)
+        #expect(opened.style.borderEffects.first?.follows == .shape)
         #expect(rendered(opened) == rendered(saved))
     }
 }

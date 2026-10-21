@@ -52,9 +52,8 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectPath", "anchors": 3, "closed": false },
+    { "do": "describe", "stage": "3-line-arrives-bordered", "note": "a new shape is drawn in the last look, so the line arrives wearing the triangle's border already; adding a second would make two rows" },
 
-    { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
-    { "do": "wait", "seconds": 0.8 },
     { "do": "press", "control": "Slider", "in": "Width", "across": 0.25 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "control": "Position", "in": "Border", "present": false },

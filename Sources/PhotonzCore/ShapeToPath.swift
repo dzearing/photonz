@@ -257,6 +257,18 @@ extension Layer {
         // mixing moves into the style it now carries: same picture, and from
         // here on it is a setting rather than a rule.
         if mixingIsFixed { turned.style.blendMode = effectiveBlendMode }
+        // A box and a wash have nothing to follow but their box, so a border on
+        // one that says Box means the same as one that says Shape, and drew as
+        // the box with the box's own corners either way. As a path the two
+        // answers part company (the box round a path is square), so every such
+        // border becomes what it always drew: the outline (`BorderFollows`).
+        if annotation.shape == .rectangle || annotation.shape == .highlight {
+            for index in turned.style.effects.indices {
+                guard case .border(var border) = turned.style.effects[index] else { continue }
+                border.follows = .shape
+                turned.style.effects[index] = .border(border)
+            }
+        }
         return PathBuilder.refit(turned, content: content)
     }
 }

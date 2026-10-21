@@ -1,0 +1,460 @@
+{
+  "out": "/tmp/photonz-playtest/border-follows-the-shape",
+  "seed": "The user, 2026-10-20: they picked a drawn package (a group of paths), added a Border, and got a rectangle round the group's box instead of a line round the package. 'borders are borders, not always boxes.' This walk puts a Border on a group of overlapping shapes, on an arrow, on a cut-out picture with a transparent edge, and on a plain opaque picture, at Next defaults, and photographs where the ink lands on each.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "frames",
+      "tools",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        140,
+        220
+      ],
+      "to": [
+        320,
+        380
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        140
+      ],
+      "to": [
+        440,
+        340
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        300
+      ],
+      "to": [
+        480,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        100,
+        100
+      ],
+      "to": [
+        520,
+        440
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Border",
+      "choose": "Outside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Width",
+      "across": 0.2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-group-outside",
+      "note": "THE TEST: one ring round the cloud the three shapes make together, not a rectangle round the group's box and not a ring round each shape"
+    },
+    {
+      "do": "panel",
+      "stage": "1-group-outside"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-group-outside"
+    },
+    {
+      "do": "render",
+      "name": "1-group-outside-doc"
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "in": "Border",
+      "reads": "Shape"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Border",
+      "choose": "Inside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "1b-group-inside",
+      "note": "Inside eats into the cloud along its outline, still one ring with no line where the shapes meet"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-group-inside"
+    },
+    {
+      "do": "render",
+      "name": "1b-group-inside-doc"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Border",
+      "choose": "Outside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Box",
+      "in": "Border, Follows"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "in": "Border",
+      "reads": "Box"
+    },
+    {
+      "do": "describe",
+      "stage": "1c-group-box",
+      "note": "the same border told to follow the Box: the rectangle round the group, which is still there for anyone who wants it"
+    },
+    {
+      "do": "panel",
+      "stage": "1c-group-box"
+    },
+    {
+      "do": "snapshot",
+      "name": "1c-group-box"
+    },
+    {
+      "do": "render",
+      "name": "1c-group-box-doc"
+    },
+    {
+      "do": "press",
+      "control": "Shape",
+      "in": "Border, Follows"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "in": "Border",
+      "reads": "Shape"
+    },
+    {
+      "do": "tool",
+      "tool": "arrow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        160
+      ],
+      "to": [
+        960,
+        360
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Border",
+      "choose": "Outside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Width",
+      "across": 0.2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-arrow-outside",
+      "note": "THE TEST: the ring runs along the shaft and round the head as one shape, not a rectangle round the arrow's box"
+    },
+    {
+      "do": "panel",
+      "stage": "2-arrow-outside"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-arrow-outside"
+    },
+    {
+      "do": "render",
+      "name": "2-arrow-outside-doc"
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "in": "Border",
+      "reads": "Shape"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Cut-out star sticker 320x320.png",
+      "at": [
+        300,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Border",
+      "choose": "Outside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Width",
+      "across": 0.2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3-cut-out-outside",
+      "note": "THE TEST: the ring follows the star's visible edge, traced from its transparency, not the square picture"
+    },
+    {
+      "do": "panel",
+      "stage": "3-cut-out-outside"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-cut-out-outside"
+    },
+    {
+      "do": "render",
+      "name": "3-cut-out-outside-doc"
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "in": "Border",
+      "reads": "Shape"
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Plain blue tile 200x140.png",
+      "at": [
+        860,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Border",
+      "choose": "Outside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Width",
+      "across": 0.2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-opaque-picture",
+      "note": "an opaque rectangular picture is still boxed, square corners and all, and its row does not ask what the border follows"
+    },
+    {
+      "do": "panel",
+      "stage": "4-opaque-picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-opaque-picture"
+    },
+    {
+      "do": "render",
+      "name": "4-opaque-picture-doc"
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "in": "Border",
+      "present": false
+    }
+  ]
+}

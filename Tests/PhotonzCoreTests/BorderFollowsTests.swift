@@ -3,9 +3,8 @@ import Foundation
 import Testing
 @testable import PhotonzCore
 
-/// What a Border round a LABEL goes round: the letters, or the box the label
-/// sits in. Every other layer has only a box, so the question is a label's
-/// alone (`BorderFollows.swift`).
+/// What a Border goes round: the thing the layer draws (a label's letters, a
+/// shape's outline) or the box it sits in (`BorderFollows.swift`).
 @Suite("What a border follows")
 struct BorderFollowsTests {
 
@@ -23,10 +22,11 @@ struct BorderFollowsTests {
               frame: CGRect(x: 10, y: 10, width: 100, height: 60))
     }
 
-    /// A border arrives round the LETTERS, which is what a border on type has
-    /// always meant here and what a caption over a screenshot wants.
-    @Test func aNewBorderFollowsTheLetters() {
-        #expect(BorderEffect().follows == .letters)
+    /// A border arrives round the SHAPE: the letters on a label, which is what
+    /// a border on type has always meant here, and the outline on anything
+    /// else that has one.
+    @Test func aNewBorderFollowsTheShape() {
+        #expect(BorderEffect().follows == .shape)
     }
 
     /// A file written before the choice existed says nothing about it, and its
@@ -34,7 +34,7 @@ struct BorderFollowsTests {
     @Test func aSavedBorderWithNoAnswerFollowsTheLetters() throws {
         let old = ##"{"width":4,"colorHex":"#000000","position":"outside","isOn":true}"##
         let border = try JSONDecoder().decode(BorderEffect.self, from: Data(old.utf8))
-        #expect(border.follows == .letters)
+        #expect(border.follows == .shape)
         #expect(border.width == 4)
     }
 
@@ -56,14 +56,14 @@ struct BorderFollowsTests {
     /// drawn round the frame, and a label can wear both at once.
     @Test func aLabelCanWearOneOfEach() {
         var letters = BorderEffect(width: 6, colorHex: "#000000")
-        letters.follows = .letters
+        letters.follows = .shape
         var frame = BorderEffect(width: 2, colorHex: "#FF0000")
         frame.follows = .box
         var label = label()
         label.style.effects = [.border(letters), .border(frame)]
 
         #expect(label.letterBorders.map(\.width) == [6])
-        #expect(label.boxBorders.map(\.width) == [2])
+        #expect(label.ringedBorders.map(\.width) == [2])
     }
 
     /// A ring that is switched off, or nought wide, is in neither list: the
@@ -74,19 +74,20 @@ struct BorderFollowsTests {
         var label = label()
         label.style.effects = [.border(off)]
         #expect(label.letterBorders.isEmpty)
-        #expect(label.boxBorders.isEmpty)
+        #expect(label.ringedBorders.isEmpty)
     }
 
     /// Everything that is not a label has no letters for a ring to follow, so
-    /// its borders all go round its box whatever they say.
-    @Test func aShapeHasNoLettersSoEveryRingIsABox() {
+    /// every one of its borders is drawn as a ring, round its outline or its
+    /// box as each row says.
+    @Test func aShapeHasNoLettersSoEveryBorderIsARing() {
         var letters = BorderEffect(width: 6)
-        letters.follows = .letters
+        letters.follows = .shape
         var shape = box()
         shape.style.effects = [.border(letters)]
         #expect(!shape.hasLetters)
         #expect(shape.letterBorders.isEmpty)
-        #expect(shape.boxBorders.map(\.width) == [6])
+        #expect(shape.ringedBorders.map(\.width) == [6])
     }
 
     @Test func aLabelHasLetters() {
@@ -110,8 +111,16 @@ struct BorderFollowsTests {
     /// The word on the picker, so the row says which of the two it is without
     /// having to try it.
     @Test func eachAnswerHasAWordOfItsOwn() {
-        #expect(BorderFollows.letters.title == "Letters")
-        #expect(BorderFollows.box.title == "Box")
+        #expect(BorderFollows.shape.title(on: .letters) == "Letters")
+        #expect(BorderFollows.shape.title(on: .outline) == "Shape")
+        #expect(BorderFollows.box.title(on: .letters) == "Box")
+        #expect(BorderFollows.box.title(on: .outline) == "Box")
         #expect(BorderFollows.allCases.count == 2)
+    }
+
+    /// The shape answer is written under the word it always was, so a file
+    /// saved by an older build opens following the same thing.
+    @Test func theShapeAnswerIsSavedAsLetters() {
+        #expect(BorderFollows.shape.rawValue == "letters")
     }
 }
