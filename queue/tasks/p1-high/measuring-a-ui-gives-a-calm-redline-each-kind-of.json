@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T23:30:13.542Z",
-  "updated": "2026-10-20T23:30:20.630Z",
+  "updated": "2026-10-21T02:20:00.818Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20 (queue/audits/2026-10-20-user-ask-measurements-noisy.png): 'when you say \"annotate the ux with measurements around the major ui elements\", it is way too noisey.' Seen in the picture: 12 measurements; the 42 x 24 toggle measured four times; readouts '42 px' stacked on '42 px' and '24 px' on '44 px'; two 656 px full-width lines; 220 px on both fields; dimension boxes running past the content to the right edge; readouts sitting over the toggles and the field.\n\nThe eval already shows it is not only the model: the skill on a frontier model scored the same case 62.8 with the judge at 3.8 for crowding (queue/evals/ask-eval-history.jsonl). So the fix belongs in code: MeasurePlan.swift (what to measure), MeasureSizeGroup.swift (repeats), MeasureLabelPlacement.swift (where readouts go). Moved here from ask-on-the-local-model-makes-results-that-look-f, which keeps the pricing half. Shares grouping with find-the-misalignments-marks-every-inconsistent (runs just before): reuse its 'things that should agree' groups to pick one of each.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-20T23:30:20.629Z",
       "note": "seq 3970 -> 8.046"
+    },
+    {
+      "t": "2026-10-21T02:20:00.816Z",
+      "note": "manager 2026-10-20 19:20: ask-annotates-a-screenshot-walk at defaults on today's probe still lands 12 measurements crowded on the switch column (42 px, 24 px, 26 px, 132 px stacked): queue/manager/shots/2026-10-20-1920-ask-measure-ran.png"
     }
   ]
 }

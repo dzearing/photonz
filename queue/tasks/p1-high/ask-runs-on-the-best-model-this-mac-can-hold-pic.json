@@ -9,9 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:27:41.987Z",
-  "updated": "2026-10-20T22:27:45.624Z",
+  "updated": "2026-10-21T02:20:00.625Z",
   "deps": [
-    "the-test-set-cannot-be-passed-by-a-lookup-unseen"
+    "the-test-set-cannot-be-passed-by-a-lookup-unseen",
+    "the-ask-test-set-scores-video-requests-too"
   ],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'what is the local model we're using? maybe we're not using the best model.' Today: qwen3:30b (pulled 12 months ago, text only), chosen on 2026-10-19 against only what was already on this Mac (gpt-oss 20B, a community Qwen3 2507 build, Apple's on-device model; queue/audits/2026-10-19-ask.json, docs/design/ask.md). Ollama 0.20.2 here; 517 GB free on disk. ollama.com/library on 2026-10-20 shows qwen3.6, gemma4 and qwen3-vl with vision, tools and thinking. Web guides also push gpt-oss-120b for tool calls, but it is about 62 GB and does not fit beside the app on 64 GB; leave it out unless a smaller quant is shown to fit. The juilpark gemma-4 'uncensored' community build already on the Mac is not a candidate.\n\nRuns right after ask-draws-a-dog-you-can-tell-is-a-dog (in progress) and before the illustration and component tasks, so they climb on the new model. A model change can move every eval score, so the next tasks re-baseline after this lands.\n\nScore the bake-off on the held-out set from the-test-set-cannot-be-passed-by-a-lookup-unseen, not only the climbable cases.",
@@ -30,6 +31,10 @@
     {
       "t": "2026-10-20T22:27:45.623Z",
       "note": "seq 35 -> 8.1"
+    },
+    {
+      "t": "2026-10-21T02:20:00.624Z",
+      "note": "manager 2026-10-20: now waits on the-ask-test-set-scores-video-requests-too, because this checklist asks for a video column per model and the eval has no video case yet; that task is sequenced just ahead (8.08) and is one sitting"
     }
   ]
 }
