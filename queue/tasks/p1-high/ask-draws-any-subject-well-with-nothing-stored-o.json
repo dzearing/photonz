@@ -4,12 +4,12 @@
   "goal": "A person can say 'make x' for any x and get a good drawing, because the quality comes from the model, the prompt, general drawing techniques and material looked up at the time of asking. The stored emoji drawings and the code written for particular subjects (a fox, a lighthouse, a skyline, mountains) come out of the app.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8.2,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T01:04:33.989Z",
-  "updated": "2026-10-21T01:24:44.908Z",
+  "updated": "2026-10-21T12:41:59.513Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen",
     "ask-runs-on-the-best-model-this-mac-can-hold-pic",
@@ -22,6 +22,7 @@
     "Kept only what works on any subject: gradients, path smoothing and simplifying, boolean shape operations, a light and shadow pass over whatever shapes exist, value and palette passes, the critique checks, the look-and-revise loop. The audit lists each technique kept and why it is general (it never names a subject)",
     "The drawing route is the best general one measured, picked from: the model writing the drawing in passes with a better prompt, the winner of ask-runs-on-the-best-model-this-mac-can-hold-pic, the picture-model-then-trace route of try-drawing-with-a-local-picture-model-then-turn, reference pictures looked up at request time and studied (not traced), or a mix",
     "Measured on the held-out set (the-test-set-cannot-be-passed-by-a-lookup-unseen), which includes subjects no runner has seen: the total is at or above today's held-out score, and the share of results from stored or coded subjects is 0",
+    "What agents and runners read says the new route, with no built-in drawing set left in it: the Photonz skill (plugin/skills/photonz/SKILL.md, the Drawing row says about a thousand built-in drawings today), the add_drawing row in docs/design/agent-mcp.md, and the Drawing a thing and Pieces sections of docs/design/ask.md",
     "The eval's stored-or-coded share is reported on every run from now on, so a later runner cannot slip a template back in. Audit under queue/audits/ with before and after contact sheets on the held-out set. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
   ],
   "log": [
@@ -36,6 +37,18 @@
     {
       "t": "2026-10-21T01:24:44.907Z",
       "note": "The held-out set and the stored-or-coded count are in (commit 936aa3d7): Scripts/ask-eval.sh run --engine ask --set held-out prints the total and a line 'drawings N stored, N template, N drawn for the request (X% looked up)'; Scripts/ask-eval.sh report shows the latest climb and held-out totals. 'stored' = the built-in drawing set, 'template' = Illustrator's coded scenes; your 0 share means both counts at 0. Held-out cases are never read one by one while you change Ask (runner-prompt, Hard rules): draw the held-out contact sheet (Scripts/ask-eval.sh sheet <run>) only for the audit after your last change. The baseline held-out run is 20261021-010309-ask-held-out."
+    },
+    {
+      "t": "2026-10-21T12:40:00.181Z",
+      "note": "digest 2026-10-21: folded in every-illustration-ask-draws-reaches-the-crafted (dropped). It asked for the forest, lighthouse, fox, skyline, line art and silhouette badge to reach 7 on crafted and designed by improving IllustrationPieces.swift, the subject-named code this task removes. Its judge notes stay useful as a general bar for the replacement route: trees need branch structure and rim light, figures need believable limbs and heads, buildings need variety (rooftops, setbacks, lit facades), rock needs planes, clouds need volume, a silhouette badge's shapes must meet its ring cleanly. Scores 2026-10-20 (run 20261020-234936-ask): 5/7, 6/7, 5/7, 5/7, 6/7, 4/5."
+    },
+    {
+      "t": "2026-10-21T12:40:29.822Z",
+      "note": "seq 8.2 -> 70"
+    },
+    {
+      "t": "2026-10-21T12:41:59.512Z",
+      "note": "digest 2026-10-21: added a checklist item for the docs: the skill, agent-mcp.md and ask.md all still describe the built-in drawing set and the illustrator's subject pieces, so an outside agent would keep asking for them after the code is gone."
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Ask today runs on a year-old model that cannot see. Try the current local models that can both see and use tools, score each on the eval, and make the winner the default, so every drawing, sheet and redline starts from the best brain this Mac has.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8.1,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:27:41.987Z",
-  "updated": "2026-10-21T02:20:00.625Z",
+  "updated": "2026-10-21T12:40:29.653Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen",
     "the-ask-test-set-scores-video-requests-too"
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-21T02:20:00.624Z",
       "note": "manager 2026-10-20: now waits on the-ask-test-set-scores-video-requests-too, because this checklist asks for a video column per model and the eval has no video case yet; that task is sequenced just ahead (8.08) and is one sitting"
+    },
+    {
+      "t": "2026-10-21T12:40:29.652Z",
+      "note": "seq 8.1 -> 50"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "When a person sends a second request while Ask is still on the first, Ask keeps it in line and runs it next, instead of doing nothing with it. Each waiting request shows as a row in the Agent area with a way to cancel it before it starts, and the one that is running can be stopped too.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8.07,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:31:23.418Z",
-  "updated": "2026-10-20T22:31:29.428Z",
+  "updated": "2026-10-21T12:40:29.487Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'if I type a message while its working, it doesn't queue the message. It should queue and let me cancel in the agent ux if it hasn't started.'\n\nSeen in code, not run: AskSession.ask (Sources/Photonz/Agent/AskSession.swift:85) opens with guard !words.isEmpty, !isBusy else { return }, so a send while busy is silently ignored; the words stay in the field. The change rows from ask-makes-the-change-straight-away-and-each-chan (AskChanges.swift) are where waiting rows belong. work is a Task, so stop can cancel it; check what a cancel mid-run leaves in the document and in History. Also the send button and Return are disabled while busy (AskViews.swift:96 and :225), which is why nothing appears to happen.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-20T22:31:29.427Z",
       "note": "seq 35 -> 8.07"
+    },
+    {
+      "t": "2026-10-21T12:40:29.486Z",
+      "note": "seq 8.07 -> 30"
     }
   ]
 }

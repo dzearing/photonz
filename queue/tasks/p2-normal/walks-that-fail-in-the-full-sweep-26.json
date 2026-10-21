@@ -4,15 +4,15 @@
   "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-10-20T20:05:16.336Z",
+  "updated": "2026-10-21T12:40:35.268Z",
   "deps": [],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-20T11:59:07Z: 982 of 986 walks passed in 288 minutes.\n\nFailing walks (4): caption-lines-join-and-a-word-moves-back-walk, playing-backwards-fast-keeps-moving-walk, section-fold-motion-walk, view-to-edit-on-a-long-recording-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 3: caption-lines-join-and-a-word-moves-back-walk, playing-backwards-fast-keeps-moving-walk, section-fold-motion-walk\n\nStopped failing since the last sweep (9): animated-charts-walk, component-drag-lands-a-copy-walk, insert-a-title-before-a-clip-walk, library-tile-click-latency-picture-walk, starter-shelf-walk, title-and-gfx-track-icons-walk, title-presets-library-shelf-walk, tutorial-add-a-second-clip-walk, video-library-catalog-walk\n\nFull output: queue/sweep/2026-10-20-001105.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-21T12:36:38Z: 998 of 1002 walks passed in 287 minutes.\n\nFailing walks (4): caption-lines-join-and-a-word-moves-back-walk, pen-width-before-you-draw-walk, section-fold-motion-walk, view-to-edit-on-a-long-recording-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 3: caption-lines-join-and-a-word-moves-back-walk, pen-width-before-you-draw-walk, section-fold-motion-walk\n\nStopped failing since the last sweep (1): playing-backwards-fast-keeps-moving-walk\n\nFull output: queue/sweep/2026-10-21-005006.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
   "acceptance": [
     "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
     "Each one is run on its own and passes twice in a row",
@@ -90,6 +90,14 @@
     {
       "t": "2026-10-20T20:05:16.334Z",
       "note": "rotating check 2026-10-20T20:05:16Z, 31 walks run from 158 onward in the rotation: caption-lines-join-and-a-word-moves-back-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-21T12:36:38.957Z",
+      "note": "sweep 2026-10-21T12:36:38Z: 4 failing (caption-lines-join-and-a-word-moves-back-walk, pen-width-before-you-draw-walk, section-fold-motion-walk, view-to-edit-on-a-long-recording-walk); stopped failing: playing-backwards-fast-keeps-moving-walk"
+    },
+    {
+      "t": "2026-10-21T12:40:35.267Z",
+      "note": "seq 40 -> 80"
     }
   ],
   "standing": "walk-sweep"

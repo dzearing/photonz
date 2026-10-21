@@ -4,12 +4,12 @@
   "goal": "Each row in the Agent area names what the request actually did in the person's own terms: \"Drew a cat\", \"Made the cat's ears bigger\", \"Added 8 measurements to the toolbar\". Today rows read \"Drew a drawing\", \"Changed a layer\" and \"Drew 2 shapes\", which tell the person nothing.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8.06,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:32:52.034Z",
-  "updated": "2026-10-20T22:32:56.552Z",
+  "updated": "2026-10-21T12:40:29.406Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20 15:32 (queue/audits/2026-10-20-user-ask-rows-undescriptive.png): 'i ask it to draw a cat but the agent history is undescriptive ... it should say \"Drew a cat\"'. Rows shown: Changed a layer; Drew a drawing (A later change builds on this.); Drew 2 shapes; Drew a drawing; Drew a drawing.\n\nCause, from code: AskChanges.sentence (Sources/PhotonzCore/AskChanges.swift:278) builds the row from the tool steps only. add_drawing maps to 'Drew a drawing' (:259) and only names a look when IllustrationBrief.make returns a brief, which it does not for a plain subject that is not a scene or an asked-for illustration (IllustrationBrief.swift:110-127), so 'a cat' falls back to 'a drawing'. set_layer is always 'Changed a layer' (:263). The request words (AskSession's asked) are never used.\n\nThe illustration task (an-illustration-ask-draws-looks-illustrated-natu) is running now and works in IllustrationBrief; pull before starting and build on what it left.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-20T22:32:56.550Z",
       "note": "seq 35 -> 8.06"
+    },
+    {
+      "t": "2026-10-21T12:40:29.405Z",
+      "note": "seq 8.06 -> 20"
     }
   ]
 }

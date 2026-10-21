@@ -4,12 +4,12 @@
   "goal": "What Ask builds on this Mac should look like a person made it: a pricing section whose card words replace the card's own placeholder text and sit in a tidy row, and screenshot measurements that read cleanly instead of crowding. Today the plan runs but the result is rough.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 10,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-21T02:20:00.754Z",
+  "updated": "2026-10-21T12:40:30.244Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -70,6 +70,10 @@
     {
       "t": "2026-10-21T02:20:00.752Z",
       "note": "manager 2026-10-20 19:20: walked again on today's probe at defaults, same result (one Card, Basic above it, $9.99 and the feature list over the card's picture): queue/manager/shots/2026-10-20-1920-ask-pricing-ran.png. Eval baseline pricing: Ask 29.6, skill 82.4. The skill's recipe for a copy's word piece is in plugin/skills/photonz/SKILL.md but Ask's instructions (AskPlanning.swift instructions(documentRead:)) are a separate text; if the fix is guidance, put it in one place both read rather than a second copy"
+    },
+    {
+      "t": "2026-10-21T12:40:30.243Z",
+      "note": "seq 10 -> 120"
     }
   ],
   "walks": [

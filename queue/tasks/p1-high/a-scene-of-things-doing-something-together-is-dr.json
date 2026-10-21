@@ -4,12 +4,12 @@
   "goal": "When a person asks for a thing in a pose or doing something ('a cat curled up sleeping'), or for several things in a relationship ('a cartoon cat playing a piano', 'a dog chasing a ball', 'a fox sleeping under a tree'), Ask draws one picture where they really do that: the cat sits at the piano, its paws on the keys, both at sensible sizes and in one style. Today it drops two stock drawings on top of each other.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8.35,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-21T01:24:24.135Z",
+  "updated": "2026-10-21T12:40:29.912Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -43,6 +43,10 @@
     {
       "t": "2026-10-21T01:24:24.134Z",
       "note": "the-test-set-cannot-be-passed-by-a-lookup-unseen moved the user's own two requests ('draw a cat curled up sleeping', 'draw a piano with a cartoon cat playing it') into the eval's HELD-OUT set, which runners read in total only. So this task's climb cases became a rabbit curled up asleep and a cat playing a guitar; the user's two are measured through the held-out total (Scripts/ask-eval.sh report), and the user's pictures already score didWhatWasAsked 1 in calibration. Don't add held-out requests to Scripts/ask-eval/cases/."
+    },
+    {
+      "t": "2026-10-21T12:40:29.911Z",
+      "note": "seq 8.35 -> 80"
     }
   ]
 }

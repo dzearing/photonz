@@ -1,23 +1,23 @@
 {
   "id": "a-redline-of-a-2x-screenshot-reads-in-points-wit",
-  "title": "A redline of a 2x screenshot reads in points, with dimension lines a designer reads at a glance",
-  "goal": "Measurements on a Retina screenshot say their numbers in points (\"124 pt\" for a button 248 pixels wide) instead of a \"px\" that reads as wrong, and each dimension line shows plainly what it spans, so a redline Ask makes reads as a finished spec rather than a tangle.",
+  "title": "A redline of a 2x screenshot reads in points, with dimension lines that show what each number spans",
+  "goal": "This finishes what the user asked for in the calm redline and did not get: a redline of a Retina screenshot should say its numbers in points (\"124 pt\" for a button 248 pixels wide), and every dimension line should start and stop on the edges it measures. Today the numbers say px, and several brackets (under Save Changes, beside the folder field) wander off what they measure, so a reader cannot tell what a number spans.",
   "epic": "measure-redline",
   "priority": "p1-high",
-  "seq": 3970,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T05:16:19.351Z",
-  "updated": "2026-10-21T06:33:53.433Z",
+  "updated": "2026-10-21T12:42:52.955Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried over from measuring-a-ui-gives-a-calm-redline-each-kind-of (2026-10-20), which shipped code-chosen marks and clear readout placement (Sources/PhotonzCore/Redline.swift, find_measurements / mark_measurements) and took the settings case from 32.5 to 59.0 for Ask (judge 2.8 to 4.8). What the judge still says, verbatim, from Scripts/ask-eval.sh run --engine ask --cases settings-measurements (runs 20261021-044351-ask, 20261021-044837-ask, 20261021-050243-ask or the latest): \"values don't match what they point at (124 px on a roughly 250 px button, 18 px on a gap that is clearly larger)\"; \"there are no end ticks to show what is being measured\"; \"the brackets don't clearly mark what they measure (26 px, 30 px, 17 px)\". The 124 is right in points (MeasureUnit.points, logical px) but labelled px: MeasureUnit.suffix is \"px\" for both units by design (Measure.swift line 12). Only three call sites use the suffix (Measure.swift label/chipText, MeasureSizeGroup.swift:176, DocumentUnit.swift:27) but about 46 test files and 38 walks expect px readouts, which is why it did not fit in the redline task. Size brackets are MeasureSizeGroup + caliper extension lines (MeasurePlan.swift, MeasureRasterizer.swift).",
   "acceptance": [
-    "On a 2x screenshot every measurement readout and the Measurements list say pt unless the person chose pixels, and every walk and test that expected px on a 2x picture is updated in the same change",
-    "A dimension line shows where it starts and stops (end ticks or the Measure tool's equivalent), so a judge or a person can tell what each number spans",
-    "The settings measurements case scores 8 or more on clean and aligned in the eval for Ask and for the skill (Scripts/ask-eval.sh run --cases settings-measurements)",
-    "A person placing many measurements by hand gets readouts kept off words, controls and other measurement lines the way an Ask redline does, without undoing the leash and on-the-line choices the user already made (MeasureCalloutClearanceTests, MeasureLabelPlacementTests)"
+    "On a 2x screenshot every measurement readout and the Measurements list say pt unless the person chose pixels (the user's calm-redline checklist, 2026-10-20), and every walk and test that expected px on a 2x picture changes in the same commit",
+    "Before and after crops of the calm redline on Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png, from the app's own render: in the after, every dimension line starts and stops on the two edges it measures (end ticks or the Measure tool's equivalent), and no bracket runs along an edge it does not measure",
+    "The settings measurements case scores 8 or more on clean and aligned for Ask and for the skill (Scripts/ask-eval.sh run --cases settings-measurements); it scored 4 on clean when the calm redline shipped",
+    "Measurements a person places by hand get the same units and the same clearer ends, and every walk that photographs a measurement still passes"
   ],
   "log": [
     {
@@ -27,6 +27,38 @@
     {
       "t": "2026-10-21T06:33:53.432Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-21T12:40:13.667Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-10-21T12:40:13.758Z",
+      "note": "digest 2026-10-21: spot-checked as a p1 bug filed by the loop. Read Sources/PhotonzCore/Measure.swift:12-24: the px suffix on a 2x picture is a deliberate design (logical pixels, as CSS reads px), so '124 px on a 248 pixel button' is the right number, misread by the eval judge, not a wrong measurement. The end-tick point is the judge's opinion with no picture yet. Moved p1 -> p2 and retitled as the open question it is; the user's main use of the app is redlining, so a unit change on every measurement is worth showing them before it ships."
+    },
+    {
+      "t": "2026-10-21T12:40:38.019Z",
+      "note": "seq 3970 -> 410"
+    },
+    {
+      "t": "2026-10-21T12:41:23.044Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-10-21T12:41:23.134Z",
+      "note": "digest 2026-10-21, second look: the calm redline's own after picture (queue/audits/2026-10-20-calm-redline-settings-after-sc.png) shows the bracket problem plainly: the 124 px bracket hangs below Save Changes, the 26 px bracket sits beside the folder field instead of on it, the 220 px bracket floats above it. That half is a visible defect left from the user's own calm-redline ask (its checklist asked for clean 8 and closed at 4), so back to p1, retitled to it. The px half stays a question for the user, not a change."
+    },
+    {
+      "t": "2026-10-21T12:41:23.258Z",
+      "note": "seq 410 -> 180"
+    },
+    {
+      "t": "2026-10-21T12:42:52.836Z",
+      "note": "digest 2026-10-21, correction: the user's own calm-redline task (measuring-a-ui-gives-a-calm-redline-each-kind-of, created by the user) carried 'Units match the picture: points on a 2x screenshot unless the person asked for pixels' and 'reaches 8 or more on clean' in its checklist, and closed done without either. So pt is the user's ask, not an open question, whatever Measure.swift's older comment says; restored as a requirement and sequenced right after the user's own asks, since it is the unfinished part of one."
+    },
+    {
+      "t": "2026-10-21T12:42:52.954Z",
+      "note": "seq 180 -> 150"
     }
   ],
   "walks": []

@@ -2,14 +2,14 @@
   "id": "ask-s-redlines-do-at-least-as-well-on-unseen-req",
   "title": "Ask's redlines do at least as well on unseen requests as before the calm redline change",
   "goal": "After Ask started choosing measurements in code, its scores on unseen measuring requests fell even though the settings screenshot request got better. Find what kind of measuring request now does worse and fix it, without tuning to any one request.",
-  "epic": "measure-redline",
+  "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 3980,
+  "seq": 180,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T06:33:47.359Z",
-  "updated": "2026-10-21T06:33:53.366Z",
+  "updated": "2026-10-21T12:42:53.205Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured, not guessed: held-out run 20261021-010309-ask-held-out (before, commit 4514d304) redline group 35.4; after the calm redline (c9200d34) 20261021-050656-ask-held-out redline 19.5; after the follow-up fixes (aa4e3ce3: an empty find_measurements answer says to fall back to find_elements, Ask lays only the ids that answer the request, a redline never drops below three marks) 20261021-055152-ask-held-out redline 19.6. Totals 20.1 / 19.2 / 19.5. Only one baseline run exists, so a lucky baseline is possible: rerun the before commit's held-out once before chasing. A runner may not open Scripts/ask-eval/held-out/ or .ask-eval/held-out-runs/; the user can look at .ask-eval/held-out-runs/20261021-055152-ask-held-out/contact-sheet.png. Ideas not yet checked: requests that name a dimension the plan never measures (a card's width, the title's size), pictures LayoutRead reads poorly (dark app windows, photos), and the prompt sending every measuring request to find_measurements.",
@@ -25,6 +25,18 @@
     {
       "t": "2026-10-21T06:33:53.365Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-21T12:40:29.200Z",
+      "note": "digest 2026-10-21: epic measure-redline -> agent-ask: this is Ask's own score on measuring requests, one of the four focus scenarios. Evidence checked: Scripts/ask-eval.sh report prints held-out 19.5 on 42 cases (run 20261021-055152-ask-held-out), matching the after number here; the 35.4 baseline is one run, so the rerun of the before commit in the notes comes first."
+    },
+    {
+      "t": "2026-10-21T12:40:30.659Z",
+      "note": "seq 3980 -> 170"
+    },
+    {
+      "t": "2026-10-21T12:42:53.204Z",
+      "note": "seq 170 -> 180"
     }
   ],
   "walks": []

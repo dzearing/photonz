@@ -4,12 +4,12 @@
   "goal": "Changing an animated chart's numbers or theme lays its bars out again and throws away any key or effect the person set by hand on a bar, and restyling a chart or title puts back the theme's version of an effect the person had edited. The person loses work without being told. Keep hand-set keys and edited effects through a change of numbers or style, the way hand-dragged title bars are now kept.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 80,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.166Z",
-  "updated": "2026-10-20T14:58:23.911Z",
+  "updated": "2026-10-21T12:40:35.592Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From two audit rough lines nobody filed: queue/audits/2026-10-17-animated-charts.json ('Changing the data or the theme lays the chart's pieces out again: a key or an effect set by hand on one bar is lost (the pieces keep their ids, and a part's retimed in and out are kept)') and queue/audits/2026-10-19-a-title-part-move-dragged-by-hand-on-the-timelin.json ('On a chart, an effect the drawing gave a bar and that you then edited (rather than added) still goes back to the theme's on a restyle; only effects you added are kept'). The model to copy is commit 56d7c8e5 (hand-dragged title part bars survive a restyle). Not reproduced by the manager, so p2 with reproduction as the first item.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-10-20T14:58:23.910Z",
       "note": "note from a-chart-is-your-data-given-to-it-the-obvious-way: a chart with later sets is now posed at every frame from the numbers of that moment (ChartData.swift, ChartPen.posed); the pose keeps each piece's own style, keys and text settings and only changes place, size, shape and words, so hand-set looks survive there. Stored pieces are still laid out by ChartPen.rebuilt as before."
+    },
+    {
+      "t": "2026-10-21T12:40:35.591Z",
+      "note": "seq 80 -> 120"
     }
   ]
 }

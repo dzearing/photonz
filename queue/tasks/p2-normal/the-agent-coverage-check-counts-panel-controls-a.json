@@ -4,12 +4,12 @@
   "goal": "The check that says how much of Photonz an agent can reach covers what a person can click in the panel and in every right-click menu, not only the menu bar, so nothing a person can do is out of an agent's reach without a written reason. Today panel controls are not counted at all and eight timeline right-click rows have no name.",
   "epic": "agent-api",
   "priority": "p2-normal",
-  "seq": 6,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:19:05.617Z",
-  "updated": "2026-10-20T15:19:13.481Z",
+  "updated": "2026-10-21T12:40:34.781Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Focus success gap: agent-api success item 1 names menus, panels and right-click menus. Today Tests/PhotonzCoreTests/EveryMenuCommandHasANameTests.swift reads menu bar rows (leftOut list :171-310), timeline right-click rows (:314-380, 57 of 65 named per queue/audits/2026-10-19-agent-skill.json) and layer right-click rows by title (:387+); other right-click rows only as 'a menu bar row under other words' (:17-19). Panel controls reach agents through typed tools (set_layer, set_layout, apply_style, set_transition; Sources/PhotonzCore/AgentTools.swift) and the agent-skill audit says no test counts them. The-panel-shows-what-the-picked-thing-is-and-its moves one-shot panel buttons into right-click and the menus, so those rows must land on this list whichever lands first. Keep the test in PhotonzCore reading source text as today, or put a registry of panel controls in Core if that reads cleaner; log which.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-20T15:19:13.480Z",
       "note": "seq 7.5 -> 6"
+    },
+    {
+      "t": "2026-10-21T12:40:34.780Z",
+      "note": "seq 6 -> 20"
     }
   ]
 }

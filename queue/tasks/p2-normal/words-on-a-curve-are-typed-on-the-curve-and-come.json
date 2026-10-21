@@ -4,12 +4,12 @@
   "goal": "A headline set along a curve can be put there, reshaped and keyed, but re-wording it opens the words straight in a box until you finish, and a Reveal or a colour ramp does nothing to it. Let a person type the words in place on the curve and give curved words the same letter-by-letter reveals and ramps straight words have.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 260,
+  "seq": 300,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T11:56:45.518Z",
-  "updated": "2026-10-20T13:58:45.223Z",
+  "updated": "2026-10-21T12:40:37.124Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from a-title-s-words-can-follow-a-curved-path (2026-10-18). Today: CanvasTextEditing opens the inline editor in the curve box with the words straight; DocumentRenderer skips reveal pieces when text.onPath != nil and InspectorPanel hides the Reveal section for curved words; TextRasterizer.rasterizeOnPath draws text.fillPaint flat (colorHex). Placement maths is TextOnPathLayout/PathWalk in PhotonzCore; TextRasterizer.pathLetters gives each glyph its place.",
@@ -50,6 +50,10 @@
     {
       "t": "2026-10-20T13:58:45.222Z",
       "note": "seq 250 -> 260"
+    },
+    {
+      "t": "2026-10-21T12:40:37.122Z",
+      "note": "seq 260 -> 300"
     }
   ],
   "walks": [

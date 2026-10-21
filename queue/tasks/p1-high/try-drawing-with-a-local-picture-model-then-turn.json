@@ -4,12 +4,12 @@
   "goal": "Language models are poor at drawing by writing shapes; picture models are good at exactly what Ask gets wrong (a cat curled up asleep, a cat at a piano, a named style). Try generating the picture with a local picture model on this Mac and turning it into clean, editable vector layers, and keep it only if it beats today's way on the held-out test set.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8.15,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:50:50.934Z",
-  "updated": "2026-10-20T22:50:58.397Z",
+  "updated": "2026-10-21T12:40:29.740Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen"
   ],
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-20T22:50:58.396Z",
       "note": "seq 42.5 -> 8.15"
+    },
+    {
+      "t": "2026-10-21T12:40:29.739Z",
+      "note": "seq 8.15 -> 60"
     }
   ]
 }

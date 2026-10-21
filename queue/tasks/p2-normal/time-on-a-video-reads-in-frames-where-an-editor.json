@@ -4,12 +4,12 @@
   "goal": "A Premiere or Final Cut editor thinks in frames: they trim a transition to 12 frames and park the playhead at 00:00:04:12. Photonz says 0:04 on the transport and 0.8s beside a transition you drag, so an editor cannot land on a frame they can name. Time stays in seconds by default, and a Timecode choice in the View menu switches every readout and length field to frames (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 140,
+  "seq": 180,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T12:30:45.465Z",
-  "updated": "2026-10-20T13:58:44.420Z",
+  "updated": "2026-10-21T12:40:36.098Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen twice now, so it is filed. First: docs/design/video-vs-premiere.md, 'Seen, not filed: No frames in the time readout. The transport says 0:04 and the ruler counts seconds; Premiere shows 00:00:04:12.' Second: queue/audits/2026-09-29-transition-edge-follows-the-pointer.json rough list: 'The bubble shows tenths of a second (0.8s), and hundredths only once the ruler is zoomed in far enough. It does not show frames.' Serves the video-beats-premiere success criterion that the ruler, playhead, clips and captions agree to the frame at every zoom. Update the gap report's line when this closes.",
@@ -150,6 +150,10 @@
     {
       "t": "2026-10-20T13:58:44.419Z",
       "note": "seq 130 -> 140"
+    },
+    {
+      "t": "2026-10-21T12:40:36.097Z",
+      "note": "seq 140 -> 180"
     }
   ],
   "started": "2026-10-02T07:23:54.886Z",

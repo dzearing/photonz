@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 35,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T00:13:56.430Z",
-  "updated": "2026-10-21T00:13:56.433Z",
+  "updated": "2026-10-21T12:40:00.249Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows an-illustration-ask-draws-looks-illustrated-natu (2026-10-20). Code: Sources/PhotonzCore/Illustrator.swift (composition, passes), IllustrationPasses.swift (inks per style, details, checks), IllustrationPieces.swift (pine, fox, skyline, lighthouse, cliff). Preview loop: PHOTONZ_ILLUSTRATION_PREVIEW=/tmp/x Scripts/test.sh --filter IllustrationPreviewTests writes each pass as SVG; render with headless Chrome. Build the probe with Scripts/build-app.sh --probe before an eval run (the in-walk build failed twice with no document open), then Scripts/ask-eval.sh run --engine ask --no-build --cases ... Judge notes from run 20261020-234936-ask: forest trees need branch structure and rim light that reads; fox legs and head too simple; skyline needs building variety (rooftops, setbacks, a lit facade) and reflections that follow the lit windows; cliff needs rock planes; silhouette badge mountains meet the inner ring abruptly and lake lines run behind the pines; clouds need volume. Related: try-drawing-with-a-local-picture-model-then-turn tries a different route (a picture model, then vector layers).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-21T00:13:56.432Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-21T12:40:00.247Z",
+      "note": "digest 2026-10-21: contradicts the user's 2026-10-20 rule that nothing Ask draws comes from code written for a subject; it would tune the fox, lighthouse and skyline functions to the eval cases. Folded into ask-draws-any-subject-well-with-nothing-stored-o, which removes those functions and keeps the judge notes as a general bar."
     }
   ],
   "walks": [

@@ -4,12 +4,12 @@
   "goal": "Ask and the Photonz skill are scored on drawings, component sheets, pricing and measurements, but never on a video, though a video is one of the four things Ask has to change well. Add video requests to the test set, scored from the frames the video actually plays, so a change that makes video asks worse shows up, and so the model Ask runs on is picked on video work as well as pictures.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 8.08,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T02:19:50.855Z",
-  "updated": "2026-10-21T02:20:00.537Z",
+  "updated": "2026-10-21T12:40:38.276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager 2026-10-20 19:30. Scripts/ask-eval/cases/ and held-out/ hold no video case at all (25 climbing cases: drawings, sheets, pricing, settings measurements). ask-runs-on-the-best-model-this-mac-can-hold-pic asks for a per-category table including video, which cannot be filled without these cases, so it now depends on this task. Video tools Ask has: add_title, cut, trim, move_clip, set_transition, apply_zooms (Sources/PhotonzCore/AskPlanning.swift AskTools.doing); missing from Ask but on the server: add_clip, new_video, export, set_playhead, video_frame (AgentVideo.swift). Frames for the sheet: the server video_frame / contact_sheet tools (AgentContactSheet.swift) or Scripts/ask-eval/contact-sheet.swift. Walk ask-adds-a-title-page-walk passes today (26 s) with a plain white on black Case 1 page: queue/manager/shots/2026-10-20-1920-ask-title-ran.png. No stored subjects or per-request templates (runner-prompt Hard rules): the cases are tests, the fix for any of them is a general technique.",
@@ -29,6 +29,14 @@
     {
       "t": "2026-10-21T02:20:00.536Z",
       "note": "seq 42.5 -> 8.08"
+    },
+    {
+      "t": "2026-10-21T12:40:29.568Z",
+      "note": "seq 8.08 -> 40"
+    },
+    {
+      "t": "2026-10-21T12:40:38.275Z",
+      "note": "digest 2026-10-21: kept ahead of the user's asks (seq 40) on purpose: ask-runs-on-the-best-model-this-mac-can-hold-pic, the user's ask right behind it, depends on it and cannot start until it is done."
     }
   ]
 }

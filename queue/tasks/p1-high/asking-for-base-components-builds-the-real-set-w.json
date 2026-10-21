@@ -4,12 +4,12 @@
   "goal": "When a person asks for base components, Ask and the Photonz skill know what a real design kit holds (buttons, toggles, text fields, checkboxes, segmented controls, menus, sliders, tabs, list rows, alerts and so on) and build each one as a proper component with its states as variants, instead of reusing the five placeholder starters in the Library.",
   "epic": "agent-skills",
   "priority": "p1-high",
-  "seq": 8.5,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:44:10.565Z",
-  "updated": "2026-10-21T01:04:48.954Z",
+  "updated": "2026-10-21T12:40:29.991Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'when i say components, it only seems to know the placeholder components. it should be able to research what base components might include.' The screenshot queue/audits/2026-10-20-user-ask-component-sheet-mess.png shows Badge, Nav Bar, Card, Text Field, Button: the app's starters.\n\nSuspect, NOT confirmed: Ask's tool list (Sources/PhotonzCore/AskPlanning.swift line 24) does include run_command, so make_component and add_variant are reachable in principle; the model may not know they exist, or what goes in them, because the prompt hands it the Library's starters up front (the Ask task chose that on 2026-10-20). Reproduce before fixing. The skill can (plugin/skills/photonz/SKILL.md line 41) but its text points at the starters (line 88). 'Research' without the web is the built-in list; looking things up on the web is the separate web task, which this one does not wait on. Runs before the component sheet task, which lays these out as a table.\n\nThe user, 2026-10-20: 'i don't want a hardcoded anything.' The earlier line asking for a built-in list of components was replaced: no stored list, no coded component looks.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-10-21T01:04:48.954Z",
       "note": "intake: no stored component list; model knowledge plus request-time lookup"
+    },
+    {
+      "t": "2026-10-21T12:40:29.990Z",
+      "note": "seq 8.5 -> 90"
     }
   ]
 }
