@@ -55,7 +55,7 @@ struct RedlinePlanTests {
         #expect(spacing.count >= 4)
     }
 
-    @Test("The four switches and the two fields each get one size, on the first of them")
+    @Test("The four switches and the two fields each get one size, on whichever has the most room for it")
     func repeatsOnce() throws {
         let r = try Self.read(Self.settings)
         let sizes = r.marks.filter { $0.role == .size }
@@ -68,21 +68,22 @@ struct RedlinePlanTests {
         #expect(fields.count == 1, "\(sizes.map { points($0) })")
         #expect(switches.first?.repeats == 4)
         #expect(fields.first?.repeats == 2)
-        // The first switch, top of the first card.
-        #expect((switches.first?.box?.minY ?? 0) < 240)
+        // On one of the four switches, at the switch column's own place.
+        #expect(switches.first?.box?.minX == 1260)
         #expect(switches.first?.what == "Switch")
         #expect(fields.first?.what == "Field")
     }
 
-    @Test("The spacing a designer marks: margin, padding, row height, section gap, the gap between buttons, a label's inset")
+    @Test("The spacing a designer marks: padding, row height, section gap, the gap between buttons, a label's inset; never a margin to where the screenshot was cropped")
     func spacingRoles() throws {
         let r = try Self.read(Self.settings)
         let roles = Set(r.marks.map(\.role))
-        for role in [RedlineMark.Role.margin, .padding, .rhythm, .sectionGap, .gap, .inset] {
+        for role in [RedlineMark.Role.padding, .rhythm, .sectionGap, .gap, .inset] {
             #expect(roles.contains(role), "missing \(role): \(r.marks.map(\.what))")
         }
         func value(_ role: RedlineMark.Role) -> CGFloat? { r.marks.first { $0.role == role }?.value(pixelScale: 2) }
-        #expect(abs((value(.margin) ?? 0) - 31) <= 1.5)
+        // Nothing measured from the picture's own edge.
+        #expect(r.marks.allSatisfy { $0.start.x > 0 && $0.start.y > 0 })
         #expect(abs((value(.padding) ?? 0) - 17) <= 1.5)
         #expect(abs((value(.rhythm) ?? 0) - 44) <= 1.5)
         #expect(abs((value(.sectionGap) ?? 0) - 19) <= 2)
@@ -112,13 +113,17 @@ struct RedlinePlanTests {
 
     // MARK: Where the readouts go
 
+    static func edges(_ r: Read) -> [CGRect] {
+        RedlinePlan.edges(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2)
+    }
+
     /// Every caliper the redline draws, placed as the app places them.
     static func laid(_ r: Read) -> [MeasureContent] {
         // The Measure tool's own default styles, as the app lays them.
         let size = MeasureStyles().content(for: .size)
         let spacing = MeasureStyles().content(for: .spacing)
         let obstacles = RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2)
-        return RedlineLayout.lay(r.marks, obstacles: obstacles, canvas: r.canvas,
+        return RedlineLayout.lay(r.marks, obstacles: obstacles, edges: Self.edges(r), canvas: r.canvas,
                                  size: size, spacing: spacing).flatMap(\.calipers)
     }
 
@@ -129,7 +134,7 @@ struct RedlinePlanTests {
             let calipers = Self.laid(r)
             if name == Self.settings {
                 // Leaving a mark out is the last resort, not the habit.
-                let laid = RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2),
+                let laid = RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2), edges: Self.edges(r),
                                              canvas: r.canvas, size: MeasureStyles().content(for: .size), spacing: MeasureStyles().content(for: .spacing))
                 #expect(laid.count == r.marks.count, "\(laid.map(\.mark.what)) of \(r.marks.map(\.what))")
             }
@@ -184,7 +189,7 @@ struct RedlinePlanTests {
         let r = try Self.read(Self.settings)
         let canvas = CGRect(origin: .zero, size: r.canvas)
         let size = MeasureStyles().content(for: .size)
-        let laid = RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2),
+        let laid = RedlineLayout.lay(r.marks, obstacles: RedlinePlan.obstacles(in: r.nodes, canvas: CGRect(origin: .zero, size: r.canvas), pixelScale: 2), edges: Self.edges(r),
                                      canvas: r.canvas, size: size, spacing: size)
         for drawn in laid where drawn.mark.role == .size {
             let box = try #require(drawn.mark.box)

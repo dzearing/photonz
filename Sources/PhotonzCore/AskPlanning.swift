@@ -511,8 +511,10 @@ public struct AskConversation: Sendable {
         lined up on an 8 point grid, using the document's own styles and components when it has them.
         - To measure or redline a screenshot ("annotate with measurements", "measure the major \
         elements", "spec this"), call find_measurements, then mark_measurements once with the ids \
-        of every mark, normally all of them. Never place those yourself. Only when the person names \
-        one particular thing to measure, call find_elements and add_measurement for it.
+        that answer the request: all of them for a general request, only those whose what or role \
+        matches when the person names particular things (just the buttons, only the spacing). Never \
+        place those yourself. When it lists nothing, or nothing that matches what was named, call \
+        find_elements and add_measurement for what was asked.
         - To check a screenshot for what is inconsistent (misalignments, uneven spacing or gaps, padding \
         or borders that differ, "check the spacing", "what is inconsistent here"), call find_misalignments, \
         then mark_misalignments once with the ids of every finding worth showing. Never measure them \

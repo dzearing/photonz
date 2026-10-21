@@ -166,6 +166,10 @@ piano for "a piano with a cartoon cat playing it"): each must get
 didWhatWasAsked 2 or lower and a case score under 40 even with every rule
 met, however clean the drawing is.
 
+Since 2026-10-20 it also judges the user's noisy redline of the settings
+screenshot (twelve measurements, the switch measured four times, readouts
+stacked): it must score 4 or under and 3 or lower on clean.
+
 ## Adding a case
 
 One file in `cases/`, named for the case:

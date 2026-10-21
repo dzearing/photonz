@@ -141,12 +141,14 @@ Photonz work should look designed, not assembled.
    switches are measured once, on the first), then the margin, a card's
    padding, the row height, the gap between sections, the gap between
    neighbouring buttons and a button's label inset. Each mark has an id.
-3. `mark_measurements` with the ids, normally all of them. Never place these
-   yourself: every readout is laid clear of words, controls and the other
-   readouts, which hand-placed measurements are not.
-4. Only when the person names one particular thing to measure, `find_elements`
-   then `add_measurement` (`kind: size` with `box`, `kind: gap` between two
-   `boxes`).
+3. `mark_measurements` with the ids that answer the request: all of them for a
+   general request, only the matching ones when the person names particular
+   things (just the buttons, only the spacing). Never place these yourself:
+   every readout is laid clear of words, controls and the other readouts,
+   which hand-placed measurements are not.
+4. When it lists nothing, or nothing that matches what was named,
+   `find_elements` then `add_measurement` (`kind: size` with `box`, `kind: gap`
+   between two `boxes`).
 5. `render_picture` and say how many you placed.
 
 ### Finding the misalignments on a screenshot

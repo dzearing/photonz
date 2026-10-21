@@ -1,7 +1,7 @@
 {
   "rubric": "ebbf2873",
   "judgeModel": "claude-opus-5-5",
-  "at": "2026-10-21T00:54:54.415Z",
+  "at": "2026-10-21T04:51:14.753Z",
   "agrees": true,
   "results": [
     {
@@ -17,8 +17,8 @@
         "didWhatWasAsked": 1
       },
       "named": [
-        "brown abstract shape",
         "brown dog",
+        "brown blob",
         "dog"
       ],
       "atBest": 8.2,
@@ -37,7 +37,7 @@
         "didWhatWasAsked": 1
       },
       "named": [
-        "Smiley face",
+        "smiley face",
         "smiley face",
         "smiley face"
       ],
@@ -63,15 +63,15 @@
       "picture": "clean-component-sheet.png",
       "case": "component-table",
       "want": "high",
-      "judge": 8,
+      "judge": 7.8,
       "lines": {
         "clean": 8,
         "typography": 8,
         "aligned": 8,
         "designed": 8,
-        "didWhatWasAsked": 8
+        "didWhatWasAsked": 7
       },
-      "atBest": 88,
+      "atBest": 86.8,
       "ok": true
     },
     {
@@ -79,13 +79,13 @@
       "case": "illustration-sun-over-mountains",
       "want": "low",
       "crafted": 3,
-      "judge": 2.2,
+      "judge": 2,
       "lines": {
         "clean": 2,
         "typography": null,
         "aligned": 2,
         "designed": 2,
-        "didWhatWasAsked": 4,
+        "didWhatWasAsked": 3,
         "crafted": 1
       },
       "named": [
@@ -93,7 +93,7 @@
         "Mountains and sun",
         "Mountains and sun"
       ],
-      "atBest": 39.3,
+      "atBest": 29.1,
       "ok": true
     },
     {
@@ -110,9 +110,9 @@
         "didWhatWasAsked": 1
       },
       "named": [
-        "cat and piano",
         "Cat and piano",
-        "cat"
+        "Cat and piano",
+        "Cat and piano"
       ],
       "atBest": 10,
       "ok": true
@@ -131,11 +131,27 @@
         "didWhatWasAsked": 1
       },
       "named": [
-        "Cat",
-        "Orange tabby cat",
-        "Orange tabby cat"
+        "orange tabby cat",
+        "orange tabby cat",
+        "Cat"
       ],
       "atBest": 9.7,
+      "ok": true
+    },
+    {
+      "picture": "user-settings-measurements-noisy.png",
+      "case": "settings-measurements",
+      "want": "low",
+      "clean": 3,
+      "judge": 3.4,
+      "lines": {
+        "clean": 2,
+        "typography": 4,
+        "aligned": 3,
+        "designed": 3,
+        "didWhatWasAsked": 5
+      },
+      "atBest": 43.1,
       "ok": true
     }
   ]

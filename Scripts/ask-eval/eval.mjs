@@ -261,6 +261,10 @@ async function calibrate() {
     // perfect rules, however clean the drawing is.
     { picture: "user-cat-curled-up-sleeping.png", case: "user-cat-curled-up-sleeping", want: "ignored", asked: 2 },
     { picture: "user-cat-playing-piano.png", case: "user-cartoon-cat-playing-piano", want: "ignored", asked: 2 },
+    // 2026-10-20: "when you say 'annotate the ux with measurements around the
+    // major ui elements', it is way too noisey" - twelve measurements, the
+    // switch measured four times, readouts stacked: 3 or lower on clean.
+    { picture: "user-settings-measurements-noisy.png", case: "settings-measurements", want: "low", clean: 3 },
   ];
   const wanted = { low: "4 or under", high: "7 or over", ignored: "asked 2 or under, case under 40" };
   let agrees = true;
@@ -276,7 +280,8 @@ async function calibrate() {
     const atBest = combine(testCase, { score: 10 }, judge, named);
     const ok = (item.want === "low" ? judge.score <= 4 : item.want === "high" ? judge.score >= 7
       : (judge.lines.didWhatWasAsked ?? 10) <= item.asked && atBest < 40)
-      && (item.crafted === undefined || (judge.lines.crafted ?? 10) <= item.crafted);
+      && (item.crafted === undefined || (judge.lines.crafted ?? 10) <= item.crafted)
+      && (item.clean === undefined || (judge.lines.clean ?? 10) <= item.clean);
     agrees &&= ok;
     results.push({ ...item, judge: judge.score, lines: judge.lines, named: named?.said, atBest, ok });
     console.log(`${ok ? "ok  " : "MISS"} ${item.picture.padEnd(34)} judge ${judge.score}, case at best ${atBest} (want ${wanted[item.want]})  ${Object.entries(judge.lines).map(([k, v]) => `${k} ${v}`).join(", ")}${named ? `  named: ${named.said.join(" / ")}` : ""}`);

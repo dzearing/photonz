@@ -303,7 +303,7 @@ enum AgentDrawingWork {
     /// The redline of the picture, chosen in code off its layout
     /// (`RedlinePlan`): the same picture and region read the same every time,
     /// so the ids a look handed out name the same marks when they are laid.
-    private static func redline(_ editor: EditorState, region: CGRect?) async throws -> (marks: [RedlineMark], obstacles: [CGRect]) {
+    private static func redline(_ editor: EditorState, region: CGRect?) async throws -> (marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect]) {
         let document = try AgentWork.document(of: editor)
         let read = await analysis(of: editor)
         guard !read.luma.isEmpty else {
@@ -315,7 +315,8 @@ enum AgentDrawingWork {
             let nodes = LayoutRead.read(luma, pixelScale: scale, region: region)
             let canvas = region ?? CGRect(x: 0, y: 0, width: luma.width, height: luma.height)
             return (RedlinePlan.marks(in: nodes, canvas: canvas, pixelScale: scale),
-                    RedlinePlan.obstacles(in: nodes, canvas: canvas, pixelScale: scale))
+                    RedlinePlan.obstacles(in: nodes, canvas: canvas, pixelScale: scale),
+                    RedlinePlan.edges(in: nodes, canvas: canvas, pixelScale: scale))
         }.value
     }
 
@@ -333,7 +334,7 @@ enum AgentDrawingWork {
         let chosen = found.marks.enumerated().filter { ids.contains(RedlinePlan.id($0.offset)) }
         let before = Set(editor.document?.layers.map(\.id) ?? [])
         editor.setTool(.measure)
-        editor.asOneUndoStep { editor.addRedline(chosen.map(\.element), obstacles: found.obstacles) }
+        editor.asOneUndoStep { editor.addRedline(chosen.map(\.element), obstacles: found.obstacles, edges: found.edges) }
         let added = (editor.document?.layers ?? []).filter { !before.contains($0.id) }
         guard !added.isEmpty else { throw Failure("Photonz could not lay those measurements.") }
         return .json(Marked(layers: added.map(\.id.uuidString), marked: chosen.map { RedlinePlan.id($0.offset) }))

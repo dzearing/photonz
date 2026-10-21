@@ -1,6 +1,6 @@
 import CoreGraphics
 import Foundation
-import PhotonzCore
+@testable import PhotonzCore
 import Testing
 
 /// The tools a model uses to redline a screenshot: `find_measurements` hands
@@ -41,6 +41,33 @@ struct RedlineToolTests {
         #expect(list[0]["repeats"]?.intValue == 4)
         #expect(list[1]["reads"]?.stringValue == "12")
         #expect(list[1]["role"]?.stringValue == "gap")
+    }
+
+    @Test("With nothing to measure, the answer says what to do instead")
+    func emptyReport() {
+        let json = RedlinePlan.report([], pixelScale: 2)
+        #expect(json["count"]?.intValue == 0)
+        #expect(json["say"]?.stringValue?.contains("add_measurement") == true)
+    }
+
+    @Test("A redline is never thrown away for want of a clean spot: too few clean marks and the rest land as the Measure tool would place them")
+    func neverEmpty() {
+        // A picture far too small for any readout to sit clear of the line.
+        let marks = [RedlineMark(role: .gap, what: "Gap", start: CGPoint(x: 20, y: 30), end: CGPoint(x: 40, y: 30),
+                                 axis: .horizontal)]
+        let laid = RedlineLayout.lay(marks, obstacles: [CGRect(x: 0, y: 0, width: 20, height: 60),
+                                                         CGRect(x: 40, y: 0, width: 20, height: 60)],
+                                     canvas: CGSize(width: 60, height: 60),
+                                     size: MeasureStyles().content(for: .size),
+                                     spacing: MeasureStyles().content(for: .spacing))
+        #expect(laid.count == 1)
+    }
+
+    @Test("Ask is told to lay the marks that answer the request, not always all of them")
+    func promptPicks() {
+        let words = AskConversation.instructions(documentRead: "")
+        #expect(words.contains("find_measurements"))
+        #expect(words.contains("only those"))
     }
 
     @Test("The Ask row counts each mark it lays")

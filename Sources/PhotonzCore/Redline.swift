@@ -9,8 +9,6 @@ public struct RedlineMark: Hashable, Sendable {
     public enum Role: String, Codable, Sendable, CaseIterable {
         /// Width and height of one kind of control, measured on the first of them.
         case size
-        /// From the picture's edge to the first card or panel.
-        case margin
         /// From a card's edge to what sits inside it.
         case padding
         /// Row height: divider to divider, or one repeated row to the next.
@@ -72,8 +70,7 @@ public struct RedlineMark: Hashable, Sendable {
 /// around the major ui elements", chosen in code off the picture's layout
 /// (`LayoutRead`) rather than by a model guessing at boxes: one size of each
 /// kind of control (the four switches are measured once, on the first), then
-/// the spacing that defines the layout in a redline's order: the margin, a
-/// card's padding, the row height, the gap between sections, the gap between
+/// the spacing that defines the layout in a redline's order: a card's padding, the row height, the gap between sections, the gap between
 /// neighbouring buttons, a button's label inset. Never a whole row or a whole
 /// card. A repeat that differs from its kind is left to "find the
 /// misalignments", not measured again.
@@ -110,6 +107,23 @@ public enum RedlinePlan {
         }
     }
 
+    /// What a readout should keep off when it has the choice but may sit
+    /// on when it has none: the border of every card and every divider, so a
+    /// readout sits inside a card or outside it rather than across its edge.
+    public static func edges(in nodes: [LayoutNode], canvas: CGRect, pixelScale: CGFloat) -> [CGRect] {
+        let scan = Scan(nodes: nodes, canvas: canvas, scale: max(pixelScale, 1))
+        let t = max(pixelScale, 1)
+        return nodes.indices.flatMap { i -> [CGRect] in
+            let r = nodes[i].rect
+            if nodes[i].kind == .rule { return [r] }
+            guard scan.isContainer(i) else { return [] }
+            return [CGRect(x: r.minX, y: r.minY, width: r.width, height: t),
+                    CGRect(x: r.minX, y: r.maxY - t, width: r.width, height: t),
+                    CGRect(x: r.minX, y: r.minY, width: t, height: r.height),
+                    CGRect(x: r.maxX - t, y: r.minY, width: t, height: r.height)]
+        }
+    }
+
     public static func id(_ index: Int) -> String { "r\(index + 1)" }
 
     /// The marks as the find_measurements tool hands them to a model: an id,
@@ -130,11 +144,15 @@ public enum RedlinePlan {
             if m.repeats > 1 { o["repeats"] = .number(Double(m.repeats)) }
             return .object(o)
         }
-        return .object([
+        var answer: [String: AgentJSON] = [
             "marks": .array(list),
             "count": .number(Double(list.count)),
             "unit": .string(pixelScale > 1 ? "points (the picture is \(Misalignment.number(pixelScale))x)" : "points"),
-        ])
+        ]
+        if list.isEmpty {
+            answer["say"] = .string("No controls or cards to measure were read here. Use find_elements, then add_measurement on what was asked.")
+        }
+        return .object(answer)
     }
 
     struct Scan {
@@ -299,28 +317,19 @@ public enum RedlinePlan {
             let obstacles = RedlinePlan.obstacles(in: nodes, canvas: canvas, pixelScale: scale)
             var sizes: [RedlineMark] = []
             let kinds = kinds(controls)
+            var representatives: [Int] = []
             for kind in kinds.prefix(mostSizes) {
-                let first = kind.members[0]
-                sizes.append(.size(kind.name, nodes[first].rect, repeats: kind.members.count))
+                let pick = representative(of: kind.members, obstacles: obstacles)
+                representatives.append(pick)
+                sizes.append(.size(kind.name, nodes[pick].rect, repeats: kind.members.count))
             }
 
             var spacing: [RedlineMark] = []
             let containers = nodes.indices.filter(isContainer).sorted(by: readingOrder)
             let minimum = 2 * scale
 
-            // The margin: the picture's edge to the first card on it, or,
-            // with no card, to the leftmost thing on the page.
-            let pageLeft = nodes.indices.filter { nodes[$0].parent == nil && nodes[$0].kind != .rule }
-                .min { nodes[$0].rect.minX < nodes[$1].rect.minX }
-            if let card = containers.first(where: { nodes[$0].parent == nil }) ?? pageLeft {
-                let r = nodes[card].rect
-                if r.minX - canvas.minX >= minimum, r.minX - canvas.minX <= canvas.width * 0.25 {
-                    let y = clearLine(across: canvas.minX...r.minX, along: r.minY...r.maxY,
-                                      vertical: false, obstacles: obstacles)
-                    spacing.append(RedlineMark(role: .margin, what: "Margin", start: CGPoint(x: canvas.minX, y: y),
-                                               end: CGPoint(x: r.minX, y: y), axis: .horizontal))
-                }
-            }
+            // No margin from the picture's edge: a screenshot's edge is where
+            // somebody cropped it, not a measurement of the design.
 
             // A card's padding: its edge to the nearest thing inside it, left
             // and, when it differs, right.
@@ -331,9 +340,15 @@ public enum RedlinePlan {
                     let l = nodes[left].rect
                     let padL = l.minX - r.minX
                     if padL >= minimum {
-                        let y = l.midY.rounded()
+                        // Along a divider that starts at the same inset, the
+                        // line says the same number and touches no word.
+                        let divider = kids(card).first { k in
+                            nodes[k].kind == .rule && abs(nodes[k].rect.minX - l.minX) <= 1.5 * scale
+                        }
+                        let y = (divider.map { nodes[$0].rect.midY } ?? l.midY).rounded()
+                        let x = divider.map { nodes[$0].rect.minX } ?? l.minX
                         spacing.append(RedlineMark(role: .padding, what: "Padding", start: CGPoint(x: r.minX, y: y),
-                                                   end: CGPoint(x: l.minX, y: y), axis: .horizontal))
+                                                   end: CGPoint(x: x, y: y), axis: .horizontal))
                     }
                     if let right = inside.max(by: { nodes[$0].rect.maxX < nodes[$1].rect.maxX }) {
                         let rr = nodes[right].rect
@@ -407,7 +422,7 @@ public enum RedlinePlan {
             // On a second button of the kind when there is one: the first
             // already carries its size's brackets.
             let buttons = kinds.prefix(mostSizes).first { $0.name == "Button" }?.members ?? []
-            if let button = buttons.dropFirst().first ?? buttons.first,
+            if let button = buttons.first(where: { !representatives.contains($0) }) ?? buttons.first,
                let words = kids(button).first(where: { nodes[$0].kind == .text }) {
                 let b = nodes[button].rect, w = nodes[words].rect
                 // Centred words in a wide button have no inset to specify.
@@ -421,6 +436,26 @@ public enum RedlinePlan {
             }
 
             return Array((sizes + spacing).prefix(mostMarks))
+        }
+
+        /// Which of a kind gets the size: the first, unless another has far
+        /// more open room to its right and below for the brackets and their
+        /// readouts (the primary button at the end of a row, not the one
+        /// hemmed in beside it).
+        func representative(of members: [Int], obstacles: [CGRect]) -> Int {
+            func room(_ i: Int) -> CGFloat {
+                let r = nodes[i].rect
+                var right = canvas.maxX - r.maxX, below = canvas.maxY - r.maxY
+                for o in obstacles where o != r {
+                    if o.maxY > r.minY, o.minY < r.maxY, o.minX >= r.maxX { right = min(right, o.minX - r.maxX) }
+                    if o.maxX > r.minX, o.minX < r.maxX, o.minY >= r.maxY { below = min(below, o.minY - r.maxY) }
+                }
+                return min(right, 200 * scale) + min(below, 200 * scale)
+            }
+            let first = members[0]
+            guard let roomiest = members.max(by: { room($0) < room($1) }),
+                  room(roomiest) > 2 * room(first) else { return first }
+            return roomiest
         }
 
         func rowHeight(_ containers: [Int], controls: [Int], obstacles: [CGRect]) -> RedlineMark? {
@@ -467,26 +502,47 @@ public enum RedlineLayout {
     /// Lays out `marks` in order. `size` and `spacing` are the Measure tool's
     /// styles for the two roles; `obstacles` is what readouts stay off
     /// (`RedlinePlan.obstacles`); `placed` is readouts already on the canvas.
-    public static func lay(_ marks: [RedlineMark], obstacles: [CGRect], canvas: CGSize,
+    public static func lay(_ marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect] = [], canvas: CGSize,
                            size: MeasureContent, spacing: MeasureContent,
                            placed: [CGRect] = []) -> [RedlineDrawn] {
         var kept = marks
+        var left: [RedlineMark] = []
         // A mark with no clean spot for a readout is left out rather than
         // stacked; the rest are laid again without its lines in the way.
-        for _ in 0..<4 {
-            let (drawn, failed) = attempt(kept, obstacles: obstacles, canvas: canvas, size: size,
-                                          spacing: spacing, placed: placed)
-            if failed.isEmpty { return drawn }
-            kept = kept.enumerated().filter { !failed.contains($0.offset) }.map(\.element)
+        var drawn: [RedlineDrawn] = []
+        for round in 0..<5 {
+            let result = attempt(kept, obstacles: obstacles, edges: edges, canvas: canvas, size: size,
+                                 spacing: spacing, placed: placed)
+            drawn = result.drawn
+            if result.failed.isEmpty || round == 4 { break }
+            left += kept.enumerated().filter { result.failed.contains($0.offset) }.map(\.element)
+            kept = kept.enumerated().filter { !result.failed.contains($0.offset) }.map(\.element)
         }
-        return attempt(kept, obstacles: obstacles, canvas: canvas, size: size, spacing: spacing,
-                       placed: placed).drawn
+        // But a redline is never thrown away for it: with fewer than three
+        // clean marks, the ones left out land as the Measure tool itself
+        // would place them, overlap and all.
+        let floor = min(3, marks.count)
+        guard drawn.count < floor, !left.isEmpty else { return drawn }
+        var readouts = placed + drawn.flatMap { $0.calipers.map { $0.labelRect(chipSize: $0.estimatedLabelSize) } }
+        for mark in left.prefix(floor - drawn.count) {
+            var piece = attempt([mark], obstacles: [], edges: [], canvas: canvas, size: size, spacing: spacing,
+                                placed: []).unplaced[0]
+            for j in piece.calipers.indices {
+                let c = piece.calipers[j]
+                piece.calipers[j].apply(MeasureLabelPlanner.plan(for: c, canvas: canvas, avoiding: readouts + obstacles,
+                                                                 describing: mark.box.map { [$0] } ?? []))
+                readouts.append(piece.calipers[j].labelRect(chipSize: c.estimatedLabelSize))
+            }
+            drawn.append(piece)
+        }
+        return drawn
     }
 
-    static func attempt(_ marks: [RedlineMark], obstacles: [CGRect], canvas: CGSize,
+    static func attempt(_ marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect], canvas: CGSize,
                         size: MeasureContent, spacing: MeasureContent,
-                        placed: [CGRect]) -> (drawn: [RedlineDrawn], failed: Set<Int>) {
+                        placed: [CGRect]) -> (drawn: [RedlineDrawn], failed: Set<Int>, unplaced: [RedlineDrawn]) {
         var state = State(obstacles: obstacles, canvas: canvas, readouts: placed)
+        state.edges = edges
         // Every line first, so a readout placed early never lands where a
         // later measurement draws its line.
         var drawn: [RedlineDrawn] = marks.map { mark in
@@ -509,6 +565,7 @@ public enum RedlineLayout {
             })
         }
         state.lines = drawn.flatMap { $0.calipers.map(\.subjectRects) }
+        let unplaced = drawn
         var failed = Set<Int>()
         for i in drawn.indices {
             let subjects = drawn[i].mark.box.map { [$0] } ?? []
@@ -522,7 +579,7 @@ public enum RedlineLayout {
                 drawn[i].calipers[j] = c
             }
         }
-        return (drawn.enumerated().filter { !failed.contains($0.offset) }.map(\.element), failed)
+        return (drawn.enumerated().filter { !failed.contains($0.offset) }.map(\.element), failed, unplaced)
     }
 
     /// The leader the canvas draws from a caliper to a readout that has
@@ -555,6 +612,7 @@ public enum RedlineLayout {
         let obstacles: [CGRect]
         let canvas: CGSize
         var readouts: [CGRect]
+        var edges: [CGRect] = []
         /// Every caliper's line, one entry per caliper.
         var lines: [[CGRect]] = []
         var leaders: [(CGPoint, CGPoint)] = []
@@ -691,7 +749,11 @@ public enum RedlineLayout {
             // Never a readout on top of anything or a leader across it: with
             // no clean spot the mark is left out.
             let leash = MeasureLabelPlanner.maxCrossReach(for: c, chip: chip)
-            let strict = [LabelAvoidance(rects: blocked + mine, weight: .forbidden)]
+            let strict = [LabelAvoidance(rects: blocked + mine, weight: .forbidden),
+                          // A tie-breaker, not a wall: a readout steps off a
+                          // card's edge when a near spot is as good, never
+                          // onto a far leader to dodge it.
+                          LabelAvoidance(rects: edges, weight: .flat(LabelPlacer.rankCost * 1.5))]
             let tiers = [(leash, 4, false), (leash * 2, 8, false)]
             var chosen: MeasureLabelPlanner.Plan?
             for tier in tiers where chosen == nil {

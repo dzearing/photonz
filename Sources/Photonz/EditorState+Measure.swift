@@ -307,16 +307,17 @@ extension EditorState {
 
     /// A redline of the picture (`RedlinePlan`), laid out as one piece
     /// (`RedlineLayout`) so no readout sits on another, on another mark's line,
-    /// or on any word or control in `obstacles`. A size lands as the same
+    /// or on any word or control in `obstacles`, and off card edges and
+    /// dividers (`edges`) wherever it has the choice. A size lands as the same
     /// group a Size click makes, spacing as the caliper a Gap click makes, each
     /// in its role's style. The caller makes them one undo step.
-    func addRedline(_ marks: [RedlineMark], obstacles: [CGRect]) {
+    func addRedline(_ marks: [RedlineMark], obstacles: [CGRect], edges: [CGRect] = []) {
         guard let document, !marks.isEmpty else { return }
         var size = measureStyles.content(for: .size)
         size.madeBy = namedMode(.size)
         var spacing = measureStyles.content(for: .spacing)
         spacing.madeBy = namedMode(.gap)
-        let drawn = RedlineLayout.lay(marks, obstacles: obstacles, canvas: document.canvasSize,
+        let drawn = RedlineLayout.lay(marks, obstacles: obstacles, edges: edges, canvas: document.canvasSize,
                                       size: size, spacing: spacing, placed: placedReadoutRects())
         for piece in drawn {
             var calipers = piece.calipers.map { c -> Layer in
