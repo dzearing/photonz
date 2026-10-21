@@ -5,11 +5,11 @@
   "epic": "interaction-foundations",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:30:51.248Z",
-  "updated": "2026-10-21T12:40:29.327Z",
+  "updated": "2026-10-21T13:31:17.447Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'there's no way to flip a layer. I tried resizing it and dragging to reverse it but that didn't work. no right click to reverse horiz/vert either.'\n\nThe model and renderer already carry it: LayerTransform.flipHorizontal and flipVertical (Sources/PhotonzCore/LayerTransform.swift:14, applied in affineTransform at :33), drawn by DocumentRenderer.swift:2845, exported as an SVG matrix (SVGExport.swift:1935-1943). The only thing that sets them today is Mirror Across Center (MirrorAcrossCenter.swift, behind its own switch, which makes a mirrored COPY, not a flip). So this is mostly a missing command and a handle drag that clamps at zero; NOT confirmed by running the app, reproduce first. Check that a resize past zero turns into a flip of the transform, not a negative frame (frames stay standardized). Check the video path draws the flip during playback and export.",
@@ -34,6 +34,53 @@
     {
       "t": "2026-10-21T12:40:29.326Z",
       "note": "seq 8.05 -> 10"
+    },
+    {
+      "t": "2026-10-21T12:44:54.651Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-21T12:51:02.567Z",
+      "note": "Before, reproduced at Next defaults on the probe (walk /tmp/flip-before/flip-before-walk.json): the rectangle's right-click menu has Duplicate, Mirror Across Center... no Flip row; Edit menu has no Transform submenu; Layer menu has none either; dragging the right handle from (600,375) to (300,375) left the rectangle at frame (400, 300, 1.0, 150): Handles.resize clamps at minSize 1."
+    },
+    {
+      "t": "2026-10-21T12:51:02.631Z",
+      "note": "Adversarial pass before building: Photoshop keeps Flip Horizontal / Flip Vertical in Edit > Transform with NO default keys, so none here (Figma's Shift H / Shift V are not Photoshop's; UX-PATTERNS 7). A flip of a rotated layer is a canvas-space mirror (rotation and skew negate), as Photoshop does. Several picked flip about their shared middle. A handle drag flips in the layer's own box (Photoshop free transform), so a rotated layer stays rotated. Moving layers on a video: chose mirroring the look at every moment (rotation keys negated, position keys shifted only when several move about a shared middle) over mirroring the path it travels, because Flip is about how it looks, as Premiere's Horizontal Flip effect. 3D turns left alone."
+    },
+    {
+      "t": "2026-10-21T13:30:36.343Z",
+      "note": "owns these walks: flip-a-layer-walk, flip-by-dragging-a-handle-walk, flip-a-title-on-a-video-walk"
+    },
+    {
+      "t": "2026-10-21T13:30:51.173Z",
+      "note": "Built: PhotonzCore/LayerFlip.swift (FlipAxis, Layer.reflected(across:at:) generalising Mirror Across Center's left-right reflect to both axes, Layer.flipped (rotation keys negated, position keys shifted with the box), Layer.mirroredInPlace for the handle drag, PhotonzDocument.canFlip/flip (one about its own middle, several about their shared middle, one undo step), Handles.resizeFlipping/crossings/anchoredFrame(flips:)). App: EditorState+Flip.swift, Edit > Transform submenu in EditorCommands, right-click rows in LayerCommandMenu under Send to Back, CanvasResizeFlip.swift + ResizeDrag.flips threaded through resizedFrame/onFlippedFramePreview/Commit. Agent: run_command flip_horizontal / flip_vertical, set_layer flip (horizontal|vertical|both), read_document reports flipped. Switch next-flip-layers, on by default in Next only."
+    },
+    {
+      "t": "2026-10-21T13:30:51.243Z",
+      "note": "Chose flat right-click rows (Figma) over a Transform submenu because the menu has no Transform group and one click beats two. Chose no keys because Photoshop gives Edit > Transform > Flip none (UX-PATTERNS 7); Figma's Shift H / Shift V would be invented here."
+    },
+    {
+      "t": "2026-10-21T13:30:51.310Z",
+      "note": "Verified: LayerFlipTests (21), FlippedLayerRenderTests (canvas equals the mirrored render, SVG read back equals the canvas for a photo, words and an arrow), FlippedLayerExportTests (a real MP4 reads blue left / red right after a horizontal flip), AgentDrawingTests set_layer flip; full Scripts/test.sh green, 14179 tests. Walks green on the probe at Next defaults: flip-a-layer-walk (right-click, Edit > Transform, undo, words), flip-by-dragging-a-handle-walk (picture right handle 200 past left -> (350,350,200,700) flipped H; bottom handle past top -> flipped both; undo; words), flip-a-title-on-a-video-walk. agent-commands-drill flip: both one undo step. set_layer flip checked through the MCP bridge. Existing mirror, right-click, resize and handle walks rerun green."
+    },
+    {
+      "t": "2026-10-21T13:30:51.374Z",
+      "note": "Pictures looked at: before right-click (no Flip row), before drag (1pt wide), after right-click menu (Flip Horizontal / Flip Vertical under Send to Back), words mirrored, picture mid drag mirrored dark half on the right, title on the video mirrored a second later."
+    },
+    {
+      "t": "2026-10-21T13:30:51.440Z",
+      "note": "left rough (did not clear the follow-up bar, nobody stopped by it): magnets off while a drag is past the other side; flipped drag re-renders per move instead of floating a sprite; words flip about their stored box so slack shifts them ~2pt; 3D turns not mirrored; Ask was not re-measured on the eval since no prompt or drawing changed (only the set_layer tool description gained flip)."
+    },
+    {
+      "t": "2026-10-21T13:31:17.445Z",
+      "note": "Flip Horizontal / Flip Vertical in Edit > Transform and on the right-click menu, a handle dragged past the other side flips and keeps going, agents via run_command and set_layer flip. Next only (next-flip-layers, default on). Verified by unit + canvas/SVG/MP4 render tests, full suite green (14179), three walks at Next defaults, agent drill. Commit a05578a0; audit queue/audits/2026-10-21-a-layer-can-be-flipped-horizontally-or-verticall.json"
     }
-  ]
+  ],
+  "started": "2026-10-21T12:44:54.650Z",
+  "walks": [
+    "flip-a-layer-walk",
+    "flip-by-dragging-a-handle-walk",
+    "flip-a-title-on-a-video-walk"
+  ],
+  "completed": "2026-10-21T13:31:17.446Z"
 }
