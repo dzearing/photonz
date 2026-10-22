@@ -379,10 +379,77 @@ What stays is what works on any subject, because nothing in it names one:
 
 ## The model
 
-Runtime: **Ollama**, on its loopback port (`127.0.0.1:11434`), the only address
-Ask ever calls. Default: **`qwen3.6:27b`** (18 GB download, about 30 GB held
-while Ask uses it), run with thinking off and a 32k window. It can see, so it
-also does Ask's look at a drawing (one model loaded, not two; below).
+**Runtime: built into Photonz** (since 2026-10-22; the user: "we should not
+have a dependency on opening ollama", "is there a way to not have the user
+micromanage apps running"). Photonz ships llama.cpp's `llama-server` inside
+its own bundle (`Contents/Helpers/AskModel/`, pinned in
+`Vendor/llama-server/VERSION`, fetched by `Scripts/vendor-llama-server.sh`,
+signed with the app by `Scripts/build-app.sh`). `AskModelServer` starts it on a
+loopback port it picks (18100 to 18899, never Ollama's) the first time Ask needs
+it, or as soon as a person opens Ask or types, and stops it after five idle
+minutes (`AskBuiltInServerPlan.idleSeconds`) and when Photonz quits. It runs
+under a small shell watch that stops it the moment Photonz's pid is gone, so a
+crash leaves nothing behind either, and a pid file catches anything older.
+Ask speaks Ollama's chat shape internally; `AskServerChat` translates both ways
+to the server's OpenAI-style `/v1/chat/completions`.
+
+Default model: **Qwen3.6 35B** (`ggml-org/Qwen3.6-35B-A3B-GGUF`, a mixture of
+experts with about 3B parameters at work per word, Q4_K_M plus its Q8_0 picture
+reader, 21.0 GB download, 21.7 GB held, measured as the server's resident
+size). It can see, so it also does Ask's look at a drawing. Qwen3.6 27B (the
+same weights as Ollama's `qwen3.6:27b`) is second: offered in Settings when
+downloaded, but not the default, because llama.cpp reads a prompt with it at a
+sixth of the speed (below). Smaller Macs are offered Gemma 4 26B or Gemma 4 E4B
+by the same three-fifths memory rule (`AskBuiltInModels.recommended`; their
+memory is estimated, not measured). Files go in `~/Library/Application
+Support/Photonz/Models`, shared by every build on the Mac, each downloaded from
+a pinned revision and kept only once its size is exact.
+
+### The runtime comparison, 2026-10-22
+
+M4 Max, 64 GB. The climb set (41 cases), no picture model running, every case
+from a cold start (the eval quits the probe after each case, so the built-in
+server loads the model every time):
+
+| Runtime and model | Climb | drawing, sheet, layout, redline, video | s / request (median) | GB held |
+| --- | --- | --- | --- | --- |
+| Built in, Qwen3.6 35B (default) | **55.3** | 61.5, 17.7, 19, 46.6, 39.5 | 22.7 | 21.7 |
+| Ollama 0.40.7, `qwen3.6:27b` (default before) | 53.1 | 56.7, 21.2, 11.2, 47.4, 52.1 | 23.7 | 29.1 |
+| Built in, Qwen3.6 27B | stopped after 10 cases | 10 cases: 62 average | 88 to 146 | 22.8 |
+
+The three requests the task named: screenshot measurements 46.6 built in
+against 47.4 (10 s against 50 s), the Case 1 title page 84.4 against 79.6
+(10 s against 5 s), a pricing section on brand 19 against 11.2 (38 s against
+83 s). Video is the built-in model's weak side: "a title page before each of
+the three clips" scored 17.5 against 85.6.
+
+Speeds (`llama-bench`, `--ctx-size 32768`): Qwen3.6 27B reads 217 tokens a
+second (flash attention and bigger batches no faster) and writes 22; Qwen3.6
+35B reads 930 to 1,330 and writes 27 or more. Ask's first prompt is about
+10,400 tokens, so the 27B spends about 47 s reading before it writes a word
+and the 35B about 8 s. The server loads either in 8 to 13 s; later turns of a
+request reuse what was read. With its network denied (`sandbox-exec`, loopback
+only) the server loads and answers tool calls and pictures the same.
+
+Setup is Settings > Ask: the model, its size and where it goes, one Download
+button, a progress bar with Stop. Ask with no model says "Ask needs its model.
+Get it in Settings." with an Open Settings button (two clicks from Ask to a
+download). A walk gets that Mac with `"askModelMissing": true`
+(`ask-sets-itself-up-walk`).
+
+**Ollama is optional, off by default**: "Use Ollama instead" in Settings > Ask
+(`ask.runtime` = `ollama`). Kept rather than removed because the bake-off and
+anyone with models there already can still use them; nothing reaches its port
+otherwise (`AskBuiltInModelTests` checks that only `AskRuntime` names it).
+
+One turn may write at most 8,192 tokens (`AskServerChat.mostTokensATurn`), so
+an svg that never closes ends in a minute or two instead of filling the window.
+
+### Before 2026-10-22: Ollama
+
+Runtime: **Ollama**, on its loopback port, the only address Ask called.
+Default: **`qwen3.6:27b`** (18 GB download, about 30 GB held while Ask uses
+it), run with thinking off and a 32k window.
 
 **Automatic** (`AskModels.automatic`) takes the first model in
 `AskModels.ranked` that the Mac has and can hold. **The rule: a model may hold

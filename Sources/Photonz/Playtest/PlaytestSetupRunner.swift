@@ -213,6 +213,9 @@ struct PlaytestSetupRunner {
         // Every walk says afresh, so one walk's Edit never leaks into the
         // next walk's View.
         EditorState.walkOpensRecordingsInEdit = setup.timelineOpen == true
+        // Every walk says afresh too: Ask on a Mac with no model downloaded.
+        AskModelServer.walkFolder = setup.askModelMissing ? PlaytestSetupRunner.emptyAskModels() : nil
+        if setup.askModelMissing { said.append("Ask has no model downloaded") }
         if setup.timelineOpen == true {
             said.append("a recording opens in Edit mode")
         }
@@ -250,6 +253,14 @@ struct PlaytestSetupRunner {
             said.append(report)
         }
         return said.isEmpty ? "nothing asked for" : said.joined(separator: "; ")
+    }
+
+    /// An empty folder for Ask's models, made fresh for the walk.
+    static func emptyAskModels() -> URL {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "photonz-walk-ask-models")
+        try? FileManager.default.removeItem(at: folder)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
     }
 
     /// Copies each picture into the capture folder the Media shelf reads, and

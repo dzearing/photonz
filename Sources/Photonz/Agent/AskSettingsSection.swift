@@ -3,45 +3,118 @@ import PhotonzCore
 import SwiftUI
 
 /// Settings' Ask section (`docs/design/ask.md`): which model on this Mac
-/// answers Ask, and the one-time setup when there is none. The only place a
+/// answers Ask, and the one-time download when there is none. The only place a
 /// model is ever chosen; Ask itself never asks (the user, 2026-10-19).
+///
+/// By default the model runs inside Photonz, so the whole setup is one
+/// Download here. Ollama is a choice for people who already keep it running,
+/// off unless they turn it on.
 struct AskSettingsSection: View {
     @State private var installed: [String]?
     @State private var checked = false
     @State private var chosen = AskLocalModel.chosen ?? ""
+    @State private var builtInChosen = AskLocalModel.builtInChosen ?? ""
+    @State private var useOllama = AskLocalModel.runtime == .ollama
+    @State private var downloaded = AskModelServer.downloaded
     @State private var pull: Double?
     @State private var pullTrouble: String?
+    private var fetch: AskModelDownload { AskModelDownload.shared }
 
     var body: some View {
         Section {
-            if !checked {
-                ProgressView().controlSize(.small)
-            } else if let installed {
-                if let automatic = AskModels.automatic(installed: installed, memoryGigabytes: AskLocalModel.memoryGigabytes) {
-                    Picker("Model", selection: $chosen) {
-                        Text("Automatic (\(automatic))").tag("")
-                        ForEach(installed, id: \.self) { Text($0).tag($0) }
-                    }
-                    .onChange(of: chosen) { _, now in AskLocalModel.chosen = now.isEmpty ? nil : now }
-                    .playtestControl("Ask Model", detail: chosen.isEmpty ? "Automatic" : chosen)
-                    Text("Runs on this Mac with Ollama. Nothing leaves the Mac.")
-                        .font(.callout).foregroundStyle(.secondary)
-                } else {
-                    download
-                }
+            if useOllama {
+                ollama
             } else {
-                Text("Ask runs on a model on this Mac, through Ollama, a free app. Install it, then come back here to get the model.")
-                    .font(.callout)
-                    .fixedSize(horizontal: false, vertical: true)
-                HStack {
-                    Button("Get Ollama") { open("https://ollama.com/download") }
-                    Button("Check Again") { Task { await reload() } }
-                }
+                builtIn
             }
+            Toggle("Use Ollama instead", isOn: $useOllama)
+                .onChange(of: useOllama) { _, now in
+                    AskLocalModel.runtime = now ? .ollama : .builtIn
+                    if now { AskModelServer.shared.stop() }
+                    Task { await reload() }
+                }
+                .playtestControl("Ask Use Ollama", detail: useOllama ? "on" : "off")
         } header: {
             Text("Ask")
         }
         .task { await reload() }
+        .onChange(of: fetch.active) { _, _ in downloaded = AskModelServer.downloaded }
+    }
+
+    // MARK: Built in
+
+    @ViewBuilder
+    private var builtIn: some View {
+        let have = AskBuiltInModels.ranked.filter { downloaded.contains($0.id) }
+        if let downloading = fetch.choice {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Downloading \(downloading.name)")
+                ProgressView(value: fetch.fraction)
+                    .playtestControl("Ask Download Progress", detail: String(format: "%.0f%%", fetch.fraction * 100))
+                Text("\(AskBuiltInModels.sizeWords(fetch.done)) of \(AskBuiltInModels.sizeWords(downloading.downloadBytes))")
+                    .font(.callout).foregroundStyle(.secondary).monospacedDigit()
+            }
+            Button("Stop") { fetch.stop() }
+                .playtestControl("Ask Stop Download", detail: "Stop")
+        } else if let automatic = AskBuiltInModels.resolve(chosen: nil, downloaded: downloaded,
+                                                             memoryGigabytes: AskLocalModel.memoryGigabytes) {
+            if have.count > 1 {
+                Picker("Model", selection: $builtInChosen) {
+                    Text("Automatic (\(automatic.name))").tag("")
+                    ForEach(have, id: \.id) { Text($0.name).tag($0.id) }
+                }
+                .onChange(of: builtInChosen) { _, now in AskLocalModel.builtInChosen = now.isEmpty ? nil : now }
+                .playtestControl("Ask Model", detail: builtInChosen.isEmpty ? "Automatic" : builtInChosen)
+            } else {
+                LabeledContent("Model", value: automatic.name)
+                    .playtestControl("Ask Model", detail: automatic.name)
+            }
+            Text("Runs inside Photonz. Nothing leaves the Mac.")
+                .font(.callout).foregroundStyle(.secondary)
+        } else if let offer = AskBuiltInModels.recommended(memoryGigabytes: AskLocalModel.memoryGigabytes) {
+            Text("Ask needs a model on this Mac: \(offer.name), \(AskBuiltInModels.sizeWords(offer.downloadBytes)). It goes in Application Support > Photonz > Models.")
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                .playtestControl("Ask Download Offer", detail: offer.name)
+            Button("Download") { fetch.start(offer) }
+                .playtestControl("Ask Download", detail: "Download \(offer.name)")
+        } else {
+            Text("Ask needs more memory than this Mac has.")
+                .font(.callout)
+        }
+        if let trouble = fetch.trouble {
+            Text(trouble).font(.callout).foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: Ollama
+
+    @ViewBuilder
+    private var ollama: some View {
+        if !checked {
+            ProgressView().controlSize(.small)
+        } else if let installed {
+            if let automatic = AskModels.automatic(installed: installed, memoryGigabytes: AskLocalModel.memoryGigabytes) {
+                Picker("Model", selection: $chosen) {
+                    Text("Automatic (\(automatic))").tag("")
+                    ForEach(installed, id: \.self) { Text($0).tag($0) }
+                }
+                .onChange(of: chosen) { _, now in AskLocalModel.chosen = now.isEmpty ? nil : now }
+                .playtestControl("Ask Model", detail: chosen.isEmpty ? "Automatic" : chosen)
+                Text("Runs on this Mac with Ollama. Nothing leaves the Mac.")
+                    .font(.callout).foregroundStyle(.secondary)
+            } else {
+                download
+            }
+        } else {
+            Text("Ollama isn't answering on this Mac.")
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Button("Get Ollama") { open("https://ollama.com/download") }
+                Button("Check Again") { Task { await reload() } }
+            }
+        }
     }
 
     @ViewBuilder
@@ -65,7 +138,9 @@ struct AskSettingsSection: View {
     }
 
     private func reload() async {
-        installed = await AskLocalModel.installed()
+        downloaded = AskModelServer.downloaded
+        guard useOllama else { return }
+        installed = await AskLocalModel.ollamaInstalled()
         checked = true
     }
 

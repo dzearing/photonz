@@ -50,8 +50,11 @@ final class AskSession {
     }
 
     private(set) var phase: Phase = .idle
-    /// The words in the composer.
-    var draft = ""
+    /// The words in the composer. The first word typed starts Ask's model
+    /// loading, so it is ready, or nearly, by the time the request is sent.
+    var draft = "" {
+        didSet { if oldValue.isEmpty, !draft.isEmpty { AskModelServer.shared.warm() } }
+    }
     /// What was last asked.
     private(set) var asked = ""
     /// Every request that changed something, newest first.
@@ -100,6 +103,7 @@ final class AskSession {
 
     func openComposer() {
         isComposerShown = true
+        AskModelServer.shared.warm()
     }
 
     func closeComposer() {
@@ -620,6 +624,9 @@ enum AskCopy {
     static let workingChip = "working"
     static let nothingRan = "None of it could run. Nothing was changed."
     static let workingLine = "Working…"
+    /// The built-in model is loading into memory, the first request after a while.
+    static let gettingReady = "Getting the model ready…"
+    static let setUp = "Open Settings"
     static let turnOff = "Turn Off"
     static let turnOn = "Turn On"
     static let delete = "Delete"

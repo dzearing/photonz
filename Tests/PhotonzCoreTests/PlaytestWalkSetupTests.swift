@@ -341,3 +341,32 @@ struct PlaytestHistorySetupTests {
         #expect(PlaytestSetup.generatedHistoryKinds(count: 500).filter { $0 == .video }.count == 166)
     }
 }
+
+/// A walk about Ask on a Mac that has never downloaded its model says so, and
+/// the probe looks for models in an empty folder of the walk's own, whatever
+/// the machine running it has downloaded.
+@Suite("A walk can start with no model for Ask")
+struct PlaytestAskModelSetupTests {
+
+    @Test("it reads yes, and saying nothing means the Mac's own models")
+    func reads() throws {
+        let missing = try PlaytestScript.decode(Data("""
+        { "setup": { "askModelMissing": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(missing.setup.askModelMissing)
+        #expect(missing.setup.isEmpty == false)
+        let unsaid = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(unsaid.setup.askModelMissing == false)
+    }
+
+    @Test("it is a yes or a no")
+    func onlyBooleans() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "askModelMissing": "yes" }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+}

@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/ask-sets-itself-up-walk",
+  "clock": 240,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "askModelMissing": true
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "annotate the ux with measurements around the major ui elements" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "stopped|planning", "timeout": 20 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-asked", "note": "what Ask says when the Mac has no model for it yet, and the one button that leads to the fix" },
+    { "do": "snapshot", "name": "1-asked" },
+    { "do": "press", "control": "Ask Set Up" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-settings", "note": "Settings > Ask: the model, its size and where it goes, and one Download button" },
+    { "do": "snapshot", "name": "2-settings", "window": "Settings" }
+  ]
+}

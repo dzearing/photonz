@@ -9,7 +9,8 @@
 #   Scripts/ask-eval.sh calibrate
 #
 # Runs one case at a time on the probe (never the dev app) and quits it after
-# each case. Needs Ollama for --engine ask, and the claude command for the
+# each case. --engine ask uses whatever Settings > Ask uses (the model built
+# into Photonz unless Ollama is picked), and the claude command runs the
 # skill engine and the judge.
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"

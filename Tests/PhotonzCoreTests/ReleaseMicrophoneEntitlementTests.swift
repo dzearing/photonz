@@ -25,7 +25,11 @@ struct ReleaseMicrophoneEntitlementTests {
 
     @Test func developerIDSigningPassesTheEntitlements() throws {
         let script = try Self.text("Scripts/build-app.sh")
-        let hardened = script.split(separator: "\n").filter { $0.contains("--options runtime") }
+        // Ask's model server is its own program inside the bundle and never
+        // uses the microphone, so its signing line carries no entitlements.
+        let hardened = script.split(separator: "\n").filter {
+            $0.contains("--options runtime") && !$0.trimmingCharacters(in: .whitespaces).hasPrefix("sign_ask_server")
+        }
         #expect(!hardened.isEmpty)
         for line in hardened {
             #expect(line.contains("--entitlements"), "hardened runtime signing without entitlements: \(line)")

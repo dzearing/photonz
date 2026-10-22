@@ -132,6 +132,15 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # unmistakable which build is running.
 cp .build/arm64-apple-macosx/release/Photonz "$APP/Contents/MacOS/$APP_NAME"
 
+# The model server Ask runs inside Photonz (docs/design/ask.md, "The model"):
+# Photonz starts it when Ask first needs it and stops it when Ask is idle or
+# Photonz quits, so nobody installs or opens another program. Its libraries
+# sit beside it, where its @loader_path rpath looks.
+ASK_SERVER_SRC=$("$(dirname "$0")/vendor-llama-server.sh")
+mkdir -p "$APP/Contents/Helpers/AskModel"
+cp "$ASK_SERVER_SRC"/* "$APP/Contents/Helpers/AskModel/"
+cp Vendor/llama-server/LICENSE "$APP/Contents/Helpers/AskModel/LICENSE.txt"
+
 # The type a component tile carries while it is being dragged. EVERY variant
 # declares it, the probe included: a type identifier the system has never heard
 # of is written onto the drag pasteboard with ZERO BYTES behind it, so the
@@ -338,15 +347,28 @@ DEV_SIGNING_WANTED=1
 # Privacy & Security > Microphone): v0.17.0 shipped that way. Dev and probe
 # builds are not hardened, so they never needed it and are left as they are.
 ENTITLEMENTS="Resources/Photonz.entitlements"
+# Ask's model server and its libraries are signed first, inside out, with the
+# same identity as the app: notarization wants every Mach-O in the bundle
+# signed (hardened, timestamped), and a helper signed by someone else would not
+# load its libraries under the app's runtime.
+sign_ask_server() {
+  local identity="$1"; shift
+  for f in "$APP/Contents/Helpers/AskModel/"*.dylib "$APP/Contents/Helpers/AskModel/llama-server"; do
+    codesign --force "$@" --sign "$identity" "$f"
+  done
+}
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
   echo "==> Codesigning (Developer ID)"
+  sign_ask_server "$CODESIGN_IDENTITY" --options runtime --timestamp
   codesign --force --options runtime --timestamp --entitlements "$ENTITLEMENTS" \
     --sign "$CODESIGN_IDENTITY" "$APP"
 elif [[ "$DEV_SIGNING_WANTED" == "0" ]]; then
   echo "==> Codesigning (ad-hoc — unsigned $VARIANT build, no identity to keep stable)"
   if [[ "$VARIANT" == "release" ]]; then
+    sign_ask_server -
     codesign --force --deep --entitlements "$ENTITLEMENTS" --sign - "$APP"
   else
+    sign_ask_server -
     codesign --force --deep --sign - "$APP"
   fi
 else
@@ -360,9 +382,11 @@ else
   fi
   if security find-identity -p codesigning 2>/dev/null | grep -q "$DEV_IDENTITY"; then
     echo "==> Codesigning (stable self-signed: $DEV_IDENTITY)"
+    sign_ask_server "$DEV_IDENTITY"
     codesign --force --deep --sign "$DEV_IDENTITY" "$APP"
   else
     echo "==> Codesigning (ad-hoc — stable identity unavailable; Screen Recording resets each build)"
+    sign_ask_server -
     codesign --force --deep --sign - "$APP"
   fi
 fi

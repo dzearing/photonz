@@ -36,3 +36,7 @@ queue/.loop-awake.pid
 
 # Python caches (Scripts/picture-model)
 __pycache__/
+
+# The model server Ask runs (Scripts/vendor-llama-server.sh fetches the pinned
+# release; Vendor/llama-server/VERSION is the pin).
+Vendor/llama-server/b*/

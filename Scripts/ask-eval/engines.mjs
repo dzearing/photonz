@@ -60,12 +60,19 @@ async function walk(dir, name, steps, { clock, build, testCase, switched }) {
   return { code: result.code, log, said: (result.stdout + result.stderr).split("\n").filter((l) => /Verdict|FAILED|COULD NOT|CRASHED|DEFERRED/.test(l)).join(" ") };
 }
 
-/// The memory Ollama says the planning model holds right now, in GB.
+/// The memory the planning model holds right now, in GB: the server inside
+/// Photonz (built-in models have no ":" in their id) as the process list says,
+/// else what Ollama says.
 async function modelMemory(trace) {
   const model = trace?.find((t) => / model /.test(t))?.match(/model ([^\s,]+)/)?.[1];
   if (!model) return null;
+  if (!model.includes(":")) {
+    const listed = await run("/bin/ps", ["-axo", "rss=,command="], { cwd: repo, timeoutMS: 5000 });
+    const line = listed.stdout.split("\n").find((l) => l.includes("Helpers/AskModel/llama-server"));
+    return line ? Math.round(parseInt(line.trim(), 10) / 1e5) / 10 : null;
+  }
   try {
-    const ps = await (await fetch("http://127.0.0.1:11434/api/ps", { signal: AbortSignal.timeout(3000) })).json();
+    const ps = await (await fetch(`http://127.0.0.1:${11434}/api/ps`, { signal: AbortSignal.timeout(3000) })).json();
     const held = ps.models?.find((m) => m.name === model || m.model === model);
     return held ? Math.round(held.size / 1e8) / 10 : null;
   } catch { return null; }

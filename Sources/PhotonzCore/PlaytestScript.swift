@@ -231,12 +231,17 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// anything. A walk that is not a stopwatch has no reason to say this: it
     /// costs a few hundred milliseconds a click.
     public var timedWithoutMarkers: Bool
+    /// Ask finds no model downloaded: the probe looks for its models in an
+    /// empty folder of the walk's own, so a walk about Ask's first run on a
+    /// fresh Mac means the same on a Mac that has the model.
+    public var askModelMissing: Bool
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false,
-                history: Int? = nil, timedWithoutMarkers: Bool = false) {
+                history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false) {
         self.timedWithoutMarkers = timedWithoutMarkers
+        self.askModelMissing = askModelMissing
         self.history = history
         self.timelineOpen = timelineOpen
         self.front = front
@@ -250,6 +255,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !front && history == nil && !timedWithoutMarkers
+            && !askModelMissing
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -259,7 +265,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["captures", "expectNoControl", "flags", "forget", "front", "history", "scratch",
+    static let knownKeys = ["askModelMissing", "captures", "expectNoControl", "flags", "forget", "front", "history", "scratch",
                             "timedWithoutMarkers", "timelineOpen"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -307,7 +313,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                   front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
                   history: try Self.count(fields["history"], field: "history"),
                   timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],
-                                                        field: "timedWithoutMarkers") ?? false)
+                                                        field: "timedWithoutMarkers") ?? false,
+                  askModelMissing: try Self.yesOrNo(fields["askModelMissing"], field: "askModelMissing") ?? false)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {

@@ -141,7 +141,8 @@ struct AgentPanel: View {
             case .planning, .running:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text(ask.asked.isEmpty ? AskCopy.workingLine : ask.asked)
+                    Text(AskModelServer.shared.loading ? AskCopy.gettingReady
+                         : ask.asked.isEmpty ? AskCopy.workingLine : ask.asked)
                         .font(.system(size: 11.5))
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
@@ -157,6 +158,12 @@ struct AgentPanel: View {
                     .font(.system(size: 11.5))
                     .fixedSize(horizontal: false, vertical: true)
                     .playtestControl("Ask Says", detail: sentence)
+                // Ask's model is set up in Settings: one click there, one to download.
+                if AskLocalModel.Trouble.setupSentences.contains(sentence) {
+                    Button(AskCopy.setUp) { AppDelegate.coordinator?.showSettings() }
+                        .controlSize(.small)
+                        .playtestControl("Ask Set Up", detail: AskCopy.setUp)
+                }
             case .idle, .ran:
                 if rows.isEmpty && waiting.isEmpty {
                     Text(AskCopy.empty).font(.system(size: 11.5)).foregroundStyle(.secondary)
