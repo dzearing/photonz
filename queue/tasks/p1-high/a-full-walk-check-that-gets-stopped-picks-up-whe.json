@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:22:57.676Z",
-  "updated": "2026-10-22T16:33:36.607Z",
+  "updated": "2026-10-22T17:00:48.449Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user asked 'how did we get paused like this' on 2026-10-22 at 09:20. Cause: after the scene task ended at 04:14 the loop started the daily full walk check (queue/bin/go-loop.sh line ~'walk sweep due', 27.4h since the last). It ran 306 minutes, reached 989 of 1011, and was stopped at 09:21 by queue/bin/person-at-mac.sh because the user came back. queue/bin/sweep.sh:585-718 marks it INTERRUPTED (exit 4) and puts the request back on the pile, so the next whole set starts again from walk 1 (another ~5 hours the next time the user steps away). Scripts/playtest-all.sh already takes --only (used by the rotating check at sweep.sh:226), so a remainder run is likely a list of names passed through --only. Traps: only merge when HEAD has no code change since the interrupted run (same rule as 'landed code' in CLAUDE.md: Sources, Scripts, Resources, Vendor, package files); the 3 walks that failed in the last moments are UNCONFIRMED (the stop takes the probe down), so rerun them rather than counting them; version-row-name-walk never finished. Never let a merged result read complete if any walk in the set has no answer. Keep the once-a-day ceiling and the person-away rule. Infrastructure task, no app code.",
@@ -37,6 +37,41 @@
     {
       "t": "2026-10-22T16:33:36.605Z",
       "note": "seq 10 -> 1"
+    },
+    {
+      "t": "2026-10-22T16:34:50.306Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T16:52:43.591Z",
+      "note": "adversarial review before building: (1) an interrupted run reset the once-a-day floor from its own start, so today a stop actually pushed the next whole-set run out a full day AND restarted it from walk one; (2) the 3 failures at the end are casualties of the stop until rerun; (3) a merged record must never read complete with any walk unanswered (a walk that waited for the person prints no line at all); (4) the loop logs seconds per sweep_pass and loop-day draws [t-seconds,t], sweep-size divides seconds by walks: logging the merged sum would paint the gap as walking and make a walk read sub-second; (5) a SIGKILLed remainder recovered by sweep-recover must merge too, so the resume rides in .claimed.json, not in sweep.sh's memory."
+    },
+    {
+      "t": "2026-10-22T16:52:43.661Z",
+      "note": "Chose: when code has landed since the stop, run the whole set as today (not remainder + touched walks), because any change under Sources can reach any walk and nothing can tell which it did. Chose: the remainder runs as soon as the Mac has been free 15 minutes, inside the floor, because it is the rest of the day's run (the merged record keeps the stopped run's start, so the floor is unchanged). Chose: a run stopped on its own clock is NOT resumed, since that usually means a wedged probe."
+    },
+    {
+      "t": "2026-10-22T16:52:43.729Z",
+      "note": "built: queue/bin/sweep-resume.mjs (remainderOf, resumable, mergeRuns); sweep-schedule decide() takes the set and returns run:full resume:true; sweep-schedule --resume-plan; sweep.sh run hands playtest-all --only the remainder and writes resumeOf+set into .claimed.json; sweep-record merges from the claim; RECORDED is now checked by the record's log path; summary logs the part's own walks/seconds; sweep.sh what feeds the loop's announcement line; PHOTONZ_SWEEP_RUNNER stand-in for drills. Drill queue/bin/sweep-resume-drill.mjs: 58 checks, catches both planted breaks; all 9 existing sweep drills still pass; Scripts/test.sh 14200 tests passed. Committed 9c075f9d."
+    },
+    {
+      "t": "2026-10-22T17:00:32.111Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-22T17:00:32.191Z",
+      "note": "real run (person away 17 min, screen unlocked): sweep.sh run finished the 2026-10-22T11:15Z run stopped at 989/1011 in 7m16s on 25 walks (22 unreached + 3 failed). Merged: 1008/1011, complete, 2 parts. Rerun cleared library-tile-click-latency-walk; confirmed caption-lines-join-and-a-word-moves-back-walk and section-fold-motion-walk; view-to-edit-on-a-long-recording-walk (unreached) fails. Standing task walks-that-fail-in-the-full-sweep-26 updated by sweep-report. Logged the sweep_pass event by hand in the loop's shape. loop-day --hours 48: sweeps 593m (20.6%) before, 600m (20.8%) after; a restart would have cost about 306m."
+    },
+    {
+      "t": "2026-10-22T17:00:32.257Z",
+      "note": "left rough (under the follow-up bar): loop-day.mjs counts a resumed part as one more 'full-set run' (minutes are right, count reads high; only a reader of loop-day sees it). Dashboard's nextFullInHours counts from the stopped run's began, so while a remainder waits for the person it does not say one is waiting (queue-lib sweepState; small, and the remainder runs within minutes of them stepping away)."
+    },
+    {
+      "t": "2026-10-22T17:00:48.447Z",
+      "note": "A whole-set walk run that is stopped now picks up where it stopped: on the same code the next run is only its unanswered walks plus its failures, merged into one complete run of the set (queue/bin/sweep-resume.mjs; sweep-schedule, sweep.sh run, sweep-record). Code landed: says so, whole set at the day's end. Verified by queue/bin/sweep-resume-drill.mjs (58 checks, in CI, catches planted breaks), all 9 sweep drills, Scripts/test.sh, and for real: this morning's run stopped at 989/1011 finished in 7m16s on 25 walks, 1008/1011 over 2 parts, standing task updated. loop-day 48h sweeps 593m before, 600m after. Audit queue/audits/2026-10-22-a-full-walk-check-that-gets-stopped-picks-up-whe.json. Commits 9c075f9d, 65ee5c1f."
     }
-  ]
+  ],
+  "started": "2026-10-22T16:34:50.305Z",
+  "walks": [],
+  "completed": "2026-10-22T17:00:48.448Z"
 }

@@ -13549,3 +13549,13 @@
 {"t":"2026-10-22T16:33:55.008Z","ev":"task_resequenced","id":"ask-works-on-what-you-have-picked-so-make-this-b","from":95,"to":105}
 {"t":"2026-10-22T16:34:06.272Z","ev":"task_created","id":"the-daily-renumbering-never-undoes-an-order-the","priority":"p2-normal","title":"The daily renumbering never undoes an order the intake window set while it ran"}
 {"t":"2026-10-22T16:34:37.574Z","ev":"manager","filed":2,"readyBefore":65,"readyAfter":66,"report":"queue/manager/2026-10-22-0934.md"}
+{"t":"2026-10-22T16:34:50.237Z","ev":"manager_pass","exit":0,"ready":66}
+{"t":"2026-10-22T16:34:50.312Z","ev":"task_started","id":"a-full-walk-check-that-gets-stopped-picks-up-whe","title":"A full walk check that gets stopped picks up where it stopped instead of starting over","priority":"p1-high"}
+{"t":"2026-10-22T16:52:43.594Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
+{"t":"2026-10-22T16:52:43.664Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
+{"t":"2026-10-22T16:52:43.732Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
+{"t":"2026-10-22T17:00:01.252Z","ev":"sweep_pass","walks":25,"seconds":436,"resumed":true,"answered":1011,"parts":2,"passed":1008,"failed":3,"complete":true,"total":1011}
+{"t":"2026-10-22T17:00:32.113Z","ev":"task_walks","id":"a-full-walk-check-that-gets-stopped-picks-up-whe","walks":[]}
+{"t":"2026-10-22T17:00:32.193Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
+{"t":"2026-10-22T17:00:32.259Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
+{"t":"2026-10-22T17:00:48.450Z","ev":"task_done","id":"a-full-walk-check-that-gets-stopped-picks-up-whe","from":"in_progress","note":"A whole-set walk run that is stopped now picks up where it stopped: on the same code the next run is only its unanswered walks plus its failures, merged into one complete run of the set (queue/bin/sweep-resume.mjs; sweep-schedule, sweep.sh run, sweep-record). Code landed: says so, whole set at the day's end. Verified by queue/bin/sweep-resume-drill.mjs (58 checks, in CI, catches planted breaks), all 9 sweep drills, Scripts/test.sh, and for real: this morning's run stopped at 989/1011 finished in 7m16s on 25 walks, 1008/1011 over 2 parts, standing task updated. loop-day 48h sweeps 593m before, 600m after. Audit queue/audits/2026-10-22-a-full-walk-check-that-gets-stopped-picks-up-whe.json. Commits 9c075f9d, 65ee5c1f."}
