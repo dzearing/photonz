@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-21T01:04:33.989Z",
-  "updated": "2026-10-21T12:41:59.513Z",
+  "updated": "2026-10-22T04:32:35.113Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen",
     "ask-runs-on-the-best-model-this-mac-can-hold-pic",
@@ -49,6 +49,10 @@
     {
       "t": "2026-10-21T12:41:59.512Z",
       "note": "digest 2026-10-21: added a checklist item for the docs: the skill, agent-mcp.md and ask.md all still describe the built-in drawing set and the illustrator's subject pieces, so an outside agent would keep asking for them after the code is gone."
+    },
+    {
+      "t": "2026-10-22T04:32:35.112Z",
+      "note": "From try-drawing-with-a-local-picture-model-then-turn (2026-10-22): the picture-model-then-trace route is built and on at Next defaults when the picture model runs; held-out drawings 0% looked up. Measured numbers are in that task's audit. Painted drawings are flat (crafted line lower than the illustrator's); a general light pass over the traced layers is the technique this task already lists."
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:50:50.934Z",
-  "updated": "2026-10-21T12:40:29.740Z",
+  "updated": "2026-10-22T05:18:31.938Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen"
   ],
@@ -34,6 +34,63 @@
     {
       "t": "2026-10-21T12:40:29.739Z",
       "note": "seq 8.15 -> 60"
+    },
+    {
+      "t": "2026-10-22T01:03:23.009Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T02:13:32.261Z",
+      "note": "Before building: a picture model handles pose, scene and style (what Ask gets wrong), but a person expects layers, not a bitmap, and Photoshop/Illustrator users expect Image Trace-like regions they can recolour. Risks found: Ollama 0.40.7 refuses image models (tried: 'image generation models are not currently supported'), so the runner is mflux; a white part touching a white backdrop is lost by naive keying; a group's fill does not recolour its children, so 'make the cat black' depends on the model setting each path."
+    },
+    {
+      "t": "2026-10-22T02:13:32.333Z",
+      "note": "Chose Z-Image Turbo (Apache 2.0, 6B, 8-bit MLX ~11 GB, 7.5 GB peak, ~25 s a 768px picture) over FLUX.2 klein and SD because it is the one with a permissive licence, a ready MLX quantisation, and flat-illustration prompts that came out clean on the first try. Chose vtracer (MIT) over potrace (GPL). Runner: a loopback server (Scripts/picture-model/serve.sh, mflux MIT) the app reaches only when the switch next-ask-paints-drawings is on and /health answers."
+    },
+    {
+      "t": "2026-10-22T02:13:32.407Z",
+      "note": "Honesty note: while checking the held-out run was alive I ran ps, and the probe's command line showed one held-out case's folder name. I did not open it or read its request, and nothing was changed because of it; I stopped using ps with full command lines for the rest of the run."
+    },
+    {
+      "t": "2026-10-22T05:18:03.998Z",
+      "note": "owns these walks: ask-paints-then-edits-walk"
+    },
+    {
+      "t": "2026-10-22T05:18:17.945Z",
+      "note": "Built: Scripts/picture-model (serve.sh, server.py: Z-Image Turbo q8 via mflux on 127.0.0.1:8793; layers.py: vtracer with k-means palette from the drawing's own pixels, mode filter, 2x trace, backdrop joined to the edge cleared, specks and backdrop path dropped, fills snapped to the palette, paths named by colour, 300 max; scenes kept edge to edge). App: AskPictureModel.swift, AgentDrawingWork paints first when the switch is on and /health answers; AskConversation(paints:) plans any subject with no svg and passes the person's words (asked) and scene; PictureModelRequest in core; AskDrawingSource counts painted as drawn. Switch next-ask-paints-drawings (area drawing), on in Next."
+    },
+    {
+      "t": "2026-10-22T05:18:18.021Z",
+      "note": "Chose to turn the switch on at Next defaults over leaving it off because it won on the held-out set on every judge line (the task's bar: win on didWhatWasAsked without losing clean or designed), and without the server Ask is unchanged. The model download stays since it won."
+    },
+    {
+      "t": "2026-10-22T05:18:18.088Z",
+      "note": "Held-out, final code (20261022-043200-ask-held-out): total 57.5 vs today's 35.9 (20261021-234253, qwen3.6:27b); drawings didWhatWasAsked 5.6 vs 3.3, clean 6.2 vs 5.9, designed 6.0 vs 4.7, crafted 6.0 vs 5.0, 30.9 s vs 30 s a drawing request (median); 0% looked up (was 28%). Memory: picture server rests 5.1 GB, peaks 13 GB; Ollama 29.1 GB. An earlier held-out run before scenes were painted edge to edge: 56.8, crafted 3.0. Climb drawings (21): 83.7 painted vs 89.6 today (today 100% looked up on climb)."
+    },
+    {
+      "t": "2026-10-22T05:18:18.154Z",
+      "note": "Edit after the fact: ask-paints-then-edits-walk at Next defaults (no flags) paints a cat curled up asleep, then 'make the cat black' and 'move the cat to the left' both land. The recolour first failed (set_layer fill on a group was refused); added AgentGroupRecolour (visible-coverage main colour sampled on a grid, shades kept, details pushed off the main colour) with AgentGroupRecolourTests."
+    },
+    {
+      "t": "2026-10-22T05:18:18.220Z",
+      "note": "Eval: --on <switch> records switched runs; 'lines <run>' prints judge lines in total (works on held-out runs) and every run now records lines. Tests: Scripts/test.sh 14214 passed (before the comment-only number fix in FeatureCatalog)."
+    },
+    {
+      "t": "2026-10-22T05:18:18.283Z",
+      "note": "Pictures I opened before closing: 2026-10-22-paint-1-painted/2-black/3-moved-sc.png (a painted curled-up cat, the same cat black with grey eyes and stripes, then moved left) and the top of both side-by-side sheets (things: painted cat/bird/car/bicycle at least as good as stored; scenes: painted skyline/lighthouse/mountains with sky, forest reads daytime). Did not open the held-out contact sheet."
+    },
+    {
+      "t": "2026-10-22T05:18:18.349Z",
+      "note": "Folded, not filed: the picture model must start with the app and install from Settings (acceptance item added to ask-works-on-a-mac-that-has-nothing-else-install); painted drawings are flat and scenes band their sky (logged on ask-draws-any-subject-well-with-nothing-stored-o, which owns the general light pass); poses now come out right (logged on a-scene-of-things-doing-something-together-is-dr). Left rough, in this log only: layer names are colour names not part names; small slivers where colours meet; a cat's pink nose can merge into a neighbour."
+    },
+    {
+      "t": "2026-10-22T05:18:31.934Z",
+      "note": "Ask paints drawings with Z-Image Turbo (Apache 2.0, mflux MIT) on this Mac and traces them into named, filled layers (vtracer MIT), on at Next defaults whenever Scripts/picture-model/serve.sh is running, otherwise unchanged. Held-out 57.5 vs 35.9; drawings didWhatWasAsked 5.6 vs 3.3, clean 6.2 vs 5.9, designed 6.0 vs 4.7, crafted 6.0 vs 5.0, 31 s vs 30 s, 0% looked up; 13 GB peak beside the planning model's 29 GB. 'make the cat black' now recolours any grouped drawing (AgentGroupRecolour). Verified by ask-paints-then-edits-walk at defaults, Scripts/test.sh 14214 passed, audit queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json."
     }
-  ]
+  ],
+  "started": "2026-10-22T01:03:23.007Z",
+  "walks": [
+    "ask-paints-then-edits-walk"
+  ],
+  "completed": "2026-10-22T05:18:31.937Z"
 }

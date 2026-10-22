@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-21T12:40:29.912Z",
+  "updated": "2026-10-22T04:32:35.190Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -47,6 +47,10 @@
     {
       "t": "2026-10-21T12:40:29.911Z",
       "note": "seq 8.35 -> 80"
+    },
+    {
+      "t": "2026-10-22T04:32:35.189Z",
+      "note": "From try-drawing-with-a-local-picture-model-then-turn (2026-10-22): with the picture model running, 'draw a cat curled up asleep' and 'a cartoon cat playing a piano' come out as one painted picture in the pose asked (pictures in that task's audit), traced into layers. The relationship plan and six climb cases asked here are still open."
     }
   ]
 }

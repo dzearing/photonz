@@ -13431,3 +13431,20 @@
 {"t":"2026-10-22T00:51:28.093Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-10-22T00:51:28.160Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-22T00:51:49.674Z","ev":"task_done","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","from":"in_progress","note":"Ask's default is now qwen3.6:27b (held-out 35.9 vs 18.2 before, two runs), chosen by scoring 10 local models + 4 -mlx tags through Ask on Ollama 0.40.7; it does its own looking (same score as two models, 11 GB less). Automatic and the Settings download follow AskModels.ranked and a 3/5-of-memory rule. Table in the audit and docs/design/ask.md; losing models removed; tests green; ask walks pass at Next defaults. Commit 3d690661."}
+{"t":"2026-10-22T01:03:22.823Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":533,"of":1009,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-22T01:03:23.017Z","ev":"task_started","id":"try-drawing-with-a-local-picture-model-then-turn","title":"Try drawing with a local picture model, then turning the picture into editable layers","priority":"p1-high"}
+{"t":"2026-10-22T02:13:32.263Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T02:13:32.335Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T02:13:32.409Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T04:32:35.031Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
+{"t":"2026-10-22T04:32:35.115Z","ev":"task_note","id":"ask-draws-any-subject-well-with-nothing-stored-o"}
+{"t":"2026-10-22T04:32:35.191Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-22T05:18:04.000Z","ev":"task_walks","id":"try-drawing-with-a-local-picture-model-then-turn","walks":["ask-paints-then-edits-walk"]}
+{"t":"2026-10-22T05:18:17.953Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T05:18:18.024Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T05:18:18.090Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T05:18:18.156Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T05:18:18.222Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T05:18:18.285Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T05:18:18.351Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
+{"t":"2026-10-22T05:18:31.939Z","ev":"task_done","id":"try-drawing-with-a-local-picture-model-then-turn","from":"in_progress","note":"Ask paints drawings with Z-Image Turbo (Apache 2.0, mflux MIT) on this Mac and traces them into named, filled layers (vtracer MIT), on at Next defaults whenever Scripts/picture-model/serve.sh is running, otherwise unchanged. Held-out 57.5 vs 35.9; drawings didWhatWasAsked 5.6 vs 3.3, clean 6.2 vs 5.9, designed 6.0 vs 4.7, crafted 6.0 vs 5.0, 31 s vs 30 s, 0% looked up; 13 GB peak beside the planning model's 29 GB. 'make the cat black' now recolours any grouped drawing (AgentGroupRecolour). Verified by ask-paints-then-edits-walk at defaults, Scripts/test.sh 14214 passed, audit queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json."}
