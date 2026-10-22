@@ -1,0 +1,40 @@
+{
+  "id": "starting-something-new-offers-just-image-or-vide",
+  "title": "File menu works like every Mac app: New makes a new Image or Video, Open opens",
+  "goal": "Photonz uses the File menu every Mac app uses. New (Command-N) only makes something new, and you choose an Image or a Video. Open (Command-O) and Open Recent open files. There is no 'New Window', and nothing about opening or capturing appears inside New.",
+  "epic": "agent-drivable",
+  "priority": "p1-high",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-22T16:25:49.544Z",
+  "updated": "2026-10-22T16:27:13.564Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-22: 'Sometimes i just want to create an image. I don't want to design ui. Can we just simplify and have \"Image\" or \"Video\" in the new dialog?' then 'what is stupider is that there's no New button. What the hell is new window? I want traditional, new, open, ... new should not have load image in it.' then 'use straightforward IA!!!' (The screenshot of the New window was pasted in chat and not saved: it showed Open... and a blue + Open Image... in the title bar, the dimmed Describe what to create / Create, tiles for Design UI, Edit an image, Edit video and Capture & redline, and Recent.) This is the user's own call, and it overrides the front door mock's tiles and Open buttons. Don't make it a decision card. Where things are: the New window is FrontDoorView.swift (templates :122-215, Open... and Open Image... header :60-80, Recent). Its words are in PhotonzCore/FrontDoor.swift (FrontDoorTemplate designUI/editImage/editVideo/captureRedline :12-64; primaryTitle :90-99 names Open Image... for editImage). It shows through Experiments.frontDoorEnabled (EditorWindowRoots.swift:19-51). The File menu is EditorCommands.swift:325-370: New Window is Shift-Command-N, New Blank Canvas and New Video have no key, New from Clipboard is Option-Command-N, Open... is at :370 and Open Recent at :291. Command-N is New Layer at :1889, a user decision from 2026-07-05. This request replaces that decision. The empty editor card (EditorView.swift:766-813, Blank canvas / Blank video / Design UI rows) should match: the same two choices, or gone if the New window covers it. Tutorial anchors are named by action (EmptyEditorStart), so migrate them deliberately. Sits alongside: the task to make Describe what to create work (filed the same minute). It depends on nothing. User, 2026-10-22, also said: 'new menu items should be at the top on the menu like every other app in the world. capture can be a secondary section.' The capture submenu is fileCaptureSubmenu (EditorCommands.swift:388), with items at :639-648.",
+  "acceptance": [
+    "File menu at Next defaults opens with the new items at the top, as in every Mac app: New... (Command-N) and New from Clipboard (Option-Command-N). Then Open... (Command-O) and Open Recent. Then the capture items as their own section below (Capture a region, Full screen, Record, Edit last capture), then Close, Save, Export and the rest. Nothing about capture or opening sits above New. 'New Window', 'New Blank Canvas...', 'New Video...' and the Design UI item are gone. A picture of the open File menu goes in the audit",
+    "New Layer moves to Shift-Command-N, which is Photoshop's key for it (the user's rule: new keys default to Photoshop's). Walks, tutorials and the shortcut list that name Command-N for New Layer are updated",
+    "New... opens the New window. It has two choices, Image and Video, each with its size presets (and a length for Video), plus the 'Describe what to create' field (a separate task makes that field work). Nothing else: no Open..., no Open Image..., no Edit an image, no Capture & redline, no Design UI, no Recent",
+    "Picking Image and a size makes a blank image document. Picking Video makes a blank video. Each takes one choice and one click, and the window it was opened from is not replaced if it has a document",
+    "Launching with nothing open, or closing the last window, shows what a Mac document app shows (the New window, or nothing with Open in the menu). The audit names which one was chosen and why. Capture stays on its keys and the menu bar item, and Open Recent stays in File",
+    "Whatever Design UI did that is worth keeping (components, a UI frame) is reachable inside an image, where a Mac pro would look for it, and the audit says where. Every UI document already made still opens",
+    "Walks and tutorials that click the old tiles, rows or menu items are updated and pass (Scripts/playtest-all.sh --no-build <name>)",
+    "Audit under queue/audits/ with pictures of the File menu and the New window; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-22T16:25:49.546Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-22T16:27:05.955Z",
+      "note": "seq 145 -> 1.1"
+    },
+    {
+      "t": "2026-10-22T16:27:13.563Z",
+      "note": "seq 1.1 -> 90"
+    }
+  ]
+}

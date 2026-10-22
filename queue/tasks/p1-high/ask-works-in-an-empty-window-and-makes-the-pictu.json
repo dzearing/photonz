@@ -1,0 +1,39 @@
+{
+  "id": "ask-works-in-an-empty-window-and-makes-the-pictu",
+  "title": "Describe what to create makes it, and Ask works with nothing open",
+  "goal": "Typing 'a sunset over the sea' into the New window's Describe what to create field and pressing Create makes a new image and draws it. In any window with nothing open, Ask is ready too, instead of sitting dimmed.",
+  "epic": "agent-drivable",
+  "priority": "p1-high",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-22T16:25:49.646Z",
+  "updated": "2026-10-22T16:27:13.635Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-22: 'also the \"ask\" in the dialog is not enabled', pointing at the New window. Confirmed in code: the prompt bar is a stub. FrontDoorView.swift:95-119 draws the placeholder as plain Text, with no field, and its Create is Button {} with .disabled(true). So it was built to look like the mock and never wired up. Separately, Edit > Ask... is disabled with no document (EditorCommands.swift:576-581, !hasDocument). I have not seen what the title bar Ask button does in an empty window: AskViews.swift:11-43 has no disabled rule, and AskSession.ask(in:) does not check for a document. Reproduce that first. Coordinate with the File-menu task (starting-something-new-offers-just-image-or-vide), which keeps this field in the New window and may move keys. The no-stored-subjects rule holds (queue/objectives.json principles).",
+  "acceptance": [
+    "The New window's field takes typing, and Return or Create runs it. Create is enabled as soon as there is text",
+    "It makes the right kind of document: a picture request makes an image, sized to fit the request (or to the size the request names). A request for a video, which Ask cannot make yet, says so in one sentence and keeps the words",
+    "It draws into the new document with the same Ask the editor uses (same model, same rows in the Agent area, revealed as it is everywhere else). One undo, or the row's switch, takes it back",
+    "In an empty window, the title bar Ask button, Edit > Ask... and Command-K (or its new key, if the File-menu task moves keys) are all enabled and behave the same way",
+    "A request that needs something already open (measure this, find the misalignments) answers in one plain sentence that nothing is open yet, rather than failing quietly",
+    "A walk types a request in the New window, presses Create, and finds a new image with a drawing and an Agent row. It passes, and focus-drill reads clean for it",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-22T16:25:49.648Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-22T16:27:06.019Z",
+      "note": "seq 147.5 -> 1.2"
+    },
+    {
+      "t": "2026-10-22T16:27:13.634Z",
+      "note": "seq 1.2 -> 100"
+    }
+  ]
+}
