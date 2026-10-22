@@ -21858,3 +21858,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Audit `queue/audits/2026-10-22-a-scene-of-things-doing-something-together-is-dr.json`; walk `ask-draws-a-scene-walk`.
 - Open: a scene's thin lines (the kite's string) vanish in scene tracing; the task stays open for its six-scene bar (5 of 6 on the final run).
 - Found while here: `layers.py` `backdrop_reached` flood fill does nothing under Pillow 12.3 (the backdrop is still dropped later by `is_backdrop`).
+
+## 2026-10-22: A stopped full walk check picks up where it stopped
+
+- `queue/bin/sweep-resume.mjs`: when the daily whole-set run is stopped (the person came back), the next one, if nothing a walk runs has changed since, runs only the walks it never answered plus the ones it saw fail, as soon as the Mac has been free 15 minutes. The two parts are merged into one record (`parts`, the first part's `began`) that reads complete only when every walk has an answer, and that can close the standing walk task. When code has landed, it says so and the whole set runs when the day is up. Wired through `sweep-schedule.mjs` (decide, `--resume-plan`), `sweep.sh run` (`--only`, claim carries `resumeOf`+`set` so a SIGKILL recovery merges too), `sweep-record.mjs`, `sweep-parse.mjs` sentences, the loop's `sweep_pass` event (the part's own walks and seconds) and `go-loop.sh`'s line (`sweep.sh what`).
+- Drill `queue/bin/sweep-resume-drill.mjs` (in CI): stops the real sweep.sh part way on a scratch queue with a stand-in runner (`PHOTONZ_SWEEP_RUNNER`).
+- Real run: this morning's run stopped at 989/1011 was finished in 7m16s (25 walks); 1008/1011 over 2 parts. library-tile-click-latency-walk passed on rerun; caption-lines-join, section-fold-motion and view-to-edit-on-a-long-recording still fail. loop-day 48h: sweeps 593m before, 600m after.
+- Open: loop-day counts the remainder as a third run (minutes right); the dashboard's "next full check" does not say a remainder is waiting.

@@ -1,0 +1,27 @@
+{
+  "feature": "A stopped full walk check picks up where it stopped",
+  "epic": "agent-drivable",
+  "summary": "When the daily full walk check is stopped because you came back to the Mac, the next one now runs only the walks it never reached plus the ones it saw fail, and the two count as one full check. This morning's run, stopped at 989 of 1011, was finished in 7 minutes 16 seconds instead of starting again from walk one.",
+  "setup": "Nothing to switch on: this is the go loop's own machinery. queue/bin/sweep.sh status shows the result; queue/bin/sweep.sh why-not says when a remainder is next.",
+  "switched": {},
+  "try": [
+    { "do": "Run queue/bin/sweep.sh status and read the first line: 1008/1011 walks passed in 313m over 2 parts, stopped at 989 and carried on on the same code." },
+    { "do": "Open queue/sweep/2026-10-22-095234.log: 25 walks, not 1011 (22 never reached, 3 that failed as the stop landed)." },
+    { "do": "Open the standing task 'Walks that fail in the full sweep' on the dashboard: it now names 3 confirmed failures from a whole-set answer, and library-tile-click-latency-walk is gone from it because it passed when run again." },
+    { "do": "Run node queue/bin/sweep-resume-drill.mjs: it stops the real sweep.sh part way on a scratch queue, then shows the next run is handed only the remainder and closes the standing task." },
+    { "do": "Run node queue/bin/loop-day.mjs --hours 48 and compare with the numbers below." }
+  ],
+  "evaluate": [
+    "Before: full walk checks took 593 of the last 48 hours' minutes (20.6%, two runs of 287 and 306 minutes). After finishing this morning's stopped run: 600 minutes (20.8%); the remainder cost 7 minutes where a restart would have cost about 306. Is that the saving you expected?",
+    "The remainder runs as soon as the Mac has been free for 15 minutes, even inside the once-a-day window, because it finishes the day's run rather than starting a second. Is that the right call, or should it wait for the next day like a whole run?",
+    "When app code lands after a stop, the whole set runs again when the day is up, and the loop's line says why. Is losing the stopped run's answers in that case acceptable?",
+    "Does 'over 2 parts' on the status line read clearly enough that 313 minutes was not one sitting?"
+  ],
+  "rough": [
+    "No pictures: nothing in the app changed, so there is no surface to photograph. The proof is the drill and the real run log named above.",
+    "I ran this one remainder myself rather than leaving it to the loop, while you had been away for 17 minutes, so the 'after' number exists now. The loop's own event for it was logged by hand in the same shape the loop writes.",
+    "loop-day.mjs counts the 7 minute remainder as a third 'full-set run' in its run count; the minutes are right, the count reads one high.",
+    "The dashboard's 'next full check in' still counts from when the stopped run began, so while a remainder is waiting for you to step away it does not say one is waiting.",
+    "A run stopped on its own clock (usually a stuck probe) is not resumed; it runs the whole set again as before."
+  ]
+}
