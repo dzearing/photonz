@@ -341,6 +341,12 @@ public enum FeatureCatalog {
     /// Ask in the editor: a request in plain words, planned by a model on this
     /// Mac with the agent tools, run as one undo step (`docs/design/ask.md`).
     public static let askFlag = "next-ask"
+    /// Ask paints every drawing with a picture model on this Mac and traces
+    /// it into layers, instead of looking it up or writing an svg, whenever
+    /// the picture model answers (`Scripts/picture-model/`); without it Ask
+    /// draws as before. On in Next since it beat the old way on the held-out
+    /// set (2026-10-22: 56.8 against 35.9).
+    public static let askPaintsFlag = "next-ask-paints-drawings"
 
     // MARK: - Definitions
 
@@ -1841,6 +1847,17 @@ public enum FeatureCatalog {
                     parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: askPaintsFlag,
+                    title: "Ask paints its drawings",
+                    description: "Ask paints each drawing with a picture model on this Mac and turns it into layers you can edit. Needs the picture model running (Scripts/picture-model/serve.sh); without it Ask draws the way it always has.",
+                    area: .drawing,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next],
+                needs: [askFlag]),
         ]
     }
 

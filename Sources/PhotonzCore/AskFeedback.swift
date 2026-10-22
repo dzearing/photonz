@@ -13,7 +13,8 @@ public enum AskDrawingSource: String, Codable, Hashable, Sendable, CaseIterable 
     case stored
     /// A coded illustration (`Illustrator`), picked by the kind of scene.
     case template
-    /// Made for the request: the model's own svg, shapes or paths.
+    /// Made for the request: the model's own svg, shapes or paths, or a
+    /// picture painted for it by the picture model and traced.
     case drawn
 
     /// The source of a step that ran, from its tool and the app's answer.
@@ -28,7 +29,7 @@ public enum AskDrawingSource: String, Codable, Hashable, Sendable, CaseIterable 
                   let from = object["from"] as? String else { return nil }
             if from.hasPrefix("built-in") { return .stored }
             if from.hasPrefix("illustration") { return .template }
-            if from.hasPrefix("your svg") { return .drawn }
+            if from.hasPrefix("your svg") || from.hasPrefix("painted") { return .drawn }
             return nil
         default: return nil
         }

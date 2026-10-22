@@ -33,3 +33,6 @@ queue/leftovers/.before.json
 queue/.loop-awake.pid
 .build-mcp/
 .ask-eval/
+
+# Python caches (Scripts/picture-model)
+__pycache__/

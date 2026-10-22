@@ -3,9 +3,10 @@
 // (Scripts/ask-eval/README.md). Run it through Scripts/ask-eval.sh.
 //
 //   run --engine ask|skill --tag "<what changed>" [--set climb|held-out] [--cases a,b]
-//       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 3]
+//       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 3] [--on <switch>,<switch>]
 //   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
 //   report [--engine ask]                   the latest climb and held-out totals side by side
+//   lines <run> [--with <run>]              a run's judge lines in total (drawings, all cases), held-out runs too
 //   history                                 every finished run, newest last
 //   calibrate                               the judge against the user's own verdicts
 //   feedback                                take the thumbs down saved in the apps into the held-out set
@@ -94,6 +95,7 @@ function saveMeta(runDir, meta) {
   meta.wallSeconds = Math.round(Object.values(meta.cases).reduce((s, r) => s + (r.caseSeconds ?? 0), 0));
   meta.lookups = tally(meta.cases);
   meta.model = modelStats(meta.cases);
+  meta.lines = judgeLines(meta.cases);
   writeFileSync(path.join(runDir, "run.json"), JSON.stringify(meta, null, 2));
 }
 
@@ -114,11 +116,35 @@ function modelStats(cases) {
   };
 }
 
+/// The judge's lines (clean, designed, didWhatWasAsked, crafted, ...) as
+/// means over a run's drawing cases and over all its cases, with the median
+/// seconds a drawing request took. Totals, so a held-out run has them too: two
+/// ways of drawing are compared on didWhatWasAsked without reading a case.
+export function judgeLines(cases) {
+  const ran = Object.values(cases).filter((r) => !r.unrun);
+  const means = (list) => {
+    const out = {};
+    for (const key of ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted"]) {
+      const values = list.map((r) => r.judge?.lines?.[key]).filter((v) => typeof v === "number");
+      if (values.length) out[key] = Math.round(values.reduce((a, b) => a + b, 0) / values.length * 10) / 10;
+    }
+    return out;
+  };
+  const drawings = ran.filter((r) => r.group === "drawing");
+  const seconds = drawings.map((r) => r.seconds).filter((v) => typeof v === "number").sort((a, b) => a - b);
+  return {
+    drawing: means(drawings), all: means(ran),
+    drawingSeconds: seconds.length ? seconds[Math.floor((seconds.length - 1) / 2)] : null,
+  };
+}
+
 function historyLine(meta) {
   const line = {
     run: meta.id, engine: meta.engine, set: meta.set ?? "climb", tag: meta.tag, commit: meta.commit, started: meta.started, finished: new Date().toISOString(),
+    ...(Object.keys(meta.switched ?? {}).length ? { switched: meta.switched } : {}),
     wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
     total: meta.total, groups: meta.groups, lookups: meta.lookups, model: meta.model, caseCount: Object.keys(meta.cases).length,
+    lines: meta.lines ?? judgeLines(meta.cases),
   };
   // A held-out run is recorded in total only, so no case can be climbed on.
   if (meta.set === "held-out") return line;
@@ -156,11 +182,15 @@ async function commandRun() {
   } else {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..*/, "").replace("T", "-");
     meta = { id: `${stamp}-${engine}${sealed ? "-held-out" : ""}`, engine, set, tag: option("tag") ?? "untagged", commit: commit(), started: new Date().toISOString(),
-             caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {} };
+             caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {},
+             // Switches the run turns on that are off at Next defaults (--on a,b): a try measured
+             // before it is anybody's default. Recorded so the run never reads as the default app.
+             switched: Object.fromEntries((option("on") ?? "").split(",").filter(Boolean).map((name) => [name, true])) };
     runDir = runDirOf(meta.id, set);
     mkdirSync(runDir, { recursive: true });
   }
   console.log(`==> ${meta.id}: ${engine}, ${set} set, "${meta.tag}", ${meta.caseIDs.length} cases, judged by ${JUDGE_MODEL} (rubric ${RUBRIC_ID}), ${judgeRuns} looks each`);
+  if (Object.keys(meta.switched ?? {}).length) console.log(`    switched on, off at Next defaults: ${Object.keys(meta.switched).join(", ")}`);
   if (sealed) console.log("    held out: each case is scored and kept, but only the total is printed or recorded");
   let done = Object.values(meta.cases).filter((r) => !r.unrun).length;
   let build = !flag("no-build");
@@ -177,7 +207,7 @@ async function commandRun() {
     process.stdout.write(sealed ? `--> held-out case ${done + 1} of ${meta.caseIDs.length} ... ` : `--> ${testCase.id}: "${testCase.request.slice(0, 60)}" ... `);
     let got;
     try {
-      got = engine === "ask" ? await runAsk(testCase, dir, { build }) : await runSkill(testCase, dir, { build });
+      got = engine === "ask" ? await runAsk(testCase, dir, { build, switched: meta.switched }) : await runSkill(testCase, dir, { build, switched: meta.switched });
     } catch (error) {
       got = { error: error.message };
       await quitProbe();
@@ -383,6 +413,21 @@ function importFeedback({ quiet = false } = {}) {
   return added;
 }
 
+/// A run's judge lines in total (`judgeLines`), held-out runs included, and
+/// another run's beside it: `lines <run> [--with <run>]`.
+function lines() {
+  const show = (id) => {
+    const dir = findRunDir(id);
+    if (!dir) throw new Error(`no run ${id}`);
+    const meta = JSON.parse(readFileSync(path.join(dir, "run.json"), "utf8"));
+    const got = judgeLines(meta.cases);
+    const fmt = (m) => Object.entries(m).map(([k, v]) => `${k} ${v}`).join(", ");
+    console.log(`${id}  total ${meta.total}  "${meta.tag}"\n    drawings: ${fmt(got.drawing)}; ${got.drawingSeconds ?? "-"}s a drawing request (median)\n    all:      ${fmt(got.all)}`);
+  };
+  show(positional);
+  if (option("with")) show(option("with"));
+}
+
 /// The two numbers a runner reports: the latest climb run and the latest
 /// held-out run of an engine on the current rubric.
 function report() {
@@ -406,6 +451,7 @@ try {
   } else if (command === "calibrate") await calibrate();
   else if (command === "feedback") importFeedback();
   else if (command === "report") report();
+  else if (command === "lines") lines();
   else if (command === "sheet") {
     const runDir = findRunDir(positional);
     console.log(await drawSheet(runDir, JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"))));

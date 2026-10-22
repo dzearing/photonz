@@ -26,7 +26,7 @@ enum AgentDrawingWork {
             let editor = try AgentDocuments.editor(id).get()
             return try add(AgentDrawing.layer(for: path), to: editor)
         case .addDrawing(let id, let call):
-            return try addDrawing(call, to: AgentDocuments.editor(id).get())
+            return try await addDrawing(call, to: AgentDocuments.editor(id).get())
         case .addText(let id, let text):
             let editor = try AgentDocuments.editor(id).get()
             return try addText(text, to: editor)
@@ -128,12 +128,22 @@ enum AgentDrawingWork {
     /// A thing drawn in one go: the built-in drawing of it when the set has
     /// one, else the agent's own SVG, as a named group (an icon frame for an
     /// icon) of layers a person can edit, picked, as one undo step.
-    private static func addDrawing(_ call: AgentDrawingCall, to editor: EditorState) throws -> Answer {
+    private static func addDrawing(_ call: AgentDrawingCall, to editor: EditorState) async throws -> Answer {
         let document = try AgentWork.document(of: editor)
         let drawing: SVGArtwork
         let from: String
         var fitted: CGRect?
-        if let brief = call.illustration {
+        if let painting = await AskPictureModel.paint(call) {
+            // "Ask paints its drawings": painted for the request and traced
+            // into named, filled paths, whatever the subject.
+            let painted = try painting.get()
+            switch SVGArtwork.parse(painted.svg, keepingGroups: true) {
+            case .success(let read): drawing = read
+            case .failure(let trouble): throw Failure("add_drawing: \(trouble.message)")
+            }
+            from = "painted: \(painted.model), \(painted.paths) paths in \(Int(painted.seconds.rounded())) s"
+            fitted = AgentDrawingPlacement.box(call.frame, fitting: drawing.bounds.size, on: document.canvasSize)
+        } else if let brief = call.illustration {
             let scene = Illustrator.draw(brief)
             switch SVGArtwork.parse(scene.svg(), keepingGroups: true) {
             case .success(let read): drawing = read

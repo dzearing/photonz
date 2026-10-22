@@ -23,10 +23,19 @@ public struct AgentDrawingCall: Hashable, Sendable {
     /// The look an illustration is drawn in, in the person's words: line
     /// art, silhouette, badge, sunset, flat, or just illustration.
     public var style: String?
+    /// The person's own words, when Ask paints the drawing with a picture
+    /// model: a subject shortened to "cat" still carries "curled up asleep".
+    public var asked: String?
+    /// A place or scene that fills the picture with its own sky and ground,
+    /// as the planning model judged it; painted edge to edge.
+    public var scene: Bool
 
     public init(subject: String, svg: String? = nil, icon: Bool = false, frame: CGRect? = nil,
-                name: String? = nil, builtIn: Bool = true, style: String? = nil) {
+                name: String? = nil, builtIn: Bool = true, style: String? = nil, asked: String? = nil,
+                scene: Bool = false) {
         self.style = style
+        self.asked = asked
+        self.scene = scene
         self.subject = subject
         self.svg = svg
         self.icon = icon
@@ -55,6 +64,35 @@ public struct AgentDrawingCall: Hashable, Sendable {
         let words = subject.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let first = words.first else { return "Drawing" }
         return first.uppercased() + words.dropFirst()
+    }
+}
+
+/// What the picture model on this Mac is asked to paint for an add_drawing
+/// call (`Scripts/picture-model/server.py`): the subject, with the person's
+/// words when they say more than it does, and the look they named. The
+/// server adds the flat, traceable look itself.
+public struct PictureModelRequest: Codable, Hashable, Sendable {
+    public var subject: String
+    public var style: String?
+    /// An icon is painted as a bold glyph with little detail.
+    public var icon: Bool
+    /// A scene fills the picture edge to edge, its backdrop kept as layers.
+    public var scene: Bool
+
+    public init(_ call: AgentDrawingCall) {
+        let subject = call.subject.trimmingCharacters(in: .whitespacesAndNewlines)
+        let asked = (call.asked ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if asked.isEmpty || asked.lowercased() == subject.lowercased() {
+            self.subject = subject
+        } else {
+            self.subject = "\(subject), from the request: \(asked)"
+        }
+        style = call.style
+        icon = call.icon
+        // The planning model's word, or the general words for a scene or a
+        // time of day in what was asked ("at dusk", "a skyline", "landscape").
+        let words = Set(IllustrationBrief.words([subject, asked, call.style ?? ""].joined(separator: " ")))
+        scene = !call.icon && (call.scene || !words.isDisjoint(with: IllustrationBrief.sceneWords.subtracting(["illustration", "illustrated"])))
     }
 }
 

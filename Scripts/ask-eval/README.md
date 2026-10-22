@@ -19,7 +19,17 @@ Scripts/ask-eval.sh feedback                 # thumbs down from the apps become 
 Scripts/ask-eval.sh calibrate                # the judge against the user's own verdicts
 Scripts/ask-eval.sh rescore <run> [--cases a,b]   # score saved results again
 Scripts/ask-eval.sh sheet <run>              # draw a run's contact sheet again
+Scripts/ask-eval.sh lines <run> [--with <run>]   # a run's judge lines in total: clean, designed, didWhatWasAsked, crafted
+Scripts/ask-eval.sh run --engine ask --on next-ask-paints-drawings --tag "..."   # with a switch on that Next has off
 ```
+
+`--on <switch>,<switch>` turns on switches that are off at Next defaults for
+every case of the run (a try measured before it is anybody's default, such as
+"Ask paints its drawings", `Scripts/picture-model/`). The run says so when it
+starts and the history records them as `switched`, so it never reads as the
+default app. `lines` prints the judge's lines as means over a run's drawing
+cases and over all its cases, with the median seconds a drawing request took;
+it is a total, so it works on held-out runs too, and every run records it.
 
 `--minutes N` stops starting new cases after N minutes and prints the
 `--resume <run>` line that carries on. That is how a go loop runner, whose

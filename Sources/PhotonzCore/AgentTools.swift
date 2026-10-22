@@ -313,6 +313,8 @@ public enum AgentTools {
                 "name": ["type": "string", "description": "The group's name in the Layers list. The subject when left out."],
                 "builtIn": ["type": "boolean", "description": "Use Photonz's own drawing when it has one. true when left out; false draws your svg instead."],
                 "style": ["type": "string", "description": "For an illustration or a scene (a landscape, the sun over mountains, a forest, a lighthouse, a skyline, an animal in its setting): the look asked for, in the person's words: line art, silhouette, badge, sunset, flat, or illustration when they named none. Photonz draws it in passes, with light, shadow and depth; send no svg."],
+                "asked": ["type": "string", "description": "The person's own words for the drawing, when they say more than the subject does (what it is doing, where). Used when Photonz paints the drawing with its picture model."],
+                "scene": ["type": "boolean", "description": "true when the drawing is a place or a scene that fills the picture with its own sky or ground (a landscape, a skyline, a beach at sunset), so it is painted edge to edge. Used when Photonz paints the drawing."],
             ], required: ["subject"])),
         AgentTool(
             name: "add_text",
@@ -601,7 +603,8 @@ public enum AgentTools {
             return .success(.addDrawing(document: document, drawing: AgentDrawingCall(
                 subject: subject, svg: svg, icon: args["icon"]?.boolValue ?? false, frame: region(args["frame"]),
                 name: args["name"]?.stringValue, builtIn: args["builtIn"]?.boolValue ?? true,
-                style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 })))
+                style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 },
+                asked: args["asked"]?.stringValue, scene: args["scene"]?.boolValue ?? false)))
         case "add_text":
             let words = args["text"]?.stringValue ?? ""
             guard !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return fail("text is empty.") }

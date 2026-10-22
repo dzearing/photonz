@@ -444,11 +444,13 @@ final class AskSession {
         let styles = await AgentWork.run(.listStyles(document: document))
         // On a video, the title styles add_title takes by name.
         let titles = editor.documentHasTime ? await AgentWork.run(.listTitles(document: document)) : nil
+        let paints = await AskPictureModel.isReady()
+        if paints { note("drawings painted by the picture model") }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : Self.text(of: components),
                                styles: styles.isError ? "" : Self.text(of: styles),
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
-                               drawings: DrawingSet.shared)
+                               drawings: DrawingSet.shared, paints: paints)
     }
 
     /// The model's turns, until it stops calling tools.

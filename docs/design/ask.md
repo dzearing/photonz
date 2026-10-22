@@ -231,6 +231,48 @@ cases): drawing score 35.4 before, 92 after; named right blind 1 of 13 before,
 does not have are where it is still weak: a lighthouse and a windmill were
 each drawn three times by the model and refused by the look.
 
+## Painting a drawing
+
+"Ask paints its drawings" (`next-ask-paints-drawings`, on in Next) sends
+every `add_drawing` to a picture model on this Mac instead of the built-in
+set, the illustrator or the model's own SVG, whenever the picture model
+answers. Measured on the held-out set on 2026-10-22 (queue task
+`try-drawing-with-a-local-picture-model-then-turn`, audit
+`queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json`):
+total 56.8 against 35.9; on drawings didWhatWasAsked 5.6 against 3.3,
+designed 5.8 against 4.7, clean 5.8 against 5.9, crafted 3.0 against 5.0
+(painted pictures are flat, the illustrator's passes added light); 49 s a
+drawing request against 30 s.
+* **Recolouring a drawing.** A fill set on a group recolours its parts
+  (`AgentGroupRecolour`): the colour covering the most becomes the one asked
+  for, the rest keep their shade in the new hue, and a detail that would sink
+  into the main colour is pushed the other way, so "make the cat black" keeps
+  its eyes.
+
+* **The picture model.** Z-Image Turbo (Tongyi-MAI, Apache 2.0), 8-bit MLX
+  weights (`mflux-community/z-image-turbo-mflux-q8`, about 11 GB) run by
+  mflux (MIT) behind `127.0.0.1:8793` (`Scripts/picture-model/serve.sh`). A
+  768 point picture takes about 22 to 28 s on an M4 Max and holds 7.5 GB at
+  its peak, beside the 18 to 29 GB the planning model holds. Ollama 0.40.7
+  refuses image models ("image generation models are not currently
+  supported"), which is why it is not the runner.
+* **The prompt** is the subject the planning model wrote, the person's own
+  words when they say more (`PictureModelRequest`: "cat, from the request:
+  draw a cat curled up sleeping"), the look they named, and a general flat,
+  traceable look (few flat colours, no text, plain backdrop). Nothing in it
+  knows any subject.
+* **Traced into layers** (`Scripts/picture-model/layers.py`, vtracer, MIT):
+  the backdrop joined to the edge is cleared (white parts inside the drawing
+  stay), the drawing's own pixels are reduced by k-means to at most ten
+  colours, a mode filter folds anti-aliased blends into one side, the picture
+  is traced at twice its size so curves are smooth, specks and the backdrop
+  path are dropped, and every fill is snapped back to the palette. Each region
+  is a filled Pen path named by its colour ("Dark brown 3"), 10 to 40 of them
+  for a single subject (300 at most), in one group named for the subject.
+* **When the server is not there**, Ask plans and draws exactly as before:
+  the switch only takes effect when `/health` answers at the start of a
+  request.
+
 ## Drawing an illustration
 
 "Draw an svg illustration of a sun over mountains" once gave three flat green

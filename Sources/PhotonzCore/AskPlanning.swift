@@ -256,13 +256,18 @@ public struct AskConversation: Sendable {
     private let drawings: DrawingLibrary?
     /// What the person typed, read for the look they named.
     private let request: String
+    /// Every drawing is painted by the picture model on this Mac and traced
+    /// into layers ("Ask paints its drawings"), so any subject plans as it
+    /// is and no svg is asked for.
+    private let paints: Bool
 
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
-                titles: String = "", drawings: DrawingLibrary? = nil) {
+                titles: String = "", drawings: DrawingLibrary? = nil, paints: Bool = false) {
         self.drawings = drawings
         self.request = request
+        self.paints = paints
         canvasWidth = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]?["width"]?.doubleValue ?? 0
-        var instructions = Self.instructions(documentRead: documentRead)
+        var instructions = Self.instructions(documentRead: documentRead, paints: paints)
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
         if !titles.isEmpty {
@@ -335,7 +340,12 @@ public struct AskConversation: Sendable {
                     continue
                 }
                 if name == "add_drawing" {
-                    step = AskStep(tool: name, arguments: Self.withStyleWords(arguments, from: request))
+                    var drawing = Self.withStyleWords(arguments, from: request)
+                    if paints, var object = drawing.objectValue {
+                        object["asked"] = .string(request)
+                        drawing = .object(object)
+                    }
+                    step = AskStep(tool: name, arguments: drawing)
                 }
                 if let earlier = repeated(step) {
                     tell(name, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
@@ -362,6 +372,7 @@ public struct AskConversation: Sendable {
     /// set has not got needs the model's own SVG, and that SVG has to read.
     func drawingProblem(_ arguments: AgentJSON) -> String? {
         let subject = arguments["subject"]?.stringValue ?? ""
+        if paints { return nil }
         let builtIn = arguments["builtIn"]?.boolValue ?? true
         let svg = arguments["svg"]?.stringValue ?? ""
         let styled = Self.withStyleWords(arguments, from: request)
@@ -512,8 +523,9 @@ public struct AskConversation: Sendable {
     }
 
     /// What the model is told before the person's request.
-    static func instructions(documentRead: String) -> String {
-        """
+    static func instructions(documentRead: String, paints: Bool = false) -> String {
+        let drawingRules = paints ? Self.paintingRules : Self.drawingRules
+        return """
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
         a request about the document in front of them. Turn it into a plan of tool calls on that document.
         - Looking tools (\(AskTools.looking.joined(separator: ", "))) answer right away. Use them when you need facts.
@@ -532,15 +544,7 @@ public struct AskConversation: Sendable {
         or borders that differ, "check the spacing", "what is inconsistent here"), call find_misalignments, \
         then mark_misalignments once with the ids of every finding worth showing. Never measure them \
         yourself. When it finds nothing, call no editing tool and say so in one short sentence.
-        - To draw a thing (a dog, a house, a coffee cup, a smiley face), call \
-        add_drawing once with its subject, and icon true when an icon was asked for. Photonz has clean drawings \
-        of about a thousand everyday things; when it has none of yours it says so, and you call add_drawing \
-        again with svg, your own drawing as one complete SVG. Never build a drawing from add_shape or add_path, \
-        and put no words, components or backdrop on it unless they were asked for.
-        - To draw an illustration or a scene (the sun over mountains, a forest at dusk, a lighthouse on a cliff, \
-        a city skyline, a fox in its setting), call add_drawing once with the scene as its subject and style \
-        set to the look asked for (line art, silhouette, badge, sunset, flat), or "illustration" when none \
-        was named. Photonz draws it itself; send no svg.
+        \(drawingRules)
         - "On brand" means the document's saved styles and the Library's components, both listed \
         below (the Library always offers starters such as a Card and a Button). Use them: place \
         components rather than drawing look-alikes, and paint with the saved styles. An empty canvas is a place to build, not a reason to refuse.
@@ -554,6 +558,31 @@ public struct AskConversation: Sendable {
         \(documentRead)
         """
     }
+
+    /// How to draw when Photonz draws from its set or the model's own svg.
+    static let drawingRules = """
+        - To draw a thing (a dog, a house, a coffee cup, a smiley face), call \
+        add_drawing once with its subject, and icon true when an icon was asked for. Photonz has clean drawings \
+        of about a thousand everyday things; when it has none of yours it says so, and you call add_drawing \
+        again with svg, your own drawing as one complete SVG. Never build a drawing from add_shape or add_path, \
+        and put no words, components or backdrop on it unless they were asked for.
+        - To draw an illustration or a scene (the sun over mountains, a forest at dusk, a lighthouse on a cliff, \
+        a city skyline, a fox in its setting), call add_drawing once with the scene as its subject and style \
+        set to the look asked for (line art, silhouette, badge, sunset, flat), or "illustration" when none \
+        was named. Photonz draws it itself; send no svg.
+        """
+
+    /// How to draw when the picture model paints every drawing.
+    static let paintingRules = """
+        - To draw anything (a thing, an animal, a pose, a scene, a named style: a dog, a cat curled up \
+        asleep, a cat playing a piano, a lighthouse on a cliff at dusk), call add_drawing once with subject \
+        set to the whole of what to draw in the person's words: what it is, what it is doing, where, and \
+        style set to the look asked for (line art, silhouette, watercolor, flat), or leave style out when \
+        none was named, and scene true when it is a place or a scene with its own sky or ground (a \
+        landscape, a skyline, a forest at dusk). Photonz paints it itself and turns it into layers; send no svg. Never build a \
+        drawing from add_shape or add_path, and put no words, components or backdrop on it unless they \
+        were asked for.
+        """
 }
 
 /// What `find_elements` finds, made easy for a small model to read: each box

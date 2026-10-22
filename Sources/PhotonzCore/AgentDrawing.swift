@@ -347,8 +347,15 @@ public enum AgentDrawing {
             if let size = change.fontSize { text.fontSize = size }
             layer.content = .text(text)
         }
-        if let problem = refusal(change.look, for: layer) { return .failure(AgentToolError("set_layer: \(problem)")) }
-        apply(change.look, keepingPaint: false, to: &layer)
+        var look = change.look
+        if layer.group != nil, let hex = look.fill?.hexValue, AgentGroupRecolour.mainColour(of: layer) != nil {
+            // A drawing's group: its parts are recoloured toward the colour
+            // ("make the cat black"), each keeping its shade.
+            layer = AgentGroupRecolour.recolour(layer, to: hex)
+            look.fill = nil
+        }
+        if let problem = refusal(look, for: layer) { return .failure(AgentToolError("set_layer: \(problem)")) }
+        apply(look, keepingPaint: false, to: &layer)
         if !change.flip.isEmpty {
             guard layer.canBeMirrored else {
                 return .failure(AgentToolError("set_layer: \(layer.name) is a reading of the picture, which a flip would point at something else."))

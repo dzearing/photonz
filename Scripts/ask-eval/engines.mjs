@@ -42,10 +42,11 @@ function startSteps(testCase, { waitForCopies = false } = {}) {
 /// at the Mac for a walk that needs it to itself, 4 a crash.
 /// A case's own `setup` (a made-up History for a request about the person's
 /// recordings) goes into the walk's; a video opens with its tracks showing.
-async function walk(dir, name, steps, { clock, build, testCase }) {
+async function walk(dir, name, steps, { clock, build, testCase, switched }) {
   const out = path.join(dir, name);
   const script = path.join(dir, `${name}.json`);
   const setup = { forget: ["all"], ...(testCase.start.sample ? { timelineOpen: true } : {}), ...(testCase.setup ?? {}) };
+  if (switched && Object.keys(switched).length) setup.flags = { ...(setup.flags ?? {}), ...switched };
   writeFileSync(script, JSON.stringify({
     out, seed: "ask-eval: one case of the scored test set (Scripts/ask-eval)", clock,
     setup, steps,
@@ -178,17 +179,17 @@ async function prepare(testCase) {
 
 /// One go of Ask on the case; a go whose Send never started Ask is tried
 /// once more, and then left unrun rather than scored as nothing made.
-export async function runAsk(testCase, dir, { build }) {
-  const first = await runAskOnce(testCase, dir, { build });
+export async function runAsk(testCase, dir, { build, switched }) {
+  const first = await runAskOnce(testCase, dir, { build, switched });
   if (first.unrun || first.engine.phase !== "idle") return first;
   await quitProbe();
-  const second = await runAskOnce(testCase, dir, { build: false });
+  const second = await runAskOnce(testCase, dir, { build: false, switched });
   if (second.unrun || second.engine.phase !== "idle") return second;
   await quitProbe();
   return { engine: second.engine, unrun: "Ask never started: the walk's Send did not take, twice" };
 }
 
-async function runAskOnce(testCase, dir, { build }) {
+async function runAskOnce(testCase, dir, { build, switched }) {
   const limit = testCase.timeout ?? 300;
   const steps = [
     ...startSteps(testCase, { waitForCopies: true }),
@@ -203,7 +204,7 @@ async function runAskOnce(testCase, dir, { build }) {
     { do: "describe", stage: "ended", note: "where the request ended" },
   ];
   const started = Date.now();
-  const [walked, unprepared] = await Promise.all([walk(dir, "ask-walk", steps, { clock: limit + 180, build, testCase }), prepare(testCase)]);
+  const [walked, unprepared] = await Promise.all([walk(dir, "ask-walk", steps, { clock: limit + 180, build, testCase, switched }), prepare(testCase)]);
   const ended = walked.log.filter((e) => e.state?.ask).at(-1)?.state.ask;
   // How the model's tool calls came back (AskConversation's count, noted each
   // turn) and how much memory it held: the model bake-off's columns.
@@ -228,9 +229,9 @@ async function runAskOnce(testCase, dir, { build }) {
   return { engine, ...got };
 }
 
-export async function runSkill(testCase, dir, { build }) {
+export async function runSkill(testCase, dir, { build, switched }) {
   const limit = testCase.skillTimeout ?? 360;
-  const walked = await walk(dir, "start-walk", startSteps(testCase), { clock: 120, build, testCase });
+  const walked = await walk(dir, "start-walk", startSteps(testCase), { clock: 120, build, testCase, switched });
   if (walked.code !== 0) {
     await quitProbe();
     return { engine: { walk: walked.code, said: walked.said }, unrun: walked.code === 3 ? "screen locked" : walked.code === 6 ? "deferred: person at the Mac" : `the start walk failed (${walked.code})` };
