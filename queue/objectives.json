@@ -10,7 +10,8 @@
     "Only epics staged now may hold open tasks. Anything serving a later epic waits, so we ship something finished instead of everything half-built.",
     "Ask the grown-up-tool question every time: would someone who knows Premiere (for video) or Photoshop (for pictures) find this where they expect it, and is it easier here? Actions live where you click: a right-click menu on the thing, not a tool or a panel button for everything.",
     "A feature exists only if a person running Next with default settings can reach it. A walk that forces a flag proves nothing about what the user sees.",
-    "Nothing Ask or the Photonz skill makes comes from stored or hand-coded subjects: no stored drawings, no code for a particular subject, no template for a kind of request or an eval case. Quality comes from the model, the prompt, general techniques that work on any subject, and material looked up at request time. Tools yes, content no. (The user, 2026-10-20.)"
+    "Nothing Ask or the Photonz skill makes comes from stored or hand-coded subjects: no stored drawings, no code for a particular subject, no template for a kind of request or an eval case. Quality comes from the model, the prompt, general techniques that work on any subject, and material looked up at request time. Tools yes, content no. (The user, 2026-10-20.)",
+    "Photonz never makes a person install, open, start or keep running another program for a feature to work. Anything a feature needs ships inside the app or is downloaded from its Settings, and Photonz starts it, stops it and frees its memory itself. (The user, 2026-10-22.)"
   ],
   "epics": [
     {
