@@ -1922,7 +1922,8 @@ another command loses that key, and its command moves.
 - **The user settled this, more than once.** 2026-07-05: M is Photoshop's
   marquee, so Measure moved to I; ⌘N is New Layer, so New from Clipboard moved
   to ⌥⌘N. 2026-10-11: H picks the Hand and Highlight moved to U; C stays Crop
-  and the Component tool took N. Parity is for keys, not behaviour: where
+  and the Component tool took N. 2026-10-22: ⌘N is File ▸ New, like every Mac
+  app, and New Layer moved to ⇧⌘N, Photoshop's own key for it. Parity is for keys, not behaviour: where
   Photoshop's interaction is clumsy the user overrides it (a marquee drag moves
   the pixels here, ⌘-drag moves the outline).
 

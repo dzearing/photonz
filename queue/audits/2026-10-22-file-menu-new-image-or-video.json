@@ -1,0 +1,31 @@
+{
+  "feature": "File menu like every Mac app: New makes an Image or a Video",
+  "epic": "agent-drivable",
+  "summary": "File > New (Command-N) opens a small New window with two choices, Image and Video, and their sizes. Return or one click makes it. File now runs New, then Open and Open Recent, then capture, then Close and Save. New Layer moved to Shift-Command-N, Photoshop's key.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the File menu. New and New from Clipboard are at the top, then Open and Open Recent, then the capture rows, then Close above Save.", "shot": "2026-10-22-file-menu-like-every-mac-app.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command-N. The New window opens with Image picked and Desktop 1440 x 1024 chosen.", "shot": "2026-10-22-new-window-1-image.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Return (or click New Image). A blank 1440 x 1024 picture opens in its own window and the New window closes.", "shot": "2026-10-22-new-window-3-made-image.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Shift-Command-N in that picture. A new empty layer appears." },
+    { "do": "Press Command-N again, click Video, click HD 720p. The button reads New Video and a Length field shows.", "shot": "2026-10-22-new-window-2-video.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click New Video. A 1280 x 720 empty video opens in its own window; the picture from before is still open." },
+    { "do": "Double-click any size row in the New window. It makes that size in one go." }
+  ],
+  "evaluate": [
+    "Is the New window what you meant by just Image or Video, with nothing else in it?",
+    "Is the File menu order the one you expect from other Mac apps?",
+    "Does Shift-Command-N for New Layer feel right now that Command-N is File > New?",
+    "Is it fine that launching with nothing open still shows no window (the app lives in the menu bar), with New and Open in its menus?"
+  ],
+  "rough": [
+    "Departs from the front door mock (ui-entry-wt.html #homeWin): the four templates, Open, Open Image and Recent are gone and Image and Video tiles with sizes take their place, your call on 2026-10-22.",
+    "Design UI is off at Next defaults and is not in New, your call on 2026-10-22. What it gave is reachable inside any image: the Design mode from the mode chip in the title bar (Control and its number), Components in the Library, and the Frame tool in the Design tool bar. Every UI document already made is an ordinary file and still opens.",
+    "Launching with nothing open, or closing the last window, still shows nothing: Photonz is a menu bar app that may start at login, so a window popping up uninvited would be worse than Preview's behaviour; New and Open are in the File menu and the menu bar icon's menu.",
+    "Close All (Option-Command-W, the Option alternate of Close) is gone from File: the system's Close was replaced with Photonz's own so it sits above Save, and a plain menu cannot carry an Option alternate.",
+    "The empty window's card rows now read New image and New video (they were Blank canvas and Blank video) and open the size sheet, now titled New Image; no walk photographs the card in this task.",
+    "Request Screen Recording Access sits at the end of the capture section in File, where the old Capture submenu had it.",
+    "The Describe what to create bar is still dimmed; making it work is ask-works-in-an-empty-window-and-makes-the-pictu."
+  ]
+}

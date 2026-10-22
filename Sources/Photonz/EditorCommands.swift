@@ -71,6 +71,14 @@ extension FocusedValues {
 /// document actions target the focused editor window (`editor`), disabling when
 /// there is none.
 struct EditorCommands: Commands {
+    /// Layer ▸ New Layer's key: Photoshop's ⇧⌘N once ⌘N is File ▸ New
+    /// (`next-front-door`), ⌘N before. The right-click row prints the same.
+    static var newLayerKey: KeyboardShortcut {
+        Experiments.shared.frontDoorEnabled
+            ? KeyboardShortcut("n", modifiers: [.command, .shift])
+            : KeyboardShortcut("n", modifiers: .command)
+    }
+
     let coordinator: AppCoordinator
     @FocusedValue(\.editorState) private var editor: EditorState?
     @FocusedValue(\.videoEditorState) private var video: VideoEditorState?
@@ -322,40 +330,53 @@ struct EditorCommands: Commands {
             Button("Experiments…") { coordinator.showExperiments() }
         }
 
-        // Replace the auto "New Window" so its default ⌘N binding doesn't
-        // collide: ⌘N belongs to Layer ▸ New Layer (user decision 2026-07-05
-        // — the select → ⌘N → fill flow), clipboard moved to ⌥⌘N.
+        // File reads like every Mac app's at Next (`next-front-door`, the
+        // user's call on 2026-10-22): what makes something new at the top,
+        // New (⌘N) opening the New window that makes an Image or a Video,
+        // then Open and Open Recent, then capture as its own section, then
+        // Save and Export. New Layer moved to ⇧⌘N, Photoshop's key for it.
+        //
+        // Off, the auto "New Window" is replaced so its default ⌘N binding
+        // doesn't collide: ⌘N belongs to Layer ▸ New Layer (user decision
+        // 2026-07-05, the select → ⌘N → fill flow), clipboard moved to ⌥⌘N.
         CommandGroup(replacing: .newItem) {
-            Button("New Window") { coordinator.newDocumentWindow() }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
-            // Starting from nothing used to mean New Window first, then the
-            // card. Here it is one step from wherever you are: the size sheet
-            // opens over the window you are in, and only once you have picked
-            // a size does a window appear. No shortcut: every N is spoken for
-            // (⌘N New Layer, ⇧⌘N New Window, ⌥⌘N New from Clipboard).
-            if Experiments.shared.blankCanvasEnabled {
-                Button("New Blank Canvas…") {
-                    if let editor {
-                        editor.isBlankCanvasDialogPresented = true
-                    } else {
-                        coordinator.newBlankCanvasWindowAskingForSize()
+            if Experiments.shared.frontDoorEnabled {
+                Button("New…") { coordinator.newDocumentWindow() }
+                    .keyboardShortcut("n", modifiers: .command)
+            } else {
+                Button("New Window") { coordinator.newDocumentWindow() }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
+                // Starting from nothing used to mean New Window first, then the
+                // card. Here it is one step from wherever you are: the size sheet
+                // opens over the window you are in, and only once you have picked
+                // a size does a window appear. No shortcut: every N is spoken for
+                // (⌘N New Layer, ⇧⌘N New Window, ⌥⌘N New from Clipboard).
+                if Experiments.shared.blankCanvasEnabled {
+                    Button("New Blank Canvas…") {
+                        if let editor {
+                            editor.isBlankCanvasDialogPresented = true
+                        } else {
+                            coordinator.newBlankCanvasWindowAskingForSize()
+                        }
                     }
                 }
-            }
-            // A video from nothing, the mock's New video (`video.html`, step
-            // 1): Premiere's File ▸ New ▸ Sequence, with no shortcut for the
-            // same reason New Blank Canvas has none.
-            if Experiments.shared.blankVideoEnabled {
-                Button("New Video…") {
-                    if let editor {
-                        editor.isBlankVideoDialogPresented = true
-                    } else {
-                        coordinator.newBlankVideoWindowAskingForSize()
+                // A video from nothing, the mock's New video (`video.html`, step
+                // 1): Premiere's File ▸ New ▸ Sequence, with no shortcut for the
+                // same reason New Blank Canvas has none.
+                if Experiments.shared.blankVideoEnabled {
+                    Button("New Video…") {
+                        if let editor {
+                            editor.isBlankVideoDialogPresented = true
+                        } else {
+                            coordinator.newBlankVideoWindowAskingForSize()
+                        }
                     }
                 }
             }
             // The empty window's Design UI row, in the menu bar too. No
-            // ellipsis: it asks nothing, it opens. No shortcut, as above.
+            // ellipsis: it asks nothing, it opens. No shortcut, as above. Off
+            // by default at Next since 2026-10-22: New makes an Image or a
+            // Video, and a UI design is the Design mode inside an image.
             if Experiments.shared.designUIStartEnabled {
                 Button(UIStarter.menuTitle) {
                     if let editor {
@@ -367,6 +388,7 @@ struct EditorCommands: Commands {
             }
             Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
                 .keyboardShortcut("n", modifiers: [.command, .option])
+            if Experiments.shared.frontDoorEnabled { Divider() }
             Button("Open…") { coordinator.presentOpenPanel() }
                 .keyboardShortcut("o", modifiers: .command)
             // The documents you opened and saved, where every Mac app keeps
@@ -386,78 +408,19 @@ struct EditorCommands: Commands {
                     .disabled(!(editor?.canImportMedia ?? false))
             }
             fileCaptureSubmenu
-            Divider()
-            // ⌘S means the same thing in both editors: commit back to where
-            // the media came from. For an image that's the flattened composite
-            // written into the capture file; for a recording it's the trim/crop
-            // baked into the stored MP4 (the original is preserved alongside,
-            // so it stays reversible).
-            Button("Save") {
-                if let editor = focusedSave?.editor as? EditorState { editor.run(.save) }
-                else { focusedSave?.editor.performSave { _ in } }
+            if !Experiments.shared.frontDoorEnabled {
+                Divider()
+                saveRows
             }
-            .keyboardShortcut("s", modifiers: .command)
-            .disabled(!(focusedSave?.affordance.isSaveEnabled ?? false))
-            // For a recording, "save a copy somewhere else" IS the export, so
-            // it goes through the one Export sheet rather than a second flow to
-            // discover (Next, `next-recording-export-sheet`). With the flag off
-            // it is the bare save box with MP4 already decided, as before.
-            // Same order in the action as in the dimming below, which is the
-            // fault the plain Save had: an action that preferred the image
-            // editor under a test that preferred whoever had something to save.
-            Button("Save As…") {
-                if editor?.document != nil { editor?.saveDocumentAs() }
-                else if let video {
-                    if Experiments.shared.recordingExportSheetEnabled {
-                        video.isExportSheetPresented = true
-                    } else {
-                        coordinator.saveRecording(video, as: .mp4)
-                    }
-                }
-            }
-            .keyboardShortcut("s", modifiers: [.command, .shift])
-            .disabled(editor?.document == nil && !(video?.isReady ?? false))
-            // A picture only. It flattens the window into one PNG, which for a
-            // video is a single still frame; a recording in history is saved
-            // into history by Save itself (`HistoryVideoSave`).
-            if editor?.documentHasTime != true {
-                Button("Save to Capture History") {
-                    if let editor, let image = editor.compositeImage(),
-                       let url = coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL,
-                                                               image: image,
-                                                               scale: editor.documentPixelScale) {
-                        editor.savedToCaptureHistory(at: url) // sidecar + clean baseline
-                    }
-                }
-                .keyboardShortcut("s", modifiers: [.command, .option])
-                .disabled(editor?.document == nil)
-            }
-            Divider()
-            // ⇧⌘E — plain ⌘E is Merge Down, matching Photoshop's layer shortcuts.
-            // On a video too (UX-PATTERNS §7): Premiere gives ⌘E to Edit
-            // Original and Export to ⌘M, so neither tool gives ⌘E to Export,
-            // and Merge Down there never takes a layer with time
-            // (`LayerMerge.swift`).
-            // One Export command for both editors: a picture and a recording
-            // leave the app through the same sheet and the same key.
-            Button("Export…") {
-                if editor?.document != nil { editor?.isExportDialogPresented = true }
-                else if let video, Experiments.shared.recordingExportSheetEnabled {
-                    video.isExportSheetPresented = true
-                }
-            }
-            .keyboardShortcut("e", modifiers: [.command, .shift])
-            // One file at a time: the window stays usable while a video
-            // writes, but a second export would have nowhere to go.
-            .disabled((editor?.document == nil && !(offersRecordingExportSheet(video)))
-                      || editor?.videoExport != nil)
-            // Copy Merged took this key and moved next to Copy in Edit, where
-            // the difference between the two copies is readable. Off, the
-            // picture-of-everything copy stays here as Copy Image.
-            if !Experiments.shared.copyPicksYourLayerEnabled {
-                Button("Copy Image") { editor?.copyCompositeToClipboard() }
-                    .keyboardShortcut("c", modifiers: [.command, .shift])
-                    .disabled(editor?.document == nil)
+        }
+        // Close above Save, where every Mac document app has it (Preview,
+        // Pages, Photoshop): the save section is the app's own, with its own
+        // Close in place of the one SwiftUI hangs after everything else.
+        if Experiments.shared.frontDoorEnabled {
+            CommandGroup(replacing: .saveItem) {
+                Button("Close") { NSApp.sendAction(#selector(NSWindow.performClose(_:)), to: nil, from: nil) }
+                    .keyboardShortcut("w", modifiers: .command)
+                saveRows
             }
         }
 
@@ -626,6 +589,84 @@ struct EditorCommands: Commands {
     /// about to spend on a tool (`EditorState+TimelineKeys`).
     private var timelineKeys: Bool { timed && (editor?.timelineHasKeyboard ?? false) }
 
+    // MARK: Save
+
+    /// File's Save, Save As, Save to Capture History, Export and Copy Image.
+    @ViewBuilder private var saveRows: some View {
+        // ⌘S means the same thing in both editors: commit back to where
+        // the media came from. For an image that's the flattened composite
+        // written into the capture file; for a recording it's the trim/crop
+        // baked into the stored MP4 (the original is preserved alongside,
+        // so it stays reversible).
+        Button("Save") {
+            if let editor = focusedSave?.editor as? EditorState { editor.run(.save) }
+            else { focusedSave?.editor.performSave { _ in } }
+        }
+        .keyboardShortcut("s", modifiers: .command)
+        .disabled(!(focusedSave?.affordance.isSaveEnabled ?? false))
+        // For a recording, "save a copy somewhere else" IS the export, so
+        // it goes through the one Export sheet rather than a second flow to
+        // discover (Next, `next-recording-export-sheet`). With the flag off
+        // it is the bare save box with MP4 already decided, as before.
+        // Same order in the action as in the dimming below, which is the
+        // fault the plain Save had: an action that preferred the image
+        // editor under a test that preferred whoever had something to save.
+        Button("Save As…") {
+            if editor?.document != nil { editor?.saveDocumentAs() }
+            else if let video {
+                if Experiments.shared.recordingExportSheetEnabled {
+                    video.isExportSheetPresented = true
+                } else {
+                    coordinator.saveRecording(video, as: .mp4)
+                }
+            }
+        }
+        .keyboardShortcut("s", modifiers: [.command, .shift])
+        .disabled(editor?.document == nil && !(video?.isReady ?? false))
+        // A picture only. It flattens the window into one PNG, which for a
+        // video is a single still frame; a recording in history is saved
+        // into history by Save itself (`HistoryVideoSave`).
+        if editor?.documentHasTime != true {
+            Button("Save to Capture History") {
+                if let editor, let image = editor.compositeImage(),
+                   let url = coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL,
+                                                           image: image,
+                                                           scale: editor.documentPixelScale) {
+                    editor.savedToCaptureHistory(at: url) // sidecar + clean baseline
+                }
+            }
+            .keyboardShortcut("s", modifiers: [.command, .option])
+            .disabled(editor?.document == nil)
+        }
+        Divider()
+        // ⇧⌘E — plain ⌘E is Merge Down, matching Photoshop's layer shortcuts.
+        // On a video too (UX-PATTERNS §7): Premiere gives ⌘E to Edit
+        // Original and Export to ⌘M, so neither tool gives ⌘E to Export,
+        // and Merge Down there never takes a layer with time
+        // (`LayerMerge.swift`).
+        // One Export command for both editors: a picture and a recording
+        // leave the app through the same sheet and the same key.
+        Button("Export…") {
+            if editor?.document != nil { editor?.isExportDialogPresented = true }
+            else if let video, Experiments.shared.recordingExportSheetEnabled {
+                video.isExportSheetPresented = true
+            }
+        }
+        .keyboardShortcut("e", modifiers: [.command, .shift])
+        // One file at a time: the window stays usable while a video
+        // writes, but a second export would have nowhere to go.
+        .disabled((editor?.document == nil && !(offersRecordingExportSheet(video)))
+                  || editor?.videoExport != nil)
+        // Copy Merged took this key and moved next to Copy in Edit, where
+        // the difference between the two copies is readable. Off, the
+        // picture-of-everything copy stays here as Copy Image.
+        if !Experiments.shared.copyPicksYourLayerEnabled {
+            Button("Copy Image") { editor?.copyCompositeToClipboard() }
+                .keyboardShortcut("c", modifiers: [.command, .shift])
+                .disabled(editor?.document == nil)
+        }
+    }
+
     // MARK: Capture
 
     // The same shortcuts are registered as global Carbon hotkeys
@@ -644,7 +685,8 @@ struct EditorCommands: Commands {
             coordinator.capture.toggleRecording()
         }
         .keyboardShortcut("5", modifiers: [.command, .shift])
-        Divider()
+        // One section in File, where these sit between Open and Save.
+        if !Experiments.shared.frontDoorEnabled { Divider() }
         Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
             .keyboardShortcut("6", modifiers: [.command, .shift])
             .disabled(coordinator.lastCapture == nil)
@@ -683,8 +725,16 @@ struct EditorCommands: Commands {
 
     /// File ▸ Capture, where Preview keeps Take Screenshot: the capture
     /// commands under their own names and keys, one level down.
+    ///
+    /// With File reading like every Mac app's (`next-front-door`) the rows
+    /// are a section of File itself, under Open, where the user asked for
+    /// them ("capture can be a secondary section", 2026-10-22).
     @ViewBuilder private var fileCaptureSubmenu: some View {
-        if Experiments.shared.proMenuBarEnabled {
+        if Experiments.shared.frontDoorEnabled {
+            Divider()
+            captureRows
+            screenRecordingAccessRow
+        } else if Experiments.shared.proMenuBarEnabled {
             Divider()
             Menu(CaptureMenuNames.menuTitle) {
                 captureRows
@@ -1882,11 +1932,12 @@ struct EditorCommands: Commands {
     @CommandsBuilder private var layerMenu: some Commands {
         CommandMenu("Layer") {
             // New empty (transparent, canvas-sized) layer. The selection
-            // region is preserved, so select → ⌘N → fill paints the region
-            // onto the fresh layer (user decision 2026-07-05; New from
-            // Clipboard moved to ⌥⌘N).
+            // region is preserved, so select → the key → fill paints the
+            // region onto the fresh layer (user decision 2026-07-05). With
+            // File reading like every Mac app's, ⌘N is File ▸ New and this
+            // is ⇧⌘N, Photoshop's key for New Layer (2026-10-22).
             Button("New Layer") { editor?.run(.newLayer) }
-                .keyboardShortcut("n", modifiers: .command)
+                .keyboardShortcut(EditorCommands.newLayerKey)
                 .disabled(!(editor?.canRun(.newLayer) ?? false))
             // Photoshop ⌘J: copy the marquee selection to a new layer, or —
             // with no marquee — duplicate the selected layer. Which pixels the

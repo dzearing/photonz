@@ -240,8 +240,11 @@ struct MenuBarMenu: View {
 
         Divider()
 
-        // Windows
-        Button("New Window") { coordinator.newDocumentWindow() }
+        // Windows. The same New the File menu has, under the same name once
+        // File reads like every Mac app's (`next-front-door`).
+        Button(Experiments.shared.frontDoorEnabled ? "New\u{2026}" : "New Window") {
+            coordinator.newDocumentWindow()
+        }
         Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
         Button("Open…") { coordinator.presentOpenPanel() }
 

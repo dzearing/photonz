@@ -3,17 +3,19 @@
   "setup": {
     "forget": [
       "all"
-    ]
+    ],
+    "flags": {
+      "next-design-ui-start": true
+    }
   },
-  "seed": "Start a UI design from nothing (ui-entry-wt.html, steps 3 to 7), at Next defaults. New Window's front door offers Design UI; picking it makes the primary button read New UI canvas, and pressing that opens untitled-ui in a window of its own while the front door closes: a 1280 by 800 canvas holding a Login frame laid out as a column, with the Library already on Components. Drag the Button off the shelf onto the frame: it joins the column as a linked copy, last, and the frame grows to hold it. The window is called untitled-ui, and File > New UI Design from it opens a second one, untitled-ui 2, leaving this one as it is.",
+  "seed": "Start a UI design from nothing (ui-entry-wt.html, steps 3 to 7), with next-design-ui-start switched on: it is off at Next defaults since the user's call on 2026-10-22, when File > New became Image or Video and nothing else. An empty window's card offers Design UI; clicking it opens untitled-ui: a 1280 by 800 canvas holding a Login frame laid out as a column, with the Library already on Components. Drag the Button off the shelf onto the frame: it joins the column as a linked copy, last, and the frame grows to hold it. File > New UI Design from it opens a second one, untitled-ui 2, leaving this one as it is.",
   "steps": [
     {
-      "do": "startFromFrontDoor",
-      "tile": "Design UI",
-      "press": "New UI canvas",
+      "do": "startFromEmpty",
+      "row": "Design UI",
       "width": 1280,
       "height": 900,
-      "card": "design-ui-1-front-door"
+      "card": "design-ui-1-empty-card"
     },
     {
       "do": "wait",

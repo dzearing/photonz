@@ -1,0 +1,12 @@
+{
+  "out": "/tmp/photonz-playtest/file-menu-like-every-mac-app",
+  "setup": { "forget": ["all"] },
+  "seed": "File reads like every Mac app's at Next defaults with no switch changed (the user, 2026-10-22: 'new menu items should be at the top on the menu like every other app in the world. capture can be a secondary section'). New (Command N) and New from Clipboard first, then Open, Open Recent and Import Media, then the capture rows as their own section, then Close above Save, Save As and Export. No New Window, New Blank Canvas, New Video or New UI Design. Layer > New Layer is Shift Command N, Photoshop's key. The open File menu is photographed for the audit.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1100, "height": 760 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "menus", "stage": "1-file", "menu": "File" },
+    { "do": "menus", "stage": "2-layer", "menu": "Layer" },
+    { "do": "menuShot", "menu": "File", "name": "file-menu-1-open" }
+  ]
+}

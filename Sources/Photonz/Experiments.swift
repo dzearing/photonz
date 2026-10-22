@@ -447,10 +447,12 @@ extension Experiments {
     /// Design UI row, which open a canvas already holding a Login frame
     /// (`UIStarter`). Next only.
     var designUIStartEnabled: Bool { isEnabled(FeatureCatalog.designUIStartFlag) }
-    /// New Window opens the front door (`next-front-door`).
+    /// File reads like every Mac app's (`next-front-door`): New (⌘N) opens
+    /// the New window, which makes an Image or a Video, then Open and Open
+    /// Recent, then capture; New Layer is ⇧⌘N, Photoshop's key.
     var frontDoorEnabled: Bool { isEnabled(FeatureCatalog.frontDoorFlag) }
-    /// The documents you open and save are remembered, for the front door's
-    /// Recent and File > Open Recent (`next-recent-documents`).
+    /// The documents you open and save are remembered, for File > Open
+    /// Recent (`next-recent-documents`).
     var recentDocumentsEnabled: Bool { isEnabled(FeatureCatalog.recentDocumentsFlag) }
     /// ⌘← / ⌘→ in the history strip step its filter (`next-history-filter-keys`).
     var historyFilterKeysEnabled: Bool { isEnabled(FeatureCatalog.historyFilterKeysFlag) }

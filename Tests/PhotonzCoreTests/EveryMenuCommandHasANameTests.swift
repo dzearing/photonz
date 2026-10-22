@@ -185,11 +185,15 @@ struct EveryMenuCommandHasANameTests {
             "a window about the app itself, not a document: an agent works in documents",
         "body: \"New Window\"":
             "an empty window waiting for a person to drop something in",
+        "body: \"New…\"":
+            "opens the New window for a person to pick an Image or a Video and a size; new_picture and new_video make one an agent names",
+        "body: \"Close\"":
+            "closes the window in front for a person; an agent works in documents it names and leaves windows to the person",
         "body: \"Open…\"":
             "a file panel for a person; open_document opens a file by path",
-        "body: \"Save As…\"":
+        "saveRows: \"Save As…\"":
             "asks for a place in a save panel; export writes to a path (slices 3 and 4)",
-        "body: \"Export…\"":
+        "saveRows: \"Export…\"":
             "asks for a place in a save panel; export writes to a path (slices 3 and 4)",
         "body: \"Undo\"":
             "an agent has undo and redo tools of their own",
@@ -291,9 +295,9 @@ struct EveryMenuCommandHasANameTests {
             "opens a new window holding a design starter; new_picture and place_component start one an agent names",
         "body: \"New from Clipboard\"":
             "opens a new window from what the person copied; paste puts the clipboard into a document an agent names",
-        "body: \"Save to Capture History\"":
+        "saveRows: \"Save to Capture History\"":
             "asks the person whether to replace the capture or keep both; save writes an edit back over the capture it came from, and export writes a copy to a path",
-        "body: \"Copy Image\"":
+        "saveRows: \"Copy Image\"":
             "shown only with Copy Merged switched off; at Next's defaults copy_merged copies the whole picture",
         "animateRows: \"Draw a Curve\\u{2026}\"":
             "a pad a person draws a curve on by hand; set_easing gives a stretch any named curve",

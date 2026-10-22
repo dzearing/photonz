@@ -31,7 +31,7 @@ struct NewCanvasDialog: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("New Canvas")
+            Text("New Image")
                 .font(.headline)
 
             VStack(spacing: 0) {

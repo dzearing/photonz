@@ -15820,7 +15820,7 @@ private final class Run {
                                     card: String?, rest: String?, first: [String], gone: String?,
                                     number: Int) async throws {
         guard Experiments.shared.frontDoorEnabled else {
-            throw Failure(description: "New Window opens no front door in this release: next-front-door is off")
+            throw Failure(description: "File > New opens no New window in this release: next-front-door is off")
         }
         try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
         let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
@@ -15830,7 +15830,7 @@ private final class Run {
             door = PlaytestHarness.knownEditors.last { !before.contains(ObjectIdentifier($0)) }
             return door?.isFrontDoor == true
         }
-        guard let door else { throw Failure(description: "New Window opened no front door") }
+        guard let door else { throw Failure(description: "File > New opened no New window") }
         try await adoptEmpty(door, step: "startFromFrontDoor", subject: "the front door", number: number)
         if let tile {
             try await pressControl(tile, in: nil, count: 1, modifiers: [], across: nil, number: number)

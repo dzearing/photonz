@@ -1,40 +1,64 @@
 import AppKit
 import PhotonzCore
-import PhotonzRender
 import SwiftUI
 
 extension EnvironmentValues {
-    /// Whether the window being drawn opened as the front door: New Window,
+    /// Whether the window being drawn opened as the New window: File > New,
     /// with `next-front-door` on. Read before the window's state has been
-    /// seeded, so its very first frame is already the front door.
+    /// seeded, so its very first frame is already the New window.
     @Entry var opensAsFrontDoor = false
 }
 
-/// The front door New Window opens (Next, `next-front-door`): the mock's
-/// `#homeWin` in `ui-entry-wt.html`, steps 2 to 4.
+/// The window File > New opens (Next, `next-front-door`): make an Image or a
+/// Video, at a size you pick, and nothing else (the user, 2026-10-22: "have
+/// Image or Video in the new dialog", "new should not have load image in it").
 ///
 /// A window that holds no document, so no canvas, no tool bar and no panel:
-/// Open and the primary button in its title bar, the prompt bar, four starting
-/// templates under Start a project, and the newest captures under Recent.
-/// Picking a template only names what the primary button will make; pressing
-/// it puts the window's mode on the template's (a template is a mode preset,
-/// never a document type) and opens the editor in a window of its own, and the
-/// front door closes on its own once that window is up.
+/// the primary button in its title bar, the prompt bar, the two choices, and
+/// the picked choice's sizes (and a length for a video). Opening is File >
+/// Open and File > Open Recent; capturing is the capture keys. What it makes
+/// opens in an editor window of its own, and this window closes on its own
+/// once that one is up, so a window that already holds a document is never
+/// replaced.
 struct FrontDoorView: View {
     @Environment(EditorState.self) private var editorState
-    @Environment(AppCoordinator.self) private var coordinator
-    @State private var picked: FrontDoorTemplate?
+    @State private var kind: FrontDoorKind = .default
+    @State private var image = SizeChoice(kind: .image)
+    @State private var video = SizeChoice(kind: .video)
+    @State private var seconds: Double = BlankVideo.defaultLengthSeconds
+    @FocusState private var customFieldFocused: Bool
 
     /// The window's width, the mock's `min(640px, 92%)`.
     static let width: CGFloat = 640
 
+    /// One kind's size: a preset's id or `customID`, the width and height
+    /// showing, and the last size typed by hand (`CustomChoice`).
+    struct SizeChoice {
+        var selection: String
+        var width: Double
+        var height: Double
+        var custom = CustomChoice<CGSize>()
+
+        static let customID = "custom"
+
+        init(kind: FrontDoorKind) {
+            let first = kind.sizes.first { $0.size == kind.defaultSize }
+            selection = first?.id ?? Self.customID
+            width = Double(kind.defaultSize.width)
+            height = Double(kind.defaultSize.height)
+        }
+
+        var size: CGSize { CGSize(width: width, height: height) }
+        var isCustom: Bool { selection == Self.customID }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             titleBar
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 18) {
                 promptBar
-                templates
-                recent
+                kinds
+                sizes
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
@@ -46,13 +70,16 @@ struct FrontDoorView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color(nsColor: .windowBackgroundColor))
         .ignoresSafeArea(.container, edges: .top)
+        .onAppear {
+            if !isAvailable(kind), let first = available.first { kind = first }
+        }
     }
 
     // MARK: Title bar
 
     /// The mock's title bar: the app's name and "· New" beside the traffic
-    /// lights, Open and the primary button at the trailing end, "right where
-    /// document actions always sit".
+    /// lights, and the primary button at the trailing end, "right where
+    /// document actions always sit". It names what it will make.
     private var titleBar: some View {
         HStack(spacing: 8) {
             HStack(spacing: 5) {
@@ -63,20 +90,13 @@ struct FrontDoorView: View {
             // Clear of the traffic lights.
             .padding(.leading, 78)
             Spacer(minLength: 12)
-            Button {
-                if coordinator.presentOpenPanel() { editorState.closeFrontDoorOnceTheEditorOpens() }
-            } label: {
-                Label(FrontDoor.openTitle, systemImage: "folder")
-            }
-            .help("Open a picture, a recording or a Photonz file (\u{2318}O)")
-            .playtestControl(FrontDoor.openTitle, detail: "Front door")
-            Button { create(picked) } label: {
-                Label(FrontDoor.primaryTitle(picked: picked), systemImage: "plus")
+            Button(action: create) {
+                Label(kind.createTitle, systemImage: "plus")
             }
             .buttonStyle(FrontDoorProminentButtonStyle())
             .keyboardShortcut(.defaultAction)
-            .disabled(!isAvailable(picked))
-            .playtestControl(FrontDoor.primaryTitle(picked: picked), detail: "Front door")
+            .disabled(!canCreate)
+            .playtestControl(kind.createTitle, detail: "New window")
         }
         .controlSize(.small)
         .padding(.trailing, 14)
@@ -88,10 +108,9 @@ struct FrontDoorView: View {
 
     // MARK: Prompt bar
 
-    /// The mock's prompt bar for the agent. Drawn, and dimmed: the agent that
-    /// answers it is staged later (`agent-drivable`), and a field that took
-    /// typing and then did nothing would be worse than one that says it is
-    /// not ready.
+    /// The mock's prompt bar for the agent. Drawn, and dimmed until the agent
+    /// that answers it lands: a field that took typing and then did nothing
+    /// would be worse than one that says it is not ready.
     private var promptBar: some View {
         HStack(spacing: 10) {
             RoundedRectangle(cornerRadius: 9)
@@ -119,47 +138,37 @@ struct FrontDoorView: View {
         .accessibilityElement(children: .combine)
     }
 
-    // MARK: Templates
+    // MARK: Image or Video
 
-    private var templates: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionLabel(FrontDoor.startHeader)
-                .help(FrontDoor.startHeaderTip)
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
-                      spacing: 12) {
-                ForEach(FrontDoorTemplate.allCases, id: \.self) { template in
-                    if isAvailable(template) { tile(template) }
-                }
-            }
+    private var available: [FrontDoorKind] { FrontDoorKind.allCases.filter(isAvailable) }
+
+    private var kinds: some View {
+        HStack(spacing: 12) {
+            ForEach(available, id: \.self) { tile($0) }
         }
     }
 
-    private func tile(_ template: FrontDoorTemplate) -> some View {
-        let isPicked = picked == template
+    private func tile(_ choice: FrontDoorKind) -> some View {
+        let isPicked = kind == choice
         return Button {
-            picked = template
+            kind = choice
         } label: {
-            VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 12) {
                 RoundedRectangle(cornerRadius: 9)
-                    .fill(Self.tint(template).opacity(0.16))
-                    .frame(width: 32, height: 32)
+                    .fill(Self.tint(choice).opacity(0.16))
+                    .frame(width: 34, height: 34)
                     .overlay {
-                        Image(systemName: template.symbol)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundStyle(Self.tint(template))
+                        Image(systemName: choice.symbol)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Self.tint(choice))
                     }
-                Text(template.title)
-                    .font(.system(size: 12.5, weight: .semibold))
+                Text(choice.title)
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.primary)
-                if let detail = template.detail {
-                    Text(detail)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
+                Spacer(minLength: 0)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 12))
             .overlay {
                 RoundedRectangle(cornerRadius: 12)
@@ -171,46 +180,124 @@ struct FrontDoorView: View {
         }
         .buttonStyle(.plain)
         // A double click is pick and go, the way a preset in Photoshop's New
-        // Document is: the first click of it has already picked the tile.
-        .simultaneousGesture(TapGesture(count: 2).onEnded { create(template) })
-        .help(template.tip)
+        // Document is: the first click of it has already picked the choice.
+        .simultaneousGesture(TapGesture(count: 2).onEnded { kind = choice; create() })
+        .help(choice.createTitle)
         .accessibilityAddTraits(isPicked ? .isSelected : [])
         .animation(.easeOut(duration: 0.15), value: isPicked)
-        .playtestControl(template.title, detail: "Front door template")
+        .playtestControl(choice.title, detail: "New window choice")
     }
 
-    /// The tile's colour, the mock's own: the component purple, the image
-    /// coral, the video cyan and the accent for redlining. Drawn only as a
-    /// glyph on a wash of itself, so it reads in light and dark alike.
-    private static func tint(_ template: FrontDoorTemplate) -> Color {
-        switch template {
-        case .designUI: Color(red: 0.6, green: 0.36, blue: 1)
-        case .editImage: Color(red: 1, green: 0.49, blue: 0.37)
-        case .editVideo: Color(red: 0.07, green: 0.63, blue: 0.79)
-        case .captureRedline: .accentColor
+    /// The choice's colour, the mock's own: the image coral and the video
+    /// cyan. Drawn only as a glyph on a wash of itself, so it reads in light
+    /// and dark alike.
+    private static func tint(_ kind: FrontDoorKind) -> Color {
+        switch kind {
+        case .image: Color(red: 1, green: 0.49, blue: 0.37)
+        case .video: Color(red: 0.07, green: 0.63, blue: 0.79)
         }
     }
 
-    // MARK: Recent
+    // MARK: Sizes
 
-    /// The documents you opened and saved among your newest captures, newest
-    /// first (`next-recent-documents`; with it off, captures only, the same
-    /// entries the history strip shows). Absent when there are none: an empty
-    /// state is empty.
-    @ViewBuilder private var recent: some View {
-        let items = FrontDoor.recent(captures: coordinator.capture.store.entries,
-                                     documents: RecentDocumentsStore.shared.documents)
-        if !items.isEmpty {
+    private var choice: Binding<SizeChoice> {
+        kind == .image ? $image : $video
+    }
+
+    @ViewBuilder private var sizes: some View {
+        if isAvailable(kind) {
             VStack(alignment: .leading, spacing: 10) {
-                sectionLabel(FrontDoor.recentHeader)
-                HStack(alignment: .top, spacing: 12) {
-                    ForEach(items) { item in
-                        FrontDoorRecentCard(item: item) { open(item) }
+                sectionLabel(FrontDoor.sizeHeader)
+                VStack(spacing: 0) {
+                    ForEach(kind.sizes) { preset in
+                        sizeRow(id: preset.id, title: preset.title,
+                                detail: FrontDoor.dimensions(preset.size)) {
+                            choice.wrappedValue.width = Double(preset.size.width)
+                            choice.wrappedValue.height = Double(preset.size.height)
+                        }
+                        Divider().opacity(0.4)
                     }
-                    Spacer(minLength: 0)
+                    sizeRow(id: SizeChoice.customID, title: FrontDoor.customTitle,
+                            detail: choice.wrappedValue.isCustom
+                                ? nil : choice.wrappedValue.custom.kept.map(FrontDoor.dimensions)) {
+                        if let size = choice.wrappedValue.custom.kept {
+                            choice.wrappedValue.width = Double(size.width)
+                            choice.wrappedValue.height = Double(size.height)
+                        }
+                    }
+                }
+                .background(.quaternary.opacity(0.35), in: .rect(cornerRadius: 10))
+                if choice.wrappedValue.isCustom {
+                    HStack(spacing: 8) {
+                        field("Width", choice.width).focused($customFieldFocused)
+                        Text(verbatim: "\u{00D7}").foregroundStyle(.secondary)
+                        field("Height", choice.height)
+                        Text("px").font(.callout).foregroundStyle(.secondary)
+                    }
+                    // Picking Custom puts the cursor in Width, so the next
+                    // thing typed is the size rather than a hunt for the field.
+                    .onAppear { customFieldFocused = true }
+                }
+                if kind.hasLength {
+                    HStack(spacing: 8) {
+                        Text(FrontDoor.lengthTitle).font(.callout)
+                        Spacer(minLength: 12)
+                        field(FrontDoor.lengthTitle, $seconds, fraction: 0...1)
+                        Text("sec").font(.callout).foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 12)
                 }
             }
         }
+    }
+
+    /// One selectable size. The whole row is the target, not a small circle,
+    /// and the picked one carries the accent so the choice reads at a glance.
+    /// A double click picks it and makes it.
+    private func sizeRow(id: String, title: String, detail: String?,
+                         onPick: @escaping () -> Void) -> some View {
+        let isSelected = choice.wrappedValue.selection == id
+        let pick = {
+            let current = choice.wrappedValue
+            choice.wrappedValue.custom.keep(current.size, isOwn: current.isCustom)
+            choice.wrappedValue.selection = id
+            onPick()
+        }
+        return Button(action: pick) {
+            HStack(spacing: 10) {
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+                Text(title)
+                    .font(.callout)
+                Spacer(minLength: 12)
+                if let detail {
+                    Text(detail)
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(TapGesture(count: 2).onEnded {
+            guard id != SizeChoice.customID else { return }
+            pick()
+            create()
+        })
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .playtestControl(title, detail: detail ?? "")
+    }
+
+    private func field(_ label: String, _ value: Binding<Double>,
+                       fraction: ClosedRange<Int> = 0...0) -> some View {
+        TextField(label, value: value,
+                  format: .number.precision(.fractionLength(fraction)).grouping(.never))
+            .textFieldStyle(.roundedBorder)
+            .multilineTextAlignment(.trailing)
+            .labelsHidden()
+            .frame(width: 76)
     }
 
     private func sectionLabel(_ text: String) -> some View {
@@ -222,57 +309,33 @@ struct FrontDoorView: View {
 
     // MARK: Doing it
 
-    /// Whether the app this release ships can make what `template` makes.
-    private func isAvailable(_ template: FrontDoorTemplate?) -> Bool {
-        switch template {
-        case nil: Experiments.shared.blankCanvasEnabled
-        case .designUI?: Experiments.shared.designUIStartEnabled
-        case .editImage?, .captureRedline?: true
-        case .editVideo?: Experiments.shared.blankVideoEnabled
+    /// Whether the app this release ships can make `kind`.
+    private func isAvailable(_ kind: FrontDoorKind) -> Bool {
+        switch kind {
+        case .image: Experiments.shared.blankCanvasEnabled
+        case .video: Experiments.shared.blankVideoEnabled
         }
     }
 
-    /// The primary button: make what the template names. Each one opens its
-    /// editor in a window of its own, which starts in the template's mode
-    /// (`FrontDoorTemplate.modeID`) on its own: a UI design in Design, a
-    /// picture in Image, a video in its one setup. The front door closes once
-    /// that window is up.
-    private func create(_ template: FrontDoorTemplate?) {
-        guard isAvailable(template) else { return }
-        picked = template
-        switch template {
-        case nil: editorState.isBlankCanvasDialogPresented = true
-        case .designUI?: editorState.startUIDesign()
-        case .editImage?:
-            if coordinator.presentOpenPanel() { editorState.closeFrontDoorOnceTheEditorOpens() }
-        case .editVideo?: editorState.isBlankVideoDialogPresented = true
-        case .captureRedline?:
-            // The capture wants the screen to itself and opens its editor only
-            // once a box is drawn, so the front door goes first.
-            let capture = coordinator.capture
-            editorState.closeFrontDoorNow()
-            DispatchQueue.main.async { capture.beginRectCapture() }
-        }
+    private var canCreate: Bool {
+        guard isAvailable(kind), kind.isValid(choice.wrappedValue.size) else { return false }
+        return !kind.hasLength || BlankVideo.isValidLength(seconds: seconds)
     }
 
-    /// A capture opens the way history opens it; a document the way Finder
-    /// and File > Open Recent do.
-    private func open(_ item: FrontDoorRecent) {
-        switch item {
-        case .capture(let entry, _):
-            if entry.kind == .video {
-                coordinator.openRecording(entry.url)
-            } else {
-                coordinator.editCapture(entry.url)
-            }
-        case .document(let document):
-            coordinator.openFileWindow(document.url)
+    /// The primary button: make the picked kind at the picked size, in an
+    /// editor window of its own that starts in the kind's mode. This window
+    /// closes once that one is up (`BlankCanvas.destination`).
+    private func create() {
+        guard canCreate else { return }
+        let size = choice.wrappedValue.size
+        switch kind {
+        case .image: editorState.createBlankCanvas(size: size)
+        case .video: editorState.createBlankVideo(size: size, lengthMS: BlankVideo.lengthMS(seconds: seconds))
         }
-        editorState.closeFrontDoorOnceTheEditorOpens()
     }
 }
 
-/// The front door's primary button and the prompt bar's Create: white on the
+/// The New window's primary button and the prompt bar's Create: white on the
 /// accent, whatever the window is doing.
 ///
 /// Not the system's prominent style: in a window that is not key it drops its
@@ -299,200 +362,7 @@ private struct FrontDoorProminentButtonStyle: ButtonStyle {
     }
 }
 
-/// One card under Recent: its picture, its name and how long ago it was
-/// taken or last used, the history strip's filmcard. A click opens it.
-private struct FrontDoorRecentCard: View {
-    let item: FrontDoorRecent
-    let open: () -> Void
-    @Environment(AppCoordinator.self) private var coordinator
-    @State private var hovered = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            picture
-                .frame(width: 136, height: 84)
-                .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 8))
-                .clipShape(.rect(cornerRadius: 8))
-            VStack(alignment: .leading, spacing: 1) {
-                Text(item.name)
-                    .font(.system(size: 11.5, weight: .medium))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                // Under the pointer the time gives way to the history strip's
-                // own actions, in the same slot, so the row never reflows.
-                ZStack(alignment: .leading) {
-                    Text(RelativeTime.string(from: item.date, to: .now))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .opacity(hovered ? 0 : 1)
-                    if hovered { actions.transition(.opacity) }
-                }
-                .frame(height: 24, alignment: .leading)
-                .animation(.easeOut(duration: 0.12), value: hovered)
-            }
-        }
-        .frame(width: 136, alignment: .leading)
-        .contentShape(Rectangle())
-        .playtestHover("front door recent card") { hovered = $0 }
-        .help(tip)
-        .contextMenu { menu }
-        .playtestControl(item.url.lastPathComponent, detail: "Front door recent")
-    }
-
-    @ViewBuilder private var picture: some View {
-        switch item {
-        case .capture(let entry, _):
-            CaptureThumbnailView(entry: entry, store: coordinator.capture.store,
-                                 ringed: hovered, onActivate: open)
-        case .document(let document):
-            // A button, so the first click on a window that is not in front
-            // opens it too, the way the template tiles take theirs.
-            Button(action: open) {
-                RecentDocumentThumbnail(url: document.url, ringed: hovered)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    private var tip: String {
-        switch item {
-        case .capture(let entry, _): entry.kind == .video ? "Open this recording" : "Open this capture"
-        case .document: "Open \(item.url.lastPathComponent)"
-        }
-    }
-}
-
-extension FrontDoorRecentCard {
-    /// The row under the pointer (`FrontDoor.actions`): the history strip's
-    /// for a capture, and for a document Copy, Edit, Show in Finder and
-    /// Remove from Recent, never Delete.
-    fileprivate var actions: some View {
-        HStack(spacing: 2) {
-            ForEach(FrontDoor.actions(for: item), id: \.self) { action in
-                iconButton(action.title, Self.symbol(action),
-                           role: action == .delete ? .destructive : nil) { perform(action) }
-            }
-        }
-        .buttonStyle(IconActionButtonStyle(diameter: 24))
-    }
-
-    /// The same verbs on a right click, where a Mac hand looks for them:
-    /// Open first, what takes the card away last, past a divider.
-    @ViewBuilder fileprivate var menu: some View {
-        let actions = FrontDoor.actions(for: item)
-        Button("Open") { open() }
-        ForEach(actions.filter { $0 != .edit && !Self.takesItAway($0) }, id: \.self) { action in
-            Button(action.title) { perform(action) }
-        }
-        Divider()
-        ForEach(actions.filter(Self.takesItAway), id: \.self) { action in
-            Button(action.title, role: action == .delete ? .destructive : nil) { perform(action) }
-        }
-    }
-
-    private static func takesItAway(_ action: FrontDoorCardAction) -> Bool {
-        action == .delete || action == .removeFromRecent
-    }
-
-    private static func symbol(_ action: FrontDoorCardAction) -> String {
-        switch action {
-        case .copy: "doc.on.doc"
-        case .edit: "square.and.pencil"
-        case .showInFinder: "folder"
-        case .delete: "trash"
-        case .removeFromRecent: "xmark"
-        }
-    }
-
-    private func perform(_ action: FrontDoorCardAction) {
-        let store = coordinator.capture.store
-        switch (action, item) {
-        case (.copy, .capture(let entry, _)): store.copyToPasteboard(entry)
-        case (.copy, .document(let document)): Self.copy(document, store: store)
-        case (.edit, _): open()
-        case (.showInFinder, _): coordinator.revealInFinder(item.url)
-        case (.delete, .capture(let entry, _)): store.remove(entry)
-        case (.removeFromRecent, .document(let document)): RecentDocumentsStore.shared.remove(document.url)
-        case (.delete, .document), (.removeFromRecent, .capture): break
-        }
-    }
-
-    /// A document's picture on the clipboard (`FrontDoorCopy`): a picture
-    /// file the way a capture copies, a project drawn whole at full size,
-    /// and a recording as its file.
-    private static func copy(_ document: RecentDocument, store: CaptureStore) {
-        let url = document.url
-        switch FrontDoorCopy.kind(for: url) {
-        case .picture:
-            store.copyToPasteboard(CaptureEntry(url: url, createdAt: document.usedAt, kind: .image))
-        case .file:
-            ClipboardWriter.writeFile(url)
-        case .project:
-            Task {
-                let png = await Task.detached(priority: .userInitiated) { () -> Data? in
-                    let images = ImageStore()
-                    guard let project = try? PackageIO.read(from: url, into: images),
-                          let picture = DocumentRenderer().render(project, store: images) else { return nil }
-                    return ImageCodec.encode(picture, format: .png)
-                }.value
-                // A project that will not draw (moved, or saved by a newer
-                // build) copies as its file, so Copy never does nothing.
-                guard let png else { ClipboardWriter.writeFile(url); return }
-                let pasteboard = NSPasteboard.general
-                pasteboard.clearContents()
-                pasteboard.setData(png, forType: .png)
-                if let tiff = NSImage(data: png)?.tiffRepresentation {
-                    pasteboard.setData(tiff, forType: .tiff)
-                }
-            }
-        }
-    }
-
-    private func iconButton(_ title: String, _ systemImage: String, role: ButtonRole? = nil,
-                            action: @escaping () -> Void) -> some View {
-        Button(role: role, action: action) { Image(systemName: systemImage) }
-            .toolTip(title, below: true)
-            .accessibilityLabel(title)
-            .playtestControl("\(title) \(item.url.lastPathComponent)", detail: "Front door recent")
-    }
-}
-
-/// A document's picture under Recent: the small preview a saved package
-/// keeps, or what Quick Look draws for a picture or a recording. A plain card
-/// with the file's kind on it while it loads, and for a package saved before
-/// it kept one.
-private struct RecentDocumentThumbnail: View {
-    let url: URL
-    var ringed = false
-    @State private var image: CGImage?
-
-    var body: some View {
-        ZStack {
-            if let image {
-                Image(decorative: image, scale: 1)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .clipShape(.rect(cornerRadius: 4))
-                    .overlay {
-                        if ringed {
-                            RoundedRectangle(cornerRadius: 4).strokeBorder(Color.accentColor, lineWidth: 2)
-                        }
-                    }
-                    .padding(4)
-            } else {
-                Image(systemName: url.pathExtension.lowercased() == "photonz" ? "doc.richtext" : "doc")
-                    .font(.system(size: 22, weight: .light))
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task(id: url) { image = await RecentDocumentPreview.image(for: url) }
-    }
-}
-
-/// Fits the window round the front door: the mock's width, and as tall as
+/// Fits the window round the New window: the mock's width, and as tall as
 /// what it holds, centred on the screen the first time.
 private struct FrontDoorWindowSizer: NSViewRepresentable {
     func makeNSView(context: Context) -> SizerView { SizerView() }

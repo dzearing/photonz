@@ -1,83 +1,94 @@
+import CoreGraphics
 import Foundation
 
-/// A starting template on the front door New Window opens
-/// (`docs/design/mocks/pages/ui-entry-wt.html`, steps 2 to 4).
+/// What File > New makes: an Image or a Video, and nothing else.
 ///
-/// A template is a MODE PRESET, never a document type (the user's call on
-/// 2026-09-15, `work-out-whether-the-app-needs-project-types-at`): picking one
-/// puts the window in a mode and names what the primary button will make.
-/// Nothing about it is written into the document, so a file made from Design
-/// UI is an ordinary file that opens anywhere without a question.
-public enum FrontDoorTemplate: String, CaseIterable, Sendable {
-    case designUI, editImage, editVideo, captureRedline
+/// The user's call on 2026-10-22, over the front door mock's four templates
+/// and its Open buttons ("Sometimes i just want to create an image", "new
+/// should not have load image in it", "use straightforward IA"). Opening a
+/// file is File > Open, capturing is the capture keys, and a UI design is the
+/// Design mode and the Library's Components inside an image.
+public enum FrontDoorKind: String, CaseIterable, Sendable {
+    case image, video
 
-    /// What the tile says, in the mock's words.
+    /// What the New window opens on, so Return alone makes a picture.
+    public static let `default`: FrontDoorKind = .image
+
+    /// What the choice says.
     public var title: String {
         switch self {
-        case .designUI: "Design UI"
-        case .editImage: "Edit an image"
-        case .editVideo: "Edit video"
-        case .captureRedline: "Capture & redline"
+        case .image: "Image"
+        case .video: "Video"
         }
     }
 
-    /// The line the mock prints under the title, word for word.
-    public var mockDetail: String {
-        switch self {
-        case .designUI: "Components, tokens, auto-layout"
-        case .editImage: "Adjust, mask, retouch, effects"
-        case .editVideo: "Timeline, transitions, captions"
-        case .captureRedline: "\u{21E7}\u{2318}4 \u{00B7} measure + annotate"
-        }
-    }
+    /// The primary button with this kind picked.
+    public var createTitle: String { "New \(title)" }
 
-    /// The line the tile draws: the mock's, when it fits the chrome budget,
-    /// and nothing when it does not. A line over the budget moves into the
-    /// tile's tip in the mock's words (UX-PATTERNS §4).
-    public var detail: String? {
-        mockDetail.count <= CopyBudget.chromeLine ? mockDetail : nil
-    }
+    /// The row the empty window's card shows for it, in the card's sentence
+    /// case ("Open a file", "Paste an image").
+    public var cardTitle: String { "New \(title.lowercased())" }
 
-    /// What the tile says under the pointer.
-    public var tip: String {
-        "\(title): \(mockDetail)"
-    }
-
-    /// The SF Symbol the tile draws. A plain name, so this file stays pure.
+    /// The SF Symbol the choice draws. A plain name, so this file stays pure.
     public var symbol: String {
         switch self {
-        case .designUI: "square.on.square"
-        case .editImage: "photo"
-        case .editVideo: "play.fill"
-        case .captureRedline: "ruler"
+        case .image: "photo"
+        case .video: "film"
         }
     }
 
-    /// The mode the window goes into (`WindowModes`). A picture, opened or
-    /// captured, starts in Image like every picture; a video has the one
-    /// setup a document with time has.
+    /// The mode the new window starts in (`WindowModes`).
     public var modeID: String {
         switch self {
-        case .designUI: "design"
-        case .editImage: WindowModes.imageID
-        case .editVideo: WindowModes.videoID
-        case .captureRedline: WindowModes.imageID
+        case .image: WindowModes.imageID
+        case .video: WindowModes.videoID
+        }
+    }
+
+    /// The sizes offered, the same lists the New Image and New Video sheets
+    /// offer, so the two ways in never disagree.
+    public var sizes: [FrontDoorSize] {
+        switch self {
+        case .image: BlankCanvas.presets.map { FrontDoorSize(id: $0.id, title: $0.title, size: $0.size) }
+        case .video: BlankVideo.presets.map { FrontDoorSize(id: $0.id, title: $0.title, size: $0.size) }
+        }
+    }
+
+    /// The size the window opens on for this kind.
+    public var defaultSize: CGSize {
+        switch self {
+        case .image: BlankCanvas.defaultPreset.size
+        case .video: BlankVideo.defaultPreset.size
+        }
+    }
+
+    /// Whether this kind asks how long it is.
+    public var hasLength: Bool { self == .video }
+
+    /// Whether a typed size can be made as it stands: the primary button's
+    /// enablement.
+    public func isValid(_ size: CGSize) -> Bool {
+        switch self {
+        case .image: BlankCanvas.isValid(size)
+        case .video: BlankVideo.isValid(size)
         }
     }
 }
 
-/// The front door's words and its one rule: what the primary button says.
+/// One size on offer in the New window.
+public struct FrontDoorSize: Hashable, Sendable, Identifiable {
+    public let id: String
+    public let title: String
+    public let size: CGSize
+}
+
+/// The New window's words.
 public enum FrontDoor {
     /// The title bar, as the mock draws it: the app's name, then "· New".
     public static let subtitle = "New"
-    public static let openTitle = "Open\u{2026}"
-    /// The mock's "Start a project · pick a template" is over the chrome
-    /// budget, so the label is its first half and the rest is the tip.
-    public static let startHeader = "Start a project"
-    public static let startHeaderTip = "Start a project \u{00B7} pick a template"
-    public static let recentHeader = "Recent"
-    /// A document's card takes it off the list, never deletes the file.
-    public static let removeFromRecentTitle = "Remove from Recent"
+    public static let sizeHeader = "Size"
+    public static let customTitle = "Custom"
+    public static let lengthTitle = "Length"
     /// The prompt bar's placeholder. The mock's line, with its example, is
     /// the field's tip.
     public static let promptPlaceholder = "Describe what to create"
@@ -86,122 +97,8 @@ public enum FrontDoor {
         + "The agent that answers this is still to come."
     public static let createTitle = "Create"
 
-    /// What the primary button makes with `picked` chosen, or with nothing
-    /// chosen yet. The mock gives Design UI's; the others name their own job
-    /// the same way.
-    public static func primaryTitle(picked: FrontDoorTemplate?) -> String {
-        switch picked {
-        case nil: "New canvas"
-        case .designUI?: "New UI canvas"
-        case .editImage?: "Open Image\u{2026}"
-        case .editVideo?: "New Video\u{2026}"
-        case .captureRedline?: "Capture"
-        }
-    }
-
-    /// How many cards Recent shows. The mock draws three in a window 640
-    /// wide; four still fit and make the row read as a strip.
-    public static let recentCount = 4
-
-    /// What Recent shows: the documents you opened and saved among your
-    /// captures, newest first, the newest few of them, and none at all when
-    /// there are none (an empty state is empty). A capture you opened is one
-    /// card, the capture's, dated when you last used it.
-    public static func recent(captures: [CaptureEntry], documents: [RecentDocument]) -> [FrontDoorRecent] {
-        var used: [URL: Date] = [:]
-        for document in documents { used[document.url.standardizedFileURL] = document.usedAt }
-        var seen = Set<URL>()
-        var all: [FrontDoorRecent] = []
-        for entry in captures {
-            let file = entry.url.standardizedFileURL
-            guard seen.insert(file).inserted else { continue }
-            all.append(.capture(entry, usedAt: max(entry.createdAt, used[file] ?? entry.createdAt)))
-        }
-        for document in documents where seen.insert(document.url.standardizedFileURL).inserted {
-            all.append(.document(document))
-        }
-        // Stable on a tie, so captures keep the order history lists them in.
-        let ordered = all.enumerated().sorted {
-            $0.element.date != $1.element.date ? $0.element.date > $1.element.date : $0.offset < $1.offset
-        }
-        return ordered.prefix(recentCount).map(\.element)
-    }
-
-    /// The row a card under Recent shows under the pointer, in order: the
-    /// mock's Copy and Edit first, then Show in Finder, then what takes it
-    /// away. A capture is the history strip's (a recording has no Copy
-    /// there). A document you opened is yours wherever it lives, so its row
-    /// takes it off the list and never deletes the file.
-    public static func actions(for item: FrontDoorRecent) -> [FrontDoorCardAction] {
-        switch item {
-        case .capture(let entry, _):
-            (entry.kind == .image ? [.copy] : []) + [.edit, .showInFinder, .delete]
-        case .document:
-            [.copy, .edit, .showInFinder, .removeFromRecent]
-        }
-    }
-}
-
-/// One verb on a card under the front door's Recent.
-public enum FrontDoorCardAction: Hashable, Sendable, CaseIterable {
-    case copy, edit, showInFinder, delete, removeFromRecent
-
-    public var title: String {
-        switch self {
-        case .copy: "Copy"
-        case .edit: "Edit"
-        case .showInFinder: "Show in Finder"
-        case .delete: "Delete"
-        case .removeFromRecent: FrontDoor.removeFromRecentTitle
-        }
-    }
-}
-
-/// What Copy on a document's card puts on the clipboard: the picture a
-/// person pastes, the way a capture's Copy does.
-public enum FrontDoorCopy: Hashable, Sendable {
-    /// A saved project, drawn whole at full size.
-    case project
-    /// A picture file: the file and its picture, as a capture copies.
-    case picture
-    /// Anything else (a recording): the file itself, as a recording copies.
-    case file
-
-    public static func kind(for url: URL) -> FrontDoorCopy {
-        let ext = url.pathExtension.lowercased()
-        if ext == "photonz" { return .project }
-        if CaptureLibrary.imageExtensions.contains(ext) { return .picture }
-        return .file
-    }
-}
-
-/// One card under the front door's Recent: a capture from history, or a
-/// document you opened or saved.
-public enum FrontDoorRecent: Hashable, Sendable, Identifiable {
-    case capture(CaptureEntry, usedAt: Date)
-    case document(RecentDocument)
-
-    public var url: URL {
-        switch self {
-        case .capture(let entry, _): entry.url
-        case .document(let document): document.url
-        }
-    }
-
-    public var id: URL { url }
-
-    /// When it was taken, or last opened or saved, whichever is later.
-    public var date: Date {
-        switch self {
-        case .capture(_, let usedAt): usedAt
-        case .document(let document): document.usedAt
-        }
-    }
-
-    public var name: String { url.deletingPathExtension().lastPathComponent }
-
-    public var isCapture: Bool {
-        if case .capture = self { return true }
-        return false
+    /// A size as the list prints it.
+    public static func dimensions(_ size: CGSize) -> String {
+        "\(Int(size.width)) \u{00D7} \(Int(size.height))"
     }
 }

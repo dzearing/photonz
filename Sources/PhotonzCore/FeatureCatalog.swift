@@ -1636,12 +1636,12 @@ public enum FeatureCatalog {
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
-                enabledByDefaultIn: [.next]),
+                enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
                     name: frontDoorFlag,
-                    title: "New Window opens the front door",
-                    description: "New Window opens a small window to start from, with Open, four templates and your recent captures, and a template sets the mode and names what the main button makes. Off means an empty window with its card.",
+                    title: "File \u{25B8} New makes an Image or a Video",
+                    description: "New (Command-N) makes an Image or a Video at a size you pick; Open and capture sit below it, and New Layer moves to Shift-Command-N. Off means New Window and Command-N for New Layer.",
                     area: .canvas,
                     isEnabled: false,
                     parameters: []),

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/empty-track-slot-walk",
-  "seed": "An empty track is drawn as the place a clip goes (video.html, the New video on ramp, step 1: an empty V1 and Audio, each a dashed, striped slot). File > New Video shows both lanes as slots, in dark and in light. A tile dragged onto V1 still draws the drop ghost over the slot, and once it lands, with its sound on Audio, neither lane is a slot. Undo takes the clip off and the slot comes back; redo puts the clip back. A track added with Add Track on a video that already has a clip is a slot too. At Next defaults, no flag set.",
+  "seed": "An empty track is drawn as the place a clip goes (video.html, the New video on ramp, step 1: an empty V1 and Audio, each a dashed, striped slot). File > New, Video, shows both lanes as slots, in dark and in light. A tile dragged onto V1 still draws the drop ghost over the slot, and once it lands, with its sound on Audio, neither lane is a slot. Undo takes the clip off and the slot comes back; redo puts the clip back. A track added with Add Track on a video that already has a clip is a slot too. At Next defaults, no flag set.",
   "setup": {
     "forget": ["all"],
     "scratch": [

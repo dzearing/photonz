@@ -87,6 +87,14 @@ struct PlaytestMenuStandInTests {
         #expect(PlaytestMenuStandIn.action(for: key("e"), modifiers: [.command, .shift]) == nil)
     }
 
+    @Test("Shift Command N makes a new layer, and plain Command N is File > New")
+    func newLayerChord() {
+        // Layer ▸ New Layer moved to Photoshop's ⇧⌘N when ⌘N became File ▸
+        // New (2026-10-22). It hangs off the focused window like undo.
+        #expect(PlaytestMenuStandIn.action(for: key("n"), modifiers: [.command, .shift]) == .newLayer)
+        #expect(PlaytestMenuStandIn.action(for: key("n"), modifiers: [.command]) == nil)
+    }
+
     @Test("A chord with no stand-in says so rather than guessing")
     func unknown() {
         // Nothing should quietly stand in for a chord nobody wrote down: a

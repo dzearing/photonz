@@ -85,6 +85,9 @@ public enum PlaytestMenuStandIn {
         Chord(key: "backspace", modifiers: [.option]): .fillWithForeground,
         // Layer ▸ Merge Down, window-scoped like undo.
         Chord(key: "e", modifiers: [.command]): .mergeDown,
+        // Layer ▸ New Layer, Photoshop's ⇧⌘N since ⌘N became File ▸ New.
+        // Window-scoped like undo.
+        Chord(key: "n", modifiers: [.command, .shift]): .newLayer,
         // Layer ▸ Copy Look and Paste Look, and View ▸ Show Timing. All three
         // hang off the focused window like undo, so all three are dimmed and
         // empty for the whole of a walk: `copy-a-look-walk` and

@@ -152,9 +152,12 @@ struct UIStarterTests {
         #expect(UIStarter.menuTitle == "New UI Design")
     }
 
-    @Test("Design UI is on by default in Next and absent from Current")
+    /// Off since the user's call on 2026-10-22: File > New makes an Image or
+    /// a Video and nothing else, and a UI design is the Design mode and the
+    /// Library's Components inside an image.
+    @Test("Design UI is off by default in Next and absent from Current")
     func flag() {
-        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.designUIStartFlag))
+        #expect(!FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.designUIStartFlag))
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.designUIStartFlag })
     }
 }

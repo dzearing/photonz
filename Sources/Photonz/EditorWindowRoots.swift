@@ -14,7 +14,7 @@ struct ImageEditorRootView: View {
     @Environment(AppCoordinator.self) private var coordinator
     @State private var editorState = EditorState()
 
-    /// Whether this window is New Window's front door: a fresh window, in a
+    /// Whether this window is the New window File ▸ New opens: a fresh window, in a
     /// release that has one.
     private var opensAsFrontDoor: Bool {
         guard case .fresh = windowID else { return false }
@@ -46,7 +46,7 @@ struct ImageEditorRootView: View {
                 editorState.hostWindow?.isDocumentEdited = dirty
             }
             .task {
-                // New Window's front door (`FrontDoorView`), said before the
+                // The New window (`FrontDoorView`), said before the
                 // window is seeded so anything it routes knows from the start.
                 if editorState.frontDoorChoice == nil { editorState.frontDoorChoice = opensAsFrontDoor }
                 // Starting from nothing while this window holds a picture opens

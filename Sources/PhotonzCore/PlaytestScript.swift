@@ -2008,7 +2008,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// than through the layer row's right click menu so the walk still runs
     /// with the screen locked, where an open menu cannot be driven.
     case turnIntoPicture
-    /// Layer ▸ New Layer (⌘N): a fresh empty layer on top, with the marquee
+    /// Layer ▸ New Layer (⇧⌘N at Next): a fresh empty layer on top, with the marquee
     /// left up so the select → new layer → fill flow can be walked. A menu
     /// chord like the rest of the Layer menu, so this is a walk's way in.
     case newLayer
@@ -2695,16 +2695,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the UI starter. The walk then drives whatever document the row opened.
     /// `window` and `card` are `blank`'s.
     case startFromEmpty(row: String, window: CGSize?, card: String?)
-    /// Start from the FRONT DOOR New Window opens (`ui-entry-wt.html`, steps
-    /// 2 to 5): pick `tile` by pointer on its face, when there is one, then
-    /// press the primary button by pointer, found by the words `press` says it
-    /// should read by then ("New UI canvas"), which is how the walk proves the
-    /// tile renamed it. The walk then drives the editor window that opened and
-    /// fails unless the front door closed on its own. `answer`, when the
-    /// primary button asks a question first (New canvas and New Video put up
-    /// their size sheet), is the sheet's button pressed by pointer next:
-    /// "Create". `window` and `card` are `blank`'s; `card` photographs the
-    /// front door with the tile picked.
+    /// Start from the New window File > New opens: pick `tile` (Image or
+    /// Video) by pointer on its face, when there is one, click each of
+    /// `first` (a size row, say) by pointer, then press the primary button by
+    /// pointer, found by the words `press` says it should read by then ("New
+    /// Video"), which is how the walk proves the pick renamed it. The walk
+    /// then drives the editor window that opened and fails unless the New
+    /// window closed on its own. `answer`, when the primary button asks a
+    /// question first, is the button pressed by pointer next. `window` and
+    /// `card` are `blank`'s; `card` photographs the New window with the
+    /// choice picked.
     case startFromFrontDoor(tile: String?, press: String, answer: String?, window: CGSize?, card: String?,
                             rest: String?, first: [String], gone: String?)
     /// Let the editor finish what the step before started. It ends the moment
@@ -4676,11 +4676,6 @@ public enum PlaytestStep: Sendable, Equatable {
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
             let rest = try f.optionalString("rest")
             let first = try f.optionalStrings("first")
-            // A card's row is only there under the pointer, so clicking it
-            // first needs the pointer resting on the card.
-            if !first.isEmpty && rest == nil {
-                throw f.invalid("first", "clicks a Recent card's row, which is only up with \"rest\" naming the card")
-            }
             self = .startFromFrontDoor(tile: try f.optionalString("tile"), press: try f.string("press"),
                                        answer: try f.optionalString("answer"),
                                        window: window, card: try f.optionalString("card"),

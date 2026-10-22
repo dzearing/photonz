@@ -864,7 +864,8 @@ final class AppCoordinator {
         }
     }
 
-    /// Menu "New Window": a brand-new empty document in its own window.
+    /// File ▸ New (Next, the New window) or New Window: a fresh window with
+    /// no document in it.
     func newDocumentWindow() {
         openWindow(.fresh(UUID()))
     }

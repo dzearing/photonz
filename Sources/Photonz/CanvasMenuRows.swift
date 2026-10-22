@@ -55,7 +55,9 @@ extension EditorState {
         if clipboardHasALayer {
             rows.append(.command("Paste", .command("v")) { self.paste() })
         }
-        rows.append(.command("New Layer", .command("n")) { self.newEmptyLayer() })
+        // The menu bar's key for it, which moved to ⇧⌘N with File ▸ New.
+        rows.append(.command("New Layer", Experiments.shared.frontDoorEnabled
+                                 ? .commandShift("n") : .command("n")) { self.newEmptyLayer() })
         rows.append(.separator)
         rows.append(.command("Select All", .command("a")) { self.selectAll() })
         // Only while there IS a marked region to drop, which is the only time

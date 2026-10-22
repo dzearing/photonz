@@ -663,9 +663,12 @@ struct PlaytestScriptTests {
         #expect(first == ["Copy project.photonz"])
         #expect(gone == "old.photonz")
         #expect(PlaytestLockSafety.canRunLocked(script.steps))
-        #expect(throws: (any Error).self) {
-            try decode(#"{ "out": "/x", "steps": [ { "do": "startFromFrontDoor", "press": "A", "first": ["B"] } ] }"#)
+        // A size row clicked before the press needs no card to rest on.
+        let sized = try decode(#"{ "out": "/x", "steps": [ { "do": "startFromFrontDoor", "tile": "Video", "first": ["HD 720p"], "press": "New Video" } ] }"#)
+        guard case .startFromFrontDoor("Video", "New Video", nil, nil, nil, nil, let sizes, nil) = sized.steps[0] else {
+            Issue.record("startFromFrontDoor with first and no rest"); return
         }
+        #expect(sizes == ["HD 720p"])
     }
 
     @Test("A blank step can say the document counts in twos, the way a Retina capture does")

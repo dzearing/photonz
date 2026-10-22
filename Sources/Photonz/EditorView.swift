@@ -788,17 +788,19 @@ struct EditorView: View {
                     // starting from nothing joins the card without moving the
                     // rows already under the pointer.
                     if Experiments.shared.blankCanvasEnabled {
-                        onboardingRow(.blank, "rectangle.badge.plus", "Blank canvas", "") {
+                        onboardingRow(.blank, "rectangle.badge.plus", FrontDoorKind.image.cardTitle, "") {
                             editorState.isBlankCanvasDialogPresented = true
                         }
                     }
                     if Experiments.shared.blankVideoEnabled {
-                        onboardingRow(.video, "film", "Blank video", "") {
+                        onboardingRow(.video, "film", FrontDoorKind.video.cardTitle, "") {
                             editorState.isBlankVideoDialogPresented = true
                         }
                     }
                     // The mock's Design UI tile (`ui-entry-wt.html`), as a row
                     // of this card: no size to ask, so it opens straight away.
+                    // Off by default at Next since 2026-10-22, so the card
+                    // offers the New window's two choices and nothing more.
                     if Experiments.shared.designUIStartEnabled {
                         onboardingRow(.ui, "rectangle.3.group", UIStarter.rowTitle, "") {
                             editorState.startUIDesign()

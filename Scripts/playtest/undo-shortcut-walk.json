@@ -13,7 +13,7 @@
     { "do": "describe", "stage": "2-drew", "note": "a rectangle drawn: two layers, and canUndo is now true, so Undo has something to do" },
     { "do": "render", "name": "undo-2-drew" },
 
-    { "do": "shortcut", "key": "n", "modifiers": ["command", "shift"], "menuItem": "New Window" },
+    { "do": "shortcut", "key": "n", "modifiers": ["command"], "menuItem": "New…" },
     { "do": "wait", "seconds": 1 },
     { "do": "menus", "stage": "3-after-new-window", "menu": "Edit" },
 

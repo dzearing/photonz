@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/new-empty-video-walk",
-  "seed": "A new video starts from an empty timeline (video.html, the New video on ramp: 1 New, empty; 2 Fill the Library; 3 Drop a first clip). File > New Video on an empty window, answered as Return answers it: 1920 by 1080 for ten seconds, an empty V1 over an empty Audio track, the timeline open and the Library open on Media. Then File > Import Media puts a recording on the shelf, and its tile dragged onto the empty V1 four seconds in lands there and makes the video long enough to hold it. At Next defaults, no flag set.",
+  "seed": "A new video starts from an empty timeline (video.html, the New video on ramp: 1 New, empty; 2 Fill the Library; 3 Drop a first clip). File > New, Video, on an empty window, answered as Return answers it: 1920 by 1080 for ten seconds, an empty V1 over an empty Audio track, the timeline open and the Library open on Media. Then File > Import Media puts a recording on the shelf, and its tile dragged onto the empty V1 four seconds in lands there and makes the video long enough to hold it. At Next defaults, no flag set.",
   "setup": {
     "forget": [
       "all"
@@ -41,7 +41,7 @@
     {
       "do": "describe",
       "stage": "2-empty-video",
-      "note": "THE FIRST TEST: File > New Video made a 1920 by 1080 video ten seconds long with nothing on it. The timeline is open on an empty V1 over an empty Audio track, and the Library is open on Media, ready for Import"
+      "note": "THE FIRST TEST: File > New, Video, made a 1920 by 1080 video ten seconds long with nothing on it. The timeline is open on an empty V1 over an empty Audio track, and the Library is open on Media, ready for Import"
     },
     {
       "do": "snapshot",

@@ -5,7 +5,7 @@
       "all"
     ]
   },
-  "seed": "New Window opens the front door ui-entry-wt.html draws (steps 2 to 5), at Next defaults with no switch changed: Open and the primary button in the title bar, the prompt bar, four templates under Start a project, and Recent. Clicking the Design UI tile by pointer renames the primary button New UI canvas (the step finds the button by those words, so a tile that failed to rename it fails here); clicking that by pointer opens untitled-ui in an editor window of its own, the window goes into the Design mode, and the front door closes on its own. The front door is photographed in light mode, so its words are read against the light window; design-ui-start-walk photographs it in the system's own appearance. Then a second front door with nothing picked: New canvas puts up the size sheet, Create opens a blank canvas in its own window, and that front door closes too.",
+  "seed": "File > New opens the New window at Next defaults with no switch changed (the user's call on 2026-10-22: New makes an Image or a Video and nothing else). It holds the prompt bar, the two choices Image and Video, and the picked choice's sizes, and nothing about opening, capturing, UI design or Recent. Image is picked on arrival, so New Image straight away (one click) opens a 1440 by 1024 blank picture in a window of its own while the New window closes; Shift Command N then makes a new layer in it, Photoshop's key now that Command N is File > New. A second New window: Video picked by pointer renames the primary button New Video (the step finds the button by those words), HD 720p clicked by pointer, and New Video opens a 1280 by 720 video in its own window, the first picture's window still standing. The File menu is read at the end: New and New from Clipboard first, then Open and Open Recent, then the capture rows.",
   "steps": [
     {
       "do": "appearance",
@@ -13,57 +13,73 @@
     },
     {
       "do": "startFromFrontDoor",
-      "tile": "Design UI",
-      "press": "New UI canvas",
+      "press": "New Image",
       "width": 1280,
       "height": 900,
-      "card": "front-door-1-design-ui-picked"
+      "card": "front-door-1-image"
     },
     {
       "do": "wait",
       "seconds": 1.0
     },
     {
-      "do": "expectWindows",
-      "titled": "untitled-ui",
+      "do": "expectLayers",
       "count": 1
     },
     {
-      "do": "expectLayers",
-      "count": 9
-    },
-    {
-      "do": "expect",
-      "control": "Mode",
-      "reads": "Design"
-    },
-    {
-      "do": "describe",
-      "stage": "2-editor",
-      "note": "The editor the front door opened: untitled-ui, 1280 by 800, the Login starter frame on the canvas, the Library on Components, and the mode chip reading Design. The front door is gone."
-    },
-    {
-      "do": "snapshot",
-      "name": "front-door-2-editor"
-    },
-    {
-      "do": "startFromFrontDoor",
-      "press": "New canvas",
-      "answer": "Create",
-      "card": "front-door-3-nothing-picked"
+      "do": "shortcut",
+      "key": "n",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "New Layer"
     },
     {
       "do": "wait",
-      "seconds": 0.6
+      "seconds": 0.5
     },
     {
       "do": "expectLayers",
-      "count": 1
+      "count": 2
     },
     {
       "do": "describe",
-      "stage": "4-blank",
-      "note": "With no template picked the primary button reads New canvas; it puts up the size sheet over the front door, and Create opens the blank canvas in a window of its own while the front door closes."
+      "stage": "2-image",
+      "note": "The picture New Image made: 1440 by 1024, white, in a window of its own, with a second layer from Shift Command N. The New window is gone."
+    },
+    {
+      "do": "snapshot",
+      "name": "front-door-2-image"
+    },
+    {
+      "do": "startFromFrontDoor",
+      "tile": "Video",
+      "first": [
+        "HD 720p"
+      ],
+      "press": "New Video",
+      "width": 1280,
+      "height": 900,
+      "card": "front-door-3-video"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-video",
+      "note": "With Video picked and HD 720p clicked the primary button read New Video, and it opened a 1280 by 720 empty video in a window of its own while the New window closed."
+    },
+    {
+      "do": "snapshot",
+      "name": "front-door-4-video"
+    },
+    {
+      "do": "menus",
+      "stage": "5-file-menu",
+      "menu": "File"
     }
   ]
 }

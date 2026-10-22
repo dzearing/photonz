@@ -1,60 +1,83 @@
+import CoreGraphics
 import Foundation
 import Testing
 @testable import PhotonzCore
 
-/// The window New Window opens (`ui-entry-wt.html`, steps 2 to 4): four
-/// starting templates, and a primary button that says what it will make.
-@Suite("The front door")
+/// The window File > New opens: two things to make, an Image or a Video, each
+/// with its sizes, and a primary button that says which one it will make
+/// (the user, 2026-10-22: "have Image or Video in the new dialog", "new
+/// should not have load image in it").
+@Suite("The New window")
 struct FrontDoorTests {
 
-    @Test("Four templates, in the mock's order")
-    func theTemplates() {
-        #expect(FrontDoorTemplate.allCases.map(\.title)
-                == ["Design UI", "Edit an image", "Edit video", "Capture & redline"])
+    @Test("Two choices, Image then Video, and nothing else")
+    func theChoices() {
+        #expect(FrontDoorKind.allCases.map(\.title) == ["Image", "Video"])
+        #expect(FrontDoorKind.default == .image)
     }
 
-    @Test("With nothing picked the primary button makes a plain canvas")
-    func nothingPicked() {
-        #expect(FrontDoor.primaryTitle(picked: nil) == "New canvas")
+    @Test("The primary button names what it makes")
+    func primaryTitles() {
+        #expect(FrontDoorKind.image.createTitle == "New Image")
+        #expect(FrontDoorKind.video.createTitle == "New Video")
     }
 
-    @Test("Picking Design UI makes the primary button read New UI canvas")
-    func designUIPicked() {
-        #expect(FrontDoor.primaryTitle(picked: .designUI) == "New UI canvas")
+    @Test("An image offers the blank canvas sizes, a video the blank video sizes")
+    func sizes() {
+        #expect(FrontDoorKind.image.sizes.map(\.id) == BlankCanvas.presets.map(\.id))
+        #expect(FrontDoorKind.image.sizes.map(\.size) == BlankCanvas.presets.map(\.size))
+        #expect(FrontDoorKind.video.sizes.map(\.id) == BlankVideo.presets.map(\.id))
+        #expect(FrontDoorKind.video.sizes.map(\.size) == BlankVideo.presets.map(\.size))
+        #expect(FrontDoorKind.image.defaultSize == BlankCanvas.defaultPreset.size)
+        #expect(FrontDoorKind.video.defaultSize == BlankVideo.defaultPreset.size)
     }
 
-    @Test("Every template's primary button names a different thing to make")
-    func everyPrimaryIsItsOwn() {
-        let titles = FrontDoorTemplate.allCases.map { FrontDoor.primaryTitle(picked: $0) }
-        #expect(Set(titles).count == titles.count)
-        #expect(!titles.contains(FrontDoor.primaryTitle(picked: nil)))
+    @Test("Only a video asks for a length")
+    func length() {
+        #expect(!FrontDoorKind.image.hasLength)
+        #expect(FrontDoorKind.video.hasLength)
     }
 
-    @Test("A template is a mode preset: each names a mode the app ships")
-    func templatesAreModes() {
-        for template in FrontDoorTemplate.allCases {
-            #expect(WindowModes.mode(template.modeID) != nil, "\(template) names no mode")
+    @Test("A typed size is held to the kind's own rules")
+    func typedSizes() {
+        // A picture may be odd sized; a movie is written in pairs of pixels.
+        #expect(FrontDoorKind.image.isValid(CGSize(width: 801, height: 601)))
+        #expect(!FrontDoorKind.video.isValid(CGSize(width: 801, height: 601)))
+        #expect(FrontDoorKind.video.isValid(CGSize(width: 800, height: 600)))
+        #expect(!FrontDoorKind.image.isValid(CGSize(width: 0, height: 600)))
+    }
+
+    @Test("Each kind opens in its own mode")
+    func modes() {
+        #expect(FrontDoorKind.image.modeID == WindowModes.imageID)
+        #expect(FrontDoorKind.video.modeID == WindowModes.videoID)
+        for kind in FrontDoorKind.allCases {
+            #expect(WindowModes.mode(kind.modeID) != nil, "\(kind) names no mode")
         }
-        #expect(FrontDoorTemplate.designUI.modeID == "design")
-        #expect(FrontDoorTemplate.editVideo.modeID == "video")
-        // A picture, captured or opened, starts in Image like every picture.
-        #expect(FrontDoorTemplate.captureRedline.modeID == WindowModes.imageID)
-        #expect(FrontDoorTemplate.editImage.modeID == WindowModes.imageID)
     }
 
-    @Test("Every word the front door draws is a label inside the chrome budget")
+    @Test("The empty window's card offers the same two choices")
+    func emptyCard() {
+        #expect(FrontDoorKind.allCases.map(\.cardTitle) == ["New image", "New video"])
+    }
+
+    @Test("Nothing about opening, capturing or designing UI is offered as something new")
+    func nothingButNew() {
+        let words = FrontDoorKind.allCases.flatMap { [$0.title, $0.createTitle, $0.cardTitle] }
+            + [FrontDoor.subtitle, FrontDoor.sizeHeader]
+        for word in words {
+            for banned in ["Open", "Capture", "Design", "Recent", "Edit"] {
+                #expect(!word.contains(banned), "\(word) mentions \(banned)")
+            }
+        }
+    }
+
+    @Test("Every word the New window draws is a label inside the chrome budget")
     func everyDrawnWordIsALabel() {
-        // A button is named by the command it is, so only the words that
-        // are not on a button are held to never saying how.
-        var commands = [FrontDoor.openTitle, FrontDoor.createTitle, FrontDoor.primaryTitle(picked: nil),
-                        FrontDoor.removeFromRecentTitle]
-        var words = [FrontDoor.subtitle, FrontDoor.startHeader, FrontDoor.recentHeader,
-                     FrontDoor.promptPlaceholder]
-        for template in FrontDoorTemplate.allCases {
-            words.append(template.title)
-            commands.append(FrontDoor.primaryTitle(picked: template))
-            if let detail = template.detail { words.append(detail) }
-        }
+        let commands = [FrontDoor.createTitle] + FrontDoorKind.allCases.map(\.createTitle)
+        var words = [FrontDoor.subtitle, FrontDoor.sizeHeader, FrontDoor.customTitle,
+                     FrontDoor.lengthTitle, FrontDoor.promptPlaceholder]
+        words += FrontDoorKind.allCases.flatMap { kind in [kind.title] + kind.sizes.map(\.title) }
         for text in commands + words {
             #expect(CopyBudget.chromeFaults(text).isEmpty, "\(text): \(CopyBudget.chromeFaults(text))")
         }
@@ -63,88 +86,12 @@ struct FrontDoorTests {
         }
     }
 
-    @Test("A mock line over the budget moves into the tile's tip in the mock's words")
-    func longMockLinesMoveIntoTheTip() {
-        for template in FrontDoorTemplate.allCases {
-            #expect(template.tip.contains(template.mockDetail))
-            if template.mockDetail.count <= CopyBudget.chromeLine {
-                #expect(template.detail == template.mockDetail)
-            } else {
-                #expect(template.detail == nil)
-            }
-        }
-        #expect(FrontDoorTemplate.designUI.mockDetail == "Components, tokens, auto-layout")
-        #expect(FrontDoorTemplate.editImage.detail == "Adjust, mask, retouch, effects")
+    @Test("A size reads as its width by its height")
+    func dimensions() {
+        #expect(FrontDoor.dimensions(CGSize(width: 1440, height: 1024)) == "1440 \u{00D7} 1024")
     }
 
-    @Test("Recent shows the newest few captures and nothing when there are none")
-    func recent() {
-        let now = Date()
-        let entries = (0..<9).map {
-            CaptureEntry(url: URL(fileURLWithPath: "/tmp/\($0).png"),
-                         createdAt: now.addingTimeInterval(TimeInterval(-$0)), kind: .image)
-        }
-        #expect(FrontDoor.recent(captures: entries, documents: []).map(\.name) == ["0", "1", "2", "3"])
-        #expect(FrontDoor.recent(captures: [], documents: []).isEmpty)
-    }
-
-    @Test("Recent puts the documents you opened among your captures, newest first")
-    func recentDocumentsAmongCaptures() {
-        let now = Date()
-        let captures = [
-            CaptureEntry(url: URL(fileURLWithPath: "/caps/shot-1.png"), createdAt: now.addingTimeInterval(-60), kind: .image),
-            CaptureEntry(url: URL(fileURLWithPath: "/caps/clip.mov"), createdAt: now.addingTimeInterval(-3600), kind: .video),
-        ]
-        let documents = [
-            RecentDocument(url: URL(fileURLWithPath: "/work/hero-card.photonz"), usedAt: now.addingTimeInterval(-10)),
-            RecentDocument(url: URL(fileURLWithPath: "/work/sunset-edit.photonz"), usedAt: now.addingTimeInterval(-86_400)),
-        ]
-        let recent = FrontDoor.recent(captures: captures, documents: documents)
-        #expect(recent.map(\.name) == ["hero-card", "shot-1", "clip", "sunset-edit"])
-        #expect(recent.map(\.isCapture) == [false, true, true, false])
-        #expect(recent.first?.date == now.addingTimeInterval(-10))
-    }
-
-    @Test("A capture you opened is listed once, as the capture, at the time you opened it")
-    func aCaptureYouOpenedIsListedOnce() {
-        let now = Date()
-        let shot = URL(fileURLWithPath: "/caps/shot-1.png")
-        let captures = [CaptureEntry(url: shot, createdAt: now.addingTimeInterval(-3600), kind: .image),
-                        CaptureEntry(url: URL(fileURLWithPath: "/caps/shot-2.png"),
-                                     createdAt: now.addingTimeInterval(-60), kind: .image)]
-        let documents = [RecentDocument(url: shot, usedAt: now)]
-        let recent = FrontDoor.recent(captures: captures, documents: documents)
-        #expect(recent.map(\.name) == ["shot-1", "shot-2"])
-        #expect(recent.first?.isCapture == true)
-        #expect(recent.first?.date == now)
-    }
-
-    @Test("A recent card's row: the mock's Copy and Edit first, and a document is never deleted from it")
-    func cardActions() {
-        let now = Date()
-        let shot = FrontDoorRecent.capture(CaptureEntry(url: URL(fileURLWithPath: "/caps/shot.png"),
-                                                        createdAt: now, kind: .image), usedAt: now)
-        let clip = FrontDoorRecent.capture(CaptureEntry(url: URL(fileURLWithPath: "/caps/clip.mov"),
-                                                        createdAt: now, kind: .video), usedAt: now)
-        let project = FrontDoorRecent.document(RecentDocument(url: URL(fileURLWithPath: "/w/hero.photonz"),
-                                                              usedAt: now))
-        #expect(FrontDoor.actions(for: shot) == [.copy, .edit, .showInFinder, .delete])
-        #expect(FrontDoor.actions(for: clip) == [.edit, .showInFinder, .delete])
-        #expect(FrontDoor.actions(for: project) == [.copy, .edit, .showInFinder, .removeFromRecent])
-        #expect(FrontDoorCardAction.removeFromRecent.title == FrontDoor.removeFromRecentTitle)
-        #expect(FrontDoorCardAction.copy.title == "Copy")
-    }
-
-    @Test("Copying a document puts its picture on the clipboard: a project drawn whole, a picture as itself")
-    func documentCopy() {
-        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/hero.photonz")) == .project)
-        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/Hero banner.PNG")) == .picture)
-        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/photo.heic")) == .picture)
-        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/talk.mov")) == .file)
-        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/notes.pdf")) == .file)
-    }
-
-    @Test("The front door is on by default in Next and absent from Current")
+    @Test("The New window is on by default in Next and absent from Current")
     func flag() {
         #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.frontDoorFlag))
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.frontDoorFlag })
