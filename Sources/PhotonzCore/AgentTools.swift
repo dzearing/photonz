@@ -303,16 +303,15 @@ public enum AgentTools {
             ]) { $1 }, required: ["points"])),
         AgentTool(
             name: "add_drawing",
-            description: "Draw a thing (a dog, a coffee cup, a smiley face) or a scene (the sun over mountains, a lighthouse on a cliff) as one drawing of editable layers, grouped and named. Photonz has clean drawings of about a thousand things and draws scenes itself, with light and depth, in the style asked for; otherwise it draws the svg you give. Better than many add_shape and add_path calls. One undo step.",
+            description: "Draw a thing (a dog, a coffee cup, a smiley face) or a scene (the sun over mountains, a lighthouse on a cliff) as one drawing of editable layers, grouped and named. With its picture model running, Photonz paints it for the request and traces it into layers; otherwise it draws the svg you give. Nothing is looked up. Better than many add_shape and add_path calls. One undo step.",
             inputSchema: schema([
                 "document": documentProperty,
                 "subject": ["type": "string", "description": "What it is, in a word or two: dog, coffee cup, smiley face, sun over mountains."],
-                "svg": ["type": "string", "description": "Your own drawing of it as one complete SVG, used when Photonz has no drawing of the subject: a viewBox, a few flat colours, curves and ellipses where the thing is round, every part touching the part it belongs to, an id on each shape naming its part (head, left-ear, body). No text."],
+                "svg": ["type": "string", "description": "Your own drawing of it as one complete SVG, needed when Photonz cannot paint it (its picture model is not running); when given, nothing is painted: a viewBox, a few flat colours, curves and ellipses where the thing is round, every part touching the part it belongs to, an id on each shape naming its part (head, left-ear, body). No text."],
                 "icon": ["type": "boolean", "description": "Make it an icon: a 512 point square icon frame with the drawing on its keylines. On a blank picture the picture becomes that frame."],
                 "frame": boxProperty("Where the drawing goes, fitted and centred in this box. Centred on the canvas, 60 per cent of its shorter side, when left out."),
                 "name": ["type": "string", "description": "The group's name in the Layers list. The subject when left out."],
-                "builtIn": ["type": "boolean", "description": "Use Photonz's own drawing when it has one. true when left out; false draws your svg instead."],
-                "style": ["type": "string", "description": "For an illustration or a scene (a landscape, the sun over mountains, a forest, a lighthouse, a skyline, an animal in its setting): the look asked for, in the person's words: line art, silhouette, badge, sunset, flat, or illustration when they named none. Photonz draws it in passes, with light, shadow and depth; send no svg."],
+                "style": ["type": "string", "description": "The look asked for, in the person's words (line art, silhouette, watercolor, flat). Leave it out when none was named."],
                 "asked": ["type": "string", "description": "The person's own words for the drawing, when they say more than the subject does (what it is doing, where). Used when Photonz paints the drawing with its picture model."],
                 "scene": ["type": "boolean", "description": "true when the drawing is a place or a scene that fills the picture with its own sky or ground (a landscape, a skyline, a beach at sunset), so it is painted edge to edge. Used when Photonz paints the drawing."],
             ], required: ["subject"])),
@@ -602,7 +601,7 @@ public enum AgentTools {
             let svg = args["svg"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
             return .success(.addDrawing(document: document, drawing: AgentDrawingCall(
                 subject: subject, svg: svg, icon: args["icon"]?.boolValue ?? false, frame: region(args["frame"]),
-                name: args["name"]?.stringValue, builtIn: args["builtIn"]?.boolValue ?? true,
+                name: args["name"]?.stringValue,
                 style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 },
                 asked: args["asked"]?.stringValue, scene: args["scene"]?.boolValue ?? false)))
         case "add_text":

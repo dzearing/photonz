@@ -2,26 +2,26 @@ import CoreGraphics
 import Foundation
 
 // add_drawing (`docs/design/ask.md`, "Drawing a thing"): a thing asked for by
-// name lands as a clean drawing made of layers, from the built-in drawing set
-// (`DrawingLibrary`) or from an SVG the agent wrote (`SVGArtwork`). One call
-// is the whole drawing, because a model writing one picture at once draws far
-// better than one placing twenty shapes blind.
+// name lands as a clean drawing made of layers, painted for the request by the
+// picture model on this Mac and traced (`Scripts/picture-model/`), or from an
+// SVG the agent wrote (`SVGArtwork`). Nothing is looked up: no drawing is
+// stored and no subject has code of its own. One call is the whole drawing,
+// because a model writing one picture at once draws far better than one
+// placing twenty shapes blind.
 
 /// What an add_drawing call asks for.
 public struct AgentDrawingCall: Hashable, Sendable {
     /// What it is, in a word or two: "dog", "coffee cup".
     public var subject: String
-    /// The agent's own drawing, used when the set has none (or `builtIn` is off).
+    /// The agent's own drawing; when it is given, nothing is painted.
     public var svg: String?
     /// Make an icon: a square icon frame with the drawing on its keylines.
     public var icon: Bool
     /// Where the drawing goes; centred on the canvas when nil.
     public var frame: CGRect?
     public var name: String?
-    /// Use the built-in drawing when the set has one.
-    public var builtIn: Bool
-    /// The look an illustration is drawn in, in the person's words: line
-    /// art, silhouette, badge, sunset, flat, or just illustration.
+    /// The look asked for, in the person's words: line art, silhouette,
+    /// watercolor, flat. Nil when none was named.
     public var style: String?
     /// The person's own words, when Ask paints the drawing with a picture
     /// model: a subject shortened to "cat" still carries "curled up asleep".
@@ -31,7 +31,7 @@ public struct AgentDrawingCall: Hashable, Sendable {
     public var scene: Bool
 
     public init(subject: String, svg: String? = nil, icon: Bool = false, frame: CGRect? = nil,
-                name: String? = nil, builtIn: Bool = true, style: String? = nil, asked: String? = nil,
+                name: String? = nil, style: String? = nil, asked: String? = nil,
                 scene: Bool = false) {
         self.style = style
         self.asked = asked
@@ -41,20 +41,12 @@ public struct AgentDrawingCall: Hashable, Sendable {
         self.icon = icon
         self.frame = frame
         self.name = name
-        self.builtIn = builtIn
     }
 
-    /// The illustration this asks for, or nil when it asks for a thing: a
-    /// scene (mountains, a forest, a lighthouse, a skyline) or a named style
-    /// is drawn by the illustrator (`Illustrator`), never by the model.
-    public var illustration: IllustrationBrief? {
-        IllustrationBrief.make(subject: subject, style: style, icon: icon)
-    }
-
-    /// What the agent is told when the set has no drawing of the thing and it
-    /// sent no SVG of its own.
-    public static func noBuiltIn(_ subject: String) -> String {
-        "add_drawing: Photonz has no drawing of \(subject). Call add_drawing again with svg: your own drawing of it as one complete SVG."
+    /// What the agent is told when the picture model is not there to paint
+    /// it and it sent no SVG of its own.
+    public static func needsSVG(_ subject: String) -> String {
+        "add_drawing: Photonz cannot paint \(subject) on this Mac right now. Call add_drawing again with svg: your own drawing of it as one complete SVG."
     }
 
     /// The layer's name: the one asked for, else the subject as a person
@@ -90,9 +82,41 @@ public struct PictureModelRequest: Codable, Hashable, Sendable {
         style = call.style
         icon = call.icon
         // The planning model's word, or the general words for a scene or a
-        // time of day in what was asked ("at dusk", "a skyline", "landscape").
-        let words = Set(IllustrationBrief.words([subject, asked, call.style ?? ""].joined(separator: " ")))
-        scene = !call.icon && (call.scene || !words.isDisjoint(with: IllustrationBrief.sceneWords.subtracting(["illustration", "illustrated"])))
+        // time of day in what was asked ("at dusk", "a landscape").
+        let words = Set(AgentDrawingWords.words([subject, asked, call.style ?? ""].joined(separator: " ")))
+        scene = !call.icon && (call.scene || !words.isDisjoint(with: AgentDrawingWords.sceneWords))
+    }
+}
+
+/// The words of a drawing request that say how it should look or that it is
+/// a whole scene. They name looks, kinds of picture and times of day, never a
+/// subject: what the picture is OF is the picture model's or the planning
+/// model's to read, whatever it is.
+public enum AgentDrawingWords {
+
+    /// The words of `text`, lower case, apostrophes and punctuation gone.
+    public static func words(_ text: String) -> [String] {
+        text.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
+    }
+
+    /// Words that say a picture is a whole scene with its own sky or ground.
+    public static let sceneWords: Set<String> = [
+        "landscape", "scene", "scenery", "vista", "view", "panorama", "poster",
+        "sunset", "sunrise", "dusk", "dawn", "twilight", "night",
+    ]
+
+    /// The words of a request that name a look, in the order typed: what Ask
+    /// adds to an add_drawing call's style when the model left them out.
+    public static func lookWords(in request: String) -> [String] {
+        let typed = words(request)
+        let joined = " " + typed.joined(separator: " ") + " "
+        var found: [String] = []
+        if joined.contains(" line art ") || joined.contains(" line drawing ") { found.append("line art") }
+        let looks: Set<String> = ["illustration", "illustrated", "silhouette", "badge", "emblem", "flat", "minimal",
+                                  "layered", "painted", "watercolor", "watercolour", "outline", "stencil", "cartoon",
+                                  "sketch", "pixel", "isometric", "geometric", "retro", "vintage"]
+        for word in typed where looks.contains(word) && !found.contains(word) { found.append(word) }
+        return found
     }
 }
 

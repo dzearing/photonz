@@ -1,0 +1,30 @@
+{
+  "feature": "Ask draws anything with nothing stored or coded for it",
+  "epic": "agent-ask",
+  "summary": "Ask no longer has a stored set of about a thousand emoji drawings or code written for particular scenes (mountains, a forest, a lighthouse, a skyline, a fox). Every drawing is painted for your words by the picture model on this Mac and traced into layers, or written as the model's own SVG when the picture model is not running. On the unseen test set it scores 57.1 (35.9 before painting, 57.5 on the last painting run), and none of its 52 drawings were looked up.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. The picture model has to be running (Scripts/picture-model/serve.sh); without it Ask writes its own SVG for every drawing.",
+  "switched": {},
+  "try": [
+    { "do": "On a blank picture press Ask, type \"draw a picture of a dog.\" and press the Ask button.", "shot": "2026-10-22-nothing-stored-1-dog-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z, then ask for \"create a smiley face icon\".", "shot": "2026-10-22-nothing-stored-2-smiley-icon-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "On a new blank picture ask for \"draw an svg illustration of a sun over mountains\".", "shot": "2026-10-22-nothing-stored-3-sun-over-mountains-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z, then ask for \"draw the sun over mountains as a black silhouette badge with pines\".", "shot": "2026-10-22-nothing-stored-4-silhouette-badge-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Ask for something nobody would have stored, in your own words (\"a heron standing in reeds at dawn\"), and open its group in Layers." },
+    { "do": "Open the held-out contact sheets, before and after: .ask-eval/held-out-runs/20261021-010309-ask-held-out/contact-sheet.png and .ask-eval/held-out-runs/20261022-055402-ask-held-out/contact-sheet.png" }
+  ],
+  "evaluate": [
+    "Does a subject nobody planned for come out as well as a dog or a cat does?",
+    "Is the dog good enough that you do not miss the old stored one?",
+    "Does the sun over mountains read as an illustration you would keep, or as flat clip art?",
+    "With the picture model stopped, is the model's own SVG good enough as a fallback, or should Ask say it needs the picture model?"
+  ],
+  "rough": [
+    "Taken out: the stored drawing set (Resources/Drawings, 992 drawings, DrawingLibrary, the app's loader, its notice in Open Source Notices, Scripts/make-drawings.mjs), add_drawing's builtIn switch, and the whole illustrator (Illustrator, IllustrationBrief, IllustrationPieces, IllustrationPasses, IllustrationGeometry, IllustrationColor: about 2,700 lines). Its eight passes and critique only ever ran on its own subject planes (ridges, treelines, water, cliffs), so none of it worked on an arbitrary shape and none of it was kept.",
+    "Kept, because nothing in it names a subject: painting from the person's own words with a general flat look (PictureModelRequest, server.py); palette reduction to a few colours, a mode filter and vtracer's curve fitting, which is the path smoothing and simplifying (layers.py); gradients read from any SVG (SVGArtwork); boolean shape operations (PathCombining); recolouring a group by its colours' shares (AgentGroupRecolour); and the look and revise loop (AskDrawingCheck), which now looks at scenes too and paints a miss again instead of swapping in an SVG.",
+    "Grep of the drawing code (AgentDrawingPlacement, AgentDrawingWork, AskPictureModel, AgentGroupRecolour, SVGArtwork, Scripts/picture-model): the only subject words left are in comments as examples (\"dog\", \"coffee cup\", \"make the cat black\"). The words the code still reads name looks (line art, silhouette, watercolor) and kinds of picture or times of day (landscape, scene, dusk, night), never a subject; a unit test (AskNothingStoredTests) keeps it that way and fails if a drawing set or an Illustrat* file comes back.",
+    "Held-out, 45 cases at Next defaults: 57.1 against 57.5 on the last painting run (judge lines on drawings: clean 6.1 against 6.2, designed 5.8 against 6.0, did what was asked 5.6 both, crafted 4 against 6) and against 35.9 before painting. 0 stored, 0 template, 52 drawn for the request. The climb set (31 requests, mostly shaped round the old stored drawings) was not re-run whole; its last total is 75.2 on six scenes.",
+    "Painted scenes vary a lot from one picture to the next: the six scene requests scored 69.7 against 75.2, and the two that dropped (a skyline at night, a sun over mountains) scored 65 again on a second run against 81 and 82 once before. The picture model got the same words both times and the rule checks were 10 every time; only the judge's marks moved, with each painting's own random seed. The crafted drop on the held-out set is the same thing on fewer cases.",
+    "Without the picture model, an everyday thing the stored set used to cover (a dog, a smiley) is now the planning model's own SVG, which is slower and rougher. Making the picture model part of Ask's own setup is ask-works-on-a-mac-that-has-nothing-else-install.",
+    "No mock covers this surface: it changes what Ask draws, not any control."
+  ]
+}

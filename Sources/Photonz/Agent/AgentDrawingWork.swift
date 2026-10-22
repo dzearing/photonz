@@ -119,15 +119,16 @@ enum AgentDrawingWork {
         let layer: String
         let name: String
         let frame: Box
-        /// "built-in: dog", or "your svg".
+        /// "painted: <model>, N paths in S s", or "your svg".
         let from: String
         let parts: Int
         let canUndo: Bool
     }
 
-    /// A thing drawn in one go: the built-in drawing of it when the set has
-    /// one, else the agent's own SVG, as a named group (an icon frame for an
-    /// icon) of layers a person can edit, picked, as one undo step.
+    /// A thing drawn in one go: painted for the request by the picture model
+    /// and traced when it is running, else the agent's own SVG, as a named
+    /// group (an icon frame for an icon) of layers a person can edit, picked,
+    /// as one undo step. Nothing is looked up: there is no stored drawing.
     private static func addDrawing(_ call: AgentDrawingCall, to editor: EditorState) async throws -> Answer {
         let document = try AgentWork.document(of: editor)
         let drawing: SVGArtwork
@@ -143,17 +144,6 @@ enum AgentDrawingWork {
             }
             from = "painted: \(painted.model), \(painted.paths) paths in \(Int(painted.seconds.rounded())) s"
             fitted = AgentDrawingPlacement.box(call.frame, fitting: drawing.bounds.size, on: document.canvasSize)
-        } else if let brief = call.illustration {
-            let scene = Illustrator.draw(brief)
-            switch SVGArtwork.parse(scene.svg(), keepingGroups: true) {
-            case .success(let read): drawing = read
-            case .failure(let trouble): throw Failure("add_drawing: \(trouble.message)")
-            }
-            from = "illustration: \(brief.lookTitle)\(brief.styleNamed ? "" : " (picked)")"
-            fitted = AgentDrawingPlacement.box(call.frame, fitting: scene.size, on: document.canvasSize)
-        } else if call.builtIn, let entry = DrawingSet.shared?.match(call.subject), case .success(let found) = entry.drawing() {
-            drawing = found
-            from = "built-in: \(entry.name)"
         } else if let svg = call.svg {
             switch SVGArtwork.parse(svg) {
             case .success(let read): drawing = read
@@ -161,7 +151,7 @@ enum AgentDrawingWork {
             }
             from = "your svg"
         } else {
-            throw Failure(AgentDrawingCall.noBuiltIn(call.subject))
+            throw Failure(AgentDrawingCall.needsSVG(call.subject))
         }
         var made: UUID?
         editor.asOneUndoStep {

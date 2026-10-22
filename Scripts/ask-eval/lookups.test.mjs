@@ -8,6 +8,7 @@ test("a built-in is stored, an illustration a template, the model's own svg draw
   assert.equal(sourceOf("add_drawing", '{"from":"built-in: cat face"}'), "stored");
   assert.equal(sourceOf("add_drawing", '{"from": "illustration: Layered (picked)"}'), "template");
   assert.equal(sourceOf("add_drawing", '{"from":"your svg","parts":3}'), "drawn");
+  assert.equal(sourceOf("add_drawing", '{"from":"painted: z-image-turbo, 40 paths in 25 s"}'), "drawn");
   assert.equal(sourceOf("add_shape", "{}"), "drawn");
   assert.equal(sourceOf("add_text", "{}"), null);
   assert.equal(sourceOf("add_drawing", "no answer"), null);

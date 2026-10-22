@@ -21842,3 +21842,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `AskModels.ranked` + a memory rule (a model holds at most 3/5 of the Mac's memory) decide Automatic and the Settings download. The eval now records median seconds, broken tool calls and GB held per run.
 - Table and rule: `docs/design/ask.md` "The model"; audit `queue/audits/2026-10-21-ask-runs-on-the-best-model-this-mac-can-hold-pic.json`.
 - Next: illustration and component tasks re-baseline on the new model.
+
+## 2026-10-22: Ask draws with nothing stored or coded
+
+- Taken out: the stored emoji drawing set (Resources/Drawings, `DrawingLibrary`, `DrawingSet`, its notice, `Scripts/make-drawings.mjs`), add_drawing's `builtIn`, and the whole illustrator (`Illustrator`, `IllustrationBrief`, `IllustrationPieces`, `IllustrationPasses`, `IllustrationGeometry`, `IllustrationColor`).
+- A drawing is painted for the request (picture model) or the model's own SVG. `AgentDrawingWords` reads only look, scene-kind and time-of-day words. The look and revise check now covers every drawing and paints a miss again. `AskNothingStoredTests` keeps the set and the illustrator out; the eval counts painted drawings as drawn.
+- Held-out 57.1 (57.5 last painting run, 35.9 before painting), 0 of 52 drawings looked up. Painted scenes swing about 15 points per picture on seed alone.
+- Docs: `docs/design/ask.md` ("Drawing a thing", "What was taken out"), the skill's Drawing row, `agent-mcp.md`. Audit `queue/audits/2026-10-22-ask-draws-any-subject-well-with-nothing-stored-o.json`.
+- Open: without the picture model everything is the model's SVG (`ask-works-on-a-mac-that-has-nothing-else-install` makes it part of setup).

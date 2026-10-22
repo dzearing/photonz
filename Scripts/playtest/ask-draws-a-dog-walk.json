@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/ask-draws-a-dog-walk",
-  "seed": "ask-draws-a-dog-you-can-tell-is-a-dog: the user's own two requests on a blank picture at Next defaults, no flag touched",
+  "seed": "ask-draws-a-dog-you-can-tell-is-a-dog: the user's own two requests on a blank picture at Next defaults, no flag touched. Since 2026-10-22 nothing is stored: the dog is painted for the request (or the model's own svg when the picture model is not running), so its parts are counted as a range, not the stored dog's twelve",
   "clock": 420,
   "setup": { "forget": ["all"] },
   "steps": [
@@ -15,7 +15,7 @@
     { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "1-dog", "note": "the dog Ask drew: one group named Dog of editable parts, over the blank picture's background" },
-    { "do": "expectLayers", "count": 14, "comment": "the background, the Dog group and its 12 parts" },
+    { "do": "expectLayers", "atLeast": 4, "atMost": 302, "comment": "the background, the dog's group and its parts, however many the drawing made" },
     { "do": "snapshot", "name": "1-dog" },
     { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.5 },

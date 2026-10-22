@@ -115,7 +115,8 @@ drawing came from. `Scripts/ask-eval.sh feedback` turns each thumbs down into
 a case of the eval's held-out set, started from that very document
 (`Scripts/ask-eval/README.md`, "The held-out set"), so the set grows from real
 use. Every add_drawing answer says where the drawing came from (`from`:
-built-in, illustration, your svg); Ask keeps it per run (`AskDrawingSource`),
+painted or your svg; built-in and illustration until 2026-10-22, still
+counted); Ask keeps it per run (`AskDrawingSource`),
 the walk state shows it as `ask.sources`, and the eval counts it, so a score
 climbed by looking things up shows as a share of lookups.
 
@@ -185,58 +186,69 @@ a held-out set written after the detector was tuned. Walks:
 
 ## Drawing a thing
 
-"Draw a dog", "create a smiley face icon": one `add_drawing` call, never a
-pile of `add_shape` and `add_path` calls placed blind (that is what drew the
-user's dog as brown shards on 2026-10-20, and the smiley with its eyes above its
-head).
+"Draw a dog", "create a smiley face icon", "a lighthouse on a cliff at dusk":
+one `add_drawing` call, never a pile of `add_shape` and `add_path` calls placed
+blind (that is what drew the user's dog as brown shards on 2026-10-20, and the
+smiley with its eyes above its head).
 
-* **The built-in set first.** `Resources/Drawings/drawings.json` holds 992 clean
-  flat drawings of everyday things: the Twemoji graphics (CC-BY 4.0, credited in
-  Open Source Notices, licence beside the file), named and given the words
-  people use from Unicode's CLDR, plus a hand list of everyday words where the
-  name is not one ("car" is "automobile", a coffee cup is "hot beverage").
-  `Scripts/make-drawings.mjs` builds it; `DrawingLibrary.match` finds in it.
-* **The model's own SVG otherwise.** When the set has nothing, the call goes
-  back to the model while it is still planning and it writes ONE whole SVG
-  (a model writes a picture far better at once than as twenty separate shapes).
+**Nothing is looked up and no subject has code of its own** (the user,
+2026-10-20: "I want to be able to say make x without having to have a bunch of
+static cat examples ... i don't want a hardcoded anything"). Until 2026-10-22
+Ask had a stored set of about a thousand emoji drawings found by name and an
+illustrator with code for particular scenes (mountains, a forest, a lighthouse,
+a skyline, a fox); both are gone (see "What was taken out" below). A drawing is
+made for the request, one of two ways:
+
+* **Painted** by the picture model on this Mac and traced into layers, whenever
+  it is running ("Painting a drawing", below). This is the route that measured
+  best on the held-out set.
+* **The model's own SVG** otherwise. With no picture model the call goes back
+  to the model while it is still planning and it writes ONE whole SVG (a model
+  writes a picture far better at once than as twenty separate shapes), told to
+  give each big form a lit and a shadow side.
+
+Either way:
+
 * **As layers, never a picture.** `SVGArtwork` reads the SVG (paths with every
   command and arcs, circles, ellipses, rects, polygons, groups, transforms,
-  fill rules, a gradient's first colour): circles and ellipses become oval
-  layers, boxes rectangles, the rest Pen paths with their curves and holes. The
-  parts go in one group named for the thing; a face's parts are named Face,
-  Left eye, Right eye, Mouth from where they sit (`FaceParts`). One Command Z
-  takes the lot.
+  fill rules, gradients): circles and ellipses become oval layers, boxes
+  rectangles, the rest Pen paths with their curves and holes. The parts go in
+  one group named for the thing; a face's parts are named Face, Left eye,
+  Right eye, Mouth from where they sit (`FaceParts`). One Command Z takes the
+  lot.
+* **The look the person named** reaches the call (`AgentDrawingWords.lookWords`:
+  line art, silhouette, watercolor, flat... words for a look, never a subject);
+  a look the model guessed that the person never said is taken off.
 * **Placed.** Centred, 60 per cent of the canvas's shorter side, or in the box
   asked for, kept on the canvas. An icon is a 512 point icon frame with the
   drawing on its live area (the keylines); on a blank picture (nothing but its
   flat background) the picture becomes that frame.
-* **Looked at before it hands back** (`AskDrawingCheck`). The drawing is
-  rendered and shown, with no hint of the request, to a model on this Mac that
-  can see: the planning model itself when it can (Ollama's capabilities say
-  `vision`), else the first of `AskModels.preferredVision` on the Mac
-  (`AskModels.eyes`). If what it
-  names shares a word with the thing, it reads; if not, the planning model says
-  yes or no. A miss is taken back and drawn again, told what was seen, at most
-  twice; then Ask says "I couldn't make a clear drawing of that. Nothing was
-  changed." No model that can see: Ask hands back without looking.
+* **Looked at before it hands back** (`AskDrawingCheck`), every drawing, scenes
+  included. The drawing is rendered and shown, with no hint of the request, to
+  a model on this Mac that can see: the planning model itself when it can
+  (Ollama's capabilities say `vision`), else the first of
+  `AskModels.preferredVision` on the Mac (`AskModels.eyes`). If what it names
+  shares a word with what was asked, it reads; if not, the planning model says
+  yes or no. A miss is taken back and drawn again, told what was seen (painted
+  again when painting, a new svg otherwise), at most twice; then Ask says "I
+  couldn't make a clear drawing of that. Nothing was changed." No model that
+  can see: Ask hands back without looking.
 
 Both models are asked with their window size pinned (32k planning, 4k
 looking; the planning model looking for itself keeps its 32k and does not
 think, so it is answered from the copy already loaded): left out, Ollama loads them at its own default (128k), which swaps
 the planning model out on every look.
 
-Measured 2026-10-20 (M4 Max, 64 GB, `Scripts/ask-eval.sh`, the 13 drawing
-cases): drawing score 35.4 before, 92 after; named right blind 1 of 13 before,
-13 of 13 after; median 18.4 s from Ask to the finished drawing. Things the set
-does not have are where it is still weak: a lighthouse and a windmill were
-each drawn three times by the model and refused by the look.
+The eval counts where every drawing came from on every run, climb and
+held-out (`Scripts/ask-eval/lookups.mjs`, `AskDrawingSource`): stored,
+template, or drawn for the request. Both lookup counts are 0 now; a drawing
+that came back from a stored set or a coded scene would show there.
 
 ## Painting a drawing
 
 "Ask paints its drawings" (`next-ask-paints-drawings`, on in Next) sends
-every `add_drawing` to a picture model on this Mac instead of the built-in
-set, the illustrator or the model's own SVG, whenever the picture model
-answers. Measured on the held-out set on 2026-10-22 (queue task
+every `add_drawing` to a picture model on this Mac instead of the model's
+own SVG, whenever the picture model answers. Measured on the held-out set on 2026-10-22 (queue task
 `try-drawing-with-a-local-picture-model-then-turn`, audit
 `queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json`,
 run `20261022-043200-ask-held-out`): total 57.5 against 35.9; on drawings
@@ -245,8 +257,8 @@ didWhatWasAsked 5.6 against 3.3, clean 6.2 against 5.9, designed 6.0 against
 looked up. A first run before scenes were painted edge to edge scored 56.8
 with crafted 3.0: a scene on plain white loses its sky.
 * **A scene** (the planning model's `scene`, or the general scene and
-  time-of-day words in `IllustrationBrief.sceneWords`: landscape, sunset,
-  night, skyline...) is painted 4:3 edge to edge with its own sky and ground;
+  time-of-day words in `AgentDrawingWords.sceneWords`: landscape, scenery,
+  sunset, night... never a subject) is painted 4:3 edge to edge with its own sky and ground;
   the tracer keeps the backdrop, blurs the picture lightly so a gradient sky
   bands smoothly, and uses fourteen colours.
 * **Recolouring a drawing.** A fill set on a group recolours its parts
@@ -277,62 +289,40 @@ with crafted 3.0: a scene on plain white loses its sky.
   path are dropped, and every fill is snapped back to the palette. Each region
   is a filled Pen path named by its colour ("Dark brown 3"), 10 to 40 of them
   for a single subject (300 at most), in one group named for the subject.
-* **When the server is not there**, Ask plans and draws exactly as before:
-  the switch only takes effect when `/health` answers at the start of a
-  request.
+* **When the server is not there**, the model writes its own SVG: the switch
+  only takes effect when `/health` answers at the start of a request.
 
-## Drawing an illustration
+## What was taken out (2026-10-22)
 
-"Draw an svg illustration of a sun over mountains" once gave three flat green
-triangles and a yellow circle, one triangle poking past its own box (the user,
-2026-10-20, `queue/audits/2026-10-20-user-ask-sun-over-mountains.png`). A
-small model on this Mac cannot hold the light direction, the value order and a
-broken ridgeline at once, so for a scene it makes only the narrow choices and
-Photonz does the craft.
+Queue task `ask-draws-any-subject-well-with-nothing-stored-o`. Taken out, with
+everything that routed to them:
 
-* **What counts.** `add_drawing` with a scene as its subject (mountains, hills,
-  a forest, a lake, the sea, a cliff, a lighthouse, a city skyline) or with a
-  `style`, or a lone animal asked for as an illustration (`IllustrationBrief`).
-  A thing by itself (a dog, a tree, a cup) and any icon stay on the built-in
-  set. Ask adds the look words the person typed ("as line art", "a badge") to
-  the call's `style` when the model leaves them out.
-* **Styles.** painted (light and shadow faces, depth haze), sunset (ridge bands
-  stepping in value under a sunset sky), flat (two tones a form, no ramps), line
-  art (ink lines, outline heaviest), silhouette (one ink, snow and ridge light
-  cut out as paper), and badge (any of them in a circle with a frame line).
-  With none named the illustrator picks one and the change row says which:
-  "Drew a sunset illustration", "Drew a silhouette badge".
-* **Eight passes, each checked** (`Illustrator`, `IllustrationWork`):
-  1. brief (subject, style, time of day); 2. composition (frame, a focal point
-  off centre, the horizon off the middle, planes blocked in as overlapping
-  boxes); 3. values (three to five planes in grey, nearest darkest); 4. shape
-  (lopsided peaks, broken ridgelines by midpoint displacement, one pine
-  repeated at varied heights); 5. light (one light; every peak split along a
-  broken crease into a lit side and a shadow face away from it, ridge light on
-  the lit side, cast shadows away from it); 6. colour (one palette per time of
-  day, every plane re-lit to its planned value, distance lighter and bluer, a
-  sky gradient); 7. detail and finish (snow caps with a ragged edge, birds near
-  the focus, reflections and glitter on water, windows, the lamp's beams, line
-  weights, everything cut to the frame in its geometry, so no masks); 8.
-  critique (values, the squint, light agreement, nothing past the frame, the
-  focus big enough to read at 32 points). A failed check revises the tuning
-  (more value contrast, another seed) and draws again, twice at most.
-* **Pieces** (`IllustrationPieces`): a ridge, its shadow face, ridge light, a
-  snow cap, a pine and a treeline, a ray burst, glitter, ripples, a reflection,
-  rolling hills, a streak of cloud, stars, birds, a skyline, a lighthouse and
-  cottage, a sitting fox. A scene is composed from them.
-* **As layers.** The scene is written as one clean SVG (a `<g id>` per part of
-  the picture, an id on every shape, gradients in defs) and read with
-  `SVGArtwork.parse(keepingGroups: true)`: a group per part (Sky, Sun, Far
-  range, Middle range...), each shape a layer named for what it is (Ridge,
-  Shadow face, Snow, Ridge light), gradients as the app's own linear and radial
-  paints. Fitted whole at four fifths of the canvas.
-* **Not looked at.** Ask's blind look (below) skips an illustration: a miss
-  would send it back to the model's own SVG, which is exactly what it replaces.
+* **The stored drawing set**: `Resources/Drawings/drawings.json` (992 Twemoji
+  drawings named from Unicode's CLDR plus a hand list of everyday words),
+  `DrawingLibrary`, the app's `DrawingSet` loader, its licence notice, and
+  `Scripts/make-drawings.mjs` that built it. add_drawing's `builtIn` argument
+  went with it.
+* **The illustrator**: `Illustrator`, `IllustrationBrief` (a list of the
+  subjects it knew: mountains, hills, forest, lake, sea, sun, moon, stars,
+  birds, clouds, lighthouse, cliff, city, fox), `IllustrationPieces` (a
+  function per subject: a ridge, a pine and treeline, clouds, stars, birds, a
+  skyline, a lighthouse, a cottage, a sitting fox), `IllustrationPasses`, and
+  its geometry and palette helpers. Its eight passes and its critique all
+  worked on those subject planes (ridges, treelines, water, cliffs), so none of
+  it ran on a shape it had not drawn itself.
 
-`Scripts/ask-eval.sh` has eight illustration cases (`"crafted": true`), judged
-on the extra "crafted" line in `Scripts/ask-eval/rubric-crafted.md`; the
-user's own picture scores crafted 1 in calibration.
+What stays is what works on any subject, because nothing in it names one:
+
+* **Painting from the person's words** and the general flat, traceable look the
+  picture model is asked for (`PictureModelRequest`, `server.py`).
+* **Palette reduction and tracing** (`layers.py`): k-means to a few colours, a
+  mode filter, vtracer's spline fitting (the path smoothing and simplifying),
+  specks dropped, fills snapped to the palette.
+* **Gradients** read from any SVG into the app's own linear and radial paints
+  (`SVGArtwork`), and **boolean shape operations** (`PathCombining`).
+* **Recolouring a group** by its colours' shares (`AgentGroupRecolour`).
+* **The look and revise loop** (`AskDrawingCheck`): a blind look by a model
+  that can see, judged against the words of the request, drawn again on a miss.
 
 ## The model
 
@@ -383,7 +373,8 @@ The `-mlx` tags scored the same as the plain ones (`qwen3.6:35b-mlx` 74.6,
 request): on Apple Silicon, Ollama 0.40 already runs the plain `qwen3.6` and
 `gemma4` tags on its MLX engine (nvfp4, `ollama ps` says `mlx`), so the plain
 tag is the default. The climb set barely separates models, because its
-drawings come from the built-in set whatever the model; the held-out set does.
+drawings came from the built-in set whatever the model (it was taken out on
+2026-10-22); the held-out set does.
 
 **One model looking, against two** (the held-out set, `qwen3.6:27b` planning):
 looking with `llama3.2-vision` beside it, 35.9, median 26.1 s, about 41 GB held

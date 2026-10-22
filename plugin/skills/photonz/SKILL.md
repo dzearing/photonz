@@ -35,7 +35,7 @@ checked.
 | --- | --- |
 | Documents | `list_documents`, `list_history` (screenshots and recordings, newest first), `open_document` (a path or a History index), `new_picture`, `new_video` |
 | Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
-| Drawing | `add_drawing` (a thing by name, from about a thousand built-in drawings, or your own SVG, as editable layers; `icon` for an icon frame; a scene with `style` is drawn by Photonz itself in an illustrator's passes), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words, `flip` to mirror it in place; `run_command mirror_across_center` makes the mirrored second half of a symmetrical drawing) |
+| Drawing | `add_drawing` (anything, a thing or a scene, as editable layers: painted for the request by Photonz's picture model and traced when it is running, else your own SVG; nothing is looked up; `icon` for an icon frame, `style` for a look the person named, `scene` for a place with its own sky), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words, `flip` to mirror it in place; `run_command mirror_across_center` makes the mirrored second half of a symmetrical drawing) |
 | Measuring a screenshot | `find_measurements` (the redline code chooses: one size of each kind of control, then the spacing), `mark_measurements` (lays the ids you pick, readouts kept clear); `find_elements` and `add_measurement` for one particular thing |
 | Checking a screenshot's consistency | `find_misalignments` (edges that miss by 1 to 8 points, uneven gaps, padding or borders that differ, every number measured), `mark_misalignments` (redlines for the ids you pick) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
@@ -115,12 +115,13 @@ Photonz work should look designed, not assembled.
 
 ### An icon or a drawing as SVG
 
-0. For a picture of an everyday thing (a dog, a cup, a smiley), try `add_drawing` with
-   its `subject` (and `icon: true` for an icon) first: it lands a clean drawing as
-   editable layers. For an illustration of a scene (the sun over mountains, a forest at
-   dusk, a lighthouse on a cliff) pass the scene as `subject` and the look asked for as
-   `style` (line art, silhouette, badge, sunset, flat, or illustration): Photonz draws it
-   with light, shadow and depth. Build it by hand, below, when you want your own drawing.
+0. Try `add_drawing` first, for anything: pass what to draw in the person's words as
+   `subject` (what it is, what it is doing, where), the look they named as `style`, `scene:
+   true` for a place with its own sky or ground, `icon: true` for an icon. When Photonz's
+   picture model is running it paints that and traces it into editable layers. When it
+   answers that it cannot paint, call it again with `svg`, your own drawing as one whole
+   SVG. Photonz has no stored drawings and no scenes of its own. Build it by hand, below,
+   when you want your own drawing.
 1. `new_picture` square (1024 x 1024); keep a margin of about a tenth on every side.
 2. Build from real shapes and paths: `add_shape` for geometric parts, `add_path` with
    smooth points for curves (a cloud is a closed path of smooth bumps, or ellipses

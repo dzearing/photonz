@@ -11,7 +11,9 @@ import Foundation
 public enum AskDrawingSource: String, Codable, Hashable, Sendable, CaseIterable {
     /// A built-in drawing, looked up by the words of its name.
     case stored
-    /// A coded illustration (`Illustrator`), picked by the kind of scene.
+    /// A coded scene or subject, picked by the kind of request. Nothing in
+    /// the app makes one any more (the illustrator was taken out on
+    /// 2026-10-22); it is still counted, so one slipping back shows.
     case template
     /// Made for the request: the model's own svg, shapes or paths, or a
     /// picture painted for it by the picture model and traced.

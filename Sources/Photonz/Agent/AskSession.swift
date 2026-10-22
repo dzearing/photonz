@@ -323,7 +323,7 @@ final class AskSession {
     /// Mac can see, or nothing was drawn).
     private func look(at plan: AskPlan, made: [Int: String], in editor: EditorState, model: String,
                       note: (String) -> Void) async -> (subject: String, seen: String)? {
-        let drawings = AskDrawingCheck.drawings(in: plan, library: DrawingSet.shared)
+        let drawings = AskDrawingCheck.drawings(in: plan)
         guard !drawings.isEmpty, let document = editor.agentID else { return nil }
         let installed = await AskLocalModel.installed() ?? []
         let ownEyes = await AskLocalModel.sees(model)
@@ -344,7 +344,7 @@ final class AskSession {
                 note("look: \(eyes) gave no answer")
                 continue
             }
-            var reads = AskDrawingCheck.reads(seen, as: drawing.subject, library: DrawingSet.shared)
+            var reads = AskDrawingCheck.reads(seen, as: drawing.subject)
             if reads == nil, let answer = try? await AskLocalModel.chat(
                 AskDrawingCheck.judgeBody(model: model, subject: drawing.subject, seen: seen))["message"]?["content"]?.stringValue {
                 reads = AskDrawingCheck.judged(answer)
@@ -450,7 +450,7 @@ final class AskSession {
                                components: components.isError ? "" : Self.text(of: components),
                                styles: styles.isError ? "" : Self.text(of: styles),
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
-                               drawings: DrawingSet.shared, paints: paints)
+                               paints: paints)
     }
 
     /// The model's turns, until it stops calling tools.

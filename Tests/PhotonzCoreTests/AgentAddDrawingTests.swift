@@ -4,7 +4,7 @@ import PhotonzCore
 import Testing
 
 /// add_drawing: an agent asks for a thing by name and gets a clean drawing of
-/// it as layers, from the built-in set or from an SVG it wrote.
+/// it as layers, painted for the request or from an SVG it wrote.
 @Suite("add_drawing draws a thing as editable layers")
 struct AgentAddDrawingTests {
 
@@ -15,14 +15,13 @@ struct AgentAddDrawingTests {
     @Test("The call carries what to draw, the agent's own SVG, and whether it is an icon")
     func theCall() throws {
         let request = try AgentTools.request(tool: "add_drawing", arguments: Self.args("""
-            {"subject": "dog", "icon": true, "name": "Rex", "builtIn": false,
+            {"subject": "dog", "icon": true, "name": "Rex",
              "frame": {"x": 10, "y": 20, "width": 300, "height": 200}, "svg": "<svg/>"}
             """)).get()
         guard case .addDrawing(nil, let call) = request else { Issue.record("\(request)"); return }
         #expect(call.subject == "dog")
         #expect(call.icon)
         #expect(call.name == "Rex")
-        #expect(!call.builtIn)
         #expect(call.svg == "<svg/>")
         #expect(call.frame == CGRect(x: 10, y: 20, width: 300, height: 200))
     }

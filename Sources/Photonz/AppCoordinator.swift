@@ -1142,12 +1142,12 @@ final class AppCoordinator {
         AppFront.activate()
         let alert = NSAlert()
         alert.messageText = OpenSourceNotices.title
-        alert.informativeText = OpenSourceNotices.intro + " " + DrawingSetNotice.intro
+        alert.informativeText = OpenSourceNotices.intro
         let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 460, height: 260))
         text.isEditable = false
         text.drawsBackground = false
         text.font = .monospacedSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
-        text.string = DrawingSetNotice.text + "\n\n\n" + OpenSourceNotices.text
+        text.string = OpenSourceNotices.text
         let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 460, height: 260))
         scroll.hasVerticalScroller = true
         scroll.borderType = .bezelBorder

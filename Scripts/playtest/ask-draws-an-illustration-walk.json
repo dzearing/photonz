@@ -14,7 +14,8 @@
     { "do": "press", "control": "Ask Send" },
     { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-sun-over-mountains", "note": "the illustration Ask drew: one group with Sky, Sun, the ranges and their shadow faces, over the blank picture's background" },
+    { "do": "describe", "stage": "1-sun-over-mountains", "note": "the scene Ask drew for the request, painted and traced (nothing stored, no coded scene): one group of filled colour layers, sky included, over the blank picture's background" },
+    { "do": "expectLayers", "atLeast": 4, "atMost": 302, "comment": "the background, the scene's group and its layers" },
     { "do": "snapshot", "name": "1-sun-over-mountains" },
     { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.5 },
@@ -27,7 +28,7 @@
     { "do": "press", "control": "Ask Send" },
     { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-silhouette-badge", "note": "the same scene as a black silhouette badge: a circle with a frame line, snow cut out as paper, a row of pines" },
+    { "do": "describe", "stage": "3-silhouette-badge", "note": "the same scene as a black silhouette badge with pines, painted for the request" },
     { "do": "snapshot", "name": "3-silhouette-badge" }
   ]
 }

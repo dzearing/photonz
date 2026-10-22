@@ -10,18 +10,17 @@ import Testing
 struct AskPaintsTests {
 
     static let circle = ##"<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#C1694F"/></svg>"##
-    static let library = DrawingLibrary(entries: [.init(name: "cat", words: ["pet"], svg: circle)])
 
     static func conversation(_ request: String, paints: Bool = true) -> AskConversation {
         AskConversation(request: request, documentRead: #"{"canvas":{"width":1440,"height":1024}}"#,
-                        drawings: library, paints: paints)
+                        paints: paints)
     }
 
     static func reply(_ name: String, _ args: AgentJSON) -> AgentJSON {
         ["message": ["role": "assistant", "content": "", "tool_calls": .array([["function": ["name": .string(name), "arguments": args]]])]]
     }
 
-    @Test("Any subject is planned with no svg: a thing the set lacks, a pose, a scene")
+    @Test("Any subject is planned with no svg: a thing, a pose, a scene")
     func anySubjectPlanned() {
         for subject in ["bicycle", "a cat curled up asleep", "a lighthouse on a cliff at dusk"] {
             var talk = Self.conversation("draw \(subject)")
@@ -37,7 +36,7 @@ struct AskPaintsTests {
         #expect(talk.steps.first?.arguments["asked"]?.stringValue == "draw a cat curled up sleeping")
     }
 
-    @Test("Without painting, nothing about drawing changes: a thing the set lacks still needs an svg")
+    @Test("Without painting, a drawing needs the model's own svg")
     func offIsUnchanged() {
         var talk = Self.conversation("draw a bicycle", paints: false)
         _ = talk.take(Self.reply("add_drawing", ["subject": "bicycle"]))
@@ -80,7 +79,8 @@ struct AskPaintsTests {
     func scenes() {
         #expect(PictureModelRequest(AgentDrawingCall(subject: "a lighthouse on a cliff", scene: true)).scene)
         #expect(PictureModelRequest(AgentDrawingCall(subject: "a forest", asked: "draw a forest at dusk")).scene)
-        #expect(PictureModelRequest(AgentDrawingCall(subject: "a city skyline")).scene)
+        #expect(PictureModelRequest(AgentDrawingCall(subject: "a city skyline", scene: true)).scene)
+        #expect(PictureModelRequest(AgentDrawingCall(subject: "a mountain landscape")).scene)
         #expect(!PictureModelRequest(AgentDrawingCall(subject: "a cat", asked: "draw a cat curled up asleep")).scene)
     }
 

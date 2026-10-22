@@ -251,9 +251,6 @@ public struct AskConversation: Sendable {
 
     /// `components` and `styles` are list_components' and list_styles'
     /// answers, handed over up front so "on brand" never starts from nothing.
-    /// The built-in drawings add_drawing draws from, so a thing the set does
-    /// not have goes back to the model for its own SVG while it still plans.
-    private let drawings: DrawingLibrary?
     /// What the person typed, read for the look they named.
     private let request: String
     /// Every drawing is painted by the picture model on this Mac and traced
@@ -262,8 +259,7 @@ public struct AskConversation: Sendable {
     private let paints: Bool
 
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
-                titles: String = "", drawings: DrawingLibrary? = nil, paints: Bool = false) {
-        self.drawings = drawings
+                titles: String = "", paints: Bool = false) {
         self.request = request
         self.paints = paints
         canvasWidth = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]?["width"]?.doubleValue ?? 0
@@ -340,7 +336,7 @@ public struct AskConversation: Sendable {
                     continue
                 }
                 if name == "add_drawing" {
-                    var drawing = Self.withStyleWords(arguments, from: request)
+                    var drawing = arguments
                     if paints, var object = drawing.objectValue {
                         object["asked"] = .string(request)
                         drawing = .object(object)
@@ -368,19 +364,15 @@ public struct AskConversation: Sendable {
         return .again(looks: looks)
     }
 
-    /// Why an add_drawing call cannot draw, or nil when it can: a thing the
-    /// set has not got needs the model's own SVG, and that SVG has to read.
+    /// Why an add_drawing call cannot draw, or nil when it can: with no
+    /// picture model to paint it, the drawing is the model's own SVG, and that
+    /// SVG has to read.
     func drawingProblem(_ arguments: AgentJSON) -> String? {
         let subject = arguments["subject"]?.stringValue ?? ""
         if paints { return nil }
-        let builtIn = arguments["builtIn"]?.boolValue ?? true
         let svg = arguments["svg"]?.stringValue ?? ""
-        let styled = Self.withStyleWords(arguments, from: request)
-        if IllustrationBrief.make(subject: subject, style: styled["style"]?.stringValue,
-                                  icon: arguments["icon"]?.boolValue ?? false) != nil { return nil }
-        if builtIn, let drawings, drawings.match(subject) != nil { return nil }
         guard !svg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return drawings == nil ? nil : AgentDrawingCall.noBuiltIn(subject)
+            return AgentDrawingCall.needsSVG(subject)
         }
         if case .failure(let trouble) = SVGArtwork.parse(svg) {
             return "add_drawing: \(trouble.message) Write the whole svg again."
@@ -389,35 +381,25 @@ public struct AskConversation: Sendable {
     }
 
     /// An add_drawing call with the look words the person typed added to its
-    /// style, so "as line art" or "a badge" reaches the illustrator even when
-    /// the model left it out.
+    /// style, so "as line art" or "a badge" reaches the drawing even when the
+    /// model left it out, and a look the person never named taken off it.
     static func withStyleWords(_ arguments: AgentJSON, from request: String) -> AgentJSON {
-        var typed = IllustrationBrief.lookWords(in: request)
+        let typed = AgentDrawingWords.lookWords(in: request)
         guard var object = arguments.objectValue else { return arguments }
-        let subject = object["subject"]?.stringValue ?? ""
-        // What else the person put in the scene ("with pines"), when the
-        // subject is a scene the model shortened.
-        if IllustrationBrief.make(subject: subject, style: nil) != nil {
-            let named = Set(IllustrationBrief.words(subject))
-            typed += IllustrationBrief.sceneWords(in: request).filter { !named.contains($0) }
-        }
-        // A badge is not an icon: a scene stays an illustration unless the
-        // person said icon.
-        if object["icon"]?.boolValue == true, !IllustrationBrief.words(request).contains("icon"),
-           IllustrationBrief.make(subject: subject, style: (object["style"]?.stringValue ?? "") + " " + typed.joined(separator: " ")) != nil {
+        let said = Set(AgentDrawingWords.words(request))
+        // A badge is not an icon unless the person said icon.
+        if object["icon"]?.boolValue == true, !said.contains("icon"), said.contains("badge") {
             object["icon"] = nil
         }
-        if typed.isEmpty, object["style"] != nil,
-           IllustrationBrief.make(subject: subject, style: nil, icon: object["icon"]?.boolValue ?? false) == nil {
-            // A look the person never asked for, on a thing that is no scene
-            // ("a picture of a bird"), is the model's guess: the thing stays a thing.
+        let given = object["style"]?.stringValue ?? ""
+        if typed.isEmpty, !given.isEmpty, said.isDisjoint(with: AgentDrawingWords.words(given)) {
+            // A look the person never asked for is the model's guess: the
+            // drawing is made in no particular look.
             object["style"] = nil
             return .object(object)
         }
-        guard !typed.isEmpty else { return .object(object) }
-        let given = object["style"]?.stringValue ?? ""
         let missing = typed.filter { !given.lowercased().contains($0) }
-        guard !missing.isEmpty else { return arguments }
+        guard !missing.isEmpty else { return .object(object) }
         object["style"] = .string(([given] + missing).filter { !$0.isEmpty }.joined(separator: " "))
         return .object(object)
     }
@@ -427,7 +409,7 @@ public struct AskConversation: Sendable {
     public mutating func revise(subject: String, seen: String) {
         steps = []
         rounds = 0
-        messages.append(["role": "user", "content": .string(AskDrawingCheck.revisionNote(subject: subject, seen: seen))])
+        messages.append(["role": "user", "content": .string(AskDrawingCheck.revisionNote(subject: subject, seen: seen, paints: paints))])
     }
 
     /// The step already planned that this one repeats: the same call, or a
@@ -559,17 +541,14 @@ public struct AskConversation: Sendable {
         """
     }
 
-    /// How to draw when Photonz draws from its set or the model's own svg.
+    /// How to draw when there is no picture model: the model's own svg.
     static let drawingRules = """
-        - To draw a thing (a dog, a house, a coffee cup, a smiley face), call \
-        add_drawing once with its subject, and icon true when an icon was asked for. Photonz has clean drawings \
-        of about a thousand everyday things; when it has none of yours it says so, and you call add_drawing \
-        again with svg, your own drawing as one complete SVG. Never build a drawing from add_shape or add_path, \
-        and put no words, components or backdrop on it unless they were asked for.
-        - To draw an illustration or a scene (the sun over mountains, a forest at dusk, a lighthouse on a cliff, \
-        a city skyline, a fox in its setting), call add_drawing once with the scene as its subject and style \
-        set to the look asked for (line art, silhouette, badge, sunset, flat), or "illustration" when none \
-        was named. Photonz draws it itself; send no svg.
+        - To draw anything (a thing, an animal, a scene: a dog, a coffee cup, a smiley face, the sun over \
+        mountains), call add_drawing once with its subject, icon true when an icon was asked for, style set to \
+        the look asked for when one was named, and svg, your own drawing as one complete SVG: a viewBox, \
+        a few flat colours, curves where the thing is round, a lit side and a shadow side on each big form, every \
+        part touching the part it belongs to. Never build a drawing from add_shape or add_path, and put no words, \
+        components or backdrop on it unless they were asked for.
         """
 
     /// How to draw when the picture model paints every drawing.
@@ -640,17 +619,9 @@ public enum AskDrawingCheck {
     public static let mostRevisions = 2
 
     /// The plan's drawings: which step, and what it was asked to be.
-    public static func drawings(in plan: AskPlan, library: DrawingLibrary? = nil) -> [(step: Int, subject: String)] {
+    public static func drawings(in plan: AskPlan) -> [(step: Int, subject: String)] {
         plan.steps.enumerated().compactMap { index, step in
             guard step.tool == "add_drawing", let subject = step.arguments["subject"]?.stringValue else { return nil }
-            // An illustration is the illustrator's, checked by its own
-            // critique pass; it is never taken back for the model's own svg.
-            if IllustrationBrief.make(subject: subject, style: step.arguments["style"]?.stringValue,
-                                      icon: step.arguments["icon"]?.boolValue ?? false) != nil { return nil }
-            // A drawing from the built-in set is known to read; a small model
-            // misreading it ("a mushroom" for the tree) must not swap it for
-            // the planning model's own svg.
-            if step.arguments["builtIn"]?.boolValue != false, let library, library.match(subject) != nil { return nil }
             return (index + 1, subject)
         }
     }
@@ -685,13 +656,15 @@ public enum AskDrawingCheck {
     /// when it shares no word with it, which the planning model then judges
     /// (a "puppy" is plainly a dog, a "mouse" plainly not, and a "hound" is
     /// for a model to say).
-    public static func reads(_ seen: String, as subject: String, library: DrawingLibrary?) -> Bool? {
-        var known = Set(DrawingLibrary.words(subject))
-        if let entry = library?.match(subject) {
-            for label in [entry.name] + entry.aliases + entry.words { known.formUnion(DrawingLibrary.words(label)) }
-        }
-        let saw = Set(DrawingLibrary.words(seen)).subtracting(generic)
+    public static func reads(_ seen: String, as subject: String) -> Bool? {
+        let known = Set(stems(subject))
+        let saw = Set(stems(seen)).subtracting(generic)
         return saw.isDisjoint(with: known.subtracting(generic)) ? nil : true
+    }
+
+    /// Words with a plural's s taken off, so "mountains" meets "mountain".
+    static func stems(_ text: String) -> [String] {
+        AgentDrawingWords.words(text).map { $0.count > 3 && $0.hasSuffix("s") && !$0.hasSuffix("ss") ? String($0.dropLast()) : $0 }
     }
 
     /// The planning model asked whether what was seen is the thing.
@@ -707,11 +680,18 @@ public enum AskDrawingCheck {
         AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("yes")
     }
 
-    static func revisionNote(subject: String, seen: String) -> String {
-        """
+    static func revisionNote(subject: String, seen: String, paints: Bool = false) -> String {
+        if paints {
+            return """
+            Someone who could not see this request looked at the drawing and said it shows: "\(seen)". It has to \
+            read at a glance as \(subject), and it was taken back. Draw it again: call add_drawing once more with \
+            no svg, its subject saying plainly what \(subject) is and the parts that make it recognisable.
+            """
+        }
+        return """
         Someone who could not see this request looked at the drawing and said it shows: "\(seen)". It has to read \
         at a glance as \(subject), and it was taken back. Draw it again: call add_drawing with subject \
-        "\(subject)", builtIn false, and a new svg. Use bigger, simpler shapes and the parts that make \
+        "\(subject)" and a new svg. Use bigger, simpler shapes and the parts that make \
         \(subject) recognisable, in the colours it really has, every part touching the part it belongs to.
         """
     }

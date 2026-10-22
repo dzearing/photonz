@@ -72,7 +72,7 @@ public struct SVGArtwork: Hashable, Sendable {
     // MARK: Reading
 
     /// `keepingGroups` keeps each `<g id>` as a group of layers (an
-    /// illustration's Sky, Far range, Sun) instead of one flat group.
+    /// painted drawing's colour layers) instead of one flat group.
     public static func parse(_ text: String, keepingGroups: Bool = false) -> Result<SVGArtwork, SVGArtworkError> {
         guard let start = text.range(of: "<svg") else {
             return .failure(SVGArtworkError("That is not an SVG: it has no <svg> element."))

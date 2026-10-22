@@ -1,8 +1,9 @@
 // Where each drawing in a run came from, so climbing the score by looking
 // things up shows as a number (the user, 2026-10-20: Ask scored 92 on drawings
 // while it drew one cat for every cat request). The app says it on every
-// add_drawing answer ("from": "built-in: cat", "illustration: ...", "your
-// svg"); PhotonzCore's AskDrawingSource reads it the same way.
+// add_drawing answer ("from": "painted: ...", "your svg"; before 2026-10-22
+// also "built-in: cat" and "illustration: ...", still counted so one slipping
+// back shows); PhotonzCore's AskDrawingSource reads it the same way.
 
 /// "stored" (a built-in looked up by name), "template" (a coded
 /// illustration), "drawn" (made for the request), or null for a step that is
@@ -14,7 +15,7 @@ export function sourceOf(tool, answer) {
   if (!from) return null;
   if (from.startsWith("built-in")) return "stored";
   if (from.startsWith("illustration")) return "template";
-  if (from.startsWith("your svg")) return "drawn";
+  if (from.startsWith("your svg") || from.startsWith("painted")) return "drawn";
   return null;
 }
 

@@ -307,11 +307,8 @@ PLIST
 if [[ -f Resources/AppIcon.icns ]]; then
   cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 fi
-# The drawings Ask draws a thing from (Scripts/make-drawings.mjs), with their licence.
-if [[ -d Resources/Drawings ]]; then
-  rm -rf "$APP/Contents/Resources/Drawings"
-  cp -R Resources/Drawings "$APP/Contents/Resources/Drawings"
-fi
+# Ask carries no stored drawings: anything left from an older build goes.
+rm -rf "$APP/Contents/Resources/Drawings"
 
 # Signing priority:
 #  1. Developer ID (CODESIGN_IDENTITY set) — CI/release. Hardened runtime +
