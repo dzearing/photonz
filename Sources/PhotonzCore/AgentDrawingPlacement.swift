@@ -74,11 +74,28 @@ public struct AgentDrawingCall: Hashable, Sendable {
         "add_drawing: Photonz cannot paint \(subject) on this Mac right now. Call add_drawing again with svg: your own drawing of it as one complete SVG."
     }
 
+    /// The longest a name made from the subject gets in the Layers list.
+    public static let longestName = 40
+
     /// The layer's name: the one asked for, else the subject as a person
-    /// would write it ("smiley face" is "Smiley face").
+    /// would write it ("smiley face" is "Smiley face"), cut to its first
+    /// clause and to whole words within 40 characters, so a subject the
+    /// model wrote out at length is a label, not a paragraph.
     public var layerName: String {
         if let name, !name.trimmingCharacters(in: .whitespaces).isEmpty { return name }
-        let words = subject.trimmingCharacters(in: .whitespacesAndNewlines)
+        var words = subject.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let comma = words.firstIndex(where: { ",;:(".contains($0) }) {
+            words = String(words[..<comma]).trimmingCharacters(in: .whitespaces)
+        }
+        if words.count > Self.longestName {
+            var kept = ""
+            for word in words.split(separator: " ") {
+                let longer = kept.isEmpty ? String(word) : kept + " " + word
+                if longer.count > Self.longestName { break }
+                kept = longer
+            }
+            words = kept.isEmpty ? String(words.prefix(Self.longestName)) : kept
+        }
         guard let first = words.first else { return "Drawing" }
         return first.uppercased() + words.dropFirst()
     }

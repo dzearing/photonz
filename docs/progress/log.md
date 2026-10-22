@@ -21850,3 +21850,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Held-out 57.1 (57.5 last painting run, 35.9 before painting), 0 of 52 drawings looked up. Painted scenes swing about 15 points per picture on seed alone.
 - Docs: `docs/design/ask.md` ("Drawing a thing", "What was taken out"), the skill's Drawing row, `agent-mcp.md`. Audit `queue/audits/2026-10-22-ask-draws-any-subject-well-with-nothing-stored-o.json`.
 - Open: without the picture model everything is the model's SVG (`ask-works-on-a-mac-that-has-nothing-else-install` makes it part of setup).
+
+## 2026-10-22: Ask plans a pose or a scene and checks the drawing against it
+
+- add_drawing takes a `plan` (one to four yes-or-no statements for each pose, action, view, mood and relationship the request names, plus what touches and what is in front). It is painted from and checked against the rendered drawing (shown on white) by the model that sees; a miss is painted again, and kept after the last try when it reads as the thing. A second drawing landing on top of the first is refused. A thing running off the picture edge is painted again. Rows keep every word of a scene; layer names are cut to a 40 character label.
+- Eleven pose and scene cases in the climb set: 83.9 before, 86.7/87.1 after. Held-out 60.3 (57.5 best, 57.1 last); a drawing request 41 s against 31 s.
+- Audit `queue/audits/2026-10-22-a-scene-of-things-doing-something-together-is-dr.json`; walk `ask-draws-a-scene-walk`.
+- Open: a scene's thin lines (the kite's string) vanish in scene tracing; the task stays open for its six-scene bar (5 of 6 on the final run).
+- Found while here: `layers.py` `backdrop_reached` flood fill does nothing under Pillow 12.3 (the backdrop is still dropped later by `is_backdrop`).

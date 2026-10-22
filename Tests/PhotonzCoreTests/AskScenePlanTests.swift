@@ -144,6 +144,18 @@ struct AskScenePlanTests {
         #expect(note.contains("plan"))
     }
 
+    @Test("A drawing's layer is named with a short label, never a paragraph")
+    func layerNameIsShort() {
+        let long = AgentDrawingCall(subject: "a cat sitting upright on its hind legs, holding a guitar with its front paws on the neck")
+        #expect(long.layerName == "A cat sitting upright on its hind legs")
+        let run = AgentDrawingCall(subject: "a robot carefully pouring water from a green watering can onto a small potted plant")
+        #expect(run.layerName.count <= AgentDrawingCall.longestName)
+        #expect(run.layerName == "A robot carefully pouring water from a")
+        #expect(AgentDrawingCall(subject: "cat playing a guitar").layerName == "Cat playing a guitar")
+        #expect(AgentDrawingCall(subject: "x", name: "My own long name that the agent chose for this group").layerName
+                == "My own long name that the agent chose for this group")
+    }
+
     // MARK: The row names the scene
 
     @Test("The row names the whole scene, the person's own words, not just its first noun")

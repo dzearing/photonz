@@ -1,27 +1,27 @@
 {
-  "rubric": "ebbf2873",
+  "rubric": "f5ae1562",
   "judgeModel": "claude-opus-5-5",
-  "at": "2026-10-21T04:51:14.753Z",
+  "at": "2026-10-22T11:05:44.038Z",
   "agrees": true,
   "results": [
     {
       "picture": "user-dog.png",
       "case": "dog",
       "want": "low",
-      "judge": 1.8,
+      "judge": 1.6,
       "lines": {
-        "clean": 3,
+        "clean": 2,
         "typography": 2,
         "aligned": 2,
         "designed": 1,
         "didWhatWasAsked": 1
       },
       "named": [
-        "brown dog",
-        "brown blob",
-        "dog"
+        "Dog",
+        "flattened animal",
+        "brown dog"
       ],
-      "atBest": 8.2,
+      "atBest": 8.1,
       "ok": true
     },
     {
@@ -38,10 +38,10 @@
       },
       "named": [
         "smiley face",
-        "smiley face",
+        "yellow face",
         "smiley face"
       ],
-      "atBest": 9.6,
+      "atBest": 8.2,
       "ok": true
     },
     {
@@ -91,7 +91,7 @@
       "named": [
         "Mountains and sun",
         "Mountains and sun",
-        "Mountains and sun"
+        "mountains and sun"
       ],
       "atBest": 29.1,
       "ok": true
@@ -101,20 +101,20 @@
       "case": "user-cat-curled-up-sleeping",
       "want": "ignored",
       "asked": 2,
-      "judge": 2.5,
+      "judge": 2.3,
       "lines": {
         "clean": 2,
         "typography": null,
-        "aligned": 3,
+        "aligned": 2,
         "designed": 4,
         "didWhatWasAsked": 1
       },
       "named": [
-        "Cat and piano",
-        "Cat and piano",
-        "Cat and piano"
+        "Cat",
+        "Piano cat",
+        "cat"
       ],
-      "atBest": 10,
+      "atBest": 9.9,
       "ok": true
     },
     {
@@ -122,20 +122,20 @@
       "case": "user-cartoon-cat-playing-piano",
       "want": "ignored",
       "asked": 2,
-      "judge": 2,
+      "judge": 2.2,
       "lines": {
         "clean": 2,
-        "typography": 2,
+        "typography": 3,
         "aligned": 2,
         "designed": 3,
         "didWhatWasAsked": 1
       },
       "named": [
         "orange tabby cat",
-        "orange tabby cat",
-        "Cat"
+        "Cat",
+        "orange tabby cat"
       ],
-      "atBest": 9.7,
+      "atBest": 9.8,
       "ok": true
     },
     {

@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/ask-draws-a-scene-walk",
+  "seed": "a-scene-of-things-doing-something-together-is-dr: at Next defaults with the picture model running (Scripts/picture-model/serve.sh), 'draw a cat playing a guitar' plans who does what and which parts touch, paints one picture of the whole scene, checks it against the plan, and lands as one change whose row names the scene; one undo takes the lot",
+  "clock": 900,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "draw a cat playing a guitar" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "planning|running|ran|stopped", "timeout": 15 },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Agent Change 1 Words", "reads": "Drew a cat playing a guitar" },
+    { "do": "expectLayers", "atLeast": 4, "atMost": 302, "comment": "the background, the scene's one group and its parts" },
+    { "do": "describe", "stage": "1-scene", "note": "one painted picture of the cat and the guitar together, traced into one group" },
+    { "do": "snapshot", "name": "1-scene" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectLayers", "count": 1, "comment": "the whole scene was one change" },
+    { "do": "snapshot", "name": "2-undone" }
+  ]
+}

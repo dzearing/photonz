@@ -244,6 +244,59 @@ held-out (`Scripts/ask-eval/lookups.mjs`, `AskDrawingSource`): stored,
 template, or drawn for the request. Both lookup counts are 0 now; a drawing
 that came back from a stored set or a coded scene would show there.
 
+## A pose or a scene is planned, then checked
+
+"A cat playing a guitar", "a black cat seen from behind", "a fox asleep under a
+tree": until 2026-10-22 the look only asked a blind model to NAME the drawing,
+so a standing cat for "a cat curled up asleep" read as "cat" and passed (queue
+task `a-scene-of-things-doing-something-together-is-dr`). Now:
+
+* **One add_drawing for the whole picture.** Two or more things, or one thing
+  in a pose, an action or a view, is one call, never one per noun. A second
+  add_drawing that would land on top of one already planned (both centred, or
+  their frames mostly the same place) is refused with the step it would cover
+  (`AskConversation.stacked`): a model resending a scene with its plan
+  reworded painted two whole pictures one over the other.
+* **A plan.** When the request names more than the thing, the planning model
+  gives add_drawing `plan`: one to four statements someone looking can answer
+  yes or no, one for each pose, action, view, mood and relationship the
+  request names, and, when two things act together, which parts touch and
+  what is in front. A view is said as the eye sees it ("we see the back of its
+  head and both ears; no face shows"), which a picture model paints far more
+  readily than the word "behind". Nothing the request did not ask for: plans
+  padded with "it is centred" and "the branch spans the canvas" made the check
+  paint good drawings again three times over.
+* **Painted from the plan.** The statements follow the subject and the
+  person's words in what the picture model is asked (`PictureModelRequest`).
+* **Checked against the plan.** After the drawing reads as the thing, the
+  model that sees is shown it on white (a lone layer renders with nothing
+  behind it) and answers yes or no for each statement, numbered
+  (`AskDrawingCheck.planBody`, `unmet`). A no is painted again, told what did
+  not show; an answer it cannot read is no miss. When the last try still misses
+  part of the plan, the drawing stays (it reads as the thing; it is the
+  closest Ask came) rather than being thrown away.
+* **Kept on the picture.** The tracer measures how much of the picture's edge
+  is drawing rather than backdrop (`layers.py`, `clipped`); a thing (not a
+  scene) running off the edge is painted once more from another seed, so a
+  tree is not cut flat along the top.
+* **Checked from the picture, not the layers.** A painted drawing's layers are
+  colour regions ("Dark brown 3"), not parts, so "the paws touch the keys" is
+  read from the rendered drawing rather than from which layers touch.
+
+* **Named with a label.** A drawing's group is named from its subject cut to
+  the first clause and to whole words within 40 characters
+  (`AgentDrawingCall.layerName`): a subject written out at length on a
+  redraw had named the layer with a paragraph.
+
+Measured on the eleven pose and scene cases of the climb set (2026-10-22):
+83.9 before, 87.1 and 86.7 after. Before, a black cat seen from behind was a
+front-facing silhouette (45); after, a rear view (87, 91). Held-out, 45
+cases at Next defaults: 60.3 (run `20261022-094634-ask-held-out`) against
+57.5 and 57.1; on drawings didWhatWasAsked 5.6 to 6.1, crafted 4 to 6, clean
+6.1 to 5.7; a drawing request 41 s against 31 s, the cost of painting again.
+Still open: a scene's thin lines (a kite's string) are lost in tracing, where
+the blur and mode filter that smooth a sky wipe them out.
+
 ## Painting a drawing
 
 "Ask paints its drawings" (`next-ask-paints-drawings`, on in Next) sends
