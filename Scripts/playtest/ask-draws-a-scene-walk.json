@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/ask-draws-a-scene-walk",
-  "seed": "a-scene-of-things-doing-something-together-is-dr: at Next defaults with the picture model running (Scripts/picture-model/serve.sh), 'draw a cat playing a guitar' plans who does what and which parts touch, paints one picture of the whole scene, checks it against the plan, and lands as one change whose row names the scene; one undo takes the lot",
+  "seed": "a-scene-of-things-doing-something-together-is-dr: at Next defaults with the picture model set up in Settings > Ask (Photonz starts it), 'draw a cat playing a guitar' plans who does what and which parts touch, paints one picture of the whole scene, checks it against the plan, and lands as one change whose row names the scene; one undo takes the lot",
   "clock": 900,
   "setup": { "forget": ["all"] },
   "steps": [

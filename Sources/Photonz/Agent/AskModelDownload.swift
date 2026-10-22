@@ -5,43 +5,76 @@ import PhotonzCore
 /// Downloads a built-in model for Ask (Settings > Ask): every file of it, one
 /// after another, into `AskModelServer.folder`, with progress and a Stop. A
 /// file is written as `<name>.part` and only takes its real name once it is
-/// whole, so a stopped download never looks like a model.
+/// whole, so a stopped download never looks like a model. A file this Mac
+/// already keeps for the Hugging Face tools, the same pinned bytes, is copied
+/// from there instead (a clone on APFS: no time, no space).
+///
+/// `shared` fetches the chat model, `pictures` the picture model, so each has
+/// its own bar and Stop in Settings.
 @MainActor
 @Observable
 final class AskModelDownload {
 
     static let shared = AskModelDownload()
+    static let pictures = AskModelDownload()
 
-    /// The model being downloaded, or nil.
-    private(set) var choice: AskBuiltInModels.Choice?
-    /// Bytes on the Mac so far, of every file of `choice`.
+    /// What one download fetches.
+    struct Item: Equatable {
+        let id: String
+        let name: String
+        let files: [AskBuiltInModels.File]
+        /// Everything it brings down, the files and whatever `finishing` fetches.
+        let totalBytes: Int64
+
+        init(_ choice: AskBuiltInModels.Choice) {
+            self.init(id: choice.id, name: choice.name, files: choice.files, totalBytes: choice.downloadBytes)
+        }
+
+        init(id: String, name: String, files: [AskBuiltInModels.File], totalBytes: Int64) {
+            self.id = id
+            self.name = name
+            self.files = files
+            self.totalBytes = totalBytes
+        }
+    }
+
+    /// What is being downloaded, or nil.
+    private(set) var item: Item?
+    /// Bytes on the Mac so far, of everything `item` brings down.
     private(set) var done: Int64 = 0
+    /// The files are down and the last step (`finishing`) is running.
+    private(set) var settingUp = false
     /// Why the last download stopped short, in one sentence.
     private(set) var trouble: String?
 
-    var active: Bool { choice != nil }
+    var active: Bool { item != nil }
     var fraction: Double {
-        guard let choice, choice.downloadBytes > 0 else { return 0 }
-        return min(1, Double(done) / Double(choice.downloadBytes))
+        guard let item, item.totalBytes > 0 else { return 0 }
+        return min(1, Double(done) / Double(item.totalBytes))
     }
 
     @ObservationIgnored private var work: Task<Void, Never>?
     @ObservationIgnored private var current: URLSessionDownloadTask?
 
-    func start(_ choice: AskBuiltInModels.Choice) {
-        guard self.choice == nil else { return }
+    func start(_ choice: AskBuiltInModels.Choice) { start(Item(choice)) }
+
+    /// Fetches `item`'s missing files, then runs `finishing` (the picture
+    /// model's tools), which is stopped by Stop like the rest.
+    func start(_ item: Item, finishing: (@MainActor () async throws -> Void)? = nil) {
+        guard self.item == nil else { return }
         trouble = nil
         let folder = AskModelServer.folder
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let missing = choice.files.filter { !Self.isWhole($0, in: folder) }
-        let need = missing.reduce(Int64(0)) { $0 + $1.bytes }
+        let missing = item.files.filter { !Self.isWhole($0, in: folder) }
+        let filesBytes = item.files.reduce(Int64(0)) { $0 + $1.bytes }
+        let need = missing.reduce(Int64(0)) { $0 + $1.bytes } + (item.totalBytes - filesBytes)
         if let free = try? folder.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
             .volumeAvailableCapacityForImportantUsage, free < need + 2_000_000_000 {
             trouble = "Not enough free space. It needs \(AskBuiltInModels.sizeWords(need + 2_000_000_000))."
             return
         }
-        self.choice = choice
-        done = choice.downloadBytes - need
+        self.item = item
+        done = filesBytes - missing.reduce(Int64(0)) { $0 + $1.bytes }
         work = Task { [weak self] in
             for file in missing {
                 guard let self, !Task.isCancelled else { return }
@@ -57,7 +90,19 @@ final class AskModelDownload {
                 }
                 done = before + file.bytes
             }
-            self?.finish()
+            guard let self, !Task.isCancelled else { return }
+            if let finishing {
+                settingUp = true
+                do {
+                    try await finishing()
+                } catch {
+                    if !Task.isCancelled { trouble = "Setting up stopped. Try again." }
+                    finish()
+                    return
+                }
+            }
+            done = item.totalBytes
+            finish()
         }
     }
 
@@ -69,9 +114,10 @@ final class AskModelDownload {
     }
 
     private func finish() {
-        choice = nil
+        item = nil
         current = nil
         work = nil
+        settingUp = false
     }
 
     static func isWhole(_ file: AskBuiltInModels.File, in folder: URL) -> Bool {
@@ -84,6 +130,19 @@ final class AskModelDownload {
                        progress: @escaping @MainActor (Int64) -> Void) async throws {
         let target = folder.appending(path: file.name)
         let part = folder.appending(path: file.name + ".part")
+        try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let home = URL(fileURLWithPath: NSHomeDirectory())
+        // The cache's snapshot names are links to its blobs: the blob is the file.
+        if let cached = AskBuiltInModels.huggingFaceCache(for: file.url, home: home)?.resolvingSymlinksInPath(),
+           let size = (try? FileManager.default.attributesOfItem(atPath: cached.path)[.size] as? NSNumber)?.int64Value,
+           size == file.bytes {
+            try? FileManager.default.removeItem(at: part)
+            if (try? FileManager.default.copyItem(at: cached, to: part)) != nil {
+                try? FileManager.default.removeItem(at: target)
+                try FileManager.default.moveItem(at: part, to: target)
+                return
+            }
+        }
         let watcher = Watcher(progress: progress)
         let session = URLSession(configuration: .ephemeral, delegate: watcher, delegateQueue: nil)
         defer { session.finishTasksAndInvalidate() }

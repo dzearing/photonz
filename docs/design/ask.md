@@ -200,7 +200,7 @@ a skyline, a fox); both are gone (see "What was taken out" below). A drawing is
 made for the request, one of two ways:
 
 * **Painted** by the picture model on this Mac and traced into layers, whenever
-  it is running ("Painting a drawing", below). This is the route that measured
+  it is set up ("Painting a drawing", below). This is the route that measured
   best on the held-out set.
 * **The model's own SVG** otherwise. With no picture model the call goes back
   to the model while it is still planning and it writes ONE whole SVG (a model
@@ -301,7 +301,7 @@ the blur and mode filter that smooth a sky wipe them out.
 
 "Ask paints its drawings" (`next-ask-paints-drawings`, on in Next) sends
 every `add_drawing` to a picture model on this Mac instead of the model's
-own SVG, whenever the picture model answers. Measured on the held-out set on 2026-10-22 (queue task
+own SVG, whenever the picture model is set up. Measured on the held-out set on 2026-10-22 (queue task
 `try-drawing-with-a-local-picture-model-then-turn`, audit
 `queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json`,
 run `20261022-043200-ask-held-out`): total 57.5 against 35.9; on drawings
@@ -322,8 +322,8 @@ with crafted 3.0: a scene on plain white loses its sky.
 
 * **The picture model.** Z-Image Turbo (Tongyi-MAI, Apache 2.0), 8-bit MLX
   weights (`mflux-community/z-image-turbo-mflux-q8`, about 11 GB) run by
-  mflux (MIT) behind `127.0.0.1:8793` (`Scripts/picture-model/serve.sh`). A
-  768 point picture takes about 22 to 28 s on an M4 Max and holds 7.5 GB at
+  mflux (MIT), which Photonz sets up and runs itself ("The picture model's
+  setup", under "The model"). A 768 point picture takes about 22 to 28 s on an M4 Max and holds 7.5 GB at
   its peak in mflux's own count (the server process rests at 5 GB and
   peaks at 13 GB with MLX's cache capped), beside the 29 GB the planning
   model holds. Ollama 0.40.7
@@ -342,8 +342,9 @@ with crafted 3.0: a scene on plain white loses its sky.
   path are dropped, and every fill is snapped back to the palette. Each region
   is a filled Pen path named by its colour ("Dark brown 3"), 10 to 40 of them
   for a single subject (300 at most), in one group named for the subject.
-* **When the server is not there**, the model writes its own SVG: the switch
-  only takes effect when `/health` answers at the start of a request.
+* **When it is not set up**, the model writes its own SVG: the switch only
+  takes effect when the weights are whole and the tools installed
+  (`AskPictureServer.isInstalled`) at the start of a request.
 
 ## What was taken out (2026-10-22)
 
@@ -436,6 +437,39 @@ button, a progress bar with Stop. Ask with no model says "Ask needs its model.
 Get it in Settings." with an Open Settings button (two clicks from Ask to a
 download). A walk gets that Mac with `"askModelMissing": true`
 (`ask-sets-itself-up-walk`).
+
+### The picture model's setup, 2026-10-22
+
+The picture model is the same kind of thing as the chat model: Settings > Ask
+offers it ("Ask can paint its drawings with Z-Image Turbo, 11.2 GB. It goes in
+Application Support > Photonz > Models.") on a Mac that can hold it beside the
+chat model (`AskPictureModelPlan.fits`, 12 GB held), with progress and Stop
+(`AskModelDownload.pictures`). One Download does two things:
+
+* **The weights**, 13 pinned files (`AskPictureModelPlan.modelFiles`, 11.0 GB)
+  into `Models/z-image-turbo-q8/`, in the layout mflux reads from a local path.
+  A file the Mac already keeps for the Hugging Face tools at the same revision
+  and size (`~/.cache/huggingface/hub/...`) is cloned from there instead
+  (`AskBuiltInModels.huggingFaceCache`), for both models.
+* **The tools**: Photonz ships `uv` (MIT, `Contents/Helpers/PictureModel/uv`,
+  pinned in `Vendor/uv/VERSION`, fetched by `Scripts/vendor-uv.sh`), which
+  builds a private Python 3.12.11 with exactly the 43 packages the server
+  imports at exact versions (`AskPictureModelPlan.packages`, installed
+  `--no-deps --only-binary`) in `Models/picture-tools/`, its cache and Python
+  inside that folder and nothing read from the person's own setup. mflux
+  declares torch, OpenCV and matplotlib for other models; leaving them out
+  saves about 700 MB (435 MB installed against 1.2 GB). About 12 s on a fast
+  connection. `installed.txt` holds the list, so a build with a different list
+  installs again.
+
+`AskPictureServer` runs `server.py` (shipped in `Contents/Resources/PictureModel/`)
+with that Python, offline (`HF_HUB_OFFLINE`, compiled files kept out of the
+bundle), on a port it picks (18900 to 19699), under the same watch as the chat
+server (`AskHelperProcess`): started the first time Ask paints, let go after
+five idle minutes, stopped when Photonz quits. It loads in about 2 s from a
+warm disk and holds 11.2 GB resident (about 25 GB at its peak while painting).
+Nobody runs a script; `Scripts/picture-model/serve.sh` is gone. A walk waits
+for the setup with `waitFor askPicturesSetUp`.
 
 **Ollama is optional, off by default**: "Use Ollama instead" in Settings > Ask
 (`ask.runtime` = `ollama`). Kept rather than removed because the bake-off and

@@ -1851,7 +1851,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: askPaintsFlag,
                     title: "Ask paints its drawings",
-                    description: "Ask paints each drawing with a picture model on this Mac and turns it into layers you can edit. Needs the picture model running (Scripts/picture-model/serve.sh); without it Ask draws the way it always has.",
+                    description: "Ask paints each drawing with a picture model on this Mac and turns it into layers you can edit. Set it up in Settings > Ask; without it Ask draws the way it always has.",
                     area: .drawing,
                     isEnabled: false,
                     parameters: []),

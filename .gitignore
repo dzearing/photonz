@@ -40,3 +40,4 @@ __pycache__/
 # The model server Ask runs (Scripts/vendor-llama-server.sh fetches the pinned
 # release; Vendor/llama-server/VERSION is the pin).
 Vendor/llama-server/b*/
+Vendor/uv/[0-9]*/

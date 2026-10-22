@@ -1,6 +1,8 @@
 """A picture model on this Mac that Ask can draw with, behind a loopback port.
 
-    Scripts/picture-model/serve.sh            # set up once, then serve on 127.0.0.1:8793
+Photonz runs it (`AskPictureServer`, docs/design/ask.md "The picture model's
+setup"): Settings > Ask installs its Python and weights, and Photonz starts it
+with PHOTONZ_PICTURE_PORT and PHOTONZ_PICTURE_MODEL set, the first time Ask paints.
 
 POST /draw {"subject": "...", "style": "...", "seed": 1, "size": 768}
   -> {"svg": "...", "paths": 27, "palette": [...], "seconds": 26.1, "picture": "/tmp/....png"}

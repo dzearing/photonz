@@ -118,6 +118,20 @@ public enum AskBuiltInModels {
         return have.first { $0.gigabytes <= memoryGigabytes * AskModels.memoryShare } ?? have.first
     }
 
+    /// Where the Hugging Face tools keep the pinned file at `url` on a Mac
+    /// that already has it (`~/.cache/huggingface/hub/models--<org>--<name>/
+    /// snapshots/<revision>/<path>`), so a download can copy those bytes
+    /// instead of fetching them again. Nil for an address that is not a
+    /// pinned Hugging Face file.
+    public static func huggingFaceCache(for url: URL, home: URL) -> URL? {
+        guard url.host() == "huggingface.co" else { return nil }
+        let parts = url.pathComponents.filter { $0 != "/" }
+        guard parts.count >= 5, parts[2] == "resolve" else { return nil }
+        return parts[4...].reduce(home.appending(path: ".cache/huggingface/hub/models--\(parts[0])--\(parts[1])/snapshots/\(parts[3])")) {
+            $0.appending(path: $1)
+        }
+    }
+
     /// "19.7 GB", "629 MB".
     public static func sizeWords(_ bytes: Int64) -> String {
         let gigabytes = Double(bytes) / 1e9

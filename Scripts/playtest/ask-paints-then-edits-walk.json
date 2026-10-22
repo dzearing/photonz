@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/ask-paints-then-edits-walk",
-  "seed": "try-drawing-with-a-local-picture-model-then-turn: at Next defaults with the picture model running (Scripts/picture-model/serve.sh), Ask paints a cat curled up asleep as layers, then a second request recolours it and a third moves it, because the painted drawing is real layers",
+  "seed": "try-drawing-with-a-local-picture-model-then-turn: at Next defaults with the picture model set up in Settings > Ask (Photonz starts it), Ask paints a cat curled up asleep as layers, then a second request recolours it and a third moves it, because the painted drawing is real layers",
   "clock": 900,
   "setup": { "forget": ["all"] },
   "steps": [

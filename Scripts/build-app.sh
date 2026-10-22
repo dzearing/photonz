@@ -141,6 +141,16 @@ mkdir -p "$APP/Contents/Helpers/AskModel"
 cp "$ASK_SERVER_SRC"/* "$APP/Contents/Helpers/AskModel/"
 cp Vendor/llama-server/LICENSE "$APP/Contents/Helpers/AskModel/LICENSE.txt"
 
+# The picture model Ask paints with (docs/design/ask.md, "The picture model"):
+# uv, which Settings > Ask runs once to build a private Python environment in
+# Application Support, and the server it runs there, which Photonz starts and
+# stops itself. The scripts sit in Resources, where codesign expects plain files.
+UV_SRC=$("$(dirname "$0")/vendor-uv.sh")
+mkdir -p "$APP/Contents/Helpers/PictureModel" "$APP/Contents/Resources/PictureModel"
+cp "$UV_SRC/uv" "$APP/Contents/Helpers/PictureModel/uv"
+cp Vendor/uv/LICENSE "$APP/Contents/Resources/PictureModel/uv-LICENSE.txt"
+cp Scripts/picture-model/server.py Scripts/picture-model/layers.py "$APP/Contents/Resources/PictureModel/"
+
 # The type a component tile carries while it is being dragged. EVERY variant
 # declares it, the probe included: a type identifier the system has never heard
 # of is written onto the drag pasteboard with ZERO BYTES behind it, so the
@@ -347,13 +357,14 @@ DEV_SIGNING_WANTED=1
 # Privacy & Security > Microphone): v0.17.0 shipped that way. Dev and probe
 # builds are not hardened, so they never needed it and are left as they are.
 ENTITLEMENTS="Resources/Photonz.entitlements"
-# Ask's model server and its libraries are signed first, inside out, with the
+# Ask's model server and its libraries, and the picture model's uv, are signed first, inside out, with the
 # same identity as the app: notarization wants every Mach-O in the bundle
 # signed (hardened, timestamped), and a helper signed by someone else would not
 # load its libraries under the app's runtime.
 sign_ask_server() {
   local identity="$1"; shift
-  for f in "$APP/Contents/Helpers/AskModel/"*.dylib "$APP/Contents/Helpers/AskModel/llama-server"; do
+  for f in "$APP/Contents/Helpers/AskModel/"*.dylib "$APP/Contents/Helpers/AskModel/llama-server" \
+           "$APP/Contents/Helpers/PictureModel/uv"; do
     codesign --force "$@" --sign "$identity" "$f"
   done
 }

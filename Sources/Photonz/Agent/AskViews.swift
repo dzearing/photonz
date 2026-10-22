@@ -141,7 +141,7 @@ struct AgentPanel: View {
             case .planning, .running:
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
-                    Text(AskModelServer.shared.loading ? AskCopy.gettingReady
+                    Text(AskModelServer.shared.loading || AskPictureServer.shared.loading ? AskCopy.gettingReady
                          : ask.asked.isEmpty ? AskCopy.workingLine : ask.asked)
                         .font(.system(size: 11.5))
                         .lineLimit(2)

@@ -548,7 +548,7 @@ final class AskSession {
         let styles = await AgentWork.run(.listStyles(document: document))
         // On a video, the title styles add_title takes by name.
         let titles = editor.documentHasTime ? await AgentWork.run(.listTitles(document: document)) : nil
-        let paints = await AskPictureModel.isReady()
+        let paints = AskPictureModel.isReady()
         if paints { note("drawings painted by the picture model") }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : Self.text(of: components),

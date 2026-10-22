@@ -124,8 +124,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated {
             AgentChannel.stop()
-            // Ask's model server goes with Photonz, its memory with it.
+            // Ask's model servers go with Photonz, their memory with them.
             AskModelServer.shared.stop()
+            AskPictureServer.shared.stop()
+            AskModelDownload.pictures.stop()
             guard let path = AppDelegate.coordinator?.pendingRelaunchBundlePath else { return }
             let relauncher = Process()
             relauncher.executableURL = URL(fileURLWithPath: "/bin/sh")

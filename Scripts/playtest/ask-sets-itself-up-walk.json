@@ -22,6 +22,15 @@
     { "do": "press", "control": "Ask Set Up" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "describe", "stage": "2-settings", "note": "Settings > Ask: the model, its size and where it goes, and one Download button" },
-    { "do": "snapshot", "name": "2-settings", "window": "Settings" }
+    { "do": "snapshot", "name": "2-settings", "window": "Settings" },
+    { "do": "expect", "control": "Ask Pictures Offer", "present": true },
+    { "do": "press", "control": "Ask Pictures Download" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expect", "control": "Ask Pictures Progress", "present": true },
+    { "do": "describe", "stage": "3-pictures", "note": "the picture model downloading in Settings > Ask, with how far along it is and a Stop" },
+    { "do": "snapshot", "name": "3-pictures", "window": "Settings" },
+    { "do": "press", "control": "Ask Pictures Stop" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "control": "Ask Pictures Offer", "present": true }
   ]
 }

@@ -4949,6 +4949,19 @@ struct PlaytestScriptTests {
         #expect(condition == .askSettled && timeout == 300)
     }
 
+    /// The picture model set up from Settings > Ask: its weights whole and its
+    /// tools installed, which takes a minute or so, not a clock a walk can guess.
+    @Test func waitForReadsAskPicturesSetUp() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "askPicturesSetUp", "timeout": 400 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, let timeout) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .askPicturesSetUp && timeout == 400)
+    }
+
     /// Anything but shown or hidden is a walk with a typo in it.
     @Test func waitForRefusesAZoomControlStateItDoesNotKnow() {
         let json = """

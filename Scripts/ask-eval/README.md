@@ -25,7 +25,7 @@ Scripts/ask-eval.sh run --engine ask --on next-ask-paints-drawings --tag "..."  
 
 `--on <switch>,<switch>` turns on switches that are off at Next defaults for
 every case of the run (a try measured before it is anybody's default, such as
-"Ask paints its drawings", `Scripts/picture-model/`). The run says so when it
+"Ask paints its drawings" before it was on at Next defaults). The run says so when it
 starts and the history records them as `switched`, so it never reads as the
 default app. `lines` prints the judge's lines as means over a run's drawing
 cases and over all its cases, with the median seconds a drawing request took;

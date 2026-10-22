@@ -18,7 +18,9 @@ struct AskSettingsSection: View {
     @State private var downloaded = AskModelServer.downloaded
     @State private var pull: Double?
     @State private var pullTrouble: String?
+    @State private var picturesInstalled = AskPictureServer.isInstalled
     private var fetch: AskModelDownload { AskModelDownload.shared }
+    private var pictureFetch: AskModelDownload { AskModelDownload.pictures }
 
     var body: some View {
         Section {
@@ -26,6 +28,9 @@ struct AskSettingsSection: View {
                 ollama
             } else {
                 builtIn
+            }
+            if Experiments.shared.isEnabled(FeatureCatalog.askPaintsFlag) {
+                pictures
             }
             Toggle("Use Ollama instead", isOn: $useOllama)
                 .onChange(of: useOllama) { _, now in
@@ -39,6 +44,7 @@ struct AskSettingsSection: View {
         }
         .task { await reload() }
         .onChange(of: fetch.active) { _, _ in downloaded = AskModelServer.downloaded }
+        .onChange(of: pictureFetch.active) { _, _ in picturesInstalled = AskPictureServer.isInstalled }
     }
 
     // MARK: Built in
@@ -46,12 +52,12 @@ struct AskSettingsSection: View {
     @ViewBuilder
     private var builtIn: some View {
         let have = AskBuiltInModels.ranked.filter { downloaded.contains($0.id) }
-        if let downloading = fetch.choice {
+        if let downloading = fetch.item {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Downloading \(downloading.name)")
                 ProgressView(value: fetch.fraction)
                     .playtestControl("Ask Download Progress", detail: String(format: "%.0f%%", fetch.fraction * 100))
-                Text("\(AskBuiltInModels.sizeWords(fetch.done)) of \(AskBuiltInModels.sizeWords(downloading.downloadBytes))")
+                Text("\(AskBuiltInModels.sizeWords(fetch.done)) of \(AskBuiltInModels.sizeWords(downloading.totalBytes))")
                     .font(.callout).foregroundStyle(.secondary).monospacedDigit()
             }
             Button("Stop") { fetch.stop() }
@@ -83,6 +89,43 @@ struct AskSettingsSection: View {
                 .font(.callout)
         }
         if let trouble = fetch.trouble {
+            Text(trouble).font(.callout).foregroundStyle(.secondary)
+        }
+    }
+
+    // MARK: Pictures
+
+    /// The picture model Ask paints its drawings with: set up here in one
+    /// download, run by Photonz. Offered when the Mac can hold it beside the
+    /// chat model; without it Ask draws with the chat model alone.
+    @ViewBuilder
+    private var pictures: some View {
+        let chat = useOllama ? nil : AskBuiltInModels.resolve(chosen: AskLocalModel.builtInChosen, downloaded: downloaded,
+                                                              memoryGigabytes: AskLocalModel.memoryGigabytes)
+            ?? AskBuiltInModels.recommended(memoryGigabytes: AskLocalModel.memoryGigabytes)
+        if pictureFetch.active {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(pictureFetch.settingUp ? "Setting up \(AskPictureModelPlan.name)"
+                     : "Downloading \(AskPictureModelPlan.name)")
+                ProgressView(value: pictureFetch.fraction)
+                    .playtestControl("Ask Pictures Progress", detail: String(format: "%.0f%%", pictureFetch.fraction * 100))
+                Text("\(AskBuiltInModels.sizeWords(pictureFetch.done)) of \(AskBuiltInModels.sizeWords(AskPictureModelPlan.downloadBytes))")
+                    .font(.callout).foregroundStyle(.secondary).monospacedDigit()
+            }
+            Button("Stop") { pictureFetch.stop() }
+                .playtestControl("Ask Pictures Stop", detail: "Stop")
+        } else if picturesInstalled {
+            LabeledContent("Pictures", value: AskPictureModelPlan.name)
+                .playtestControl("Ask Pictures", detail: AskPictureModelPlan.name)
+        } else if AskPictureModelPlan.fits(memoryGigabytes: AskLocalModel.memoryGigabytes, beside: chat) {
+            Text("Ask can paint its drawings with \(AskPictureModelPlan.name), \(AskBuiltInModels.sizeWords(AskPictureModelPlan.downloadBytes)). It goes in Application Support > Photonz > Models.")
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                .playtestControl("Ask Pictures Offer", detail: AskPictureModelPlan.name)
+            Button("Download \(AskPictureModelPlan.name)") { AskPictureServer.download() }
+                .playtestControl("Ask Pictures Download", detail: "Download \(AskPictureModelPlan.name)")
+        }
+        if let trouble = pictureFetch.trouble {
             Text(trouble).font(.callout).foregroundStyle(.secondary)
         }
     }
@@ -139,6 +182,7 @@ struct AskSettingsSection: View {
 
     private func reload() async {
         downloaded = AskModelServer.downloaded
+        picturesInstalled = AskPictureServer.isInstalled
         guard useOllama else { return }
         installed = await AskLocalModel.ollamaInstalled()
         checked = true

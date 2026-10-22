@@ -18597,6 +18597,7 @@ private final class Run {
         case .clipRippleLook: editor.clipRippleLookShown
         case .askPhase(let phases): phases.split(separator: "|").contains { $0 == editor.ask.phase.name }
         case .askSettled: !editor.ask.isBusy && editor.ask.line.isEmpty
+        case .askPicturesSetUp: AskPictureServer.isInstalled && !AskModelDownload.pictures.active
         case .panelMenuOpen(let label): VideoKit.DropdownButton.isHeldOpenForAWalk(label)
         case .zoomControl(let shown): editor.canvasZoomControl.isShown == shown
         case .displayZoom(let percent): Int((editor.displayZoom * 100).rounded()) == percent
