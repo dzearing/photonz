@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-21T12:40:30.244Z",
+  "updated": "2026-10-22T00:51:28.092Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -74,6 +74,10 @@
     {
       "t": "2026-10-21T12:40:30.243Z",
       "note": "seq 10 -> 120"
+    },
+    {
+      "t": "2026-10-22T00:51:28.091Z",
+      "note": "2026-10-21: Ask's default is now qwen3.6:27b, which can see; the look step uses the planning model itself (AskModels.eyes), so 'Ask looks at its own result through a model that can see' needs no second model."
     }
   ],
   "walks": [

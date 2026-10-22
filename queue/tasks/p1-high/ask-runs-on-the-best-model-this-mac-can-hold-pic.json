@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:27:41.987Z",
-  "updated": "2026-10-21T12:40:29.653Z",
+  "updated": "2026-10-22T00:51:49.673Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen",
     "the-ask-test-set-scores-video-requests-too"
@@ -39,6 +39,48 @@
     {
       "t": "2026-10-21T12:40:29.652Z",
       "note": "seq 8.1 -> 50"
+    },
+    {
+      "t": "2026-10-21T17:00:33.572Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T00:51:27.637Z",
+      "note": "Ollama 0.20.2 -> 0.40.7. Bake-off on the climb set: 10 models + 4 -mlx tags; held-out on the 4 under 30s (qwen3-vl:30b stopped at ~5 min a case). Numbers in the audit and docs/design/ask.md 'The model'."
+    },
+    {
+      "t": "2026-10-22T00:51:27.703Z",
+      "note": "Chose qwen3.6:27b (held-out 35.9 on two runs) over qwen3.6:35b (31.5, 7.9s) because the bar is the best scorer under 30s and 27b's held-out medians were 26.1s and 31.1s with a 3.6s climb median; the 1.1s overrun on the one-model run is in the audit's rough list."
+    },
+    {
+      "t": "2026-10-22T00:51:27.765Z",
+      "note": "Chose one model looking (same 35.9, 11 GB less, +5s median) over two, as the checklist asks; ask.eyes defaults key makes a second model look, for measuring only."
+    },
+    {
+      "t": "2026-10-22T00:51:27.833Z",
+      "note": "Stopped early on purpose: mistral-small3.2:24b (no tool calls, 0 on 13 cases), gemma4:31b-mlx (57s median, 6 cases), qwen3-vl:8b (42-300s, 7 cases), qwen3-vl:30b held-out (6 of 45 cases in 30 min). Not run on held-out: gemma4:31b (56.5s), gemma4:12b (dominated by e4b at the same memory)."
+    },
+    {
+      "t": "2026-10-22T00:51:27.899Z",
+      "note": "Tests: the first full Scripts/test.sh run reported 1 failing issue whose name was cut from the output; two full reruns were green (exit 0, 14200 tests). Walks ask-annotates-a-screenshot and ask-draws-a-dog pass at Next defaults with Automatic picking qwen3.6:27b. Pictures looked at: the redline (8 measurements, crowded, as before; ask-on-the-local-model-makes-results-that-look-f covers it) and the dog (built-in drawing)."
+    },
+    {
+      "t": "2026-10-22T00:51:27.963Z",
+      "note": "left rough: held-out medians near 30s mean slower Macs with 48 GB would be about twice as slow on the dense 27b; not filed, since only 64 GB was measurable here and Settings lets a person pick another model."
+    },
+    {
+      "t": "2026-10-22T00:51:28.026Z",
+      "note": "owns these walks: ask-annotates-a-screenshot-walk, ask-draws-a-dog-walk"
+    },
+    {
+      "t": "2026-10-22T00:51:49.671Z",
+      "note": "Ask's default is now qwen3.6:27b (held-out 35.9 vs 18.2 before, two runs), chosen by scoring 10 local models + 4 -mlx tags through Ask on Ollama 0.40.7; it does its own looking (same score as two models, 11 GB less). Automatic and the Settings download follow AskModels.ranked and a 3/5-of-memory rule. Table in the audit and docs/design/ask.md; losing models removed; tests green; ask walks pass at Next defaults. Commit 3d690661."
     }
-  ]
+  ],
+  "started": "2026-10-21T17:00:33.571Z",
+  "walks": [
+    "ask-annotates-a-screenshot-walk",
+    "ask-draws-a-dog-walk"
+  ],
+  "completed": "2026-10-22T00:51:49.672Z"
 }

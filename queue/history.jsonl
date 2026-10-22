@@ -13419,3 +13419,15 @@
 {"t":"2026-10-21T16:48:31.054Z","ev":"task_note","id":"the-ask-test-set-scores-video-requests-too"}
 {"t":"2026-10-21T16:48:31.118Z","ev":"task_note","id":"the-ask-test-set-scores-video-requests-too"}
 {"t":"2026-10-21T16:48:31.181Z","ev":"task_walks","id":"the-ask-test-set-scores-video-requests-too","walks":[]}
+{"t":"2026-10-21T17:00:33.385Z","ev":"slice_pass","walks":31,"passed":31,"failed":0,"seconds":554,"of":1009,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-21T17:00:33.578Z","ev":"task_started","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","title":"Ask runs on the best model this Mac can hold, picked by the scores","priority":"p1-high"}
+{"t":"2026-10-22T00:51:27.639Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
+{"t":"2026-10-22T00:51:27.705Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
+{"t":"2026-10-22T00:51:27.767Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
+{"t":"2026-10-22T00:51:27.835Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
+{"t":"2026-10-22T00:51:27.901Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
+{"t":"2026-10-22T00:51:27.965Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
+{"t":"2026-10-22T00:51:28.028Z","ev":"task_walks","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","walks":["ask-annotates-a-screenshot-walk","ask-draws-a-dog-walk"]}
+{"t":"2026-10-22T00:51:28.093Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-22T00:51:28.160Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
+{"t":"2026-10-22T00:51:49.674Z","ev":"task_done","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","from":"in_progress","note":"Ask's default is now qwen3.6:27b (held-out 35.9 vs 18.2 before, two runs), chosen by scoring 10 local models + 4 -mlx tags through Ask on Ollama 0.40.7; it does its own looking (same score as two models, 11 GB less). Automatic and the Settings download follow AskModels.ranked and a 3/5-of-memory rule. Table in the audit and docs/design/ask.md; losing models removed; tests green; ask walks pass at Next defaults. Commit 3d690661."}
