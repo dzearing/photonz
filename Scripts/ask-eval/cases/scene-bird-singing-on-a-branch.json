@@ -1,0 +1,29 @@
+{
+  "request": "draw a bird on a branch singing",
+  "group": "drawing",
+  "from": "a-scene-of-things-doing-something-together-is-dr (the user's cat-playing-piano and cat-asleep reports, 2026-10-20; examples of the bar, not things to code)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "bird",
+    "bluebird",
+    "canary",
+    "cardinal",
+    "chickadee",
+    "finch",
+    "jay",
+    "robin",
+    "songbird",
+    "sparrow",
+    "tit",
+    "warbler",
+    "wren"
+  ],
+  "expect": {
+    "words": false
+  }
+}

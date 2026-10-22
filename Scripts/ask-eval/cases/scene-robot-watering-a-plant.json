@@ -1,0 +1,17 @@
+{
+  "request": "draw a robot watering a plant",
+  "group": "drawing",
+  "from": "a-scene-of-things-doing-something-together-is-dr (the user's cat-playing-piano and cat-asleep reports, 2026-10-20; examples of the bar, not things to code)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "robot"
+  ],
+  "expect": {
+    "words": false
+  }
+}

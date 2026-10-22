@@ -347,6 +347,10 @@ public struct AskConversation: Sendable {
                     tell(name, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
                     continue
                 }
+                if name == "add_drawing", let earlier = stacked(step) {
+                    tell(name, "Not planned: step \(earlier) already draws the whole picture in that place, and a second one would land on top of it. A scene is one add_drawing. Plan something else, or finish.")
+                    continue
+                }
                 // Checked as it would run, with $N standing in for ids not made yet.
                 switch AgentTools.request(tool: name, arguments: arguments) {
                 case .success:
@@ -406,10 +410,39 @@ public struct AskConversation: Sendable {
 
     /// The drawing did not read as `subject` to a model that could see it
     /// (`AskDrawingCheck`): the plan starts again, told what was seen.
-    public mutating func revise(subject: String, seen: String) {
+    public mutating func revise(subject: String, seen: String, unmet: [String] = []) {
         steps = []
         rounds = 0
-        messages.append(["role": "user", "content": .string(AskDrawingCheck.revisionNote(subject: subject, seen: seen, paints: paints))])
+        messages.append(["role": "user", "content": .string(AskDrawingCheck.revisionNote(subject: subject, seen: seen, paints: paints,
+                                                                                       unmet: unmet))])
+    }
+
+    /// The drawing already planned that this one would land on top of: both
+    /// centred (no frame), or their frames mostly the same place. A model
+    /// that sends a scene's add_drawing again with its plan reworded would
+    /// otherwise paint two whole pictures one over the other.
+    func stacked(_ step: AskStep) -> Int? {
+        func frame(_ step: AskStep) -> CGRect? {
+            let box = step.arguments["frame"]
+            guard let x = box?["x"]?.doubleValue, let y = box?["y"]?.doubleValue,
+                  let width = box?["width"]?.doubleValue, let height = box?["height"]?.doubleValue else { return nil }
+            return CGRect(x: x, y: y, width: width, height: height)
+        }
+        let mine = frame(step)
+        for (index, earlier) in steps.enumerated() where earlier.tool == "add_drawing" {
+            let theirs = frame(earlier)
+            switch (mine, theirs) {
+            case (nil, nil):
+                return index + 1
+            case (let a?, let b?):
+                let shared = a.intersection(b)
+                let smaller = min(a.width * a.height, b.width * b.height)
+                if !shared.isNull, smaller > 0, shared.width * shared.height > smaller * 0.5 { return index + 1 }
+            default:
+                continue
+            }
+        }
+        return nil
     }
 
     /// The step already planned that this one repeats: the same call, or a
@@ -553,14 +586,23 @@ public struct AskConversation: Sendable {
 
     /// How to draw when the picture model paints every drawing.
     static let paintingRules = """
-        - To draw anything (a thing, an animal, a pose, a scene, a named style: a dog, a cat curled up \
-        asleep, a cat playing a piano, a lighthouse on a cliff at dusk), call add_drawing once with subject \
+        - To draw anything (a thing, an animal, a pose, a scene, a named style: a dog, a horse rearing \
+        up, an owl reading a book, a lighthouse on a cliff at dusk), call add_drawing once with subject \
         set to the whole of what to draw in the person's words: what it is, what it is doing, where, and \
         style set to the look asked for (line art, silhouette, watercolor, flat), or leave style out when \
         none was named, and scene true when it is a place or a scene with its own sky or ground (a \
         landscape, a skyline, a forest at dusk). Photonz paints it itself and turns it into layers; send no svg. Never build a \
         drawing from add_shape or add_path, and put no words, components or backdrop on it unless they \
-        were asked for.
+        were asked for. A request with two or more things, or one thing in a pose, an action or a view, is ONE \
+        add_drawing of the whole picture, never one per thing.
+        - When the request names more than the thing, give add_drawing a plan: one to four short statements, \
+        each one someone looking at the picture can answer yes or no, for exactly what the request names: each \
+        pose, action, view, mood and relationship ("a horse rearing up": it stands on its hind legs; its \
+        front hooves are in the air). When two things act together, say which parts touch and what is in front \
+        ("its hand grips the umbrella's handle"). For a view the request names, say what the eye sees, \
+        not the word for it: which sides show and which do not ("a house seen from above": we see its whole \
+        roof from straight above; no walls show). Nothing the request did not ask for: no statement about where it sits in the \
+        picture, how big it is on the canvas, or a detail nobody named. A plain thing ("a dog") has no plan.
         """
 }
 
@@ -618,12 +660,41 @@ public enum AskDrawingCheck {
     /// How many times a drawing that did not read is drawn again.
     public static let mostRevisions = 2
 
-    /// The plan's drawings: which step, and what it was asked to be.
-    public static func drawings(in plan: AskPlan) -> [(step: Int, subject: String)] {
+    /// The plan's drawings: which step, what it was asked to be, and the
+    /// statements the picture has to bear out.
+    public static func drawings(in plan: AskPlan) -> [(step: Int, subject: String, plan: [String])] {
         plan.steps.enumerated().compactMap { index, step in
             guard step.tool == "add_drawing", let subject = step.arguments["subject"]?.stringValue else { return nil }
-            return (index + 1, subject)
+            return (index + 1, subject, AgentDrawingCall.statements(step.arguments["plan"]))
         }
+    }
+
+    /// The model that sees asked, statement by statement, whether the drawing
+    /// shows what its plan said: the picture and the statements, nothing of
+    /// the request or the subject.
+    public static func planBody(model: String, png: Data, plan: [String], planner: Bool = false) -> AgentJSON {
+        let listed = plan.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
+        let question = """
+        Look closely at this drawing. For each statement, answer yes only if the drawing plainly shows it, \
+        and no if it does not or you cannot tell.
+        \(listed)
+        Answer with one line per statement and nothing else, like: 1 yes
+        """
+        return visionBody(model: model, png: png, planner: planner, question: question)
+    }
+
+    /// The statements the answer says no to. A line it cannot read, or a
+    /// number the plan does not have, is no miss: a garbled answer never
+    /// throws a drawing away.
+    public static func unmet(_ answer: String, plan: [String]) -> [String] {
+        var missed: [Int] = []
+        for line in AskConversation.withoutThinking(answer).split(whereSeparator: \.isNewline) {
+            let words = line.lowercased().split { !$0.isLetter && !$0.isNumber }
+            guard let number = words.first.flatMap({ Int($0) }), (1...plan.count).contains(number),
+                  let verdict = words.dropFirst().first else { continue }
+            if verdict == "no", !missed.contains(number) { missed.append(number) }
+        }
+        return missed.sorted().map { plan[$0 - 1] }
     }
 
     public static let visionContextWindow = 4096
@@ -631,8 +702,8 @@ public enum AskDrawingCheck {
     public static let seePrompt = "What does this drawing show? Answer with just the name of the thing, in one to three words."
 
     /// The request to the model that sees: the picture and the question, nothing more.
-    public static func visionBody(model: String, png: Data, planner: Bool = false) -> AgentJSON {
-        let messages: AgentJSON = [["role": "user", "content": .string(seePrompt), "images": [.string(png.base64EncodedString())]]]
+    public static func visionBody(model: String, png: Data, planner: Bool = false, question: String = seePrompt) -> AgentJSON {
+        let messages: AgentJSON = [["role": "user", "content": .string(question), "images": [.string(png.base64EncodedString())]]]
         // The planning model looking keeps its own window and does not think,
         // so Ollama answers from the model it already has loaded.
         if planner {
@@ -680,7 +751,17 @@ public enum AskDrawingCheck {
         AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("yes")
     }
 
-    static func revisionNote(subject: String, seen: String, paints: Bool = false) -> String {
+    static func revisionNote(subject: String, seen: String, paints: Bool = false, unmet: [String] = []) -> String {
+        if !unmet.isEmpty {
+            let listed = unmet.map { "\"\($0)\"" }.joined(separator: ", ")
+            return """
+            Someone who could not see this request looked closely at the drawing of \(subject). It does not show: \
+            \(listed), and it was taken back. Draw it again: call add_drawing once more\(paints ? " with no svg" : " with a new svg"), \
+            the same plan, and a subject that says what the eye sees in place of the word for it: which sides and \
+            parts show and which do not, where the head, body and each limb are, which part touches which, what is \
+            in front.
+            """
+        }
         if paints {
             return """
             Someone who could not see this request looked at the drawing and said it shows: "\(seen)". It has to \

@@ -314,6 +314,7 @@ public enum AgentTools {
                 "style": ["type": "string", "description": "The look asked for, in the person's words (line art, silhouette, watercolor, flat). Leave it out when none was named."],
                 "asked": ["type": "string", "description": "The person's own words for the drawing, when they say more than the subject does (what it is doing, where). Used when Photonz paints the drawing with its picture model."],
                 "scene": ["type": "boolean", "description": "true when the drawing is a place or a scene that fills the picture with its own sky or ground (a landscape, a skyline, a beach at sunset), so it is painted edge to edge. Used when Photonz paints the drawing."],
+                "plan": ["type": "array", "items": ["type": "string"], "description": "Only when the request names more than the thing: one to four short statements someone looking at the picture can answer yes or no, for each pose, action, view, mood and relationship the request names, and when two things act together which parts touch (its paws on the keys) and what is in front. Nothing the request did not ask for. Painted from, and checked against the drawing once it is made."],
             ], required: ["subject"])),
         AgentTool(
             name: "add_text",
@@ -603,7 +604,8 @@ public enum AgentTools {
                 subject: subject, svg: svg, icon: args["icon"]?.boolValue ?? false, frame: region(args["frame"]),
                 name: args["name"]?.stringValue,
                 style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 },
-                asked: args["asked"]?.stringValue, scene: args["scene"]?.boolValue ?? false)))
+                asked: args["asked"]?.stringValue, scene: args["scene"]?.boolValue ?? false,
+                plan: AgentDrawingCall.statements(args["plan"]))))
         case "add_text":
             let words = args["text"]?.stringValue ?? ""
             guard !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return fail("text is empty.") }

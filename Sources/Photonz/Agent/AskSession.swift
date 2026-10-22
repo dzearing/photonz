@@ -1,4 +1,6 @@
+import CoreGraphics
 import Foundation
+import ImageIO
 import Observation
 import PhotonzCore
 import PhotonzRender
@@ -210,9 +212,14 @@ final class AskSession {
                 phase = .stopped(AskCopy.stoppedSentence)
                 return
             }
-            if let miss {
-                // What was drawn does not read as what was asked: it comes
-                // back off, and is drawn again or owned up to.
+            if let miss, !miss.unmet.isEmpty, revisions >= AskDrawingCheck.mostRevisions {
+                // It reads as the thing but still misses part of its plan
+                // after the last try: it stays, the closest Ask came.
+                note("keeping the last drawing: still not shown: \(miss.unmet.joined(separator: "; "))")
+            } else if let miss {
+                // What was drawn does not read as what was asked, or does not
+                // show what its plan said: it comes back off, and is drawn
+                // again or owned up to.
                 editor.undo()
                 guard revisions < AskDrawingCheck.mostRevisions, !Task.isCancelled else {
                     stepsRun = 0
@@ -221,8 +228,10 @@ final class AskSession {
                     return
                 }
                 revisions += 1
-                note("drawing again (\(revisions)): \(miss.subject) was seen as \(miss.seen)")
-                talk.revise(subject: miss.subject, seen: miss.seen)
+                note(miss.unmet.isEmpty
+                     ? "drawing again (\(revisions)): \(miss.subject) was seen as \(miss.seen)"
+                     : "drawing again (\(revisions)): \(miss.subject) does not show \(miss.unmet.joined(separator: "; "))")
+                talk.revise(subject: miss.subject, seen: miss.seen, unmet: miss.unmet)
                 phase = .planning
                 continue
             }
@@ -319,10 +328,11 @@ final class AskSession {
     }
 
     /// The first drawing the plan made that a model that can see does not
-    /// take for what was asked, or nil when each reads (or nothing on this
-    /// Mac can see, or nothing was drawn).
+    /// take for what was asked, or that does not show a statement of its
+    /// plan (`unmet`), or nil when each reads (or nothing on this Mac can
+    /// see, or nothing was drawn).
     private func look(at plan: AskPlan, made: [Int: String], in editor: EditorState, model: String,
-                      note: (String) -> Void) async -> (subject: String, seen: String)? {
+                      note: (String) -> Void) async -> (subject: String, seen: String, unmet: [String])? {
         let drawings = AskDrawingCheck.drawings(in: plan)
         guard !drawings.isEmpty, let document = editor.agentID else { return nil }
         let installed = await AskLocalModel.installed() ?? []
@@ -335,10 +345,11 @@ final class AskSession {
         for drawing in drawings {
             guard let layer = made[drawing.step] else { continue }
             let picture = await AgentWork.run(.renderPicture(document: document, layer: layer, region: nil, maxSize: 512))
-            guard let png = picture.content.compactMap({ part -> Data? in
+            guard let drawn = picture.content.compactMap({ part -> Data? in
                 if case .png(let data) = part { return data }
                 return nil
             }).first else { continue }
+            let png = Self.onWhite(drawn)
             guard let seen = try? await AskLocalModel.chat(AskDrawingCheck.visionBody(model: eyes, png: png, planner: eyes == model))["message"]?["content"]?
                 .stringValue?.trimmingCharacters(in: .whitespacesAndNewlines), !seen.isEmpty else {
                 note("look: \(eyes) gave no answer")
@@ -350,10 +361,40 @@ final class AskSession {
                 reads = AskDrawingCheck.judged(answer)
             }
             note("look: \(drawing.subject) seen as \(seen) -> \(reads == true ? "reads" : "does not read")")
-            if reads != true { return (drawing.subject, seen) }
+            if reads != true { return (drawing.subject, seen, []) }
+            // It reads as the thing; now whether it shows the pose, the view
+            // and the relationships its plan named.
+            guard !drawing.plan.isEmpty,
+                  let answer = try? await AskLocalModel.chat(AskDrawingCheck.planBody(
+                      model: eyes, png: png, plan: drawing.plan, planner: eyes == model))["message"]?["content"]?.stringValue
+            else { continue }
+            let unmet = AskDrawingCheck.unmet(answer, plan: drawing.plan)
+            note("look: plan \(drawing.plan.count - unmet.count) of \(drawing.plan.count) shown"
+                 + (unmet.isEmpty ? "" : ", not: \(unmet.joined(separator: "; "))"))
+            if !unmet.isEmpty { return (drawing.subject, seen, unmet) }
         }
         return nil
     }
+    /// A drawing rendered on its own has nothing behind it; the model that
+    /// looks is shown it on white, the way it sits on a blank canvas, so a
+    /// black drawing is not black on black to it.
+    static func onWhite(_ png: Data) -> Data {
+        guard let source = CGImageSourceCreateWithData(png as CFData, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+              let context = CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
+                                      bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return png }
+        let box = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+        context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        context.fill(box)
+        context.draw(image, in: box)
+        let out = NSMutableData()
+        guard let flat = context.makeImage(),
+              let destination = CGImageDestinationCreateWithData(out, "public.png" as CFString, 1, nil) else { return png }
+        CGImageDestinationAddImage(destination, flat, nil)
+        return CGImageDestinationFinalize(destination) ? out as Data : png
+    }
+
     // MARK: The rows
 
     /// Turns a request's change off or on, as one undo step. When something

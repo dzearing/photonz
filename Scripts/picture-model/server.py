@@ -28,7 +28,8 @@ PORT = int(os.environ.get("PHOTONZ_PICTURE_PORT", "8793"))
 
 LOOK = ("flat vector illustration, simple bold shapes, a few flat colours, clean edges, "
         "no gradients, no texture, no shading, no text, no letters, no border, "
-        "one subject centred with space around it on a plain white background")
+        "the whole picture centred with space around it and nothing cut off by the edge, "
+        "on a plain white background")
 STYLES = {
     "line art": "black line art drawing, uniform thick outlines, no fill colours, no text, plain white background",
     "silhouette": "solid single colour silhouette, no inner detail, no text, plain white background",
@@ -72,7 +73,7 @@ def prompt_for(subject: str, style: str | None, icon: bool = False, scene: bool 
 
 
 def draw(subject: str, style: str | None, seed: int, size: int, colors: int, icon: bool = False,
-         scene: bool = False) -> dict:
+         scene: bool = False, retried: bool = False) -> dict:
     command, args, loaded = model
     # A scene is a landscape picture, the shape of a canvas; a thing is square.
     args.width, args.height = (size * 4 // 3 // 16 * 16, size) if scene else (size, size)
@@ -88,6 +89,11 @@ def draw(subject: str, style: str | None, seed: int, size: int, colors: int, ico
     path = tempfile.NamedTemporaryFile(prefix="photonz-picture-", suffix=".png", delete=False).name
     picture.save(path)
     traced = trace(picture, colors=colors + 4 if scene else colors, mode_size=7 if scene else 5, keep_backdrop=scene)
+    if traced["clipped"] and not retried:
+        # Part of the drawing ran off the picture and would land cut off
+        # straight along the edge: painted once more from another seed.
+        print(f"{subject!r} ran off the edge; painting again", flush=True)
+        return draw(subject, style, seed + 7919, size, colors, icon, scene, retried=True)
     return {**traced, "model": MODEL, "prompt": prompt, "picture": path, "seconds": round(time.time() - started, 1),
             "paintSeconds": round(painted, 1)}
 

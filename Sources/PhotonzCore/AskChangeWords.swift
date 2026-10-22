@@ -92,7 +92,9 @@ public enum AskChangeWords {
            let subject = groups[0].steps[0].arguments["subject"]?.stringValue,
            request.names(subject) {
             // Cut short where it still names what was drawn.
-            if let said = request.fitted("Drew", cutting: true, keeping: { $0.names(subject) }) { return said }
+            // A scene keeps all of itself: "a piano" is not "a cat playing a piano".
+            let named = request.namedWords(subject)
+            if let said = request.fitted("Drew", cutting: true, keeping: { $0.namedWords(subject) == named }) { return said }
         }
         // The steps say it better than the request when every one names what it made.
         if !groups.allSatisfy({ $0.steps.allSatisfy { saysWhatItMade.contains($0.tool) } }),
@@ -374,9 +376,14 @@ public enum AskChangeWords {
 
         /// Whether the request's words name the drawing's subject.
         func names(_ subject: String) -> Bool {
+            !namedWords(subject).isEmpty
+        }
+
+        /// The words of the drawing's subject that the request's words name.
+        func namedWords(_ subject: String) -> Set<String> {
             let mine = Self.words(object).map { $0.lowercased() }
-            return Self.words(subject).map { $0.lowercased() }.filter { $0.count >= 3 && $0 != "icon" }
-                .contains { word in mine.contains { $0.hasPrefix(word) } }
+            return Set(Self.words(subject).map { $0.lowercased() }.filter { $0.count >= 3 && $0 != "icon" }
+                .filter { word in mine.contains { $0.hasPrefix(word) } })
         }
     }
 }

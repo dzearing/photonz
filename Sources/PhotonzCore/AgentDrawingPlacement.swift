@@ -29,10 +29,20 @@ public struct AgentDrawingCall: Hashable, Sendable {
     /// A place or scene that fills the picture with its own sky and ground,
     /// as the planning model judged it; painted edge to edge.
     public var scene: Bool
+    /// What has to be true of the picture, in the planning model's words:
+    /// who is in it, what each is doing, the view, which parts touch, what is
+    /// in front ("its front paws rest on the keys"). Painted from, and checked
+    /// against the drawing once it is made (`AskDrawingCheck`).
+    public var plan: [String]
+
+    /// More statements than this and the picture model's words stop being
+    /// about the picture.
+    public static let mostStatements = 6
 
     public init(subject: String, svg: String? = nil, icon: Bool = false, frame: CGRect? = nil,
                 name: String? = nil, style: String? = nil, asked: String? = nil,
-                scene: Bool = false) {
+                scene: Bool = false, plan: [String] = []) {
+        self.plan = plan
         self.style = style
         self.asked = asked
         self.scene = scene
@@ -41,6 +51,21 @@ public struct AgentDrawingCall: Hashable, Sendable {
         self.icon = icon
         self.frame = frame
         self.name = name
+    }
+
+    /// A plan's statements, from a list or from one string with a statement a
+    /// line or between semicolons; blanks dropped, six at most.
+    public static func statements(_ plan: AgentJSON?) -> [String] {
+        let written: [String]
+        if let list = plan?.arrayValue {
+            written = list.compactMap(\.stringValue)
+        } else if let one = plan?.stringValue {
+            written = one.split { $0 == ";" || $0.isNewline }.map(String.init)
+        } else {
+            written = []
+        }
+        let kept = written.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        return Array(kept.prefix(mostStatements))
     }
 
     /// What the agent is told when the picture model is not there to paint
@@ -74,11 +99,17 @@ public struct PictureModelRequest: Codable, Hashable, Sendable {
     public init(_ call: AgentDrawingCall) {
         let subject = call.subject.trimmingCharacters(in: .whitespacesAndNewlines)
         let asked = (call.asked ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if asked.isEmpty || asked.lowercased() == subject.lowercased() {
-            self.subject = subject
-        } else {
-            self.subject = "\(subject), from the request: \(asked)"
+        var described = subject
+        if !asked.isEmpty, asked.lowercased() != subject.lowercased() {
+            described = "\(subject), from the request: \(asked)"
         }
+        // The plan says how the picture is put together: the pose, the view,
+        // which parts touch and what is in front.
+        let plan = call.plan.map { $0.trimmingCharacters(in: CharacterSet(charactersIn: " .")) }.filter { !$0.isEmpty }
+        if !plan.isEmpty {
+            described += ". " + plan.joined(separator: ". ")
+        }
+        self.subject = described
         style = call.style
         icon = call.icon
         // The planning model's word, or the general words for a scene or a

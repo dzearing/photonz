@@ -227,7 +227,18 @@ def trace(image: Image.Image, colors: int = 10, speckle: int | None = None, scal
     out = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{left:.1f} {top:.1f} {w:.1f} {h:.1f}" '
            f'width="{w * shrink:.1f}" height="{h * shrink:.1f}">\n' + "\n".join(lines) + "\n</svg>\n")
     return {"svg": out, "paths": len(kept), "found": len(found),
-            "palette": sorted({p[1] for p in kept})}
+            "palette": sorted({p[1] for p in kept}), "clipped": clipped(image, backdrop, keep_backdrop)}
+
+
+def clipped(image: Image.Image, backdrop: np.ndarray, keep_backdrop: bool) -> bool:
+    """Whether the drawing runs off the picture: more than one part in a
+    hundred of the picture's edge is not the backdrop's colour. A scene fills
+    the frame on purpose, so it never counts."""
+    if keep_backdrop:
+        return False
+    pixels = np.asarray(image.convert("RGB")).astype(int)
+    edge = np.concatenate([pixels[0], pixels[-1], pixels[:, 0], pixels[:, -1]])
+    return bool((np.abs(edge - backdrop).sum(axis=1) >= 36).mean() > 0.01)
 
 
 def main() -> int:
