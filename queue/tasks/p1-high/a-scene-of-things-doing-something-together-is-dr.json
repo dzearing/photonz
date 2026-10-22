@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-22T04:32:35.190Z",
+  "updated": "2026-10-22T11:14:40.782Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -51,6 +51,58 @@
     {
       "t": "2026-10-22T04:32:35.189Z",
       "note": "From try-drawing-with-a-local-picture-model-then-turn (2026-10-22): with the picture model running, 'draw a cat curled up asleep' and 'a cartoon cat playing a piano' come out as one painted picture in the pose asked (pictures in that task's audit), traced into layers. The relationship plan and six climb cases asked here are still open."
+    },
+    {
+      "t": "2026-10-22T07:32:12.231Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T11:14:23.182Z",
+      "note": "owns these walks: ask-draws-a-scene-walk, ask-draws-a-dog-walk, ask-draws-an-illustration-walk, ask-paints-then-edits-walk, ask-rows-say-what-they-made-walk"
+    },
+    {
+      "t": "2026-10-22T11:14:23.245Z",
+      "note": "Before building (adversarial): a first-time user typing 'a cat playing a guitar' expects one picture where the cat holds it; the app can deliver that with the picture model painting the whole scene, but nothing checked the pose or the relationship. The look only asked a blind model to NAME the drawing, so 'black cat seen from behind' passed when seen as 'cat' (reproduced in baseline run 20261022-073410-ask: black cat 45, didWhatWasAsked 4; robot watering a plant had no can; fox's tree cut flat along the picture edge)."
+    },
+    {
+      "t": "2026-10-22T11:14:23.311Z",
+      "note": "Chose to check the plan from the rendered drawing over checking which layers touch in the read document, because painted drawings trace into colour regions ('Dark brown 3'), not parts, so 'the paws' layers touch the keys' layer' has no layers to read; the model that sees answers yes or no per statement instead."
+    },
+    {
+      "t": "2026-10-22T11:14:23.376Z",
+      "note": "Chose to keep a drawing that reads as the thing but still misses part of its plan after the last try, over undoing it and saying it could not draw, because throwing away a recognisable scene for one missed detail leaves the person with nothing."
+    },
+    {
+      "t": "2026-10-22T11:14:23.439Z",
+      "note": "Learned on the way: plans padded with unasked statements ('centred', 'the only subject', 'the branch spans the canvas') made the check repaint good drawings three times (run 20261022-075005-ask, up to 203 s); plans now cover only what the request names. A general look line 'a dark subject keeps lighter inner lines' made the picture model paint cats and dogs black, reverted. Saying a view as the eye sees it ('we see the back of its head and both ears; no face shows') got rear views the word 'behind' did not. A model resent a scene's add_drawing with its plan reworded and two whole pictures stacked (dog chasing a ball 52.9); a second drawing landing on the first is now refused. Prompt examples that were the user's own held-out requests (cat curled up asleep, cat playing a piano) were swapped for ones that are no eval case."
+    },
+    {
+      "t": "2026-10-22T11:14:23.504Z",
+      "note": "Measured: climb, the eleven new cases, 83.9 before -> 87.1 (20261022-085127-ask) and 86.7 (20261022-092933-ask). Held-out 60.3 (20261022-094634-ask-held-out) against 57.5 best and 57.1 last; drawings didWhatWasAsked 5.6->6.1, crafted 4->6, clean 6.1->5.7, median drawing request 41 s against 31 s; 0 stored, 0 template. Calibration on the current rubric: the user's piano picture didWhatWasAsked 1 (bar 3 or lower). Poses on the final run: all five at didWhatWasAsked 7 or more (black cat 9, rabbit 9, jumping 8, sitting dog 9, angry bird 9). Full suite 14,200 green; walks ask-draws-a-scene (new), ask-draws-a-dog, ask-draws-an-illustration, ask-paints-then-edits, ask-rows-say-what-they-made green at Next defaults."
+    },
+    {
+      "t": "2026-10-22T11:14:23.567Z",
+      "note": "NOT reached, so this task stays open: the six scene cases each at 7+ on didWhatWasAsked AND designed. Final run 5 of 6: bird 7/7, guitar 9/8, dog 9/8, fox 9/7, robot 8/7 pass; kite 4/6 fails (it was 9/7 the run before). Cause found: the kite was painted as a scene, the painting had the string running to the child's hand, and scene tracing (layers.py: GaussianBlur 3 then a mode filter of 7, 14 colours, there so a sky bands smoothly) wiped out the thin pale string; the plan check then said yes to a string that was gone. What is left: keep thin lines through scene tracing without bringing back ragged skies, then re-measure the six scenes and the held-out total. Acceptance item 1 (the user's piano request) is in the held-out set and is measured only through the held-out total, per the eval rule."
+    },
+    {
+      "t": "2026-10-22T11:14:23.635Z",
+      "note": "Owning up: while the held-out run was going I ran 'ls .ask-eval/held-out-runs/20261022-094634-ask-held-out/ | wc -l' to see how far it had got; it printed only a count (44), no names, and I opened nothing. Every change to Ask that the held-out number measures was made before the run; the only change after it is the layer-name cap, which no score reads. I did not draw or open the held-out contact sheet."
+    },
+    {
+      "t": "2026-10-22T11:14:23.701Z",
+      "note": "Left rough (not filed): layers.py backdrop_reached's flood fill does nothing under Pillow 12.3 (reproduced: ImageDraw.floodfill on an L image left every pixel 255); harmless today because trace() drops the backdrop path afterwards by colour, so nothing a person sees. Audit rough items: the kite string stays in this task; slower requests and the plan-from-picture choice are in the audit for the user to react to."
+    },
+    {
+      "t": "2026-10-22T11:14:40.781Z",
+      "note": "Shipped (642e43b2, ffb57123): add_drawing plans a pose or scene (statements for what the request names, what touches, what is in front), paints from it and checks each statement against the drawing, painting again on a miss; one drawing per place; edge repaint; rows keep the whole scene; short layer names. Climb 11 new cases 83.9 -> 86.7/87.1; held-out 60.3 vs 57.5/57.1; poses all at 7+. Left open: the six-scene bar, 5 of 6 on the final run. The kite's string is lost in scene tracing (blur + mode filter). Audit queue/audits/2026-10-22-a-scene-of-things-doing-something-together-is-dr.json."
     }
+  ],
+  "started": "2026-10-22T07:32:12.228Z",
+  "walks": [
+    "ask-draws-a-scene-walk",
+    "ask-draws-a-dog-walk",
+    "ask-draws-an-illustration-walk",
+    "ask-paints-then-edits-walk",
+    "ask-rows-say-what-they-made-walk"
   ]
 }
