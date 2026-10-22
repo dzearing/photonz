@@ -19,3 +19,5 @@ sweep/last-slice.json
 sweep/.slice-pick.json
 sweep/.slice-walks.txt
 sweep/.awake.pid
+sweep/.resume-walks.txt
+sweep/.resume-claim.json

@@ -50,6 +50,14 @@ jobs:
           node queue/bin/sweep-parse-drill.mjs
           node queue/bin/sweep-interrupt-drill.mjs
 
+      # And a run that was STOPPED is finished, not started again: on
+      # 2026-10-22 a whole-set run reached 989 of 1011 walks in five hours and
+      # was put down when the user came back, and the next was due to start
+      # again at walk one. This holds the remainder, the merge into one run of
+      # the set, and the standing task reading it honest, end to end.
+      - name: A stopped sweep picks up where it stopped
+        run: node queue/bin/sweep-resume-drill.mjs
+
       # And a sweep that loses the app part way through says the run went blind
       # rather than writing down every walk after that point as broken. One did
       # on 2026-09-21: 438 of 553 named as failing, on code that had passed 537

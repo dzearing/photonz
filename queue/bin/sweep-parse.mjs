@@ -278,18 +278,29 @@ function sweepSentencesPlain(r) {
       `Not one of the ${r.couldNotRun} walks it tried got through, so nothing was filed. It runs again once the screen is unlocked.`,
     ];
   }
+  // A run written down in parts, because it was stopped and carried on from
+  // (queue/bin/sweep-resume.mjs). Said, so "in 5h 12m" is not read as one sitting.
+  const parts = Array.isArray(r.parts) && r.parts.length > 1 ? r.parts.length : 0;
+  const inParts = parts ? ` over ${parts} parts` : '';
   if (r.complete === false) {
     return [
       `Last sweep ${when} DID NOT FINISH${cutShortBecause(r)}: `
-        + `it reached ${r.walks}${r.total ? ` of ${r.total}` : ''} walks in ${took(r.seconds || 0)}, of which ${r.passed} passed.`,
+        + `it reached ${r.walks}${r.total ? ` of ${r.total}` : ''} walks in ${took(r.seconds || 0)}${inParts}, of which ${r.passed} passed.`,
       `The walks it never reached are unknown, not passing.`
         + (r.failed.length
           ? ` The ${r.failed.length} that failed are UNCONFIRMED: a run that stops takes the probe app down with it, `
             + `so a walk failing in its last moments may be a casualty of the stop. The next full sweep decides.`
             + (r.unfinished ? ` ${r.unfinished} never finished at all.` : '')
           : ''),
-      `The request that asked for this sweep is pending again; the loop runs another one.`,
+      r.interrupted
+        ? `The request that asked for this sweep is pending again; on the same code the loop runs only the walks it left unanswered, and the whole set again once code lands.`
+        : `The request that asked for this sweep is pending again; the loop runs another one.`,
     ];
+  }
+  if (parts) {
+    const first = r.parts[0];
+    return [`Last sweep ${when}: ${r.passed}/${r.walks} walks passed in ${took(r.seconds || 0)}${inParts}: `
+      + `it was stopped at ${first.walks} walks and carried on from there on the same code.`];
   }
   return [`Last sweep ${when}: ${r.passed}/${r.walks} walks passed in ${took(r.seconds || 0)}.`];
 }

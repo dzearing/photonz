@@ -87,20 +87,43 @@ export function decide({
   codeSinceCheck = null,
   screenLocked = false,
   floorHours = DEFAULTS.floorHours,
+  // The walk names as they are now. Only needed to carry on from a stopped
+  // whole-set run (queue/bin/sweep-resume.mjs); without it nothing resumes.
+  set = null,
 } = {}) {
   const pending = Array.isArray(requests) ? requests : [];
 
   const began = latest && latest.began ? Date.parse(latest.began) : NaN;
   const hoursSince = Number.isFinite(began) ? (now - began) / HOUR : null;
-  const out = (run, why) => ({
+  const out = (run, why, extra = {}) => ({
     run, why, hoursSince,
     nextFullInHours: hoursSince === null ? 0 : Math.max(0, floorHours - hoursSince),
+    ...extra,
   });
 
   // Nothing has ever been recorded, so there is no floor to stand on and no
   // rotation worth starting: the first thing the loop owes anybody is one
   // whole-set answer.
   if (hoursSince === null) return out('full', 'no whole-set run has ever been recorded');
+
+  // The last whole-set run was STOPPED part way (the person came back to the
+  // Mac, the loop was put down) and nothing a walk runs has changed since: the
+  // next whole-set run is only what it left unanswered, and it runs as soon as
+  // the Mac is free rather than a day later. It is the rest of the day's run,
+  // not a second one, so the floor does not hold it back and its record keeps
+  // the stopped run's start (queue/bin/sweep-resume.mjs). On 2026-10-22 a run
+  // stopped at 989 of 1011 was due to start again from walk one.
+  const codeSinceFullKnown = latest && latest.head && head
+    ? (latest.head === head ? false : codeSinceFull) : codeSinceFull;
+  const rest = Array.isArray(set)
+    ? resumable({ record: latest, set, head, codeSince: codeSinceFullKnown, screenLocked, blind })
+    : null;
+  if (rest && rest.ok) {
+    return out('full', rest.why, { resume: true, walks: rest.walks.length, unreached: rest.unreached.length, rerun: rest.rerun.length });
+  }
+  // Said whenever a stopped run could NOT be carried on from, so nobody reads
+  // a whole-set run of five hours as the loop forgetting what it had reached.
+  const notResumed = rest && rest.because === 'code' ? `; ${rest.why}` : '';
 
   // A runner that changed something every walk touches can say so.
   if (pending.some((r) => r && r.now)) {
@@ -154,7 +177,7 @@ export function decide({
     if (sameCode) {
       return out('full', `${hoursSince.toFixed(1)}h since the last whole-set run, which did not cover the set${asked}`);
     }
-    return out('full', `code has landed and it is ${hoursSince.toFixed(1)}h since the last whole-set run${asked}`);
+    return out('full', `code has landed and it is ${hoursSince.toFixed(1)}h since the last whole-set run${asked}${notResumed}`);
   }
 
   // Inside the floor: the rotating check, once per change of code. A whole-set
@@ -163,7 +186,7 @@ export function decide({
   if (head && (checkedCode || sameCode)) {
     return out('nothing', 'nothing new has landed since the last walk check');
   }
-  return out('slice', `code has landed since the last walk check and it is ${hoursSince.toFixed(1)}h since the last whole-set run, so the rotating check runs${asked}`);
+  return out('slice', `code has landed since the last walk check and it is ${hoursSince.toFixed(1)}h since the last whole-set run, so the rotating check runs${asked}${notResumed}`);
 }
 
 // Which walks a rotating check covers: the walks named for every check, then
@@ -275,6 +298,7 @@ import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { perWalkSeconds as sweepPerWalkSeconds } from './sweep-size.mjs';
+import { resumable } from './sweep-resume.mjs';
 
 export const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -337,6 +361,7 @@ export function decideFromDisk({
     codeSinceCheck: rotation ? codeLandedBetween(rotation.lastHead, at, repo) : null,
     screenLocked,
     floorHours,
+    set: walkNames(repo),
   });
 }
 
@@ -363,6 +388,27 @@ if (isMain) {
   if (argv.includes('--decide')) {
     const d = decideFromDisk({ dir, head, screenLocked: argv.includes('--locked'), floorHours });
     console.log(JSON.stringify(d));
+    process.exit(0);
+  }
+
+  // The rest of a stopped whole-set run: what to run and why, as JSON, and
+  // with --out the walk names one to a line for playtest-all.sh --only. Its
+  // `claim` is what sweep.sh writes into .claimed.json so the record merges.
+  if (argv.includes('--resume-plan')) {
+    const latest = readJSON(join(dir, 'latest.json'));
+    const set = walkNames();
+    const plan = resumable({
+      record: latest, set, head,
+      codeSince: latest ? codeLandedBetween(latest.head, head) : null,
+      screenLocked: argv.includes('--locked'),
+      blind: readJSON(join(dir, 'blind.json')),
+    });
+    const outFile = arg('--out', null);
+    if (plan.ok && outFile) writeFileSync(outFile, plan.walks.join('\n') + '\n');
+    const claimFile = arg('--claim', null);
+    if (plan.ok && claimFile) writeFileSync(claimFile, JSON.stringify({ resumeOf: latest, set }) + '\n');
+    console.log(JSON.stringify({ ok: plan.ok, why: plan.why, because: plan.because || null,
+      walks: plan.walks.length, unreached: plan.unreached.length, rerun: plan.rerun.length, of: set.length }));
     process.exit(0);
   }
 
@@ -436,6 +482,12 @@ if (isMain) {
   onto the open task that owns it, or else onto the standing walk task, which
   it opens if none is open: one new task per check at most. An owner blocked
   on a card does not count: the standing task takes that walk too.
+
+  A whole-set run that is stopped part way (the person came back) picks up
+  where it stopped: if nothing a walk runs has changed since, the next one runs
+  only the walks it never answered and the ones it saw fail, as soon as the Mac
+  is free, and the two count as one run of the set. If code has landed since,
+  the whole set runs again when the day is up.
 
   A runner that changed something every walk touches can jump the floor:
       queue/bin/sweep.sh request --now "<why the whole set, right now>"

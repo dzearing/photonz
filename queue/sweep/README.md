@@ -51,6 +51,8 @@ Drills: `node queue/bin/sweep-schedule-drill.mjs`, `node queue/bin/loop-day-dril
 | `blind.json` | the same | the last run that WENT BLIND, if there was one: where the app stopped launching, how many walks that cost, and what it did answer before it. `sweep.sh status` leads with it while it is newer than `latest.json`. |
 | `<date>-<time>.log` | the same run | the full output, one line per walk. The last ten are kept. |
 | `.claimed.json` | `sweep.sh run`, at the moment it starts | the requests this run is serving, plus who is running it, when it began, which log it is writing and how big the set is. Deleted when the run is written down. One left behind means a run that never finished. |
+| `.resume-walks.txt` | `sweep.sh run` | the walks a run that is finishing a stopped one was handed, one to a line. |
+| `.resume-claim.json` | the same | the stopped record and the set, copied into `.claimed.json` so the record merges, after a SIGKILL too. |
 | `.awake.pid` | `playtest-all.sh` | the caffeinate holding the Mac awake for the length of the run, so a run that is killed does not leave the hold behind. |
 
 ## A sweep that goes blind says so
@@ -133,6 +135,50 @@ thing takes a minute rather than an hour, because the run can be narrowed:
 PHOTONZ_QUEUE_DIR=/tmp/swq PHOTONZ_SWEEP_ARGS="--no-build caliper" \
   queue/bin/sweep.sh run          # then kill it part way, either signal
 ```
+
+## A stopped run picks up where it stopped
+
+On 2026-10-22 the daily whole-set run began at 04:15, ran for 306 minutes,
+reached 989 of 1011 walks and was put down at 09:21 because the user came back
+to the Mac. What it reached was kept, but none of it counted: the record read
+"did not finish", the standing walk task could not be closed by it, and the next
+whole-set run was going to start again at walk one, five more hours of the Mac
+for twenty two walks nobody had answered.
+
+Now the next whole-set run, **when nothing a walk runs has changed since**
+(the same `Sources`, `Scripts`, `Resources`, `Vendor` and package files rule as
+"landed code"), runs only the rest (`queue/bin/sweep-resume.mjs`):
+
+* **the remainder** is every walk the stopped run never answered (the one in
+  flight, the ones after it, any a lock refused) plus every walk it saw FAIL.
+  Those failures are unconfirmed, because a stop takes the probe down with it,
+  so they run again rather than being counted;
+* it runs **as soon as the Mac has been left alone for fifteen minutes**, inside
+  the once-a-day floor: it is the rest of the day's run, not a second one. The
+  merged record keeps the stopped run's `began`, so the next whole-set run is
+  still counted from when the day's run started;
+* the two parts are written to `latest.json` as **one run of the set**, with
+  `parts` saying how it was made up. It reads complete only when every walk in
+  the set has an answer and the part that finished it was not itself cut short,
+  and only then can it close the standing walk task. A remainder that is
+  stopped too is merged the same way and carried on from again;
+* **when code has landed since**, nothing is carried on: what the stopped run
+  reached is about code that is gone. The schedule's line says so, and the whole
+  set runs again when the day is up, as before. Running the remainder plus "the
+  walks the change touched" was weighed and turned down: any change under
+  `Sources` can reach any walk, and nothing here can tell which ones it did;
+* a run stopped on its own clock (a wedged probe, usually) and a screen that is
+  locked now are not carried on from either;
+* the event the loop logs for a remainder carries that part's own walks and
+  seconds, so `queue/bin/loop-day.mjs` and `queue/bin/sweep-size.mjs` read what
+  the loop really spent.
+
+`queue/bin/sweep.sh why-not` says when a remainder is next and how big;
+`queue/bin/sweep.sh what` is the phrase the loop's line uses for it. Drill:
+`node queue/bin/sweep-resume-drill.mjs`, which stops the real `sweep.sh` part
+way on a scratch queue with a stand-in walk runner (`PHOTONZ_SWEEP_RUNNER`),
+then checks that the next run is handed only the remainder and that the
+standing task is closed by the merged record.
 
 ## Why a runner never runs the sweep itself
 

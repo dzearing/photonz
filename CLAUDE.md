@@ -69,6 +69,13 @@ The schedule now:
   task per check, naming only the walks it saw fail
   (`queue/bin/sweep-slice-record.mjs`, drilled by
   `queue/bin/slice-owner-drill.mjs`).
+* **A whole-set run that is stopped part way picks up where it stopped.** When
+  the person comes back and the run is put down, the next one, if nothing a walk
+  runs has changed since, runs only the walks it never answered plus the ones it
+  saw fail, as soon as the Mac is free again, and the two are written down as
+  one run of the set that can close the standing walk task. When code has landed
+  since, it says so and the whole set runs again when the day is up
+  (`queue/bin/sweep-resume.mjs`, drilled by `queue/bin/sweep-resume-drill.mjs`).
 * **A change every walk touches can jump the floor**:
   `queue/bin/sweep.sh request --now "<why the whole set, right now>"`.
 

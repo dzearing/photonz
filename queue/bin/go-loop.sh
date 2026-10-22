@@ -518,6 +518,12 @@ sweep_pass() {
     if screen_locked; then
       what="the part of the walk sweep a locked screen cannot touch (about $part minutes)"
     fi
+    # A whole-set run that was stopped is finished, not started again, when
+    # nothing a walk runs has changed (queue/bin/sweep-resume.mjs). Say so, or
+    # a twenty five walk remainder is announced as five hours of the Mac.
+    local rest
+    rest=$(queue/bin/sweep.sh what 2>/dev/null)
+    [[ -n "$rest" ]] && what="$rest"
     # Say WHY, in the same sentence the rotating check prints. A full sweep is
     # two hours, and until 2026-09-22 this line said only "due", so a sweep
     # that fired on a collapsed floor looked exactly like one that fired on a

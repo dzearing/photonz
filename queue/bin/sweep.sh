@@ -35,6 +35,8 @@
 #   queue/bin/sweep.sh schedule               when the full set runs, in words
 #   queue/bin/sweep.sh why                    the reason on its own, for a log line
 #   queue/bin/sweep.sh why-not                the whole decision in one sentence
+#   queue/bin/sweep.sh what                   the next whole-set run, when it is only
+#                                             the rest of a stopped one
 #
 # ASKING IS NOT STARTING. Until 2026-09-21 a request started a sweep, and since
 # a runner asks after every task the whole set ran after every task: thirteen
@@ -160,6 +162,17 @@ why)
   screen_locked && LOCKED_FLAG="--locked"
   queue/bin/sweep-schedule.mjs --decide $LOCKED_FLAG 2>/dev/null \
     | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).why)}catch{console.log("the schedule could not be read")}})'
+  ;;
+
+# ------------------------------------------------------------------ what ----
+# What the next whole-set run is, in words, when it is NOT the whole set: the
+# rest of a stopped run (queue/bin/sweep-resume.mjs). Prints nothing otherwise,
+# so the loop keeps its own words for a full or locked run.
+what)
+  LOCKED_FLAG=""
+  screen_locked && LOCKED_FLAG="--locked"
+  queue/bin/sweep-schedule.mjs --resume-plan $LOCKED_FLAG 2>/dev/null \
+    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const p=JSON.parse(s); if(p.ok) console.log(`the rest of the stopped walk sweep (${p.walks} of ${p.of} walks: ${p.unreached} it never reached and ${p.rerun} it saw fail)`)}catch{}})'
   ;;
 
 # ---------------------------------------------------------------- why-not ----
@@ -369,7 +382,13 @@ summary)
         || Date.parse(blind.ended) > Date.parse(latest.ended));
       const r = newer ? blind : latest;
       if (!r) { console.log("{}"); process.exit(0); }
-      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, complete: r.complete !== false, total: r.total || 0, ...(r.blind ? { blind: true, blindFrom: r.blind.from, blindWalks: r.blind.count } : {}), ...(r.interrupted ? { interrupted: true } : {}), ...(r.timedOut ? { timedOut: true } : {}), ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial } : {}) }));
+      // A run that finished a stopped one logs THIS part: its own walks and its
+      // own seconds. loop-day.mjs draws the span [t - seconds, t], and the sum
+      // of both parts would paint the hours between them as walking;
+      // sweep-size.mjs divides seconds by walks, and the merged count over the time of one
+      // part would read as a walk taking under a second.
+      const part = r.resumed ? { walks: r.resumed.ran, seconds: r.resumed.seconds, resumed: true, answered: r.walks, parts: (r.parts || []).length } : { walks: r.walks, seconds: r.seconds };
+      console.log(JSON.stringify({ ...part, passed: r.passed, failed: r.failed.length, complete: r.complete !== false, total: r.total || 0, ...(r.blind ? { blind: true, blindFrom: r.blind.from, blindWalks: r.blind.count } : {}), ...(r.interrupted ? { interrupted: true } : {}), ...(r.timedOut ? { timedOut: true } : {}), ...(r.screenLocked ? { screenLocked: true, couldNotRun: r.couldNotRun || 0, partial: !!r.partial } : {}) }));
     ' "$LATEST" "$BLIND"
   else
     echo '{}'
@@ -408,6 +427,30 @@ run)
   began_s=$SECONDS
   began=$(now)
   TOTAL_WALKS=$(ls Scripts/playtest/*.json 2>/dev/null | wc -l | tr -d ' ')
+  # A whole-set run that was STOPPED, on code nothing has changed since, is
+  # finished rather than started again: only the walks it left unanswered run,
+  # plus the ones it saw fail, and the record merges the two into one run of
+  # the set (queue/bin/sweep-resume.mjs). Not for --force, which asks for the
+  # whole set, nor for a run narrowed on purpose with PHOTONZ_SWEEP_ARGS.
+  RESUME=0
+  RESUME_PICK="$SDIR/.resume-walks.txt"
+  RESUME_CLAIM="$SDIR/.resume-claim.json"
+  rm -f "$RESUME_PICK" "$RESUME_CLAIM"
+  RUN_WALKS=$TOTAL_WALKS
+  if [[ "${2:-}" != "--force" && -z "${PHOTONZ_SWEEP_ARGS:-}" ]]; then
+    LOCKED_FLAG=""
+    screen_locked && LOCKED_FLAG="--locked"
+    PLAN=$(queue/bin/sweep-schedule.mjs --resume-plan $LOCKED_FLAG --out "$RESUME_PICK" --claim "$RESUME_CLAIM" 2>/dev/null || echo '{}')
+    if [[ "$(node -e 'try{console.log(JSON.parse(process.argv[1]).ok?1:0)}catch{console.log(0)}' "$PLAN")" == 1 && -s "$RESUME_PICK" && -s "$RESUME_CLAIM" ]]; then
+      RESUME=1
+      RUN_WALKS=$(wc -l < "$RESUME_PICK" | tr -d ' ')
+      echo "==> Carrying on from a stopped whole-set run: $(node -e 'console.log(JSON.parse(process.argv[1]).why)' "$PLAN")."
+      echo "    This runs $RUN_WALKS of $TOTAL_WALKS walks; the rest already have their answer from the stopped run, on this same code."
+    else
+      WHY_NOT=$(node -e 'try{const p=JSON.parse(process.argv[1]); if(["code","set","locked","blind"].includes(p.because)) console.log(p.why)}catch{}' "$PLAN")
+      [[ -n "$WHY_NOT" ]] && echo "==> Not carrying on from the stopped run: $WHY_NOT."
+    fi
+  fi
   # How big the set is, for "224 of 532 walks ran". A run narrowed with
   # PHOTONZ_SWEEP_ARGS covers a handful on purpose, so it reports no set size
   # rather than pretending the rest of the set was refused. Decided HERE rather
@@ -419,16 +462,22 @@ run)
   node -e '
     const fs = require("fs");
     const [req, claimed, ...rest] = process.argv.slice(1);
-    const [pid, began, logPath, logRel, total, head] = rest;
+    const [pid, began, logPath, logRel, total, head, resumeClaim] = rest;
     let doc = { requests: [] };
     try { doc = JSON.parse(fs.readFileSync(req, "utf8")); } catch {}
     if (!Array.isArray(doc.requests)) doc.requests = [];
+    // The record being finished and the set it is finished against, when this
+    // run carries on from a stopped one. sweep-record.mjs merges on them, and
+    // so does sweep-recover.mjs for a run that is killed part way.
+    let resume = {};
+    if (resumeClaim) { try { resume = JSON.parse(fs.readFileSync(resumeClaim, "utf8")); } catch {} }
     fs.writeFileSync(claimed, JSON.stringify({
       requests: doc.requests, pid: Number(pid), began, logPath, logRel,
-      total: Number(total) || 0, head: head || null,
+      total: Number(total) || 0, head: head || null, ...resume,
     }, null, 2) + "\n");
     try { fs.unlinkSync(req); } catch {}
-  ' "$REQ" "$CLAIMED" "$$" "$began" "$SDIR/$stamp.log" "queue/sweep/$stamp.log" "$SET_SIZE" "$HEAD_SHA"
+  ' "$REQ" "$CLAIMED" "$$" "$began" "$SDIR/$stamp.log" "queue/sweep/$stamp.log" "$SET_SIZE" "$HEAD_SHA" "$( (( RESUME )) && echo "$RESUME_CLAIM")"
+  rm -f "$RESUME_CLAIM"
   echo "==> Walk sweep started $began, logging to $RUNLOG"
   # With the screen locked only the walks that never ask for a control by name
   # can run. Say which of the two runs is happening, in the live note as well as
@@ -441,6 +490,7 @@ run)
   PART_MIN=$(queue/bin/sweep-size.mjs --partial-minutes 2>/dev/null || echo 55)
   WHAT="the full walk sweep (about $FULL_MIN minutes)"
   screen_locked && WHAT="the part of the walk sweep a locked screen cannot touch (about $PART_MIN minutes)"
+  (( RESUME )) && WHAT="the rest of the stopped walk sweep ($RUN_WALKS of $TOTAL_WALKS walks)"
   Q note "running $WHAT; no task is claimed while it runs" >/dev/null 2>&1
 
   # PHOTONZ_SWEEP=1 is the key that unlocks the full run in playtest-all.sh;
@@ -450,6 +500,15 @@ run)
   # machinery can be verified in a minute instead of an hour; a real sweep
   # leaves it empty and runs everything.
   read -r -a SWEEP_ARGS <<< "${PHOTONZ_SWEEP_ARGS:-}"
+  (( RESUME )) && SWEEP_ARGS=(--only "$RESUME_PICK")
+  # PHOTONZ_SWEEP_RUNNER swaps the walk runner for a stand-in, so a drill can
+  # hold this whole path, claim to record, with no probe and in seconds
+  # (queue/bin/sweep-resume-drill.mjs). A stand-in drives no app and takes
+  # nothing from the person, so it is not stopped for them and there is no
+  # probe for it to put away.
+  RUNNER="${PHOTONZ_SWEEP_RUNNER:-Scripts/playtest-all.sh}"
+  STAND_IN=0
+  [[ -n "${PHOTONZ_SWEEP_RUNNER:-}" ]] && STAND_IN=1
   # Where playtest-all.sh leaves the pid of the caffeinate holding the Mac
   # awake, so that a run this script KILLS does not leave the hold behind. See
   # the forced stop below.
@@ -459,7 +518,7 @@ run)
   # PHOTONZ_SWEEP=1 is the key that unlocks the full run in playtest-all.sh;
   # without it that script refuses, which is what keeps a runner from starting
   # a sweep it cannot survive.
-  PHOTONZ_SWEEP=1 Scripts/playtest-all.sh ${SWEEP_ARGS[@]+"${SWEEP_ARGS[@]}"} > "$RUNLOG" 2>&1 &
+  PHOTONZ_SWEEP=1 "$RUNNER" ${SWEEP_ARGS[@]+"${SWEEP_ARGS[@]}"} > "$RUNLOG" 2>&1 &
   SWEEP_PID=$!
   # Write the run itself into the claim, now that it has a pid.
   #
@@ -507,7 +566,7 @@ run)
     # playtest.sh leaves the probe app up when it is killed mid-walk. This is
     # the sanctioned way to put it down; never reach for pkill, which is one
     # typo away from killing the user's dev app.
-    Scripts/probe-app.sh --quit >/dev/null 2>&1
+    (( STAND_IN )) || Scripts/probe-app.sh --quit >/dev/null 2>&1
   }
 
   # A sweep that is ASKED to stop still owes an answer.
@@ -566,7 +625,7 @@ run)
     sleep 3
     # The person came back: put the sweep down within seconds and give them
     # their Mac. What it reached is kept and its request goes back on the pile.
-    if (( ! INTERRUPTED )) && queue/bin/person-at-mac.sh here 3; then
+    if (( ! INTERRUPTED && ! STAND_IN )) && queue/bin/person-at-mac.sh here 3; then
       INTERRUPTED=1
       echo "!! Somebody is using the Mac: stopping the walk sweep so it stops driving the probe."
     fi
@@ -579,17 +638,17 @@ run)
     [[ "$DONE_N" =~ ^[0-9]+$ ]] || DONE_N=0
     if (( DONE_N >= LAST_REPORTED + 20 )); then
       LAST_REPORTED=$DONE_N
-      echo "==> walk sweep: $DONE_N of $TOTAL_WALKS walks done"
-      Q note "walk sweep: $DONE_N of $TOTAL_WALKS walks done" >/dev/null 2>&1
+      echo "==> walk sweep: $DONE_N of $RUN_WALKS walks done"
+      Q note "walk sweep: $DONE_N of $RUN_WALKS walks done" >/dev/null 2>&1
     fi
     if (( INTERRUPTED )); then
-      echo "!! Walk sweep INTERRUPTED at walk $DONE_N of $TOTAL_WALKS. What it reached is recorded below and the request that asked for it goes back on the pile."
+      echo "!! Walk sweep INTERRUPTED at walk $DONE_N of $RUN_WALKS. What it reached is recorded below and the request that asked for it goes back on the pile."
       stop_the_run
       break
     fi
     if (( SECONDS - began_s > CAP )); then
       TIMED_OUT=1
-      echo "!! Walk sweep passed its ${CAP}s cap at walk $DONE_N of $TOTAL_WALKS; stopping it."
+      echo "!! Walk sweep passed its ${CAP}s cap at walk $DONE_N of $RUN_WALKS; stopping it."
       stop_the_run
       break
     fi
@@ -634,8 +693,10 @@ run)
   # 2026-09-19 it did not ask, so a run stopped at walk zero printed the
   # previous sweep's counts as its own and filed them onto the standing task a
   # second time.
+  # Asked by the log the record names, not by when it began: a run that
+  # finishes a stopped one is written down under the stopped run's start.
   RECORDED=0
-  [[ -s "$LATEST" ]] && [[ "$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).began||"")}catch{console.log("")}' "$LATEST")" == "$began" ]] && RECORDED=1
+  [[ -s "$LATEST" ]] && [[ "$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).log||"")}catch{console.log("")}' "$LATEST")" == "queue/sweep/$stamp.log" ]] && RECORDED=1
 
   # A run that WENT BLIND is not in latest.json either, and it needs its own
   # words: it answered real walks and then lost the app, which is neither "no
@@ -680,7 +741,15 @@ run)
   # run has no set to count itself against and says so by leaving it out.
   OF_SET=""
   (( SET_SIZE > 0 )) && OF_SET=" of $SET_SIZE"
-  if (( INTERRUPTED )); then
+  COMPLETE=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).complete===false?0:1)' "$LATEST")
+  if (( RESUME )); then
+    echo "==> The rest of the stopped walk sweep took $((took / 60))m $((took % 60))s. With the stopped run, $REACHED$OF_SET walks have an answer, $FAILCOUNT of them failing."
+    if (( COMPLETE )); then
+      echo "    That is the whole set, on one code, so it counts as the day's full run."
+    else
+      echo "    That is NOT the whole set yet. What is still unanswered is unknown, not passing; on the same code the loop carries on from here again."
+    fi
+  elif (( INTERRUPTED )); then
     echo "==> Walk sweep INTERRUPTED after $((took / 60))m $((took % 60))s: it reached $REACHED$OF_SET walks, $FAILCOUNT of them failing."
     (( FAILCOUNT )) && echo "    Those failures are UNCONFIRMED: a stop takes the probe app down with it, so a walk failing in the last moments may be a casualty of the stop."
     echo "    The rest were never run: unknown, not passing. The request is pending again and the loop runs another sweep."

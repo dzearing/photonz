@@ -20,6 +20,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseSweepLog, sweepSentences } from './sweep-parse.mjs';
+import { mergeRuns } from './sweep-resume.mjs';
 
 // Record one run and settle its requests. Returns what it wrote and what it
 // decided, so a caller can say it out loud rather than guessing.
@@ -33,9 +34,19 @@ export function recordSweep({
   const r = parseSweepLog(logText, { total: Number(total) || 0, timedOut, interrupted });
 
   let requests = [];
-  try { requests = JSON.parse(readFileSync(claimed, 'utf8')).requests || []; } catch { /* none */ }
+  // A run that carries on from a STOPPED one says so in its claim: the record
+  // it is finishing and the set it is finishing it against
+  // (queue/bin/sweep-resume.mjs). Read from the claim, not from latest.json at
+  // the end, so a run recovered after a SIGKILL merges exactly as a live one.
+  let resumeOf = null;
+  let set = null;
+  try {
+    const claim = JSON.parse(readFileSync(claimed, 'utf8'));
+    requests = claim.requests || [];
+    if (claim.resumeOf && Array.isArray(claim.set)) { resumeOf = claim.resumeOf; set = claim.set; }
+  } catch { /* none */ }
 
-  const result = {
+  let result = {
     began, ended, seconds: Number(seconds),
     walks: r.walks, passed: r.passed, failed: r.failed,
     couldNotRun: r.couldNotRun, total: r.total,
@@ -87,6 +98,13 @@ export function recordSweep({
     writeFileSync(where, JSON.stringify(result, null, 2) + '\n');
   }
 
+  // Finishing a stopped run: this part and the stopped one are one run of the
+  // set, and that is what gets written down. A part that went blind or
+  // answered nothing is not merged into anything; the stopped run stays the
+  // record, exactly as it would with no carrying-on at all.
+  const merged = Boolean(resumeOf && !wentBlind && !nothingToSay);
+  if (merged) result = mergeRuns(resumeOf, result, set);
+
   // latest.json ONLY EVER MOVES FORWARD. Nothing older than what is already
   // recorded is written over it, whoever is writing and for whatever reason.
   //
@@ -121,7 +139,7 @@ export function recordSweep({
   // into .claimed.json before it starts, so a run that never reaches here
   // leaves nobody asking for the sweep it failed to do.
   let handedBack = 0;
-  if (!r.complete && requests.length) {
+  if (!result.complete && requests.length) {
     let pending = { requests: [] };
     try { pending = JSON.parse(readFileSync(req, 'utf8')); } catch { /* none pending */ }
     if (!Array.isArray(pending.requests)) pending.requests = [];
@@ -133,7 +151,7 @@ export function recordSweep({
     handedBack = requests.length;
   }
 
-  return { result, recorded, older, handedBack, blind: wentBlind };
+  return { result, recorded, older, handedBack, blind: wentBlind, merged };
 }
 
 // ---- the command line ------------------------------------------------------
@@ -142,7 +160,7 @@ if (invokedDirectly) {
   const [logFile, latest, claimed, req, began, ended, seconds, runlogRel, timedOut, total, head, interrupted] =
     process.argv.slice(2);
 
-  const { result, recorded, older, handedBack, blind } = recordSweep({
+  const { result, recorded, older, handedBack, blind, merged } = recordSweep({
     logText: existsSync(logFile) ? readFileSync(logFile, 'utf8') : '',
     latest, claimed, req, began, ended, seconds, runlogRel,
     timedOut: timedOut === '1', interrupted: interrupted === '1',
@@ -161,6 +179,16 @@ if (invokedDirectly) {
   } else if (!recorded) {
     console.log('==> Not one walk answered and nothing was refused, so this run is not written down: '
       + 'the last recorded sweep stays the last recorded sweep.');
+  }
+  if (merged && recorded) {
+    const m = result.resumed;
+    console.log(`==> This run carried on from the one stopped at ${m.reached} walks, so the two are written down as one run of the set: `
+      + `${result.walks} of ${result.total} walks answered${result.complete ? ', the whole set' : ''}.`);
+    if (m.reran) {
+      console.log(`    It ran the ${m.reran} walk(s) the stopped run saw fail again: `
+        + `${m.confirmed.length ? `still failing ${m.confirmed.join(', ')}` : 'none still failing'}`
+        + `${m.cleared.length ? `; passed this time ${m.cleared.join(', ')}` : ''}.`);
+    }
   }
   for (const line of sweepSentences(result)) console.log(line);
   if (result.failed.length) {
