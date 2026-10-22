@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 350,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T08:55:55.575Z",
-  "updated": "2026-10-22T16:27:16.740Z",
+  "updated": "2026-10-22T17:53:20.699Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/ui-entry-wt.html ~300-330 (.filmcard .acts: Copy, Edit, Pin, Delete). Built: Sources/Photonz/FrontDoorView.swift FrontDoorRecentCard.actions (document case: Edit, Show in Finder, Remove from Recent; capture case keeps the history strip's Copy, Edit, Show in Finder, Delete; no Pin anywhere in the app). Copy for a .photonz could copy its preview (PackageIO.readPreview). From the-front-door-s-recent-lists-documents-you-open. | 2026-10-15 runner: Copy built for document cards (FrontDoorCopy: .photonz rendered whole off main via PackageIO.read + DocumentRenderer, picture file via CaptureStore.copyToPasteboard, recording via ClipboardWriter.writeFile); row and menu read FrontDoor.actions. Walk front-door-recent-card-actions-walk (startFromFrontDoor rest/first/gone) proves Copy, Edit, Remove from Recent by pointer at Next defaults. Show in Finder is deliberately not clicked by the walk: it activates Finder over the person. Remaining: Pin (not in the app at all) and what the last button does, on the decision card.",
@@ -126,6 +126,10 @@
     {
       "t": "2026-10-22T16:27:16.738Z",
       "note": "seq 340 -> 350"
+    },
+    {
+      "t": "2026-10-22T17:53:20.698Z",
+      "note": "Overtaken: the user's call on 2026-10-22 (task starting-something-new-offers-just-image-or-vide) took Recent out of the New window entirely; recent documents live in File > Open Recent now, so there are no Recent cards left to give actions to."
     }
   ],
   "walks": [

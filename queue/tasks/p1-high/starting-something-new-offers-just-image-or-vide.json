@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 1.1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:25:49.544Z",
-  "updated": "2026-10-22T16:33:36.799Z",
+  "updated": "2026-10-22T17:53:57.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-22: 'Sometimes i just want to create an image. I don't want to design ui. Can we just simplify and have \"Image\" or \"Video\" in the new dialog?' then 'what is stupider is that there's no New button. What the hell is new window? I want traditional, new, open, ... new should not have load image in it.' then 'use straightforward IA!!!' (The screenshot of the New window was pasted in chat and not saved: it showed Open... and a blue + Open Image... in the title bar, the dimmed Describe what to create / Create, tiles for Design UI, Edit an image, Edit video and Capture & redline, and Recent.) This is the user's own call, and it overrides the front door mock's tiles and Open buttons. Don't make it a decision card. Where things are: the New window is FrontDoorView.swift (templates :122-215, Open... and Open Image... header :60-80, Recent). Its words are in PhotonzCore/FrontDoor.swift (FrontDoorTemplate designUI/editImage/editVideo/captureRedline :12-64; primaryTitle :90-99 names Open Image... for editImage). It shows through Experiments.frontDoorEnabled (EditorWindowRoots.swift:19-51). The File menu is EditorCommands.swift:325-370: New Window is Shift-Command-N, New Blank Canvas and New Video have no key, New from Clipboard is Option-Command-N, Open... is at :370 and Open Recent at :291. Command-N is New Layer at :1889, a user decision from 2026-07-05. This request replaces that decision. The empty editor card (EditorView.swift:766-813, Blank canvas / Blank video / Design UI rows) should match: the same two choices, or gone if the New window covers it. Tutorial anchors are named by action (EmptyEditorStart), so migrate them deliberately. Sits alongside: the task to make Describe what to create work (filed the same minute). It depends on nothing. User, 2026-10-22, also said: 'new menu items should be at the top on the menu like every other app in the world. capture can be a secondary section.' The capture submenu is fileCaptureSubmenu (EditorCommands.swift:388), with items at :639-648.",
@@ -43,6 +43,64 @@
     {
       "t": "2026-10-22T16:33:36.798Z",
       "note": "manager 2026-10-22: seq put back to 1.1, the intake window's order. The daily triage's renumbering (16:27:13) overwrote intake's 1.1 eight seconds after intake set it, from a plan read before (history.jsonl task_resequenced events)."
+    },
+    {
+      "t": "2026-10-22T17:01:10.372Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T17:09:25.103Z",
+      "note": "owns these walks: front-door-walk, front-door-recent-documents-walk, design-ui-start-walk, design-mode-tool-strip-walk, undo-shortcut-walk"
+    },
+    {
+      "t": "2026-10-22T17:53:34.137Z",
+      "note": "walks front-door-walk, front-door-recent-documents-walk, design-ui-start-walk, design-mode-tool-strip-walk, undo-shortcut-walk -> front-door-walk, file-menu-like-every-mac-app-walk, front-door-recent-documents-walk, design-ui-start-walk, design-mode-tool-strip-walk, undo-shortcut-walk"
+    },
+    {
+      "t": "2026-10-22T17:53:43.791Z",
+      "note": "Review before building: a Photoshop hand expects Cmd-N to open a New Document dialog with presets and Return to make it; the old window had no New at all and its main button opened a file. A first-time user had to know Design UI vs Edit an image. Nothing the request assumes is missing: blank canvas and blank video already existed behind sheets, so the New window reuses their size lists (FrontDoorKind.sizes)."
+    },
+    {
+      "t": "2026-10-22T17:53:43.857Z",
+      "note": "Chose to keep the primary button in the New window's title bar (the mock's place) and name it New Image / New Video over a bottom-right Create, because the user overrode the tiles and Open buttons, not the mock's placement, and a second Create beside the prompt bar's would be ambiguous."
+    },
+    {
+      "t": "2026-10-22T17:53:43.922Z",
+      "note": "Chose nothing on screen at launch / after the last window closes over popping the New window, because Photonz is a menu-bar app that may launch at login; New and Open are in File and the menu-bar icon's menu."
+    },
+    {
+      "t": "2026-10-22T17:53:43.991Z",
+      "note": "Chose to turn next-design-ui-start off at Next defaults over deleting it: the File item and the card row are gone at defaults, the flag still turns them back on, and design-ui-start-walk / design-mode-tool-strip-walk now switch it on and start from the empty card. Design mode, Library Components and the Frame tool stay in every image."
+    },
+    {
+      "t": "2026-10-22T17:53:44.056Z",
+      "note": "Chose to replace SwiftUI's Close (CommandGroup replacing .saveItem, Next only) so Close sits above Save like Preview/Pages; costs the Option alternate Close All. Left rough, in the audit, not filed: nobody reported missing it."
+    },
+    {
+      "t": "2026-10-22T17:53:44.122Z",
+      "note": "Removed the New window's Recent section and its card code (FrontDoorRecent, card actions, RecentDocumentPreview), deleted front-door-recent-card-actions-walk, moved front-door-recent-documents-walk onto File > Open Recent, and dropped a-recent-document-card-offers-the-mock-s-copy-pi as overtaken. Added file-menu-like-every-mac-app-walk (photographs the open File menu; reads Layer > New Layer as Shift-Cmd-N) and a Shift-Cmd-N stand-in for walks."
+    },
+    {
+      "t": "2026-10-22T17:53:44.186Z",
+      "note": "Verified: front-door-walk, file-menu-like-every-mac-app-walk, front-door-recent-documents-walk, design-ui-start-walk, design-mode-tool-strip-walk, undo-shortcut-walk, new-empty-video-walk, empty-track-slot-walk all ok at --no-build; Scripts/test.sh 14199 tests passed. Looked at all four audit pictures: the New window shows only the prompt bar, Image/Video and sizes; the File menu reads New, Open, capture, Close, Save, Export."
+    },
+    {
+      "t": "2026-10-22T17:53:44.252Z",
+      "note": "walks front-door-walk, file-menu-like-every-mac-app-walk, front-door-recent-documents-walk, design-ui-start-walk, design-mode-tool-strip-walk, undo-shortcut-walk -> front-door-walk, file-menu-like-every-mac-app-walk, front-door-recent-documents-walk, design-ui-start-walk, design-mode-tool-strip-walk, undo-shortcut-walk"
+    },
+    {
+      "t": "2026-10-22T17:53:57.360Z",
+      "note": "File > New (Cmd-N) opens a New window with only Image and Video and their sizes (length for Video); File reads New / Open, Open Recent / capture section / Close, Save / Export; New Layer is Shift-Cmd-N. Next only (next-front-door), Design UI start off at defaults. Verified by 8 walks at Next defaults and Scripts/test.sh (14199 passed). Audit: queue/audits/2026-10-22-file-menu-new-image-or-video.json. Commit 26948d3d."
     }
-  ]
+  ],
+  "started": "2026-10-22T17:01:10.371Z",
+  "walks": [
+    "front-door-walk",
+    "file-menu-like-every-mac-app-walk",
+    "front-door-recent-documents-walk",
+    "design-ui-start-walk",
+    "design-mode-tool-strip-walk",
+    "undo-shortcut-walk"
+  ],
+  "completed": "2026-10-22T17:53:57.361Z"
 }
