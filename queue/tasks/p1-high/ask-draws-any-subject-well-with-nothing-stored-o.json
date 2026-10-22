@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T01:04:33.989Z",
-  "updated": "2026-10-22T04:32:35.113Z",
+  "updated": "2026-10-22T07:14:22.927Z",
   "deps": [
     "the-test-set-cannot-be-passed-by-a-lookup-unseen",
     "ask-runs-on-the-best-model-this-mac-can-hold-pic",
@@ -53,6 +53,45 @@
     {
       "t": "2026-10-22T04:32:35.112Z",
       "note": "From try-drawing-with-a-local-picture-model-then-turn (2026-10-22): the picture-model-then-trace route is built and on at Next defaults when the picture model runs; held-out drawings 0% looked up. Measured numbers are in that task's audit. Painted drawings are flat (crafted line lower than the illustrator's); a general light pass over the traced layers is the technique this task already lists."
+    },
+    {
+      "t": "2026-10-22T05:37:02.119Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T05:39:06.108Z",
+      "note": "Adversarial pass before building: the painting route (picture model then trace) already wins held-out 57.5 vs 35.9 at 0% looked up, so removing the stored set and the illustrator changes nothing when the picture model runs. What breaks: (1) without the picture model, a thing the set had (dog, smiley) now needs the model's own svg, so Ask is slower and rougher there; (2) scenes that the illustrator drew are no longer skipped by the look-and-revise check, so a painted scene that reads wrong is painted again; (3) an outside agent that sends builtIn gets nothing special. Chose to remove the whole Illustrator (Illustrator, IllustrationPieces, IllustrationPasses, IllustrationBrief) over keeping its passes because every pass works on subject planes (ridges, treelines, water, cliffs, skylines) and its critique checks read those planes, so none of it runs on an arbitrary shape."
+    },
+    {
+      "t": "2026-10-22T06:12:03.983Z",
+      "note": "Owning up: while checking on the held-out run I listed .ask-eval/held-out-runs/20261022-055402-ask-held-out/ and saw some case folder names. I opened no case and changed nothing in Ask after it: every code and prompt change was already made and tested before the run started; only docs were written after."
+    },
+    {
+      "t": "2026-10-22T07:04:36.364Z",
+      "note": "owns these walks: ask-draws-a-dog-walk, ask-draws-an-illustration-walk, ask-paints-then-edits-walk"
+    },
+    {
+      "t": "2026-10-22T07:13:48.030Z",
+      "note": "Left rough (in this log, not filed): painted scenes vary about 15 points from one picture to the next on the seed alone (skyline at night and sun over mountains: 81/82 once, 65/66 twice since, same words to the picture model, rules 10 each time). A general fix would be painting two and keeping the one the looker reads best; it is a quality idea, not a defect, and the flat look of painted scenes is already in the painting audit. Folded the no-picture-model consequence into ask-works-on-a-mac-that-has-nothing-else-install."
+    },
+    {
+      "t": "2026-10-22T07:13:48.095Z",
+      "note": "Measured: held-out 57.1 at Next defaults (run 20261022-055402-ask-held-out), 0 stored, 0 template, 52 drawn. The task's bar is 'at or above today's held-out score': the held-out score when the task was filed and measured against in the painting audit is 35.9 (this rubric); the last painting run is 57.5, so 57.1 is the same route within run-to-run noise. Climb: six scene cases 69.7 against 75.2 (seed variance, see above). Walks green at Next defaults: ask-draws-a-dog-walk, ask-draws-an-illustration-walk (both updated: a range of layers instead of the stored dog's 14), ask-paints-then-edits-walk, ask-rows-say-what-they-made-walk. Full suite 14,184 tests passed."
+    },
+    {
+      "t": "2026-10-22T07:13:53.566Z",
+      "note": "Looked at the four audit captures: the painted dog reads as a dog with clean parts; the smiley icon sits on its keylines; the sun over mountains is a flat but clean scene with its sky; the silhouette badge is a black field with a white circle, ridges and pines, its ring edge not a clean circle at the bottom. Did not open either held-out contact sheet."
+    },
+    {
+      "t": "2026-10-22T07:14:22.925Z",
+      "note": "Stored drawing set (Resources/Drawings, DrawingLibrary, loader, notice, make-drawings.mjs), the builtIn switch and the whole illustrator (Illustrator, IllustrationBrief/Pieces/Passes/Geometry/Color) removed in a543dae3. Drawings are painted for the request or the model's own SVG; AgentDrawingWords reads only look, scene-kind and time words; the look-and-revise check covers every drawing. Held-out 57.1 at Next defaults (35.9 before painting, 57.5 last painting run), 0 stored, 0 template, 52 drawn. AskNothingStoredTests guards it; full suite green (14,184); walks ask-draws-a-dog, ask-draws-an-illustration, ask-paints-then-edits, ask-rows-say-what-they-made green. Docs: ask.md, SKILL.md, agent-mcp.md. Audit queue/audits/2026-10-22-ask-draws-any-subject-well-with-nothing-stored-o.json with held-out sheets named by path."
     }
-  ]
+  ],
+  "started": "2026-10-22T05:37:02.118Z",
+  "walks": [
+    "ask-draws-a-dog-walk",
+    "ask-draws-an-illustration-walk",
+    "ask-paints-then-edits-walk"
+  ],
+  "completed": "2026-10-22T07:14:22.926Z"
 }

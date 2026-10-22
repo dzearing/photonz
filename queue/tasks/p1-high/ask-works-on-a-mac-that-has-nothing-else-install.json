@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:17:59.926Z",
-  "updated": "2026-10-22T04:32:35.030Z",
+  "updated": "2026-10-22T07:13:47.963Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Focus success gap: agent-ask success item 2 says which models answer 'works out of the box'. Today Ask needs Ollama on 127.0.0.1:11434 (Sources/Photonz/Agent/AskLocalModel.swift:10) with qwen3:30b, 18.6 GB (AskPlanning.swift:503, AskModels). With no Ollama it says 'Ask needs Ollama. See Settings.' (AskLocalModel.swift:30-31) and Settings links Ollama's website. The 2026-10-19 Ask audit's last rough line: that path was never walked, since this Mac has Ollama. Apple's FoundationModels was rejected for a 4,096 token window against about 5,800 tokens of tools plus document (docs/design/ask.md, model table): a tool list cut per request (looking tools plus the four or five doing tools the request needs) may fit, measure it. An in-app runtime (for example MLX Swift with a downloaded model) avoids a second program. Not reproduced as a click on a fresh Mac by the manager (this Mac has Ollama); the code path above is what a Mac without it reaches. Do not uninstall or stop the person's Ollama; use a seam on the probe. Runs after the eval task if it is done, otherwise score by the three walks and the eval's rubric by hand.",
@@ -52,6 +52,10 @@
     {
       "t": "2026-10-22T04:32:35.029Z",
       "note": "From try-drawing-with-a-local-picture-model-then-turn (2026-10-22): Ask now paints drawings with a local picture model when 127.0.0.1:8793 answers (Scripts/picture-model/serve.sh, a Python+MLX server). Today nothing starts it, so a person only gets painting if someone runs serve.sh. Added an acceptance item: the picture model joins this task's in-app setup and is started by Photonz. The runner (mflux, MIT) is Python; a native Swift MLX port or an app-managed bundled environment are the two ways in."
+    },
+    {
+      "t": "2026-10-22T07:13:47.962Z",
+      "note": "From ask-draws-any-subject-well-with-nothing-stored-o (2026-10-22): the stored drawing set and the coded illustrator are gone, so without the picture model Ask's only drawing route is the planning model's own SVG, for everyday things (a dog, a smiley) as well. That makes the picture model being part of setup matter more; the last acceptance item's 'old drawing route, 35.9' is now 'the model's own SVG'."
     }
   ]
 }
