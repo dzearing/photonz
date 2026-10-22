@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 1.2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:25:49.646Z",
-  "updated": "2026-10-22T16:33:50.820Z",
+  "updated": "2026-10-22T19:00:16.567Z",
   "deps": [
     "starting-something-new-offers-just-image-or-vide"
   ],
@@ -44,6 +44,48 @@
     {
       "t": "2026-10-22T16:33:36.863Z",
       "note": "manager 2026-10-22: seq put back to 1.2, the intake window's order (the triage renumbering raced intake). Now waits on starting-something-new-offers-just-image-or-vide, which builds the New window and its Describe field."
+    },
+    {
+      "t": "2026-10-22T18:12:50.410Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T18:59:25.252Z",
+      "note": "owns these walks: ask-makes-a-picture-from-the-new-window-walk, ask-with-nothing-open-walk"
+    },
+    {
+      "t": "2026-10-22T18:59:54.532Z",
+      "note": "Reproduced first: the New window's prompt bar was a Text with a disabled Create; Edit > Ask… was disabled with no document; the title bar Ask was absent in an empty window (its accessory installed only with a document), so not dimmed but missing."
+    },
+    {
+      "t": "2026-10-22T18:59:54.599Z",
+      "note": "Adversarial pass: a first-time user types into the obvious field and presses Return; Return used to be the New Image default button, so with words typed Return now belongs to the field (New Image loses the default only while the field holds text). A Photoshop user expects New to make a document; describing it is the extra. The empty window has no panel, so the refusal sentence shows under the composer field rather than in the Agent area."
+    },
+    {
+      "t": "2026-10-22T18:59:54.666Z",
+      "note": "Chose a word rule (AskFromNothing, PhotonzCore, tested) over a model call to sort picture / video / needs-something-open because it answers instantly, before a window opens, and knows no subjects. Chose request size > named format > the New window's picked size over a subject-to-shape table, which would be hardcoded content."
+    },
+    {
+      "t": "2026-10-22T18:59:54.733Z",
+      "note": "Chose: in the New window, Edit > Ask… and Command K focus the Describe field (that window draws its own title bar, so no Ask button there)."
+    },
+    {
+      "t": "2026-10-22T18:59:54.802Z",
+      "note": "Verified: Scripts/test.sh green (14208 tests). Walks ask-makes-a-picture-from-the-new-window-walk and ask-with-nothing-open-walk pass with real drawings (sunset, 14 layers + row; lighthouse at 800x600 + row) and refusals; front-door, file-menu, blank-canvas, chrome-says-labels, design-ui-start, new-empty-video walks still pass; focus-drill reads clean for both new walks. Looked at all five audit pictures."
+    },
+    {
+      "t": "2026-10-22T18:59:54.934Z",
+      "note": "left rough: the empty window still shows the tool bar at its foot with no document (existing behaviour, not this task's). Placement of the sunset folded into ask-on-the-local-model-makes-results-that-look-f."
+    },
+    {
+      "t": "2026-10-22T19:00:16.565Z",
+      "note": "The New window's Describe field makes a picture and Ask draws it (row in Agent area, one undo); video and needs-something-open requests answer in one sentence and keep the words; the empty window's title bar Ask, Edit > Ask… and Cmd-K are enabled. Core rule AskFromNothing tested; walks ask-makes-a-picture-from-the-new-window-walk and ask-with-nothing-open-walk pass with real drawings, focus-drill clean; Scripts/test.sh green; audit queue/audits/2026-10-22-ask-works-in-an-empty-window-and-makes-the-pictu.json; commit e269abd9."
     }
-  ]
+  ],
+  "started": "2026-10-22T18:12:50.405Z",
+  "walks": [
+    "ask-makes-a-picture-from-the-new-window-walk",
+    "ask-with-nothing-open-walk"
+  ],
+  "completed": "2026-10-22T19:00:16.566Z"
 }

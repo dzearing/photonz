@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-10-22T16:59:50.394Z",
+  "updated": "2026-10-22T18:10:40.987Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-22T16:59:50Z: 1008 of 1011 walks passed in 313 minutes.\n\nFailing walks (3): caption-lines-join-and-a-word-moves-back-walk, section-fold-motion-walk, view-to-edit-on-a-long-recording-walk\n\nAlready named by another open task, so read that one before re-diagnosing (1):\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 2: caption-lines-join-and-a-word-moves-back-walk, section-fold-motion-walk\n\nStopped failing since the last sweep (1): library-tile-click-latency-walk\n\nFull output: queue/sweep/2026-10-22-095234.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -114,6 +114,10 @@
     {
       "t": "2026-10-22T16:59:50.392Z",
       "note": "sweep 2026-10-22T16:59:50Z: 3 failing (caption-lines-join-and-a-word-moves-back-walk, section-fold-motion-walk, view-to-edit-on-a-long-recording-walk); stopped failing: library-tile-click-latency-walk"
+    },
+    {
+      "t": "2026-10-22T18:10:40.986Z",
+      "note": "rotating check 2026-10-22T18:10:40Z, 32 walks run from 486 onward in the rotation: library-tile-click-latency-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
     }
   ],
   "standing": "walk-sweep"

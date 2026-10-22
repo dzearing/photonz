@@ -13575,3 +13575,16 @@
 {"t":"2026-10-22T17:53:44.188Z","ev":"task_note","id":"starting-something-new-offers-just-image-or-vide"}
 {"t":"2026-10-22T17:53:44.254Z","ev":"task_walks","id":"starting-something-new-offers-just-image-or-vide","walks":["front-door-walk","file-menu-like-every-mac-app-walk","front-door-recent-documents-walk","design-ui-start-walk","design-mode-tool-strip-walk","undo-shortcut-walk"]}
 {"t":"2026-10-22T17:53:57.363Z","ev":"task_done","id":"starting-something-new-offers-just-image-or-vide","from":"in_progress","note":"File > New (Cmd-N) opens a New window with only Image and Video and their sizes (length for Video); File reads New / Open, Open Recent / capture section / Close, Save / Export; New Layer is Shift-Cmd-N. Next only (next-front-door), Design UI start off at defaults. Verified by 8 walks at Next defaults and Scripts/test.sh (14199 passed). Audit: queue/audits/2026-10-22-file-menu-new-image-or-video.json. Commit 26948d3d."}
+{"t":"2026-10-22T18:10:40.958Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-22T18:10:40.988Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-22T18:12:50.211Z","ev":"slice_pass","walks":32,"passed":30,"failed":2,"seconds":825,"of":1011,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-22T18:12:50.416Z","ev":"task_started","id":"ask-works-in-an-empty-window-and-makes-the-pictu","title":"Describe what to create makes it, and Ask works with nothing open","priority":"p1-high"}
+{"t":"2026-10-22T18:59:25.254Z","ev":"task_walks","id":"ask-works-in-an-empty-window-and-makes-the-pictu","walks":["ask-makes-a-picture-from-the-new-window-walk","ask-with-nothing-open-walk"]}
+{"t":"2026-10-22T18:59:54.536Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
+{"t":"2026-10-22T18:59:54.602Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
+{"t":"2026-10-22T18:59:54.668Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
+{"t":"2026-10-22T18:59:54.735Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
+{"t":"2026-10-22T18:59:54.804Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
+{"t":"2026-10-22T18:59:54.869Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-22T18:59:54.936Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
+{"t":"2026-10-22T19:00:16.568Z","ev":"task_done","id":"ask-works-in-an-empty-window-and-makes-the-pictu","from":"in_progress","note":"The New window's Describe field makes a picture and Ask draws it (row in Agent area, one undo); video and needs-something-open requests answer in one sentence and keep the words; the empty window's title bar Ask, Edit > Ask… and Cmd-K are enabled. Core rule AskFromNothing tested; walks ask-makes-a-picture-from-the-new-window-walk and ask-with-nothing-open-walk pass with real drawings, focus-drill clean; Scripts/test.sh green; audit queue/audits/2026-10-22-ask-works-in-an-empty-window-and-makes-the-pictu.json; commit e269abd9."}

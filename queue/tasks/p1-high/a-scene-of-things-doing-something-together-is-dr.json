@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-22T16:27:30.347Z",
+  "updated": "2026-10-22T18:10:40.957Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -103,6 +103,10 @@
     {
       "t": "2026-10-22T16:27:30.345Z",
       "note": "2026-10-22 digest: layer names coming out as colour names ('Dark brown 3'), seen here and in the painting task, now has its own task: a-painted-drawing-s-layers-are-named-for-the-par. Note for the next runner: what is left on this task is the kite's string lost in scene tracing and a re-measure of the six scenes; the rest shipped in 642e43b2 and ffb57123."
+    },
+    {
+      "t": "2026-10-22T18:10:40.956Z",
+      "note": "rotating check 2026-10-22T18:10:40Z, 32 walks run from 486 onward in the rotation: ask-draws-a-scene-walk (its script changed since the last check) failing."
     }
   ],
   "started": "2026-10-22T07:32:12.228Z",

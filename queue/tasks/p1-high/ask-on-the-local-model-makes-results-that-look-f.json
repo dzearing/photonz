@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-22T16:27:13.362Z",
+  "updated": "2026-10-22T18:59:54.868Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -82,6 +82,10 @@
     {
       "t": "2026-10-22T16:27:13.361Z",
       "note": "seq 120 -> 60"
+    },
+    {
+      "t": "2026-10-22T18:59:54.867Z",
+      "note": "also from ask-works-in-an-empty-window-and-makes-the-pictu: 'a sunset over the sea' on a fresh 1440x1024 canvas made just for it was drawn as a ~640x460 card in the middle of white, while the lighthouse scene did fill its 800x600 canvas. A canvas made for the request should be filled by a scene. Picture: queue/audits/2026-10-22-ask-from-nothing-2-drawn-sc.png"
     }
   ],
   "walks": [
