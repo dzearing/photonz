@@ -238,11 +238,17 @@ every `add_drawing` to a picture model on this Mac instead of the built-in
 set, the illustrator or the model's own SVG, whenever the picture model
 answers. Measured on the held-out set on 2026-10-22 (queue task
 `try-drawing-with-a-local-picture-model-then-turn`, audit
-`queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json`):
-total 56.8 against 35.9; on drawings didWhatWasAsked 5.6 against 3.3,
-designed 5.8 against 4.7, clean 5.8 against 5.9, crafted 3.0 against 5.0
-(painted pictures are flat, the illustrator's passes added light); 49 s a
-drawing request against 30 s.
+`queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json`,
+run `20261022-043200-ask-held-out`): total 57.5 against 35.9; on drawings
+didWhatWasAsked 5.6 against 3.3, clean 6.2 against 5.9, designed 6.0 against
+4.7, crafted 6.0 against 5.0; 31 s a drawing request against 30 s; nothing
+looked up. A first run before scenes were painted edge to edge scored 56.8
+with crafted 3.0: a scene on plain white loses its sky.
+* **A scene** (the planning model's `scene`, or the general scene and
+  time-of-day words in `IllustrationBrief.sceneWords`: landscape, sunset,
+  night, skyline...) is painted 4:3 edge to edge with its own sky and ground;
+  the tracer keeps the backdrop, blurs the picture lightly so a gradient sky
+  bands smoothly, and uses fourteen colours.
 * **Recolouring a drawing.** A fill set on a group recolours its parts
   (`AgentGroupRecolour`): the colour covering the most becomes the one asked
   for, the rest keep their shade in the new hue, and a detail that would sink
@@ -253,7 +259,9 @@ drawing request against 30 s.
   weights (`mflux-community/z-image-turbo-mflux-q8`, about 11 GB) run by
   mflux (MIT) behind `127.0.0.1:8793` (`Scripts/picture-model/serve.sh`). A
   768 point picture takes about 22 to 28 s on an M4 Max and holds 7.5 GB at
-  its peak, beside the 18 to 29 GB the planning model holds. Ollama 0.40.7
+  its peak in mflux's own count (the server process rests at 5 GB and
+  peaks at 13 GB with MLX's cache capped), beside the 29 GB the planning
+  model holds. Ollama 0.40.7
   refuses image models ("image generation models are not currently
   supported"), which is why it is not the runner.
 * **The prompt** is the subject the planning model wrote, the person's own

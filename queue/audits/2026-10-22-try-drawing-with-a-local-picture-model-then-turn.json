@@ -1,0 +1,33 @@
+{
+  "feature": "Ask paints its drawings with a picture model on this Mac, as layers you can edit",
+  "epic": "agent-ask",
+  "summary": "With the picture model running, Ask paints every drawing from your own words (a cat curled up asleep, a cat at the piano, a skyline at night) and turns it into named, filled layers, instead of looking up a stored drawing. On the unseen test set it scores 57.5 against 35.9 for today's way, and it wins on doing what was asked (5.6 against 3.3), clean (6.2 against 5.9), designed (6.0 against 4.7) and crafted (6.0 against 5.0). \"Make the cat black\" now works on any grouped drawing.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. The picture model has to be running first: in a terminal run Scripts/picture-model/serve.sh (the first run sets itself up and downloads about 11 GB). Without it Ask draws the way it did before.",
+  "switched": {},
+  "try": [
+    { "do": "On a blank picture press Ask, type \"draw a cat curled up asleep\" and press the Ask button.", "shot": "2026-10-22-paint-1-painted-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open the Cat curled up asleep group in Layers and click a few of its parts (Orange, Dark brown 3...)." },
+    { "do": "Press Ask, type \"make the cat black\" and send it.", "shot": "2026-10-22-paint-2-black-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Ask, type \"move the cat to the left\" and send it.", "shot": "2026-10-22-paint-3-moved-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "On a new blank picture ask for \"draw an illustration of a city skyline at night\".", "shot": "2026-10-22-paint-scenes-side-by-side.png" },
+    { "do": "Compare today's drawings with painted ones for the same requests, left against right.", "shot": "2026-10-22-paint-things-side-by-side.png" }
+  ],
+  "evaluate": [
+    "Does the painted cat look like something you would keep, rather than clip art you would replace?",
+    "Are the layers useful: can you pick, recolour or delete a part (an ear, a stripe) and get what you expected?",
+    "Is about 30 seconds for a drawing acceptable, given it is drawn for what you asked?",
+    "Does the black cat keep enough of its eyes and stripes, or should a recolour keep more contrast?",
+    "Do scenes (skyline, forest at dusk) read well enough, or do you miss the old illustrator's light and glow?"
+  ],
+  "rough": [
+    "Nothing starts the picture model for you yet: someone has to run Scripts/picture-model/serve.sh. Making it part of Ask's in-app setup is now an acceptance item on ask-works-on-a-mac-that-has-nothing-else-install.",
+    "The picture model is Z-Image Turbo (Tongyi-MAI, Apache 2.0, commercial use allowed) in 8-bit MLX weights, run by mflux (MIT); tracing is vtracer (MIT). Chose it over FLUX.2 klein and Stable Diffusion because it has the permissive licence, a ready Mac quantisation and clean flat pictures on the first try. potrace was ruled out as GPL. Ollama 0.40.7 refuses image models outright, so it could not be the runner.",
+    "Memory: the picture model rests at 5 GB and peaks at 13 GB while painting, beside the planning model's 29 GB, so about 42 GB at the worst moment on this 64 GB Mac. Each picture takes 22 to 34 s; the median drawing request was 30.9 s against 30 s before (the old way spent its time on the model writing svg and looking again).",
+    "On the climb set, built around the old stored drawings and coded scenes, painting scores 83.7 against 89.6 on the 21 drawing requests: the old way had a stored or coded answer for every one of them. The held-out set, which nobody shaped, is the fair number. Held-out contact sheet for you (runners never open it): .ask-eval/held-out-runs/20261022-043200-ask-held-out/contact-sheet.png",
+    "Edges are traced from pixels, so a close look shows small wobbles and the odd sliver where two colours meet; the judge's clean line is 6.2. A piano cat's cheek blush and a cat's pink nose can merge into a neighbouring colour when the palette is reduced to ten.",
+    "Scenes are painted edge to edge with their sky, and a soft gradient sky comes out as a few flat bands. The forest at dusk scored 47 on the climb set because the picture read as daytime.",
+    "Layer names are colour names (Orange, Dark brown 3), not part names (ear, tail): a picture model does not say which region is which. The group carries the subject's name.",
+    "A colour set on a group now recolours every part inside it (any grouped drawing, not only painted ones): the colour seen most becomes the one asked for and the rest keep their shade. Before, Ask's \"make the cat black\" was refused outright.",
+    "No mock covers this surface: it changes what Ask draws, not any control."
+  ]
+}

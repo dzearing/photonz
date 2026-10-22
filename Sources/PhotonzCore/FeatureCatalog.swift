@@ -345,7 +345,7 @@ public enum FeatureCatalog {
     /// it into layers, instead of looking it up or writing an svg, whenever
     /// the picture model answers (`Scripts/picture-model/`); without it Ask
     /// draws as before. On in Next since it beat the old way on the held-out
-    /// set (2026-10-22: 56.8 against 35.9).
+    /// set (2026-10-22: 57.5 against 35.9).
     public static let askPaintsFlag = "next-ask-paints-drawings"
 
     // MARK: - Definitions
