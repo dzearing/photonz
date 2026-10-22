@@ -1,0 +1,55 @@
+{
+  "feature": "Ask runs inside Photonz, with no Ollama to install or open",
+  "epic": "agent-ask",
+  "summary": "Ask's model now runs inside Photonz. Settings > Ask downloads it once (21 GB, size and place shown first), Photonz starts it when Ask needs it and lets it go when idle or on quit, and Ollama is never needed. On the eval's 41 climb cases it scores 55.3 against 53.1 for the Ollama setup it replaces, at about the same speed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, Ollama not running. M4 Max, 64 GB. For the first-run steps the model must not be downloaded yet (the walk ask-sets-itself-up-walk gives the probe that Mac).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Before: with Ollama closed, the old build took this request and stopped with \"Ask needs Ollama. See Settings.\" (read from the app's state; the picture is the moment before) and no way to fix it inside Photonz.",
+      "shot": "2026-10-22-ask-builtin-0-before.png"
+    },
+    {
+      "do": "On a Mac with no model yet, open a screenshot, press Ask, type a request and press Return. Read what Ask says.",
+      "shot": "2026-10-22-ask-builtin-1-needs-model.png"
+    },
+    {
+      "do": "Click Open Settings under Ask's sentence. Settings > Ask shows the model, its size and where it goes.",
+      "shot": "2026-10-22-ask-builtin-2-settings-offer.png"
+    },
+    {
+      "do": "Click Download. Watch the bar and the GB count; Stop is beside it.",
+      "shot": "2026-10-22-ask-builtin-3-downloading.png"
+    },
+    {
+      "do": "When it finishes, Settings shows the Model row instead of the offer.",
+      "shot": "2026-10-22-ask-builtin-4-ready.png"
+    },
+    {
+      "do": "Back in the editor, ask \"annotate the ux with measurements around the major ui elements\" and wait about ten seconds.",
+      "shot": "2026-10-22-ask-builtin-5-ran.png"
+    },
+    {
+      "do": "Quit Photonz and check Activity Monitor: no llama-server is left."
+    }
+  ],
+  "evaluate": [
+    "Is \"Ask needs its model. Get it in Settings.\" with an Open Settings button clear enough on first use, or should Download sit right in Ask's panel?",
+    "Is a 21 GB download in Settings acceptable as the one setup step, or do you want a smaller first model that upgrades later?",
+    "Does the first request after a while (about 8 to 13 seconds of loading, shown as \"Getting the model ready...\") feel acceptable?",
+    "Video requests are the built-in model's weak side (39.5 against 52.1): is that worth fixing before anything else on Ask?",
+    "Should \"Use Ollama instead\" stay in Settings, or go?"
+  ],
+  "rough": [
+    "Runtime and model: llama.cpp's llama-server b11826 inside the app bundle (Contents/Helpers/AskModel), Qwen3.6 35B-A3B Q4_K_M with its Q8_0 picture reader. 21.0 GB download, 21.7 GB held while loaded, 8 to 13 s to load, the screenshot request 9 to 10 s from cold, 22.7 s median a request over the climb set.",
+    "Eval, climb set, 41 cases, cold start each case, no picture model: built in 55.3 (drawing 61.5, sheet 17.7, layout 19, redline 46.6, video 39.5) against Ollama qwen3.6:27b 53.1 (56.7, 21.2, 11.2, 47.4, 52.1). The three named requests: screenshot measurements 46.6 against 47.4 (10 s against 50 s), Case 1 title page 84.4 against 79.6 (10 s against 5 s), pricing on brand 19 against 11.2 (38 s against 83 s). Runs 20261022-204744-ask and 20261022-212621-ask.",
+    "The held-out set has not been run on the built-in model yet; the task stays open for it.",
+    "Video is weaker than with Ollama: \"a title page before each of the three clips\" scored 17.5 against 85.6. The task stays open for it.",
+    "The picture model that paints Ask's drawings is still the Python server started by hand (Scripts/picture-model/serve.sh); with it off, drawings are the model's own SVG. Bringing it into Settings > Ask is the part of this task not built yet.",
+    "Offline: the model server answered tools and pictures with all outbound network denied (sandbox-exec, loopback only). The whole app has not been run with its network blocked.",
+    "The dense Qwen3.6 27B (same weights as the old Ollama default) is offered in Settings when downloaded but is not the default: llama.cpp reads Ask's 10,400-token first prompt with it in about 47 s, so a request takes 90 to 150 s.",
+    "Two failures found and fixed on the way: a request reaching a server that was still loading stopped it, and a quitting copy of the app could stop the next copy's server through the shared pid file.",
+    "The Settings window opens at a height that cuts the Use Ollama instead row in half until it is scrolled or resized.",
+    "No mock covers Settings > Ask or Ask's setup sentence."
+  ]
+}
