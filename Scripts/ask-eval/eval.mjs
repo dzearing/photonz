@@ -93,14 +93,32 @@ function saveMeta(runDir, meta) {
   meta.groups = groupsOf(meta.cases);
   meta.wallSeconds = Math.round(Object.values(meta.cases).reduce((s, r) => s + (r.caseSeconds ?? 0), 0));
   meta.lookups = tally(meta.cases);
+  meta.model = modelStats(meta.cases);
   writeFileSync(path.join(runDir, "run.json"), JSON.stringify(meta, null, 2));
+}
+
+/// The engine's own figures across a run: seconds per request (median),
+/// tool calls and how many came back broken, requests Ollama itself refused,
+/// and the most memory the model held. Totals, so a held-out run has them too.
+function modelStats(cases) {
+  const ran = Object.values(cases).filter((r) => !r.unrun && r.engine);
+  const seconds = ran.map((r) => r.engine.seconds).filter((s) => typeof s === "number").sort((a, b) => a - b);
+  const median = seconds.length ? (seconds.length % 2 ? seconds[(seconds.length - 1) / 2] : (seconds[seconds.length / 2 - 1] + seconds[seconds.length / 2]) / 2) : null;
+  const sum = (key) => ran.reduce((s, r) => s + (r.engine[key] ?? 0), 0);
+  const memory = ran.map((r) => r.engine.modelGigabytes).filter((g) => typeof g === "number");
+  return {
+    medianSeconds: median === null ? null : Math.round(median * 10) / 10,
+    calls: sum("calls"), brokenCalls: sum("brokenCalls"),
+    refused: ran.filter((r) => r.engine.phase === "stopped" && /error|pars|unexpected|does not support/i.test(r.engine.says ?? "")).length,
+    gigabytes: memory.length ? Math.max(...memory) : null,
+  };
 }
 
 function historyLine(meta) {
   const line = {
     run: meta.id, engine: meta.engine, set: meta.set ?? "climb", tag: meta.tag, commit: meta.commit, started: meta.started, finished: new Date().toISOString(),
     wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
-    total: meta.total, groups: meta.groups, lookups: meta.lookups, caseCount: Object.keys(meta.cases).length,
+    total: meta.total, groups: meta.groups, lookups: meta.lookups, model: meta.model, caseCount: Object.keys(meta.cases).length,
   };
   // A held-out run is recorded in total only, so no case can be climbed on.
   if (meta.set === "held-out") return line;
@@ -192,6 +210,7 @@ async function commandRun() {
   const sheet = sealed ? null : await drawSheet(runDir, meta);
   console.log(`==> ${meta.id}: total ${meta.total} over ${Object.keys(meta.cases).length} cases (${Object.entries(meta.groups).map(([g, v]) => `${g} ${v}`).join(", ")}), ${Math.round(meta.wallSeconds / 60)} min of cases`);
   console.log(`    ${describe(meta.lookups)}`);
+  if (meta.model) console.log(`    ${meta.engineModel ?? engine}: ${meta.model.medianSeconds ?? "-"}s a request (median), ${meta.model.brokenCalls} of ${meta.model.calls} tool calls broken, ${meta.model.refused} refused by Ollama, ${meta.model.gigabytes ?? "-"} GB held`);
   if (sheet) console.log(`    contact sheet ${sheet}`);
   else console.log("    no contact sheet: a person who wants to see the held-out pictures runs `Scripts/ask-eval.sh sheet <run>` themselves");
   if (finished && !meta.recorded) {

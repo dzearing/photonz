@@ -59,6 +59,17 @@ async function walk(dir, name, steps, { clock, build, testCase }) {
   return { code: result.code, log, said: (result.stdout + result.stderr).split("\n").filter((l) => /Verdict|FAILED|COULD NOT|CRASHED|DEFERRED/.test(l)).join(" ") };
 }
 
+/// The memory Ollama says the planning model holds right now, in GB.
+async function modelMemory(trace) {
+  const model = trace?.find((t) => / model /.test(t))?.match(/model ([^\s,]+)/)?.[1];
+  if (!model) return null;
+  try {
+    const ps = await (await fetch("http://127.0.0.1:11434/api/ps", { signal: AbortSignal.timeout(3000) })).json();
+    const held = ps.models?.find((m) => m.name === model || m.model === model);
+    return held ? Math.round(held.size / 1e8) / 10 : null;
+  } catch { return null; }
+}
+
 export async function quitProbe() {
   await run(path.join(repo, "Scripts/probe-app.sh"), ["--quit"], { cwd: repo, timeoutMS: 60_000 });
 }
@@ -194,6 +205,9 @@ async function runAskOnce(testCase, dir, { build }) {
   const started = Date.now();
   const [walked, unprepared] = await Promise.all([walk(dir, "ask-walk", steps, { clock: limit + 180, build, testCase }), prepare(testCase)]);
   const ended = walked.log.filter((e) => e.state?.ask).at(-1)?.state.ask;
+  // How the model's tool calls came back (AskConversation's count, noted each
+  // turn) and how much memory it held: the model bake-off's columns.
+  const turn = [...(ended?.trace ?? [])].reverse().map((t) => t.match(/turn \d+: \d+ steps planned, (\d+) calls, (\d+) broken/)).find(Boolean);
   const engine = {
     walk: walked.code, said: walked.said,
     phase: ended?.phase ?? null,
@@ -203,6 +217,8 @@ async function runAskOnce(testCase, dir, { build }) {
     steps: ended?.steps ?? [], skipped: ended?.skipped ?? [], says: ended?.says ?? "",
     // Where each drawing came from: stored, template or drawn for the request.
     sources: ended?.sources ?? [],
+    calls: turn ? Number(turn[1]) : null, brokenCalls: turn ? Number(turn[2]) : null,
+    modelGigabytes: await modelMemory(ended?.trace),
   };
   if (walked.code === 3 || walked.code === 6) return { engine, unrun: walked.code === 3 ? "screen locked" : "deferred: person at the Mac" };
   if (unprepared) { await quitProbe(); return { engine, unrun: unprepared }; }

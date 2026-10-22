@@ -212,14 +212,17 @@ head).
   flat background) the picture becomes that frame.
 * **Looked at before it hands back** (`AskDrawingCheck`). The drawing is
   rendered and shown, with no hint of the request, to a model on this Mac that
-  can see (`llama3.2-vision`, first of `AskModels.preferredVision`). If what it
+  can see: the planning model itself when it can (Ollama's capabilities say
+  `vision`), else the first of `AskModels.preferredVision` on the Mac
+  (`AskModels.eyes`). If what it
   names shares a word with the thing, it reads; if not, the planning model says
   yes or no. A miss is taken back and drawn again, told what was seen, at most
   twice; then Ask says "I couldn't make a clear drawing of that. Nothing was
   changed." No model that can see: Ask hands back without looking.
 
 Both models are asked with their window size pinned (32k planning, 4k
-looking): left out, Ollama loads them at its own default (128k), which swaps
+looking; the planning model looking for itself keeps its 32k and does not
+think, so it is answered from the copy already loaded): left out, Ollama loads them at its own default (128k), which swaps
 the planning model out on every look.
 
 Measured 2026-10-20 (M4 Max, 64 GB, `Scripts/ask-eval.sh`, the 13 drawing
@@ -284,22 +287,72 @@ user's own picture scores crafted 1 in calibration.
 ## The model
 
 Runtime: **Ollama**, on its loopback port (`127.0.0.1:11434`), the only address
-Ask ever calls. Default: **`qwen3:30b`** (Qwen3 30B A3B, a mixture of experts
-with 3B active, 18.6 GB), run with thinking off and a 32k window. Automatic
-takes the first of `qwen3:30b`, `qwen3:32b`, `qwen3:14b`, `qwen3:8b` the Mac has
-(`AskModels`).
+Ask ever calls. Default: **`qwen3.6:27b`** (18 GB download, about 30 GB held
+while Ask uses it), run with thinking off and a 32k window. It can see, so it
+also does Ask's look at a drawing (one model loaded, not two; below).
 
-Measured on 2026-10-19, M4 Max, 64 GB, the screenshot request:
+**Automatic** (`AskModels.automatic`) takes the first model in
+`AskModels.ranked` that the Mac has and can hold. **The rule: a model may hold
+at most three fifths of the Mac's memory** (`memoryShare`), leaving the rest
+for macOS, Photonz and a browser. So, by memory:
+
+| Mac | Automatic picks (and Settings offers to download) |
+| --- | --- |
+| 48 GB or more | `qwen3.6:27b` |
+| 36 GB | `qwen3:30b` (cannot see; the look falls back to `llama3.2-vision` if present) |
+| 32 GB | `gemma4:e4b` |
+| 24 GB or less | none: Settings says Ask needs more memory than this Mac has |
+
+A model chosen in Settings wins while it is on the Mac, whatever its size.
+
+### The bake-off, 2026-10-21
+
+M4 Max, 64 GB, Ollama 0.40.7 (brought up from 0.20.2 first). Every model ran
+the eval's climb set (30 cases) through Ask; the ones that answer in under 30 s
+ran the held-out set (45 cases) too. Seconds are Ask's own, send to done, the
+median over the set. Memory is what Ollama said the model held at 32k. Broken
+calls are tool calls with arguments the tool could not take, a tool it was not
+given, or a call written as text (`AskConversation.brokenCalls`). The look used
+`llama3.2-vision` for every row here, so the rows compare planners only.
+
+| Model | Climb | Held-out | s / request (climb, held-out) | GB held | Broken calls (climb, held-out) |
+| --- | --- | --- | --- | --- | --- |
+| `qwen3.6:27b` | 74.1 | **35.9** | 3.6, 26.1 | 29.9 | 1 of 64, 18 of 128 |
+| `qwen3.6:35b` | 72.4 | 31.5 | 1.3, 7.9 | 32.7 | 0 of 64, 27 of 156 |
+| `gemma4:26b` | 71.6 | 26.4 | 7.9, 9.6 | 25.7 | 0 of 66, 19 of 129 |
+| `qwen3:30b` (before) | 71.4 | 18.2 (on 0.20.2) | 10.8, - | 21.9 | 3 of 74, - |
+| `gemma4:e4b` | 74.3 | 13.5 | 4.2, 4.6 | 18.6 | 0 of 42, 14 of 57 |
+| `gemma4:12b` | 71.7 | - | 20.4 | 17.3 | 3 of 50 |
+| `qwen3-vl:30b` | 74.7 | stopped: about 5 min a case | 28 | 22.5 | 0 of 51 |
+| `gemma4:31b` | 75.3 | - (too slow) | 56.5 | 29.8 | 0 of 65 |
+| `mistral-small3.2:24b` | 0 after 13 cases | - | 47 a turn | - | never called a tool |
+| `qwen3-vl:8b` | stopped after 7 cases | - | 42 to 300 | - | - |
+
+The `-mlx` tags scored the same as the plain ones (`qwen3.6:35b-mlx` 74.6,
+`qwen3.6:27b-mlx` 75.5, `gemma4:26b-mlx` 73.7, `gemma4:31b-mlx` 57 s a
+request): on Apple Silicon, Ollama 0.40 already runs the plain `qwen3.6` and
+`gemma4` tags on its MLX engine (nvfp4, `ollama ps` says `mlx`), so the plain
+tag is the default. The climb set barely separates models, because its
+drawings come from the built-in set whatever the model; the held-out set does.
+
+**One model looking, against two** (the held-out set, `qwen3.6:27b` planning):
+looking with `llama3.2-vision` beside it, 35.9, median 26.1 s, about 41 GB held
+by the two; looking with itself, 35.9 (drawings 36.0 against 35.1), median
+31.1 s, 29.3 GB held. Same score, 11 GB and a second download fewer, about 5 s
+slower in the middle of the held-out set (its harder requests; the climb set's
+median is 3.6 s). One model is the default; `defaults write <bundle id>
+ask.eyes <model>` makes a second model look, for measuring only.
+
+Earlier, 2026-10-19, the screenshot request alone:
 
 | Model | Result |
 | --- | --- |
-| `qwen3:30b` (Ollama) | Plan in 22 s from a cold prompt, 25 measurements before the sorting and the cap; tool calls well formed |
 | Qwen3 30B A3B Instruct 2507 (a community build) | Wrote its tool call as text with a broken tag; Ask now reads those too, but the stock tag is the default |
 | `gpt-oss:20b` | Its template cannot read a property given as a choice of types; with that flattened it ignored the no-thinking switch, thought for 122 s and gave up |
 | Apple's on-device model (FoundationModels) | Not usable: its window is 4,096 tokens and the tool list plus the document read is about 5,800 before the request |
 
-With no model: Settings says so and offers the download of `qwen3:30b` (18.6 GB,
-stated before you press it) through Ollama's own pull; with no Ollama, Settings
+With no model: Settings says so and offers the download of the best model the
+Mac can hold (`AskModels.recommended`, its size stated before you press it) through Ollama's own pull; with no Ollama, Settings
 links its download. Ask itself says "Ask needs Ollama. See Settings." in the
 Agent group.
 
@@ -323,5 +376,6 @@ they stop with Ask's own sentence.
 
 * The composer's `/` command list (the mock's `.cplist`): typing `/` to run an
   ordinary command by name.
-* Pictures: the default model reads text only, so Ask plans from the
-  structured read and the element boxes, never from a rendered picture.
+* Pictures while planning: the default model can see since 2026-10-21, but Ask
+  still plans from the structured read and the element boxes; only the look at
+  a drawing shows it a picture.

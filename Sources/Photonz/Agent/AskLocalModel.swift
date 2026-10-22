@@ -16,6 +16,14 @@ enum AskLocalModel {
         set { UserDefaults.standard.set(newValue, forKey: choiceKey) }
     }
 
+    /// A model to look at drawings with instead of the planning model. Not in
+    /// Settings: it is how the eval measures one model against two
+    /// (`docs/design/ask.md`, "The model"), set with `defaults write`.
+    static var eyesOverride: String? { UserDefaults.standard.string(forKey: "ask.eyes") }
+
+    /// This Mac's memory, in GB, for which models it can hold.
+    static var memoryGigabytes: Double { AskModels.gigabytes(ofMemory: ProcessInfo.processInfo.physicalMemory) }
+
     enum Trouble: Error, Equatable {
         /// Ollama is not running, or not installed.
         case noRunner
@@ -48,8 +56,26 @@ enum AskLocalModel {
     /// The model Ask will use now, or why there is none.
     static func model() async -> Result<String, Trouble> {
         guard let installed = await installed() else { return .failure(.noRunner) }
-        guard let model = AskModels.resolve(chosen: chosen, installed: installed) else { return .failure(.noModel) }
+        guard let model = AskModels.resolve(chosen: chosen, installed: installed, memoryGigabytes: memoryGigabytes) else {
+            return .failure(.noModel)
+        }
         return .success(model)
+    }
+
+    /// Whether a model can see a picture, as Ollama says (`/api/show`'s
+    /// capabilities), falling back to the measured list.
+    static func sees(_ model: String) async -> Bool {
+        let measured = AskModels.ranked.first { $0.tag == model }?.sees ?? false
+        guard let url = base?.appending(path: "api/show") else { return measured }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = (["model": .string(model)] as AgentJSON).encoded()
+        request.timeoutInterval = 5
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let capabilities = (try? AgentJSON.parse(data))?["capabilities"]?.arrayValue else { return measured }
+        return capabilities.contains { $0.stringValue == "vision" }
     }
 
     /// Ask's own session: nothing cached, nothing shared with the rest of the app.

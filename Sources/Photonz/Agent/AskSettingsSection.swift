@@ -17,7 +17,7 @@ struct AskSettingsSection: View {
             if !checked {
                 ProgressView().controlSize(.small)
             } else if let installed {
-                if let automatic = AskModels.automatic(installed: installed) {
+                if let automatic = AskModels.automatic(installed: installed, memoryGigabytes: AskLocalModel.memoryGigabytes) {
                     Picker("Model", selection: $chosen) {
                         Text("Automatic (\(automatic))").tag("")
                         ForEach(installed, id: \.self) { Text($0).tag($0) }
@@ -46,13 +46,18 @@ struct AskSettingsSection: View {
 
     @ViewBuilder
     private var download: some View {
-        Text("Ask needs a model on this Mac: \(AskModels.recommended), a one-time download of \(String(format: "%.1f", AskModels.recommendedGigabytes)) GB, about 10 to 30 minutes on a fast connection.")
-            .font(.callout)
-            .fixedSize(horizontal: false, vertical: true)
-        if let pull {
-            ProgressView(value: pull)
+        if let offer = AskModels.recommended(memoryGigabytes: AskLocalModel.memoryGigabytes) {
+            Text("Ask needs a model on this Mac: \(offer.tag), a one-time download of \(String(format: "%.1f", offer.download)) GB, about 10 to 30 minutes on a fast connection.")
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+            if let pull {
+                ProgressView(value: pull)
+            } else {
+                Button("Download \(offer.tag)") { Task { await download(offer.tag) } }
+            }
         } else {
-            Button("Download \(AskModels.recommended)") { Task { await download(AskModels.recommended) } }
+            Text("Ask needs more memory than this Mac has.")
+                .font(.callout)
         }
         if let pullTrouble {
             Text(pullTrouble).font(.callout).foregroundStyle(.secondary)

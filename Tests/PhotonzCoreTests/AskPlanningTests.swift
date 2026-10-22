@@ -68,6 +68,20 @@ struct AskPlanningTests {
         #expect(talk.messages.last?["content"]?.stringValue?.contains("step 1") == true)
     }
 
+    @Test("Every call the model makes is counted, and the broken ones apart: wrong arguments, an unknown tool, or a call written as text")
+    func brokenCallsAreCounted() throws {
+        var talk = Self.conversation()
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"Pricing","x":64,"y":48}"#), ("find_elements", #"{"limit":20}"#)]))
+        #expect(talk.calls == 2)
+        #expect(talk.brokenCalls == 0)
+        _ = talk.take(try Self.reply([("add_text", #"{"x":"left"}"#), ("draw_unicorn", "{}")]))
+        #expect(talk.calls == 4)
+        #expect(talk.brokenCalls == 2)
+        _ = talk.take(try Self.reply([], content: #"<tool_call>{"name":"add_text","arguments":{"text":"Hi","x":1,"y":2}}</tool_call>"#))
+        #expect(talk.calls == 5)
+        #expect(talk.brokenCalls == 3, "a call written as text still runs, but it came back broken")
+    }
+
     @Test("A looking call is handed back to be run, and its answer goes to the model")
     func lookingIsRun() throws {
         var talk = Self.conversation()
@@ -294,18 +308,50 @@ struct AskPlanningTests {
 
     // MARK: Which model
 
-    @Test("Automatic picks the measured default when it is on the Mac, else the best one there")
-    func automaticModel() {
-        #expect(AskModels.automatic(installed: ["llama3.2-vision:latest", "qwen3:30b"]) == "qwen3:30b")
-        #expect(AskModels.automatic(installed: ["qwen3:8b", "gemma3:4b"]) == "qwen3:8b")
-        #expect(AskModels.automatic(installed: ["gemma3:4b"]) == nil)
-        #expect(AskModels.automatic(installed: []) == nil)
+    @Test("Automatic picks the best measured model on the Mac that fits in its memory")
+    func automaticModel() throws {
+        let best = try #require(AskModels.ranked.first)
+        let everything = AskModels.ranked.map(\.tag) + ["llama3.2-vision:latest"]
+        #expect(AskModels.automatic(installed: everything, memoryGigabytes: 68.7) == best.tag)
+        #expect(AskModels.automatic(installed: ["llama3.2-vision:latest", "qwen3:30b"], memoryGigabytes: 68.7) == "qwen3:30b")
+        #expect(AskModels.automatic(installed: ["gemma3:4b"], memoryGigabytes: 68.7) == nil)
+        #expect(AskModels.automatic(installed: [], memoryGigabytes: 68.7) == nil)
+        // A smaller Mac skips what it cannot hold beside the app and a browser.
+        let small = AskModels.automatic(installed: everything, memoryGigabytes: 34.4)
+        let picked = try #require(AskModels.ranked.first { $0.tag == small })
+        #expect(AskModels.fits(picked, memoryGigabytes: 34.4))
+        #expect(!AskModels.fits(best, memoryGigabytes: 34.4))
+        #expect(AskModels.ranked.prefix { $0.tag != small }.allSatisfy { !AskModels.fits($0, memoryGigabytes: 34.4) })
+    }
+
+    @Test("A model fits when it holds no more than three fifths of the Mac's memory")
+    func fitsRule() {
+        let model = AskModels.Choice(tag: "x", gigabytes: 30, download: 20, sees: true)
+        #expect(AskModels.fits(model, memoryGigabytes: 68.7))
+        #expect(!AskModels.fits(model, memoryGigabytes: 34.4))
+        #expect(AskModels.fits(model, memoryGigabytes: 50))
+    }
+
+    @Test("A Mac with no model is offered the best one it can hold")
+    func recommendedFitsTheMac() throws {
+        #expect(AskModels.recommended(memoryGigabytes: 68.7) == AskModels.ranked.first)
+        let small = try #require(AskModels.recommended(memoryGigabytes: 34.4))
+        #expect(AskModels.fits(small, memoryGigabytes: 34.4))
+        #expect(small != AskModels.ranked.first)
+        #expect(AskModels.recommended(memoryGigabytes: 17.2) == nil)
+    }
+
+    @Test("The measured list is best first, every model in it plans with tools, and the default can see")
+    func rankedList() throws {
+        #expect(Set(AskModels.ranked.map(\.tag)).count == AskModels.ranked.count)
+        #expect(try #require(AskModels.ranked.first).sees)
+        #expect(AskModels.ranked.allSatisfy { $0.gigabytes > $0.download })
     }
 
     @Test("A model chosen in Settings wins while it is still on the Mac")
     func chosenModel() {
-        #expect(AskModels.resolve(chosen: "qwen3:8b", installed: ["qwen3:8b", "qwen3:30b"]) == "qwen3:8b")
-        #expect(AskModels.resolve(chosen: "gone:1b", installed: ["qwen3:30b"]) == "qwen3:30b")
-        #expect(AskModels.resolve(chosen: nil, installed: ["qwen3:30b"]) == "qwen3:30b")
+        #expect(AskModels.resolve(chosen: "qwen3:8b", installed: ["qwen3:8b", "qwen3:30b"], memoryGigabytes: 68.7) == "qwen3:8b")
+        #expect(AskModels.resolve(chosen: "gone:1b", installed: ["qwen3:30b"], memoryGigabytes: 68.7) == "qwen3:30b")
+        #expect(AskModels.resolve(chosen: nil, installed: ["qwen3:30b"], memoryGigabytes: 68.7) == "qwen3:30b")
     }
 }

@@ -325,7 +325,10 @@ final class AskSession {
                       note: (String) -> Void) async -> (subject: String, seen: String)? {
         let drawings = AskDrawingCheck.drawings(in: plan, library: DrawingSet.shared)
         guard !drawings.isEmpty, let document = editor.agentID else { return nil }
-        guard let eyes = AskModels.vision(installed: await AskLocalModel.installed() ?? []) else {
+        let installed = await AskLocalModel.installed() ?? []
+        let ownEyes = await AskLocalModel.sees(model)
+        guard let eyes = AskLocalModel.eyesOverride.flatMap({ installed.contains($0) ? $0 : nil })
+                ?? AskModels.eyes(planner: model, plannerSees: ownEyes, installed: installed) else {
             note("look skipped: no model on this Mac can see")
             return nil
         }
@@ -336,7 +339,7 @@ final class AskSession {
                 if case .png(let data) = part { return data }
                 return nil
             }).first else { continue }
-            guard let seen = try? await AskLocalModel.chat(AskDrawingCheck.visionBody(model: eyes, png: png))["message"]?["content"]?
+            guard let seen = try? await AskLocalModel.chat(AskDrawingCheck.visionBody(model: eyes, png: png, planner: eyes == model))["message"]?["content"]?
                 .stringValue?.trimmingCharacters(in: .whitespacesAndNewlines), !seen.isEmpty else {
                 note("look: \(eyes) gave no answer")
                 continue
@@ -465,7 +468,7 @@ final class AskSession {
             }
             if Task.isCancelled { return .failure(.said(AskCopy.stoppedSentence)) }
             let outcome = talk.take(reply)
-            note("turn \(talk.rounds): \(talk.steps.count) steps planned")
+            note("turn \(talk.rounds): \(talk.steps.count) steps planned, \(talk.calls) calls, \(talk.brokenCalls) broken")
             switch outcome {
             case .planned(let plan):
                 return .success(plan)

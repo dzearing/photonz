@@ -121,9 +121,19 @@ struct AskDrawingTests {
         #expect(body["options"]?["num_ctx"]?.doubleValue == Double(AskConversation.contextWindow))
     }
 
-    @Test("The model that looks is the first one on the Mac that can see")
+    @Test("A planning model that can see does its own looking; one that cannot hands it to the first on the Mac that can")
     func visionModel() {
-        #expect(AskModels.vision(installed: ["qwen3:30b", "llama3.2-vision:latest"]) == "llama3.2-vision:latest")
-        #expect(AskModels.vision(installed: ["qwen3:30b"]) == nil)
+        #expect(AskModels.eyes(planner: "qwen3.6:35b", plannerSees: true, installed: ["qwen3.6:35b", "llama3.2-vision:latest"]) == "qwen3.6:35b")
+        #expect(AskModels.eyes(planner: "qwen3:30b", plannerSees: false, installed: ["qwen3:30b", "llama3.2-vision:latest"]) == "llama3.2-vision:latest")
+        #expect(AskModels.eyes(planner: "qwen3:30b", plannerSees: false, installed: ["qwen3:30b"]) == nil)
+    }
+
+    @Test("The planning model looking keeps its own window and does not think, so it is not loaded again")
+    func plannerLooksInItsOwnWindow() {
+        let body = AskDrawingCheck.visionBody(model: "qwen3.6:35b", png: Data([1]), planner: true)
+        #expect(body["options"]?["num_ctx"]?.doubleValue == Double(AskConversation.contextWindow))
+        #expect(body["think"]?.boolValue == false)
+        let separate = AskDrawingCheck.visionBody(model: "llama3.2-vision:latest", png: Data([1]))
+        #expect(separate["think"] == nil)
     }
 }

@@ -234,6 +234,12 @@ public struct AskConversation: Sendable {
     public private(set) var names: [String: String] = [:]
     /// How many times the model has been asked; the app stops at `mostRounds`.
     public private(set) var rounds = 0
+    /// Every tool call the model has made, and the ones that came back
+    /// broken: arguments the tool cannot take, a tool it was never given, or
+    /// a call written out as text. What the model bake-off counts
+    /// (`docs/design/ask.md`, "The model").
+    public private(set) var calls = 0
+    public private(set) var brokenCalls = 0
     public static let mostRounds = 12
     /// More readouts than this crowd a screenshot past reading.
     public static let mostMeasurements = 12
@@ -293,7 +299,11 @@ public struct AskConversation: Sendable {
             guard let name = call["function"]?["name"]?.stringValue else { return nil }
             return (name, Self.arguments(call["function"]?["arguments"]))
         }
-        if calls.isEmpty { calls = Self.callsWritten(in: content) }
+        if calls.isEmpty {
+            calls = Self.callsWritten(in: content)
+            brokenCalls += calls.count
+        }
+        self.calls += calls.count
         guard !calls.isEmpty else {
             let sentence = content.trimmingCharacters(in: .whitespacesAndNewlines)
             if steps.isEmpty, !nudged {
@@ -320,6 +330,7 @@ public struct AskConversation: Sendable {
                 }
                 let arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
+                    brokenCalls += 1
                     tell(name, "Not planned. \(problem)")
                     continue
                 }
@@ -336,9 +347,11 @@ public struct AskConversation: Sendable {
                     steps.append(step)
                     tell(name, "Planned as step \(steps.count). Refer to what it makes as $\(steps.count).")
                 case .failure(let failure):
+                    brokenCalls += 1
                     tell(name, "Not planned. \(failure.message)")
                 }
             } else {
+                brokenCalls += 1
                 tell(name, "\(name) is not one of your tools here. Use only the tools you were given.")
             }
         }
@@ -618,13 +631,21 @@ public enum AskDrawingCheck {
     public static let seePrompt = "What does this drawing show? Answer with just the name of the thing, in one to three words."
 
     /// The request to the model that sees: the picture and the question, nothing more.
-    public static func visionBody(model: String, png: Data) -> AgentJSON {
+    public static func visionBody(model: String, png: Data, planner: Bool = false) -> AgentJSON {
+        let messages: AgentJSON = [["role": "user", "content": .string(seePrompt), "images": [.string(png.base64EncodedString())]]]
+        // The planning model looking keeps its own window and does not think,
+        // so Ollama answers from the model it already has loaded.
+        if planner {
+            return ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
+                    "options": ["temperature": 0, "num_ctx": .number(Double(AskConversation.contextWindow))],
+                    "messages": messages]
+        }
         // A small window of its own: one picture and one question. Left out,
         // Ollama loads the model at its own default, as big as 128k, which
         // pushes the planning model out of memory on every look.
-        ["model": .string(model), "stream": false, "keep_alive": "30m",
-         "options": ["temperature": 0, "num_ctx": .number(Double(visionContextWindow))],
-         "messages": [["role": "user", "content": .string(seePrompt), "images": [.string(png.base64EncodedString())]]]]
+        return ["model": .string(model), "stream": false, "keep_alive": "30m",
+                "options": ["temperature": 0, "num_ctx": .number(Double(visionContextWindow))],
+                "messages": messages]
     }
 
     /// Words that name no particular thing.
@@ -670,33 +691,74 @@ public enum AskDrawingCheck {
 /// Which model on this Mac answers Ask.
 public enum AskModels {
 
-    /// Models that can see, best first, for Ask's look at a drawing.
+    /// A model Ask plans well with, as the bake-off measured it
+    /// (`docs/design/ask.md`, "The model"): its Ollama tag, the memory it
+    /// holds while Ask uses it (with Ask's 32k window, as Ollama reports it),
+    /// its download, both in GB, and whether it can see a picture.
+    public struct Choice: Sendable, Equatable {
+        public let tag: String
+        public let gigabytes: Double
+        public let download: Double
+        public let sees: Bool
+
+        public init(tag: String, gigabytes: Double, download: Double, sees: Bool) {
+            self.tag = tag
+            self.gigabytes = gigabytes
+            self.download = download
+            self.sees = sees
+        }
+    }
+
+    /// Best first, by the bake-off of 2026-10-21 (M4 Max, 64 GB, Ollama
+    /// 0.40.7): the held-out score among the models that answer in under 30
+    /// seconds a request, then smaller models for Macs with less memory.
+    public static let ranked: [Choice] = [
+        Choice(tag: "qwen3.6:27b", gigabytes: 29.9, download: 18, sees: true),
+        Choice(tag: "qwen3.6:35b", gigabytes: 32.7, download: 23, sees: true),
+        Choice(tag: "gemma4:26b", gigabytes: 25.7, download: 16, sees: true),
+        Choice(tag: "qwen3:30b", gigabytes: 21.9, download: 18.6, sees: false),
+        Choice(tag: "gemma4:e4b", gigabytes: 18.6, download: 9.5, sees: true),
+        Choice(tag: "gemma4:12b", gigabytes: 17.3, download: 7.7, sees: true),
+    ]
+
+    /// The most of the Mac's memory a model may hold, so macOS, Photonz and a
+    /// browser keep the rest.
+    public static let memoryShare = 0.6
+
+    public static func fits(_ choice: Choice, memoryGigabytes: Double) -> Bool {
+        choice.gigabytes <= memoryGigabytes * memoryShare
+    }
+
+    /// The Mac's memory in GB, for the rule above.
+    public static func gigabytes(ofMemory bytes: UInt64) -> Double { Double(bytes) / 1e9 }
+
+    /// Models that can see, best first, for Ask's look at a drawing when the
+    /// planning model cannot.
     public static let preferredVision = ["llama3.2-vision:latest", "llama3.2-vision", "llama3.2-vision:11b",
                                          "qwen2.5vl:7b", "gemma3:12b", "gemma3:27b", "llava:latest"]
 
-    /// The first model on the Mac that can see, or nil (Ask then hands back
-    /// without looking).
-    public static func vision(installed: [String]) -> String? {
-        preferredVision.first { installed.contains($0) }
+    /// The model that looks at a drawing: the planning model itself when it
+    /// can see (one model loaded, not two), else the first on the Mac that
+    /// can, else nil (Ask then hands back without looking).
+    public static func eyes(planner: String, plannerSees: Bool, installed: [String]) -> String? {
+        if plannerSees { return planner }
+        return preferredVision.first { installed.contains($0) }
     }
 
-    /// The default, measured on the user's three try paths (`docs/design/ask.md`):
-    /// the first of these the Mac has, in order.
-    public static let preferred = ["qwen3:30b", "qwen3:32b", "qwen3:14b", "qwen3:8b"]
+    /// The best measured model the Mac already has and can hold, or nil when
+    /// it has none.
+    public static func automatic(installed: [String], memoryGigabytes: Double) -> String? {
+        ranked.first { installed.contains($0.tag) && fits($0, memoryGigabytes: memoryGigabytes) }?.tag
+    }
 
-    /// What a Mac with none of them would download: the measured default.
-    public static let recommended = "qwen3:30b"
-    /// Its download, as Ollama lists it, for the one-time setup to say up front.
-    public static let recommendedGigabytes = 18.6
-
-    /// The best model the Mac already has, or nil when it has none that plans well.
-    public static func automatic(installed: [String]) -> String? {
-        preferred.first { installed.contains($0) }
+    /// What a Mac with none of them is offered to download: the best it can hold.
+    public static func recommended(memoryGigabytes: Double) -> Choice? {
+        ranked.first { fits($0, memoryGigabytes: memoryGigabytes) }
     }
 
     /// The model chosen in Settings while it is still on the Mac, else automatic.
-    public static func resolve(chosen: String?, installed: [String]) -> String? {
+    public static func resolve(chosen: String?, installed: [String], memoryGigabytes: Double) -> String? {
         if let chosen, installed.contains(chosen) { return chosen }
-        return automatic(installed: installed)
+        return automatic(installed: installed, memoryGigabytes: memoryGigabytes)
     }
 }

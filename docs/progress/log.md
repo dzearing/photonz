@@ -21835,3 +21835,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A request sent while Ask is at work waits in line (`AskRequestLine`, PhotonzCore, tested) and shows as a row above the working one with a cancel; it runs when the one before finishes, on the document that one left. The working row names its request; Stop ends only it and the next starts. Closing a window drops its line.
 - New walk condition `askSettled`; walks `ask-queues-a-request-walk`, `ask-cancels-a-waiting-request-walk`, `ask-stops-a-running-request-walk`. Audit `queue/audits/2026-10-21-a-request-typed-while-ask-is-working-waits-its-t.json`.
 - Open: no walk closes a window, so the drop-on-close path is checked by reading only.
+
+## 2026-10-21: Ask's model, picked by the eval
+
+- Ollama 0.20.2 -> 0.40.7. Ten local models scored through Ask on the climb set, the four under 30 s on the held-out set. Default is now `qwen3.6:27b` (held-out 35.9 against 18.2 for `qwen3:30b`); it also does its own looking at drawings.
+- `AskModels.ranked` + a memory rule (a model holds at most 3/5 of the Mac's memory) decide Automatic and the Settings download. The eval now records median seconds, broken tool calls and GB held per run.
+- Table and rule: `docs/design/ask.md` "The model"; audit `queue/audits/2026-10-21-ask-runs-on-the-best-model-this-mac-can-hold-pic.json`.
+- Next: illustration and component tasks re-baseline on the new model.
