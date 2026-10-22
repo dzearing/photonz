@@ -4,12 +4,12 @@
   "goal": "Asked to put the newest recording after the open one, or to cut a clip at a moment and dissolve across it, Ask on a video changes nothing today, while the agent skill does both. Ask should do both, judged by the video cases of its test set.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 45,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T16:47:34.564Z",
-  "updated": "2026-10-21T16:47:34.568Z",
+  "updated": "2026-10-22T16:27:30.215Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the-ask-test-set-scores-video-requests-too. Reproduce: Scripts/ask-eval.sh run --engine ask --cases video-latest-recording-after-this-one,video-dissolve-where-the-copy-starts --tag repro. Run 20261021-153141-ask: history case steps [run_command add_video_track], score 7.5; dissolve case steps [run_command split_at_playhead, set_transition dissolve], skipped: \"Split at Playhead cannot run now: it needs a clip under the playhead\" / \"This video has no cuts\", says \"None of it could run. Nothing was changed.\" (8.6). Skill run 20261021-154541-skill scores 80.8 and 85 on the same two cases. AskTools.doing (Sources/PhotonzCore/AskPlanning.swift) has cut but not add_clip or list_history; the server has both (AgentVideo.swift, AgentTools.swift).",
@@ -23,6 +23,14 @@
     {
       "t": "2026-10-21T16:47:34.567Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-22T16:27:14.569Z",
+      "note": "seq 45 -> 30"
+    },
+    {
+      "t": "2026-10-22T16:27:30.214Z",
+      "note": "2026-10-22 digest: tried the repro command in the notes; it did not test anything, because the local model runner was not running (Ask said it needs the runner, steps []), and the eval scored it anyway (filed the-ask-scoring-run-refuses-to-score-when-the-mo; the bogus run was removed). The gap itself is confirmed by reading: AskTools.doing in Sources/PhotonzCore/AskPlanning.swift has no add_clip, though AgentVideo.swift defines one for the external agent. Kept at p2 for want of a run that shows it today."
     }
   ]
 }

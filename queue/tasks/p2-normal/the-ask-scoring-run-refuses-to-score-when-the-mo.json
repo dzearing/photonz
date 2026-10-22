@@ -1,0 +1,32 @@
+{
+  "id": "the-ask-scoring-run-refuses-to-score-when-the-mo",
+  "title": "The Ask scoring run refuses to score when the model runner is not running",
+  "goal": "The scored test set is how a change to Ask is kept or thrown away. When the local model runner is not running, every case ends at once with Ask saying it needs the runner, yet the test set still scores the run, records it in the history and prints 'WORSE: throw it away'. A runner reading that could throw away a good change. It should stop and say the runner is down instead.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "loop",
+  "created": "2026-10-22T16:26:02.189Z",
+  "updated": "2026-10-22T16:27:14.635Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the digest pass 2026-10-22 16:24 UTC with Ollama not running (pgrep -fl ollama empty, curl localhost:11434/api/ps empty):\n  Scripts/ask-eval.sh run --engine ask --cases video-latest-recording-after-this-one,video-dissolve-where-the-copy-starts --tag digest-repro-2026-10-22\nOutput: both cases ran in about 1 s ('asked, quiet after 0.13s'), ask state phase stopped, says 'Ask needs Ollama. See Settings.', steps []. Scored 8.6 and 7.5 (judge read 'the video is unchanged'), total 8.1, printed '==> WORSE: throw it away (against \"picture model try: z-image-turbo q8 + vtracer\")' and appended run 20261022-162402-ask to queue/evals/ask-eval-history.jsonl. The digest pass removed that history line and the run folder by hand. Code: Scripts/ask-eval/eval.mjs.",
+  "acceptance": [
+    "Reproduce first: with the runner stopped, run the two-case command in the notes and record that it scores and prints a verdict today",
+    "After the change, the same command stops before the first case with one plain line saying the runner is not answering, records nothing in queue/evals/ask-eval-history.jsonl and exits non-zero",
+    "A case whose Ask state says it needs the runner partway through a run (the runner died mid-run) is marked could-not-run, not scored, and the run's total and verdict leave it out",
+    "With the runner up, the same two cases score as before"
+  ],
+  "log": [
+    {
+      "t": "2026-10-22T16:26:02.191Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-10-22T16:27:14.634Z",
+      "note": "seq 47.5 -> 40"
+    }
+  ]
+}

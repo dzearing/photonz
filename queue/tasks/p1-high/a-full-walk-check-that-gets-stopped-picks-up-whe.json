@@ -4,12 +4,12 @@
   "goal": "When the once-a-day full walk check is stopped because the person came back to the Mac, the next run only does the walks it never reached (and the few that failed at the end), so five hours of checking are not thrown away for twenty missing walks and the loop gets back to building sooner.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 1,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:22:57.676Z",
-  "updated": "2026-10-22T16:22:57.784Z",
+  "updated": "2026-10-22T16:27:13.026Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user asked 'how did we get paused like this' on 2026-10-22 at 09:20. Cause: after the scene task ended at 04:14 the loop started the daily full walk check (queue/bin/go-loop.sh line ~'walk sweep due', 27.4h since the last). It ran 306 minutes, reached 989 of 1011, and was stopped at 09:21 by queue/bin/person-at-mac.sh because the user came back. queue/bin/sweep.sh:585-718 marks it INTERRUPTED (exit 4) and puts the request back on the pile, so the next whole set starts again from walk 1 (another ~5 hours the next time the user steps away). Scripts/playtest-all.sh already takes --only (used by the rotating check at sweep.sh:226), so a remainder run is likely a list of names passed through --only. Traps: only merge when HEAD has no code change since the interrupted run (same rule as 'landed code' in CLAUDE.md: Sources, Scripts, Resources, Vendor, package files); the 3 walks that failed in the last moments are UNCONFIRMED (the stop takes the probe down), so rerun them rather than counting them; version-row-name-walk never finished. Never let a merged result read complete if any walk in the set has no answer. Keep the once-a-day ceiling and the person-away rule. Infrastructure task, no app code.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-22T16:22:57.783Z",
       "note": "seq 145 -> 1"
+    },
+    {
+      "t": "2026-10-22T16:27:13.025Z",
+      "note": "seq 1 -> 10"
     }
   ]
 }

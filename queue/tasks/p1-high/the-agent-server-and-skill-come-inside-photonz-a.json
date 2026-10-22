@@ -3,13 +3,13 @@
   "title": "The agent server and skill come inside Photonz and install with one command",
   "goal": "Someone who has the Photonz app and an agent tool on their Mac, but not the Photonz source, can let the agent drive Photonz with one command they copy from inside the app. Today the server and skill only install from a checkout of the source, so only the person who builds Photonz can use them.",
   "epic": "agent-mcp",
-  "priority": "p2-normal",
-  "seq": 10,
+  "priority": "p1-high",
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:19:05.514Z",
-  "updated": "2026-10-21T12:40:34.695Z",
+  "updated": "2026-10-22T16:27:13.973Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Focus success gap: agent-mcp success says 'installs with one command'; today that command is Scripts/install-mcp.sh in a checkout (lines 39 and 44: claude mcp add plus a skill link). docs/design/agent-mcp.md 'Not in this slice' (line 392-397): shipping the bridge inside the app bundle. Rough lines in queue/audits/2026-10-19-agent-skill.json ('The install is a developer's') and 2026-10-19-agent-mcp-reach-read-see.json ('builds a small helper program the first time, about 4 seconds'). Skill at plugin/skills/photonz/SKILL.md, plugin/.mcp.json. The channel already listens in every build (agent-mcp.md:34-41, release.sock, dev.sock, probe.sock). Scripts/build-app.sh must copy and sign the helper; never touch dist/Photonz Dev.app from a runner, use the probe.",
@@ -33,6 +33,14 @@
     {
       "t": "2026-10-21T12:40:34.694Z",
       "note": "seq 5 -> 10"
+    },
+    {
+      "t": "2026-10-22T16:27:12.879Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-10-22T16:27:13.971Z",
+      "note": "seq 10 -> 150"
     }
   ]
 }

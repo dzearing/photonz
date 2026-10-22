@@ -4,12 +4,12 @@
   "goal": "In the transition walkthrough the cut opens into its two clips from a small chevron on the V1 track label. Today it opens only from its right-click, the Clip menu and Option E, because the arrow already on the track label opens the track's keyed-value lanes. While a cut is picked, the track label shows a second chevron, beside that arrow, that opens and closes the cut (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 290,
+  "seq": 300,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-18T06:28:51.470Z",
-  "updated": "2026-10-21T12:40:37.038Z",
+  "updated": "2026-10-22T16:27:16.381Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html line 376 #btnExpand (.xbtn chevron-down in the V1 .tl), step 5 data-cue #btnExpand. Today: TimelineTrackRows.swift twist (hasKeyLanes / hasParts arrow). Expand the Cut itself shipped in a-cut-opens-into-its-two-clips-on-their-own-rows (EditorState+ExpandedCut.toggleExpandedCut, ExpandedCutRows). Walk to extend: Scripts/playtest/expand-the-cut-from-its-menus-walk.json.",
@@ -54,6 +54,10 @@
     {
       "t": "2026-10-21T12:40:37.037Z",
       "note": "seq 250 -> 290"
+    },
+    {
+      "t": "2026-10-22T16:27:16.379Z",
+      "note": "seq 290 -> 300"
     }
   ]
 }

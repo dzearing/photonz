@@ -1,0 +1,33 @@
+{
+  "id": "a-painted-drawing-s-layers-are-named-for-the-par",
+  "title": "A painted drawing's layers are named for the parts they are, so a follow-up ask can find the tail",
+  "goal": "When Ask paints a drawing it traces it into layers named after colours ('Orange', 'Dark brown 3'). A person opening Layers cannot tell the ear from the tail, and a follow-up request such as 'make the cat's tail longer' or 'make its ears pink' has nothing to aim at. Each sizeable layer should carry the name of the part it shows, worked out at request time by looking at the drawing, never from anything stored for a subject.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-22T16:26:13.331Z",
+  "updated": "2026-10-22T16:27:14.700Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen twice in the last day, so it is no longer a nit: try-drawing-with-a-local-picture-model-then-turn left rough 'layer names are colour names not part names'; the scene audit (queue/audits/2026-10-22-a-scene-of-things-doing-something-together-is-dr.json, rough) says 'a painted drawing's layers are colour regions (\"Dark brown 3\"), not paws and keys', which is also why that task had to check its plan from the rendered picture instead of from which layers touch. The paint route: Scripts/picture-model/layers.py traces colours with vtracer; names are set where the trace lands (AskPictureModel / AgentDrawingWork). The look-and-revise check (AskDrawingCheck) already has a model that sees; it can name regions in the same pass. Product model: layers are everything, so a layer list of colour names breaks the promise that a drawing is editable.",
+  "acceptance": [
+    "Before picture: the layer list of 'draw a cat curled up asleep' at Next defaults, showing the colour names",
+    "On five drawing requests chosen from the climb set, at least four in five layers covering more than 2 per cent of the drawing carry a part name (tail, ear, eye, roof, wheel), checked from the read document and written in the audit with the count; today it is none",
+    "'make the cat's ears pink' after 'draw a cat curled up asleep' changes only the ear layers, judged from before and after pictures",
+    "Names come from looking at the painted picture at request time; AskNothingStoredTests still passes and no subject word is added to code",
+    "The extra time per drawing is measured and stays under 5 seconds at the median; held-out total does not drop. Audit with the layer list before and after, at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-22T16:26:13.333Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-10-22T16:27:14.699Z",
+      "note": "seq 48.75 -> 50"
+    }
+  ]
+}

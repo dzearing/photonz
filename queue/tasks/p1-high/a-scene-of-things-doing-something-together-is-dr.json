@@ -4,12 +4,12 @@
   "goal": "When a person asks for a thing in a pose or doing something ('a cat curled up sleeping'), or for several things in a relationship ('a cartoon cat playing a piano', 'a dog chasing a ball', 'a fox sleeping under a tree'), Ask draws one picture where they really do that: the cat sits at the piano, its paws on the keys, both at sensible sizes and in one style. Today it drops two stock drawings on top of each other.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 80,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-22T11:14:40.782Z",
+  "updated": "2026-10-22T16:27:30.347Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -95,6 +95,14 @@
     {
       "t": "2026-10-22T11:14:40.781Z",
       "note": "Shipped (642e43b2, ffb57123): add_drawing plans a pose or scene (statements for what the request names, what touches, what is in front), paints from it and checks each statement against the drawing, painting again on a miss; one drawing per place; edge repaint; rows keep the whole scene; short layer names. Climb 11 new cases 83.9 -> 86.7/87.1; held-out 60.3 vs 57.5/57.1; poses all at 7+. Left open: the six-scene bar, 5 of 6 on the final run. The kite's string is lost in scene tracing (blur + mode filter). Audit queue/audits/2026-10-22-a-scene-of-things-doing-something-together-is-dr.json."
+    },
+    {
+      "t": "2026-10-22T16:27:13.095Z",
+      "note": "seq 80 -> 20"
+    },
+    {
+      "t": "2026-10-22T16:27:30.345Z",
+      "note": "2026-10-22 digest: layer names coming out as colour names ('Dark brown 3'), seen here and in the painting task, now has its own task: a-painted-drawing-s-layers-are-named-for-the-par. Note for the next runner: what is left on this task is the kite's string lost in scene tracing and a re-measure of the six scenes; the rest shipped in 642e43b2 and ffb57123."
     }
   ],
   "started": "2026-10-22T07:32:12.228Z",

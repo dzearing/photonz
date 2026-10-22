@@ -4,12 +4,12 @@
   "goal": "Pulling a corner handle on a rectangle rounds just that corner and Option rounds all four, but pulling the corner knob on a shape drawn with the Pen rounds every corner and Option rounds just one. Someone who learns one gets the other backwards. Make both work like Photoshop's live shapes: a plain pull rounds every corner and Option rounds only the one pulled, so the rectangle changes to match (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 380,
+  "seq": 390,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T12:51:27.995Z",
-  "updated": "2026-10-21T12:40:37.778Z",
+  "updated": "2026-10-22T16:27:17.029Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found in the 2026-10-05 digest's design review, from two audits. Rectangle: drag-a-shapes-corner-to-round-it (2026-09-09, PhotonzCore/CornerRadiusHandles.swift) pulls one corner, Option for all four; its runner noted at the time that this is the reverse of Photoshop and Figma and built it as the task asked. Drawn shape: round-a-path-s-corners-by-pulling-a-knob-in-from (2026-10-05, the user's ask, PathCornerRounding.swift, CanvasPathEdit) pulls all, Option for one; its audit queue/audits/2026-10-04-round-a-path-s-corners.json asks in evaluate whether the two should agree. Photoshop live shape corners, Figma and Illustrator live corners all round every corner on a plain drag and isolate one with Option/Alt.",
@@ -110,6 +110,10 @@
     {
       "t": "2026-10-21T12:40:37.777Z",
       "note": "seq 340 -> 380"
+    },
+    {
+      "t": "2026-10-22T16:27:17.028Z",
+      "note": "seq 380 -> 390"
     }
   ]
 }
