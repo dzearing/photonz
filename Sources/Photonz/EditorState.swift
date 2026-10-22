@@ -2619,7 +2619,7 @@ final class EditorState {
     /// How this window opens another one holding a blank canvas. Set once by
     /// the window root, which is where the app coordinator lives; the editor
     /// itself stays free of window plumbing.
-    @ObservationIgnored var openBlankCanvasWindow: ((CGSize) -> Void)?
+    @ObservationIgnored var openBlankCanvasWindow: ((CGSize, String?) -> Void)?
 
     /// What happens when a recording this window was opened for cannot be read
     /// after all. Set by the window root, which is the only thing that can both
@@ -2643,11 +2643,16 @@ final class EditorState {
     /// Answers the New Canvas sheet, from whichever route opened it. An empty
     /// window fills itself; a window already holding a picture keeps it and the
     /// canvas arrives in a window of its own.
-    func createBlankCanvas(size: CGSize) {
+    ///
+    /// `asking`, from the New window's Describe field, is a request Ask
+    /// draws into the new canvas the moment it is up.
+    func createBlankCanvas(size: CGSize, asking: String? = nil) {
         switch BlankCanvas.destination(windowHasDocument: document != nil, isFrontDoor: isFrontDoor) {
-        case .thisWindow: newBlankCanvas(size: size)
+        case .thisWindow:
+            newBlankCanvas(size: size)
+            if let asking, document != nil { ask.askOnceShown(asking, in: self) }
         case .newWindow:
-            openBlankCanvasWindow?(size)
+            openBlankCanvasWindow?(size, asking)
             closeFrontDoorOnceTheEditorOpens()
         }
     }
@@ -2694,10 +2699,13 @@ final class EditorState {
             // A walk that starts from a blank canvas needs to find it.
             PlaytestHarness.register(self)
             #endif
-        case .blankCanvas(_, let size):
+        case .blankCanvas(let id, let size):
             untitledName = Self.nextUntitledName()
             if let size {
                 newBlankCanvas(size: size)
+                // Made from the New window's Describe field: Ask draws what
+                // was described into it.
+                if let asking = AskHandoff.take(id), document != nil { ask.askOnceShown(asking, in: self) }
             } else {
                 // Nobody has picked a size yet: this window opens empty and
                 // asks. Only reached when the question came from a window with

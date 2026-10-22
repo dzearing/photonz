@@ -106,12 +106,71 @@ final class AskSession {
         isComposerShown = false
     }
 
+    /// Why the last request asked with nothing open was not run (a video,
+    /// or something that would already have to be open), shown under the
+    /// field that asked it, which keeps the words. Cleared by the next ask.
+    var refusal: String?
+    /// Bumped to put the cursor in the New window's Describe field: Ask
+    /// there is that field, not a composer over a canvas it does not have.
+    private(set) var promptFocusPass = 0
+
+    /// The title bar's Ask, Edit > Ask… and its key: the composer, or in the
+    /// New window, its Describe field.
+    func summon(in editor: EditorState) {
+        if editor.isFrontDoor {
+            promptFocusPass &+= 1
+        } else {
+            openComposer()
+        }
+    }
+
     /// Hands the composer's words to the model, or while it works on one,
     /// puts them in line behind it.
+    ///
+    /// In a window with nothing open, a request to make a picture makes a
+    /// blank one here first, sized to the request (`AskFromNothing`), and Ask
+    /// draws into it as it would on any picture. A request it cannot do with
+    /// nothing open says why under the field and keeps the words.
     func ask(in editor: EditorState) {
         let words = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !words.isEmpty else { return }
+        refusal = nil
+        if editor.document == nil {
+            switch AskFromNothing.start(words, picked: BlankCanvas.defaultPreset.size) {
+            case nil: return
+            case .video?:
+                refusal = AskFromNothing.videoSentence
+                return
+            case .needsSomethingOpen?:
+                refusal = AskFromNothing.nothingOpenSentence
+                return
+            case .picture(let size)?:
+                editor.newBlankCanvas(size: size)
+                guard editor.document != nil else { return }
+            }
+        }
         draft = ""
+        send(words, in: editor)
+    }
+
+    /// Asks `words` in a window that was just made for them: the New
+    /// window's Describe field opened this one holding a blank picture. Waits
+    /// for the window to be on screen, since Ask reaches the document the way
+    /// an agent does, through the windows that are open.
+    func askOnceShown(_ words: String, in editor: EditorState) {
+        hasAsked = true
+        Task { [weak self, weak editor] in
+            for _ in 0..<100 {
+                guard let editor else { return }
+                if editor.hostWindow?.isVisible == true, editor.agentID != nil { break }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            guard let self, let editor else { return }
+            self.send(words, in: editor)
+        }
+    }
+
+    private func send(_ words: String, in editor: EditorState) {
         hasAsked = true
         isComposerShown = false
         // Whatever hides the Agent group comes out first: a video in View, a
@@ -606,4 +665,15 @@ enum AskFeedbackFolder {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(saved).write(to: folder.appendingPathComponent("case.json"), options: .atomic)
     }
+}
+
+/// A request typed into the New window's Describe field, held from the moment
+/// it asks for a window until that window is seeded with its blank picture.
+@MainActor
+enum AskHandoff {
+    private static var held: [UUID: String] = [:]
+
+    static func hold(_ words: String, for window: UUID) { held[window] = words }
+
+    static func take(_ window: UUID) -> String? { held.removeValue(forKey: window) }
 }

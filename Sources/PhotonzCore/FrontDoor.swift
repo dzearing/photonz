@@ -93,8 +93,9 @@ public enum FrontDoor {
     /// the field's tip.
     public static let promptPlaceholder = "Describe what to create"
     public static let promptTip =
-        "Describe what you want to create \u{00B7} \u{201C}a pricing card with our brand gradient\u{201D}\u{2026} "
-        + "The agent that answers this is still to come."
+        "Describe what you want to create \u{00B7} \u{201C}a pricing card with our brand gradient\u{201D}\u{2026}"
+    /// The tip while Ask is off in this release.
+    public static let promptTipNotReady = promptTip + " The agent that answers this is still to come."
     public static let createTitle = "Create"
 
     /// A size as the list prints it.

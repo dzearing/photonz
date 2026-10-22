@@ -27,6 +27,12 @@ struct FrontDoorView: View {
     @State private var video = SizeChoice(kind: .video)
     @State private var seconds: Double = BlankVideo.defaultLengthSeconds
     @FocusState private var customFieldFocused: Bool
+    /// What is typed into the prompt bar.
+    @State private var prompt = ""
+    @FocusState private var promptFocused: Bool
+    /// Set once Create has made the picture, so a second Return while the
+    /// New window closes makes nothing more.
+    @State private var described = false
 
     /// The window's width, the mock's `min(640px, 92%)`.
     static let width: CGFloat = 640
@@ -94,7 +100,9 @@ struct FrontDoorView: View {
                 Label(kind.createTitle, systemImage: "plus")
             }
             .buttonStyle(FrontDoorProminentButtonStyle())
-            .keyboardShortcut(.defaultAction)
+            // Return makes the picked kind, until something is typed into
+            // the prompt bar: then Return is the prompt bar's Create.
+            .keyboardShortcut(hasPrompt ? nil : .defaultAction)
             .disabled(!canCreate)
             .playtestControl(kind.createTitle, detail: "New window")
         }
@@ -108,34 +116,85 @@ struct FrontDoorView: View {
 
     // MARK: Prompt bar
 
-    /// The mock's prompt bar for the agent. Drawn, and dimmed until the agent
-    /// that answers it lands: a field that took typing and then did nothing
-    /// would be worse than one that says it is not ready.
+    /// The mock's prompt bar for the agent: describe a picture and Create
+    /// makes a new image sized to the description and Ask draws it there
+    /// (`AskFromNothing`). With Ask off in this release it is drawn dimmed,
+    /// since a field that took typing and then did nothing would be worse
+    /// than one that says it is not ready.
     private var promptBar: some View {
-        HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 9)
-                .fill(LinearGradient(colors: [Color(red: 0.43, green: 0.55, blue: 1),
-                                              Color(red: 0.77, green: 0.42, blue: 1)],
-                                     startPoint: .topLeading, endPoint: .bottomTrailing))
-                .frame(width: 30, height: 30)
-                .overlay {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
+        let live = Experiments.shared.askEnabled
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(LinearGradient(colors: [Color(red: 0.43, green: 0.55, blue: 1),
+                                                  Color(red: 0.77, green: 0.42, blue: 1)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 30, height: 30)
+                    .overlay {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                if live {
+                    TextField(FrontDoor.promptPlaceholder, text: $prompt)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 14))
+                        .focused($promptFocused)
+                        .onSubmit(describe)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .playtestControl(FrontDoor.promptPlaceholder, detail: "the New window's prompt bar")
+                } else {
+                    Text(FrontDoor.promptPlaceholder)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-            Text(FrontDoor.promptPlaceholder)
-                .font(.system(size: 14))
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Button(FrontDoor.createTitle) {}
-                .buttonStyle(FrontDoorProminentButtonStyle(large: true))
-                .disabled(true)
+                Button(FrontDoor.createTitle, action: describe)
+                    .buttonStyle(FrontDoorProminentButtonStyle(large: true))
+                    .keyboardShortcut(hasPrompt && !promptFocused ? .defaultAction : nil)
+                    .disabled(!canDescribe)
+                    .playtestControl(FrontDoor.createTitle, detail: "the New window's prompt bar")
+            }
+            .padding(10)
+            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(promptFocused ? Color.accentColor.opacity(0.6) : Color(nsColor: .separatorColor)))
+            .contentShape(.rect(cornerRadius: 12))
+            // A click anywhere on the bar puts the cursor in the field.
+            .onTapGesture { promptFocused = true }
+            .help(live ? FrontDoor.promptTip : FrontDoor.promptTipNotReady)
+            // Why the last description was not made (a video, or something
+            // that would already have to be open), with the words kept.
+            if let promptSays = editorState.ask.refusal {
+                Text(promptSays)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 12)
+                    .playtestControl("Ask Says", detail: promptSays)
+            }
         }
-        .padding(10)
-        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color(nsColor: .separatorColor)))
-        .help(FrontDoor.promptTip)
-        .accessibilityElement(children: .combine)
+        .onChange(of: prompt) { editorState.ask.refusal = nil }
+        // Edit > Ask… and its key, here: the cursor in this field.
+        .onChange(of: editorState.ask.promptFocusPass) { promptFocused = true }
+    }
+
+    private var hasPrompt: Bool { !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    private var canDescribe: Bool { Experiments.shared.askEnabled && hasPrompt && !described }
+
+    /// The prompt bar's Create: a picture request makes a new image, sized
+    /// to what it names or else to the image size picked below, and Ask draws
+    /// into it. Anything else says why and keeps the words.
+    private func describe() {
+        guard canDescribe else { return }
+        switch AskFromNothing.start(prompt, picked: image.size) {
+        case nil: return
+        case .video?: editorState.ask.refusal = AskFromNothing.videoSentence
+        case .needsSomethingOpen?: editorState.ask.refusal = AskFromNothing.nothingOpenSentence
+        case .picture(let size)?:
+            described = true
+            editorState.createBlankCanvas(size: size, asking: prompt.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
     }
 
     // MARK: Image or Video

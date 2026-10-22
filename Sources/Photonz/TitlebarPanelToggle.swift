@@ -160,14 +160,17 @@ struct TitlebarPanelToggle: View {
             }
             toggle
                 // View mode has no panel to show, so no toggle for it
-                // (`ViewEditMode`). Faded rather than taken out, so the
-                // switch beside it never slides.
-                .opacity(editorState.isWatching ? 0 : 1)
-                .allowsHitTesting(!editorState.isWatching)
+                // (`ViewEditMode`), and neither has a window with nothing
+                // open, where only Ask is here. Faded rather than taken out,
+                // so the switch beside it never slides.
+                .opacity(hidesToggle ? 0 : 1)
+                .allowsHitTesting(!hidesToggle)
                 .animation(.viewEditMode, value: editorState.isWatching)
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
+
+    private var hidesToggle: Bool { editorState.isWatching || !editorState.hasDocument }
 
     private var toggle: some View {
         let shown = editorState.isInspectorShown

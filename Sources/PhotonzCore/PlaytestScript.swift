@@ -2707,6 +2707,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// choice picked.
     case startFromFrontDoor(tile: String?, press: String, answer: String?, window: CGSize?, card: String?,
                             rest: String?, first: [String], gone: String?)
+    /// Ask with nothing open: type `text` into the New window's Describe
+    /// field and press its Create by pointer (`newWindow`), or press the
+    /// empty window's title bar Ask, type into the composer and press its
+    /// Ask by pointer (`emptyWindow`). The walk then drives the picture it
+    /// made. With `says`, the request is one Ask cannot do with nothing open:
+    /// the step fails unless no picture was made, the words stayed in the
+    /// field, and the window says exactly that. `window` and `card` are
+    /// `blank`'s; `card` photographs the window with the words typed, or with
+    /// `says`, once it has said why.
+    case askFromNothing(from: AskFromNothingPlace, text: String, says: String?, window: CGSize?, card: String?)
     /// Let the editor finish what the step before started. It ends the moment
     /// the app goes quiet, which is why a walk's waits cost seconds rather than
     /// minutes.
@@ -4452,7 +4462,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "appearance", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
+        "action", "appKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
@@ -4484,6 +4494,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .blankVideo: "blankVideo"
         case .startFromEmpty: "startFromEmpty"
         case .startFromFrontDoor: "startFromFrontDoor"
+        case .askFromNothing: "askFromNothing"
         case .wait: "wait"
         case .key: "key"
         case .shortcut: "shortcut"
@@ -4671,6 +4682,15 @@ public enum PlaytestStep: Sendable, Equatable {
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
             self = .startFromEmpty(row: try f.string("row"), window: window,
                                    card: try f.optionalString("card"))
+        case "askFromNothing":
+            let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
+            let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
+            let from = try f.string("from")
+            guard let place = AskFromNothingPlace(rawValue: from) else {
+                throw f.invalid("from", "must be newWindow or emptyWindow")
+            }
+            self = .askFromNothing(from: place, text: try f.string("text"), says: try f.optionalString("says"),
+                                   window: window, card: try f.optionalString("card"))
         case "startFromFrontDoor":
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
@@ -6752,4 +6772,10 @@ public struct ExpandedCutClaim: Hashable, Sendable {
         self.holdSeconds = holdSeconds
         self.within = within
     }
+}
+
+/// Where an `askFromNothing` step asks: the New window's Describe field, or
+/// the title bar Ask of a window with nothing open.
+public enum AskFromNothingPlace: String, Sendable, Equatable {
+    case newWindow, emptyWindow
 }

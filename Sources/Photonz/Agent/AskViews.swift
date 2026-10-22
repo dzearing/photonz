@@ -17,7 +17,7 @@ struct AskTitlebarButton: View {
     var body: some View {
         let ask = editorState.ask
         Button {
-            ask.isComposerShown ? ask.closeComposer() : ask.openComposer()
+            ask.isComposerShown ? ask.closeComposer() : ask.summon(in: editorState)
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "sparkles")
@@ -96,7 +96,16 @@ struct AskComposerOverlay: View {
                 .disabled(ask.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .playtestControl("Ask Send", detail: "the Ask composer's Ask button")
             }
+            // Asked with nothing open, a request it cannot do there: why,
+            // with the words still in the field.
+            if let refusal = ask.refusal {
+                Text(refusal)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .playtestControl("Ask Says", detail: refusal)
+            }
         }
+        .onChange(of: ask.draft) { ask.refusal = nil }
         .padding(14)
         .frame(width: 520)
         .glassEffect(.regular, in: .rect(cornerRadius: 16))

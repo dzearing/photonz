@@ -614,6 +614,41 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An askFromNothing step describes a picture in the New window or an empty window")
+    func askFromNothingDecodes() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "askFromNothing", "from": "newWindow", "text": "a sunset over the sea",
+              "width": 1280, "height": 900, "card": "typed" },
+            { "do": "askFromNothing", "from": "emptyWindow", "text": "a video of waves",
+              "says": "Ask can't make videos yet." }
+          ]
+        }
+        """)
+        guard case .askFromNothing(let place, let text, let says, let window, let card) = script.steps[0] else {
+            Issue.record("askFromNothing"); return
+        }
+        #expect(place == .newWindow)
+        #expect(text == "a sunset over the sea")
+        #expect(says == nil)
+        #expect(window == CGSize(width: 1280, height: 900))
+        #expect(card == "typed")
+        #expect(script.steps[0].name == "askFromNothing")
+        guard case .askFromNothing(.emptyWindow, "a video of waves", "Ask can't make videos yet.", nil, nil)
+                = script.steps[1] else {
+            Issue.record("refused askFromNothing"); return
+        }
+        #expect(PlaytestLockSafety.canRunLocked([script.steps[1]]))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "out": "/tmp/walk/out", "steps": [ { "do": "askFromNothing", "from": "dock", "text": "a cat" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "out": "/tmp/walk/out", "steps": [ { "do": "askFromNothing", "from": "newWindow" } ] }"#)
+        }
+    }
+
     @Test("A startFromFrontDoor step picks a tile and presses the primary button by pointer")
     func startFromFrontDoorDecodes() throws {
         let script = try decode("""

@@ -536,11 +536,14 @@ struct EditorCommands: Commands {
             // Ask (Next, `next-ask`), in Edit beside the Mac's own Writing
             // Tools. ⌘K as the mock prints it, except on a video, where ⌘K
             // is Premiere's Add Edit (Split at Playhead, UX-PATTERNS §7).
+            // Ready in a window with nothing open too: there it makes a
+            // picture for the request, and in the New window it is the
+            // Describe field (`AskSession.summon`).
             if Experiments.shared.askEnabled {
                 Divider()
-                Button("Ask…") { editor?.ask.openComposer() }
+                Button("Ask…") { if let editor { editor.ask.summon(in: editor) } }
                     .keyboardShortcut(timed ? nil : KeyboardShortcut("k", modifiers: .command))
-                    .disabled(!(editor?.hasDocument ?? false))
+                    .disabled(editor == nil)
             }
         }
 

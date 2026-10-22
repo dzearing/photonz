@@ -289,8 +289,12 @@ struct EditorView: View {
             //
             // The title bar is outside this view's tree, so the state it reads
             // is handed over rather than inherited.
+            //
+            // An empty window has Ask there all the same (Next, `next-ask`):
+            // a request typed with nothing open makes the picture it asks
+            // for. Not the New window, which draws its own title bar.
             .background {
-                if editorState.hasDocument {
+                if editorState.hasDocument || (TitlebarPanelToggle.offersAsk && !showsFrontDoor) {
                     TitlebarPanelToggleInstaller(editorState: editorState)
                 }
             }

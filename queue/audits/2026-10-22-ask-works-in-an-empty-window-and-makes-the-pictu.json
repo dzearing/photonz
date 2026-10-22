@@ -1,0 +1,55 @@
+{
+  "feature": "Describe what to create makes it, and Ask works with nothing open",
+  "epic": "agent-drivable",
+  "summary": "Type a picture into the New window's Describe field and Create opens a new image and Ask draws it there, with its row in the Agent area. In an empty window the title bar Ask, Edit > Ask… and Command K are ready and do the same.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Ask needs its local model running, as it does everywhere else today.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press Command N, type \"a sunset over the sea\" into Describe what to create.",
+      "shot": "2026-10-22-ask-from-nothing-1-typed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Return. A new 1440 by 1024 image opens, the New window closes, and Ask draws the sunset with a Drew a sunset over the sea row.",
+      "shot": "2026-10-22-ask-from-nothing-2-drawn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: the drawing goes, the blank picture stays."
+    },
+    {
+      "do": "Press Command N, type \"a video of waves on a beach\" and press Create: it says Ask can't make videos yet and keeps your words.",
+      "shot": "2026-10-22-ask-from-nothing-3-video-refused-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In a window with nothing open (its card says Drop an image here), click Ask in the title bar and ask \"measure this\": it says Nothing is open yet.",
+      "shot": "2026-10-22-ask-from-nothing-4-measure-refused-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the same window ask \"a lighthouse at night, 800 x 600\": the window becomes an 800 by 600 picture with the lighthouse drawn.",
+      "shot": "2026-10-22-ask-from-nothing-5-empty-window-drawn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the New window press Command K: the cursor goes into Describe what to create."
+    }
+  ],
+  "evaluate": [
+    "Is Return in the Describe field making the picture (and not a blank New Image) what you expect?",
+    "Should a request with no size or shape take the size picked in the list below the field (Desktop by default), as it does now?",
+    "Do the two one-line answers (Ask can't make videos yet. / Nothing is open yet.) say enough, or should they point at what to do next?",
+    "Does the Ask button alone in an empty window's title bar read as ready, next to the card?"
+  ],
+  "rough": [
+    "The sunset was drawn as a smaller picture in the middle of the white canvas rather than filling it, though the canvas was made just for it; the lighthouse did fill its canvas. That is how Ask places a drawing, folded into ask-on-the-local-model-makes-results-that-look-f.",
+    "What kind of request it is (a picture, a video, about something already open) is read from the words: working verbs at the start (measure, crop, find), words pointing at something open (this, the screenshot), and words naming time (video, animated). A request phrased oddly can land on the wrong side; the answer then says so and keeps the words.",
+    "A request names its shape by a size (800 x 600) or a format (a banner, a poster, a square image, portrait orientation); otherwise it takes the size picked in the New window. Ask can still turn the blank picture into an icon frame, as it does on any blank picture.",
+    "The New window draws its own title bar, so it has no Ask button: Edit > Ask… and Command K put the cursor in its Describe field instead.",
+    "No mock covers Ask in an empty window or the one-line answers.",
+    "The New window's prompt bar matches ui-entry-wt.html step 2; the mock's longer placeholder line sits in the field's tip (UX-PATTERNS §4).",
+    "Pictures were taken with the window behind another app, so the Create and Ask buttons show their background look."
+  ]
+}

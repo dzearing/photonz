@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/ask-makes-a-picture-from-the-new-window-walk",
+  "seed": "ask-works-in-an-empty-window-and-makes-the-pictu: the user's own example typed into the New window's Describe field at Next defaults, no flag touched. Create (clicked by pointer) opens a new 1440 by 1024 image in its own window, the New window closes, and Ask draws the sunset into it with the same rows in the Agent area as anywhere else; one Command Z takes the drawing back and leaves the blank picture",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "askFromNothing", "from": "newWindow", "text": "a sunset over the sea", "width": 1280, "height": 900, "card": "1-typed" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Agent Change 1 Switch", "reads": "on" },
+    { "do": "expectLayers", "atLeast": 2, "atMost": 400, "comment": "the background and whatever the drawing made" },
+    { "do": "describe", "stage": "2-drawn", "note": "the sunset Ask drew into the new picture, with its row in the Agent area" },
+    { "do": "snapshot", "name": "2-drawn" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "describe", "stage": "3-undone", "note": "one Command Z took the drawing back; the blank picture stays" },
+    { "do": "snapshot", "name": "3-undone" }
+  ]
+}

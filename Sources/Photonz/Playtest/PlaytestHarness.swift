@@ -1028,6 +1028,8 @@ private final class Run {
         case .startFromFrontDoor(let tile, let press, let answer, let size, let card, let rest, let first, let gone):
             try await startFromFrontDoor(tile: tile, press: press, answer: answer, window: size, card: card,
                                          rest: rest, first: first, gone: gone, number: number)
+        case .askFromNothing(let place, let text, let says, let size, let card):
+            try await askFromNothing(place, text: text, says: says, window: size, card: card, number: number)
 
         case .open(let file, let size):
             let url = try fileURL(file)
@@ -15880,6 +15882,102 @@ private final class Run {
         try await adopt(made, window: window, step: "startFromFrontDoor",
                         subject: "\"\(press)\" pressed on the front door"
                             + (tile.map { " after picking \"\($0)\"" } ?? ""),
+                        number: number)
+    }
+
+    /// Ask with nothing open, used the way a person uses it: words typed
+    /// into the New window's Describe field and its Create clicked by
+    /// pointer, or the empty window's title bar Ask clicked, the request
+    /// typed into the composer and its Ask clicked. The walk then drives the
+    /// picture that was made, or with `says`, checks nothing was made and the
+    /// window said exactly that, with the words kept.
+    private func askFromNothing(_ place: AskFromNothingPlace, text: String, says: String?, window size: CGSize?,
+                                card: String?, number: Int) async throws {
+        let step = "askFromNothing"
+        try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
+        let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
+        coordinator.openWindowAction?(.fresh(UUID()))
+        var opened: EditorState?
+        try await poll(place == .newWindow ? "the New window" : "an empty window", within: 15) {
+            opened = PlaytestHarness.knownEditors.last { !before.contains(ObjectIdentifier($0)) }
+            return opened != nil && (place == .emptyWindow || opened?.isFrontDoor == true)
+        }
+        guard let opened else { throw Failure(description: "no window opened") }
+        if place == .emptyWindow { opened.frontDoorChoice = false }
+        try await adoptEmpty(opened, step: step,
+                             subject: place == .newWindow ? "the New window" : "an empty window", number: number)
+        guard let window = opened.hostWindow else { throw Failure(description: "the window went away") }
+        let send: String
+        switch place {
+        case .newWindow:
+            // The Describe field, found by its own placeholder.
+            let fields = window.contentView.map { Self.findAll(NSTextField.self, in: $0) } ?? []
+            guard let field = fields.first(where: {
+                $0.isEditable && $0.placeholderString == FrontDoor.promptPlaceholder
+            }) else {
+                throw Failure(description: "the New window has no \"\(FrontDoor.promptPlaceholder)\" field taking typing")
+            }
+            window.makeFirstResponder(field)
+            send = FrontDoor.createTitle
+        case .emptyWindow:
+            try await pressControl(AskCopy.button, in: nil, count: 1, modifiers: [], across: nil, number: number)
+            send = "Ask Send"
+        }
+        let typed: NSTextView = try await patiently {
+            guard let field = window.firstResponder as? NSTextView else {
+                throw Failure(description: "no field has the keyboard after "
+                              + (place == .newWindow ? "clicking the Describe field" : "pressing Ask"))
+            }
+            return field
+        }
+        typed.insertText(text, replacementRange: typed.selectedRange())
+        await sleep(0.3)
+        note(number, step, "typed \"\(text)\" into "
+             + (place == .newWindow ? "the New window's Describe field" : "the Ask composer"))
+        // A request that will be made is photographed typed, before it goes;
+        // one that will be refused, once the window has said why.
+        if let card, says == nil {
+            try await photographEmptyWindow(opened, window: size, name: card, number: number)
+        }
+        let known = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
+        try await pressControl(send, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        if let says {
+            try await poll("the window to say \"\(says)\"", within: 5) { opened.ask.refusal != nil }
+            let said = opened.ask.refusal ?? ""
+            guard said == says else {
+                throw Failure(description: "the window said \"\(said)\", not \"\(says)\"")
+            }
+            await sleep(0.5)
+            let made = PlaytestHarness.knownEditors.contains {
+                !known.contains(ObjectIdentifier($0)) && $0.document != nil
+            }
+            guard opened.document == nil, !made else {
+                throw Failure(description: "\"\(text)\" made a picture, though the window said \"\(said)\"")
+            }
+            let kept = typed.string
+            guard kept.contains(text) else {
+                throw Failure(description: "the words were not kept: the field holds \"\(kept)\"")
+            }
+            note(number, step, "said \"\(said)\", made nothing, and kept the words")
+            if let card {
+                try await photographEmptyWindow(opened, window: size, name: card, number: number)
+            }
+            opened.hostWindow?.close()
+            return
+        }
+        var made: EditorState?
+        try await poll("the picture \"\(text)\" makes", within: 15) {
+            made = place == .emptyWindow
+                ? (opened.document != nil ? opened : nil)
+                : PlaytestHarness.knownEditors.last { !known.contains(ObjectIdentifier($0)) && $0.document != nil }
+            return made != nil
+        }
+        guard let made else { throw Failure(description: "\"\(text)\" made no picture") }
+        if place == .newWindow {
+            try await poll("the New window to close on its own", within: 5) { !(window.isVisible) }
+        }
+        try await adopt(made, window: size, step: step,
+                        subject: "\"\(text)\" asked " + (place == .newWindow ? "in the New window" : "in an empty window"),
                         number: number)
     }
 

@@ -1,0 +1,18 @@
+{
+  "out": "/tmp/photonz-playtest/ask-with-nothing-open-walk",
+  "seed": "ask-works-in-an-empty-window-and-makes-the-pictu: Ask with nothing open at Next defaults, no flag touched. In the New window a video request says Ask can't make videos yet and keeps the words; in an empty window the title bar Ask is there and pressed by pointer, a request about something already open says nothing is open yet and keeps the words, and a picture request naming its size (800 x 600) fills that window with an 800 by 600 image and Ask draws into it",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "askFromNothing", "from": "newWindow", "text": "a video of waves on a beach", "says": "Ask can't make videos yet.", "width": 1280, "height": 900, "card": "1-video-refused" },
+    { "do": "askFromNothing", "from": "emptyWindow", "text": "measure this", "says": "Nothing is open yet.", "width": 1280, "height": 900, "card": "2-measure-refused" },
+    { "do": "askFromNothing", "from": "emptyWindow", "text": "a lighthouse at night, 800 x 600", "width": 1280, "height": 900 },
+    { "do": "expectLayers", "atLeast": 1 },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Agent Change 1 Switch", "reads": "on" },
+    { "do": "describe", "stage": "3-drawn", "note": "the empty window became an 800 by 600 picture and Ask drew the lighthouse into it" },
+    { "do": "snapshot", "name": "3-drawn" }
+  ]
+}

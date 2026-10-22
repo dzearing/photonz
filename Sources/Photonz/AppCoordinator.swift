@@ -878,8 +878,13 @@ final class AppCoordinator {
     /// File ▸ New Blank Canvas, once a size has been chosen: a new window born
     /// holding that canvas. The window the question was asked from keeps its
     /// picture untouched.
-    func newBlankCanvasWindow(size: CGSize) {
-        openWindow(.blankCanvas(UUID(), size))
+    ///
+    /// `asking` is a request for Ask to draw into it, from the New window's
+    /// Describe field: held for the window until it is seeded.
+    func newBlankCanvasWindow(size: CGSize, asking: String? = nil) {
+        let id = UUID()
+        if let asking { AskHandoff.hold(asking, for: id) }
+        openWindow(.blankCanvas(id, size))
     }
 
     /// File ▸ New Video, once a size and length have been chosen.

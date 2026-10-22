@@ -185,6 +185,12 @@ public enum PlaytestLockSafety {
         // through accessibility. The first locked run of front-door-walk is
         // its watch; if it refuses there, take it out.
         "startFromFrontDoor",
+        // Added 2026-10-22 by reading, NOT yet watched under a lock: the same
+        // door, a field found by its own placeholder and typed into through
+        // its field editor (as `type` does), and buttons pressed through the
+        // app's own register. The first locked run of
+        // ask-makes-a-picture-from-nothing-walk is its watch.
+        "askFromNothing",
         // Added 2026-09-25 by reading, NOT yet watched under a lock (the screen
         // was unlocked all day): it asks the editor how wide each frame on
         // screen was read and how wide it is shown, the same kind of own state
@@ -552,6 +558,7 @@ public enum PlaytestLockSafety {
         case .blankVideo(_, let card): card != nil
         case .startFromEmpty(_, _, let card): card != nil
         case .startFromFrontDoor(_, _, _, _, let card, _, _, _): card != nil
+        case .askFromNothing(_, _, _, _, let card): card != nil
         default: false
         }
     }

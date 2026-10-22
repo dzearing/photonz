@@ -51,8 +51,8 @@ struct ImageEditorRootView: View {
                 if editorState.frontDoorChoice == nil { editorState.frontDoorChoice = opensAsFrontDoor }
                 // Starting from nothing while this window holds a picture opens
                 // another window rather than replacing what is here.
-                editorState.openBlankCanvasWindow = { [coordinator] size in
-                    coordinator.newBlankCanvasWindow(size: size)
+                editorState.openBlankCanvasWindow = { [coordinator] size, asking in
+                    coordinator.newBlankCanvasWindow(size: size, asking: asking)
                 }
                 editorState.openBlankVideoWindow = { [coordinator] size, lengthMS in
                     coordinator.newBlankVideoWindow(size: size, lengthMS: lengthMS)
