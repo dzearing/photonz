@@ -4,13 +4,15 @@
   "goal": "Typing 'a sunset over the sea' into the New window's Describe what to create field and pressing Create makes a new image and draws it. In any window with nothing open, Ask is ready too, instead of sitting dimmed.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 100,
+  "seq": 1.2,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:25:49.646Z",
-  "updated": "2026-10-22T16:27:13.635Z",
-  "deps": [],
+  "updated": "2026-10-22T16:33:50.820Z",
+  "deps": [
+    "starting-something-new-offers-just-image-or-vide"
+  ],
   "blockedBy": [],
   "notes": "User, 2026-10-22: 'also the \"ask\" in the dialog is not enabled', pointing at the New window. Confirmed in code: the prompt bar is a stub. FrontDoorView.swift:95-119 draws the placeholder as plain Text, with no field, and its Create is Button {} with .disabled(true). So it was built to look like the mock and never wired up. Separately, Edit > Ask... is disabled with no document (EditorCommands.swift:576-581, !hasDocument). I have not seen what the title bar Ask button does in an empty window: AskViews.swift:11-43 has no disabled rule, and AskSession.ask(in:) does not check for a document. Reproduce that first. Coordinate with the File-menu task (starting-something-new-offers-just-image-or-vide), which keeps this field in the New window and may move keys. The no-stored-subjects rule holds (queue/objectives.json principles).",
   "acceptance": [
@@ -34,6 +36,14 @@
     {
       "t": "2026-10-22T16:27:13.634Z",
       "note": "seq 1.2 -> 100"
+    },
+    {
+      "t": "2026-10-22T16:33:36.733Z",
+      "note": "seq 100 -> 1.2"
+    },
+    {
+      "t": "2026-10-22T16:33:36.863Z",
+      "note": "manager 2026-10-22: seq put back to 1.2, the intake window's order (the triage renumbering raced intake). Now waits on starting-something-new-offers-just-image-or-vide, which builds the New window and its Describe field."
     }
   ]
 }

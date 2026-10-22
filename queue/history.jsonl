@@ -13538,3 +13538,14 @@
 {"t":"2026-10-22T16:27:49.833Z","ev":"triage","summary":"merged 0, dropped 0, filed 2 (eval scores with the runner down; painted layers named by colour), promoted 2 focus tasks p2->p1 (one-command agent install, coverage check), reset 0, leftovers 0, renumbered p1 and p2 open tasks in steps of 10, logged 4 findings"}
 {"t":"2026-10-22T16:28:18.625Z","ev":"task_resequenced","id":"ask-works-on-a-mac-that-has-nothing-else-install","from":130,"to":1.3}
 {"t":"2026-10-22T16:28:50.553Z","ev":"digest","file":"2026-10-22.md"}
+{"t":"2026-10-22T16:33:33.391Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
+{"t":"2026-10-22T16:33:33.452Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-10-22T16:33:36.608Z","ev":"task_resequenced","id":"a-full-walk-check-that-gets-stopped-picks-up-whe","from":10,"to":1}
+{"t":"2026-10-22T16:33:36.670Z","ev":"task_resequenced","id":"starting-something-new-offers-just-image-or-vide","from":90,"to":1.1}
+{"t":"2026-10-22T16:33:36.735Z","ev":"task_resequenced","id":"ask-works-in-an-empty-window-and-makes-the-pictu","from":100,"to":1.2}
+{"t":"2026-10-22T16:33:36.800Z","ev":"task_note","id":"starting-something-new-offers-just-image-or-vide"}
+{"t":"2026-10-22T16:33:36.865Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
+{"t":"2026-10-22T16:33:50.890Z","ev":"task_created","id":"ask-works-on-what-you-have-picked-so-make-this-b","priority":"p1-high","title":"Ask works on what you have picked, so make this bigger changes the picked layer"}
+{"t":"2026-10-22T16:33:55.008Z","ev":"task_resequenced","id":"ask-works-on-what-you-have-picked-so-make-this-b","from":95,"to":105}
+{"t":"2026-10-22T16:34:06.272Z","ev":"task_created","id":"the-daily-renumbering-never-undoes-an-order-the","priority":"p2-normal","title":"The daily renumbering never undoes an order the intake window set while it ran"}
+{"t":"2026-10-22T16:34:37.574Z","ev":"manager","filed":2,"readyBefore":65,"readyAfter":66,"report":"queue/manager/2026-10-22-0934.md"}

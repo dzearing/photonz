@@ -1,0 +1,35 @@
+{
+  "id": "ask-works-on-what-you-have-picked-so-make-this-b",
+  "title": "Ask works on what you have picked, so make this bigger changes the picked layer",
+  "goal": "A person picks a layer (a button on a screenshot, a card, a title on a video) and asks Ask to make this bigger, round its corners or give it the accent colour. Ask should change the picked thing, the way the agent-edit mock shows with its 1 selected scope, and the way generative fill acts on a selection in Photoshop. Today Ask is never told what is picked, so this has nothing to aim at and the model has to guess from the words.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 105,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-22T16:33:50.886Z",
+  "updated": "2026-10-22T16:33:55.007Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence (read, 2026-10-22, HEAD b5be5bb0): Sources/PhotonzCore/AgentDocumentRead.swift carries no selection field (grep selected|selection|picked: nothing), AskPlanning.swift instructions never mention it, and AskViews.swift draws only the Agent title, on-device and the close button. Mock: docs/design/mocks/pages/agent-edit.html, the Agent group header reads 1 selected over the typed request make the CTA bigger and use the accent color round the corners more and add a soft shadow; the mock proposal and Accept card are NOT wanted (the user replaced Run plan with straight-away changes and rows on 2026-10-20). Competitors: Photoshop generative fill and Canva Magic Edit act on what is selected; Figma AI acts on the selection. Shared path: AgentTools.request and AgentWork.run serve both Ask and the server, so add it to the read once. Hard rule from queue/bin/runner-prompt.md: nothing stored or coded for any subject or request.",
+  "acceptance": [
+    "Reproduce first, at Next defaults with the model running: pick one layer on a picture with several, ask make this red, and record in the task log what Ask changed (expected today: a guess, a new shape, or the wrong layer)",
+    "The document read that Ask and the agent server both use says what is picked (ids and names), so an outside agent sees it too; the server tool docs and the Photonz skill say so in one line each",
+    "With something picked, Ask aims words like this, it and these at the picked layers; with nothing picked it works as today. A request that names another layer by name still goes to that layer",
+    "The Ask composer shows the scope as the agent-edit mock does (1 selected, 3 selected) next to its title, in the composer row it already has, and nothing when nothing is picked",
+    "At least three cases with a picked layer join the eval climb set (a change of size, of colour, of corners), scored with Scripts/ask-eval.sh, and the held-out total does not drop. Nothing about any case is coded: a general change to the read and the instructions",
+    "A walk picks a layer, asks make this bigger, and checks that only that layer changed and that one Command Z takes it back. It passes, and focus-drill reads clean for it",
+    "Ships behind next-ask at Next defaults; try path: open a screenshot, draw a rectangle and a circle, pick the circle, press Ask, type make this red. Audit written under queue/audits/ with before and after pictures beside the agent-edit mock. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-22T16:33:50.888Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-22T16:33:55.006Z",
+      "note": "seq 95 -> 105"
+    }
+  ]
+}

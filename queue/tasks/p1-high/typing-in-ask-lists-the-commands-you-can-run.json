@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:48.425Z",
-  "updated": "2026-10-22T16:27:13.429Z",
+  "updated": "2026-10-22T16:33:33.451Z",
   "deps": [
     "ask-makes-the-change-straight-away-and-each-chan"
   ],
@@ -58,6 +58,10 @@
     {
       "t": "2026-10-22T16:27:13.428Z",
       "note": "seq 130 -> 70"
+    },
+    {
+      "t": "2026-10-22T16:33:33.450Z",
+      "note": "manager 2026-10-22: today the composer opens over the top edge of the picture (queue/manager/shots/2026-10-22-ask-needs-ollama-typed.png, about 20 pt over a settings screenshot the request asks to measure). If this task keeps the composer up after Ask, it must not sit over the document being changed (the never-cover rule in UX-PATTERNS): park it where it covers neither the canvas content nor the Agent group, and say where in the audit."
     }
   ]
 }

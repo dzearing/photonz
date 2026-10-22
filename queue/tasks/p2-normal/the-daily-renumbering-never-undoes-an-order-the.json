@@ -1,0 +1,28 @@
+{
+  "id": "the-daily-renumbering-never-undoes-an-order-the",
+  "title": "The daily renumbering never undoes an order the intake window set while it ran",
+  "goal": "When the person files asks in the intake window while the daily triage is renumbering the queue, the order intake gave their asks must survive. On 2026-10-22 intake put the user's File menu and Describe what to create asks at the head of the queue, and eight seconds later the triage wrote its own numbers over them from a list it had read before, sending both from first in line to ninth and tenth. Nobody noticed until a later pass read the history.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-22T16:34:06.268Z",
+  "updated": "2026-10-22T16:34:06.271Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence, queue/history.jsonl 2026-10-22: 16:27:05.957 task_resequenced starting-something-new-offers-just-image-or-vide 145 -> 1.1 and 16:27:06.021 ask-works-in-an-empty-window-and-makes-the-pictu 147.5 -> 1.2 (intake); 16:27:13.565 the same two 1.1 -> 90 and 1.2 -> 100 (digest triage, renumbering in steps of 10 per queue/bin/digest-prompt.md line 16). The manager pass of 2026-10-22 put them back to 1.1 and 1.2 by hand. Seq writes go through queue.mjs seq in queue/bin/queue-lib.mjs.",
+  "acceptance": [
+    "Reproduce first with a drill: read the open tasks, change one task seq the way intake does, then apply a renumbering planned from the first read; record that today the intake seq is lost",
+    "Renumbering works from the queue as it is at the moment it writes (for example one queue.mjs renumber command that orders and writes in one go, or a seq write that refuses when the task changed since it was read); the digest prompt uses it instead of a string of seq calls",
+    "The drill passes after the change: the task intake moved keeps the place intake gave it, relative to the others, and the rest are renumbered as before",
+    "No visible app change, so no flag; audit written under queue/audits/ with the drill output before and after. Anything left rough is written into this task log, or filed if it clears the follow-up bar (queue/bin/follow-up-bar.md)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-22T16:34:06.270Z",
+      "note": "created (manager)"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "Photonz uses the File menu every Mac app uses. New (Command-N) only makes something new, and you choose an Image or a Video. Open (Command-O) and Open Recent open files. There is no 'New Window', and nothing about opening or capturing appears inside New.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 90,
+  "seq": 1.1,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:25:49.544Z",
-  "updated": "2026-10-22T16:27:13.564Z",
+  "updated": "2026-10-22T16:33:36.799Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-22: 'Sometimes i just want to create an image. I don't want to design ui. Can we just simplify and have \"Image\" or \"Video\" in the new dialog?' then 'what is stupider is that there's no New button. What the hell is new window? I want traditional, new, open, ... new should not have load image in it.' then 'use straightforward IA!!!' (The screenshot of the New window was pasted in chat and not saved: it showed Open... and a blue + Open Image... in the title bar, the dimmed Describe what to create / Create, tiles for Design UI, Edit an image, Edit video and Capture & redline, and Recent.) This is the user's own call, and it overrides the front door mock's tiles and Open buttons. Don't make it a decision card. Where things are: the New window is FrontDoorView.swift (templates :122-215, Open... and Open Image... header :60-80, Recent). Its words are in PhotonzCore/FrontDoor.swift (FrontDoorTemplate designUI/editImage/editVideo/captureRedline :12-64; primaryTitle :90-99 names Open Image... for editImage). It shows through Experiments.frontDoorEnabled (EditorWindowRoots.swift:19-51). The File menu is EditorCommands.swift:325-370: New Window is Shift-Command-N, New Blank Canvas and New Video have no key, New from Clipboard is Option-Command-N, Open... is at :370 and Open Recent at :291. Command-N is New Layer at :1889, a user decision from 2026-07-05. This request replaces that decision. The empty editor card (EditorView.swift:766-813, Blank canvas / Blank video / Design UI rows) should match: the same two choices, or gone if the New window covers it. Tutorial anchors are named by action (EmptyEditorStart), so migrate them deliberately. Sits alongside: the task to make Describe what to create work (filed the same minute). It depends on nothing. User, 2026-10-22, also said: 'new menu items should be at the top on the menu like every other app in the world. capture can be a secondary section.' The capture submenu is fileCaptureSubmenu (EditorCommands.swift:388), with items at :639-648.",
@@ -35,6 +35,14 @@
     {
       "t": "2026-10-22T16:27:13.563Z",
       "note": "seq 1.1 -> 90"
+    },
+    {
+      "t": "2026-10-22T16:33:36.668Z",
+      "note": "seq 90 -> 1.1"
+    },
+    {
+      "t": "2026-10-22T16:33:36.798Z",
+      "note": "manager 2026-10-22: seq put back to 1.1, the intake window's order. The daily triage's renumbering (16:27:13) overwrote intake's 1.1 eight seconds after intake set it, from a plan read before (history.jsonl task_resequenced events)."
     }
   ]
 }
