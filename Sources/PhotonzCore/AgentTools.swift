@@ -444,6 +444,19 @@ public enum AgentTools {
 
     public static func tool(named name: String) -> AgentTool? { all.first { $0.name == name } }
 
+    /// A font family as a call names it, with the system font's other names
+    /// (its optical sizes SF Pro Display and SF Pro Text, the names CSS and
+    /// older docs give it) read as nil, the system font. A plan of fifty
+    /// steps died at its eleventh on "SF Pro Display", a family this Mac does
+    /// not list, though it is the font every other step was set in
+    /// (2026-10-23). SF Pro Rounded is a design of its own and is kept.
+    public static func fontFamily(_ name: String?) -> String? {
+        guard let name = name?.trimmingCharacters(in: .whitespaces), !name.isEmpty else { return nil }
+        let system: Set<String> = ["sf pro", "sf pro display", "sf pro text", "san francisco", "system", "system font",
+                                   "-apple-system", "system-ui", "blinkmacsystemfont", ".applesystemuifont", ".sf ns"]
+        return system.contains(name.lowercased()) ? nil : name
+    }
+
     // MARK: Checking a call
 
     /// A call checked against its tool's schema and made into a request, or
@@ -620,7 +633,7 @@ public enum AgentTools {
             }
             return .success(.addText(document: document, text: AgentText(
                 string: words, origin: CGPoint(x: args["x"]?.doubleValue ?? 0, y: args["y"]?.doubleValue ?? 0),
-                fontSize: cg(args["fontSize"]) ?? 24, fontName: args["fontName"]?.stringValue,
+                fontSize: cg(args["fontSize"]) ?? 24, fontName: AgentTools.fontFamily(args["fontName"]?.stringValue),
                 weight: args["weight"]?.stringValue.flatMap(TextWeight.init(rawValue:)), colorHex: color,
                 alignment: args["alignment"]?.stringValue.flatMap(TextAlign.init(rawValue:)),
                 width: cg(args["width"]), name: args["name"]?.stringValue,

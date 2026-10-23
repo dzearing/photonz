@@ -312,7 +312,7 @@ extension AgentTools {
                 return .success(.addStyle(document: document, style: .color(name: styleName, hex: hex)))
             }
             let treatment = TextTreatment(
-                fontName: args["font"]?.stringValue ?? "SF Pro",
+                fontName: AgentTools.fontFamily(args["font"]?.stringValue) ?? "SF Pro",
                 fontSize: CGFloat(args["size"]?.doubleValue ?? 16),
                 weight: args["weight"]?.stringValue.flatMap(TextWeight.init(rawValue:)) ?? .regular,
                 colorHex: hex ?? AgentDrawing.defaultStrokeHex)

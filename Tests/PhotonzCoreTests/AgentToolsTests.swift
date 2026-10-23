@@ -159,6 +159,23 @@ struct AgentToolsTests {
         let notAnObject = AgentTools.request(tool: "undo", arguments: .array([]))
         #expect(notAnObject.failure != nil)
     }
+
+    @Test("The system font's other names are read as SF Pro, so a plan never dies on one")
+    func systemFontNames() throws {
+        for name in ["SF Pro Display", "SF Pro Text", "San Francisco", "System", "-apple-system", "system-ui", ".AppleSystemUIFont"] {
+            let request = try AgentTools.request(tool: "add_text", arguments: Self.args(#"{"text":"Hi","x":0,"y":0,"fontName":"\#(name)"}"#)).get()
+            guard case .addText(_, let text) = request else { Issue.record("\(request)"); continue }
+            #expect(text.fontName == nil, "\(name) should be the system font")
+        }
+        for name in ["SF Pro Rounded", "New York", "Helvetica Neue"] {
+            let request = try AgentTools.request(tool: "add_text", arguments: Self.args(#"{"text":"Hi","x":0,"y":0,"fontName":"\#(name)"}"#)).get()
+            guard case .addText(_, let text) = request else { Issue.record("\(request)"); continue }
+            #expect(text.fontName == name, "\(name) is a font of its own")
+        }
+        let style = try AgentTools.request(tool: "add_style", arguments: Self.args(#"{"kind":"text","name":"Body","font":"SF Pro Text"}"#)).get()
+        guard case .addStyle(_, .text(_, let treatment)) = style else { Issue.record("\(style)"); return }
+        #expect(treatment.fontName == "SF Pro")
+    }
 }
 
 extension Result {
@@ -166,4 +183,5 @@ extension Result {
         if case .failure(let error) = self { return error }
         return nil
     }
+
 }
