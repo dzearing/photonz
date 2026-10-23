@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 20,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-23T10:51:34.382Z",
+  "updated": "2026-10-23T11:40:41.764Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -219,6 +219,22 @@
     {
       "t": "2026-10-23T10:51:34.380Z",
       "note": "Also seen (black cat 22.6 on 20261023-075807-ask): the first try was a correct rear view; the plan's unasked 'hind legs are visible' survived grounding, failed it, and the retry painted a side view the plan check passed as 'back facing the viewer'."
+    },
+    {
+      "t": "2026-10-23T11:40:41.562Z",
+      "note": "Measured after 9b106782: climb ten illustration/style cases 78.7 -> 84.7 (20261023-093450-ask -> 20261023-102225-ask), kite scene 90 and fox scene 91.2; held-out 60.3 (20261023-105134-ask-held-out) against 58.5 last and 61 best, drawings 69.5 (highest on the built-in engine; earlier 65.7 to 69.1), drawing lines clean 5.8 -> 6.4, didWhatWasAsked 6.3 -> 6.6, designed 6.0 -> 6.2. Full suite 14,248 green; walks ask-draws-an-illustration and ask-draws-a-scene ok at Next defaults. I did not open any held-out case or sheet."
+    },
+    {
+      "t": "2026-10-23T11:40:41.632Z",
+      "note": "Left rough (not filed, in the audit): a grainy dark night sky still bands raggedly; the smaller speck size keeps a few crumbs on ridgelines (layered sunset 85.6 -> 82.4, judges named specks). Audit: queue/audits/2026-10-23-a-scene-of-things-doing-something-together-is-dr-pass5.json; pictures opened: the before/after sheet, the badge old/new trace, the walk capture (clean badge, row 'Drew the sun over mountains with pines'), city flat and traced crops, sunset smoothing crops."
+    },
+    {
+      "t": "2026-10-23T11:40:41.697Z",
+      "note": "NOT reached, so the task stays open: held-out 60.3 against the 61 best. Whether that item is judged against 61 (first run on this engine, plan check silently off), against the pre-task 57.5, or on several runs is still the user's call; I have not changed the bar."
+    },
+    {
+      "t": "2026-10-23T11:40:41.762Z",
+      "note": "Scene tracing: sharp edges, no grey halos, small things kept (9b106782). Climb illustrations 78.7 -> 84.7; held-out 60.3 (drawings 69.5, best yet) against 61 best, so the held-out item stays open."
     }
   ],
   "started": "2026-10-23T09:31:56.889Z",
