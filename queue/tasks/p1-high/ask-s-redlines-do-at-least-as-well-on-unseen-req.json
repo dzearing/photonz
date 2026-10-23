@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-21T06:33:47.359Z",
-  "updated": "2026-10-22T16:27:13.905Z",
+  "updated": "2026-10-23T07:05:54.837Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured, not guessed: held-out run 20261021-010309-ask-held-out (before, commit 4514d304) redline group 35.4; after the calm redline (c9200d34) 20261021-050656-ask-held-out redline 19.5; after the follow-up fixes (aa4e3ce3: an empty find_measurements answer says to fall back to find_elements, Ask lays only the ids that answer the request, a redline never drops below three marks) 20261021-055152-ask-held-out redline 19.6. Totals 20.1 / 19.2 / 19.5. Only one baseline run exists, so a lucky baseline is possible: rerun the before commit's held-out once before chasing. A runner may not open Scripts/ask-eval/held-out/ or .ask-eval/held-out-runs/; the user can look at .ask-eval/held-out-runs/20261021-055152-ask-held-out/contact-sheet.png. Ideas not yet checked: requests that name a dimension the plan never measures (a card's width, the title's size), pictures LayoutRead reads poorly (dark app windows, photos), and the prompt sending every measuring request to find_measurements.",
@@ -41,6 +41,10 @@
     {
       "t": "2026-10-22T16:27:13.904Z",
       "note": "seq 180 -> 140"
+    },
+    {
+      "t": "2026-10-23T07:05:54.836Z",
+      "note": "From the scene task, 2026-10-23: the held-out redline group read 31.5 to 37.9 on every run through 20261023-023728-ask-held-out, then 5.5 (20261023-034535-ask-held-out) and 13.2 (20261023-061502-ask-held-out). Neither run changed anything about redlines: the first was a rerun on the same code as 023728, so this looks like a swing in how the built-in model answers redline requests rather than a code change. The climb redline case (settings-measurements) scores 46.6 now (20261023-070523-ask), the same as on 2026-10-22 (46.6, 47.4), so the drop is only in unseen requests. Totals only; no held-out case was opened."
     }
   ],
   "walks": []
