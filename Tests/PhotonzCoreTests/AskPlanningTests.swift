@@ -178,22 +178,14 @@ struct AskPlanningTests {
         #expect(AskTools.withoutStarters("not json") == "not json")
     }
 
-    @Test("A labelled row that would run past the bottom of the canvas grows the canvas down first")
-    func sheetGrowsTheCanvas() throws {
+    @Test("A sheet longer than the canvas plans no canvas size: the table grows the canvas as it lands")
+    func sheetPlansNoCanvasSize() throws {
         var talk = Self.sheet()
-        // Rows of 200 points, their names above and the gap below: from 100, three fit 1024.
         for index in 0..<5 {
             _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100, width: 80, height: 200)]))
         }
-        #expect(talk.steps.map(\.tool) == ["add_component", "add_component", "add_component",
-                                            "run_command", "add_component", "run_command", "add_component"])
-        let grows = talk.steps.filter { $0.tool == "run_command" }.map(\.arguments)
-        #expect(grows.allSatisfy { $0["command"]?.stringValue == "canvas_size" })
-        #expect(grows.allSatisfy { $0["arguments"]?["anchor"]?.stringValue == "topLeft" && $0["arguments"]?["width"]?.doubleValue == 1440 })
-        // The fourth row ends at 100 + 3 x 249 + 225 = 1072, the fifth at 1321; 48 below each.
-        #expect(grows.map { $0["arguments"]?["height"]?.doubleValue } == [1120, 1369])
-        #expect(talk.messages.last?["content"]?.stringValue?.contains("step 7") == true,
-                "the model is told the number its row really has")
+        #expect(talk.steps.map(\.tool) == Array(repeating: "add_component", count: 5))
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("step 5") == true)
     }
 
     @Test("Past a sheet's worth of components, more are refused and the model told to finish")

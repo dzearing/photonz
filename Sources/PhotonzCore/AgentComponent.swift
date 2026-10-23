@@ -148,6 +148,16 @@ public struct AgentNewComponent: Hashable, Sendable {
                 return "\(part.name) is centred in \(target), and there is no part called that."
             }
         }
+        for part in parts where part.kind == .text && part.centerIn == nil && part.frame.width > 0 {
+            let size = part.fontSize ?? 15
+            // Generous, so tight labels pass: a letter is about half the size wide.
+            if CGFloat((part.text ?? "").count) * size * Self.letterWidth > part.frame.width * 1.15 {
+                return "\(part.name)'s words are longer than its box, \(Int(part.frame.width)) wide, and would run past it. Make the box wider or the words shorter."
+            }
+        }
+        if let (a, b) = wordsOverWords {
+            return "\(a) and \(b) are words on top of words. Give each its own place (its own y, or its own x), so they sit apart."
+        }
         var looked: Set<String> = []
         for look in looks {
             guard looked.insert(look.name).inserted else { return "two looks are called \(look.name)." }
@@ -156,6 +166,48 @@ public struct AgentNewComponent: Hashable, Sendable {
             }
             for change in look.changes where !seen.contains(change.part) {
                 return "the \(look.name) look changes \(change.part), and there is no part called that. The parts are \(parts.map(\.name).joined(separator: ", "))."
+            }
+        }
+        return nil
+    }
+}
+
+extension AgentNewComponent {
+    /// Two parts of words that would land on one another in the first look,
+    /// by name, or nil. Sized from their font before anything is measured
+    /// (a line half as wide as its size per letter and one and a half sizes
+    /// tall), so a planner can refuse the call before it is built: a card's
+    /// title and body both centred in the card came out one on the other
+    /// (the eval, 2026-10-23).
+    static let letterWidth: CGFloat = 0.5
+
+    var wordsOverWords: (String, String)? {
+        func spot(_ part: AgentComponentPart) -> CGRect? {
+            guard part.kind == .text, let words = part.text, !words.isEmpty else { return nil }
+            let size = part.fontSize ?? 15
+            let width = min(CGFloat(words.count) * size * Self.letterWidth,
+                            part.frame.width > 0 ? part.frame.width : .greatestFiniteMagnitude)
+            let height = size * 1.5
+            if let target = part.centerIn, let box = parts.first(where: { $0.name == target })?.frame {
+                return CGRect(x: box.midX - width / 2, y: box.midY - height / 2, width: width, height: height)
+            }
+            let box = part.frame
+            let x: CGFloat = switch (box.width > 0, part.alignment) {
+            case (false, _), (true, .left?): box.minX
+            case (true, .right?): box.maxX - width
+            default: box.midX - width / 2
+            }
+            let y = box.height > 0 ? box.midY - height / 2 : box.minY
+            return CGRect(x: x, y: y, width: width, height: height)
+        }
+        let spots = parts.compactMap { part in spot(part).map { (part.name, $0) } }
+        for (index, (name, box)) in spots.enumerated() {
+            for (other, otherBox) in spots[(index + 1)...] {
+                let shared = box.intersection(otherBox)
+                // A little touching at the edges is two lines set close, not one on the other.
+                if !shared.isNull, shared.width > 2, shared.height > min(box.height, otherBox.height) / 3 {
+                    return (name, other)
+                }
             }
         }
         return nil
@@ -171,8 +223,11 @@ public struct AgentMadeComponent: Hashable, Sendable {
 
     public var componentID: UUID
     public var looks: [Look]
-    /// The words `labels` set: the row's name, then each look's name.
+    /// The words `labels` set for it: the row's name, then the name of any
+    /// look whose state is not its column's.
     public var labels: [UUID] = []
+    /// The table every labelled row is laid out as, nil without `labels`.
+    public var sheet: AgentSheetLayout?
 }
 
 // MARK: - Building it
@@ -279,11 +334,14 @@ extension PhotonzDocument {
                 for id in moving { trial.updateLayer(id: id) { $0.frame.origin.y += landing - row.minY } }
             }
         }
+        // A labelled row is a row of the sheet: the whole table is laid out
+        // again with it (`AgentComponentSheet.swift`).
+        let sheet = spec.labels ? trial.agentArrangeSheet(measure: measure) : nil
         self = trial
         return .success(AgentMadeComponent(
             componentID: componentID,
             looks: zip(spec.looks, mains).map { AgentMadeComponent.Look(name: $0.name, layer: $1) },
-            labels: labels))
+            labels: spec.labels ? trial.sheetLabels(of: componentID) : labels, sheet: sheet))
     }
 
     /// Makes room for and sets a labelled row's words: the looks move right
@@ -432,7 +490,7 @@ extension AgentTools {
                 "y": ["type": "number", "description": "Top edge of its looks, in canvas points."],
                 "step": ["type": "number", "minimum": 1, "description": "How far right each look sits from the one before, so looks of different components line up in columns. Its width plus 24 when left out."],
                 "property": ["type": "string", "description": "What the looks are: State when left out, or Size, Type."],
-                "labels": ["type": "boolean", "description": "true sets its name on the left of its row and each look's name under the look, as a sheet of a kit's components shows them (the row moves right to make room); false sets no words."],
+                "labels": ["type": "boolean", "description": "true makes it a row of the sheet: every labelled component on the canvas is laid out as one table, its name on the left, each state named once over its column and each look centred in its cell, rows an even gap apart, starting where the first row was asked for. false sets no words and leaves it where x and y say."],
                 "parts": ["type": "array", "minItems": 1,
                           "description": .string("Its first look, bottom first. \(componentPartWords)"),
                           "items": ["type": "object",

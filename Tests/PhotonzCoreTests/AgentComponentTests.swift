@@ -259,48 +259,87 @@ struct AgentComponentTests {
         #expect(Self.piece("Back", of: "Default", in: document, made)?.style.shadows.isEmpty == true)
     }
 
-    @Test("labels names the row on its left and each look under it, and they move with the row")
+    @Test("labels names the row on its left and its states once above them, and a second set goes under it")
     func labelled() throws {
         let json = Self.toggle.replacingOccurrences(of: #""labels": false,"#, with: #""labels": true,"#)
         var document = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
         let made = try document.agentAddComponent(try Self.spec(json), measure: Self.measure).get()
         let boxes = made.looks.compactMap { document.canvasBounds(of: $0.layer) }
-        let column = AgentNewComponent.labelColumn
-        // "Disabled" (64 wide here) is wider than the 51 point toggle, so the step makes room for it.
-        #expect(boxes.map(\.minX) == [100 + column, 188 + column, 276 + column])
-        let words = made.labels.compactMap { document.layer(id: $0) }
-        #expect(words.compactMap(\.text?.string) == ["Toggle", "Off", "On", "Disabled"])
-        let name = try #require(words.first)
+        let words = document.layers.filter { $0.text != nil }
+        #expect(Set(words.compactMap(\.text?.string)) == ["Toggle", "Off", "On", "Disabled"])
+        #expect(made.labels.compactMap { document.layer(id: $0)?.text?.string } == ["Toggle"],
+                "every state is its column's, so none is named under its look")
+        let name = try #require(made.labels.first.flatMap { document.layer(id: $0) })
         #expect(name.frame.minX == 100)
         #expect(name.frame.maxX <= boxes[0].minX)
         #expect(name.frame.midY.rounded() == boxes[0].midY.rounded(), "the name sits level with the row")
-        for (caption, box) in zip(words.dropFirst(), boxes) {
-            // Under the look: the editor's own badge naming a component's state sits above it.
-            #expect(caption.frame.minY >= box.maxY, "\(caption.text?.string ?? "") sits under its look")
-            #expect(abs(caption.frame.midX - box.midX) <= 1)
-        }
         #expect(Set(words.compactMap { $0.text?.fontSize }).count == 1, "one size for every label")
-        // A second set asked onto the same spot moves down, words and all.
+        // A second set asked onto the same spot goes under it, words and all.
         let again = try document.agentAddComponent(try Self.spec(json), measure: Self.measure).get()
         let secondName = try #require(again.labels.first.flatMap { document.layer(id: $0) })
-        let lowest = (made.labels + made.looks.map(\.layer)).compactMap { document.canvasBounds(of: $0)?.maxY }.max() ?? 0
-        let secondTop = (again.labels + again.looks.map(\.layer)).compactMap { document.canvasBounds(of: $0)?.minY }.min() ?? 0
-        #expect(secondTop >= lowest + AgentNewComponent.lookGap,
-                "\((made.labels + made.looks.map(\.layer)).compactMap { document.canvasBounds(of: $0) }) then \((again.labels + again.looks.map(\.layer)).compactMap { document.canvasBounds(of: $0) })")
+        let lowest = made.looks.compactMap { document.canvasBounds(of: $0.layer)?.maxY }.max() ?? 0
+        let secondTop = again.looks.compactMap { document.canvasBounds(of: $0.layer)?.minY }.min() ?? 0
+        #expect(secondTop == lowest + AgentNewComponent.rowGap)
         #expect(secondName.frame.minX == 100)
     }
 
-    @Test("A labelled row of small looks steps far enough that the state names never touch")
-    func captionsNeverTouch() throws {
-        let json = ##"""
-            {"name": "Checkbox", "x": 0, "y": 0, "labels": true, "firstLook": "Unchecked",
-             "parts": [{"name": "Box", "shape": "rectangle", "x": 0, "y": 0, "width": 22, "height": 22}],
-             "looks": [{"name": "Indeterminate", "changes": [{"part": "Box", "opacity": 0.5}]}]}
+    @Test("Words set on top of other words are refused, naming both, so the component is drawn again")
+    func wordsOverWords() throws {
+        func card(_ title: String, _ body: String) -> String {
+            ##"""
+            {"name": "Card", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 120},
+                       {"name": "Title", "shape": "text", "text": "Card Title", "fontSize": 17, \##(title)},
+                       {"name": "Body", "shape": "text", "text": "Card content goes here", "fontSize": 15, \##(body)}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#F2F2F7"}]}]}
             """##
-        let (document, made) = try Self.built(json)
-        let captions = made.labels.dropFirst().compactMap { document.layer(id: $0)?.frame }
-        #expect(captions.count == 2)
-        #expect(captions[0].maxX + 8 <= captions[1].minX, "\(captions)")
+        }
+        // Both centred in the card: one line on the other.
+        guard case .failure(let stacked) = try Self.request(card(
+            #""centerIn": "Background", "x": 0, "y": 0, "width": 0, "height": 0"#,
+            #""centerIn": "Background", "x": 0, "y": 0, "width": 0, "height": 0"#)) else {
+            Issue.record("accepted words over words"); return
+        }
+        #expect(stacked.message.contains("Title") && stacked.message.contains("Body"), "\(stacked.message)")
+        // Boxes that share a middle put the words on one another too.
+        guard case .failure = try Self.request(card(#""x": 16, "y": 40, "width": 168, "height": 20"#,
+                                                    #""x": 16, "y": 30, "width": 168, "height": 40"#)) else {
+            Issue.record("accepted boxes sharing a middle"); return
+        }
+        // One under the other is a card.
+        #expect(throws: Never.self) {
+            _ = try Self.request(card(#""x": 16, "y": 16, "width": 168, "height": 24"#,
+                                      #""x": 16, "y": 48, "width": 168, "height": 24"#)).get()
+        }
+        // Side by side in their own boxes is a segmented control.
+        let segments = ##"""
+            {"name": "Segments", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 0, "width": 180, "height": 28},
+                       {"name": "One", "shape": "text", "text": "One", "x": 0, "y": 0, "width": 60, "height": 28},
+                       {"name": "Two", "shape": "text", "text": "Two", "x": 60, "y": 0, "width": 60, "height": 28},
+                       {"name": "Three", "shape": "text", "text": "Three", "x": 120, "y": 0, "width": 60, "height": 28}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Track", "fill": "#E5E5EA"}]}]}
+            """##
+        #expect(throws: Never.self) { _ = try Self.request(segments).get() }
+    }
+
+    @Test("Words longer than the box they sit in are refused, so they never run past the component's edge")
+    func wordsPastTheirBox() throws {
+        func card(_ words: String, width: Int) -> String {
+            ##"""
+            {"name": "Card", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 120},
+                       {"name": "Body", "shape": "text", "text": "\##(words)", "fontSize": 15, "x": 16, "y": 40, "width": \##(width), "height": 24}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#F2F2F7"}]}]}
+            """##
+        }
+        guard case .failure(let long) = try Self.request(card("Card body text goes here with description.", width: 168)) else {
+            Issue.record("accepted words longer than their box"); return
+        }
+        #expect(long.message.contains("Body"), "\(long.message)")
+        #expect(throws: Never.self) { _ = try Self.request(card("Card body text", width: 168)).get() }
+        // A box of no width is no box: the words sit from its left edge.
+        #expect(throws: Never.self) { _ = try Self.request(card("Card body text goes here with description.", width: 0)).get() }
     }
 
     @Test("A text colour change lands on the words")

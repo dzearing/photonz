@@ -303,11 +303,10 @@ public struct AskConversation: Sendable {
     public static let contextWindow = 32768
 
     /// The canvas's width, read from the document, for sorting what
-    /// `find_elements` finds.
+    /// `find_elements` finds. A sheet of components that needs more room
+    /// than the canvas has grows it as it lands, from the table as laid out
+    /// (`AgentDesignWork.addComponent`), so the plan needs no height.
     private let canvasWidth: Double
-    /// And its height, for how many rows a sheet of components holds; it
-    /// grows with a plan that grows the canvas.
-    private var canvasHeight: Double
 
     /// `components` and `styles` are list_components' and list_styles'
     /// answers, handed over up front so "on brand" never starts from nothing.
@@ -324,7 +323,6 @@ public struct AskConversation: Sendable {
         self.paints = paints
         let canvas = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]
         canvasWidth = canvas?["width"]?.doubleValue ?? 0
-        canvasHeight = canvas?["height"]?.doubleValue ?? 0
         var instructions = Self.instructions(documentRead: documentRead, paints: paints)
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
@@ -395,16 +393,6 @@ public struct AskConversation: Sendable {
                    steps.filter({ $0.tool == "add_component" }).count >= Self.mostComponents {
                     tell(name, "Not planned: \(Self.mostComponents) components fill a sheet. Plan nothing more of them; finish.")
                     continue
-                }
-                if name == "add_component", arguments["labels"]?.boolValue == true, let height = sheetHeight(with: arguments),
-                   height > canvasHeight {
-                    // The sheet goes on down the page: the canvas grows from
-                    // its top edge first, so nothing already there moves.
-                    canvasHeight = height
-                    steps.append(AskStep(tool: "run_command", arguments: [
-                        "command": "canvas_size",
-                        "arguments": ["width": .number(canvasWidth), "height": .number(height), "anchor": "topLeft"],
-                    ]))
                 }
                 if name == "add_text", let words = arguments["text"]?.stringValue, let earlier = labelledBy(words) {
                     tell(name, "Not planned: step \(earlier) already sets those words beside its row. Plan something else, or finish.")
@@ -484,24 +472,6 @@ public struct AskConversation: Sendable {
         return nil
     }
 
-    /// How tall the canvas has to be for one more labelled row under the
-    /// rows planned so far (each as tall as its parts, its state names under
-    /// and the gap below), with a margin under it; nil when the canvas is not
-    /// known. Past the bottom the app finds no free row and the rest pile up
-    /// on one another (2026-10-23), so a sheet that needs more grows the
-    /// canvas down instead, as the skill does.
-    func sheetHeight(with arguments: AgentJSON) -> Double? {
-        guard canvasHeight > 0, canvasWidth > 0 else { return nil }
-        let rows = steps.filter { $0.tool == "add_component" && $0.arguments["labels"]?.boolValue == true }
-            .map(\.arguments)
-        let top = (rows.first ?? arguments)["y"]?.doubleValue ?? 0
-        let used = rows.reduce(top) { $0 + Self.rowHeight($1) + Double(AgentNewComponent.lookGap) }
-        return used + Self.rowHeight(arguments) + Self.sheetMargin
-    }
-
-    /// Room left under the last row of a sheet that grew the canvas.
-    static let sheetMargin = 48.0
-
     /// Whether a runner's error says it could not read the model's reply as
     /// a tool call (llama.cpp: "Failed to parse tool call arguments as
     /// JSON"). One such reply twenty calls into a kit lost every step already
@@ -536,7 +506,7 @@ public struct AskConversation: Sendable {
             .filter { candidate in rows.filter { width(steps[$0].arguments) + gap <= candidate }.allSatisfy { fits($0, candidate) } }
             .max()
         // And down: each row straight under the last, where the app will find
-        // it free, so the room counted by `sheetHeight` is the room used.
+        // it free, so a later row never lands on an earlier one.
         var y = steps[first].arguments["y"]?.doubleValue ?? 0
         for index in rows {
             guard var arguments = steps[index].arguments.objectValue else { continue }
@@ -774,10 +744,10 @@ public struct AskConversation: Sendable {
         font at one small type scale, the platform's own colours put straight on the parts (save no styles \
         unless asked), one corner radius per kind, padding on the 8 point grid, words centred in their control.
         - Shown as a table or sheet: first a title with add_text at the top left, the largest words on \
-        the sheet; then one row per component, each add_component with labels true (it names the row and \
-        each state where they land, so set no other labels yourself), the same x and the same step for \
-        every component so the states line up in columns, and each row's y below the last, every row \
-        inside the canvas. Place no starters on it.
+        the sheet; then one row per component, each add_component with labels true, the same x for \
+        every component and each row's y below the last. Photonz lays the labelled rows out as one table \
+        (the names down the left, each state named once over its column, every look in its cell, the canvas \
+        grown when it needs more room), so set no labels or headers yourself. Place no starters on it.
         """
 
     /// How to draw when there is no picture model: the model's own svg.

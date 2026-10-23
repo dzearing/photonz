@@ -1,0 +1,28 @@
+{
+  "feature": "A sheet of components comes out as a clean table",
+  "epic": "agent-skills",
+  "summary": "Ask for components in their states and the rows Photonz builds now land as one table: the title, a header row naming each state once over its column, the names down the left, every look centred in its cell on one grid, rows evenly apart, and the canvas growing when the table needs room. Rows with a different set of states (off and on, selected) get their own header row on the same grid.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A blank picture, 1440 by 1024.",
+  "switched": {},
+  "try": [
+    { "do": "Make a blank picture and press Ask (Command K).", "shot": "2026-10-20-user-ask-component-sheet-mess.png", "shotNote": "Before: what the same request made on 2026-10-20." },
+    { "do": "Type: create a table of apple like quality base components that show different states and text, and send it.", "shot": "2026-10-23-component-sheet-window-sc.png" },
+    { "do": "When it finishes, export the picture (or zoom out) and read the table without the canvas chips over it.", "shot": "2026-10-23-component-sheet-ask-after.png", "shotNote": "Ask on this Mac, the picture as exported." },
+    { "do": "Ask for one more labelled component and watch the whole table lay itself out again with it.", "shot": "2026-10-23-component-sheet-skill-after.png", "shotNote": "The same request through the Photonz skill." },
+    { "do": "Ask the skill for a design system sheet: buttons, text fields, cards and navigation.", "shot": "2026-10-23-design-system-sheet-skill-after.png" }
+  ],
+  "evaluate": [
+    "Does the exported sheet read as one table, with every look under its own state name?",
+    "Are separate header rows for off and on, or selected, clearer than one wide header with empty cells?",
+    "Is a header row once per group of rows enough, or do you want the state under every look again?",
+    "On the canvas, do the purple name chips over each copy get in the way of reading the header row?"
+  ],
+  "rough": [
+    "On the canvas the purple name chip over each component copy covers the header row at normal zoom (the window picture above); the exported picture is clean. Filed as its own task, named in this task's log.",
+    "Ask on this Mac is not at the bar: the judge gives it 5 to 6 on every line (clean 6, typography 6, aligned 6, designed 5, did what was asked 5; score 52, was 49.4). What holds it back is inside its own drawings: a checkbox labelled Off drawn checked, a toggle and a switch drawn as the same control, states that barely differ. This task stays open for it.",
+    "The skill clears 8 on every line for the user's own request (8, 8, 8, 8, 9; score 88.8, was 84.4) and on the design system sheet all but aligned (7; score 86.4, was 61.7 at the first baseline).",
+    "Rows are grouped by their states, so the model's own order can change: rows sharing Default, Hover, Pressed, Disabled sit together above the off and on rows.",
+    "A row with only two of four states leaves empty cells on the right; the judge reads those as holes.",
+    "No mock covers this surface: it is a picture Ask makes, judged against the eval's rubric."
+  ]
+}

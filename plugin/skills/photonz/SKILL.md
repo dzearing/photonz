@@ -127,9 +127,13 @@ Photonz work should look designed, not assembled.
    with `x`, `y`, `width`, `height` inside the component; words sit centred in
    their box unless `alignment` says otherwise), `firstLook` naming the parts as
    given, and `looks`, each state with only what `changes`. Pass `labels: true`
-   so its name sits left of its row and each state is named under its look, and
-   give every kind the same `x` and `step` so the states line up in columns.
-   Each becomes one Library component with its states as versions.
+   and the same `x` for every kind, each row's `y` below the last: Photonz lays
+   the labelled rows out as one table (names down the left, each state named
+   once over its column, every look centred in its cell, rows evenly apart, the
+   canvas grown when it needs room), so set no row names or state headers
+   yourself. Give states the same names across kinds (Default, Hover, Pressed,
+   Disabled) so they share columns. Each becomes one Library component with its
+   states as versions.
 4. Make them look like the kit: the system font at one small type scale, the
    platform's own colours, one corner radius per kind, padding on the 8 grid.
 5. `render_picture` the sheet and fix what reads wrong.

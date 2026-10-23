@@ -355,8 +355,24 @@ moved, resized, hidden or reworded). Each look becomes a named version
 (`addComponentVersion`), the question they answer is called State, and the
 looks sit in a row from `x`, `y`, `step` apart. A row that would land on
 another drawing drops to the next free row at the same x, 24 clear. `labels`
-sets the component's name on the left of its row and each state's name under
-its look. One undo step; the answer's `layer` is the first look.
+makes it a row of the sheet. One undo step; the answer's `layer` is the first
+look.
+
+**The sheet is a table** (`asking-for-a-sheet-of-components-gives-a-clean-t`,
+`AgentComponentSheet.swift`). Every labelled add_component lays every labelled
+row on the canvas out again as one table, from where the table already starts:
+a header row naming each state once over its column, the components' names on
+one left edge, each look centred in its cell, cells as wide as the canvas
+allows with the left margin kept on the right, and rows 32 apart. Columns are
+named by what most rows call each state (`sheetColumns`): the first column by
+the commonest first look, the rest by the state names the most rows share, in
+the order they mostly come; a look named like a column goes in it, others take
+the free columns from the left and keep their own name under them (a toggle's
+On under Hover). Header and caption words are set anew each time and are found
+again by name (`<State> Header`, `<Row> <State> Label`), the row's name
+(`<Row> Label`) is what makes a component a row. A table that runs past the
+canvas grows it from the top left in the same undo step
+(`AgentDesignWork.addComponent`), so Ask's plan no longer guesses a height.
 
 It exists because the five-call-per-piece route (draw, group, make_component,
 add_variant, find the copy's pieces, recolour them) was out of reach of a model
