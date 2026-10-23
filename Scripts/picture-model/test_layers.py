@@ -8,6 +8,7 @@ Run with the Python Settings > Ask installs (it has numpy, Pillow, vtracer):
 from __future__ import annotations
 
 import os
+import re
 import sys
 import unittest
 
@@ -153,6 +154,23 @@ class ThingsKeepSmallDetails(unittest.TestCase):
         traced = layers.trace(thing(), colors=10)
         self.assertNotIn('id="White', traced["svg"])
         self.assertIn("Black", traced["svg"])
+
+    def test_a_grey_thing_on_white_has_no_square_behind_it(self):
+        # The tracer's stack starts with a full-picture rectangle; with the
+        # backdrop given as a colour, dropping it left the rectangle showing
+        # in the drawing's own grey whenever that grey covered more of the
+        # picture than the backdrop (a grey rabbit on a grey square).
+        picture = Image.new("RGB", (512, 512), (254, 254, 253))
+        draw = ImageDraw.Draw(picture)
+        draw.ellipse([20, 60, 492, 500], fill=(147, 128, 120), outline=(3, 2, 2), width=10)
+        draw.ellipse([300, 60, 360, 200], fill=(131, 101, 90), outline=(3, 2, 2), width=8)
+        traced = layers.trace(picture, colors=10)
+        boxes = [layers.path_box(m.group(2), float(m.group(4)), float(m.group(5))) for m in re.finditer(
+            r'<path id="([^"]+)" d="([^"]*)" fill="(#\w+)" transform="translate\(([-\d.]+),([-\d.]+)\)"', traced["svg"])]
+        self.assertTrue(boxes)
+        for box in boxes:
+            self.assertFalse(box[0] <= 1 and box[1] <= 1 and box[2] >= 1023 and box[3] >= 1023,
+                             f"a path covers the whole picture: {box}")
 
 
 class BackdropReached(unittest.TestCase):

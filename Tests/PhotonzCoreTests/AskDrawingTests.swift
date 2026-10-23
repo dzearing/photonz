@@ -155,6 +155,19 @@ struct AskDrawingTests {
         #expect(body["options"]?["num_ctx"]?.doubleValue == Double(AskConversation.contextWindow))
     }
 
+    @Test("Judging a name asks only whether it is the same kind of thing, never the pose or the setting")
+    func judgeAsksOnlyWhatItIs() throws {
+        // A one to three word name cannot carry a pose, an action or a place:
+        // "Bluebird" for "a bird on a branch singing" was judged no, and a
+        // scene that showed exactly that was thrown away (2026-10-23). The
+        // pose is the plan check's job.
+        let body = AskDrawingCheck.judgeBody(model: "qwen3:30b", subject: "a bird on a branch singing", seen: "Bluebird")
+        let question = try #require(body["messages"]?.arrayValue?.first?["content"]?.stringValue)
+        #expect(question.contains("\"a bird on a branch singing\"") && question.contains("\"Bluebird\""))
+        #expect(question.contains("kind of thing"))
+        #expect(question.contains("pose") && question.contains("setting"))
+    }
+
     @Test("A planning model that can see does its own looking; one that cannot hands it to the first on the Mac that can")
     func visionModel() {
         #expect(AskModels.eyes(planner: "qwen3.6:35b", plannerSees: true, installed: ["qwen3.6:35b", "llama3.2-vision:latest"]) == "qwen3.6:35b")

@@ -282,6 +282,16 @@ def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
     quantised.putpalette([int(v) for v in palette.flatten()] + [0] * (768 - palette.size))
     flat = np.asarray(quantised.convert("RGB")).copy()
     alpha = np.full(distance.shape, 255, np.uint8)
+    if not keep_backdrop:
+        # The backdrop is made clear, so the tracer leaves it out: given as a
+        # colour, it came back as a region over a full-picture rectangle of
+        # the drawing's own colour (the tracer's stack starts with one), and
+        # dropping the backdrop left a grey square behind a grey rabbit.
+        # Clear is the backdrop-coloured region joined to the edge; a white
+        # inside the drawing (a cheek) is not joined to it and stays.
+        own = np.abs(palette - backdrop).sum(axis=1).argmin()
+        if np.abs(palette[own] - backdrop).sum() <= 30:
+            alpha[backdrop_reached(indices == own)] = 0
     return Image.fromarray(np.dstack([flat, alpha]), "RGBA"), backdrop
 
 

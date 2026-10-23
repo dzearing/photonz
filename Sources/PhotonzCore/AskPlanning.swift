@@ -790,9 +790,17 @@ public enum AskDrawingCheck {
         AgentDrawingWords.words(text).map { $0.count > 3 && $0.hasSuffix("s") && !$0.hasSuffix("ss") ? String($0.dropLast()) : $0 }
     }
 
-    /// The planning model asked whether what was seen is the thing.
+    /// The planning model asked whether what was seen is the thing. Only the
+    /// kind of thing: a one to three word name cannot carry a pose, an action
+    /// or a place, so asking whether "Bluebird" is "a bird on a branch
+    /// singing" got no and threw away a scene that showed exactly that. The
+    /// pose and the setting are the plan check's (`planBody`).
     public static func judgeBody(model: String, subject: String, seen: String) -> AgentJSON {
-        let question = "Someone was shown a drawing and said it shows: \"\(seen)\". Would most people say it is a drawing of \(subject)? Answer only yes or no."
+        let question = """
+        A drawing was asked to show: "\(subject)". Someone shown it, without being told what it was, named it in a \
+        few words: "\(seen)". A name that short leaves out any pose, action, mood or setting, so judge only the \
+        kind of thing: is what they named the main thing asked for, or a kind of it? Answer only yes or no.
+        """
         // The planning model's own window, so asking it does not reload it.
         return ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
                 "options": ["temperature": 0, "num_ctx": .number(Double(AskConversation.contextWindow))],
