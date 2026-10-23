@@ -1,0 +1,26 @@
+{
+  "feature": "Painted scenes trace with sharp edges and keep their small things",
+  "epic": "agent-ask",
+  "summary": "A scene or illustration Ask paints no longer comes back with grey rings round every shape, and its small things (lit windows, stars, lamps) survive as a few layers instead of vanishing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, picture model downloaded in Settings > Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open a blank picture and press Ask (Cmd-K)." },
+    { "do": "Type 'draw the sun over mountains as a black silhouette badge with pines' and send.", "shot": "2026-10-23-scene-tracing-badge-sc.png" },
+    { "do": "Zoom in on the edge of a pine against the white." },
+    { "do": "Ask for 'an illustration of a city skyline at night' on a new blank picture.", "shot": "2026-10-23-scene-tracing-before-after.png" },
+    { "do": "Open the Layers list and find the lit windows layer." }
+  ],
+  "evaluate": [
+    "Do the edges of the pines and the sun look cleanly cut, with no grey outline?",
+    "Does the night skyline keep its lit windows?",
+    "Is one layer per window colour easier to work with than a layer per window would be?",
+    "Do sky gradients read as smooth bands, or still as ragged ones?"
+  ],
+  "rough": [
+    "A dark night sky still splits into a ragged band where its gradient is grainier than the smoothing allows; it was there before this change too.",
+    "Keeping smaller shapes also keeps a few crumbs along ridgelines: the layered sunset's judges named 'stray specks along the ridgelines' (82.4 against 85.6 before).",
+    "Before/after sheet compares two runs, so each row is a different painting of the same request; the badge old/new picture (2026-10-23-scene-tracing-badge-old-new.png) is the same painting traced both ways.",
+    "Held-out total 60.3 against 58.5 the run before and 61 best (drawings 69.5, the highest on this engine, clean 5.8 -> 6.4); the task's held-out item stays open against 61."
+  ]
+}
