@@ -31,6 +31,7 @@ PORT = int(os.environ.get("PHOTONZ_PICTURE_PORT", "8793"))
 LOOK = ("flat vector illustration, simple bold shapes, a few flat colours, clean edges, "
         "no gradients, no texture, no shading, no text, no letters, no border, "
         "the whole picture centred with space around it and nothing cut off by the edge, "
+        "every figure drawn whole from head to feet, "
         "on a plain white background")
 STYLES = {
     "line art": "black line art drawing, uniform thick outlines, no fill colours, no text, plain white background",
