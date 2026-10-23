@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-23T09:20:42.136Z",
+  "updated": "2026-10-23T10:51:34.382Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -207,9 +207,21 @@
     {
       "t": "2026-10-23T09:20:42.135Z",
       "note": "Plans keep only what the words ask for, retries hold the first plan, the closest try lands (cef38a10). Climb ten of eleven poses/scenes at 90 avg; held-out 58.5 (drawings 67.2) against 61 best, so the held-out item is still not reached."
+    },
+    {
+      "t": "2026-10-23T09:31:56.893Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-23T10:51:34.314Z",
+      "note": "Reproduced on climb run 20261023-093450-ask (the plain-thing, illustration and style drawing cases, never run since painting shipped, 82.4): judges named grey halos/fringes on 6 of 21, all scene-traced pictures. Re-tracing the badge painting: the scene blur turned edges into ramps, 7 of 16 palette colours were in-between greys, rings round every pine. And a night skyline lost every lit window to the speck filter. Fixed in 9b106782 (median + blur only on gradients; scene speck size width/320; small same-colour shapes gathered into one layer). Ten cases 78.7 -> 84.7, halo mentions 5 -> 0."
+    },
+    {
+      "t": "2026-10-23T10:51:34.380Z",
+      "note": "Also seen (black cat 22.6 on 20261023-075807-ask): the first try was a correct rear view; the plan's unasked 'hind legs are visible' survived grounding, failed it, and the retry painted a side view the plan check passed as 'back facing the viewer'."
     }
   ],
-  "started": "2026-10-23T07:28:39.129Z",
+  "started": "2026-10-23T09:31:56.889Z",
   "walks": [
     "ask-draws-a-scene-walk",
     "ask-draws-a-dog-walk",
