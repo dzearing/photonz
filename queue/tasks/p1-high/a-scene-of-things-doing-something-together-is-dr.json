@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-22T18:10:40.957Z",
+  "updated": "2026-10-23T03:34:51.842Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -107,9 +107,41 @@
     {
       "t": "2026-10-22T18:10:40.956Z",
       "note": "rotating check 2026-10-22T18:10:40Z, 32 walks run from 486 onward in the rotation: ask-draws-a-scene-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-10-23T01:45:33.511Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-23T03:34:45.044Z",
+      "note": "Reproduced the kite: re-traced the stored painting from run 20261022-092933-ask with layers.py; the string vanished where it crossed into the paler lower sky (in the paler band it stands out from the sky by about 34, and the palette's band colour swallowed it), and the eye and smile went too. Fixed in 64766b7c: thin lines found on the sharp picture (a top-hat per channel), kept only when long and sparse (at least the tracer's speck size, under a fifth of their box, so a lit-window grid stays to the blur), given a colour of their own when they would vanish into what surrounds them, and kept out of the mode filter. Nine stored climb-run scene paintings (only from climb-run time windows, none from held-out runs) re-traced: every scene without such a line gives the same paths as before; the kite string now reaches the hand. Scripts/picture-model/test_layers.py added."
+    },
+    {
+      "t": "2026-10-23T03:34:45.111Z",
+      "note": "Found and fixed (64766b7c): since Ask moved to the model built into Photonz (qwen3.6-35b-a3b), add_drawing came with no plan, so the plan check never ran: 22 and 32 checks a run on the morning climb runs, 0 on every run since 20261022-204744-ask. Photonz now asks the planning model for a drawing's plan when it is left out (AskDrawingCheck.planningBody / statements(fromAnswer:), AskPlan.settingDrawingPlan, AskSession.withDrawingPlans); the latest runs show 'plan for ...' and 'plan N of N shown' on every drawing."
+    },
+    {
+      "t": "2026-10-23T03:34:45.176Z",
+      "note": "Chose to ask for a missing plan in its own short question over telling the model in its tool reply to resend add_drawing with a plan, because a resent add_drawing is the stacked-pictures case this task already had to refuse, and a focused question does not depend on the model choosing to fill in an optional field."
+    },
+    {
+      "t": "2026-10-23T03:34:45.240Z",
+      "note": "Scene prompt (e0969844, server.py SCENE): every figure and object whole inside the frame; fox designed 6 -> 8. Climb, six scenes: 84.2 (20261023-015754-ask, string fix only) -> 88.4 (20261023-020749-ask, plan fix) -> 90.1 (20261023-023000-ask). Full suite 14,241 green; walks ask-draws-a-scene, ask-draws-a-dog, ask-draws-an-illustration, ask-paints-then-edits, ask-rows-say-what-they-made all ok at Next defaults."
+    },
+    {
+      "t": "2026-10-23T03:34:45.303Z",
+      "note": "NOT reached, so the task stays open. (1) Six scenes each 7+ on didWhatWasAsked AND designed in one run: latest run all six at 7+ on didWhatWasAsked, five of six on designed (bird designed 6: its eye touches the black eye stripe in the painting and merges into it in the traced layers). The two runs before missed fox designed 6 / robot designed 5, and robot 5/5 (a painting with no watering can, before the plan fix). The misses move between cases from run to run and are about how the painting looks. (2) Held-out total: 59.5 (20261023-023728-ask-held-out) against 61 (20261022-231423-ask-held-out); drawings group 66.7 against 69.1, drawing lines clean 6.2 vs 5.8, designed 6.2 vs 6.1, didWhatWasAsked 6.2 vs 6.4, crafted 6 vs 4. One run cannot separate that from noise (the drawing group has ranged 60.7 to 69.1 over the last six held-out runs). Next: run the held-out set once more before changing anything else; if it is still below 61, test the scene-prompt line (server.py SCENE) on its own, since the plan fix restores a check that measured +3 on the held-out set when it first shipped. I did not open any held-out case or its sheet."
+    },
+    {
+      "t": "2026-10-23T03:34:45.369Z",
+      "note": "Left rough (not filed): the a3b model's plans sometimes add a detail nobody asked for ('the cat's mouth is near the guitar sound hole'), which costs a repaint; the planning question already says not to. And in a thing (not a scene), a small dark detail touching a region of the same colour (the bird's eye on its eye stripe) merges into it in the layers; a tracer cannot split that without knowing the subject."
+    },
+    {
+      "t": "2026-10-23T03:34:51.840Z",
+      "note": "Thin lines kept through scene tracing (kite string reaches the hand) and the missing-plan regression fixed (64766b7c, e0969844). Still short: the six scenes all at 7+ on both lines in one run (latest 6/6 on didWhatWasAsked, 5/6 on designed), and the held-out total did not rise (59.5 vs 61). Next runner: re-run held-out first; see log."
     }
   ],
-  "started": "2026-10-22T07:32:12.228Z",
+  "started": "2026-10-23T01:45:33.507Z",
   "walks": [
     "ask-draws-a-scene-walk",
     "ask-draws-a-dog-walk",
