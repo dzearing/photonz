@@ -39,7 +39,7 @@ checked.
 | Measuring a screenshot | `find_measurements` (the redline code chooses: one size of each kind of control, then the spacing), `mark_measurements` (lays the ids you pick, readouts kept clear); `find_elements` and `add_measurement` for one particular thing |
 | Checking a screenshot's consistency | `find_misalignments` (edges that miss by 1 to 8 points, uneven gaps, padding or borders that differ, every number measured), `mark_misalignments` (redlines for the ids you pick) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
-| Components | `run_command make_component`, `list_components`, `place_component` |
+| Components | `add_component` (a new component with every state it has, in one call), `run_command make_component` (a group you built), `list_components`, `place_component` |
 | Video | `add_clip`, `cut`, `trim`, `move_clip`, `set_transition`, `add_title` / `list_titles`, `recommended_zooms` / `apply_zooms`, `set_playhead` |
 | Everything else | `list_commands` (every menu bar and right-click command, by name, with whether it can run now) and `run_command` |
 | Out | `export` (PNG, SVG, MP4), `undo`, `redo` |
@@ -85,9 +85,10 @@ Photonz work should look designed, not assembled.
 - **One of each.** One accent colour, one corner radius per kind of thing, one stroke
   width per drawing, one type family. Two weights at most on a page.
 - **The app's own styles first.** Title pages and name cards come from `list_titles`;
-  transitions from `set_transition`'s kinds; buttons, fields and cards from the
-  starter components in `list_components`. Use one style throughout a piece and keep
-  every repeat identical (same style, same words layout, same length).
+  transitions from `set_transition`'s kinds; the document's own components when it
+  has them. The Library's starters are placeholders, not a kit: never answer a request
+  for components with them. Use one style throughout a piece and keep every repeat
+  identical (same style, same words layout, same length).
 - **Legible always.** Never light words on a light ground or dark on dark. Check every
   text layer against what is actually behind it in a render.
 - **Names.** Name layers for what they are (`Title`, `Case 3`, `Primary Button`), so
@@ -112,6 +113,26 @@ Photonz work should look designed, not assembled.
    join into its clip.
 6. `contact_sheet` across the whole video and `video_frame` on each page: same layout,
    right words, nothing flashing, zooms where the clicks are. Fix, then `export` mp4.
+
+### Base components, a UI kit, controls in their states
+
+"Base components", "a set of controls showing their states", "a UI kit":
+
+1. Decide what the kit holds from what you know of the real one for that platform
+   (Apple's when none is named; look its kit up on the web when you can). A set of
+   base components is a dozen kinds or more, each with the states that kit shows
+   for it (default, hover, pressed, focused, disabled; on and off; selected).
+2. `add_text` the sheet's title at the top left, the largest words on it.
+3. One `add_component` per kind: its `parts` (boxes, ovals, words, Pen paths, each
+   with `x`, `y`, `width`, `height` inside the component; words sit centred in
+   their box unless `alignment` says otherwise), `firstLook` naming the parts as
+   given, and `looks`, each state with only what `changes`. Pass `labels: true`
+   so its name sits left of its row and each state is named above its look, and
+   give every kind the same `x` and `step` so the states line up in columns.
+   Each becomes one Library component with its states as versions.
+4. Make them look like the kit: the system font at one small type scale, the
+   platform's own colours, one corner radius per kind, padding on the 8 grid.
+5. `render_picture` the sheet and fix what reads wrong.
 
 ### An icon or a drawing as SVG
 

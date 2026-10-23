@@ -52,10 +52,31 @@ else, so Ask has it.
    makes as `$N`; the run swaps in the real id from that step's answer.
 4. Refused while planning: a call that fails its schema, a tool Ask does not
    offer, a repeat of a planned step, a size measurement of a box already
-   measured (85% overlap), and a thirteenth measurement.
+   measured (85% overlap), a thirteenth measurement, a thirteenth component,
+   and a labelled component row that would run off the bottom of the canvas
+   (`fitsOnSheet`). A refused call the model sends back unchanged twice more
+   ends the planning with the steps already written (`mostSameRefusals`): a
+   small model at temperature 0 otherwise spent every round left on it.
+   Thirty rounds at most (twelve until 2026-10-23, when a kit of base
+   components ran out of them).
 5. Words with no tool call end it: with steps, that is the plan; with none,
    the model's own sentence ("I can't…") is shown in the Agent group and
    nothing changes.
+
+**Components.** Asked for components, a kit or a design system, the model
+makes each kind itself with `add_component` (`docs/design/agent-mcp.md`,
+"Making a component"): its parts, its first look, and every state as only what
+changes, so each lands in the Library as one component with its states as
+versions. Which kinds a kit holds and how each looks is the model's own
+knowledge of the platform's real kit, sharpened by the prompt
+(`AskConversation.componentRules`); nothing about them is stored. The Library's
+starters are no longer offered as the answer (before 2026-10-23 the prompt said
+"the Library always offers starters... use them", and "base components" came
+back as the five starters copied four times). Shown as a table, each row is an
+`add_component` with `labels`, and the conversation lines them up as one sheet
+(`alignSheet`): every row at the first one's x, one column step for every row
+it fits. Measured on the user's request: 14.7 before, 47.7 after
+(2026-10-23, `Scripts/ask-eval.sh`, case `component-table`).
 
 `find_elements` answers are sorted before the model reads them
 (`AskElements`): each box is labelled `control`, `card`, `row` or `strip` by its
@@ -582,6 +603,9 @@ Agent group.
   "Make a pricing section on brand".
 * `Scripts/playtest/ask-draws-a-dog-walk.json`: a blank canvas, "draw a picture
   of a dog." (one Command Z takes it back), then "create a smiley face icon".
+* `Scripts/playtest/ask-builds-base-components-walk.json`: a blank canvas, the
+  user's "create a table of apple like quality base components that show
+  different states and text" (one Command Z takes the whole sheet back).
 
 Each presses the Ask button, types, sends, waits for `ran`, then undoes and
 redoes the request, turns its row off and on with the switch, deletes it, and

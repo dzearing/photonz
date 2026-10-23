@@ -86,7 +86,7 @@ enum AgentWork {
         case .newVideo, .addClip, .cut, .trim, .moveClip, .setTransition, .addTitle, .listTitles,
              .recommendedZooms, .applyZooms, .setPlayhead, .exportVideo:
             return try await AgentVideoWork.answer(request)
-        case .listStyles, .addStyle, .applyStyle, .setLayout:
+        case .listStyles, .addStyle, .applyStyle, .setLayout, .addComponent:
             return try await AgentDesignWork.answer(request)
         }
     }

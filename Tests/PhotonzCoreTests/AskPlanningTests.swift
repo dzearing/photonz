@@ -103,6 +103,79 @@ struct AskPlanningTests {
         #expect(said.contains("add_text"))
     }
 
+    @Test("A refused call sent back unchanged twice ends the planning with the steps already written")
+    func stuckOnARefusal() throws {
+        var talk = Self.conversation()
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"Hi","x":8,"y":8}"#)]))
+        let stuck = ("add_text", #"{"words":"Pricing"}"#)
+        #expect(talk.take(try Self.reply([stuck])) == .again(looks: []))
+        #expect(talk.take(try Self.reply([stuck])) == .again(looks: []))
+        guard case .planned(let plan) = talk.take(try Self.reply([stuck])) else {
+            Issue.record("still asking after the same refusal three times"); return
+        }
+        #expect(plan.steps.map(\.tool) == ["add_text"])
+        // A model that moves on from a refusal is not stuck.
+        var moving = Self.conversation()
+        _ = moving.take(try Self.reply([("add_text", #"{"text":"Hi","x":8,"y":8}"#)]))
+        _ = moving.take(try Self.reply([stuck]))
+        _ = moving.take(try Self.reply([stuck]))
+        #expect(moving.take(try Self.reply([("add_text", #"{"text":"Bye","x":8,"y":40}"#)])) == .again(looks: []))
+    }
+
+    static func sheet() -> AskConversation {
+        AskConversation(request: "base components", documentRead: #"{"kind":"picture","canvas":{"width":1440,"height":1024}}"#)
+    }
+
+    static func component(_ name: String, x: Int, y: Int, width: Int, height: Int = 32,
+                          labels: Bool = true) -> (String, String) {
+        ("add_component", """
+            {"name":"\(name)","x":\(x),"y":\(y),"labels":\(labels),"firstLook":"Default",\
+            "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":\(width),"height":\(height)}],\
+            "looks":[{"name":"Hover","changes":[{"part":"Back","opacity":0.8}]}]}
+            """)
+    }
+
+    @Test("Labelled components line up as one sheet: the first one's x, one column step that fits the canvas")
+    func sheetLinesUp() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        _ = talk.take(try Self.reply([Self.component("Field", x: 300, y: 200, width: 200)]))
+        _ = talk.take(try Self.reply([Self.component("Loose", x: 900, y: 300, width: 60, labels: false)]))
+        let args = talk.steps.map(\.arguments)
+        #expect(args.map { $0["x"]?.doubleValue } == [40, 40, 900])
+        #expect(args[0]["step"]?.doubleValue == 224 && args[1]["step"]?.doubleValue == 224,
+                "the widest look plus 24, for every labelled row")
+        #expect(args[2]["step"] == nil, "a component with no labels is left as asked")
+        // A look too wide to share a column with the rest keeps its own step,
+        // and the rest still share theirs.
+        var wide = Self.sheet()
+        _ = wide.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        _ = wide.take(try Self.reply([Self.component("Banner", x: 40, y: 200, width: 900)]))
+        _ = wide.take(try Self.reply([Self.component("Field", x: 40, y: 300, width: 200)]))
+        #expect(wide.steps.map { $0.arguments["step"]?.doubleValue } == [224, nil, 224])
+    }
+
+    @Test("A labelled row that would run past the bottom of the canvas is refused: the sheet is full")
+    func sheetIsFull() throws {
+        var talk = Self.sheet()
+        // Rows of 200 points, their names above and the gap below: from 100, three fit 1024 and a fourth does not.
+        for index in 0..<6 {
+            _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100, width: 80, height: 200)]))
+        }
+        #expect(talk.steps.count == 3, "\(talk.steps.count)")
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("full") == true)
+    }
+
+    @Test("Past a sheet's worth of components, more are refused and the model told to finish")
+    func enoughComponents() throws {
+        var talk = Self.sheet()
+        for index in 0..<(AskConversation.mostComponents + 2) {
+            _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100 + index * 60, width: 80, labels: false)]))
+        }
+        #expect(talk.steps.count == AskConversation.mostComponents)
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("finish") == true)
+    }
+
     @Test("The same step twice is refused, naming the step it repeats")
     func duplicateRefused() throws {
         var talk = Self.conversation()

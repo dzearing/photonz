@@ -72,6 +72,8 @@ public enum AgentRequest: Hashable, Sendable {
     case addStyle(document: String?, style: AgentNewStyle)
     case applyStyle(document: String?, style: String, layers: [String], part: AgentStylePart?)
     case setLayout(document: String?, layer: String, change: AgentLayoutChange)
+    // Components (`AgentComponent.swift`)
+    case addComponent(document: String?, component: AgentNewComponent)
 }
 
 /// Why a call was refused, in one sentence a model can act on.
@@ -170,7 +172,7 @@ public enum AgentTools {
          "description": .string("How many steps to \(verb). 1 when left out.")]
     }
 
-    private static func schema(_ properties: [String: AgentJSON], required: [String] = []) -> AgentJSON {
+    static func schema(_ properties: [String: AgentJSON], required: [String] = []) -> AgentJSON {
         ["type": "object", "properties": .object(properties),
          "required": .array(required.map(AgentJSON.string)), "additionalProperties": false]
     }
@@ -261,7 +263,7 @@ public enum AgentTools {
                 "command": ["type": "string", "description": "The command's name from list_commands, such as split_at_playhead."],
                 "arguments": ["type": "object", "description": "The command's arguments, as list_commands gives them."],
             ], required: ["command"])),
-    ] + drawingTools + videoTools + designTools
+    ] + drawingTools + videoTools + designTools + componentTools
 
     /// Slice 3: build a picture out of real layers and export it.
     static let drawingTools: [AgentTool] = [
@@ -509,6 +511,8 @@ public enum AgentTools {
             return videoRequest(name, args, document: document)
         case _ where designToolNames.contains(name):
             return designRequest(name, args, document: document)
+        case _ where componentToolNames.contains(name):
+            return componentRequest(name, args, document: document)
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }
@@ -531,7 +535,7 @@ public enum AgentTools {
         return .success(ink)
     }
 
-    private static func look(_ args: [String: AgentJSON], _ tool: String) -> Result<AgentLook, AgentToolError> {
+    static func look(_ args: [String: AgentJSON], _ tool: String) -> Result<AgentLook, AgentToolError> {
         Result {
             var look = AgentLook()
             look.fill = try ink(args["fill"], tool, "fill").get()

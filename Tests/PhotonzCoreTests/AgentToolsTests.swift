@@ -13,7 +13,7 @@ struct AgentToolsTests {
         try AgentJSON.parse(Data(json.utf8))
     }
 
-    @Test("The slices offer the reach, read, see and undo tools, the commands, drawing, video, then design")
+    @Test("The slices offer the reach, read, see and undo tools, the commands, drawing, video, design, then components")
     func theSliceIsComplete() {
         #expect(AgentTools.all.map(\.name) == [
             "list_documents", "list_history", "open_document", "read_document",
@@ -25,6 +25,7 @@ struct AgentToolsTests {
             "export", "new_video", "add_clip", "cut", "trim", "move_clip", "set_transition", "add_title",
             "list_titles", "recommended_zooms", "apply_zooms", "set_playhead",
             "list_styles", "add_style", "apply_style", "set_layout",
+            "add_component",
         ])
     }
 

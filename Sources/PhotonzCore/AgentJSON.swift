@@ -76,6 +76,45 @@ public enum AgentJSON: Hashable, Sendable {
     }
 
     public func encodedString() -> String { String(decoding: encoded(), as: UTF8.self) }
+
+    /// `encoded()`, except that inside every object `scope` picks out, keys
+    /// named in `leading` come first, in that order, and the rest after them
+    /// sorted. A model runner that constrains a tool call to its schema writes
+    /// the keys in the order the schema lists them, so this is the order the
+    /// model has to write them in (`AskTools.wireEncoded`).
+    public func encoded(leading: [String], inside scope: (AgentJSON) -> Bool) -> Data {
+        let rank = Dictionary(leading.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+        var out = ""
+        write(into: &out, ordered: false, rank: rank, scope: scope)
+        return Data(out.utf8)
+    }
+
+    private func write(into out: inout String, ordered: Bool, rank: [String: Int], scope: (AgentJSON) -> Bool) {
+        switch self {
+        case .array(let items):
+            out += "["
+            for (index, item) in items.enumerated() {
+                if index > 0 { out += "," }
+                item.write(into: &out, ordered: ordered, rank: rank, scope: scope)
+            }
+            out += "]"
+        case .object(let object):
+            let inScope = ordered || scope(self)
+            let keys = object.keys.sorted { a, b in
+                guard inScope else { return a < b }
+                return (rank[a] ?? Int.max, a) < (rank[b] ?? Int.max, b)
+            }
+            out += "{"
+            for (index, key) in keys.enumerated() {
+                if index > 0 { out += "," }
+                out += AgentJSON.string(key).encodedString() + ":"
+                object[key]?.write(into: &out, ordered: inScope, rank: rank, scope: scope)
+            }
+            out += "}"
+        default:
+            out += encodedString()
+        }
+    }
 }
 
 extension AgentJSON: Codable {

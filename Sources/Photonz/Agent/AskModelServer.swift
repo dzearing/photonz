@@ -89,7 +89,7 @@ final class AskModelServer {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = AskServerChat.body(fromOllama: body).encoded()
+        request.httpBody = AskTools.wireEncoded(AskServerChat.body(fromOllama: body))
         request.timeoutInterval = 300
         let data: Data
         do {

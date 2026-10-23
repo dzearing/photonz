@@ -343,6 +343,37 @@ inspector's Make Adjustable that an agent cannot press
 (`PhotonzDocument.agentWordCopyPiece`). Anything else set on a piece is refused
 with the two ways forward (edit_original, make_unique).
 
+### Making a component (`asking-for-base-components-builds-the-real-set-w`)
+
+`add_component` makes one Library component with every look it has in one
+call: the `parts` of its first look (rectangle, ellipse, text, path, each with
+`x`, `y`, `width`, `height` inside the component; words sit centred in that box
+unless `alignment` says left or right, or centred in another part with
+`centerIn`; a path's points are measured from its box), `firstLook` naming them,
+and `looks`, each state with only what `changes` (fill, colour, opacity, a part
+moved, resized, hidden or reworded). Each look becomes a named version
+(`addComponentVersion`), the question they answer is called State, and the
+looks sit in a row from `x`, `y`, `step` apart. A row that would land on
+another drawing drops to the next free row at the same x, 24 clear. `labels`
+sets the component's name on the left of its row and each state's name above
+its look. One undo step; the answer's `layer` is the first look.
+
+It exists because the five-call-per-piece route (draw, group, make_component,
+add_variant, find the copy's pieces, recolour them) was out of reach of a model
+on this Mac planning blind, so Ask answered "base components" with the five
+starters (the user, 2026-10-20). Nothing about which components a kit holds or
+how one looks is stored: the call says it. Built in
+`PhotonzDocument.agentAddComponent` (`AgentComponent.swift`), measured and
+landed by `AgentDesignWork`.
+
+**Key order on the wire.** The model built into Photonz runs on llama.cpp,
+which holds a tool call to its schema and lets the model write keys only in the
+order the schema lists them. Sorted, that put `height` before `width` and every
+look before the parts it changes, so the model wrote a box with no height and
+no looks at all (2026-10-23). `AskTools.wireEncoded` sends add_component's keys
+in the order a person writes them (`componentKeyOrder`); every other tool goes
+out sorted, exactly as before.
+
 **Reading one layer.** `read_document` lists 400 layers at most, top first; a
 board with a page of thirty rows runs past that and the rows below stop being
 listed. `layer` reads one group, frame or component and everything inside it

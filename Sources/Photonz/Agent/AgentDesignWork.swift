@@ -1,5 +1,6 @@
 import Foundation
 import PhotonzCore
+import PhotonzRender
 
 /// What the design-system tools do in the running app
 /// (`docs/design/agent-mcp.md`, "Design systems").
@@ -25,6 +26,8 @@ enum AgentDesignWork {
             return try applyStyle(AgentDocuments.editor(id).get(), style: style, layers: layers, part: part)
         case .setLayout(let id, let layer, let change):
             return try setLayout(AgentDocuments.editor(id).get(), layer: layer, change: change)
+        case .addComponent(let id, let component):
+            return try addComponent(AgentDocuments.editor(id).get(), component)
         default:
             throw Failure("That is not a design tool.")
         }
@@ -121,6 +124,54 @@ enum AgentDesignWork {
             let parts = Set(bySlot.keys.map(\.rawValue)).sorted().joined(separator: ", ")
             return .json(Applied(style: styleID.uuidString, layers: layers, part: parts, canUndo: editor.canUndo))
         }
+    }
+
+    struct MadeComponent: Encodable {
+        struct Look: Encodable {
+            let name: String
+            let layer: String
+            let frame: AgentDrawingWork.Box
+        }
+        /// The first look, so a plan's "$N" names something on the canvas.
+        let layer: String
+        let component: String
+        let name: String
+        let looks: [Look]
+        let parts: [String]
+        let canUndo: Bool
+    }
+
+    /// add_component: the component and every look of it, built in the
+    /// document (`PhotonzDocument.agentAddComponent`) with the app measuring
+    /// the words, landed as one undo step and picked.
+    private static func addComponent(_ editor: EditorState, _ spec: AgentNewComponent) throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        guard editor.componentsEnabled else { throw Failure("This release has no components.") }
+        guard !document.hasTime else { throw Failure("add_component: components are for a picture; a video has none.") }
+        let measure: (TextContent, CGFloat?) -> CGSize = { content, width in
+            TextRasterizer.naturalSize(content, maxWidth: width ?? .greatestFiniteMagnitude)
+        }
+        // Tried on a copy first, so a call that cannot be built answers its
+        // sentence and leaves no empty step in the history.
+        var trial = document
+        _ = try trial.agentAddComponent(spec, measure: measure).get()
+        var built: AgentMadeComponent?
+        editor.asOneUndoStep {
+            editor.perform { built = try? $0.agentAddComponent(spec, measure: measure).get() }
+            if let first = built?.looks.first { editor.selectLayer(first.layer) }
+        }
+        guard let made = built else { throw Failure("Photonz could not add \(spec.name) to \(AgentWork.title(of: editor)).") }
+        guard let landed = editor.document, let first = made.looks.first,
+              landed.layer(id: first.layer) != nil else {
+            throw Failure("Photonz could not add \(spec.name) to \(AgentWork.title(of: editor)).")
+        }
+        let looks = made.looks.map { look in
+            MadeComponent.Look(name: look.name, layer: look.layer.uuidString,
+                               frame: AgentDrawingWork.Box(landed.canvasBounds(of: look.layer) ?? .zero))
+        }
+        return .json(MadeComponent(layer: first.layer.uuidString, component: made.componentID.uuidString,
+                                   name: landed.mainComponent(componentID: made.componentID)?.name ?? spec.name,
+                                   looks: looks, parts: spec.parts.map(\.name), canUndo: editor.canUndo))
     }
 
     private static func setLayout(_ editor: EditorState, layer: String, change: AgentLayoutChange) throws -> Answer {

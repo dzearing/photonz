@@ -22,7 +22,7 @@ public enum AskTools {
     /// the asking document's own undo history as one step.
     public static let doing: [String] = [
         "add_drawing", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "mark_measurements", "mark_misalignments",
-        "place_component",
+        "place_component", "add_component",
         "add_style", "apply_style", "set_layout", "run_command",
         "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
     ]
@@ -37,6 +37,27 @@ public enum AskTools {
         return ["type": "function",
                 "function": ["name": .string(tool.name), "description": .string(tool.description),
                              "parameters": modelSchema(tool.inputSchema, top: true)]]
+    }
+
+    /// add_component's keys in the order a person writes them: what a part
+    /// is, where it sits, its words, then its paint. A model runner that holds
+    /// a tool call to its schema (the model built into Photonz) only lets the
+    /// model write keys in the schema's own order, and sorted they put height
+    /// before width and every look before the parts it changes, so a model
+    /// that wrote width first could never give a height (2026-10-23).
+    static let componentKeyOrder = [
+        "name", "shape", "part", "x", "y", "width", "height", "step", "labels", "property", "parts", "firstLook", "looks", "changes",
+        "text", "fontSize", "weight", "color", "alignment", "centerIn",
+        "fill", "stroke", "strokeWidth", "cornerRadius", "opacity", "shadow", "removeShadow", "visible",
+        "points", "closed", "smooth",
+    ]
+
+    /// A chat body as it goes to the model: keys sorted, add_component's
+    /// schema in `componentKeyOrder`.
+    public static func wireEncoded(_ body: AgentJSON) -> Data {
+        body.encoded(leading: componentKeyOrder) { json in
+            json["name"]?.stringValue == "add_component" && json["parameters"] != nil
+        }
     }
 
     static func modelSchema(_ schema: AgentJSON, top: Bool = false) -> AgentJSON {
@@ -261,14 +282,22 @@ public struct AskConversation: Sendable {
     /// (`docs/design/ask.md`, "The model").
     public private(set) var calls = 0
     public private(set) var brokenCalls = 0
-    public static let mostRounds = 12
+    /// Thirty since 2026-10-23: a kit of base components is one add_component
+    /// a round, a dozen or more of them, then its title and labels, and twelve
+    /// rounds ran out before the last few components. A model stuck sending
+    /// one refused call is stopped sooner (`mostSameRefusals`).
+    public static let mostRounds = 30
     /// More readouts than this crowd a screenshot past reading.
     public static let mostMeasurements = 12
+    /// A sheet of components fills a picture at about this many rows.
+    public static let mostComponents = 12
     public static let contextWindow = 32768
 
     /// The canvas's width, read from the document, for sorting what
     /// `find_elements` finds.
     private let canvasWidth: Double
+    /// And its height, for how many rows a sheet of components holds.
+    private let canvasHeight: Double
 
     /// `components` and `styles` are list_components' and list_styles'
     /// answers, handed over up front so "on brand" never starts from nothing.
@@ -283,7 +312,9 @@ public struct AskConversation: Sendable {
                 titles: String = "", paints: Bool = false) {
         self.request = request
         self.paints = paints
-        canvasWidth = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]?["width"]?.doubleValue ?? 0
+        let canvas = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]
+        canvasWidth = canvas?["width"]?.doubleValue ?? 0
+        canvasHeight = canvas?["height"]?.doubleValue ?? 0
         var instructions = Self.instructions(documentRead: documentRead, paints: paints)
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
@@ -350,6 +381,15 @@ public struct AskConversation: Sendable {
                     tell(name, "Not planned: \(Self.mostMeasurements) measurements is the most a picture reads well with. Plan nothing more of them; finish.")
                     continue
                 }
+                if name == "add_component",
+                   steps.filter({ $0.tool == "add_component" }).count >= Self.mostComponents {
+                    tell(name, "Not planned: \(Self.mostComponents) components fill a sheet. Plan nothing more of them; finish.")
+                    continue
+                }
+                if name == "add_component", arguments["labels"]?.boolValue == true, !fitsOnSheet(arguments) {
+                    tell(name, "Not planned: the sheet is full, and this row would run off the bottom of the canvas. Plan nothing more of them; finish.")
+                    continue
+                }
                 let arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
                     brokenCalls += 1
@@ -376,17 +416,81 @@ public struct AskConversation: Sendable {
                 switch AgentTools.request(tool: name, arguments: arguments) {
                 case .success:
                     steps.append(step)
+                    if name == "add_component" { alignSheet() }
+                    sameRefusals = 0
+                    lastRefused = ""
                     tell(name, "Planned as step \(steps.count). Refer to what it makes as $\(steps.count).")
                 case .failure(let failure):
                     brokenCalls += 1
                     tell(name, "Not planned. \(failure.message)")
+                    let said = "\(name) \(arguments.encodedString())"
+                    sameRefusals = said == lastRefused ? sameRefusals + 1 : 0
+                    lastRefused = said
                 }
             } else {
                 brokenCalls += 1
                 tell(name, "\(name) is not one of your tools here. Use only the tools you were given.")
             }
         }
+        // A small model at temperature 0 that sends a refused call back
+        // unchanged sends it every round after; the plan it has is offered
+        // instead of the rest of the rounds going on the same refusal.
+        if sameRefusals >= Self.mostSameRefusals, !steps.isEmpty, looks.isEmpty {
+            return .planned(AskPlan(steps: steps, summary: "", names: names))
+        }
         return .again(looks: looks)
+    }
+
+    /// Whether one more labelled row still fits above the bottom of the
+    /// canvas, under the rows planned so far: each as tall as its parts, its
+    /// names above and the gap below. Past that the app finds no free row
+    /// and the rest pile up on one another (2026-10-23).
+    func fitsOnSheet(_ arguments: AgentJSON) -> Bool {
+        guard canvasHeight > 0 else { return true }
+        func height(_ arguments: AgentJSON) -> Double {
+            let parts = (arguments["parts"]?.arrayValue ?? []).map {
+                ($0["y"]?.doubleValue ?? 0) + ($0["height"]?.doubleValue ?? 0)
+            }.max() ?? 0
+            return parts + Double(AgentNewComponent.labelSize + 4 + AgentNewComponent.captionGap)
+        }
+        let rows = steps.filter { $0.tool == "add_component" && $0.arguments["labels"]?.boolValue == true }
+            .map(\.arguments)
+        let top = (rows.first ?? arguments)["y"]?.doubleValue ?? 0
+        let used = rows.reduce(top) { $0 + height($1) + Double(AgentNewComponent.lookGap) }
+        return used + height(arguments) <= canvasHeight
+    }
+
+    /// Labelled components are one sheet: every row starts at the first
+    /// one's x, and when the longest row fits the canvas they share one step
+    /// (the widest look plus the gap), so each state sits in a column. A
+    /// small model planning blind gives each its own x and step, and the rows
+    /// came out staggered (2026-10-23).
+    mutating func alignSheet() {
+        let rows = steps.indices.filter { steps[$0].tool == "add_component" && steps[$0].arguments["labels"]?.boolValue == true }
+        guard let first = rows.first, let x = steps[first].arguments["x"]?.doubleValue else { return }
+        func width(_ arguments: AgentJSON) -> Double {
+            (arguments["parts"]?.arrayValue ?? []).map {
+                ($0["x"]?.doubleValue ?? 0) + ($0["width"]?.doubleValue ?? 0)
+            }.max() ?? 0
+        }
+        func looks(_ arguments: AgentJSON) -> Int { 1 + (arguments["looks"]?.arrayValue?.count ?? 0) }
+        // The shared step is the widest look that still lets its own row
+        // fit the canvas at that step; a look wider than that keeps its own.
+        let room = canvasWidth - x - Double(AgentNewComponent.labelColumn)
+        func fits(_ index: Int, _ step: Double) -> Bool {
+            canvasWidth > 0 && Double(looks(steps[index].arguments)) * step <= room
+        }
+        let gap = Double(AgentNewComponent.lookGap)
+        let step = rows.map { (width(steps[$0].arguments) + gap).rounded() }
+            .filter { candidate in rows.filter { width(steps[$0].arguments) + gap <= candidate }.allSatisfy { fits($0, candidate) } }
+            .max()
+        for index in rows {
+            guard var arguments = steps[index].arguments.objectValue else { continue }
+            arguments["x"] = .number(x)
+            let shares = step.map { width(steps[index].arguments) + gap <= $0 && fits(index, $0) } ?? false
+            arguments["step"] = shares ? step.map(AgentJSON.number) : nil
+            steps[index] = AskStep(tool: "add_component", arguments: .object(arguments))
+        }
     }
 
     /// Why an add_drawing call cannot draw, or nil when it can: with no
@@ -508,6 +612,10 @@ public struct AskConversation: Sendable {
     static let longestLookAnswer = 16000
     public static let noPlanSentence = "I couldn't make a plan for that."
     private var nudged = false
+    /// The last call refused, and how many rounds running it came back the same.
+    private var lastRefused = ""
+    private var sameRefusals = 0
+    static let mostSameRefusals = 2
     static let nudge = "Try again with the tools and what is listed above: plan it step by step. Answer I can't only if no tool can do any part of it."
 
     private mutating func tell(_ tool: String, _ text: String) {
@@ -581,9 +689,10 @@ public struct AskConversation: Sendable {
         then mark_misalignments once with the ids of every finding worth showing. Never measure them \
         yourself. When it finds nothing, call no editing tool and say so in one short sentence.
         \(drawingRules)
-        - "On brand" means the document's saved styles and the Library's components, both listed \
-        below (the Library always offers starters such as a Card and a Button). Use them: place \
-        components rather than drawing look-alikes, and paint with the saved styles. An empty canvas is a place to build, not a reason to refuse.
+        - "On brand" means the document's saved styles and its own components, both listed \
+        below. Use them: place its components rather than drawing look-alikes, and paint with the saved styles. \
+        An empty canvas is a place to build, not a reason to refuse.
+        \(Self.componentRules)
         - On a video, times are seconds on the video's clock. add_title with clip puts a title page in \
         front of that clip.
         - Plan only what was asked. When the plan is complete, answer with one short sentence saying \
@@ -594,6 +703,26 @@ public struct AskConversation: Sendable {
         \(documentRead)
         """
     }
+
+    /// How to make components, a kit or a design system. Which kinds a kit
+    /// holds and how each looks is the model's own knowledge of real kits: no
+    /// list of them is written here or anywhere in the app (the user,
+    /// 2026-10-20: "i don't want a hardcoded anything").
+    static let componentRules = """
+        - Asked for components, base components, controls, a UI kit or a design system, make each one \
+        yourself with add_component, never by placing the Library's starters. Think of the real design kit \
+        for the platform asked for (Apple's when none is named) and make the kinds of control it is built \
+        from: a set of base components is about a dozen kinds. Give each the looks that kit shows for it (its states: \
+        default, hover, pressed, disabled, on and off, selected, focused, as that kind has them), the first \
+        look as parts and every other look as only what changes. Make them look like the kit: the system \
+        font at one small type scale, the platform's own colours put straight on the parts (save no styles \
+        unless asked), one corner radius per kind, padding on the 8 point grid, words centred in their control.
+        - Shown as a table or sheet: first a title with add_text at the top left, the largest words on \
+        the sheet; then one row per component, each add_component with labels true (it names the row and \
+        each state where they land, so set no other labels yourself), the same x and the same step for \
+        every component so the states line up in columns, and each row's y below the last, every row \
+        inside the canvas. Place no starters on it.
+        """
 
     /// How to draw when there is no picture model: the model's own svg.
     static let drawingRules = """

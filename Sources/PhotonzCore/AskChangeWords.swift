@@ -25,6 +25,7 @@ public enum AskChangeWords {
         case "add_text": Kind(verb: "Added", one: "text", many: "texts")
         case "add_title": Kind(verb: "Added", one: "a title", many: "titles")
         case "place_component": Kind(verb: "Placed", one: "a component", many: "components")
+        case "add_component": Kind(verb: "Made", one: "a component", many: "components")
         case "set_layer": Kind(verb: editVerb(step.arguments), one: "a layer", many: "layers")
         case "add_style": Kind(verb: "Saved", one: "a style", many: "styles")
         case "apply_style": Kind(verb: "Restyled", one: "a layer", many: "layers")

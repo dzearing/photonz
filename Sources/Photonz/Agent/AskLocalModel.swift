@@ -148,7 +148,7 @@ enum AskLocalModel {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = body.encoded()
+        request.httpBody = AskTools.wireEncoded(body)
         request.timeoutInterval = 300
         let data = try await send(request)
         let json = try AgentJSON.parse(data)
