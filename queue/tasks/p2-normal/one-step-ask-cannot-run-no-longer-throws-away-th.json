@@ -1,0 +1,27 @@
+{
+  "id": "one-step-ask-cannot-run-no-longer-throws-away-th",
+  "title": "One step Ask cannot run no longer throws away the rest of its plan",
+  "goal": "When Ask plans a long change and one step turns out to be impossible as it runs, Ask still makes the rest of the change (and says which part it skipped), instead of changing nothing at all.",
+  "epic": "agent-skills",
+  "priority": "p2-normal",
+  "seq": 85,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-23T18:58:24.864Z",
+  "updated": "2026-10-23T18:58:24.867Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-23 in eval run 20261023-163832-ask, case pricing-section: Ask planned 56 steps and the whole request ended \"Step 11 failed. Nothing was changed.\" because step 11 was add_text with fontName \"SF Pro Display\" (engine.skipped: \"11: add_text: there is no font called SF Pro Display on this Mac\"). That trigger is fixed (AgentTools.fontFamily, commit 54d9088d), but any one refusal at run time still costs the whole plan: AskSession.swift around stepFailed (AskCopy.stepFailed). Longer plans are more common since Ask may plan 30 rounds (2026-10-23). Reproduce by planting a step that fails at run time (a layer id that does not exist) in a plan in a unit or walk.",
+  "acceptance": [
+    "A plan with one step that fails as it runs makes every other step, as one undo step, and its row says which step was left out and why in one short line",
+    "A failing step that a later step depends on ($N) leaves out that later step too, and says so",
+    "The pricing section and component table eval cases score no lower than before (Scripts/ask-eval.sh run --engine ask --cases pricing-section,component-table)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-23T18:58:24.866Z",
+      "note": "created (manual)"
+    }
+  ]
+}

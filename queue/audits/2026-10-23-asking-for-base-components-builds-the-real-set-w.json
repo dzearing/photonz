@@ -1,0 +1,49 @@
+{
+  "feature": "Asking for base components builds the real set, with their states",
+  "epic": "agent-skills",
+  "summary": "Ask and the Photonz skill now answer \"base components\" by making each kind of control themselves (a dozen: button, toggle, text field, checkbox, radio button, segmented control, slider and so on), each one Library component holding its states (Default, Hover, Pressed, Disabled, On, Off) as versions you pick on any copy, laid out as a titled sheet with every row and state named. The Library's five starters are no longer the answer.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Ask on the built-in model (Settings > Ask). The skill through the Photonz MCP server.",
+  "switched": {},
+  "try": [
+    {
+      "do": "File > New > Image, press Ask, and send: create a table of apple like quality base components that show different states and text.",
+      "shot": "2026-10-23-base-components-ask-window-sc.png",
+      "shotNote": "The window was photographed behind another app (a walk never takes the front), so it shows the background look: blue controls can read paler than in front."
+    },
+    {
+      "do": "Compare it with what the same request made yesterday.",
+      "shot": "2026-10-23-base-components-ask-before.png",
+      "shotNote": "Before (2026-10-22): the starter Button, Text Field and Card four times each. A picture of the document from the eval (render_picture), not a window capture."
+    },
+    {
+      "do": "Open the Library's Components shelf: each kind is one tile, and its count says how many states it holds."
+    },
+    {
+      "do": "Drag the Toggle tile onto the canvas and pick On from the copy's State menu in the inspector."
+    },
+    {
+      "do": "Press Command Z once: the whole sheet goes."
+    },
+    {
+      "do": "Ask the skill the same thing from an agent session with the Photonz plugin.",
+      "shot": "2026-10-23-base-components-skill-after.png",
+      "shotNote": "The skill's result, eval run 20261023-163119-skill (render_picture). Before, it drew five kinds by hand: 2026-10-23-base-components-skill-before.png."
+    }
+  ],
+  "evaluate": [
+    "Are these the kinds of control you expect in a base set, and is anything you would miss first left out?",
+    "Do the states read as different at a glance (hover, pressed and disabled on the buttons; on and off on the toggles)?",
+    "Is picking a state on a copy (the inspector's State menu) how you would want to use them?",
+    "Does Ask's sheet look Apple-quality to you, or only tidy? Where does it fall short first?"
+  ],
+  "rough": [
+    "No mock covers this surface; the Library, its State menu and the canvas badges are the shipped ones.",
+    "Ask's own drawing still slips on some kinds: in the window capture the alert's title and message overlap, a segmented control's labels can crowd, and the Off checkbox is sometimes drawn ticked. That is the model on this Mac, not the tool; the skill (a larger model) drew all thirteen of its kinds cleanly.",
+    "Each state is named under its own look, not once at the head of a column, and rows sit close enough that the editor's state badge of one row nearly touches the names of the row above. One header row and a strict grid are the sheet task's (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "When the sheet needs more room than the picture has, Ask grows the canvas down from its top edge (Image > Canvas Size), as the skill does. On a picture you made for something else that is a change you may not expect.",
+    "Ask is not the same from run to run on this model: the component table scored 47.7, 45.4, 41.1, 40.3 and 42 over runs of the same code. Its sheets make nine to twelve kinds.",
+    "Eval, rubric f5ae1562: Ask component-table 14.7 before, about 43 after (mean of five runs, range 40.3 to 47.7); design-system-sheet 20.7 before, 38.4 to 69.6 after. Skill component-table 75.2 before (the 2026-10-20 result re-judged), 84.4 after.",
+    "Measured from the documents read back: Ask uses SF Pro at three sizes (13, 15, 32), the skill at two (11, 13); colours are the system set (#007AFF, #E5E5EA, #C7C7CC, #34C759 or #30D158, #FF3B30, #6E6E73 for secondary words); the skill keeps one or two corner radii per kind (the second a focus ring's). Radii are read from the calls, since read_document does not report them.",
+    "Ask's two numbers (Scripts/ask-eval.sh report): the whole climb set was 74.9 on this work's first build (20261023-163832-ask, against 55.3 for the last whole run), and the held-out set is 60.8 on the final build (20261023-185409-ask-held-out) against 61.0 before: flat overall, with its layout group up from 7.3 to 37.7 and redline from 13.6 to 31.5 against this morning's held-out run, and drawing down 3.4. A person can draw that run's pictures with Scripts/ask-eval.sh sheet 20261023-185409-ask-held-out; I have not looked at them."
+  ]
+}

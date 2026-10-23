@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-23T14:07:56.201Z",
+  "updated": "2026-10-23T16:39:50.499Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -51,6 +51,10 @@
     {
       "t": "2026-10-23T14:07:56.200Z",
       "note": "seq 40 -> 20"
+    },
+    {
+      "t": "2026-10-23T16:39:50.498Z",
+      "note": "From asking-for-base-components-builds-the-real-set-w (2026-10-23): add_component now makes a component with its states as versions in one call, and labels:true names its row on the left and each state above its look; Ask lines labelled rows up on one x and one column step (AskConversation.alignSheet) and stops a sheet when the canvas is full. What is still yours: one header row instead of a caption over every look, a true grid, equal row gaps. Ask component-table is 47.7 now, skill 84.4."
     }
   ]
 }
