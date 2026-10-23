@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-23T03:34:51.842Z",
+  "updated": "2026-10-23T07:17:18.163Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -139,9 +139,41 @@
     {
       "t": "2026-10-23T03:34:51.840Z",
       "note": "Thin lines kept through scene tracing (kite string reaches the hand) and the missing-plan regression fixed (64766b7c, e0969844). Still short: the six scenes all at 7+ on both lines in one run (latest 6/6 on didWhatWasAsked, 5/6 on designed), and the held-out total did not rise (59.5 vs 61). Next runner: re-run held-out first; see log."
+    },
+    {
+      "t": "2026-10-23T03:45:02.366Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-23T07:17:05.997Z",
+      "note": "Six scenes all 7+ on both lines in one run (90.2) and the tracer keeps eyes, mouths and bellies with no shadow specks or square behind; the held-out total did not rise (58.0 vs 61 best), so the task stays open on that item."
+    },
+    {
+      "t": "2026-10-23T07:17:17.786Z",
+      "note": "Held-out first, as the last runner asked, before changing anything: 58.1 (20261023-034535-ask-held-out) on the same code that scored 59.5. Drawings 67.4 against 66.7; the redline group alone went 34.5 -> 5.5. So 59.5 vs 61 was noise, not the plan fix."
+    },
+    {
+      "t": "2026-10-23T07:17:17.859Z",
+      "note": "Reproduced and fixed in the tracer (c772a0c2, 344af3b4): the bird scene's eye vanished because the backdrop flood fill never ran under Pillow 12 (an image made from an array is read-only memory) and a small black eye on a navy stripe could not win a palette slot. Now: backdrop out of the palette with its colour added back, best of four k-means starts (one start turned a brown can and a green leaf khaki), a colour of its own for a small flat detail, pale grey shadows joined to the backdrop leave with it, and the backdrop is made clear so the tracer leaves it out (it had been drawing a full-picture square of the drawing's own colour whenever that colour covered more of the picture than the white: a grey rabbit on a grey square). 29 climb paintings re-traced old against new, all same or better; five new checks in test_layers.py, each failing on the old tracer."
+    },
+    {
+      "t": "2026-10-23T07:17:17.936Z",
+      "note": "Found and fixed (344af3b4): Ask threw away a good bird scene ('I couldn't make a clear drawing of that', run 20261023-045832-ask) because the name judge was asked whether 'Bluebird' and 'Bird' were 'a bird on a branch singing'; a short name cannot carry a pose. The judge now asks only whether it is the kind of thing asked for; the plan check keeps the pose. And (c495210f) the look line for a single thing asks for every figure whole, head to feet, after a child flying a kite came back cut off at the waist."
+    },
+    {
+      "t": "2026-10-23T07:17:18.013Z",
+      "note": "Measured: six scenes all 7+ on didWhatWasAsked AND designed in one run, 20261023-055503-ask total 90.2 (bird 7/8, guitar 9/8, kite 8/7, dog 7/8, fox 9/7, robot 9/7). Runs before it this session: 5 of 6 and 4 of 6 (a ball hanging from the dog's mouth, the half-length child). Poses (20261023-060814-ask) all 7+ on didWhatWasAsked. Full suite 14,242 green; walks ask-draws-a-scene, ask-draws-a-dog, ask-draws-an-illustration, ask-paints-then-edits, ask-rows-say-what-they-made all ok at Next defaults."
+    },
+    {
+      "t": "2026-10-23T07:17:18.087Z",
+      "note": "NOT reached, so the task stays open: the held-out total did not rise. 58.0 (20261023-061502-ask-held-out) after all of this pass, against 58.1 / 59.5 on the two before and 61 best; drawings group 65.7 (66.7, 67.4, 69.1). Over this session's held-out runs the drawing group moved under 2 points while redline moved 29, so the total cannot see a change this size. Next runner: a held-out rise has to come from drawings that do better on unseen requests (drawings there average didWhatWasAsked 6.2 and designed 6.0, against 7 to 9 on the climb scenes), not from more climb cases. I did not open any held-out case or sheet."
+    },
+    {
+      "t": "2026-10-23T07:17:18.162Z",
+      "note": "Left rough (not filed): a pale grey part of a thing touching the white backdrop with no outline would now be dropped as a shadow; none of 29 climb paintings had one. Redline held-out drop folded into ask-s-redlines-do-at-least-as-well-on-unseen-req. Audit: queue/audits/2026-10-23-a-scene-of-things-doing-something-together-is-dr.json; pictures opened: both scene sheets, the pose sheet, the walk capture, both tracer old/new sheets, the rabbit before/after."
     }
   ],
-  "started": "2026-10-23T01:45:33.507Z",
+  "started": "2026-10-23T03:45:02.365Z",
   "walks": [
     "ask-draws-a-scene-walk",
     "ask-draws-a-dog-walk",

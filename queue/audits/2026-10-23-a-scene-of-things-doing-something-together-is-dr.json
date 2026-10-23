@@ -1,0 +1,46 @@
+{
+  "feature": "A drawing shows what was asked, pose and all (third pass)",
+  "epic": "agent-ask",
+  "summary": "A painted drawing keeps its small details when it becomes layers: an eye on a dark stripe, a pink mouth, a cream belly. A soft shadow under it and a square behind it are gone. Ask also no longer throws a scene away because a three-word name could not say what the figure was doing.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default, with the picture model set up in Settings > Ask. Walk: Scripts/playtest/ask-draws-a-scene-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a blank picture, press Ask, type \"draw a cat playing a guitar\" and send it.",
+      "shot": "2026-10-23-scene-walk-1-scene-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the cat's eyes and open mouth: they are their own colours, not merged into the fur or the outline."
+    },
+    {
+      "do": "Ask for \"draw a bird on a branch singing\", then \"draw a child flying a kite\"."
+    },
+    {
+      "do": "Ask for a big drawing in one colour, like \"draw a grey rabbit curled up asleep\": no square behind it.",
+      "shot": "2026-10-23-tracer-grey-square-before-after.png"
+    },
+    {
+      "do": "Compare each painting with its layers before and after (columns: the painting, the old layers, the new layers).",
+      "shot": "2026-10-23-tracer-painting-old-new-1.png"
+    },
+    {
+      "do": "Compare the six scenes before (2026-10-23-scene-before-sheet.png) and after this pass.",
+      "shot": "2026-10-23-scene-after-sheet.png"
+    }
+  ],
+  "evaluate": [
+    "Do the eyes, mouths and bellies now look like the painting they came from?",
+    "With a drawing on a dark canvas, does anything pale show around its edge or under its feet?",
+    "Does the child flying a kite read as a whole child holding the string?",
+    "Is about 40 seconds for a drawing request still acceptable?"
+  ],
+  "rough": [
+    "The six scenes all reached 7 or more on both didWhatWasAsked and designed in one run (20261023-055503-ask, total 90.2). The two runs before missed on one or two cases each (a ball hanging from a dog's mouth, a child painted only to the waist), so this is not every run: the misses come from how the picture model paints.",
+    "The held-out total did not rise: 58.0 (20261023-061502-ask-held-out) against 58.1 and 59.5 on the two runs before it and 61 at best; drawings group 65.7 against 66.7, 67.4 and 69.1. This task stays open on that item (a-scene-of-things-doing-something-together-is-dr).",
+    "The held-out redline group fell from 31 to 38 to 5.5 and 13.2 over the last two runs with no redline change; logged on ask-s-redlines-do-at-least-as-well-on-unseen-req.",
+    "Most of today's run-to-run swing in the held-out total comes from the redline and layout groups, which this task does not touch.",
+    "A pale grey part of a drawing that touches the white backdrop with no outline would now be taken for a shadow and dropped. None of the 29 climb paintings I re-traced had one.",
+    "No mock covers this surface: it is Ask's existing row and the canvas."
+  ]
+}
