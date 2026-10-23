@@ -216,6 +216,7 @@ struct PlaytestSetupRunner {
         // Every walk says afresh too: Ask on a Mac with no model downloaded.
         AskModelServer.walkFolder = setup.askModelMissing ? PlaytestSetupRunner.emptyAskModels() : nil
         if setup.askModelMissing { said.append("Ask has no model downloaded") }
+        if setup.offline { said.append(PlaytestSetupRunner.goOffline()) }
         if setup.timelineOpen == true {
             said.append("a recording opens in Edit mode")
         }
@@ -256,6 +257,41 @@ struct PlaytestSetupRunner {
     }
 
     /// An empty folder for Ask's models, made fresh for the walk.
+    /// Cuts the probe off from everything but this Mac's loopback for the
+    /// rest of its life (`PlaytestOffline`), then proves it: a fetch from the
+    /// web must fail. What it says goes in the walk's log.
+    static func goOffline() -> String {
+        typealias SandboxInit = @convention(c) (UnsafePointer<CChar>, UInt64,
+                                                UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>) -> Int32
+        // sandbox_init is in libSystem but not in Swift's Darwin module.
+        guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "sandbox_init") else {
+            return "could NOT go offline: no sandbox_init"
+        }
+        var trouble: UnsafeMutablePointer<CChar>?
+        let status = unsafeBitCast(symbol, to: SandboxInit.self)(PlaytestOffline.profile, 0, &trouble)
+        guard status == 0 else {
+            return "could NOT go offline: " + (trouble.map { String(cString: $0) } ?? "sandbox_init \(status)")
+        }
+        // The proof, waited for here: the walk has not started yet.
+        final class Reached: @unchecked Sendable {
+            // Written once on the session's queue before `done` is signalled, read after.
+            var value = false
+        }
+        let reached = Reached()
+        let done = DispatchSemaphore(value: 0)
+        if let web = URL(string: "https://huggingface.co") {
+            var request = URLRequest(url: web)
+            request.timeoutInterval = 5
+            URLSession(configuration: .ephemeral).dataTask(with: request) { _, response, _ in
+                reached.value = response != nil
+                done.signal()
+            }.resume()
+            _ = done.wait(timeout: .now() + 6)
+        }
+        return reached.value ? "could NOT go offline: huggingface.co still answered"
+            : "offline: nothing beyond this Mac answers (huggingface.co refused)"
+    }
+
     static func emptyAskModels() -> URL {
         let folder = FileManager.default.temporaryDirectory.appending(path: "photonz-walk-ask-models")
         try? FileManager.default.removeItem(at: folder)

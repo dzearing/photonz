@@ -235,11 +235,17 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// empty folder of the walk's own, so a walk about Ask's first run on a
     /// fresh Mac means the same on a Mac that has the model.
     public var askModelMissing: Bool
+    /// The probe cannot reach anything but this Mac (`PlaytestOffline`) for
+    /// the rest of its life, and so neither can a helper it starts: how a walk
+    /// proves Ask runs with no network, never touching the person's Wi-Fi.
+    public var offline: Bool
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false,
-                history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false) {
+                history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
+                offline: Bool = false) {
+        self.offline = offline
         self.timedWithoutMarkers = timedWithoutMarkers
         self.askModelMissing = askModelMissing
         self.history = history
@@ -255,7 +261,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !front && history == nil && !timedWithoutMarkers
-            && !askModelMissing
+            && !askModelMissing && !offline
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -265,7 +271,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["askModelMissing", "captures", "expectNoControl", "flags", "forget", "front", "history", "scratch",
+    static let knownKeys = ["askModelMissing", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
                             "timedWithoutMarkers", "timelineOpen"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -314,7 +320,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                   history: try Self.count(fields["history"], field: "history"),
                   timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],
                                                         field: "timedWithoutMarkers") ?? false,
-                  askModelMissing: try Self.yesOrNo(fields["askModelMissing"], field: "askModelMissing") ?? false)
+                  askModelMissing: try Self.yesOrNo(fields["askModelMissing"], field: "askModelMissing") ?? false,
+                  offline: try Self.yesOrNo(fields["offline"], field: "offline") ?? false)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {

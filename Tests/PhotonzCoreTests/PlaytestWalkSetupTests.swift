@@ -370,3 +370,36 @@ struct PlaytestAskModelSetupTests {
         }
     }
 }
+
+/// A walk can take the probe off the network for the rest of its life: it
+/// proves Ask runs with everything already on the Mac, the person's own
+/// Wi-Fi untouched.
+@Suite("A walk can run the probe with no network")
+struct PlaytestOfflineSetupTests {
+
+    @Test("it reads yes, and saying nothing leaves the network alone")
+    func reads() throws {
+        let offline = try PlaytestScript.decode(Data("""
+        { "setup": { "offline": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(offline.setup.offline)
+        #expect(offline.setup.isEmpty == false)
+        let unsaid = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(unsaid.setup.offline == false)
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "offline": "yes" }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+
+    @Test("the block lets the Mac's own loopback through and nothing else")
+    func profile() {
+        let profile = PlaytestOffline.profile
+        #expect(profile.contains("(deny network-outbound (remote ip))"))
+        #expect(profile.contains("(allow network-outbound (remote ip \"localhost:*\"))"))
+        #expect(profile.hasPrefix("(version 1)"))
+    }
+}

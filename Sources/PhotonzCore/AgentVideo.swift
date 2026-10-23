@@ -166,8 +166,8 @@ extension AgentTools {
                 "style": ["type": "string", "description": "The style's name as list_titles gives it. The first style when left out."],
                 "text": ["type": "string", "description": "The main line: a page's title, a card's name."],
                 "subtitle": ["type": "string", "description": "The second line: a page's subtitle, a card's role. Left out, the style's sample line is taken away."],
-                "clip": ["type": "string", "description": "A clip's or another title page's id: the page goes in front of it on its track."],
-                "seconds": secondsProperty("Where it goes when no clip is given. The playhead when left out."),
+                "clip": ["type": "string", "description": "A clip's or another title page's id: the page goes in front of it on its track. A page before the first clip takes that clip's id too."],
+                "seconds": secondsProperty("Where it goes when no clip is given. Left out with clip, it goes at the playhead, wherever that is, not at the start."),
                 "track": ["type": "string", "description": "With seconds: the track it goes on when that track is free there; otherwise a new track over it, since a title never covers a clip. The answer names the track."],
             ], required: ["text"])),
         AgentTool(
