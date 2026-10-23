@@ -99,5 +99,71 @@ class ScenesKeepThinLines(unittest.TestCase):
         self.assertTrue(white, "no white layer in the traced scene")
 
 
+def thing(size: int = 768) -> Image.Image:
+    """A thing the way the picture model paints one: on white, a big blue
+    body with a dark navy band across it, a small black eye sitting on the
+    band, a cream patch inside a dark outline, and a soft grey shadow on
+    the ground beneath."""
+    picture = Image.new("RGB", (size, size), (255, 255, 255))
+    pixels = np.asarray(picture).astype(float).copy()
+    ys, xs = np.mgrid[0:size, 0:size]
+    # The shadow: a soft grey ellipse fading out into the white.
+    d = ((xs - size * 0.5) / (size * 0.3)) ** 2 + ((ys - size * 0.86) / (size * 0.05)) ** 2
+    pixels -= (np.clip(1 - d, 0, 1) * 30)[:, :, None]
+    picture = Image.fromarray(np.clip(pixels, 0, 255).astype(np.uint8), "RGB")
+    draw = ImageDraw.Draw(picture)
+    draw.ellipse([size * 0.2, size * 0.15, size * 0.8, size * 0.8], fill=(60, 120, 180))
+    draw.rectangle([size * 0.25, size * 0.3, size * 0.75, size * 0.38], fill=(26, 37, 53))
+    draw.ellipse([size * 0.4, size * 0.31, size * 0.43, size * 0.34], fill=(0, 0, 0))
+    draw.ellipse([size * 0.35, size * 0.5, size * 0.65, size * 0.7], fill=(250, 242, 225), outline=(40, 30, 25), width=8)
+    for shade in range(12):
+        # a few greens, blues and browns elsewhere, so the palette is busy
+        x = size * (0.27 + 0.04 * shade)
+        draw.rectangle([x, size * 0.42, x + size * 0.03, size * 0.47],
+                       fill=(40 + 15 * shade, 160 - 6 * shade, 60 + 9 * shade))
+    return picture
+
+
+def colour_at(flat: np.ndarray, x: float, y: float) -> np.ndarray:
+    return flat[int(y), int(x), :3].astype(int)
+
+
+class ThingsKeepSmallDetails(unittest.TestCase):
+    def test_a_black_eye_on_a_dark_band_keeps_its_colour(self):
+        picture = thing()
+        big = picture.resize((picture.size[0] * 2, picture.size[1] * 2), Image.Resampling.LANCZOS)
+        flat = np.asarray(layers.reduce_colours(big, 10)[0])
+        size = big.size[0]
+        eye = colour_at(flat, size * 0.415, size * 0.325)
+        band = colour_at(flat, size * 0.6, size * 0.34)
+        self.assertLess(eye.sum(), 40, f"the eye came out {eye}")
+        self.assertGreater(np.abs(eye - band).sum(), 60, "the eye merged into the band")
+
+    def test_a_soft_shadow_leaves_with_the_backdrop_and_the_cream_stays(self):
+        picture = thing()
+        big = picture.resize((picture.size[0] * 2, picture.size[1] * 2), Image.Resampling.LANCZOS)
+        flat = np.asarray(layers.reduce_colours(big, 10)[0])
+        size = big.size[0]
+        shadow = flat[int(size * 0.85):int(size * 0.87), int(size * 0.3):int(size * 0.7), :3].astype(int)
+        self.assertTrue((shadow.min(axis=2) > 245).all(), "the shadow came back as a colour")
+        cream = colour_at(flat, size * 0.5, size * 0.6)
+        self.assertLess(np.abs(cream - (250, 242, 225)).sum(), 20, f"the cream patch came out {cream}")
+
+    def test_the_traced_thing_has_no_backdrop_or_shadow_layer(self):
+        traced = layers.trace(thing(), colors=10)
+        self.assertNotIn('id="White', traced["svg"])
+        self.assertIn("Black", traced["svg"])
+
+
+class BackdropReached(unittest.TestCase):
+    def test_it_fills_from_the_edge_and_not_an_enclosed_hole(self):
+        near = np.ones((20, 20), bool)
+        near[5:15, 5:15] = False
+        near[8:12, 8:12] = True
+        reached = layers.backdrop_reached(near)
+        self.assertTrue(reached[0, 0] and reached[19, 19])
+        self.assertFalse(reached[10, 10])
+
+
 if __name__ == "__main__":
     unittest.main()

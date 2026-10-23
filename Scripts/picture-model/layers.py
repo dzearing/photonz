@@ -39,9 +39,10 @@ def nearest(fill: str, palette: np.ndarray) -> str:
 
 
 def backdrop_reached(near: np.ndarray) -> np.ndarray:
-    """The backdrop-coloured pixels joined to the picture's edge: white eyes
-    and highlights inside the drawing stay part of it."""
-    mask = Image.fromarray(np.where(near, 255, 0).astype(np.uint8), "L")
+    """The pixels of `near` joined to the picture's edge through `near`."""
+    # A copy: since Pillow 12 an image made from an array shares the array's
+    # read-only memory, and floodfill on it changes nothing.
+    mask = Image.fromarray(np.where(near, 255, 0).astype(np.uint8), "L").copy()
     height, width = near.shape
     edge = [(x, 0) for x in range(width)] + [(x, height - 1) for x in range(width)] \
         + [(0, y) for y in range(height)] + [(width - 1, y) for y in range(height)]
@@ -51,29 +52,36 @@ def backdrop_reached(near: np.ndarray) -> np.ndarray:
     return np.asarray(mask) == 128
 
 
-def kmeans_palette(pixels: np.ndarray, colors: int, seed: int = 0) -> np.ndarray:
+def kmeans_palette(pixels: np.ndarray, colors: int, seed: int = 0, starts: int = 4) -> np.ndarray:
     """Up to `colors` colours that stand for `pixels` (k-means, k-means++
-    start, on a sample), with colours closer than a glance can tell merged."""
+    start, on a sample), with colours closer than a glance can tell merged.
+    The best of `starts` runs is kept: one start can settle on a blend of
+    two parts (a khaki between a brown can and a green leaf) and lose both."""
     if len(pixels) == 0:
         return np.zeros((1, 3))
     rng = np.random.default_rng(seed)
     sample = pixels[rng.choice(len(pixels), size=min(len(pixels), 40000), replace=False)].astype(float)
-    centres = [sample[rng.integers(len(sample))]]
-    for _ in range(1, colors):
-        d = np.min([((sample - c) ** 2).sum(axis=1) for c in centres], axis=0)
-        if d.sum() == 0:
-            break
-        centres.append(sample[rng.choice(len(sample), p=d / d.sum())])
-    centres = np.array(centres)
-    for _ in range(20):
-        nearest_centre = ((sample[:, None, :] - centres[None]) ** 2).sum(axis=2).argmin(axis=1)
-        moved = np.array([sample[nearest_centre == i].mean(axis=0) if (nearest_centre == i).any() else centres[i]
-                          for i in range(len(centres))])
-        if np.allclose(moved, centres, atol=0.5):
-            break
-        centres = moved
+    best, best_error = None, np.inf
+    for _ in range(starts):
+        centres = [sample[rng.integers(len(sample))]]
+        for _ in range(1, colors):
+            d = np.min([((sample - c) ** 2).sum(axis=1) for c in centres], axis=0)
+            if d.sum() == 0:
+                break
+            centres.append(sample[rng.choice(len(sample), p=d / d.sum())])
+        centres = np.array(centres)
+        for _ in range(20):
+            nearest_centre = ((sample[:, None, :] - centres[None]) ** 2).sum(axis=2).argmin(axis=1)
+            moved = np.array([sample[nearest_centre == i].mean(axis=0) if (nearest_centre == i).any() else centres[i]
+                              for i in range(len(centres))])
+            if np.allclose(moved, centres, atol=0.5):
+                break
+            centres = moved
+        error = ((sample[:, None, :] - centres[None]) ** 2).sum(axis=2).min(axis=1).sum()
+        if error < best_error:
+            best, best_error = centres, error
     kept: list[np.ndarray] = []
-    for c in centres:
+    for c in best:
         if all(np.abs(c - k).sum() > 30 for k in kept):
             kept.append(c)
     return np.round(np.array(kept))
@@ -168,9 +176,46 @@ def with_line_colours(palette: np.ndarray, line: np.ndarray, around: np.ndarray)
     return np.vstack([palette, *added]) if added else palette
 
 
+DETAIL_ERROR = 60
+
+
+def detail_colours(palette: np.ndarray, pixels: np.ndarray, drawn: np.ndarray,
+                   smallest: int) -> tuple[np.ndarray, np.ndarray]:
+    """Up to two colours for small flat details no palette colour stands
+    for, and where they go: a black eye on a dark navy stripe is too few
+    pixels to win a k-means slot, so it takes the stripe's colour and the
+    face goes blank. A detail is flat (the same colour as its neighbours, so
+    not an anti-aliased edge), far from every palette colour, one colour
+    (not a blend of two missed parts), and at least `smallest` pixels. Only
+    the detail's own pixels take its colour, so nothing around it changes."""
+    none = np.zeros((0, 3)), np.zeros(drawn.shape, bool)
+    values = pixels.astype(np.int16)
+    spread = np.max([square_filter(values[:, :, c], 5, np.maximum) - square_filter(values[:, :, c], 5, np.minimum)
+                     for c in range(3)], axis=0)
+    error = np.abs(values - palette[assign(pixels, palette)]).sum(axis=2)
+    missed = drawn & (spread < 20) & (error > DETAIL_ERROR)
+    if missed.sum() < smallest:
+        return none
+    found = pixels[missed].astype(int)
+    centres = kmeans_palette(found, 4)
+    owners = assign(found[None], centres)[0]
+    tight = []
+    for i, c in enumerate(centres):
+        members = found[owners == i]
+        if len(members) >= smallest and np.abs(members - c).sum(axis=1).mean() < 30 \
+                and np.abs(palette - c).sum(axis=1).min() > 30:
+            tight.append((len(members), i))
+    keep = [i for _, i in sorted(tight, reverse=True)[:2]]
+    if not keep:
+        return none
+    where = np.zeros(drawn.shape, bool)
+    where[missed] = np.isin(owners, keep)
+    return centres[keep], where
+
+
 def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
                    keep_backdrop: bool = False) -> tuple[Image.Image, np.ndarray]:
-    """The picture in at most `colors` flat colours, the backdrop made clear.
+    """The picture in at most `colors` flat colours.
 
     Pixels near the backdrop colour become transparent so the drawing sits on
     whatever canvas it lands on; the rest are quantised (k-means through
@@ -194,14 +239,37 @@ def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
     pixels = np.asarray(rgb)
     backdrop = border_colour(pixels)
     distance = np.abs(pixels.astype(int) - backdrop).sum(axis=2)
-    clear = np.zeros(distance.shape, bool) if keep_backdrop else backdrop_reached(distance < 36)
-    # The palette comes from the drawing's own pixels only, so the backdrop
-    # takes no slots and a small dark detail (an eye) keeps its colour.
-    base = kmeans_palette(pixels[~clear], colors)
-    palette = with_line_colours(base, line_pixels, pixels[lines])
-    # Only a line may take a line's colour, so the colours added for it do
-    # not eat into the regions around it.
+    drawn = np.ones(distance.shape, bool) if keep_backdrop else distance >= 36
+    shadow = np.zeros(distance.shape, bool)
+    if not keep_backdrop:
+        # A soft grey shadow under a figure is a little darker than the
+        # backdrop and has no colour of its own; it would come back as ragged
+        # specks of the nearest pale colour (a cream belly's). Pale grey
+        # pixels joined to the backdrop are the backdrop; a cream or a white
+        # inside the drawing is not joined to it, or has colour, and stays.
+        values = pixels.astype(int)
+        grey = (values.max(axis=2) - values.min(axis=2)) < 12
+        shadow = backdrop_reached((distance < 36) | (grey & (distance < 100))) & (distance >= 36)
+        drawn &= ~shadow
+    # A drawing's palette comes from its own pixels, so the backdrop (most of
+    # the picture) takes no slots from a small dark detail (an eye); the
+    # backdrop's colour then joins as one more, so a faint shadow and the
+    # blends along the outline fold into the backdrop and leave with it
+    # (trace drops the backdrop-coloured region reaching the edge), and a
+    # white inside the drawing (a cheek) still has its colour.
+    base = kmeans_palette(pixels[drawn], colors)
+    if not keep_backdrop and np.abs(base - backdrop).sum(axis=1).min() > 30:
+        base = np.vstack([base, np.round(backdrop)])
+    speck = max(4, round(rgb.size[0] / 96))
+    added, details = detail_colours(base, pixels, drawn, speck * speck)
+    with_details = np.vstack([base, added])
+    palette = with_line_colours(with_details, line_pixels, pixels[lines])
+    # Only a line may take a line's colour, and only a detail a detail's, so
+    # the colours added for them do not eat into the regions around them.
     labels = assign(pixels, base)
+    labels[details] = assign(pixels[details][None], with_details)[0]
+    if shadow.any():
+        labels[shadow] = assign(np.round(backdrop)[None, None].astype(np.uint8), base)[0, 0]
     labels[lines] = assign(line_pixels[None], palette)[0]
     quantised = Image.fromarray(labels.astype(np.uint8), "P")
     quantised.putpalette([int(v) for v in palette.flatten()] + [0] * (768 - palette.size))
@@ -213,7 +281,7 @@ def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
     quantised = Image.fromarray(indices, "P")
     quantised.putpalette([int(v) for v in palette.flatten()] + [0] * (768 - palette.size))
     flat = np.asarray(quantised.convert("RGB")).copy()
-    alpha = np.where(clear, 0, 255).astype(np.uint8)
+    alpha = np.full(distance.shape, 255, np.uint8)
     return Image.fromarray(np.dstack([flat, alpha]), "RGBA"), backdrop
 
 
