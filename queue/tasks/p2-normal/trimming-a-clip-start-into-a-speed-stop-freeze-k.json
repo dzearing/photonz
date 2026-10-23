@@ -4,12 +4,12 @@
   "goal": "When you drag the start of a clip into the middle of a speed-stop freeze, the clip should freeze only for what was left of the hold and still end on the recording last frame, and dragging the edge back out should give the clip back as it was. Today the whole freeze plays again and the end of the recording drops off.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 70,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T05:39:23.539Z",
-  "updated": "2026-10-22T16:27:14.829Z",
+  "updated": "2026-10-23T14:07:57.878Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-19 with a throwaway test (deleted after): SpeedRampTests.frozenForASecond() (8 s recording, ramp to 4x at 3000, that stop frozen for 1000 ms, hold 6000-7000 of 17000), clip.trimStart(ofPiece: 0, byMS: 6500). Printed: trimmed true in 3000 length 10500 out 7513 frameAt900 3000. Expected out 8000 and the frame moving off 3000 after 500 ms. Same cause as the split fix in 4a21f06d: ClipPiece.trimmedStart keeps the full ramp, and a hold is spent on the frame a piece starts from. Use ClipPiece.speedRampCarriedOn(fromOffsetMS:) for the trimmed piece, but a trim must stay reversible: trimming back out (negative delta) from a start frame whose freeze hold was cut short has to give the hold back first before walking back into the ramp, and SpeedRamp.sourceMS going back never spends the hold on its start frame. Needs a design for how much hold is restorable (the piece does not remember the original hold).",
@@ -44,6 +44,10 @@
     {
       "t": "2026-10-22T16:27:14.828Z",
       "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-10-23T14:07:57.877Z",
+      "note": "seq 70 -> 100"
     }
   ]
 }

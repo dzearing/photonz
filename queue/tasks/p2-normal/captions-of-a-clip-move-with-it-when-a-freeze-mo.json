@@ -4,12 +4,12 @@
   "goal": "When a person freezes a frame on one track (the new default), the captions transcribed from that clip should move along with the clip, so the words stay under the person speaking. Today they stay where they were and drift out of step by the length of the freeze.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T19:23:32.679Z",
-  "updated": "2026-10-22T16:27:14.764Z",
+  "updated": "2026-10-23T14:07:57.794Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in freeze-frame-asks-how-long-walk picture 2 (2026-10-17): Sample Talk frozen 10s at 0:03 with This track; the Captions track cues stayed at 8s while the clip they transcribe moved to 18s, and the cue across 0:03 reads 10s out. Captions carry no link to the clip they were heard off (grep captionSource in PhotonzCore finds nothing), so HoldPush.pushHeldTime(.thisTrack) only sees layerIDs(onTracks: [the clip track]). Premiere moves captions only with sync lock; here they are the clip's own words, which a person expects to follow it.",
@@ -49,6 +49,10 @@
     {
       "t": "2026-10-22T16:27:14.763Z",
       "note": "seq 50 -> 60"
+    },
+    {
+      "t": "2026-10-23T14:07:57.793Z",
+      "note": "seq 60 -> 90"
     }
   ],
   "walks": []

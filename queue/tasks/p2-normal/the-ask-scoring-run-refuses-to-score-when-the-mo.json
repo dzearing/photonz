@@ -1,7 +1,7 @@
 {
   "id": "the-ask-scoring-run-refuses-to-score-when-the-mo",
-  "title": "The Ask scoring run refuses to score when the model runner is not running",
-  "goal": "The scored test set is how a change to Ask is kept or thrown away. When the local model runner is not running, every case ends at once with Ask saying it needs the runner, yet the test set still scores the run, records it in the history and prints 'WORSE: throw it away'. A runner reading that could throw away a good change. It should stop and say the runner is down instead.",
+  "title": "The Ask scoring run refuses to score when Ask's model is not answering",
+  "goal": "The scored test set is how a change to Ask is kept or thrown away. When Ask's model is not answering (it did not start, or the runner is down), every case ends at once, yet the test set still scores the run, records it in the history and prints a verdict such as throw it away. A runner reading that could throw away a good change. It should stop and say the model is not answering instead.",
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 40,
@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-22T16:26:02.189Z",
-  "updated": "2026-10-22T22:20:03.298Z",
+  "updated": "2026-10-23T14:04:50.670Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the digest pass 2026-10-22 16:24 UTC with Ollama not running (pgrep -fl ollama empty, curl localhost:11434/api/ps empty):\n  Scripts/ask-eval.sh run --engine ask --cases video-latest-recording-after-this-one,video-dissolve-where-the-copy-starts --tag digest-repro-2026-10-22\nOutput: both cases ran in about 1 s ('asked, quiet after 0.13s'), ask state phase stopped, says 'Ask needs Ollama. See Settings.', steps []. Scored 8.6 and 7.5 (judge read 'the video is unchanged'), total 8.1, printed '==> WORSE: throw it away (against \"picture model try: z-image-turbo q8 + vtracer\")' and appended run 20261022-162402-ask to queue/evals/ask-eval-history.jsonl. The digest pass removed that history line and the run folder by hand. Code: Scripts/ask-eval/eval.mjs.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-10-22T22:20:03.297Z",
       "note": "Also happens with the built-in model (2026-10-22, ask-works-on-a-mac-that-has-nothing-else-install): run 20261022-195615-ask scored all 41 cases at 0.1 s with Ask saying \"Ask's model didn't start. Try again.\" and wrote a 0.9 total to ask-eval-history.jsonl (removed by hand). Ollama is no longer the default runner: the sentences to treat as could-not-run are AskLocalModel.Trouble's (noModel, downloading, wouldNotStart, noRunner), and the up-front check should ask whichever runtime Settings > Ask uses."
+    },
+    {
+      "t": "2026-10-23T14:04:50.642Z",
+      "note": "2026-10-23 digest: goal reworded to cover the model built into Photonz as well as Ollama (see the 2026-10-22 22:20 line); the work is unchanged."
     }
   ]
 }

@@ -1,0 +1,32 @@
+{
+  "id": "where-the-loop-s-day-went-counts-a-resumed-walk",
+  "title": "Where the loop's day went counts a resumed walk run as part of the run it finishes",
+  "goal": "The daily digest reads the loop's day from one report and is told to call out any day with more than one whole-set walk run, since each costs about five hours. That report counts the short pick-up of a stopped run as a run of its own, so a day with one run in two parts and one new run reads as three, and the digest raises an alarm that is not real.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 470,
+  "status": "pending",
+  "release": "next",
+  "area": "loop",
+  "created": "2026-10-23T14:08:35.106Z",
+  "updated": "2026-10-23T14:08:35.203Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen by the a-full-walk-check-that-gets-stopped-picks-up-whe runner on 2026-10-22 (left rough: count reads one high) and again by the 2026-10-23 digest, which had to read queue/loop.log to find that the three runs were the 2026-10-22T11:15Z run stopped at 989 of 1011, its 7 minute pick-up (queue/sweep/2026-10-22-095234.log, 25 walks), and the 2026-10-23T11:41Z run stopped at 453 of 1015 when the person came back. Code: queue/bin/loop-day.mjs.",
+  "acceptance": [
+    "Reproduce first: run node queue/bin/loop-day.mjs --hours 24 over the window ending 2026-10-23T14:02Z (or a drill that plants the same events) and record that it prints 3 full-set runs for the 2026-10-22 run, its 25-walk pick-up, and the 2026-10-23 run",
+    "A pick-up that finishes a stopped run is counted with the run it finishes (its minutes still count), so that window reads 2 runs, and the line says when a run was finished in parts",
+    "A run stopped part way and not yet picked up says so beside the count",
+    "A drill covers both cases and runs with the other sweep drills"
+  ],
+  "log": [
+    {
+      "t": "2026-10-23T14:08:35.108Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-23T14:08:35.202Z",
+      "note": "seq 4080 -> 470"
+    }
+  ]
+}

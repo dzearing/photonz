@@ -4,12 +4,12 @@
   "goal": "Today a key's right-click offers six Premiere eases while a segment, a row and the timeline bar with a segment picked offer the ten named curves plus Hold and Draw a Curve, and the two lists use the same words for opposite things. Make it one list everywhere, the one the animate mock draws: a key's right-click shows the ten curves, Hold and Draw a Curve, and Ease In, Ease Out and Bezier leave the key menu (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 250,
+  "seq": 280,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T21:03:39.436Z",
-  "updated": "2026-10-22T16:27:16.032Z",
+  "updated": "2026-10-23T14:07:59.372Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-timeline-bar-easing-sets-picked-segments-too (its checklist item 4). Mock docs/design/mocks/pages/video-animate.html (2026-10-12) line 406: Right-click a key or a segment: the easing list (the same ten curves everywhere, then Draw a Curve), Hold, Copy Ease, Paste Ease; its key carries the curve LEAVING it (k.e). User-sourced tasks of 2026-09-23 (keyframe-anything-and-see-and-shape-the-keys-on, move-a-layer-from-a-to-b-grow-it-shrink-it-fade) asked for Right-click a key: Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier. Name clash: curve Ease in = slow START (CSS); KeyEase Ease In = slow ARRIVAL at the key (Premiere), i.e. the opposite end of the stretch. Code: KeyEase.allCases in EditorState+KeyLanes.keyMenuRows, EditorState+ClipKeys.clipKeyMenuRows, TimelineDock.easingMenu (keys alone); EasingCurve list in segmentCurveRows / CurveRow.menu. Core helper PhotonzDocument.segmentsInHand(layerID:points:segments:) already maps a picked point to the segment it starts (last key: the one arriving), so one list on keys can reuse curveStretches. newKeyEase (bar remembers an ease for new keys) would need a curve equivalent. Walks expecting the key list: key-lanes-menu-walk, keyframe-anything-walk, timeline-bar-labels-only-walk, title-flies-in-grows-and-fades-out-walk, a-zoom-follows-the-cursor-walk, curves-on-a-zoom-and-a-dissolve-walk, pick-several-zooms-walk, every-title-dropdown-opens-on-a-click-walk.",
@@ -78,6 +78,10 @@
     {
       "t": "2026-10-22T16:27:16.031Z",
       "note": "seq 240 -> 250"
+    },
+    {
+      "t": "2026-10-23T14:07:59.370Z",
+      "note": "seq 250 -> 280"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "On a video in Edit, the Ask button lands on top of the right panel: it covers the Transitions search field, and once the panel scrolls, rows such as Intensity slide up underneath Ask and the View and Edit switch with nothing between them. A person reads two things on top of each other and cannot click the field under Ask. Ask, View and Edit should sit in a title bar strip of their own, and the panel's rows should start below it or pass under it the way content passes under a Mac toolbar.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 120,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:18:48.491Z",
-  "updated": "2026-10-22T16:27:13.769Z",
+  "updated": "2026-10-23T14:07:56.783Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the manager 2026-10-20 08:16: Scripts/playtest-all.sh --no-build ask-adds-a-title-page passed, and its pictures /tmp/photonz-playtest/ask-adds-a-title-page-walk/1-plan-sc.png and 2-ran-sc.png show the overlap (crops saved under queue/manager/shots/). The Ask button came with 8238a30a: Sources/Photonz/TitlebarPanelToggle.swift:147-156 widens the right slot by AskTitlebarButton.width when offersAsk; AskTitlebarButton in Sources/Photonz/Agent/AskViews.swift:11. On a video the panel runs to the window top (the View and Edit switch already floated over it before Ask); on a picture Layers starts below the title bar. Placement contract: the title bar row (docs/design/mocks/shared/UX-PATTERNS.md, line 24 and section 1 line 322) owns Ask, the mode and the panel toggle; the panel starts under it. Check whether the video panel's top inset counts the wider right slot.",
@@ -49,6 +49,10 @@
     {
       "t": "2026-10-22T16:27:13.768Z",
       "note": "seq 160 -> 120"
+    },
+    {
+      "t": "2026-10-23T14:07:56.781Z",
+      "note": "seq 120 -> 90"
     }
   ]
 }

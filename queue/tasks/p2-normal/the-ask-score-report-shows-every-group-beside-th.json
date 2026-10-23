@@ -1,0 +1,33 @@
+{
+  "id": "the-ask-score-report-shows-every-group-beside-th",
+  "title": "The Ask score report shows every group beside the total and says when one falls",
+  "goal": "The scored test set is how the loop decides whether a change made Ask better. Today it reports one total for the unseen requests, so when Ask moved to the model built into Photonz the layout score fell from about 30 to about 7 and nobody saw it, because better drawings lifted the total. The same total held a drawing task open for five passes on swings in groups it never touched. The report should show each group, and say when one falls.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "loop",
+  "created": "2026-10-23T14:07:33.733Z",
+  "updated": "2026-10-23T14:07:57.707Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence, 2026-10-23 digest. Scripts/ask-eval.sh report prints: held-out 60.3 (45 cases, 20261023-105134-ask-held-out), nothing else. queue/evals/ask-eval-history.jsonl held-out groups (total, drawing, layout, redline, video): 20261022-094634 60.3 65.3 23.3 37.9 59.7 (Ollama); 20261022-231423 61 69.1 6.4 31.5 48.1 (built in, first run); 20261023-034535 58.1 67.4 5.7 5.5 51.6; 20261023-105134 60.3 69.5 7.3 13.6 49.8. The scene task (a-scene-of-things-doing-something-together-is-dr) was claimed five times in 24 hours chasing a total of 61 that its own group (drawing, 65.7 to 69.5) never moved. Code: Scripts/ask-eval/eval.mjs; prompt: queue/bin/runner-prompt.md around the held-out rule. The layout and redline drops themselves are on ask-on-the-local-model-makes-results-that-look-f and ask-s-redlines-do-at-least-as-well-on-unseen-req.",
+  "acceptance": [
+    "Reproduce first: run Scripts/ask-eval.sh report and record in the log that it prints only the held-out total, with no groups and no word about the layout drop between 20261022-094634-ask-held-out and 20261022-231423-ask-held-out",
+    "The report prints each group (drawing, layout, redline, video) for the latest climb and held-out runs, beside the run before and the best on the same engine model",
+    "A group more than 10 points under the run before it is called out in one plain line naming the group, the two runs and both numbers; the verdict a run prints (keep or throw away) names any group that fell, not only the total",
+    "The runner prompt says an Ask task's held-out bar is read from the group the task changes, on the same engine model as its baseline, and the open Ask tasks with a held-out item say which group",
+    "No app change, so no flag; audit under queue/audits/ with the report before and after"
+  ],
+  "log": [
+    {
+      "t": "2026-10-23T14:07:33.735Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-23T14:07:57.705Z",
+      "note": "seq 58.75 -> 80"
+    }
+  ]
+}

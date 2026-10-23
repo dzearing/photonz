@@ -1,0 +1,33 @@
+{
+  "id": "open-settings-from-ask-lands-on-the-ask-section",
+  "title": "Open Settings from Ask lands on the Ask section, with nothing pinned over it",
+  "goal": "When Ask says it needs its model and the person clicks Open Settings, the Settings window should open on the Ask section, ready to download. Today it opens short, led by a dark pinned band for an unrelated section (Questions you have silenced), with the Ask section pushed down and cut off at the bottom of the window.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-23T14:06:24.776Z",
+  "updated": "2026-10-23T14:07:57.626Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-10-23 digest design review in queue/audits/2026-10-22-ask-builtin-2-settings-offer.png (Settings opened from Ask on a Mac with nothing downloaded): the first thing in the window is the Questions you have silenced header on a darker band, then its empty card, then Ask with its Download button, and the next row (Use Ollama instead) cut off at the foot. The ask-works-on-a-mac-that-has-nothing-else-install runner logged it as left rough: the Settings window opens short and the sticky header covers the top of the Ask section until scrolled. It is the first screen a person sees on the way to making Ask work at all.",
+  "acceptance": [
+    "Reproduce first: at Next defaults with no model downloaded, ask something, click Open Settings under Ask's sentence, and photograph the window; record in the log that today it opens on the silenced-questions band (as in queue/audits/2026-10-22-ask-builtin-2-settings-offer.png)",
+    "Opened from Ask, Settings shows the Ask section at its top with its Download button in view, and no section header stays pinned over another section's rows while scrolling",
+    "Opened from the menu, Settings reads top to bottom with section headers that scroll with their sections",
+    "A walk opens Settings from Ask's sentence and checks the Ask section and its Download button are in view; it passes at Next defaults and focus-drill reads it clean",
+    "Audit under queue/audits/ with before and after pictures"
+  ],
+  "log": [
+    {
+      "t": "2026-10-23T14:06:24.778Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-23T14:07:57.625Z",
+      "note": "seq 57.5 -> 70"
+    }
+  ]
+}

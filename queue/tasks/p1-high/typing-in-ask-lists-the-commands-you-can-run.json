@@ -4,12 +4,12 @@
   "goal": "In the Ask composer, typing / turns it into the command list the mock shows: every menu command by name, filtered as you type, and Return runs the one picked, so a sentence you ask and a command you run go through the same box. After a run, the Agent group lists what changed, and clicking a change picks that layer on the canvas.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 70,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:48.425Z",
-  "updated": "2026-10-22T16:33:33.451Z",
+  "updated": "2026-10-23T14:07:56.450Z",
   "deps": [
     "ask-makes-the-change-straight-away-and-each-chan"
   ],
@@ -62,6 +62,10 @@
     {
       "t": "2026-10-22T16:33:33.450Z",
       "note": "manager 2026-10-22: today the composer opens over the top edge of the picture (queue/manager/shots/2026-10-22-ask-needs-ollama-typed.png, about 20 pt over a settings screenshot the request asks to measure). If this task keeps the composer up after Ask, it must not sit over the document being changed (the never-cover rule in UX-PATTERNS): park it where it covers neither the canvas content nor the Agent group, and say where in the audit."
+    },
+    {
+      "t": "2026-10-23T14:07:56.449Z",
+      "note": "seq 70 -> 50"
     }
   ]
 }
