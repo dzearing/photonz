@@ -1,0 +1,27 @@
+{
+  "id": "an-eval-case-that-starts-on-three-clips-runs-whe",
+  "title": "An eval case that starts on three clips runs when it is the first case of a run",
+  "goal": "The Ask eval sometimes scores 0 on the case that starts with three copies of the sample recording, because the app never receives the case at all. Whether it runs depends on timing, so the video score it reports can be wrong by about 17 points.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 55,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-23T01:15:50.425Z",
+  "updated": "2026-10-23T01:15:50.428Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-22 by the ask-works-on-a-mac-that-has-nothing-else-install runner: runs 20261023-001800-ask, 20261023-002716-ask, 20261023-004119-ask and 20261023-010308-ask all printed `total 0 over 1 cases` / `not run: the sample recording never opened`; the walk folder stayed empty (no log.json) and playtest.sh ran out of time at 540 s with the probe idle. The same walk file run by hand (Scripts/playtest.sh <ask-walk.json> --no-build) starts and runs. Cause: engines.mjs prepare() starts the MCP bridge in parallel with the walk; Sources/PhotonzMCP/main.swift launches the probe itself when none is running (PHOTONZ_APP_PATH, launchPatience 25 s). When the build or launch is slow the bridge launches a bare probe first, the walk launch lands on that instance and its --playtest arguments are lost. With --no-build it usually wins the race (4 of 5 runs scored). Fix: start the bridge only after the walk has started (wait for the walk log), or tell the bridge not to launch.",
+  "acceptance": [
+    "Scripts/ask-eval.sh run --engine ask --cases video-case-titles-before-three-clips (with the build) scores the case rather than 0, three runs out of three",
+    "A case whose copies cannot be laid down is reported as not run, never scored as 0"
+  ],
+  "log": [
+    {
+      "t": "2026-10-23T01:15:50.427Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

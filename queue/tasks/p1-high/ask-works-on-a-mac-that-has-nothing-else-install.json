@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 1.3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:17:59.926Z",
-  "updated": "2026-10-22T22:20:21.554Z",
+  "updated": "2026-10-23T01:31:52.029Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-22: 'we should not have a dependency on opening ollama', then 'is there a way to not have the user micromanage apps running'. This makes it the user's task, and it beats the old line that kept today's Ollama setup working as the default. Focus success gap: agent-ask success item 2 says which models answer 'works out of the box'. Today Ask needs Ollama on 127.0.0.1:11434 (Sources/Photonz/Agent/AskLocalModel.swift:10) with qwen3:30b, 18.6 GB (AskPlanning.swift:503, AskModels). With no Ollama it says 'Ask needs Ollama. See Settings.' (AskLocalModel.swift:30-31) and Settings links Ollama's website. The 2026-10-19 Ask audit's last rough line: that path was never walked, since this Mac has Ollama. Apple's FoundationModels was rejected for a 4,096 token window against about 5,800 tokens of tools plus document (docs/design/ask.md, model table): a tool list cut per request (looking tools plus the four or five doing tools the request needs) may fit, measure it. An in-app runtime (for example MLX Swift with a downloaded model) avoids a second program. Not reproduced as a click on a fresh Mac by the manager (this Mac has Ollama); the code path above is what a Mac without it reaches. Do not uninstall or stop the person's Ollama; use a seam on the probe. Runs after the eval task if it is done, otherwise score by the three walks and the eval's rubric by hand.",
@@ -119,12 +119,43 @@
     {
       "t": "2026-10-22T22:20:21.553Z",
       "note": "Built in and on by default (680aab27): Ask's model runs inside Photonz (bundled llama-server, Qwen3.6 35B-A3B), downloaded from Settings > Ask, started and stopped by Photonz, no Ollama. Climb 55.3 vs Ollama's 53.1 at the same speed; walks ask-sets-itself-up-walk and ask-annotates-a-screenshot-walk pass at Next defaults. Still open: held-out set, video gap (39.5 vs 52.1), picture model setup in Settings, whole-app network-blocked run. Audit queue/audits/2026-10-22-ask-works-on-a-mac-that-has-nothing-else-install.json"
+    },
+    {
+      "t": "2026-10-22T22:32:24.905Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-22T23:14:17.119Z",
+      "note": "Picture model now set up from Settings > Ask and run by Photonz (4fdb14b6): pinned weights (HF-cache clone when present) + private Python built by bundled uv 0.13.5, lean 43-package list (no torch/OpenCV/matplotlib, 435 MB). Chose an app-managed environment over a native port of mflux+vtracer because it reuses the measured pipeline unchanged and lands today; a native port is a much larger job with no score gain. Tools install cold: 12 s. Server: ~2 s load warm, 30 s a drawing, 11.2 GB resident. serve.sh removed."
+    },
+    {
+      "t": "2026-10-23T00:08:02.906Z",
+      "note": "Held-out set at Next defaults, built-in Qwen3.6 35B + the picture model Photonz now sets up and runs, no Ollama: 61 over 45 cases (drawing 69.1, layout 6.4, redline 31.5, video 48.1; 41.5 s median a request; 0 looked up), run 20261022-231423-ask-held-out, against 60.3 for the best before (Ollama qwen3.6:27b + serve.sh painting)."
+    },
+    {
+      "t": "2026-10-23T00:17:59.964Z",
+      "note": "Offline (whole probe sandboxed to loopback, its helpers inheriting it; setup proves huggingface.co refused): ask-runs-with-no-network-walk measures the screenshot and paints a bicycle (picture model started offline, 25.8 s); the three named requests' walks all pass offline: screenshot measurements 9.5 s, Case 1 title page 10.2 s, pricing on brand 59.3 s (Ask's send-to-done)."
+    },
+    {
+      "t": "2026-10-23T01:31:24.808Z",
+      "note": "walks ask-sets-itself-up-walk, ask-annotates-a-screenshot-walk -> ask-sets-itself-up-walk, ask-annotates-a-screenshot-walk, ask-runs-with-no-network-walk, ask-paints-then-edits-walk"
+    },
+    {
+      "t": "2026-10-23T01:31:51.955Z",
+      "note": "Video gap closed: the built-in model left the first title unplaced every time on the three-clips case (17.5/17.5/17.8); add_title's clip/seconds now say an unplaced page goes at the playhead and a page before the first clip takes that clip's id. Case 84.4, video group 53.1 vs Ollama 52.1 (run 20261023-011305-ask). The held-out 61 was measured before this wording change. Idle: both servers let go 5 min 12 s after last use with Photonz open; after quit, 0 processes within 1 s. Left rough: the Settings window's sticky 'Questions you have silenced' header covers the top of Ask until scrolled (cosmetic, pre-existing, not filed). Filed an-eval-case-that-starts-on-three-clips-runs-whe (eval bridge launch race, reproduced 4 times)."
+    },
+    {
+      "t": "2026-10-23T01:31:52.027Z",
+      "note": "Ask's chat model (llama-server, Qwen3.6 35B) and picture model (Z-Image Turbo in a private Python built by the bundled uv) are both set up from Settings > Ask and started/stopped by Photonz; no Ollama, no script, nothing left after quit (1 s), let go after 5 min idle. Held-out 61 vs 60.3 before; climb 55.3 vs 53.1; video 53.1 vs 52.1 after the add_title wording fix. Offline proven with a loopback-only probe sandbox (ask-runs-with-no-network-walk; three named requests 9.5/10.2/59.3 s). Commits 4fdb14b6, 1eedf547, d3e66764; audit queue/audits/2026-10-22-ask-works-on-a-mac-that-has-nothing-else-install.json"
     }
   ],
   "source": "user",
-  "started": "2026-10-22T19:11:38.095Z",
+  "started": "2026-10-22T22:32:24.904Z",
   "walks": [
     "ask-sets-itself-up-walk",
-    "ask-annotates-a-screenshot-walk"
-  ]
+    "ask-annotates-a-screenshot-walk",
+    "ask-runs-with-no-network-walk",
+    "ask-paints-then-edits-walk"
+  ],
+  "completed": "2026-10-23T01:31:52.028Z"
 }
