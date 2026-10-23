@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-23T14:43:43.781Z",
-  "updated": "2026-10-23T14:43:43.896Z",
+  "updated": "2026-10-23T21:02:18.863Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-22: 'new menu items should be at the top on the menu like every other app in the world. capture can be a secondary section.' Then on 2026-10-23: 'what happened to the asks i had, to move the new menu items in the photonz menu up to the top'. The intake window filed that first message against the File menu only (starting-something-new-offers-just-image-or-vide, done, commit 26948d3d), and the menu bar icon's menu was never touched. That was an intake miss. The menu is MenuBarMenu in Sources/Photonz/PhotonzApp.swift:217 onward. Today's order: capture region, full screen, record, divider, edit last capture, divider, New... (New Window when front door is off), New from Clipboard, Open..., divider, updates, Welcome, Settings, Experiments, About, notices, divider, Quit. There is no Open Recent there yet; reuse openRecentMenu from EditorCommands.swift (around :291) rather than building a second list. Capture names come from CaptureMenuNames.",
@@ -28,6 +28,36 @@
     {
       "t": "2026-10-23T14:43:43.895Z",
       "note": "seq 75 -> 1"
+    },
+    {
+      "t": "2026-10-23T20:09:35.600Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-23T21:01:52.454Z",
+      "note": "owns these walks: menu-bar-icon-menu-starts-with-new-walk, menu-bar-icon-menu-picture-walk"
+    },
+    {
+      "t": "2026-10-23T21:02:03.954Z",
+      "note": "Adversarial pass: a Mac user expects New/Open first in an app's menu (Preview, Pages); the app-shell mock drew capture first, overridden by the user's 2026-10-22 words. The harness had no way to read a status item's menu, so added a statusMenu walk step (reads/asserts rows, choose by path) and menuShot \"Menu Bar Icon\" to photograph it. Open Recent extracted into a shared OpenRecentMenu view used by File and the icon menu."
+    },
+    {
+      "t": "2026-10-23T21:02:04.024Z",
+      "note": "Chose no divider between New from Clipboard and Open (File has one) over copying File's divider because the checklist lists the four rows as one section. Kept Show History in the capture section. Front Door off keeps the old order (verified by a throwaway walk)."
+    },
+    {
+      "t": "2026-10-23T21:02:04.091Z",
+      "note": "Verified: menu-bar-icon-menu-starts-with-new-walk ok (order + keys, Open Recent > project.photonz reopens it), menu-bar-icon-menu-picture-walk ok with a real capture, file-menu-like-every-mac-app + front-door-recent-documents ok, focus-drill clean (0/54 ticks lost), Scripts/test.sh 14279 tests green. Looked at the picture: New/Open rows on top, capture below a line. left rough: docs/design/playtest-harness.md not updated with the statusMenu step because it had someone else's uncommitted edits; the step is documented on its enum case. Rough audit items are mine-to-note only, none clears the follow-up bar."
+    },
+    {
+      "t": "2026-10-23T21:02:18.861Z",
+      "note": "Menu bar icon's menu now starts New… ⌘N, New from Clipboard ⌥⌘N, Open… ⌘O, Open Recent (shared with File), then capture, app rows, Quit (MenuBarMenu in PhotonzApp.swift, commit e45ff1eb). Verified by menu-bar-icon-menu-starts-with-new-walk (order, keys, reopening from Open Recent), a real picture, focus-drill clean, 14279 tests green. Audit 2026-10-23-menu-bar-icon-menu-starts-with-new.json."
     }
-  ]
+  ],
+  "started": "2026-10-23T20:09:35.598Z",
+  "walks": [
+    "menu-bar-icon-menu-starts-with-new-walk",
+    "menu-bar-icon-menu-picture-walk"
+  ],
+  "completed": "2026-10-23T21:02:18.862Z"
 }
