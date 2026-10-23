@@ -156,6 +156,71 @@ struct AskScenePlanTests {
                 == "My own long name that the agent chose for this group")
     }
 
+    // MARK: A plan the model left out is asked for
+
+    @Test("A drawing sent with no plan is listed for one to be asked for; one with a plan is not")
+    func unplannedDrawingsAreFound() {
+        let plan = AskPlan(steps: [
+            AskStep(tool: "add_drawing", arguments: ["subject": "robot watering a plant"]),
+            AskStep(tool: "add_text", arguments: ["text": "Hello"]),
+            AskStep(tool: "add_drawing", arguments: ["subject": "a cat playing a piano", "plan": .array(Self.piano)]),
+        ], summary: "")
+        let missing = AskDrawingCheck.unplanned(in: plan)
+        #expect(missing.map(\.step) == [1])
+        #expect(missing.map(\.subject) == ["robot watering a plant"])
+    }
+
+    @Test("The question for a plan carries the subject and the rules for statements, and does not think")
+    func planQuestion() {
+        let body = AskDrawingCheck.planningBody(model: "m", subject: "robot watering a plant")
+        let asked = body["messages"]?.arrayValue?.first?["content"]?.stringValue ?? ""
+        #expect(asked.contains("robot watering a plant"))
+        #expect(asked.contains("yes or no"))
+        #expect(asked.contains("none"))
+        #expect(body["think"] == false)
+        #expect(body["stream"] == false)
+    }
+
+    @Test("The answer's statements are read one per line, numbering and bullets taken off, at most four")
+    func planAnswerRead() {
+        let answer = """
+        1. The robot holds a watering can by its handle.
+        - Water pours from the can's spout onto the plant
+        * the plant sits in a pot
+
+        4) the robot faces the plant
+        5. one too many
+        """
+        #expect(AskDrawingCheck.statements(fromAnswer: answer) == [
+            "The robot holds a watering can by its handle", "Water pours from the can's spout onto the plant",
+            "the plant sits in a pot", "the robot faces the plant",
+        ])
+    }
+
+    @Test("A plain thing's answer is no plan at all")
+    func plainThingHasNoPlan() {
+        #expect(AskDrawingCheck.statements(fromAnswer: "none").isEmpty)
+        #expect(AskDrawingCheck.statements(fromAnswer: "None.").isEmpty)
+        #expect(AskDrawingCheck.statements(fromAnswer: "<think>a dog is plain</think>\nnone").isEmpty)
+        #expect(AskDrawingCheck.statements(fromAnswer: "").isEmpty)
+    }
+
+    @Test("The plan asked for is written into its step, the rest of the plan untouched")
+    func planWrittenIntoStep() {
+        let plan = AskPlan(steps: [
+            AskStep(tool: "add_drawing", arguments: ["subject": "robot watering a plant", "scene": true]),
+            AskStep(tool: "add_text", arguments: ["text": "Hello"]),
+        ], summary: "Drew it", names: ["a": "b"])
+        let filled = plan.settingDrawingPlan(step: 1, to: ["the robot holds a watering can"])
+        #expect(filled.steps[0].arguments["plan"] == .array(["the robot holds a watering can"]))
+        #expect(filled.steps[0].arguments["subject"] == "robot watering a plant")
+        #expect(filled.steps[0].arguments["scene"] == true)
+        #expect(filled.steps[1] == plan.steps[1])
+        #expect(filled.summary == "Drew it" && filled.names == ["a": "b"])
+        #expect(AskDrawingCheck.drawings(in: filled).first?.plan == ["the robot holds a watering can"])
+        #expect(plan.settingDrawingPlan(step: 1, to: []) == plan)
+    }
+
     // MARK: The row names the scene
 
     @Test("The row names the whole scene, the person's own words, not just its first noun")

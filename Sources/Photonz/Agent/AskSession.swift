@@ -257,13 +257,15 @@ final class AskSession {
             let outcome = await Self.plan(&talk, model: model, in: editor, note: note)
             guard !Task.isCancelled else { return }
             lastPlanSeconds = Date().timeIntervalSince(started)
-            let plan: AskPlan
+            var plan: AskPlan
             switch outcome {
             case .success(let planned): plan = planned
             case .failure(let trouble):
                 phase = .stopped(trouble.sentence)
                 return
             }
+            plan = await Self.withDrawingPlans(plan, model: model, note: note)
+            guard !Task.isCancelled else { return }
             self.plan = plan
             guard let ran = await run(plan, in: editor) else { return }
             let miss = await look(at: plan, made: ran.made, in: editor, model: model, note: note)
@@ -438,6 +440,23 @@ final class AskSession {
         }
         return nil
     }
+    /// The plan with every drawing the model sent without a plan given one,
+    /// asked of the planning model drawing by drawing, so a pose or a scene
+    /// is painted from its statements and checked against them whichever
+    /// model planned it. A plain thing's answer is none and leaves it as sent.
+    private static func withDrawingPlans(_ plan: AskPlan, model: String, note: (String) -> Void) async -> AskPlan {
+        var plan = plan
+        for drawing in AskDrawingCheck.unplanned(in: plan) {
+            guard !Task.isCancelled,
+                  let answer = try? await AskLocalModel.chat(AskDrawingCheck.planningBody(model: model, subject: drawing.subject))["message"]?["content"]?
+                      .stringValue else { continue }
+            let statements = AskDrawingCheck.statements(fromAnswer: answer)
+            note("plan for \(drawing.subject): " + (statements.isEmpty ? "none" : statements.joined(separator: "; ")))
+            plan = plan.settingDrawingPlan(step: drawing.step, to: statements)
+        }
+        return plan
+    }
+
     /// A drawing rendered on its own has nothing behind it; the model that
     /// looks is shown it on white, the way it sits on a blank canvas, so a
     /// black drawing is not black on black to it.

@@ -90,6 +90,84 @@ def assign(pixels: np.ndarray, palette: np.ndarray) -> np.ndarray:
     return out.reshape(pixels.shape[:2])
 
 
+LINE_CONTRAST = 24
+
+
+def square_filter(values: np.ndarray, reach: int, keep) -> np.ndarray:
+    """The min (`keep=np.minimum`) or max of each `reach` square, one axis at
+    a time, edges padded with themselves: Pillow's rank filter is ten times
+    slower at a scene's size."""
+    half = reach // 2
+    out = values
+    for axis in (0, 1):
+        padded = np.pad(out, [(half, half) if a == axis else (0, 0) for a in (0, 1)], mode="edge")
+        length = out.shape[axis]
+        out = padded.take(range(0, length), axis=axis)
+        for shift in range(1, reach):
+            out = keep(out, padded.take(range(shift, shift + length), axis=axis))
+    return out
+
+
+def thin_lines(image: Image.Image, reach: int) -> np.ndarray:
+    """Pixels on a line narrower than `reach` that stands out from what is on
+    both sides of it: a string, an eye, a mouth, a highlight. A top-hat per
+    channel (the pixel against the picture opened or closed by a square of
+    `reach`), so the step between two regions and a sky's grain are not lines.
+    """
+    reach = max(3, reach | 1)
+    pixels = np.asarray(image.convert("RGB")).astype(np.int16)
+    found = np.zeros(pixels.shape[:2], bool)
+    for c in range(3):
+        value = pixels[:, :, c]
+        opened = square_filter(square_filter(value, reach, np.minimum), reach, np.maximum)
+        closed = square_filter(square_filter(value, reach, np.maximum), reach, np.minimum)
+        found |= (value - opened > LINE_CONTRAST) | (closed - value > LINE_CONTRAST)
+    return found
+
+
+def long_lines(found: np.ndarray, smallest: int) -> np.ndarray:
+    """The lines in `found` that are long and sparse (a string, an outline):
+    at least `smallest` pixels joined together, covering under a fifth of
+    their own box. A dense patch of short lines (the gaps between lit
+    windows) is left to the blur, which keeps it as a few solid shapes."""
+    width = found.shape[1]
+    left = set(np.flatnonzero(found).tolist())
+    kept = np.zeros(found.size, bool)
+    while left:
+        seed = left.pop()
+        stack, part = [seed], [seed]
+        while stack:
+            y, x = divmod(stack.pop(), width)
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    q = (y + dy) * width + x + dx
+                    if 0 <= x + dx < width and q in left:
+                        left.remove(q)
+                        stack.append(q)
+                        part.append(q)
+        if len(part) < smallest:
+            continue
+        ys, xs = np.divmod(np.array(part), width)
+        if len(part) < 0.2 * (np.ptp(ys) + 1) * (np.ptp(xs) + 1):
+            kept[part] = True
+    return kept.reshape(found.shape)
+
+
+def with_line_colours(palette: np.ndarray, line: np.ndarray, around: np.ndarray) -> np.ndarray:
+    """The palette plus up to two colours for thin lines that would otherwise
+    take the colour of what is around them (a pale string across a pale sky):
+    a line is too few pixels to win a palette slot of its own. `line` is the
+    lines' own pixels, `around` the blurred picture at the same places."""
+    if len(line) == 0:
+        return palette
+    stands_out = np.abs(line.astype(int) - around.astype(int)).sum(axis=1) > LINE_CONTRAST
+    lost = stands_out & (assign(line[None], palette)[0] == assign(around[None], palette)[0])
+    if not lost.any():
+        return palette
+    added = [c for c in kmeans_palette(line[lost], 2) if np.abs(palette - c).sum(axis=1).min() > 16]
+    return np.vstack([palette, *added]) if added else palette
+
+
 def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
                    keep_backdrop: bool = False) -> tuple[Image.Image, np.ndarray]:
     """The picture in at most `colors` flat colours, the backdrop made clear.
@@ -99,7 +177,17 @@ def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
     Pillow) to a palette taken from the picture itself.
     """
     rgb = image.convert("RGB")
+    lines = np.zeros(rgb.size[::-1], bool)
+    line_pixels = np.zeros((0, 3), np.uint8)
     if keep_backdrop:
+        # A scene's thin lines (a kite's string, an eye) are found on the
+        # sharp picture and kept out of the blur and the mode filter below,
+        # which would otherwise wipe them out.
+        # A line smaller than the tracer's speck size (trace) would be dropped
+        # there anyway, so only longer ones are kept.
+        speck = max(4, round(rgb.size[0] / 96))
+        lines = long_lines(thin_lines(rgb, round(rgb.size[0] / 228)), speck * speck)
+        line_pixels = np.asarray(rgb)[lines]
         # A scene's sky is often a soft gradient with grain in it; a light
         # blur lets its bands come out as smooth curves instead of ragged ones.
         rgb = rgb.filter(ImageFilter.GaussianBlur(3))
@@ -109,13 +197,21 @@ def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
     clear = np.zeros(distance.shape, bool) if keep_backdrop else backdrop_reached(distance < 36)
     # The palette comes from the drawing's own pixels only, so the backdrop
     # takes no slots and a small dark detail (an eye) keeps its colour.
-    palette = kmeans_palette(pixels[~clear], colors)
-    labels = assign(pixels, palette)
+    base = kmeans_palette(pixels[~clear], colors)
+    palette = with_line_colours(base, line_pixels, pixels[lines])
+    # Only a line may take a line's colour, so the colours added for it do
+    # not eat into the regions around it.
+    labels = assign(pixels, base)
+    labels[lines] = assign(line_pixels[None], palette)[0]
     quantised = Image.fromarray(labels.astype(np.uint8), "P")
     quantised.putpalette([int(v) for v in palette.flatten()] + [0] * (768 - palette.size))
     # A small mode filter folds the blends along anti-aliased edges into
     # one side or the other, so they do not come back as slivers.
     quantised = quantised.filter(ImageFilter.ModeFilter(mode_size))
+    indices = np.asarray(quantised).copy()
+    indices[lines] = labels[lines]
+    quantised = Image.fromarray(indices, "P")
+    quantised.putpalette([int(v) for v in palette.flatten()] + [0] * (768 - palette.size))
     flat = np.asarray(quantised.convert("RGB")).copy()
     alpha = np.where(clear, 0, 255).astype(np.uint8)
     return Image.fromarray(np.dstack([flat, alpha]), "RGBA"), backdrop

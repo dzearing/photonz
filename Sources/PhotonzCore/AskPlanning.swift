@@ -190,6 +190,17 @@ public struct AskPlan: Hashable, Sendable {
     /// Step `number`'s line, as the Agent group shows it.
     public func line(_ number: Int) -> AskStep.Line { steps[number - 1].line(names: names) }
 
+    /// The plan with step `number`'s drawing given `statements` as its plan
+    /// (`AskDrawingCheck.unplanned`). No statements changes nothing.
+    public func settingDrawingPlan(step number: Int, to statements: [String]) -> AskPlan {
+        guard !statements.isEmpty, steps.indices.contains(number - 1),
+              var arguments = steps[number - 1].arguments.objectValue else { return self }
+        arguments["plan"] = .array(statements.map { .string($0) })
+        var changed = steps
+        changed[number - 1] = AskStep(tool: changed[number - 1].tool, arguments: .object(arguments))
+        return AskPlan(steps: changed, summary: summary, names: names)
+    }
+
     /// Whether a step after step `number` names what it makes (`$number`).
     /// A step the app refuses changes nothing, so it can be passed over,
     /// unless a later step was counting on it.
@@ -667,6 +678,47 @@ public enum AskDrawingCheck {
             guard step.tool == "add_drawing", let subject = step.arguments["subject"]?.stringValue else { return nil }
             return (index + 1, subject, AgentDrawingCall.statements(step.arguments["plan"]))
         }
+    }
+
+    /// The drawings the model sent with no plan. A plan is optional in the
+    /// tool, and the model built into Photonz leaves it out even for a pose or
+    /// a scene, so each of these is asked for its plan on its own
+    /// (`planningBody`) before it is painted.
+    public static func unplanned(in plan: AskPlan) -> [(step: Int, subject: String)] {
+        drawings(in: plan).filter { $0.plan.isEmpty }.map { ($0.step, $0.subject) }
+    }
+
+    /// The planning model asked for one drawing's plan, the same rules the
+    /// instructions give it, and "none" for a plain thing.
+    public static func planningBody(model: String, subject: String) -> AgentJSON {
+        let question = """
+        A picture is about to be drawn of: "\(subject)".
+        Write what has to be true of the picture for it to show exactly that: one to four short statements, \
+        each one someone looking at the picture can answer yes or no, for each pose, action, view, mood and \
+        relationship those words name ("a horse rearing up": it stands on its hind legs; its front hooves are \
+        in the air). When two things act together, say which parts touch and what is in front ("its hand grips \
+        the umbrella's handle"). For a view, say what the eye sees, not the word for it: which sides show and \
+        which do not. Nothing the words do not ask for: no statement about where it sits in the picture, how \
+        big it is, or a detail nobody named.
+        If the words name only a thing, with no pose, action, view, mood or relationship ("a dog"), answer none.
+        Answer with one statement per line and nothing else.
+        """
+        return ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
+                "options": ["temperature": 0, "num_ctx": .number(Double(AskConversation.contextWindow))],
+                "messages": [["role": "user", "content": .string(question)]]]
+    }
+
+    /// The statements in the planning model's answer: one per line, with any
+    /// numbering or bullet and the closing full stop taken off, at most four.
+    /// "none" (a plain thing) is no plan.
+    public static func statements(fromAnswer answer: String) -> [String] {
+        let lines = AskConversation.withoutThinking(answer).split(whereSeparator: \.isNewline).map { line -> String in
+            var text = Substring(line).drop { $0.isWhitespace || $0.isNumber || "-*•.)".contains($0) }
+            while let last = text.last, last.isWhitespace || last == "." { text = text.dropLast() }
+            return String(text)
+        }.filter { !$0.isEmpty }
+        if lines.count == 1, lines[0].lowercased() == "none" { return [] }
+        return Array(lines.filter { $0.lowercased() != "none" }.prefix(4))
     }
 
     /// The model that sees asked, statement by statement, whether the drawing
