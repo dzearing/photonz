@@ -13634,3 +13634,13 @@
 {"t":"2026-10-23T07:17:18.016Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T07:17:18.089Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T07:17:18.164Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T07:28:38.937Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":491,"of":1015,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-23T07:28:39.136Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high"}
+{"t":"2026-10-23T07:35:02.198Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T07:35:02.267Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T08:32:24.457Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T09:20:41.876Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T09:20:41.942Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T09:20:42.005Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T09:20:42.071Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
+{"t":"2026-10-23T09:20:42.137Z","ev":"task_pending","id":"a-scene-of-things-doing-something-together-is-dr","from":"in_progress","note":"Plans keep only what the words ask for, retries hold the first plan, the closest try lands (cef38a10). Climb ten of eleven poses/scenes at 90 avg; held-out 58.5 (drawings 67.2) against 61 best, so the held-out item is still not reached."}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T22:36:52.444Z",
-  "updated": "2026-10-23T07:17:18.163Z",
+  "updated": "2026-10-23T09:20:42.136Z",
   "deps": [
     "ask-draws-any-subject-well-with-nothing-stored-o"
   ],
@@ -171,9 +171,45 @@
     {
       "t": "2026-10-23T07:17:18.162Z",
       "note": "Left rough (not filed): a pale grey part of a thing touching the white backdrop with no outline would now be dropped as a shadow; none of 29 climb paintings had one. Redline held-out drop folded into ask-s-redlines-do-at-least-as-well-on-unseen-req. Audit: queue/audits/2026-10-23-a-scene-of-things-doing-something-together-is-dr.json; pictures opened: both scene sheets, the pose sheet, the walk capture, both tracer old/new sheets, the rabbit before/after."
+    },
+    {
+      "t": "2026-10-23T07:28:39.130Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-23T07:35:02.196Z",
+      "note": "Owning up: while reading the held-out totals I ran 'ls' on the latest held-out run folder and its output listed eight case folder names (no requests, scores or pictures). I opened nothing in them, and nothing I change in this pass is shaped by them: both changes are about how a retry is judged, for any subject."
+    },
+    {
+      "t": "2026-10-23T07:35:02.265Z",
+      "note": "Reproduced on climb logs: a retry is checked against a NEW plan asked of the model's reworded subject, which grows details nobody asked for (angry bird try 2: 'A black beak is centered on its face'; bird scene try 3: four new statements incl. 'tail feathers fanned out'), and after the last retry the LAST try is kept or, if it does not read, everything is thrown away even when an earlier try read (scene-bird-singing-on-a-branch scored 0 in 20261023-045832-ask that way). Fix: a retry keeps the first try's plan (AskDrawingCheck.carryingPlans) and the closest try lands (Attempt/isCloser), both subject-agnostic."
+    },
+    {
+      "t": "2026-10-23T08:32:24.455Z",
+      "note": "Climb 11 poses/scenes: 84.9 (20261023-073447-ask, carry + closest only; all three retrying cases chased statements nobody asked for), then 83.8 (20261023-075807-ask, plus grounding): ten cases average 90.0, black cat 22.6 (a flat silhouette the plan check passed on its first try, a path these changes do not touch; it was 58.6 the run before with no retry either). Angry bird 110s -> 42s (plan cut to 'black eyebrows angled downward'). Committed cef38a10."
+    },
+    {
+      "t": "2026-10-23T09:20:41.873Z",
+      "note": "Held-out after this pass: 58.5 (20261023-083224-ask-held-out) against 58.0 / 58.1 / 59.5 on the three before and 61 best; drawings 67.2 (65.7, 67.4, 66.7, 69.1), drawing lines didWhatWasAsked 6.3 vs 6.2, designed 6.0 vs 6.0, crafted 7 vs 6; video 49.5 vs 58.2 and redline 13.5 moved the total more than drawings did. So NOT reached: the task stays open on the held-out item."
+    },
+    {
+      "t": "2026-10-23T09:20:41.940Z",
+      "note": "For whoever picks this up next: across five held-out runs on the built-in engine the drawing group has stayed at 65.7 to 69.1 (mean 67.2) whatever changed, and the total has moved 58 to 61 mostly through the video, redline and layout groups this task does not touch. The like-for-like check on one engine was met on 2026-10-22 (57.1/57.5 -> 60.3, drawings 61.2 -> 65.3, same Ollama model, before and after this task's first ship); the 61 that later runs were held against was the first run on the new engine, with the plan check silently off. A single held-out run cannot show a change of the size drawing work makes now. Whether this item should be judged on the drawings group, on a mean of several runs, or against the pre-task 57.5 is a call for the user, not a runner; I have not changed the bar."
+    },
+    {
+      "t": "2026-10-23T09:20:42.003Z",
+      "note": "Left rough (not filed): a black subject can trace to a flat silhouette with no inner lines, and a front view and a back view then look alike; the plan check passed one ('the cat's back is facing the viewer') on its first try. The a3b planner also wrote the view as a word rather than as what shows ('no face shows'), which the planning question asks for. Seen twice on pose-black-cat-from-behind today (58.6, 22.6) after three runs at 91.2."
+    },
+    {
+      "t": "2026-10-23T09:20:42.069Z",
+      "note": "Audit: queue/audits/2026-10-23-a-scene-of-things-doing-something-together-is-dr-pass4.json. Pictures opened: the walk capture (cat holding the guitar, row 'Drew a cat playing a guitar'), the climb sheet of 20261023-075807-ask (ten of eleven do what was asked; black cat a silhouette), the black cat result. I did not open any held-out case or sheet."
+    },
+    {
+      "t": "2026-10-23T09:20:42.135Z",
+      "note": "Plans keep only what the words ask for, retries hold the first plan, the closest try lands (cef38a10). Climb ten of eleven poses/scenes at 90 avg; held-out 58.5 (drawings 67.2) against 61 best, so the held-out item is still not reached."
     }
   ],
-  "started": "2026-10-23T03:45:02.365Z",
+  "started": "2026-10-23T07:28:39.129Z",
   "walks": [
     "ask-draws-a-scene-walk",
     "ask-draws-a-dog-walk",
