@@ -462,7 +462,7 @@ public struct AskConversation: Sendable {
     }
 
     /// How tall a labelled component's row is: its tallest part and the
-    /// state names above it.
+    /// state names under it.
     static func rowHeight(_ arguments: AgentJSON) -> Double {
         let parts = (arguments["parts"]?.arrayValue ?? []).map {
             ($0["y"]?.doubleValue ?? 0) + ($0["height"]?.doubleValue ?? 0)
@@ -485,7 +485,7 @@ public struct AskConversation: Sendable {
     }
 
     /// How tall the canvas has to be for one more labelled row under the
-    /// rows planned so far (each as tall as its parts, its state names above
+    /// rows planned so far (each as tall as its parts, its state names under
     /// and the gap below), with a margin under it; nil when the canvas is not
     /// known. Past the bottom the app finds no free row and the rest pile up
     /// on one another (2026-10-23), so a sheet that needs more grows the

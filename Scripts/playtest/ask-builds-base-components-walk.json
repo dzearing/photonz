@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/ask-builds-base-components-walk",
+  "seed": "asking-for-base-components-builds-the-real-set-w: the user's own request on a blank picture at Next defaults, no flag touched. Ask makes each kind of component itself with add_component (its states as versions), names each row and state, and the whole sheet is one undo step. How many kinds and which is the model's call, so the layers are counted as a range",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "create a table of apple like quality base components that show different states and text" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-sheet", "note": "the sheet Ask made: a title, then one row per kind of component, its name on the left and each state named above its look" },
+    { "do": "expectLayers", "atLeast": 20, "comment": "the background, the title, and for each kind its looks and their names" },
+    { "do": "snapshot", "name": "1-sheet" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "2-undone", "note": "one Command Z took the whole sheet back" },
+    { "do": "expectLayers", "count": 1 }
+  ]
+}

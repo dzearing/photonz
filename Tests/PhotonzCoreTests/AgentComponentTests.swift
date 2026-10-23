@@ -259,7 +259,7 @@ struct AgentComponentTests {
         #expect(Self.piece("Back", of: "Default", in: document, made)?.style.shadows.isEmpty == true)
     }
 
-    @Test("labels names the row on its left and each look above it, and they move with the row")
+    @Test("labels names the row on its left and each look under it, and they move with the row")
     func labelled() throws {
         let json = Self.toggle.replacingOccurrences(of: #""labels": false,"#, with: #""labels": true,"#)
         var document = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
@@ -275,7 +275,8 @@ struct AgentComponentTests {
         #expect(name.frame.maxX <= boxes[0].minX)
         #expect(name.frame.midY.rounded() == boxes[0].midY.rounded(), "the name sits level with the row")
         for (caption, box) in zip(words.dropFirst(), boxes) {
-            #expect(caption.frame.maxY <= box.minY, "\(caption.text?.string ?? "") sits above its look")
+            // Under the look: the editor's own badge naming a component's state sits above it.
+            #expect(caption.frame.minY >= box.maxY, "\(caption.text?.string ?? "") sits under its look")
             #expect(abs(caption.frame.midX - box.midX) <= 1)
         }
         #expect(Set(words.compactMap { $0.text?.fontSize }).count == 1, "one size for every label")

@@ -355,7 +355,7 @@ moved, resized, hidden or reworded). Each look becomes a named version
 (`addComponentVersion`), the question they answer is called State, and the
 looks sit in a row from `x`, `y`, `step` apart. A row that would land on
 another drawing drops to the next free row at the same x, 24 clear. `labels`
-sets the component's name on the left of its row and each state's name above
+sets the component's name on the left of its row and each state's name under
 its look. One undo step; the answer's `layer` is the first look.
 
 It exists because the five-call-per-piece route (draw, group, make_component,

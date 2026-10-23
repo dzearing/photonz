@@ -102,12 +102,12 @@ public struct AgentNewComponent: Hashable, Sendable {
     /// How far right each look sits from the one before; its width plus 24
     /// when nil.
     public var step: CGFloat?
-    /// Its name set on the left of its row and each look's name above the
+    /// Its name set on the left of its row and each look's name under the
     /// look, the way a sheet of a kit's components reads.
     public var labels: Bool
     /// Room on the left of a labelled row for its name.
     public static let labelColumn: CGFloat = 160
-    /// The size labels are set at, and the room above a look for its name.
+    /// The size labels are set at, and the room under a look for its name.
     public static let labelSize: CGFloat = 13
     public static let captionGap: CGFloat = 8
 
@@ -287,8 +287,10 @@ extension PhotonzDocument {
     }
 
     /// Makes room for and sets a labelled row's words: the looks move right
-    /// past the name's column and down past their own names, the name sits
-    /// level with the looks and each look's name is centred above it. Plain
+    /// past the name's column, the name sits level with the looks and each
+    /// look's name is centred under it. Under, because the editor badges
+    /// every component's state above it, and names above sat in those badges
+    /// (the walk's window capture, 2026-10-23). Plain
     /// words in the Text tool's look, legibility shadow and all, since they
     /// may sit on any backdrop. Answers the words' ids, the name first.
     mutating func labelRow(_ spec: AgentNewComponent, mains: [UUID],
@@ -300,9 +302,8 @@ extension PhotonzDocument {
             layer.name = name
             return layer
         }
-        let captionRoom = AgentNewComponent.labelSize + 4 + AgentNewComponent.captionGap
         for id in mains {
-            updateLayer(id: id) { $0.frame.origin.x += AgentNewComponent.labelColumn; $0.frame.origin.y += captionRoom }
+            updateLayer(id: id) { $0.frame.origin.x += AgentNewComponent.labelColumn }
         }
         let boxes = mains.compactMap { canvasBounds(of: $0) }
         guard boxes.count == mains.count, let first = boxes.first else { return [] }
@@ -313,7 +314,7 @@ extension PhotonzDocument {
         for (look, box) in zip(spec.looks, boxes) {
             var caption = words(look.name, weight: .regular, color: "#6E6E73", name: "\(spec.name) \(look.name) Label")
             caption.frame.origin = CGPoint(x: (box.midX - caption.frame.width / 2).rounded(),
-                                           y: (box.minY - AgentNewComponent.captionGap - caption.frame.height).rounded())
+                                           y: (box.maxY + AgentNewComponent.captionGap).rounded())
             made.append(caption)
         }
         for layer in made { addLayer(layer) }
@@ -431,7 +432,7 @@ extension AgentTools {
                 "y": ["type": "number", "description": "Top edge of its looks, in canvas points."],
                 "step": ["type": "number", "minimum": 1, "description": "How far right each look sits from the one before, so looks of different components line up in columns. Its width plus 24 when left out."],
                 "property": ["type": "string", "description": "What the looks are: State when left out, or Size, Type."],
-                "labels": ["type": "boolean", "description": "true sets its name on the left of its row and each look's name above the look, as a sheet of a kit's components shows them (the row moves right to make room); false sets no words."],
+                "labels": ["type": "boolean", "description": "true sets its name on the left of its row and each look's name under the look, as a sheet of a kit's components shows them (the row moves right to make room); false sets no words."],
                 "parts": ["type": "array", "minItems": 1,
                           "description": .string("Its first look, bottom first. \(componentPartWords)"),
                           "items": ["type": "object",
