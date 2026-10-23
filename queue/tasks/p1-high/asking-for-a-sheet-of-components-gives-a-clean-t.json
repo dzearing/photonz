@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-23T16:39:50.499Z",
+  "updated": "2026-10-23T22:49:26.661Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -55,6 +55,42 @@
     {
       "t": "2026-10-23T16:39:50.498Z",
       "note": "From asking-for-base-components-builds-the-real-set-w (2026-10-23): add_component now makes a component with its states as versions in one call, and labels:true names its row on the left and each state above its look; Ask lines labelled rows up on one x and one column step (AskConversation.alignSheet) and stops a sheet when the canvas is full. What is still yours: one header row instead of a caption over every look, a true grid, equal row gaps. Ask component-table is 47.7 now, skill 84.4."
+    },
+    {
+      "t": "2026-10-23T21:16:32.558Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-23T22:49:14.240Z",
+      "note": "owns these walks: ask-builds-base-components-walk"
+    },
+    {
+      "t": "2026-10-23T22:49:14.307Z",
+      "note": "Built: every labelled add_component lays every labelled row on the canvas out as one table (Sources/PhotonzCore/AgentComponentSheet.swift): header row naming each state once over its column, names on one left edge, looks centred in cells on one grid filling the width with even margins, rows 32 apart. Rows found by their copies too, since the editor parks originals in the Library (the first eval run piled every row on one y for exactly that). Chose a header row per group of rows sharing their states (sheetSections) over one header with odd states under someone else's column, because the judge read a toggle's On under Hover as wrong. App grows the canvas from the laid-out table in the same undo step (AgentDesignWork.addComponent); the planner's estimated canvas_size steps are gone. add_component now refuses words on top of words and words longer than their box, estimated from font size so Ask's planner refuses before building. Skill recipe and agent-mcp.md updated."
+    },
+    {
+      "t": "2026-10-23T22:49:14.374Z",
+      "note": "Eval (rubric f5ae1562). Skill component-table 88.8 (was 84.4): clean 8, typography 8, aligned 8, designed 8, didWhatWasAsked 9, every line at the bar. Skill design-system-sheet 86.4 (baseline 61.7): 8, 8, aligned 7, 8, 8. Ask component-table 52 (was 49.4; rules 9.8, noOverlap 10): judge 6, 6, 6, 5, 5. Ask design-system-sheet 52.8 (was 59.2; a blind look is worth several points, read with care): 3, 5, 4, 4, 6. NOT at the bar: Ask is 3 to 6 per line and the skill's design sheet has aligned 7. What holds Ask back is inside its own drawings (a checkbox labelled Off drawn checked, toggle and switch both drawn, states that barely differ, card text past the card) and the model's row order, not the table. Left pending for that."
+    },
+    {
+      "t": "2026-10-23T22:49:14.441Z",
+      "note": "Tried and reverted: a two line prompt edit (each kind once, same state names across kinds) was followed by two design-system-sheet runs timing out in planning at 300 s; with it reverted the case ran in 91 s. Not proven to be the cause (the second also overlapped the full test suite), so not kept."
+    },
+    {
+      "t": "2026-10-23T22:49:14.505Z",
+      "note": "Follow-up filed: the-name-chips-over-component-copies-stay-clear (p1). The window capture shows the canvas name chip over each copy covering the header row at normal zoom; the export is clean. Left rough here: rows with fewer states leave empty cells the judge calls holes; grouping rows by states can reorder the model's rows."
+    },
+    {
+      "t": "2026-10-23T22:49:14.572Z",
+      "note": "Audit: queue/audits/2026-10-23-component-sheet-table.json (before 2026-10-20-user-ask-component-sheet-mess.png, after pictures for Ask and skill, window capture). Pictures looked at: Ask after shows a titled table, each group headed, no words overlapping, flaws in the drawings themselves; skill after reads as a design-kit page; window capture shows chips over headers. Tests: Scripts/test.sh 14289 passed; ask-builds-base-components-walk passes."
+    },
+    {
+      "t": "2026-10-23T22:49:26.660Z",
+      "note": "Table layout shipped (dafd16e6) and the skill's request clears 8 on every line, but Ask on this Mac is at 5 to 6 and the skill's design sheet has aligned 7: the 8 of 10 bar is not met, so it stays open."
     }
+  ],
+  "started": "2026-10-23T21:16:32.556Z",
+  "walks": [
+    "ask-builds-base-components-walk"
   ]
 }

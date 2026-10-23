@@ -13750,3 +13750,15 @@
 {"t":"2026-10-23T21:02:04.026Z","ev":"task_note","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new"}
 {"t":"2026-10-23T21:02:04.093Z","ev":"task_note","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new"}
 {"t":"2026-10-23T21:02:18.864Z","ev":"task_done","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","from":"in_progress","note":"Menu bar icon's menu now starts New… ⌘N, New from Clipboard ⌥⌘N, Open… ⌘O, Open Recent (shared with File), then capture, app rows, Quit (MenuBarMenu in PhotonzApp.swift, commit e45ff1eb). Verified by menu-bar-icon-menu-starts-with-new-walk (order, keys, reopening from Open Recent), a real picture, focus-drill clean, 14279 tests green. Audit 2026-10-23-menu-bar-icon-menu-starts-with-new.json."}
+{"t":"2026-10-23T21:14:22.191Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-23T21:16:32.381Z","ev":"slice_pass","walks":31,"passed":30,"failed":1,"seconds":526,"of":1018,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-23T21:16:32.564Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-10-23T22:48:46.886Z","ev":"task_created","id":"the-name-chips-over-component-copies-stay-clear","priority":"p1-high","title":"The name chips over component copies stay clear of a sheet of components header row"}
+{"t":"2026-10-23T22:49:14.242Z","ev":"task_walks","id":"asking-for-a-sheet-of-components-gives-a-clean-t","walks":["ask-builds-base-components-walk"]}
+{"t":"2026-10-23T22:49:14.310Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-23T22:49:14.376Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-23T22:49:14.443Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-23T22:49:14.507Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-23T22:49:14.574Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-23T22:49:14.639Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-23T22:49:26.662Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Table layout shipped (dafd16e6) and the skill's request clears 8 on every line, but Ask on this Mac is at 5 to 6 and the skill's design sheet has aligned 7: the 8 of 10 bar is not met, so it stays open."}
