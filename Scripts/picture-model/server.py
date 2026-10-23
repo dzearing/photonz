@@ -56,7 +56,8 @@ ICON = ("simple bold flat icon, minimal detail, a few flat colours, no gradients
 
 
 SCENE = ("flat vector illustration of the whole scene filling the frame edge to edge, with its own sky and "
-         "ground, layered flat shapes for depth, a few flat colours, clean edges, no gradients, no texture, "
+         "ground, every figure and object whole inside the frame with room around it, none cut off by the edge, "
+         "layered flat shapes for depth, a few flat colours, clean edges, no gradients, no texture, "
          "no text, no letters, no border")
 
 
