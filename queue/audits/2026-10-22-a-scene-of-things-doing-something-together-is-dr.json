@@ -1,27 +1,55 @@
 {
   "feature": "A drawing shows what was asked, pose and all",
   "epic": "agent-ask",
-  "summary": "Ask now plans a pose or a scene before it paints (who is in it, what each is doing, the view, which parts touch), paints one picture of the whole thing, and checks the drawing against each part of that plan, painting it again when something did not show. A black cat seen from behind is now a cat from behind, and a robot watering a plant holds a real watering can.",
-  "setup": "Photonz Probe, release Next, no switch changed from its default, with the picture model running (Scripts/picture-model/serve.sh). Walk: Scripts/playtest/ask-draws-a-scene-walk.json.",
+  "summary": "Ask plans a pose or a scene before it paints (who is in it, what each is doing, the view, which parts touch), paints one picture of the whole thing, and checks the drawing against each part of that plan, painting it again when something did not show. Thin lines in a painted scene (a kite's string, a mouth) now survive being turned into layers.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default, with the picture model set up in Settings > Ask. Walk: Scripts/playtest/ask-draws-a-scene-walk.json.",
   "switched": {},
   "try": [
-    { "do": "Open a blank picture and press Ask.", "shot": "2026-10-22-scene-plan-2-undone-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Type \"draw a cat playing a guitar\" and send it.", "shot": "2026-10-22-scene-plan-1-scene-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Read the new row under Agent: it says \"Drew a cat playing a guitar\"." },
-    { "do": "Press Command Z once: the whole scene goes, in one step." },
-    { "do": "Ask for a pose: \"draw a black cat seen from behind\", then \"draw a rabbit curled up asleep\"." },
-    { "do": "Ask for two things together: \"draw a dog chasing a ball\" or \"draw a robot watering a plant\"." },
-    { "do": "Compare the eval sheets: before (2026-10-22-scene-plan-before-sheet.png) and after (2026-10-22-scene-plan-after-sheet.png, 2026-10-22-scene-plan-after-sheet-2.png)." }
+    {
+      "do": "Open a blank picture and press Ask.",
+      "shot": "2026-10-22-scene-plan-2-undone-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type \"draw a cat playing a guitar\" and send it.",
+      "shot": "2026-10-22-scene-plan-1-scene-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the new row under Agent: it says \"Drew a cat playing a guitar\"."
+    },
+    {
+      "do": "Press Command Z once: the whole scene goes, in one step."
+    },
+    {
+      "do": "Ask for a pose: \"draw a black cat seen from behind\", then \"draw a rabbit curled up asleep\"."
+    },
+    {
+      "do": "Ask for two things together: \"draw a dog chasing a ball\" or \"draw a robot watering a plant\"."
+    },
+    {
+      "do": "Compare the same painted scene traced before and after the thin-line fix: the string now reaches the child's hand.",
+      "shot": "2026-10-22-scene-kite-string-before-after.png"
+    },
+    {
+      "do": "Compare the eval sheets: before (2026-10-22-scene-plan-before-sheet.png) and the latest six scenes (2026-10-22-scene-plan-after-sheet-3.png).",
+      "shot": "2026-10-22-scene-plan-after-sheet-3.png"
+    }
   ],
   "evaluate": [
     "Does each drawing do the thing you asked (the pose, the view, the action), not just show the animal?",
     "When two things are in it, do they touch where they should (paws on the guitar, can over the plant)?",
     "Is a drawing request taking about 40 seconds instead of 30 acceptable for this, or does it feel slow?",
-    "Is \"Cat playing g...\" in the Layers list the right length of name for a drawing?"
+    "Is \"Cat playing g...\" in the Layers list the right length of name for a drawing?",
+    "In the kite picture, does the string reaching the hand make the difference between a child holding a kite and a child near a kite?"
   ],
   "rough": [
+    "Second pass (2026-10-22 evening): the six scenes on the latest climb run (20261023-023000-ask) score 90.1; didWhatWasAsked 7 or more on all six, designed 7 or more on five. The bird missed at designed 6 because its eye merged into the black stripe it touches in the painting. Across three runs a different case missed each time (fox, robot, bird), all on how the painting looks, so the task stays open (a-scene-of-things-doing-something-together-is-dr).",
+    "Held-out after this pass: 59.5 (20261023-023728-ask-held-out) against 61 the run before, drawings group 66.7 against 69.1. It did not rise, so the task stays open on that item too.",
+    "The plan check had stopped running when Ask moved to the model built into Photonz: that model sends the drawing without its plan. Photonz now asks for the plan itself when it is left out; the check ran on every drawing in the latest runs.",
+    "On the latest runs the kite was painted as a child and a kite on white, not as a scene, so its climb score does not show the thin-line fix; the before and after picture of one painted scene does.",
+    "A scene now takes about 0.7 seconds longer to turn into layers, and asking for a missing plan adds one short question to the model (about 1 to 3 seconds).",
     "Climb, the eleven new pose and scene cases: 83.9 before (run 20261022-073410-ask), 87.1 and 86.7 after (20261022-085127-ask, 20261022-092933-ask). Held-out, 45 cases at Next defaults: 60.3 (20261022-094634-ask-held-out) against 57.5 best and 57.1 last; drawings didWhatWasAsked 5.6 to 6.1, crafted 4 to 6, clean 6.1 to 5.7; 0 stored, 0 template.",
-    "Not yet at this task's bar: on the final climb run five of the six scene cases scored 7 or more on both didWhatWasAsked and designed; the kite scored 4 and 6. Its painting had the string running to the child's hand, and tracing it as a scene (blur and a mode filter so a sky comes out in smooth bands) wiped out the thin pale string. The task stays open for it (a-scene-of-things-doing-something-together-is-dr).",
     "A drawing request now takes a median 41 seconds on the held-out set against 31: a drawing that misses part of its plan is painted again, up to twice.",
     "The plan is checked from the drawing as rendered, not from which layers touch: a painted drawing's layers are colour regions (\"Dark brown 3\"), not paws and keys.",
     "The user's own piano and curled-up-cat requests sit in the held-out set, so they are measured in the held-out total only and were not run on their own. The user's piano picture still scores didWhatWasAsked 1 in calibration (bar: 3 or lower).",
