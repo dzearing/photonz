@@ -418,11 +418,27 @@ server loads the model every time):
 | Ollama 0.40.7, `qwen3.6:27b` (default before) | 53.1 | 56.7, 21.2, 11.2, 47.4, 52.1 | 23.7 | 29.1 |
 | Built in, Qwen3.6 27B | stopped after 10 cases | 10 cases: 62 average | 88 to 146 | 22.8 |
 
+Held-out set, 2026-10-22, at Next defaults (built-in Qwen3.6 35B, the picture
+model Photonz sets up and runs, no Ollama): **61** over 45 cases (drawing 69.1,
+layout 6.4, redline 31.5, video 48.1; 41.5 s median a request; nothing looked
+up), run `20261022-231423-ask-held-out`, against 60.3 for the best before
+(Ollama `qwen3.6:27b` with the picture model started by hand).
+
 The three requests the task named: screenshot measurements 46.6 built in
 against 47.4 (10 s against 50 s), the Case 1 title page 84.4 against 79.6
 (10 s against 5 s), a pricing section on brand 19 against 11.2 (38 s against
-83 s). Video is the built-in model's weak side: "a title page before each of
-the three clips" scored 17.5 against 85.6.
+83 s). Video was the built-in model's weak side: "a title page before each of
+the three clips" scored 17.5 against 85.6, because it left the first page with
+no clip and no time, and such a page goes at the playhead. Once `add_title`
+said so in its own words, the case scored 84.4 and the climb set's video group
+53.1 against Ollama's 52.1 (run `20261023-011305-ask`).
+
+Offline: a walk can take the probe off the network (`"offline": true`, a
+loopback-only sandbox the probe puts on itself and every helper inherits).
+`ask-runs-with-no-network-walk` measures a screenshot and paints a drawing
+that way, and the three named requests ran offline in 9.5 s, 10.2 s and 59.3 s.
+Both servers let go 5 min 12 s after Ask last used them, and nothing of
+Photonz's is running a second after it quits.
 
 Speeds (`llama-bench`, `--ctx-size 32768`): Qwen3.6 27B reads 217 tokens a
 second (flash attention and bigger batches no faster) and writes 22; Qwen3.6

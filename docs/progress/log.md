@@ -21874,3 +21874,13 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Climb set, 41 cases, cold each case, no picture model: built in Qwen3.6 35B 55.3 (22.7 s median), Ollama qwen3.6:27b 53.1 (23.7 s). Built-in Qwen3.6 27B reads prompts at 217 tok/s (47 s for Ask's first prompt), so it is a Settings choice, not the default. Server runs the same with network denied (sandbox-exec). One turn writes at most 8,192 tokens.
 - Fixed on the way: a request reaching a server still loading stopped it; a quitting instance could stop the next instance's server through the shared pid file (now owner-aware, plus one retry).
 - Open on the task: the held-out set, video cases (39.5 vs 52.1), the picture model (still Python, started by hand), a network-blocked run of the whole app.
+
+## 2026-10-22 (evening): Ask's picture model set up and run by Photonz; Ask proven offline
+
+Queue task `ask-works-on-a-mac-that-has-nothing-else-install`, closing the four items left open above.
+
+- The picture model is part of Settings > Ask: "Ask can paint its drawings with Z-Image Turbo, 11.2 GB" with Download, progress, Stop. The weights are 13 pinned files (cloned from `~/.cache/huggingface` when the same bytes are there; the chat model's too). The tools are a private Python 3.12.11 plus 43 pinned packages, built by the `uv` the app now ships (`Vendor/uv/VERSION`, `Scripts/vendor-uv.sh`), without torch/OpenCV/matplotlib (435 MB). `AskPictureServer` runs `server.py` offline on a picked port, starts it on first paint, lets it go after five idle minutes, stops it at quit. Process handling for both servers is now `AskHelperProcess`. `serve.sh` is gone.
+- Walk setup `"offline": true` (`PlaytestOffline`): the probe sandboxes itself to loopback, helpers inherit it. `ask-runs-with-no-network-walk`; walk condition `askPicturesSetUp`.
+- Held-out, Next defaults, no Ollama: 61 (was 60.3 with Ollama + hand-started painting). Video gap closed by `add_title` saying an unplaced page goes at the playhead: three-clips case 17.5 to 84.4, video group 53.1 against Ollama's 52.1. The held-out run came before that wording change.
+- Filed `an-eval-case-that-starts-on-three-clips-runs-whe`: the eval's bridge can launch the probe before the walk, so the copies case scores 0 when it is first in a run.
+- Next: whether one Download should fetch both models (audit question).
