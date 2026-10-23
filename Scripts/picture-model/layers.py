@@ -213,6 +213,30 @@ def detail_colours(palette: np.ndarray, pixels: np.ndarray, drawn: np.ndarray,
     return centres[keep], where
 
 
+SMOOTH_SPREAD = 20
+SMOOTH_SIGMA = 8
+
+
+def smoothed(rgb: Image.Image) -> Image.Image:
+    """A scene with its grain taken out and its edges kept sharp. A sky is
+    often a soft gradient with grain in it, and its bands come out ragged
+    unless it is blurred; but a blur over the whole picture turns every
+    edge into a ramp, and the ramp comes back as rings of in-between colour
+    round every shape (grey halos round black pines on white) that also take
+    palette slots from the picture's own colours. So: a median filter
+    everywhere (grain out, edges kept), and a wide blur only where nothing
+    within the blur's reach differs by more than `SMOOTH_SPREAD`, which is
+    a gradient, never an edge or a low-contrast detail."""
+    sharp = rgb.filter(ImageFilter.MedianFilter(5))
+    soft = np.asarray(sharp.filter(ImageFilter.GaussianBlur(SMOOTH_SIGMA)))
+    values = np.asarray(sharp).astype(np.int16)
+    reach = 4 * SMOOTH_SIGMA + 1
+    spread = np.max([square_filter(values[:, :, c], reach, np.maximum) - square_filter(values[:, :, c], reach, np.minimum)
+                     for c in range(3)], axis=0)
+    flat = (spread < SMOOTH_SPREAD)[:, :, None]
+    return Image.fromarray(np.where(flat, soft, values).astype(np.uint8), "RGB")
+
+
 def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
                    keep_backdrop: bool = False) -> tuple[Image.Image, np.ndarray]:
     """The picture in at most `colors` flat colours.
@@ -233,9 +257,7 @@ def reduce_colours(image: Image.Image, colors: int, mode_size: int = 5,
         speck = max(4, round(rgb.size[0] / 96))
         lines = long_lines(thin_lines(rgb, round(rgb.size[0] / 228)), speck * speck)
         line_pixels = np.asarray(rgb)[lines]
-        # A scene's sky is often a soft gradient with grain in it; a light
-        # blur lets its bands come out as smooth curves instead of ragged ones.
-        rgb = rgb.filter(ImageFilter.GaussianBlur(3))
+        rgb = smoothed(rgb)
     pixels = np.asarray(rgb)
     backdrop = border_colour(pixels)
     distance = np.abs(pixels.astype(int) - backdrop).sum(axis=2)
@@ -338,6 +360,45 @@ def path_area(d: str) -> float:
     return 0 if box is None else (box[2] - box[0]) * (box[3] - box[1])
 
 
+SCENE_SPECKLE = 320
+GATHER_AREA = 0.001
+
+
+def shifted(d: str, dx: float, dy: float) -> str:
+    """A path's commands moved by (dx, dy). The tracer writes only absolute
+    M, L, C and Z, so its numbers are x, y pairs throughout."""
+    out, index = [], 0
+    for token in re.findall(r"[A-Za-z]|-?\d+(?:\.\d+)?", d):
+        if token.isalpha():
+            out.append(token)
+            continue
+        out.append(f"{float(token) + (dx if index % 2 == 0 else dy):.1f}".rstrip("0").rstrip("."))
+        index += 1
+    return " ".join(out)
+
+
+def gathered(kept: list, small: float) -> list:
+    """A scene's small shapes of one colour made one layer: a city's lit
+    windows, a night's stars. One layer a window would be hundreds of layers
+    nobody can work with, and the path cap would drop most of them. The
+    gathered layer sits where the last of them did, so it stays on top of
+    what it was drawn over."""
+    groups: dict[str, list[int]] = {}
+    for i, (d, fill, _, _) in enumerate(kept):
+        if path_area(d) < small:
+            groups.setdefault(fill, []).append(i)
+    merged = {members[-1]: members for members in groups.values() if len(members) > 1}
+    dropped = {i for members in merged.values() for i in members}
+    out = []
+    for i, path in enumerate(kept):
+        if i in merged:
+            d = " ".join(shifted(kept[j][0], kept[j][2], kept[j][3]) for j in merged[i])
+            out.append((d, path[1], 0.0, 0.0))
+        elif i not in dropped:
+            out.append(path)
+    return out
+
+
 def trace(image: Image.Image, colors: int = 10, speckle: int | None = None, scale: int = 2,
           mode_size: int = 5, keep_backdrop: bool = False) -> dict:
     """The picture as an SVG of named, filled paths, and what was kept.
@@ -357,14 +418,17 @@ def trace(image: Image.Image, colors: int = 10, speckle: int | None = None, scal
     palette = np.unique(opaque, axis=0) if len(opaque) else np.zeros((1, 3), int)
     buffer = io.BytesIO()
     flat.save(buffer, format="PNG")
-    speckle = speckle or max(4, round(width / 96))
+    # A scene's small things (lit windows, stars, lamps) are what it is
+    # made of, where a thing's specks are noise: a scene keeps patches a
+    # quarter the size, and its small shapes are gathered by colour below.
+    speckle = speckle or max(4, round(width / (SCENE_SPECKLE if keep_backdrop else 96)))
     svg = vtracer.convert_raw_image_to_svg(
         buffer.getvalue(), img_format="png", colormode="color", hierarchical="stacked", mode="spline",
         filter_speckle=speckle, color_precision=8, layer_difference=8, corner_threshold=60,
         length_threshold=4.0, max_iterations=10, splice_threshold=45, path_precision=1)
     found = [(m.group(1), nearest(m.group(2), palette), float(m.group(3)), float(m.group(4)))
              for m in PATH.finditer(svg)]
-    smallest = (width * height) * 0.00015
+    smallest = speckle * speckle if keep_backdrop else (width * height) * 0.00015
 
     def is_backdrop(d: str, fill: str, dx: float, dy: float) -> bool:
         # The tracer does not read transparency, so the backdrop comes back
@@ -375,6 +439,8 @@ def trace(image: Image.Image, colors: int = 10, speckle: int | None = None, scal
         return not keep_backdrop and touches and np.abs(rgb - backdrop).sum() < 48
 
     kept = [p for p in found if path_area(p[0]) >= smallest and not is_backdrop(*p)]
+    if keep_backdrop:
+        kept = gathered(kept, width * height * GATHER_AREA)
     if len(kept) > MAX_PATHS:
         # Keep the biggest regions; the stacking order of the rest is kept.
         biggest = set(sorted(range(len(kept)), key=lambda i: -path_area(kept[i][0]))[:MAX_PATHS])

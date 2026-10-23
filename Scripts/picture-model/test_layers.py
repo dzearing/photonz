@@ -129,6 +129,47 @@ def colour_at(flat: np.ndarray, x: float, y: float) -> np.ndarray:
     return flat[int(y), int(x), :3].astype(int)
 
 
+class ScenesHaveNoHalos(unittest.TestCase):
+    """A blur over a whole scene turned every edge into a ramp that came back
+    as rings of grey round black pines on white (2026-10-23, the judge: 'grey
+    halo fringes along every edge')."""
+
+    def test_a_black_shape_on_white_has_no_ring_of_grey(self):
+        picture = Image.new("RGB", (1024, 768), "white")
+        ImageDraw.Draw(picture).polygon([(300, 650), (512, 120), (724, 650)], fill=(22, 20, 20))
+        big = picture.resize((2048, 1536), Image.Resampling.LANCZOS)
+        flat = np.asarray(layers.reduce_colours(big, 14, 7, keep_backdrop=True)[0])[:, :, :3].astype(int)
+        between = (flat.min(axis=2) > 60) & (flat.max(axis=2) < 220)
+        self.assertLess(between.sum(), 200, f"{between.sum()} pixels of in-between grey")
+
+    def test_low_contrast_detail_is_not_smoothed_away(self):
+        picture = Image.new("RGB", (1024, 768), (45, 42, 44))
+        ImageDraw.Draw(picture).ellipse([480, 360, 540, 420], fill=(22, 20, 20))
+        big = picture.resize((2048, 1536), Image.Resampling.LANCZOS)
+        flat = np.asarray(layers.reduce_colours(big, 14, 7, keep_backdrop=True)[0])[:, :, :3].astype(int)
+        self.assertLess(flat[780, 1020].sum(), 3 * 32)
+        self.assertGreater(flat[100, 100].sum(), 3 * 38)
+
+
+class ScenesKeepSmallThings(unittest.TestCase):
+    """A city's lit windows were each under the tracer's speck size, and the
+    night skyline came back as dark blocks (2026-10-23)."""
+
+    def test_lit_windows_come_through_in_a_few_layers(self):
+        picture = Image.new("RGB", (1024, 768), (14, 22, 32))
+        draw = ImageDraw.Draw(picture)
+        draw.rectangle([300, 250, 700, 768], fill=(10, 12, 16))
+        windows = [(320 + 30 * i, 280 + 30 * j) for i in range(12) for j in range(14)]
+        for x, y in windows:
+            draw.rectangle([x, y, x + 6, y + 8], fill=(236, 214, 150))
+        traced = layers.trace(picture, colors=14, mode_size=7, keep_backdrop=True)
+        lit = [m for m in re.finditer(r'd="([^"]*)" fill="(#[0-9A-F]{6})"', traced["svg"])
+               if int(m.group(2)[1:3], 16) > 180]
+        shapes = sum(m.group(1).count("M") for m in lit)
+        self.assertGreater(shapes, 0.9 * len(windows), f"{shapes} of {len(windows)} windows")
+        self.assertLessEqual(len(lit), 3)
+
+
 class ThingsKeepSmallDetails(unittest.TestCase):
     def test_a_black_eye_on_a_dark_band_keeps_its_colour(self):
         picture = thing()
