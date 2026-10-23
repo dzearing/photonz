@@ -218,39 +218,19 @@ struct MenuBarMenu: View {
     @Bindable var coordinator: AppCoordinator
 
     var body: some View {
-        // Capture
-        Button(CaptureMenuNames.captureRegion) { coordinator.capture.beginRectCapture() }
-            .keyboardShortcut("4", modifiers: [.command, .shift])
-        Button(CaptureMenuNames.captureFullScreen) { coordinator.capture.captureFullScreen() }
-            .keyboardShortcut("3", modifiers: [.command, .shift])
-        Button(CaptureMenuNames.recording(isRecording: coordinator.capture.isRecording)) {
-            coordinator.capture.toggleRecording()
+        // Making and opening first, the way every Mac app's menu starts, and
+        // the same rows, names and keys as File (the user, 2026-10-22: "new
+        // menu items should be at the top ... capture can be a secondary
+        // section"). Off `next-front-door` the old Capture-first order stays.
+        if Experiments.shared.frontDoorEnabled {
+            documentRows
+            Divider()
+            captureRows
+        } else {
+            captureRows
+            Divider()
+            documentRows
         }
-        .keyboardShortcut("5", modifiers: [.command, .shift])
-
-        Divider()
-
-        // History. Edit Last Capture is the keyboard path from a capture to
-        // its editor once the toast has faded (a recording opens the video
-        // editor); the shortcut is also a global hotkey (CaptureCenter).
-        Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
-            .keyboardShortcut("6", modifiers: [.command, .shift])
-            .disabled(coordinator.lastCapture == nil)
-        // Same item as the editor's Capture menu, same one name, same checkmark.
-        Toggle(CaptureMenuNames.history, isOn: Binding(
-            get: { coordinator.isHistoryShown },
-            set: { $0 ? coordinator.showHistory() : coordinator.hideHistory() }))
-        .keyboardShortcut("h", modifiers: [.command, .shift])
-
-        Divider()
-
-        // Windows. The same New the File menu has, under the same name once
-        // File reads like every Mac app's (`next-front-door`).
-        Button(Experiments.shared.frontDoorEnabled ? "New\u{2026}" : "New Window") {
-            coordinator.newDocumentWindow()
-        }
-        Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
-        Button("Open…") { coordinator.presentOpenPanel() }
 
         Divider()
 
@@ -281,5 +261,51 @@ struct MenuBarMenu: View {
 
         Button("Quit \(AppInfo.name)") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q", modifiers: .command)
+    }
+
+    /// New, New from Clipboard, Open and Open Recent: File's rows, with
+    /// File's keys, so a command learned in one menu is found in the other.
+    @ViewBuilder private var documentRows: some View {
+        if Experiments.shared.frontDoorEnabled {
+            Button("New\u{2026}") { coordinator.newDocumentWindow() }
+                .keyboardShortcut("n", modifiers: .command)
+        } else {
+            Button("New Window") { coordinator.newDocumentWindow() }
+        }
+        Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
+            .keyboardShortcut(Experiments.shared.frontDoorEnabled
+                              ? KeyboardShortcut("n", modifiers: [.command, .option]) : nil)
+        Button("Open\u{2026}") { coordinator.presentOpenPanel() }
+            .keyboardShortcut(Experiments.shared.frontDoorEnabled
+                              ? KeyboardShortcut("o", modifiers: .command) : nil)
+        if Experiments.shared.recentDocumentsEnabled {
+            OpenRecentMenu(coordinator: coordinator)
+        }
+    }
+
+    /// Capture, then the way back to what was captured.
+    @ViewBuilder private var captureRows: some View {
+        Button(CaptureMenuNames.captureRegion) { coordinator.capture.beginRectCapture() }
+            .keyboardShortcut("4", modifiers: [.command, .shift])
+        Button(CaptureMenuNames.captureFullScreen) { coordinator.capture.captureFullScreen() }
+            .keyboardShortcut("3", modifiers: [.command, .shift])
+        Button(CaptureMenuNames.recording(isRecording: coordinator.capture.isRecording)) {
+            coordinator.capture.toggleRecording()
+        }
+        .keyboardShortcut("5", modifiers: [.command, .shift])
+        // Edit Last Capture is the keyboard path from a capture to its editor
+        // once the toast has faded (a recording opens the video editor); the
+        // shortcut is also a global hotkey (CaptureCenter). Its own section
+        // only in the old order: at the foot of a section that is all capture
+        // it needs no line above it.
+        if !Experiments.shared.frontDoorEnabled { Divider() }
+        Button(CaptureMenuNames.editLastCapture) { coordinator.editLastCapture() }
+            .keyboardShortcut("6", modifiers: [.command, .shift])
+            .disabled(coordinator.lastCapture == nil)
+        // Same item as the editor's Capture menu, same one name, same checkmark.
+        Toggle(CaptureMenuNames.history, isOn: Binding(
+            get: { coordinator.isHistoryShown },
+            set: { $0 ? coordinator.showHistory() : coordinator.hideHistory() }))
+        .keyboardShortcut("h", modifiers: [.command, .shift])
     }
 }

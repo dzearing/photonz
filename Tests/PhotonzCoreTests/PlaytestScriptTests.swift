@@ -505,6 +505,57 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// The menu under the Photonz icon in the menu bar hangs off neither the
+    /// app's menu bar nor a window, so neither `menus` nor `menuShot` could
+    /// say what it holds, and the order the user asked for on 2026-10-22 had
+    /// nothing to hold it to.
+    @Test("A statusMenu step reads the menu bar icon's menu and can require its rows in order")
+    func statusMenuStepCanRequireTheRows() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "statusMenu", "stage": "top",
+                       "rows": ["New…  ⌘N", "---", "Quit Photonz  ⌘Q"] } ] }
+        """)
+        guard case .statusMenu(let stage, let rows, _) = script.steps[0] else {
+            Issue.record("statusMenu"); return
+        }
+        #expect(stage == "top")
+        #expect(rows == ["New…  ⌘N", "---", "Quit Photonz  ⌘Q"])
+        #expect(script.steps[0].name == "statusMenu")
+    }
+
+    @Test("A statusMenu step with no rows only reads the menu")
+    func statusMenuStepMayOnlyRead() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "statusMenu", "stage": "read" } ] }
+        """)
+        guard case .statusMenu(_, let rows, let choose) = script.steps[0] else {
+            Issue.record("statusMenu"); return
+        }
+        #expect(rows.isEmpty)
+        #expect(choose.isEmpty)
+    }
+
+    @Test("A statusMenu step can pick a row by its path")
+    func statusMenuStepCanChooseARow() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "statusMenu", "stage": "pick",
+                       "choose": "Open Recent > project.photonz" } ] }
+        """)
+        guard case .statusMenu(_, _, let choose) = script.steps[0] else {
+            Issue.record("statusMenu"); return
+        }
+        #expect(choose == ["Open Recent", "project.photonz"])
+    }
+
+    @Test("A statusMenu step with an empty part in its path is refused")
+    func statusMenuStepRefusesAnEmptyPath() {
+        #expect(throws: PlaytestScriptError.self) {
+            _ = try decode("""
+            { "steps": [ { "do": "statusMenu", "stage": "pick", "choose": "Open Recent > " } ] }
+            """)
+        }
+    }
+
     @Test("A menuShot step with no menu named is refused with a readable reason")
     func menuShotStepNeedsAMenu() {
         #expect(throws: PlaytestScriptError.self) {

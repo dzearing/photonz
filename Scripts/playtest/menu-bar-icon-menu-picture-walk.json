@@ -1,0 +1,10 @@
+{
+  "out": "/tmp/photonz-playtest/menu-bar-icon-menu-picture",
+  "setup": { "forget": ["all"] },
+  "seed": "A picture of the menu under the Photonz icon in the menu bar at Next defaults, for the audit: New, New from Clipboard, Open and Open Recent at the top, capture below as its own section. menu-bar-icon-menu-starts-with-new-walk holds the order; this one only photographs it, popped up over the window.",
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1100, "height": 760 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "menuShot", "menu": "Menu Bar Icon", "name": "menu-bar-icon-menu" }
+  ]
+}

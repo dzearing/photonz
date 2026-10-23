@@ -1,0 +1,26 @@
+{
+  "feature": "The menu bar icon's menu starts with New and Open",
+  "epic": "agent-drivable",
+  "summary": "Clicking the Photonz icon in the menu bar now shows New, New from Clipboard, Open and Open Recent at the top with the File menu's keys. Capture follows as its own section, then updates, settings and Quit.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Click the Photonz icon in the menu bar.", "shot": "2026-10-23-menu-bar-icon-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour. The menu is the icon's own, popped up over a window so a walk can photograph it." },
+    { "do": "Read the top four rows: New… ⌘N, New from Clipboard ⌥⌘N, Open… ⌘O, Open Recent." },
+    { "do": "Pick New… and see the New window with Image and Video." },
+    { "do": "Open the icon's menu again, hover Open Recent, and pick a document you opened lately." },
+    { "do": "Check the capture rows below the line still carry ⇧⌘4, ⇧⌘3, ⇧⌘5 and ⇧⌘6." }
+  ],
+  "evaluate": [
+    "Does New at the top read like every other Mac app's menu now?",
+    "Is Open Recent here the same list as File > Open Recent?",
+    "Should Show History stay in the capture section, under Edit Last Capture?",
+    "Do you miss a line between New from Clipboard and Open, which File has?"
+  ],
+  "rough": [
+    "The app-shell mock still draws this menu with capture first; it is built New first per your call on 2026-10-22 ('new menu items should be at the top ... capture can be a secondary section'). The mock page is left as drawn.",
+    "File puts a line between New from Clipboard and Open; this menu does not, as the task's checklist reads (your call on 2026-10-22 asked for New at the top and capture as a second section, nothing about a line there).",
+    "Show History stays in the capture section under Edit Last Capture; the checklist did not name it, and it belongs with capture.",
+    "With the Front Door switch off (Current) the old capture-first order is unchanged."
+  ]
+}

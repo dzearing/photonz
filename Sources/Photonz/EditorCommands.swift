@@ -298,19 +298,7 @@ struct EditorCommands: Commands {
 
     /// File > Open Recent: the same documents the front door's Recent puts
     /// among your captures, newest first.
-    private var openRecentMenu: some View {
-        let recents = RecentDocumentsStore.shared
-        let documents = recents.documents
-        let titles = RecentDocuments.menuTitles(documents)
-        return Menu("Open Recent") {
-            ForEach(Array(zip(documents, titles)), id: \.0.id) { document, title in
-                Button(title) { coordinator.openFileWindow(document.url) }
-            }
-            if !documents.isEmpty { Divider() }
-            Button("Clear Menu") { recents.clear() }
-                .disabled(documents.isEmpty)
-        }
-    }
+    private var openRecentMenu: some View { OpenRecentMenu(coordinator: coordinator) }
 
     var body: some Commands {
         #if PHOTONZ_PLAYTEST
@@ -2731,6 +2719,31 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut("f", modifiers: [.control, .command])
             .disabled(!hasDocument)
+        }
+    }
+}
+
+/// Open Recent: the same documents the front door's Recent puts among your
+/// captures, newest first, with Clear Menu at the foot. One list for File and
+/// for the menu under the app's icon (`MenuBarMenu`), so the two never differ.
+struct OpenRecentMenu: View {
+    let coordinator: AppCoordinator
+
+    var body: some View { openRecentMenu }
+
+    // Its rows under this name, which is what `EveryMenuCommandHasANameTests`
+    // reads File's rows by.
+    private var openRecentMenu: some View {
+        let recents = RecentDocumentsStore.shared
+        let documents = recents.documents
+        let titles = RecentDocuments.menuTitles(documents)
+        return Menu("Open Recent") {
+            ForEach(Array(zip(documents, titles)), id: \.0.id) { document, title in
+                Button(title) { coordinator.openFileWindow(document.url) }
+            }
+            if !documents.isEmpty { Divider() }
+            Button("Clear Menu") { recents.clear() }
+                .disabled(documents.isEmpty)
         }
     }
 }

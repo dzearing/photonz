@@ -3284,6 +3284,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `ticked` and `unticked` name the rows that must, and must not, be
     /// wearing a checkmark, so the step is a test and not only a picture.
     case menuShot(menu: String, name: String, ticked: [String], unticked: [String])
+    /// The `menu` a `menuShot` names to photograph the menu under the app's
+    /// icon in the menu bar, rather than one on the app's own menu bar.
+    public static let statusMenuTitle = "Menu Bar Icon"
     /// Open the menu you get by RIGHT CLICKING something — a layer row or a
     /// measurement row in the right hand panel (`on`), or a spot on the picture
     /// itself (`at`) — and photograph it.
@@ -4368,6 +4371,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// row with no key acts. Fails when the row is missing or dimmed.
     case menus(stage: String, menu: String?, oneKeyEach: Bool = false, bar: [String] = [],
                choose: [String] = [])
+    /// Write the menu under the app's icon in the menu bar to the log and to
+    /// `status-menu-<stage>.txt`: every row, divider and shortcut, top to
+    /// bottom, one line each the way `menus` writes a menu ("New…  ⌘N",
+    /// "---" for a divider). It is read inside the app's own process, so
+    /// nothing opens on screen.
+    ///
+    /// `rows`, when given, is that reading exactly: the walk fails when the
+    /// menu reads any other way, and says how it does read.
+    ///
+    /// `choose` picks one row by its path ("Open Recent > project.photonz"),
+    /// after the reading, the way a click on it does. Fails when the row is
+    /// missing or dimmed.
+    case statusMenu(stage: String, rows: [String] = [], choose: [String] = [])
     /// Write the measured frame of every glass group along the bottom of the
     /// canvas to the log and to `toolbar-<stage>.json`: its height, its top and
     /// bottom edge, and its centre line, left to right.
@@ -4484,7 +4500,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4655,6 +4671,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .clipboardText: "clipboardText"
         case .readClipboard: "readClipboard"
         case .menus: "menus"
+        case .statusMenu: "statusMenu"
         case .toolBar: "toolBar"
         case .panelEdge: "panelEdge"
         case .panelStart: "panelStart"
@@ -6349,6 +6366,15 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .menus(stage: try f.string("stage"), menu: try f.optionalString("menu"),
                           oneKeyEach: try f.optionalFlag("oneKeyEach") ?? false,
                           bar: try f.optionalStrings("bar"), choose: choose)
+        case "statusMenu":
+            let choose = (try f.optionalString("choose"))?
+                .components(separatedBy: ">").map { $0.trimmingCharacters(in: .whitespaces) } ?? []
+            if choose.contains(where: \.isEmpty) {
+                throw PlaytestScriptError.invalidField(index: index, step: "statusMenu", field: "choose",
+                                                       reason: "a row, or a path to one, \"Open Recent > project.photonz\"")
+            }
+            self = .statusMenu(stage: try f.string("stage"), rows: try f.optionalStrings("rows"),
+                               choose: choose)
         case "toolBar":
             let slots = f.has("slots") ? try f.optionalStrings("slots") : nil
             let more = f.has("more") ? fields["more"] as? [String] : nil

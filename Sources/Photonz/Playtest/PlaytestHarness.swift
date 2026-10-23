@@ -2843,6 +2843,32 @@ private final class Run {
             try await openPanelMenu(menu, in: row, shot: shot, choose: choose, clicking: clicking,
                                     at: at, number: number)
 
+        case .statusMenu(let stage, let wanted, let choose):
+            let menu = try Self.statusItemMenu()
+            Self.fill(menu)
+            let tree = menu.items.map { Self.describe(item: $0, depth: 0) }
+            // Dimming is left out: a status item's menu is validated as it
+            // opens, and this one never opens. Order, names, keys and what is
+            // inside a submenu are exact.
+            let reading = "the menu under the app's icon in the menu bar reads:\n"
+                + Self.outline(tree, dimming: false)
+            // The rows held to `rows` are the menu's own, not a submenu's: what
+            // Open Recent lists is whatever this Mac opened last.
+            let read = tree.map { entry -> [String: Any] in
+                var row = entry
+                row["items"] = nil
+                return row
+            }.map { Self.outline([$0], dimming: false, indent: "") }
+            try? Data(reading.utf8).write(to: out.appendingPathComponent("status-menu-\(stage).txt"))
+            note(number, step.name, reading, state: ["rows": read])
+            if !wanted.isEmpty, read != wanted {
+                let first = read.indices.first { $0 >= wanted.count || read[$0] != wanted[$0] } ?? read.count
+                throw Failure(description: "the menu bar icon's menu differs from row \(first + 1): "
+                              + "it reads \(read.joined(separator: " | ")), "
+                              + "not \(wanted.joined(separator: " | "))")
+            }
+            if !choose.isEmpty { try chooseMenuBarRow(choose, in: menu) }
+
         case .menuShot(let menu, let name, let ticked, let unticked):
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
                                             unticked: unticked, number: number)
@@ -13627,9 +13653,19 @@ private final class Run {
             throw Failure(description: "the app has no menu bar")
         }
         bar.update()
-        guard let top = bar.items.first(where: { $0.title == name && !$0.isHidden }), let menu = top.submenu else {
+        let menu: NSMenu
+        if name == PlaytestStep.statusMenuTitle {
+            // The menu under the app's icon, popped up over the window like
+            // any other: the same `NSMenu` the icon opens.
+            menu = try Self.statusItemMenu()
+            Self.fill(menu)
+        } else if let top = bar.items.first(where: { $0.title == name && !$0.isHidden }),
+                  let submenu = top.submenu {
+            menu = submenu
+        } else {
             let names = bar.items.map(\.title).joined(separator: ", ")
-            throw Failure(description: "no menu called \"\(name)\"; the menu bar has: \(names)")
+            throw Failure(description: "no menu called \"\(name)\"; the menu bar has: \(names), "
+                          + "and \"\(PlaytestStep.statusMenuTitle)\" is the one under the app's icon")
         }
         // A window scoped row (View ▸ Show Grid) reads its words and its
         // checkmark off the FOCUSED window, so with nothing key it reports the
@@ -17589,8 +17625,10 @@ private final class Run {
     /// Picks one row of the menu bar by its path, the way a click on it does:
     /// the menus on the way are brought up to date first, as opening them
     /// would, and a missing or dimmed row fails the walk naming what was there.
-    private func chooseMenuBarRow(_ path: [String]) throws {
-        guard var menu = NSApp.mainMenu else { throw Failure(description: "the app has no menu bar") }
+    /// `root` is the menu the path starts in: the menu bar unless a step
+    /// names another (the menu under the app's icon).
+    private func chooseMenuBarRow(_ path: [String], in root: NSMenu? = nil) throws {
+        guard var menu = root ?? NSApp.mainMenu else { throw Failure(description: "the app has no menu bar") }
         var item: NSMenuItem?
         for (depth, title) in path.enumerated() {
             menu.update()
@@ -17613,6 +17651,28 @@ private final class Run {
             throw Failure(description: "\(path.joined(separator: " > ")) is dimmed")
         }
         owner.performActionForItem(at: index)
+    }
+
+    /// The menu under the app's icon in the menu bar (`MenuBarExtra`).
+    ///
+    /// It belongs to an `NSStatusItem`, which AppKit lists nowhere public. The
+    /// item draws in a window of its own on the status bar, and that window
+    /// answers `statusItem`, so the menu is reached through it. The probe is
+    /// the only build with walks in it, so leaning on that private name costs
+    /// the shipping app nothing; if a macOS update takes it away the step
+    /// fails saying so, rather than reading an empty menu.
+    static func statusItemMenu() throws -> NSMenu {
+        let selector = NSSelectorFromString("statusItem")
+        let bars = NSApp.windows.filter { String(describing: type(of: $0)).contains("StatusBar") }
+        for window in bars where window.responds(to: selector) {
+            if let item = window.perform(selector)?.takeUnretainedValue() as? NSStatusItem,
+               let menu = item.menu ?? item.button?.menu {
+                return menu
+            }
+        }
+        let seen = bars.map { "\(type(of: $0)) answers statusItem: \($0.responds(to: selector))" }
+        throw Failure(description: "found no menu under the app's icon in the menu bar; status bar windows: "
+                      + (seen.isEmpty ? "none" : seen.joined(separator: ", ")))
     }
 
     private func readMenuBar(only wanted: String?) throws -> [String: Any] {

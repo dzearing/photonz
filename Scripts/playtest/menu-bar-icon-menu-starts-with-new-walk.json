@@ -1,0 +1,86 @@
+{
+  "out": "/tmp/photonz-playtest/menu-bar-icon-menu-starts-with-new",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "The menu under the Photonz icon in the menu bar starts the way File does at Next defaults, with no switch changed (the user, 2026-10-22: 'new menu items should be at the top on the menu like every other app in the world. capture can be a secondary section'). New, New from Clipboard, Open and Open Recent first, with File's keys; then the capture rows as their own section with their own keys; then updates, Welcome, Settings, Experiments, About and notices; then Quit. Read inside the app, so nothing opens on screen. Then a picture is opened, saved as a project and closed, and picking it from the icon's Open Recent reopens it in a window of its own, the same as File > Open Recent.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1100,
+      "height": 760
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "statusMenu",
+      "stage": "1-read",
+      "rows": [
+        "New…  ⌘N",
+        "New from Clipboard  ⌥⌘N",
+        "Open…  ⌘O",
+        "Open Recent",
+        "---",
+        "Capture Region  ⇧⌘4",
+        "Capture Full Screen  ⇧⌘3",
+        "Record Screen / Video…  ⇧⌘5",
+        "Edit Last Capture  ⇧⌘6",
+        "Show History  ⇧⌘H",
+        "---",
+        "Check for Updates…",
+        "Welcome & Permissions…",
+        "Settings…",
+        "Experiments…",
+        "About Photonz Next (Probe)",
+        "Open Source Notices…",
+        "---",
+        "Quit Photonz Next (Probe)  ⌘Q"
+      ]
+    },
+    {
+      "do": "menus",
+      "stage": "2-file",
+      "menu": "File"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Hero banner.png"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "saveProjectAs"
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "statusMenu",
+      "stage": "2-open-recent",
+      "choose": "Open Recent > project.photonz"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectWindows",
+      "titled": "project.photonz",
+      "count": 1
+    }
+  ]
+}
