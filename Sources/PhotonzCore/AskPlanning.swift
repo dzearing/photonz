@@ -201,6 +201,16 @@ public struct AskPlan: Hashable, Sendable {
         return AskPlan(steps: changed, summary: summary, names: names)
     }
 
+    /// The plan with step `number`'s drawing plan replaced by `statements`;
+    /// none takes the plan off, so the drawing is a plain thing.
+    public func replacingDrawingPlan(step number: Int, with statements: [String]) -> AskPlan {
+        guard steps.indices.contains(number - 1), var arguments = steps[number - 1].arguments.objectValue else { return self }
+        arguments["plan"] = statements.isEmpty ? nil : .array(statements.map { .string($0) })
+        var changed = steps
+        changed[number - 1] = AskStep(tool: changed[number - 1].tool, arguments: .object(arguments))
+        return AskPlan(steps: changed, summary: summary, names: names)
+    }
+
     /// Whether a step after step `number` names what it makes (`$number`).
     /// A step the app refuses changes nothing, so it can be passed over,
     /// unless a later step was counting on it.
@@ -686,6 +696,71 @@ public enum AskDrawingCheck {
     /// (`planningBody`) before it is painted.
     public static func unplanned(in plan: AskPlan) -> [(step: Int, subject: String)] {
         drawings(in: plan).filter { $0.plan.isEmpty }.map { ($0.step, $0.subject) }
+    }
+
+    /// The planning model asked, statement by statement, whether the person's
+    /// words ask for it. Asked to plan only what the words name, the model
+    /// built into Photonz still adds details ("an angry bird": its body is
+    /// round and red, it has a black beak), and every one the painting misses
+    /// paints the picture again for nothing anybody asked; on 2026-10-23 every
+    /// try painted again on one climb run was for such a detail.
+    public static func groundingBody(model: String, request: String, plan: [String]) -> AgentJSON {
+        let listed = plan.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
+        let question = """
+        Someone asked for: "\(request)".
+        These statements were written about the picture:
+        \(listed)
+        For each statement, answer yes if those words ask for it: a pose, action, view, mood or relationship \
+        the words name, or what that plainly takes (someone playing a guitar has their hands on it). Answer no \
+        if it adds a colour, shape, part, place or detail the words do not name.
+        Answer with one line per statement and nothing else, like: 1 yes
+        """
+        return ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
+                "options": ["temperature": 0, "num_ctx": .number(Double(AskConversation.contextWindow))],
+                "messages": [["role": "user", "content": .string(question)]]]
+    }
+
+    /// The statements the words ask for: those the answer says no to are
+    /// dropped, and a line it cannot read keeps its statement.
+    public static func grounded(_ plan: [String], answer: String) -> [String] {
+        let dropped = unmet(answer, plan: plan)
+        return plan.filter { !dropped.contains($0) }
+    }
+
+    /// A plan drawn again with each drawing given the plan the first try's
+    /// drawing in the same place was checked against (`carried`, in drawing
+    /// order). The model rewords the subject when it draws again and leaves
+    /// the plan out or rewrites it, and a plan asked afresh of the reworded
+    /// subject grows details nobody asked for, each one a reason to draw
+    /// again; the request's own plan is the bar every try is held to. A
+    /// drawing whose first plan was none (a plain thing) is left as sent.
+    /// Nil when the plan has a different number of drawings, so each is
+    /// asked for afresh.
+    public static func carryingPlans(_ carried: [[String]], into plan: AskPlan) -> AskPlan? {
+        let drawn = drawings(in: plan)
+        guard drawn.count == carried.count else { return nil }
+        return zip(drawn, carried).reduce(plan) { $0.settingDrawingPlan(step: $1.0.step, to: $1.1) }
+    }
+
+    /// How close a try at drawing came: whether each drawing read as the
+    /// thing asked for, and how many statements of its plan it did not show.
+    public struct Attempt: Sendable, Equatable {
+        public var reads: Bool
+        public var missed: Int
+        public init(reads: Bool, missed: Int) {
+            self.reads = reads
+            self.missed = missed
+        }
+    }
+
+    /// Whether `attempt` came closer than `held`: one that reads beats one
+    /// that does not, fewer statements missed beats more, and a tie goes to
+    /// the later try, drawn with the misses named. A try that does not read
+    /// is never kept.
+    public static func isCloser(_ attempt: Attempt, than held: Attempt?) -> Bool {
+        guard attempt.reads else { return false }
+        guard let held, held.reads else { return true }
+        return attempt.missed <= held.missed
     }
 
     /// The planning model asked for one drawing's plan, the same rules the

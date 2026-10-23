@@ -221,6 +221,88 @@ struct AskScenePlanTests {
         #expect(plan.settingDrawingPlan(step: 1, to: []) == plan)
     }
 
+    // MARK: A drawing drawn again keeps its plan, and the closest try stays
+
+    static func drawing(_ subject: String, _ plan: [AgentJSON]? = nil) -> AskStep {
+        AskStep(tool: "add_drawing", arguments: plan.map { ["subject": .string(subject), "plan": .array($0)] }
+                ?? ["subject": .string(subject)])
+    }
+
+    @Test("A drawing drawn again is checked against the plan the first one was, not a new plan of its reworded subject")
+    func revisionCarriesThePlan() {
+        let first = AskPlan(steps: [Self.drawing("a cat playing a piano", Self.piano)], summary: "")
+        let carried = AskDrawingCheck.drawings(in: first).map(\.plan)
+        // The model rewords the subject and leaves the plan out.
+        let again = AskPlan(steps: [Self.drawing("a cartoon cat seated on a bench, both front paws pressing the keys")],
+                            summary: "Drew it")
+        let carrying = AskDrawingCheck.carryingPlans(carried, into: again)
+        #expect(carrying?.steps[0].arguments["plan"] == .array(Self.piano))
+        #expect(carrying?.steps[0].arguments["subject"] == "a cartoon cat seated on a bench, both front paws pressing the keys")
+        #expect(carrying.map { AskDrawingCheck.unplanned(in: $0) }?.isEmpty == true)
+        // A plan the model reworded is replaced by the one the request was checked against.
+        let reworded = AskPlan(steps: [Self.drawing("a cat at a piano", ["a cat", "a piano"])], summary: "")
+        #expect(AskDrawingCheck.carryingPlans(carried, into: reworded)?.steps[0].arguments["plan"] == .array(Self.piano))
+    }
+
+    @Test("A plain thing drawn again stays a plain thing; a different number of drawings asks afresh")
+    func revisionCarriesNothingForAPlainThing() {
+        let carried: [[String]] = [[]]
+        let again = AskPlan(steps: [Self.drawing("a dog, side view, four legs, wagging tail")], summary: "")
+        let carrying = AskDrawingCheck.carryingPlans(carried, into: again)
+        #expect(carrying == again)
+        let two = AskPlan(steps: [Self.drawing("a dog"), Self.drawing("a ball")], summary: "")
+        #expect(AskDrawingCheck.carryingPlans(carried, into: two) == nil)
+        let text = AskPlan(steps: [AskStep(tool: "add_text", arguments: ["text": "Hi"]), Self.drawing("a dog")], summary: "")
+        #expect(AskDrawingCheck.carryingPlans([["it sits"]], into: text)?.steps[1].arguments["plan"] == .array(["it sits"]))
+    }
+
+    @Test("The closest try is kept: one that reads beats one that does not, fewer statements missed beats more, a tie goes to the later")
+    func closestTryKept() {
+        typealias Try = AskDrawingCheck.Attempt
+        #expect(AskDrawingCheck.isCloser(Try(reads: true, missed: 2), than: nil))
+        #expect(!AskDrawingCheck.isCloser(Try(reads: false, missed: 0), than: nil))
+        #expect(AskDrawingCheck.isCloser(Try(reads: true, missed: 1), than: Try(reads: true, missed: 2)))
+        #expect(!AskDrawingCheck.isCloser(Try(reads: true, missed: 2), than: Try(reads: true, missed: 1)))
+        #expect(AskDrawingCheck.isCloser(Try(reads: true, missed: 1), than: Try(reads: true, missed: 1)))
+        #expect(!AskDrawingCheck.isCloser(Try(reads: false, missed: 0), than: Try(reads: true, missed: 3)))
+        #expect(AskDrawingCheck.isCloser(Try(reads: true, missed: 3), than: Try(reads: false, missed: 0)))
+    }
+
+    // MARK: A plan keeps only what the words ask for
+
+    @Test("The question whether the words ask for each statement carries the request and the numbered statements, and does not think")
+    func groundingQuestion() {
+        let body = AskDrawingCheck.groundingBody(model: "m", request: "draw a robot watering a plant",
+                                                 plan: ["the robot holds a watering can", "the plant is in front of the robot"])
+        let asked = body["messages"]?.arrayValue?.first?["content"]?.stringValue ?? ""
+        #expect(asked.contains("draw a robot watering a plant"))
+        #expect(asked.contains("1. the robot holds a watering can"))
+        #expect(asked.contains("2. the plant is in front of the robot"))
+        #expect(asked.contains("1 yes"))
+        #expect(body["think"] == false)
+        #expect(body["stream"] == false)
+    }
+
+    @Test("Statements the words do not ask for are dropped; a line it cannot read keeps its statement")
+    func groundingKeepsWhatWasAsked() {
+        let plan = ["its eyebrows angle down", "its body is round and red", "it has a black beak", "it frowns"]
+        #expect(AskDrawingCheck.grounded(plan, answer: "1 yes\n2 no\n3. No\n4 yes") == ["its eyebrows angle down", "it frowns"])
+        #expect(AskDrawingCheck.grounded(plan, answer: "1 yes\n2 no") == ["its eyebrows angle down", "it has a black beak", "it frowns"])
+        #expect(AskDrawingCheck.grounded(plan, answer: "I am not sure") == plan)
+        #expect(AskDrawingCheck.grounded(plan, answer: "1 no\n2 no\n3 no\n4 no").isEmpty)
+    }
+
+    @Test("A plan cut down is written back into its step, and a plan cut to nothing is taken off")
+    func groundedPlanWrittenBack() {
+        let plan = AskPlan(steps: [Self.drawing("angry bird", ["its eyebrows angle down", "it has a black beak"])], summary: "")
+        let cut = plan.replacingDrawingPlan(step: 1, with: ["its eyebrows angle down"])
+        #expect(AskDrawingCheck.drawings(in: cut).first?.plan == ["its eyebrows angle down"])
+        let none = plan.replacingDrawingPlan(step: 1, with: [])
+        #expect(none.steps[0].arguments["plan"] == nil)
+        #expect(none.steps[0].arguments["subject"] == "angry bird")
+        #expect(AskDrawingCheck.drawings(in: none).first?.plan == [])
+    }
+
     // MARK: The row names the scene
 
     @Test("The row names the whole scene, the person's own words, not just its first noun")

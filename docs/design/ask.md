@@ -272,9 +272,14 @@ task `a-scene-of-things-doing-something-together-is-dr`). Now:
   model that sees is shown it on white (a lone layer renders with nothing
   behind it) and answers yes or no for each statement, numbered
   (`AskDrawingCheck.planBody`, `unmet`). A no is painted again, told what did
-  not show; an answer it cannot read is no miss. When the last try still misses
-  part of the plan, the drawing stays (it reads as the thing; it is the
-  closest Ask came) rather than being thrown away.
+  not show; an answer it cannot read is no miss. Every try is held to the
+  first try's plan (`AskDrawingCheck.carryingPlans`): the model rewords the
+  subject when it draws again, and a plan asked afresh of the reworded subject
+  grew details nobody asked for ("a black beak centred on its face" for "an
+  angry bird"), each a reason to paint again. After the last try the closest
+  one lands (`Attempt`, `isCloser`: one that reads beats one that does not,
+  fewer statements missed beats more, a tie goes to the later): a last try
+  that did not read had thrown away an earlier one that did (2026-10-23).
 * **Kept on the picture.** The tracer measures how much of the picture's edge
   is drawing rather than backdrop (`layers.py`, `clipped`); a thing (not a
   scene) running off the edge is painted once more from another seed, so a

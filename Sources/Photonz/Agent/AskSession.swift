@@ -253,6 +253,11 @@ final class AskSession {
             return
         }
         var revisions = 0
+        // The plans the first try's drawings were checked against, held for
+        // every try after it, and the closest try so far, kept to land if a
+        // later one comes out worse.
+        var carried: [[String]]?
+        var closest: (attempt: AskDrawingCheck.Attempt, after: PhotonzDocument, ran: Ran, plan: AskPlan)?
         while true {
             let outcome = await Self.plan(&talk, model: model, in: editor, note: note)
             guard !Task.isCancelled else { return }
@@ -264,8 +269,13 @@ final class AskSession {
                 phase = .stopped(trouble.sentence)
                 return
             }
-            plan = await Self.withDrawingPlans(plan, model: model, note: note)
+            if let carrying = carried.flatMap({ AskDrawingCheck.carryingPlans($0, into: plan) }) {
+                plan = carrying
+            } else {
+                plan = await Self.withDrawingPlans(plan, asked: words, model: model, note: note)
+            }
             guard !Task.isCancelled else { return }
+            carried = carried ?? AskDrawingCheck.drawings(in: plan).map(\.plan)
             self.plan = plan
             guard let ran = await run(plan, in: editor) else { return }
             let miss = await look(at: plan, made: ran.made, in: editor, model: model, note: note)
@@ -277,11 +287,26 @@ final class AskSession {
                 phase = .stopped(AskCopy.stoppedSentence)
                 return
             }
-            if let miss, !miss.unmet.isEmpty, revisions >= AskDrawingCheck.mostRevisions {
+            var landed = ran
+            let attempt = AskDrawingCheck.Attempt(reads: miss.map { !$0.unmet.isEmpty } ?? true, missed: miss?.unmet.count ?? 0)
+            if miss != nil, revisions >= AskDrawingCheck.mostRevisions, let held = closest,
+               !AskDrawingCheck.isCloser(attempt, than: held.attempt) {
+                // The last try came out worse than an earlier one: that one
+                // lands in its place, the closest Ask came.
+                editor.undo()
+                editor.perform { $0 = held.after }
+                landed = held.ran
+                lastSources = held.ran.sources
+                self.plan = held.plan
+                note("keeping an earlier drawing: it showed all but \(held.attempt.missed) of its plan")
+            } else if let miss, !miss.unmet.isEmpty, revisions >= AskDrawingCheck.mostRevisions {
                 // It reads as the thing but still misses part of its plan
                 // after the last try: it stays, the closest Ask came.
                 note("keeping the last drawing: still not shown: \(miss.unmet.joined(separator: "; "))")
             } else if let miss {
+                if AskDrawingCheck.isCloser(attempt, than: closest?.attempt), let after = editor.document {
+                    closest = (attempt, after, ran, plan)
+                }
                 // What was drawn does not read as what was asked, or does not
                 // show what its plan said: it comes back off, and is drawn
                 // again or owned up to.
@@ -301,9 +326,9 @@ final class AskSession {
                 continue
             }
             if let after = editor.document {
-                changes.record(asked: words, sentence: AskChangeWords.sentence(ran.landed, asked: words,
-                                                                              before: ran.before, after: after),
-                               before: ran.before, after: after, sources: ran.sources)
+                changes.record(asked: words, sentence: AskChangeWords.sentence(landed.landed, asked: words,
+                                                                              before: landed.before, after: after),
+                               before: landed.before, after: after, sources: landed.sources)
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
@@ -444,7 +469,11 @@ final class AskSession {
     /// asked of the planning model drawing by drawing, so a pose or a scene
     /// is painted from its statements and checked against them whichever
     /// model planned it. A plain thing's answer is none and leaves it as sent.
-    private static func withDrawingPlans(_ plan: AskPlan, model: String, note: (String) -> Void) async -> AskPlan {
+    /// Then every plan keeps only the statements the person's words ask for
+    /// (`AskDrawingCheck.groundingBody`), so nothing is painted again for a
+    /// detail nobody named.
+    private static func withDrawingPlans(_ plan: AskPlan, asked words: String, model: String,
+                                         note: (String) -> Void) async -> AskPlan {
         var plan = plan
         for drawing in AskDrawingCheck.unplanned(in: plan) {
             guard !Task.isCancelled,
@@ -453,6 +482,15 @@ final class AskSession {
             let statements = AskDrawingCheck.statements(fromAnswer: answer)
             note("plan for \(drawing.subject): " + (statements.isEmpty ? "none" : statements.joined(separator: "; ")))
             plan = plan.settingDrawingPlan(step: drawing.step, to: statements)
+        }
+        for drawing in AskDrawingCheck.drawings(in: plan) where !drawing.plan.isEmpty {
+            guard !Task.isCancelled,
+                  let answer = try? await AskLocalModel.chat(AskDrawingCheck.groundingBody(model: model, request: words, plan: drawing.plan))["message"]?["content"]?
+                      .stringValue else { continue }
+            let kept = AskDrawingCheck.grounded(drawing.plan, answer: answer)
+            guard kept != drawing.plan else { continue }
+            note("plan asked for: " + (kept.isEmpty ? "none" : kept.joined(separator: "; ")))
+            plan = plan.replacingDrawingPlan(step: drawing.step, with: kept)
         }
         return plan
     }
