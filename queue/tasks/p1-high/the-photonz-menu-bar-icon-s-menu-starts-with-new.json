@@ -1,0 +1,33 @@
+{
+  "id": "the-photonz-menu-bar-icon-s-menu-starts-with-new",
+  "title": "The Photonz menu bar icon's menu starts with New and Open, with capture below",
+  "goal": "Clicking the Photonz icon in the menu bar shows New, New from Clipboard, Open and Open Recent at the top, the same order the File menu now uses. The capture items come next as their own section, then updates, settings and Quit.",
+  "epic": "agent-drivable",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-23T14:43:43.781Z",
+  "updated": "2026-10-23T14:43:43.896Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-22: 'new menu items should be at the top on the menu like every other app in the world. capture can be a secondary section.' Then on 2026-10-23: 'what happened to the asks i had, to move the new menu items in the photonz menu up to the top'. The intake window filed that first message against the File menu only (starting-something-new-offers-just-image-or-vide, done, commit 26948d3d), and the menu bar icon's menu was never touched. That was an intake miss. The menu is MenuBarMenu in Sources/Photonz/PhotonzApp.swift:217 onward. Today's order: capture region, full screen, record, divider, edit last capture, divider, New... (New Window when front door is off), New from Clipboard, Open..., divider, updates, Welcome, Settings, Experiments, About, notices, divider, Quit. There is no Open Recent there yet; reuse openRecentMenu from EditorCommands.swift (around :291) rather than building a second list. Capture names come from CaptureMenuNames.",
+  "acceptance": [
+    "At Next defaults the menu bar icon's menu reads, top to bottom: New... , New from Clipboard, Open... , Open Recent (the same documents as File > Open Recent); a divider; Capture a region, Capture full screen, Record, Edit last capture; a divider; then updates, Welcome & Permissions, Settings, Experiments, About, notices; a divider; Quit",
+    "Each item does what its File menu twin does: New... opens the New window with Image and Video, and Open Recent opens the picked document",
+    "Shortcuts shown match the File menu's (Command-N, Option-Command-N, Command-O) and the capture keys stay as they are",
+    "A walk reads the menu's order without opening it on screen (the harness reads menus without showing them) and passes; focus-drill reads clean for it",
+    "Audit under queue/audits/ with a picture of the menu; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-23T14:43:43.783Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-23T14:43:43.895Z",
+      "note": "seq 75 -> 1"
+    }
+  ]
+}
