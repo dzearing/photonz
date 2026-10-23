@@ -143,6 +143,8 @@ struct AskPlanningTests {
         _ = talk.take(try Self.reply([Self.component("Loose", x: 900, y: 300, width: 60, labels: false)]))
         let args = talk.steps.map(\.arguments)
         #expect(args.map { $0["x"]?.doubleValue } == [40, 40, 900])
+        // Rows stack straight under one another: 32 tall, 25 for the state names, 24 apart.
+        #expect(args.map { $0["y"]?.doubleValue } == [100, 181, 300])
         #expect(args[0]["step"]?.doubleValue == 224 && args[1]["step"]?.doubleValue == 224,
                 "the widest look plus 24, for every labelled row")
         #expect(args[2]["step"] == nil, "a component with no labels is left as asked")
@@ -155,15 +157,43 @@ struct AskPlanningTests {
         #expect(wide.steps.map { $0.arguments["step"]?.doubleValue } == [224, nil, 224])
     }
 
-    @Test("A labelled row that would run past the bottom of the canvas is refused: the sheet is full")
-    func sheetIsFull() throws {
+    @Test("Words a labelled row already sets are refused, naming the step that sets them")
+    func labelsNotTwice() throws {
         var talk = Self.sheet()
-        // Rows of 200 points, their names above and the gap below: from 100, three fit 1024 and a fourth does not.
-        for index in 0..<6 {
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"button","x":40,"y":150}"#)]))
+        #expect(talk.steps.count == 1)
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("step 1") == true)
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"Base Components","x":40,"y":40}"#)]))
+        #expect(talk.steps.count == 2, "a title is words of its own")
+    }
+
+    @Test("Ask is never shown the Library's starters: it builds, or uses the document's own")
+    func noStarters() {
+        let listing = #"[{"id":"S-1","name":"Button","from":"starter","detail":"starter"},{"id":"D-1","name":"Hero","from":"document","detail":"main"}]"#
+        let shown = AskTools.withoutStarters(listing)
+        #expect(!shown.contains("S-1"))
+        #expect(shown.contains("D-1"))
+        #expect(AskTools.withoutStarters(#"[{"id":"S-1","name":"Button","from":"starter"}]"#) == "[]")
+        #expect(AskTools.withoutStarters("not json") == "not json")
+    }
+
+    @Test("A labelled row that would run past the bottom of the canvas grows the canvas down first")
+    func sheetGrowsTheCanvas() throws {
+        var talk = Self.sheet()
+        // Rows of 200 points, their names above and the gap below: from 100, three fit 1024.
+        for index in 0..<5 {
             _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100, width: 80, height: 200)]))
         }
-        #expect(talk.steps.count == 3, "\(talk.steps.count)")
-        #expect(talk.messages.last?["content"]?.stringValue?.contains("full") == true)
+        #expect(talk.steps.map(\.tool) == ["add_component", "add_component", "add_component",
+                                            "run_command", "add_component", "run_command", "add_component"])
+        let grows = talk.steps.filter { $0.tool == "run_command" }.map(\.arguments)
+        #expect(grows.allSatisfy { $0["command"]?.stringValue == "canvas_size" })
+        #expect(grows.allSatisfy { $0["arguments"]?["anchor"]?.stringValue == "topLeft" && $0["arguments"]?["width"]?.doubleValue == 1440 })
+        // The fourth row ends at 100 + 3 x 249 + 225 = 1072, the fifth at 1321; 48 below each.
+        #expect(grows.map { $0["arguments"]?["height"]?.doubleValue } == [1120, 1369])
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("step 7") == true,
+                "the model is told the number its row really has")
     }
 
     @Test("Past a sheet's worth of components, more are refused and the model told to finish")
@@ -174,6 +204,13 @@ struct AskPlanningTests {
         }
         #expect(talk.steps.count == AskConversation.mostComponents)
         #expect(talk.messages.last?["content"]?.stringValue?.contains("finish") == true)
+    }
+
+    @Test("A reply the model runner could not read as a call is told apart from other trouble")
+    func unreadableReply() {
+        #expect(AskConversation.isUnreadableReply("Failed to parse tool call arguments as JSON: [json.exception.parse_error.101] parse error at line 1"))
+        #expect(!AskConversation.isUnreadableReply("Stopped. Nothing was changed."))
+        #expect(!AskConversation.isUnreadableReply("the model is not running"))
     }
 
     @Test("The same step twice is refused, naming the step it repeats")

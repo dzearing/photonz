@@ -52,6 +52,15 @@ public enum AskTools {
         "points", "closed", "smooth",
     ]
 
+    /// A list_components answer with the Library's starters taken out. They
+    /// are placeholders, and a model shown them answered "base components"
+    /// with exactly their five kinds (the user, 2026-10-20; again 2026-10-23
+    /// after add_component). A starter asked for by name still places.
+    public static func withoutStarters(_ listing: String) -> String {
+        guard let entries = (try? AgentJSON.parse(Data(listing.utf8)))?.arrayValue else { return listing }
+        return AgentJSON.array(entries.filter { $0["from"]?.stringValue != "starter" }).encodedString()
+    }
+
     /// A chat body as it goes to the model: keys sorted, add_component's
     /// schema in `componentKeyOrder`.
     public static func wireEncoded(_ body: AgentJSON) -> Data {
@@ -296,8 +305,9 @@ public struct AskConversation: Sendable {
     /// The canvas's width, read from the document, for sorting what
     /// `find_elements` finds.
     private let canvasWidth: Double
-    /// And its height, for how many rows a sheet of components holds.
-    private let canvasHeight: Double
+    /// And its height, for how many rows a sheet of components holds; it
+    /// grows with a plan that grows the canvas.
+    private var canvasHeight: Double
 
     /// `components` and `styles` are list_components' and list_styles'
     /// answers, handed over up front so "on brand" never starts from nothing.
@@ -386,8 +396,18 @@ public struct AskConversation: Sendable {
                     tell(name, "Not planned: \(Self.mostComponents) components fill a sheet. Plan nothing more of them; finish.")
                     continue
                 }
-                if name == "add_component", arguments["labels"]?.boolValue == true, !fitsOnSheet(arguments) {
-                    tell(name, "Not planned: the sheet is full, and this row would run off the bottom of the canvas. Plan nothing more of them; finish.")
+                if name == "add_component", arguments["labels"]?.boolValue == true, let height = sheetHeight(with: arguments),
+                   height > canvasHeight {
+                    // The sheet goes on down the page: the canvas grows from
+                    // its top edge first, so nothing already there moves.
+                    canvasHeight = height
+                    steps.append(AskStep(tool: "run_command", arguments: [
+                        "command": "canvas_size",
+                        "arguments": ["width": .number(canvasWidth), "height": .number(height), "anchor": "topLeft"],
+                    ]))
+                }
+                if name == "add_text", let words = arguments["text"]?.stringValue, let earlier = labelledBy(words) {
+                    tell(name, "Not planned: step \(earlier) already sets those words beside its row. Plan something else, or finish.")
                     continue
                 }
                 let arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
@@ -441,23 +461,54 @@ public struct AskConversation: Sendable {
         return .again(looks: looks)
     }
 
-    /// Whether one more labelled row still fits above the bottom of the
-    /// canvas, under the rows planned so far: each as tall as its parts, its
-    /// names above and the gap below. Past that the app finds no free row
-    /// and the rest pile up on one another (2026-10-23).
-    func fitsOnSheet(_ arguments: AgentJSON) -> Bool {
-        guard canvasHeight > 0 else { return true }
-        func height(_ arguments: AgentJSON) -> Double {
-            let parts = (arguments["parts"]?.arrayValue ?? []).map {
-                ($0["y"]?.doubleValue ?? 0) + ($0["height"]?.doubleValue ?? 0)
-            }.max() ?? 0
-            return parts + Double(AgentNewComponent.labelSize + 4 + AgentNewComponent.captionGap)
+    /// How tall a labelled component's row is: its tallest part and the
+    /// state names above it.
+    static func rowHeight(_ arguments: AgentJSON) -> Double {
+        let parts = (arguments["parts"]?.arrayValue ?? []).map {
+            ($0["y"]?.doubleValue ?? 0) + ($0["height"]?.doubleValue ?? 0)
+        }.max() ?? 0
+        return parts + Double(AgentNewComponent.labelSize + 4 + AgentNewComponent.captionGap)
+    }
+
+    /// The planned labelled component whose own labels already say `words`
+    /// (its name or a look's), by step number. The model set its own row
+    /// names over the ones add_component placed (2026-10-23).
+    func labelledBy(_ words: String) -> Int? {
+        let said = words.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        for (index, step) in steps.enumerated()
+        where step.tool == "add_component" && step.arguments["labels"]?.boolValue == true {
+            let names = [step.arguments["name"]?.stringValue, step.arguments["firstLook"]?.stringValue]
+                + (step.arguments["looks"]?.arrayValue ?? []).map { $0["name"]?.stringValue }
+            if names.compactMap({ $0?.lowercased() }).contains(said) { return index + 1 }
         }
+        return nil
+    }
+
+    /// How tall the canvas has to be for one more labelled row under the
+    /// rows planned so far (each as tall as its parts, its state names above
+    /// and the gap below), with a margin under it; nil when the canvas is not
+    /// known. Past the bottom the app finds no free row and the rest pile up
+    /// on one another (2026-10-23), so a sheet that needs more grows the
+    /// canvas down instead, as the skill does.
+    func sheetHeight(with arguments: AgentJSON) -> Double? {
+        guard canvasHeight > 0, canvasWidth > 0 else { return nil }
         let rows = steps.filter { $0.tool == "add_component" && $0.arguments["labels"]?.boolValue == true }
             .map(\.arguments)
         let top = (rows.first ?? arguments)["y"]?.doubleValue ?? 0
-        let used = rows.reduce(top) { $0 + height($1) + Double(AgentNewComponent.lookGap) }
-        return used + height(arguments) <= canvasHeight
+        let used = rows.reduce(top) { $0 + Self.rowHeight($1) + Double(AgentNewComponent.lookGap) }
+        return used + Self.rowHeight(arguments) + Self.sheetMargin
+    }
+
+    /// Room left under the last row of a sheet that grew the canvas.
+    static let sheetMargin = 48.0
+
+    /// Whether a runner's error says it could not read the model's reply as
+    /// a tool call (llama.cpp: "Failed to parse tool call arguments as
+    /// JSON"). One such reply twenty calls into a kit lost every step already
+    /// planned (2026-10-23); with steps planned the app offers them instead,
+    /// as it does when the rounds run out.
+    public static func isUnreadableReply(_ words: String) -> Bool {
+        words.hasPrefix("Failed to parse tool call")
     }
 
     /// Labelled components are one sheet: every row starts at the first
@@ -484,9 +535,14 @@ public struct AskConversation: Sendable {
         let step = rows.map { (width(steps[$0].arguments) + gap).rounded() }
             .filter { candidate in rows.filter { width(steps[$0].arguments) + gap <= candidate }.allSatisfy { fits($0, candidate) } }
             .max()
+        // And down: each row straight under the last, where the app will find
+        // it free, so the room counted by `sheetHeight` is the room used.
+        var y = steps[first].arguments["y"]?.doubleValue ?? 0
         for index in rows {
             guard var arguments = steps[index].arguments.objectValue else { continue }
             arguments["x"] = .number(x)
+            arguments["y"] = .number(y)
+            y += Self.rowHeight(steps[index].arguments) + gap
             let shares = step.map { width(steps[index].arguments) + gap <= $0 && fits(index, $0) } ?? false
             arguments["step"] = shares ? step.map(AgentJSON.number) : nil
             steps[index] = AskStep(tool: "add_component", arguments: .object(arguments))
@@ -712,7 +768,7 @@ public struct AskConversation: Sendable {
         - Asked for components, base components, controls, a UI kit or a design system, make each one \
         yourself with add_component, never by placing the Library's starters. Think of the real design kit \
         for the platform asked for (Apple's when none is named) and make the kinds of control it is built \
-        from: a set of base components is about a dozen kinds. Give each the looks that kit shows for it (its states: \
+        from: a set of base components is a dozen kinds or more. Give each the looks that kit shows for it (its states: \
         default, hover, pressed, disabled, on and off, selected, focused, as that kind has them), the first \
         look as parts and every other look as only what changes. Make them look like the kit: the system \
         font at one small type scale, the platform's own colours put straight on the parts (save no styles \

@@ -608,7 +608,7 @@ final class AskSession {
         let paints = AskPictureModel.isReady()
         if paints { note("drawings painted by the picture model") }
         return AskConversation(request: words, documentRead: Self.text(of: read),
-                               components: components.isError ? "" : Self.text(of: components),
+                               components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
                                styles: styles.isError ? "" : Self.text(of: styles),
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
                                paints: paints)
@@ -625,6 +625,10 @@ final class AskSession {
                 reply = try await AskLocalModel.chat(talk.chatBody(model: model))
                 note("answered: \(reply["message"]?.encodedString().prefix(300) ?? "")")
             } catch let trouble as AskLocalModel.Trouble {
+                if case .said(let words) = trouble, AskConversation.isUnreadableReply(words), !talk.steps.isEmpty {
+                    note("unreadable reply after \(talk.steps.count) steps: offering them")
+                    return .success(AskPlan(steps: talk.steps, summary: "", names: talk.names))
+                }
                 return .failure(trouble)
             } catch {
                 return .failure(.said(AskCopy.stoppedSentence))
@@ -644,7 +648,9 @@ final class AskSession {
                     arguments["document"] = .string(document)
                     let answer: String
                     switch AgentTools.request(tool: look.tool, arguments: .object(arguments)) {
-                    case .success(let request): answer = Self.text(of: await AgentWork.run(request))
+                    case .success(let request):
+                        let said = Self.text(of: await AgentWork.run(request))
+                        answer = look.tool == "list_components" ? AskTools.withoutStarters(said) : said
                     case .failure(let refused): answer = refused.message
                     }
                     talk.answer(look, with: answer)

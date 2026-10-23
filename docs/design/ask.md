@@ -53,8 +53,9 @@ else, so Ask has it.
 4. Refused while planning: a call that fails its schema, a tool Ask does not
    offer, a repeat of a planned step, a size measurement of a box already
    measured (85% overlap), a thirteenth measurement, a thirteenth component,
-   and a labelled component row that would run off the bottom of the canvas
-   (`fitsOnSheet`). A refused call the model sends back unchanged twice more
+   and words a labelled component row already sets. A labelled row that would
+   run off the bottom of the canvas grows the canvas down first (a
+   `canvas_size` step anchored top left, `sheetHeight`). A refused call the model sends back unchanged twice more
    ends the planning with the steps already written (`mostSameRefusals`): a
    small model at temperature 0 otherwise spent every round left on it.
    Thirty rounds at most (twelve until 2026-10-23, when a kit of base
@@ -74,8 +75,10 @@ starters are no longer offered as the answer (before 2026-10-23 the prompt said
 "the Library always offers starters... use them", and "base components" came
 back as the five starters copied four times). Shown as a table, each row is an
 `add_component` with `labels`, and the conversation lines them up as one sheet
-(`alignSheet`): every row at the first one's x, one column step for every row
-it fits. Measured on the user's request: 14.7 before, 47.7 after
+(`alignSheet`): every row at the first one's x and straight under the last,
+one column step for every row it fits. The starters are taken out of what
+Ask is shown (`AskTools.withoutStarters`): shown them, it answered with
+exactly their five kinds. Measured on the user's request: 14.7 before, 47.7 after
 (2026-10-23, `Scripts/ask-eval.sh`, case `component-table`).
 
 `find_elements` answers are sorted before the model reads them
