@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:44:10.565Z",
-  "updated": "2026-10-23T14:07:56.121Z",
+  "updated": "2026-10-23T19:54:22.288Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'when i say components, it only seems to know the placeholder components. it should be able to research what base components might include.' The screenshot queue/audits/2026-10-20-user-ask-component-sheet-mess.png shows Badge, Nav Bar, Card, Text Field, Button: the app's starters.\n\nSuspect, NOT confirmed: Ask's tool list (Sources/PhotonzCore/AskPlanning.swift line 24) does include run_command, so make_component and add_variant are reachable in principle; the model may not know they exist, or what goes in them, because the prompt hands it the Library's starters up front (the Ask task chose that on 2026-10-20). Reproduce before fixing. The skill can (plugin/skills/photonz/SKILL.md line 41) but its text points at the starters (line 88). 'Research' without the web is the built-in list; looking things up on the web is the separate web task, which this one does not wait on. Runs before the component sheet task, which lays these out as a table.\n\nThe user, 2026-10-20: 'i don't want a hardcoded anything.' The earlier line asking for a built-in list of components was replaced: no stored list, no coded component looks.",
@@ -52,6 +52,67 @@
     {
       "t": "2026-10-23T14:07:56.120Z",
       "note": "seq 30 -> 10"
+    },
+    {
+      "t": "2026-10-23T14:09:45.356Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-23T16:39:50.085Z",
+      "note": "Reproduced 2026-10-23 on the built-in model (qwen3.6-35b-a3b): the user's request placed the starter Button, Text Field and Card four times each, no states, no labels (eval 11.7 on 2026-10-22, 14.7 on the built-in runtime). Cause confirmed from the model's messages: the prompt said 'the Library always offers starters... use them', and building a component with states took ~6 blind calls per piece (draw, group, make_component, add_variant, find the copy's pieces, recolour), out of reach of a model planning without seeing results."
+    },
+    {
+      "t": "2026-10-23T16:39:50.159Z",
+      "note": "Adversarial review before building: a person asking for 'base components' expects what Apple's kit has (button, field, toggle, checkbox, segmented, slider, stepper, list row...) each in its states, and expects to pick the state on a copy, as with Figma variants. The app can hold states (component versions) but an agent could not say a component in one breath, and Ask's 12 rounds could not fit a dozen kinds. Chose a general add_component tool (parts + first look + each state as only what changes) over a stored kit list because the user ruled out anything hardcoded (2026-10-20); the tool stores no kinds and no looks."
+    },
+    {
+      "t": "2026-10-23T16:39:50.236Z",
+      "note": "Found and fixed: the built-in llama.cpp runtime holds a tool call to its schema in the schema's key order, and AgentJSON sends keys sorted, so the model could never write height after width and skipped every look. AskTools.wireEncoded now sends add_component's keys in writing order; every other tool goes out byte for byte as before (test keysInWritingOrder)."
+    },
+    {
+      "t": "2026-10-23T16:39:50.335Z",
+      "note": "Chose labels on add_component (row name on the left, each state named above its look, placed by the app where the row lands) over leaving words to the model because the model plans blind and rows move when they would overlap; its hand-placed headers landed on components (run 20261023-151955). The full table (one header row, a grid) stays with asking-for-a-sheet-of-components-gives-a-clean-t."
+    },
+    {
+      "t": "2026-10-23T16:39:50.416Z",
+      "note": "Ask, component-table: 14.7 -> 47.7; design-system-sheet 20.7 -> 38.4 (runs 20261022-204744 vs 20261023-162755). Skill, component-table: 75.2 (the 2026-10-20 result re-judged on rubric f5ae1562) -> 84.4 (20261023-163119-skill), 13 kinds from 14 add_component calls."
+    },
+    {
+      "t": "2026-10-23T16:39:50.587Z",
+      "note": "owns these walks: ask-builds-base-components-walk"
+    },
+    {
+      "t": "2026-10-23T18:58:39.846Z",
+      "note": "Adversarial review after building, on the real window (walk ask-builds-base-components-walk, window capture): the editor's own purple state badge sat over the state names set above each look, so the names moved under the look (commit ae98eae1). Rows still sit tight: a row's badge nearly touches the names of the row above; left for the sheet task, which owns the grid."
+    },
+    {
+      "t": "2026-10-23T18:58:39.923Z",
+      "note": "Fixed on the way: Ask was shown the starters and answered with exactly their five kinds (now hidden from Ask, AskTools.withoutStarters); rows stacked off the canvas and piled up (Ask now stacks rows and grows the canvas down with canvas_size anchored top left); a server reply it could not parse threw away 21 planned calls (now offered, like running out of rounds); 'SF Pro Display' killed a 56-step pricing plan (system font names now read as SF Pro, commit 54d9088d)."
+    },
+    {
+      "t": "2026-10-23T18:58:40.003Z",
+      "note": "Final on this build (20261023-184702-ask): component-table 49.4 with 12 kinds, design-system-sheet 59.2, pricing-section 15.9 (its runs on this code: 21.4, 21.6, 15.9 against a single baseline run of 19, read as noise). Ask component-table over its last runs: 47.7, 45.4, 41.1, 40.3, 42, 49.4; the last four good runs each made 12 kinds."
+    },
+    {
+      "t": "2026-10-23T18:58:40.082Z",
+      "note": "left rough (logged, not filed): the local model's own slips inside a component (alert title over message, a ticked Off checkbox, crowded segmented labels) are Ask quality on this model, covered in spirit by ask-on-the-local-model-makes-results-that-look-f; run to run variance of about 10 points on the component table; read_document does not report corner radii, so the audit read them from the calls."
+    },
+    {
+      "t": "2026-10-23T18:58:40.160Z",
+      "note": "Filed: one-step-ask-cannot-run-no-longer-throws-away-th (p2, reproduced in eval run 20261023-163832-ask pricing-section)."
+    },
+    {
+      "t": "2026-10-23T19:54:02.177Z",
+      "note": "Held-out on the final build: 60.8 (20261023-185409-ask-held-out) against 61.0 before, flat; layout 37.7 (from 7.3), redline 31.5 (from 13.6), drawing 66.1 (from 69.5). Whole climb set 74.9 on the first build (20261023-163832-ask). Audit: queue/audits/2026-10-23-asking-for-base-components-builds-the-real-set-w.json; pictures looked at: ask-before, ask-after, ask-window-sc (twelve kinds, names under each look, badges clear), skill-before, skill-after (thirteen kinds), design-system-after."
+    },
+    {
+      "t": "2026-10-23T19:54:22.286Z",
+      "note": "New add_component tool (MCP and Ask): a component's parts plus each state as changes, built as one Library component with its states as versions, never on top of another drawing, optional row and state names. Ask's prompt no longer points at the starters (and Ask no longer sees them), labelled rows line up as one sheet, the canvas grows when a sheet needs it, and the skill has a base components recipe. Found and fixed on the way: the built-in runtime holds tool calls to the schema's key order (add_component now goes out in writing order), a 56-step plan died on 'SF Pro Display', and an unreadable reply threw away 21 planned calls. Eval (rubric f5ae1562): Ask component-table 14.7 -> 49.4 on the final build (twelve kinds; range 40 to 49 over six runs), design-system-sheet 20.7 -> 59.2; skill component-table 75.2 -> 84.4 (thirteen kinds). Held-out 61.0 -> 60.8, whole climb set 74.9. Verified: 14,275 tests, walk ask-builds-base-components-walk at Next defaults (window capture, one Command Z takes the sheet back). Audit queue/audits/2026-10-23-asking-for-base-components-builds-the-real-set-w.json."
     }
-  ]
+  ],
+  "started": "2026-10-23T14:09:45.355Z",
+  "walks": [
+    "ask-builds-base-components-walk"
+  ],
+  "completed": "2026-10-23T19:54:22.287Z"
 }

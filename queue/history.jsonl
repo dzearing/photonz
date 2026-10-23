@@ -13724,3 +13724,21 @@
 {"t":"2026-10-23T14:08:35.110Z","ev":"task_created","id":"where-the-loop-s-day-went-counts-a-resumed-walk","priority":"p2-normal","title":"Where the loop's day went counts a resumed walk run as part of the run it finishes"}
 {"t":"2026-10-23T14:08:35.204Z","ev":"task_resequenced","id":"where-the-loop-s-day-went-counts-a-resumed-walk","from":4080,"to":470}
 {"t":"2026-10-23T14:09:23.058Z","ev":"digest","file":"2026-10-23.md"}
+{"t":"2026-10-23T14:09:45.361Z","ev":"task_started","id":"asking-for-base-components-builds-the-real-set-w","title":"Asking for base components builds the real set, with their states, not the five starters","priority":"p1-high"}
+{"t":"2026-10-23T14:43:43.785Z","ev":"task_created","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","priority":"p1-high","title":"The Photonz menu bar icon's menu starts with New and Open, with capture below"}
+{"t":"2026-10-23T14:43:43.897Z","ev":"task_resequenced","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","from":75,"to":1}
+{"t":"2026-10-23T16:39:50.087Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T16:39:50.161Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T16:39:50.238Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T16:39:50.338Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T16:39:50.418Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T16:39:50.506Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-23T16:39:50.589Z","ev":"task_walks","id":"asking-for-base-components-builds-the-real-set-w","walks":["ask-builds-base-components-walk"]}
+{"t":"2026-10-23T18:58:24.868Z","ev":"task_created","id":"one-step-ask-cannot-run-no-longer-throws-away-th","priority":"p2-normal","title":"One step Ask cannot run no longer throws away the rest of its plan"}
+{"t":"2026-10-23T18:58:39.848Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T18:58:39.925Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T18:58:40.005Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T18:58:40.084Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T18:58:40.163Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T19:54:02.182Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
+{"t":"2026-10-23T19:54:22.289Z","ev":"task_done","id":"asking-for-base-components-builds-the-real-set-w","from":"in_progress","note":"New add_component tool (MCP and Ask): a component's parts plus each state as changes, built as one Library component with its states as versions, never on top of another drawing, optional row and state names. Ask's prompt no longer points at the starters (and Ask no longer sees them), labelled rows line up as one sheet, the canvas grows when a sheet needs it, and the skill has a base components recipe. Found and fixed on the way: the built-in runtime holds tool calls to the schema's key order (add_component now goes out in writing order), a 56-step plan died on 'SF Pro Display', and an unreadable reply threw away 21 planned calls. Eval (rubric f5ae1562): Ask component-table 14.7 -> 49.4 on the final build (twelve kinds; range 40 to 49 over six runs), design-system-sheet 20.7 -> 59.2; skill component-table 75.2 -> 84.4 (thirteen kinds). Held-out 61.0 -> 60.8, whole climb set 74.9. Verified: 14,275 tests, walk ask-builds-base-components-walk at Next defaults (window capture, one Command Z takes the sheet back). Audit queue/audits/2026-10-23-asking-for-base-components-builds-the-real-set-w.json."}
