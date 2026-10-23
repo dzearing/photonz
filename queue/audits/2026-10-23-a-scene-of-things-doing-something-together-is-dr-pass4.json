@@ -1,0 +1,35 @@
+{
+  "feature": "A drawing shows what was asked, pose and all (fourth pass)",
+  "epic": "agent-ask",
+  "summary": "Ask no longer paints a picture again for a detail nobody asked for: its plan for a pose or a scene keeps only what your words ask for, every retry is held to that same plan, and after the last retry the closest try is the one you get.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default, with the picture model set up in Settings > Ask. Walk: Scripts/playtest/ask-draws-a-scene-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a blank picture, press Ask, type \"draw a cat playing a guitar\" and send it.",
+      "shot": "2026-10-23-scene-pass4-walk-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Ask for \"draw an angry bird\" and time it: about 40 seconds, not about 110."
+    },
+    {
+      "do": "Ask for \"draw a robot watering a plant\" and check the robot holds the can and water reaches the plant."
+    },
+    {
+      "do": "Compare the eleven pose and scene drawings from this pass.",
+      "shot": "2026-10-23-scene-pass4-climb-sheet.png"
+    }
+  ],
+  "evaluate": [
+    "Does a plain request with a mood (\"an angry bird\") now come back in about the time a plain thing takes?",
+    "Do the scenes still show the relationship you asked for (paws on the guitar, water on the plant)?",
+    "Is a single dark silhouette, like the black cat on the sheet, acceptable for \"seen from behind\", or should a dark subject always keep inner lines?"
+  ],
+  "rough": [
+    "The held-out total did not rise: 58.5 (20261023-083224-ask-held-out) against 58.0 on the run before and 61 at best; drawings group 67.2, inside the 65.7 to 69.1 it has moved over five runs on the same engine. This task stays open on that item (a-scene-of-things-doing-something-together-is-dr).",
+    "One climb case, a black cat seen from behind, came out as a flat black silhouette with its front paws showing, and the plan check passed it on the first try (22.6 on 20261023-075807-ask, 58.6 the run before). These changes do not touch that path; it stays in this task's log (a-scene-of-things-doing-something-together-is-dr).",
+    "The robot scene still paints again twice for \"the plant is in front of the robot\", which the request-words check kept as asked for. It costs about a minute; the drawing it keeps scores 90.",
+    "No mock covers this surface: it is Ask's existing row and the canvas."
+  ]
+}
