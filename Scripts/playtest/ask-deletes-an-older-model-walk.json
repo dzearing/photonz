@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/ask-deletes-an-older-model-walk",
+  "clock": 120,
+  "setup": {
+    "forget": ["all"],
+    "askModelsOnly": ["qwen3.8-27b", "qwen3.6-35b-a3b"]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "reveal", "control": "Ask Model" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Ask Model", "present": true },
+    { "do": "expect", "control": "Ask Download Newer", "present": false },
+    { "do": "expect", "control": "Ask Delete Qwen3.6 35B", "present": true },
+    { "do": "describe", "stage": "1-both-models", "note": "Settings > Ask with both models down: Automatic is Qwen3.8 27B, and the older Qwen3.6 35B has a Delete" },
+    { "do": "snapshot", "name": "1-both-models", "window": "Settings" },
+    { "do": "press", "control": "Ask Delete Qwen3.6 35B" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "2-delete-asks", "note": "Delete asks first, saying how much it frees" },
+    { "do": "snapshot", "name": "2-delete-asks", "window": "Settings" }
+  ]
+}

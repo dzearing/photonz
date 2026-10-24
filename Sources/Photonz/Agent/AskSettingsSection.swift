@@ -19,6 +19,7 @@ struct AskSettingsSection: View {
     @State private var pull: Double?
     @State private var pullTrouble: String?
     @State private var picturesInstalled = AskPictureServer.isInstalled
+    @State private var deleting: AskBuiltInModels.Choice?
     private var fetch: AskModelDownload { AskModelDownload.shared }
     private var pictureFetch: AskModelDownload { AskModelDownload.pictures }
 
@@ -43,6 +44,22 @@ struct AskSettingsSection: View {
             Text("Ask")
         }
         .task { await reload() }
+        .confirmationDialog(deleting.map { "Delete \($0.name)?" } ?? "", isPresented: Binding(
+            get: { deleting != nil }, set: { if !$0 { deleting = nil } }
+        )) {
+            if let old = deleting {
+                Button("Delete \(AskBuiltInModels.sizeWords(old.downloadBytes))", role: .destructive) {
+                    AskModelServer.shared.delete(old)
+                    if AskLocalModel.builtInChosen == old.id {
+                        AskLocalModel.builtInChosen = nil
+                        builtInChosen = ""
+                    }
+                    downloaded = AskModelServer.downloaded
+                }
+            }
+        } message: {
+            Text("Ask can download it again later.")
+        }
         .onChange(of: fetch.active) { _, _ in downloaded = AskModelServer.downloaded }
         .onChange(of: pictureFetch.active) { _, _ in picturesInstalled = AskPictureServer.isInstalled }
     }
@@ -77,6 +94,22 @@ struct AskSettingsSection: View {
             }
             Text("Runs inside Photonz. Nothing leaves the Mac.")
                 .font(.callout).foregroundStyle(.secondary)
+            // A newer default than the one this Mac has: offered beside it,
+            // which keeps answering until the new one is down.
+            if let newer = AskBuiltInModels.newer(downloaded: downloaded, memoryGigabytes: AskLocalModel.memoryGigabytes) {
+                LabeledContent("New default: \(newer.name) (\(AskBuiltInModels.sizeWords(newer.downloadBytes)))") {
+                    Button("Download") { fetch.start(newer) }
+                        .playtestControl("Ask Download Newer", detail: "Download \(newer.name)")
+                }
+            }
+            let inUse = AskBuiltInModels.resolve(chosen: AskLocalModel.builtInChosen, downloaded: downloaded,
+                                                 memoryGigabytes: AskLocalModel.memoryGigabytes)?.id
+            ForEach(AskBuiltInModels.removable(downloaded: downloaded, inUse: inUse), id: \.id) { old in
+                LabeledContent(old.name) {
+                    Button("Delete") { deleting = old }
+                        .playtestControl("Ask Delete \(old.name)", detail: "Delete")
+                }
+            }
         } else if let offer = AskBuiltInModels.recommended(memoryGigabytes: AskLocalModel.memoryGigabytes) {
             Text("Ask needs a model on this Mac: \(offer.name), \(AskBuiltInModels.sizeWords(offer.downloadBytes)). It goes in Application Support > Photonz > Models.")
                 .font(.callout)

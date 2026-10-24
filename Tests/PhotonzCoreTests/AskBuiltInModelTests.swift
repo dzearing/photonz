@@ -80,6 +80,54 @@ struct AskBuiltInModelTests {
         #expect(AskBuiltInModels.recommended(memoryGigabytes: 4) == nil)
     }
 
+    @Test("Qwen3.8 27B is the default: the official 4-bit file and its picture reader, pinned, exact sizes")
+    func qwen38IsTheDefault() throws {
+        let best = try #require(AskBuiltInModels.ranked.first)
+        #expect(best.id == "qwen3.8-27b")
+        #expect(best.name == "Qwen3.8 27B")
+        let pinned = "https://huggingface.co/ggml-org/Qwen3.8-27B-GGUF/resolve/a316ea527fde32c12487be7574e2db5ac2ad2a7e/"
+        #expect(best.model.url.absoluteString == pinned + "Qwen3.8-27B-Q4_K_M.gguf")
+        #expect(best.model.bytes == 18_973_870_528)
+        let eyes = try #require(best.eyes)
+        #expect(eyes.url.absoluteString == pinned + "mmproj-Qwen3.8-27B-Q8_0.gguf")
+        #expect(eyes.bytes == 629_247_008)
+        // The draft that lets it write faster comes from the same revision.
+        let draft = try #require(best.draft)
+        #expect(draft.url.absoluteString == pinned + "mtp-Qwen3.8-27B-Q4_0.gguf")
+        #expect(draft.bytes == 1_680_271_776)
+        #expect(best.files.contains(draft))
+        #expect(!best.needed.contains(draft))
+        // The model before it is still a choice.
+        #expect(AskBuiltInModels.choice(id: "qwen3.6-35b-a3b") != nil)
+    }
+
+    @Test("Qwen3.8 27B is offered from a 48 GB Mac up; a 36 GB Mac gets a smaller one")
+    func qwen38FromWhatMacSize() throws {
+        let best = try #require(AskBuiltInModels.ranked.first)
+        // The three-fifths rule: the Mac size it starts at is its memory held / 0.6.
+        let from = best.gigabytes / AskModels.memoryShare
+        #expect(from > 36 && from <= 48, "\(from)")
+        for mac in [48.0, 64, 96, 128] { #expect(AskBuiltInModels.recommended(memoryGigabytes: mac) == best, "\(mac)") }
+        for mac in [16.0, 18, 24, 32, 36] { #expect(AskBuiltInModels.recommended(memoryGigabytes: mac) != best, "\(mac)") }
+        #expect(AskBuiltInModels.recommended(memoryGigabytes: 36)?.id == "gemma-4-26b-a4b")
+    }
+
+    @Test("A Mac that has Qwen3.6 35B keeps using it, and is offered the new default beside it")
+    func olderDownloadKeepsWorking() throws {
+        let best = try #require(AskBuiltInModels.ranked.first)
+        let old = ["qwen3.6-35b-a3b"]
+        #expect(AskBuiltInModels.resolve(chosen: nil, downloaded: old, memoryGigabytes: 68.7)?.id == "qwen3.6-35b-a3b")
+        #expect(AskBuiltInModels.newer(downloaded: old, memoryGigabytes: 68.7) == best)
+        // Nothing to offer once it is down, nor when nothing is (Settings' own offer covers that), nor when it does not fit.
+        #expect(AskBuiltInModels.newer(downloaded: old + [best.id], memoryGigabytes: 68.7) == nil)
+        #expect(AskBuiltInModels.newer(downloaded: [], memoryGigabytes: 68.7) == nil)
+        #expect(AskBuiltInModels.newer(downloaded: ["gemma-4-26b-a4b"], memoryGigabytes: 36) == nil)
+        // Once the new one is down, Automatic moves to it and the old one can go.
+        #expect(AskBuiltInModels.resolve(chosen: nil, downloaded: old + [best.id], memoryGigabytes: 68.7) == best)
+        #expect(AskBuiltInModels.removable(downloaded: old + [best.id], inUse: best.id).map(\.id) == ["qwen3.6-35b-a3b"])
+        #expect(AskBuiltInModels.removable(downloaded: old, inUse: "qwen3.6-35b-a3b").isEmpty)
+    }
+
     @Test("The model in use is the one chosen while it is downloaded, else the best downloaded one")
     func resolvesAmongDownloaded() throws {
         let ids = AskBuiltInModels.ranked.map(\.id)
@@ -227,5 +275,22 @@ struct AskBuiltInModelTests {
         #expect(value("--ctx-size") == String(AskConversation.contextWindow))
         #expect(args.contains("--jinja"))
         #expect(args.contains("--no-webui"))
+    }
+
+    @Test("The draft writes ahead for the model when its file is on the Mac, and is left out when it is not")
+    func serverDraft() throws {
+        let choice = try #require(AskBuiltInModels.ranked.first)
+        let draft = try #require(choice.draft)
+        let folder = URL(fileURLWithPath: "/tmp/models")
+        let with = AskBuiltInServerPlan.arguments(for: choice, in: folder, port: 18_200, draftOnDisk: true)
+        func value(_ flag: String) -> String? { with.firstIndex(of: flag).map { with[$0 + 1] } }
+        #expect(value("--spec-type") == "draft-mtp")
+        #expect(value("--model-draft") == folder.appending(path: draft.name).path)
+        let without = AskBuiltInServerPlan.arguments(for: choice, in: folder, port: 18_200, draftOnDisk: false)
+        #expect(!without.contains("--spec-type"))
+        #expect(!without.contains("--model-draft"))
+        let old = try #require(AskBuiltInModels.choice(id: "qwen3.6-35b-a3b"))
+        #expect(old.draft == nil)
+        #expect(!AskBuiltInServerPlan.arguments(for: old, in: folder, port: 18_200, draftOnDisk: true).contains("--spec-type"))
     }
 }

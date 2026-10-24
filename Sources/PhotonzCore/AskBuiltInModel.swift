@@ -53,10 +53,27 @@ public enum AskBuiltInModels {
         public let model: File
         /// The picture reader that lets it see, or nil when it cannot.
         public let eyes: File?
-        /// Memory it holds while Ask uses it at Ask's window, in GB.
+        /// A small model that writes a few words ahead for the big one to
+        /// check (llama.cpp's multi-token prediction), or nil. It changes how
+        /// fast an answer comes, never what it says, and the model runs
+        /// without it when its file is missing.
+        public let draft: File?
+        /// Memory it holds while Ask uses it at Ask's window, in GB, draft included.
         public let gigabytes: Double
 
-        public var files: [File] { [model] + (eyes.map { [$0] } ?? []) }
+        public init(id: String, name: String, model: File, eyes: File?, draft: File? = nil, gigabytes: Double) {
+            self.id = id
+            self.name = name
+            self.model = model
+            self.eyes = eyes
+            self.draft = draft
+            self.gigabytes = gigabytes
+        }
+
+        /// What it cannot run without.
+        public var needed: [File] { [model] + (eyes.map { [$0] } ?? []) }
+        /// What a download brings down.
+        public var files: [File] { needed + (draft.map { [$0] } ?? []) }
         public var downloadBytes: Int64 { files.reduce(0) { $0 + $1.bytes } }
         public var sees: Bool { eyes != nil }
     }
@@ -68,7 +85,13 @@ public enum AskBuiltInModels {
         return File(name: name, url: url, bytes: bytes)
     }
 
-    /// Best first, by the eval's climb set on 2026-10-22 (M4 Max, 64 GB;
+    /// Qwen3.8 27B first, by the user's call on 2026-10-24 ("we should be
+    /// using qwen 3.8 27b 4 bit quant over 3.6 35b"); its measurements against
+    /// Qwen3.6 35B are in `docs/design/ask.md`, "Qwen3.8 27B, 2026-10-24". It
+    /// is dense, so it reads a prompt at about a seventh of the 35B's speed,
+    /// and its draft roughly doubles how fast it writes.
+    ///
+    /// The rest by the eval's climb set on 2026-10-22 (M4 Max, 64 GB;
     /// `docs/design/ask.md`, "The model"): Qwen3.6 35B, mixture of experts,
     /// 55.3 at a 22.7 s median, against 53.1 for Ollama's `qwen3.6:27b` (the
     /// default before) at 23.7 s. Qwen3.6 27B scores alike but reads a prompt
@@ -77,6 +100,15 @@ public enum AskBuiltInModels {
     /// memory. Memory held is measured for the two Qwen models and estimated
     /// for the others from their files.
     public static let ranked: [Choice] = [
+        Choice(id: "qwen3.8-27b", name: "Qwen3.8 27B",
+               model: file("ggml-org/Qwen3.8-27B-GGUF", "a316ea527fde32c12487be7574e2db5ac2ad2a7e",
+                           "Qwen3.8-27B-Q4_K_M.gguf", 18_973_870_528),
+               eyes: file("ggml-org/Qwen3.8-27B-GGUF", "a316ea527fde32c12487be7574e2db5ac2ad2a7e",
+                          "mmproj-Qwen3.8-27B-Q8_0.gguf", 629_247_008),
+               draft: file("ggml-org/Qwen3.8-27B-GGUF", "a316ea527fde32c12487be7574e2db5ac2ad2a7e",
+                           "mtp-Qwen3.8-27B-Q4_0.gguf", 1_680_271_776),
+               // The median over the climb set, as the 35B's 21.7 is; 27.6 at its peak.
+               gigabytes: 24.4),
         Choice(id: "qwen3.6-35b-a3b", name: "Qwen3.6 35B",
                model: file("ggml-org/Qwen3.6-35B-A3B-GGUF", "7878dc9a905c7c9379e5e8d6a1aa9affdd6839c5",
                            "Qwen3.6-35B-A3B-Q4_K_M.gguf", 20_419_565_568),
@@ -116,6 +148,20 @@ public enum AskBuiltInModels {
         if let chosen, downloaded.contains(chosen), let picked = choice(id: chosen) { return picked }
         let have = ranked.filter { downloaded.contains($0.id) }
         return have.first { $0.gigabytes <= memoryGigabytes * AskModels.memoryShare } ?? have.first
+    }
+
+    /// The model this Mac would be offered, when a person has another one
+    /// but not that: Settings offers it beside the one in use, which keeps
+    /// answering until they download it or pick otherwise.
+    public static func newer(downloaded: [String], memoryGigabytes: Double) -> Choice? {
+        guard !downloaded.isEmpty, let best = recommended(memoryGigabytes: memoryGigabytes),
+              !downloaded.contains(best.id) else { return nil }
+        return best
+    }
+
+    /// Downloaded models a person may delete: every one but the one in use.
+    public static func removable(downloaded: [String], inUse: String?) -> [Choice] {
+        ranked.filter { downloaded.contains($0.id) && $0.id != inUse }
     }
 
     /// Where the Hugging Face tools keep the pinned file at `url` on a Mac
@@ -161,10 +207,15 @@ public enum AskBuiltInServerPlan {
         busy == 0 && now.timeIntervalSince(lastUsed) > idleSeconds
     }
 
-    /// The server's command line.
-    public static func arguments(for choice: AskBuiltInModels.Choice, in folder: URL, port: Int) -> [String] {
+    /// The server's command line. The draft goes in when its file is on the
+    /// Mac (`draftOnDisk`), so a model downloaded without it still runs.
+    public static func arguments(for choice: AskBuiltInModels.Choice, in folder: URL, port: Int,
+                                 draftOnDisk: Bool = false) -> [String] {
         var args = ["--model", folder.appending(path: choice.model.name).path]
         if let eyes = choice.eyes { args += ["--mmproj", folder.appending(path: eyes.name).path] }
+        if draftOnDisk, let draft = choice.draft {
+            args += ["--spec-type", "draft-mtp", "--model-draft", folder.appending(path: draft.name).path]
+        }
         args += [
             "--host", "127.0.0.1", "--port", String(port),
             "--ctx-size", String(AskConversation.contextWindow),

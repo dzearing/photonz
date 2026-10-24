@@ -423,10 +423,24 @@ crash leaves nothing behind either, and a pid file catches anything older.
 Ask speaks Ollama's chat shape internally; `AskServerChat` translates both ways
 to the server's OpenAI-style `/v1/chat/completions`.
 
-Default model: **Qwen3.6 35B** (`ggml-org/Qwen3.6-35B-A3B-GGUF`, a mixture of
+Default model: **Qwen3.8 27B** since 2026-10-24, the user's call ("we should be
+using qwen 3.8 27b 4 bit quant over 3.6 35b"): `ggml-org/Qwen3.8-27B-GGUF`,
+Q4_K_M plus its Q8_0 picture reader and its multi-token-prediction draft
+(`mtp-Qwen3.8-27B-Q4_0.gguf`, run with `--spec-type draft-mtp`), 21.3 GB
+download, 24.4 GB held (the median over the climb set; 27.6 at its peak), from
+a 48 GB Mac up. It is dense, so it is slower than the 35B: see "Qwen3.8 27B,
+2026-10-24" below. A Mac that already has Qwen3.6 35B keeps using it, and
+Settings offers Qwen3.8 beside it ("New default: Qwen3.8 27B (21.3 GB)",
+Download); once both are down Automatic moves to Qwen3.8 and the older one has
+a Delete (`AskBuiltInModels.newer`, `removable`; walks
+`ask-offers-the-new-default-model-walk`, `ask-deletes-an-older-model-walk`). A
+model whose draft file is missing runs without it.
+
+Before it, **Qwen3.6 35B** (`ggml-org/Qwen3.6-35B-A3B-GGUF`, a mixture of
 experts with about 3B parameters at work per word, Q4_K_M plus its Q8_0 picture
 reader, 21.0 GB download, 21.7 GB held, measured as the server's resident
-size). It can see, so it also does Ask's look at a drawing. Qwen3.6 27B (the
+size), now second, and the default on a 40 GB Mac. Both can see, so each also
+does Ask's look at a drawing. Qwen3.6 27B (the
 same weights as Ollama's `qwen3.6:27b`) is second: offered in Settings when
 downloaded, but not the default, because llama.cpp reads a prompt with it at a
 sixth of the speed (below). Smaller Macs are offered Gemma 4 26B or Gemma 4 E4B
@@ -434,6 +448,46 @@ by the same three-fifths memory rule (`AskBuiltInModels.recommended`; their
 memory is estimated, not measured). Files go in `~/Library/Application
 Support/Photonz/Models`, shared by every build on the Mac, each downloaded from
 a pinned revision and kept only once its size is exact.
+
+### Qwen3.8 27B, 2026-10-24
+
+M4 Max, 64 GB, the same code for both (commit 2abd8391 plus the switch), every
+case from a cold start, Next defaults (built-in server, picture model on):
+
+| Model | Climb (41) | drawing, sheet, layout, redline, video | Held-out (45) | drawing, layout, redline, video | s / request (median, climb / held-out) | GB held (median / peak) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Qwen3.8 27B + MTP draft (default) | 75.3 | 79.4, 81.4, 67.9, 46.6, 54 | 57.8 | 64.4, 12.3, 22.3, 59.6 | 140.8 / 141.9 | 24.4 / 27.6 |
+| Qwen3.6 35B | 77.1 | 86.3, 65.2, 32.9, 48.3, 37.8 | 60.2 | 68.4, 22.4, 9.2, 50.1 | 52.1 / 49.1 | 21.8 / 23.5 |
+
+Runs `20261024-131153-ask`, `20261024-151759-ask`, `20261024-163432-ask-held-out`,
+`20261024-191502-ask-held-out`. Qwen3.8 is better on sheets, video and held-out
+redline, worse on drawings (its own look turned down two good drawings by
+naming them more or less precisely than the request; queue task
+`ask-on-qwen3-8-27b-keeps-a-drawing-its-look-name`) and held-out layout, and
+about three times slower: it is dense, reads a prompt at 103 to 183 tokens a
+second against the 35B's 1,046, so a cold first request spends 60 to 90 s
+reading Ask's ~10k-token instructions (screenshot measurements 83 s against
+14 s). A warm server reads only what is new (the same 12.5k-token prompt a
+second time: 1.6 s against 62.8 s); bringing that read back from disk on a cold
+start is queue task `ask-s-first-answer-after-its-model-loads-comes-i`.
+
+**The draft.** `mtp-Qwen3.8-27B-Q4_0.gguf` (1.7 GB, same revision) runs as
+llama.cpp's multi-token prediction (`--spec-type draft-mtp --model-draft`,
+`AskBuiltInServerPlan.arguments(draftOnDisk:)`). Writing a 700-token svg:
+11.9 tokens a second without, 33.2 with it (510 of 565 drafted accepted), 28.7
+with the repo's DFlash draft instead. On 8 climb cases, 73.8 with it against
+60.4 without (`20261024-160940-ask`): without it the component table and the
+pricing section ran past the eval's 300 s. It costs about 3.8 GB held. Prompt
+reading, tool calls and pictures are the same with it.
+
+**The server.** b11826 loads Qwen3.8 (`qwen35`, 64 blocks, the same shape as
+Qwen3.6 27B); b11853, the newest on 2026-10-24, read and wrote at the same
+speed back to back, so the vendored build did not change.
+
+**Memory.** "GB held" is the eval's reading of the server's resident size after
+each case (`modelMemory` in `Scripts/ask-eval/engines.mjs`; until 2026-10-24 it
+read the server's shell watch and said 0 for every built-in run). The choices'
+`gigabytes` is the median, as the 35B's 21.7 always was.
 
 ### The runtime comparison, 2026-10-22
 

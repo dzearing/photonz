@@ -216,6 +216,10 @@ struct PlaytestSetupRunner {
         // Every walk says afresh too: Ask on a Mac with no model downloaded.
         AskModelServer.walkFolder = setup.askModelMissing ? PlaytestSetupRunner.emptyAskModels() : nil
         if setup.askModelMissing { said.append("Ask has no model downloaded") }
+        if let only = setup.askModelsOnly {
+            AskModelServer.walkFolder = PlaytestSetupRunner.askModels(only)
+            said.append("Ask has only \(only.isEmpty ? "no model" : only.joined(separator: ", ")) downloaded")
+        }
         if setup.offline { said.append(PlaytestSetupRunner.goOffline()) }
         if setup.timelineOpen == true {
             said.append("a recording opens in Edit mode")
@@ -296,6 +300,21 @@ struct PlaytestSetupRunner {
         let folder = FileManager.default.temporaryDirectory.appending(path: "photonz-walk-ask-models")
         try? FileManager.default.removeItem(at: folder)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder
+    }
+
+    /// A folder holding only `ids`' files, cloned from the Mac's own models
+    /// folder (APFS clones: instant, no space, and a walk that deletes one
+    /// takes nothing from the Mac). A model the Mac does not have stays missing.
+    static func askModels(_ ids: [String]) -> URL {
+        let folder = emptyAskModels()
+        AskModelServer.walkFolder = nil
+        let mac = AskModelServer.folder
+        for choice in ids.compactMap(AskBuiltInModels.choice(id:)) {
+            for file in choice.files {
+                try? FileManager.default.copyItem(at: mac.appending(path: file.name), to: folder.appending(path: file.name))
+            }
+        }
         return folder
     }
 

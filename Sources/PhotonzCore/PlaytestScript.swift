@@ -235,6 +235,11 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// empty folder of the walk's own, so a walk about Ask's first run on a
     /// fresh Mac means the same on a Mac that has the model.
     public var askModelMissing: Bool
+    /// Ask finds only these models downloaded (`AskBuiltInModels` ids): the
+    /// probe looks in a folder of the walk's own holding clones of just those
+    /// files from the Mac's, so a walk about a Mac with an older model means
+    /// the same on a Mac with every model. Nil means the Mac's own models.
+    public var askModelsOnly: [String]?
     /// The probe cannot reach anything but this Mac (`PlaytestOffline`) for
     /// the rest of its life, and so neither can a helper it starts: how a walk
     /// proves Ask runs with no network, never touching the person's Wi-Fi.
@@ -244,8 +249,9 @@ public struct PlaytestSetup: Sendable, Equatable {
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
-                offline: Bool = false) {
+                askModelsOnly: [String]? = nil, offline: Bool = false) {
         self.offline = offline
+        self.askModelsOnly = askModelsOnly
         self.timedWithoutMarkers = timedWithoutMarkers
         self.askModelMissing = askModelMissing
         self.history = history
@@ -261,7 +267,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !front && history == nil && !timedWithoutMarkers
-            && !askModelMissing && !offline
+            && !askModelMissing && askModelsOnly == nil && !offline
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -271,7 +277,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["askModelMissing", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
+    static let knownKeys = ["askModelMissing", "askModelsOnly", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
                             "timedWithoutMarkers", "timelineOpen"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -309,6 +315,20 @@ public struct PlaytestSetup: Sendable, Equatable {
             }
             if !forget.contains(memory) { forget.append(memory) }
         }
+        var only: [String]?
+        if fields["askModelsOnly"] != nil {
+            let ids = try Self.words(fields["askModelsOnly"], field: "askModelsOnly")
+            if let stray = ids.first(where: { AskBuiltInModels.choice(id: $0) == nil }) {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "askModelsOnly", reason: "names \"\(stray)\", which is not a built-in model; they are "
+                        + AskBuiltInModels.ranked.map(\.id).joined(separator: ", "))
+            }
+            if fields["askModelMissing"] as? Bool == true {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "askModelsOnly", reason: "cannot go with askModelMissing, which says there are none")
+            }
+            only = ids
+        }
         self.init(forget: forget,
                   captures: try Self.words(fields["captures"], field: "captures"),
                   scratch: try Self.words(fields["scratch"], field: "scratch"),
@@ -321,6 +341,7 @@ public struct PlaytestSetup: Sendable, Equatable {
                   timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],
                                                         field: "timedWithoutMarkers") ?? false,
                   askModelMissing: try Self.yesOrNo(fields["askModelMissing"], field: "askModelMissing") ?? false,
+                  askModelsOnly: only,
                   offline: try Self.yesOrNo(fields["offline"], field: "offline") ?? false)
     }
 

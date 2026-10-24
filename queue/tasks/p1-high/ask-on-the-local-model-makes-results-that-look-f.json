@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-24T12:35:55.102Z",
+  "updated": "2026-10-24T20:25:49.652Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -107,6 +107,10 @@
     {
       "t": "2026-10-24T12:35:55.101Z",
       "note": "seq 40 -> 80"
+    },
+    {
+      "t": "2026-10-24T20:25:49.650Z",
+      "note": "2026-10-24: Ask's built-in default is now Qwen3.8 27B (task ask-uses-qwen3-8-27b-at-4-bit-by-default-instead). Held-out on it: layout 12.3, video 59.6 (run 20261024-163432-ask-held-out), against Qwen3.6 35B at the same code layout 22.4, video 50.1 (20261024-191502-ask-held-out). So this task's video bar (55) is met on the new default and its layout bar (30) is further away; measure against Qwen3.8 27B."
     }
   ],
   "walks": [

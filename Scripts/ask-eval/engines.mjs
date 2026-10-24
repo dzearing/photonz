@@ -68,8 +68,10 @@ async function modelMemory(trace) {
   if (!model) return null;
   if (!model.includes(":")) {
     const listed = await run("/bin/ps", ["-axo", "rss=,command="], { cwd: repo, timeoutMS: 5000 });
-    const line = listed.stdout.split("\n").find((l) => l.includes("Helpers/AskModel/llama-server"));
-    return line ? Math.round(parseInt(line.trim(), 10) / 1e5) / 10 : null;
+    // The server's shell watch names the server too, so the biggest of them is the server.
+    const sizes = listed.stdout.split("\n").filter((l) => l.includes("Helpers/AskModel/llama-server"))
+      .map((l) => parseInt(l.trim(), 10)).filter((n) => n > 0);
+    return sizes.length ? Math.round(Math.max(...sizes) / 1e5) / 10 : null;
   }
   try {
     const ps = await (await fetch(`http://127.0.0.1:${11434}/api/ps`, { signal: AbortSignal.timeout(3000) })).json();

@@ -99,7 +99,8 @@ footprint (its 20 GB model file is mapped, not copied, so its RSS reads 22 GB),
 and the picture model 13 GB while it paints and about 5 GB while it waits.
 
 A Mac is offered the best chat model that fits in 60 percent of its memory
-(`AskModels.memoryShare`): a 64 GB Mac gets Qwen3.6 35B, a 16 GB Mac gets Gemma 4
+(`AskModels.memoryShare`): a 48 GB or larger Mac gets Qwen3.8 27B (24.4 GB held with
+its draft), a 40 GB Mac Qwen3.6 35B, a 36 GB Mac Gemma 4 26B, a 16 GB Mac Gemma 4
 E4B (7.5 GB), and the picture model (12 GB) is offered only where it fits beside
 the chat model, so not on 16 GB.
 

@@ -1,0 +1,55 @@
+{
+  "feature": "Ask runs on Qwen3.8 27B by default",
+  "epic": "agent-drivable",
+  "summary": "Ask's built-in model is now Qwen3.8 27B at 4-bit, with its small draft model so it writes about twice as fast, on any Mac with 48 GB or more. A Mac that already has Qwen3.6 35B keeps using it, is offered the new one in Settings with its size, and can delete the old one once both are down.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Settings > Ask. The model files go in Application Support > Photonz > Models.",
+  "switched": {},
+  "try": [
+    {
+      "do": "On a Mac that has only Qwen3.6 35B, open Settings (Command-comma) and find Ask: Qwen3.6 35B is still the model, and Qwen3.8 27B is offered beside it with its size.",
+      "shot": "2026-10-24-qwen38-default-1-older-model.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Download on the New default row and wait for 21.3 GB."
+    },
+    {
+      "do": "Look at Model: it now reads Automatic (Qwen3.8 27B), and Qwen3.6 35B has a Delete.",
+      "shot": "2026-10-24-qwen38-default-2-both-models.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Delete beside Qwen3.6 35B: it asks first and says it frees 21.0 GB.",
+      "shot": "2026-10-24-qwen38-default-3-delete-asks.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "On a Mac with no model yet, Settings > Ask offers Qwen3.8 27B, 21.3 GB, and still offers the picture model under it.",
+      "shot": "2026-10-24-qwen38-default-4-fresh-mac.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a screenshot, press Ask and type: annotate the ux with measurements around the major ui elements. Time it, then ask a second thing straight after and time that."
+    }
+  ],
+  "evaluate": [
+    "Is waiting about a minute and a half for the first answer after Ask loads acceptable for now, given that a second request right after is quick?",
+    "Do Qwen3.8's sheets, titles and zooms look better to you than the 35B's did (it scored higher there)?",
+    "Is 'New default: Qwen3.8 27B (21.3 GB)' with a Download button clear enough, or should the old model's row say more?",
+    "Should Delete also be offered for the model in use, falling back to the next one?"
+  ],
+  "rough": [
+    "Measured on this M4 Max, 64 GB, same code (commit 2abd8391 plus this change), every case from a cold start. Climb set (41 cases): Qwen3.8 27B 75.3 (drawing 79.4, sheet 81.4, layout 67.9, redline 46.6, video 54), 140.8 s median a request, 24.4 GB held median and 27.6 peak (run 20261024-131153-ask). Qwen3.6 35B 77.1 (86.3, 65.2, 32.9, 48.3, 37.8), 52.1 s, 21.8 median and 23.5 peak (20261024-151759-ask).",
+    "Held-out set (45 cases): Qwen3.8 27B 57.8 (drawing 64.4, layout 12.3, redline 22.3, video 59.6), 141.9 s median, 27.0 GB peak (20261024-163432-ask-held-out). Qwen3.6 35B 60.2 (68.4, 22.4, 9.2, 50.1), 49.1 s, 23.8 GB peak (20261024-191502-ask-held-out). Nothing looked up in either.",
+    "Slower: about three times the 35B's time a request. Qwen3.8 is dense and reads a prompt at 103 to 183 tokens a second here against the 35B's 1,046, so a cold first request spends 60 to 90 s reading Ask's instructions. Screenshot measurements take 83 s against 14 s. A warm second request reads only what is new (1.6 s against 62.8 s on the same 12,500-token prompt). Filed as ask-s-first-answer-after-its-model-loads-comes-i.",
+    "Worse on drawings: climb 79.4 against 86.3, held-out 64.4 against 68.4. Two climb drawings ended with 'I couldn't make a clear drawing of that' because Qwen3.8, checking its own drawing, would not accept a blue tit or a plain bird as 'a bird on a branch singing'. Filed as ask-on-qwen3-8-27b-keeps-a-drawing-its-look-name.",
+    "Worse on held-out layout: 12.3 against 22.4. Folded into ask-on-the-local-model-makes-results-that-look-f, whose bar is that group.",
+    "Better on sheets (81.4 against 65.2), video (54 against 37.8 climb, 59.6 against 50.1 held-out) and held-out redline (22.3 against 9.2).",
+    "The draft (mtp-Qwen3.8-27B-Q4_0.gguf, 1.7 GB, llama.cpp's multi-token prediction) is kept: on 8 climb cases 73.8 with it against 60.4 without (run 20261024-160940-ask), because without it the component table and the pricing section ran past the eval's 300 s. Writing a 700-token svg: 11.9 tokens a second without, 33.2 with MTP, 28.7 with the DFlash draft. Short requests take about the same time either way. It costs about 3.8 GB more memory.",
+    "The vendored server stays at llama.cpp b11826: it loads Qwen3.8 (same architecture as Qwen3.6 27B), answers tool calls and reads pictures. The newest build, b11853, measured the same speed back to back (132 against 135 tokens a second reading).",
+    "The memory rule now gives Qwen3.8 27B to a 48 GB Mac and up, Qwen3.6 35B to a 40 GB Mac, Gemma 4 26B to a 36 GB Mac. The picture model is still offered beside Qwen3.8 on a 64 GB Mac (24.4 + 12 GB inside the three-fifths share).",
+    "No mock covers Settings > Ask.",
+    "The Delete in the walk is pressed by name, not clicked at a point: the walk's pointer click reaches only the editor window. They are plain Settings buttons with nothing laid over them.",
+    "The eval had been reporting 0 GB held for every built-in run: it read the server's small shell watch instead of the server. It now reads the biggest of them, which is how the memory numbers above were taken."
+  ]
+}

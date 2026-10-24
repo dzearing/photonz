@@ -1,0 +1,28 @@
+{
+  "id": "ask-s-first-answer-after-its-model-loads-comes-i",
+  "title": "Ask's first answer after its model loads comes in seconds on Qwen3.8 27B, not a minute",
+  "goal": "Since Qwen3.8 27B became Ask's default, the first request after the model loads spends about a minute reading Ask's standing instructions before it does anything, so measuring a screenshot takes about 83 seconds where it took 14. Make that first read come back from disk so a cold Ask answers about as fast as a warm one.",
+  "epic": "agent-drivable",
+  "priority": "p1-high",
+  "seq": 165,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T20:25:25.315Z",
+  "updated": "2026-10-24T20:25:25.318Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-10-24 by ask-uses-qwen3-8-27b-at-4-bit-by-default-instead: Qwen3.8 27B is dense and reads a prompt at 103-183 tok/s on the M4 Max (Qwen3.6 35B: 1,046), so Ask's ~10-12k-token first prompt costs 60-90 s cold. Warm reuse already works: /tmp bench with llama-server b11826, same 12.5k-token system prompt twice: 'read 12517 new tokens (0 cached), 62.8s' then 'read 20 new tokens (12498 cached), 1.6s'. Every eval case starts cold (the probe quits after each), and a person's first Ask after launch or after 5 idle minutes does too. Ideas: llama-server --slot-save-path plus POST /slots/0?action=save|restore keyed by model id + a hash of the standing prompt (system + tools, before the document), restored right after load in AskModelServer.start; or warm() sending the standing prompt as soon as the model loads (it already starts loading when a person opens Ask). Check qwen35 is hybrid (recurrent layers every 4th full attention), so a restore must carry the recurrent state too; llama.cpp's slot save does for whole-prompt matches. Trace of a cold case: scene-bird-singing-on-a-branch's first turn answered at 89.9 s.",
+  "acceptance": [
+    "On Qwen3.8 27B, from a cold start (probe just launched), 'annotate the ux with measurements around the major ui elements' on the settings screenshot finishes in 25 s or less, measured by the climb case settings-measurements (83 s on 2026-10-24, run 20261024-131153-ask)",
+    "The climb set's median seconds a request on Qwen3.8 27B drops from 140.8 to 90 or less, with the climb total within 3 points of 75.3 and the held-out total reported beside it",
+    "Nothing about the saved read is shared between models, and a model or prompt change never reuses a stale one (a test in PhotonzCore says how it is keyed)",
+    "Audit with the before and after times"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T20:25:25.317Z",
+      "note": "created (manual)"
+    }
+  ]
+}

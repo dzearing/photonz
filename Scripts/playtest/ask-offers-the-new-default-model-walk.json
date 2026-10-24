@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/ask-offers-the-new-default-model-walk",
+  "clock": 120,
+  "setup": {
+    "forget": ["all"],
+    "askModelsOnly": ["qwen3.6-35b-a3b"]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "reveal", "control": "Ask Model" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Ask Model", "present": true },
+    { "do": "expect", "control": "Ask Download Newer", "present": true },
+    { "do": "expect", "control": "Ask Delete Qwen3.6 35B", "present": false },
+    { "do": "describe", "stage": "1-older-model", "note": "Settings > Ask on a Mac that has only Qwen3.6 35B: it stays the model Ask uses, and Qwen3.8 27B is offered beside it with its size" },
+    { "do": "snapshot", "name": "1-older-model", "window": "Settings" }
+  ]
+}

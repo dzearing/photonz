@@ -369,6 +369,28 @@ struct PlaytestAskModelSetupTests {
             """.utf8))
         }
     }
+    @Test("it can name the only models the Mac has, by their ids, and an unknown id is refused")
+    func onlySome() throws {
+        let some = try PlaytestScript.decode(Data("""
+        { "setup": { "askModelsOnly": ["qwen3.6-35b-a3b"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(some.setup.askModelsOnly == ["qwen3.6-35b-a3b"])
+        #expect(some.setup.isEmpty == false)
+        let unsaid = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(unsaid.setup.askModelsOnly == nil)
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "askModelsOnly": ["no-such-model"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "askModelsOnly": ["qwen3.6-35b-a3b"], "askModelMissing": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
 }
 
 /// A walk can take the probe off the network for the rest of its life: it

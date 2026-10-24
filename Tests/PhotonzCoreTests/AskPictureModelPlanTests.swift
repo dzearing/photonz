@@ -118,6 +118,9 @@ struct AskPictureModelPlanTests {
         let chat = try #require(AskBuiltInModels.choice(id: "qwen3.6-35b-a3b"))
         #expect(AskPictureModelPlan.fits(memoryGigabytes: 64, beside: chat))
         #expect(!AskPictureModelPlan.fits(memoryGigabytes: 48, beside: chat))
+        // The default since 2026-10-24 still leaves room for it on a 64 GB Mac.
+        let newer = try #require(AskBuiltInModels.choice(id: "qwen3.8-27b"))
+        #expect(AskPictureModelPlan.fits(memoryGigabytes: 64, beside: newer))
         #expect(AskPictureModelPlan.fits(memoryGigabytes: 24, beside: nil))
         #expect(!AskPictureModelPlan.fits(memoryGigabytes: 16, beside: nil))
     }

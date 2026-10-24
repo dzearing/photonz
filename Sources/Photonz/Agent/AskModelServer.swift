@@ -62,12 +62,23 @@ final class AskModelServer {
         return FileManager.default.isExecutableFile(atPath: url.path) ? url : nil
     }
 
-    /// Whether every file of `choice` is on the Mac, whole.
+    /// Whether every file `choice` cannot run without is on the Mac, whole.
     static func isDownloaded(_ choice: AskBuiltInModels.Choice) -> Bool {
-        choice.files.allSatisfy { file in
-            let path = folder.appending(path: file.name).path
-            let size = (try? FileManager.default.attributesOfItem(atPath: path)[.size] as? NSNumber)?.int64Value
-            return size == file.bytes
+        choice.needed.allSatisfy(isWhole)
+    }
+
+    static func isWhole(_ file: AskBuiltInModels.File) -> Bool {
+        let path = folder.appending(path: file.name).path
+        let size = (try? FileManager.default.attributesOfItem(atPath: path)[.size] as? NSNumber)?.int64Value
+        return size == file.bytes
+    }
+
+    /// Takes `choice`'s files off the Mac (Settings' Delete), stopping the
+    /// server first if it is the one running.
+    func delete(_ choice: AskBuiltInModels.Choice) {
+        if running == choice.id { stop() }
+        for file in choice.files {
+            try? FileManager.default.removeItem(at: Self.folder.appending(path: file.name))
         }
     }
 
@@ -140,7 +151,9 @@ final class AskModelServer {
         loading = true
         defer { loading = false }
         let port = AskBuiltInServerPlan.pickPort()
-        try server.launch(helper, arguments: AskBuiltInServerPlan.arguments(for: choice, in: Self.folder, port: port),
+        let draftOnDisk = choice.draft.map(Self.isWhole) ?? false
+        try server.launch(helper, arguments: AskBuiltInServerPlan.arguments(for: choice, in: Self.folder, port: port,
+                                                                            draftOnDisk: draftOnDisk),
                           environment: nil, pidFolder: Self.folder, note: "starts \(choice.id) on port \(port)")
         self.port = port
         running = choice.id
