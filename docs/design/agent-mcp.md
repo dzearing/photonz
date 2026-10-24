@@ -374,6 +374,30 @@ again by name (`<State> Header`, `<Row> <State> Label`), the row's name
 canvas grows it from the top left in the same undo step
 (`AgentDesignWork.addComponent`), so Ask's plan no longer guesses a height.
 
+**What a person could not see is refused** (`AgentNewComponent.problem`,
+2026-10-23). In any look: words on top of words, and words half on a box
+(they belong wholly inside it or wholly off it: a segmented control's label
+past its track, a tab's icon on its name). Words that cannot be read against
+what is behind them (the topmost painted box under their middle, else the
+white canvas; contrast under 1.6). In the first look: a surface the canvas's
+own white with no edge or shadow. A later look whose every change is a shade
+too small to see (two colours under 1.2 contrast with no channel moving 48 of
+255: #FF3B30 to #FF453A is refused, #2563EB to #1D4ED8 is plain). A part can
+start hidden with `visible: false`, and a part a later look shows with
+`visible: true` that the call never hid starts hidden on its own, so a
+checkbox's Off has no check.
+
+Ask's planner does not hand those refusals to the model on this Mac, which
+sent a refused call back unchanged until its rounds ran out
+(`AgentNewComponent.madePlain`): it widens a too-small shade the way it
+already leans, edges a white surface with a hairline, and sets unreadable
+words in the nearest of near black, secondary grey and white that reads. It
+also refuses a component drawn the same as one already planned (a Toggle and
+a Switch), words of the model's own once the table has rows, decodes `&amp;`
+and kin, asks once for a title when the sheet has none (and puts it first),
+and takes a component sent back unchanged out of the talk, asking for the
+next kind as a new turn instead. Ask's trace now notes every refusal's words.
+
 It exists because the five-call-per-piece route (draw, group, make_component,
 add_variant, find the copy's pieces, recolour them) was out of reach of a model
 on this Mac planning blind, so Ask answered "base components" with the five

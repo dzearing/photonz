@@ -42,11 +42,14 @@ public struct AgentComponentPart: Hashable, Sendable {
     public var centerIn: String?
     public var points: [AgentPathPoint]
     public var closed: Bool
+    /// Hidden in the first look, for a later look to show: a check mark only
+    /// On shows.
+    public var hidden: Bool
 
     public init(name: String, kind: Kind, frame: CGRect = .zero, look: AgentLook = AgentLook(),
                 text: String? = nil, fontSize: CGFloat? = nil, weight: TextWeight? = nil,
                 colorHex: String? = nil, alignment: TextAlign? = nil, centerIn: String? = nil,
-                points: [AgentPathPoint] = [], closed: Bool = false) {
+                points: [AgentPathPoint] = [], closed: Bool = false, hidden: Bool = false) {
         self.name = name
         self.kind = kind
         self.frame = frame
@@ -59,6 +62,7 @@ public struct AgentComponentPart: Hashable, Sendable {
         self.centerIn = centerIn
         self.points = points
         self.closed = closed
+        self.hidden = hidden
     }
 }
 
@@ -158,6 +162,16 @@ public struct AgentNewComponent: Hashable, Sendable {
         if let (a, b) = wordsOverWords {
             return "\(a) and \(b) are words on top of words. Give each its own place (its own y, or its own x), so they sit apart."
         }
+        if let (words, box) = wordsHalfOn {
+            return "\(words)'s words run over the edge of \(box). Set them wholly inside \(box) (a wider \(box), shorter words or a smaller size) or wholly off it."
+        }
+        if let (words, behind) = unreadableWords {
+            let backdrop = behind.map { "on \($0)" } ?? "on the canvas"
+            return "\(words)'s colour is too close to what is behind it (\(backdrop)) to read. Set its words in a colour that stands out from it: dark on a light ground, light on a dark one."
+        }
+        if let part = unseenSurface {
+            return "\(part) is the canvas's own white with no edge or shadow, so nobody could see it. Give it a fill a step darker than the canvas, a 1 point edge, or a soft shadow."
+        }
         var looked: Set<String> = []
         for look in looks {
             guard looked.insert(look.name).inserted else { return "two looks are called \(look.name)." }
@@ -166,6 +180,23 @@ public struct AgentNewComponent: Hashable, Sendable {
             }
             for change in look.changes where !seen.contains(change.part) {
                 return "the \(look.name) look changes \(change.part), and there is no part called that. The parts are \(parts.map(\.name).joined(separator: ", "))."
+            }
+        }
+        for look in looks.dropFirst() {
+            let shown = inLook(look)
+            if let (a, b) = shown.wordsOverWords {
+                return "in the \(look.name) look, \(a) and \(b) are words on top of words. Move them so each keeps its own place in every look."
+            }
+            if let (words, box) = shown.wordsHalfOn {
+                return "in the \(look.name) look, \(words)'s words run over the edge of \(box). Keep them wholly inside \(box) or wholly off it in every look."
+            }
+            if let (words, behind) = shown.unreadableWords {
+                return "in the \(look.name) look, \(words)'s colour is too close to what is behind it (\(behind.map { "on \($0)" } ?? "on the canvas")) to read. Give \(words) a colour in that look that stands out from it."
+            }
+        }
+        for look in looks.dropFirst() {
+            if let small = tooSmallToSee(look) {
+                return "the \(look.name) look is hard to tell from \(looks[0].name): \(small) is a shade too small to see. Make the difference plain (a fill clearly darker or lighter, an edge, a part shown or hidden), or leave the look out."
             }
         }
         return nil
@@ -182,25 +213,7 @@ extension AgentNewComponent {
     static let letterWidth: CGFloat = 0.5
 
     var wordsOverWords: (String, String)? {
-        func spot(_ part: AgentComponentPart) -> CGRect? {
-            guard part.kind == .text, let words = part.text, !words.isEmpty else { return nil }
-            let size = part.fontSize ?? 15
-            let width = min(CGFloat(words.count) * size * Self.letterWidth,
-                            part.frame.width > 0 ? part.frame.width : .greatestFiniteMagnitude)
-            let height = size * 1.5
-            if let target = part.centerIn, let box = parts.first(where: { $0.name == target })?.frame {
-                return CGRect(x: box.midX - width / 2, y: box.midY - height / 2, width: width, height: height)
-            }
-            let box = part.frame
-            let x: CGFloat = switch (box.width > 0, part.alignment) {
-            case (false, _), (true, .left?): box.minX
-            case (true, .right?): box.maxX - width
-            default: box.midX - width / 2
-            }
-            let y = box.height > 0 ? box.midY - height / 2 : box.minY
-            return CGRect(x: x, y: y, width: width, height: height)
-        }
-        let spots = parts.compactMap { part in spot(part).map { (part.name, $0) } }
+        let spots = parts.compactMap { part in wordsSpot(part).map { (part.name, $0) } }
         for (index, (name, box)) in spots.enumerated() {
             for (other, otherBox) in spots[(index + 1)...] {
                 let shared = box.intersection(otherBox)
@@ -211,6 +224,369 @@ extension AgentNewComponent {
             }
         }
         return nil
+    }
+
+    /// Words that sit half on a box of the first look, the words' name then
+    /// the box's: a segmented control's second label running out past its
+    /// track, a tab's icon on top of its name, a card's line past the card
+    /// (the eval, 2026-10-23). Words belong wholly inside a box or wholly
+    /// off it. The words are sized from their font as `wordsOverWords` sizes
+    /// them, trimmed a little so words set close to an edge are not caught.
+    var wordsHalfOn: (String, String)? {
+        for part in parts {
+            guard let spot = wordsSpot(part) else { continue }
+            let size = part.fontSize ?? 15
+            let words = spot.insetBy(dx: spot.width * 0.06, dy: size * 0.25)
+            for box in parts {
+                // A box with nothing said is drawn filled; one painted none with no edge is not drawn.
+                let drawn = box.look.fill?.hexValue != nil || box.look.stroke?.hexValue != nil
+                    || (box.look.fill == nil && box.look.stroke == nil)
+                guard case .shape = box.kind, drawn, !box.hidden else { continue }
+                let shared = words.intersection(box.frame)
+                if shared.isNull || shared.width <= 1 || shared.height <= 1 { continue }
+                if !box.frame.insetBy(dx: -1, dy: -1).contains(words) { return (part.name, box.name) }
+            }
+        }
+        return nil
+    }
+
+    /// The component as a later look draws it: each part moved, sized,
+    /// reworded, repainted, shown or hidden as the look's changes say, so
+    /// what is checked on the first look can be checked on every look.
+    func inLook(_ look: AgentComponentLook) -> AgentNewComponent {
+        var shown = self
+        for change in look.changes {
+            guard let at = shown.parts.firstIndex(where: { $0.name == change.part }) else { continue }
+            let asked = change.change
+            var part = shown.parts[at]
+            part.frame = CGRect(x: asked.x ?? part.frame.minX, y: asked.y ?? part.frame.minY,
+                                width: asked.width ?? part.frame.width, height: asked.height ?? part.frame.height)
+            if let words = asked.text { part.text = words }
+            if let size = asked.fontSize { part.fontSize = size }
+            if let visible = asked.visible { part.hidden = !visible }
+            if let fill = asked.look.fill {
+                if part.kind == .text { part.colorHex = fill.hexValue } else { part.look.fill = fill }
+            }
+            if let stroke = asked.look.stroke { part.look.stroke = stroke }
+            shown.parts[at] = part
+        }
+        shown.looks = [look]
+        return shown
+    }
+
+    /// Where a part's words will sit in the first look, sized from their
+    /// font, or nil for a part that is not words.
+    func wordsSpot(_ part: AgentComponentPart) -> CGRect? {
+        guard part.kind == .text, !part.hidden, let words = part.text, !words.isEmpty else { return nil }
+        let size = part.fontSize ?? 15
+        let width = min(CGFloat(words.count) * size * Self.letterWidth,
+                        part.frame.width > 0 ? part.frame.width : .greatestFiniteMagnitude)
+        let height = size * 1.5
+        if let target = part.centerIn, let box = parts.first(where: { $0.name == target })?.frame {
+            return CGRect(x: box.midX - width / 2, y: box.midY - height / 2, width: width, height: height)
+        }
+        let box = part.frame
+        let x: CGFloat = switch (box.width > 0, part.alignment) {
+        case (false, _), (true, .left?): box.minX
+        case (true, .right?): box.maxX - width
+        default: box.midX - width / 2
+        }
+        let y = box.height > 0 ? box.midY - height / 2 : box.minY
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+}
+
+// MARK: - Looks a person can see
+
+extension AgentNewComponent {
+    /// Two looks' colours read as one below this contrast ratio between
+    /// them, unless a channel moves by `leastHueStep`: a badge's Hover drawn
+    /// #FF453A over its #FF3B30 (1.04) was a look nobody could tell from
+    /// Default (the eval, 2026-10-23). A hover a step darker (#2563EB to
+    /// #1D4ED8, 1.38; #007AFF to #0062CC, 1.42) is plain, and was refused
+    /// while this was measured on the largest channel alone.
+    static let leastLookContrast = 1.2
+    /// A colour that moves this far on one channel, out of 255, is a new
+    /// colour however alike the two are in lightness (grey to green).
+    static let leastHueStep = 48.0
+    /// Two colours closer than this, on their largest channel, are one
+    /// colour: what `drawnLike` counts as the same paint.
+    static let sameColourStep = 20.0
+    /// A surface closer than this to the canvas is the canvas: #F2F2F7 on
+    /// white (13 apart) is a grey a person sees, #FAFAFA (5) is not.
+    static let surfaceStep = 10.0
+    /// An opacity changed by less than this reads as no change.
+    static let leastOpacityStep = 0.15
+    /// What a new picture's canvas is, and so what a surface must stand out
+    /// from. Sheets are made on a new picture, which is white; a component
+    /// on a dark backdrop it drew itself is not checked against that.
+    static let canvasColour = "#FFFFFF"
+
+    /// Whether a person tells the two colours apart, or nil when either is
+    /// not a colour.
+    static func plainlyApart(_ a: String?, _ b: String?) -> Bool? {
+        guard let a, let b, let one = RGBA(hex: a), let two = RGBA(hex: b), let step = apart(a, b) else { return nil }
+        return step >= leastHueStep || RGBA.contrast(one.linearLuminance, two.linearLuminance) >= leastLookContrast
+    }
+
+    /// How far apart two colours are, on their largest channel out of 255,
+    /// or nil when either is not a colour.
+    static func apart(_ a: String?, _ b: String?) -> Double? {
+        guard let a, let b, let one = RGBA(hex: a), let two = RGBA(hex: b) else { return nil }
+        return max(abs(one.r - two.r), abs(one.g - two.g), abs(one.b - two.b), abs(one.a - two.a)) * 255
+    }
+
+    /// A look's change put in words when every change in it is too small to
+    /// see ("Background #FF3B30 to #FF453A"), or nil when any change shows.
+    /// Changes it cannot weigh (a radius, a shadow) count as showing.
+    func tooSmallToSee(_ look: AgentComponentLook) -> String? {
+        var small: [String] = []
+        for change in look.changes {
+            guard let part = parts.first(where: { $0.name == change.part }) else { return nil }
+            let asked = change.change
+            if let visible = asked.visible, visible == part.hidden { return nil }
+            if asked.fontSize != nil || !asked.flip.isEmpty { return nil }
+            if let words = asked.text, words != part.text { return nil }
+            let moved = [(asked.x, part.frame.minX), (asked.y, part.frame.minY),
+                         (asked.width, part.frame.width), (asked.height, part.frame.height)]
+            if moved.contains(where: { asked, was in asked.map { abs($0 - was) >= 1 } ?? false }) { return nil }
+            let new = asked.look
+            if new.cornerRadius != nil || new.shadow != nil { return nil }
+            if let width = new.strokeWidth, abs(width - (part.look.strokeWidth ?? 0)) >= 1 { return nil }
+            if let opacity = new.opacity {
+                let was = part.look.opacity ?? 1
+                if abs(opacity - was) >= Self.leastOpacityStep { return nil }
+                small.append("\(part.name)'s opacity \(Self.number(was)) to \(Self.number(opacity))")
+            }
+            let fillWas = part.kind == .text ? part.colorHex : part.look.fill?.hexValue
+            for (ink, was) in [(new.fill, fillWas), (new.stroke, part.look.stroke?.hexValue)] {
+                guard let ink else { continue }
+                guard let plain = Self.plainlyApart(ink.hexValue, was) else {
+                    if ink.hexValue != was { return nil }
+                    continue
+                }
+                if plain { return nil }
+                small.append("\(part.name) \(was ?? "") to \(ink.hexValue ?? "")")
+            }
+        }
+        return small.isEmpty ? nil : small.joined(separator: " and ")
+    }
+
+    /// How far a widened shade is first set from the first look's, out of
+    /// 255; it goes further, a step at a time, until the two are plain.
+    static let plainColourStep = 32.0
+    /// The hairline a surface the canvas's colour is given: that colour,
+    /// this much darker.
+    static let hairlineShade = 0.12
+
+    /// add_component's arguments with what nobody could see made plain: a
+    /// look whose every change is a shade too small has its shades widened
+    /// (the same way, further), and a surface the canvas's colour with no
+    /// edge gets a hairline. For Ask's planner: a small model told why a
+    /// call was refused sent it back unchanged for every round left (the
+    /// eval, 2026-10-23), while an agent that can read the refusal is still
+    /// given it (`problem`). Anything else is left as the model gave it.
+    public static func madePlain(_ arguments: AgentJSON) -> AgentJSON {
+        guard var args = arguments.objectValue else { return arguments }
+        func spec() -> AgentNewComponent? {
+            if case .success(let found) = AgentTools.componentSpec("add_component", args) { return found }
+            return nil
+        }
+        func named(_ json: AgentJSON) -> String {
+            (json["name"]?.stringValue ?? json["part"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces)
+        }
+        var edged: Set<String> = []
+        while let found = spec(), let surface = found.unseenSurface, edged.insert(surface).inserted,
+              var parts = args["parts"]?.arrayValue,
+              let at = parts.firstIndex(where: { named($0) == surface }), var part = parts[at].objectValue {
+            let canvas = RGBA(hex: canvasColour) ?? RGBA(r: 1, g: 1, b: 1)
+            part["stroke"] = .string(RGBA(r: canvas.r * (1 - hairlineShade), g: canvas.g * (1 - hairlineShade),
+                                          b: canvas.b * (1 - hairlineShade)).hexString)
+            part["strokeWidth"] = .number(1)
+            parts[at] = .object(part)
+            args["parts"] = .array(parts)
+        }
+        var recoloured: Set<String> = []
+        while let found = spec(), let (words, _) = found.unreadableWords, recoloured.insert(words).inserted,
+              let part = found.parts.first(where: { $0.name == words }),
+              case .some(.some(let behind)) = found.wordsBackdrop(part), let ground = RGBA(hex: behind.colour),
+              var parts = args["parts"]?.arrayValue,
+              let at = parts.firstIndex(where: { named($0) == words }), var said = parts[at].objectValue {
+            said["color"] = .string(readable(near: part.colorHex ?? defaultWordColour, on: ground))
+            said["fill"] = nil
+            parts[at] = .object(said)
+            args["parts"] = .array(parts)
+        }
+        guard let found = spec(), var looks = args["looks"]?.arrayValue else { return .object(args) }
+        // Words a later look leaves unreadable get, in that look, the shade
+        // nearest their own that reads.
+        for (index, look) in found.looks.enumerated().dropFirst() where index - 1 < looks.count {
+            var shown = found.inLook(look)
+            var fixed: Set<String> = []
+            while let (words, _) = shown.unreadableWords, fixed.insert(words).inserted,
+                  let part = shown.parts.first(where: { $0.name == words }),
+                  case .some(.some(let behind)) = shown.wordsBackdrop(part), let ground = RGBA(hex: behind.colour),
+                  var said = looks[index - 1].objectValue {
+                let colour = readable(near: part.colorHex ?? defaultWordColour, on: ground)
+                var changes = said["changes"]?.arrayValue ?? []
+                if let at = changes.firstIndex(where: { named($0) == words }), var change = changes[at].objectValue {
+                    change["color"] = .string(colour)
+                    change["fill"] = nil
+                    changes[at] = .object(change)
+                } else {
+                    changes.append(["part": .string(words), "color": .string(colour)])
+                }
+                said["changes"] = .array(changes)
+                looks[index - 1] = .object(said)
+                if let at = shown.parts.firstIndex(where: { $0.name == words }) { shown.parts[at].colorHex = colour }
+            }
+        }
+        for (index, look) in found.looks.enumerated().dropFirst() where index - 1 < looks.count {
+            guard found.tooSmallToSee(look) != nil, var said = looks[index - 1].objectValue,
+                  var changes = said["changes"]?.arrayValue else { continue }
+            for (at, entry) in changes.enumerated() {
+                guard var change = entry.objectValue,
+                      let part = found.parts.first(where: { $0.name == named(entry) }) else { continue }
+                let fillWas = part.kind == .text ? part.colorHex : part.look.fill?.hexValue
+                for (key, was) in [("fill", fillWas), ("color", fillWas), ("stroke", part.look.stroke?.hexValue)] {
+                    guard let was, let new = change[key]?.stringValue, plainlyApart(new, was) == false else { continue }
+                    change[key] = .string(widened(new, from: was))
+                }
+                if let opacity = change["opacity"]?.doubleValue {
+                    let was = part.look.opacity ?? 1
+                    if abs(opacity - was) < leastOpacityStep { change["opacity"] = .number(max(0.3, was - 0.4)) }
+                }
+                changes[at] = .object(change)
+            }
+            said["changes"] = .array(changes)
+            looks[index - 1] = .object(said)
+        }
+        args["looks"] = .array(looks)
+        return .object(args)
+    }
+
+    /// Shades words are set in when theirs cannot be read: near black, the
+    /// system's secondary grey and white.
+    static let readableShades = ["#1C1C1E", "#8E8E93", "#FFFFFF"]
+    /// How far a shade picked for words stands out from what is behind them.
+    static let pickedWordContrast = 3.0
+
+    /// The shade nearest `asked` that reads on `ground`: grey for words
+    /// that were white on white, black when grey would not read either.
+    static func readable(near asked: String, on ground: RGBA) -> String {
+        let wanted = RGBA(hex: asked) ?? RGBA(r: 0, g: 0, b: 0)
+        func distance(_ hex: String) -> Double {
+            guard let shade = RGBA(hex: hex) else { return .infinity }
+            return abs(shade.r - wanted.r) + abs(shade.g - wanted.g) + abs(shade.b - wanted.b)
+        }
+        func contrast(_ hex: String) -> Double {
+            RGBA(hex: hex).map { RGBA.contrast($0.linearLuminance, ground.linearLuminance) } ?? 0
+        }
+        let reads = readableShades.filter { contrast($0) >= pickedWordContrast }
+        return reads.min { distance($0) < distance($1) }
+            ?? readableShades.max { contrast($0) < contrast($1) } ?? "#000000"
+    }
+
+    /// `new` moved on from `was` the way it already leans, until the two are
+    /// plain to the eye; a step darker when it does not lean, and the
+    /// other way when that way runs out of room.
+    static func widened(_ new: String, from was: String) -> String {
+        guard let base = RGBA(hex: was), let asked = RGBA(hex: new) else { return new }
+        var lean = [asked.r - base.r, asked.g - base.g, asked.b - base.b]
+        if lean.map(abs).max() ?? 0 < 0.5 / 255 { lean = [-1, -1, -1] }
+        let biggest = lean.map(abs).max() ?? 1
+        func going(_ sign: Double, _ step: Double) -> String {
+            let scale = step / 255 / biggest
+            return RGBA(r: min(max(base.r + sign * lean[0] * scale, 0), 1), g: min(max(base.g + sign * lean[1] * scale, 0), 1),
+                        b: min(max(base.b + sign * lean[2] * scale, 0), 1)).hexString
+        }
+        for step in stride(from: plainColourStep, through: 160, by: 16) {
+            for sign in [1.0, -1.0] where plainlyApart(going(sign, step), was) == true { return going(sign, step) }
+        }
+        return going(1, 160)
+    }
+
+    static func number(_ value: Double) -> String {
+        value == value.rounded() ? String(Int(value)) : String(format: "%g", value)
+    }
+
+    /// Below this contrast ratio words cannot be read against what is
+    /// behind them: white on a white canvas is 1, grey #8E8E93 on white is
+    /// about 3.3 and reads.
+    static let leastWordContrast = 1.6
+    /// Words given no colour are set near black.
+    static let defaultWordColour = "#000000"
+
+    /// What a part's words sit on in the first look, and its colour: the
+    /// topmost painted box drawn before them that holds their middle (a box
+    /// painted none is looked through), else the canvas (name nil). Nil when
+    /// the box is drawn in the default colour, which is not known here.
+    func wordsBackdrop(_ part: AgentComponentPart) -> (name: String?, colour: String)?? {
+        guard let spot = wordsSpot(part), let index = parts.firstIndex(where: { $0.name == part.name }) else { return nil }
+        let middle = CGPoint(x: spot.midX, y: spot.midY)
+        for box in parts[..<index].reversed() {
+            guard case .shape = box.kind, !box.hidden, box.frame.contains(middle) else { continue }
+            if box.look.fill == nil && box.look.stroke == nil { return .some(nil) }
+            guard let fill = box.look.fill?.hexValue, (RGBA(hex: fill)?.a ?? 1) >= 0.5 else { continue }
+            return (box.name, fill)
+        }
+        return (nil, Self.canvasColour)
+    }
+
+    /// Words of the first look nobody could read against what is behind
+    /// them, by name, and the box behind them (nil for the canvas): a
+    /// checkbox's label set white beside it on a white canvas (the eval,
+    /// 2026-10-23). Words are always legible (the user, 2026-09-30).
+    var unreadableWords: (String, String?)? {
+        for part in parts where part.kind == .text {
+            guard case .some(.some(let behind)) = wordsBackdrop(part),
+                  let ink = RGBA(hex: part.colorHex ?? Self.defaultWordColour),
+                  let ground = RGBA(hex: behind.colour) else { continue }
+            if RGBA.contrast(ink.linearLuminance, ground.linearLuminance) < Self.leastWordContrast {
+                return (part.name, behind.name)
+            }
+        }
+        return nil
+    }
+
+    /// The first box of the first look painted the canvas's own colour with
+    /// no edge and no shadow, sitting on nothing else of the component, by
+    /// name: a card or a dialog drawn white on a white canvas showed its words
+    /// floating with no card at all (the eval, 2026-10-23). White on top of
+    /// another part (a toggle's knob on its track) is seen against that part.
+    var unseenSurface: String? {
+        for (index, part) in parts.enumerated() {
+            guard case .shape = part.kind, !part.hidden, let fill = part.look.fill?.hexValue,
+                  let distance = Self.apart(fill, Self.canvasColour), distance < Self.surfaceStep else { continue }
+            let edged = part.look.stroke?.hexValue != nil && (part.look.strokeWidth ?? 1) > 0
+            if edged { continue }
+            if case .drop? = part.look.shadow { continue }
+            let onAnother = parts[..<index].contains { under in
+                guard case .shape = under.kind else { return false }
+                return under.frame.intersects(part.frame)
+            }
+            if !onAnother { return part.name }
+        }
+        return nil
+    }
+
+    /// Whether this is drawn as the other is, whatever it is called: the
+    /// same pieces in the same order, the same sizes give or take a few
+    /// points and the same paint. A sheet showing a Toggle and a Switch drawn
+    /// alike read as one control twice (the eval, 2026-10-23).
+    public func drawnLike(_ other: AgentNewComponent) -> Bool {
+        guard parts.count == other.parts.count, !parts.isEmpty else { return false }
+        func same(_ a: String?, _ b: String?) -> Bool {
+            a == b || (Self.apart(a, b).map { $0 < Self.sameColourStep } ?? false)
+        }
+        return zip(parts, other.parts).allSatisfy { one, two in
+            one.kind == two.kind
+                && abs(one.frame.width - two.frame.width) <= 3 && abs(one.frame.height - two.frame.height) <= 3
+                && same(one.look.fill?.hexValue, two.look.fill?.hexValue)
+                && same(one.look.stroke?.hexValue, two.look.stroke?.hexValue)
+                && same(one.colorHex, two.colorHex)
+                && one.points.count == two.points.count
+        }
     }
 }
 
@@ -425,6 +801,7 @@ extension PhotonzDocument {
             AgentDrawing.apply(look, keepingPaint: true, to: &layer)
         }
         layer.name = part.name
+        if part.hidden { layer.isVisible = false }
         return layer
     }
 
@@ -508,6 +885,7 @@ extension AgentTools {
                                                    "description": "Words: regular, medium, semibold or bold."],
                                         "alignment": ["type": "string", "enum": ["left", "center", "right"], "description": "Words: where lines sit across their width."],
                                         "centerIn": ["type": "string", "description": "Words: the name of the part they sit centred in, across and down, such as Background."],
+                                        "visible": ["type": "boolean", "description": "false hides it in the first look, for a later look to show with visible true: a check mark only On shows."],
                                         "points": ["type": "array", "description": "A path: two or more points, measured from the part's x and y.",
                                                    "items": ["type": "object", "properties": [
                                                        "x": ["type": "number"], "y": ["type": "number"],
@@ -529,7 +907,7 @@ extension AgentTools {
                                                         "y": ["type": "number", "description": "Move its top edge here."],
                                                         "width": ["type": "number", "minimum": 1, "description": "Resize to this width."],
                                                         "height": ["type": "number", "minimum": 1, "description": "Resize to this height."],
-                                                        "visible": ["type": "boolean", "description": "false hides it in this look."],
+                                                        "visible": ["type": "boolean", "description": "false hides it in this look; true shows a part the first look hides."],
                                                         "text": ["type": "string", "description": "Words: what they say in this look."],
                                                     ] as [String: AgentJSON])) { $1 }),
                                                     "required": ["part"], "additionalProperties": false]],
@@ -541,7 +919,15 @@ extension AgentTools {
 
     static func componentRequest(_ name: String, _ args: [String: AgentJSON],
                                  document: String?) -> Result<AgentRequest, AgentToolError> {
-        func fail(_ words: String) -> Result<AgentRequest, AgentToolError> { .failure(AgentToolError("\(name): \(words)")) }
+        componentSpec(name, args).flatMap { spec in
+            if let problem = spec.problem { return .failure(AgentToolError("\(name): \(problem)")) }
+            return .success(.addComponent(document: document, component: spec))
+        }
+    }
+
+    /// The component a call describes, read but not yet checked.
+    static func componentSpec(_ name: String, _ args: [String: AgentJSON]) -> Result<AgentNewComponent, AgentToolError> {
+        func fail(_ words: String) -> Result<AgentNewComponent, AgentToolError> { .failure(AgentToolError("\(name): \(words)")) }
         func number(_ json: AgentJSON?, _ key: String) -> CGFloat? { json?[key]?.doubleValue.map { CGFloat($0) } }
         func look(_ json: AgentJSON, _ what: String) -> Result<AgentLook, AgentToolError> {
             var fields = json.objectValue ?? [:]
@@ -591,7 +977,19 @@ extension AgentTools {
                 look: partLook, text: item["text"]?.stringValue, fontSize: number(item, "fontSize"),
                 weight: item["weight"]?.stringValue.flatMap(TextWeight.init(rawValue:)),
                 colorHex: colorHex, alignment: item["alignment"]?.stringValue.flatMap(TextAlign.init(rawValue:)),
-                centerIn: item["centerIn"]?.stringValue, points: points, closed: item["closed"]?.boolValue ?? false))
+                centerIn: item["centerIn"]?.stringValue, points: points, closed: item["closed"]?.boolValue ?? false,
+                hidden: item["visible"]?.boolValue == false))
+        }
+        // A part a later look shows with visible true, and the call never
+        // said, starts hidden: that look is the one that shows it.
+        let shown = Set((args["looks"]?.arrayValue ?? []).flatMap { look in
+            (look["changes"]?.arrayValue ?? []).compactMap { change in
+                change["visible"]?.boolValue == true ? change["part"]?.stringValue : nil
+            }
+        })
+        for (index, item) in (args["parts"]?.arrayValue ?? []).enumerated()
+        where index < parts.count && item["visible"] == nil && shown.contains(parts[index].name) {
+            parts[index].hidden = true
         }
 
         let firstLook = (args["firstLook"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces)
@@ -620,7 +1018,6 @@ extension AgentTools {
             property: ComponentNaming.normalized(args["property"]?.stringValue) ?? AgentNewComponent.defaultProperty,
             parts: parts, looks: looks, step: number(.object(args), "step"),
             labels: args["labels"]?.boolValue ?? false)
-        if let problem = spec.problem { return fail(problem) }
-        return .success(.addComponent(document: document, component: spec))
+        return .success(spec)
     }
 }

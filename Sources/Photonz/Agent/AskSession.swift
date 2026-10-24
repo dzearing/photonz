@@ -626,6 +626,10 @@ final class AskSession {
                 note("answered: \(reply["message"]?.encodedString().prefix(300) ?? "")")
             } catch let trouble as AskLocalModel.Trouble {
                 if case .said(let words) = trouble, AskConversation.isUnreadableReply(words), !talk.steps.isEmpty {
+                    if talk.askForTitle() {
+                        note("unreadable reply after \(talk.steps.count) steps: asking for the sheet's title first")
+                        continue
+                    }
                     note("unreadable reply after \(talk.steps.count) steps: offering them")
                     return .success(AskPlan(steps: talk.steps, summary: "", names: talk.names))
                 }
@@ -634,8 +638,13 @@ final class AskSession {
                 return .failure(.said(AskCopy.stoppedSentence))
             }
             if Task.isCancelled { return .failure(.said(AskCopy.stoppedSentence)) }
+            let heard = talk.messages.count
             let outcome = talk.take(reply)
             note("turn \(talk.rounds): \(talk.steps.count) steps planned, \(talk.calls) calls, \(talk.brokenCalls) broken")
+            // Why a call was refused, so a run's trace says what the model was told.
+            for message in talk.messages.dropFirst(heard) where message["role"]?.stringValue == "tool" {
+                if let said = message["content"]?.stringValue, said.hasPrefix("Not planned") { note("refused: \(said.prefix(300))") }
+            }
             switch outcome {
             case .planned(let plan):
                 return .success(plan)

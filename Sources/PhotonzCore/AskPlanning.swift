@@ -376,10 +376,14 @@ public struct AskConversation: Sendable {
             if steps.isEmpty {
                 return .cannot(sentence.isEmpty ? Self.noPlanSentence : sentence)
             }
+            // A sheet of labelled rows with no title is asked for one once
+            // (the eval, 2026-10-23: twelve rows and no title).
+            if askForTitle() { return .again(looks: []) }
             return .planned(AskPlan(steps: steps, summary: sentence, names: names))
         }
         var looks: [AskLook] = []
-        for (name, arguments) in calls {
+        for (name, said) in calls {
+            let arguments = name == "add_text" || name == "add_component" ? Self.withoutEntities(said) : said
             if AskTools.looking.contains(name) {
                 looks.append(AskLook(tool: name, arguments: arguments))
             } else if AskTools.doing.contains(name) {
@@ -398,6 +402,14 @@ public struct AskConversation: Sendable {
                     tell(name, "Not planned: step \(earlier) already sets those words beside its row. Plan something else, or finish.")
                     continue
                 }
+                // The title comes first; after it the table names every row
+                // and state, and words of the model's own (a section heading)
+                // were laid over by its rows (the eval, 2026-10-23).
+                if name == "add_text", steps.contains(where: { $0.tool == "add_text" }),
+                   steps.contains(where: { $0.tool == "add_component" && $0.arguments["labels"]?.boolValue == true }) {
+                    refuse(name, arguments, "Not planned: the table names its own rows and states, and words of your own would land on it. Plan the next component, or finish.")
+                    continue
+                }
                 let arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
                     brokenCalls += 1
@@ -412,8 +424,11 @@ public struct AskConversation: Sendable {
                     }
                     step = AskStep(tool: name, arguments: drawing)
                 }
+                if name == "add_component" {
+                    step = AskStep(tool: name, arguments: AgentNewComponent.madePlain(arguments))
+                }
                 if let earlier = repeated(step) {
-                    tell(name, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
+                    refuse(name, step.arguments, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
                     continue
                 }
                 if name == "add_drawing", let earlier = stacked(step) {
@@ -421,8 +436,22 @@ public struct AskConversation: Sendable {
                     continue
                 }
                 // Checked as it would run, with $N standing in for ids not made yet.
-                switch AgentTools.request(tool: name, arguments: arguments) {
+                switch AgentTools.request(tool: name, arguments: name == "add_component" ? step.arguments : arguments) {
+                case .success(.addComponent(_, let component)) where drawnBefore(component) != nil:
+                    let (earlier, kind) = drawnBefore(component) ?? (0, "")
+                    let made = steps.compactMap { $0.tool == "add_component" ? $0.arguments["name"]?.stringValue : nil }
+                    refuse(name, step.arguments, "Not planned: \(component.name) is drawn the same as \(kind), step \(earlier). A sheet shows each kind of control once. Planned so far: \(made.joined(separator: ", ")). Make a kind that is not in that list, drawn as that kind is, or finish.")
                 case .success:
+                    // The title asked for after the rows goes first, so it
+                    // sits above them, when no step names another by $N.
+                    if askedForTitle, name == "add_text", !steps.contains(where: { $0.tool == "add_text" }),
+                       !steps.contains(where: { $0.arguments.encodedString().contains("\"$") }) {
+                        steps.insert(step, at: 0)
+                        sameRefusals = 0
+                        lastRefused = ""
+                        tell(name, "Planned as step 1.")
+                        continue
+                    }
                     steps.append(step)
                     if name == "add_component" { alignSheet() }
                     sameRefusals = 0
@@ -430,15 +459,25 @@ public struct AskConversation: Sendable {
                     tell(name, "Planned as step \(steps.count). Refer to what it makes as $\(steps.count).")
                 case .failure(let failure):
                     brokenCalls += 1
-                    tell(name, "Not planned. \(failure.message)")
-                    let said = "\(name) \(arguments.encodedString())"
-                    sameRefusals = said == lastRefused ? sameRefusals + 1 : 0
-                    lastRefused = said
+                    refuse(name, step.arguments, "Not planned. \(failure.message)")
                 }
             } else {
                 brokenCalls += 1
                 tell(name, "\(name) is not one of your tools here. Use only the tools you were given.")
             }
+        }
+        // A component sent back unchanged once is taken out of the talk and
+        // the model asked, as a new turn, for the next kind: told so in a
+        // tool answer it sent the same call a third time (the eval,
+        // 2026-10-23), and one kind it cannot draw ended the sheet.
+        if calls.count == 1, calls[0].0 == "add_component", sameRefusals == 1,
+           let kind = calls[0].1["name"]?.stringValue, leftOut.insert(kind).inserted,
+           messages.count >= 2, messages[messages.count - 1]["role"]?.stringValue == "tool" {
+            messages.removeLast(2)
+            messages.append(["role": "user", "content": .string("Leave \(kind) out: it could not be planned. Plan the next kind of component the sheet does not have yet, or finish.")])
+            sameRefusals = 0
+            lastRefused = ""
+            return .again(looks: [])
         }
         // A small model at temperature 0 that sends a refused call back
         // unchanged sends it every round after; the plan it has is offered
@@ -599,6 +638,33 @@ public struct AskConversation: Sendable {
     /// The step already planned that this one repeats: the same call, or a
     /// size measurement of what is the same box give or take a few points
     /// (`find_elements` lists one control by several readers).
+    /// Words with the web's escapes a model sometimes writes ("Cards &amp;
+    /// Containers") set as the characters they stand for.
+    static func withoutEntities(_ json: AgentJSON) -> AgentJSON {
+        switch json {
+        case .string(let words) where words.contains("&"):
+            var plain = words
+            for (entity, character) in [("&lt;", "<"), ("&gt;", ">"), ("&quot;", "\""), ("&#39;", "'"), ("&apos;", "'"), ("&amp;", "&")] {
+                plain = plain.replacingOccurrences(of: entity, with: character)
+            }
+            return .string(plain)
+        case .array(let items): return .array(items.map(withoutEntities))
+        case .object(let fields): return .object(fields.mapValues(withoutEntities))
+        default: return json
+        }
+    }
+
+    /// The earlier add_component step drawn the same as this one, and what
+    /// it is called: a Toggle and a Switch drawn alike are one control twice.
+    func drawnBefore(_ component: AgentNewComponent) -> (Int, String)? {
+        for (index, step) in steps.enumerated() where step.tool == "add_component" {
+            guard case .success(.addComponent(_, let earlier)) = AgentTools.request(tool: step.tool, arguments: step.arguments),
+                  component.drawnLike(earlier) else { continue }
+            return (index + 1, earlier.name)
+        }
+        return nil
+    }
+
     func repeated(_ step: AskStep) -> Int? {
         for (index, earlier) in steps.enumerated() {
             if earlier == step { return index + 1 }
@@ -641,8 +707,31 @@ public struct AskConversation: Sendable {
     /// The last call refused, and how many rounds running it came back the same.
     private var lastRefused = ""
     private var sameRefusals = 0
+    /// Components the model was asked to leave out after sending one back unchanged.
+    private var leftOut: Set<String> = []
+    private var askedForTitle = false
     static let mostSameRefusals = 2
     static let nudge = "Try again with the tools and what is listed above: plan it step by step. Answer I can't only if no tool can do any part of it."
+
+    /// Asks once for a title when the plan is a sheet of labelled rows with
+    /// none, and says whether it asked. Also called when the model's last
+    /// reply could not be read, so a sheet offered then still gets one.
+    public mutating func askForTitle() -> Bool {
+        guard !askedForTitle, !steps.contains(where: { $0.tool == "add_text" }),
+              steps.contains(where: { $0.tool == "add_component" && $0.arguments["labels"]?.boolValue == true }) else { return false }
+        askedForTitle = true
+        messages.append(["role": "user", "content": .string("A sheet starts with its title: plan one add_text at the top left, the largest words on the sheet, then finish.")])
+        return true
+    }
+
+    /// Tells the model a call was not planned, counted toward stopping a
+    /// model that sends it back unchanged.
+    private mutating func refuse(_ tool: String, _ arguments: AgentJSON, _ text: String) {
+        let said = "\(tool) \(arguments.encodedString())"
+        sameRefusals = said == lastRefused ? sameRefusals + 1 : 0
+        lastRefused = said
+        tell(tool, text)
+    }
 
     private mutating func tell(_ tool: String, _ text: String) {
         messages.append(["role": "tool", "tool_name": .string(tool), "content": .string(text)])
@@ -741,7 +830,7 @@ public struct AskConversation: Sendable {
         from: a set of base components is a dozen kinds or more. Give each the looks that kit shows for it (its states: \
         default, hover, pressed, disabled, on and off, selected, focused, as that kind has them), the first \
         look as parts and every other look as only what changes. Make them look like the kit: the system \
-        font at one small type scale, the platform's own colours put straight on the parts (save no styles \
+        font at one small type scale, the platform's own light-appearance colours put straight on the parts (save no styles \
         unless asked), one corner radius per kind, padding on the 8 point grid, words centred in their control.
         - Shown as a table or sheet: first a title with add_text at the top left, the largest words on \
         the sheet; then one row per component, each add_component with labels true, the same x for \

@@ -181,7 +181,7 @@ struct AgentComponentTests {
     func wordsInABox() throws {
         let json = ##"""
             {"name": "Row", "x": 0, "y": 0, "labels": false,
-             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 300, "height": 44, "fill": "#FFFFFF"},
+             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 300, "height": 44, "fill": "#F2F2F7"},
                        {"name": "Title", "shape": "text", "text": "Wi-Fi", "x": 16, "y": 0, "width": 200, "height": 44, "alignment": "left"},
                        {"name": "Value", "shape": "text", "text": "Home", "x": 200, "y": 0, "width": 84, "height": 44, "alignment": "right"},
                        {"name": "Badge", "shape": "text", "text": "New", "x": 100, "y": 0, "width": 100, "height": 44}],
@@ -246,6 +246,86 @@ struct AgentComponentTests {
                                      looks: [AgentComponentLook(name: "Default"), AgentComponentLook(name: "Hover")])
         #expect(spec.problem?.contains("Hover") == true)
         #expect(spec.problem?.contains("changes") == true)
+    }
+
+    @Test("A look only a shade off the first is refused, saying which change is too small to see")
+    func aLookTooCloseToTell() throws {
+        func badge(_ hover: String) -> String {
+            ##"""
+            {"name": "Badge", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 40, "height": 20, "cornerRadius": 10, "fill": "#FF3B30"},
+                       {"name": "Count", "shape": "text", "text": "3", "fontSize": 13, "color": "#FFFFFF", "x": 0, "y": 0, "width": 0, "height": 0, "centerIn": "Back"}],
+             "looks": [{"name": "Hover", "changes": [\##(hover)]}]}
+            """##
+        }
+        guard case .failure(let shade) = try Self.request(badge(##"{"part": "Back", "fill": "#FF453A"}"##)) else {
+            Issue.record("accepted a look a shade off the first"); return
+        }
+        #expect(shade.message.contains("Hover"), "\(shade.message)")
+        #expect(shade.message.contains("#FF453A"), "\(shade.message)")
+        // Words a shade off, an opacity barely changed, both together: still one look.
+        for small in [##"{"part": "Count", "color": "#F4F4F4"}"##, ##"{"part": "Back", "opacity": 0.92}"##,
+                      ##"{"part": "Back", "fill": "#FF453A"}, {"part": "Count", "color": "#FAFAFA"}"##] {
+            guard case .failure = try Self.request(badge(small)) else { Issue.record("accepted \(small)"); continue }
+        }
+        // A change the eye sees passes, alone or beside a small one.
+        for plain in [##"{"part": "Back", "fill": "#D70015"}"##, ##"{"part": "Back", "opacity": 0.4}"##,
+                      ##"{"part": "Count", "visible": false}"##, ##"{"part": "Count", "text": "4"}"##,
+                      ##"{"part": "Back", "y": 2}"##, ##"{"part": "Back", "stroke": "#000000", "strokeWidth": 2}"##,
+                      ##"{"part": "Back", "fill": "#FF453A"}, {"part": "Count", "color": "#000000"}"##] {
+            #expect(throws: Never.self, "\(plain)") { _ = try Self.request(badge(plain)).get() }
+        }
+        #expect(throws: Never.self) { _ = try Self.request(Self.toggle).get() }
+        #expect(throws: Never.self) { _ = try Self.request(Self.button).get() }
+        // Judged by how much lighter or darker, or by a new hue: a hover a step darker is plain.
+        #expect(AgentNewComponent.plainlyApart("#2563EB", "#1D4ED8") == true)
+        #expect(AgentNewComponent.plainlyApart("#F2F2F7", "#D1D1D6") == true)
+        #expect(AgentNewComponent.plainlyApart("#FF3B30", "#FF453A") == false)
+        #expect(AgentNewComponent.plainlyApart("#0A84FF", "#007AFF") == false)
+        for (was, asked) in [("#FF3B30", "#FF453A"), ("#007AFF", "#0A84FF"), ("#FFFFFF", "#FAFAFA"), ("#000000", "#050505")] {
+            #expect(AgentNewComponent.plainlyApart(AgentNewComponent.widened(asked, from: was), was) == true, "\(was) \(asked)")
+        }
+    }
+
+    @Test("A surface the canvas's own white, with no edge or shadow, is refused: nobody could see it")
+    func anUnseenSurface() throws {
+        func card(_ background: String) -> String {
+            ##"""
+            {"name": "Card", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 240, "height": 120, "cornerRadius": 12, \##(background)},
+                       {"name": "Title", "shape": "text", "text": "Title", "fontSize": 17, "x": 16, "y": 16, "width": 0, "height": 0}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#D1D1D6"}]}]}
+            """##
+        }
+        guard case .failure(let unseen) = try Self.request(card(##""fill": "#FFFFFF""##)) else {
+            Issue.record("accepted a white surface with no edge on a white canvas"); return
+        }
+        #expect(unseen.message.contains("Background"), "\(unseen.message)")
+        guard case .failure = try Self.request(card(##""fill": "#FDFDFD", "stroke": "none""##)) else {
+            Issue.record("accepted a near-white surface with its edge taken off"); return
+        }
+        for seen in [##""fill": "#F2F2F7""##, ##""fill": "#FFFFFF", "stroke": "#E5E5EA", "strokeWidth": 1"##,
+                     ##""fill": "#FFFFFF", "shadow": {"opacity": 0.12, "radius": 8, "y": 2}"##] {
+            #expect(throws: Never.self, "\(seen)") { _ = try Self.request(card(seen)).get() }
+        }
+        // White on top of another part is seen against that part: a toggle's knob.
+        #expect(throws: Never.self) { _ = try Self.request(Self.toggle).get() }
+    }
+
+    @Test("Two components drawn alike are told apart from two kinds that only share a size")
+    func drawnAlike() throws {
+        let toggle = try Self.spec(Self.toggle)
+        var renamed = toggle
+        renamed.name = "Switch"
+        renamed.origin = CGPoint(x: 600, y: 900)
+        #expect(renamed.drawnLike(toggle))
+        #expect(!(try Self.spec(Self.button)).drawnLike(toggle))
+        var recoloured = toggle
+        recoloured.parts[0].look.fill = AgentInk("#5856D6")
+        #expect(!recoloured.drawnLike(toggle), "a different colour is a different look")
+        var resized = toggle
+        resized.parts[0].frame.size.width = 80
+        #expect(!resized.drawnLike(toggle))
     }
 
     @Test("A shadow nobody could see is no shadow")
@@ -338,8 +418,125 @@ struct AgentComponentTests {
         }
         #expect(long.message.contains("Body"), "\(long.message)")
         #expect(throws: Never.self) { _ = try Self.request(card("Card body text", width: 168)).get() }
-        // A box of no width is no box: the words sit from its left edge.
-        #expect(throws: Never.self) { _ = try Self.request(card("Card body text goes here with description.", width: 0)).get() }
+        // A box of no width is no box: the words sit from its left edge, and
+        // these run on past the card's.
+        guard case .failure(let past) = try Self.request(card("Card body text goes here with description.", width: 0)) else {
+            Issue.record("accepted words running past the card"); return
+        }
+        #expect(past.message.contains("Body") && past.message.contains("Background"), "\(past.message)")
+    }
+
+    @Test("Words half on a box are refused, naming both: wholly inside it or wholly off it")
+    func wordsHalfOnABox() throws {
+        func tab(iconY: Int, labelX: Int = 0) -> String {
+            ##"""
+            {"name": "Tab", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Bar", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 49, "fill": "#F2F2F7"},
+                       {"name": "Icon", "shape": "rectangle", "x": 48, "y": \##(iconY), "width": 24, "height": 24, "cornerRadius": 6, "fill": "#007AFF"},
+                       {"name": "Name", "shape": "text", "text": "Search", "fontSize": 10, "x": \##(labelX), "y": 32, "width": 120, "height": 12}],
+             "looks": [{"name": "Selected", "changes": [{"part": "Icon", "fill": "#8E8E93"}]}]}
+            """##
+        }
+        guard case .failure(let onIcon) = try Self.request(tab(iconY: 22)) else { Issue.record("accepted words on an icon"); return }
+        #expect(onIcon.message.contains("Name") && onIcon.message.contains("Icon"), "\(onIcon.message)")
+        guard case .failure(let pastBar) = try Self.request(tab(iconY: 4, labelX: 60)) else { Issue.record("accepted words past the bar"); return }
+        #expect(pastBar.message.contains("Bar"), "\(pastBar.message)")
+        #expect(throws: Never.self) { _ = try Self.request(tab(iconY: 4)).get() }
+        // Words centred in their control, and words beside a box rather than on it, are fine.
+        #expect(throws: Never.self) { _ = try Self.request(Self.button).get() }
+        #expect(throws: Never.self) { _ = try Self.request(##"""
+            {"name": "Check", "x": 0, "y": 0, "labels": false, "firstLook": "Off",
+             "parts": [{"name": "Box", "shape": "rectangle", "x": 0, "y": 0, "width": 20, "height": 20, "stroke": "#8E8E93", "strokeWidth": 1.5},
+                       {"name": "Label", "shape": "text", "text": "Remember me", "fontSize": 15, "x": 28, "y": 0, "width": 0, "height": 20}],
+             "looks": [{"name": "On", "changes": [{"part": "Box", "fill": "#007AFF"}]}]}
+            """##).get() }
+    }
+
+    @Test("A part can start hidden and show in a later look: a check mark only On shows")
+    func aPartHiddenInTheFirstLook() throws {
+        func checkbox(_ check: String) -> String {
+            ##"""
+            {"name": "Checkbox", "x": 0, "y": 0, "labels": false, "firstLook": "Off",
+             "parts": [{"name": "Box", "shape": "rectangle", "x": 0, "y": 0, "width": 22, "height": 22, "cornerRadius": 6, "stroke": "#8E8E93", "strokeWidth": 1.5},
+                       {"name": "Check", "shape": "path", "x": 5, "y": 6, "width": 12, "height": 10, "stroke": "#FFFFFF", "strokeWidth": 2,
+                        "points": [{"x": 0, "y": 5}, {"x": 4, "y": 9}, {"x": 12, "y": 0}]\##(check)}],
+             "looks": [{"name": "On", "changes": [{"part": "Box", "fill": "#007AFF", "stroke": "#007AFF"}, {"part": "Check", "visible": true}]},
+                       {"name": "Disabled", "changes": [{"part": "Box", "opacity": 0.4}]}]}
+            """##
+        }
+        for said in [#", "visible": false"#, ""] {
+            let (document, made) = try Self.built(checkbox(said))
+            #expect(Self.piece("Check", of: "Off", in: document, made)?.isVisible == false, "said: \(said)")
+            #expect(Self.piece("Check", of: "On", in: document, made)?.isVisible == true, "said: \(said)")
+            #expect(Self.piece("Check", of: "Disabled", in: document, made)?.isVisible == false, "said: \(said)")
+        }
+        // A look that only shows a hidden part is a change a person sees.
+        let spec = try Self.spec(checkbox(""))
+        #expect(spec.tooSmallToSee(spec.looks[1]) == nil)
+    }
+
+    @Test("Words nobody could read against what is behind them are refused: the canvas, or the box they sit on")
+    func unreadableWords() throws {
+        func row(_ label: String, back: String = "#E5E5EA") -> String {
+            ##"""
+            {"name": "Row", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Box", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 32, "cornerRadius": 8, "fill": "\##(back)"},
+                       {"name": "Inside", "shape": "text", "text": "One", "fontSize": 13, "x": 0, "y": 0, "width": 0, "height": 0, "centerIn": "Box", "color": "\##(label)"},
+                       {"name": "Beside", "shape": "text", "text": "Option", "fontSize": 15, "x": 132, "y": 6, "width": 0, "height": 0, "color": "\##(label)"}],
+             "looks": [{"name": "Disabled", "changes": [{"part": "Box", "opacity": 0.4}]}]}
+            """##
+        }
+        guard case .failure(let onCanvas) = try Self.request(row("#F2F2F7", back: "#007AFF")) else { Issue.record("accepted white words on the white canvas"); return }
+        #expect(onCanvas.message.contains("Beside") && onCanvas.message.contains("canvas"), "\(onCanvas.message)")
+        guard case .failure(let onBox) = try Self.request(row("#1C1C1E", back: "#2C2C2E")) else { Issue.record("accepted dark words on a dark box"); return }
+        #expect(onBox.message.contains("Inside") && onBox.message.contains("Box"), "\(onBox.message)")
+        #expect(throws: Never.self) { _ = try Self.request(row("#1C1C1E")).get() }
+        #expect(throws: Never.self) { _ = try Self.request(row("#8E8E93")).get() }
+        #expect(throws: Never.self) { _ = try Self.request(Self.button).get() }
+        // Ask's planner sets them in the colour that reads instead of refusing.
+        let plain = AgentNewComponent.madePlain(try AgentJSON.parse(Data(row("#F2F2F7").utf8)))
+        guard case .success(.addComponent(_, let spec)) = AgentTools.request(tool: "add_component", arguments: plain) else {
+            Issue.record("the plain call is still refused"); return
+        }
+        #expect(spec.problem == nil)
+    }
+
+    @Test("Words that land on words in a later look are refused too, naming the look")
+    func wordsOverWordsInALaterLook() throws {
+        func segmented(_ second: String) -> String {
+            ##"""
+            {"name": "Segmented", "x": 0, "y": 0, "labels": false, "firstLook": "First",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 32, "cornerRadius": 8, "fill": "#E5E5EA"},
+                       {"name": "Pill", "shape": "rectangle", "x": 2, "y": 2, "width": 98, "height": 28, "cornerRadius": 7, "fill": "#FFFFFF"},
+                       {"name": "Daily", "shape": "text", "text": "Daily", "fontSize": 13, "x": 2, "y": 2, "width": 98, "height": 28},
+                       {"name": "Weekly", "shape": "text", "text": "Weekly", "fontSize": 13, "x": 100, "y": 2, "width": 98, "height": 28}],
+             "looks": [{"name": "Second", "changes": [{"part": "Pill", "x": 100}, \##(second)]}]}
+            """##
+        }
+        guard case .failure(let stacked) = try Self.request(segmented(##"{"part": "Daily", "x": 100}"##)) else {
+            Issue.record("accepted words moved onto words"); return
+        }
+        #expect(stacked.message.contains("Second") && stacked.message.contains("Daily") && stacked.message.contains("Weekly"), "\(stacked.message)")
+        #expect(throws: Never.self) { _ = try Self.request(segmented(##"{"part": "Weekly", "color": "#000000"}"##)).get() }
+    }
+
+    @Test("Words a later look leaves unreadable are refused, and Ask's planner recolours them to the nearest shade that reads")
+    func unreadableInALaterLook() throws {
+        let json = ##"""
+            {"name": "Secondary", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 40, "cornerRadius": 10, "fill": "#007AFF"},
+                       {"name": "Label", "shape": "text", "text": "Cancel", "fontSize": 15, "x": 0, "y": 0, "width": 0, "height": 0, "centerIn": "Back", "color": "#FFFFFF"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Back", "fill": "#F2F2F7"}]}]}
+            """##
+        guard case .failure(let lost) = try Self.request(json) else { Issue.record("accepted white words on a white hover"); return }
+        #expect(lost.message.contains("Hover") && lost.message.contains("Label"), "\(lost.message)")
+        let plain = AgentNewComponent.madePlain(try AgentJSON.parse(Data(json.utf8)))
+        guard case .success(.addComponent(_, let spec)) = AgentTools.request(tool: "add_component", arguments: plain) else {
+            Issue.record("the plain call is still refused"); return
+        }
+        #expect(spec.problem == nil)
+        #expect(spec.inLook(spec.looks[1]).parts[1].colorHex != "#FFFFFF")
+        #expect(spec.parts[1].colorHex == "#FFFFFF", "the first look keeps the words it could read")
     }
 
     @Test("A text colour change lands on the words")

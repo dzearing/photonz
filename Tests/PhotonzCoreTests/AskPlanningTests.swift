@@ -182,17 +182,115 @@ struct AskPlanningTests {
     func sheetPlansNoCanvasSize() throws {
         var talk = Self.sheet()
         for index in 0..<5 {
-            _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100, width: 80, height: 200)]))
+            _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100, width: 80 + index * 8, height: 200)]))
         }
         #expect(talk.steps.map(\.tool) == Array(repeating: "add_component", count: 5))
         #expect(talk.messages.last?["content"]?.stringValue?.contains("step 5") == true)
+    }
+
+    @Test("A component drawn the same as one already planned is refused, naming it, so the sheet shows each kind once")
+    func sameKindTwice() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([Self.component("Toggle", x: 40, y: 100, width: 51)]))
+        _ = talk.take(try Self.reply([Self.component("Switch", x: 40, y: 200, width: 51)]))
+        #expect(talk.steps.count == 1)
+        let said = talk.messages.last?["content"]?.stringValue ?? ""
+        #expect(said.contains("Toggle") && said.contains("step 1"), "\(said)")
+        _ = talk.take(try Self.reply([Self.component("Slider", x: 40, y: 200, width: 200)]))
+        #expect(talk.steps.count == 2, "a different drawing is a different kind")
+    }
+
+    @Test("Ask's planner makes a look a shade off plain and edges a white surface itself, rather than refusing a small model")
+    func madePlainForTheModel() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([("add_component", ##"""
+            {"name":"Card","x":40,"y":100,"labels":true,"firstLook":"Default",
+            "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":200,"height":100,"fill":"#FFFFFF"},
+            {"name":"Title","shape":"text","text":"Title","color":"#1C1C1E","x":16,"y":16,"width":0,"height":0}],
+            "looks":[{"name":"Hover","changes":[{"part":"Back","fill":"#FAFAFA"}]},
+            {"name":"Pressed","changes":[{"part":"Title","color":"#2C2C2E"},{"part":"Back","opacity":0.95}]}]}
+            """##)]))
+        #expect(talk.steps.count == 1, "\(talk.messages.last?["content"]?.stringValue ?? "")")
+        let planned = try #require(talk.steps.first?.arguments)
+        let back = planned["parts"]?.arrayValue?.first
+        #expect(back?["stroke"]?.stringValue != nil && back?["strokeWidth"]?.doubleValue == 1, "a white card on white gets a hairline edge")
+        guard case .success(.addComponent(_, let spec)) = AgentTools.request(tool: "add_component", arguments: planned) else {
+            Issue.record("the plain call is still refused"); return
+        }
+        #expect(spec.problem == nil)
+        // A shade already plain is left as the model gave it.
+        let button = AgentNewComponent.madePlain(try AgentJSON.parse(Data(##"""
+            {"name":"Button","x":0,"y":0,"labels":false,"firstLook":"Default",
+             "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":120,"height":40,"fill":"#007AFF"}],
+             "looks":[{"name":"Pressed","changes":[{"part":"Back","fill":"#0062CC"}]}]}
+            """##.utf8)))
+        #expect(button["looks"]?.arrayValue?.first?["changes"]?.arrayValue?.first?["fill"]?.stringValue == "#0062CC")
+    }
+
+    @Test("A model sending a refused component back unchanged is stopped, with the plan it has")
+    func stuckOnTheSameKind() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        var outcome: AskConversation.Outcome?
+        var told: [String] = []
+        for _ in 0..<5 {
+            outcome = talk.take(try Self.reply([Self.component("Button", x: 40, y: 200, width: 120)]))
+            told.append(talk.messages.last?["content"]?.stringValue ?? "")
+            if case .planned = outcome { break }
+        }
+        #expect(!told[0].contains("Leave Button out"))
+        #expect(told[1].contains("Leave Button out"), "sent back unchanged, it is asked for the next kind: \(told[1])")
+        #expect(talk.messages.filter { $0["role"]?.stringValue == "tool" && $0["content"]?.stringValue?.hasPrefix("Not planned") == true }.count < told.count,
+                "the unchanged repeat is taken out of the talk")
+        guard case .planned(let plan) = outcome else { Issue.record("still asking after five refusals"); return }
+        #expect(plan.steps.count == 1)
+        #expect(talk.rounds <= 6)
+    }
+
+    @Test("Once a sheet has labelled rows, words of the model's own are refused: the table names its rows and states")
+    func noWordsOverTheTable() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"Base Components","x":40,"y":40}"#)]))
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"Cards and Containers","x":40,"y":400}"#)]))
+        #expect(talk.steps.map(\.tool) == ["add_text", "add_component"])
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("table") == true)
+    }
+
+    @Test("Words the model wrote as web text are set as the characters they stand for")
+    func entitiesDecoded() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"Cards &amp; Containers &lt;1&gt;","x":40,"y":40}"#)]))
+        #expect(talk.steps.first?.arguments["text"]?.stringValue == "Cards & Containers <1>")
+    }
+
+    @Test("A sheet planned with no title is asked for one once, and the title goes first")
+    func sheetGetsATitle() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        guard case .again = talk.take(try Self.reply([])) else { Issue.record("planned with no title"); return }
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("title") == true)
+        _ = talk.take(try Self.reply([("add_text", #"{"text":"Base Components","x":40,"y":40,"fontSize":32}"#)]))
+        #expect(talk.steps.map(\.tool) == ["add_text", "add_component"])
+        guard case .planned = talk.take(try Self.reply([])) else { Issue.record("asked twice"); return }
+    }
+
+    @Test("A sheet offered after an unreadable reply is still asked for its title, once")
+    func titleAfterAnUnreadableReply() throws {
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        let first = talk.askForTitle()
+        #expect(first)
+        #expect(talk.messages.last?["content"]?.stringValue?.contains("title") == true)
+        let second = talk.askForTitle()
+        #expect(!second, "asked once")
     }
 
     @Test("Past a sheet's worth of components, more are refused and the model told to finish")
     func enoughComponents() throws {
         var talk = Self.sheet()
         for index in 0..<(AskConversation.mostComponents + 2) {
-            _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100 + index * 60, width: 80, labels: false)]))
+            _ = talk.take(try Self.reply([Self.component("Kind \(index)", x: 40, y: 100 + index * 60, width: 80 + index * 8, labels: false)]))
         }
         #expect(talk.steps.count == AskConversation.mostComponents)
         #expect(talk.messages.last?["content"]?.stringValue?.contains("finish") == true)

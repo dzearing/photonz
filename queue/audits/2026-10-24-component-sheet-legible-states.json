@@ -1,0 +1,29 @@
+{
+  "feature": "A sheet of components whose states you can see and whose words you can read",
+  "epic": "agent-skills",
+  "summary": "Ask and the skill now refuse a component whose states barely differ, whose surface vanishes into a white page, or whose words sit on words, run off a box or can't be read, in every state. A part can start hidden, so an Off checkbox is empty. Ask fixes those things itself instead of looping, and gets a title on every sheet.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. A new blank picture.",
+  "switched": {},
+  "try": [
+    { "do": "Make a new blank picture, press Command K and ask: create a table of apple like quality base components that show different states and text.", "shot": "2026-10-24-component-sheet-ask-after.png" },
+    { "do": "Look at the Checkbox row: Off is an empty box, On is checked." },
+    { "do": "Look at the Card and Alert rows: each sits on a visible card with a soft shadow, not words floating on white." },
+    { "do": "Compare it with the sheet from 2026-10-20.", "shot": "2026-10-20-user-ask-component-sheet-mess.png" },
+    { "do": "Ask for a component sheet for a website's design system (buttons, fields, cards, nav).", "shot": "2026-10-24-component-sheet-ask-design-after.png" },
+    { "do": "Look at the same request made by the Photonz skill.", "shot": "2026-10-24-component-sheet-skill-design-after.png" },
+    { "do": "Open the sheet in the window and pick a look.", "shot": "2026-10-24-component-sheet-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Can you tell every state from its neighbour at a glance?",
+    "Is every word on the sheet readable, in every state?",
+    "Do the empty cells (a toggle has no Hover column) bother you enough that rows should only show the states they have?",
+    "Is a hover a clear step darker or lighter the right amount of change, or too loud for an Apple-like kit?"
+  ],
+  "rough": [
+    "Not at the bar. Ask's judge lines are 5 to 6 of 10 (needed 8): component-table 59 and 51.1 on the final code (52 before this pass, 39.2 at the start), design-system-sheet 66.8 (52.8 before). Runs on the same code range from 37 to 59, so one run says little. The task stays open.",
+    "The skill is 83.6 on component-table (88.8 before; judge 7 to 8) and 82 on design-system-sheet (86.4 before; judge 6 to 8). Its judges now complain about the table, not the components: empty cells and a second header row.",
+    "Empty cells: rows whose kind lacks a state leave holes under the shared header, and every judge names them. Logged on this task, not filed.",
+    "What the model draws is still the limit for Ask: a dark Off track on a light page, a lumpy tab icon, buttons tight to a card's edge, a slider whose states look alike.",
+    "The window capture shows each copy's name chip over the header row; that is the-name-chips-over-component-copies-stay-clear."
+  ]
+}
