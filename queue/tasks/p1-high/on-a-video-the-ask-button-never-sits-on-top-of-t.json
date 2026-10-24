@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:18:48.491Z",
-  "updated": "2026-10-24T12:35:55.300Z",
+  "updated": "2026-10-24T23:35:22.607Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the manager 2026-10-20 08:16: Scripts/playtest-all.sh --no-build ask-adds-a-title-page passed, and its pictures /tmp/photonz-playtest/ask-adds-a-title-page-walk/1-plan-sc.png and 2-ran-sc.png show the overlap (crops saved under queue/manager/shots/). The Ask button came with 8238a30a: Sources/Photonz/TitlebarPanelToggle.swift:147-156 widens the right slot by AskTitlebarButton.width when offersAsk; AskTitlebarButton in Sources/Photonz/Agent/AskViews.swift:11. On a video the panel runs to the window top (the View and Edit switch already floated over it before Ask); on a picture Layers starts below the title bar. Placement contract: the title bar row (docs/design/mocks/shared/UX-PATTERNS.md, line 24 and section 1 line 322) owns Ask, the mode and the panel toggle; the panel starts under it. Check whether the video panel's top inset counts the wider right slot.",
@@ -57,6 +57,10 @@
     {
       "t": "2026-10-24T12:35:55.299Z",
       "note": "seq 90 -> 140"
+    },
+    {
+      "t": "2026-10-24T23:35:22.606Z",
+      "note": "Since the hero button (2026-10-24) Ask has a violet bloom that spills past the title bar by design; where Ask overlaps the panel on a video in Edit the bloom tints the panel's top row. Keep that in mind when moving the panel below the title bar strip."
     }
   ]
 }

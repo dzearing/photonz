@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:31:22.572Z",
-  "updated": "2026-10-24T14:32:04.591Z",
+  "updated": "2026-10-24T23:35:28.834Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: 'the ask button in the app does not match the design. We should have a hero button for ask, which has a nice sheen animation on hover as shown in the design language, but the button on the app mismatches.' Design picture: queue/audits/2026-10-24-user-ask-hero-design.png. App today: queue/audits/2026-10-24-user-ask-button-app.png.\n\nSpec: docs/design/mocks/shared/components/button.css:107-185 (.btn.hero / .pill.ai): --hero-1 #6E8BFF, --hero-2 #c56cff, --hero-3 #ff7ab8; rest gradient 120deg hero-1 to hero-2; inset top highlight rgba(255,255,255,.4); glow 0 6px 16px -6px violet 60%; hover adds ::before gradient hero-1 -12%, hero-2 46%, hero-3 112% at opacity 1 over .2s, glow-hi 0 8px 22px -6px 66%, highlight .58; ::after sheen 55% wide band rgba(255,255,255,.5) swept translateX 0 to 260% over .66s cubic-bezier(.32,.72,.3,1), fading in by 22%. Pressed: inset 0 1px 3px rgba(38,16,72,.34) + small glow. The comment there explains the earlier web bug where hover wiped the gradient to grey; do not reproduce it in SwiftUI.\n\nApp: Sources/Photonz/Agent/AskViews.swift:11-44 AskTitlebarButton uses .buttonStyle(.plain) + .glassEffect(.regular.interactive(), in: .capsule), fixed width 76 (static let width, probably used by the title bar layout: grep AskTitlebarButton.width before changing it). Build a reusable HeroButtonStyle (one per surface, Ask only, per the CSS comment) rather than inlining. Glass under a filled gradient is wrong: an opaque fill has no backdrop (CSS turns backdrop-filter off for the same reason). Clip the sheen to the capsule. The composer's own send button (AskViews.swift ~92, .borderedProminent) is a second Ask control on screen; the spec says one hero per surface, so leave it as is unless the runner judges otherwise and logs why.\n\nRelated: queue/tasks/p1-high/on-a-video-the-ask-button-never-sits-on-top-of-t.json touches the same button's placement; do not undo it.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-10-24T14:32:04.589Z",
       "note": "seq 165 -> 5"
+    },
+    {
+      "t": "2026-10-24T22:57:11.737Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T22:59:30.935Z",
+      "note": "Adversarial pass before building: a first-time user sees one coloured pill in an otherwise grey title bar, which is the point (one hero per surface). Risks: (1) the glow spills below a 28pt title bar and may be clipped by the titlebar accessory; (2) white ⌘K at 70% on the pink end can drop under the 2:1 colour floor, so the shortcut goes to 85% white; (3) a walk cannot fire a real hover, so the sheen is proved through playtestHover plus an offscreen reel of the shipped control at fixed sweep moments; (4) filmWindow leaves the title bar out, so it cannot film this. Premiere/Photoshop have no equivalent; the Mac's own title bar has none either, the design language owns this one."
+    },
+    {
+      "t": "2026-10-24T23:28:39.280Z",
+      "note": "owns these walks: ask-hero-button-walk"
+    },
+    {
+      "t": "2026-10-24T23:35:22.540Z",
+      "note": "Built: HeroButtonLook/HeroGlow/HeroSheen/HeroSpectrum in PhotonzCore (15 tests), HeroButtonStyle + HeroButtonFace (DesignSystem), AskTitlebarButton on it with the mock's ic-sparkle drawn as AskSparkle, width measured from content (87pt). Title bar views now let drawing spill (clipsToBounds false up the accessory chain) because the bloom was cut into a hard rectangle at the accessory's box; clicks unaffected. Chose full-white key at a lighter weight over the mock's 70% white because the legibility check failed it as same-family pink. Chose to leave the composer's send button as the system blue: one hero per surface. Looked at: side-by-side, poses sheet, sheen contact sheet, live crops; all show the spectrum, the sweep and no grey hover. Left rough (no task): live sweep not filmed (title bar outside film steps), reel is the shipped drawing offscreen; focus ring checked on the drawing only. Bloom over the panel on video Edit belongs to on-a-video-the-ask-button-never-sits-on-top-of-t (logged there)."
+    },
+    {
+      "t": "2026-10-24T23:35:28.832Z",
+      "note": "Title bar Ask is now the design's hero pill (HeroButtonStyle on AskTitlebarButton, core model HeroButtonLook with 15 tests): spectrum at rest, wider pink spectrum + bigger bloom + one 0.66s sheen on hover, held-down look while open, violet focus ring, Reduce Motion skips the sweep. Measured: ends #7C88FF/#BD70FE vs design #7887FF/#BB70FF; key 2.7-3.0:1 and legibility check green; 87x24pt sized to content. Verified with ask-hero-button-walk (4 real captures), video walk, full Scripts/test.sh green (14390 tests). Audit queue/audits/2026-10-24-the-ask-button-is-the-design-s-hero-button-a-vio.json with side-by-side, poses, sheen reel."
     }
-  ]
+  ],
+  "started": "2026-10-24T22:57:11.736Z",
+  "walks": [
+    "ask-hero-button-walk"
+  ],
+  "completed": "2026-10-24T23:35:28.833Z"
 }
