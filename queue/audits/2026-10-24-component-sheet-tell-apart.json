@@ -1,0 +1,29 @@
+{
+  "feature": "A component sheet whose states can be told apart, and whose rows of one kind stay together",
+  "epic": "agent-skills",
+  "summary": "Ask now leaves out a state nobody could tell from another (a hover that only grows a shadow, a pressed the same as hover), keeps a Disabled field fainter than its Default, sets words on a blue button white, and never names a state Selected2. On every sheet, rows of one family stay together, a slightly wide row keeps Hover under Hover, and there is at least 64 points under the last row.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a blank 1440 x 1024 picture and press Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Before: the user's sheet of 2026-10-20, five components with words laid over them.", "shot": "2026-10-20-user-ask-component-sheet-mess.png" },
+    { "do": "Press Ask and type: create a table of apple like quality base components that show different states and text", "shot": "2026-10-24-component-sheet-tell-apart-ask.png" },
+    { "do": "Look at the Disabled text field: it is lighter than Default, not darker, and its words are faint." },
+    { "do": "Look at the alert and the card: a component whose hover only changed a shadow shows its Default look alone." },
+    { "do": "Ask for: Make a component sheet for a website's design system: buttons, text fields, cards and navigation, each labelled, with a title.", "shot": "2026-10-24-component-sheet-tell-apart-ask-design.png" },
+    { "do": "Ask the Photonz skill in an agent session for the same sheet: the five kinds of button sit together, the slider with the controls of its own kind.", "shot": "2026-10-24-component-sheet-tell-apart-skill.png" },
+    { "do": "Look at the skill's design sheet: every section on one grid, room under the last row.", "shot": "2026-10-24-component-sheet-tell-apart-skill-design.png" }
+  ],
+  "evaluate": [
+    "Is a component shown in its Default look alone better than a hover that looks the same as Default?",
+    "Does the Disabled field now read as switched off at a glance?",
+    "When a row is a little too wide for a column, is a wider table better than its Hover sitting under Pressed?",
+    "Does the skill's sheet now read as a page from Apple's design kit?"
+  ],
+  "rough": [
+    "Not at the bar yet for Ask, so the task stays open. The skill (rubric f5ae1562) is at the bar on both cases for the first time: your request 88.4 (judge 8, 8, 8, 8, 9), the design sheet 84.4 (8, 8, 8, 8, 9); before this pass 87.6 and 87.2 with aligned 7.",
+    "Ask on this Mac: your request 64.1, 54.2 and 57.9 over three runs this pass (judge 4 to 7), was 42.6 to 59; the design sheet 82, 78.8 and 75.6 (judge 5 to 8), was 18.3 to 79.2. What costs it now is inside the model's own drawings: an icon on top of its word, a toggle and a switch drawn as two rows, a checkbox ticked in its Default look, components nobody asked for.",
+    "A sheet on a blank picture still leaves an empty band under it when the table is shorter than the page: the page cannot end under the table without cropping the picture's white background, and nothing yet tells a blank page's white from a screenshot.",
+    "The task's walk and one eval run stalled waiting for the model's first answer; that is find-out-why-ask-sometimes-waits-five-minutes-fo. So this pass has no new window capture; the last one is 2026-10-24-component-sheet-sections-window-sc.png. The pictures above are the eval's renders of the document.",
+    "No mock covers the component sheet; it is judged against Apple's design kit pages."
+  ]
+}
