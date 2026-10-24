@@ -163,9 +163,9 @@
   #lang-selection .selwrap.lx-t{transform:perspective(900px) translateZ(var(--tz,0px)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;transition:transform .12s ease-out}
   #lang-selection .selwrap.lx-t.lx-busy{transition:none}
   /* in 3D mode the edge grips become pills that turn the card, and the corners move it along Z (nearer or farther). Nothing sits on the content */
-  #lang-selection .selwrap.lx-on .handle.tc,#lang-selection .selwrap.lx-on .handle.bc{width:18px;height:8px;border-radius:4px;cursor:grab}
+  #lang-selection .selwrap.lx-on .handle.tc,#lang-selection .selwrap.lx-on .handle.bc{width:18px;height:8px;border-radius:4px;cursor:move}
   #lang-selection .selwrap.lx-on .handle.tc{top:-4.5px}#lang-selection .selwrap.lx-on .handle.bc{bottom:-4.5px}
-  #lang-selection .selwrap.lx-on .handle.ml,#lang-selection .selwrap.lx-on .handle.mr{width:8px;height:18px;border-radius:4px;cursor:grab}
+  #lang-selection .selwrap.lx-on .handle.ml,#lang-selection .selwrap.lx-on .handle.mr{width:8px;height:18px;border-radius:4px;cursor:move}
   #lang-selection .selwrap.lx-on .handle.ml{left:-4.5px}#lang-selection .selwrap.lx-on .handle.mr{right:-4.5px}
   #lang-selection .selwrap.lx-on .handle.lx-drag{background:var(--accent);cursor:grabbing}
   /* depth grips: a round chip on each corner carrying an in-and-out arrow along the diagonal, so it reads as "pull out, push in", not "resize" */
@@ -258,7 +258,7 @@
                   <span class="mtag" id="lxHeroTag">Hero card · 400 × 268</span>
                   <!-- the grip swap: the 3D grips (edges turn, corners push back or pull forward) or the sizing grips; the card keeps its 3D look either way -->
                   <button class="lx-3d" id="lxHero3d" type="button" title="Switch to the 3D grips"><svg class="lx-g-size" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="0.8" y="0.8" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="8.6" y="0.8" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="0.8" y="8.6" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="8.6" y="8.6" width="2.6" height="2.6" rx=".6" fill="currentColor"/></svg><svg class="lx-g-3d" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
-                  <span class="lx-home" aria-hidden="true"></span><span class="lx-hint">Edges turn it · drag a corner out to pull it forward, in to push it back</span>
+                  <span class="lx-home" aria-hidden="true"></span><span class="lx-hint">Drag an edge any way to turn it · drag a corner out to pull it forward, in to push it back</span>
                                   </div>
               </div>
 
@@ -922,8 +922,8 @@
 <script src="/shared/photonz-ds.js"></script>
 <script>
 /* Live on the section 01 card: the chip beside the rotate knob swaps the
-   grips. With the 3D grips up, the top and bottom pills tip the card, the left
-   and right pills turn it (Shift snaps to 15°), and the corners push it back or
+   grips. With the 3D grips up, any edge pill turns the card: up and down tip
+   it, left and right turn it (Shift snaps to 15°), and the corners push it back or
    pull it forward. Swapping back brings the sizing grips; the card keeps its
    turn and depth. Escape swaps back too. */
 (function () {
@@ -940,7 +940,7 @@
       ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '° · ' + depth
       : 'Hero card · 400 × 268' + (turned ? ' · in 3D' : '');
   }
-  var tips = { tc: 'Drag to tip it', bc: 'Drag to tip it', ml: 'Drag to turn it', mr: 'Drag to turn it',
+  var tips = { tc: 'Drag any way to turn it', bc: 'Drag any way to turn it', ml: 'Drag any way to turn it', mr: 'Drag any way to turn it',
     tl: 'Drag out to pull it forward, in to push it back', tr: 'Drag out to pull it forward, in to push it back',
     bl: 'Drag out to pull it forward, in to push it back', br: 'Drag out to pull it forward, in to push it back' };
   function set(on) { Object.keys(tips).forEach(function (k) { var h = wrap.querySelector(':scope > .handle.' + k); if (h) { if (on) h.title = tips[k]; else h.removeAttribute('title'); } });
@@ -965,10 +965,13 @@
   }
   var pill = function (k) { return wrap.querySelector(':scope > .handle.' + k); };
   var snap = function (ev, v) { return ev.shiftKey ? Math.round(v / 15) * 15 : v; };
-  grab(pill('tc'), function (ev, s) { rx = clamp(snap(ev, s.rx - (ev.clientY - s.y) * .4), -60, 60); });
-  grab(pill('bc'), function (ev, s) { rx = clamp(snap(ev, s.rx + (ev.clientY - s.y) * .4), -60, 60); });
-  grab(pill('ml'), function (ev, s) { ry = clamp(snap(ev, s.ry - (ev.clientX - s.x) * .4), -60, 60); });
-  grab(pill('mr'), function (ev, s) { ry = clamp(snap(ev, s.ry + (ev.clientX - s.x) * .4), -60, 60); });
+  // any edge pill turns the card both ways: up and down tip it, left and right turn it
+  ['tc', 'bc', 'ml', 'mr'].forEach(function (k) {
+    grab(pill(k), function (ev, s) {
+      rx = clamp(snap(ev, s.rx - (ev.clientY - s.y) * .4), -60, 60);
+      ry = clamp(snap(ev, s.ry + (ev.clientX - s.x) * .4), -60, 60);
+    });
+  });
   ['tl', 'tr', 'bl', 'br'].forEach(function (k) {
     grab(pill(k), function (ev, s) {
       // the corner stays under the pointer: how much bigger the card looks says how far along Z it went
