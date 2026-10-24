@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-24T05:46:47.989Z",
+  "updated": "2026-10-24T08:17:59.522Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -143,9 +143,37 @@
     {
       "t": "2026-10-24T05:46:47.987Z",
       "note": "No more empty cells, an even row rhythm and sane widths shipped (f4fe5124); the skill reaches 8 on every line for the user's request (88.8), but its design-system sheet has 7s on aligned and designed, and Ask on this Mac is at 5 to 6 because of its own drawings: the 8-of-10 bar is not met, so it stays open."
+    },
+    {
+      "t": "2026-10-24T06:04:44.883Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T08:17:53.805Z",
+      "note": "Built (a9c8c518): looks and headers start at their column's left edge; a state keeps its column across sections; a section too wide takes every other column, a many-state one widens every column (within 1.25x the canvas), only wider ones spread; the last column's room is reserved only for what lands there, and nothing goes past the table's edge (a strided look past the margin grew the canvas and widened every later layout); a tall row under short ones repeats its section's header. add_component refuses an empty one-box card and checks words on words at 0.56 of a size a letter. Ask's planner (AgentComponentSense.madeSensible) sets words on 13/15/17, hides an Off tick, greys an Off track drawn in colour or near black, dims a Disabled look's words brighter than Default's, and builds each component once while planning so a call that fails at run time is refused with its reason (a planned Navigation was silently skipped). AgentToolError is a LocalizedError (skips read 'error 1'). Skill: named kinds drawn whole."
+    },
+    {
+      "t": "2026-10-24T08:17:53.871Z",
+      "note": "Chose left edges over centred looks because every judge of the centred sheets named looks centred while wider ones start at the edge; the skill went 77.6/80.8 to 79.6/84.8 on the switch, then 86/81.2 with the widening rule. Chose every-other-column over centring between two columns because judges read the latter as 'offset'."
+    },
+    {
+      "t": "2026-10-24T08:17:53.936Z",
+      "note": "Eval (rubric f5ae1562). Skill component-table 86 (judge 8, 8, 7, 8, 8), design sheet 85.6 (8, 7, 8, 8, 9) and 81.2 (8, 8, 7, 8, 9). Ask component-table 54.9, 52.8, 54.5, 58.3 (final: 6, 7, 7, 5, 6); Ask design sheet 76.8, 30.9 (Navigation skipped at run time, fixed since), 79.2, 77.2 (final: 6, 7, 6, 6, 7); before this pass 48 to 59 and 37.7 to 66.8. NOT at the 8-of-10 bar: skill aligned 7, Ask 5 to 7. Left pending."
+    },
+    {
+      "t": "2026-10-24T08:17:54.002Z",
+      "note": "Left rough (not filed, this task covers it): judges still mark aligned when sections have different column counts; Ask's own drawings (segmented control with one option, looks named Selected 1/2/3, two rows both called Button, a blue Off toggle once more although the same call rebuilt by hand is caught: the trace truncates the call so it could not be read; an Off radio dot; a Disabled field darker than Default in the walk's run). The chips over headers are the-name-chips-over-component-copies-stay-clear."
+    },
+    {
+      "t": "2026-10-24T08:17:54.068Z",
+      "note": "Pictures looked at: Ask after (both cases: titled tables on left edges, grey Off toggle and empty Off box in one, blue Off toggle in the other), skill after (both: one grid, wide sections on the button columns), the walk's window capture (table under name chips). Tests: Scripts/test.sh 14341 passed; ask-builds-base-components-walk ok. Audit: queue/audits/2026-10-24-component-sheet-grid.json"
+    },
+    {
+      "t": "2026-10-24T08:17:59.521Z",
+      "note": "One grid with left edges, kept columns and wide sections on whole columns, plus Off/Disabled sense, one type scale and a planning-time build check shipped (a9c8c518). The skill is at 8 on every line but aligned (7); Ask on this Mac is at 5 to 7 (its own drawings): the 8-of-10 bar is not met, so it stays open."
     }
   ],
-  "started": "2026-10-24T04:24:21.133Z",
+  "started": "2026-10-24T06:04:44.882Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-10-23T21:14:22.190Z",
+  "updated": "2026-10-24T06:02:33.351Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-23T14:01:25Z DID NOT FINISH (the run was interrupted: whoever was running it went away): it reached 453 of 1015 walks in 140 minutes, of which 451 passed. The walks it never reached are unknown, not passing.\n\nFailing walks (2): caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk\n\nThose 2 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: label-size-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nNot run this time and still failing from the last check (2): section-fold-motion-walk, view-to-edit-on-a-long-recording-walk\nThis run was interrupted before reaching them. They are unread, not fixed.\n\nFull output: queue/sweep/2026-10-23-044106.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -138,6 +138,10 @@
     {
       "t": "2026-10-23T21:14:22.189Z",
       "note": "rotating check 2026-10-23T21:14:22Z, 31 walks run from 712 onward in the rotation: segmented-thumb-film-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-24T06:02:33.349Z",
+      "note": "rotating check 2026-10-24T06:02:33Z, 36 walks run from 840 onward in the rotation: title-bar-right-click-menu-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
     }
   ],
   "standing": "walk-sweep"
