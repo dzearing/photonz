@@ -159,21 +159,14 @@
   #lang-selection .lx-3d[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
   #lang-selection .selwrap.lx-on{transform:perspective(900px) translateZ(var(--tz,0px)) rotateX(var(--rx,8deg)) rotateY(var(--ry,-18deg));transform-style:preserve-3d;transition:transform .12s ease-out}
   #lang-selection .selwrap.lx-on.lx-busy{transition:none}
-  /* in 3D mode the sizing grips step aside: the knob in the middle turns, the circle on the right brings it nearer */
-  #lang-selection .selwrap.lx-on > .handle{display:none}
-  #lang-selection .lx-pv{display:none;position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
-    background:var(--panel);border:1.5px solid var(--accent);box-sizing:border-box;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.3);touch-action:none}
-  #lang-selection .lx-pv::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--accent)}
-  #lang-selection .lx-pv:hover,#lang-selection .lx-pv.lx-drag{background:var(--accent)}
-  #lang-selection .lx-pv:hover::after,#lang-selection .lx-pv.lx-drag::after{background:var(--accent-ink)}
-  #lang-selection .lx-pv.lx-drag{cursor:grabbing}
-  #lang-selection .selwrap.lx-on .lx-pv{display:block}
-  /* the depth circle, off the right edge on a stem, mirroring the rotate knob */
-  #lang-selection .lx-zstem{display:none;position:absolute;top:50%;right:-17px;width:16px;height:1px;background:var(--accent);pointer-events:none}
-  #lang-selection .lx-z{display:none;position:absolute;top:50%;right:-31px;width:14px;height:14px;margin-top:-7px;border-radius:50%;
-    background:var(--panel);border:1.5px solid var(--accent);box-sizing:border-box;cursor:ns-resize;box-shadow:0 1px 3px rgba(0,0,0,.3);touch-action:none}
-  #lang-selection .lx-z:hover,#lang-selection .lx-z.lx-drag{background:var(--accent)}
-  #lang-selection .selwrap.lx-on .lx-z,#lang-selection .selwrap.lx-on .lx-zstem{display:block}
+  /* in 3D mode the edge grips become pills that turn the card, and the corners move it along Z (nearer or farther). Nothing sits on the content */
+  #lang-selection .selwrap.lx-on .handle.tc,#lang-selection .selwrap.lx-on .handle.bc{width:18px;height:8px;border-radius:4px;cursor:grab}
+  #lang-selection .selwrap.lx-on .handle.tc{top:-4.5px}#lang-selection .selwrap.lx-on .handle.bc{bottom:-4.5px}
+  #lang-selection .selwrap.lx-on .handle.ml,#lang-selection .selwrap.lx-on .handle.mr{width:8px;height:18px;border-radius:4px;cursor:grab}
+  #lang-selection .selwrap.lx-on .handle.ml{left:-4.5px}#lang-selection .selwrap.lx-on .handle.mr{right:-4.5px}
+  #lang-selection .selwrap.lx-on .handle.lx-drag{background:var(--accent);cursor:grabbing}
+  #lang-selection .selwrap.lx-on .handle.tl,#lang-selection .selwrap.lx-on .handle.tr,
+  #lang-selection .selwrap.lx-on .handle.bl,#lang-selection .selwrap.lx-on .handle.br{border-radius:50%;cursor:zoom-in}
 </style>
 </head>
 <body class="page">
@@ -238,10 +231,9 @@
                   <span class="handle ml"></span><span class="handle mr"></span>
                   <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
                   <span class="mtag" id="lxHeroTag">Hero card · 400 × 268</span>
-                  <!-- the 3D chip: click it, drag the middle knob to turn, the right circle to bring it nearer -->
+                  <!-- the 3D chip: click it, then the edge pills turn the card and the corners move it along Z -->
                   <button class="lx-3d" id="lxHero3d" type="button" title="Turn in 3D" aria-pressed="false"><svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
-                  <span class="lx-pv" title="Drag to turn in 3D"></span><span class="lx-zstem"></span><span class="lx-z" title="Drag up to bring nearer, down to push away"></span>
-                </div>
+                                  </div>
               </div>
 
               <div class="cnv-act">
@@ -903,14 +895,15 @@
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-/* Live on the section 01 card: the 3D chip turns 3D mode on. The knob in the
-   middle turns the card both ways at once (Shift snaps to 15°), the circle on
-   the right brings it nearer or pushes it away. Escape leaves 3D mode. */
+/* Live on the section 01 card: the 3D chip turns 3D mode on. The top and
+   bottom pills tip the card, the left and right pills turn it (Shift snaps to
+   15°), and the corners move it along Z: drag out to bring it nearer, in to
+   push it away. Escape leaves 3D mode. */
 (function () {
   var chip = document.getElementById('lxHero3d');
   if (!chip) return;
   var wrap = chip.parentElement, tag = document.getElementById('lxHeroTag');
-  var rx = 8, ry = -18, tz = 0;
+  var rx = 8, ry = -18, tz = 0, P = 900;
   function paint() {
     wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg'); wrap.style.setProperty('--tz', tz + 'px');
     if (tag) tag.textContent = wrap.classList.contains('lx-on')
@@ -920,26 +913,34 @@
   function set(on) { wrap.classList.toggle('lx-on', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); paint(); }
   chip.addEventListener('click', function (e) { e.stopPropagation(); set(!wrap.classList.contains('lx-on')); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+  var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
   function grab(el, onMove) {
+    if (!el) return;
     el.addEventListener('pointerdown', function (e) {
       if (!wrap.classList.contains('lx-on')) return;
       e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
       el.classList.add('lx-drag'); wrap.classList.add('lx-busy');
-      var start = { x: e.clientX, y: e.clientY, rx: rx, ry: ry, tz: tz };
+      var r = wrap.getBoundingClientRect();
+      var start = { x: e.clientX, y: e.clientY, rx: rx, ry: ry, tz: tz, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+      start.d = Math.hypot(e.clientX - start.cx, e.clientY - start.cy) || 1;
       function move(ev) { onMove(ev, start); paint(); }
       function up() { el.classList.remove('lx-drag'); wrap.classList.remove('lx-busy');
         el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); }
       el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
     });
   }
-  var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
-  grab(wrap.querySelector(':scope > .lx-pv'), function (ev, s) {
-    var snap = function (v) { return ev.shiftKey ? Math.round(v / 15) * 15 : v; };
-    rx = clamp(snap(s.rx - (ev.clientY - s.y) * .4), -60, 60);
-    ry = clamp(snap(s.ry + (ev.clientX - s.x) * .4), -60, 60);
-  });
-  grab(wrap.querySelector(':scope > .lx-z'), function (ev, s) {
-    tz = clamp(s.tz - (ev.clientY - s.y) * 1.5, -400, 300);
+  var pill = function (k) { return wrap.querySelector(':scope > .handle.' + k); };
+  var snap = function (ev, v) { return ev.shiftKey ? Math.round(v / 15) * 15 : v; };
+  grab(pill('tc'), function (ev, s) { rx = clamp(snap(ev, s.rx - (ev.clientY - s.y) * .4), -60, 60); });
+  grab(pill('bc'), function (ev, s) { rx = clamp(snap(ev, s.rx + (ev.clientY - s.y) * .4), -60, 60); });
+  grab(pill('ml'), function (ev, s) { ry = clamp(snap(ev, s.ry - (ev.clientX - s.x) * .4), -60, 60); });
+  grab(pill('mr'), function (ev, s) { ry = clamp(snap(ev, s.ry + (ev.clientX - s.x) * .4), -60, 60); });
+  ['tl', 'tr', 'bl', 'br'].forEach(function (k) {
+    grab(pill(k), function (ev, s) {
+      // the corner stays under the pointer: how much bigger the card looks says how far along Z it went
+      var k0 = P / (P - s.tz), k = k0 * Math.hypot(ev.clientX - s.cx, ev.clientY - s.cy) / s.d;
+      tz = clamp(P * (1 - 1 / k), -600, 450);
+    });
   });
 })();
 </script>
