@@ -1,0 +1,34 @@
+{
+  "id": "the-setup-window-walks-you-through-only-the-step",
+  "title": "The setup window walks you through only the steps you still need, including using Photonz from Claude Code and Copilot",
+  "goal": "The window that sets up permissions becomes Photonz's one setup window. It shows, one step at a time, only the steps you have not seen and still need: screen recording, microphone, the screenshot keys, and a new step that explains using Photonz from Claude Code and GitHub Copilot and offers to install the skills. Each step is shown once. Anything you skip can be done later from Settings.",
+  "epic": "agent-drivable",
+  "priority": "p1-high",
+  "seq": 1.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T12:11:00.296Z",
+  "updated": "2026-10-24T12:11:10.628Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-24: 'I'd love the skills an FRE for using photonz with copilot and claude code where there is a nice explainer and an opt in to install the skills. It should show up once, but they can dismiss and install the skills from settings. The FRE should be able to display multiple steps if we have not yet seen the step. I think it should be the same FRE dialog that sets up your permissions as needed. If they've done a step or don't need it we skip as expected.' Today's window: Sources/Photonz/Welcome/WelcomeView.swift (Screen Recording, Microphone, Free up the screenshot keys, all on one page with Start Capturing) and WelcomeController.swift. It has a single completed/dismissed pair (welcome.setupCompleted, welcome.setupDismissed :27-33) and a first-run tutorial offer (:36-41). Per-step seen state replaces the single pair: migrate it so people who finished setup are not shown the permission steps again. Depends on the Settings install task (the-agent-server-and-skill-come-inside-photonz-a), which owns the actual install. Don't add an Ask model download step here. Ask setup happens when Ask is first pressed (the model choice task, filed the same minute). Mention in one line on the agents page that Ask inside Photonz needs no setup until you use it.",
+  "acceptance": [
+    "One setup window, the one that today asks for permissions, holds every step. Each step is a page with a short explainer, a primary action, and Skip. A step counter shows when more than one step is left (for example 2 of 3)",
+    "A step is shown only if it is still needed AND has not been seen: a permission already granted, a tool not on this Mac, skills already installed, or a step seen and skipped before are all left out. Each step's seen state is stored on its own, so a step added in a later version shows once to people who already finished setup, and nothing else comes back",
+    "The new agents step: a picture or short illustration of an agent driving Photonz, two plain sentences on what it lets you do ('ask Claude Code or Copilot to edit, measure or redline in Photonz'), and an opt-in Install for each tool found on this Mac (the same install the Settings Agents section runs). Nothing is installed unless the person clicks Install",
+    "Dismissing the window, or Skip on any step, never asks again for that step. The Settings Agents section and the permission rows stay as the way to do it later, and the last page says so in one line",
+    "Launch with everything done shows no window. A brand-new Mac shows every step. A Mac that finished the old setup sees only the agents step, once. Each case is a walk, and focus-drill reads clean",
+    "Copy is short and plain, no em dashes, no vendor names beyond the two tool names. Pictures of each page and of the skip logic's cases go in an audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T12:11:00.299Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T12:11:10.627Z",
+      "note": "seq 77.5 -> 1.2"
+    }
+  ]
+}

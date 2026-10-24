@@ -1,0 +1,36 @@
+{
+  "id": "settings-offers-several-ask-models-with-what-eac",
+  "title": "Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one",
+  "goal": "Nothing is downloaded until a person wants Ask. Settings > Ask lists several models, each with what it needs (memory, disk space) and a quality and speed rating, a Download button, and a way to pick the one Ask uses. Pressing Ask with no model opens a short dialog that recommends the right set for this Mac and downloads it, then carries on with what was asked.",
+  "epic": "agent-drivable",
+  "priority": "p1-high",
+  "seq": 1.3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T12:11:00.440Z",
+  "updated": "2026-10-24T12:11:10.747Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-24: 'in settings, I would like multiple model options to choose from. There should be a download button to download them on demand, and then use them. Each should have some requirements and maybe something like quality / speed ratings. This would allow users to opt into the ask functionality without requiring a model to be downloaded. I think by default, model should not be downloaded and clicking ask should bring you to a dialog which downloads a recommended model set if needed based on the mac configuration.' Today: Sources/Photonz/Agent/AskSettingsSection.swift offers one recommended model with Download (:81-85) and a Picker over the ones you have (:68-70), plus the picture model's Download (:121-125). An Ollama branch remains (:141-175). The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B 21.7 GB, Qwen3.6 27B 22.8 GB, Gemma 4 26B 18.5 GB, all from Hugging Face at pinned revisions) and the picture model is in AskPictureModelPlan.swift (about 11 GB). Downloads go through AskModelDownload.swift. Nothing smaller than 18.5 GB exists, so a 16 GB Mac gets 'Ask needs more memory than this Mac has.' Scoring: Scripts/ask-eval.sh, held-out set. Check what happens today when Ask is pressed with no model (not reproduced here). Ties in with the memory task (photonz-uses-little-memory-and-what-made-it-use): smaller models lower memory as well.",
+  "acceptance": [
+    "A fresh install downloads nothing and starts no helper. Ask and its button are present. Proved by a walk on a clean Application Support folder (probe), with the folder's size before and after launch in the audit",
+    "Settings > Ask lists the models as rows: name, a one-line what it's good at, needs (memory and disk, plus 'too big for this Mac' when it is), quality and speed ratings, and Download / Use / Delete. A download shows size, progress and Stop. The chosen model is marked. The picture model is a row of its own (needed for drawings), with the same needs and ratings",
+    "The ratings are measured, not made up: quality from the held-out eval score, speed from the median time to a result on the same Mac class, each shown as a simple 1 to 5 scale with the real numbers in the help tag. The audit has the table and how each number was made",
+    "At least one model fits a 16 GB Mac and at least one fits 8 GB (smaller, lower rated, clearly marked), so Ask can work on every supported Mac. If a size cannot do Ask's work at all, the row says so instead of being offered",
+    "Pressing Ask (or Create in the New window) with no model opens one dialog: what Ask is, the recommended set for this Mac (chat model, plus picture model if it fits) with total size and space left, Download and Not now. When the download finishes, what the person typed runs without being typed again. Not now keeps the words",
+    "The recommendation is chosen by this Mac's memory and free disk space by a tested rule in PhotonzCore, and the audit lists what 8, 16, 24, 36, 64 GB Macs get",
+    "Deleting a model frees its disk space, and Ask falls back to the next downloaded model or to the dialog",
+    "Audit under queue/audits/ with pictures of Settings > Ask, the dialog, and the ratings table; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T12:11:00.443Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T12:11:10.742Z",
+      "note": "seq 78.75 -> 1.3"
+    }
+  ]
+}

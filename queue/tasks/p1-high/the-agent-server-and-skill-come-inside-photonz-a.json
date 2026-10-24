@@ -1,22 +1,23 @@
 {
   "id": "the-agent-server-and-skill-come-inside-photonz-a",
-  "title": "The agent server and skill come inside Photonz and install with one command",
-  "goal": "Someone who has the Photonz app and an agent tool on their Mac, but not the Photonz source, can let the agent drive Photonz with one command they copy from inside the app. Today the server and skill only install from a checkout of the source, so only the person who builds Photonz can use them.",
+  "title": "Settings installs the Photonz skills for Claude Code and Copilot with one click, from the app alone",
+  "goal": "Someone with only the Photonz app can turn on 'use Photonz from Claude Code' or 'from GitHub Copilot' in Settings with one Install button each, and an agent in either tool can then drive Photonz. Uninstall is one click too. Today it only installs from a copy of the source, and Copilot isn't supported at all.",
   "epic": "agent-mcp",
   "priority": "p1-high",
-  "seq": 110,
+  "seq": 1.1,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:19:05.514Z",
-  "updated": "2026-10-23T14:07:56.968Z",
+  "updated": "2026-10-24T12:11:10.520Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Focus success gap: agent-mcp success says 'installs with one command'; today that command is Scripts/install-mcp.sh in a checkout (lines 39 and 44: claude mcp add plus a skill link). docs/design/agent-mcp.md 'Not in this slice' (line 392-397): shipping the bridge inside the app bundle. Rough lines in queue/audits/2026-10-19-agent-skill.json ('The install is a developer's') and 2026-10-19-agent-mcp-reach-read-see.json ('builds a small helper program the first time, about 4 seconds'). Skill at plugin/skills/photonz/SKILL.md, plugin/.mcp.json. The channel already listens in every build (agent-mcp.md:34-41, release.sock, dev.sock, probe.sock). Scripts/build-app.sh must copy and sign the helper; never touch dist/Photonz Dev.app from a runner, use the probe.",
+  "notes": "User, 2026-10-24: 'I'd love the skills an FRE for using photonz with copilot and claude code where there is a nice explainer and an opt in to install the skills... they can dismiss and install the skills from settings.' This task is the Settings half and the packaging. The setup-window step is a separate task that depends on this one (filed the same minute). Today: Scripts/install-mcp.sh (claude mcp add --scope user, links plugin/skills/photonz into ~/.claude/skills), and there is nothing for Copilot. Focus success gap: agent-mcp success says 'installs with one command'; today that command is Scripts/install-mcp.sh in a checkout (lines 39 and 44: claude mcp add plus a skill link). docs/design/agent-mcp.md 'Not in this slice' (line 392-397): shipping the bridge inside the app bundle. Rough lines in queue/audits/2026-10-19-agent-skill.json ('The install is a developer's') and 2026-10-19-agent-mcp-reach-read-see.json ('builds a small helper program the first time, about 4 seconds'). Skill at plugin/skills/photonz/SKILL.md, plugin/.mcp.json. The channel already listens in every build (agent-mcp.md:34-41, release.sock, dev.sock, probe.sock). Scripts/build-app.sh must copy and sign the helper; never touch dist/Photonz Dev.app from a runner, use the probe.",
   "acceptance": [
     "The small server program and the Photonz skill ship inside the app bundle (release, Dev and Probe builds), signed with the app, and codesign --verify --deep passes on the bundle",
-    "The one command to register them is shown in one place inside the app, with a Copy button. Place it by the placement contract (recommended: Settings, an Agents section); log why",
-    "From a folder with no Photonz source, a fresh agent session registered with that command reads the open document and renders a picture from the probe, proved in the audit with the command and the output pasted",
+    "Settings has an Agents section (place it by the placement contract) with one row per tool, Claude Code and GitHub Copilot (VS Code and the Copilot CLI). Each row says in one line what it gives you, whether that tool was found on this Mac, and has Install / Uninstall. Install registers the Photonz server and puts the skill where that tool reads skills or instructions, with no Terminal and no copied command. Unfound tools say how to get them in one line. A Copy command fallback may stay for people who want it",
+    "From a folder with no Photonz source, a fresh session in each tool, installed only through that button, reads the open document and renders a picture from the probe. Proved in the audit for Claude Code and for Copilot, with the session output. If Copilot can only take the server (no skills), say what it gets and give it the skill's instructions in the form it reads. Log what was chosen",
+    "Install never overwrites a person's own config: it adds its own entry, and Uninstall removes only that entry. Both are covered by tests against sample config files for each tool",
     "Scripts/install-mcp.sh keeps working for developers and points at the same server; removing works too",
     "The first run builds nothing (today it compiles a helper for about 4 seconds)",
     "Copy is short and plain, no em dashes, no vendor names. Shipped behind next-agent-channel at Next defaults; try path: Settings, copy the command, run it, ask the agent to describe the open picture. Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
@@ -45,6 +46,10 @@
     {
       "t": "2026-10-23T14:07:56.967Z",
       "note": "seq 150 -> 110"
+    },
+    {
+      "t": "2026-10-24T12:11:10.519Z",
+      "note": "seq 110 -> 1.1"
     }
   ]
 }
