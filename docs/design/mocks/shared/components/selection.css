@@ -137,6 +137,8 @@
   pointer-events: none;
 }
 [data-mtag="below"] .mtag { top: auto; bottom: -30px }
+/* above, but at the frame's left edge, so a centred rotate knob stays clear */
+[data-mtag="aside"] .mtag { left: 0; transform: none }
 
 /* ---- MULTI-SELECTION ----
    Select two objects and there is ONE frame, on the union of their bounds, and

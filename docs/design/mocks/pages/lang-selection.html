@@ -119,6 +119,40 @@
     #lang-selection .lx-anat,#lang-selection .lx-grid,#lang-selection .lx-grid.three,#lang-selection .lx-dd{grid-template-columns:1fr}
     #lang-selection .lx-api .lx-r{grid-template-columns:1fr}
   }
+  /* 03b · proposal specimens (page-local, for review) */
+  #lang-selection .lx-svg{display:block;margin:auto;overflow:visible}
+  #lang-selection .lx-svgcap{font:500 9.5px var(--mono);fill:var(--faint);text-anchor:middle}
+  #lang-selection .lx-grip{fill:var(--panel);stroke:var(--accent);stroke-width:6}
+  #lang-selection .lx-stem{stroke:var(--accent);stroke-width:6}
+  #lang-selection .lx-knob{fill:var(--panel);stroke:var(--accent);stroke-width:6}
+  #lang-selection .lx-knob-open{fill:none}
+  #lang-selection .lx-no-g{opacity:.55}
+  #lang-selection .lx-ring3d{fill:none;stroke:var(--accent);stroke-width:1.5;stroke-linejoin:round}
+  #lang-selection .lx-stem2{stroke:var(--accent);stroke-width:1.5}
+  #lang-selection .lx-knob2{fill:var(--panel);stroke:var(--accent);stroke-width:1.5}
+  #lang-selection .lx-3don{fill:var(--accent)}
+  #lang-selection .lx-3donglyph{stroke:var(--accent-ink);stroke-width:1.2;stroke-linejoin:round}
+  #lang-selection .lx-tilt{fill:var(--panel);stroke:var(--accent);stroke-width:1.5}
+  #lang-selection .lx-tilt.lx-hot{fill:var(--accent)}
+  #lang-selection .lx-hint{fill:none;stroke:var(--accent);stroke-width:1.2;stroke-linecap:round;opacity:.8}
+  #lang-selection .lx-pivot{fill:var(--panel);stroke:var(--accent);stroke-width:1.5}
+  #lang-selection .lx-pivx{stroke:var(--accent);stroke-width:1.2;stroke-linecap:round}
+  #lang-selection .lx-tagbg{fill:var(--accent)}
+  #lang-selection .lx-tagtx{font:640 10px var(--mono);fill:var(--accent-ink);text-anchor:middle}
+  #lang-selection .lx-ball{fill:rgba(20,22,29,.28);stroke:var(--accent);stroke-width:1.5}
+  #lang-selection .lx-ballring{fill:none;stroke:var(--accent);stroke-width:1;opacity:.55}
+  #lang-selection .lx-balldot{fill:var(--accent)}
+  #lang-selection .lx-gizbg{fill:var(--panel);stroke:var(--edge-lo);stroke-width:1}
+  #lang-selection .lx-axis{fill:none;stroke:var(--accent);stroke-width:1.5;opacity:.6}
+  #lang-selection .lx-axis-hot{opacity:1;stroke-width:2}
+  #lang-selection .lx-axis-z{opacity:.35}
+  /* the 3D chip, beside the rotate knob (knob centre is 30.5px above the frame) */
+  #lang-selection .lx-3d{position:absolute;left:calc(50% + 13.5px);top:-38.5px;width:16px;height:16px;border-radius:4px;
+    background:var(--panel);border:1px solid var(--accent-line);color:var(--accent);display:grid;place-items:center;box-sizing:border-box;
+    box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  /* a component badge: above the top-left corner with a 6px gap, never on the grip */
+  #lang-selection .lx-badge{position:absolute;left:0;top:-26px;display:flex;align-items:center;gap:4px;height:16px;padding:0 6px;
+    border-radius:5px;background:#6b3fd6;color:#fff;font-size:9.5px;font-weight:640;white-space:nowrap}
 </style>
 </head>
 <body class="page">
@@ -363,6 +397,170 @@
             <div class="lx-li"><span class="lx-pin">5</span><span><b>Measure tag</b> · live width by height in logical points while you drag, hidden at rest so the artboard stays clean. <code>.mtag</code></span></div>
             <div class="lx-li"><span class="lx-pin">·</span><span><b>Hit areas</b> · handles are drawn small and hit large, so a precise-looking frame is still easy to grab, and larger still on a small window.</span></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3b · PROPOSAL · handle polish and the 3D tools (for the user's review, 2026-10-24) -->
+    <div class="lx-blk" id="lx-proposal-3d">
+      <div class="lx-blk-h"><span class="lx-n">03b</span><h3>Proposal · cleaner handles and a 3D mode</h3><span class="lx-sub"><span class="tag acc">for review</span> Specimens · not shipped yet</span></div>
+      <div class="lx-blk-b">
+        <p class="lx-note"><b>Why.</b> On a selected card today the frame is hard to look at: square-cornered grips,
+          a stem that runs into the rotate knob, labels sitting on the grips, and three big coloured 3D arrows plus a
+          crosshair that cover the card and its neighbours. This section proposes the fix in four parts. Parts 1 to 3
+          are polish to the frame everyone sees. Part 4 turns 3D into a mode you switch on from a button by the rotate
+          knob, and offers three ways to draw it.</p>
+
+        <!-- 1 · polish -->
+        <div class="lx-grid three">
+          <div class="spec">
+            <div class="spec-h">1 · Grip corners<span class="tag">shown at 4×</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth short"><div class="canvas">
+                <svg class="lx-svg" viewBox="0 0 240 150" width="240" height="150" aria-label="A square grip next to a grip with a 2 pixel corner radius, both at four times size">
+                  <g class="lx-no-g"><rect x="40" y="45" width="36" height="36" class="lx-grip" rx="0"/><text x="58" y="112" class="lx-svgcap">today · 0</text></g>
+                  <g><rect x="150" y="45" width="36" height="36" class="lx-grip" rx="8"/><text x="168" y="112" class="lx-svgcap">2px radius</text></g>
+                </svg>
+              </div></div>
+              <p class="lx-cap">Every grip is 9px with a <b>2px</b> corner, the same softening as the frame. The guide already says 2px; the app draws them square and has to match.</p>
+            </div>
+          </div>
+          <div class="spec">
+            <div class="spec-h">2 · The stem stops at the knob<span class="tag">shown at 4×</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth short"><div class="canvas">
+                <svg class="lx-svg" viewBox="0 0 240 150" width="240" height="150" aria-label="Left: the stem line runs into the middle of the rotate knob. Right: the stem ends at the knob's edge">
+                  <g class="lx-no-g"><line x1="58" y1="128" x2="58" y2="40" class="lx-stem"/><circle cx="58" cy="40" r="20" class="lx-knob lx-knob-open"/><line x1="58" y1="20" x2="58" y2="60" class="lx-stem"/><text x="58" y="146" class="lx-svgcap">today</text></g>
+                  <g><line x1="168" y1="128" x2="168" y2="60" class="lx-stem"/><circle cx="168" cy="40" r="20" class="lx-knob"/><text x="168" y="146" class="lx-svgcap">to the edge</text></g>
+                </svg>
+              </div></div>
+              <p class="lx-cap">The stem runs from the frame's top edge to the knob's <b>outer edge</b> and stops. The knob is filled with the panel colour, so nothing shows through it.</p>
+            </div>
+          </div>
+          <div class="spec">
+            <div class="spec-h">3 · Nothing sits on a grip<span class="tag">labels and badges</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth short"><div class="canvas">
+                <div class="selwrap" data-sel-frame="Hero card · 140 × 78" data-sel-parts="edges rotate" style="width:140px;margin-top:6px">
+                  <div class="lx-obj" style="width:140px;height:78px"></div>
+                  <span class="lx-badge" title="Component instance"><svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true"><path d="M5 .8 9.2 5 5 9.2.8 5Z" fill="currentColor"/></svg>Default</span>
+                </div>
+              </div></div>
+              <p class="lx-cap">The name and size tag goes <b>below</b> the frame when the frame has a rotate knob, because the knob owns the space above. A component's badge and variant name sit above the top-left corner with a 6px gap, never on the corner grip.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 · the 3D button -->
+        <div class="lx-grid">
+          <div class="spec">
+            <div class="spec-h">4a · The 3D button, off<span class="tag">beside the rotate knob</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth"><div class="canvas">
+                <div class="selwrap" data-sel-frame="190 × 112" data-sel-parts="edges rotate" style="width:190px">
+                  <div class="lx-obj" style="width:190px;height:112px"></div>
+                  <span class="lx-3d" title="Turn in 3D"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></span>
+                </div>
+              </div></div>
+              <p class="lx-cap">A 16px chip, 8px to the right of the knob and centred on it: panel fill, hairline edge, a small cube. Same family as the grips, so it reads as part of the frame, not a toolbar. Tooltip <b>Turn in 3D</b>. Nothing 3D is drawn until it is on.</p>
+            </div>
+          </div>
+          <div class="spec">
+            <div class="spec-h">4b · The 3D button, on<span class="tag acc">3D mode</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth"><div class="canvas">
+                <svg class="lx-svg" viewBox="0 0 300 200" width="300" height="200" aria-label="The card tilted in 3D: its frame follows the tilt, edge grips become tilt grips, a small pivot sits at the centre, and the 3D button is filled">
+                  <defs><linearGradient id="lxg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c4dff"/><stop offset=".5" stop-color="#b14dff"/><stop offset="1" stop-color="#ff5d8f"/></linearGradient></defs>
+                  <polygon points="77,55 240,48 235,166 68,159" fill="url(#lxg1)"/>
+                  <polygon points="77,55 240,48 235,166 68,159" class="lx-ring3d"/>
+                  <line x1="158.5" y1="48" x2="158.5" y2="35" class="lx-stem2"/><circle cx="158.5" cy="29.5" r="5.5" class="lx-knob2"/>
+                  <g transform="translate(172 21.5)"><rect width="16" height="16" rx="4" class="lx-3don"/><path transform="translate(2 2)" d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" class="lx-3donglyph"/></g>
+                  <rect x="150.5" y="48" width="16" height="7" rx="3.5" class="lx-tilt" transform="rotate(-2.5 158.5 51.5)"/>
+                  <rect x="143.5" y="159" width="16" height="7" rx="3.5" class="lx-tilt" transform="rotate(-2.1 151.5 162.5)"/>
+                  <rect x="69" y="99" width="7" height="16" rx="3.5" class="lx-tilt" transform="rotate(4.3 72.5 107)"/>
+                  <rect x="234" y="99" width="7" height="16" rx="3.5" class="lx-tilt" transform="rotate(-2.4 237.5 107)"/>
+                  <circle cx="155" cy="107" r="6" class="lx-pivot"/><circle cx="155" cy="107" r="2" class="lx-balldot"/>
+                  <rect x="102" y="176" width="106" height="16" rx="6" class="lx-tagbg"/><text x="155" y="187.5" class="lx-tagtx">Y −24° · X 10°</text>
+                </svg>
+              </div></div>
+              <p class="lx-cap">On: the chip fills with the accent, the frame follows the tilt, and the grips change job (option A below). Click it again, press Escape, or pick another layer to leave 3D mode. The turn stays; only the tools go.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 · three ways to draw the 3D tools -->
+        <p class="lx-note"><b>Three ways to draw 3D mode.</b> All three stay inside the design language: one accent, hairline strokes,
+          panel-filled grips with 2px or round corners, nothing bigger than the knob except where the option needs it, and no coloured arrows.</p>
+        <div class="lx-grid three">
+          <div class="spec">
+            <div class="spec-h">A · Tilt from the edges<span class="tag acc">recommended</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth tall"><div class="canvas">
+                <svg class="lx-svg" viewBox="0 0 300 230" width="300" height="230" aria-label="Option A: the edge grips become small pill-shaped tilt grips on the tilted frame, with a small pivot at the centre">
+                  <polygon points="77,65 240,58 235,176 68,169" fill="url(#lxg1)"/>
+                  <polygon points="77,65 240,58 235,176 68,169" class="lx-ring3d"/>
+                  <line x1="158.5" y1="58" x2="158.5" y2="45" class="lx-stem2"/><circle cx="158.5" cy="39.5" r="5.5" class="lx-knob2"/>
+                  <g transform="translate(172 31.5)"><rect width="16" height="16" rx="4" class="lx-3don"/><path transform="translate(2 2)" d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" class="lx-3donglyph"/></g>
+                  <rect x="150.5" y="58" width="16" height="7" rx="3.5" class="lx-tilt" transform="rotate(-2.5 158.5 61.5)"/>
+                  <rect x="143.5" y="169" width="16" height="7" rx="3.5" class="lx-tilt" transform="rotate(-2.1 151.5 172.5)"/>
+                  <rect x="69" y="109" width="7" height="16" rx="3.5" class="lx-tilt" transform="rotate(4.3 72.5 117)"/>
+                  <rect x="234" y="109" width="7" height="16" rx="3.5" class="lx-tilt lx-hot" transform="rotate(-2.4 237.5 117)"/>
+                  <path d="M250 101 q10 16 0 32" class="lx-hint"/><path d="M247 131 l3 3 3-4" class="lx-hint"/>
+                  <circle cx="155" cy="117" r="6" class="lx-pivot"/><circle cx="155" cy="117" r="2" class="lx-balldot"/>
+                </svg>
+              </div></div>
+              <p class="lx-cap"><b>How it works:</b> drag the top or bottom pill to tip the card forward or back, the left or right pill to turn it. The knob still spins it flat. Drag the small pivot to move what it turns around, and Option-drag the pivot to push it nearer or further. Shift snaps to 15°.
+                <br><b>Good:</b> it adds nothing outside the frame, so it can't cover neighbours. The grips stay where your hand already is, and the frame shows the real tilt.
+                <br><b>Cost:</b> no resizing while in 3D mode (the corners hide), which is also what tells you the mode is on.</p>
+            </div>
+          </div>
+          <div class="spec">
+            <div class="spec-h">B · A small trackball<span class="tag">free tumble</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth tall"><div class="canvas">
+                <svg class="lx-svg" viewBox="0 0 300 230" width="300" height="230" aria-label="Option B: a 52 pixel trackball circle at the centre of the tilted card">
+                  <polygon points="77,65 240,58 235,176 68,169" fill="url(#lxg1)"/>
+                  <polygon points="77,65 240,58 235,176 68,169" class="lx-ring3d"/>
+                  <line x1="158.5" y1="58" x2="158.5" y2="45" class="lx-stem2"/><circle cx="158.5" cy="39.5" r="5.5" class="lx-knob2"/>
+                  <g transform="translate(172 31.5)"><rect width="16" height="16" rx="4" class="lx-3don"/><path transform="translate(2 2)" d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" class="lx-3donglyph"/></g>
+                  <circle cx="155" cy="117" r="26" class="lx-ball"/>
+                  <ellipse cx="155" cy="117" rx="26" ry="9" class="lx-ballring"/>
+                  <ellipse cx="155" cy="117" rx="9" ry="26" class="lx-ballring"/>
+                  <circle cx="155" cy="117" r="2.5" class="lx-balldot"/>
+                </svg>
+              </div></div>
+              <p class="lx-cap"><b>How it works:</b> drag inside the ball to tumble the card any way, drag its rim to spin it flat. Shift keeps to one axis.
+                <br><b>Good:</b> one control does every direction, which is how pro 3D apps work.
+                <br><b>Cost:</b> the ball covers the middle of what you're turning, and on a small object it covers most of it. Free tumbling is also hard to aim at an exact angle.</p>
+            </div>
+          </div>
+          <div class="spec">
+            <div class="spec-h">C · Axis rings off the corner<span class="tag">precise</span></div>
+            <div class="spec-b">
+              <div class="cnv lx-plinth tall"><div class="canvas">
+                <svg class="lx-svg" viewBox="0 0 300 230" width="300" height="230" aria-label="Option C: a small three-ring axis control just outside the top right corner of the tilted card"><g transform="translate(-34 8)">
+                  <polygon points="77,65 240,58 235,176 68,169" fill="url(#lxg1)"/>
+                  <polygon points="77,65 240,58 235,176 68,169" class="lx-ring3d"/>
+                  <line x1="158.5" y1="58" x2="158.5" y2="45" class="lx-stem2"/><circle cx="158.5" cy="39.5" r="5.5" class="lx-knob2"/>
+                  <g transform="translate(172 31.5)"><rect width="16" height="16" rx="4" class="lx-3don"/><path transform="translate(2 2)" d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" class="lx-3donglyph"/></g>
+                  <g transform="translate(268 36)">
+                    <circle r="17" class="lx-gizbg"/>
+                    <ellipse rx="13" ry="5" class="lx-axis"/><ellipse rx="5" ry="13" class="lx-axis lx-axis-hot"/><circle r="13" class="lx-axis lx-axis-z"/>
+                  </g>
+                  
+                </g></svg>
+              </div></div>
+              <p class="lx-cap"><b>How it works:</b> a 34px badge just outside the top-right corner. Drag the flat ring to tip the card, the upright ring to turn it, the outer ring to spin it. The card itself only moves.
+                <br><b>Good:</b> exact, one axis at a time, never on the card.
+                <br><b>Cost:</b> your hand leaves the object to use it, and it still needs room past the corner, which a card near the canvas edge doesn't have.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lx-api">
+          <div class="lx-r"><b>Compared</b><span>A · adds nothing past the frame, hand stays on the object, exact by edge · B · covers the centre, free but loose · C · exact, but off the object and needs space past the corner</span></div>
+          <div class="lx-r"><b>Recommendation</b><span><b>A</b>, with the 3D button and parts 1 to 3. It fixes every complaint (size, overlap, look) without a new kind of control. Typed angles stay in Properties for exact values.</span></div>
+          <div class="lx-r"><b>Keyboard</b><span>none proposed for the button. Rotate and 3D live where you click. Escape leaves 3D mode.</span></div>
         </div>
       </div>
     </div>

@@ -114,7 +114,15 @@
     if (host.querySelector('.mtag')) {
       var canvas = host.closest('.canvas') || host.closest('.cnv');
       var top = canvas ? canvas.getBoundingClientRect().top : 0;
-      host.setAttribute('data-mtag', r.top - top < 34 ? 'below' : 'above');
+      /* A tag never covers a grip (the user, 2026-10-24: "We don't have labels
+         covering grippers"). The rotate knob owns the space above the top
+         edge's middle, so a frame that has one puts its tag BELOW. With no
+         room below either, it goes above but to the left, clear of the knob. */
+      var rotates = !!host.querySelector(':scope > .rot');
+      var bottom = canvas ? canvas.getBoundingClientRect().bottom : Infinity;
+      var roomAbove = r.top - top >= 34, roomBelow = bottom - r.bottom >= 34;
+      host.setAttribute('data-mtag',
+        rotates ? (roomBelow ? 'below' : 'aside') : (roomAbove ? 'above' : 'below'));
     }
   }
 
