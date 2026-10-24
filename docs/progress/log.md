@@ -21884,3 +21884,13 @@ Queue task `ask-works-on-a-mac-that-has-nothing-else-install`, closing the four 
 - Held-out, Next defaults, no Ollama: 61 (was 60.3 with Ollama + hand-started painting). Video gap closed by `add_title` saying an unplaced page goes at the playhead: three-clips case 17.5 to 84.4, video group 53.1 against Ollama's 52.1. The held-out run came before that wording change.
 - Filed `an-eval-case-that-starts-on-three-clips-runs-whe`: the eval's bridge can launch the probe before the walk, so the copies case scores 0 when it is first in a run.
 - Next: whether one Download should fetch both models (audit question).
+
+## 2026-10-23 (night): Photonz gives closed windows' memory back
+
+Queue task `photonz-uses-little-memory-and-what-made-it-use` (a colleague saw Photonz near 4 GB).
+
+- Reproduced on the probe: opening and closing pictures only ever grew it (400 MB to 1.96 GB). Every closed window's editor stayed alive: a retain cycle between the inspector's fold store and the panel, a tool bar walk hook in every build, and the walk harness's own strong list. Fixed all three, and an editor now empties its pictures, frames and caches the moment its window closes (`EditorState.letGoOnClose`).
+- macOS 26's allocator keeps large freed blocks in the footprint at the session's peak; the bundle launches with `MallocLargeCache=0` (`LSEnvironment`, checked by `build-app.sh`), a 3 to 4 percent render cost.
+- Budget in `docs/design/memory.md` and `MemoryBudget` (core, tested): under 300 MB idle with one screenshot, back within 20 percent after a session. Walk step `memory`; `closed-windows-give-their-memory-back-walk` runs in every rotating check. Long session tool: `Scripts/memory-session.sh` (sampler `memory-watch.sh`, chart `memory-chart.mjs`).
+- Long session, Photonz idle with everything closed: 1247 MB before, 180 MB after. Ask helpers (own rows in Activity Monitor, responsible process Photonz): chat about 3 GB, picture model 13 GB painting and 5 GB loaded, both gone 5 idle minutes later and on quit.
+- Open: up to three emptied editors stay reachable through a closed window AppKit keeps (no memory cost).

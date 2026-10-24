@@ -266,6 +266,9 @@ extension View {
     /// Registers what each row under More does (`ToolBarLayoutProbe.moreRows`).
     func toolBarMoreProbe(_ rows: [String], pick: @escaping @MainActor (String) -> Void) -> some View {
         onChange(of: rows, initial: true) { _, now in
+            // Only where a walk can read it: the pick closure holds its
+            // window's editor, and kept the last one alive in every build.
+            guard AppInfo.flavor == .probe else { return }
             ToolBarLayoutProbe.shared.moreRows = now
             ToolBarLayoutProbe.shared.pickMoreRow = pick
         }

@@ -1,0 +1,234 @@
+{
+  "out": "/tmp/photonz-playtest/closed-windows-give-their-memory-back-walk",
+  "seed": "Photonz gives a closed window's memory back. Opens and closes a 12-megapixel picture and a screenshot six times, reading Photonz's own footprint after each round, and fails if the readings keep climbing, if closed editors are still alive, or if Photonz is not back within 20 percent of where it was with nothing open. Until 2026-10-23 every closed editor stayed in memory with its pictures: five 12-megapixel pictures opened and closed left the probe at 1.9 GB. No names, no drags, no menus: it runs while the person works and under a lock.",
+  "setup": {
+    "forget": [
+      "recent"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 3
+    },
+    {
+      "do": "memory",
+      "mark": "one-screenshot",
+      "underMB": 300
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "memory",
+      "mark": "nothing-open"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Twelve megapixel picture 4000x3000.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "memory",
+      "mark": "round"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Twelve megapixel picture 4000x3000.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "memory",
+      "mark": "round"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Twelve megapixel picture 4000x3000.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "memory",
+      "mark": "round"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Twelve megapixel picture 4000x3000.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "memory",
+      "mark": "round"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Twelve megapixel picture 4000x3000.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "memory",
+      "mark": "round"
+    },
+    {
+      "do": "open",
+      "file": "fixtures/Twelve megapixel picture 4000x3000.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "memory",
+      "mark": "round"
+    },
+    {
+      "do": "memory",
+      "mark": "end",
+      "risingOver": "round",
+      "editorsAtMost": 1,
+      "withinPercentOf": "nothing-open",
+      "percent": 20
+    }
+  ]
+}

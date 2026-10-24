@@ -467,6 +467,54 @@ public final class DocumentRenderer: @unchecked Sendable {
         frameBuffer?.deallocate()
     }
 
+    /// The bytes the interactive frame buffer holds.
+    var frameBufferBytes: Int {
+        interactiveLock.lock()
+        defer { interactiveLock.unlock() }
+        return frameBuffer == nil ? 0 : frameBufferCapacity
+    }
+
+    /// Gives back the frame buffer, the last frame and every cache. For a
+    /// window that has closed, or memory running short: the next render
+    /// simply builds what it needs again.
+    public func letGo() {
+        interactiveLock.lock()
+        frameBuffer?.deallocate()
+        frameBuffer = nil
+        frameBufferCapacity = 0
+        frameSize = (0, 0)
+        lastDocument = nil
+        lastFrame = nil
+        lastColorSpace = nil
+        lastCompositing = nil
+        interactiveLock.unlock()
+        cacheLock.lock()
+        surfaceCache.removeAll()
+        surfaceOrder.removeAll()
+        ringCache.removeAll()
+        ringOrder.removeAll()
+        maskCache.removeAll()
+        maskOrder.removeAll()
+        maskPixels = 0
+        followCache.removeAll()
+        rasterCache.removeAll()
+        rasterOrder.removeAll()
+        piecesCache.removeAll()
+        piecesOrder.removeAll()
+        reachCache.removeAll()
+        reachOrder.removeAll()
+        wrapCache.removeAll()
+        wrapOrder.removeAll()
+        cacheLock.unlock()
+    }
+
+    /// Lets go of what Core Image keeps between renders in the contexts every
+    /// renderer shares. For memory running short.
+    public static func clearSharedCaches() {
+        lightContext.clearCaches()
+        webContext.clearCaches()
+    }
+
     /// Latest-wins re-render for the editing session. Same output as
     /// `render(_:store:)`; unchanged documents return the previous frame
     /// object, small edits patch only their dirty region.

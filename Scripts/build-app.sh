@@ -280,6 +280,14 @@ cat > "$APP/Contents/Info.plist" <<PLIST
          editor window open. AppCoordinator also sets .accessory at runtime so
          plain `swift build` dev runs behave the same. -->
     <key>LSUIElement</key><true/>
+    <!-- Memory (2026-10-23, docs/design/memory.md): the system allocator keeps
+         every large block Photonz frees, so after one 12-megapixel picture
+         closed Photonz never came back below its peak (a 3 to 4 percent
+         slower full render buys memory that really goes back). -->
+    <key>LSEnvironment</key>
+    <dict>
+        <key>MallocLargeCache</key><string>0</string>
+    </dict>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
@@ -404,6 +412,13 @@ fi
 
 if [[ "$VARIANT" == "release" ]]; then
   "$(dirname "$0")/check-entitlements.sh" "$APP"
+fi
+
+# Without it a closed picture's memory stays counted against Photonz for good
+# (docs/design/memory.md).
+if [[ "$(/usr/libexec/PlistBuddy -c "Print :LSEnvironment:MallocLargeCache" "$APP/Contents/Info.plist" 2>/dev/null)" != "0" ]]; then
+  echo "==> FAILED: Info.plist does not turn off the allocator's large cache (LSEnvironment MallocLargeCache)" >&2
+  exit 1
 fi
 
 # A pasteboard type the bundle does not declare carries no data, and the only

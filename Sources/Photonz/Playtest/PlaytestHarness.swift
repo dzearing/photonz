@@ -22,7 +22,12 @@ enum PlaytestHarness {
     /// `Photonz Probe.app --playtest <script.json>` (via `open --args`).
     static let argument = AppFlavor.walkArgument
 
-    private static var editors: [EditorState] = []
+    /// Held weakly: a walk that opens and closes documents must see them go,
+    /// or every closed editor (its pictures, its frame buffer) stays in memory
+    /// for the rest of the walk and a memory check reads the harness, not the
+    /// app. A strong list held 20 of 25 closed editors on 2026-10-23.
+    private static var editorRefs: [WeakRef<EditorState>] = []
+    private static var editors: [EditorState] { editorRefs.compactMap(\.value) }
     private static var run: Run?
 
     /// Whether a scripted walk is driving this app. Read by anything whose
@@ -112,7 +117,8 @@ enum PlaytestHarness {
     /// the run can find the one it just opened.
     static func register(_ editor: EditorState) {
         guard AppInfo.flavor == .probe else { return }
-        if !editors.contains(where: { $0 === editor }) { editors.append(editor) }
+        editorRefs.removeAll { $0.value == nil }
+        if !editors.contains(where: { $0 === editor }) { editorRefs.append(WeakRef(editor)) }
     }
 
     /// Called once at launch. Does nothing unless this is the probe and a
@@ -144,8 +150,8 @@ enum PlaytestHarness {
             forName: NSWindow.willCloseNotification, object: nil, queue: .main) { note in
             guard let closing = note.object as? NSWindow else { return }
             MainActor.assumeIsolated {
-                editors.removeAll { $0.hostWindow === closing }
-                recordings.removeAll { $0.hostWindow === closing }
+                editorRefs.removeAll { $0.value == nil || $0.value?.hostWindow === closing }
+                recordingRefs.removeAll { $0.value == nil || $0.value?.hostWindow === closing }
             }
         }
     }
@@ -166,7 +172,8 @@ enum PlaytestHarness {
     /// it insists on a document and a viewport.
     static var allEditors: [EditorState] { editors }
 
-    private static var recordings: [VideoEditorState] = []
+    private static var recordingRefs: [WeakRef<VideoEditorState>] = []
+    private static var recordings: [VideoEditorState] { recordingRefs.compactMap(\.value) }
 
     /// A recording's window announces itself the same way a picture editor
     /// does. It is a different kind of window entirely (one picture and one
@@ -174,7 +181,8 @@ enum PlaytestHarness {
     /// teach in it, so a walk has to be able to find one.
     static func register(_ recording: VideoEditorState) {
         guard AppInfo.flavor == .probe else { return }
-        if !recordings.contains(where: { $0 === recording }) { recordings.append(recording) }
+        recordingRefs.removeAll { $0.value == nil }
+        if !recordings.contains(where: { $0 === recording }) { recordingRefs.append(WeakRef(recording)) }
     }
 
     /// Every recording window that is loaded and drivable, oldest first.
@@ -1010,6 +1018,28 @@ private final class Run {
                                            width: image.width, height: image.height))
         }
         return Int(pixel[3])
+    }
+
+    // MARK: - Memory
+
+    /// Readings taken by `memory` steps, by mark, in order.
+    private var memoryMarks: [String: [MemoryReading]] = [:]
+
+    /// Photonz's own footprint, after handing freed pages back and letting
+    /// whatever closed this turn finish going, and the editors still alive.
+    private func checkMemory(_ check: PlaytestMemoryCheck) async throws -> String {
+        await sleep(1)
+        MemoryRelief.giveBackNow()
+        await sleep(0.5)
+        let reading = MemoryReading(footprintBytes: MemoryRelief.footprintBytes(),
+                                    liveEditors: EditorState.liveEditors.count)
+        if let mark = check.mark { memoryMarks[mark, default: []].append(reading) }
+        let said = String(format: "%.0f MB, %d editor(s) alive", reading.megabytes, reading.liveEditors)
+            + (check.mark.map { " (marked \"\($0)\")" } ?? "")
+        if let failure = MemoryBudget.verdict(reading, check: check, marks: memoryMarks) {
+            throw Failure(description: failure)
+        }
+        return said
     }
 
     // MARK: - Steps
@@ -3073,6 +3103,9 @@ private final class Run {
 
         case .expectEdited(let edited):
             note(number, step.name, try checkEdited(edited), state: describe())
+
+        case .memory(let check):
+            note(number, step.name, try await checkMemory(check))
 
         case .expectShows(let drawing):
             note(number, step.name, try checkShows(drawing), state: describe())
@@ -21359,3 +21392,10 @@ private struct ZoomReading: Equatable {
 }
 
 #endif
+
+/// A reference that lets go when its object does, for registries that must
+/// never be what keeps a closed window's state alive.
+final class WeakRef<Value: AnyObject> {
+    weak var value: Value?
+    init(_ value: Value) { self.value = value }
+}

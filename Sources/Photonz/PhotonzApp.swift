@@ -96,6 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             AppDelegate.coordinator?.start()
             if let coordinator = AppDelegate.coordinator { EditorWarmUp.run(coordinator: coordinator) }
             if let coordinator = AppDelegate.coordinator { AgentChannel.startIfEnabled(coordinator: coordinator) }
+            MemoryRelief.watchForPressure { EditorState.liveEditors }
             #if PHOTONZ_PLAYTEST
             // Non-shipping builds only; the probe alone acts on either of these.
             ProbeGrants.recordOnLaunch()

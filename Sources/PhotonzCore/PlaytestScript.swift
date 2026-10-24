@@ -3642,6 +3642,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that separates a page, lets the reading land and presses undo can say
     /// `expectEdited: false` and pin it.
     case expectEdited(Bool)
+    /// Reads Photonz's own memory (its footprint, the number Activity
+    /// Monitor shows, after handing freed pages back) and how many picture
+    /// editors are alive, remembers it by name and holds it to a ceiling, a
+    /// share of an earlier reading, or a series that must not keep climbing
+    /// (`MemoryBudget`). Needs no window, so it runs after every one closed.
+    case memory(PlaytestMemoryCheck)
     /// Which drawing every picked copy of a component is showing, by the name
     /// its own menu gives that drawing ("Secondary · Large").
     ///
@@ -4500,7 +4506,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4662,6 +4668,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectBuilds: "expectBuilds"
         case .expectListStill: "expectListStill"
         case .expectEdited: "expectEdited"
+        case .memory: "memory"
         case .expectShows: "expectShows"
         case .scrollPanel: "scrollPanel"
         case .wheel: "wheel"
@@ -6300,6 +6307,13 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectShows(drawing: try f.string("drawing"))
         case "expectEdited":
             self = .expectEdited(try f.optionalFlag("edited") ?? f.optionalFlag("is") ?? true)
+        case "memory":
+            var check = PlaytestMemoryCheck(mark: try f.optionalString("mark"), underMB: try f.optionalNumber("underMB"),
+                                            editorsAtMost: try f.optionalNumber("editorsAtMost").map { Int($0) },
+                                            withinPercentOf: try f.optionalString("withinPercentOf"),
+                                            risingOver: try f.optionalString("risingOver"))
+            if let percent = try f.optionalNumber("percent") { check.percent = percent }
+            self = .memory(check)
         case "expectPicked":
             guard fields["layers"] != nil else {
                 throw f.invalid("layers", "expectPicked has to say which layers must be picked, by name; an empty list means nothing should be")

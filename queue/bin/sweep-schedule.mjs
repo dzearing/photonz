@@ -64,7 +64,11 @@ export const DEFAULTS = {
   // 3d-grippers-on-a-picked-layer-walk picks a layer and checks its 3D arcs
   // and depth arrow are drawn with no hover, then swings it: the user found
   // them gone on 2026-10-13 and asked that they never silently go again.
-  everyCheck: ['an-editing-session-walk', '3d-grippers-on-a-picked-layer-walk'],
+  // closed-windows-give-their-memory-back-walk opens and closes pictures and
+  // fails if Photonz keeps what it closed: a colleague saw it near 4 GB and
+  // every closed window was found still in memory (2026-10-23).
+  everyCheck: ['an-editing-session-walk', '3d-grippers-on-a-picked-layer-walk',
+    'closed-windows-give-their-memory-back-walk'],
 };
 
 const HOUR = 3600 * 1000;

@@ -1,0 +1,33 @@
+{
+  "feature": "Photonz gives memory back",
+  "epic": "unmanned-loop",
+  "task": "photonz-uses-little-memory-and-what-made-it-use",
+  "summary": "Closing a window now really frees it. Before, every closed window stayed in memory with its pictures, so Photonz only ever grew: 1.25 GB with nothing open after a 14 minute session, on its way to the 4 GB a colleague saw. After the same session it sits at 180 MB.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Measured on the probe with Scripts/memory-session.sh (the long session) and closed-windows-give-their-memory-back-walk (the guard every rotating check now runs).",
+  "switched": {},
+  "try": [
+    { "do": "Open Activity Monitor, Memory tab, and find Photonz Dev. Note its Memory number.", "shot": "2026-10-23-memory-before-photonz.png" },
+    { "do": "Open a big photo (12 megapixels or more) and three screenshots, then close all four windows.", "shot": "2026-10-23-memory-after-photonz.png" },
+    { "do": "Wait a few seconds and read Photonz's Memory again: it should be back near where it started, not hundreds of MB higher." },
+    { "do": "Do the same open and close three more times: the number should not keep climbing." },
+    { "do": "Ask Photonz to draw something. Two new rows appear in Activity Monitor: llama-server (Ask's chat model, about 3 GB) and python (the picture model, up to 13 GB while it paints, about 5 GB after).", "shot": "2026-10-23-memory-after.png" },
+    { "do": "Leave Ask alone for five minutes: both rows go away." },
+    { "do": "Ask again, then quit Photonz straight away: both rows are gone within two seconds." }
+  ],
+  "evaluate": [
+    "After closing a big photo, is Photonz back near where it started in Activity Monitor?",
+    "Over a normal working day, does Photonz stay under a few hundred MB with one screenshot open?",
+    "Is five idle minutes the right time to keep Ask's models loaded, given the picture model holds about 5 GB while it waits?",
+    "Would you rather Activity Monitor showed the two Ask helpers with Photonz in their names, so nobody wonders what llama-server and python are?"
+  ],
+  "rough": [
+    "What it was: four causes, each measured. (1) A retain cycle in the right hand panel kept every closed window's editor, pictures and frame buffer alive: 25 editors alive after 25 windows closed (heap on a memory graph). (2) Something can always hold the last closed editor (SwiftUI's menu commands, AppKit keeping a closed window), so an editor now empties itself the moment its window closes. (3) macOS's allocator never hands large freed blocks back: 180 MB of an idle probe was freed pictures still counted against it; the app now launches with that cache off. (4) The walk harness itself held every editor, so walk readings could not be trusted; it holds them weakly now.",
+    "Long session, before: 203 MB with one screenshot, 693 MB after 20 screenshots (21 editors alive), 1430 MB editing a 12 MP picture, 1247 MB idle with every window closed (26 editors alive). After: 165 MB, 87 MB, 501 MB, 180 MB (3 emptied editors). Budget written in docs/design/memory.md: under 300 MB idle with one screenshot, back within 20 percent after a session.",
+    "Up to three closed windows' editors stay reachable after a long session, through a closed window AppKit keeps. Each was emptied of its pictures when its window closed, so they cost almost nothing (the footprint check holds that); the quick guard allows one, the long session three. Logged on the task, not filed: nobody sees it.",
+    "Ask's helpers are their own rows in Activity Monitor (llama-server, python), not Photonz, but macOS counts them as Photonz's (their responsible process), which is what the out-of-memory dialog sums. Loaded: chat model about 3 GB, picture model 13 GB while painting and about 5 GB after. Both let go after five idle minutes and on quit, measured. A colleague's 4 GB could have been either Photonz after a long day (fixed) or one of these rows (by design).",
+    "A 16 GB Mac is offered Gemma 4 E4B (about 7.5 GB) for chat and is not offered the picture model (it needs 12 GB beside the chat model, over 60 percent of 16 GB). A 64 GB Mac gets Qwen3.6 35B.",
+    "Turning the allocator's large cache off costs a little render speed, measured on the perf tests: full 12 MP render 27.2 to 28.1 ms median, interactive edit unchanged at 5.4 ms, 2x export about 4 percent slower.",
+    "No app pictures: nothing on screen changed, so the pictures are memory charts (sampled every 10 seconds, so the painting peak may read a little low). No mock covers this.",
+    "section-fold-motion-walk failed twice and passed once on this build with two different failures; it is already on walks-that-fail-in-the-full-sweep-26 from before this change."
+  ]
+}

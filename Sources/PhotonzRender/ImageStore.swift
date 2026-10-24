@@ -82,6 +82,31 @@ public final class ImageStore: @unchecked Sendable {
         return copy
     }
 
+    /// How many pictures are held.
+    public var count: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return images.count
+    }
+
+    /// The bytes of picture held, as decoded bitmaps: what a store costs in
+    /// memory, for the budget the app is held to (`MemoryBudget`).
+    public var pixelBytes: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return images.values.reduce(0) { $0 + $1.bytesPerRow * $1.height }
+    }
+
+    /// Lets go of every picture. For a window that has closed: anything that
+    /// still reaches the store after it finds nothing, rather than keeping a
+    /// closed document's pixels alive.
+    public func removeAll() {
+        lock.lock()
+        images.removeAll()
+        vectors.removeAll()
+        lock.unlock()
+    }
+
     public func remove(_ ref: ImageRef) {
         lock.lock()
         images[ref.id] = nil

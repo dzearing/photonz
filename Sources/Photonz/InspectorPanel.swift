@@ -686,8 +686,14 @@ struct InspectorPanel: View {
         .background { PanelTimeFactsWatcher { watchedTimeFacts = $0 } }
         .onAppear(perform: loadOrder)
         .onChange(of: order) { persistOrder() }
-        // A panel that goes away mid-drag takes its key watch with it.
-        .onDisappear(perform: stopWatchingForEscape)
+        // A panel that goes away mid-drag takes its key watch with it, and
+        // lets go of the fold store's way back to it: that closure holds this
+        // panel, the panel's state holds the store, and a closed window's
+        // editor stayed alive through the pair (2026-10-23, memory task).
+        .onDisappear {
+            stopWatchingForEscape()
+            folds.onFoldFromAnotherWindow = nil
+        }
         // Only a scripted walk reads these; both are no-ops in the shipping
         // build. A walk cannot drive the header's gesture — SwiftUI does not
         // answer synthesized mouse events, which is the same wall

@@ -2833,8 +2833,69 @@ final class EditorState {
     /// The window hosting this editor, captured by `WindowCloseGuard` so the
     /// close confirmation can attach and the edited-dot can track dirtiness.
     @ObservationIgnored weak var hostWindow: NSWindow? {
-        didSet { if hostWindow !== oldValue { watchHostWindowFullScreen() } }
+        didSet {
+            if hostWindow !== oldValue {
+                watchHostWindowFullScreen()
+                watchHostWindowClose()
+            }
+        }
     }
+
+    /// The window's close notice, so a closed editor gives its memory back.
+    @ObservationIgnored private var closeWatch: NSObjectProtocol?
+    /// Its window has closed and it has let go (`letGoOnClose`): a frame
+    /// still on its way is dropped rather than kept.
+    @ObservationIgnored private var windowClosed = false
+
+    private func watchHostWindowClose() {
+        if let closeWatch { NotificationCenter.default.removeObserver(closeWatch) }
+        closeWatch = nil
+        guard let hostWindow else { return }
+        closeWatch = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: hostWindow, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.letGoOnClose() }
+        }
+    }
+
+    /// The window has closed: give back the pictures, the frames and every
+    /// cache now, rather than whenever the last thing holding this editor lets
+    /// go. Something always can: SwiftUI's menu commands keep the last focused
+    /// editor, AppKit keeps a closed window a while, and on 2026-10-23 a
+    /// probe that opened and closed a 12-megapixel picture five times was at
+    /// 1.9 GB because every closed editor still held its store and its frame
+    /// buffer. The document and its undo history stay (they hold no pixels),
+    /// so nothing reading this editor after the close trips over a nil.
+    func letGoOnClose() {
+        if let closeWatch { NotificationCenter.default.removeObserver(closeWatch) }
+        closeWatch = nil
+        // AppKit keeps a closed window a while, and its first responder is
+        // the canvas, whose closures hold this editor.
+        hostWindow?.makeFirstResponder(nil)
+        windowClosed = true
+        scheduler = nil
+        renderedImage = nil
+        crispTile = nil
+        crispTileViewport = nil
+        shownDrawnDocument = nil
+        thumbnailCache = [:]
+        flatPictureMemo = [:]
+        tileRenderer.letGo()
+        previewRenderer.letGo()
+        store.removeAll()
+        MemoryRelief.giveBackSoon()
+    }
+
+    /// Memory is short on the Mac: drop what is only kept to be quick, all of
+    /// which is drawn again when next needed (`MemoryRelief`).
+    func letGoOfCaches() {
+        thumbnailCache = [:]
+        flatPictureMemo = [:]
+        tileRenderer.letGo()
+        previewRenderer.letGo()
+    }
+
+    /// Every editor seeded with a document that is still alive.
+    static var liveEditors: [EditorState] { seeded.allObjects }
 
     /// The window fills the screen right now, read off the window's own
     /// notices (`EditorState+FullScreen`), so the View menu's row and the
@@ -5619,7 +5680,7 @@ final class EditorState {
             scheduler = RenderScheduler(store: store, onDelivery: { [weak self] frame in
                 await MainActor.run {
                     // Drop the frame if the document was closed while rendering.
-                    guard let self, self.history != nil else { return }
+                    guard let self, self.history != nil, !self.windowClosed else { return }
                     self.renderedImage = frame.image
                     if self.crispTileOutOfDate {
                         self.crispTileOutOfDate = false

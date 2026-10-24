@@ -1,0 +1,715 @@
+{
+ "out": "/tmp/photonz-playtest/memory-long-session",
+ "seed": "The long session the memory budget is measured on (docs/design/memory.md): 20 screenshots opened and closed, a 12-megapixel picture edited with a shape, text and a shadow and undone and redone, five minutes of captioned talk played and scrubbed, capture history opened, Ask asked to draw twice, then ten idle minutes. Not part of the walk set: it loads Ask's models and takes about twenty minutes. Run it with Scripts/memory-session.sh, which samples Photonz and every helper it starts and draws the chart. The end allows three editors alive: on 2026-10-23 three closed windows' editors were still reachable after the session through a closed window AppKit keeps (its SwiftUI focus storage and menu observation), each already emptied of its pictures when its window closed, so they cost almost nothing; the footprint checks are what hold the memory.",
+ "clock": 2100,
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "captures": [
+   "../playtest/fixtures/thumbnail-shapes/Shape 2 ordinary 1200x800.png",
+   "../playtest/fixtures/thumbnail-shapes/Shape 1 wide 2400x300.png"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "memory",
+   "mark": "one-screenshot",
+   "underMB": 300
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "memory",
+   "mark": "nothing-open"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/objects-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/dark-fields-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/gap-cards-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/gap-heading-lines-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/effects-panel-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/objects-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/dense-page-1x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/dark-fields-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/gap-cards-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/gap-heading-lines-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "memory",
+   "mark": "after-20-screenshots"
+  },
+  {
+   "do": "open",
+   "file": "../playtest/fixtures/Twelve megapixel picture 4000x3000.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    600,
+    600
+   ],
+   "to": [
+    1800,
+    1200
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    700,
+    1400
+   ]
+  },
+  {
+   "do": "type",
+   "text": "Quarterly numbers"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    1200,
+    900
+   ]
+  },
+  {
+   "do": "action",
+   "action": "addShadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "memory",
+   "mark": "twelve-megapixel-edited"
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "memory",
+   "mark": "after-twelve-megapixel"
+  },
+  {
+   "do": "action",
+   "action": "openLongTalk"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "action",
+   "action": "videoPlay"
+  },
+  {
+   "do": "wait",
+   "seconds": 20,
+   "onTheClock": true
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekQuarter"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "videoSeekMiddle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "videoSeekThreeQuarters"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoPlay"
+  },
+  {
+   "do": "wait",
+   "seconds": 10,
+   "onTheClock": true
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "memory",
+   "mark": "video-playing"
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "memory",
+   "mark": "after-video"
+  },
+  {
+   "do": "blank",
+   "canvasWidth": 800,
+   "canvasHeight": 600,
+   "width": 1100,
+   "height": 800
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "shortcut",
+   "key": "h",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Show History"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "memory",
+   "mark": "history-open"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "askFromNothing",
+   "from": "newWindow",
+   "text": "a red bicycle leaning on a brick wall",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "waitFor",
+   "condition": "askPhase",
+   "value": "ran|stopped",
+   "timeout": 300
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "memory",
+   "mark": "ask-1"
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "askFromNothing",
+   "from": "newWindow",
+   "text": "a paper boat on a pond",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "waitFor",
+   "condition": "askPhase",
+   "value": "ran|stopped",
+   "timeout": 300
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "memory",
+   "mark": "ask-2"
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "wait",
+   "seconds": 60,
+   "onTheClock": true
+  },
+  {
+   "do": "memory",
+   "mark": "idle"
+  },
+  {
+   "do": "memory",
+   "mark": "end",
+   "withinPercentOf": "one-screenshot",
+   "percent": 20,
+   "editorsAtMost": 3,
+   "risingOver": "idle"
+  }
+ ]
+}
