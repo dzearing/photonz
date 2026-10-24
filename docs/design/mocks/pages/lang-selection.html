@@ -153,6 +153,22 @@
   /* a component badge: above the top-left corner with a 6px gap, never on the grip */
   #lang-selection .lx-badge{position:absolute;left:0;top:-26px;display:flex;align-items:center;gap:4px;height:16px;padding:0 6px;
     border-radius:5px;background:#6b3fd6;color:#fff;font-size:9.5px;font-weight:640;white-space:nowrap}
+  /* section 01 · the proposal made live: the 3D chip turns 3D mode on */
+  #lang-selection button.lx-3d{padding:0;cursor:pointer}
+  #lang-selection button.lx-3d:hover{border-color:var(--accent)}
+  #lang-selection .lx-3d[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  #lang-selection .selwrap.lx-on{transform:perspective(900px) rotateX(var(--rx,8deg)) rotateY(var(--ry,-18deg));transform-style:preserve-3d;transition:transform .12s ease-out}
+  #lang-selection .selwrap.lx-on .handle.tl,#lang-selection .selwrap.lx-on .handle.tr,
+  #lang-selection .selwrap.lx-on .handle.bl,#lang-selection .selwrap.lx-on .handle.br{display:none}
+  #lang-selection .selwrap.lx-on .handle.tc,#lang-selection .selwrap.lx-on .handle.bc{width:18px;height:8px;border-radius:4px;cursor:ns-resize}
+  #lang-selection .selwrap.lx-on .handle.tc{top:-4.5px}#lang-selection .selwrap.lx-on .handle.bc{bottom:-4.5px}
+  #lang-selection .selwrap.lx-on .handle.ml,#lang-selection .selwrap.lx-on .handle.mr{width:8px;height:18px;border-radius:4px;cursor:ew-resize}
+  #lang-selection .selwrap.lx-on .handle.ml{left:-4.5px}#lang-selection .selwrap.lx-on .handle.mr{right:-4.5px}
+  #lang-selection .selwrap.lx-on .handle.lx-drag{background:var(--accent)}
+  #lang-selection .lx-pv{display:none;position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;
+    background:var(--panel);border:1.5px solid var(--accent);box-sizing:border-box}
+  #lang-selection .lx-pv::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--accent)}
+  #lang-selection .selwrap.lx-on .lx-pv{display:block}
 </style>
 </head>
 <body class="page">
@@ -216,7 +232,10 @@
                   <span class="handle tl"></span><span class="handle tc"></span><span class="handle tr"></span>
                   <span class="handle ml"></span><span class="handle mr"></span>
                   <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
-                  <span class="mtag">Hero card · 400 × 268</span>
+                  <span class="mtag" id="lxHeroTag">Hero card · 400 × 268</span>
+                  <!-- the 3D chip (proposal 03b): click it, then drag the edge pills -->
+                  <button class="lx-3d" id="lxHero3d" type="button" title="Turn in 3D" aria-pressed="false"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
+                  <span class="lx-pv" aria-hidden="true"></span>
                 </div>
               </div>
 
@@ -405,7 +424,7 @@
     <div class="lx-blk" id="lx-proposal-3d">
       <div class="lx-blk-h"><span class="lx-n">03b</span><h3>Proposal · cleaner handles and a 3D mode</h3><span class="lx-sub"><span class="tag acc">for review</span> Specimens · not shipped yet</span></div>
       <div class="lx-blk-b">
-        <p class="lx-note"><b>Why.</b> On a selected card today the frame is hard to look at: square-cornered grips,
+        <p class="lx-note"><b>Try it live</b> on the card in section 01 at the top: click the cube beside the rotate knob, then drag the edge pills (Shift for 15° steps, Escape to leave). <b>Why.</b> On a selected card today the frame is hard to look at: square-cornered grips,
           a stem that runs into the rotate knob, labels sitting on the grips, and three big coloured 3D arrows plus a
           crosshair that cover the card and its neighbours. This section proposes the fix in four parts. Parts 1 to 3
           are polish to the frame everyone sees. Part 4 turns 3D into a mode you switch on from a button by the rotate
@@ -878,5 +897,42 @@
   </section>
 </main>
 <script src="/shared/photonz-ds.js"></script>
+<script>
+/* Proposal 03b, live on the section 01 card: the 3D chip turns 3D mode on;
+   the edge pills then tip (top, bottom) and turn (left, right) the card. */
+(function () {
+  var chip = document.getElementById('lxHero3d');
+  if (!chip) return;
+  var wrap = chip.parentElement, tag = document.getElementById('lxHeroTag');
+  var rx = 8, ry = -18;
+  function paint() {
+    wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg');
+    if (tag) tag.textContent = wrap.classList.contains('lx-on')
+      ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '°' : 'Hero card · 400 × 268';
+  }
+  function set(on) { wrap.classList.toggle('lx-on', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); paint(); }
+  chip.addEventListener('click', function (e) { e.stopPropagation(); set(!wrap.classList.contains('lx-on')); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+  ['tc', 'bc', 'ml', 'mr'].forEach(function (k) {
+    var h = wrap.querySelector(':scope > .handle.' + k);
+    if (!h) return;
+    h.addEventListener('pointerdown', function (e) {
+      if (!wrap.classList.contains('lx-on')) return;
+      e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('lx-drag');
+      var x0 = e.clientX, y0 = e.clientY, rx0 = rx, ry0 = ry;
+      function move(ev) {
+        var snap = function (v) { return ev.shiftKey ? Math.round(v / 15) * 15 : v; };
+        if (k === 'tc') rx = snap(rx0 - (ev.clientY - y0) * .4);
+        if (k === 'bc') rx = snap(rx0 + (ev.clientY - y0) * .4);
+        if (k === 'ml') ry = snap(ry0 - (ev.clientX - x0) * .4);
+        if (k === 'mr') ry = snap(ry0 + (ev.clientX - x0) * .4);
+        rx = Math.max(-60, Math.min(60, rx)); ry = Math.max(-60, Math.min(60, ry)); paint();
+      }
+      function up() { h.classList.remove('lx-drag'); h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); }
+      h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
+    });
+  });
+})();
+</script>
 </body>
 </html>
