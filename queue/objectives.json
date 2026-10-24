@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-24T14:31:40.504Z",
+  "updated": "2026-10-24T14:36:45.513Z",
   "focus": "agent-drivable",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -474,9 +474,12 @@
         {
           "id": "epic-uehjr1",
           "title": "Arrow captions: point at something and label it in a legible pill with a shadow, like the measure tool",
-          "note": "Finished. Arrow captions landed and were audited on 2026-09-04; sent back to later on 2026-09-04 by the manager pass.",
-          "stage": "later",
-          "children": []
+          "note": "Finished. Arrow captions landed and were audited on 2026-09-04; sent back to later on 2026-09-04 by the manager pass. Reopened 2026-10-24 by the user: the chip needs a set of professional styles to pick from.",
+          "stage": "now",
+          "children": [],
+          "success": [
+            "Arrow captions and measurement readouts each offer a set of professional chip styles picked from picture tiles, every one legible over any picture and identical in export"
+          ]
         },
         {
           "id": "measurements-panel",
