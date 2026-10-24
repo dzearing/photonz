@@ -182,10 +182,7 @@
     mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 2 8 8M2 2v3M2 2h3M8 8V5M8 8H5' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
   #lang-selection .selwrap.lx-on .handle.tr::after,#lang-selection .selwrap.lx-on .handle.bl::after{transform:scaleX(-1)}
   #lang-selection .selwrap.lx-on .handle.lx-drag::after{background:var(--accent-ink)}
-  /* depth cues: a dashed outline stays where the card sat (Z 0) and the shadow grows as it comes forward */
-  #lang-selection .lx-home{display:none;position:absolute;inset:0;border:1px dashed var(--accent);border-radius:inherit;opacity:.55;
-    transform:translateZ(calc(-1 * var(--tz,0px)));pointer-events:none}
-  #lang-selection .selwrap.lx-on .lx-home{display:block}
+  /* depth cue: the shadow grows as the card comes forward and tightens as it goes back */
   /* box-shadow, not filter: a filter would flatten the 3D and pin the outline to the card */
   #lang-selection .selwrap.lx-t{box-shadow:0 calc(var(--lift,0) * 30px) calc(8px + var(--lift,0) * 40px) rgba(0,0,0,calc(.15 + var(--lift,0) * .4))}
   /* the first-use hint, under the tag and clear of every grip; gone after the first drag */
@@ -258,7 +255,7 @@
                   <span class="mtag" id="lxHeroTag">Hero card · 400 × 268</span>
                   <!-- the grip swap: the 3D grips (edges turn, corners push back or pull forward) or the sizing grips; the card keeps its 3D look either way -->
                   <button class="lx-3d" id="lxHero3d" type="button" title="Switch to the 3D grips"><svg class="lx-g-size" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="0.8" y="0.8" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="8.6" y="0.8" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="0.8" y="8.6" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="8.6" y="8.6" width="2.6" height="2.6" rx=".6" fill="currentColor"/></svg><svg class="lx-g-3d" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
-                  <span class="lx-home" aria-hidden="true"></span><span class="lx-hint">Drag an edge any way to turn it · drag a corner out to pull it forward, in to push it back</span>
+                  <span class="lx-hint">Drag an edge any way to turn it · drag a corner out to pull it forward, in to push it back</span>
                                   </div>
               </div>
 
