@@ -156,9 +156,12 @@
   /* section 01 · the proposal made live: the 3D chip turns 3D mode on */
   #lang-selection button.lx-3d{padding:0;cursor:pointer}
   #lang-selection button.lx-3d:hover{border-color:var(--accent)}
-  #lang-selection .lx-3d[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-  #lang-selection .selwrap.lx-on{transform:perspective(900px) translateZ(var(--tz,0px)) rotateX(var(--rx,8deg)) rotateY(var(--ry,-18deg));transform-style:preserve-3d;transition:transform .12s ease-out}
-  #lang-selection .selwrap.lx-on.lx-busy{transition:none}
+  /* a swap, not a toggle: it shows the grips you would switch to, never a lit 'on' state */
+  #lang-selection .lx-3d .lx-g-size{display:none}
+  #lang-selection .selwrap.lx-on .lx-3d .lx-g-size{display:block}#lang-selection .selwrap.lx-on .lx-3d .lx-g-3d{display:none}
+  /* the card's turn and depth belong to the card: they stay whichever grips are up */
+  #lang-selection .selwrap.lx-t{transform:perspective(900px) translateZ(var(--tz,0px)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;transition:transform .12s ease-out}
+  #lang-selection .selwrap.lx-t.lx-busy{transition:none}
   /* in 3D mode the edge grips become pills that turn the card, and the corners move it along Z (nearer or farther). Nothing sits on the content */
   #lang-selection .selwrap.lx-on .handle.tc,#lang-selection .selwrap.lx-on .handle.bc{width:18px;height:8px;border-radius:4px;cursor:grab}
   #lang-selection .selwrap.lx-on .handle.tc{top:-4.5px}#lang-selection .selwrap.lx-on .handle.bc{bottom:-4.5px}
@@ -184,7 +187,7 @@
     transform:translateZ(calc(-1 * var(--tz,0px)));pointer-events:none}
   #lang-selection .selwrap.lx-on .lx-home{display:block}
   /* box-shadow, not filter: a filter would flatten the 3D and pin the outline to the card */
-  #lang-selection .selwrap.lx-on{box-shadow:0 calc(var(--lift,0) * 30px) calc(8px + var(--lift,0) * 40px) rgba(0,0,0,calc(.15 + var(--lift,0) * .4))}
+  #lang-selection .selwrap.lx-t{box-shadow:0 calc(var(--lift,0) * 30px) calc(8px + var(--lift,0) * 40px) rgba(0,0,0,calc(.15 + var(--lift,0) * .4))}
   /* the first-use hint, under the tag and clear of every grip; gone after the first drag */
   #lang-selection .lx-hint{display:none;position:absolute;left:50%;bottom:-56px;transform:translateX(-50%);white-space:nowrap;
     font-size:10.5px;color:var(--text-2,#b8bccb);background:var(--panel);border:1px solid var(--edge-lo);border-radius:6px;padding:3px 8px;pointer-events:none}
@@ -253,8 +256,8 @@
                   <span class="handle ml"></span><span class="handle mr"></span>
                   <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
                   <span class="mtag" id="lxHeroTag">Hero card · 400 × 268</span>
-                  <!-- the 3D chip: click it, then the edge pills turn the card and the corners move it along Z -->
-                  <button class="lx-3d" id="lxHero3d" type="button" title="Turn in 3D" aria-pressed="false"><svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
+                  <!-- the grip swap: the 3D grips (edges turn, corners push back or pull forward) or the sizing grips; the card keeps its 3D look either way -->
+                  <button class="lx-3d" id="lxHero3d" type="button" title="Switch to the 3D grips"><svg class="lx-g-size" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><rect x="2" y="2" width="8" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="0.8" y="0.8" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="8.6" y="0.8" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="0.8" y="8.6" width="2.6" height="2.6" rx=".6" fill="currentColor"/><rect x="8.6" y="8.6" width="2.6" height="2.6" rx=".6" fill="currentColor"/></svg><svg class="lx-g-3d" viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
                   <span class="lx-home" aria-hidden="true"></span><span class="lx-hint">Edges turn it · drag a corner out to pull it forward, in to push it back</span>
                                   </div>
               </div>
@@ -918,26 +921,30 @@
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-/* Live on the section 01 card: the 3D chip turns 3D mode on. The top and
-   bottom pills tip the card, the left and right pills turn it (Shift snaps to
-   15°), and the corners move it along Z: drag out to bring it nearer, in to
-   push it away. Escape leaves 3D mode. */
+/* Live on the section 01 card: the chip beside the rotate knob swaps the
+   grips. With the 3D grips up, the top and bottom pills tip the card, the left
+   and right pills turn it (Shift snaps to 15°), and the corners push it back or
+   pull it forward. Swapping back brings the sizing grips; the card keeps its
+   turn and depth. Escape swaps back too. */
 (function () {
   var chip = document.getElementById('lxHero3d');
   if (!chip) return;
   var wrap = chip.parentElement, tag = document.getElementById('lxHeroTag');
-  var rx = 8, ry = -18, tz = 0, P = 900;
+  var rx = 0, ry = 0, tz = 0, P = 900;
+  wrap.classList.add('lx-t');
   function paint() {
     wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg'); wrap.style.setProperty('--tz', tz + 'px'); wrap.style.setProperty('--lift', Math.max(0, Math.min(1, (tz + 600) / 1050)).toFixed(3));
+    var turned = Math.round(rx) || Math.round(ry) || Math.round(tz);
+    var depth = Math.round(tz) === 0 ? 'in place' : Math.abs(Math.round(tz)) + (tz > 0 ? ' forward' : ' back');
     if (tag) tag.textContent = wrap.classList.contains('lx-on')
-      ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '° · ' + (Math.round(tz) === 0 ? 'in place' : Math.abs(Math.round(tz)) + (tz > 0 ? ' forward' : ' back'))
-      : 'Hero card · 400 × 268';
+      ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '° · ' + depth
+      : 'Hero card · 400 × 268' + (turned ? ' · in 3D' : '');
   }
   var tips = { tc: 'Drag to tip it', bc: 'Drag to tip it', ml: 'Drag to turn it', mr: 'Drag to turn it',
     tl: 'Drag out to pull it forward, in to push it back', tr: 'Drag out to pull it forward, in to push it back',
     bl: 'Drag out to pull it forward, in to push it back', br: 'Drag out to pull it forward, in to push it back' };
   function set(on) { Object.keys(tips).forEach(function (k) { var h = wrap.querySelector(':scope > .handle.' + k); if (h) { if (on) h.title = tips[k]; else h.removeAttribute('title'); } });
-    wrap.classList.toggle('lx-on', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); paint(); }
+    wrap.classList.toggle('lx-on', on); chip.title = on ? 'Switch to the sizing grips' : 'Switch to the 3D grips'; paint(); }
   chip.addEventListener('click', function (e) { e.stopPropagation(); set(!wrap.classList.contains('lx-on')); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
   var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
