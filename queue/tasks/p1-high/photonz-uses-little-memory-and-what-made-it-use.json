@@ -1,0 +1,34 @@
+{
+  "id": "photonz-uses-little-memory-and-what-made-it-use",
+  "title": "Photonz uses little memory, and what made it use 4 GB is found and fixed",
+  "goal": "Photonz stays light on memory however long it has been open and whatever you do in it, and lets go of what it no longer needs. A colleague saw it use about 4 GB. Find out what caused that, fix it, and set a memory budget that a test holds the app to from now on.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T00:45:53.715Z",
+  "updated": "2026-10-24T00:45:53.827Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-23: 'a colleague was saying photonz was consuming like 4 gigs. there must be a memory leak. please make a task a goal to use low memory and evaluate what might have caused the high usage.' A leak is the user's guess and is NOT confirmed. We don't know which version, release or session the colleague had. Measured on this Mac by the intake window at 2026-10-23 (footprint -p): the Photonz Dev app itself is 128 MB after 1h55m. Two helpers it started 3 minutes earlier for Ask: llama-server (dist/Photonz Dev.app/Contents/Helpers/AskModel, Qwen3.6-35B-A3B Q4_K_M) is 4,831 MB footprint, with RSS shown as 22.6 GB because of the mapped model file. The picture model, python server.py under Application Support/Photonz/Models/picture-tools, is 4,757 MB footprint. So the strongest SUSPECT for '4 GB' is the Ask helpers, since Activity Monitor may show them under Photonz. Check that, and check how a person would see it. The others are long-session growth in the app itself, which has not been measured. The idle release for the chat server is in AskModelServer.swift:159-182 (AskBuiltInServerPlan.isIdle). Not checked whether AskPictureModel.swift has the same. Helper start and stop is AskHelperProcess.swift. Possibly relevant: should the default model be smaller on a Mac with less memory (AskModels.recommended picks by memory)? Say in the audit what a 16 GB Mac gets. Never kill or measure the person's own dev app during their session: use the probe.",
+  "acceptance": [
+    "Reproduce first: a scripted long session on the probe (open and close 20 screenshots and a 12-megapixel picture, edit with layers and effects, undo and redo, scrub and play a 5-minute captioned video, open capture history, run Ask with drawing twice, leave it idle 10 minutes). Record the footprint of Photonz and of each helper it starts (footprint -p, not RSS) every minute, as a chart in the audit. That is the before",
+    "Name each cause found, with the measurement that proves it: a leak (Instruments Leaks or the leaks tool, or memory that only grows across repeated open/close), caches with no limit (ImageStore, thumbnails, capture history, video frames, render textures), undo history holding whole bitmaps, the Ask helpers. For each one, say whether a person sees it in Activity Monitor as Photonz",
+    "Fix what was found, then set and write down the budget. Photonz on its own: under about 300 MB idle with one screenshot open, and back within 20 percent of that after the long session once windows are closed. Caches have a size limit and shrink under memory pressure. The audit has the after chart",
+    "The Ask helpers (the chat model server and the picture model) start only when Ask needs them, and are let go after a few idle minutes and when Photonz quits. Each one's footprint while loaded and after release is in the audit, and the picture model obeys the same idle rule as the chat model",
+    "A test runs the open/close loop and fails if memory keeps growing across repeats (a leak guard), and a memory check after the long session joins the rotating walk check",
+    "Audit under queue/audits/ with the before and after charts; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T00:45:53.717Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T00:45:53.826Z",
+      "note": "seq 3970 -> 1"
+    }
+  ]
+}
