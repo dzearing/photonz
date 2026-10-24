@@ -13807,3 +13807,13 @@
 {"t":"2026-10-24T08:17:54.004Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T08:17:54.070Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T08:17:59.523Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"One grid with left edges, kept columns and wide sections on whole columns, plus Off/Disabled sense, one type scale and a planning-time build check shipped (a9c8c518). The skill is at 8 on every line but aligned (7); Ask on this Mac is at 5 to 7 (its own drawings): the 8-of-10 bar is not met, so it stays open."}
+{"t":"2026-10-24T08:34:26.470Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":813,"of":1019,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-24T08:34:26.665Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-10-24T09:12:37.764Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T10:34:13.875Z","ev":"task_note","id":"find-out-why-ask-sometimes-waits-five-minutes-fo"}
+{"t":"2026-10-24T10:54:01.609Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T10:54:01.687Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T10:54:01.754Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T10:54:01.822Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T10:54:01.889Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T10:54:01.955Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Title-edge table, page margin, word wrap, parts held in their box and Off/On sense shipped (7e12ebd2..f76e3ddd). The skill is at 8 or 9 on every line but aligned (7) for both cases; Ask on this Mac is 5 to 7. The 8-of-10 bar is not met, so it stays open."}

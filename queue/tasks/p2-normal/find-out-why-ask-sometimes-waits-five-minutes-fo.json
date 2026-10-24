@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-21T02:00:56.194Z",
-  "updated": "2026-10-24T05:46:41.695Z",
+  "updated": "2026-10-24T10:34:13.874Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-20 in the held-out baseline (.ask-eval/held-out-runs/20261021-010309-ask-held-out): pose-cat-yawning (18:19-18:24), pose-person-waving (18:25-18:30) and scene-squirrel-acorn-stump (18:39-18:44) each ended with the walk step '[8 waitFor] FAILED: askPhase(\"ran|stopped\") did not happen within 300.0s' and Ask's trace stopping at '0.0s asking the model' (ask.trace in ask-walk/log.json). Other cases in between answered in about 8 s. curl -s localhost:11434/api/ps afterwards listed qwen3:30b plus a second model loaded, so contention for Ollama is one suspect; not reproduced on demand. AskLocalModel.swift sets timeoutInterval 300 and resource timeout 600 on the chat call. Not filed p1 because not reproduced; the eval counts these as nothing made.",
@@ -42,6 +42,10 @@
     {
       "t": "2026-10-24T05:46:41.694Z",
       "note": "Seen again 2026-10-24 running ask-builds-base-components-walk on f4fe5124's code: trace stopped at '0.0s asking the model' with no answer for 300 s (walk FAILED at step 9 waitFor askPhase). The very next run of the same build answered in 13.7 s and planned the sheet in 238 s."
+    },
+    {
+      "t": "2026-10-24T10:34:13.873Z",
+      "note": "Again 2026-10-24 ~10:14 UTC: eval run 20261024-101354-ask, component-table, the trace stops at 'asking the model' for 300 s on the first request (the probe had just been rebuilt and re-signed)."
     }
   ]
 }

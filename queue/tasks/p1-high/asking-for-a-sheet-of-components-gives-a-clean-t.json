@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-24T08:17:59.522Z",
+  "updated": "2026-10-24T10:54:01.954Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -171,9 +171,41 @@
     {
       "t": "2026-10-24T08:17:59.521Z",
       "note": "One grid with left edges, kept columns and wide sections on whole columns, plus Off/Disabled sense, one type scale and a planning-time build check shipped (a9c8c518). The skill is at 8 on every line but aligned (7); Ask on this Mac is at 5 to 7 (its own drawings): the 8-of-10 bar is not met, so it stays open."
+    },
+    {
+      "t": "2026-10-24T08:34:26.657Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T09:12:37.762Z",
+      "note": "Built (7e12ebd2): a table under a left-set title starts on the title's left edge and ends that far from the right; words half over a drawn icon (filled closed path) are refused; Ask's planner grows a box to hold boxes hanging past its edge (alert buttons under the card), takes the Off track as the biggest FILLED box incl. closed paths (both hypotheses reproduced in tests: a closed-path track and a bigger unfilled hit area each let a blue Off through), and sends back a second labelled row with a name already used. Eval rules leave hidden layers out (a segmented control's hidden option words scored noOverlap 0). Ask's trace keeps 3000 characters of an answer."
+    },
+    {
+      "t": "2026-10-24T10:54:01.606Z",
+      "note": "Built (e500996b, c968ed74, f76e3ddd): add_component lets words wrap in a box tall enough for more lines, and builds them at the box's width (a wrapping card body was refused twelve times as one line: eval 20261024-091230-ask design sheet 18.3, no card). Ask's planner: sheet and title no nearer the edge than 64; Off check reads an unpainted box as the default blue it is drawn in (Track with no fill, read off the 3000-character trace); Default beside Checked/On is the Off look; a dot held still in a round box is hidden in Off and a knob held still in a pill moves to the far end in On; a tick drawn in its box's colour is set white or near black. A tall row under any other row gets its header row again."
+    },
+    {
+      "t": "2026-10-24T10:54:01.685Z",
+      "note": "Chose to align the table to the title rather than move the title, because 'words the person or the model set are left alone' is a tested contract; Ask's planner moves its own title to the 64 margin while planning instead."
+    },
+    {
+      "t": "2026-10-24T10:54:01.752Z",
+      "note": "Eval (rubric f5ae1562). Skill 87.6 (judge 8, 8, 7, 8, 9) and design 87.2 (8, 8, 7, 8, 9), was 86 and 81.2/85.6. Ask runs this pass: component-table 42.6, 47.4, 43.7, 56.6, 51.7 (final: 6, 6, 6, 5, 5); design sheet 76, 18.3 (wrap bug, fixed), 64.1, 58.6, 78.8 (final: 7, 7, 6, 6, 7). One run stalled on the model's first answer (folded into find-out-why-ask-sometimes-waits-five-minutes-fo). NOT at the 8-of-10 bar: skill aligned 7, Ask 5 to 7. The tick-contrast fix landed after the last eval and is unmeasured. Eval rules now leave hidden layers out (rules.mjs flatten), which moved Ask's noOverlap from 0 to 10 on segmented controls with one option shown per look."
+    },
+    {
+      "t": "2026-10-24T10:54:01.820Z",
+      "note": "Left rough (not filed, this task covers it): Ask's four columns stretch over the page while most rows have two states (judges: 'right half mostly empty'); hover looks that barely differ (nav, badge, card) get through tooSmallToSee when a shadow or one colour moves; a Disabled field FILL darker than Default is not caught (disabledLooksDisabled only dims words); look names like Selected2; skill's slider sorted among button rows."
+    },
+    {
+      "t": "2026-10-24T10:54:01.887Z",
+      "note": "Pictures looked at: skill after (title and names on one edge, full matrix; design sheet with header rows over cards and nav), Ask design after (card words wrap inside, empty Default checkbox, grey Off switch; wide sections off the grid, sidebar mostly empty), Ask component-table after (alert buttons inside the card, Off looks right; Disabled field darker, Selected2), walk window capture (table under the name chips, already the-name-chips-over-component-copies-stay-clear; a blue tick on blue, fixed in f76e3ddd). Tests: Scripts/test.sh 14350 passed; ask-builds-base-components-walk ok at Next defaults. Audit: queue/audits/2026-10-24-component-sheet-title-edge.json"
+    },
+    {
+      "t": "2026-10-24T10:54:01.953Z",
+      "note": "Title-edge table, page margin, word wrap, parts held in their box and Off/On sense shipped (7e12ebd2..f76e3ddd). The skill is at 8 or 9 on every line but aligned (7) for both cases; Ask on this Mac is 5 to 7. The 8-of-10 bar is not met, so it stays open."
     }
   ],
-  "started": "2026-10-24T06:04:44.882Z",
+  "started": "2026-10-24T08:34:26.656Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
