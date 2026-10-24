@@ -1,0 +1,33 @@
+{
+  "feature": "Opening a folded panel section makes its room above it",
+  "epic": "found-collapse",
+  "summary": "Opening a folded section of the right panel no longer pushes the sections under it out of sight. When there is not enough room, the sections above it fold, the nearest first, with Appearance and Effects folding last.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A picture in a short window (1280 by 620) and the sample recording. Walk: Scripts/playtest/opening-a-section-folds-the-near-side-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "Open a picture in a short window, draw a rectangle, choose View > Library, then click the LIBRARY header to fold it.", "shot": "2026-10-24-open-room-1-library-folded.png" },
+    { "do": "Click the LIBRARY header again to open it.", "shot": "2026-10-24-open-room-2-library-opened.png" },
+    { "do": "Click the MOTION header to open it. The Library under it stays open and in view.", "shot": "2026-10-24-open-room-3-motion-opened.png" },
+    { "do": "Click the LAYERS header to open it. Nothing else folds, because nothing sits above Layers.", "shot": "2026-10-24-open-room-5-layers-opened.png" },
+    { "do": "Open the sample recording, pick the clip, and leave the Library folded at the foot.", "shot": "2026-10-24-open-room-7-recording-library-folded.png" },
+    { "do": "Click the LIBRARY header. Before this change, Appearance and Effects went out of view (left). Now they stay, and the sections above them fold (right).", "shot": "2026-10-24-open-room-recording-old-vs-new.png" }
+  ],
+  "evaluate": [
+    "When you open the Library at the foot, is folding the sections just above it what you meant by collapsing panes on the other side?",
+    "Is it right that Appearance and Effects are the last to fold, even when one of them sits right above the section you opened?",
+    "Opening Layers at the top folds nothing and pushes the sections under it down as before. Is that acceptable, or should Layers open shorter when there is no room?",
+    "In a recording, opening the Library folded Properties, Time and Audio. Is losing Properties to keep Appearance and Effects the trade you want?",
+    "Do the extra folds read as one motion, or do you notice them landing a frame after the section you clicked?"
+  ],
+  "rough": [
+    "No mock covers how sections share room when one opens, so this follows your words of 2026-10-24 rather than a mock.",
+    "I read 'behind it' as the sections under the one you open, and 'the other side' as the sections above it, the Library at the foot included. Chose this over 'the direction it opens' (which would leave the Library and Layers nothing to fold) because it gives every section the same rule.",
+    "Layers at the top has nothing above it, so opening it in a short panel still pushes the picked thing's sections down and can push the last one out of view, as before. Opening Layers shorter would mean changing the height you set with its divider, so I left it.",
+    "In a short window the rule can fold a big section for a few points: opening Motion's one line folded Appearance, and the Library's pane then grew into the room left (picture 3). The Library holds its share of the panel even when its shelf is nearly empty.",
+    "In the scrolling part, sections under the one you open keep their headers on screen, but their bodies may slide below the edge. Holding the bodies too folded Appearance just to reopen Effects in a recording.",
+    "The folds land one at a time, a frame after the click, so no frame is dropped. Folding two in the same frame cost 16 to 17.6ms.",
+    "A fold that takes the panel from too tall to fitting redraws the whole panel (21 to 29ms). The rule now reaches that state more often. Filed as task folding-a-section-that-lets-the-panel-fit-again.",
+    "Folds are remembered across documents as before, so a section the rule folds stays folded in the next document too.",
+    "Before pictures, from the reproduction walk run before the change: 2026-10-24-open-room-before-picture-sheet.png, 2026-10-24-open-room-before-recording-library-opened.png."
+  ]
+}
