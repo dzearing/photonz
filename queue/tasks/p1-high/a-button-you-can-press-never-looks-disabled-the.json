@@ -1,0 +1,33 @@
+{
+  "id": "a-button-you-can-press-never-looks-disabled-the",
+  "title": "A button you can press never looks disabled: the remove x on an effect reads as bright as the eye beside it",
+  "goal": "Every icon button that works looks like it works. The x that removes an effect, the reorder grip beside it, and every other active icon button in the panels are drawn at the same strength as their working neighbours (like the eye). Faint grey is kept for things that really are disabled.",
+  "epic": "agent-drivable",
+  "priority": "p1-high",
+  "seq": 1.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T12:28:55.368Z",
+  "updated": "2026-10-24T12:28:55.625Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-24: 'the \"remove\" x button on effects seems disabled but it is not. buttons which are active should not look diminished. look at the eye visibility icon button next to it.' Screenshot: queue/audits/2026-10-24-user-effect-remove-looks-disabled.png (Shadow effect: grip, eye bright, x faint). Confirmed in code: Sources/Photonz/EffectsListRow.swift:220-232 removeButton sets .foregroundStyle(.tertiary) on an enabled button, and the grip at :200-204 is .tertiary at rest. The same pattern is likely elsewhere: there are 93 .foregroundStyle(.tertiary) uses in Sources/Photonz, most of them text, so sort buttons from labels. Candidates to check: MotionListInspector.swift:186, PropertyKeysInspector.swift:689, MotionStripView.swift:247 and TimelineTrackRows.swift:1627 (xmarks), plus the Motion header's play button in the same screenshot, which also looks dim. Keep the mock's quiet look: quiet means the same tone as the eye, not fainter.",
+  "acceptance": [
+    "The effect row's remove x and reorder grip are drawn in the same tone as its eye button at rest, and a little brighter on hover, in light and dark. Picture before and after in the audit",
+    "One rule in the panel kit decides an icon button's tone: enabled at rest, hovered, pressed, disabled. Disabled is the only state drawn faint. Row icon buttons use it instead of setting their own colour",
+    "Sweep: every icon-only button in the panels, dock, timeline headers and Ask rows that is enabled but drawn faint (.tertiary or a low opacity) is listed in the audit with its file and line, and moved onto the rule, or kept faint with a written reason (for example it is a hint, not a button)",
+    "A check (unit test or a walk that measures pixel contrast) fails when an enabled icon button is drawn fainter than the disabled tone plus a margin, so this cannot come back",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T12:28:55.371Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T12:28:55.623Z",
+      "note": "seq 77.5 -> 1.5"
+    }
+  ]
+}
