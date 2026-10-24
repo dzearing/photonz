@@ -723,7 +723,6 @@
     if (!pend.length) return 'nothing waiting';
     return (decIdx + 1) + ' of ' + pend.length + ' waiting, tasks are blocked on these';
   }
-  function decEmpty() { return '<div class="db-empty">No open questions. The loop will surface UX and product calls here instead of guessing.</div>'; }
   function decCard(d) {
     var h = '<div class="db-decide" data-decision="' + esc(d.id) + '">';
     h += '<div class="db-q"><i class="ic ic-help"></i><span>' + esc(d.question) + '</span></div>';
@@ -788,7 +787,15 @@
     setTimeout(function () {
       var pend = decPending();
       if (decIdx >= pend.length) decIdx = Math.max(0, pend.length - 1);
-      stage.innerHTML = pend.length ? decCard(pend[decIdx]) : decEmpty();
+      // The last question answered: the card goes, rather than sitting empty.
+      if (!pend.length) {
+        var card = stage.closest('.db-card');
+        if (card) card.remove();
+        decAnim = false;
+        if (after) after();
+        return;
+      }
+      stage.innerHTML = decCard(pend[decIdx]);
       var count = document.getElementById('db-dec-count');
       if (count) count.textContent = decCount(pend);
       var next = stage.firstElementChild;
@@ -1096,8 +1103,10 @@
 
     h += '<div class="db-sumgrid">';
 
-    // needs attention: a carousel, one question at a time
+    // needs attention: a carousel, one question at a time. Only when a
+    // question waits: an empty card is noise (the user, 2026-10-24).
     if (decIdx >= pend.length) decIdx = Math.max(0, pend.length - 1);
+    if (pend.length) {
     h += '<div class="db-card span2"><div class="db-card-h"><i class="ic ic-warning" style="color:var(--warn)"></i><h3>Needs your decision</h3><span class="k" id="db-dec-count">' + decCount(pend) + '</span>';
     if (pend.length > 1) {
       h += '<span style="flex:1"></span><span class="db-decnav">';
@@ -1106,8 +1115,9 @@
       h += '</span>';
     }
     h += '</div><div class="db-card-b"><div class="db-decstage" id="db-decstage">';
-    h += pend.length ? decCard(pend[decIdx]) : decEmpty();
+    h += decCard(pend[decIdx]);
     h += '</div></div></div>';
+    }
 
     // up next
     h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-list"></i><h3>Up next</h3><span class="k">highest priority first</span></div><div class="db-card-b tight">';
