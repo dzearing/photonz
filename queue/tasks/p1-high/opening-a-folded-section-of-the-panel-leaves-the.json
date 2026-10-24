@@ -1,0 +1,34 @@
+{
+  "id": "opening-a-folded-section-of-the-panel-leaves-the",
+  "title": "Opening a folded section of the panel leaves the sections past it alone, and folds sections on the other side if it needs room",
+  "goal": "When you open a section of the side panel that was folded shut, it should get its room without pulling open or dragging out the folded sections behind it. If there is not enough room, Photonz may fold sections on the far side of the one you opened, never the ones it would otherwise drag along.",
+  "epic": "next-polish",
+  "priority": "p1-high",
+  "seq": 1.6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T20:30:49.737Z",
+  "updated": "2026-10-24T20:30:49.856Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-24: \"if I expand a collapsed pane, it should not pull other panes behind it out but can collapse panes on the other side to make room\". NOT reproduced in the intake window; the exact case they hit is a suspect, reproduce first. Where to look: Sources/Photonz/InspectorPanel.swift toggleCollapsed :2334 and expand :2407 (folds.toggle / folds.open, nothing folds anything else today); the panel is split into lists pane, pick sections and the Library shelf pane (split.lists / split.pick / split.shelf, shelfPaneHeight around :389, ShelfPaneGrip :609); height sharing is Sources/Photonz/InspectorDockLayout.swift ceilings :308 over Sources/PhotonzCore/DockHeightBudget.swift (forms paid first, lists squeezed, fold guarantee for Appearance and Effects). Trap: the Appearance/Effects fold guarantee (user 2026-09-07) must still hold, so the 'fold the other side' rule must not fold a promised section that is the one being opened's neighbour without checking that promise; and the shelf pane's held height (PanelShelfPane.Hold) may be what drags the shelf out when a section above opens. 'Behind it' is read as the sections after it in the direction it opens; if the reproduction shows a different meaning, write that in the log and follow the user's words.",
+  "acceptance": [
+    "Reproduced first: with Layers, the picked thing's sections and the Library shelf each folded and open in turn, a walk opens each folded section and records which other sections changed (open/folded, height, on screen or not) before any fix. The audit names the cases that moved a section behind the opened one",
+    "Opening a folded section never opens, unfolds, or pushes off screen a section that sits after it in the opening direction; their fold state and on screen position stay as they were (measured in the walk, before and after)",
+    "When the opened section needs more room than is free, sections on the other side of it fold, nearest first, only as many as needed, and the opened section is fully on screen",
+    "The rule lives in a tested core function (which sections to fold to make room for one being opened), with unit tests for top, middle and bottom sections and the case where folding everything else is still not enough",
+    "Works the same for the Layers pane, the forms in the middle and the Library shelf at the foot, at Next defaults",
+    "A walk covers it; audit under queue/audits/ with before and after pictures; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T20:30:49.739Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T20:30:49.855Z",
+      "note": "seq 3970 -> 1.6"
+    }
+  ]
+}
