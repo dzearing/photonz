@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-24T20:25:49.652Z",
+  "updated": "2026-10-24T20:37:36.655Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -17,6 +17,7 @@
     "Ask 'Make a pricing section on brand' on a blank canvas: each plan's words land inside the placed cards (their own text, not new text laid over them), the cards sit in one evenly spaced row, and no text overlaps another layer, checked against the read document",
     "Ask looks at its own result before it hands back (a picture through a model that can see, or a check of the read document) and fixes what it finds, or says in one short sentence what it could not do",
     "Audit with before and after pictures for the pricing request, run with no switch changed",
+    "Words Ask places over a filled shape it made read against that fill (the same readability check add_component uses, applied to add_text and add_shape in general, or a default text colour picked against what is behind it), checked on the pricing request's button labels",
     "The held-out layout group is back to at least 30 and the video group to at least 55 on the model built into Photonz (Scripts/ask-eval.sh run --engine ask --set held-out; the groups are in queue/evals/ask-eval-history.jsonl). They read layout 23 to 37 and video 55 to 60 on the Ollama model through 2026-10-22 09:46, and layout 6 to 10 and video 48 to 51 on every held-out run since the move to the built-in model (20261022-231423-ask-held-out onward). Cause named in general terms, never as a held-out request"
   ],
   "log": [
@@ -111,6 +112,10 @@
     {
       "t": "2026-10-24T20:25:49.650Z",
       "note": "2026-10-24: Ask's built-in default is now Qwen3.8 27B (task ask-uses-qwen3-8-27b-at-4-bit-by-default-instead). Held-out on it: layout 12.3, video 59.6 (run 20261024-163432-ask-held-out), against Qwen3.6 35B at the same code layout 22.4, video 50.1 (20261024-191502-ask-held-out). So this task's video bar (55) is met on the new default and its layout bar (30) is further away; measure against Qwen3.8 27B."
+    },
+    {
+      "t": "2026-10-24T20:37:36.624Z",
+      "note": "manager 2026-10-24 21:00, probe at abc02936 on the new default Qwen3.8 27B: Scripts/playtest-all.sh --no-build ask-makes-a-pricing-section passed in 224 s and made a title, subtitle and three cards in one even row (first checklist item reads met on this run, vs one empty card on 2026-10-23). What gives it away now: every button label is dark text on the #007AFF fill, because add_text was sent with no colour and the default is dark (the call: add_shape fill #007AFF then add_text 'Choose Starter' with no color). add_component already refuses words unreadable against what is behind them (bf4dc3c2); add_text and add_shape do not. Picture: queue/manager/shots/2026-10-24-ask-pricing-qwen38.png"
     }
   ],
   "walks": [
