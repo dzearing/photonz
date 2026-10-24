@@ -1,0 +1,28 @@
+{
+  "feature": "A sheet of components with no empty cells and an even rhythm",
+  "epic": "agent-skills",
+  "summary": "A component sheet no longer leaves holes: components with the same states share a header row, and any other set of states gets its own. Rows keep one rhythm, one wide component no longer stretches the whole table, and blue words on a darker blue are refused.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a blank picture and press Ask.",
+  "switched": {},
+  "try": [
+    { "do": "On a blank 1440 x 1024 picture, press Ask and type: create a table of apple like quality base components that show different states and text", "shot": "2026-10-24-component-sheet-sections-window-sc.png", "shotNote": "Taken with the window behind another app (a walk never takes the front), so picked controls read in the window's background look." },
+    { "do": "Look down each header row: every state it names has a look under it in every row below it." },
+    { "do": "Compare the Slider and Switch rows with the Button rows: the gaps between rows are the same.", "shot": "2026-10-24-component-sheet-sections-ask.png" },
+    { "do": "Ask the Photonz skill in an agent session for the same sheet and compare.", "shot": "2026-10-24-component-sheet-sections-skill.png" },
+    { "do": "Ask the skill for a component sheet for a website's design system: buttons, text fields, cards and navigation, each labelled, with a title.", "shot": "2026-10-24-component-sheet-sections-skill-design.png" },
+    { "do": "Press Command Z once: the whole sheet goes." }
+  ],
+  "evaluate": [
+    "Does a new header row for each set of states read as sections of one page, or as too many header rows?",
+    "Is the 56 point gap before a new section enough to tell sections apart without a dividing line?",
+    "When one section has wider cells (three cards under five button columns), does that read as wrong, or as fine?",
+    "Would you rather see an empty cell under a shared header than a second header row?"
+  ],
+  "rough": [
+    "Not at the bar yet, so the task stays open. Skill, the user's request: 88.8, judge 8, 8, 8, 8, 9 (was 83.6 to 88.8, with 7s). Skill, design-system sheet: 85.2 twice, judge 8, 8, 7, 7, 8 (was 82). Ask on this Mac: 57.3 and 48 on the user's request and 37.7 and 49.4 on the design sheet, judge 5 to 6 (it ranged 37 to 67 before). Before: 2026-10-20-user-ask-component-sheet-mess.png.",
+    "What still holds Ask back is in its own drawings, not the table: a back label and a title drawn on top of each other, an Off checkbox drawn ticked, a dark or blue Off toggle, empty cards, 'Selected2' as a state name, a disabled field darker than its default, and up to eight type sizes on one sheet.",
+    "A section whose looks are too wide for the shared columns (cards, navigation bars) spreads its cells over the full width, so its columns do not line up with the button columns above. Judges name this, at about one point on aligned.",
+    "The name chips the canvas puts over each component copy cover the header row in the window (the window picture). Already its own task: the-name-chips-over-component-copies-stay-clear.",
+    "One run of the walk timed out because the local model never answered its first request in 300 seconds; the next run of the same build planned the sheet in 238 seconds and passed."
+  ]
+}
