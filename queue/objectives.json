@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-21T01:04:16.041Z",
+  "updated": "2026-10-24T14:31:40.504Z",
   "focus": "agent-drivable",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
@@ -523,7 +523,7 @@
       "id": "image-editing",
       "title": "Make Photonz the best tool for image editing",
       "note": "Non-destructive photo work that feels native: every adjustment is a layer, nothing bakes in.",
-      "stage": "later",
+      "stage": "now",
       "children": [
         {
           "id": "image-retouch",
@@ -549,10 +549,18 @@
         {
           "id": "image-paint",
           "title": "Drawing and painting with real brushes",
-          "note": "",
-          "stage": "later",
-          "children": []
+          "note": "Asked for by the user, 2026-10-24: a Brush tool with a realistic set of media (charcoal, chalk, oil paint, watercolour, markers, crayons, airbrush), each with its own settings like other paint apps, and reachable from MCP so the agent can paint.",
+          "stage": "now",
+          "children": [],
+          "success": [
+            "A Brush tool paints freehand on a picture with charcoal, chalk, oil paint, watercolour, marker, crayon and airbrush, and a person shown unlabelled strokes can tell the seven media apart",
+            "Each brush has its own settings, the ones that medium needs, the way Procreate and Photoshop brushes do",
+            "The agent paints with the same brushes and settings through MCP, and its strokes undo one step at a time like a person's"
+          ]
         }
+      ],
+      "success": [
+        "A person can paint and draw on a picture with realistic brushes, each medium tuned with its own settings, and the agent can paint with the same brushes through the same calls"
       ]
     },
     {

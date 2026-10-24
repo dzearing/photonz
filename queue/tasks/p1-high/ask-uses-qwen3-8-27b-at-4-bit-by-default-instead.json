@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:12:38.623Z",
-  "updated": "2026-10-24T12:35:54.867Z",
+  "updated": "2026-10-24T13:11:06.439Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'we should be using qwen 3.8 27b 4 bit quant over 3.6 35b'. Checked on Hugging Face by the intake window: Qwen/Qwen3.8-27B was released 2026-08-05, Apache 2.0, image-text-to-text. The official GGUFs at ggml-org/Qwen3.8-27B-GGUF are Q4_K_M 18.97 GB, Q8_0 28.6 GB, BF16 53.8 GB, mmproj Q8_0 0.63 GB / BF16 0.93 GB, plus mtp-* and dflash-* draft files. MLX builds exist (lmstudio-community/Qwen3.8-27B-MLX-4bit) if MLX is ever used. The 2026-10-21 model bake-off (ask-runs-on-the-best-model-this-mac-can-hold-pic) compared Ollama tags only and never saw Qwen3.8. The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B is the default at :74, recommended(memoryGigabytes:) at :109). Vendored server: build b11826 (Scripts/vendor-llama-server.sh). Not checked: whether b11826 knows Qwen3.8's architecture. Coordinate with the model choice task (settings-offers-several-ask-models-with-what-eac): this task decides the default, and that one shows the rows and ratings. Whichever runs second builds on the first.",
@@ -33,6 +33,15 @@
     {
       "t": "2026-10-24T12:35:54.866Z",
       "note": "seq 1.05 -> 10"
+    },
+    {
+      "t": "2026-10-24T12:38:04.613Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T13:11:06.438Z",
+      "note": "Downloaded Qwen3.8-27B-Q4_K_M (sha256 c600de03...) + mmproj Q8_0 (2e968a6a...) + mtp/dflash Q4_0 drafts at a316ea52. Vendored b11826 loads it (arch qwen35, same shape as Qwen3.6 27B): tool call and picture both answered right. Speed on the server bench (12.5k-token prompt): reads 103-183 tok/s, writes 5-15 tok/s; Qwen3.6 35B on the same bench reads 1046 and writes 76. b11853 (newest) measured the same (132/10.1 against 135/9.1 back to back), so b11826 stays. Drafts, 700-token svg write: none 11.9 tok/s, MTP 33.2 (510/565 accepted), DFlash 28.7 (494/612). MTP keeps prompt reading, tools and pictures; resident 25.8 GB with MTP against 22.0 without."
     }
-  ]
+  ],
+  "started": "2026-10-24T12:38:04.611Z"
 }

@@ -1,0 +1,38 @@
+{
+  "id": "a-brush-tool-paints-with-realistic-charcoal-chal",
+  "title": "A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it",
+  "goal": "Add a Brush tool so people can paint, not only build vector shapes. It comes with a realistic set of media: charcoal, chalk, oil paint, watercolour, markers, crayons and airbrush. Each brush has its own settings, the ones that medium needs, the way brushes do in Procreate or Photoshop (for example how wet watercolour is and how far it bleeds, how much oil paint is loaded and how it smears, how grainy chalk and charcoal are, how soft and how heavy the airbrush flow is). Pressure and speed shape the stroke. The agent can pick a brush, set it and paint strokes through MCP, so it can make painted illustrations too.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T14:32:04.475Z",
+  "updated": "2026-10-24T14:32:08.905Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-24: 'There is no \"brush\" tool, that lets you paint in the app. This makes the app difficult to paint vs make vector art. I'd love to have a realistic set of paint brushes for illustration (hooked up to mcp so the agent can use them.)' Then: 'i'd like charcoal, chalk, oil paint, watercolors, markers, crayons, airbrushing' and 'the brushes each may have unique adjustments just like other paint apps'.\n\nThe epic image-paint (under image-editing) was staged 'later'; the intake window moved both to 'now' with success criteria in queue/objectives.json so this task may run.\n\nThis is big. The runner should plan it as an epic: split into dependent tasks (brush engine + raster paint layer, then each medium, then settings UI, then MCP, then brushed vector strokes) and file them with deps, keeping this task as the umbrella, rather than landing one huge commit.\n\nWhere things are: tools are Sources/PhotonzCore/Tools.swift (Tools.swift:102-104 already reserves B/E/S/J/Y for brushes, erasers and stamps). There is no brush engine and no paintable raster layer type confirmed; check Sources/PhotonzCore/Layer.swift for an image layer the strokes can land on. Pixels never live in the document model (CLAUDE.md): a stroke should be stored as data (points, pressure, brush id + settings) and rendered in PhotonzRender, or rasterised into an ImageStore-backed layer through History.perform; decide and write it in docs/design. Watercolour and oil need a simulation (wet layer, pigment deposit, edge darkening, bristle smear), likely a Metal kernel; look at published approaches (Curtis et al. 1997 watercolour, Procreate/Rebelle/Fresco behaviour) rather than texture stamps. MCP server: Sources/PhotonzMCP/main.swift; every command must also be one API call (epic agent-api). Product model already says vector strokes can carry a brush: docs/design/mocks/shared/PRODUCT-MODEL.md:37-55.\n\nRelated: the paint bucket task (queue/tasks/p1-high/the-paint-bucket-fills-the-enclosed-area-you-cli.json) and the colour swatches showing for tools that paint (the-colour-swatches-appear-only-for-tools-that-p.json): the brush is a tool that paints, so swatches must show for it.",
+  "acceptance": [
+    "A Brush tool sits in the tool bar on Photoshop's B and paints freehand strokes on a picture with the foreground colour; each stroke is one undo step",
+    "Seven brushes ship: charcoal, chalk, oil paint, watercolour, marker, crayon, airbrush. Each looks like its medium, not a round dab with a texture: charcoal and chalk catch on a paper grain and smudge; oil paint carries and smears colour and shows bristle ridges; watercolour is transparent, pools darker at the edges, blooms and layers where strokes overlap; marker is flat, translucent and darkens where it crosses itself; crayon is waxy and broken over grain; airbrush is a soft even spray that builds up",
+    "Each brush has its own settings, chosen per medium as in Procreate and Photoshop (size and opacity everywhere, then for example wetness and bleed for watercolour, load and smear for oil, grain and smudge for charcoal and chalk, flow and softness for airbrush, tip shape for marker). The settings show in the tool bar's options for the brush that is picked, with plain names, and each one visibly changes the stroke",
+    "Pen pressure and tilt (Apple Pencil via Sidecar, tablets) and pointer speed shape size, opacity or flow where the medium would; a mouse gets a sensible simulated taper",
+    "A brush can also paint the stroke of a vector path (docs/design/mocks/shared/PRODUCT-MODEL.md 'Vector strokes are brushes'), and the path stays editable; if this is too large for one task it is filed as its own follow-up, not dropped",
+    "Painting stays smooth: strokes keep up with the pointer on a 12 megapixel picture, MEASURED (input to pixel latency and frame time while painting) and written in the audit",
+    "MCP: tools to list the brushes and their settings, pick and set a brush, and paint a stroke from a list of points with optional pressure; the agent's strokes look identical to a person's at the same settings and undo one step at a time; Ask can use them to paint an illustration",
+    "A visual bar the weak version fails: a blind test sheet of one unlabelled stroke per medium, and the audit records whether each can be told apart (by the runner and by a model judge), alongside reference photos of each real medium; a round stamped brush with only colour changes must fail it",
+    "Try path: open a blank picture at Next defaults, press B, pick watercolour, paint two overlapping strokes; switch to charcoal and smudge; then ask the agent to paint a small landscape with oil paint",
+    "Audit under queue/audits/ with the stroke sheet per medium and per setting, a reel of painting live, and the agent's painting; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T14:32:04.477Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T14:32:08.903Z",
+      "note": "seq 3970 -> 6"
+    }
+  ]
+}
