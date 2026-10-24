@@ -147,7 +147,7 @@
   #lang-selection .lx-axis-hot{opacity:1;stroke-width:2}
   #lang-selection .lx-axis-z{opacity:.35}
   /* the 3D chip, beside the rotate knob (knob centre is 30.5px above the frame) */
-  #lang-selection .lx-3d{position:absolute;left:calc(50% + 13.5px);top:-38.5px;width:16px;height:16px;border-radius:4px;
+  #lang-selection .lx-3d{position:absolute;left:calc(50% + 13.5px);top:-40.5px;width:20px;height:20px;border-radius:5px;
     background:var(--panel);border:1px solid var(--accent-line);color:var(--accent);display:grid;place-items:center;box-sizing:border-box;
     box-shadow:0 1px 3px rgba(0,0,0,.25)}
   /* a component badge: above the top-left corner with a 6px gap, never on the grip */
@@ -157,18 +157,23 @@
   #lang-selection button.lx-3d{padding:0;cursor:pointer}
   #lang-selection button.lx-3d:hover{border-color:var(--accent)}
   #lang-selection .lx-3d[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-  #lang-selection .selwrap.lx-on{transform:perspective(900px) rotateX(var(--rx,8deg)) rotateY(var(--ry,-18deg));transform-style:preserve-3d;transition:transform .12s ease-out}
-  #lang-selection .selwrap.lx-on .handle.tl,#lang-selection .selwrap.lx-on .handle.tr,
-  #lang-selection .selwrap.lx-on .handle.bl,#lang-selection .selwrap.lx-on .handle.br{display:none}
-  #lang-selection .selwrap.lx-on .handle.tc,#lang-selection .selwrap.lx-on .handle.bc{width:18px;height:8px;border-radius:4px;cursor:ns-resize}
-  #lang-selection .selwrap.lx-on .handle.tc{top:-4.5px}#lang-selection .selwrap.lx-on .handle.bc{bottom:-4.5px}
-  #lang-selection .selwrap.lx-on .handle.ml,#lang-selection .selwrap.lx-on .handle.mr{width:8px;height:18px;border-radius:4px;cursor:ew-resize}
-  #lang-selection .selwrap.lx-on .handle.ml{left:-4.5px}#lang-selection .selwrap.lx-on .handle.mr{right:-4.5px}
-  #lang-selection .selwrap.lx-on .handle.lx-drag{background:var(--accent)}
-  #lang-selection .lx-pv{display:none;position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;
-    background:var(--panel);border:1.5px solid var(--accent);box-sizing:border-box}
-  #lang-selection .lx-pv::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--accent)}
+  #lang-selection .selwrap.lx-on{transform:perspective(900px) translateZ(var(--tz,0px)) rotateX(var(--rx,8deg)) rotateY(var(--ry,-18deg));transform-style:preserve-3d;transition:transform .12s ease-out}
+  #lang-selection .selwrap.lx-on.lx-busy{transition:none}
+  /* in 3D mode the sizing grips step aside: the knob in the middle turns, the circle on the right brings it nearer */
+  #lang-selection .selwrap.lx-on > .handle{display:none}
+  #lang-selection .lx-pv{display:none;position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;
+    background:var(--panel);border:1.5px solid var(--accent);box-sizing:border-box;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.3);touch-action:none}
+  #lang-selection .lx-pv::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--accent)}
+  #lang-selection .lx-pv:hover,#lang-selection .lx-pv.lx-drag{background:var(--accent)}
+  #lang-selection .lx-pv:hover::after,#lang-selection .lx-pv.lx-drag::after{background:var(--accent-ink)}
+  #lang-selection .lx-pv.lx-drag{cursor:grabbing}
   #lang-selection .selwrap.lx-on .lx-pv{display:block}
+  /* the depth circle, off the right edge on a stem, mirroring the rotate knob */
+  #lang-selection .lx-zstem{display:none;position:absolute;top:50%;right:-17px;width:16px;height:1px;background:var(--accent);pointer-events:none}
+  #lang-selection .lx-z{display:none;position:absolute;top:50%;right:-31px;width:14px;height:14px;margin-top:-7px;border-radius:50%;
+    background:var(--panel);border:1.5px solid var(--accent);box-sizing:border-box;cursor:ns-resize;box-shadow:0 1px 3px rgba(0,0,0,.3);touch-action:none}
+  #lang-selection .lx-z:hover,#lang-selection .lx-z.lx-drag{background:var(--accent)}
+  #lang-selection .selwrap.lx-on .lx-z,#lang-selection .selwrap.lx-on .lx-zstem{display:block}
 </style>
 </head>
 <body class="page">
@@ -233,9 +238,9 @@
                   <span class="handle ml"></span><span class="handle mr"></span>
                   <span class="handle bl"></span><span class="handle bc"></span><span class="handle br"></span>
                   <span class="mtag" id="lxHeroTag">Hero card · 400 × 268</span>
-                  <!-- the 3D chip (proposal 03b): click it, then drag the edge pills -->
-                  <button class="lx-3d" id="lxHero3d" type="button" title="Turn in 3D" aria-pressed="false"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
-                  <span class="lx-pv" aria-hidden="true"></span>
+                  <!-- the 3D chip: click it, drag the middle knob to turn, the right circle to bring it nearer -->
+                  <button class="lx-3d" id="lxHero3d" type="button" title="Turn in 3D" aria-pressed="false"><svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
+                  <span class="lx-pv" title="Drag to turn in 3D"></span><span class="lx-zstem"></span><span class="lx-z" title="Drag up to bring nearer, down to push away"></span>
                 </div>
               </div>
 
@@ -478,7 +483,7 @@
               <div class="cnv lx-plinth"><div class="canvas">
                 <div class="selwrap" data-sel-frame="190 × 112" data-sel-parts="edges rotate" style="width:190px">
                   <div class="lx-obj" style="width:190px;height:112px"></div>
-                  <span class="lx-3d" title="Turn in 3D"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></span>
+                  <span class="lx-3d" title="Turn in 3D"><svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></span>
                 </div>
               </div></div>
               <p class="lx-cap">A 16px chip, 8px to the right of the knob and centred on it: panel fill, hairline edge, a small cube. Same family as the grips, so it reads as part of the frame, not a toolbar. Tooltip <b>Turn in 3D</b>. Nothing 3D is drawn until it is on.</p>
@@ -898,39 +903,43 @@
 </main>
 <script src="/shared/photonz-ds.js"></script>
 <script>
-/* Proposal 03b, live on the section 01 card: the 3D chip turns 3D mode on;
-   the edge pills then tip (top, bottom) and turn (left, right) the card. */
+/* Live on the section 01 card: the 3D chip turns 3D mode on. The knob in the
+   middle turns the card both ways at once (Shift snaps to 15°), the circle on
+   the right brings it nearer or pushes it away. Escape leaves 3D mode. */
 (function () {
   var chip = document.getElementById('lxHero3d');
   if (!chip) return;
   var wrap = chip.parentElement, tag = document.getElementById('lxHeroTag');
-  var rx = 8, ry = -18;
+  var rx = 8, ry = -18, tz = 0;
   function paint() {
-    wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg');
+    wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg'); wrap.style.setProperty('--tz', tz + 'px');
     if (tag) tag.textContent = wrap.classList.contains('lx-on')
-      ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '°' : 'Hero card · 400 × 268';
+      ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '° · Z ' + Math.round(tz)
+      : 'Hero card · 400 × 268';
   }
   function set(on) { wrap.classList.toggle('lx-on', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); paint(); }
   chip.addEventListener('click', function (e) { e.stopPropagation(); set(!wrap.classList.contains('lx-on')); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
-  ['tc', 'bc', 'ml', 'mr'].forEach(function (k) {
-    var h = wrap.querySelector(':scope > .handle.' + k);
-    if (!h) return;
-    h.addEventListener('pointerdown', function (e) {
+  function grab(el, onMove) {
+    el.addEventListener('pointerdown', function (e) {
       if (!wrap.classList.contains('lx-on')) return;
-      e.preventDefault(); h.setPointerCapture(e.pointerId); h.classList.add('lx-drag');
-      var x0 = e.clientX, y0 = e.clientY, rx0 = rx, ry0 = ry;
-      function move(ev) {
-        var snap = function (v) { return ev.shiftKey ? Math.round(v / 15) * 15 : v; };
-        if (k === 'tc') rx = snap(rx0 - (ev.clientY - y0) * .4);
-        if (k === 'bc') rx = snap(rx0 + (ev.clientY - y0) * .4);
-        if (k === 'ml') ry = snap(ry0 - (ev.clientX - x0) * .4);
-        if (k === 'mr') ry = snap(ry0 + (ev.clientX - x0) * .4);
-        rx = Math.max(-60, Math.min(60, rx)); ry = Math.max(-60, Math.min(60, ry)); paint();
-      }
-      function up() { h.classList.remove('lx-drag'); h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); }
-      h.addEventListener('pointermove', move); h.addEventListener('pointerup', up);
+      e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
+      el.classList.add('lx-drag'); wrap.classList.add('lx-busy');
+      var start = { x: e.clientX, y: e.clientY, rx: rx, ry: ry, tz: tz };
+      function move(ev) { onMove(ev, start); paint(); }
+      function up() { el.classList.remove('lx-drag'); wrap.classList.remove('lx-busy');
+        el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); }
+      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
     });
+  }
+  var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
+  grab(wrap.querySelector(':scope > .lx-pv'), function (ev, s) {
+    var snap = function (v) { return ev.shiftKey ? Math.round(v / 15) * 15 : v; };
+    rx = clamp(snap(s.rx - (ev.clientY - s.y) * .4), -60, 60);
+    ry = clamp(snap(s.ry + (ev.clientX - s.x) * .4), -60, 60);
+  });
+  grab(wrap.querySelector(':scope > .lx-z'), function (ev, s) {
+    tz = clamp(s.tz - (ev.clientY - s.y) * 1.5, -400, 300);
   });
 })();
 </script>
