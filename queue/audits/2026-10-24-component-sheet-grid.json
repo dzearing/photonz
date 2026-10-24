@@ -1,0 +1,28 @@
+{
+  "feature": "A component sheet on one grid, with looks that mean their state",
+  "epic": "agent-skills",
+  "summary": "Every look in a component sheet now starts at its column's left edge, a state keeps its column from one section to the next, and wide components take whole columns instead of a grid of their own. Ask also stops drawing an Off checkbox with its tick, an Off switch in blue or near black, a Disabled field darker than its Default, empty cards, and more than four type sizes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a blank 1440 x 1024 picture and press Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Press Ask and type: create a table of apple like quality base components that show different states and text", "shot": "2026-10-24-component-sheet-grid-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Run your eye down the Default column: every look and header starts on the same left edge.", "shot": "2026-10-24-component-sheet-grid-ask.png" },
+    { "do": "Find the Off toggle and Off checkbox: the toggle is grey and the box is empty." },
+    { "do": "Ask for: Make a component sheet for a website's design system: buttons, text fields, cards and navigation, each labelled, with a title.", "shot": "2026-10-24-component-sheet-grid-ask-design.png" },
+    { "do": "Ask the Photonz skill in an agent session for the same two sheets and compare.", "shot": "2026-10-24-component-sheet-grid-skill.png" },
+    { "do": "Look at the skill's design sheet: wide navigation bars and cards start on the button columns above them.", "shot": "2026-10-24-component-sheet-grid-skill-design.png" },
+    { "do": "Press Command Z once: the whole sheet goes." }
+  ],
+  "evaluate": [
+    "Do looks starting at their column's left edge read better than looks centred in their cells did?",
+    "When a section has fewer states (Off and On under four button columns), does it read as part of one grid?",
+    "Is a card that takes every other column, under five button columns, lined up enough?",
+    "Do the Off and Disabled looks now read as off and disabled at a glance?"
+  ],
+  "rough": [
+    "Not at the bar yet, so the task stays open. Skill (rubric f5ae1562): the user's request 86, judge 8, 8, 7, 8, 8 (was 88.8 with 8 on every line in one earlier run, 77.6 to 86.4 in others); the design sheet 81.2 and 85.6, judge 8, 8, 7, 8, 9 and 8, 7, 8, 8, 9 (was 85.2, aligned 7). Ask on this Mac: the user's request 58.3, judge 6, 7, 7, 5, 6 (was 48 and 57.3); the design sheet 77.2 and 79.2, judge 6 to 8 (was 37.7 and 49.4). Before: 2026-10-20-user-ask-component-sheet-mess.png.",
+    "What holds Ask back is still its own drawings: a segmented control with one option and looks named Selected 1, 2, 3, two rows both called Button, a slider whose states look the same, a tab icon that is a blob, and once more a blue Off toggle that the new Off check did not catch (the same call rebuilt by hand is caught, so the model sent something the trace does not show).",
+    "Judges still mark aligned 7 when one section has more columns than another (four buttons over five fields): the grid is shared, but a short row ends early.",
+    "The name chips the canvas puts over each component copy cover the header row in the window picture. Already its own task: the-name-chips-over-component-copies-stay-clear."
+  ]
+}
