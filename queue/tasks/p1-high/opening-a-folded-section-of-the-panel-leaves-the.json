@@ -5,11 +5,11 @@
   "epic": "found-collapse",
   "priority": "p1-high",
   "seq": 1.6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T20:30:49.737Z",
-  "updated": "2026-10-24T20:30:49.856Z",
+  "updated": "2026-10-24T22:56:36.338Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: \"if I expand a collapsed pane, it should not pull other panes behind it out but can collapse panes on the other side to make room\". NOT reproduced in the intake window; the exact case they hit is a suspect, reproduce first. Where to look: Sources/Photonz/InspectorPanel.swift toggleCollapsed :2334 and expand :2407 (folds.toggle / folds.open, nothing folds anything else today); the panel is split into lists pane, pick sections and the Library shelf pane (split.lists / split.pick / split.shelf, shelfPaneHeight around :389, ShelfPaneGrip :609); height sharing is Sources/Photonz/InspectorDockLayout.swift ceilings :308 over Sources/PhotonzCore/DockHeightBudget.swift (forms paid first, lists squeezed, fold guarantee for Appearance and Effects). Trap: the Appearance/Effects fold guarantee (user 2026-09-07) must still hold, so the 'fold the other side' rule must not fold a promised section that is the one being opened's neighbour without checking that promise; and the shelf pane's held height (PanelShelfPane.Hold) may be what drags the shelf out when a section above opens. 'Behind it' is read as the sections after it in the direction it opens; if the reproduction shows a different meaning, write that in the log and follow the user's words.",
@@ -29,6 +29,61 @@
     {
       "t": "2026-10-24T20:30:49.855Z",
       "note": "seq 3970 -> 1.6"
+    },
+    {
+      "t": "2026-10-24T20:38:34.957Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T20:59:24.796Z",
+      "note": "Reproduced before any fix (front walk, 1280x620 picture with a rectangle picked and the Library shown, plus a recording with its clip picked). Opening the Library at the foot cut Appearance across its Fill row and pushed Motion out of sight (Appearance 186-331 cut, Motion 399-467 under a 374 band). Opening Layers at the top did the same to the pick sections under it. In a recording with the clip picked, opening the Library pushed Appearance and Effects (the promised pair) out of view (inView went Properties,Time,Appearance,Effects -> Properties,Time). A folded Library also rides on whatever opens above it (its pane grows into free room, header under the last pick section) but stays on screen."
+    },
+    {
+      "t": "2026-10-24T22:55:56.418Z",
+      "note": "owns these walks: opening-a-section-folds-the-near-side-walk, section-fold-motion-walk, every-section-header-opens-walk"
+    },
+    {
+      "t": "2026-10-24T22:56:18.667Z",
+      "note": "Adversarial review before building: the panel is three parts (Layers pane, the pick's scroller, the Library pane at the foot), and 'room' in a scroller is only what is on screen; a Premiere/Final Cut inspector never folds other sections on its own, so this goes further than the grown-up tools on the user's word. The trap from the notes holds: Appearance and Effects (promised 2026-09-07) fold only after every ordinary section on the near side."
+    },
+    {
+      "t": "2026-10-24T22:56:18.735Z",
+      "note": "Chose 'behind' = the sections under the opened one and 'the other side' = the sections above it, the Library included (its body opens under its header like every other), over the intake reading 'after it in the direction it opens', because that reading leaves both Layers and the Library nothing to fold and only the middle with a rule."
+    },
+    {
+      "t": "2026-10-24T22:56:18.800Z",
+      "note": "Chose to fold nothing when folding the whole near side still cannot fit, over folding everything anyway, because the person would lose every open section and the panel would scroll regardless. Consequence: Layers at the top (nothing above it) in a short panel still pushes the pick's last section out of view, as before. Acceptance item 2 holds for the middle and the foot; Layers is the exception, asked about in the audit's evaluate list rather than solved by shrinking the pane the person sized with its divider."
+    },
+    {
+      "t": "2026-10-24T22:56:18.867Z",
+      "note": "Chose to promise sections under the opened one in the scroller their HEADERS on screen, not their bodies, after holding bodies whole folded Appearance just to reopen Effects in a recording."
+    },
+    {
+      "t": "2026-10-24T22:56:18.936Z",
+      "note": "Built: PhotonzCore PanelOpenRoom (13 tests: room to spare, top, middle, bottom, promised last, never folds behind, cannot fit folds nothing). InspectorPanel.roomToOpen feeds it what is on screen; the Library's share is re-worked when the plan folds Layers (its pane is a share of the room under Layers). Folds land one per pass after the click (two in one pass held 16-17.6ms). Arithmetic 0.04-0.12ms a click. Commit 2548e042."
+    },
+    {
+      "t": "2026-10-24T22:56:19.004Z",
+      "note": "Verified: opening-a-section-folds-the-near-side-walk passes on the final build (front, Next defaults, no flags; pointer clicks on header faces): foot (Library opens whole, Motion folds first, Appearance kept), middle (Motion, Effects open with the Library under them unchanged and in view), top, a 900pt window where nothing folds, and a recording where Appearance and Effects stay in view. every-section-header-opens-walk passes. Scripts/test.sh: 14375 tests pass. Pictures looked at: foot before/after and recording old-vs-new; both show the after state the goal asks for."
+    },
+    {
+      "t": "2026-10-24T22:56:19.073Z",
+      "note": "Walks changed in the same commit: section-fold-motion-walk (reopen Captions and Time after Transitions takes its room; Mute/Normalize checks read the Audio/Audio Gain headers; the two clip-phase Transitions clicks untimed under folding-a-section-that-lets-the-panel-fit-again) and every-section-header-opens-walk (reopen bottom up). section-fold-motion still shows its standing 16-19ms flakes on other clicks (the same ones in the 10-21/10-22 sweeps, owned by walks-that-fail-in-the-full-sweep-26); the last three runs were cut short when the person came back to the Mac."
+    },
+    {
+      "t": "2026-10-24T22:56:19.141Z",
+      "note": "Rough items: panel redraw when a fold makes the panel fit -> filed folding-a-section-that-lets-the-panel-fit-again (p2). Layers-at-top, Library empty glass after folds, folds remembered across documents -> left in the audit's rough list and this log; none is broken, each is a judgement for the user. ask-shows-the-agent-group-when-folded-walk failing (unrelated, reproduced with the rule off) -> folded into walks-that-fail-in-the-full-sweep-26."
+    },
+    {
+      "t": "2026-10-24T22:56:36.336Z",
+      "note": "Opening a folded panel section now takes its room from the sections above it, nearest first, Appearance and Effects last, and leaves the sections under it folded or open as they were and on screen. Rule in PhotonzCore PanelOpenRoom (13 tests), fed by InspectorPanel.roomToOpen; commit 2548e042. Reproduced first (Library opening cut Appearance and pushed Motion out of view in a picture, and pushed Appearance and Effects out of view in a recording). Verified by opening-a-section-folds-the-near-side-walk at Next defaults (foot, middle, top, roomy window, recording) and every-section-header-opens-walk; 14375 unit tests pass. Exception: Layers at the top has nothing above it, so in a short panel it still pushes the pick down as before (asked in the audit). Audit 2026-10-24-opening-a-folded-section-of-the-panel-leaves-the.json; follow-up folding-a-section-that-lets-the-panel-fit-again (p2)."
     }
-  ]
+  ],
+  "started": "2026-10-24T20:38:34.955Z",
+  "walks": [
+    "opening-a-section-folds-the-near-side-walk",
+    "section-fold-motion-walk",
+    "every-section-header-opens-walk"
+  ],
+  "completed": "2026-10-24T22:56:36.337Z"
 }

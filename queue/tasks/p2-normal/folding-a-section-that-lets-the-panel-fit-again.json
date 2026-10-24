@@ -1,0 +1,30 @@
+{
+  "id": "folding-a-section-that-lets-the-panel-fit-again",
+  "title": "Folding a section that lets the panel fit again never holds a frame",
+  "goal": "When a person folds or opens a section and the rest of the right panel goes from too tall to fitting (or back), the whole panel redraws in one pass of 21 to 29ms, a frame the app does not draw. Folding should feel instant whatever it does to the panel.",
+  "epic": "found-collapse",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T22:20:10.881Z",
+  "updated": "2026-10-24T22:20:10.884Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-24 (task opening-a-folded-section-of-the-panel-leaves-the): Scripts/playtest.sh Scripts/playtest/section-fold-motion-walk.json, three runs: [88 press] pressing \"Transitions section\" held the main thread for 28.2ms / 25.4ms / 21.4ms in one pass, starting 5-9ms after the click; note says inspectorPanel bodies 1. The shut path is unchanged code (PanelOpenRoom only runs on an open); what changed is the fold state: the open-room rule now folds the audio sections when Captions/Audio Gain reopen in a 670pt panel, so shutting the 541pt Transitions takes the pick from overflowing to fitting. InspectorPanel.checkFoldBudget sees the ceilings change (Appearance squeezed 145 -> natural 171) and bumps foldBudgetPass, which redraws the whole panel (about the 23ms pick floor measured 2026-09-17). Before the rule the walk kept everything open, the pick overflowed before and after, the ceilings never changed and the shut cost 8-13ms. Same cost is reachable by hand without the rule: fold those sections yourself and shut Transitions. Likely fix: hand each section its ceiling through its own cell (like PanelSectionFoldStore does for folds) so a ceiling change redraws only the sections whose ceiling moved. The reopen measured 27.9ms / 25.6ms the same way (fits -> too tall).",
+  "acceptance": [
+    "In a recording with its clip picked and Properties, Time, Audio Fades, Audio Gain and Audio Effects folded, shutting Transitions by its header and opening it again each hold the main thread under 16ms in every pass",
+    "section-fold-motion-walk's two clip-phase presses of Transitions carry longestUnderMS 16 again and pass three runs in a row",
+    "No section on screen jumps or flickers while the panel re-shares its height"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T22:20:10.883Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "section-fold-motion-walk"
+  ]
+}

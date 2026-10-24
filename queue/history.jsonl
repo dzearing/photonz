@@ -13931,3 +13931,18 @@
 {"t":"2026-10-24T20:37:36.626Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-10-24T20:37:36.728Z","ev":"task_note","id":"ask-s-first-answer-after-its-model-loads-comes-i"}
 {"t":"2026-10-24T20:38:13.552Z","ev":"manager","filed":0,"readyBefore":75,"readyAfter":76,"report":"queue/manager/2026-10-24-2105.md"}
+{"t":"2026-10-24T20:38:34.884Z","ev":"manager_pass","exit":0,"ready":76}
+{"t":"2026-10-24T20:38:34.963Z","ev":"task_started","id":"opening-a-folded-section-of-the-panel-leaves-the","title":"Opening a folded section of the panel leaves the sections past it alone, and folds sections on the other side if it needs room","priority":"p1-high"}
+{"t":"2026-10-24T20:59:24.798Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:20:10.885Z","ev":"task_created","id":"folding-a-section-that-lets-the-panel-fit-again","priority":"p2-normal","title":"Folding a section that lets the panel fit again never holds a frame"}
+{"t":"2026-10-24T22:55:56.421Z","ev":"task_walks","id":"opening-a-folded-section-of-the-panel-leaves-the","walks":["opening-a-section-folds-the-near-side-walk","section-fold-motion-walk","every-section-header-opens-walk"]}
+{"t":"2026-10-24T22:56:01.730Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-24T22:56:18.669Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:18.737Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:18.802Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:18.870Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:18.938Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:19.006Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:19.075Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:19.143Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
+{"t":"2026-10-24T22:56:36.339Z","ev":"task_done","id":"opening-a-folded-section-of-the-panel-leaves-the","from":"in_progress","note":"Opening a folded panel section now takes its room from the sections above it, nearest first, Appearance and Effects last, and leaves the sections under it folded or open as they were and on screen. Rule in PhotonzCore PanelOpenRoom (13 tests), fed by InspectorPanel.roomToOpen; commit 2548e042. Reproduced first (Library opening cut Appearance and pushed Motion out of view in a picture, and pushed Appearance and Effects out of view in a recording). Verified by opening-a-section-folds-the-near-side-walk at Next defaults (foot, middle, top, roomy window, recording) and every-section-header-opens-walk; 14375 unit tests pass. Exception: Layers at the top has nothing above it, so in a short panel it still pushes the pick down as before (asked in the audit). Audit 2026-10-24-opening-a-folded-section-of-the-panel-leaves-the.json; follow-up folding-a-section-that-lets-the-panel-fit-again (p2)."}
