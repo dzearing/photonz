@@ -4,12 +4,12 @@
   "goal": "The window that sets up permissions becomes Photonz's one setup window. It shows, one step at a time, only the steps you have not seen and still need: screen recording, microphone, the screenshot keys, and a new step that explains using Photonz from Claude Code and GitHub Copilot and offers to install the skills. Each step is shown once. Anything you skip can be done later from Settings.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 1.2,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:11:00.296Z",
-  "updated": "2026-10-24T12:11:10.628Z",
+  "updated": "2026-10-24T12:35:54.934Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'I'd love the skills an FRE for using photonz with copilot and claude code where there is a nice explainer and an opt in to install the skills. It should show up once, but they can dismiss and install the skills from settings. The FRE should be able to display multiple steps if we have not yet seen the step. I think it should be the same FRE dialog that sets up your permissions as needed. If they've done a step or don't need it we skip as expected.' Today's window: Sources/Photonz/Welcome/WelcomeView.swift (Screen Recording, Microphone, Free up the screenshot keys, all on one page with Start Capturing) and WelcomeController.swift. It has a single completed/dismissed pair (welcome.setupCompleted, welcome.setupDismissed :27-33) and a first-run tutorial offer (:36-41). Per-step seen state replaces the single pair: migrate it so people who finished setup are not shown the permission steps again. Depends on the Settings install task (the-agent-server-and-skill-come-inside-photonz-a), which owns the actual install. Don't add an Ask model download step here. Ask setup happens when Ask is first pressed (the model choice task, filed the same minute). Mention in one line on the agents page that Ask inside Photonz needs no setup until you use it.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-24T12:11:10.627Z",
       "note": "seq 77.5 -> 1.2"
+    },
+    {
+      "t": "2026-10-24T12:35:54.933Z",
+      "note": "seq 1.2 -> 30"
     }
   ]
 }

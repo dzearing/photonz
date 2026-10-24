@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-23T14:06:24.776Z",
-  "updated": "2026-10-23T14:07:57.626Z",
+  "updated": "2026-10-24T12:35:02.698Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-23 digest design review in queue/audits/2026-10-22-ask-builtin-2-settings-offer.png (Settings opened from Ask on a Mac with nothing downloaded): the first thing in the window is the Questions you have silenced header on a darker band, then its empty card, then Ask with its Download button, and the next row (Use Ollama instead) cut off at the foot. The ask-works-on-a-mac-that-has-nothing-else-install runner logged it as left rough: the Settings window opens short and the sticky header covers the top of the Ask section until scrolled. It is the first screen a person sees on the way to making Ask work at all.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-23T14:07:57.625Z",
       "note": "seq 57.5 -> 70"
+    },
+    {
+      "t": "2026-10-24T12:35:02.697Z",
+      "note": "duplicate of settings-offers-several-ask-models-with-what-eac, which rebuilds Settings > Ask and the no-model path; acceptance folded in on 2026-10-24 triage"
     }
   ]
 }

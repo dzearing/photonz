@@ -4,12 +4,12 @@
   "goal": "The model Ask runs on by default is Qwen3.8 27B, 4-bit (Q4_K_M), a newer model than the Qwen3.6 35B used today. The older models stay as choices in Settings.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 1.05,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:12:38.623Z",
-  "updated": "2026-10-24T12:12:38.813Z",
+  "updated": "2026-10-24T12:35:54.867Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'we should be using qwen 3.8 27b 4 bit quant over 3.6 35b'. Checked on Hugging Face by the intake window: Qwen/Qwen3.8-27B was released 2026-08-05, Apache 2.0, image-text-to-text. The official GGUFs at ggml-org/Qwen3.8-27B-GGUF are Q4_K_M 18.97 GB, Q8_0 28.6 GB, BF16 53.8 GB, mmproj Q8_0 0.63 GB / BF16 0.93 GB, plus mtp-* and dflash-* draft files. MLX builds exist (lmstudio-community/Qwen3.8-27B-MLX-4bit) if MLX is ever used. The 2026-10-21 model bake-off (ask-runs-on-the-best-model-this-mac-can-hold-pic) compared Ollama tags only and never saw Qwen3.8. The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B is the default at :74, recommended(memoryGigabytes:) at :109). Vendored server: build b11826 (Scripts/vendor-llama-server.sh). Not checked: whether b11826 knows Qwen3.8's architecture. Coordinate with the model choice task (settings-offers-several-ask-models-with-what-eac): this task decides the default, and that one shows the rows and ratings. Whichever runs second builds on the first.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-24T12:12:38.811Z",
       "note": "seq 77.5 -> 1.05"
+    },
+    {
+      "t": "2026-10-24T12:35:54.866Z",
+      "note": "seq 1.05 -> 10"
     }
   ]
 }

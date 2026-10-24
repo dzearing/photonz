@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p2-normal",
   "seq": 85,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-23T18:58:24.864Z",
-  "updated": "2026-10-23T18:58:24.867Z",
+  "updated": "2026-10-24T12:35:02.458Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-23 in eval run 20261023-163832-ask, case pricing-section: Ask planned 56 steps and the whole request ended \"Step 11 failed. Nothing was changed.\" because step 11 was add_text with fontName \"SF Pro Display\" (engine.skipped: \"11: add_text: there is no font called SF Pro Display on this Mac\"). That trigger is fixed (AgentTools.fontFamily, commit 54d9088d), but any one refusal at run time still costs the whole plan: AskSession.swift around stepFailed (AskCopy.stepFailed). Longer plans are more common since Ask may plan 30 rounds (2026-10-23). Reproduce by planting a step that fails at run time (a layer id that does not exist) in a plan in a unit or walk.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-23T18:58:24.866Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-24T12:35:02.456Z",
+      "note": "duplicate of when-ask-stops-part-way-it-says-so-and-one-refus: folded its acceptance in (run-time failures) on 2026-10-24 triage"
     }
   ]
 }

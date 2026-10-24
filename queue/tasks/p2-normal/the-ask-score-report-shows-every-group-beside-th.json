@@ -4,12 +4,12 @@
   "goal": "The scored test set is how the loop decides whether a change made Ask better. Today it reports one total for the unseen requests, so when Ask moved to the model built into Photonz the layout score fell from about 30 to about 7 and nobody saw it, because better drawings lifted the total. The same total held a drawing task open for five passes on swings in groups it never touched. The report should show each group, and say when one falls.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 80,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:07:33.733Z",
-  "updated": "2026-10-23T14:07:57.707Z",
+  "updated": "2026-10-24T12:35:55.600Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, 2026-10-23 digest. Scripts/ask-eval.sh report prints: held-out 60.3 (45 cases, 20261023-105134-ask-held-out), nothing else. queue/evals/ask-eval-history.jsonl held-out groups (total, drawing, layout, redline, video): 20261022-094634 60.3 65.3 23.3 37.9 59.7 (Ollama); 20261022-231423 61 69.1 6.4 31.5 48.1 (built in, first run); 20261023-034535 58.1 67.4 5.7 5.5 51.6; 20261023-105134 60.3 69.5 7.3 13.6 49.8. The scene task (a-scene-of-things-doing-something-together-is-dr) was claimed five times in 24 hours chasing a total of 61 that its own group (drawing, 65.7 to 69.5) never moved. Code: Scripts/ask-eval/eval.mjs; prompt: queue/bin/runner-prompt.md around the held-out rule. The layout and redline drops themselves are on ask-on-the-local-model-makes-results-that-look-f and ask-s-redlines-do-at-least-as-well-on-unseen-req.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-23T14:07:57.705Z",
       "note": "seq 58.75 -> 80"
+    },
+    {
+      "t": "2026-10-24T12:35:55.599Z",
+      "note": "seq 80 -> 70"
     }
   ]
 }

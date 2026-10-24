@@ -4,12 +4,12 @@
   "goal": "Nothing is downloaded until a person wants Ask. Settings > Ask lists several models, each with what it needs (memory, disk space) and a quality and speed rating, a Download button, and a way to pick the one Ask uses. Pressing Ask with no model opens a short dialog that recommends the right set for this Mac and downloads it, then carries on with what was asked.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 1.3,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:11:00.440Z",
-  "updated": "2026-10-24T12:11:10.747Z",
+  "updated": "2026-10-24T12:35:54.968Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'in settings, I would like multiple model options to choose from. There should be a download button to download them on demand, and then use them. Each should have some requirements and maybe something like quality / speed ratings. This would allow users to opt into the ask functionality without requiring a model to be downloaded. I think by default, model should not be downloaded and clicking ask should bring you to a dialog which downloads a recommended model set if needed based on the mac configuration.' Today: Sources/Photonz/Agent/AskSettingsSection.swift offers one recommended model with Download (:81-85) and a Picker over the ones you have (:68-70), plus the picture model's Download (:121-125). An Ollama branch remains (:141-175). The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B 21.7 GB, Qwen3.6 27B 22.8 GB, Gemma 4 26B 18.5 GB, all from Hugging Face at pinned revisions) and the picture model is in AskPictureModelPlan.swift (about 11 GB). Downloads go through AskModelDownload.swift. Nothing smaller than 18.5 GB exists, so a 16 GB Mac gets 'Ask needs more memory than this Mac has.' Scoring: Scripts/ask-eval.sh, held-out set. Check what happens today when Ask is pressed with no model (not reproduced here). Ties in with the memory task (photonz-uses-little-memory-and-what-made-it-use): smaller models lower memory as well.",
@@ -21,7 +21,8 @@
     "Pressing Ask (or Create in the New window) with no model opens one dialog: what Ask is, the recommended set for this Mac (chat model, plus picture model if it fits) with total size and space left, Download and Not now. When the download finishes, what the person typed runs without being typed again. Not now keeps the words",
     "The recommendation is chosen by this Mac's memory and free disk space by a tested rule in PhotonzCore, and the audit lists what 8, 16, 24, 36, 64 GB Macs get",
     "Deleting a model frees its disk space, and Ask falls back to the next downloaded model or to the dialog",
-    "Audit under queue/audits/ with pictures of Settings > Ask, the dialog, and the ratings table; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+    "Audit under queue/audits/ with pictures of Settings > Ask, the dialog, and the ratings table; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not",
+    "Settings opened from Ask or from the dialog lands on the Ask section with its rows and Download buttons in view, and no section header stays pinned over another section's rows while scrolling. Today it opens short, led by the dark pinned Questions you have silenced band with Ask cut off at the bottom (queue/audits/2026-10-22-ask-builtin-2-settings-offer.png). Folded from open-settings-from-ask-lands-on-the-ask-section"
   ],
   "log": [
     {
@@ -31,6 +32,14 @@
     {
       "t": "2026-10-24T12:11:10.742Z",
       "note": "seq 78.75 -> 1.3"
+    },
+    {
+      "t": "2026-10-24T12:35:02.621Z",
+      "note": "2026-10-24 triage: folded in open-settings-from-ask-lands-on-the-ask-section (p2). This task rebuilds Settings > Ask and the no-model path into it, so the window that opens on the wrong section with a pinned band over it is the same screen; its bar is the new last acceptance item. Its walk idea: open Settings from Ask and check the Ask section and Download button are in view, focus-drill clean."
+    },
+    {
+      "t": "2026-10-24T12:35:54.967Z",
+      "note": "seq 1.3 -> 40"
     }
   ]
 }

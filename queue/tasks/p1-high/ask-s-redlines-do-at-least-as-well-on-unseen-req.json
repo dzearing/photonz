@@ -4,12 +4,12 @@
   "goal": "After Ask started choosing measurements in code, its scores on unseen measuring requests fell even though the settings screenshot request got better. Find what kind of measuring request now does worse and fix it, without tuning to any one request.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 100,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T06:33:47.359Z",
-  "updated": "2026-10-24T01:56:09.177Z",
+  "updated": "2026-10-24T12:35:55.334Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured, not guessed: held-out run 20261021-010309-ask-held-out (before, commit 4514d304) redline group 35.4; after the calm redline (c9200d34) 20261021-050656-ask-held-out redline 19.5; after the follow-up fixes (aa4e3ce3: an empty find_measurements answer says to fall back to find_elements, Ask lays only the ids that answer the request, a redline never drops below three marks) 20261021-055152-ask-held-out redline 19.6. Totals 20.1 / 19.2 / 19.5. Only one baseline run exists, so a lucky baseline is possible: rerun the before commit's held-out once before chasing. A runner may not open Scripts/ask-eval/held-out/ or .ask-eval/held-out-runs/; the user can look at .ask-eval/held-out-runs/20261021-055152-ask-held-out/contact-sheet.png. Ideas not yet checked: requests that name a dimension the plan never measures (a card's width, the title's size), pictures LayoutRead reads poorly (dark app windows, photos), and the prompt sending every measuring request to find_measurements.",
@@ -57,6 +57,10 @@
     {
       "t": "2026-10-24T01:56:09.175Z",
       "note": "manager 2026-10-23 19:00, ask-annotates-a-screenshot on the built-in model (settings-pane-2x fixture): 8 measurements, sensible picks (row height 44, section gap 18, button gap 12, field width 220), but pills sit on what they measure: 16 px on the card's left edge, 44 px on a row divider, 26 px pressed against 18 px, 24 px and 42 px crowding the last switch. Values read in px on a 2x picture (that is a-redline-of-a-2x-screenshot-reads-in-points-wit). Picture: queue/manager/shots/2026-10-23-ask-annotates-settings-2x.png"
+    },
+    {
+      "t": "2026-10-24T12:35:55.333Z",
+      "note": "seq 100 -> 150"
     }
   ],
   "walks": []

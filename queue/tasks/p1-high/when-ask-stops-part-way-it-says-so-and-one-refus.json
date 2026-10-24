@@ -4,12 +4,12 @@
   "goal": "On a blank picture, asking Ask to make a pricing section on brand made a title, a subtitle and one empty card, then stopped. The row in the Agent group still says Made a pricing section on brand, and Ask said nothing about the rest. A person ends up believing the change is done when most of it was never made. Ask should keep going past one step it got wrong, and when it does stop short it should say in one short line what it did not make, in the row and where Ask answers.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 45,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T01:55:58.347Z",
-  "updated": "2026-10-24T01:56:09.039Z",
+  "updated": "2026-10-24T12:35:55.200Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the manager pass 2026-10-23 19:00 on the probe built 18:39 from HEAD bf4dc3c2: Scripts/playtest-all.sh --no-build ask-annotates-a-screenshot ask-adds-a-title-page ask-makes-a-pricing-section -> 3 passed (walks pass whatever was made). Pricing trace (qwen3.6-35b-a3b): turn 3 add_text Subtitle; turn 4 add_shape rectangle with frame 320x480 at 120,240 (one card); turns 5, 6, 7 each add_shape {shape: rectangle, stroke: #D2D2D7, strokeWidth: 1} with NO frame -> 'refused: Not planned. add_shape: a rectangle needs a frame.' three times -> 'done'. Final ask state: says '', skipped [], changes ['Made a pricing section on brand (on)']. Picture: queue/manager/shots/2026-10-23-ask-pricing-one-empty-card.png. Code: Sources/PhotonzCore/AskPlanning.swift, refuse() counts sameRefusals; the early stop at 'if sameRefusals >= Self.mostSameRefusals, !steps.isEmpty, looks.isEmpty' returns .planned(AskPlan(steps:, summary: \"\")) silently (mostSameRefusals = 2, added in 6052b7d0 on 2026-10-23); the add_component special case just above it (removeLast(2), 'Leave X out ... plan the next kind') is the pattern to make general. The refusal text itself could name what is missing with an example from the call before it (the previous add_shape had a frame), which may be what the small model needs. Row words: AskSession.swift and AskCopy. Related, not the same: one-step-ask-cannot-run-no-longer-throws-away-th (p2) is a step failing at RUN time; ask-on-the-local-model-makes-results-that-look-f (p1) is how good a finished result looks.",
@@ -21,7 +21,9 @@
     "Eval: Scripts/ask-eval.sh run --engine ask --cases pricing-section,component-table scores no lower than before, and the held-out layout group (Scripts/ask-eval.sh run --engine ask --set held-out) is reported before and after in the audit, read from its own group on the same model",
     "Try path, no switch to change: open a new 1440 by 900 picture, press Ask, type Make a pricing section on brand. The Agent group row says what was made, and says what was left out if anything was",
     "Audit written under queue/audits/ with the before picture (queue/manager/shots/2026-10-23-ask-pricing-one-empty-card.png) and an after picture",
-    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not",
+    "Run time too (folded from one-step-ask-cannot-run-no-longer-throws-away-th): a plan with one step that fails as it runs makes every other step, as one undo step, and its row says which step was left out and why in one short line. Today one failed step ends with 'Step 11 failed. Nothing was changed.' (eval run 20261023-163832-ask, pricing-section, AskSession stepFailed). Reproduce by planting a step that fails at run time, such as a layer id that does not exist, in a unit test",
+    "A failing step that a later step depends on ($N) leaves out that later step too, and says so"
   ],
   "log": [
     {
@@ -31,6 +33,14 @@
     {
       "t": "2026-10-24T01:56:09.038Z",
       "note": "seq 77.5 -> 45"
+    },
+    {
+      "t": "2026-10-24T12:35:02.375Z",
+      "note": "2026-10-24 triage: folded in one-step-ask-cannot-run-no-longer-throws-away-th (p2). Same thing a person sees, a change that stops short and says nothing true about it, at plan time here and at run time there, in the same files (AskPlanning, AskSession, AskCopy). Its two acceptance items are now the last two here. Evidence spot-check: the walk log /tmp/photonz-playtest/ask-makes-a-pricing-section-walk/log.json (18:54 2026-10-23) carries 'refused: Not planned. add_shape: a rectangle needs a frame.' 93 times, and AskPlanning.swift:493 still returns the plan with summary \"\" after two same refusals. Stays p1."
+    },
+    {
+      "t": "2026-10-24T12:35:55.199Z",
+      "note": "seq 45 -> 110"
     }
   ]
 }

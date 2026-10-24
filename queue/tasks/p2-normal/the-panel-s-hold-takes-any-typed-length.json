@@ -4,12 +4,12 @@
   "goal": "A freeze picked on the timeline shows its length in the panel as a dropdown of five fixed lengths; it should be a field you type any length into (10 s, 1:30, 48f), the same as the Freeze Frame popover, so the panel never offers only a fixed set.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 310,
+  "seq": 300,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T19:23:42.365Z",
-  "updated": "2026-10-23T14:07:59.632Z",
+  "updated": "2026-10-24T12:35:56.363Z",
   "deps": [],
   "blockedBy": [],
   "notes": "SpeedInspector.held(_:) draws Hold as VideoKit.DropdownRow over ClipPieces.holdStopsMS. The popover parses with FreezeLength.parse (PhotonzCore/FreezeLength.swift) and commits through PhotonzDocument.setHoldLength, which already moves the track (HoldPush.pushHeldTime). The mock video-freeze-wt.html shows Length 3.0s as a value, not a list. The user, 2026-10-17: why have only a fixed set of options. Also used by ⌘R on a held piece (opensWhenAsked).",
@@ -51,6 +51,10 @@
     {
       "t": "2026-10-23T14:07:59.631Z",
       "note": "seq 280 -> 310"
+    },
+    {
+      "t": "2026-10-24T12:35:56.362Z",
+      "note": "seq 310 -> 300"
     }
   ],
   "walks": []

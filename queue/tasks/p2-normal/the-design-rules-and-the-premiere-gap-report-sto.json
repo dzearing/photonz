@@ -4,12 +4,12 @@
   "goal": "On 2026-10-19 every waiting card was taken as recommended and cards became rare, but the design rules runners read and the report that measures Photonz against Premiere still say some questions are open cards. A runner reading them is told to wait for, or open, a card that no longer exists, and the gap report reads further behind than the app is.",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-10-20T13:58:02.156Z",
-  "updated": "2026-10-23T14:07:57.955Z",
+  "updated": "2026-10-24T12:35:55.698Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-20 digest's rule review. The cards were taken as recommended in 624a8e3a; runner-prompt.md and manager-prompt.md were updated then, the design documents were not. Docs only: no app code, so no walk check is started by it.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-10-23T14:07:57.954Z",
       "note": "seq 80 -> 110"
+    },
+    {
+      "t": "2026-10-24T12:35:55.697Z",
+      "note": "seq 110 -> 100"
     }
   ]
 }
