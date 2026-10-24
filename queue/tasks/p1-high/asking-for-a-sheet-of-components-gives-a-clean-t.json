@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-24T01:38:56.299Z",
+  "updated": "2026-10-24T05:46:47.989Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -115,9 +115,37 @@
     {
       "t": "2026-10-24T01:38:56.298Z",
       "note": "The checks and the planner fixes shipped (bf4dc3c2). Ask's sheets look clearly cleaner but are judged 5 to 7 of 10 and the skill 6 to 8; the 8-of-10 bar is not met, so it stays open."
+    },
+    {
+      "t": "2026-10-24T04:24:21.138Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T05:46:41.760Z",
+      "note": "Built (f4fe5124): only rows with exactly the same states share a header row, so no cell under a header is empty; sections stand 56 apart; every row is at least 44 tall so sliders and switches keep the buttons' rhythm; shorter rows come first in a section; a section too wide for the shared column step spreads its own cells over the same width (one 400 pt nav bar had grown a sheet to 2448 pt); the canvas grows with the left margin under the table too (AgentSheetLayout.canvas(around:)). Words are judged by APCA lightness contrast 20 (RGBA.lightnessContrast) instead of the 1.6 ratio, which let #007AFF on #0056CC through. Skill recipe and Ask's rules say only kinds with the same states share a header row."
+    },
+    {
+      "t": "2026-10-24T05:46:41.832Z",
+      "note": "Chose a header row per exact set of states over empty cells under a shared header, because every judge of the 2026-10-23 sheets named the holes; after the change no judge names a hole, and two of nine name sections changing columns."
+    },
+    {
+      "t": "2026-10-24T05:46:41.897Z",
+      "note": "Eval (rubric f5ae1562). Skill component-table 86.4 (sections alone, aligned 7 for packed small rows), then 88.8 with even rows: judge 8, 8, 8, 8, 9, at the bar. Skill design-system-sheet 68.9 (the model shrank navigation to one link), 84, then 85.2 twice with wide sections spread: judge 8, 8, 7, 8, 9 and 8, 8, 7, 7, 8, NOT at the bar (aligned and designed 7: wide sections off the 5-column grid, cards under the nav's header). Ask component-table 57.3 and 48 (alignment rule 9.4, judge 5 to 6); Ask design-system-sheet 37.7 and 49.4 (judge 5 to 6). Ask's shortfall is its own drawings: overlapping Back and title, Off checkbox ticked, dark or blue Off toggle, empty cards, Selected2, up to 8 type sizes."
+    },
+    {
+      "t": "2026-10-24T05:46:41.963Z",
+      "note": "Pictures looked at: skill component-table after (full matrix, no holes, even rows), skill design sheet after (no holes, cards under the nav section's header), Ask after (clean table, flaws inside the drawings), the walk's window capture (table under the name chips, already the-name-chips-over-component-copies-stay-clear). Tests: Scripts/test.sh 14323 passed. ask-builds-base-components-walk: one run timed out waiting for the model's first answer (folded into find-out-why-ask-sometimes-waits-five-minutes-fo), the next passed. Audit: queue/audits/2026-10-24-component-sheet-sections.json"
+    },
+    {
+      "t": "2026-10-24T05:46:42.032Z",
+      "note": "Left rough (not filed, this task covers it): wide sections do not share the column grid; Ask's 'Off checkbox drawn ticked' recurs in most Ask runs and has no general check yet (the hidden-part inference only works when a later look says visible true); add_component's words-on-words check estimates widths from font size, so '← Back' and a centred title can still overlap once measured."
+    },
+    {
+      "t": "2026-10-24T05:46:47.987Z",
+      "note": "No more empty cells, an even row rhythm and sane widths shipped (f4fe5124); the skill reaches 8 on every line for the user's request (88.8), but its design-system sheet has 7s on aligned and designed, and Ask on this Mac is at 5 to 6 because of its own drawings: the 8-of-10 bar is not met, so it stays open."
     }
   ],
-  "started": "2026-10-23T23:01:35.553Z",
+  "started": "2026-10-24T04:24:21.133Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
