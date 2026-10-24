@@ -623,7 +623,10 @@ final class AskSession {
             do {
                 note("asking the model")
                 reply = try await AskLocalModel.chat(talk.chatBody(model: model))
-                note("answered: \(reply["message"]?.encodedString().prefix(300) ?? "")")
+                // Long enough to hold a whole component call, so a look the
+                // planner let through can be rebuilt from the trace (a blue
+                // Off toggle could not be, cut at 300, 2026-10-24).
+                note("answered: \(reply["message"]?.encodedString().prefix(3000) ?? "")")
             } catch let trouble as AskLocalModel.Trouble {
                 if case .said(let words) = trouble, AskConversation.isUnreadableReply(words), !talk.steps.isEmpty {
                     if talk.askForTitle() {

@@ -250,7 +250,14 @@ extension AgentNewComponent {
                 // A box with nothing said is drawn filled; one painted none with no edge is not drawn.
                 let drawn = box.look.fill?.hexValue != nil || box.look.stroke?.hexValue != nil
                     || (box.look.fill == nil && box.look.stroke == nil)
-                guard case .shape = box.kind, drawn, !box.hidden else { continue }
+                // A drawn icon is a box too: a tab's name half over its
+                // triangle read as words on a shape (the eval, 2026-10-24).
+                let boxed: Bool = switch box.kind {
+                case .shape: true
+                case .path: box.closed && box.look.fill?.hexValue != nil
+                case .text: false
+                }
+                guard boxed, drawn, !box.hidden else { continue }
                 let shared = words.intersection(box.frame)
                 if shared.isNull || shared.width <= 1 || shared.height <= 1 { continue }
                 if !box.frame.insetBy(dx: -1, dy: -1).contains(words) { return (part.name, box.name) }

@@ -222,6 +222,23 @@ struct AskPlanningTests {
         #expect(talk.steps.count == 2, "a different drawing is a different kind")
     }
 
+    @Test("A labelled row named like one already planned is sent back to be named for what makes it different")
+    func sameNameTwice() throws {
+        // The eval, 2026-10-24: a filled and a grey button, both rows
+        // labelled "Button", and every judge named it.
+        var talk = Self.sheet()
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        _ = talk.take(try Self.reply([Self.component("button ", x: 40, y: 200, width: 200, height: 44)]))
+        #expect(talk.steps.count == 1)
+        let said = talk.messages.last?["content"]?.stringValue ?? ""
+        #expect(said.contains("called button") && said.contains("step 1"), "\(said)")
+        _ = talk.take(try Self.reply([Self.component("Secondary Button", x: 40, y: 200, width: 200, height: 44)]))
+        #expect(talk.steps.count == 2)
+        // A component on its own, with no row name, may share a name.
+        _ = talk.take(try Self.reply([Self.component("Button", x: 900, y: 600, width: 300, height: 60, labels: false)]))
+        #expect(talk.steps.count == 3)
+    }
+
     @Test("Ask's planner makes a look a shade off plain and edges a white surface itself, rather than refusing a small model")
     func madePlainForTheModel() throws {
         var talk = Self.sheet()

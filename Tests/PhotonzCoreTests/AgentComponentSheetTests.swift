@@ -253,6 +253,32 @@ struct AgentComponentSheetTests {
         #expect(top == 100)
     }
 
+    @Test("A table under a title starts on the title's left edge, and keeps that margin on the right")
+    func underItsTitle() throws {
+        // The skill, 2026-10-24: a title at 64 and every row asked for at 240,
+        // and all three judges: "the title doesn't share the table's left
+        // edge", "the table sits off-centre with a large empty right side".
+        var document = Self.blank()
+        let title = Layer(name: "Title", content: .text(TextContent(string: "Base Components", fontSize: 34)),
+                          frame: CGRect(x: 64, y: 56, width: 280, height: 42))
+        document.addLayer(title)
+        let made = try Self.add(Self.row("Button", x: 240, y: 144, looks: Self.states), to: &document)
+        _ = try Self.add(Self.row("Field", x: 240, y: 220, looks: Self.states), to: &document)
+        let sheet = try #require(made.sheet)
+        #expect(sheet.frame.minX == 64)
+        let names = Self.words(in: document).filter { ["Button", "Field"].contains($0.text?.string ?? "") }
+        #expect(names.count == 2 && names.allSatisfy { $0.frame.minX == 64 }, "\(names.map(\.frame.minX))")
+        #expect(document.layer(id: title.id)?.frame.origin == CGPoint(x: 64, y: 56), "the title stays where it was")
+        let last = try #require(Self.boxes(made, in: document).last)
+        #expect(abs(last.maxX - (1440 - 64)) <= 1, "\(last.maxX)")
+        // A title set in the middle of the page is not an edge to start from.
+        var centred = Self.blank()
+        centred.addLayer(Layer(name: "Title", content: .text(TextContent(string: "Base Components", fontSize: 34)),
+                               frame: CGRect(x: 580, y: 56, width: 280, height: 42)))
+        let middle = try Self.add(Self.row("Button", x: 240, y: 144, looks: Self.states), to: &centred)
+        #expect(middle.sheet?.frame.minX == 240)
+    }
+
     @Test("A row taller than a control keeps its own height, the same gap between it and the next")
     func tallRows() throws {
         var document = Self.blank()

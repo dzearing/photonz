@@ -93,6 +93,69 @@ struct AgentComponentSenseTests {
         #expect(Self.part("Track", in: spec, look: "On")?.look.fill?.hexValue == "#34C759")
     }
 
+    @Test("An Off track drawn as a closed path, or under a bigger box with no fill, is still given the off grey")
+    func offTrackAnyShape() throws {
+        // The eval, 2026-10-24: a blue Off toggle the rectangle-only check
+        // let through, twice.
+        let path = try Self.plain(##"""
+            {"name": "Toggle", "x": 40, "y": 600, "labels": true, "firstLook": "Off",
+             "parts": [{"name": "Track", "shape": "path", "closed": true, "x": 0, "y": 0, "width": 51, "height": 31, "fill": "#007AFF",
+                        "points": [{"x": 0, "y": 0}, {"x": 51, "y": 0}, {"x": 51, "y": 31}, {"x": 0, "y": 31}]},
+                       {"name": "Knob", "shape": "ellipse", "x": 2, "y": 2, "width": 27, "height": 27, "fill": "#FFFFFF"}],
+             "looks": [{"name": "On", "changes": [{"part": "Track", "fill": "#34C759"}, {"part": "Knob", "x": 22}]}]}
+            """##)
+        #expect(Self.part("Track", in: path, look: "Off")?.look.fill?.hexValue == AgentNewComponent.offTrack)
+        #expect(Self.part("Track", in: path, look: "On")?.look.fill?.hexValue == "#34C759")
+        let framed = try Self.plain(##"""
+            {"name": "Toggle", "x": 40, "y": 600, "labels": true, "firstLook": "Off",
+             "parts": [{"name": "Hit Area", "shape": "rectangle", "x": 0, "y": 0, "width": 60, "height": 36},
+                       {"name": "Track", "shape": "rectangle", "x": 4, "y": 2, "width": 51, "height": 31, "cornerRadius": 15.5, "fill": "#007AFF"},
+                       {"name": "Knob", "shape": "ellipse", "x": 6, "y": 4, "width": 27, "height": 27, "fill": "#FFFFFF"}],
+             "looks": [{"name": "On", "changes": [{"part": "Knob", "x": 26}]}]}
+            """##)
+        #expect(Self.part("Track", in: framed, look: "Off")?.look.fill?.hexValue == AgentNewComponent.offTrack)
+        #expect(Self.part("Track", in: framed, look: "On")?.look.fill?.hexValue == "#007AFF", "On keeps its blue")
+    }
+
+    @Test("Boxes hanging past the card they sit in grow the card to hold them, with the room it leaves elsewhere")
+    func cardHoldsItsButtons() throws {
+        // The eval, 2026-10-24: an alert's OK and Cancel hanging under its card.
+        let spec = try Self.plain(##"""
+            {"name": "Alert", "x": 40, "y": 600, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Card", "shape": "rectangle", "x": 0, "y": 0, "width": 280, "height": 120, "cornerRadius": 12, "fill": "#FFFFFF", "stroke": "#D1D1D6", "strokeWidth": 1},
+                       {"name": "Title", "shape": "text", "text": "Alert Title", "fontSize": 17, "x": 20, "y": 20, "width": 240, "height": 22},
+                       {"name": "OK", "shape": "rectangle", "x": 20, "y": 100, "width": 110, "height": 36, "fill": "#007AFF"},
+                       {"name": "Cancel", "shape": "rectangle", "x": 150, "y": 100, "width": 110, "height": 36, "fill": "#E5E5EA"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "OK", "fill": "#0062CC"}]}]}
+            """##)
+        let card = try #require(spec.parts.first { $0.name == "Card" })
+        #expect(card.frame == CGRect(x: 0, y: 0, width: 280, height: 156), "\(card.frame)")
+        // A card already holding its buttons is left as drawn.
+        let held = try Self.plain(##"""
+            {"name": "Alert", "x": 40, "y": 600, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Card", "shape": "rectangle", "x": 0, "y": 0, "width": 280, "height": 160, "fill": "#F2F2F7"},
+                       {"name": "OK", "shape": "rectangle", "x": 20, "y": 100, "width": 110, "height": 36, "fill": "#007AFF"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "OK", "fill": "#0062CC"}]}]}
+            """##)
+        #expect(held.parts[0].frame.height == 160)
+    }
+
+    @Test("Words half over a drawn icon are refused, as words half over a box are")
+    func wordsHalfOnIcon() throws {
+        do {
+            _ = try AgentComponentTests.spec(##"""
+                {"name": "Tab", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+                 "parts": [{"name": "Icon", "shape": "path", "closed": true, "x": 0, "y": 0, "width": 24, "height": 24, "fill": "#007AFF",
+                            "points": [{"x": 0, "y": 0}, {"x": 24, "y": 12}, {"x": 0, "y": 24}]},
+                           {"name": "Name", "shape": "text", "text": "Search", "fontSize": 11, "x": -6, "y": 16, "width": 40, "height": 14}],
+                 "looks": [{"name": "Selected", "changes": [{"part": "Icon", "fill": "#0040DD"}]}]}
+                """##)
+            Issue.record("words half over the icon were let through")
+        } catch {
+            #expect(error.localizedDescription.contains("edge of Icon"), "\(error)")
+        }
+    }
+
     @Test("A Disabled look whose words stand out more than Default's is dimmed, and still reads")
     func disabledIsDimmer() throws {
         let spec = try Self.plain(##"""

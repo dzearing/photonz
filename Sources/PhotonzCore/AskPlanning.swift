@@ -441,6 +441,11 @@ public struct AskConversation: Sendable {
                     let (earlier, kind) = drawnBefore(component) ?? (0, "")
                     let made = steps.compactMap { $0.tool == "add_component" ? $0.arguments["name"]?.stringValue : nil }
                     refuse(name, step.arguments, "Not planned: \(component.name) is drawn the same as \(kind), step \(earlier). A sheet shows each kind of control once. Planned so far: \(made.joined(separator: ", ")). Make a kind that is not in that list, drawn as that kind is, or finish.")
+                case .success(.addComponent(_, let component)) where component.labels && namedBefore(component) != nil:
+                    // Two rows with one name read as the same thing twice (the
+                    // eval, 2026-10-24: a filled and a grey button both "Button").
+                    let earlier = namedBefore(component) ?? 0
+                    refuse(name, step.arguments, "Not planned: step \(earlier) already has a row called \(component.name.trimmingCharacters(in: .whitespaces)). Name this one for what makes it different from that row, or finish.")
                 case .success(.addComponent(_, let component)) where Self.cannotBuild(component) != nil:
                     brokenCalls += 1
                     refuse(name, step.arguments, "Not planned. \(Self.cannotBuild(component) ?? "")")
@@ -681,6 +686,17 @@ public struct AskConversation: Sendable {
             return (index + 1, earlier.name)
         }
         return nil
+    }
+
+    /// The earlier labelled add_component step whose row has this one's
+    /// name, whatever its case or spaces.
+    func namedBefore(_ component: AgentNewComponent) -> Int? {
+        func key(_ name: String) -> String { name.trimmingCharacters(in: .whitespaces).lowercased() }
+        return steps.indices.first { index in
+            let step = steps[index]
+            return step.tool == "add_component" && step.arguments["labels"]?.boolValue == true
+                && key(step.arguments["name"]?.stringValue ?? "") == key(component.name)
+        }.map { $0 + 1 }
     }
 
     func repeated(_ step: AskStep) -> Int? {

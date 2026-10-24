@@ -361,7 +361,10 @@ look.
 **The sheet is a table** (`asking-for-a-sheet-of-components-gives-a-clean-t`,
 `AgentComponentSheet.swift`). Every labelled add_component lays every labelled
 row on the canvas out again as one table, from where the table already starts:
-the components' names on one left edge, and rows grouped into sections of
+the components' names on one left edge (the title's, when words larger than
+the names sit above the table in the left quarter of the page, so title and
+table share one margin: judges, 2026-10-24, read a title at 64 over names at
+240 as "off-centre"), and rows grouped into sections of
 exactly the same states (whatever their order or case), each under its own
 header row naming each state once over its column, so no cell under a header
 is ever empty (2026-10-24: every judge named the holes when rows with fewer

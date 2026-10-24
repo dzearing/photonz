@@ -8,9 +8,13 @@ const EDGE = 1.5; // points: two edges this close are the same edge
 
 /// Every layer in the read with its frame on the canvas, top first. A child's
 /// frame is measured from its group's top left (read_document), so it is moved
-/// by every group above it.
+/// by every group above it. A hidden layer, and all it holds, is left out: no
+/// one sees it, so it overlaps nothing and lines up with nothing (a segmented
+/// control's three option words, each shown in one look, read as three words
+/// on top of each other, 2026-10-24).
 export function flatten(layers, origin = { x: 0, y: 0 }, parent = null, out = []) {
   for (const layer of layers ?? []) {
+    if (layer.hidden) continue;
     const frame = { x: origin.x + layer.frame.x, y: origin.y + layer.frame.y, width: layer.frame.width, height: layer.frame.height };
     const node = { layer, frame, parent, depth: parent ? parent.depth + 1 : 0 };
     out.push(node);

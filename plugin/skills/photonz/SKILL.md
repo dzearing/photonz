@@ -131,8 +131,9 @@ Photonz work should look designed, not assembled.
    given, and `looks`, each state with only what `changes`. Pass `labels: true`
    and the same `x` for every kind, each row's `y` below the last: Photonz lays
    the labelled rows out as one table (names down the left, each state named
-   once over its column, every look starting at its column's left edge, rows evenly apart, the
-   canvas grown when it needs room), so set no row names or state headers
+   once over its column, every look starting at its column's left edge, rows evenly apart,
+   the names starting on the title's left edge and the table ending that far from
+   the right, the canvas grown when it needs room), so set no row names or state headers
    yourself. Only kinds with exactly the same states share a header row, so
    no cell is left empty: give every kind that has them the same states with
    the same names (Default, Hover, Pressed, Disabled), and keep a kind's own

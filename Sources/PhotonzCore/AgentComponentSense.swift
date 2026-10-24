@@ -111,8 +111,17 @@ extension AgentNewComponent {
             }
         }
 
+        // The track is the biggest filled box, a closed path as much as a
+        // rectangle; a bigger box with no fill (a hit area round it) is
+        // nothing anyone sees (the eval, 2026-10-24: a blue Off toggle got
+        // past a check that only looked at the biggest rectangle).
         let boxes = offShown.parts.enumerated().filter { _, part in
-            if case .shape = part.kind { return !part.hidden } else { return false }
+            guard !part.hidden, part.look.fill?.hexValue != nil, (part.look.opacity ?? 1) > 0 else { return false }
+            switch part.kind {
+            case .shape: return true
+            case .path: return part.closed
+            case .text: return false
+            }
         }
         if let (index, track) = boxes.max(by: { $0.1.frame.width * $0.1.frame.height < $1.1.frame.width * $1.1.frame.height }),
            let fill = track.look.fill?.hexValue, let colour = RGBA(hex: fill) {
@@ -129,6 +138,57 @@ extension AgentNewComponent {
             }
         }
         if !looks.isEmpty { out["looks"] = .array(looks) }
+        return out
+    }
+
+    /// The room a box keeps round what it holds, when nothing it holds
+    /// says otherwise, and the least and most it is taken as.
+    static let heldRoom: ClosedRange<CGFloat> = 8...24
+
+    /// Boxes and drawn shapes that hang past the edge of the box they mostly
+    /// sit in (an alert's buttons under its card) have that box grown to
+    /// hold them, keeping on that side the least room it leaves round what
+    /// it holds on any other. Words are left to `wordsHalfOn`.
+    static func heldInside(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
+        func area(_ rect: CGRect) -> CGFloat { rect.isNull ? 0 : rect.width * rect.height }
+        let drawn = found.parts.filter { part in
+            guard !part.hidden else { return false }
+            switch part.kind {
+            case .shape: return part.frame.width > 0 && part.frame.height > 0
+            case .path: return part.closed
+            case .text: return false
+            }
+        }
+        guard let outer = drawn.filter({ if case .shape = $0.kind { true } else { false } })
+            .max(by: { area($0.frame) < area($1.frame) }) else { return args }
+        let inside = drawn.filter { part in
+            part.name != outer.name && area(part.frame) * 2 <= area(outer.frame)
+                && area(part.frame.intersection(outer.frame)) >= area(part.frame) / 2
+        }
+        let crossing = inside.filter { !outer.frame.insetBy(dx: -1, dy: -1).contains($0.frame) }
+        guard !crossing.isEmpty else { return args }
+        // The room left on every side a held part does not cross.
+        let insets = inside.flatMap { part in
+            [part.frame.minX - outer.frame.minX, part.frame.minY - outer.frame.minY,
+             outer.frame.maxX - part.frame.maxX, outer.frame.maxY - part.frame.maxY].filter { $0 >= 0 }
+        }
+        let room = min(max(insets.min() ?? 16, heldRoom.lowerBound), heldRoom.upperBound)
+        let reach = crossing.map(\.frame).reduce(outer.frame) { $0.union($1) }
+        var grown = outer.frame
+        if reach.minX < outer.frame.minX - 1 { grown.size.width += grown.minX - (reach.minX - room); grown.origin.x = reach.minX - room }
+        if reach.minY < outer.frame.minY - 1 { grown.size.height += grown.minY - (reach.minY - room); grown.origin.y = reach.minY - room }
+        if reach.maxX > outer.frame.maxX + 1 { grown.size.width = reach.maxX + room - grown.minX }
+        if reach.maxY > outer.frame.maxY + 1 { grown.size.height = reach.maxY + room - grown.minY }
+        guard var parts = args["parts"]?.arrayValue,
+              let at = parts.firstIndex(where: { ($0["name"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces) == outer.name }),
+              var object = parts[at].objectValue else { return args }
+        object["x"] = .number(Double(grown.minX))
+        object["y"] = .number(Double(grown.minY))
+        object["width"] = .number(Double(grown.width))
+        object["height"] = .number(Double(grown.height))
+        parts[at] = .object(object)
+        var out = args
+        out["parts"] = .array(parts)
         return out
     }
 
@@ -182,6 +242,7 @@ extension AgentNewComponent {
         }
         var out = args
         for step in [{ (args: [String: AgentJSON]) in onTypeScale(args) },
+                     { args in built(args).map { heldInside(args, $0) } ?? args },
                      { args in built(args).map { offLooksOff(args, $0) } ?? args },
                      { args in built(args).map { disabledLooksDisabled(args, $0) } ?? args }] {
             let before = built(out)?.problem

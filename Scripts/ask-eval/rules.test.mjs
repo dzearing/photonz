@@ -216,3 +216,15 @@ test("a trim is read from how long the video now runs", () => {
   assert.equal(score(video([recording("r", "Tutorial Sample", 0, 6)]), trimmed).rules.asked.score, 10);
   assert.match(score(video([recording("r", "Tutorial Sample", 0, 8)]), trimmed).rules.asked.note, /MISS 8s long \(5 to 6.5s wanted\)/);
 });
+
+test("hidden words overlap nothing: a copy showing one of three option words is clean", () => {
+  const option = (string, x, hidden) => ({ ...text(string, x, 6, 13), id: `${string}-${x}`, hidden });
+  const look = (x, shown) => component("Segmented Control", x, 300, 180, 32,
+    [option("Option 1", 2, shown !== 1), option("Option 2", 60, shown !== 2), option("Option 3", 60, shown !== 3)]);
+  const result = score(read([look(200, 1), look(540, 2), look(880, 3)]), sheet);
+  assert.equal(result.rules.noOverlap.score, 10, result.rules.noOverlap.note);
+  // Shown, the second and third words do sit on each other.
+  const shown = score(read([component("Segmented Control", 200, 300, 180, 32,
+    [option("Option 2", 60, false), option("Option 3", 60, false)])]), sheet);
+  assert.ok(shown.rules.noOverlap.score < 10, shown.rules.noOverlap.note);
+});
