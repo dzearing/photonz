@@ -831,7 +831,17 @@ extension PhotonzDocument {
                                   weight: part.weight, colorHex: part.colorHex ?? part.look.fill?.hexValue,
                                   alignment: part.alignment, name: part.name, shadow: false)
             let content = words.content
-            layer = TextBuilder.layer(content: content, at: part.frame.origin, naturalSize: measure(content, nil))
+            var size = measure(content, nil)
+            // Words wider than a box tall enough for more than one line wrap
+            // at its width, as the check on their length let them (a card's
+            // body ran past both its edges on one line, the eval, 2026-10-24).
+            let fontSize = part.fontSize ?? 15
+            if part.frame.width > 0, size.width > part.frame.width,
+               part.frame.height >= 2 * fontSize * AgentNewComponent.lineHeight {
+                size = measure(content, part.frame.width)
+                size.width = part.frame.width
+            }
+            layer = TextBuilder.layer(content: content, at: part.frame.origin, naturalSize: size)
             layer.style.shadows = []
             var look = part.look
             look.fill = nil

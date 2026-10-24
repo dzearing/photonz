@@ -433,6 +433,32 @@ struct AgentComponentTests {
         #expect(past.message.contains("Body") && past.message.contains("Background"), "\(past.message)")
     }
 
+    @Test("Words in a box tall enough for more lines wrap at the box's width, so they stay inside the card")
+    func wordsWrapInTheirBox() throws {
+        // The eval, 2026-10-24: a card's body let through for wrapping was
+        // built on one line and ran past both card edges.
+        var document = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
+        let made = try document.agentAddComponent(try Self.spec(##"""
+            {"name": "Card", "x": 40, "y": 40, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 140, "fill": "#F2F2F7"},
+                       {"name": "Body", "shape": "text", "text": "Card body text goes here with description.", "fontSize": 15, "x": 16, "y": 40, "width": 168, "height": 64, "alignment": "left"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#C7C7CC"}]}]}
+            """##), measure: Self.measure).get()
+        for look in ["Default", "Hover"] {
+            let body = try #require(Self.piece("Body", of: look, in: document, made))
+            #expect(body.frame.width == 168, "\(look): \(body.frame)")
+        }
+        // Words on one line in a one-line box keep their own width.
+        var short = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
+        let label = try short.agentAddComponent(try Self.spec(##"""
+            {"name": "Chip", "x": 40, "y": 40, "labels": false, "firstLook": "Default",
+             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 32, "fill": "#F2F2F7"},
+                       {"name": "Label", "shape": "text", "text": "Tag", "fontSize": 15, "x": 0, "y": 0, "width": 120, "height": 32, "centerIn": "Back"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Back", "fill": "#C7C7CC"}]}]}
+            """##), measure: Self.measure).get()
+        #expect(Self.piece("Label", of: "Default", in: short, label)?.frame.width == 24)
+    }
+
     @Test("Words half on a box are refused, naming both: wholly inside it or wholly off it")
     func wordsHalfOnABox() throws {
         func tab(iconY: Int, labelX: Int = 0) -> String {

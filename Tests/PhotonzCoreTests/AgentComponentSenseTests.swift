@@ -40,6 +40,30 @@ struct AgentComponentSenseTests {
         #expect(spec.problem == nil)
     }
 
+    @Test("A first look called Default beside one called Checked is the Off look: its tick is hidden")
+    func defaultBesideChecked() throws {
+        // The eval, 2026-10-24, read off the trace: "Default" and "Checked",
+        // and every judge read the Default box as already ticked.
+        let spec = try Self.plain(##"""
+            {"name": "Checkbox", "x": 40, "y": 800, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Box", "shape": "rectangle", "x": 0, "y": 0, "width": 20, "height": 20, "cornerRadius": 4, "fill": "#FFFFFF", "stroke": "#D1D1D6", "strokeWidth": 1},
+                       {"name": "Check", "shape": "path", "closed": false, "x": 0, "y": 0, "width": 20, "height": 20, "points": [{"x": 4, "y": 10}, {"x": 8, "y": 14}, {"x": 16, "y": 6}]},
+                       {"name": "Label", "shape": "text", "text": "Option", "fontSize": 15, "x": 28, "y": 0, "width": 100, "height": 20, "color": "#1C1C1E"}],
+             "looks": [{"name": "Checked", "changes": [{"part": "Box", "fill": "#007AFF", "stroke": "#007AFF"}, {"part": "Check", "stroke": "#FFFFFF"}]}]}
+            """##)
+        #expect(Self.part("Check", in: spec, look: "Default")?.hidden == true)
+        #expect(Self.part("Check", in: spec, look: "Checked")?.hidden == false)
+        // Default beside Selected (a tab) is not an Off look.
+        let tab = try Self.plain(##"""
+            {"name": "Tab", "x": 40, "y": 800, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 80, "height": 32, "fill": "#007AFF"},
+                       {"name": "Chevron", "shape": "path", "closed": false, "x": 60, "y": 10, "width": 10, "height": 12, "stroke": "#FFFFFF", "points": [{"x": 0, "y": 0}, {"x": 6, "y": 6}, {"x": 0, "y": 12}]}],
+             "looks": [{"name": "Selected", "changes": [{"part": "Back", "fill": "#0040DD"}]}]}
+            """##)
+        #expect(Self.part("Chevron", in: tab, look: "Default")?.hidden == false)
+        #expect(Self.part("Back", in: tab, look: "Default")?.look.fill?.hexValue == "#007AFF")
+    }
+
     @Test("An Off look given later hides the tick in that look only")
     func laterOffHidesTick() throws {
         let spec = try Self.plain(##"""
@@ -93,7 +117,7 @@ struct AgentComponentSenseTests {
         #expect(Self.part("Track", in: spec, look: "On")?.look.fill?.hexValue == "#34C759")
     }
 
-    @Test("An Off track drawn as a closed path, or under a bigger box with no fill, is still given the off grey")
+    @Test("An Off track drawn as a closed path, under a bigger box nobody sees, or with no paint at all is still given the off grey")
     func offTrackAnyShape() throws {
         // The eval, 2026-10-24: a blue Off toggle the rectangle-only check
         // let through, twice.
@@ -108,13 +132,23 @@ struct AgentComponentSenseTests {
         #expect(Self.part("Track", in: path, look: "On")?.look.fill?.hexValue == "#34C759")
         let framed = try Self.plain(##"""
             {"name": "Toggle", "x": 40, "y": 600, "labels": true, "firstLook": "Off",
-             "parts": [{"name": "Hit Area", "shape": "rectangle", "x": 0, "y": 0, "width": 60, "height": 36},
+             "parts": [{"name": "Hit Area", "shape": "rectangle", "x": 0, "y": 0, "width": 60, "height": 36, "opacity": 0},
                        {"name": "Track", "shape": "rectangle", "x": 4, "y": 2, "width": 51, "height": 31, "cornerRadius": 15.5, "fill": "#007AFF"},
                        {"name": "Knob", "shape": "ellipse", "x": 6, "y": 4, "width": 27, "height": 27, "fill": "#FFFFFF"}],
              "looks": [{"name": "On", "changes": [{"part": "Knob", "x": 26}]}]}
             """##)
         #expect(Self.part("Track", in: framed, look: "Off")?.look.fill?.hexValue == AgentNewComponent.offTrack)
         #expect(Self.part("Track", in: framed, look: "On")?.look.fill?.hexValue == "#007AFF", "On keeps its blue")
+        // A track given no paint at all is drawn in the default blue (the
+        // eval, 2026-10-24, read off the trace: "Track" with no fill).
+        let unpainted = try Self.plain(##"""
+            {"name": "Toggle Switch", "x": 40, "y": 600, "labels": true, "firstLook": "Off",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 0, "width": 52, "height": 32, "cornerRadius": 16},
+                       {"name": "Knob", "shape": "ellipse", "x": 2, "y": 2, "width": 28, "height": 28, "fill": "#FFFFFF", "stroke": "#D1D1D6", "strokeWidth": 1}],
+             "looks": [{"name": "On", "changes": [{"part": "Track", "fill": "#34C759"}, {"part": "Knob", "x": 22}]}]}
+            """##)
+        #expect(Self.part("Track", in: unpainted, look: "Off")?.look.fill?.hexValue == AgentNewComponent.offTrack)
+        #expect(Self.part("Track", in: unpainted, look: "On")?.look.fill?.hexValue == "#34C759")
     }
 
     @Test("Boxes hanging past the card they sit in grow the card to hold them, with the room it leaves elsewhere")

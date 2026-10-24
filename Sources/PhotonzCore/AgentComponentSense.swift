@@ -33,6 +33,21 @@ extension AgentNewComponent {
     /// A fill darker than this, as light, reads as filled in.
     static let darkLuminance = 0.08
 
+    /// First looks that are the resting look, and the looks beside which
+    /// that resting look is Off: a checkbox's Default beside Checked is its
+    /// unchecked look, while a tab's Default beside Selected is not.
+    static let restNames: Set<String> = ["default", "normal", "rest", "resting"]
+    static let checkedNames: Set<String> = ["on", "checked"]
+
+    /// The look that is Off: one named so, else a first look named as the
+    /// resting look when another is named Checked or On.
+    static func offLook(_ names: [String]) -> Int? {
+        if let off = names.firstIndex(where: offNames.contains) { return off }
+        guard let first = names.first, restNames.contains(first),
+              names.dropFirst().contains(where: checkedNames.contains) else { return nil }
+        return 0
+    }
+
     static func stateWords(_ name: String) -> [String] {
         name.lowercased().split(whereSeparator: { !$0.isLetter }).map(String.init)
     }
@@ -79,8 +94,7 @@ extension AgentNewComponent {
     /// the off grey, the On looks keeping the colour it had.
     static func offLooksOff(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
         let names = found.looks.map { $0.name.trimmingCharacters(in: .whitespaces).lowercased() }
-        guard let off = names.firstIndex(where: offNames.contains),
-              let on = names.firstIndex(where: onNames.contains) else { return args }
+        guard let off = offLook(names), let on = names.firstIndex(where: onNames.contains) else { return args }
         // Every look that is a kind of on: On, On Disabled, Checked Hover.
         let onLooks = names.indices.filter { index in
             index != off && !stateWords(names[index]).filter(onNames.contains).isEmpty
@@ -115,8 +129,12 @@ extension AgentNewComponent {
         // rectangle; a bigger box with no fill (a hit area round it) is
         // nothing anyone sees (the eval, 2026-10-24: a blue Off toggle got
         // past a check that only looked at the biggest rectangle).
+        // A box given no paint at all is drawn in the default fill.
+        func painted(_ part: AgentComponentPart) -> String? {
+            part.look.fill?.hexValue ?? (part.look.fill == nil && part.look.stroke == nil ? AgentDrawing.defaultFillHex : nil)
+        }
         let boxes = offShown.parts.enumerated().filter { _, part in
-            guard !part.hidden, part.look.fill?.hexValue != nil, (part.look.opacity ?? 1) > 0 else { return false }
+            guard !part.hidden, painted(part) != nil, (part.look.opacity ?? 1) > 0 else { return false }
             switch part.kind {
             case .shape: return true
             case .path: return part.closed
@@ -124,12 +142,12 @@ extension AgentNewComponent {
             }
         }
         if let (index, track) = boxes.max(by: { $0.1.frame.width * $0.1.frame.height < $1.1.frame.width * $1.1.frame.height }),
-           let fill = track.look.fill?.hexValue, let colour = RGBA(hex: fill) {
+           let fill = painted(track), let colour = RGBA(hex: fill) {
             let spread = max(colour.r, colour.g, colour.b) - min(colour.r, colour.g, colour.b)
             if spread >= saturatedSpread || colour.linearLuminance < darkLuminance {
                 if off == 0 {
                     setPart(track.name, "fill", .string(offTrack))
-                    for look in onLooks where found.parts[index].look.fill?.hexValue == found.inLook(found.looks[look]).parts[index].look.fill?.hexValue {
+                    for look in onLooks where painted(found.parts[index]) == painted(found.inLook(found.looks[look]).parts[index]) {
                         change(look, "fill", .string(fill), track.name)
                     }
                 } else {
@@ -148,8 +166,7 @@ extension AgentNewComponent {
     /// control. A mark that moves or hides between the two is left as drawn.
     static func onIsNotOff(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
         let names = found.looks.map { $0.name.trimmingCharacters(in: .whitespaces).lowercased() }
-        guard let off = names.firstIndex(where: offNames.contains),
-              let on = names.firstIndex(where: onNames.contains) else { return args }
+        guard let off = offLook(names), let on = names.firstIndex(where: onNames.contains) else { return args }
         let onLooks = names.indices.filter { index in
             index != off && !stateWords(names[index]).filter(onNames.contains).isEmpty
         }
