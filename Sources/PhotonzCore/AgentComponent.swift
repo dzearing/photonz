@@ -510,10 +510,11 @@ extension AgentNewComponent {
         value == value.rounded() ? String(Int(value)) : String(format: "%g", value)
     }
 
-    /// Below this contrast ratio words cannot be read against what is
-    /// behind them: white on a white canvas is 1, grey #8E8E93 on white is
-    /// about 3.3 and reads.
-    static let leastWordContrast = 1.6
+    /// Below this lightness contrast (`RGBA.lightnessContrast`) words
+    /// cannot be read against what is behind them: white on a white canvas
+    /// is 0, blue #007AFF on a pressed #0056CC about 14, while Apple's faint
+    /// disabled grey #C7C7CC on white is about 30 and #8E8E93 about 60.
+    static let leastWordLightness = 20.0
     /// Words given no colour are set near black.
     static let defaultWordColour = "#000000"
 
@@ -542,7 +543,7 @@ extension AgentNewComponent {
             guard case .some(.some(let behind)) = wordsBackdrop(part),
                   let ink = RGBA(hex: part.colorHex ?? Self.defaultWordColour),
                   let ground = RGBA(hex: behind.colour) else { continue }
-            if RGBA.contrast(ink.linearLuminance, ground.linearLuminance) < Self.leastWordContrast {
+            if RGBA.lightnessContrast(text: ink, on: ground) < Self.leastWordLightness {
                 return (part.name, behind.name)
             }
         }

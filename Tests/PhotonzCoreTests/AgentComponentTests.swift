@@ -352,14 +352,15 @@ struct AgentComponentTests {
         let name = try #require(made.labels.first.flatMap { document.layer(id: $0) })
         #expect(name.frame.minX == 100)
         #expect(name.frame.maxX <= boxes[0].minX)
-        #expect(name.frame.midY.rounded() == boxes[0].midY.rounded(), "the name sits level with the row")
+        #expect(abs(name.frame.midY - boxes[0].midY) <= 1, "the name sits level with the row")
         #expect(Set(words.compactMap { $0.text?.fontSize }).count == 1, "one size for every label")
         // A second set asked onto the same spot goes under it, words and all.
         let again = try document.agentAddComponent(try Self.spec(json), measure: Self.measure).get()
         let secondName = try #require(again.labels.first.flatMap { document.layer(id: $0) })
-        let lowest = made.looks.compactMap { document.canvasBounds(of: $0.layer)?.maxY }.max() ?? 0
-        let secondTop = again.looks.compactMap { document.canvasBounds(of: $0.layer)?.minY }.min() ?? 0
-        #expect(secondTop == lowest + AgentNewComponent.rowGap)
+        let first = try #require(made.looks.first.flatMap { document.canvasBounds(of: $0.layer) })
+        let second = try #require(again.looks.first.flatMap { document.canvasBounds(of: $0.layer) })
+        let band = max(first.height, AgentNewComponent.rowHeight)
+        #expect(abs(second.midY - first.midY - (band + AgentNewComponent.rowGap)) <= 1)
         #expect(secondName.frame.minX == 100)
     }
 
@@ -493,6 +494,13 @@ struct AgentComponentTests {
         #expect(throws: Never.self) { _ = try Self.request(row("#1C1C1E")).get() }
         #expect(throws: Never.self) { _ = try Self.request(row("#8E8E93")).get() }
         #expect(throws: Never.self) { _ = try Self.request(Self.button).get() }
+        // Blue words on a darker blue box (the eval, 2026-10-24: a pressed
+        // secondary button) are as hard to read as their ratio of 1.64 hides;
+        // the faint grey Apple sets a disabled label in still reads.
+        guard case .failure(let blue) = try Self.request(row("#007AFF", back: "#0056CC")) else { Issue.record("accepted blue words on a blue box"); return }
+        #expect(blue.message.contains("Inside"), "\(blue.message)")
+        #expect(throws: Never.self) { _ = try Self.request(row("#AEAEB2")).get() }
+        #expect(throws: Never.self) { _ = try Self.request(row("#FFFFFF", back: "#34C759").replacingOccurrences(of: ##""color": "#FFFFFF"}],"##, with: ##""color": "#000000"}],"##)).get() }
         // Ask's planner sets them in the colour that reads instead of refusing.
         let plain = AgentNewComponent.madePlain(try AgentJSON.parse(Data(row("#F2F2F7").utf8)))
         guard case .success(.addComponent(_, let spec)) = AgentTools.request(tool: "add_component", arguments: plain) else {

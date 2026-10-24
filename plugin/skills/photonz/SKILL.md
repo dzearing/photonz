@@ -131,8 +131,10 @@ Photonz work should look designed, not assembled.
    the labelled rows out as one table (names down the left, each state named
    once over its column, every look centred in its cell, rows evenly apart, the
    canvas grown when it needs room), so set no row names or state headers
-   yourself. Give states the same names across kinds (Default, Hover, Pressed,
-   Disabled) so they share columns. Each becomes one Library component with its
+   yourself. Only kinds with exactly the same states share a header row, so
+   no cell is left empty: give every kind that has them the same states with
+   the same names (Default, Hover, Pressed, Disabled), and keep a kind's own
+   set (Off, On) to the kinds that need it. Each becomes one Library component with its
    states as versions.
 4. Make them look like the kit: the system font at one small type scale, the
    platform's own colours, one corner radius per kind, padding on the 8 grid.

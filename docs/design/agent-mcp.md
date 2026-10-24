@@ -361,17 +361,22 @@ look.
 **The sheet is a table** (`asking-for-a-sheet-of-components-gives-a-clean-t`,
 `AgentComponentSheet.swift`). Every labelled add_component lays every labelled
 row on the canvas out again as one table, from where the table already starts:
-a header row naming each state once over its column, the components' names on
-one left edge, each look centred in its cell, cells as wide as the canvas
-allows with the left margin kept on the right, and rows 32 apart. Columns are
-named by what most rows call each state (`sheetColumns`): the first column by
-the commonest first look, the rest by the state names the most rows share, in
-the order they mostly come; a look named like a column goes in it, others take
-the free columns from the left and keep their own name under them (a toggle's
-On under Hover). Header and caption words are set anew each time and are found
-again by name (`<State> Header`, `<Row> <State> Label`), the row's name
-(`<Row> Label`) is what makes a component a row. A table that runs past the
-canvas grows it from the top left in the same undo step
+the components' names on one left edge, and rows grouped into sections of
+exactly the same states (whatever their order or case), each under its own
+header row naming each state once over its column, so no cell under a header
+is ever empty (2026-10-24: every judge named the holes when rows with fewer
+states shared a header). Sections stand 56 apart, rows 32 apart, every row at
+least 44 tall with its looks centred in it so small controls keep the rhythm
+of buttons, and within a section the shorter rows come first so none sits far
+from its header under a tall one. Columns fill the canvas's width with the
+left margin kept on the right: sections that fit share one column step, and a
+section whose looks are too wide for it spreads its own cells over the same
+width rather than widening every column (one 400 point navigation bar once
+grew a sheet to 2448 points). Header words are set anew each time and found
+again by name (`<State> Header`); the row's name (`<Row> Label`) is what makes
+a component a row. A table that runs past the canvas grows it from the top
+left in the same undo step, keeping its left margin on the right and under
+its last row (`AgentSheetLayout.canvas(around:)`, called from
 (`AgentDesignWork.addComponent`), so Ask's plan no longer guesses a height.
 
 **What a person could not see is refused** (`AgentNewComponent.problem`,
@@ -379,7 +384,9 @@ canvas grows it from the top left in the same undo step
 (they belong wholly inside it or wholly off it: a segmented control's label
 past its track, a tab's icon on its name). Words that cannot be read against
 what is behind them (the topmost painted box under their middle, else the
-white canvas; contrast under 1.6). In the first look: a surface the canvas's
+white canvas; an APCA lightness contrast under 20, `RGBA.lightnessContrast`,
+which refuses #007AFF on a pressed #0056CC that the 1.6 ratio let through and
+keeps Apple's faint disabled greys). In the first look: a surface the canvas's
 own white with no edge or shadow. A later look whose every change is a shade
 too small to see (two colours under 1.2 contrast with no channel moving 48 of
 255: #FF3B30 to #FF453A is refused, #2563EB to #1D4ED8 is plain). A part can

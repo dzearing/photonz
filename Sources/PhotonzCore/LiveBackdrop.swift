@@ -263,6 +263,25 @@ extension RGBA {
     public static func contrast(_ one: Double, _ other: Double) -> Double {
         (max(one, other) + 0.05) / (min(one, other) + 0.05)
     }
+
+    /// How far apart words read from what is behind them, as the eye sees
+    /// it: the lightness contrast of APCA (the method WCAG 3 drafts), 0 for
+    /// none to about 106 for black on white. Unlike the ratio it knows that
+    /// a difference between two dark colours is harder to see than the same
+    /// ratio between two light ones: #007AFF words on #0056CC have a ratio
+    /// of 1.64 and read about 14, while Apple's faint #C7C7CC disabled label
+    /// on white has 1.69 and reads about 30.
+    public static func lightnessContrast(text: RGBA, on ground: RGBA) -> Double {
+        func y(_ colour: RGBA) -> Double {
+            let raw = 0.2126729 * pow(colour.r, 2.4) + 0.7151522 * pow(colour.g, 2.4) + 0.0721750 * pow(colour.b, 2.4)
+            return raw < 0.022 ? raw + pow(0.022 - raw, 1.414) : raw
+        }
+        let ink = y(text), back = y(ground)
+        let signed = back > ink
+            ? (pow(back, 0.56) - pow(ink, 0.57)) * 1.14
+            : (pow(back, 0.65) - pow(ink, 0.62)) * 1.14
+        return abs(signed) < 0.1 ? 0 : (abs(signed) - 0.027) * 100
+    }
 }
 
 private extension Double {

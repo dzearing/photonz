@@ -836,7 +836,8 @@ public struct AskConversation: Sendable {
         the sheet; then one row per component, each add_component with labels true, the same x for \
         every component and each row's y below the last. Photonz lays the labelled rows out as one table \
         (the names down the left, each state named once over its column, every look in its cell, the canvas \
-        grown when it needs more room), so set no labels or headers yourself. Place no starters on it.
+        grown when it needs more room), so set no labels or headers yourself. Only kinds with the same states \
+        share a header row: give every kind that has them the same state names. Place no starters on it.
         """
 
     /// How to draw when there is no picture model: the model's own svg.

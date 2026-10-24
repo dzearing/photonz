@@ -144,9 +144,6 @@ enum AgentDesignWork {
     /// add_component: the component and every look of it, built in the
     /// document (`PhotonzDocument.agentAddComponent`) with the app measuring
     /// the words, landed as one undo step and picked.
-    /// Room left under the last row of a sheet that grew the canvas.
-    static let sheetMargin: CGFloat = 48
-
     private static func addComponent(_ editor: EditorState, _ spec: AgentNewComponent) throws -> Answer {
         let document = try AgentWork.document(of: editor)
         guard editor.componentsEnabled else { throw Failure("This release has no components.") }
@@ -163,10 +160,9 @@ enum AgentDesignWork {
             editor.perform { built = try? $0.agentAddComponent(spec, measure: measure).get() }
             // A table that runs past the canvas grows it from the top left,
             // so nothing already there moves, keeping the table's own left
-            // margin on the right and a margin under its last row.
+            // margin on the right and under its last row.
             if let sheet = built?.sheet, let canvas = editor.document?.canvasSize {
-                let needed = CGSize(width: max(canvas.width, (sheet.frame.maxX + sheet.frame.minX).rounded(.up)),
-                                    height: max(canvas.height, (sheet.frame.maxY + Self.sheetMargin).rounded(.up)))
+                let needed = sheet.canvas(around: canvas)
                 if needed != canvas { editor.setCanvasSize(to: needed, anchor: .topLeft) }
             }
             if let first = built?.looks.first { editor.selectLayer(first.layer) }
