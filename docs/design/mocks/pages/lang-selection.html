@@ -157,38 +157,42 @@
   #lang-selection button.lx-3d{padding:0;cursor:pointer}
   #lang-selection button.lx-3d:hover{border-color:var(--accent)}
   /* a swap, not a toggle: it shows the grips you would switch to, never a lit 'on' state */
+    /* the card's turn and depth belong to the card: they stay whichever grips are up */
+  #lang-selection .selwrap.lx-t{transform:perspective(900px) translateZ(var(--tz,0px)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d}
+  /* depth cue: the shadow grows as the card comes forward and tightens as it goes back */
+  #lang-selection .selwrap.lx-t{box-shadow:0 calc(var(--lift,0) * 30px) calc(8px + var(--lift,0) * 40px) rgba(0,0,0,calc(.15 + var(--lift,0) * .4))}
+  #lang-selection .selwrap.lx-t > .sel-ring{display:none}
+  /* THE CONTROLS LAYER. Grips, knob, chip and tag are drawn flat over the card, at the
+     card's projected corners, so they stay the same size on screen however far the
+     card is turned or pushed back. Only the content takes the 3D. */
+  #lang-selection .lx-ov{position:absolute;inset:0;pointer-events:none;z-index:5}
+  #lang-selection .lx-ov > *{pointer-events:auto}
+  #lang-selection .lx-ov > .lx-outline,#lang-selection .lx-ov > .mtag,#lang-selection .lx-ov > .lx-hint,#lang-selection .lx-ov > .rotstem{pointer-events:none}
+  #lang-selection .lx-outline{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  #lang-selection .lx-outline polygon{fill:none;stroke:var(--accent);stroke-width:1.5}
+  #lang-selection .lx-ov > .handle,#lang-selection .lx-ov > .rot,#lang-selection .lx-ov > .lx-3d,#lang-selection .lx-ov > .mtag,#lang-selection .lx-ov > .lx-hint{right:auto;bottom:auto;transform:translate(-50%,-50%)}
+  #lang-selection .lx-ov > .rotstem{right:auto;bottom:auto;height:1.5px;transform-origin:0 50%}
   #lang-selection .lx-3d .lx-g-size{display:none}
-  #lang-selection .selwrap.lx-on .lx-3d .lx-g-size{display:block}#lang-selection .selwrap.lx-on .lx-3d .lx-g-3d{display:none}
-  /* the card's turn and depth belong to the card: they stay whichever grips are up */
-  #lang-selection .selwrap.lx-t{transform:perspective(900px) translateZ(var(--tz,0px)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;transition:transform .12s ease-out}
-  #lang-selection .selwrap.lx-t.lx-busy{transition:none}
-  /* in 3D mode the edge grips become pills that turn the card, and the corners move it along Z (nearer or farther). Nothing sits on the content */
-  #lang-selection .selwrap.lx-on .handle.tc,#lang-selection .selwrap.lx-on .handle.bc{width:18px;height:8px;border-radius:4px;cursor:move}
-  #lang-selection .selwrap.lx-on .handle.tc{top:-4.5px}#lang-selection .selwrap.lx-on .handle.bc{bottom:-4.5px}
-  #lang-selection .selwrap.lx-on .handle.ml,#lang-selection .selwrap.lx-on .handle.mr{width:8px;height:18px;border-radius:4px;cursor:move}
-  #lang-selection .selwrap.lx-on .handle.ml{left:-4.5px}#lang-selection .selwrap.lx-on .handle.mr{right:-4.5px}
-  #lang-selection .selwrap.lx-on .handle.lx-drag{background:var(--accent);cursor:grabbing}
-  /* depth grips: a round chip on each corner carrying an in-and-out arrow along the diagonal, so it reads as "pull out, push in", not "resize" */
-  #lang-selection .selwrap.lx-on .handle.tl,#lang-selection .selwrap.lx-on .handle.tr,
-  #lang-selection .selwrap.lx-on .handle.bl,#lang-selection .selwrap.lx-on .handle.br{width:16px;height:16px;border-radius:50%;
+  #lang-selection .lx-ov.lx-on .lx-3d .lx-g-size{display:block}#lang-selection .lx-ov.lx-on .lx-3d .lx-g-3d{display:none}
+  /* the 3D grips: edge pills turn the card any way, corner chips push it back or pull it forward */
+  #lang-selection .lx-ov.lx-on > .handle.tc,#lang-selection .lx-ov.lx-on > .handle.bc{width:18px;height:8px;border-radius:4px;cursor:move}
+  #lang-selection .lx-ov.lx-on > .handle.ml,#lang-selection .lx-ov.lx-on > .handle.mr{width:8px;height:18px;border-radius:4px;cursor:move}
+  #lang-selection .lx-ov > .handle.lx-drag{background:var(--accent)}
+  #lang-selection .lx-ov.lx-on > .handle.tl,#lang-selection .lx-ov.lx-on > .handle.tr,
+  #lang-selection .lx-ov.lx-on > .handle.bl,#lang-selection .lx-ov.lx-on > .handle.br{width:16px;height:16px;border-radius:50%;
     box-shadow:0 1px 3px rgba(0,0,0,.3);display:grid;place-items:center}
-  #lang-selection .selwrap.lx-on .handle.tl,#lang-selection .selwrap.lx-on .handle.br{cursor:nwse-resize}
-  #lang-selection .selwrap.lx-on .handle.tr,#lang-selection .selwrap.lx-on .handle.bl{cursor:nesw-resize}
-  #lang-selection .selwrap.lx-on .handle.tl{top:-8.5px;left:-8.5px}#lang-selection .selwrap.lx-on .handle.tr{top:-8.5px;right:-8.5px}
-  #lang-selection .selwrap.lx-on .handle.bl{bottom:-8.5px;left:-8.5px}#lang-selection .selwrap.lx-on .handle.br{bottom:-8.5px;right:-8.5px}
-  #lang-selection .selwrap.lx-on .handle.tl::after,#lang-selection .selwrap.lx-on .handle.tr::after,
-  #lang-selection .selwrap.lx-on .handle.bl::after,#lang-selection .selwrap.lx-on .handle.br::after{content:"";width:10px;height:10px;background:var(--accent);
+  #lang-selection .lx-ov.lx-on > .handle.tl,#lang-selection .lx-ov.lx-on > .handle.br{cursor:nwse-resize}
+  #lang-selection .lx-ov.lx-on > .handle.tr,#lang-selection .lx-ov.lx-on > .handle.bl{cursor:nesw-resize}
+  #lang-selection .lx-ov.lx-on > .handle.tl::after,#lang-selection .lx-ov.lx-on > .handle.tr::after,
+  #lang-selection .lx-ov.lx-on > .handle.bl::after,#lang-selection .lx-ov.lx-on > .handle.br::after{content:"";width:10px;height:10px;background:var(--accent);
     -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 2 8 8M2 2v3M2 2h3M8 8V5M8 8H5' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
     mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 2 8 8M2 2v3M2 2h3M8 8V5M8 8H5' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
-  #lang-selection .selwrap.lx-on .handle.tr::after,#lang-selection .selwrap.lx-on .handle.bl::after{transform:scaleX(-1)}
-  #lang-selection .selwrap.lx-on .handle.lx-drag::after{background:var(--accent-ink)}
-  /* depth cue: the shadow grows as the card comes forward and tightens as it goes back */
-  /* box-shadow, not filter: a filter would flatten the 3D and pin the outline to the card */
-  #lang-selection .selwrap.lx-t{box-shadow:0 calc(var(--lift,0) * 30px) calc(8px + var(--lift,0) * 40px) rgba(0,0,0,calc(.15 + var(--lift,0) * .4))}
+  #lang-selection .lx-ov.lx-on > .handle.tr::after,#lang-selection .lx-ov.lx-on > .handle.bl::after{transform:scaleX(-1)}
+  #lang-selection .lx-ov.lx-on > .handle.lx-drag::after{background:var(--accent-ink)}
   /* the first-use hint, under the tag and clear of every grip; gone after the first drag */
-  #lang-selection .lx-hint{display:none;position:absolute;left:50%;bottom:-56px;transform:translateX(-50%);white-space:nowrap;
-    font-size:10.5px;color:var(--text-2,#b8bccb);background:var(--panel);border:1px solid var(--edge-lo);border-radius:6px;padding:3px 8px;pointer-events:none}
-  #lang-selection .selwrap.lx-on:not(.lx-used) .lx-hint{display:block}
+  #lang-selection .lx-hint{display:none;position:absolute;white-space:nowrap;
+    font-size:10.5px;color:var(--text-2,#b8bccb);background:var(--panel);border:1px solid var(--edge-lo);border-radius:6px;padding:3px 8px}
+  #lang-selection .lx-ov.lx-on:not(.lx-used) > .lx-hint{display:block}
 </style>
 </head>
 <body class="page">
@@ -929,38 +933,80 @@
   var wrap = chip.parentElement, tag = document.getElementById('lxHeroTag');
   var rx = 0, ry = 0, tz = 0, P = 900;
   wrap.classList.add('lx-t');
+  // the controls layer: flat, over the card, holding every control the card used to carry
+  var host = wrap.parentElement, ov = document.createElement('div');
+  ov.className = 'lx-ov'; host.appendChild(ov);
+  var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), poly = document.createElementNS(NS, 'polygon');
+  svg.setAttribute('class', 'lx-outline'); svg.appendChild(poly); ov.appendChild(svg);
+  ['.rotstem', '.rot', '.handle', '.mtag', '.lx-3d', '.lx-hint'].forEach(function (q) {
+    wrap.querySelectorAll(':scope > ' + q).forEach(function (el) { ov.appendChild(el); });
+  });
+  // where the card's corners and edge midpoints land on screen, read off zero-size markers inside it
+  var spots = { tl: [0, 0], tc: [50, 0], tr: [100, 0], ml: [0, 50], mr: [100, 50], bl: [0, 100], bc: [50, 100], br: [100, 100], c: [50, 50] };
+  var marks = {};
+  Object.keys(spots).forEach(function (k) {
+    var m = document.createElement('span');
+    m.style.cssText = 'position:absolute;width:0;height:0;left:' + spots[k][0] + '%;top:' + spots[k][1] + '%';
+    wrap.appendChild(m); marks[k] = m;
+  });
+  function at(el, x, y) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+  function layout() {
+    var o = host.getBoundingClientRect(), pt = {};
+    Object.keys(marks).forEach(function (k) { var r = marks[k].getBoundingClientRect(); pt[k] = [r.left - o.left, r.top - o.top]; });
+    poly.setAttribute('points', ['tl', 'tr', 'br', 'bl'].map(function (k) { return pt[k].join(','); }).join(' '));
+    ['tl', 'tc', 'tr', 'ml', 'mr', 'bl', 'bc', 'br'].forEach(function (k) {
+      var h = ov.querySelector(':scope > .handle.' + k); if (h) at(h, pt[k][0], pt[k][1]);
+    });
+    // the knob stands off the top edge, square to it, 30px out on screen whatever the card's depth
+    var ex = pt.tr[0] - pt.tl[0], ey = pt.tr[1] - pt.tl[1], el = Math.hypot(ex, ey) || 1;
+    var ux = ex / el, uy = ey / el, nx = uy, ny = -ux;
+    var kx = pt.tc[0] + nx * 30, ky = pt.tc[1] + ny * 30;
+    var knob = ov.querySelector(':scope > .rot'); if (knob) at(knob, kx, ky);
+    var stem = ov.querySelector(':scope > .rotstem');
+    if (stem) { at(stem, pt.tc[0] + nx * 5, pt.tc[1] + ny * 5); stem.style.width = '19.5px';
+      stem.style.transform = 'translateY(-50%) rotate(' + Math.atan2(ny, nx) + 'rad)'; }
+    var swap = ov.querySelector(':scope > .lx-3d'); if (swap) at(swap, kx + ux * 22, ky + uy * 22);
+    // the tag and hint sit under the lowest point of the card, level, never on a grip
+    var low = Math.max(pt.bl[1], pt.br[1], pt.bc[1]);
+    var tagEl = ov.querySelector(':scope > .mtag'); if (tagEl) at(tagEl, pt.bc[0], low + 22);
+    var hint = ov.querySelector(':scope > .lx-hint'); if (hint) at(hint, pt.bc[0], low + 48);
+  }
+  window.addEventListener('resize', layout);
   function paint() {
-    wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg'); wrap.style.setProperty('--tz', tz + 'px'); wrap.style.setProperty('--lift', Math.max(0, Math.min(1, (tz + 600) / 1050)).toFixed(3));
+    wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg'); wrap.style.setProperty('--tz', tz + 'px');
+    wrap.style.setProperty('--lift', Math.max(0, Math.min(1, (tz + 600) / 1050)).toFixed(3));
     var turned = Math.round(rx) || Math.round(ry) || Math.round(tz);
     var depth = Math.round(tz) === 0 ? 'in place' : Math.abs(Math.round(tz)) + (tz > 0 ? ' forward' : ' back');
-    if (tag) tag.textContent = wrap.classList.contains('lx-on')
+    if (tag) tag.textContent = ov.classList.contains('lx-on')
       ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '° · ' + depth
       : 'Hero card · 400 × 268' + (turned ? ' · in 3D' : '');
+    layout();
   }
+  paint();
   var tips = { tc: 'Drag any way to turn it', bc: 'Drag any way to turn it', ml: 'Drag any way to turn it', mr: 'Drag any way to turn it',
     tl: 'Drag out to pull it forward, in to push it back', tr: 'Drag out to pull it forward, in to push it back',
     bl: 'Drag out to pull it forward, in to push it back', br: 'Drag out to pull it forward, in to push it back' };
-  function set(on) { Object.keys(tips).forEach(function (k) { var h = wrap.querySelector(':scope > .handle.' + k); if (h) { if (on) h.title = tips[k]; else h.removeAttribute('title'); } });
-    wrap.classList.toggle('lx-on', on); chip.title = on ? 'Switch to the sizing grips' : 'Switch to the 3D grips'; paint(); }
-  chip.addEventListener('click', function (e) { e.stopPropagation(); set(!wrap.classList.contains('lx-on')); });
+  function set(on) { Object.keys(tips).forEach(function (k) { var h = ov.querySelector(':scope > .handle.' + k); if (h) { if (on) h.title = tips[k]; else h.removeAttribute('title'); } });
+    ov.classList.toggle('lx-on', on); chip.title = on ? 'Switch to the sizing grips' : 'Switch to the 3D grips'; paint(); }
+  chip.addEventListener('click', function (e) { e.stopPropagation(); set(!ov.classList.contains('lx-on')); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
   var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
   function grab(el, onMove) {
     if (!el) return;
     el.addEventListener('pointerdown', function (e) {
-      if (!wrap.classList.contains('lx-on')) return;
+      if (!ov.classList.contains('lx-on')) return;
       e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
-      el.classList.add('lx-drag'); wrap.classList.add('lx-busy', 'lx-used');
+      el.classList.add('lx-drag'); ov.classList.add('lx-used');
       var r = wrap.getBoundingClientRect();
       var start = { x: e.clientX, y: e.clientY, rx: rx, ry: ry, tz: tz, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
       start.d = Math.hypot(e.clientX - start.cx, e.clientY - start.cy) || 1;
       function move(ev) { onMove(ev, start); paint(); }
-      function up() { el.classList.remove('lx-drag'); wrap.classList.remove('lx-busy');
+      function up() { el.classList.remove('lx-drag');
         el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); }
       el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
     });
   }
-  var pill = function (k) { return wrap.querySelector(':scope > .handle.' + k); };
+  var pill = function (k) { return ov.querySelector(':scope > .handle.' + k); };
   var snap = function (ev, v) { return ev.shiftKey ? Math.round(v / 15) * 15 : v; };
   // any edge pill turns the card both ways: up and down tip it, left and right turn it
   ['tc', 'bc', 'ml', 'mr'].forEach(function (k) {
