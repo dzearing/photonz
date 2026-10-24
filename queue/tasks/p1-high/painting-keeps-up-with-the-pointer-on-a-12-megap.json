@@ -1,0 +1,38 @@
+{
+  "id": "painting-keeps-up-with-the-pointer-on-a-12-megap",
+  "title": "Painting keeps up with the pointer on a 12 megapixel picture, measured",
+  "goal": "Painting never lags behind your hand, even on a big photo: the stroke under the pointer draws within a frame and letting go lands the stroke without a hitch, measured on a 12 megapixel picture with a few hundred strokes on its paint layer.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T23:40:48.236Z",
+  "updated": "2026-10-24T23:41:00.264Z",
+  "deps": [
+    "pressing-b-picks-a-brush-that-paints-freehand-st",
+    "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
+    "marker-strokes-are-flat-and-darken-where-they-cr",
+    "watercolour-strokes-are-transparent-pool-darker",
+    "oil-paint-strokes-carry-and-smear-colour-and-sho"
+  ],
+  "blockedBy": [],
+  "notes": "Umbrella: a-brush-tool-paints-with-realistic-charcoal-chal (the user's ask, 2026-10-24). Design: docs/design/brushes.md, read it first; its decisions are settled unless this task's runner finds one cannot work, in which case they say so in the log and in the doc.\n\nDesign doc decision 5. Needs the medium slices for the per-medium numbers; the foundation slice may already do the prefix cache.",
+  "acceptance": [
+    "Input-to-pixel latency and frame time while painting are measured on a 12 MP picture with each medium, and are under one frame (16 ms) for the live stroke",
+    "Landing a stroke on a paint layer that already holds a few hundred strokes takes under 50 ms (the layer keeps its last raster and paints only the new stroke)",
+    "Undo of a stroke on that layer is as quick as landing one",
+    "The numbers are written in the audit and held by a perf test"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T23:40:48.238Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T23:41:00.264Z",
+      "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st, charcoal-chalk-and-crayon-catch-on-a-paper-grain, marker-strokes-are-flat-and-darken-where-they-cr, watercolour-strokes-are-transparent-pool-darker, oil-paint-strokes-carry-and-smear-colour-and-sho"
+    }
+  ]
+}

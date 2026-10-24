@@ -1,0 +1,34 @@
+{
+  "id": "a-vector-path-s-line-can-be-painted-with-a-brush",
+  "title": "A vector path's line can be painted with a brush and stays editable",
+  "goal": "Any path drawn with the Pen can have its line painted with one of the brushes instead of a plain stroke, so drawings get a hand-made look while the path stays fully editable: move a point and the brushed line repaints along the new curve.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T23:40:48.125Z",
+  "updated": "2026-10-24T23:41:00.238Z",
+  "deps": [
+    "pressing-b-picks-a-brush-that-paints-freehand-st"
+  ],
+  "blockedBy": [],
+  "notes": "Umbrella: a-brush-tool-paints-with-realistic-charcoal-chal (the user's ask, 2026-10-24). Design: docs/design/brushes.md, read it first; its decisions are settled unless this task's runner finds one cannot work, in which case they say so in the log and in the doc.\n\nDesign doc decision 9; PRODUCT-MODEL.md \"Vector strokes are brushes\". PathContent gains brush: BrushSettings?; PathRasterizer samples the curve into StrokeSamples and calls the paint engine.",
+  "acceptance": [
+    "A path's line can be set to a brush and medium from the panel and from the agent API",
+    "The brushed line follows the curve and tapers at open ends; moving an anchor repaints it",
+    "Swapping the brush on a group of paths restyles every line at once",
+    "A walk with no flags draws a path, brushes its line and moves an anchor, with real window pictures in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T23:40:48.127Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T23:41:00.238Z",
+      "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    }
+  ]
+}

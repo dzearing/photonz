@@ -1,0 +1,34 @@
+{
+  "id": "each-brush-shows-its-own-settings-in-the-tool-op",
+  "title": "Each brush shows its own settings in the tool options and the panel, and each one visibly changes the stroke",
+  "goal": "While the brush is in hand, the options over the tool bar let you pick the medium from a dropdown and set its size, opacity and its own settings, the way Procreate and Photoshop brushes each have their own, and the panel shows the full list. The brush remembers its settings per medium.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T23:40:47.779Z",
+  "updated": "2026-10-24T23:41:00.153Z",
+  "deps": [
+    "pressing-b-picks-a-brush-that-paints-freehand-st"
+  ],
+  "blockedBy": [],
+  "notes": "Umbrella: a-brush-tool-paints-with-realistic-charcoal-chal (the user's ask, 2026-10-24). Design: docs/design/brushes.md, read it first; its decisions are settled unless this task's runner finds one cannot work, in which case they say so in the log and in the doc.\n\nDesign doc decision 7. Read the settings list from BrushMedium in PhotonzCore, never a second list in the app. Placement contract: tool options capsule + panel section are the two allowed doors. More than three exclusive options is a dropdown. Panel rows are labels and values, no sentences.",
+  "acceptance": [
+    "The tool options over the tool bar show a Medium dropdown with the seven media, Size, Opacity and the medium's own two main settings, all with plain names; the panel's Brush section shows every setting for the medium",
+    "Changing a setting changes the next stroke and never repaints strokes already made; each medium remembers its own values",
+    "[ and ] shrink and grow the brush, and a size ring under the pointer shows the tip size",
+    "Every control is proven clickable at a point on its face by a walk with no flags; a sheet of strokes per setting goes in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T23:40:47.781Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T23:41:00.153Z",
+      "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    }
+  ]
+}

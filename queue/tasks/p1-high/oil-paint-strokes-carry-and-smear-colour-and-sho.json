@@ -1,0 +1,35 @@
+{
+  "id": "oil-paint-strokes-carry-and-smear-colour-and-sho",
+  "title": "Oil paint strokes carry and smear colour and show bristle ridges",
+  "goal": "The oil paint brush behaves like a loaded bristle brush: it lays down thick colour that runs out along a stroke, picks up and smears the paint already on the canvas, and leaves bristle ridges that catch the light. How loaded the brush is and how much it smears are its own settings.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T23:40:47.664Z",
+  "updated": "2026-10-24T23:41:00.125Z",
+  "deps": [
+    "pressing-b-picks-a-brush-that-paints-freehand-st"
+  ],
+  "blockedBy": [],
+  "notes": "Umbrella: a-brush-tool-paints-with-realistic-charcoal-chal (the user's ask, 2026-10-24). Design: docs/design/brushes.md, read it first; its decisions are settled unless this task's runner finds one cannot work, in which case they say so in the log and in the doc.\n\nDesign doc decision 4: bristle-and-pickup in the spirit of IMPaSTo (Baxter et al. 2004): a per-bristle colour reservoir picking up from the layer, a height channel lit at render. Likely a Metal or Core Image kernel.",
+  "acceptance": [
+    "A stroke shows bristle streaks along its direction and lit ridges, not a flat fill",
+    "Painting across an earlier stroke drags its colour along and mixes it; Smear sets how much",
+    "Load sets how far a stroke goes before the brush runs dry",
+    "Measured bars the round tip fails: colour carried past the crossing point when one stroke crosses another, and ridge contrast inside a stroke",
+    "A walk with no flags paints two crossing strokes by pointer drag, with real window pictures in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T23:40:47.666Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T23:41:00.125Z",
+      "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    }
+  ]
+}

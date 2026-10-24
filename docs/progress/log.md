@@ -21894,3 +21894,11 @@ Queue task `photonz-uses-little-memory-and-what-made-it-use` (a colleague saw Ph
 - Budget in `docs/design/memory.md` and `MemoryBudget` (core, tested): under 300 MB idle with one screenshot, back within 20 percent after a session. Walk step `memory`; `closed-windows-give-their-memory-back-walk` runs in every rotating check. Long session tool: `Scripts/memory-session.sh` (sampler `memory-watch.sh`, chart `memory-chart.mjs`).
 - Long session, Photonz idle with everything closed: 1247 MB before, 180 MB after. Ask helpers (own rows in Activity Monitor, responsible process Photonz): chat about 3 GB, picture model 13 GB painting and 5 GB loaded, both gone 5 idle minutes later and on quit.
 - Open: up to three emptied editors stay reachable through a closed window AppKit keeps (no memory cost).
+
+## 2026-10-24 (night): the Brush epic is planned
+
+Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a Brush tool with charcoal, chalk, oil, watercolour, marker, crayon and airbrush, each with its own settings, reachable from MCP).
+
+- Design: `docs/design/brushes.md`. A stroke is data (samples with pressure, tilt and time; the brush and its settings; colour; a seed) on a new Paint layer kind, never pixels in the model. Strokes land on a Paint layer above the picture, one undo step each; the brush stays in hand. One engine: dab placement in PhotonzCore (pure, tested), per-medium marking in PhotonzRender (watercolour after Curtis 1997, oil with pickup and a lit height channel). The live stroke draws its own overlay; a paint layer keeps its last raster.
+- Ten child tasks at p1 with deps, foundation first (`pressing-b-picks-a-brush-that-paints-freehand-st`, seq 5.1), then dry media, marker and airbrush, watercolour, oil, settings, pressure, MCP, brushed vector strokes, and painting speed. The umbrella waits on all ten and closes the epic with the blind test sheet, the try path and the audit.
+- No app code this run.

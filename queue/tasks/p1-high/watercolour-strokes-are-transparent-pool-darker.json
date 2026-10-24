@@ -1,0 +1,35 @@
+{
+  "id": "watercolour-strokes-are-transparent-pool-darker",
+  "title": "Watercolour strokes are transparent, pool darker at their edges, bloom and layer where they overlap",
+  "goal": "The watercolour brush behaves like real watercolour: strokes are transparent washes that dry darker at their edges, bleed and bloom where wet paint touches wet paint, granulate into the paper, and build up in glazes where strokes overlap. How wet the brush is and how far it bleeds are its own settings.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T23:40:47.541Z",
+  "updated": "2026-10-24T23:41:00.098Z",
+  "deps": [
+    "pressing-b-picks-a-brush-that-paints-freehand-st"
+  ],
+  "blockedBy": [],
+  "notes": "Umbrella: a-brush-tool-paints-with-realistic-charcoal-chal (the user's ask, 2026-10-24). Design: docs/design/brushes.md, read it first; its decisions are settled unless this task's runner finds one cannot work, in which case they say so in the log and in the doc.\n\nDesign doc decision 4: follow Curtis et al. 1997 (wet-area mask, pigment flow, edge darkening, backruns) simplified to interactive rate; Rebelle and Fresco are the behaviour to match. Expect a Core Image or Metal kernel in PhotonzRender. Replay must stay deterministic (strokes are data and re-render on load). Wet-on-wet needs to know which earlier strokes are still wet: use stroke time (a stroke dries a few seconds after it ends, by its Wetness), recorded as data so replay matches.",
+  "acceptance": [
+    "A single stroke is a transparent wash with a darker edge where the pigment pooled",
+    "Two overlapping strokes layer: the overlap is a deeper glaze, and painting into a stroke that is still wet blooms outward",
+    "Wetness and Bleed each visibly change the stroke (sheet of strokes per setting in the audit)",
+    "Measured bars the round tip fails: edge-to-centre darkness ratio of a stroke, and how far a wet stroke spreads past its painted path",
+    "Painting stays smooth at 12 MP (frame time while painting measured in the audit), and a walk with no flags paints two overlapping strokes by pointer drag"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T23:40:47.543Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T23:41:00.098Z",
+      "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "marker-strokes-are-flat-and-darken-where-they-cr",
+  "title": "Marker strokes are flat and darken where they cross, and the airbrush sprays softly and builds up",
+  "goal": "The marker and the airbrush look like their real tools: a marker stroke is one flat translucent colour that gets darker only where separate strokes cross, with a round or chisel tip, and the airbrush is a soft even spray that builds up the longer you hold it over one spot.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-24T23:40:47.427Z",
+  "updated": "2026-10-24T23:41:00.071Z",
+  "deps": [
+    "pressing-b-picks-a-brush-that-paints-freehand-st"
+  ],
+  "blockedBy": [],
+  "notes": "Umbrella: a-brush-tool-paints-with-realistic-charcoal-chal (the user's ask, 2026-10-24). Design: docs/design/brushes.md, read it first; its decisions are settled unless this task's runner finds one cannot work, in which case they say so in the log and in the doc.\n\nDesign doc decision 4 table, rows Marker and Airbrush. Marker: render the stroke into its own coverage mask with max (not sum), then composite the stroke with multiply over earlier strokes. Airbrush dwell needs time in the samples (StrokeSample.ms) and dabs emitted while the pointer is still.",
+  "acceptance": [
+    "A marker stroke has even colour along its length even where it doubles back on itself, and a second stroke crossing it is darker in the overlap",
+    "Tip switches the marker between round and chisel, and a chisel stroke changes width with direction",
+    "Airbrush is a fine soft spray; holding the pointer still builds colour up; Flow and Softness each visibly change it",
+    "A walk with no flags paints with both by pointer drag, with real window pictures in the audit; measured bars for flatness (colour variance along a marker stroke) and build-up (airbrush density after a dwell vs a pass) that the round tip fails"
+  ],
+  "log": [
+    {
+      "t": "2026-10-24T23:40:47.429Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-24T23:41:00.071Z",
+      "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    }
+  ]
+}

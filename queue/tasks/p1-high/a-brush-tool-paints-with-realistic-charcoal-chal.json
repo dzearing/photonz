@@ -9,8 +9,19 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-24T14:32:08.905Z",
-  "deps": [],
+  "updated": "2026-10-24T23:42:30.055Z",
+  "deps": [
+    "pressing-b-picks-a-brush-that-paints-freehand-st",
+    "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
+    "marker-strokes-are-flat-and-darken-where-they-cr",
+    "watercolour-strokes-are-transparent-pool-darker",
+    "oil-paint-strokes-carry-and-smear-colour-and-sho",
+    "each-brush-shows-its-own-settings-in-the-tool-op",
+    "pen-pressure-tilt-and-pointer-speed-shape-a-brus",
+    "the-agent-can-list-set-and-paint-with-the-brushe",
+    "a-vector-path-s-line-can-be-painted-with-a-brush",
+    "painting-keeps-up-with-the-pointer-on-a-12-megap"
+  ],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: 'There is no \"brush\" tool, that lets you paint in the app. This makes the app difficult to paint vs make vector art. I'd love to have a realistic set of paint brushes for illustration (hooked up to mcp so the agent can use them.)' Then: 'i'd like charcoal, chalk, oil paint, watercolors, markers, crayons, airbrushing' and 'the brushes each may have unique adjustments just like other paint apps'.\n\nThe epic image-paint (under image-editing) was staged 'later'; the intake window moved both to 'now' with success criteria in queue/objectives.json so this task may run.\n\nThis is big. The runner should plan it as an epic: split into dependent tasks (brush engine + raster paint layer, then each medium, then settings UI, then MCP, then brushed vector strokes) and file them with deps, keeping this task as the umbrella, rather than landing one huge commit.\n\nWhere things are: tools are Sources/PhotonzCore/Tools.swift (Tools.swift:102-104 already reserves B/E/S/J/Y for brushes, erasers and stamps). There is no brush engine and no paintable raster layer type confirmed; check Sources/PhotonzCore/Layer.swift for an image layer the strokes can land on. Pixels never live in the document model (CLAUDE.md): a stroke should be stored as data (points, pressure, brush id + settings) and rendered in PhotonzRender, or rasterised into an ImageStore-backed layer through History.perform; decide and write it in docs/design. Watercolour and oil need a simulation (wet layer, pigment deposit, edge darkening, bristle smear), likely a Metal kernel; look at published approaches (Curtis et al. 1997 watercolour, Procreate/Rebelle/Fresco behaviour) rather than texture stamps. MCP server: Sources/PhotonzMCP/main.swift; every command must also be one API call (epic agent-api). Product model already says vector strokes can carry a brush: docs/design/mocks/shared/PRODUCT-MODEL.md:37-55.\n\nRelated: the paint bucket task (queue/tasks/p1-high/the-paint-bucket-fills-the-enclosed-area-you-cli.json) and the colour swatches showing for tools that paint (the-colour-swatches-appear-only-for-tools-that-p.json): the brush is a tool that paints, so swatches must show for it.",
   "acceptance": [
@@ -33,6 +44,27 @@
     {
       "t": "2026-10-24T14:32:08.903Z",
       "note": "seq 3970 -> 6"
+    },
+    {
+      "t": "2026-10-24T23:36:28.500Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T23:41:32.302Z",
+      "note": "Planned as an epic, per the task's notes: design in docs/design/brushes.md (strokes stored as data in a new Paint layer kind, never pixels in the model; one engine with a pure placement half in PhotonzCore and per-medium marking in PhotonzRender; live stroke drawn on its own overlay; per-layer prefix raster cache). Ten child tasks filed at p1 with deps: pressing-b-picks-a-brush-that-paints-freehand-st (foundation, seq 5.1) first; dry media, marker+airbrush, watercolour, oil, settings, pressure, MCP, brushed vector strokes after it; painting speed after the four medium slices. This umbrella now depends on all ten and does the blind test sheet, try path, reel and final audit when they are done."
+    },
+    {
+      "t": "2026-10-24T23:41:32.367Z",
+      "note": "Adversarial review before building: (1) a first-time user presses B over a screenshot and expects to paint on it: strokes land on a new Paint layer above it, which looks identical and keeps the screenshot intact (the retouch mock's own rule); a Photoshop user may look for the layer they painted on and find Paint instead, which is the one departure. (2) Every other making tool hands back Select after landing; a brush must not (dozens of strokes in a row), so the foundation keeps the brush in hand. (3) Re-compositing a 12 MP document on every mouse move cannot hit 16 ms: the live stroke paints its own overlay with the same marking code, and a paint layer keeps its last raster so a new stroke paints only itself. (4) Smudge: Photoshop and Procreate make it a separate tool; chose a Paint / Smudge mode on the brush over a separate Smudge tool because the try path is 'switch to charcoal and smudge' in one step and S/J/E stay free for stamp, heal and eraser. (5) Seven media in the options is more than three exclusive options, so a dropdown (UX-PATTERNS rule). (6) Mocks: image.html and img-retouch-wt.html show Brush (B) on the tool bar and brush settings as panel rows (Size, Hardness, Flow, a mode dropdown); the settings slice builds both doors (capsule + panel), which the placement contract allows. (7) Video documents: a paint layer on a video spans the document's time like any drawn layer; nothing more is planned until the user asks."
+    },
+    {
+      "t": "2026-10-24T23:41:32.433Z",
+      "note": "Chose strokes-as-data over painting into an ImageStore bitmap because pixels never live in the model (CLAUDE.md), undo stays a small snapshot, agent strokes are identical to a person's by construction, and brushed vector paths reuse the engine; the cost (replay) is covered by the per-layer raster cache and a later explicit Flatten command."
+    },
+    {
+      "t": "2026-10-24T23:42:30.054Z",
+      "note": "Planned as an epic (docs/design/brushes.md). Ten child tasks filed at p1 with deps, foundation first (pressing-b-picks-a-brush-that-paints-freehand-st). This umbrella now depends on all ten; it comes back to the queue when they are done, to run the blind test sheet, the try path, the reel and the final audit."
     }
-  ]
+  ],
+  "started": "2026-10-24T23:36:28.499Z"
 }
