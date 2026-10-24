@@ -215,6 +215,43 @@ extension AgentNewComponent {
         return out
     }
 
+    /// A mark (a tick, a chevron: an open path) drawn in nearly the colour
+    /// of the box it sits on is set white or near black in that look,
+    /// whichever stands out more, as words that cannot be read are.
+    static func marksStandOut(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
+        var out = args
+        var looks = out["looks"]?.arrayValue ?? []
+        for (lookIndex, look) in found.looks.enumerated() {
+            let shown = lookIndex == 0 ? found : found.inLook(look)
+            for part in shown.parts where part.kind == .path && !part.closed && !part.hidden {
+                let boxes = shown.parts.filter { box in
+                    guard case .shape = box.kind, !box.hidden, let _ = box.look.fill?.hexValue else { return false }
+                    return box.frame.insetBy(dx: -1, dy: -1).contains(part.frame)
+                }
+                guard let box = boxes.min(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }),
+                      let groundHex = box.look.fill?.hexValue, let ground = RGBA(hex: groundHex),
+                      let ink = RGBA(hex: part.look.stroke?.hexValue ?? AgentDrawing.defaultStrokeHex),
+                      abs(RGBA.lightnessContrast(text: ink, on: ground)) < leastWordLightness else { continue }
+                let choices = ["#FFFFFF", "#1C1C1E"].compactMap { hex in RGBA(hex: hex).map { (hex, $0) } }
+                guard let best = choices.max(by: {
+                    abs(RGBA.lightnessContrast(text: $0.1, on: ground)) < abs(RGBA.lightnessContrast(text: $1.1, on: ground))
+                })?.0 else { continue }
+                if lookIndex == 0 {
+                    guard var parts = out["parts"]?.arrayValue,
+                          let at = parts.firstIndex(where: { ($0["name"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces) == part.name }),
+                          var object = parts[at].objectValue else { continue }
+                    object["stroke"] = .string(best)
+                    parts[at] = .object(object)
+                    out["parts"] = .array(parts)
+                } else if lookIndex - 1 < looks.count {
+                    looks[lookIndex - 1] = setting("stroke", .string(best), on: part.name, in: looks[lookIndex - 1])
+                }
+            }
+        }
+        if !looks.isEmpty { out["looks"] = .array(looks) }
+        return out
+    }
+
     /// The room a box keeps round what it holds, when nothing it holds
     /// says otherwise, and the least and most it is taken as.
     static let heldRoom: ClosedRange<CGFloat> = 8...24
@@ -319,6 +356,7 @@ extension AgentNewComponent {
                      { args in built(args).map { heldInside(args, $0) } ?? args },
                      { args in built(args).map { offLooksOff(args, $0) } ?? args },
                      { args in built(args).map { onIsNotOff(args, $0) } ?? args },
+                     { args in built(args).map { marksStandOut(args, $0) } ?? args },
                      { args in built(args).map { disabledLooksDisabled(args, $0) } ?? args }] {
             let before = built(out)?.problem
             let next = step(out)

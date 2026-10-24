@@ -221,6 +221,21 @@ struct AgentComponentSenseTests {
         #expect(Self.part("Knob", in: moved, look: "On")?.frame.minX == 21)
     }
 
+    @Test("A tick drawn in the colour of the box it sits on is set white or near black, whichever shows")
+    func markStandsOut() throws {
+        // The walk, 2026-10-24: a blue tick on the blue box of an On checkbox.
+        let spec = try Self.plain(##"""
+            {"name": "Checkbox", "x": 664, "y": 96, "labels": true, "firstLook": "Off",
+             "parts": [{"name": "Box", "shape": "rectangle", "x": 0, "y": 0, "width": 20, "height": 20, "cornerRadius": 4, "fill": "#FFFFFF", "stroke": "#8E8E93", "strokeWidth": 1},
+                       {"name": "Check", "shape": "path", "closed": false, "x": 0, "y": 0, "width": 20, "height": 20, "stroke": "#007AFF", "strokeWidth": 2,
+                        "points": [{"x": 4, "y": 10}, {"x": 8, "y": 14}, {"x": 16, "y": 6}]}],
+             "looks": [{"name": "On", "changes": [{"part": "Box", "fill": "#007AFF", "stroke": "#007AFF"}, {"part": "Check", "visible": true}]}]}
+            """##)
+        #expect(Self.part("Check", in: spec, look: "On")?.look.stroke?.hexValue == "#FFFFFF")
+        #expect(Self.part("Check", in: spec, look: "On")?.hidden == false)
+        #expect(Self.part("Check", in: spec, look: "Off")?.hidden == true)
+    }
+
     @Test("A Disabled look whose words stand out more than Default's is dimmed, and still reads")
     func disabledIsDimmer() throws {
         let spec = try Self.plain(##"""
