@@ -7,7 +7,7 @@ import Foundation
 // Every component add_component made with `labels` is a row of one table, and
 // each labelled add_component lays the whole table out again: a header row
 // naming each state once over its column, the components' names down the left
-// on one edge, every look centred in its cell on one grid, and the same gap
+// on one edge, every look starting at its column's left edge on one grid, and the same gap
 // between every pair of rows. Only rows with the same states share a header
 // row, so no cell under a header is ever left empty (every judge of the
 // 2026-10-23 sheets named the holes under shared headers); a row with other
@@ -53,6 +53,9 @@ extension AgentNewComponent {
     public static let cellGap: CGFloat = 32
     /// The secondary label grey the state names are set in.
     static let stateNameHex = "#6E6E73"
+    /// How much wider than the canvas a table may grow so a section of
+    /// many states keeps the shared columns.
+    static let mostWidening: CGFloat = 1.25
     /// Room right of the widest row name before the first column.
     static let nameGap: CGFloat = 32
 }
@@ -172,10 +175,44 @@ extension PhotonzDocument {
         }
     }
 
+    /// A row taller than this is a tall row (a card, a panel) rather than a
+    /// control: twice the least row height.
+    static let tallRow = AgentNewComponent.rowHeight * 2
+
+    /// The sections with each state kept in the column an earlier header
+    /// row gave it, when that column is one of the section's own (a section
+    /// of three states keeps to the first three columns, with no gap), and
+    /// the states left over in the columns left free, in their order.
+    /// Judges, 2026-10-24: "the column states change between sections
+    /// (Focused moves from column 4 to column 3)".
+    static func keepingColumns(_ sections: [SheetSection]) -> [SheetSection] {
+        func key(_ name: String) -> String { name.trimmingCharacters(in: .whitespaces).lowercased() }
+        var home: [String: Int] = [:]
+        return sections.map { section in
+            let count = section.headers.count
+            var column = Array(repeating: -1, count: count)
+            var taken = Set<Int>()
+            for (at, header) in section.headers.enumerated() {
+                guard let wanted = home[key(header)], wanted < count, !taken.contains(wanted) else { continue }
+                column[at] = wanted
+                taken.insert(wanted)
+            }
+            var free = (0..<count).filter { !taken.contains($0) }.makeIterator()
+            for at in column.indices where column[at] < 0 { column[at] = free.next() ?? at }
+            var moved = section
+            for (at, header) in section.headers.enumerated() {
+                moved.headers[column[at]] = header
+                if home[key(header)] == nil { home[key(header)] = column[at] }
+            }
+            moved.cells = section.cells.map { $0.map { column[$0] } }
+            return moved
+        }
+    }
+
     /// Lays every labelled row out as one table from where the table already
     /// starts (its first header row, else its top row): rows that share
     /// their states under one header row naming each state once over its
-    /// column, names on the left, every look centred in its cell on one grid
+    /// column, names on the left, every look at its column's left edge on one grid
     /// as wide as the canvas allows with the left margin kept on the right,
     /// and rows `rowGap` apart, each at least `rowHeight` tall. The headers are set anew each time (any
     /// state names add_component set under the looks are taken off); the row
@@ -211,27 +248,108 @@ extension PhotonzDocument {
             updateLayer(id: id) { $0.frame.origin.x += dx; $0.frame.origin.y += dy }
         }
 
-        let sections = Self.sheetSections(rows.map { $0.looks.map(\.name) })
+        let sections = Self.keepingColumns(Self.sheetSections(rows.map { $0.looks.map(\.name) }))
         let columns = sections.map(\.headers.count).max() ?? 0
         let sizes = rows.map { $0.looks.map { canvasBounds(of: $0.layer)?.size ?? .zero } }
         let nameColumn = max(AgentNewComponent.labelColumn,
                              ((rows.map { width($0.name) }.max() ?? 0) + AgentNewComponent.nameGap).rounded(.up))
         // Each section's cells are as wide as its widest look or header
-        // needs; the grid is as wide as the canvas allows, or as the widest
-        // section needs when that is more. Sections that fit share one
-        // column step across it, and a section too wide for that step (three
-        // navigation bars under buttons) spreads its own cells over the same
-        // width rather than widening every column of the table (2026-10-24:
-        // one 400 point bar grew a sheet to 2448 points and its type to specks).
+        // needs. The grid's columns are as wide as the canvas allows, with
+        // the last column's widest look ending the left margin from the
+        // right edge (judges, 2026-10-24: "a lopsided right margin" when the
+        // last cell ran to the margin and its look sat half a cell in), or
+        // as the widest section needs when that is more.
         let needs = sections.map { section -> CGFloat in
             let widest = (section.rows.flatMap { sizes[$0].map(\.width) } + section.headers.map(width)).max() ?? 0
             return (widest + AgentNewComponent.cellGap).rounded(.up)
         }
-        let room = max(canvasSize.width - 2 * x - nameColumn,
-                       zip(sections, needs).map { CGFloat($0.headers.count) * $1 }.max() ?? 0)
-        let shared = columns > 0 ? (room / CGFloat(columns)).rounded(.down) : 0
-        let cells = zip(sections, needs).map { section, need in
-            need <= shared ? shared : (room / CGFloat(max(section.headers.count, 1))).rounded(.down)
+        let canvasRoom = canvasSize.width - 2 * x - nameColumn
+        // Looks start at their column's left edge, so a section needs its
+        // steps and its last look, not a gap after it.
+        let needed = zip(sections, needs).map { section, need in
+            CGFloat(max(section.headers.count - 1, 0)) * need + need - AgentNewComponent.cellGap
+        }.max() ?? 0
+        var room = max(canvasRoom, needed)
+        let even = columns > 0 ? room / CGFloat(columns) : 0
+        func widest(_ section: SheetSection) -> CGFloat {
+            let looks: [CGFloat] = section.rows.flatMap { row in sizes[row].map(\.width) }
+            return max(looks.max() ?? 0, section.headers.last.map(width) ?? 0)
+        }
+        // The column step that ends the last column's widest look on the
+        // margin, with that look as wide as `last`.
+        func step(last: CGFloat) -> CGFloat {
+            guard columns > 0 else { return 0 }
+            guard columns > 1, last < room else { return even.rounded(.down) }
+            return ((room - last) / CGFloat(columns - 1)).rounded(.down)
+        }
+        // Every other column (or every third) a section too wide for one
+        // takes, at this step: the least that leaves room, or nil.
+        func stride(_ section: SheetSection, _ need: CGFloat, at shared: CGFloat) -> Int? {
+            guard columns > 1, need > shared else { return nil }
+            return (2...columns).first { CGFloat($0) * shared >= need && (section.headers.count - 1) * $0 <= columns - 1 }
+        }
+        // What ends in the last column: every section of as many states as
+        // there are columns, then any wider one whose every other column (or
+        // every third) lands on it at that step.
+        var lastLook = zip(sections, needs).filter { $0.0.headers.count == columns }.map { widest($0.0) }.max() ?? 0
+        let first = step(last: lastLook)
+        for (section, need) in zip(sections, needs) {
+            guard let by = stride(section, need, at: first), (section.headers.count - 1) * by == columns - 1 else { continue }
+            lastLook = max(lastLook, widest(section))
+        }
+        var shared = step(last: lastLook)
+        // A section of many states too wide for the columns, which cannot
+        // take every other one either, widens every column rather than
+        // spreading over a grid of its own, as long as the table stays
+        // within a quarter more than the canvas: four states with a wide
+        // list row spread 350 apart under buttons 270 apart, and every judge
+        // read "the column grid changes between sections" (the eval,
+        // 2026-10-24). Wider than that (three navigation bars), it spreads.
+        let stuck = zip(sections, needs).filter { section, need in
+            need > shared && section.headers.count > 1 && stride(section, need, at: shared) == nil
+        }
+        if let widen = stuck.map(\.1).max() {
+            let last = max(lastLook, stuck.filter { $0.0.headers.count == columns }.map { widest($0.0) }.max() ?? 0)
+            let wanted = CGFloat(columns - 1) * widen + last
+            if wanted <= canvasRoom * AgentNewComponent.mostWidening {
+                room = max(room, wanted)
+                lastLook = last
+                shared = max(step(last: lastLook), widen)
+            }
+        }
+        // What whole-point columns leave over goes before the first column,
+        // so the last look still ends on the margin.
+        let lead = columns > 1 && lastLook < room
+            ? max(0, room - lastLook - shared * CGFloat(columns - 1)).rounded(.down) : 0
+        // Every look and header starts at its column's left edge, so the
+        // columns share edges whatever the looks' widths (judges,
+        // 2026-10-24, of looks centred in their cells: "buttons sit centred
+        // while fields and cards start from the column's left edge", "the
+        // columns don't share edges").
+        func gridLeft(_ column: Int) -> CGFloat { x + nameColumn + lead + CGFloat(column) * shared }
+        // Where each section's columns start. A section that fits a column
+        // uses the table's own. One too wide for that takes every other
+        // column (three cards under five buttons: the first, third and
+        // fifth; two bars under four: the first and third), or every third,
+        // so its looks still start on the columns above (judges, 2026-10-24:
+        // a section that "does not line up with the 5-column grid above").
+        // Only a section too wide for that spreads its own cells over the
+        // table's width rather than widening every column (2026-10-24: one
+        // 400 point bar grew a sheet to 2448 points and its type to specks).
+        // Nothing is placed past the table's right edge: a canvas grown for
+        // it once widens every column of every layout after.
+        let tableRight = x + nameColumn + room
+        let placings = zip(sections, needs).map { section, need -> (Int) -> CGFloat in
+            let count = section.headers.count
+            if need <= shared { return { gridLeft($0) } }
+            let widest = need - AgentNewComponent.cellGap
+            if let stride = stride(section, need, at: shared),
+               gridLeft((count - 1) * stride) + widest <= tableRight {
+                return { gridLeft($0 * stride) }
+            }
+            // Spread so the last look ends on the table's right edge.
+            let cell = count > 1 ? ((room - widest) / CGFloat(count - 1)).rounded(.down) : 0
+            return { x + nameColumn + CGFloat($0) * cell }
         }
 
         var made: [Layer] = []
@@ -240,27 +358,38 @@ extension PhotonzDocument {
         var bottom = top
         for (index, section) in sections.enumerated() {
             if index > 0 { y = (bottom + AgentNewComponent.sectionGap).rounded() }
-            let cell = cells[index]
-            func centre(_ column: Int) -> CGFloat { x + nameColumn + (CGFloat(column) + 0.5) * cell }
-            for (column, header) in section.headers.enumerated() {
-                var layer = words(header, weight: .semibold, color: AgentNewComponent.stateNameHex,
-                                  name: Self.headerName(header))
-                layer.frame.origin = CGPoint(x: (centre(column) - layer.frame.width / 2).rounded(), y: y)
-                made.append(layer)
+            let left = placings[index]
+            func headerRow() {
+                for (column, header) in section.headers.enumerated() {
+                    var layer = words(header, weight: .semibold, color: AgentNewComponent.stateNameHex,
+                                      name: Self.headerName(header))
+                    layer.frame.origin = CGPoint(x: left(column).rounded(), y: y)
+                    made.append(layer)
+                }
+                y += (lineHeight + AgentNewComponent.headerGap).rounded()
             }
-            y += (lineHeight + AgentNewComponent.headerGap).rounded()
+            headerRow()
             // Shorter rows first, so none sits far under a taller one from the
             // header that names its columns (a judge, 2026-10-24: a nav row
             // under cards "borrows the card state labels").
             func band(_ index: Int) -> CGFloat { max(sizes[index].map(\.height).max() ?? 0, AgentNewComponent.rowHeight) }
             let ordered = zip(section.rows, section.cells).enumerated()
                 .sorted { (band($0.element.0), $0.offset) < (band($1.element.0), $1.offset) }.map(\.element)
+            // A tall row (cards) under short ones gets the header row again
+            // right above it: three judges of three, 2026-10-24, read cards
+            // under a row of links as "borrowing the nav column headers".
+            var previous: CGFloat?
             for (index, cells) in ordered {
                 let row = rows[index]
                 let band = band(index)
+                if let previous, previous <= Self.tallRow, band > Self.tallRow {
+                    y = (bottom + AgentNewComponent.sectionGap).rounded()
+                    headerRow()
+                }
+                previous = band
                 for (at, look) in row.looks.enumerated() {
                     let size = sizes[index][at]
-                    move(look.layer, to: CGPoint(x: centre(cells[at]) - size.width / 2, y: y + (band - size.height) / 2))
+                    move(look.layer, to: CGPoint(x: left(cells[at]), y: y + (band - size.height) / 2))
                 }
                 if let label = self.layer(id: row.label) {
                     move(row.label, to: CGPoint(x: x, y: y + (band - label.frame.height) / 2))
@@ -270,8 +399,10 @@ extension PhotonzDocument {
             }
         }
         for layer in made { addLayer(layer) }
+        let right = (rows.flatMap { $0.looks.compactMap { canvasBounds(of: $0.layer)?.maxX } }
+            + made.map(\.frame.maxX)).max() ?? (x + nameColumn)
         return AgentSheetLayout(headers: sections.map(\.headers), columns: columns,
-                                frame: CGRect(x: x, y: top, width: nameColumn + room,
+                                frame: CGRect(x: x, y: top, width: (right - x).rounded(.up),
                                               height: bottom - top))
     }
 

@@ -441,6 +441,9 @@ public struct AskConversation: Sendable {
                     let (earlier, kind) = drawnBefore(component) ?? (0, "")
                     let made = steps.compactMap { $0.tool == "add_component" ? $0.arguments["name"]?.stringValue : nil }
                     refuse(name, step.arguments, "Not planned: \(component.name) is drawn the same as \(kind), step \(earlier). A sheet shows each kind of control once. Planned so far: \(made.joined(separator: ", ")). Make a kind that is not in that list, drawn as that kind is, or finish.")
+                case .success(.addComponent(_, let component)) where Self.cannotBuild(component) != nil:
+                    brokenCalls += 1
+                    refuse(name, step.arguments, "Not planned. \(Self.cannotBuild(component) ?? "")")
                 case .success:
                     // The title asked for after the rows goes first, so it
                     // sits above them, when no step names another by $N.
@@ -486,6 +489,21 @@ public struct AskConversation: Sendable {
             return .planned(AskPlan(steps: steps, summary: "", names: names))
         }
         return .again(looks: looks)
+    }
+
+    /// Why a component whose call reads fine still could not be built, or
+    /// nil: it is built once on an empty picture, words sized from their
+    /// font, so a look whose change cannot land is refused while the model
+    /// can still fix it. A planned Navigation was skipped when the plan ran
+    /// and the sheet asked for navigation had none (the eval, 2026-10-24).
+    static func cannotBuild(_ component: AgentNewComponent) -> String? {
+        var scratch = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
+        let estimate: (TextContent, CGFloat?) -> CGSize = { content, width in
+            let natural = CGFloat(content.string.count) * content.fontSize * AgentNewComponent.letterWidth
+            return CGSize(width: max(1, min(natural, width ?? natural)), height: content.fontSize * 1.3)
+        }
+        if case .failure(let error) = scratch.agentAddComponent(component, measure: estimate) { return error.message }
+        return nil
     }
 
     /// How tall a labelled component's row is: its tallest part and the

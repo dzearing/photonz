@@ -368,11 +368,26 @@ is ever empty (2026-10-24: every judge named the holes when rows with fewer
 states shared a header). Sections stand 56 apart, rows 32 apart, every row at
 least 44 tall with its looks centred in it so small controls keep the rhythm
 of buttons, and within a section the shorter rows come first so none sits far
-from its header under a tall one. Columns fill the canvas's width with the
-left margin kept on the right: sections that fit share one column step, and a
-section whose looks are too wide for it spreads its own cells over the same
-width rather than widening every column (one 400 point navigation bar once
-grew a sheet to 2448 points). Header words are set anew each time and found
+from its header under a tall one; a tall row (over 88 points, a card) under
+short ones gets its section's header row again right above it. A state keeps
+the column an earlier header row gave it when that column is one of its
+section's own, so Focused is not under Pressed in the next section
+(`keepingColumns`). Every look and header starts at its column's left edge,
+so the columns share edges whatever the looks' widths (judges read looks
+centred in their cells as "buttons centred while fields start from the left
+edge"). Columns fill the canvas's width with the last column's widest look
+ending the left margin from the right edge. Sections that fit share one
+column step; one too wide for that takes every other column (three cards under
+five buttons: the first, third and fifth), or every third, so its looks still
+start on the columns above; a section of many states that can do neither
+widens every column for itself, as long as the table stays within a quarter
+more than the canvas (a list row spread over a grid of its own read as "the
+column grid changes between sections"); and only a section too wide for any
+of those spreads its looks over the table's width, the last ending on its
+right edge, rather than widening every column (one 400 point navigation bar
+once grew a sheet to 2448 points). The last column's room is reserved only for
+what actually lands in it. Nothing is placed past the table's right edge,
+since a canvas grown once widens every layout after it. Header words are set anew each time and found
 again by name (`<State> Header`); the row's name (`<Row> Label`) is what makes
 a component a row. A table that runs past the canvas grows it from the top
 left in the same undo step, keeping its left margin on the right and under
@@ -392,7 +407,26 @@ too small to see (two colours under 1.2 contrast with no channel moving 48 of
 255: #FF3B30 to #FF453A is refused, #2563EB to #1D4ED8 is plain). A part can
 start hidden with `visible: false`, and a part a later look shows with
 `visible: true` that the call never hid starts hidden on its own, so a
-checkbox's Off has no check.
+checkbox's Off has no check. A component drawn as one box big enough to hold
+something (120 by 100) and holding nothing is refused as an empty box. Words
+on words are looked for with words sized 0.56 of their size a letter, a
+little wider than the 0.5 the length check uses ("← Back" ran 4 points into a
+centred "Navigation" once built).
+
+**What Ask's planner sets right itself** (`AgentComponentSense.swift`,
+`madeSensible`, run first in `madePlain`, so only for Ask). Words go on one
+type scale (13, 15, 17), so a sheet holds at most four sizes. An Off look
+(Off, Unchecked, Unselected) of a component that also has an On look hides an
+open stroked path (a tick) that shows in both, and an Off whose biggest box is
+filled with a colour or near black gets the off grey #E9E9EA, the On looks
+keeping the colour it had. A Disabled look whose words stand out more than the
+first look's is set between what is behind them and the first look's colour,
+as faint as still reads. Each is kept only when the call can still be built.
+The planner then builds the component once on an empty picture, words sized
+from their font, so a look whose change cannot land (a planned Navigation was
+skipped when the plan ran) is refused while the model can still fix it
+(`AskConversation.cannotBuild`), and a tool's refusal reads as its own words
+wherever it is shown (`AgentToolError` is a `LocalizedError`).
 
 Ask's planner does not hand those refusals to the model on this Mac, which
 sent a refused call back unchanged until its rounds ran out

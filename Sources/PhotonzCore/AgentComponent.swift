@@ -169,6 +169,9 @@ public struct AgentNewComponent: Hashable, Sendable {
             let backdrop = behind.map { "on \($0)" } ?? "on the canvas"
             return "\(words)'s colour is too close to what is behind it (\(backdrop)) to read. Set its words in a colour that stands out from it: dark on a light ground, light on a dark one."
         }
+        if let part = emptyBox {
+            return "\(name) is an empty box: \(part) with nothing in it. Put in it what a \(name.lowercased()) holds (its words, an image area, a button), or draw it smaller."
+        }
         if let part = unseenSurface {
             return "\(part) is the canvas's own white with no edge or shadow, so nobody could see it. Give it a fill a step darker than the canvas, a 1 point edge, or a soft shadow."
         }
@@ -212,8 +215,14 @@ extension AgentNewComponent {
     /// (the eval, 2026-10-23).
     static let letterWidth: CGFloat = 0.5
 
+    /// Words are sized a little wider when looking for words on words:
+    /// "← Back" and a centred "Navigation" in a 200 point bar measured 4
+    /// points into each other when built and were let through at half a
+    /// size a letter (the eval, 2026-10-24).
+    static let overlapLetterWidth: CGFloat = 0.56
+
     var wordsOverWords: (String, String)? {
-        let spots = parts.compactMap { part in wordsSpot(part).map { (part.name, $0) } }
+        let spots = parts.compactMap { part in wordsSpot(part, letterWidth: Self.overlapLetterWidth).map { (part.name, $0) } }
         for (index, (name, box)) in spots.enumerated() {
             for (other, otherBox) in spots[(index + 1)...] {
                 let shared = box.intersection(otherBox)
@@ -276,10 +285,10 @@ extension AgentNewComponent {
 
     /// Where a part's words will sit in the first look, sized from their
     /// font, or nil for a part that is not words.
-    func wordsSpot(_ part: AgentComponentPart) -> CGRect? {
+    func wordsSpot(_ part: AgentComponentPart, letterWidth: CGFloat = letterWidth) -> CGRect? {
         guard part.kind == .text, !part.hidden, let words = part.text, !words.isEmpty else { return nil }
         let size = part.fontSize ?? 15
-        let width = min(CGFloat(words.count) * size * Self.letterWidth,
+        let width = min(CGFloat(words.count) * size * letterWidth,
                         part.frame.width > 0 ? part.frame.width : .greatestFiniteMagnitude)
         let height = size * 1.5
         if let target = part.centerIn, let box = parts.first(where: { $0.name == target })?.frame {
@@ -388,6 +397,7 @@ extension AgentNewComponent {
     /// given it (`problem`). Anything else is left as the model gave it.
     public static func madePlain(_ arguments: AgentJSON) -> AgentJSON {
         guard var args = arguments.objectValue else { return arguments }
+        args = madeSensible(args)
         func spec() -> AgentNewComponent? {
             if case .success(let found) = AgentTools.componentSpec("add_component", args) { return found }
             return nil
@@ -548,6 +558,19 @@ extension AgentNewComponent {
             }
         }
         return nil
+    }
+
+    /// The least size of a box that holds something: a card, a panel, a
+    /// dialog. A sheet's cards drawn as one white box each read as "empty
+    /// white boxes" to every judge (the eval, 2026-10-24).
+    static let holdingBox = CGSize(width: 120, height: 100)
+
+    /// The one box a component is drawn as when that box is big enough to
+    /// hold something and holds nothing, by name.
+    var emptyBox: String? {
+        guard parts.count == 1, let part = parts.first, case .shape = part.kind,
+              part.frame.width >= Self.holdingBox.width, part.frame.height >= Self.holdingBox.height else { return nil }
+        return part.name
     }
 
     /// The first box of the first look painted the canvas's own colour with

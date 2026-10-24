@@ -188,6 +188,28 @@ struct AskPlanningTests {
         #expect(talk.messages.last?["content"]?.stringValue?.contains("step 5") == true)
     }
 
+    @Test("A component that passes its checks but cannot be built is refused while planning, with the reason, so no kind is lost when the plan runs")
+    func componentThatCannotBeBuilt() throws {
+        var talk = Self.sheet()
+        // A shape given words in a look: the call reads fine, the build fails
+        // (the eval, 2026-10-24: a planned Navigation skipped at run time as
+        // "AgentToolError error 1").
+        _ = talk.take(try Self.reply([("add_component", """
+            {"name":"Chip","x":40,"y":100,"labels":true,"firstLook":"Default",\
+            "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":60,"height":24}],\
+            "looks":[{"name":"Hover","changes":[{"part":"Back","text":"Hi"}]}]}
+            """)]))
+        #expect(talk.steps.isEmpty)
+        let said = talk.messages.last?["content"]?.stringValue ?? ""
+        #expect(said.contains("Back"), "\(said)")
+    }
+
+    @Test("A tool's refusal reads as its own words wherever it is shown, not as an error number")
+    func toolErrorWords() {
+        let error: Error = AgentToolError("add_component: Back has no words to change.")
+        #expect(error.localizedDescription == "add_component: Back has no words to change.")
+    }
+
     @Test("A component drawn the same as one already planned is refused, naming it, so the sheet shows each kind once")
     func sameKindTwice() throws {
         var talk = Self.sheet()

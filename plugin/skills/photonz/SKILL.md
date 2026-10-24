@@ -122,6 +122,8 @@ Photonz work should look designed, not assembled.
    (Apple's when none is named; look its kit up on the web when you can). A set of
    base components is a dozen kinds or more, each with the states that kit shows
    for it (default, hover, pressed, focused, disabled; on and off; selected).
+   A kind the person names is drawn whole, as they mean it: navigation is a bar
+   with its links, a card holds its words, not one piece of either.
 2. `add_text` the sheet's title at the top left, the largest words on it.
 3. One `add_component` per kind: its `parts` (boxes, ovals, words, Pen paths, each
    with `x`, `y`, `width`, `height` inside the component; words sit centred in
@@ -129,7 +131,7 @@ Photonz work should look designed, not assembled.
    given, and `looks`, each state with only what `changes`. Pass `labels: true`
    and the same `x` for every kind, each row's `y` below the last: Photonz lays
    the labelled rows out as one table (names down the left, each state named
-   once over its column, every look centred in its cell, rows evenly apart, the
+   once over its column, every look starting at its column's left edge, rows evenly apart, the
    canvas grown when it needs room), so set no row names or state headers
    yourself. Only kinds with exactly the same states share a header row, so
    no cell is left empty: give every kind that has them the same states with

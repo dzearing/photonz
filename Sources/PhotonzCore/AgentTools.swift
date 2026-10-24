@@ -77,7 +77,7 @@ public enum AgentRequest: Hashable, Sendable {
 }
 
 /// Why a call was refused, in one sentence a model can act on.
-public struct AgentToolError: Error, Hashable, Sendable {
+public struct AgentToolError: LocalizedError, Hashable, Sendable {
     public let message: String
     /// No tool has the name asked for, which is a protocol error rather than
     /// a tool's own.
@@ -87,6 +87,10 @@ public struct AgentToolError: Error, Hashable, Sendable {
         self.message = message
         self.isUnknownTool = isUnknownTool
     }
+
+    /// Its own words wherever an error is shown: an Ask step skipped on it
+    /// read "AgentToolError error 1" (the eval, 2026-10-24).
+    public var errorDescription: String? { message }
 }
 
 /// The tools of the agent channel and the checking of a call against them.
