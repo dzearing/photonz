@@ -13817,3 +13817,22 @@
 {"t":"2026-10-24T10:54:01.822Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T10:54:01.889Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T10:54:01.955Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Title-edge table, page margin, word wrap, parts held in their box and Off/On sense shipped (7e12ebd2..f76e3ddd). The skill is at 8 or 9 on every line but aligned (7) for both cases; Ask on this Mac is 5 to 7. The 8-of-10 bar is not met, so it stays open."}
+{"t":"2026-10-24T11:12:59.091Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":648,"of":1019,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-24T11:12:59.301Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-10-24T12:11:00.301Z","ev":"task_created","id":"the-setup-window-walks-you-through-only-the-step","priority":"p1-high","title":"The setup window walks you through only the steps you still need, including using Photonz from Claude Code and Copilot"}
+{"t":"2026-10-24T12:11:00.445Z","ev":"task_created","id":"settings-offers-several-ask-models-with-what-eac","priority":"p1-high","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one"}
+{"t":"2026-10-24T12:11:10.521Z","ev":"task_resequenced","id":"the-agent-server-and-skill-come-inside-photonz-a","from":110,"to":1.1}
+{"t":"2026-10-24T12:11:10.629Z","ev":"task_resequenced","id":"the-setup-window-walks-you-through-only-the-step","from":77.5,"to":1.2}
+{"t":"2026-10-24T12:11:10.748Z","ev":"task_resequenced","id":"settings-offers-several-ask-models-with-what-eac","from":78.75,"to":1.3}
+{"t":"2026-10-24T12:12:38.627Z","ev":"task_created","id":"ask-uses-qwen3-8-27b-at-4-bit-by-default-instead","priority":"p1-high","title":"Ask uses Qwen3.8 27B at 4-bit by default instead of Qwen3.6 35B"}
+{"t":"2026-10-24T12:12:38.814Z","ev":"task_resequenced","id":"ask-uses-qwen3-8-27b-at-4-bit-by-default-instead","from":77.5,"to":1.05}
+{"t":"2026-10-24T12:25:55.885Z","ev":"task_note","id":"find-out-why-ask-sometimes-waits-five-minutes-fo"}
+{"t":"2026-10-24T12:28:55.373Z","ev":"task_created","id":"a-button-you-can-press-never-looks-disabled-the","priority":"p1-high","title":"A button you can press never looks disabled: the remove x on an effect reads as bright as the eye beside it"}
+{"t":"2026-10-24T12:28:55.626Z","ev":"task_resequenced","id":"a-button-you-can-press-never-looks-disabled-the","from":77.5,"to":1.5}
+{"t":"2026-10-24T12:31:52.018Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T12:31:52.097Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T12:31:52.177Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T12:31:52.256Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T12:31:52.334Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-24T12:31:58.931Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Looks nobody could tell apart left out, Disabled kept faint, white words on colour, rows of one family together and slightly wide sections on the grid shipped (2abd8391). The skill is at 8 or better on every line for both cases (88.4 and 84.4); Ask on this Mac is 4 to 8 (its own drawings). The 8-of-10 bar is not met for Ask, so it stays open."}
+{"t":"2026-10-24T12:32:07.880Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}

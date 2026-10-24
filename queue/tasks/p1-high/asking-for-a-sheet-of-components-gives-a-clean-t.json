@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-24T10:54:01.954Z",
+  "updated": "2026-10-24T12:32:07.879Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -203,9 +203,41 @@
     {
       "t": "2026-10-24T10:54:01.953Z",
       "note": "Title-edge table, page margin, word wrap, parts held in their box and Off/On sense shipped (7e12ebd2..f76e3ddd). The skill is at 8 or 9 on every line but aligned (7) for both cases; Ask on this Mac is 5 to 7. The 8-of-10 bar is not met, so it stays open."
+    },
+    {
+      "t": "2026-10-24T11:12:59.293Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T12:31:52.016Z",
+      "note": "Built (2abd8391): Ask's planner leaves out a later look nobody could tell from an earlier one, measured as the share of the component that changes times how far its paint moves (AgentNewComponent.seenDifference, under 1.5): a shadow-only hover, one small button a shade off, a word faded to 70%, a knob grown 4 points, a Pressed twin of Hover. Numbers come off look names (Selected2 is Selected; a repeat goes). A Disabled surface is never further from the canvas than Default's (set halfway to the canvas), and its words are dimmed again after the readability pass had set them near black. Unreadable words on a colour go white where white reads. Sheet: rows of one family (last word of the name) stay together in a section; a section within 15% of a column's width widens every column instead of taking every other one; at least 64 under the last row when the canvas grows. Skill recipe says to name rows by family."
+    },
+    {
+      "t": "2026-10-24T12:31:52.095Z",
+      "note": "Chose widening the columns over every-other-column for a section only a little too wide (within 15%), because all three judges of run 20261024-113424-ask read the strided nav as 'the hover column jumps to the third column'; wider sections still stride. Chose to leave out a barely different look rather than strengthen it, because there is nothing honest to strengthen a shadow-only hover into, and judges named identical twins in every Ask run."
+    },
+    {
+      "t": "2026-10-24T12:31:52.175Z",
+      "note": "Tried and taken out: ending the page a foot under the table when nothing lies below. A blank picture carries a full-size white Background image layer, so the rule never fired, and the core can't tell cropping that apart from cropping a screenshot. Left rough (this task covers it): the empty band under a short sheet on a blank page."
+    },
+    {
+      "t": "2026-10-24T12:31:52.254Z",
+      "note": "Eval (rubric f5ae1562). Skill: component-table 88.4 (judge 8, 8, 8, 8, 9), design sheet 84.4 (8, 8, 8, 8, 9): both at the bar for the first time (were 87.6 and 87.2 with aligned 7). Ask component-table 64.1, 54.2, 57.9 (judge 4 to 7; was 42.6 to 59); Ask design sheet 82, 78.8, 75.6 (judge 5 to 8; was 18.3 to 79.2). NOT at the 8-of-10 bar for Ask. One more run (20261024-112340-ask) stalled on the model's first answer. Left rough (this task covers it): Ask's own drawings, an icon on top of its word (words fully under an icon are not refused, only half over), toggle and switch drawn as two rows, a checkbox ticked in a Default look beside Hover/Pressed (no Checked look, so offLook does not apply), components nobody asked for."
+    },
+    {
+      "t": "2026-10-24T12:31:52.332Z",
+      "note": "Pictures looked at: Ask after (113424: faint Disabled field, no Selected2, alert shown in Default alone; 120409: icon over Home, toggle twice, checkbox ticked in Default; nav now on the grid), Ask design (113424: tidy grid, empty band at the bottom), skill after (121624: buttons together, slider beside its kind, every column on one grid), skill design. Tests: Scripts/test.sh 14356 passed. ask-builds-base-components-walk ran twice and stalled both times on the model's first answer (step 9 waitFor, 300 s), with the user's Photonz Dev llama-server resident at the same time; folded into find-out-why-ask-sometimes-waits-five-minutes-fo. Audit: queue/audits/2026-10-24-component-sheet-tell-apart.json"
+    },
+    {
+      "t": "2026-10-24T12:31:58.929Z",
+      "note": "Looks nobody could tell apart left out, Disabled kept faint, white words on colour, rows of one family together and slightly wide sections on the grid shipped (2abd8391). The skill is at 8 or better on every line for both cases (88.4 and 84.4); Ask on this Mac is 4 to 8 (its own drawings). The 8-of-10 bar is not met for Ask, so it stays open."
+    },
+    {
+      "t": "2026-10-24T12:32:07.877Z",
+      "note": "Next pass: Ask's default model changed while this pass ran (10d5e08d: qwen3.8 27b at 4-bit instead of qwen3.6 35b), so every Ask number above is on the old model; measure a fresh baseline first."
     }
   ],
-  "started": "2026-10-24T08:34:26.656Z",
+  "started": "2026-10-24T11:12:59.292Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
