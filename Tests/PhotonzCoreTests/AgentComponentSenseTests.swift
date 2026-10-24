@@ -248,9 +248,135 @@ struct AgentComponentSenseTests {
         let read = { (hex: String?, ground: String) in
             abs(RGBA.lightnessContrast(text: RGBA(hex: hex ?? "") ?? RGBA(r: 0, g: 0, b: 0), on: RGBA(hex: ground) ?? RGBA(r: 1, g: 1, b: 1)))
         }
-        #expect(read(disabled.colorHex, "#E5E5EA") <= read(first.colorHex, "#F2F2F7"), "\(disabled.colorHex ?? "")")
-        #expect(read(disabled.colorHex, "#E5E5EA") >= AgentNewComponent.leastWordLightness)
+        // The Disabled fill is set faint too (no darker than Default's), so
+        // the words are read on the fill it ends with.
+        let ground = try #require(Self.part("Back", in: spec, look: "Disabled")?.look.fill?.hexValue)
+        #expect(read(disabled.colorHex, ground) <= read(first.colorHex, "#F2F2F7"), "\(disabled.colorHex ?? "") on \(ground)")
+        #expect(read(disabled.colorHex, ground) >= AgentNewComponent.leastWordLightness)
         #expect(spec.problem == nil)
+    }
+
+    @Test("A Disabled look whose faint words the plain pass had to darken to read is dimmed again, on a fill no darker than Default's")
+    func disabledStaysFaintAfterRecolour() throws {
+        // Ask's trace, 2026-10-24: #C7C7CC on #E5E5EA was set near black to
+        // read, and every judge read the Disabled field as "more active than
+        // the default one".
+        let spec = try Self.plain(##"""
+            {"name": "Text Field", "x": 32, "y": 160, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 36, "cornerRadius": 8, "fill": "#F2F2F7"},
+                       {"name": "Label", "shape": "text", "text": "Placeholder", "fontSize": 15, "alignment": "left", "x": 12, "y": 0, "width": 176, "height": 36, "color": "#8E8E93"}],
+             "looks": [{"name": "Focused", "changes": [{"part": "Background", "fill": "#FFFFFF", "stroke": "#007AFF", "strokeWidth": 2}]},
+                       {"name": "Disabled", "changes": [{"part": "Background", "fill": "#E5E5EA"}, {"part": "Label", "color": "#C7C7CC"}]}]}
+            """##)
+        let back = try #require(Self.part("Background", in: spec, look: "Disabled")?.look.fill?.hexValue)
+        let ground = try #require(RGBA(hex: back)), first = try #require(RGBA(hex: "#F2F2F7"))
+        #expect(ground.linearLuminance >= first.linearLuminance, "\(back) is no darker than Default's #F2F2F7")
+        let words = try #require(Self.part("Label", in: spec, look: "Disabled")?.colorHex)
+        let reads = abs(RGBA.lightnessContrast(text: RGBA(hex: words) ?? first, on: ground))
+        let before = abs(RGBA.lightnessContrast(text: RGBA(hex: "#8E8E93") ?? first, on: first))
+        #expect(reads <= before, "\(words) on \(back) stands out no more than Default's words")
+        #expect(reads >= AgentNewComponent.leastWordLightness, "\(words) on \(back) still reads")
+        #expect(spec.problem == nil)
+    }
+
+    @Test("A look named with a number on the end is named its state; one that would repeat a name is left out")
+    func numberedLooks() throws {
+        // Ask's segmented control, 2026-10-24: a header read "Selected2", and
+        // every judge called it a typo.
+        let two = try Self.plain(##"""
+            {"name": "Segmented Control", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 32, "fill": "#E5E5EA"},
+                       {"name": "Selection", "shape": "rectangle", "x": 2, "y": 2, "width": 96, "height": 28, "fill": "#FFFFFF"}],
+             "looks": [{"name": "Selected2", "changes": [{"part": "Selection", "x": 102}]}]}
+            """##)
+        #expect(two.looks.map(\.name) == ["Default", "Selected"])
+        let three = try Self.plain(##"""
+            {"name": "Segmented Control", "x": 0, "y": 0, "labels": true, "firstLook": "Selected 1",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 0, "width": 300, "height": 32, "fill": "#E5E5EA"},
+                       {"name": "Selection", "shape": "rectangle", "x": 2, "y": 2, "width": 96, "height": 28, "fill": "#FFFFFF"}],
+             "looks": [{"name": "Selected 2", "changes": [{"part": "Selection", "x": 102}]},
+                       {"name": "Disabled", "changes": [{"part": "Track", "opacity": 0.4}]},
+                       {"name": "Selected 3", "changes": [{"part": "Selection", "x": 202}]}]}
+            """##)
+        #expect(three.looks.map(\.name) == ["Selected", "Disabled"])
+    }
+
+    @Test("A look that barely differs from an earlier one is left out: a shadow, or one small part a shade off")
+    func barelyDifferent() throws {
+        // Judges of Ask's sheets, 2026-10-24: "the hover versions of the nav
+        // bar, badge, alert and card match their defaults".
+        let card = try Self.plain(##"""
+            {"name": "Card", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 260, "height": 150, "cornerRadius": 12, "fill": "#FFFFFF", "stroke": "#E5E5EA", "strokeWidth": 1},
+                       {"name": "Title", "shape": "text", "text": "Card Title", "fontSize": 17, "x": 16, "y": 100, "width": 228, "height": 24, "color": "#1C1C1E"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "shadow": {"color": "#000000", "opacity": 0.2, "radius": 24}}]}]}
+            """##)
+        #expect(card.looks.map(\.name) == ["Default"])
+        let alert = try Self.plain(##"""
+            {"name": "Alert", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 260, "height": 150, "cornerRadius": 12, "fill": "#FFFFFF", "stroke": "#E5E5EA", "strokeWidth": 1},
+                       {"name": "Title", "shape": "text", "text": "Alert Title", "fontSize": 17, "x": 16, "y": 16, "width": 228, "height": 24, "color": "#1C1C1E"},
+                       {"name": "Button1", "shape": "rectangle", "x": 140, "y": 104, "width": 100, "height": 32, "cornerRadius": 8, "fill": "#007AFF"},
+                       {"name": "OK", "shape": "text", "text": "OK", "fontSize": 15, "centerIn": "Button1", "x": 0, "y": 0, "width": 0, "height": 0, "color": "#FFFFFF"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Button1", "fill": "#0071E6"}]}]}
+            """##)
+        #expect(alert.looks.map(\.name) == ["Default"])
+        // A word faded to 70%, a knob grown 24 to 28 with a thicker edge.
+        let navigation = try Self.plain(##"""
+            {"name": "Navigation Bar", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 300, "height": 44, "fill": "#F2F2F7"},
+                       {"name": "Title", "shape": "text", "text": "Title", "fontSize": 17, "weight": "semibold", "alignment": "center", "x": 100, "y": 12, "width": 100, "height": 20, "color": "#000000"},
+                       {"name": "Left Button", "shape": "text", "text": "Back", "fontSize": 17, "x": 12, "y": 12, "width": 60, "height": 20, "color": "#007AFF"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Left Button", "opacity": 0.7}]}]}
+            """##)
+        #expect(navigation.looks.map(\.name) == ["Default"])
+        let slider = try Self.plain(##"""
+            {"name": "Slider", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 15, "width": 160, "height": 4, "cornerRadius": 2, "fill": "#C7C7CC"},
+                       {"name": "Fill", "shape": "rectangle", "x": 0, "y": 15, "width": 80, "height": 4, "cornerRadius": 2, "fill": "#007AFF"},
+                       {"name": "Knob", "shape": "ellipse", "x": 72, "y": 5, "width": 24, "height": 24, "fill": "#FFFFFF", "stroke": "#C7C7CC", "strokeWidth": 1}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Knob", "x": 72, "width": 28, "height": 28, "strokeWidth": 2}]},
+                       {"name": "Moved", "changes": [{"part": "Knob", "x": 120}, {"part": "Fill", "width": 128}]}]}
+            """##)
+        #expect(slider.looks.map(\.name) == ["Default", "Moved"])
+        // Twins: a Pressed the same as Hover goes, Hover stays.
+        let toggle = try Self.plain(##"""
+            {"name": "Button", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 36, "cornerRadius": 8, "fill": "#007AFF"},
+                       {"name": "Label", "shape": "text", "text": "Button", "fontSize": 15, "centerIn": "Background", "x": 0, "y": 0, "width": 0, "height": 0, "color": "#FFFFFF"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#0056CC"}]},
+                       {"name": "Pressed", "changes": [{"part": "Background", "fill": "#0056CC"}]},
+                       {"name": "Disabled", "changes": [{"part": "Background", "fill": "#E5E5EA"}, {"part": "Label", "color": "#8E8E93"}]}]}
+            """##)
+        #expect(toggle.looks.map(\.name) == ["Default", "Hover", "Disabled"])
+        // What plainly shows stays: an edge round a field, a tick, a word turned blue.
+        let field = try Self.plain(##"""
+            {"name": "Field", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 36, "cornerRadius": 8, "fill": "#FFFFFF", "stroke": "#C7C7CC", "strokeWidth": 1},
+                       {"name": "Label", "shape": "text", "text": "Name", "fontSize": 15, "x": 12, "y": 0, "width": 176, "height": 36, "color": "#8E8E93"}],
+             "looks": [{"name": "Focused", "changes": [{"part": "Background", "stroke": "#007AFF", "strokeWidth": 2}]}]}
+            """##)
+        #expect(field.looks.map(\.name) == ["Default", "Focused"])
+        let nav = try Self.plain(##"""
+            {"name": "Tabs", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 240, "height": 44, "fill": "#F2F2F7"},
+                       {"name": "Home", "shape": "text", "text": "Home", "fontSize": 15, "x": 16, "y": 0, "width": 60, "height": 44, "color": "#1C1C1E"},
+                       {"name": "About", "shape": "text", "text": "About", "fontSize": 15, "x": 96, "y": 0, "width": 60, "height": 44, "color": "#1C1C1E"}],
+             "looks": [{"name": "Selected", "changes": [{"part": "About", "color": "#007AFF"}]}]}
+            """##)
+        #expect(nav.looks.map(\.name) == ["Default", "Selected"])
+    }
+
+    @Test("Blue words left unreadable on a blue look are set white, not near black")
+    func whiteOnColour() throws {
+        let spec = try Self.plain(##"""
+            {"name": "Secondary Button", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 40, "cornerRadius": 8, "fill": "#FFFFFF", "stroke": "#007AFF", "strokeWidth": 1.5},
+                       {"name": "Label", "shape": "text", "text": "Secondary", "fontSize": 15, "centerIn": "Background", "x": 0, "y": 0, "width": 0, "height": 0, "color": "#007AFF"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#007AFF"}]}]}
+            """##)
+        #expect(Self.part("Label", in: spec, look: "Hover")?.colorHex == "#FFFFFF")
+        #expect(Self.part("Label", in: spec, look: "Default")?.colorHex == "#007AFF")
     }
 
     @Test("Words on a planned component are set on one type scale")

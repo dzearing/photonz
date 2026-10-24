@@ -308,19 +308,22 @@ struct AgentComponentSheetTests {
         #expect(hover.contains { abs($0 - navBoxes[1].minX) <= 1 })
     }
 
-    @Test("Wide looks beside a long row name still start on the first and third columns, clear of the name")
+    @Test("Wide looks beside a long row name still start on the table's columns, clear of the name")
     func wideBesideALongName() throws {
         var document = Self.blank()
         let long = "Navigation Bar With A Long Name"
         let button = try Self.add(Self.row("Button", y: 100, looks: Self.states), to: &document)
+        // A little too wide for a column beside the long name: every column
+        // widens, so Hover stays under Hover (`slightlyWideWidens`).
         let nav = try Self.add(Self.row(long, y: 300, width: 340, looks: ["Default", "Hover"]), to: &document)
         let columns = Self.columnEdges(button, in: document)
         let navBoxes = Self.boxes(nav, in: document)
         #expect(abs(navBoxes[0].minX - columns[0]) <= 1, "\(navBoxes[0].minX) \(columns)")
-        #expect(abs(navBoxes[1].minX - columns[2]) <= 1, "\(navBoxes[1].minX) \(columns)")
+        #expect(abs(navBoxes[1].minX - columns[1]) <= 1, "\(navBoxes[1].minX) \(columns)")
         let name = try #require(Self.words(in: document).first { $0.text?.string == long })
         #expect(name.frame.maxX + 16 <= navBoxes[0].minX)
-        #expect(navBoxes[1].maxX <= 1400 + 1)
+        let sheet = try #require(nav.sheet)
+        #expect(navBoxes[1].maxX <= sheet.frame.maxX + 1)
     }
 
     @Test("Looks too wide for one column take every other one, so they still start on the columns above")
@@ -454,6 +457,21 @@ struct AgentComponentSheetTests {
         #expect(linkTop < cardTop)
     }
 
+    @Test("In a section, rows of one family (names ending in the same word) sit together, in the order they came")
+    func familiesTogether() throws {
+        // The skill's sheet, 2026-10-24: Secondary Button, refused once and
+        // sent again after the Slider, landed under it, and all three judges
+        // read "the slider sits oddly among the button rows".
+        var document = Self.blank()
+        let primary = try Self.add(Self.row("Primary Button", y: 100, looks: Self.states), to: &document)
+        let slider = try Self.add(Self.row("Slider", y: 900, looks: Self.states), to: &document)
+        let secondary = try Self.add(Self.row("Secondary Button", y: 900, looks: Self.states), to: &document)
+        let field = try Self.add(Self.row("Text Field", y: 900, looks: Self.states), to: &document)
+        let search = try Self.add(Self.row("Search Field", y: 900, looks: Self.states), to: &document)
+        let tops = [primary, secondary, slider, field, search].map { Self.boxes($0, in: document).map(\.minY).min() ?? 0 }
+        #expect(tops == tops.sorted(), "\(tops)")
+    }
+
     @Test("A table that runs past the canvas grows it, keeping its left margin on the right and under its last row")
     func canvasAround() {
         let layout = AgentSheetLayout(headers: [], columns: 4, frame: CGRect(x: 64, y: 120, width: 1400, height: 1300))
@@ -461,6 +479,25 @@ struct AgentComponentSheetTests {
         // Never smaller than it was.
         let small = AgentSheetLayout(headers: [], columns: 1, frame: CGRect(x: 40, y: 40, width: 200, height: 100))
         #expect(small.canvas(around: CGSize(width: 1440, height: 1024)) == CGSize(width: 1440, height: 1024))
+        // Under the last row, never less than the page margin, however near
+        // the left edge the table starts (judges, 2026-10-24: "the bottom
+        // margin is tight" at 50).
+        let near = AgentSheetLayout(headers: [], columns: 4, frame: CGRect(x: 50, y: 120, width: 1400, height: 1300))
+        #expect(near.canvas(around: CGSize(width: 1440, height: 1024)) == CGSize(width: 1500, height: 1484))
+    }
+
+    @Test("A section only a little too wide for a column widens every column, so its Hover stays under Hover")
+    func slightlyWideWidens() throws {
+        var document = Self.blank()
+        let button = try Self.add(Self.row("Button", y: 100, width: 120, looks: Self.states), to: &document)
+        let step = Self.columnEdges(button, in: document)[1] - Self.columnEdges(button, in: document)[0]
+        let width = Int(step - AgentNewComponent.cellGap) + 20
+        let nav = try Self.add(Self.row("Navigation Bar", y: 300, width: width, height: 44, looks: ["Default", "Hover"]), to: &document)
+        let edges = Self.columnEdges(button, in: document)
+        let bars = Self.boxes(nav, in: document)
+        #expect(abs(bars[0].minX - edges[0]) <= 1)
+        #expect(abs(bars[1].minX - edges[1]) <= 1, "\(bars.map(\.minX)) \(edges)")
+        #expect(bars[1].minX - bars[0].maxX >= AgentNewComponent.cellGap)
     }
 
     @Test("Rows share a header only when they have the same states, whatever their order or case; headers run in the order states mostly come")

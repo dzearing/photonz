@@ -32,8 +32,13 @@ public struct AgentSheetLayout: Hashable, Sendable {
     public func canvas(around current: CGSize) -> CGSize {
         let margin = max(frame.minX, 0)
         return CGSize(width: max(current.width, (frame.maxX + margin).rounded(.up)),
-                      height: max(current.height, (frame.maxY + margin).rounded(.up)))
+                      height: max(current.height, (frame.maxY + max(margin, Self.leastFoot)).rounded(.up)))
     }
+
+    /// The least room under the last row, however near the left edge the
+    /// table starts: at 50 every judge read "the bottom margin is tight"
+    /// (the eval, 2026-10-24).
+    public static let leastFoot: CGFloat = 64
 }
 
 extension AgentNewComponent {
@@ -56,6 +61,9 @@ extension AgentNewComponent {
     /// How much wider than the canvas a table may grow so a section of
     /// many states keeps the shared columns.
     static let mostWidening: CGFloat = 1.25
+    /// A section whose cells need at most this much more than a column
+    /// widens the columns rather than taking every other one.
+    static let slightlyWide: CGFloat = 1.15
     /// Room right of the widest row name before the first column.
     static let nameGap: CGFloat = 32
 }
@@ -119,6 +127,11 @@ extension PhotonzDocument {
                                  top: min(top, label.frame.minY)))
         }
         return rows.sorted { $0.top < $1.top }
+    }
+
+    /// The family a row's name says it is in: its last word, whatever its case.
+    static func family(_ name: String) -> String {
+        name.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber }).last.map(String.init) ?? name.lowercased()
     }
 
     static func rowLabelName(_ row: String) -> String { "\(row) Label" }
@@ -320,8 +333,13 @@ extension PhotonzDocument {
         // list row spread 350 apart under buttons 270 apart, and every judge
         // read "the column grid changes between sections" (the eval,
         // 2026-10-24). Wider than that (three navigation bars), it spreads.
+        // So does a section only a little too wide for a column (a 300
+        // point navigation bar under columns 298 apart): taking every other
+        // column put its Hover under Pressed, and all three judges read "the
+        // hover column jumps to the third column" (the eval, 2026-10-24).
         let stuck = zip(sections, needs).filter { section, need in
-            need > shared && section.headers.count > 1 && stride(section, need, at: shared) == nil
+            need > shared && section.headers.count > 1
+                && (stride(section, need, at: shared) == nil || need <= shared * AgentNewComponent.slightlyWide)
         }
         if let widen = stuck.map(\.1).max() {
             let last = max(lastLook, stuck.filter { $0.0.headers.count == columns }.map { widest($0.0) }.max() ?? 0)
@@ -388,8 +406,16 @@ extension PhotonzDocument {
             // header that names its columns (a judge, 2026-10-24: a nav row
             // under cards "borrows the card state labels").
             func band(_ index: Int) -> CGFloat { max(sizes[index].map(\.height).max() ?? 0, AgentNewComponent.rowHeight) }
+            // And rows of one family (names ending in the same word: Primary
+            // Button, Secondary Button) together, where the first of them
+            // came: a button refused once and sent again after the slider
+            // landed under it, and every judge read "the slider sits oddly
+            // among the button rows" (the skill's sheet, 2026-10-24).
+            let families = section.rows.map { Self.family(rows[$0].name) }
+            func family(_ at: Int) -> Int { families.firstIndex(of: families[at]) ?? at }
             let ordered = zip(section.rows, section.cells).enumerated()
-                .sorted { (band($0.element.0), $0.offset) < (band($1.element.0), $1.offset) }.map(\.element)
+                .sorted { (band($0.element.0), family($0.offset), $0.offset) < (band($1.element.0), family($1.offset), $1.offset) }
+                .map(\.element)
             // A tall row (cards) under any other row gets the header row
             // again right above it: three judges of three, 2026-10-24, read
             // cards under a row of links as "borrowing the nav column

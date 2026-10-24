@@ -485,6 +485,17 @@ extension AgentNewComponent {
             looks[index - 1] = .object(said)
         }
         args["looks"] = .array(looks)
+        // What was set to read may now stand out more in a Disabled look
+        // than in the first (#C7C7CC on #E5E5EA set near black: every judge
+        // read that field as "more active than the default one"), and a look
+        // a person cannot tell from an earlier one is left out.
+        for step in [{ (args: [String: AgentJSON], found: AgentNewComponent) in disabledFillsFaint(args, found) },
+                     { args, found in disabledLooksDisabled(args, found) },
+                     { args, found in barelyDifferentLeftOut(args, found) }] {
+            guard let found = spec(), found.problem == nil else { break }
+            let next = step(args, found)
+            if case .success(let built) = AgentTools.componentSpec("add_component", next), built.problem == nil { args = next }
+        }
         return .object(args)
     }
 
@@ -506,6 +517,12 @@ extension AgentNewComponent {
             RGBA(hex: hex).map { RGBA.contrast($0.linearLuminance, ground.linearLuminance) } ?? 0
         }
         let reads = readableShades.filter { contrast($0) >= pickedWordContrast }
+        // On a colour (a blue button) words are white where white reads,
+        // the way the system sets them: the nearest shade to blue words was
+        // near black, and every judge read "black text on blue" (the eval,
+        // 2026-10-24).
+        let spread = max(ground.r, ground.g, ground.b) - min(ground.r, ground.g, ground.b)
+        if spread >= saturatedSpread, reads.contains("#FFFFFF") { return "#FFFFFF" }
         return reads.min { distance($0) < distance($1) }
             ?? readableShades.max { contrast($0) < contrast($1) } ?? "#000000"
     }

@@ -130,7 +130,7 @@ struct AskPlanningTests {
                           labels: Bool = true) -> (String, String) {
         ("add_component", """
             {"name":"\(name)","x":\(x),"y":\(y),"labels":\(labels),"firstLook":"Default",\
-            "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":\(width),"height":\(height)}],\
+            "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":\(width),"height":\(height),"fill":"#007AFF"}],\
             "looks":[{"name":"Hover","changes":[{"part":"Back","opacity":0.8}]}]}
             """)
     }
