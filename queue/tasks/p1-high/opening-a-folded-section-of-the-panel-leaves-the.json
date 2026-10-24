@@ -2,7 +2,7 @@
   "id": "opening-a-folded-section-of-the-panel-leaves-the",
   "title": "Opening a folded section of the panel leaves the sections past it alone, and folds sections on the other side if it needs room",
   "goal": "When you open a section of the side panel that was folded shut, it should get its room without pulling open or dragging out the folded sections behind it. If there is not enough room, Photonz may fold sections on the far side of the one you opened, never the ones it would otherwise drag along.",
-  "epic": "next-polish",
+  "epic": "found-collapse",
   "priority": "p1-high",
   "seq": 1.6,
   "status": "pending",
