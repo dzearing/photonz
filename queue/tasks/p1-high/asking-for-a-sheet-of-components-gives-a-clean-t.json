@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-23T22:49:26.661Z",
+  "updated": "2026-10-24T01:38:56.299Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -87,9 +87,37 @@
     {
       "t": "2026-10-23T22:49:26.660Z",
       "note": "Table layout shipped (dafd16e6) and the skill's request clears 8 on every line, but Ask on this Mac is at 5 to 6 and the skill's design sheet has aligned 7: the 8 of 10 bar is not met, so it stays open."
+    },
+    {
+      "t": "2026-10-23T23:01:35.556Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T01:38:55.968Z",
+      "note": "Built (bf4dc3c2): add_component refuses looks nobody could see or read: words on words, words half on a box, and unreadable words, checked in every look; a white surface with no edge; a later look whose changes are too small to see (contrast under 1.2 and no channel moving 48). Parts can start hidden (visible false, or inferred from a later visible true), so Off checkboxes are empty. Ask's planner fixes shades, edges and word colours itself (madePlain), refuses a kind drawn twice and its own words over the table, decodes &amp;, asks once for a title (also after an unreadable reply), and takes an unchanged component repeat out of the talk, asking for the next kind instead. The trace now notes each refusal."
+    },
+    {
+      "t": "2026-10-24T01:38:56.039Z",
+      "note": "Chose to fix in the planner rather than refuse for Ask, because the 35B model sent a refused call back unchanged for all 30 rounds (run 20261023-231151: 18.7). Chose contrast-or-hue over a largest-channel gap for 'too small to see', because the channel gap refused the skill's #2563EB to #1D4ED8 hover and cost it a Pressed card (72.4, then 82 once measured by contrast)."
+    },
+    {
+      "t": "2026-10-24T01:38:56.104Z",
+      "note": "Eval (rubric f5ae1562). Ask component-table: 59 and 51.1 on the final code (52 before; runs on the same code range 37 to 59), judge 5 to 6 per line. Ask design-system-sheet 66.8 (52.8 before), judge 5 to 7. Skill component-table 83.6 (88.8 before; judge 7 to 8), skill design-system-sheet 82 (86.4 before; judge 6 to 8). NOT at the 8-of-10 bar: what is left is the empty cells under shared headers (every judge names them) and what the model draws (a dark Off track, tight button padding, a lumpy tab icon). Left pending."
+    },
+    {
+      "t": "2026-10-24T01:38:56.169Z",
+      "note": "Left rough (not filed, this task covers it): rows with fewer states leave holes under a shared header; one idea is a header per exact set of states, at the cost of more header rows. Look names like Selected2 read as debug text."
+    },
+    {
+      "t": "2026-10-24T01:38:56.233Z",
+      "note": "Pictures looked at: Ask after (title, light look, cards and alert on visible surfaces, Off checkbox empty, every label legible; holes under headers), Ask design sheet after, skill design sheet after (tidy matrix, holes), window capture (name chips over headers, already its own task). Tests: Scripts/test.sh 14304 passed; ask-builds-base-components-walk ok. Audit: queue/audits/2026-10-24-component-sheet-legible-states.json"
+    },
+    {
+      "t": "2026-10-24T01:38:56.298Z",
+      "note": "The checks and the planner fixes shipped (bf4dc3c2). Ask's sheets look clearly cleaner but are judged 5 to 7 of 10 and the skill 6 to 8; the 8-of-10 bar is not met, so it stays open."
     }
   ],
-  "started": "2026-10-23T21:16:32.556Z",
+  "started": "2026-10-23T23:01:35.553Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
