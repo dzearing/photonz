@@ -13772,3 +13772,9 @@
 {"t":"2026-10-24T01:38:56.171Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T01:38:56.235Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T01:38:56.300Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"The checks and the planner fixes shipped (bf4dc3c2). Ask's sheets look clearly cleaner but are judged 5 to 7 of 10 and the skill 6 to 8; the 8-of-10 bar is not met, so it stays open."}
+{"t":"2026-10-24T01:50:28.837Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":527,"of":1018,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-24T01:55:58.351Z","ev":"task_created","id":"when-ask-stops-part-way-it-says-so-and-one-refus","priority":"p1-high","title":"When Ask stops part way it says so, and one refused step no longer ends the change"}
+{"t":"2026-10-24T01:56:09.040Z","ev":"task_resequenced","id":"when-ask-stops-part-way-it-says-so-and-one-refus","from":77.5,"to":45}
+{"t":"2026-10-24T01:56:09.105Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-24T01:56:09.178Z","ev":"task_note","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req"}
+{"t":"2026-10-24T01:56:41.014Z","ev":"manager","filed":1,"readyBefore":68,"readyAfter":69,"report":"queue/manager/2026-10-23-1905.md"}
