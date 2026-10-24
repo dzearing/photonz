@@ -18712,6 +18712,15 @@ private final class Run {
             InspectorLayoutProbe.shared.measured
                 .first { $0.title == title }
                 .map { InspectorLayoutProbe.shared.isHeaderVisible($0) } ?? false
+        // Read off the stored folds, for a section the dock is drawing.
+        case .sectionFolded(let title), .sectionOpen(let title):
+            InspectorLayoutProbe.shared.measured.first { $0.title == title }.map { section in
+                let folds = PanelSectionFolds(
+                    stored: UserDefaults.standard.string(forKey: InspectorPanel.collapsedKey))
+                let isFolded = folds.contains(section.id.rawValue)
+                if case .sectionFolded = condition { return isFolded }
+                return !isFolded
+            } ?? false
         // Read off the sections the dock is actually DRAWING, in draw order, so
         // this is the claim a person could check with their eyes: the next
         // header down from Effects says Motion. A section the selection does
@@ -20156,6 +20165,18 @@ private final class Run {
                 "\(Int($0.lowerBound.rounded()))-\(Int($0.upperBound.rounded()))"
             } ?? "none",
             "dockPaneGap": InspectorLayoutProbe.shared.paneGap.map { ($0 * 10).rounded() / 10 } ?? 0,
+            // The Library's own pane at the foot, in the same coordinates,
+            // and the sections drawn folded shut, so a walk can say which
+            // sections an open moved, folded or pushed out of sight.
+            "dockShelfPane": InspectorLayoutProbe.shared.shelfBand.map {
+                "\(Int($0.lowerBound.rounded()))-\(Int($0.upperBound.rounded()))"
+            } ?? "none",
+            "dockFolded": {
+                let folds = PanelSectionFolds(
+                    stored: UserDefaults.standard.string(forKey: InspectorPanel.collapsedKey))
+                return InspectorLayoutProbe.shared.measured
+                    .filter { folds.contains($0.id.rawValue) }.map(\.title)
+            }(),
             // What the height budget did to each list: "Effects 129/129 floor
             // 129" reads as drawn/natural, and the floor it may never go under.
             "dockListRoom": InspectorLayoutProbe.shared.measured.compactMap { section in
@@ -20175,6 +20196,9 @@ private final class Run {
             // What the panel last did about an effect you opened: the reveal
             // that keeps a chevron from putting its settings out of sight.
             "effectReveal": InspectorLayoutProbe.shared.effectReveal ?? "none yet",
+            // What the last header click that opened a folded section did
+            // to make its room (`PanelOpenRoom`).
+            "openRoom": InspectorLayoutProbe.shared.openRoom ?? "none yet",
             // ...and what it last did about the section a PICK brought up: the
             // reveal that keeps a click on a layer from leaving that layer's
             // own settings below the fold.

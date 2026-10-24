@@ -1,0 +1,611 @@
+{
+ "out": "/tmp/photonz-playtest/opening-a-section-folds-the-near-side-walk",
+ "seed": "Opening a folded section of the right hand panel leaves the sections under it alone and takes its room from the sections above it, folding the nearest first, Appearance and Effects last (the user, 2026-10-24: if I expand a collapsed pane, it should not pull other panes behind it out but can collapse panes on the other side to make room). Every header is clicked with the pointer on its face, at Next defaults with no flag set, in a 620 point window where room is short, a 900 point window where it is not, and a recording with its clip picked.",
+ "setup": {
+  "front": true,
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 900,
+   "canvasHeight": 600,
+   "width": 1280,
+   "height": 620
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "showLibrary"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    200,
+    150
+   ],
+   "to": [
+    500,
+    350
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Layers",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Library section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionFolded",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "1-library-folded",
+   "note": "BEFORE, the foot: a 620 point window, a rectangle picked, Layers, Appearance, Effects and Motion open and the Library folded at the foot. Before the fix, opening the Library here cut Appearance across its Fill row and pushed Motion out of sight"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-library-folded"
+  },
+  {
+   "do": "press",
+   "control": "Library section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionFolded",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionHeaderInView",
+   "value": "Layers",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionHeaderInView",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionHeaderInView",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionHeaderInView",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "2-library-opened",
+   "note": "AFTER, the foot: the Library opens whole and makes its room above it, nearest first. Motion, just above, folds first; Appearance, which the panel promises is always in reach, stays open and whole, and every header stays on screen"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-library-opened"
+  },
+  {
+   "do": "press",
+   "control": "Motion section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "3-motion-opened",
+   "note": "The middle: Motion opens whole, and the Library under it stays open and on screen. Whatever room it needs comes from above it"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-motion-opened"
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionFolded",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Effects section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionHeaderInView",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "4-effects-opened",
+   "note": "The middle again: Effects, folded when the Library opened, opened. Motion and the Library under it keep their folds and stay on screen; any room comes from above"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-effects-opened"
+  },
+  {
+   "do": "press",
+   "control": "Layers section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Layers",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "5-layers-opened",
+   "note": "The top: Layers has nothing above it to fold, so it opens as it always did and every section under it keeps its fold. The pick's sections give way inside their own scroller"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-layers-opened"
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "blank",
+   "canvasWidth": 900,
+   "canvasHeight": 600,
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "showLibrary"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    200,
+    150
+   ],
+   "to": [
+    500,
+    350
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionFolded",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Appearance section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Layers",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Library section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionFolded",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Library section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Layers",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Motion",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "6-roomy",
+   "note": "A 900 point window: Appearance, left folded by the short window, and the Library each opened, and nothing else folds, because there is room"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-roomy"
+  },
+  {
+   "do": "action",
+   "action": "closeDocument"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "selectRow",
+   "row": "Tutorial Sample"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Library section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionFolded",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "7-recording-library-folded",
+   "note": "BEFORE, a recording: the clip picked, the Library folded at the foot (a recording starts it folded; the picture above left it open, so it is folded by its header here). Before the fix, opening it pushed Appearance and Effects out of view"
+  },
+  {
+   "do": "snapshot",
+   "name": "7-recording-library-folded"
+  },
+  {
+   "do": "press",
+   "control": "Library section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Library",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Appearance",
+   "timeout": 2
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionInView",
+   "value": "Effects",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "8-recording-library-opened",
+   "note": "AFTER, a recording: the Library opens and Appearance and Effects stay whole on screen; the sections above them fold to make the room"
+  },
+  {
+   "do": "snapshot",
+   "name": "8-recording-library-opened"
+  }
+ ]
+}

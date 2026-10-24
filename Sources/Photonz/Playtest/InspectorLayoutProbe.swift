@@ -56,6 +56,10 @@ import SwiftUI
     /// "it was already all there" is the answer half the time and a walk
     /// reading an empty line could not tell that from a reveal that never ran.
     var effectReveal: String?
+    /// What the last header click that opened a folded section decided about
+    /// the room it needed (`PanelOpenRoom`): the room, what each section on
+    /// screen takes, and which it folded, if any.
+    var openRoom: String?
     /// What the height budget did to each list section this pass, so a walk can
     /// say "nothing in Effects is cut across the middle" in words rather than
     /// by someone squinting at a capture.
@@ -200,6 +204,17 @@ import SwiftUI
     InspectorLayoutProbe.shared.carrying = title
 }
 
+@MainActor func recordPanelOpenRoom(_ said: String) {
+    InspectorLayoutProbe.shared.openRoom = said
+}
+
+/// How long working out the room took, on the end of the line above.
+@MainActor func notePanelOpenRoomCost(_ took: Duration) {
+    let ms = Double(took.components.attoseconds) / 1e15 + Double(took.components.seconds) * 1000
+    InspectorLayoutProbe.shared.openRoom = (InspectorLayoutProbe.shared.openRoom ?? "")
+        + String(format: " (%.2fms)", ms)
+}
+
 @MainActor func recordEffectReveal(_ id: String, frame: CGRect,
                                    room: CGFloat, action: DockReveal.Action) {
     func points(_ value: CGFloat) -> String { "\(Int(value.rounded()))" }
@@ -244,6 +259,8 @@ extension View {
 @MainActor func recordInspectorListsPane(_ lists: [InspectorSectionID], band: ClosedRange<CGFloat>?) {}
 @MainActor func recordInspectorShelfPane(_ band: ClosedRange<CGFloat>?) {}
 @MainActor func recordInspectorCarrying(_ title: String?) {}
+@MainActor func recordPanelOpenRoom(_ said: String) {}
+@MainActor func notePanelOpenRoomCost(_ took: Duration) {}
 @MainActor func recordEffectReveal(_ id: String, frame: CGRect,
                                    room: CGFloat, action: DockReveal.Action) {}
 @MainActor func recordInspectorListRoom(_ id: InspectorSectionID,

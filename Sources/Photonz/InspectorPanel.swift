@@ -2331,10 +2331,163 @@ struct InspectorPanel: View {
     /// A click on a header. The section redraws itself; this panel redraws
     /// only when the fold changed what the dock's lists may be given, so a
     /// shut form hands its room to the layers list on the same curve.
+    ///
+    /// Opening a folded section takes its room from the sections above it,
+    /// folding the nearest first, and leaves the ones under it as they were
+    /// (`PanelOpenRoom`, the user 2026-10-24). Those folds land in the
+    /// passes after the click, on the same curve: in the click's own pass
+    /// they held a frame (17.5ms opening a recording's Transitions, which
+    /// folded two, `section-fold-motion-walk`).
     private func toggleCollapsed(_ id: InspectorSectionID) {
+        #if PHOTONZ_PLAYTEST
+        let started = ContinuousClock.now
+        #endif
+        let making = isCollapsed(id) ? roomToOpen(id) : []
+        #if PHOTONZ_PLAYTEST
+        if isCollapsed(id) { notePanelOpenRoomCost(ContinuousClock.now - started) }
+        #endif
         withAnimation(foldMotion) {
             refold { folds.toggle(id) }
         }
+        foldOnePerPass(making)
+    }
+
+    /// Folds these, the first a pass from now and each of the rest a pass
+    /// after the one before, all on the fold's curve. Two in one pass held
+    /// a frame too (16.1 to 17.6ms, a recording's Time and Captions).
+    private func foldOnePerPass(_ sections: [InspectorSectionID]) {
+        guard let first = sections.first else { return }
+        DispatchQueue.main.async {
+            withAnimation(foldMotion) {
+                refold { folds.fold([first]) }
+            }
+            foldOnePerPass(Array(sections.dropFirst()))
+        }
+    }
+
+    /// The sections to fold so `id`, folded now, opens whole with everything
+    /// on screen under it still on screen (`PanelOpenRoom`). Only what is on
+    /// screen counts: the Layers pane, the Library's pane, and the picked
+    /// thing's sections whose headers are in view. Empty when there is room,
+    /// when folding cannot make enough, or before the panel has measured
+    /// what it needs.
+    private func roomToOpen(_ id: InspectorSectionID) -> [InspectorSectionID] {
+        // Why a plan was not made, for a walk to read; nothing in the shipping build.
+        func skip(_ why: String) -> [InspectorSectionID] {
+            #if PHOTONZ_PLAYTEST
+            recordPanelOpenRoom("\(id.rawValue): not worked out, \(why)")
+            #endif
+            return []
+        }
+        guard let column = listsColumnHeight else { return skip("the panel is not measured yet") }
+        let lists = listsReveal.drawnSections
+        let pick = reveal.drawnSections
+        let shelf = shelfReveal.drawnSections
+        guard lists.contains(id) || pick.contains(id) || shelf.contains(id) else {
+            return skip("it is not drawn")
+        }
+        let padding = 2 * DockMetrics.listTopPadding
+        let divider = DockMetrics.sectionDividerHeight
+        let showsListsGrip = !lists.isEmpty && !pick.isEmpty
+        // The whole stack the three parts share, less the dividers between
+        // them and the padding each part draws above and below its sections.
+        var room = column + ListsPaneGrip.thickness - padding
+        if showsListsGrip { room -= ListsPaneGrip.thickness }
+        if !lists.isEmpty { room -= padding }
+        if !shelf.isEmpty { room -= ListsPaneGrip.thickness + padding }
+
+        var entries: [PanelOpenRoom.Entry] = []
+        func add(_ section: InspectorSectionID, open: CGFloat?) -> Bool {
+            guard let header = budget.headers[section], let open else { return false }
+            entries.append(PanelOpenRoom.Entry(
+                key: section.rawValue, folded: header + divider, open: max(open, header + divider),
+                isOpen: !isCollapsed(section),
+                isPromised: DockMetrics.promisedSections.contains(section)))
+            return true
+        }
+        let full = InspectorDockLayout(budget: budget, collapsed: { _ in false })
+
+        // The Layers pane: drawn at the height its divider chose, or less
+        // when its lists need less, never squeezed by the pick. With nothing
+        // picked it is the whole column and its lists give way like any list.
+        let paneChosen = min(PanelListsPane.chosenHeight(stored: listsPaneStored.wrappedValue > 0
+                                                              ? CGFloat(listsPaneStored.wrappedValue) : nil,
+                                                          column: column),
+                             PanelListsPane.maxAllowedHeight(column: column, floor: listsPaneFloor(lists)))
+        for section in lists {
+            guard let whole = full.openHeight(of: section, whole: true) else {
+                return skip("\(section.rawValue) is not measured")
+            }
+            let padded = whole + (Self.boundsItself(section) ? DockMetrics.bodyBottomPadding : 0)
+            let open = pick.isEmpty ? full.openHeight(of: section, whole: section == id)
+                : min(padded, paneChosen - padding)
+            guard add(section, open: open) else { return skip("\(section.rawValue) is not measured") }
+        }
+
+        // The pick's sections in view. One under the opened section keeps
+        // its header on screen, and its body may slide under the fold like
+        // anything in a scroller: holding a recording's audio sections whole
+        // at the foot folded Appearance to reopen Effects (2026-10-24).
+        let viewport = reveal.viewportHeight
+        let opening = pick.firstIndex(of: id)
+        for (index, section) in pick.enumerated() {
+            let frame = reveal.sectionFrames[section]
+            let headerInView = frame.map { $0.minY < viewport - 4 && $0.maxY > 4 } ?? false
+            guard section == id || headerInView else { continue }
+            let after = opening.map { index > $0 } ?? false
+            let open = after
+                ? budget.headers[section].map { $0 + divider }
+                : full.openHeight(of: section, whole: section == id)
+            guard add(section, open: open) else { return skip("\(section.rawValue) is not measured") }
+        }
+
+        // The Library's pane: the height chosen for it open, its header shut.
+        // Its share is of the room under the Layers pane, so a plan that
+        // folds Layers makes it taller: it is worked out again for that.
+        let listKeys = Set(lists.map(\.rawValue))
+        func planned(foldingLists folded: Set<String>) -> PanelOpenRoom.Plan? {
+            var all = entries
+            let pane = padding + all.filter { listKeys.contains($0.key) }.reduce(CGFloat(0)) { sum, entry in
+                sum + (entry.key == id.rawValue ? entry.open : folded.contains(entry.key) ? entry.folded : entry.now)
+            }
+            for section in shelf {
+                let split = (pick: pick, lists: lists, shelf: shelf)
+                let shelfAt = shelfColumn(split, pickIsEmpty: pick.isEmpty,
+                                          paneHeight: pick.isEmpty ? 0 : pane,
+                                          showsListsGrip: showsListsGrip)
+                // As `shelfPaneHeight` draws it unheld, less the room it only
+                // grows into when the pick leaves some.
+                let least = shelfStored.wrappedValue > 0 ? nil : full.leastHeight(of: shelf)
+                let height = PanelShelfPane.atLeastTheShelf(shelfChosen(split, column: shelfAt),
+                                                            least: least, column: shelfAt)
+                guard let header = budget.headers[section] else { return nil }
+                all.append(PanelOpenRoom.Entry(key: section.rawValue, folded: header + divider,
+                                               open: max(height - padding, header + divider),
+                                               isOpen: !isCollapsed(section)))
+            }
+            guard let index = all.firstIndex(where: { $0.key == id.rawValue }) else { return nil }
+            #if PHOTONZ_PLAYTEST
+            defer { entriesSaid = all }
+            #endif
+            return PanelOpenRoom.plan(all, opening: index, room: room)
+        }
+        #if PHOTONZ_PLAYTEST
+        var entriesSaid: [PanelOpenRoom.Entry] = []
+        #endif
+        guard var plan = planned(foldingLists: []) else { return [] }
+        let listsFolded = listKeys.intersection(plan.folds)
+        if !listsFolded.isEmpty {
+            guard let again = planned(foldingLists: listsFolded) else { return [] }
+            plan = again
+        }
+        #if PHOTONZ_PLAYTEST
+        recordPanelOpenRoom("\(id.rawValue): room \(Int(room)), "
+            + entriesSaid.map { "\($0.key) \(Int($0.isOpen || $0.key == id.rawValue ? $0.open : $0.folded))" }
+                .joined(separator: " ")
+            + (plan.fits ? (plan.folds.isEmpty ? ", fits" : ", folds \(plan.folds.joined(separator: ","))")
+                : ", cannot fit, folds nothing"))
+        #endif
+        return plan.folds.compactMap(InspectorSectionID.init(rawValue:))
     }
 
     /// The Agent group opened if it was folded and scrolled on screen if it

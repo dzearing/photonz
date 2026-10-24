@@ -736,6 +736,11 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// ...and the weaker claim, for a section too tall to ever fit whole: its
     /// header is on screen, so you at least know the settings are there.
     case sectionHeaderInView(String)
+    /// A properties-panel section with this header is drawn folded shut, or
+    /// open. Opening one section may fold others to make room, never the
+    /// ones under it (`PanelOpenRoom`), and which are folded is the claim.
+    case sectionFolded(String)
+    case sectionOpen(String)
     /// One section is the NEXT one down from another, by their header text.
     /// Where a section sits is the whole of what the panel order does, and it
     /// is the one thing a snapshot argues about badly: a walk could report the
@@ -4923,6 +4928,8 @@ public enum PlaytestStep: Sendable, Equatable {
             case "measureMode": .measureMode(try f.enumValue("value", MeasureToolMode.self))
             case "sectionInView": .sectionInView(try f.string("value"))
             case "sectionHeaderInView": .sectionHeaderInView(try f.string("value"))
+            case "sectionFolded": .sectionFolded(try f.string("value"))
+            case "sectionOpen": .sectionOpen(try f.string("value"))
             case "sectionDirectlyUnder": .sectionDirectlyUnder(try f.string("value"),
                                                                under: try f.string("under"))
             case "layerRowInView": .layerRowInView(try f.string("value"))
@@ -4946,7 +4953,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 case let other: throw f.invalid("value", "zoomControl is \"shown\" or \"hidden\", not \"\(other)\"")
                 }
             case "displayZoom": .displayZoom(Int(try f.number("value")))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, askSettled, askPicturesSetUp, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionFolded, sectionOpen, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, askSettled, askPicturesSetUp, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

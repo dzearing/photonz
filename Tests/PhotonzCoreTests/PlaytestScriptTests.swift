@@ -4929,6 +4929,23 @@ struct PlaytestScriptTests {
         #expect(condition == .sectionDirectlyUnder("Motion", under: "Effects") && timeout == 3)
     }
 
+    @Test func waitForReadsWhetherASectionIsFoldedOrOpen() {
+        // Opening one section may fold others to make room, and never the
+        // ones under it (`PanelOpenRoom`): which sections are folded is the
+        // claim, so it is a step the walk fails on.
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "sectionFolded", "value": "Motion", "timeout": 2 },
+            { "do": "waitFor", "condition": "sectionOpen", "value": "Appearance" }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let folded, let timeout) = script.steps[0],
+              case .waitFor(let open, _) = script.steps[1] else { Issue.record("waitFor"); return }
+        #expect(folded == .sectionFolded("Motion") && timeout == 2)
+        #expect(open == .sectionOpen("Appearance"))
+    }
+
     @Test func waitForRejectsASectionWithNothingToSitUnder() {
         let json = """
         { "out": "/tmp/x", "steps": [

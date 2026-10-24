@@ -418,6 +418,19 @@ struct DockBudgetScratch: Equatable {
         return total
     }
 
+    /// What one section takes open, header and divider included, whatever its
+    /// fold: `whole` draws all of it, otherwise a list counts at the floor
+    /// the budget may squeeze it to and a form whole. Nil until its header
+    /// and body have been measured. For `PanelOpenRoom`, which asks before a
+    /// folded section has been drawn open.
+    func openHeight(of id: InspectorSectionID, whole: Bool) -> CGFloat? {
+        guard let header = budget.headers[id], let body = budget.bodies[id] else { return nil }
+        let scrolls = DockMetrics.scrollingSections.contains(id)
+        let extras = budget.listExtras[id] ?? 0
+        let drawn = scrolls && !whole ? min(body, squeezeFloor(for: id, room: room)) : body
+        return header + DockMetrics.sectionDividerHeight + (scrolls ? extras : 0) + drawn
+    }
+
     /// How short a list section may be squeezed.
     ///
     /// Three rows for a list of rows, which is the ordinary case: layers,

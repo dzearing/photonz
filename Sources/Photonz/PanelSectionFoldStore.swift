@@ -76,6 +76,15 @@ final class PanelSectionFoldStore {
         return true
     }
 
+    /// Folds these sections in one write (`PanelOpenRoom`).
+    func fold(_ ids: [InspectorSectionID]) {
+        attach()
+        var next = folds
+        for id in ids where !next.contains(id.rawValue) { next.toggle(id.rawValue) }
+        guard next != folds else { return }
+        apply(next)
+    }
+
     private func apply(_ next: PanelSectionFolds) {
         let flipped = next.flipped(from: folds)
         folds = next

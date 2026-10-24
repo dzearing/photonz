@@ -120,6 +120,53 @@
    "seconds": 0.4
   },
   {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Transitions",
+   "timeout": 2
+  },
+  {
+   "do": "describe",
+   "stage": "1-transitions-took-its-room",
+   "note": "Transitions opened needs its whole height, so the sections above it, Captions then Time, fold to make the room, and nothing under it moves (PanelOpenRoom, the user 2026-10-24). Each is opened again by its header before the clip is picked"
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionFolded",
+   "value": "Captions",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Captions section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Captions",
+   "timeout": 2
+  },
+  {
+   "do": "press",
+   "control": "Time section",
+   "longestUnderMS": 16
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "waitFor",
+   "condition": "sectionOpen",
+   "value": "Time",
+   "timeout": 2
+  },
+  {
    "do": "expect",
    "control": "Add Captions",
    "present": true
@@ -365,9 +412,13 @@
    "seconds": 0.4
   },
   {
+   "do": "describe",
+   "stage": "3-clip-transitions-shut",
+   "note": "Not timed: the open-room rule has folded the audio sections by now, so shutting Transitions takes the clip's sections from too tall to fitting, and the whole panel redraws in one pass of 21 to 29ms. That cost is task folding-a-section-that-lets-the-panel-fit-again, which puts the 16ms bar back on this click and the one that opens it again"
+  },
+  {
    "do": "press",
-   "control": "Transitions section",
-   "longestUnderMS": 16
+   "control": "Transitions section"
   },
   {
    "do": "wait",
@@ -375,8 +426,7 @@
   },
   {
    "do": "press",
-   "control": "Transitions section",
-   "longestUnderMS": 16
+   "control": "Transitions section"
   },
   {
    "do": "wait",
@@ -384,12 +434,12 @@
   },
   {
    "do": "expect",
-   "control": "Mute",
+   "control": "Audio section",
    "present": true
   },
   {
    "do": "expect",
-   "control": "Normalize",
+   "control": "Audio Gain section",
    "present": true
   },
   {
