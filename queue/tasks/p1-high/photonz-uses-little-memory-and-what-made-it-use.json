@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T00:45:53.715Z",
-  "updated": "2026-10-24T00:45:53.827Z",
+  "updated": "2026-10-24T04:08:30.452Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-23: 'a colleague was saying photonz was consuming like 4 gigs. there must be a memory leak. please make a task a goal to use low memory and evaluate what might have caused the high usage.' A leak is the user's guess and is NOT confirmed. We don't know which version, release or session the colleague had. Measured on this Mac by the intake window at 2026-10-23 (footprint -p): the Photonz Dev app itself is 128 MB after 1h55m. Two helpers it started 3 minutes earlier for Ask: llama-server (dist/Photonz Dev.app/Contents/Helpers/AskModel, Qwen3.6-35B-A3B Q4_K_M) is 4,831 MB footprint, with RSS shown as 22.6 GB because of the mapped model file. The picture model, python server.py under Application Support/Photonz/Models/picture-tools, is 4,757 MB footprint. So the strongest SUSPECT for '4 GB' is the Ask helpers, since Activity Monitor may show them under Photonz. Check that, and check how a person would see it. The others are long-session growth in the app itself, which has not been measured. The idle release for the chat server is in AskModelServer.swift:159-182 (AskBuiltInServerPlan.isIdle). Not checked whether AskPictureModel.swift has the same. Helper start and stop is AskHelperProcess.swift. Possibly relevant: should the default model be smaller on a Mac with less memory (AskModels.recommended picks by memory)? Say in the audit what a 16 GB Mac gets. Never kill or measure the person's own dev app during their session: use the probe.",
@@ -29,6 +29,51 @@
     {
       "t": "2026-10-24T00:45:53.826Z",
       "note": "seq 3970 -> 1"
+    },
+    {
+      "t": "2026-10-24T01:57:03.754Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-24T02:58:50.206Z",
+      "note": "owns these walks: closed-windows-give-their-memory-back-walk"
+    },
+    {
+      "t": "2026-10-24T04:07:49.327Z",
+      "note": "Reproduced first on the probe: 20 screenshots and five 12 MP pictures opened and closed took Photonz from 400 MB to 1.96 GB, never coming back (Scripts/memory-watch.sh). heap on a memory graph: 25 EditorState alive after 25 windows closed. leaks --traceTree named the holders: the walk harness's strong editor list (20 of them, probe only), the inspector fold store's closure (a retain cycle with the panel's @State), ToolBarLayoutProbe.shared.pickMoreRow (every build), and a closed window AppKit keeps."
+    },
+    {
+      "t": "2026-10-24T04:07:49.392Z",
+      "note": "Fixed: harness holds editors weakly; InspectorPanel clears folds.onFoldFromAnotherWindow on disappear; ToolBarLayoutProbe registers only in the probe; EditorState.letGoOnClose empties store, renderers, frame, thumbnails on the window's willClose (and drops frames still in flight). Guard proven: putting the fold cycle back turns closed-windows-give-their-memory-back-walk red with '13 editors are still in memory'."
+    },
+    {
+      "t": "2026-10-24T04:07:49.455Z",
+      "note": "Chose MallocLargeCache=0 (Info.plist LSEnvironment, checked by build-app.sh) over keeping the allocator's large cache because on macOS 26 freed large blocks stay in the footprint at the session's peak and malloc_zone_pressure_relief does not release them (test program: 8x48 MB freed stays 367 MB; with the setting, back to 1 MB). Cost on render perf tests: full 12 MP 27.2 to 28.1 ms, interactive 5.4 ms unchanged, export about 4 percent."
+    },
+    {
+      "t": "2026-10-24T04:07:49.521Z",
+      "note": "Long session (Scripts/memory-session.sh), Photonz itself. Before: 203 MB one screenshot, 693 after 20 screenshots (21 editors), 1430 editing 12 MP, 1247 idle with all closed (26 editors). After: 165, 87, 501, 180 (3 emptied editors). Ask helpers: llama-server about 3 GB, picture model 13 GB painting and 5 GB loaded, both let go about 5 min after Ask's last drawing and within 2 s of quit; responsible process of both is Photonz. 16 GB Mac: Gemma 4 E4B, picture model not offered."
+    },
+    {
+      "t": "2026-10-24T04:07:49.587Z",
+      "note": "left rough: up to 3 closed windows' editors stay reachable after a long session via a closed window AppKit keeps (SwiftUI focus storage, menu observation); each already emptied, so no one sees it. Did not file: under the bar. Quick guard allows 1, long session 3."
+    },
+    {
+      "t": "2026-10-24T04:07:49.658Z",
+      "note": "left rough: section-fold-motion-walk failed twice then passed on this build with two different failures (an 18.5 ms pass, then Speed missing); already listed on walks-that-fail-in-the-full-sweep-26 from before this change, so nothing new filed."
+    },
+    {
+      "t": "2026-10-24T04:07:49.726Z",
+      "note": "Audit rough items are measured facts or logged above; none filed (no defect a person would see remains). closed-windows-give-their-memory-back-walk joins every rotating check (queue/bin/sweep-schedule.mjs everyCheck)."
+    },
+    {
+      "t": "2026-10-24T04:08:30.450Z",
+      "note": "Found and fixed what made Photonz grow: closed windows stayed in memory (inspector fold-store retain cycle, a tool bar walk hook in every build, the walk harness's strong list), and macOS 26's allocator kept freed pictures counted (MallocLargeCache=0 via LSEnvironment). Editors now empty themselves on close; memory pressure clears render caches. Long session, Photonz idle with all closed: 1247 MB before, 180 MB after; one screenshot 165 MB (budget 300). Budget in docs/design/memory.md + MemoryBudget (tested); walk step memory; closed-windows-give-their-memory-back-walk in every rotating check (proven red with the cycle put back). Ask helpers measured: chat ~3 GB, picture model 13 GB painting / 5 GB loaded, both released 5 idle min after use and within 2 s of quit. Charts and audit: queue/audits/2026-10-23-photonz-uses-little-memory.json. Commit 38e4992c; Scripts/test.sh green (14,317)."
     }
-  ]
+  ],
+  "started": "2026-10-24T01:57:03.753Z",
+  "walks": [
+    "closed-windows-give-their-memory-back-walk"
+  ],
+  "completed": "2026-10-24T04:08:30.451Z"
 }

@@ -13778,3 +13778,14 @@
 {"t":"2026-10-24T01:56:09.105Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-10-24T01:56:09.178Z","ev":"task_note","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req"}
 {"t":"2026-10-24T01:56:41.014Z","ev":"manager","filed":1,"readyBefore":68,"readyAfter":69,"report":"queue/manager/2026-10-23-1905.md"}
+{"t":"2026-10-24T01:57:03.678Z","ev":"manager_pass","exit":0,"ready":69}
+{"t":"2026-10-24T01:57:03.760Z","ev":"task_started","id":"photonz-uses-little-memory-and-what-made-it-use","title":"Photonz uses little memory, and what made it use 4 GB is found and fixed","priority":"p1-high"}
+{"t":"2026-10-24T02:58:50.208Z","ev":"task_walks","id":"photonz-uses-little-memory-and-what-made-it-use","walks":["closed-windows-give-their-memory-back-walk"]}
+{"t":"2026-10-24T04:07:49.329Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
+{"t":"2026-10-24T04:07:49.394Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
+{"t":"2026-10-24T04:07:49.457Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
+{"t":"2026-10-24T04:07:49.523Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
+{"t":"2026-10-24T04:07:49.590Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
+{"t":"2026-10-24T04:07:49.660Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
+{"t":"2026-10-24T04:07:49.728Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
+{"t":"2026-10-24T04:08:30.453Z","ev":"task_done","id":"photonz-uses-little-memory-and-what-made-it-use","from":"in_progress","note":"Found and fixed what made Photonz grow: closed windows stayed in memory (inspector fold-store retain cycle, a tool bar walk hook in every build, the walk harness's strong list), and macOS 26's allocator kept freed pictures counted (MallocLargeCache=0 via LSEnvironment). Editors now empty themselves on close; memory pressure clears render caches. Long session, Photonz idle with all closed: 1247 MB before, 180 MB after; one screenshot 165 MB (budget 300). Budget in docs/design/memory.md + MemoryBudget (tested); walk step memory; closed-windows-give-their-memory-back-walk in every rotating check (proven red with the cycle put back). Ask helpers measured: chat ~3 GB, picture model 13 GB painting / 5 GB loaded, both released 5 idle min after use and within 2 s of quit. Charts and audit: queue/audits/2026-10-23-photonz-uses-little-memory.json. Commit 38e4992c; Scripts/test.sh green (14,317)."}
