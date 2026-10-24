@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:12:38.623Z",
-  "updated": "2026-10-24T13:11:06.439Z",
+  "updated": "2026-10-24T20:27:37.540Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'we should be using qwen 3.8 27b 4 bit quant over 3.6 35b'. Checked on Hugging Face by the intake window: Qwen/Qwen3.8-27B was released 2026-08-05, Apache 2.0, image-text-to-text. The official GGUFs at ggml-org/Qwen3.8-27B-GGUF are Q4_K_M 18.97 GB, Q8_0 28.6 GB, BF16 53.8 GB, mmproj Q8_0 0.63 GB / BF16 0.93 GB, plus mtp-* and dflash-* draft files. MLX builds exist (lmstudio-community/Qwen3.8-27B-MLX-4bit) if MLX is ever used. The 2026-10-21 model bake-off (ask-runs-on-the-best-model-this-mac-can-hold-pic) compared Ollama tags only and never saw Qwen3.8. The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B is the default at :74, recommended(memoryGigabytes:) at :109). Vendored server: build b11826 (Scripts/vendor-llama-server.sh). Not checked: whether b11826 knows Qwen3.8's architecture. Coordinate with the model choice task (settings-offers-several-ask-models-with-what-eac): this task decides the default, and that one shows the rows and ratings. Whichever runs second builds on the first.",
@@ -41,7 +41,29 @@
     {
       "t": "2026-10-24T13:11:06.438Z",
       "note": "Downloaded Qwen3.8-27B-Q4_K_M (sha256 c600de03...) + mmproj Q8_0 (2e968a6a...) + mtp/dflash Q4_0 drafts at a316ea52. Vendored b11826 loads it (arch qwen35, same shape as Qwen3.6 27B): tool call and picture both answered right. Speed on the server bench (12.5k-token prompt): reads 103-183 tok/s, writes 5-15 tok/s; Qwen3.6 35B on the same bench reads 1046 and writes 76. b11853 (newest) measured the same (132/10.1 against 135/9.1 back to back), so b11826 stays. Drafts, 700-token svg write: none 11.9 tok/s, MTP 33.2 (510/565 accepted), DFlash 28.7 (494/612). MTP keeps prompt reading, tools and pictures; resident 25.8 GB with MTP against 22.0 without."
+    },
+    {
+      "t": "2026-10-24T16:34:32.622Z",
+      "note": "Climb set, same commit: Qwen3.8 27B + MTP 75.3 (drawing 79.4, sheet 81.4, layout 67.9, redline 46.6, video 54; 140.8 s median; 24.4 GB median held, 27.6 peak) run 20261024-131153-ask, against Qwen3.6 35B 77.1 (86.3, 65.2, 32.9, 48.3, 37.8; 52.1 s; 21.8 median, 23.5 peak) run 20261024-151759-ask. Qwen3.8's two drawing zeros are Ask's own look rejecting its painted drawing twice ('I couldn't make a clear drawing of that'). MTP against none, 8 climb cases: 73.8 against 60.4 (run 20261024-160940-ask); without the draft the component table and pricing section ran past the eval's 300 s; short requests take about the same time either way. Chose to keep MTP because it is what lets long writes finish."
+    },
+    {
+      "t": "2026-10-24T20:26:42.817Z",
+      "note": "owns these walks: ask-offers-the-new-default-model-walk, ask-deletes-an-older-model-walk, ask-sets-itself-up-walk"
+    },
+    {
+      "t": "2026-10-24T20:27:37.460Z",
+      "note": "Held-out, same code: Qwen3.8 27B + MTP 57.8 (drawing 64.4, layout 12.3, redline 22.3, video 59.6; 141.9 s; 27.0 GB peak) run 20261024-163432-ask-held-out, against Qwen3.6 35B 60.2 (68.4, 22.4, 9.2, 50.1; 49.1 s; 23.8 GB) run 20261024-191502-ask-held-out. Chose gigabytes 24.4 (climb median) over the 27.6 peak because the 35B's 21.7 was always a typical reading (its median by the same measure is 21.8), and the peak would have hidden the picture model offer on 64 GB Macs. Filed ask-s-first-answer-after-its-model-loads-comes-i (p1, speed: cold first request 60-90 s reading the standing prompt; warm reuse already 1.6 s) and ask-on-qwen3-8-27b-keeps-a-drawing-its-look-name (p2, drawings its look names more or less precisely are thrown away). Folded the held-out layout drop into ask-on-the-local-model-makes-results-that-look-f. Left rough, no task: the Settings window still opens led by the pinned 'Questions you have silenced' band (already an acceptance item of settings-offers-several-ask-models-with-what-eac)."
+    },
+    {
+      "t": "2026-10-24T20:27:37.538Z",
+      "note": "Qwen3.8 27B (Q4_K_M + Q8_0 picture reader + MTP draft, pinned at a316ea52) is Ask's default from a 48 GB Mac up; Qwen3.6 35B stays a choice and keeps working where it is the only one, Settings offers the new one with its size and deletes the old. Vendored b11826 loads it with tools and pictures. Measured same code: climb 75.3 vs 77.1, held-out 57.8 vs 60.2, 141 s vs 50 s a request, 24.4 vs 21.8 GB; MTP kept (73.8 vs 60.4 on 8 cases). Walks ask-offers-the-new-default-model-walk, ask-deletes-an-older-model-walk, ask-sets-itself-up-walk green; Scripts/test.sh 14361 passed. Audit queue/audits/2026-10-24-ask-uses-qwen3-8-27b-at-4-bit-by-default-instead.json. Follow-ups filed for speed and drawing checks."
     }
   ],
-  "started": "2026-10-24T12:38:04.611Z"
+  "started": "2026-10-24T12:38:04.611Z",
+  "walks": [
+    "ask-offers-the-new-default-model-walk",
+    "ask-deletes-an-older-model-walk",
+    "ask-sets-itself-up-walk"
+  ],
+  "completed": "2026-10-24T20:27:37.539Z"
 }

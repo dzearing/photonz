@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:11:00.440Z",
-  "updated": "2026-10-24T12:35:54.968Z",
+  "updated": "2026-10-24T20:27:37.391Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'in settings, I would like multiple model options to choose from. There should be a download button to download them on demand, and then use them. Each should have some requirements and maybe something like quality / speed ratings. This would allow users to opt into the ask functionality without requiring a model to be downloaded. I think by default, model should not be downloaded and clicking ask should bring you to a dialog which downloads a recommended model set if needed based on the mac configuration.' Today: Sources/Photonz/Agent/AskSettingsSection.swift offers one recommended model with Download (:81-85) and a Picker over the ones you have (:68-70), plus the picture model's Download (:121-125). An Ollama branch remains (:141-175). The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B 21.7 GB, Qwen3.6 27B 22.8 GB, Gemma 4 26B 18.5 GB, all from Hugging Face at pinned revisions) and the picture model is in AskPictureModelPlan.swift (about 11 GB). Downloads go through AskModelDownload.swift. Nothing smaller than 18.5 GB exists, so a 16 GB Mac gets 'Ask needs more memory than this Mac has.' Scoring: Scripts/ask-eval.sh, held-out set. Check what happens today when Ask is pressed with no model (not reproduced here). Ties in with the memory task (photonz-uses-little-memory-and-what-made-it-use): smaller models lower memory as well.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-10-24T12:35:54.967Z",
       "note": "seq 1.3 -> 40"
+    },
+    {
+      "t": "2026-10-24T20:27:37.390Z",
+      "note": "2026-10-24: the default is now Qwen3.8 27B with its MTP draft (commit abc02936). Settings > Ask gained two interim rows this task's rebuild replaces: 'New default: <name> (<size>)' + Download when a Mac has an older model (AskBuiltInModels.newer), and a Delete with a confirmation for every downloaded model not in use (AskBuiltInModels.removable, AskModelServer.delete). Measured ratings to start from: climb 75.3 / held-out 57.8 / 141 s median / 24.4 GB for Qwen3.8 27B, 77.1 / 60.2 / 50 s / 21.8 GB for Qwen3.6 35B (docs/design/ask.md, 'Qwen3.8 27B, 2026-10-24'). A walk can lend the probe only some models with setup askModelsOnly."
     }
   ]
 }
