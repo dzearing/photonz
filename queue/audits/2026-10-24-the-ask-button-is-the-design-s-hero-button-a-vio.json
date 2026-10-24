@@ -1,0 +1,63 @@
+{
+  "feature": "Ask is the design's hero button",
+  "epic": "agent-ask",
+  "task": "the-ask-button-is-the-design-s-hero-button-a-vio",
+  "summary": "The Ask button in the title bar is now the design language's hero pill: a blue to violet spectrum with white words, a gloss along the top and a violet bloom underneath. Hover opens the spectrum toward pink, grows the bloom and sweeps one sheen across; while the Ask box is open it stays coloured and reads as held down.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/ask-hero-button-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open any picture and look at the top right of the title bar.",
+      "shot": "2026-10-24-ask-hero-rest-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Rest the pointer on Ask and watch one light sheen cross it, left to right.",
+      "shot": "2026-10-24-ask-hero-sheen-sheet.png"
+    },
+    {
+      "do": "Keep the pointer there: the pill stays pinker and brighter, and the sheen does not come back.",
+      "shot": "2026-10-24-ask-hero-hovered-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Ask: the Ask box opens and the pill stays coloured, pressed in, its bloom tucked.",
+      "shot": "2026-10-24-ask-hero-open-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Escape and compare the pill with the design.",
+      "shot": "2026-10-24-ask-hero-side-by-side.png"
+    },
+    {
+      "do": "Open a video: Ask drops its key and sits the usual gap from View and Edit."
+    }
+  ],
+  "evaluate": [
+    "Does Ask now read as the one control up there that is different in kind, without shouting?",
+    "Is the sheen the right speed and brightness, or would you want it softer?",
+    "Does the violet bloom under the pill look right on your title bar, or does it smudge the panel below it?",
+    "Is 24 points tall right in a 28 point title bar, or should it be the design's 28?"
+  ],
+  "measured": [
+    "Pill colours, live capture converted to sRGB, 5pt in from each end at mid height: left #7C88FF, right #BD70FE. The design's 120 degree line puts #7887FF and #BB70FF there (12% and 88% of the way from #6E8BFF to #C56CFF), so both ends are within 4 of the design in every channel. The old pill measured #202429 at both ends.",
+    "Word contrast on the live pill (white on the colour behind it, sRGB): Ask 3.0:1 at rest, 2.9:1 hovered and open; the key 3.0:1 at rest, 2.7:1 hovered and open, where it sits on the pink end. The app's legibility check passes all seven poses (white on a vivid colour of another family needs 2:1).",
+    "Sheen: the frame 0.10s into the hover differs from the settled hover by a mean of 7.9 / 16.6 / 0.2 per channel over the pill; the old button had no sweep at all (0). Rest against settled hover: about 33 / 9 / 11.",
+    "Size: 87 by 24 points, measured from its own words and sparkle. Your design picture measures 85.5 by 24 points; the old pill was a typed-in 76 wide."
+  ],
+  "reel": [
+    "2026-10-24-ask-hero-sheen.mp4",
+    "2026-10-24-ask-hero-sheen.gif",
+    "2026-10-24-ask-hero-sheen-sheet.png",
+    "2026-10-24-ask-hero-poses.png"
+  ],
+  "rough": [
+    "The reel and the sheen contact sheet are the shipped drawing rendered offscreen at every 60th of a second, not a film of the window: the walk's film steps leave the title bar out and a snapshot lands after the 0.66s sweep has ended. The walk does prove the pointer reaches the button's hover.",
+    "Chose 24 points tall over the mock CSS's 28px (lang-frame.html, .askbtn) because your design picture of 2026-10-24 measures 24 points tall (171 by 48 pixels at 2x) and the app's title bar is itself 28 points; the panel toggle beside it is 24 too.",
+    "The key is full white, a lighter weight and a size smaller than the word, where the mock's .kbd is 70% white: at 70% it takes on the pink behind it and fails the app's legibility check. Settled by your call on 2026-09-30 (never white on white, legible always).",
+    "The bloom spills past the title bar onto whatever is under it, as the design draws it; on a video in Edit, where Ask already sits over the panel, it tints the panel's top row a little. That overlap is on-a-video-the-ask-button-never-sits-on-top-of-t.",
+    "Keyboard focus draws the violet ring (see the poses sheet), but a title bar button only takes focus with Full Keyboard Access on, so it was checked on the drawing, not live.",
+    "The Ask box's own send button stays the system's blue button: the design allows one hero per surface, and the title bar's is the one that opens the agent.",
+    "The sparkle matches the mock: one large and one small four point star, drawn from the mock's own ic-sparkle outline (the old button used the system's three star symbol)."
+  ]
+}

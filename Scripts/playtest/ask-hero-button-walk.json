@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/ask-hero-button-walk",
+  "clock": 90,
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "control": "Ask", "present": true },
+    { "do": "describe", "stage": "1-rest", "note": "the title bar's Ask button at rest: the blue to violet hero pill with a violet bloom under it" },
+    { "do": "snapshot", "name": "1-rest" },
+    { "do": "move", "control": "Ask" },
+    { "do": "snapshot", "name": "2-hover-sweep" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "describe", "stage": "3-hovered", "note": "the pointer on Ask: the wider blue, violet, pink spectrum, a brighter gloss and a bigger bloom; the sheen has passed" },
+    { "do": "snapshot", "name": "3-hovered" },
+    { "do": "move", "at": [400, 400] },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-open", "note": "Ask pressed and its composer up: the pill stays coloured, held down, its bloom tucked in" },
+    { "do": "snapshot", "name": "4-open" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Ask", "present": true }
+  ]
+}

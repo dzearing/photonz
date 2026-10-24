@@ -335,8 +335,35 @@ enum LegibilityCatalogue {
 
     // MARK: - Tooltips, toasts, badges
 
+    /// Ask's hero pill in the title bar: white words on its own opaque
+    /// spectrum, in every pose, the key's 85% white included.
+    private static var hero: [Specimen] {
+        let name = "Ask hero button"
+        func ask(open: Bool = false, pointer: Kit.ShownPointer = .live) -> AnyView {
+            AnyView(Button {} label: { AskTitlebarButton.label(showsKey: true) }
+                .buttonStyle(HeroButtonStyle(isOpen: open, height: AskTitlebarButton.height))
+                .environment(\.shownPointer, pointer))
+        }
+        var all = pointers.map { state, pointer in
+            Specimen(control: name, state: state, ground: .anything, inks: 3) { ask(pointer: pointer) }
+        }
+        all.append(Specimen(control: name, state: "open", ground: .anything, inks: 3) { ask(open: true) })
+        all.append(Specimen(control: name, state: "open, hovered", ground: .anything, inks: 3) {
+            ask(open: true, pointer: .hovered) })
+        all.append(Specimen(control: name, state: "focused", ground: .anything, inks: 3) {
+            AnyView(HeroButtonFace(label: AskTitlebarButton.label(showsKey: true),
+                                   look: HeroButtonLook(pose: .rest), height: AskTitlebarButton.height,
+                                   focused: true))
+        })
+        all.append(Specimen(control: name, state: "on a video, no key", ground: .anything, inks: 2) {
+            AnyView(Button {} label: { AskTitlebarButton.label(showsKey: false) }
+                .buttonStyle(HeroButtonStyle(height: AskTitlebarButton.height)))
+        })
+        return all
+    }
+
     private static var overlays: [Specimen] {
-        [
+        hero + [
             Specimen(control: "Tooltip", state: "label and key", ground: .own, inks: 2) {
                 AnyView(HintTooltipView(label: "Blade", key: "B", side: .top, beakX: 30).fixedSize())
             },

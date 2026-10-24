@@ -15,6 +15,9 @@ struct PhotonzApp: App {
         // `swift build && .build/debug/Photonz --legibility-sheet`: draws every
         // shared control, measures its words and exits (`LegibilitySheet`).
         LegibilitySheet.runIfAsked()
+        // `.build/debug/Photonz --hero-reel`: films the hero button's sheen
+        // from its shipped drawing and exits (`HeroReel`).
+        HeroReel.runIfAsked()
         #endif
         #if PHOTONZ_PLAYTEST
         // Before anything reads a feature flag, and before the menu bar exists:

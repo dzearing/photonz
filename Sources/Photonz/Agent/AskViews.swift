@@ -8,38 +8,91 @@ import SwiftUI
 // No model is chosen anywhere here: that lives in Settings (the user,
 // 2026-10-19).
 
-/// The title bar's Ask button, the mock's `.askbtn`: sparkle, Ask, and the key.
+/// The title bar's Ask button, the mock's `.askbtn`: sparkle, Ask, and the
+/// key, on the design's hero button (`HeroButtonStyle`), the one control in
+/// the title bar that opens the agent rather than running a command.
 struct AskTitlebarButton: View {
     @Environment(EditorState.self) private var editorState
 
-    static let width: CGFloat = 76
+    static let height: CGFloat = 24
+    private static let sparkleSize: CGFloat = 14
+    private static let wordSize: CGFloat = 12
+    private static let keySize: CGFloat = 10.5
+    private static let spacing: CGFloat = 5
+    private static let padding: CGFloat = 12
+
+    /// The widest it is drawn, with the key, so the title bar's box (fixed
+    /// between documents, `TitlebarPanelToggle.boxWidth`) always holds it
+    /// whole. Measured from the words and the symbol, never typed in: the old
+    /// typed-in 76 cut the pill to a width its words did not choose.
+    @MainActor static let width: CGFloat = {
+        func wide(_ text: String, _ font: NSFont) -> CGFloat {
+            (text as NSString).size(withAttributes: [.font: font]).width
+        }
+        let content = sparkleSize
+            + wide(AskCopy.button, .systemFont(ofSize: wordSize, weight: .semibold))
+            + wide("⌘K", .systemFont(ofSize: keySize, weight: .regular))
+            + spacing * 2
+        return ceil(content + padding * 2) + 2
+    }()
+
+    /// Sparkle, Ask and, where it is Ask's, the key. The legibility check
+    /// draws this same label on the same style.
+    static func label(showsKey: Bool) -> some View {
+        HStack(spacing: spacing) {
+            AskSparkle()
+                .frame(width: sparkleSize, height: sparkleSize)
+                .measuredInk()
+            Text(AskCopy.button)
+                .font(.system(size: wordSize, weight: .semibold))
+            if showsKey {
+                // Quieter than the word by size and weight, never by fading:
+                // the design's 70% white takes on the pink behind it and reads
+                // as one colour with it (`LegibilitySheet`, 2026-10-24).
+                Text("⌘K")
+                    .font(.system(size: keySize, weight: .regular))
+            }
+        }
+        .fixedSize()
+    }
 
     var body: some View {
         let ask = editorState.ask
         Button {
             ask.isComposerShown ? ask.closeComposer() : ask.summon(in: editorState)
         } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 11, weight: .semibold))
-                Text(AskCopy.button)
-                    .font(.system(size: 12, weight: .medium))
-                // Only where ⌘K is Ask: on a video it is Premiere's Add Edit.
-                if !editorState.documentHasTime {
-                    Text("⌘K")
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.horizontal, 8)
-            .frame(height: 22)
-            .contentShape(.capsule)
+            // Only where ⌘K is Ask: on a video it is Premiere's Add Edit.
+            Self.label(showsKey: !editorState.documentHasTime)
         }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .capsule)
-        .frame(width: Self.width, height: TitlebarPanelToggle.barHeight)
+        .buttonStyle(HeroButtonStyle(isOpen: ask.isComposerShown, height: Self.height, padding: Self.padding))
+        .focusEffectDisabled()
         .toolTip(AskCopy.buttonTooltip, key: editorState.documentHasTime ? nil : "⌘K", below: true)
         .playtestControl("Ask", detail: "the title bar's Ask button")
+        // Its own width, not the box's: on a video, without the key, it sits
+        // the usual gap from View | Edit and the spare room is on its left.
+        .frame(height: TitlebarPanelToggle.barHeight)
+    }
+}
+
+/// The design's sparkle (`ic-sparkle` in the mocks' icon set): one large four
+/// pointed star and a small one off its lower right, filled. Drawn from the
+/// design's own 24 point outline, scaled to the frame it is given.
+struct AskSparkle: Shape {
+    func path(in rect: CGRect) -> Path {
+        func star(_ center: CGPoint, reach: CGFloat, waist: CGFloat) -> [CGPoint] {
+            [CGPoint(x: center.x, y: center.y - reach), CGPoint(x: center.x + waist, y: center.y - waist),
+             CGPoint(x: center.x + reach, y: center.y), CGPoint(x: center.x + waist, y: center.y + waist),
+             CGPoint(x: center.x, y: center.y + reach), CGPoint(x: center.x - waist, y: center.y + waist),
+             CGPoint(x: center.x - reach, y: center.y), CGPoint(x: center.x - waist, y: center.y - waist)]
+        }
+        let scale = min(rect.width, rect.height) / 24
+        var path = Path()
+        for points in [star(CGPoint(x: 12, y: 10.75), reach: 7.95, waist: 2.05),
+                       star(CGPoint(x: 18.8, y: 18.4), reach: 3.2, waist: 0.85)] {
+            path.addLines(points.map { CGPoint(x: rect.minX + $0.x * scale, y: rect.minY + $0.y * scale) })
+            path.closeSubpath()
+        }
+        return path
     }
 }
 

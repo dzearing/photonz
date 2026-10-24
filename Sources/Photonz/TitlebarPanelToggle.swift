@@ -101,6 +101,21 @@ struct TitlebarPanelToggleInstaller: NSViewRepresentable {
             controller.fullScreenMinHeight = 0
             window.addTitlebarAccessoryViewController(controller)
             accessory = controller
+            letBloomSpill()
+        }
+
+        /// Ask's violet bloom falls below and beside its pill, past the
+        /// accessory's box and the title bar's bottom edge, the way the design
+        /// draws it over whatever is beneath. Every view from the hosting view
+        /// up to the title bar's own container would otherwise cut it into a
+        /// hard rectangle. Only drawing is let out: clicks still stop at each
+        /// view's bounds.
+        private func letBloomSpill() {
+            var view: NSView? = accessoryView.subviews.first
+            while let current = view, current !== window?.contentView?.superview {
+                current.clipsToBounds = false
+                view = current.superview
+            }
         }
 
         /// Makes room for View | Edit to the toggle's left, or gives it back.
