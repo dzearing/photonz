@@ -165,8 +165,30 @@
   #lang-selection .selwrap.lx-on .handle.ml,#lang-selection .selwrap.lx-on .handle.mr{width:8px;height:18px;border-radius:4px;cursor:grab}
   #lang-selection .selwrap.lx-on .handle.ml{left:-4.5px}#lang-selection .selwrap.lx-on .handle.mr{right:-4.5px}
   #lang-selection .selwrap.lx-on .handle.lx-drag{background:var(--accent);cursor:grabbing}
+  /* depth grips: a round chip on each corner carrying an in-and-out arrow along the diagonal, so it reads as "pull out, push in", not "resize" */
   #lang-selection .selwrap.lx-on .handle.tl,#lang-selection .selwrap.lx-on .handle.tr,
-  #lang-selection .selwrap.lx-on .handle.bl,#lang-selection .selwrap.lx-on .handle.br{border-radius:50%;cursor:zoom-in}
+  #lang-selection .selwrap.lx-on .handle.bl,#lang-selection .selwrap.lx-on .handle.br{width:16px;height:16px;border-radius:50%;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);display:grid;place-items:center}
+  #lang-selection .selwrap.lx-on .handle.tl,#lang-selection .selwrap.lx-on .handle.br{cursor:nwse-resize}
+  #lang-selection .selwrap.lx-on .handle.tr,#lang-selection .selwrap.lx-on .handle.bl{cursor:nesw-resize}
+  #lang-selection .selwrap.lx-on .handle.tl{top:-8.5px;left:-8.5px}#lang-selection .selwrap.lx-on .handle.tr{top:-8.5px;right:-8.5px}
+  #lang-selection .selwrap.lx-on .handle.bl{bottom:-8.5px;left:-8.5px}#lang-selection .selwrap.lx-on .handle.br{bottom:-8.5px;right:-8.5px}
+  #lang-selection .selwrap.lx-on .handle.tl::after,#lang-selection .selwrap.lx-on .handle.tr::after,
+  #lang-selection .selwrap.lx-on .handle.bl::after,#lang-selection .selwrap.lx-on .handle.br::after{content:"";width:10px;height:10px;background:var(--accent);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 2 8 8M2 2v3M2 2h3M8 8V5M8 8H5' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 2 8 8M2 2v3M2 2h3M8 8V5M8 8H5' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat}
+  #lang-selection .selwrap.lx-on .handle.tr::after,#lang-selection .selwrap.lx-on .handle.bl::after{transform:scaleX(-1)}
+  #lang-selection .selwrap.lx-on .handle.lx-drag::after{background:var(--accent-ink)}
+  /* depth cues: a dashed outline stays where the card sat (Z 0) and the shadow grows as it comes forward */
+  #lang-selection .lx-home{display:none;position:absolute;inset:0;border:1px dashed var(--accent);border-radius:inherit;opacity:.55;
+    transform:translateZ(calc(-1 * var(--tz,0px)));pointer-events:none}
+  #lang-selection .selwrap.lx-on .lx-home{display:block}
+  /* box-shadow, not filter: a filter would flatten the 3D and pin the outline to the card */
+  #lang-selection .selwrap.lx-on{box-shadow:0 calc(var(--lift,0) * 30px) calc(8px + var(--lift,0) * 40px) rgba(0,0,0,calc(.15 + var(--lift,0) * .4))}
+  /* the first-use hint, under the tag and clear of every grip; gone after the first drag */
+  #lang-selection .lx-hint{display:none;position:absolute;left:50%;bottom:-56px;transform:translateX(-50%);white-space:nowrap;
+    font-size:10.5px;color:var(--text-2,#b8bccb);background:var(--panel);border:1px solid var(--edge-lo);border-radius:6px;padding:3px 8px;pointer-events:none}
+  #lang-selection .selwrap.lx-on:not(.lx-used) .lx-hint{display:block}
 </style>
 </head>
 <body class="page">
@@ -233,6 +255,7 @@
                   <span class="mtag" id="lxHeroTag">Hero card · 400 × 268</span>
                   <!-- the 3D chip: click it, then the edge pills turn the card and the corners move it along Z -->
                   <button class="lx-3d" id="lxHero3d" type="button" title="Turn in 3D" aria-pressed="false"><svg viewBox="0 0 12 12" width="14" height="14" aria-hidden="true"><path d="M6 1.2 10.4 3.6v4.8L6 10.8 1.6 8.4V3.6Z M1.6 3.6 6 6l4.4-2.4M6 6v4.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></button>
+                  <span class="lx-home" aria-hidden="true"></span><span class="lx-hint">Edges turn it · drag a corner out to pull it forward, in to push it back</span>
                                   </div>
               </div>
 
@@ -905,12 +928,16 @@
   var wrap = chip.parentElement, tag = document.getElementById('lxHeroTag');
   var rx = 8, ry = -18, tz = 0, P = 900;
   function paint() {
-    wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg'); wrap.style.setProperty('--tz', tz + 'px');
+    wrap.style.setProperty('--rx', rx + 'deg'); wrap.style.setProperty('--ry', ry + 'deg'); wrap.style.setProperty('--tz', tz + 'px'); wrap.style.setProperty('--lift', Math.max(0, Math.min(1, (tz + 600) / 1050)).toFixed(3));
     if (tag) tag.textContent = wrap.classList.contains('lx-on')
-      ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '° · Z ' + Math.round(tz)
+      ? 'Hero card · X ' + Math.round(rx) + '° · Y ' + Math.round(ry) + '° · ' + (Math.round(tz) === 0 ? 'in place' : Math.abs(Math.round(tz)) + (tz > 0 ? ' forward' : ' back'))
       : 'Hero card · 400 × 268';
   }
-  function set(on) { wrap.classList.toggle('lx-on', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); paint(); }
+  var tips = { tc: 'Drag to tip it', bc: 'Drag to tip it', ml: 'Drag to turn it', mr: 'Drag to turn it',
+    tl: 'Drag out to pull it forward, in to push it back', tr: 'Drag out to pull it forward, in to push it back',
+    bl: 'Drag out to pull it forward, in to push it back', br: 'Drag out to pull it forward, in to push it back' };
+  function set(on) { Object.keys(tips).forEach(function (k) { var h = wrap.querySelector(':scope > .handle.' + k); if (h) { if (on) h.title = tips[k]; else h.removeAttribute('title'); } });
+    wrap.classList.toggle('lx-on', on); chip.setAttribute('aria-pressed', on ? 'true' : 'false'); paint(); }
   chip.addEventListener('click', function (e) { e.stopPropagation(); set(!wrap.classList.contains('lx-on')); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
   var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
@@ -919,7 +946,7 @@
     el.addEventListener('pointerdown', function (e) {
       if (!wrap.classList.contains('lx-on')) return;
       e.preventDefault(); e.stopPropagation(); el.setPointerCapture(e.pointerId);
-      el.classList.add('lx-drag'); wrap.classList.add('lx-busy');
+      el.classList.add('lx-drag'); wrap.classList.add('lx-busy', 'lx-used');
       var r = wrap.getBoundingClientRect();
       var start = { x: e.clientX, y: e.clientY, rx: rx, ry: ry, tz: tz, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
       start.d = Math.hypot(e.clientX - start.cx, e.clientY - start.cy) || 1;
