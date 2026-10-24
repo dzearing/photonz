@@ -406,11 +406,11 @@ struct AgentComponentTests {
 
     @Test("Words longer than the box they sit in are refused, so they never run past the component's edge")
     func wordsPastTheirBox() throws {
-        func card(_ words: String, width: Int) -> String {
+        func card(_ words: String, width: Int, height: Int = 24) -> String {
             ##"""
             {"name": "Card", "x": 0, "y": 0, "labels": false, "firstLook": "Default",
              "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 200, "height": 120},
-                       {"name": "Body", "shape": "text", "text": "\##(words)", "fontSize": 15, "x": 16, "y": 40, "width": \##(width), "height": 24}],
+                       {"name": "Body", "shape": "text", "text": "\##(words)", "fontSize": 15, "x": 16, "y": 40, "width": \##(width), "height": \##(height)}],
              "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#F2F2F7"}]}]}
             """##
         }
@@ -419,6 +419,12 @@ struct AgentComponentTests {
         }
         #expect(long.message.contains("Body"), "\(long.message)")
         #expect(throws: Never.self) { _ = try Self.request(card("Card body text", width: 168)).get() }
+        // A box tall enough for three lines wraps the words onto them (the
+        // eval, 2026-10-24: a card's body in a 64 point box refused twelve
+        // times as one line, and the sheet lost its card).
+        #expect(throws: Never.self) {
+            _ = try Self.request(card("Card body text goes here with description.", width: 168, height: 64)).get()
+        }
         // A box of no width is no box: the words sit from its left edge, and
         // these run on past the card's.
         guard case .failure(let past) = try Self.request(card("Card body text goes here with description.", width: 0)) else {

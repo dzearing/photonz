@@ -135,14 +135,21 @@ struct AskPlanningTests {
             """)
     }
 
-    @Test("Labelled components line up as one sheet: the first one's x, one column step that fits the canvas")
+    @Test("Labelled components line up as one sheet: the first one's x, no nearer the edge than the page margin, one column step that fits the canvas")
     func sheetLinesUp() throws {
         var talk = Self.sheet()
-        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        _ = talk.take(try Self.reply([Self.component("Button", x: 80, y: 100, width: 120)]))
         _ = talk.take(try Self.reply([Self.component("Field", x: 300, y: 200, width: 200)]))
         _ = talk.take(try Self.reply([Self.component("Loose", x: 900, y: 300, width: 60, labels: false)]))
         let args = talk.steps.map(\.arguments)
-        #expect(args.map { $0["x"]?.doubleValue } == [40, 40, 900])
+        #expect(args.map { $0["x"]?.doubleValue } == [80, 80, 900])
+        // A sheet and its title set at 40 start on the page margin instead:
+        // judges read 40 as "the right column nearly touches the edge"
+        // (the eval, 2026-10-24).
+        var tight = Self.sheet()
+        _ = tight.take(try Self.reply([("add_text", #"{"text":"Base Components","x":40,"y":40,"fontSize":32}"#)]))
+        _ = tight.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        #expect(tight.steps.map { $0.arguments["x"]?.doubleValue } == [64, 64])
         // Rows stack straight under one another: 32 tall, 25 for the state names, 24 apart.
         #expect(args.map { $0["y"]?.doubleValue } == [100, 181, 300])
         #expect(args[0]["step"]?.doubleValue == 224 && args[1]["step"]?.doubleValue == 224,

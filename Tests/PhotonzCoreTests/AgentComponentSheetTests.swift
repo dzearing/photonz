@@ -438,6 +438,10 @@ struct AgentComponentSheetTests {
         #expect(selected.count == 2, "\(selected.count)")
         let nearest = selected.map { cardTop - $0.frame.maxY }.filter { $0 > 0 }.min() ?? .infinity
         #expect(nearest == AgentNewComponent.headerGap, "\(nearest)")
+        // A tall row under another tall row gets it too (judges, 2026-10-24,
+        // of cards under a footer: "the cards have no state labels").
+        _ = try Self.add(Self.row("Panel", y: 500, width: 160, height: 120, looks: looks), to: &document)
+        #expect(Self.words(in: document).filter { $0.text?.string == "Selected" }.count == 3)
     }
 
     @Test("In a section, the shorter rows sit nearest its header row and the tall ones under them")

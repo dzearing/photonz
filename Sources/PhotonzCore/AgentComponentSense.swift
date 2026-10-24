@@ -141,6 +141,63 @@ extension AgentNewComponent {
         return out
     }
 
+    /// An On look that reads as Off, set right: a mark held still inside
+    /// the control's box in both looks (a radio's dot, a switch's knob) is
+    /// hidden in Off when the box is round or square, and moved to the far
+    /// end in On when the box is a long pill, as a person would on any such
+    /// control. A mark that moves or hides between the two is left as drawn.
+    static func onIsNotOff(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
+        let names = found.looks.map { $0.name.trimmingCharacters(in: .whitespaces).lowercased() }
+        guard let off = names.firstIndex(where: offNames.contains),
+              let on = names.firstIndex(where: onNames.contains) else { return args }
+        let onLooks = names.indices.filter { index in
+            index != off && !stateWords(names[index]).filter(onNames.contains).isEmpty
+        }
+        let offShown = found.inLook(found.looks[off]), onShown = found.inLook(found.looks[on])
+        func area(_ rect: CGRect) -> CGFloat { rect.width * rect.height }
+        let shapes = offShown.parts.indices.filter { index in
+            if case .shape = offShown.parts[index].kind { return !offShown.parts[index].hidden } else { return false }
+        }
+        guard let box = shapes.max(by: { area(offShown.parts[$0].frame) < area(offShown.parts[$1].frame) }) else { return args }
+        let frame = offShown.parts[box].frame
+        guard frame.width > 0, frame.height > 0 else { return args }
+        let marks = shapes.filter { index in
+            let mark = offShown.parts[index]
+            return index != box && area(mark.frame) * 2 <= area(frame) && frame.insetBy(dx: -1, dy: -1).contains(mark.frame)
+                && !onShown.parts[index].hidden && onShown.parts[index].frame == mark.frame
+                && mark.look.fill?.hexValue != nil
+        }
+        var out = args
+        var looks = out["looks"]?.arrayValue ?? []
+        for index in marks {
+            let mark = offShown.parts[index]
+            if frame.width <= frame.height * 1.3 {
+                if off == 0 {
+                    guard var parts = out["parts"]?.arrayValue,
+                          let at = parts.firstIndex(where: { ($0["name"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces) == mark.name }),
+                          var object = parts[at].objectValue else { continue }
+                    object["visible"] = false
+                    parts[at] = .object(object)
+                    out["parts"] = .array(parts)
+                    for look in onLooks where look > 0 && look - 1 < looks.count {
+                        looks[look - 1] = setting("visible", true, on: mark.name, in: looks[look - 1])
+                    }
+                } else if off - 1 < looks.count {
+                    looks[off - 1] = setting("visible", false, on: mark.name, in: looks[off - 1])
+                }
+            } else if frame.width >= frame.height * 1.5 {
+                let across = frame.maxX - (mark.frame.minX - frame.minX) - mark.frame.width
+                guard abs(across - mark.frame.minX) > 2 else { continue }
+                for look in onLooks where look > 0 && look - 1 < looks.count
+                    && found.inLook(found.looks[look]).parts[index].frame == mark.frame {
+                    looks[look - 1] = setting("x", .number(Double(across)), on: mark.name, in: looks[look - 1])
+                }
+            }
+        }
+        if !looks.isEmpty { out["looks"] = .array(looks) }
+        return out
+    }
+
     /// The room a box keeps round what it holds, when nothing it holds
     /// says otherwise, and the least and most it is taken as.
     static let heldRoom: ClosedRange<CGFloat> = 8...24
@@ -244,6 +301,7 @@ extension AgentNewComponent {
         for step in [{ (args: [String: AgentJSON]) in onTypeScale(args) },
                      { args in built(args).map { heldInside(args, $0) } ?? args },
                      { args in built(args).map { offLooksOff(args, $0) } ?? args },
+                     { args in built(args).map { onIsNotOff(args, $0) } ?? args },
                      { args in built(args).map { disabledLooksDisabled(args, $0) } ?? args }] {
             let before = built(out)?.problem
             let next = step(out)

@@ -390,14 +390,15 @@ extension PhotonzDocument {
             func band(_ index: Int) -> CGFloat { max(sizes[index].map(\.height).max() ?? 0, AgentNewComponent.rowHeight) }
             let ordered = zip(section.rows, section.cells).enumerated()
                 .sorted { (band($0.element.0), $0.offset) < (band($1.element.0), $1.offset) }.map(\.element)
-            // A tall row (cards) under short ones gets the header row again
-            // right above it: three judges of three, 2026-10-24, read cards
-            // under a row of links as "borrowing the nav column headers".
+            // A tall row (cards) under any other row gets the header row
+            // again right above it: three judges of three, 2026-10-24, read
+            // cards under a row of links as "borrowing the nav column
+            // headers", and cards under a footer as having "no state labels".
             var previous: CGFloat?
             for (index, cells) in ordered {
                 let row = rows[index]
                 let band = band(index)
-                if let previous, previous <= Self.tallRow, band > Self.tallRow {
+                if previous != nil, band > Self.tallRow {
                     y = (bottom + AgentNewComponent.sectionGap).rounded()
                     headerRow()
                 }

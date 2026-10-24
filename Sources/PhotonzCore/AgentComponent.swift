@@ -154,8 +154,10 @@ public struct AgentNewComponent: Hashable, Sendable {
         }
         for part in parts where part.kind == .text && part.centerIn == nil && part.frame.width > 0 {
             let size = part.fontSize ?? 15
+            // As many lines as the box is tall: words wrap at its width.
+            let lines = max(1, (part.frame.height / (size * Self.lineHeight)).rounded(.down))
             // Generous, so tight labels pass: a letter is about half the size wide.
-            if CGFloat((part.text ?? "").count) * size * Self.letterWidth > part.frame.width * 1.15 {
+            if CGFloat((part.text ?? "").count) * size * Self.letterWidth > part.frame.width * 1.15 * lines {
                 return "\(part.name)'s words are longer than its box, \(Int(part.frame.width)) wide, and would run past it. Make the box wider or the words shorter."
             }
         }
@@ -214,6 +216,8 @@ extension AgentNewComponent {
     /// title and body both centred in the card came out one on the other
     /// (the eval, 2026-10-23).
     static let letterWidth: CGFloat = 0.5
+    /// A line of words is about this many sizes tall.
+    static let lineHeight: CGFloat = 1.3
 
     /// Words are sized a little wider when looking for words on words:
     /// "← Back" and a centred "Navigation" in a 200 point bar measured 4
@@ -295,9 +299,11 @@ extension AgentNewComponent {
     func wordsSpot(_ part: AgentComponentPart, letterWidth: CGFloat = letterWidth) -> CGRect? {
         guard part.kind == .text, !part.hidden, let words = part.text, !words.isEmpty else { return nil }
         let size = part.fontSize ?? 15
-        let width = min(CGFloat(words.count) * size * letterWidth,
-                        part.frame.width > 0 ? part.frame.width : .greatestFiniteMagnitude)
-        let height = size * 1.5
+        let natural = CGFloat(words.count) * size * letterWidth
+        let width = min(natural, part.frame.width > 0 ? part.frame.width : .greatestFiniteMagnitude)
+        // Words wider than their box wrap onto more lines.
+        let lines = width > 0 ? (natural / (width * 1.15)).rounded(.up) : 1
+        let height = max(size * 1.5, size * Self.lineHeight * lines)
         if let target = part.centerIn, let box = parts.first(where: { $0.name == target })?.frame {
             return CGRect(x: box.midX - width / 2, y: box.midY - height / 2, width: width, height: height)
         }

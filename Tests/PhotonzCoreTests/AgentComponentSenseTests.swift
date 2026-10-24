@@ -156,6 +156,37 @@ struct AgentComponentSenseTests {
         }
     }
 
+    @Test("An Off radio drawn with its dot shows none, and an On switch drawn with its knob still at the off end has it moved over")
+    func onIsNotOff() throws {
+        // The eval, 2026-10-24: "the Off radio is already selected", "the On
+        // toggle keeps its knob on the left".
+        let radio = try Self.plain(##"""
+            {"name": "Radio", "x": 40, "y": 600, "labels": true, "firstLook": "Off",
+             "parts": [{"name": "Ring", "shape": "ellipse", "x": 0, "y": 0, "width": 20, "height": 20, "fill": "#FFFFFF", "stroke": "#C7C7CC", "strokeWidth": 1},
+                       {"name": "Dot", "shape": "ellipse", "x": 6, "y": 6, "width": 8, "height": 8, "fill": "#007AFF"}],
+             "looks": [{"name": "On", "changes": [{"part": "Ring", "stroke": "#007AFF"}]}]}
+            """##)
+        #expect(Self.part("Dot", in: radio, look: "Off")?.hidden == true)
+        #expect(Self.part("Dot", in: radio, look: "On")?.hidden == false)
+        let toggle = try Self.plain(##"""
+            {"name": "Toggle", "x": 40, "y": 600, "labels": true, "firstLook": "Off",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 0, "width": 51, "height": 31, "cornerRadius": 15.5, "fill": "#E9E9EA"},
+                       {"name": "Knob", "shape": "ellipse", "x": 2, "y": 2, "width": 27, "height": 27, "fill": "#FFFFFF"}],
+             "looks": [{"name": "On", "changes": [{"part": "Track", "fill": "#34C759"}]}]}
+            """##)
+        #expect(Self.part("Knob", in: toggle, look: "Off")?.frame.minX == 2)
+        #expect(Self.part("Knob", in: toggle, look: "On")?.frame.minX == 22)
+        #expect(Self.part("Knob", in: toggle, look: "On")?.hidden == false, "a knob is moved, never hidden")
+        // A knob the model already moved is left where it put it.
+        let moved = try Self.plain(##"""
+            {"name": "Toggle", "x": 40, "y": 600, "labels": true, "firstLook": "Off",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 0, "width": 51, "height": 31, "fill": "#E9E9EA"},
+                       {"name": "Knob", "shape": "ellipse", "x": 2, "y": 2, "width": 27, "height": 27, "fill": "#FFFFFF"}],
+             "looks": [{"name": "On", "changes": [{"part": "Track", "fill": "#34C759"}, {"part": "Knob", "x": 21}]}]}
+            """##)
+        #expect(Self.part("Knob", in: moved, look: "On")?.frame.minX == 21)
+    }
+
     @Test("A Disabled look whose words stand out more than Default's is dimmed, and still reads")
     func disabledIsDimmer() throws {
         let spec = try Self.plain(##"""

@@ -548,9 +548,24 @@ public struct AskConversation: Sendable {
     /// (the widest look plus the gap), so each state sits in a column. A
     /// small model planning blind gives each its own x and step, and the rows
     /// came out staggered (2026-10-23).
+    /// The least room a sheet leaves at the page's left edge, and so at its right.
+    static let sheetMargin = 64.0
+
     mutating func alignSheet() {
         let rows = steps.indices.filter { steps[$0].tool == "add_component" && steps[$0].arguments["labels"]?.boolValue == true }
-        guard let first = rows.first, let x = steps[first].arguments["x"]?.doubleValue else { return }
+        guard let first = rows.first, let asked = steps[first].arguments["x"]?.doubleValue else { return }
+        // No nearer the page's edge than its margin, the title over it too:
+        // at 40 every judge read the last column as nearly touching the
+        // right edge (the eval, 2026-10-24).
+        let x = max(asked, Self.sheetMargin)
+        let top = steps[first].arguments["y"]?.doubleValue ?? 0
+        for index in steps.indices where steps[index].tool == "add_text" && index < first {
+            guard var arguments = steps[index].arguments.objectValue,
+                  let at = arguments["x"]?.doubleValue, at < Self.sheetMargin,
+                  (arguments["y"]?.doubleValue ?? 0) < top else { continue }
+            arguments["x"] = .number(Self.sheetMargin)
+            steps[index] = AskStep(tool: "add_text", arguments: .object(arguments))
+        }
         func width(_ arguments: AgentJSON) -> Double {
             (arguments["parts"]?.arrayValue ?? []).map {
                 ($0["x"]?.doubleValue ?? 0) + ($0["width"]?.doubleValue ?? 0)

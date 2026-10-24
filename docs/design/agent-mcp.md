@@ -372,7 +372,7 @@ states shared a header). Sections stand 56 apart, rows 32 apart, every row at
 least 44 tall with its looks centred in it so small controls keep the rhythm
 of buttons, and within a section the shorter rows come first so none sits far
 from its header under a tall one; a tall row (over 88 points, a card) under
-short ones gets its section's header row again right above it. A state keeps
+any other row gets its section's header row again right above it. A state keeps
 the column an earlier header row gave it when that column is one of its
 section's own, so Focused is not under Pressed in the next section
 (`keepingColumns`). Every look and header starts at its column's left edge,
