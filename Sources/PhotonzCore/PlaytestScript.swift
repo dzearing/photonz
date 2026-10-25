@@ -2896,10 +2896,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// picture of everything else, so one that sits under another can be drawn
     /// over it for the whole move and drop back under on the release; only the
     /// held picture against the landed one shows it.
+    ///
+    /// `pause` (seconds) stops the pointer part way along, button still down,
+    /// for that long: `pauseAt` says where, as a share of the travel (half way
+    /// unless said). A hand holding still sends no moves, which is how an
+    /// airbrush held over one spot builds up.
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
               modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
               hold: String?, readout: String?, wobble: CGFloat, cancel: Bool,
-              showsBox: Bool?, expectFresh: Double? = nil, landsAsHeld: Bool = false)
+              showsBox: Bool?, expectFresh: Double? = nil, landsAsHeld: Bool = false,
+              pause: PlaytestDragPause? = nil)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -4879,7 +4885,8 @@ public enum PlaytestStep: Sendable, Equatable {
                          cancel: try f.optionalFlag("cancel") ?? false,
                          showsBox: try f.optionalFlag("showsBox"),
                          expectFresh: try f.optionalNumber("expectFresh"),
-                         landsAsHeld: try f.optionalFlag("landsAsHeld") ?? false)
+                         landsAsHeld: try f.optionalFlag("landsAsHeld") ?? false,
+                         pause: try Self.dragPause(f))
         case "expectFresh":
             self = .expectFresh(percent: try f.optionalNumber("percent") ?? 0.5)
         case "expectReadout":
@@ -6489,6 +6496,20 @@ public enum PlaytestStep: Sendable, Equatable {
         }
     }
 
+    /// A drag's `pause` and `pauseAt`, nil when it does not stop part way.
+    private static func dragPause(_ f: Fields) throws -> PlaytestDragPause? {
+        guard let seconds = try f.optionalNumber("pause") else {
+            if f.has("pauseAt") { throw f.invalid("pauseAt", "says where a \"pause\" happens, so it needs one") }
+            return nil
+        }
+        guard seconds > 0 else { throw f.invalid("pause", "is how long the pointer holds still, so it must be more than 0") }
+        let at = try f.optionalNumber("pauseAt") ?? 0.5
+        guard (0...1).contains(at) else {
+            throw f.invalid("pauseAt", "is the share of the travel to stop at, from 0 (the start) to 1 (the end)")
+        }
+        return PlaytestDragPause(at: at, seconds: seconds)
+    }
+
     /// Typed access to one step's fields, so every problem reports the step,
     /// the field and what was expected.
     private struct Fields {
@@ -6863,6 +6884,18 @@ public struct PlaytestDragWatch: Equatable, Sendable {
         self.seconds = seconds
         self.followsHand = followsHand
         self.landsAsHeld = landsAsHeld
+    }
+}
+
+/// Where a `drag` stops part way with the button still down, and for how
+/// long: `at` is the share of the travel, 0 to 1.
+public struct PlaytestDragPause: Hashable, Sendable {
+    public var at: Double
+    public var seconds: Double
+
+    public init(at: Double, seconds: Double) {
+        self.at = at
+        self.seconds = seconds
     }
 }
 

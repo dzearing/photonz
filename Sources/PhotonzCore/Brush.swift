@@ -345,6 +345,11 @@ public enum BrushPlacement {
         max(0.25, diameter * 0.1)
     }
 
+    /// How often an airbrush held still lays another dab, in milliseconds:
+    /// the spray keeps coming while the trigger is down, so paint builds up
+    /// over one spot the longer the pointer stays there (decision 4).
+    public static let dwellInterval: Double = 25
+
     /// Every dab of a finished stroke. `jitter` moves each dab off the line by
     /// up to that fraction of its radius.
     public static func dabs(for stroke: BrushStroke, jitter: CGFloat = 0) -> [BrushDab] {
@@ -379,11 +384,20 @@ public enum BrushPlacement {
         private var lastMs: Double?
         /// How far along the path the next dab is due, from the last one.
         private var untilNext: CGFloat = 0
+        /// Whether this brush keeps laying dabs while the pointer holds still
+        /// (the airbrush), and, for one that does: where the pointer has been
+        /// staying, when it was last read there, and the time owed toward the
+        /// next dab.
+        let dwells: Bool
+        private var stay: CGPoint?
+        private var stayMs: Double = 0
+        private var dwellOwed: Double = 0
 
         public init(settings: BrushSettings, seed: UInt32, jitter: CGFloat = 0) {
             diameter = CGFloat(settings.size)
             opacity = settings.opacity / 100
             gap = BrushPlacement.spacing(forDiameter: diameter)
+            dwells = settings.medium == .airbrush
             self.jitter = max(0, jitter)
             random = SeededRandom(seed: seed, salt: 0xB2C5)
         }
@@ -391,8 +405,9 @@ public enum BrushPlacement {
         /// Takes the next sample and hands back the dabs it settled.
         public mutating func add(_ sample: StrokeSample) -> [BrushDab] {
             let point = sample.point
+            var dabs = dwells ? held(sample) : []
             // A sample on top of the last one adds nothing to the curve.
-            if let last = points.last, last == point { return [] }
+            if let last = points.last, last == point { return dabs }
             if let last = points.last {
                 let distance = Double(hypot(point.x - last.x, point.y - last.y))
                 travelled += distance
@@ -407,7 +422,6 @@ public enum BrushPlacement {
                                                             diameter: Double(diameter)))
             tilts.append(sample.tilt.map { CGPoint(x: min(1, max(-1, $0.x)), y: min(1, max(-1, $0.y))) }
                          ?? .zero)
-            var dabs: [BrushDab] = []
             if points.count == 1 {
                 dabs.append(dab(at: point, pressure: pressures[0], tilt: tilts[0]))
                 untilNext = gap
@@ -420,6 +434,32 @@ public enum BrushPlacement {
                 points.removeFirst()
                 pressures.removeFirst()
                 tilts.removeFirst()
+            }
+            return dabs
+        }
+
+        /// The dabs a brush that dwells lays while the pointer stays within a
+        /// dab's spacing of where it settled: one every `dwellInterval` of the
+        /// time it has stayed, at the pointer. Moving further away starts a
+        /// new stay, so a steady pass lays only its spaced dabs and a slow one
+        /// a few more, the way an airbrush deposits by time.
+        private mutating func held(_ sample: StrokeSample) -> [BrushDab] {
+            guard let anchor = stay,
+                  hypot(sample.point.x - anchor.x, sample.point.y - anchor.y) < gap else {
+                stay = sample.point
+                stayMs = sample.ms
+                dwellOwed = 0
+                return []
+            }
+            dwellOwed += max(0, sample.ms - stayMs)
+            stayMs = sample.ms
+            var dabs: [BrushDab] = []
+            let press = sample.pressure.map { min(1, max(0, $0)) } ?? pressures.last ?? 0.5
+            let lean = sample.tilt.map { CGPoint(x: min(1, max(-1, $0.x)), y: min(1, max(-1, $0.y))) }
+                ?? tilts.last ?? .zero
+            while dwellOwed >= BrushPlacement.dwellInterval {
+                dwellOwed -= BrushPlacement.dwellInterval
+                dabs.append(dab(at: sample.point, pressure: press, tilt: lean))
             }
             return dabs
         }

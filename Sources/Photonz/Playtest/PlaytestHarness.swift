@@ -1516,7 +1516,8 @@ private final class Run {
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
         case .drag(let from, let to, let steps, let modifiers, let halfway, let hold,
-                   let readout, let wobble, let cancel, let showsBox, let expectFresh, let landsAsHeld):
+                   let readout, let wobble, let cancel, let showsBox, let expectFresh, let landsAsHeld,
+                   let pause):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
@@ -1563,6 +1564,11 @@ private final class Run {
                 guides.record(canvas.liveSnapGuides)
                 gridLines.record(canvas.liveGridSnapLines)
                 await sleep(0.02)
+                // The hand holds still part way, button down: no moves at all
+                // for that long, the way a person keeps an airbrush on a spot.
+                if let pause, i == max(1, min(steps, Int((pause.at * Double(steps)).rounded()))) {
+                    await sleep(pause.seconds)
+                }
                 if expectFresh != nil { freshness.sample(try requireEditor(), moment: "move \(i)") }
                 // Changing your mind half way, with the button still down.
                 // Handed to the canvas the way AppKit hands a key to whatever

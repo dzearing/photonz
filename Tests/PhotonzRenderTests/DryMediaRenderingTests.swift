@@ -125,8 +125,8 @@ struct DryMediaRenderingTests {
 
     @Test("Measured bar: grain leaves gaps inside each dry stroke where the round tip leaves none")
     func interiorGapsBar() throws {
-        // The round soft tip from the foundation slice (still the marker's).
-        let round = try gaps(.marker)
+        // The round soft tip from the foundation slice (still the oil paint's).
+        let round = try gaps(.oil)
         #expect(round < 0.02, "round tip: \(round)")
         for medium in [BrushMedium.charcoal, .chalk, .crayon] {
             let g = try gaps(medium)
@@ -218,9 +218,9 @@ struct DryMediaRenderingTests {
             PaintMeasures.widthWaver(try render([stroke(m, from: line.0, to: line.1, set: ["grain": 0])]),
                                      from: line.0, to: line.1, diameter: 24, scale: 1)
         }
-        let crayon = try waver(.crayon), marker = try waver(.marker)
+        let crayon = try waver(.crayon), round = try waver(.oil)
         #expect(crayon > 0.03, "crayon \(crayon)")
-        #expect(marker < 0.01, "marker \(marker)")
+        #expect(round < 0.01, "round tip \(round)")
     }
 
     @Test("A second crayon pass over the same spot leaves the paper's pits bare")
@@ -234,7 +234,7 @@ struct DryMediaRenderingTests {
         // Wax settles on the same high tooth again: most of the bare pits
         // after one pass are still bare after two.
         #expect(twice > once * 0.5, "\(once) -> \(twice)")
-        let round = stroke(.marker, from: a, to: b, seed: 1)
+        let round = stroke(.oil, from: a, to: b, seed: 1)
         #expect(PaintMeasures.interiorGapFraction(try render([round, round]), from: a, to: b, diameter: 24,
                                                   scale: 1) == 0)
     }
@@ -281,7 +281,7 @@ struct DryMediaRenderingTests {
     // MARK: - Live and landed
 
     @Test("The live stroke, marked a few dabs at a time, is the stroke that lands", arguments: [
-        BrushMedium.pencil, .charcoal, .chalk, .crayon, .marker,
+        BrushMedium.pencil, .charcoal, .chalk, .crayon, .marker, .airbrush,
     ])
     func liveMatchesLanded(_ medium: BrushMedium) throws {
         let s = stroke(medium, from: CGPoint(x: 40, y: 50), to: CGPoint(x: 260, y: 70))

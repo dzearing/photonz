@@ -7,9 +7,11 @@ import PhotonzCore
 ///
 /// Every stroke is replayed in order: its dabs come from `BrushPlacement`
 /// (PhotonzCore), and each medium marks them its own way. Charcoal, chalk and
-/// crayon catch on a paper grain (`DryMedia.swift`); a smudge drags what is
-/// already painted; the media still to come are stamped with one plain round
-/// with a soft edge until their slices give them their own marking here.
+/// crayon catch on a paper grain (`DryMedia.swift`); the marker lays flat ink
+/// multiplied over what is there and the airbrush sprays a cloud that builds
+/// (`MarkerAirbrush.swift`); a smudge drags what is already painted; the media
+/// still to come are stamped with one plain round with a soft edge until their
+/// slices give them their own marking here.
 ///
 /// The live stroke on the canvas marks with `LiveMarker`, which runs the same
 /// code dab for dab, so what lands when the pointer comes up is what was drawn
@@ -49,7 +51,8 @@ public enum PaintRasterizer {
     /// A stroke is as opaque as its Opacity everywhere it covers, however many
     /// of its own dabs overlap: the dabs are marked fully on their own and the
     /// result is laid down at the stroke's opacity. Two separate strokes DO
-    /// build on each other, the way two passes of a brush do.
+    /// build on each other, the way two passes of a brush do. The airbrush is
+    /// the one medium whose own dabs build, as a spray does.
     public static func paint(_ stroke: BrushStroke, in context: CGContext, scale: CGFloat) {
         let dabs = BrushPlacement.dabs(for: stroke, jitter: jitter(for: stroke.settings.medium))
         let toPixels = CGAffineTransform(scaleX: scale, y: scale)
@@ -65,6 +68,24 @@ public enum PaintRasterizer {
             for dab in dabs { _ = dry.mark(dab) }
             dry.composite(into: plane, colour: colour, opacity: Float(stroke.settings.opacity / 100))
             return
+        }
+        switch stroke.settings.medium {
+        case .marker:
+            guard let plane = PixelPlane(context), let colour = RGBA(hex: stroke.colorHex) else { return }
+            var marker = MarkerStroke(settings: stroke.settings, colour: colour, toPixels: toPixels,
+                                      limit: plane.box)
+            for dab in dabs { _ = marker.mark(dab) }
+            marker.composite(into: plane, colour: colour)
+            return
+        case .airbrush:
+            guard let plane = PixelPlane(context), let colour = RGBA(hex: stroke.colorHex) else { return }
+            var spray = AirbrushStroke(settings: stroke.settings, seed: stroke.seed, toPixels: toPixels,
+                                       limit: plane.box)
+            for dab in dabs { _ = spray.mark(dab) }
+            spray.composite(into: plane, colour: colour, opacity: Float(stroke.settings.opacity / 100))
+            return
+        default:
+            break
         }
         guard let tip = Tip(stroke: stroke, scale: scale) else { return }
         context.saveGState()
@@ -89,16 +110,22 @@ public enum PaintRasterizer {
     /// few dabs at a time with the same code that lands it.
     ///
     /// The bitmap holds this stroke alone and is shown at the stroke's
-    /// opacity, except for a smudge, which is shown as it is: what a smudge
-    /// lays over the paint below it, read from `working`, a copy of that paint
-    /// in the bitmap's pixels.
+    /// opacity, except for a smudge and a marker, which are shown as they are
+    /// (`showsAtFullStrength`): what they lay over the paint below them, read
+    /// from `working`, a copy of that paint in the bitmap's pixels. A marker
+    /// with no `working` lands on fresh paper.
     public final class LiveMarker {
         private enum Kind {
             case round(Tip)
             case dry(DryStroke, RGBA)
+            case marker(MarkerStroke, RGBA, under: PixelPlane?)
+            case airbrush(AirbrushStroke, RGBA)
             case smudge(SmudgeStroke, PixelPlane)
         }
 
+        /// Whether the canvas shows the bitmap as it is, rather than at the
+        /// stroke's opacity: it already holds what lands, opacity and all.
+        public let showsAtFullStrength: Bool
         private let bitmap: CGContext
         private let plane: PixelPlane?
         private let pointsToPixels: CGAffineTransform
@@ -119,9 +146,19 @@ public enum PaintRasterizer {
             self.working = working
             plane = PixelPlane(bitmap)
             let limit = PixelBox(clip).intersection(plane?.box ?? .empty)
+            showsAtFullStrength = stroke.settings.mode == .smudge || stroke.settings.medium == .marker
             if stroke.settings.mode == .smudge {
                 guard let working, let read = PixelPlane(working), plane != nil else { return nil }
                 kind = .smudge(SmudgeStroke(settings: stroke.settings, toPixels: pointsToPixels, limit: limit), read)
+            } else if stroke.settings.medium == .marker {
+                guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
+                kind = .marker(MarkerStroke(settings: stroke.settings, colour: colour, toPixels: pointsToPixels,
+                                            limit: limit),
+                               colour, under: working.flatMap { PixelPlane($0) })
+            } else if stroke.settings.medium == .airbrush {
+                guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
+                kind = .airbrush(AirbrushStroke(settings: stroke.settings, seed: stroke.seed,
+                                                toPixels: pointsToPixels, limit: limit), colour)
             } else if let look = DryLook(stroke.settings) {
                 guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
                 kind = .dry(DryStroke(look: look, seed: stroke.seed, toPixels: pointsToPixels, limit: limit),
@@ -151,6 +188,18 @@ public enum PaintRasterizer {
                 for dab in dabs { touched = touched.union(dry.mark(dab)) }
                 dry.replace(touched, in: plane, colour: colour)
                 kind = .dry(dry, colour)
+            case .marker(var marker, let colour, let under):
+                guard let plane else { return }
+                var touched = PixelBox.empty
+                for dab in dabs { touched = touched.union(marker.mark(dab)) }
+                marker.replace(touched, in: plane, under: under, colour: colour)
+                kind = .marker(marker, colour, under: under)
+            case .airbrush(var spray, let colour):
+                guard let plane else { return }
+                var touched = PixelBox.empty
+                for dab in dabs { touched = touched.union(spray.mark(dab)) }
+                spray.replace(touched, in: plane, colour: colour)
+                kind = .airbrush(spray, colour)
             case .smudge(var smudge, let read):
                 guard let plane else { return }
                 for dab in dabs { _ = smudge.mark(dab, target: read, mirror: plane) }

@@ -25,6 +25,79 @@ public enum PaintMeasures {
     /// core to the paper's tooth.
     public static let pencilLightToothBar = 0.3
 
+    /// The marker's bar, read with `flatShare` off a stroke that doubles back
+    /// over itself: a marker lays one even colour edge to edge however often
+    /// it covers the same ground. The round tip's soft edge leaves about half
+    /// its stroke in a fall-off, so it fails.
+    public static let markerFlatBar = 0.9
+
+    /// The airbrush's bar: held still for a second, it leaves at least this
+    /// many times the coverage a steady pass does (`meanAlpha` at each). The
+    /// round tip covers both the same, so it fails.
+    public static let airbrushBuildUpBar = 1.6
+
+    /// How much of what a stroke touched is one even colour: among the pixels
+    /// above a twentieth of its strongest coverage, the share within a tenth of
+    /// that strongest. A flat marker scores near 1; a soft edge or a pass that
+    /// builds on itself lowers it.
+    public static func flatShare(_ image: CGImage) -> Double {
+        let alphas = alphaPlane(image)
+        guard let top = alphas.max(), top > 0 else { return 0 }
+        let touched = alphas.filter { $0 >= top * 0.05 }
+        guard !touched.isEmpty else { return 0 }
+        // The strongest the stroke usually reaches, not one stray pixel.
+        let strong = touched.sorted()[Int(Double(touched.count - 1) * 0.95)]
+        return Double(touched.filter { abs($0 - strong) <= strong * 0.1 }.count) / Double(touched.count)
+    }
+
+    /// The average coverage within `radius` points of `point`, 0...1.
+    public static func meanAlpha(_ image: CGImage, around point: CGPoint, radius: CGFloat,
+                                 scale: CGFloat) -> Double {
+        let alphas = alphaPlane(image)
+        guard !alphas.isEmpty else { return 0 }
+        let width = image.width, height = image.height
+        let cx = point.x * scale, cy = point.y * scale, r = radius * scale
+        var sum = 0.0, count = 0
+        for y in max(0, Int(cy - r))..<min(height, Int(cy + r) + 1) {
+            for x in max(0, Int(cx - r))..<min(width, Int(cx + r) + 1)
+            where hypot(CGFloat(x) + 0.5 - cx, CGFloat(y) + 0.5 - cy) <= r {
+                sum += alphas[y * width + x]
+                count += 1
+            }
+        }
+        return count > 0 ? sum / Double(count) : 0
+    }
+
+    /// How grainy a stroke's fringe is: across the band from half its radius
+    /// out to nine tenths, how far each pixel stands off the average of the
+    /// pixels around it, as a share of the band's coverage. A smooth fall-off,
+    /// however steep, reads near 0; a spray of fine droplets does not.
+    public static func fringeGrain(_ image: CGImage, from a: CGPoint, to b: CGPoint,
+                                   diameter: CGFloat, scale: CGFloat) -> Double {
+        let alphas = alphaPlane(image)
+        let width = image.width, height = image.height
+        let dx = b.x - a.x, dy = b.y - a.y
+        let length = hypot(dx, dy)
+        guard !alphas.isEmpty, length > 0, diameter > 0, width > 2, height > 2 else { return 0 }
+        let radius = diameter / 2
+        var off = 0.0, cover = 0.0
+        for y in 1..<(height - 1) {
+            for x in 1..<(width - 1) {
+                let p = CGPoint(x: (CGFloat(x) + 0.5) / scale, y: (CGFloat(y) + 0.5) / scale)
+                let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (length * length)
+                guard t >= 0.1, t <= 0.9 else { continue }
+                let across = abs((p.x - a.x) * dy - (p.y - a.y) * dx) / length / radius
+                guard across >= 0.5, across <= 0.9 else { continue }
+                var around = 0.0
+                for j in -1...1 { for i in -1...1 { around += alphas[(y + j) * width + x + i] } }
+                let here = alphas[y * width + x]
+                off += abs(here - around / 9)
+                cover += here
+            }
+        }
+        return cover > 0 ? off / cover : 0
+    }
+
     /// The share of the stroke's core (within a third of its radius of the
     /// line) that the paper left bare: pixels under half of the core's
     /// strongest coverage. A soft round tip covers its core solidly and

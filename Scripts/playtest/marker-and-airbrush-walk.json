@@ -1,0 +1,161 @@
+{
+  "out": "/tmp/photonz-playtest/marker-and-airbrush-walk",
+  "seed": "The marker and the airbrush (docs/design/brushes.md, decision 4). No flags: Next as a person gets it. B picks the Brush and the Medium dropdown over the tool bar picks Marker: a pointer drag lays one flat translucent stroke on a new Paint layer, and a second drag crossing it is darker only in the overlap, held with the button down against the landed picture (the live overlay multiplies over the paint under it, the way the landed stroke does). Then Airbrush: a pointer drag that holds still for a second half way, button down, leaves a dark built-up spot in a soft spray. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 2000,
+      "height": 1300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "choose": "Marker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        560
+      ],
+      "to": [
+        1240,
+        580
+      ],
+      "steps": 28,
+      "wobble": 2,
+      "hold": "1-marker-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        990,
+        440
+      ],
+      "to": [
+        1010,
+        720
+      ],
+      "steps": 24,
+      "wobble": 2,
+      "hold": "2-marker-crossing-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "3-marker-crossed"
+    },
+    {
+      "do": "describe",
+      "stage": "3-marker-crossed",
+      "note": "one Paint layer holding two marker strokes that cross"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "choose": "Airbrush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        820
+      ],
+      "to": [
+        1240,
+        840
+      ],
+      "steps": 28,
+      "wobble": 2,
+      "pause": 1.2,
+      "pauseAt": 0.5,
+      "hold": "4-airbrush-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "5-airbrush-built-up"
+    },
+    {
+      "do": "describe",
+      "stage": "5-airbrush-built-up",
+      "note": "a third stroke, the airbrush, on the same Paint layer"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

@@ -267,6 +267,51 @@ an anchor and the line re-paints.
   1.4 times the width and 1.8 times the darkness of 2H; at pressure 0.2 at least
   0.3 of the core left to the tooth. The round tip fails all three.
 
+## What the marker and airbrush settled (2026-10-25)
+
+- **A marker keeps the most, never the sum.** `MarkerStroke` (PhotonzRender,
+  `MarkerAirbrush.swift`) lays each dab's nib into a coverage field by max, so
+  a stroke that doubles back on itself is one even colour edge to edge. The
+  edge is crisp with a hair of give (a pixel, or 0.4 pt at high zoom), never a
+  soft brush.
+- **Flow is the ink's strength**: 0.2 to 0.95 of the light taken at full
+  coverage, never fully opaque, times Opacity. A marker ignores pressure and
+  speed for now (decision 6 gives tilt a side; that is the dynamics slice).
+- **It lands multiplied over the paint before it** on the same layer: the
+  stroke is laid as `a·C·(1 − Da + D)` source-over, which is exactly multiply.
+  The same formula makes the live overlay honest: the canvas hands the live
+  marker the picked paint layer as it stands (the `working` copy the smudge
+  already used), the overlay holds what the stroke lays over that paint, and
+  it is shown at full strength (`LiveMarker.showsAtFullStrength`). Laid over
+  the canvas it is the landed picture (the walk: 0.05% apart on a crossing).
+  Over the picture under the paint layer the marker is a normal layer; the
+  layer's own blend mode is the place to multiply it over a screenshot.
+- **The chisel nib** is a rounded box the stroke's Size wide and 0.3 of it
+  thick, held at a fixed 45 degrees (long edge lower left to upper right, a
+  right hand's hold): along that edge the stroke is a thin line, across it the
+  full width. Tilt turning the nib waits for the dynamics slice.
+- **The airbrush sprays by time.** `BrushPlacement.Walker` lays an airbrush
+  dab every `dwellInterval` (25 ms) the pointer stays within a dab's spacing of
+  where it settled, as well as its spaced dabs along the way, so a held spot
+  builds up and a slow pass is darker than a fast one. The pointer sends no
+  events while still, so the canvas's `brushDwellTimer` hands the stroke a
+  sample where the pointer is after 25 ms without one; those samples are
+  stored, so the landed stroke builds exactly what was seen.
+- **A dab is a cloud plus droplets.** A bell of mist (Softness from a crisp
+  cone fading over its outer 40 per cent to a gaussian that fades from the
+  middle) and fine droplets of 0.2 to 0.4 pt drawn from the stroke's seed,
+  evenly over the cone when crisp and bunched to the middle when soft. Paint
+  adds as spray does: each layer covers a share of what is still bare. Flow and
+  the pen's press set how much each dab sprays. Jitter was tried to break the
+  rings a crisp cone leaves at a stroke's ends and made it lumpy; a wider
+  fall-off on the crisp cone does it instead.
+- **Bars** (`MarkerAirbrushRenderingTests`, `PaintMeasures`): `flatShare` of a
+  marker stroke that doubles back at least 0.9 (marker 0.99, the round tip
+  0.82); `meanAlpha` held a second over a pass at least 1.6 times (airbrush
+  3.3, the round tip 1.0); `fringeGrain` of the spray at least three times the
+  round tip's (0.040 against 0.005). The round tip is now the oil paint's,
+  until its slice.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,

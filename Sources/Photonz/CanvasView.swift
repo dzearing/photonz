@@ -1292,6 +1292,10 @@ final class CanvasNSView: NSView {
     /// The composite on screen when the last stroke was handed over; the
     /// overlay comes down once a different one arrives with the stroke in it.
     var brushCommitImage: CGImage?
+    /// Keeps a held airbrush spraying: while the button is down and the
+    /// pointer still, it hands the stroke another sample where the pointer is
+    /// (`CanvasBrush`, `BrushPlacement.dwellInterval`).
+    var brushDwellTimer: Timer?
     /// The ring cursor for the tip at the last size it was drawn for.
     var brushCursorCache: (diameter: CGFloat, cursor: NSCursor)?
     /// The last line handed to the chip under the canvas. The line is worked

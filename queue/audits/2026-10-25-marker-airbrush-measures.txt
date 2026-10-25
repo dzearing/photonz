@@ -1,0 +1,9 @@
+Bars at defaults, 2x, mouse press.
+Marker	flat share of a stroke that doubles back 0.994 (bar 0.90: passes)
+Round tip	flat share of a stroke that doubles back 0.815 (bar 0.90: fails)
+Airbrush	held a second 0.95, a pass 0.29, build-up 3.23x (bar 1.6: passes)
+Round tip	held a second 1.00, a pass 1.00, build-up 1.00x (bar 1.6: fails)
+Airbrush	fringe grain 0.0400
+Round tip	fringe grain 0.0046
+Airbrush softness 0	edge fall-off 0.25 of the radius
+Airbrush softness 100	edge fall-off 0.40 of the radius

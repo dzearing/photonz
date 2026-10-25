@@ -1,0 +1,29 @@
+{
+  "feature": "Marker and airbrush",
+  "epic": "image-paint",
+  "summary": "The marker now paints one flat, see-through colour that gets darker only where a separate stroke crosses it, from a round or a chisel tip. The airbrush is a fine soft spray that keeps building up for as long as you hold it over one spot.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screenshot. Walk: Scripts/playtest/marker-and-airbrush-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press B, then pick Marker from the Medium dropdown in the options above the tool bar.", "shot": "2026-10-25-marker-airbrush-1-marker-held-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag a stroke across the picture, then drag a second stroke that crosses it.", "shot": "2026-10-25-marker-airbrush-2-marker-crossed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look closely at the crossing: only the overlap is darker, and each stroke is the same colour along its whole length.", "shot": "2026-10-25-marker-airbrush-marker-close-sc.png" },
+    { "do": "Pick Airbrush from the Medium dropdown and drag a stroke, stopping half way with the button still down for a second.", "shot": "2026-10-25-marker-airbrush-4-airbrush-built-up-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look closely at where you stopped: the spray has built up into a dark spot.", "shot": "2026-10-25-marker-airbrush-airbrush-close-sc.png" },
+    { "do": "Open the stroke sheet to see the chisel tip, Flow and Softness, which have no controls yet.", "shot": "2026-10-25-marker-airbrush-sheet.png" }
+  ],
+  "evaluate": [
+    "Does a marker stroke read as a real felt marker: flat, see-through, darker only where two strokes cross?",
+    "Does the chisel tip on the sheet change width with direction the way a real chisel marker does?",
+    "Does the airbrush read as a fine spray rather than a blurry brush, and does holding still build up the way you expect?",
+    "Is the build-up rate right: about a second to go from a light veil to solid?"
+  ],
+  "rough": [
+    "Tip, Flow and Softness work in the engine but have no controls yet, so the chisel tip and the Flow and Softness settings are shown on the stroke sheet, not in the app. The retouch mock's setting rows (Size, Flow and so on) are covered by each-brush-shows-its-own-settings-in-the-tool-op.",
+    "Size carries over when you switch medium, so an airbrush picked after the marker starts at the marker's 14 points and looks like a thin spray line. Choosing a size per medium is part of each-brush-shows-its-own-settings-in-the-tool-op ('each medium remembers its own values').",
+    "A spot held for a second at a small size saturates to a solid dot with a short soft edge. That is how a real airbrush behaves up close, but it can look like a blob at 14 points.",
+    "The marker multiplies over earlier paint on the same Paint layer only. Over the screenshot underneath it is a normal see-through layer, as the design doc says: the layer's blend mode is where to make it multiply over the picture.",
+    "Tilt does not yet turn the chisel nib or widen the marker, and pressure does not change a marker stroke. That belongs to the pressure, tilt and speed slice in the brushes design doc.",
+    "No mock draws marker or airbrush strokes themselves; the bars on the sheet (flat share 0.99 against the round tip's 0.82, build-up 3.3x against 1.0x, spray grain 0.040 against 0.005) are what decide the look."
+  ]
+}

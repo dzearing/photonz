@@ -115,7 +115,7 @@ struct PencilSheetTests {
         ])
         // The blind sheet: the same marks in each medium, unlabelled, in a
         // fixed shuffle. Each at its own default size.
-        let media: [(String, BrushMedium)] = [("crayon", .crayon), ("pencil", .pencil), ("round tip", .marker),
+        let media: [(String, BrushMedium)] = [("crayon", .crayon), ("pencil", .pencil), ("round tip", .oil),
                                               ("charcoal", .charcoal), ("chalk", .chalk)]
         try write("pencil-blind.png", rows: media.map { name, medium in
             let b = BrushSettings(medium: medium)
@@ -142,7 +142,7 @@ struct PencilSheetTests {
             return try #require(PaintRasterizer.rasterize(PaintContent(strokes: [s]), size: box, scale: scale))
         }
         var out: [String] = ["Straight strokes at Size 4, 2x, mouse press unless said."]
-        for medium in [BrushMedium.pencil, .marker] {
+        for medium in [BrushMedium.pencil, .oil] {
             let label = medium == .pencil ? "Pencil" : "Round tip"
             for (index, grade) in BrushMedium.pencilGrades.enumerated() {
                 let p = PaintMeasures.lineProfile(try line(medium, ["hardness": Double(index)]), from: a, to: b,

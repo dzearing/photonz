@@ -69,9 +69,13 @@ extension CanvasNSView {
             let clip = box.applying(canvasToPixels)
             let toPixels = canvasToPixels.translatedBy(x: origin.x, y: origin.y)
             var working: CGContext?
-            if smudging, let target, let paint = document.layer(id: target)?.paint {
-                // What the smudge drags: the paint layer as it stands, drawn
-                // into the view's pixels where it sits.
+            // What the smudge drags, and what a marker darkens where it
+            // crosses: the paint layer the stroke lands on, as it stands,
+            // drawn into the view's pixels where it sits. A marker starting a
+            // new layer has no paint under it.
+            let under = smudging ? target
+                : stroke.settings.medium == .marker ? pickedPaintLayer(in: document) : nil
+            if let under, let paint = document.layer(id: under)?.paint {
                 working = Self.brushBitmap(width: width, height: height)
                 if let raster = PaintRasterizer.rasterize(paint, size: box.size,
                                                           scale: viewport.zoom * backing) {
@@ -89,12 +93,45 @@ extension CanvasNSView {
             marker: marker, bitmap: bitmap, origin: origin, began: event.timestamp)
         brushLayer.frame = bounds
         brushLayer.contentsScale = backing
-        // A smudge's overlay holds what it lays over the paint, already at its
-        // strength; a stroke's holds the stroke alone, shown at its opacity.
-        brushLayer.opacity = smudging ? 1 : Float(stroke.settings.opacity / 100)
+        // A smudge's or a marker's overlay holds what it lays over the paint,
+        // already at its strength; a stroke's holds the stroke alone, shown at
+        // its opacity.
+        brushLayer.opacity = (marker?.showsAtFullStrength ?? smudging) ? 1 : Float(stroke.settings.opacity / 100)
         brushLayer.isHidden = false
         addBrushSample(at: p, event: event)
+        if stroke.settings.medium == .airbrush, stroke.settings.mode == .paint { startBrushDwell() }
         return true
+    }
+
+    /// An airbrush keeps spraying while the button is down, moving or not,
+    /// but the pointer only reports when it moves: so while the stroke lasts,
+    /// a tick that finds no sample for a while hands the stroke one where the
+    /// pointer last was. Stored with the stroke, so what lands is what built
+    /// up on screen.
+    private func startBrushDwell() {
+        brushDwellTimer?.invalidate()
+        let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.brushDwellTick() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        brushDwellTimer = timer
+    }
+
+    private func stopBrushDwell() {
+        brushDwellTimer?.invalidate()
+        brushDwellTimer = nil
+    }
+
+    private func brushDwellTick() {
+        guard let live = brushStroke, let last = live.stroke.samples.last else {
+            stopBrushDwell()
+            return
+        }
+        let ms = (ProcessInfo.processInfo.systemUptime - live.began) * 1000
+        // The pointer reports many times a second while it moves; only a
+        // pause this long is the hand holding still.
+        guard ms - last.ms >= 25 else { return }
+        appendBrushSample(StrokeSample(point: last.point, pressure: last.pressure, tilt: last.tilt, ms: ms))
     }
 
     private static func brushBitmap(width: Int, height: Int) -> CGContext? {
@@ -112,6 +149,7 @@ extension CanvasNSView {
     /// the editor. The overlay stays up until the composite that holds the
     /// stroke arrives, so nothing flickers between the two.
     func brushMouseUp(at p: CGPoint, event: NSEvent) {
+        stopBrushDwell()
         guard var live = brushStroke else { return }
         brushStroke = nil
         live.marker?.mark(live.walker.finish())
@@ -171,7 +209,7 @@ extension CanvasNSView {
     }
 
     private func addBrushSample(at p: CGPoint, event: NSEvent) {
-        guard var live = brushStroke else { return }
+        guard let live = brushStroke else { return }
         // A tablet reports how hard it is pressed and how far it leans; a
         // mouse reports nothing worth keeping, so its samples carry none and
         // placement simulates a press (`BrushDynamics`).
@@ -186,25 +224,41 @@ extension CanvasNSView {
             tilt = pen.tilt ?? tilt
         }
         #endif
-        let sample = StrokeSample(point: p, pressure: pressure, tilt: tilt,
-                                  ms: max(0, (event.timestamp - live.began) * 1000))
+        appendBrushSample(StrokeSample(point: p, pressure: pressure, tilt: tilt,
+                                       ms: max(0, (event.timestamp - live.began) * 1000)))
+    }
+
+    /// Adds one sample (canvas points) to the stroke under the hand and marks
+    /// the dabs it settles.
+    private func appendBrushSample(_ sample: StrokeSample) {
+        guard var live = brushStroke else { return }
+        // Never back in time: a tick and an event can cross.
+        var sample = sample
+        if let last = live.stroke.samples.last { sample.ms = max(sample.ms, last.ms) }
         live.stroke.samples.append(sample)
         // The walker works in the landing layer's own points, as the renderer
         // does once the stroke is stored there.
         var local = sample
-        local.point = CGPoint(x: p.x - live.origin.x, y: p.y - live.origin.y)
+        local.point = CGPoint(x: sample.point.x - live.origin.x, y: sample.point.y - live.origin.y)
         let dabs = live.walker.add(local)
         live.marker?.mark(dabs)
         brushStroke = live
         if !dabs.isEmpty { brushLayer.contents = live.bitmap.makeImage() }
     }
 
+    /// The picked paint layer a stroke will be added to, when there is one:
+    /// unlocked, the way `PhotonzDocument.paintStroke` decides.
+    private func pickedPaintLayer(in document: PhotonzDocument) -> UUID? {
+        guard let id = selectedLayerID, let picked = document.layer(id: id), picked.paint != nil,
+              !picked.isLocked else { return nil }
+        return id
+    }
+
     /// The box the stroke will land in, in canvas points: the picked paint
     /// layer's, or the frame the stroke starts on, or the whole canvas, which
     /// is what `PhotonzDocument.paintStroke` decides.
     private func brushLandingBox(startingAt p: CGPoint, in document: PhotonzDocument) -> CGRect {
-        if let id = selectedLayerID, let picked = document.layer(id: id), picked.paint != nil,
-           !picked.isLocked, let box = document.canvasBounds(of: id) {
+        if let id = pickedPaintLayer(in: document), let box = document.canvasBounds(of: id) {
             return box
         }
         return document.frameID(under: p).flatMap { document.canvasBounds(of: $0) }

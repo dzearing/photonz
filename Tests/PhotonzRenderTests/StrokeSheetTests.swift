@@ -55,7 +55,7 @@ struct StrokeSheetTests {
     @Test(.enabled(if: folder != nil))
     func writeSheet() throws {
         let folder = try #require(Self.folder)
-        let media: [BrushMedium] = [.charcoal, .chalk, .crayon, .marker]
+        let media: [BrushMedium] = [.charcoal, .chalk, .crayon, .marker, .airbrush]
         let scale: CGFloat = 2, rowHeight: CGFloat = 120, width: CGFloat = 1000
         var lines: [String] = []
         for labelled in [false, true] {

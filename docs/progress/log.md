@@ -21932,3 +21932,11 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - Walk step `pen` (pressure, lean for the drags after it); every painting drag reports its brush move times. Walk `pencil-draws-and-shades-walk` on a 12 MP canvas, no flags.
 - Next: settings in the tool options and panel, then the dynamics for the other media.
 
+
+## 2026-10-25 — Marker and airbrush
+
+- `MarkerAirbrush.swift` (PhotonzRender): `MarkerStroke` keeps the most coverage per pixel (round or 45 degree chisel nib, crisp edge) and lands multiplied over earlier paint as an adjusted source-over, so the live overlay (handed the picked paint layer as `working`, shown at full strength) matches the landed stroke. `AirbrushStroke`: a mist bell shaped by Softness plus fine seeded droplets, built up as spray.
+- `BrushPlacement.Walker`: the airbrush lays a dab every `dwellInterval` (25 ms) held within a dab's spacing; the canvas's `brushDwellTimer` feeds samples while the button is down and the pointer still.
+- `PaintMeasures.flatShare`, `meanAlpha(around:)`, `fringeGrain` and two bars; `MarkerAirbrushRenderingTests`, `BrushDwellTests`, `MarkerAirbrushSheetTests` (sheet on request). Round-tip baselines in other tests moved from marker to oil.
+- Walk step `drag` takes `pause`/`pauseAt`. Walk `marker-and-airbrush-walk`, no flags. Audit `queue/audits/2026-10-25-marker-airbrush.json`.
+- Next: the settings slice gives Tip, Flow and Softness their controls (noted on its task).
