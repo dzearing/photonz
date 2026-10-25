@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.779Z",
-  "updated": "2026-10-25T08:01:54.195Z",
+  "updated": "2026-10-25T08:50:24.171Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -49,6 +49,10 @@
     {
       "t": "2026-10-25T08:01:54.194Z",
       "note": "Watercolour now has three own settings (Wetness, Bleed, Granulation; 2026-10-25), so its capsule row has one more than the 'two own settings' the design doc assumed; the panel carries all three. Same as the pencil's three."
+    },
+    {
+      "t": "2026-10-25T08:50:24.170Z",
+      "note": "From the airbrush slice (2026-10-25): the airbrush's own settings are now Flow, Spread, Droplet Size, Build-up (four, Softness became Spread with the old id mapped). The capsule should carry Flow and Spread, the panel all four. Sheets: queue/audits/2026-10-25-airbrush-*.png."
     }
   ]
 }

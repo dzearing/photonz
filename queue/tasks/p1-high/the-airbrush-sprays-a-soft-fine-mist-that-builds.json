@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.35,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T04:54:55.110Z",
-  "updated": "2026-10-25T04:55:12.899Z",
+  "updated": "2026-10-25T08:50:38.552Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"airbrush doesn't [look like airbrush] either\" and \"airbrush might have some [knobs] about the spray intencity or spread or whatever makes sense for that while other brushes might have other settings specific to them.\"\n\nCause, from reading the code (not reproduced in the app): Sources/PhotonzRender/DryMedia.swift:276 returns nil for .marker, .airbrush, .oil, .watercolour, so those media fall back to the plain round tip. Airbrush has no slice of its own in the queue; the umbrella is a-brush-tool-paints-with-realistic-charcoal-chal and its slices are 6.x. Today's airbrush settings are Flow and Softness (Sources/PhotonzCore/Brush.swift:67); rename or extend them, keeping the setting ids the MCP tools read stable or migrated.\n\nDesign: docs/design/brushes.md, read it first. Strokes are data with a seed, so the spray's droplets must come from the stroke's seed and replay identically. Expect a Core Image or Metal kernel in PhotonzRender; keep the live overlay exact. The brush chooser task (filed the same day) shows each brush's real sample stroke, so the airbrush tile shows whatever this lands.",
@@ -31,6 +31,47 @@
     {
       "t": "2026-10-25T04:55:12.898Z",
       "note": "seq 3970 -> 6.35"
+    },
+    {
+      "t": "2026-10-25T08:17:31.264Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T08:19:50.463Z",
+      "note": "Reproduced first: the task's note (airbrush falls back to the round tip) predates 83b94294, which landed a first spray with dwell build-up 2h after this task was filed. So today's airbrush is NOT the round tip's stroke; capturing the before sheet to show what it is now (a soft bell, a few fine specks, Flow and Softness only, no speed or spatter)."
+    },
+    {
+      "t": "2026-10-25T08:49:57.423Z",
+      "note": "owns these walks: airbrush-sprays-and-builds-walk"
+    },
+    {
+      "t": "2026-10-25T08:50:23.817Z",
+      "note": "Adversarial review before building: a Photoshop or Procreate user expects an airbrush to build up while held (Photoshop's airbrush toggle), Flow, and a soft spray; Spread and droplet size come from real airbrushes (distance and needle). No mock draws strokes. The settings have no controls in the app yet (each-brush-shows-its-own-settings-in-the-tool-op owns that), so each setting is proven on a sheet, not by a click."
+    },
+    {
+      "t": "2026-10-25T08:50:23.887Z",
+      "note": "Chose to make Softness into Spread (old id mapped, so saved strokes keep their value) over keeping both, because two knobs for how wide and soft the mist is would fight; the spray is always feathered now, as the acceptance asks. Chose Build-up as the held dwell rate (40 ms at 50, 20 ms at 100, none at 0) over scaling every dab, so a pass looks the same at any Build-up and only holding changes."
+    },
+    {
+      "t": "2026-10-25T08:50:23.954Z",
+      "note": "Built: AirbrushStroke rewritten (bell of mist by Spread, droplets by Droplet Size with a 30% overspray halo, spatter when Flow times press passes a half); BrushDab.spray from pointer speed for the airbrush only; dwellInterval(buildUp:). Bars measured (queue/audits/2026-10-25-airbrush-measures.txt): feather 0.82 vs round 0.21 (bar 0.6); edge droplets 0.17/pt2 vs 0 (bar 0.1); hold 1s 3.3x vs 1.0x, rising at 0/250/500/1000/2000 ms; slow over fast 2.0x vs 1.0x (bar 1.4); pen hard over light 2.45x. Walk airbrush-sprays-and-builds-walk (no flags, 12 MP blank): moves 0.3-0.4 ms median, 1.0 ms worst. Blind test: two model judges named all 8 rows right and the airbrush at high confidence."
+    },
+    {
+      "t": "2026-10-25T08:50:24.035Z",
+      "note": "Looked at: before sheet (soft blur, held spot a hard disc), the defaults, spread, droplet, buildup, pressure-speed sheets, profile plot, reel contact sheet, blind sheet, and the walk's 4-sprayed-sc close-up: a droplet line feathering out, a soft dark held spot, spatter at Flow 100. First held spot at Spread 100 still showed a disc edge; fixed by fading the mist from 0.45 of the radius and capping the bell."
+    },
+    {
+      "t": "2026-10-25T08:50:24.102Z",
+      "note": "left rough: (1) a walk drag with a held picture leaves an end spot because the spray builds while photographed; that is the harness, not a person's stroke, so no task. (2) A judge thought the edge specks read as dots more than mist; a taste call left at defaults, Droplet Size lowers it. (3) Size carries over between media: already in each-brush-shows-its-own-settings-in-the-tool-op."
+    },
+    {
+      "t": "2026-10-25T08:50:38.549Z",
+      "note": "Airbrush is a real spray (540c94df): a bell of mist densest at the line that feathers out with no edge, fine droplets with an overspray halo, spatter at heavy flow; pressure sprays more, a fast pass is lighter, holding builds up (stored samples, replay matches). Own settings Flow, Spread (Softness mapped), Droplet Size, Build-up, each on a sheet. Bars vs round tip: feather 0.82/0.21, edge droplets 0.17/0, hold 3.3x/1.0x, slow/fast 2.0x/1.0x. Walk airbrush-sprays-and-builds-walk, no flags, 12 MP: 0.3-0.4 ms per move. Blind test: two model judges named it. Full suite green (14516 tests). Audit queue/audits/2026-10-25-airbrush.json with sheets and reel."
     }
-  ]
+  ],
+  "started": "2026-10-25T08:17:31.262Z",
+  "walks": [
+    "airbrush-sprays-and-builds-walk"
+  ],
+  "completed": "2026-10-25T08:50:38.551Z"
 }
