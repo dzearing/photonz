@@ -3570,6 +3570,8 @@ private final class Run {
 
         case .filmThumb(let film):
             note(number, step.name, try await filmThumb(film, number: number), state: describe())
+        case .filmHover(let film):
+            note(number, step.name, try await filmHover(film, number: number), state: describe())
         case .filmWindow(let film):
             note(number, step.name, try await filmWindow(film, number: number), state: describe())
 
@@ -11608,6 +11610,86 @@ private final class Run {
             if !inside, worst <= Int(scale), gone == 0 {
                 throw Failure(description: "the thumb never left its room, and this walk claims it would: " + summary)
             }
+        }
+        return summary
+    }
+
+    /// Films a control while the pointer arrives on it, and reads whether a
+    /// band of light crossed it (`PlaytestHoverFilm`, `SheenSweep`): the Ask
+    /// button's sheen is over in 0.66s, long before a snapshot lands.
+    private func filmHover(_ film: PlaytestHoverFilm, number: Int) async throws -> String {
+        guard CGPreflightScreenCaptureAccess() else {
+            captures.skippedUngranted()
+            throw Failure(description: "filming a hover needs the probe's Screen Recording grant, and it has none")
+        }
+        let target = try panelTarget(film.control, kind: .control)
+        guard let host = target.window else {
+            throw Failure(description: "the control \"\(film.control)\" is in no window")
+        }
+        let box = target.convert(target.bounds, to: nil)
+        let scale = host.backingScaleFactor
+        let frame = host.frame
+        let crop = CGRect(x: box.minX * scale, y: (frame.height - box.maxY) * scale,
+                          width: box.width * scale, height: box.height * scale).integral
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+        guard let scWindow = content.windows.first(where: { $0.windowID == CGWindowID(host.windowNumber) }) else {
+            throw Failure(description: "window \(host.windowNumber) is not in shareable content")
+        }
+        // Shown for the film, still behind the person's windows (`filmThumb`).
+        let hidden = host.alphaValue == 0
+        if hidden {
+            MainThreadMeter.shared.setAsidePasses()
+            Self.keepBehindThePerson(host)
+            host.alphaValue = 1
+            harnessWork { host.display() }
+            await sleep(0.25)
+        }
+        defer {
+            if hidden { host.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
+        }
+        let camera = PlaytestWindowFilm(crop: crop)
+        try await camera.start(scWindow, size: CGSize(width: frame.width * scale, height: frame.height * scale))
+        await sleep(0.15)
+        try await perform(.move(.control(film.control, in: nil), []), number: number)
+        await sleep(film.seconds)
+        let beforeTheStop = MainThreadMeter.shared.mark()
+        defer { MainThreadMeter.shared.forget(since: beforeTheStop) }
+        await camera.stop()
+        let frames = camera.frames
+        guard frames.count >= 2 else {
+            throw Failure(description: "the film caught \(frames.count) frame(s); nothing to read")
+        }
+        // The middle of the control, clear of a gloss along its top and a
+        // bloom under it.
+        let height = frames[0].image.height
+        let rows = Int(Double(height) * 0.35)...Int(Double(height) * 0.65)
+        let reading = SheenSweep.read(frames.map { PlaytestWindowFilm.lightness(of: $0.image, rows: rows) })
+        var readings: [[String: Any]] = []
+        for (index, each) in frames.enumerated() {
+            if let data = ImageCodec.encode(each.image, format: .png) {
+                try? data.write(to: out.appendingPathComponent("\(film.name)-\(index)-sc.png"))
+            }
+            var entry: [String: Any] = ["frame": index, "ms": Int((each.time * 1000).rounded())]
+            if let centre = reading.centres[index] { entry["bandAt"] = centre }
+            readings.append(entry)
+        }
+        write(json: ["control": film.control, "widthPt": box.width, "scale": scale, "lit": reading.lit,
+                     "strongest": reading.strongest, "swept": reading.swept, "frames": readings],
+              to: "\(film.name).json")
+        if let sheet = Self.stacked(frames.map(\.image)),
+           let data = ImageCodec.encode(sheet, format: .png) {
+            try data.write(to: out.appendingPathComponent("\(film.name)-strip-sc.png"))
+            captures.photographed("\(film.name)-strip", behind: Self.windowIsBehind)
+        }
+        let path = reading.centres.compactMap { $0 }.map { String(format: "%.2f", $0) }.joined(separator: " ")
+        let summary = String(format: "%d frames over %.0fms; a band of light in %d of them, at most %.0f lighter "
+                                + "than the settled hover, ", frames.count, (frames.last?.time ?? 0) * 1000,
+                             reading.lit, reading.strongest)
+            + (reading.swept ? "carried across (\(path))" : path.isEmpty ? "no sweep" : "not carried across (\(path))")
+        if let sweeps = film.sweeps, sweeps != reading.swept {
+            throw Failure(description: (sweeps ? "no sheen swept across \"\(film.control)\": "
+                                               : "a sheen swept across \"\(film.control)\", and this walk claims none would: ")
+                          + summary)
         }
         return summary
     }

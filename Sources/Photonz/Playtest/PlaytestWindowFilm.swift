@@ -1,5 +1,6 @@
 // Films one window, cropped to a strip of it, at the display's own rate: the
-// camera behind a `filmThumb` step (`PlaytestThumbFilm`).
+// camera behind a `filmThumb` step (`PlaytestThumbFilm`) and a `filmHover`
+// step (`PlaytestHoverFilm`).
 //
 // A snapshot is one picture a quarter of a second after the fact, and the
 // segmented thumb's whole move is gone in less. The user saw it fling out of
@@ -110,9 +111,20 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
         return bytes
     }
 
+    /// Each column's lightness (0...255, `SheenSweep.lightness`) along a band of rows, the middle value
+    /// down the band: what `filmHover` reads a band of light by.
+    static func lightness(of image: CGImage, rows: ClosedRange<Int>) -> [Double] {
+        columns(of: image, rows: rows) { r, g, b in SheenSweep.lightness(r: r * 255, g: g * 255, b: b * 255) }
+    }
+
     /// Each column's colourfulness (0...1, `ThumbFootprint.colourfulness`) along a band of rows, the middle value
     /// down the band so a letter crossing it does not light a column.
     static func columns(of image: CGImage, rows: ClosedRange<Int>) -> [Double] {
+        columns(of: image, rows: rows, reading: ThumbFootprint.colourfulness)
+    }
+
+    private static func columns(of image: CGImage, rows: ClosedRange<Int>,
+                                reading: (Double, Double, Double) -> Double) -> [Double] {
         let width = image.width, height = image.height
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
         let drawn: Bool = bytes.withUnsafeMutableBytes { raw in
@@ -128,8 +140,7 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
         return (0..<width).map { x in
             let values = band.map { y -> Double in
                 let at = (y * width + x) * 4
-                return ThumbFootprint.colourfulness(r: Double(bytes[at]) / 255, g: Double(bytes[at + 1]) / 255,
-                                                    b: Double(bytes[at + 2]) / 255)
+                return reading(Double(bytes[at]) / 255, Double(bytes[at + 1]) / 255, Double(bytes[at + 2]) / 255)
             }.sorted()
             return values.isEmpty ? 0 : values[values.count / 2]
         }

@@ -1,0 +1,35 @@
+{
+  "out": "/tmp/photonz-playtest/ask-sheen-every-hover-walk",
+  "clock": 120,
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "control": "Ask", "present": true },
+    { "do": "move", "at": [400, 400] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "hover-1", "note": "the pointer arrives on Ask: one light sheen crosses it left to right" },
+    { "do": "filmHover", "name": "hover-1", "control": "Ask", "sweeps": true },
+    { "do": "move", "at": [400, 400] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "hover-2", "note": "the pointer comes back: the sheen crosses again (until 2026-10-24 only the first hover swept)" },
+    { "do": "filmHover", "name": "hover-2", "control": "Ask", "sweeps": true },
+    { "do": "move", "at": [400, 400] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "hover-3", "note": "and a third time" },
+    { "do": "filmHover", "name": "hover-3", "control": "Ask", "sweeps": true },
+    { "do": "describe", "stage": "staying", "note": "the pointer stays on Ask and moves a little: no second sweep while it stays" },
+    { "do": "filmHover", "name": "staying", "control": "Ask", "seconds": 0.8, "sweeps": false },
+    { "do": "move", "at": [400, 400] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "filmHover", "name": "hover-4-cut-short", "control": "Ask", "seconds": 0.2 },
+    { "do": "move", "at": [400, 400] },
+    { "do": "describe", "stage": "hover-5", "note": "the pointer leaves mid sweep and comes straight back: a fresh sweep from the leading edge" },
+    { "do": "filmHover", "name": "hover-5", "control": "Ask", "sweeps": true },
+    { "do": "move", "at": [400, 400] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "filmHover", "name": "hover-6", "control": "Ask", "sweeps": true }
+  ]
+}

@@ -160,12 +160,19 @@ struct TimelineKeysTests {
         #expect(command(.letter("s"), repeating: true) == nil)
     }
 
-    @Test("Command-K splits at the playhead wherever the keyboard is")
-    func commandKSplits() {
-        #expect(command(.letter("k"), .command) == .splitAtPlayhead)
-        #expect(command(.letter("k"), .command, focused: false) == .splitAtPlayhead)
+    @Test("Command-B splits at the playhead wherever the keyboard is, and Command-K is left to Ask")
+    func commandBSplits() {
+        // Final Cut's Blade. ⌘K, Premiere's Add Edit, is Ask on a video as on
+        // a picture (the user, 2026-10-24), so the timeline leaves it to the
+        // menu.
+        #expect(command(.letter("b"), .command) == .splitAtPlayhead)
+        #expect(command(.letter("b"), .command, focused: false) == .splitAtPlayhead)
+        #expect(command(.letter("k"), .command) == nil)
+        #expect(command(.letter("k"), .command, focused: false) == nil)
         // ⇧⌘K is the menu's Split Everything, not this.
         #expect(command(.letter("k"), [.command, .shift]) == nil)
+        // B alone is still the Blade tool, on a focused timeline.
+        #expect(command(.letter("b")) == .bladeTool)
     }
 
     @Test("Delete lifts and Shift-Delete ripples, on a focused timeline")

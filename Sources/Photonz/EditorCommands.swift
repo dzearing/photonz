@@ -522,15 +522,16 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .disabled(!(editor?.canRedo ?? false))
             // Ask (Next, `next-ask`), in Edit beside the Mac's own Writing
-            // Tools. ⌘K as the mock prints it, except on a video, where ⌘K
-            // is Premiere's Add Edit (Split at Playhead, UX-PATTERNS §7).
-            // Ready in a window with nothing open too: there it makes a
+            // Tools. ⌘K as the mock prints it, on a video as on a picture:
+            // the user asked for one key for Ask everywhere on 2026-10-24,
+            // so Split at Playhead took Final Cut's ⌘B instead of Premiere's
+            // ⌘K. Ready in a window with nothing open too: there it makes a
             // picture for the request, and in the New window it is the
             // Describe field (`AskSession.summon`).
             if Experiments.shared.askEnabled {
                 Divider()
                 Button("Ask…") { if let editor { editor.ask.summon(in: editor) } }
-                    .keyboardShortcut(timed ? nil : KeyboardShortcut("k", modifiers: .command))
+                    .keyboardShortcut("k", modifiers: .command)
                     .disabled(editor == nil)
             }
         }
@@ -786,12 +787,13 @@ struct EditorCommands: Commands {
     // whichever surface is in front of you.
     @ViewBuilder private var splitAndDeleteRows: some View {
         let onTimeline = timed
-        // Premiere's Add Edit, ⌘K, on the timeline, where B picks up
-        // the Blade; the recording window keeps its B.
+        // Final Cut's Blade, ⌘B, on the timeline, where B alone picks up
+        // the Blade tool; the recording window keeps its B. Premiere's ⌘K
+        // is Ask on a video as on a picture (the user, 2026-10-24).
         Button("Split at Playhead") {
             if onTimeline { editor?.run(.splitAtPlayhead) } else { video?.cutAtPlayhead() }
         }
-        .keyboardShortcut(onTimeline ? KeyboardShortcut("k", modifiers: .command)
+        .keyboardShortcut(onTimeline ? KeyboardShortcut("b", modifiers: .command)
                                      : KeyboardShortcut("b", modifiers: []))
         .disabled(!(onTimeline ? (editor?.canRun(.splitAtPlayhead) ?? false)
                                : (video?.canCutAtPlayhead ?? false)))

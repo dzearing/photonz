@@ -1,0 +1,129 @@
+{
+  "out": "/tmp/photonz-playtest/ask-is-command-k-on-a-video-walk",
+  "seed": "Command K is Ask on a video as on a picture (the user, 2026-10-24), at Next defaults with no flag touched. The sample recording open: the title bar's Ask button shows its key, the Edit menu's Ask row carries Command K, Command K opens the Ask box, and Command B (Final Cut's Blade) is Split at Playhead, with no two rows of the menu bar printing the same key.",
+  "clock": 120,
+  "setup": {
+    "timelineOpen": true,
+    "front": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Ask",
+      "present": true
+    },
+    {
+      "do": "menus",
+      "stage": "1-video-keys",
+      "oneKeyEach": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-video",
+      "note": "a video open: the Ask button in the title bar shows Command K, as on a picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-video"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Ask Request",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-command-k-asks",
+      "note": "Command K on a video opened the Ask box, not a cut"
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "pieces": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "2-command-k-asks"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Ask Request",
+      "present": false
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "b",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-command-b-splits",
+      "note": "Command B, Final Cut's Blade, cut the clip at the playhead"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "pieces": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "3-command-b-splits"
+    }
+  ]
+}

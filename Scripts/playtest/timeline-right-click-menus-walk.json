@@ -43,7 +43,7 @@
                "Fade In and Out", "Fade In", "Fade Out", "Punch In", "Add Click at 0:02.00…", "—",
                "Animate", "Add Key at 0:02.00", "—",
                "Select Forward", "Duplicate", "Rename…", "Reveal in Finder"],
-      "keys": { "Split at 0:02.00": "⌘K", "Freeze Frame at 0:02.00…": "⌥⇧F", "Detach Audio": "⌃⇧D", "Cut": "⌘X", "Copy": "⌘C",
+      "keys": { "Split at 0:02.00": "⌘B", "Freeze Frame at 0:02.00…": "⌥⇧F", "Detach Audio": "⌃⇧D", "Cut": "⌘X", "Copy": "⌘C",
                 "Delete": "⌫", "Ripple Delete": "⇧⌫" } },
     { "comment": "The sound drawn under the video answers like a sound: no picture rows.",
       "do": "rightClick", "at": [518, 916], "space": "window", "shot": "2-linked-sound",

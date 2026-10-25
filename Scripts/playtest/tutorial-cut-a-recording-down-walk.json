@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-cut-a-recording-down-walk",
-  "seed": "The Video track's first guide, at Next defaults with no flag set: the guide writes its own eight second recording and opens it in the editor, then teaches Premiere's way to tighten a take. Q with the playhead two seconds in takes the start off, W takes the end off, Command K cuts the clip in two and Delete throws the piece before the cut away. Every waiting step moves on only because the document really lost time or gained a cut.",
+  "seed": "The Video track's first guide, at Next defaults with no flag set: the guide writes its own eight second recording and opens it in the editor, then teaches Premiere's way to tighten a take. Q with the playhead two seconds in takes the start off, W takes the end off, Command B cuts the clip in two and Delete throws the piece before the cut away. Every waiting step moves on only because the document really lost time or gained a cut.",
   "setup": { "forget": ["tutorials"] },
   "steps": [
     { "do": "startGuide", "guide": "cut-a-recording-down" },
@@ -39,10 +39,10 @@
 
     { "do": "action", "action": "videoSeekMiddle" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "key", "key": "b", "modifiers": ["command"] },
     { "do": "waitFor", "condition": "tutorialStep", "value": "throw-a-piece-away", "timeout": 6 },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "6-throw-a-piece-away", "note": "Command K cut the clip in two at the playhead, and the piece before the cut is the one left picked" },
+    { "do": "describe", "stage": "6-throw-a-piece-away", "note": "Command B cut the clip in two at the playhead, and the piece before the cut is the one left picked" },
     { "do": "snapshot", "name": "6-throw-a-piece-away" },
 
     { "do": "key", "key": "delete" },

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-video-window-says-its-name-walk",
-  "seed": "A video window says its name, picture size, length and whether it is saved in its title bar, at Next defaults with no flag touched, the way video.html draws it (launch-teaser · 1920 x 1080 · 0:15 · saved). The sample recording opens and the line reads its name, size, length and saved; a Command K cut turns the last word to edited; Command S saves the edit as a project and the line takes the project's name and says saved again. A still picture opened after it gets no line: its title bar stays as it was.",
+  "seed": "A video window says its name, picture size, length and whether it is saved in its title bar, at Next defaults with no flag touched, the way video.html draws it (launch-teaser · 1920 x 1080 · 0:15 · saved). The sample recording opens and the line reads its name, size, length and saved; a Command B cut turns the last word to edited; Command S saves the edit as a project and the line takes the project's name and says saved again. A still picture opened after it gets no line: its title bar stays as it was.",
   "setup": {"forget": ["all"]},
   "steps": [
     {"do": "action", "action": "openSampleRecording"},
@@ -13,11 +13,11 @@
     {"do": "describe", "stage": "1-opened", "note": "the sample recording at Next defaults, untouched: the title bar says its name, size and length, and saved"},
     {"do": "snapshot", "name": "1-opened"},
     {"do": "action", "action": "videoSeekMiddle"},
-    {"do": "key", "key": "k", "modifiers": ["command"]},
+    {"do": "key", "key": "b", "modifiers": ["command"]},
     {"do": "wait", "seconds": 0.6},
     {"do": "expectEdited", "edited": true},
     {"do": "expect", "control": "Window title", "reads": "Tutorial Sample · 1280 x 800 · 0:08 · edited"},
-    {"do": "describe", "stage": "2-cut", "note": "one Command K cut: the last word of the line turns to edited"},
+    {"do": "describe", "stage": "2-cut", "note": "one Command B cut: the last word of the line turns to edited"},
     {"do": "snapshot", "name": "2-cut"},
     {"do": "action", "action": "save"},
     {"do": "wait", "seconds": 0.6},

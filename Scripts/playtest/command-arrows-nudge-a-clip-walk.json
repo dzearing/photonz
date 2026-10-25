@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/command-arrows-nudge-a-clip-walk",
-  "seed": "Command and an arrow key nudge a picked clip a frame in time (task command-and-an-arrow-key-nudge-a-picked-clip-a-f), Premiere's Nudge Clip Selection on its Mac keys, at Next defaults with no flag touched. The sample recording is cut in two with Command K, piece 2 is clicked with a real press on its bar, and Command Right three times moves the clip three frames later (0.099s), the Clip line reading 4.1s where it read 4.0s. Shift Command Left asks for five frames earlier and stops at the start of the document. One Command Z takes back one press. Plain Right still steps the playhead, and with nothing picked Command Right moves nothing.",
+  "seed": "Command and an arrow key nudge a picked clip a frame in time (task command-and-an-arrow-key-nudge-a-picked-clip-a-f), Premiere's Nudge Clip Selection on its Mac keys, at Next defaults with no flag touched. The sample recording is cut in two with Command B, piece 2 is clicked with a real press on its bar, and Command Right three times moves the clip three frames later (0.099s), the Clip line reading 4.1s where it read 4.0s. Shift Command Left asks for five frames earlier and stops at the start of the document. One Command Z takes back one press. Plain Right still steps the playhead, and with nothing picked Command Right moves nothing.",
   "setup": {
     "forget": [
       "all"
@@ -15,8 +15,8 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.8 },
-    { "comment": "One cut at 0:04 with Command K.", "do": "action", "action": "videoSeekMiddle" },
-    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "comment": "One cut at 0:04 with Command B.", "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "b", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2, "startsAt": 0.0, "within": 0.001 },
     { "do": "action", "action": "videoSeekThreeQuarters" },
@@ -31,7 +31,7 @@
     { "do": "reveal", "control": "Time section" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 4.0s → 8.0s · 4.0s · 1.0x" },
-    { "do": "describe", "stage": "1-piece-2-picked", "note": "the recording cut at 0:04 with Command K, piece 2 picked with a click on its bar; the Clip line reads 4.0s to 8.0s" },
+    { "do": "describe", "stage": "1-piece-2-picked", "note": "the recording cut at 0:04 with Command B, piece 2 picked with a click on its bar; the Clip line reads 4.0s to 8.0s" },
     { "do": "snapshot", "name": "1-piece-2-picked" },
 
     { "do": "key", "key": "right", "modifiers": ["command"] },

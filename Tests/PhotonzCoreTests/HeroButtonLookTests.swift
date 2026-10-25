@@ -123,6 +123,23 @@ struct HeroSheenTests {
         #expect(after == end)
     }
 
+    @Test("Every arrival of the pointer sweeps, leaving never does, and Reduce Motion or a dimmed button skips it")
+    func whichArrivalsSweep() {
+        // The user, 2026-10-24: only the first hover swept. Each arrival is
+        // its own sweep, however many came before.
+        for _ in 0..<5 {
+            #expect(HeroSheen.sweeps(arriving: true, enabled: true, reduceMotion: false))
+            #expect(!HeroSheen.sweeps(arriving: false, enabled: true, reduceMotion: false))
+        }
+        #expect(!HeroSheen.sweeps(arriving: true, enabled: true, reduceMotion: true))
+        #expect(!HeroSheen.sweeps(arriving: true, enabled: false, reduceMotion: false))
+    }
+
+    @Test("A sweep at its end is unseen, so a band parked there shows nothing at rest")
+    func parkedAtTheEnd() {
+        #expect(HeroSheen.frame(at: HeroSheen.duration).opacity == 0)
+    }
+
     @Test("Moves on the design's curve: most of the travel early, a soft landing")
     func eased() {
         let half = HeroSheen.frame(at: HeroSheen.duration / 2)

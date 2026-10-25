@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-gap-between-clips-closes-walk",
-  "seed": "The talk sample with captions, nothing switched from its default. Cut it at 0:04 and 0:08 with Command K, mark the middle piece with X and lift it with the semicolon: a four second gap opens on V1. A click in the gap picks it, drawn in the band a range on a track wears; Delete closes it, the last piece slides back to 0:04 and its captions come with it, in one undo step. Shift Delete and the gap's own right-click menu (Ripple Delete, first row) do the same. A drag starting in the gap still draws a box.",
+  "seed": "The talk sample with captions, nothing switched from its default. Cut it at 0:04 and 0:08 with Command B, mark the middle piece with X and lift it with the semicolon: a four second gap opens on V1. A click in the gap picks it, drawn in the band a range on a track wears; Delete closes it, the last piece slides back to 0:04 and its captions come with it, in one undo step. Shift Delete and the gap's own right-click menu (Ripple Delete, first row) do the same. A drag starting in the gap still draws a box.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -34,7 +34,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]
@@ -49,7 +49,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]

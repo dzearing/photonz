@@ -23,8 +23,9 @@ extension EditorState {
     // MARK: The keys the rows print
 
     enum TimelineMenuKeys {
-        /// Premiere's Add Edit. B picks up the Blade.
-        static let split = MenuShortcut.command("k")
+        /// Final Cut's Blade, ⌘B: Premiere's ⌘K is Ask, on a video as on a
+        /// picture (the user, 2026-10-24). B alone picks up the Blade tool.
+        static let split = MenuShortcut.command("b")
         static let delete = MenuShortcut(key: DeleteKeyCharacters.backwards, modifiers: [])
         /// ⇧⌫, the key the timeline answers for it (`TimelineKeys`), on the
         /// pro menu bar: ⌥⌫ is Photoshop's Fill with Foreground, and one key

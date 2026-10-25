@@ -27,7 +27,7 @@ enum HeroReel {
         for (scheme, ground) in [("dark", Color(white: 0.16)), ("light", Color(white: 0.93))] {
             func shoot(_ name: String, _ look: HeroButtonLook, sheen: HeroSheen.Frame? = nil,
                        focused: Bool = false) {
-                let face = HeroButtonFace(label: AskTitlebarButton.label(showsKey: true), look: look,
+                let face = HeroButtonFace(label: AskTitlebarButton.label, look: look,
                                           height: AskTitlebarButton.height, focused: focused,
                                           shownSheen: sheen ?? HeroSheen.frame(at: 0))
                     .padding(.horizontal, 24).padding(.top, 8).padding(.bottom, 24)

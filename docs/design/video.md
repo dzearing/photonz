@@ -302,7 +302,8 @@ before the toolbar's single-letter key equivalents can take it.
 | M | Add Marker | marquee |
 | ⇧M | Go to Next Marker | cycle the selection tools |
 | ⇧⌘M | Go to Previous Marker | same |
-| ⌘K | Split at Playhead (Premiere's Add Edit) | same |
+| ⌘B | Split at Playhead (Final Cut's Blade; ⌘K is Ask, UX-PATTERNS §7) | same |
+| ⌘K | Ask, as on a picture (the user, 2026-10-24) | same |
 | ⇧⌘K | Split Everything at Playhead | same |
 | ⌘R | Speed: opens the picked piece's Speed list in the panel (Premiere's Speed/Duration) | same |
 | ⌫ | Lift: what is picked goes, nothing else moves | delete, as ever |

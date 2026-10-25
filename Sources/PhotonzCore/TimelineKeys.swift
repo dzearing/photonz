@@ -2,14 +2,16 @@ import Foundation
 
 // Premiere's keys on the timeline.
 //
-// A Premiere editor reaches for J/K/L, I and O, the arrows and ⌘K without
-// looking. Most of those letters already mean a Photoshop tool here (K the
+// A Premiere editor reaches for J/K/L, I and O, the arrows and a key to cut
+// at the playhead without looking. Most of those letters already mean a Photoshop tool here (K the
 // Lens, L the Line, I Measure, O the Ellipse, A the Arrow, M the marquee), so a
 // press means the timeline's thing only while the timeline has the keyboard,
 // which is Premiere's own rule: a key acts on the panel that has focus. The
-// keys no tool wants (Space, Home, End, ⌘K, ⌥I, ⌥O) work wherever the keyboard
+// keys no tool wants (Space, Home, End, ⌘B, ⌥I, ⌥O) work wherever the keyboard
 // is, because there is nothing for them to be mistaken for. ⌘T is Final Cut's
-// Add Cross Dissolve rather than Premiere's ⌘D, which is Photoshop's Deselect.
+// Add Cross Dissolve rather than Premiere's ⌘D, which is Photoshop's Deselect,
+// and the cut is Final Cut's Blade, ⌘B, rather than Premiere's ⌘K, which is
+// Ask on a video as on a picture (the user, 2026-10-24).
 //
 // Everything here is the decision; the app turns an `NSEvent` into a
 // `TimelineKeyPress` and a `TimelineKeyCommand` into the edit.
@@ -169,7 +171,8 @@ public enum TimelineKeys {
         case (.space, [.command, .shift]): return .playInToOut
         case (.home, []): return .goToStart
         case (.end, []): return .goToEnd
-        case (.letter("k"), [.command]): return .splitAtPlayhead
+        // Final Cut's Blade: Premiere's ⌘K is Ask everywhere.
+        case (.letter("b"), [.command]): return .splitAtPlayhead
         // Final Cut's key, since Premiere's ⌘D is Photoshop's Deselect here.
         case (.letter("t"), [.command]): return .applyDefaultTransition
         // Premiere's Speed/Duration. Photoshop's ⌘R is Rulers, which this app

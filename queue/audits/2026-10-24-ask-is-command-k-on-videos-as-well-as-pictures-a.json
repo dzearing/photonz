@@ -1,0 +1,55 @@
+{
+  "feature": "Ask is Command K everywhere, and its sheen plays on every hover",
+  "epic": "agent-ask",
+  "task": "ask-is-command-k-on-videos-as-well-as-pictures-a",
+  "summary": "Command K opens Ask on a video as well as a picture, and the Ask button shows the key in both. Splitting a clip at the playhead moved to Command B, Final Cut's Blade key. The light sheen across the Ask button now plays every time the pointer arrives, not only the first time.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: Scripts/playtest/ask-is-command-k-on-a-video-walk.json and Scripts/playtest/ask-sheen-every-hover-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open any recording and look at the Ask button at the top right: it reads Ask ⌘K, as on a picture.",
+      "shot": "2026-10-24-ask-key-on-a-video-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With the video open, press Command K: the Ask box opens over the picture and nothing is cut.",
+      "shot": "2026-10-24-ask-command-k-on-a-video-sc.png"
+    },
+    {
+      "do": "Press Escape, park the playhead in the clip and press Command B: the clip splits there.",
+      "shot": "2026-10-24-command-b-splits-sc.png"
+    },
+    {
+      "do": "Rest the pointer on Ask and watch the sheen cross it.",
+      "shot": "2026-10-24-ask-sheen-every-hover-sheet.png"
+    },
+    {
+      "do": "Move the pointer away and back three or four times, once before the sheen has finished: it sweeps again each time.",
+      "shot": "2026-10-24-ask-sheen-every-hover.gif"
+    },
+    {
+      "do": "Leave the pointer resting on Ask: the sheen does not come back until you leave and return."
+    }
+  ],
+  "evaluate": [
+    "Does Command B feel right for cutting at the playhead, or would you rather it be something else now that Command K is Ask?",
+    "Is a sweep on every arrival pleasant, or does it get busy when you pass over the button often?",
+    "Does Ask ⌘K on a video still sit comfortably beside View and Edit, now that it is a little wider?"
+  ],
+  "measured": [
+    "Before the fix, filmed at the display's rate (filmHover): hover 1 drew a band in 21 frames carried from 0.02 to 0.99 of the width; hovers 2 and 3 drew no band carried across, only the pink end fading in.",
+    "After: hovers 1, 2, 3, 5 and 6 each swept from about 0.02 to 0.99 of the width in 18 to 20 frames, the band up to 61 to 63 levels lighter than the settled hover. Hover 5 arrived while hover 4's sweep was still crossing and started fresh from the leading edge. Resting on the button for 0.8s drew no band (0 frames)."
+  ],
+  "reel": [
+    "2026-10-24-ask-sheen-every-hover.mp4",
+    "2026-10-24-ask-sheen-every-hover.gif",
+    "2026-10-24-ask-sheen-every-hover-sheet.png"
+  ],
+  "rough": [
+    "Split at Playhead moved from Command K (Premiere's Add Edit) to Command B (Final Cut's Blade), because you asked for Command K to be Ask on a video too (your call on 2026-10-24, UX-PATTERNS §7). The Blade tooltip, the Clip menu row, the right-click Split row, the cut tutorial and 30 walks changed with it.",
+    "Split Everything at Playhead keeps Premiere's Shift Command K: Ask does not want it and nothing else has it, so Command B and Shift Command K now sit side by side for the two cuts (UX-PATTERNS §7).",
+    "Ask with its key is about 20 points wider on a video than before, and on a video in Edit it still sits over the top of the right panel; that overlap is on-a-video-the-ask-button-never-sits-on-top-of-t.",
+    "Command K reaches Ask through the Edit menu, so the walk that proves it runs with the probe in front; with the probe behind another app its menu bar is frozen and no menu key acts.",
+    "Reduce Motion skipping the sweep is checked by a unit test of the rule the button calls, not filmed: a walk cannot turn Reduce Motion on."
+  ]
+}

@@ -10,9 +10,9 @@
     { "do": "expectTimeline", "keyboard": "timeline", "lengthMS": 8000 },
 
     { "do": "action", "action": "videoSeekQuarter" },
-    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "key", "key": "b", "modifiers": ["command"] },
     { "do": "action", "action": "videoSeekMiddle" },
-    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "key", "key": "b", "modifiers": ["command"] },
     { "do": "action", "action": "videoSeekQuarter" },
     { "do": "key", "key": "right", "modifiers": ["shift"] },
     { "do": "key", "key": "right", "modifiers": ["shift"] },

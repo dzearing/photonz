@@ -153,7 +153,8 @@ struct TutorialVideoEditorTrackTests {
         let guide = try #require(TutorialCatalog.guide(id: "cut-a-recording-down"))
         let words = guide.steps.map(\.body).joined(separator: " ")
         // Premiere's keys, by name: the person already has them in their fingers.
-        for key in ["press Q", "press W", "Command K", "Delete", "J, K and L"] {
+        // The cut is Final Cut's Command B: Command K is Ask (2026-10-24).
+        for key in ["press Q", "press W", "Command B", "Delete", "J, K and L"] {
             #expect(words.contains(key), "the cut guide never says \(key)")
         }
     }

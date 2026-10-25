@@ -9,7 +9,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectTimeline", "keyboard": "timeline" },
     { "do": "action", "action": "videoSeekQuarter" },
-    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "key", "key": "b", "modifiers": ["command"] },
     { "do": "action", "action": "videoSeekMiddle" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "menus", "stage": "1-nothing-marked", "menu": "Sequence", "oneKeyEach": true },

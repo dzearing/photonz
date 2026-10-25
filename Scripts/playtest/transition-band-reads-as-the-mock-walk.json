@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/transition-band-reads-as-the-mock-walk",
-  "seed": "A transition on a cut is drawn the way the video mock draws .xband, at Next defaults with no flag touched: a recording is cut with Command K at two seconds, the cut is clicked and Cross dissolve picked at the cut, and the band is photographed at the default zoom and zoomed right in, in dark and in light. It is a solid cyan to orange band with a white edge, the transition icon in the middle and a grip at each end, with no join grip drawn through it and the clip's name starting past it rather than under it. A click on the band picks the cut, and a dip to black is drawn as a dashed outline so the clips under it still read.",
+  "seed": "A transition on a cut is drawn the way the video mock draws .xband, at Next defaults with no flag touched: a recording is cut with Command B at two seconds, the cut is clicked and Cross dissolve picked at the cut, and the band is photographed at the default zoom and zoomed right in, in dark and in light. It is a solid cyan to orange band with a white edge, the transition icon in the middle and a grip at each end, with no join grip drawn through it and the clip's name starting past it rather than under it. A click on the band picks the cut, and a dip to black is drawn as a dashed outline so the clips under it still read.",
   "setup": {
     "front": true,
     "forget": [
@@ -43,7 +43,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]

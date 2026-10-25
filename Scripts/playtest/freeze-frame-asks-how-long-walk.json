@@ -34,7 +34,7 @@
   },
   {
    "do": "key",
-   "key": "k",
+   "key": "b",
    "modifiers": [
     "command"
    ]
@@ -49,7 +49,7 @@
   },
   {
    "do": "key",
-   "key": "k",
+   "key": "b",
    "modifiers": [
     "command"
    ]

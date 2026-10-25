@@ -1923,7 +1923,12 @@ another command loses that key, and its command moves.
   marquee, so Measure moved to I; ⌘N is New Layer, so New from Clipboard moved
   to ⌥⌘N. 2026-10-11: H picks the Hand and Highlight moved to U; C stays Crop
   and the Component tool took N. 2026-10-22: ⌘N is File ▸ New, like every Mac
-  app, and New Layer moved to ⇧⌘N, Photoshop's own key for it. Parity is for keys, not behaviour: where
+  app, and New Layer moved to ⇧⌘N, Photoshop's own key for it. 2026-10-24: ⌘K
+  is Ask on a video as on a picture, overriding Premiere's Add Edit for that one
+  key ("make sure that ask button has the same keystroke (cmd-k) on both image
+  and video"), so Split at Playhead took Final Cut's Blade, ⌘B: free in every
+  menu on a video, and the key a Final Cut editor already cuts with. Split
+  Everything keeps Premiere's ⇧⌘K, which Ask does not want. Parity is for keys, not behaviour: where
   Photoshop's interaction is clumsy the user overrides it (a marquee drag moves
   the pixels here, ⌘-drag moves the outline).
 
@@ -2131,8 +2136,9 @@ accent ring round the timeline dock says when it is the timeline.
 - **While the timeline has it:** J / K / L shuttle (K+J/L a frame), I and O
   mark, M adds a marker, V Select, B Blade, `=` `-` `\` zoom, ← → a frame
   (⇧ five), ↑ ↓ edit points, ⌫ lift, ⇧⌫ ripple delete.
-- **Everywhere, wherever the keyboard is:** Space, Home, End, ⌘K split, ⌥I / ⌥O
-  clear the marks. No picture tool wants them.
+- **Everywhere, wherever the keyboard is:** Space, Home, End, ⌘B split (Final
+  Cut's Blade; ⌘K is Ask, see §7), ⌥I / ⌥O clear the marks. No picture tool
+  wants them.
 - **The picture tools those letters would pick** (K Lens, L Line, I Measure, O
   Ellipse, M Marquee, A Arrow) are reached from the tool bar, always, and by
   their letter once the canvas has the keyboard: a press on the canvas (or

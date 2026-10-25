@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/option-drag-copies-a-clip-walk",
-  "seed": "Option drag on a clip leaves a copy behind (task option-drag-on-a-clip-leaves-a-copy-behind). At Next defaults with no flag changed: open a recording, split it with Command K, hold Option over the second piece and the pointer wears the copy badge, then Option-drag that piece right with a real mouse. The original stays cut in two exactly where it was, a copy of the second piece lands later as a clip of its own reading the same recording, on a new track straight over V1 because V1 is busy there, and one undo takes the copy away.",
+  "seed": "Option drag on a clip leaves a copy behind (task option-drag-on-a-clip-leaves-a-copy-behind). At Next defaults with no flag changed: open a recording, split it with Command B, hold Option over the second piece and the pointer wears the copy badge, then Option-drag that piece right with a real mouse. The original stays cut in two exactly where it was, a copy of the second piece lands later as a clip of its own reading the same recording, on a new track straight over V1 because V1 is busy there, and one undo takes the copy away.",
   "setup": {
     "front": true,
     "timelineOpen": true,
@@ -31,7 +31,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]

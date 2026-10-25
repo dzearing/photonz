@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/cut-panel-names-the-clip-walk",
-  "seed": "A cut inside one recording names its two sides the way the timeline does. At Next defaults, nothing switched on by hand: open the sample recording, cut it in two with Command K at a quarter of the way in, click the cut with the pointer, and the panel's Edit point reads Out: Sample Talk and In: Sample Talk, the name both bars on V1 carry (it read Piece 1 and Piece 2 until 2026-10-06, names no bar shows). Then a recording whose name is far longer than a field is opened, cut with the blade (B and a click at two seconds) and its cut clicked with the select tool (V), and both fields still sit on one line, giving way in the middle.",
+  "seed": "A cut inside one recording names its two sides the way the timeline does. At Next defaults, nothing switched on by hand: open the sample recording, cut it in two with Command B at a quarter of the way in, click the cut with the pointer, and the panel's Edit point reads Out: Sample Talk and In: Sample Talk, the name both bars on V1 carry (it read Piece 1 and Piece 2 until 2026-10-06, names no bar shows). Then a recording whose name is far longer than a field is opened, cut with the blade (B and a click at two seconds) and its cut clicked with the select tool (V), and both fields still sit on one line, giving way in the middle.",
   "setup": {
     "forget": [
       "all"
@@ -32,7 +32,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]

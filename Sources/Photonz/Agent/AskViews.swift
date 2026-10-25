@@ -36,22 +36,20 @@ struct AskTitlebarButton: View {
         return ceil(content + padding * 2) + 2
     }()
 
-    /// Sparkle, Ask and, where it is Ask's, the key. The legibility check
-    /// draws this same label on the same style.
-    static func label(showsKey: Bool) -> some View {
+    /// Sparkle, Ask and the key, ⌘K on a picture and on a video alike. The
+    /// legibility check draws this same label on the same style.
+    static var label: some View {
         HStack(spacing: spacing) {
             AskSparkle()
                 .frame(width: sparkleSize, height: sparkleSize)
                 .measuredInk()
             Text(AskCopy.button)
                 .font(.system(size: wordSize, weight: .semibold))
-            if showsKey {
-                // Quieter than the word by size and weight, never by fading:
-                // the design's 70% white takes on the pink behind it and reads
-                // as one colour with it (`LegibilitySheet`, 2026-10-24).
-                Text("⌘K")
-                    .font(.system(size: keySize, weight: .regular))
-            }
+            // Quieter than the word by size and weight, never by fading: the
+            // design's 70% white takes on the pink behind it and reads as one
+            // colour with it (`LegibilitySheet`, 2026-10-24).
+            Text("⌘K")
+                .font(.system(size: keySize, weight: .regular))
         }
         .fixedSize()
     }
@@ -61,15 +59,13 @@ struct AskTitlebarButton: View {
         Button {
             ask.isComposerShown ? ask.closeComposer() : ask.summon(in: editorState)
         } label: {
-            // Only where ⌘K is Ask: on a video it is Premiere's Add Edit.
-            Self.label(showsKey: !editorState.documentHasTime)
+            Self.label
         }
         .buttonStyle(HeroButtonStyle(isOpen: ask.isComposerShown, height: Self.height, padding: Self.padding))
         .focusEffectDisabled()
-        .toolTip(AskCopy.buttonTooltip, key: editorState.documentHasTime ? nil : "⌘K", below: true)
+        .toolTip(AskCopy.buttonTooltip, key: "⌘K", below: true)
         .playtestControl("Ask", detail: "the title bar's Ask button")
-        // Its own width, not the box's: on a video, without the key, it sits
-        // the usual gap from View | Edit and the spare room is on its left.
+        // Its own width, not the box's: the box is measured to hold it.
         .frame(height: TitlebarPanelToggle.barHeight)
     }
 }

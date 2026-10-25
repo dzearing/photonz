@@ -49,8 +49,9 @@ struct HeroButtonStyle: ButtonStyle {
                 .opacity(isEnabled ? 1 : 0.55)
                 .playtestHover("hero") { inside in
                     hovering = inside
-                    // Reduce Motion keeps the colour change and skips the sweep.
-                    if inside, isEnabled, !reduceMotion { sweeps += 1 }
+                    if HeroSheen.sweeps(arriving: inside, enabled: isEnabled, reduceMotion: reduceMotion) {
+                        sweeps += 1
+                    }
                 }
                 .animation(.easeOut(duration: 0.2), value: look)
         }
@@ -142,14 +143,24 @@ struct HeroButtonFace<Label: View>: View {
         } else {
             Rectangle().fill(band)
                 .frame(width: bandWidth)
-                .keyframeAnimator(initialValue: 0.0, trigger: sweeps) { band, elapsed in
+                .keyframeAnimator(initialValue: HeroSheen.duration, trigger: sweeps) { band, elapsed in
                     let frame = HeroSheen.frame(at: elapsed)
                     band.offset(x: frame.lead * width).opacity(frame.opacity)
                 } keyframes: { _ in
+                    // A new trigger plays the track from wherever the last
+                    // one left the value, which is the end of a sweep, so
+                    // every sweep starts by going back to its beginning: without
+                    // this only the first hover swept (the user, 2026-10-24).
+                    // Parked at the end until then, so nothing shows at rest.
                     KeyframeTrack {
+                        MoveKeyframe(0.0)
                         LinearKeyframe(HeroSheen.duration, duration: HeroSheen.duration)
                     }
                 }
+                // The hover's own colour change animates the face; the band
+                // moves only by its keyframes, never eased back from where
+                // the last sweep left it.
+                .transaction { $0.animation = nil }
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

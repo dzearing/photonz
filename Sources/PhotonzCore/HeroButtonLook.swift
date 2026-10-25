@@ -118,6 +118,15 @@ public enum HeroSheen {
         public var opacity: Double
     }
 
+    /// Whether the pointer coming onto the button (`arriving`) or leaving it
+    /// sweeps the band: every arrival does, from the start, however many came
+    /// before and even while the last sweep is still crossing. Leaving never
+    /// does; Reduce Motion keeps the colour change and skips the sweep, and a
+    /// dimmed button does not answer the pointer.
+    public static func sweeps(arriving: Bool, enabled: Bool, reduceMotion: Bool) -> Bool {
+        arriving && enabled && !reduceMotion
+    }
+
     /// The band `elapsed` seconds after the pointer arrived.
     public static func frame(at elapsed: Double) -> Frame {
         let t = min(max(elapsed / duration, 0), 1)

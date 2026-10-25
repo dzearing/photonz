@@ -2142,7 +2142,7 @@ public enum TutorialGuides {
     // and the timeline under the picture, and the small recording window (and
     // the two guides that taught it) is gone from Next. These six teach the editor a
     // Premiere or Final Cut person already half knows, with the keys they
-    // already have in their fingers: Q and W, Command K, the Delete key, a
+    // already have in their fingers: Q and W, Command B, the Delete key, a
     // click on the cut for its transitions, Command T.
     //
     // Every step that asks for something waits for the DOCUMENT to show it
@@ -2195,7 +2195,7 @@ public enum TutorialGuides {
                 id: "cut-it-in-two",
                 anchor: .timelineTracks,
                 title: "Cut it in two",
-                body: "Park the playhead anywhere in the clip and press Command K. It splits there, and nothing is thrown away.",
+                body: "Park the playhead anywhere in the clip and press Command B. It splits there, and nothing is thrown away.",
                 advance: .waitsFor(.clipCut)),
             TutorialStep(
                 id: "throw-a-piece-away",

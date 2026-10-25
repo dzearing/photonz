@@ -82,7 +82,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]
@@ -106,7 +106,7 @@
     {
       "do": "describe",
       "stage": "1-edited",
-      "note": "THE EDIT: two seconds trimmed off the front with Q, a cut at the middle with Command K, and a zoom added at the playhead"
+      "note": "THE EDIT: two seconds trimmed off the front with Q, a cut at the middle with Command B, and a zoom added at the playhead"
     },
     {
       "do": "snapshot",

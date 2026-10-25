@@ -17,8 +17,8 @@ Switch: `next-ask`, on by default in Next, absent from Current.
 
 | Place | What | Code |
 | --- | --- | --- |
-| Title bar, right slot | **Ask** button (sparkle, Ask, ⌘K on a picture), the mock's `.askbtn` | `AskTitlebarButton`, hung in `TitlebarPanelToggle` |
-| Edit menu | **Ask…**, ⌘K on a picture | `EditorCommands` (undo/redo group) |
+| Title bar, right slot | **Ask** button (sparkle, Ask, ⌘K), the mock's `.askbtn` | `AskTitlebarButton`, hung in `TitlebarPanelToggle` |
+| Edit menu | **Ask…**, ⌘K | `EditorCommands` (undo/redo group) |
 | Over the window | The composer, the mock's `.askpal`: glass over a dimmed window, one field, Ask. Return asks, Escape or a click outside closes | `AskComposerOverlay` |
 | Dock | The **Agent** group, there once the window has asked: Working… while it works, then one row per request, newest at the top (what changed, a switch, a delete; right-click for Turn Off/On and Delete), and a field to ask again | `AgentPanel`, `InspectorSectionID.agent` |
 | Settings | **Ask**: which model answers, Automatic by default; the one-time setup when there is none | `AskSettingsSection` |
@@ -28,10 +28,18 @@ Choose a model menu row (line 426) are not built: the user removed them on
 2026-10-19 ("i don't want to have to select a model in the experience"). Which
 model answers is set once in Settings.
 
-**⌘K.** The mock prints ⌘K for Ask. On a video ⌘K is Premiere's Add Edit
-(Split at Playhead), so there the key stays with Split and Ask is the button
-and the menu row (UX-PATTERNS §7). On a picture Photonz gives ⌘K to nothing
-else, so Ask has it.
+**⌘K.** The mock prints ⌘K for Ask, and Ask has it everywhere, on a video as
+on a picture: the user asked for one key on 2026-10-24. Until then a video gave
+⌘K to Premiere's Add Edit; Split at Playhead now takes Final Cut's Blade, ⌘B
+(UX-PATTERNS §7).
+
+**The sheen.** Every arrival of the pointer sweeps the button's sheen once,
+from the start, even while the last sweep is still crossing; staying does not
+repeat it, and Reduce Motion skips it (`HeroSheen.sweeps`). Until 2026-10-24
+only the first hover swept: a keyframe animator replays its track from where
+the last run left the value, which was the end. The track now starts with a
+move back to the beginning. `ask-sheen-every-hover-walk` films it
+(`filmHover`).
 
 ## How a request becomes a plan
 

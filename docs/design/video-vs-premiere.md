@@ -22,7 +22,7 @@ clumsier than Premiere, **Low** is a nicety a Premiere user would miss.
 
 | Basic | Premiere | Photonz Next today | Verdict |
 | --- | --- | --- | --- |
-| Blade at the playhead | Command K, C for the razor | Command K anywhere, B then a click on a clip, right-click Split at Playhead ([picture](video-vs-premiere/blade-cut.jpg)) | Works |
+| Blade at the playhead | Command K, C for the razor | Command B anywhere (Final Cut's Blade; Command K is Ask since 2026-10-24), B then a click on a clip, right-click Split at Playhead ([picture](video-vs-premiere/blade-cut.jpg)) | Works |
 | Ripple delete | Shift Delete | Shift Delete with the timeline focused, right-click Ripple Delete; plain Delete closes the gap too | Works |
 | J, K, L shuttle | Works on the timeline | Works, up to 8x, from the moment a recording opens ([picture](video-vs-premiere/closed-2-l-plays-on-open.jpg)) | Works (was **Gap 2**) |
 | Drag clips between tracks | Drag up or down | Carry up onto the track above, or past the top for a new track (tracks walk) | Works |

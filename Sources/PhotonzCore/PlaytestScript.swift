@@ -4162,6 +4162,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// (`PlaytestThumbFilm`). Frames go to `<name>-<n>-sc.png`, the readings
     /// to `<name>.json`. Needs the Screen Recording grant.
     case filmThumb(PlaytestThumbFilm)
+    /// Films a control while the pointer arrives on it and reads whether a
+    /// band of light crossed it (`PlaytestHoverFilm`, `SheenSweep`). Frames
+    /// go to `<name>-<n>-sc.png`, the readings to `<name>.json`. Needs the
+    /// Screen Recording grant.
+    case filmHover(PlaytestHoverFilm)
     /// Presses a key and FILMS the whole window while what it set off slides,
     /// then reads when the window drew each new picture (`PlaytestSlideFilm`,
     /// `SlideCadence`). Frames go to `<name>-<n>-sc.png`, the readings to
@@ -4532,7 +4537,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4677,6 +4682,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectPlaybackShows: "expectPlaybackShows"
         case .expectScrubSmooth: "expectScrubSmooth"
         case .filmThumb: "filmThumb"
+        case .filmHover: "filmHover"
         case .filmWindow: "filmWindow"
         case .filmMenuBar: "filmMenuBar"
         case .expectBox: "expectBox"
@@ -6227,6 +6233,13 @@ public enum PlaytestStep: Sendable, Equatable {
                 name: try f.string("name"), rail: rail,
                 pad: CGFloat(try f.optionalNumber("pad") ?? 0), seconds: seconds,
                 trigger: trigger, inside: try f.optionalFlag("inside"), slack: CGFloat(slack)))
+        case "filmHover":
+            let seconds = try f.optionalNumber("seconds") ?? PlaytestHoverFilm.defaultSeconds
+            guard seconds >= 0.2, seconds <= 3 else {
+                throw f.invalid("seconds", "a hover is filmed for 0.2 to 3 seconds, not \(seconds)")
+            }
+            self = .filmHover(PlaytestHoverFilm(name: try f.string("name"), control: try f.string("control"),
+                                                seconds: seconds, sweeps: try f.optionalFlag("sweeps")))
         case "filmMenuBar":
             let seconds = try f.optionalNumber("seconds") ?? 10
             guard seconds >= 1, seconds <= 30 else {

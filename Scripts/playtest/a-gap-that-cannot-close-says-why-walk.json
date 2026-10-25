@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-gap-that-cannot-close-says-why-walk",
-  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command K, X on the middle piece and the semicolon lift it: a four second gap on V1, with the talk's own sound under it on Audio. Lock Audio from its header, pick the gap on V1 and press Delete: nothing moves, and the pill under the canvas says Not closed, V1 sound is locked. Shift Delete says the same. Unlock Audio and Delete closes the gap as a-gap-between-clips-closes-walk expects.",
+  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command B, X on the middle piece and the semicolon lift it: a four second gap on V1, with the talk's own sound under it on Audio. Lock Audio from its header, pick the gap on V1 and press Delete: nothing moves, and the pill under the canvas says Not closed, V1 sound is locked. Shift Delete says the same. Unlock Audio and Delete closes the gap as a-gap-between-clips-closes-walk expects.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -34,7 +34,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]
@@ -49,7 +49,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]

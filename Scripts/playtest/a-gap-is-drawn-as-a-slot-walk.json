@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-gap-is-drawn-as-a-slot-walk",
-  "seed": "The talk sample with captions, nothing switched from its default. Cut it at 0:04 and 0:08 with Command K, mark the middle piece with X and lift it with the semicolon: the four second gap on V1 is drawn as the cut walkthrough mock (video-cut-wt step 7, #theGap) draws it, a dashed slot the height of a clip with a soft diagonal hatch, in dark and light. A click picks it and the range band sits over the slot; Delete closes it and the slot goes.",
+  "seed": "The talk sample with captions, nothing switched from its default. Cut it at 0:04 and 0:08 with Command B, mark the middle piece with X and lift it with the semicolon: the four second gap on V1 is drawn as the cut walkthrough mock (video-cut-wt step 7, #theGap) draws it, a dashed slot the height of a clip with a soft diagonal hatch, in dark and light. A click picks it and the range band sits over the slot; Delete closes it and the slot goes.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -34,7 +34,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]
@@ -49,7 +49,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]

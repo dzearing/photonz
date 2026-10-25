@@ -181,7 +181,7 @@ struct TimelineDock: View {
                        isOn: editorState.timelineTool == .range) {
                 editorState.timelineTool = editorState.timelineTool == .range ? .select : .range
             }
-            toolButton("scissors", name: "Blade", help: "Blade (B), split at playhead (⌘K)",
+            toolButton("scissors", name: "Blade", help: "Blade (B), split at playhead (⌘B)",
                        isOn: isBlade) {
                 editorState.isTimelineBlade.toggle()
             }

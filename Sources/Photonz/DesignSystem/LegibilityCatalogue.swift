@@ -340,7 +340,7 @@ enum LegibilityCatalogue {
     private static var hero: [Specimen] {
         let name = "Ask hero button"
         func ask(open: Bool = false, pointer: Kit.ShownPointer = .live) -> AnyView {
-            AnyView(Button {} label: { AskTitlebarButton.label(showsKey: true) }
+            AnyView(Button {} label: { AskTitlebarButton.label }
                 .buttonStyle(HeroButtonStyle(isOpen: open, height: AskTitlebarButton.height))
                 .environment(\.shownPointer, pointer))
         }
@@ -351,13 +351,9 @@ enum LegibilityCatalogue {
         all.append(Specimen(control: name, state: "open, hovered", ground: .anything, inks: 3) {
             ask(open: true, pointer: .hovered) })
         all.append(Specimen(control: name, state: "focused", ground: .anything, inks: 3) {
-            AnyView(HeroButtonFace(label: AskTitlebarButton.label(showsKey: true),
+            AnyView(HeroButtonFace(label: AskTitlebarButton.label,
                                    look: HeroButtonLook(pose: .rest), height: AskTitlebarButton.height,
                                    focused: true))
-        })
-        all.append(Specimen(control: name, state: "on a video, no key", ground: .anything, inks: 2) {
-            AnyView(Button {} label: { AskTitlebarButton.label(showsKey: false) }
-                .buttonStyle(HeroButtonStyle(height: AskTitlebarButton.height)))
         })
         return all
     }

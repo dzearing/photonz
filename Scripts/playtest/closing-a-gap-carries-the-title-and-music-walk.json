@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/closing-a-gap-carries-the-title-and-music-walk",
-  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command K, X on the middle piece and the semicolon lift it, leaving a four second gap on V1; then a title typed with the text tool at 0:10 and the sample song dropped at 0:09 on its own track. A click in the gap picks it and Delete closes it: the last piece, the title and the song all move back four seconds, as they do when a piece of a clip is deleted. One Command Z puts all three back, and Shift Delete does the same as Delete.",
+  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command B, X on the middle piece and the semicolon lift it, leaving a four second gap on V1; then a title typed with the text tool at 0:10 and the sample song dropped at 0:09 on its own track. A click in the gap picks it and Delete closes it: the last piece, the title and the song all move back four seconds, as they do when a piece of a clip is deleted. One Command Z puts all three back, and Shift Delete does the same as Delete.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -34,7 +34,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]
@@ -49,7 +49,7 @@
     },
     {
       "do": "key",
-      "key": "k",
+      "key": "b",
       "modifiers": [
         "command"
       ]

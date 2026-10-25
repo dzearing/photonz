@@ -198,7 +198,7 @@ were: canvas, panel, panel.frame, tool.arrow, tool.crop, tool.frame, tool.line, 
 This one runs in the sweep rather than in the test run, and it adds NO walks to
 it: the thirty odd tutorial walks were already there, and they now assert
 instead of only photographing. The full sweep is
-about 910 walks and about 245 minutes,
+about 1010 walks and about 290 minutes,
 so a walk per guide on top of the walk per guide we already had would have been
 pure cost.
 
@@ -1168,7 +1168,7 @@ a Premiere or Final Cut person half knows already:
 
 | Guide | Brings | What it makes you do |
 | --- | --- | --- |
-| Cut a recording down | the recording, b-roll on the shelf | Q, W, Command K, Delete |
+| Cut a recording down | the recording, b-roll on the shelf | Q, W, Command B, Delete |
 | Add a second clip | the same window | b-roll from the Media shelf onto the end of V1 |
 | A title that moves | the same window | T, type, Command Return, Position's diamond, a drag a second later |
 | Put a transition on a cut | recording and b-roll already meeting on V1 | click the cut, pick Cross dissolve |

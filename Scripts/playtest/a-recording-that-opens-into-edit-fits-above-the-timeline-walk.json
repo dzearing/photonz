@@ -14,7 +14,7 @@
     { "do": "snapshot", "name": "1-guide-opened" },
 
     { "do": "action", "action": "videoSeekThreeQuarters" },
-    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "key", "key": "b", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectRecording", "pieces": 2 },
     { "do": "action", "action": "saveProjectAs" },

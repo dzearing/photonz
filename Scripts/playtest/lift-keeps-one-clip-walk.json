@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/lift-keeps-one-clip-walk",
-  "seed": "The talk sample at Next defaults. I at a quarter, O at the middle, then the semicolon (Lift): the stretch goes and the gap stays, and both halves are still called Sample Talk, the way Command K and Extract leave them; nothing is called Sample Talk copy. One Command Z puts the clip back whole. Then with its sound detached onto its own clip, the same lift leaves two halves of the picture called Sample Talk and two halves of the sound called Sample Talk sound.",
+  "seed": "The talk sample at Next defaults. I at a quarter, O at the middle, then the semicolon (Lift): the stretch goes and the gap stays, and both halves are still called Sample Talk, the way Command B and Extract leave them; nothing is called Sample Talk copy. One Command Z puts the clip back whole. Then with its sound detached onto its own clip, the same lift leaves two halves of the picture called Sample Talk and two halves of the sound called Sample Talk sound.",
   "setup": {
     "timelineOpen": true,
     "forget": ["all"]
