@@ -1,0 +1,12 @@
+Bars on a straight stroke at Size 40, 2x, mouse press.
+Watercolour	edge to centre 1.41 (bar 1.30: passes), spread past the path 0.25 (bar 0.15: passes)
+Round tip	edge to centre 1.00 (bar 1.30: fails), spread past the path -0.03 (bar 0.15: fails)
+Watercolour wetness 0	edge to centre 1.58, spread 0.00
+Watercolour wetness 50	edge to centre 1.40, spread 0.21
+Watercolour wetness 100	edge to centre 1.62, spread 0.44
+Watercolour bleed 0	edge to centre 1.86, spread 0.03
+Watercolour bleed 50	edge to centre 1.29, spread 0.29
+Watercolour bleed 100	edge to centre 1.09, spread 0.45
+Watercolour granulation 0	edge to centre 1.42, spread 0.25
+Watercolour granulation 50	edge to centre 1.43, spread 0.25
+Watercolour granulation 100	edge to centre 1.46, spread 0.25

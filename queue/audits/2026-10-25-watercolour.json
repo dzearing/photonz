@@ -1,0 +1,31 @@
+{
+  "feature": "Watercolour",
+  "epic": "image-paint",
+  "summary": "The watercolour brush now paints a see-through wash that dries darker at its edge, creeps past where the brush went, settles into the paper, deepens into a glaze where a dry stroke is crossed, and spreads out through a wash that is still wet.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A blank picture or any screenshot. Walk: Scripts/playtest/watercolour-wash-and-bloom-walk.json (12 megapixel canvas).",
+  "switched": {},
+  "try": [
+    { "do": "Press B, then pick Watercolour from the Medium dropdown in the options above the tool bar, and pick a colour from the tool bar swatch.", "shot": "2026-10-25-watercolour-1-wash-held-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag one stroke across the picture and look at its edge: it is darker than its middle, and the outline wanders." },
+    { "do": "Straight away, within a few seconds, drag a second stroke across the first.", "shot": "2026-10-25-watercolour-2-into-the-wet-wash-held-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Wait ten seconds, then drag a third stroke across the first somewhere else.", "shot": "2026-10-25-watercolour-5-glazed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare the two crossings: the wet one spread softly into the wash, the dry one is a crisp darker glaze.", "shot": "2026-10-25-watercolour-close-sc.png" },
+    { "do": "Open the stroke sheet to see Wetness, Bleed and Granulation, and two colours dropped into wet washes.", "shot": "2026-10-25-watercolour-sheet.png" }
+  ],
+  "evaluate": [
+    "Does a single stroke read as watercolour to you: see-through, uneven, with a darker dried edge?",
+    "Is a few seconds (about five at the default Wetness) the right time for a wash to stay wet?",
+    "Does a stroke dropped into a wet wash spread the way you expect, or does it need to spread further?",
+    "On the sheet, do Wetness, Bleed and Granulation each do what their names promise?",
+    "Is Granulation worth its own setting, or should it stay fixed?"
+  ],
+  "rough": [
+    "No mock draws watercolour strokes; the two measured bars decide the look: edge 1.41 times as dark as the middle (bar 1.3, round tip 1.00) and a spread of 0.25 of the radius past the brush (bar 0.15, round tip -0.03). Numbers in 2026-10-25-watercolour-measures.txt.",
+    "Wetness, Bleed and Granulation work in the engine but have no controls yet, so they are shown on the stroke sheet, not in the app. The settings slice covers it (each-brush-shows-its-own-settings-in-the-tool-op).",
+    "A real bloom also lifts the earlier wash's colour out of its middle. Here paint is only ever added, so the live stroke can show exactly what lands: the bloom is the new paint spreading through the wet wash with a darker ragged front.",
+    "The bloom's ragged front breaks into small flecks rather than one smooth cauliflower edge, and the dry brush (Wetness near 0) skips in blotches rather than in streaks along the drag. Both visible on the sheet.",
+    "Two colours mixed wet read a little muddy, because a wash darkens what is under it the way a glaze does. Real pigments mixed wet stay a bit brighter.",
+    "Wet into wet works within one Paint layer, which is where strokes go one after another anyway. A stroke on a different layer never blooms into this one.",
+    "Painting moves took 0.4 to 0.9 ms (worst 1.8 ms) on the 12 megapixel canvas. Each stroke landing then holds the app for about 0.35 to 0.43 s while the whole layer is redrawn; the pencil walk shows the same 0.3 to 0.4 s, and keeping the last picture of the layer is the painting speed slice (brushes design doc, decision 5), tracked as painting-keeps-up-with-the-pointer-on-a-12-megap."
+  ]
+}

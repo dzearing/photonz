@@ -1,0 +1,181 @@
+{
+  "out": "/tmp/photonz-playtest/watercolour-wash-and-bloom-walk",
+  "seed": "Watercolour (docs/design/brushes.md, decision 4). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the Medium dropdown over the tool bar is clicked at its face and Watercolour chosen, and the brush is given a plain blue. A pointer drag lays a see-through wash with a darker pooled edge on a new Paint layer; a second drag crossing it straight away, while it is still wet, blooms out through it; after eight seconds the wash has dried and a third drag crossing it is a plain glaze, darker only where the two overlap. Every drag holds the picture with the button down against the landed one (the live overlay replays the wet washes it blooms into) and reports how long the canvas took over each move. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 4000,
+      "canvasHeight": 3000,
+      "width": 1500,
+      "height": 1000,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "at": [
+        "centre"
+      ],
+      "choose": "Watercolour"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Tool Medium",
+      "reads": "Watercolour"
+    },
+    {
+      "do": "action",
+      "action": "paintToolColor"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "drag",
+      "from": [
+        1820,
+        1500
+      ],
+      "to": [
+        2180,
+        1512
+      ],
+      "steps": 30,
+      "wobble": 1.5,
+      "hold": "1-wash-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        1950,
+        1420
+      ],
+      "to": [
+        1958,
+        1600
+      ],
+      "steps": 24,
+      "wobble": 1.5,
+      "hold": "2-into-the-wet-wash-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "3-bloomed"
+    },
+    {
+      "do": "describe",
+      "stage": "3-bloomed",
+      "note": "one Paint layer: a wash, and a second stroke dropped into it while it was wet"
+    },
+    {
+      "do": "wait",
+      "seconds": 8,
+      "onTheClock": true
+    },
+    {
+      "do": "drag",
+      "from": [
+        2090,
+        1420
+      ],
+      "to": [
+        2098,
+        1600
+      ],
+      "steps": 24,
+      "wobble": 1.5,
+      "hold": "4-over-the-dry-wash-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "5-glazed"
+    },
+    {
+      "do": "describe",
+      "stage": "5-glazed",
+      "note": "a third stroke crossing the wash after it dried: a glaze, no bloom"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

@@ -48,8 +48,11 @@ extension CanvasNSView {
         let backing = window?.backingScaleFactor ?? 2
         let width = Int((bounds.width * backing).rounded(.up))
         let height = Int((bounds.height * backing).rounded(.up))
+        // Stamped with when it began, so watercolour knows which earlier
+        // strokes are still wet, on every replay as now.
         let stroke = BrushStroke(samples: [], settings: brushSettings, colorHex: brushColorHex,
-                                 seed: UInt32.random(in: 1...UInt32.max))
+                                 seed: UInt32.random(in: 1...UInt32.max),
+                                 startedAt: Date().timeIntervalSinceReferenceDate)
         let smudging = stroke.settings.mode == .smudge
         // Paint shows only inside the layer it will land on, so the live
         // stroke is cut to the same box. A smudge lands on the paint under it,
@@ -69,13 +72,17 @@ extension CanvasNSView {
             let clip = box.applying(canvasToPixels)
             let toPixels = canvasToPixels.translatedBy(x: origin.x, y: origin.y)
             var working: CGContext?
-            // What the smudge drags, and what a marker darkens where it
-            // crosses: the paint layer the stroke lands on, as it stands,
-            // drawn into the view's pixels where it sits. A marker starting a
+            // What the smudge drags, and what a marker or a wash darkens where
+            // it crosses: the paint layer the stroke lands on, as it stands,
+            // drawn into the view's pixels where it sits. A stroke starting a
             // new layer has no paint under it.
-            let under = smudging ? target
-                : stroke.settings.medium == .marker ? pickedPaintLayer(in: document) : nil
+            let multiplies = stroke.settings.medium == .marker || stroke.settings.medium == .watercolour
+            let under = smudging ? target : multiplies ? pickedPaintLayer(in: document) : nil
+            var earlier: [BrushStroke] = []
             if let under, let paint = document.layer(id: under)?.paint {
+                // The washes on it still wet, that a watercolour stroke
+                // blooms into.
+                earlier = paint.strokes
                 working = Self.brushBitmap(width: width, height: height)
                 if let raster = PaintRasterizer.rasterize(paint, size: box.size,
                                                           scale: viewport.zoom * backing) {
@@ -84,7 +91,7 @@ extension CanvasNSView {
                 }
             }
             marker = PaintRasterizer.LiveMarker(stroke: stroke, bitmap: bitmap, pointsToPixels: toPixels,
-                                                clip: clip, working: working)
+                                                clip: clip, working: working, earlier: earlier)
         }
         brushStroke = BrushLiveStroke(
             stroke: stroke,
@@ -93,9 +100,9 @@ extension CanvasNSView {
             marker: marker, bitmap: bitmap, origin: origin, began: event.timestamp)
         brushLayer.frame = bounds
         brushLayer.contentsScale = backing
-        // A smudge's or a marker's overlay holds what it lays over the paint,
-        // already at its strength; a stroke's holds the stroke alone, shown at
-        // its opacity.
+        // A smudge's, a marker's or a wash's overlay holds what it lays over
+        // the paint, already at its strength; a stroke's holds the stroke
+        // alone, shown at its opacity.
         brushLayer.opacity = (marker?.showsAtFullStrength ?? smudging) ? 1 : Float(stroke.settings.opacity / 100)
         brushLayer.isHidden = false
         addBrushSample(at: p, event: event)

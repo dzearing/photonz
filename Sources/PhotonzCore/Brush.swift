@@ -51,9 +51,14 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
 
     /// How far past half its Size a stroke of this medium can mark, as a
     /// multiple: a pencil laid on its side shades a band several times as wide
-    /// as its point. One for every medium whose tip is its Size.
+    /// as its point, and watercolour bleeds and blooms well past where the
+    /// brush went. One for every medium whose tip is its Size.
     public var reach: Double {
-        self == .pencil ? 7 : 1
+        switch self {
+        case .pencil: 7
+        case .watercolour: 4.5
+        default: 1
+        }
     }
 
     /// The pencil grades Hardness picks from, hard and pale to soft and dark.
@@ -88,7 +93,8 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
         case .oil:
             own = [.percent("load", "Load", 70), .percent("smear", "Smear", 40)]
         case .watercolour:
-            own = [.percent("wetness", "Wetness", 60), .percent("bleed", "Bleed", 40)]
+            own = [.percent("wetness", "Wetness", 60), .percent("bleed", "Bleed", 40),
+                   .percent("granulation", "Granulation", 25)]
         }
         return shared + own
     }
@@ -221,19 +227,43 @@ public struct StrokeSample: Hashable, Codable, Sendable {
 }
 
 /// One painted stroke: where the pointer went, the brush it was painted with,
-/// its colour, and the seed every random choice the engine makes is drawn from,
-/// so it looks the same on every render.
+/// its colour, the seed every random choice the engine makes is drawn from, so
+/// it looks the same on every render, and when it was painted.
 public struct BrushStroke: Hashable, Codable, Sendable {
     public var samples: [StrokeSample]
     public var settings: BrushSettings
     public var colorHex: String
     public var seed: UInt32
+    /// When the stroke began, in seconds on the wall clock (any fixed epoch;
+    /// the canvas uses the reference date). Watercolour reads it to know which
+    /// earlier strokes are still wet (`wetness(when:)`), and because it is
+    /// stored, a replay blooms exactly where the first render did. Nil for a
+    /// stroke painted before strokes had a time: it reads as long dry.
+    public var startedAt: Double?
 
-    public init(samples: [StrokeSample], settings: BrushSettings, colorHex: String, seed: UInt32) {
+    public init(samples: [StrokeSample], settings: BrushSettings, colorHex: String, seed: UInt32,
+                startedAt: Double? = nil) {
         self.samples = samples
         self.settings = settings
         self.colorHex = colorHex
         self.seed = seed
+        self.startedAt = startedAt
+    }
+
+    /// When the pointer came up, in the same seconds as `startedAt`.
+    public var endedAt: Double? {
+        startedAt.map { $0 + (samples.last?.ms ?? 0) / 1000 }
+    }
+
+    /// How wet this stroke's paint still is when `later` begins: 1 while it is
+    /// being painted or just finished, falling to 0 by its drying time
+    /// (`WatercolourDrying`). Zero for anything but watercolour paint, and
+    /// for either stroke without a time.
+    public func wetness(when later: BrushStroke) -> Double {
+        guard settings.medium == .watercolour, settings.mode == .paint,
+              let ended = endedAt, let begins = later.startedAt else { return 0 }
+        let drying = WatercolourDrying.seconds(wetness: settings.value("wetness"))
+        return min(1, max(0, 1 - (begins - ended) / drying))
     }
 
     /// The same stroke with every sample moved, for carrying it between the
@@ -276,6 +306,16 @@ extension Layer {
     public var paint: PaintContent? {
         if case .paint(let paint) = content { return paint }
         return nil
+    }
+}
+
+/// How long a watercolour stroke stays wet after the brush lifts: a few
+/// seconds, longer the wetter the brush (Wetness 0...100). Long enough to drop
+/// a second colour into a wash, the way a watercolourist works wet into wet,
+/// and short enough that a stroke laid a little later glazes over a dry one.
+public enum WatercolourDrying {
+    public static func seconds(wetness: Double) -> Double {
+        1.5 + 6.5 * min(1, max(0, wetness / 100))
     }
 }
 

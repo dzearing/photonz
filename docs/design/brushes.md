@@ -88,7 +88,7 @@ blind test fails it):
 | Marker | flat within a stroke (max coverage, not sum), translucent, darkens where separate strokes cross (multiply); chisel or round tip with an angle | Tip, Flow |
 | Airbrush | gaussian spray of fine particles whose flow accumulates while the pointer dwells | Flow, Softness |
 | Oil | carries colour: picks up what is under the brush and smears it along; bristle streaks in a height map, lit so ridges show | Load, Smear |
-| Watercolour | transparent glaze; pigment pools darker at the wet edge; wet-on-wet blooms; granulates into the grain; overlapping strokes layer | Wetness, Bleed |
+| Watercolour | transparent glaze; pigment pools darker at the wet edge; wet-on-wet blooms; granulates into the grain; overlapping strokes layer | Wetness, Bleed, Granulation |
 
 Watercolour follows the published simulation (Curtis et al., "Computer-Generated
 Watercolor", SIGGRAPH 1997: a wet-area mask, pigment moved by a shallow-water
@@ -311,6 +311,57 @@ an anchor and the line re-paints.
   3.3, the round tip 1.0); `fringeGrain` of the spray at least three times the
   round tip's (0.040 against 0.005). The round tip is now the oil paint's,
   until its slice.
+
+## What watercolour settled (2026-10-25)
+
+- **No fluid is simulated; what Curtis's simulation produces is built from
+  fields a dab can update alone** (`Watercolour.swift`, PhotonzRender). Each
+  pixel keeps how deep it is inside the WET AREA (the most any dab gave it, so a
+  stroke is one wash however often it doubles back) and inside the brush's own
+  path. The wet area is the path crept out by Bleed along lobes and fingers of
+  noise fixed to the layer and the stroke's seed. Pigment is a thin, mottled
+  wash, a little thinner where the water carried it, POOLED darker in a band
+  just inside the wet area's edge, settled into the paper's pits by
+  Granulation (the same `PaperGrain` as the dry media, read twice as broad),
+  and, at low Wetness, caught only on the tooth (a dry brush). Per-pixel noise
+  is worked out once, the first time a dab comes near, and kept.
+- **Wetness** is how wet the brush is: how long the stroke stays wet, how far
+  Bleed can carry it, how hard the edge pools, and below about 40 a dry brush
+  that skips. **Bleed** is how far it creeps past the brush; above 40 its front
+  feathers instead of pooling. **Granulation** was added because some pigments
+  settle into the paper and some do not, and a watercolourist picks for it.
+  Edge darkening is not its own knob: a dry brush has no pooled edge and a wet
+  wash does, so Wetness carries it.
+- **A stroke records when it began** (`BrushStroke.startedAt`, seconds; the
+  canvas stamps it at mouse-down). A watercolour stroke stays wet for
+  `WatercolourDrying.seconds(wetness:)` after it ends (1.5 s dry to 8 s soaked,
+  5.4 s at the default) and `wetness(when:)` says how wet it still is when a
+  later stroke begins. Strokes saved before there was a time have none and
+  read as long dry, so nothing painted earlier changes. Stored, so a replay
+  blooms where the first render did.
+- **Wet into wet**: where a stroke's dabs fall on a wash still wet, its water
+  floods on through that wash, as far as three and a half radii, never onto
+  dry paper. Into a soaking wash the front feathers (soft mixing); into one
+  that has begun to dry it is crisp and pools hard and dark (a backrun). It
+  works within one paint layer. The renderer keeps the washes still wet as it
+  replays a layer (`WetWashes`); the live overlay rebuilds the same ones from
+  the layer's strokes at mouse-down (`WetWashes.under(_:earlier:...)`, only the
+  strokes that can still matter), so the bloom under the pointer is the bloom
+  that lands.
+- **Known departure**: a real bloom also LIFTS pigment out of the earlier
+  wash's middle. Paint here is only laid, never lifted (as with the smudge), so
+  the live overlay can be honest; the bloom is new paint spreading through the
+  wet wash with a pale inside and a dark ragged front.
+- **It lands multiplied** over the paint before it on the layer, exactly as the
+  marker does (the same adjusted source-over), so dry strokes crossing deepen
+  into a glaze and the live overlay, handed the layer's paint, matches.
+- **Bars** (`WatercolourRenderingTests`, `PaintMeasures`): `edgeToCentre` (the
+  darkest of the outer third of the covered width over the mean of its middle
+  third, median over half-radius stretches) at least 1.3: watercolour 1.41, the
+  round tip 1.00. `spreadPastPath` (how far a twentieth of the strongest
+  coverage reaches past the radius, as a share of it) at least 0.15:
+  watercolour 0.25, round tip -0.03. Bleed 0 to 100 moves the spread 0.03 to
+  0.45. A box of 4.5 times half the Size holds a stroke (`BrushMedium.reach`).
 
 ## Slices (queue tasks, in order)
 

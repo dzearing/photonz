@@ -9,9 +9,10 @@ import PhotonzCore
 /// (PhotonzCore), and each medium marks them its own way. Charcoal, chalk and
 /// crayon catch on a paper grain (`DryMedia.swift`); the marker lays flat ink
 /// multiplied over what is there and the airbrush sprays a cloud that builds
-/// (`MarkerAirbrush.swift`); a smudge drags what is already painted; the media
-/// still to come are stamped with one plain round with a soft edge until their
-/// slices give them their own marking here.
+/// (`MarkerAirbrush.swift`); watercolour lays a wash that pools at its edge,
+/// bleeds, and blooms into washes still wet (`Watercolour.swift`); a smudge
+/// drags what is already painted; oil paint is still stamped with one plain
+/// round with a soft edge until its slice gives it its own marking here.
 ///
 /// The live stroke on the canvas marks with `LiveMarker`, which runs the same
 /// code dab for dab, so what lands when the pointer comes up is what was drawn
@@ -39,8 +40,10 @@ public enum PaintRasterizer {
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
         let visible = CGRect(origin: .zero, size: size)
+        // The watercolour washes still wet as the strokes go down in order.
+        var wet = WetWashes()
         for stroke in content.strokes where stroke.bounds.intersects(visible) {
-            paint(stroke, in: context, scale: scale)
+            paint(stroke, in: context, scale: scale, wet: &wet)
         }
         return context.makeImage()
     }
@@ -54,6 +57,14 @@ public enum PaintRasterizer {
     /// build on each other, the way two passes of a brush do. The airbrush is
     /// the one medium whose own dabs build, as a spray does.
     public static func paint(_ stroke: BrushStroke, in context: CGContext, scale: CGFloat) {
+        var wet = WetWashes()
+        paint(stroke, in: context, scale: scale, wet: &wet)
+    }
+
+    /// The same, for a stroke replayed among its layer's others: `wet` holds
+    /// the watercolour washes still wet when it begins, and takes this one if
+    /// it is watercolour.
+    static func paint(_ stroke: BrushStroke, in context: CGContext, scale: CGFloat, wet: inout WetWashes) {
         let dabs = BrushPlacement.dabs(for: stroke, jitter: jitter(for: stroke.settings.medium))
         let toPixels = CGAffineTransform(scaleX: scale, y: scale)
         if stroke.settings.mode == .smudge {
@@ -84,6 +95,14 @@ public enum PaintRasterizer {
             for dab in dabs { _ = spray.mark(dab) }
             spray.composite(into: plane, colour: colour, opacity: Float(stroke.settings.opacity / 100))
             return
+        case .watercolour:
+            guard let plane = PixelPlane(context), let colour = RGBA(hex: stroke.colorHex) else { return }
+            var wash = WatercolourStroke(settings: stroke.settings, colour: colour, seed: stroke.seed,
+                                         toPixels: toPixels, limit: plane.box, under: wet.under(stroke))
+            for dab in dabs { _ = wash.mark(dab) }
+            wash.composite(into: plane, colour: colour)
+            wet.add(stroke, wash)
+            return
         default:
             break
         }
@@ -110,15 +129,18 @@ public enum PaintRasterizer {
     /// few dabs at a time with the same code that lands it.
     ///
     /// The bitmap holds this stroke alone and is shown at the stroke's
-    /// opacity, except for a smudge and a marker, which are shown as they are
-    /// (`showsAtFullStrength`): what they lay over the paint below them, read
-    /// from `working`, a copy of that paint in the bitmap's pixels. A marker
-    /// with no `working` lands on fresh paper.
+    /// opacity, except for a smudge, a marker and watercolour, which are shown
+    /// as they are (`showsAtFullStrength`): what they lay over the paint below
+    /// them, read from `working`, a copy of that paint in the bitmap's pixels.
+    /// A marker or a wash with no `working` lands on fresh paper. Watercolour
+    /// also reads the `earlier` strokes of the layer it lands on (in that
+    /// layer's points), for the washes still wet that it blooms into.
     public final class LiveMarker {
         private enum Kind {
             case round(Tip)
             case dry(DryStroke, RGBA)
             case marker(MarkerStroke, RGBA, under: PixelPlane?)
+            case watercolour(WatercolourStroke, RGBA, under: PixelPlane?)
             case airbrush(AirbrushStroke, RGBA)
             case smudge(SmudgeStroke, PixelPlane)
         }
@@ -139,7 +161,7 @@ public enum PaintRasterizer {
         /// of the layer it lands on. Nil when the bitmap is not one this can
         /// mark, or a smudge has no paint to read.
         public init?(stroke: BrushStroke, bitmap: CGContext, pointsToPixels: CGAffineTransform,
-                     clip: CGRect, working: CGContext? = nil) {
+                     clip: CGRect, working: CGContext? = nil, earlier: [BrushStroke] = []) {
             self.bitmap = bitmap
             self.pointsToPixels = pointsToPixels
             self.clip = clip
@@ -147,6 +169,7 @@ public enum PaintRasterizer {
             plane = PixelPlane(bitmap)
             let limit = PixelBox(clip).intersection(plane?.box ?? .empty)
             showsAtFullStrength = stroke.settings.mode == .smudge || stroke.settings.medium == .marker
+                || stroke.settings.medium == .watercolour
             if stroke.settings.mode == .smudge {
                 guard let working, let read = PixelPlane(working), plane != nil else { return nil }
                 kind = .smudge(SmudgeStroke(settings: stroke.settings, toPixels: pointsToPixels, limit: limit), read)
@@ -155,6 +178,12 @@ public enum PaintRasterizer {
                 kind = .marker(MarkerStroke(settings: stroke.settings, colour: colour, toPixels: pointsToPixels,
                                             limit: limit),
                                colour, under: working.flatMap { PixelPlane($0) })
+            } else if stroke.settings.medium == .watercolour {
+                guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
+                let under = WetWashes.under(stroke, earlier: earlier, toPixels: pointsToPixels, limit: limit)
+                kind = .watercolour(WatercolourStroke(settings: stroke.settings, colour: colour, seed: stroke.seed,
+                                                      toPixels: pointsToPixels, limit: limit, under: under),
+                                    colour, under: working.flatMap { PixelPlane($0) })
             } else if stroke.settings.medium == .airbrush {
                 guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
                 kind = .airbrush(AirbrushStroke(settings: stroke.settings, seed: stroke.seed,
@@ -194,6 +223,12 @@ public enum PaintRasterizer {
                 for dab in dabs { touched = touched.union(marker.mark(dab)) }
                 marker.replace(touched, in: plane, under: under, colour: colour)
                 kind = .marker(marker, colour, under: under)
+            case .watercolour(var wash, let colour, let under):
+                guard let plane else { return }
+                var touched = PixelBox.empty
+                for dab in dabs { touched = touched.union(wash.mark(dab)) }
+                wash.replace(touched, in: plane, under: under, colour: colour)
+                kind = .watercolour(wash, colour, under: under)
             case .airbrush(var spray, let colour):
                 guard let plane else { return }
                 var touched = PixelBox.empty

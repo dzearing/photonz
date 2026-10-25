@@ -36,6 +36,97 @@ public enum PaintMeasures {
     /// round tip covers both the same, so it fails.
     public static let airbrushBuildUpBar = 1.6
 
+    /// Watercolour's two bars, read off a straight stroke at Size 40
+    /// (`WatercolourRenderingTests`). Its edge, where the pigment pooled as
+    /// the wash dried, is at least this many times as dark as its middle
+    /// (`edgeToCentre`); the round tip is darkest in its middle, so it reads
+    /// about 1 or less and fails...
+    public static let watercolourEdgeBar = 1.3
+    /// ...and the wash spreads at least this share of the tip's radius past
+    /// the path the brush took (`spreadPastPath`); the round tip stops at its
+    /// edge, about 0, and fails.
+    public static let watercolourSpreadBar = 0.15
+
+    /// How much darker a stroke's edge is than its middle: across short
+    /// stretches of its middle length (each averaged along, so a grainy wash
+    /// reads as a person sees it), the darkest coverage in the outer third
+    /// of the width it covers, over the mean coverage in its middle third.
+    /// The median of those.
+    public static func edgeToCentre(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                                    scale: CGFloat) -> Double {
+        var ratios: [Double] = []
+        for profile in profiles(image, from: a, to: b, diameter: diameter, scale: scale) {
+            guard let peak = profile.max(), peak > 0.02,
+                  let top = profile.firstIndex(where: { $0 >= peak * 0.08 }),
+                  let bottom = profile.lastIndex(where: { $0 >= peak * 0.08 }), bottom - top >= 6 else { continue }
+            let half = Double(bottom - top) / 2, middle = Double(top + bottom) / 2
+            var centre = 0.0, count = 0
+            var upper = 0.0, lower = 0.0
+            for j in top...bottom {
+                let off = (Double(j) - middle) / half
+                if abs(off) <= 1 / 3 {
+                    centre += profile[j]
+                    count += 1
+                } else if off < -1 / 3 {
+                    upper = max(upper, profile[j])
+                } else {
+                    lower = max(lower, profile[j])
+                }
+            }
+            guard count > 0, centre > 0 else { continue }
+            ratios.append((upper + lower) / 2 / (centre / Double(count)))
+        }
+        return median(ratios)
+    }
+
+    /// How far a stroke spreads past the path its tip took, as a share of
+    /// the tip's radius: across short stretches of its middle length, how far
+    /// from the line the paint still reaches a twentieth of its strongest
+    /// (and at least 3 per cent coverage), either side, less the radius. The
+    /// median of those. A tip that stops at its edge reads about 0.
+    public static func spreadPastPath(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                                      scale: CGFloat) -> Double {
+        let radius = Double(diameter / 2 * scale)
+        var spreads: [Double] = []
+        for profile in profiles(image, from: a, to: b, diameter: diameter, scale: scale) {
+            guard let peak = profile.max(), peak > 0.02 else { continue }
+            let floor = max(0.03, peak * 0.05)
+            guard let top = profile.firstIndex(where: { $0 >= floor }),
+                  let bottom = profile.lastIndex(where: { $0 >= floor }) else { continue }
+            let mid = Double(profile.count - 1) / 2
+            let reach = (mid - Double(top) + Double(bottom) - mid) / 2 + 0.5
+            spreads.append((reach - radius) / radius)
+        }
+        return median(spreads)
+    }
+
+    /// The stroke's coverage across it, a profile for each short stretch of
+    /// its middle length (half a radius long, averaged along it), reaching
+    /// out three radii either side of the line.
+    private static func profiles(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                                 scale: CGFloat) -> [[Double]] {
+        guard let grid = Grid(image, from: a, to: b, diameter: diameter, scale: scale),
+              !grid.alongRange.isEmpty else { return [] }
+        let side = Int((diameter * 1.5 * scale).rounded())
+        let stretch = max(1, Int((diameter / 4 * scale).rounded()))
+        var out: [[Double]] = []
+        var start = grid.alongRange.lowerBound
+        while start + stretch <= grid.alongRange.upperBound {
+            out.append((-side...side).map { j in
+                var sum = 0.0
+                for i in start..<(start + stretch) { sum += grid.alpha(i, j) }
+                return sum / Double(stretch)
+            })
+            start += stretch
+        }
+        return out
+    }
+
+    private static func median(_ values: [Double]) -> Double {
+        guard !values.isEmpty else { return 0 }
+        return values.sorted()[values.count / 2]
+    }
+
     /// How much of what a stroke touched is one even colour: among the pixels
     /// above a twentieth of its strongest coverage, the share within a tenth of
     /// that strongest. A flat marker scores near 1; a soft edge or a pass that

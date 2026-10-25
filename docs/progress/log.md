@@ -21940,3 +21940,12 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - `PaintMeasures.flatShare`, `meanAlpha(around:)`, `fringeGrain` and two bars; `MarkerAirbrushRenderingTests`, `BrushDwellTests`, `MarkerAirbrushSheetTests` (sheet on request). Round-tip baselines in other tests moved from marker to oil.
 - Walk step `drag` takes `pause`/`pauseAt`. Walk `marker-and-airbrush-walk`, no flags. Audit `queue/audits/2026-10-25-marker-airbrush.json`.
 - Next: the settings slice gives Tip, Flow and Softness their controls (noted on its task).
+
+
+## 2026-10-25 — Watercolour
+
+- `Watercolour.swift` (PhotonzRender): `WatercolourStroke` keeps per-pixel wet-area and path depths (max over dabs), lays a mottled wash pooled at the wet edge, crept out by Bleed, granulated into `PaperGrain`, skipping as a dry brush at low Wetness, multiplied over earlier paint; blooms through washes still wet. `WetWashes` carries the wet washes through a layer's replay and rebuilds them for the live overlay (`LiveMarker(..., earlier:)`).
+- `BrushStroke.startedAt` (stamped by the canvas), `endedAt`, `wetness(when:)`, `WatercolourDrying.seconds(wetness:)`; Granulation setting; watercolour `reach` 4.5.
+- `PaintMeasures.edgeToCentre`, `spreadPastPath` and two bars; `WatercolourRenderingTests`, `WatercolourDryingTests`, `WatercolourSheetTests` (sheet on request).
+- Walk `watercolour-wash-and-bloom-walk` (12 MP, no flags). Audit `queue/audits/2026-10-25-watercolour.json`.
+- Next: oil paint is the last medium on the round tip; the landing stall (~0.4 s per stroke at 12 MP, same for pencil) is the painting speed slice.
