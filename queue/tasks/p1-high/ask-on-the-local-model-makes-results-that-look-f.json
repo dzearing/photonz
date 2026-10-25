@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-25T13:26:46.512Z",
+  "updated": "2026-10-25T15:43:11.659Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -120,6 +120,10 @@
     {
       "t": "2026-10-25T13:26:46.511Z",
       "note": "seq 80 -> 160"
+    },
+    {
+      "t": "2026-10-25T15:43:11.658Z",
+      "note": "rotating check 2026-10-25T15:43:11Z, 21 walks run from 103 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-makes-a-pricing-section-walk failing."
     }
   ],
   "walks": [
