@@ -51,13 +51,19 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
 
     /// How far past half its Size a stroke of this medium can mark, as a
     /// multiple: a pencil laid on its side shades a band several times as wide
-    /// as its point, and watercolour bleeds and blooms well past where the
-    /// brush went. One for every medium whose tip is its Size.
+    /// as its point, watercolour bleeds and blooms well past where the brush
+    /// went, and a hard press or a lean widens most media past their Size
+    /// (`BrushDynamics`). One for a medium whose tip never leaves its Size.
     public var reach: Double {
+        let response = BrushDynamics.response(for: self)
+        let pressed = response.size(pressure: 1)
         switch self {
-        case .pencil: 7
-        case .watercolour: 4.5
-        default: 1
+        case .pencil: return 7
+        case .watercolour: return 4.5 * pressed
+        default:
+            // The tip's own edge breaks past its radius a little, and the
+            // side laid down reaches along the lean.
+            return pressed * (1 + response.side.long) * (response.side.long > 0 ? 1.2 : 1)
         }
     }
 
@@ -282,8 +288,8 @@ public enum BrushSize {
 
 /// One reading of the pointer while painting, in the layer's own top-left
 /// points. Pressure and tilt are nil for a device that has none (a mouse):
-/// placement then simulates a press (`BrushDynamics`). The Pencil reads both;
-/// the other media still paint one weight end to end.
+/// placement then simulates a press and a taper (`BrushDynamics`). Every
+/// medium reads them its own way (`BrushDynamics.response(for:)`).
 public struct StrokeSample: Hashable, Codable, Sendable {
     public var point: CGPoint
     /// 0...1 from a tablet or pencil, nil for a mouse.
@@ -414,9 +420,17 @@ public struct BrushDab: Hashable, Sendable {
     /// time, so a dab on a fast pass, over in a moment, lays less than one on
     /// a slow pass or held still. 1 for every other medium.
     public var spray: Double
+    /// How heavily the dab marks against the medium's own weight: the press
+    /// and the taper of a stroke's ends, around 1 (a pen pressed hard can go
+    /// a little past it). The diameter already carries the press's width.
+    public var weight: Double
+    /// How far along the stroke's path the dab is, in points from where it
+    /// touched down: what the taper of its ends is read from.
+    public var along: Double
 
     public init(center: CGPoint, diameter: CGFloat, opacity: Double, angle: Double = 0,
-                pressure: Double = 1, tilt: CGPoint = .zero, spray: Double = 1) {
+                pressure: Double = 1, tilt: CGPoint = .zero, spray: Double = 1, weight: Double = 1,
+                along: Double = 0) {
         self.center = center
         self.diameter = diameter
         self.opacity = opacity
@@ -424,23 +438,161 @@ public struct BrushDab: Hashable, Sendable {
         self.pressure = pressure
         self.tilt = tilt
         self.spray = spray
+        self.weight = weight
+        self.along = along
     }
 }
 
-/// How a pointer with no pressure of its own presses (decision 6): a mouse
-/// stroke touches down lightly and settles to a steady middle press over its
-/// first few points, and presses lighter the faster it moves, the way a hand
-/// does. Only the end of a stroke is not shaped: the live stroke cannot know
-/// where it ends, and what lands must be what was seen.
+/// How the hand shapes a stroke (decision 6): a pen's press, its lean and its
+/// speed, and for a pointer with no pressure of its own (a mouse) a simulated
+/// press and a taper at both ends.
+///
+/// A mouse stroke touches down lightly and settles to a steady middle press
+/// over its first few points, presses lighter the faster it moves, swells in
+/// from a narrow point and, once the pointer lifts, thins out again over its
+/// last stretch. The live stroke cannot know where it ends, so the taper out
+/// is laid when the stroke lands (`BrushPlacement.taperedOut`): the end of the
+/// line visibly draws in as it lands, the way a finger's taper does in other
+/// paint apps.
 public enum BrushDynamics {
+
+    /// The press a mouse settles to, and the press every medium's response is
+    /// measured from: pressed like this, a stroke is exactly its Size and its
+    /// medium's own weight, so what a mouse paints is what the Size says.
+    public static let steadyPress = 0.64
 
     /// The press of a mouse moving `speed` points a millisecond, `travelled`
     /// points into a stroke whose tip is `diameter` points across. 0...1.
     public static func mousePressure(speed: Double, travelled: Double, diameter: Double) -> Double {
         let settle = smooth(0, max(6, diameter * 3), travelled)
-        let press = 0.38 + (0.64 - 0.38) * settle
+        let press = 0.38 + (steadyPress - 0.38) * settle
         let thinned = press * (1 - 0.4 * smooth(0.4, 3, speed))
         return min(1, max(0.1, thinned))
+    }
+
+    /// How a medium answers the hand, the design doc's table: what a press
+    /// does to its width and its weight, how much a fast pen thins it, how
+    /// far a mouse stroke's ends taper, and what a lean lays down.
+    public struct Response: Hashable, Sendable {
+        /// The width at no press at all, as a share of the width at a full
+        /// press; 1 when the press does not change the width.
+        public var sizeFloor: Double
+        /// The same for the weight: how dark or dense it lays.
+        public var weightFloor: Double
+        /// How much a pen moving fast narrows the line, 0...1 at a quick
+        /// 4 points a millisecond.
+        public var speedThinning: Double
+        /// How far a mouse stroke's ends narrow: 0.7 starts and ends the line
+        /// at three tenths of its width.
+        public var taperDepth: Double
+        /// What leaning the pen does.
+        public var side: Side
+
+        /// The width a press gives, as a multiple of the Size: exactly 1 at
+        /// the steady press.
+        public func size(pressure: Double) -> Double {
+            Self.factor(sizeFloor, pressure)
+        }
+
+        /// The weight a press gives, as a multiple of the medium's own: 1 at
+        /// the steady press.
+        public func weight(pressure: Double) -> Double {
+            Self.factor(weightFloor, pressure)
+        }
+
+        private static func factor(_ floor: Double, _ pressure: Double) -> Double {
+            let p = min(1, max(0, pressure))
+            return (floor + (1 - floor) * p) / (floor + (1 - floor) * steadyPress)
+        }
+    }
+
+    /// What a lean lays down: a stick on its side marks a patch `long` radii
+    /// further along the lean and `short` further across it, at `pale` less
+    /// weight (a press spread over more paper). A round marker nib leaned
+    /// broadens the same way; a chisel nib also turns to the lean
+    /// (`turnsNib`). All zero for a medium a lean does not change.
+    public struct Side: Hashable, Sendable {
+        public var long: Double
+        public var short: Double
+        public var pale: Double
+        public var turnsNib: Bool
+
+        public static let none = Side(long: 0, short: 0, pale: 0, turnsNib: false)
+    }
+
+    /// Each medium's response. The pencil's press and lean are its own
+    /// (`DryLook`, its grades and Tilt Shading), so its width and weight read
+    /// flat here and only the taper and a fast pen shape it. The airbrush
+    /// already sprays by the press and the pass's speed, and its spray has no
+    /// blunt end to taper. Oil's press is its load and watercolour's is the
+    /// belly of a round brush spreading.
+    public static func response(for medium: BrushMedium) -> Response {
+        switch medium {
+        case .pencil:
+            Response(sizeFloor: 1, weightFloor: 1, speedThinning: 0.25, taperDepth: 0.55, side: .none)
+        case .charcoal:
+            Response(sizeFloor: 0.4, weightFloor: 0.3, speedThinning: 0.3, taperDepth: 0.75,
+                     side: Side(long: 1.6, short: 0.5, pale: 0.3, turnsNib: false))
+        case .chalk:
+            Response(sizeFloor: 0.5, weightFloor: 0.4, speedThinning: 0.3, taperDepth: 0.65,
+                     side: Side(long: 1.7, short: 0.5, pale: 0.15, turnsNib: false))
+        case .crayon:
+            Response(sizeFloor: 0.75, weightFloor: 0.3, speedThinning: 0.2, taperDepth: 0.5, side: .none)
+        case .marker:
+            Response(sizeFloor: 0.8, weightFloor: 1, speedThinning: 0.1, taperDepth: 0.35,
+                     side: Side(long: 0.6, short: 0, pale: 0, turnsNib: true))
+        case .airbrush:
+            Response(sizeFloor: 1, weightFloor: 1, speedThinning: 0, taperDepth: 0, side: .none)
+        case .oil:
+            Response(sizeFloor: 0.7, weightFloor: 1, speedThinning: 0.15, taperDepth: 0.3, side: .none)
+        case .watercolour:
+            Response(sizeFloor: 0.3, weightFloor: 1, speedThinning: 0.3, taperDepth: 0.8, side: .none)
+        }
+    }
+
+    /// The response a brush paints with: its medium's, except that a smudge
+    /// is a finger, the same width end to end however it is pressed.
+    public static func response(for settings: BrushSettings) -> Response {
+        guard settings.mode == .paint else {
+            return Response(sizeFloor: 1, weightFloor: 1, speedThinning: 0, taperDepth: 0, side: .none)
+        }
+        return response(for: settings.medium)
+    }
+
+    /// How much a pen moving `speed` points a millisecond narrows a line
+    /// that thins by `thinning`: not at all slow, the whole of it by a quick
+    /// 4. A mouse's press already carries its speed.
+    public static func penThinning(speed: Double, thinning: Double) -> Double {
+        1 - thinning * smooth(0.5, 4, speed)
+    }
+
+    /// How far a lean of `tilt` (each axis -1...1) lays the side down, 0...1,
+    /// and which way: upright and a slight lean are 0, a lean of 0.8 or more
+    /// is all of it.
+    public static func lean(_ tilt: CGPoint) -> (amount: Double, axis: CGVector) {
+        let leaning = Double(hypot(tilt.x, tilt.y))
+        let amount = smooth(0.12, 0.8, leaning)
+        guard amount > 0.01, leaning > 0 else { return (0, CGVector(dx: 1, dy: 0)) }
+        return (amount, CGVector(dx: tilt.x / CGFloat(leaning), dy: tilt.y / CGFloat(leaning)))
+    }
+
+    /// How long a mouse stroke's taper runs, in points, for a tip `diameter`
+    /// across: a few tip widths, never so short a thin line has none.
+    public static func taperLength(diameter: Double) -> Double {
+        min(60, max(10, diameter * 2))
+    }
+
+    /// The width a mouse stroke has `distance` points from one of its ends,
+    /// as a share of its full width: `1 - depth` at the end, swelling to all
+    /// of it a taper's length in.
+    public static func taper(distance: Double, diameter: Double, depth: Double) -> Double {
+        1 - depth * (1 - smooth(0, taperLength(diameter: diameter), distance))
+    }
+
+    /// What a taper of `width` (a share of the full width) does to the weight:
+    /// the ends lighten as well as narrow, the way a hand lifts off.
+    public static func taperWeight(_ width: Double) -> Double {
+        (1 + width) / 2
     }
 
     /// How quickly the speed a press is read from follows the pointer: a
@@ -494,12 +646,33 @@ public enum BrushPlacement {
         var dabs: [BrushDab] = []
         for sample in stroke.samples { dabs += walker.add(sample) }
         dabs += walker.finish()
-        return dabs
+        return taperedOut(dabs, for: stroke)
+    }
+
+    /// A mouse stroke's dabs with the end of it thinned out (decision 6), now
+    /// that it is known where it ends: each dab narrows to the lesser of the
+    /// taper from where it touched down, which it already has, and the taper
+    /// from where it lifted. A pen's stroke is handed back as it is, since its
+    /// own press lifts off.
+    public static func taperedOut(_ dabs: [BrushDab], for stroke: BrushStroke) -> [BrushDab] {
+        let depth = BrushDynamics.response(for: stroke.settings).taperDepth
+        guard stroke.samples.first?.pressure == nil, depth > 0, let end = dabs.last?.along else { return dabs }
+        let size = stroke.settings.size
+        return dabs.map { dab in
+            let fromStart = BrushDynamics.taper(distance: dab.along, diameter: size, depth: depth)
+            let fromEnd = BrushDynamics.taper(distance: end - dab.along, diameter: size, depth: depth)
+            guard fromEnd < fromStart else { return dab }
+            var dab = dab
+            dab.diameter *= CGFloat(fromEnd / fromStart)
+            dab.weight *= BrushDynamics.taperWeight(fromEnd) / BrushDynamics.taperWeight(fromStart)
+            return dab
+        }
     }
 
     /// The same placement, one sample at a time, for the live stroke: what it
-    /// hands back as the pointer moves, plus `finish()`, is exactly
-    /// `dabs(for:)` of the finished stroke, so what lands is what was seen.
+    /// hands back as the pointer moves, plus `finish()`, is `dabs(for:)` of
+    /// the finished stroke before a mouse stroke's end is thinned
+    /// (`taperedOut`), so what lands is what was seen up to the last stretch.
     ///
     /// It runs one sample behind: the curve through a sample bends according
     /// to the sample after it, so a span is only placed once the next sample
@@ -509,11 +682,20 @@ public enum BrushPlacement {
         let opacity: Double
         let gap: CGFloat
         let jitter: CGFloat
+        /// How the medium answers the press, the lean and the speed.
+        let response: BrushDynamics.Response
         private var random: SeededRandom
         private var points: [CGPoint] = []
-        /// Each point's press and lean, kept beside it.
+        /// Each point's press and lean, and how much a pen's speed thins it
+        /// there, kept beside it.
         private var pressures: [Double] = []
         private var tilts: [CGPoint] = []
+        private var thins: [Double] = []
+        /// Whether the press is simulated (a mouse: its first sample had no
+        /// pressure), which is what swells its start in.
+        private var simulated: Bool?
+        /// How far along the path the next spaced dab is.
+        private var along: Double = 0
         /// What a mouse's press is read from: how fast it has been moving
         /// (eased), how far it has come, and when its last sample was.
         private var speed: Double = 0
@@ -537,6 +719,7 @@ public enum BrushPlacement {
             opacity = settings.opacity / 100
             gap = BrushPlacement.spacing(forDiameter: diameter)
             dwells = settings.medium == .airbrush
+            response = BrushDynamics.response(for: settings)
             interval = dwells ? BrushPlacement.dwellInterval(buildUp: settings.value("buildup")) : nil
             self.jitter = max(0, jitter)
             random = SeededRandom(seed: seed, salt: 0xB2C5)
@@ -556,14 +739,17 @@ public enum BrushPlacement {
                 }
             }
             lastMs = sample.ms
+            if simulated == nil { simulated = sample.pressure == nil }
             points.append(point)
             pressures.append(sample.pressure.map { min(1, max(0, $0)) }
                              ?? BrushDynamics.mousePressure(speed: speed, travelled: travelled,
                                                             diameter: Double(diameter)))
             tilts.append(sample.tilt.map { CGPoint(x: min(1, max(-1, $0.x)), y: min(1, max(-1, $0.y))) }
                          ?? .zero)
+            thins.append(sample.pressure == nil ? 1
+                         : BrushDynamics.penThinning(speed: speed, thinning: response.speedThinning))
             if points.count == 1 {
-                dabs.append(dab(at: point, pressure: pressures[0], tilt: tilts[0]))
+                dabs.append(dab(at: point, pressure: pressures[0], tilt: tilts[0], thin: thins[0]))
                 untilNext = gap
                 return dabs
             }
@@ -574,6 +760,7 @@ public enum BrushPlacement {
                 points.removeFirst()
                 pressures.removeFirst()
                 tilts.removeFirst()
+                thins.removeFirst()
             }
             return dabs
         }
@@ -600,7 +787,7 @@ public enum BrushPlacement {
             guard let interval else { return dabs }
             while dwellOwed >= interval {
                 dwellOwed -= interval
-                dabs.append(dab(at: sample.point, pressure: press, tilt: lean, held: true))
+                dabs.append(dab(at: sample.point, pressure: press, tilt: lean, thin: 1, held: true))
             }
             return dabs
         }
@@ -611,9 +798,13 @@ public enum BrushPlacement {
         public mutating func finish() -> [BrushDab] {
             var dabs: [BrushDab] = []
             guard points.count >= 2, let end = points.last, let press = pressures.last,
-                  let lean = tilts.last else { return dabs }
+                  let lean = tilts.last, let thin = thins.last else { return dabs }
             walkSpan(from: points.count - 2, into: &dabs)
-            if untilNext < gap { dabs.append(dab(at: end, pressure: press, tilt: lean)) }
+            if untilNext < gap {
+                // The very end is short of a whole spacing past the last dab.
+                along += Double(gap - untilNext) - Double(gap)
+                dabs.append(dab(at: end, pressure: press, tilt: lean, thin: thin))
+            }
             return dabs
         }
 
@@ -629,6 +820,7 @@ public enum BrushPlacement {
             // The press and lean ease from one sample's to the next's.
             let press1 = pressures[k], press2 = pressures[k + 1]
             let lean1 = tilts[k], lean2 = tilts[k + 1]
+            let thin1 = thins[k], thin2 = thins[k + 1]
             // Enough pieces that each is well under a dab apart.
             let pieces = max(1, Int((length / max(gap * 0.5, 0.5)).rounded(.up)))
             var previous = p1
@@ -647,7 +839,8 @@ public enum BrushPlacement {
                     let u = Double(t0 + (t - t0) * (whole - segment + untilNext) / whole)
                     dabs.append(dab(at: at, pressure: press1 + (press2 - press1) * u,
                                     tilt: CGPoint(x: lean1.x + (lean2.x - lean1.x) * u,
-                                                  y: lean1.y + (lean2.y - lean1.y) * u)))
+                                                  y: lean1.y + (lean2.y - lean1.y) * u),
+                                    thin: thin1 + (thin2 - thin1) * u))
                     segment -= untilNext
                     from = at
                     untilNext = gap
@@ -657,7 +850,11 @@ public enum BrushPlacement {
             }
         }
 
-        private mutating func dab(at point: CGPoint, pressure: Double, tilt: CGPoint,
+        /// One dab, shaped by the hand: its width and weight from the press
+        /// (`response`), narrowed by a fast pen (`thin`) and, for a mouse,
+        /// swelled in from the touch-down. A spaced dab moves `along` on by a
+        /// spacing; one held in place stays where the pointer is.
+        private mutating func dab(at point: CGPoint, pressure: Double, tilt: CGPoint, thin: Double,
                                   held: Bool = false) -> BrushDab {
             var center = point
             if jitter > 0 {
@@ -666,9 +863,20 @@ public enum BrushPlacement {
                 center.x += cos(angle) * radius
                 center.y += sin(angle) * radius
             }
-            return BrushDab(center: center, diameter: diameter, opacity: opacity,
+            let at = along
+            if !held { along += Double(gap) }
+            var width = response.size(pressure: pressure) * thin
+            var weight = response.weight(pressure: pressure)
+            if simulated == true {
+                let taper = BrushDynamics.taper(distance: at, diameter: Double(diameter),
+                                                depth: response.taperDepth)
+                width *= taper
+                weight *= BrushDynamics.taperWeight(taper)
+            }
+            return BrushDab(center: center, diameter: diameter * CGFloat(width), opacity: opacity,
                             pressure: pressure, tilt: tilt,
-                            spray: dwells && !held ? BrushPlacement.spray(speed: speed) : 1)
+                            spray: dwells && !held ? BrushPlacement.spray(speed: speed) : 1,
+                            weight: weight, along: at)
         }
 
         private func catmullRom(_ p0: CGPoint, _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint,

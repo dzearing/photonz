@@ -96,7 +96,8 @@ struct BrushPencilTests {
         var live: [BrushDab] = []
         for sample in s.samples { live += walker.add(sample) }
         live += walker.finish()
-        #expect(live == BrushPlacement.dabs(for: s))
+        #expect(live.map(\.pressure) == BrushPlacement.dabs(for: s).map(\.pressure))
+        #expect(BrushPlacement.taperedOut(live, for: s) == BrushPlacement.dabs(for: s))
     }
 
     @Test("A pencil's box reaches far enough for the side of the lead when the pen is tilted")
@@ -105,8 +106,10 @@ struct BrushPencilTests {
                         StrokeSample(point: CGPoint(x: 200, y: 100), ms: 20)], size: 4)
         #expect(s.bounds.height >= 4 * BrushMedium.pencil.reach)
         #expect(BrushMedium.pencil.reach >= 6)
-        #expect(BrushMedium.charcoal.reach == 1)
+        // Charcoal's box reaches as far as a hard press and its side
+        // (`BrushDynamicsTests`), short of a pencil's.
+        #expect(BrushMedium.charcoal.reach < BrushMedium.pencil.reach)
         let charcoal = stroke(s.samples, medium: .charcoal, size: 4)
-        #expect(charcoal.bounds.height == 4)
+        #expect(abs(charcoal.bounds.height - 4 * BrushMedium.charcoal.reach) < 1e-9)
     }
 }

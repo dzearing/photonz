@@ -37,6 +37,26 @@ struct MarkerStroke {
     static let chiselAxis = CGVector(dx: 1 / 2.0.squareRoot(), dy: -1 / 2.0.squareRoot())
     /// How thick a chisel nib is, as a share of its width (the stroke's Size).
     static let chiselThickness: CGFloat = 0.3
+    /// What a lean does to the nib (`BrushDynamics.response(for:)`).
+    static let side = BrushDynamics.response(for: .marker).side
+
+    /// Which way the chisel's long edge runs for a pen leaning `lean` (0...1)
+    /// toward `toward`: square to the lean, turning there from the upright
+    /// hold (`chiselAxis`) as the pen leans further. The edge has no head or
+    /// tail, so the turn takes the nearer way round.
+    static func nibAxis(lean: Double, toward: CGVector) -> CGVector {
+        guard lean > 0 else { return chiselAxis }
+        var square = CGVector(dx: toward.dy, dy: -toward.dx)
+        if square.dx * chiselAxis.dx + square.dy * chiselAxis.dy < 0 {
+            square = CGVector(dx: -square.dx, dy: -square.dy)
+        }
+        let t = CGFloat(lean)
+        let x = chiselAxis.dx + (square.dx - chiselAxis.dx) * t
+        let y = chiselAxis.dy + (square.dy - chiselAxis.dy) * t
+        let length = hypot(x, y)
+        guard length > 1e-6 else { return square }
+        return CGVector(dx: x / length, dy: y / length)
+    }
 
     /// How much light a marker's ink takes at a Flow of 0...100: never
     /// nothing, never quite opaque, the way a felt tip always lets the paper
@@ -58,14 +78,19 @@ struct MarkerStroke {
     mutating func mark(_ dab: BrushDab) -> PixelBox {
         let centre = dab.center.applying(toPixels)
         let half = max(dab.diameter / 2 * pixelsPerPoint, 0.5)
-        let box = PixelBox.around(centre, radius: half + 2).intersection(field.limit)
+        // A pen leaned: a chisel nib turns its long edge square to the lean,
+        // the way the hand holds it; a round one lays the side of its felt, a
+        // little longer the way it leans.
+        let (lean, leanAxis) = BrushDynamics.lean(dab.tilt)
+        let side = 1 + CGFloat(Self.side.long * lean)
+        let box = PixelBox.around(centre, radius: half * (chisel ? 1 : side) + 2).intersection(field.limit)
         guard !box.isEmpty else { return .empty }
         field.ensure(box)
         // A felt edge: crisp, with a hair of give, never a soft brush.
         let feather = max(1, 0.4 * pixelsPerPoint)
         let thick = max(half * Self.chiselThickness, 0.5)
         let corner = thick * 0.5
-        let axis = Self.chiselAxis
+        let axis = Self.nibAxis(lean: lean, toward: leanAxis)
         for y in box.minY..<box.maxY {
             for x in box.minX..<box.maxX {
                 let dx = CGFloat(x) + 0.5 - centre.x, dy = CGFloat(y) + 0.5 - centre.y
@@ -76,6 +101,11 @@ struct MarkerStroke {
                     let u = abs(dx * axis.dx + dy * axis.dy) - (half - corner)
                     let v = abs(-dx * axis.dy + dy * axis.dx) - (thick - corner)
                     distance = hypot(max(u, 0), max(v, 0)) + min(max(u, v), 0) - corner
+                } else if lean > 0 {
+                    // An ellipse, long along the lean.
+                    let u = (dx * leanAxis.dx + dy * leanAxis.dy) / side
+                    let v = -dx * leanAxis.dy + dy * leanAxis.dx
+                    distance = hypot(u, v) - half
                 } else {
                     distance = hypot(dx, dy) - half
                 }

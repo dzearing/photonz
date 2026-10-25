@@ -1,0 +1,45 @@
+{
+  "feature": "Pen pressure, tilt and speed, and the mouse taper",
+  "epic": "image-paint",
+  "summary": "Every brush now answers the hand: a pen pressed harder paints wider and darker where that medium would, leaning it lays charcoal and chalk on their side and turns a chisel marker, and a fast stroke thins. A mouse stroke swells in from a point and tapers out instead of starting and ending as a blunt circle.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. No tablet was attached to the test Mac: the pen strokes here are synthetic pressure and tilt fed through the same placement and rasterizer a tablet's samples take (walk 'pen-pressure-and-mouse-taper-walk', and the sheet from PHOTONZ_DYNAMICS_SHEET=<dir> Scripts/test.sh --filter DynamicsSheet).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a blank image, press B, and pick Charcoal from the brush tiles over the tool bar."
+    },
+    {
+      "do": "Drag a line with the mouse and let go: it starts from a point, swells to the Size, and its end draws in to a point as it lands.",
+      "shot": "2026-10-25-pen-pressure-walk-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With a tablet or an Apple Pencil through Sidecar, draw one line pressing lightly and one pressing hard: light is thin and grey, hard is broad and black."
+    },
+    {
+      "do": "Lean the pen well over and drag across: charcoal lays a broad, paler band with the side of the stick."
+    },
+    {
+      "do": "Pick Marker, set Tip to Chisel, and draw with the pen leaned two different ways: the nib's broad edge turns with the lean."
+    },
+    {
+      "do": "Draw the same line slowly and then quickly: the quick one is thinner.",
+      "shot": "2026-10-25-pen-pressure-sheet.png"
+    }
+  ],
+  "evaluate": [
+    "Does the mouse taper feel natural, or does the end drawing in as the stroke lands catch your eye?",
+    "With a real pen, is the steady middle press about the width the ring under the pointer shows?",
+    "Is the heavy press on charcoal and watercolour too wide (up to about 1.3 times the Size)?",
+    "Does leaned charcoal read as the side of the stick, and is chalk's side broad enough?",
+    "Should the marker taper at all with a mouse, or start and end as a full round nib like a real felt tip?"
+  ],
+  "rough": [
+    "No tablet was attached to the test Mac, so nothing here was drawn with a real pen; pen strokes are synthetic samples through the same path a tablet's take (the task's own acceptance item).",
+    "The end of a mouse stroke thins only when the button comes up: the live stroke cannot know where it ends, so the last few tip widths draw in as the stroke lands (the walk measured 0.13% of the canvas changing). Chose that over replaying the stroke at release or holding the tail back while drawing (docs/design/brushes.md, What the dynamics settled).",
+    "Size is the width at the mouse's steady press, not at a full press as in Photoshop, so a hard press paints up to about 1.3 times the Size, past the ring under the pointer. Chose it so a mouse paints exactly what the ring shows.",
+    "The airbrush has no taper (its spray already feathers) and its press stays its flow; the pencil keeps its own press and lean and gains the taper and pen-speed thinning.",
+    "No mock covers the pressure response; the design doc's decision 6 is the spec.",
+    "No reel: what changes is the shape of a stroke, shown on the stroke sheet (light, medium, heavy, swell, leaned, mouse slow, mouse fast for each of the eight brushes), with its numbers in 2026-10-25-pen-pressure-measures.txt."
+  ]
+}

@@ -473,6 +473,53 @@ an anchor and the line re-paints.
   at its top end (`0.25·s² + 0.65·s⁴`, defaults within a tenth of before); it
   reads 0.47. Numbers: `queue/audits/2026-10-25-brush-settings-measures.txt`.
 
+## What the dynamics settled (2026-10-25)
+
+- **One response per medium, in PhotonzCore** (`BrushDynamics.response(for:)`):
+  what a press does to the width and the weight, how much a fast pen thins
+  the line, how deep a mouse stroke's taper goes, and what a lean lays down.
+  Placement applies it, so every dab's `diameter` already carries the press
+  and the new `BrushDab.weight` carries how heavily it marks; the renderers
+  only read them. Charcoal: width 0.4 and weight 0.3 at no press (shares of a
+  full press). Chalk 0.5 and 0.4, crayon 0.75 and 0.3 (wax reaches deeper
+  into the paper as it is pressed), watercolour width 0.3 (a round brush's
+  belly), oil 0.7 (its press is still its load), marker 0.8 and never darker.
+  The airbrush's press stays its flow and the pencil's stays its own grades.
+- **Size is the steady press.** Every response is 1 at the mouse's steady
+  press (`BrushDynamics.steadyPress`, 0.64), so a mouse paints exactly what
+  the ring under the pointer shows and the earlier slices' bars still hold. A
+  hard press goes past the Size (charcoal about 1.28 times); `BrushMedium.reach`
+  covers it and a full lean. Photoshop puts Size at a full press; chose this
+  because a mouse never presses hard.
+- **Speed.** A mouse's simulated press already lightens moving fast. A pen's
+  press is left as the pen read it, and each dab is narrowed by the pen's
+  eased speed instead (`penThinning`, up to 0.3 by 4 pt/ms).
+- **The mouse taper.** A stroke whose first sample has no pressure swells in
+  from `1 - taperDepth` of its width over `taperLength` (twice the Size, 10 to
+  60 points) as it is drawn, and once the pointer lifts its last stretch thins
+  the same way (`BrushPlacement.taperedOut`, applied by `dabs(for:)`). The
+  live stroke cannot know where it ends, so the tail draws in as the stroke
+  lands, the way a finger's taper does in other paint apps: chose that over
+  replaying the whole stroke on the main thread at release (a hitch on a long
+  stroke) and over holding the tail back while drawing (the line would trail
+  the pointer by two tip widths). The walk measured 0.13% of the canvas
+  changing between held and landed. A click is a light touch, as before. The
+  airbrush does not taper (its spray already feathers) and a smudge is a
+  finger: no press, no taper.
+- **Tilt.** `BrushDynamics.lean(_:)` is the one reading (none under 0.12, all
+  of it by 0.8). Charcoal and chalk lay the side of the stick, the pencil's
+  patch generalised: 2.6 and 2.7 times longer along the lean, paler, a softer
+  edge for charcoal. A chisel marker's long edge turns square to the lean
+  (from its fixed 45 degrees upright); a round one broadens 1.6 times along it.
+- **Bars** (`BrushDynamicsRenderingTests`, numbers in
+  `queue/audits/2026-10-25-pen-pressure-measures.txt`): heavy over light at
+  least 1.4 times the width and 1.6 times the paint for charcoal and chalk,
+  crayon's paint 1.5 times, the airbrush's 1.8, watercolour and oil 1.15
+  times the width; leaned charcoal 1.6 times as wide (chalk 1.3); a chisel
+  leaned across 2.5 times as wide as along; a fast pen or mouse at most 0.88
+  of a slow one; a mouse stroke within 5 points of either end under 0.7 of its
+  middle width. Before this slice every medium but the pencil failed them all.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,

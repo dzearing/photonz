@@ -1,0 +1,189 @@
+{
+  "out": "/tmp/photonz-playtest/pen-pressure-and-mouse-taper-walk",
+  "seed": "Pressure, tilt and speed (docs/design/brushes.md, decision 6). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas zoomed in. B picks the Brush and Charcoal's tile is clicked at its face. A mouse drag paints a line that swells in and, once the button is up, tapers out. Then a pen step puts a pen in the walk's hand: a light line, a hard line, and a line with the pen leaned across it that lays the side of the stick. Every drag holds the picture with the button down against the landed one (the mouse line's end thins as it lands, well inside the 1% the walk allows). Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 4000,
+      "canvasHeight": 3000,
+      "width": 1500,
+      "height": 1000,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Charcoal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Charcoal"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "drag",
+      "from": [
+        1800,
+        1380
+      ],
+      "to": [
+        2200,
+        1390
+      ],
+      "steps": 36,
+      "wobble": 1,
+      "hold": "1-mouse-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "pen",
+      "pressure": 0.2
+    },
+    {
+      "do": "drag",
+      "from": [
+        1800,
+        1450
+      ],
+      "to": [
+        2200,
+        1455
+      ],
+      "steps": 36,
+      "wobble": 1,
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "pen",
+      "pressure": 0.95
+    },
+    {
+      "do": "drag",
+      "from": [
+        1800,
+        1520
+      ],
+      "to": [
+        2200,
+        1525
+      ],
+      "steps": 36,
+      "wobble": 1,
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "pen",
+      "pressure": 0.6,
+      "tilt": [
+        0.2,
+        0.8
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        1800,
+        1600
+      ],
+      "to": [
+        2200,
+        1605
+      ],
+      "steps": 36,
+      "wobble": 1,
+      "hold": "2-leaned-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "pen"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "3-mouse-light-heavy-leaned"
+    },
+    {
+      "do": "describe",
+      "stage": "3-mouse-light-heavy-leaned",
+      "note": "top to bottom: a mouse line that tapers at both ends, a pen pressed lightly, a pen pressed hard, a pen leaned across the stroke"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

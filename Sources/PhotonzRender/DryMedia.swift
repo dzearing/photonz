@@ -254,6 +254,9 @@ struct DryLook {
     /// How far a lean lays the side of the lead down (the Tilt Shading
     /// setting), 0...1.
     var tiltShading: Float = 0
+    /// What a lean lays down for a stick that is not a pencil: charcoal and
+    /// chalk on their side (`BrushDynamics.response(for:)`).
+    var side = BrushDynamics.Side.none
     /// Graphite's sheen: how far the colour lifts toward a cool silver where
     /// the deposit is densest, so passes pile up to a sheen and not a black.
     var sheen: Float = 0
@@ -276,6 +279,7 @@ struct DryLook {
                       reach: 0.64, softness: 0.12, strength: 1, grain: grain, wash: true,
                       drag: smudge, specks: .dust, streaks: 0.15, streakCount: 14, streakRun: 60, toneSwing: 0.1,
                       tipLength: 1, catchRun: 1.3, powder: 0, powderSize: 1, wobble: 0.06, wobbleRun: 30)
+            side = BrushDynamics.response(for: .charcoal).side
         case .chalk:
             // Powder: a lighter film than charcoal's carbon (chalk is mostly
             // white binder), even where it lands and bare where it skips, a
@@ -285,6 +289,7 @@ struct DryLook {
                       reach: 0.72, softness: 0.04, strength: 0.8, grain: grain, wash: false,
                       drag: smudge, specks: .crumbs, streaks: 0.6, streakCount: 13, streakRun: 14, toneSwing: 0.3,
                       tipLength: 1, catchRun: 3, powder: 0.75, powderSize: 0.65, wobble: 0.1, wobbleRun: 12)
+            side = BrushDynamics.response(for: .chalk).side
         case .crayon:
             // Wax: a hard edge that wavers with the hand, colour only on the
             // high tooth, an even fine pattern of bare pits, faint striations.
@@ -446,29 +451,38 @@ struct DryStroke {
     /// Lays one dab down and hands back the pixels it touched.
     mutating func mark(_ dab: BrushDab) -> PixelBox {
         var radius = max(dab.diameter / 2 * CGFloat(look.width), 0.25)
-        // A pressed medium's press: a harder one is a little wider and a good
-        // deal darker. Everything else paints its one weight.
-        var weight: Float = 1
-        // The side of the lead: how far the pen leans, as the tip's long and
+        // The press has already set the width (the dab's diameter) and the
+        // weight for charcoal, chalk and crayon; the pencil's own press is a
+        // little wider and a good deal darker by its grade. A mouse stroke's
+        // ends lighten as they narrow (the dab's weight).
+        var weight = Float(min(1.2, max(0, dab.weight)))
+        // The side of the stick: how far the pen leans, as the tip's long and
         // short reach over its upright radius, and which way.
+        let (leaning, leanAxis) = BrushDynamics.lean(dab.tilt)
         var lean: Float = 0
-        var leanAxis = CGVector(dx: 1, dy: 0)
+        var long: Float = 1, short: Float = 1
         if look.pressed {
             let p = Float(min(1, max(0, dab.pressure)))
             radius *= CGFloat(0.8 + 0.35 * p)
-            weight = 0.3 + 0.7 * pow(p, 0.8)
-            let leaning = Float(hypot(dab.tilt.x, dab.tilt.y))
-            lean = smoothstep(0.12, 0.8, leaning) * look.tiltShading
+            weight *= 0.3 + 0.7 * pow(p, 0.8)
+            lean = Float(leaning) * look.tiltShading
             if lean > 0.01 {
-                leanAxis = CGVector(dx: dab.tilt.x / CGFloat(leaning), dy: dab.tilt.y / CGFloat(leaning))
                 // Laid on its side the lead spreads its press over a broad
                 // patch: paler, and only the high tooth catches.
                 weight *= 1 - 0.5 * lean
+                long = 1 + 6 * lean
+                short = 1 + 2.5 * lean
             } else {
                 lean = 0
             }
+        } else if look.side.long > 0, leaning > 0.01 {
+            // Charcoal or chalk leaned: the side of the stick lays a broader,
+            // paler band, longest the way the pen leans.
+            lean = Float(leaning)
+            long = 1 + Float(look.side.long) * lean
+            short = 1 + Float(look.side.short) * lean
+            weight *= 1 - Float(look.side.pale) * lean
         }
-        let long = 1 + 6 * lean, short = 1 + 2.5 * lean
         let centre = dab.center.applying(toPixels)
         let speckReach: CGFloat
         switch look.specks {
@@ -531,7 +545,8 @@ struct DryStroke {
         let tipBox = PixelBox.around(centre, radius: radius * CGFloat(tipReach * long) * pixelsPerPoint + 1)
             .intersection(box)
         // A lead on its side has a soft edge: its press fades out across it.
-        let inner = look.inner * (1 - 0.75 * lean)
+        // A stick's side keeps more of its own edge.
+        let inner = look.inner * (1 - (look.pressed ? 0.75 : 0.3) * lean)
         guard !tipBox.isEmpty else {
             for (at, size, amount) in specks { speck(at: at, size: size, amount: amount) }
             return box
@@ -582,7 +597,7 @@ struct DryStroke {
                 // The highest of several heights runs high; spread it back out
                 // so a press reaches about the same share of the paper.
                 paper = pow(paper, catchSpread)
-                let laid = look.deposit(tip: tip, paper: paper)
+                let laid = min(1, look.deposit(tip: tip, paper: paper))
                 let i = field.index(x, y)
                 if laid > field.values[i] { field.values[i] = laid }
             }

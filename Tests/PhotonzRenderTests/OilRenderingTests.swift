@@ -179,9 +179,7 @@ struct OilRenderingTests {
             stroke: second, bitmap: overlay, pointsToPixels: CGAffineTransform(scaleX: scale, y: scale),
             clip: CGRect(x: 0, y: 0, width: width, height: height), working: working, earlier: [first]))
         #expect(live.showsAtFullStrength)
-        var walker = BrushPlacement.Walker(settings: second.settings, seed: second.seed)
-        for sample in second.samples { live.mark(walker.add(sample)) }
-        live.mark(walker.finish())
+        for batch in landedBatches(second) { live.mark(batch) }
         live.finish()
         let shown = try #require(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
                                            bytesPerRow: width * 4, space: space, bitmapInfo: info))

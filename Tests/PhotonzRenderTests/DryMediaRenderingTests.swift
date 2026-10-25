@@ -152,9 +152,12 @@ struct DryMediaRenderingTests {
         func image(_ m: BrushMedium) throws -> CGImage { try render([stroke(m, from: line.0, to: line.1)]) }
         let charcoal = try image(.charcoal), chalk = try image(.chalk)
         // The tip's own fall-off, read with the paper out of the way: grain and
-        // the stick's streaks would band the averaged profile.
+        // the stick's streaks would band the averaged profile, and pressed
+        // steadily, since a mouse's tapering ends would soften it too.
         func tip(_ m: BrushMedium) throws -> CGImage {
-            try render([stroke(m, from: line.0, to: line.1, set: ["grain": 0])])
+            var s = stroke(m, from: line.0, to: line.1, set: ["grain": 0])
+            s.samples = s.samples.map { var p = $0; p.pressure = BrushDynamics.steadyPress; return p }
+            return try render([s])
         }
         let softCharcoal = PaintMeasures.edgeSoftness(try tip(.charcoal), from: line.0, to: line.1,
                                                       diameter: 24, scale: 1)
@@ -214,9 +217,11 @@ struct DryMediaRenderingTests {
         let line = (CGPoint(x: 40, y: 60), CGPoint(x: 260, y: 60))
         // Read with the paper out of the way, so the tooth does not count as
         // waver.
+        // Pressed steadily, so a mouse's taper does not count as waver either.
         func waver(_ m: BrushMedium) throws -> Double {
-            PaintMeasures.widthWaver(try render([stroke(m, from: line.0, to: line.1, set: ["grain": 0])]),
-                                     from: line.0, to: line.1, diameter: 24, scale: 1)
+            var s = stroke(m, from: line.0, to: line.1, set: ["grain": 0])
+            s.samples = s.samples.map { var p = $0; p.pressure = BrushDynamics.steadyPress; return p }
+            return PaintMeasures.widthWaver(try render([s]), from: line.0, to: line.1, diameter: 24, scale: 1)
         }
         let crayon = try waver(.crayon), round = try PaintRasterizer.$plainRound.withValue(true) { try waver(.oil) }
         #expect(crayon > 0.03, "crayon \(crayon)")
@@ -296,10 +301,7 @@ struct DryMediaRenderingTests {
         let marker = try #require(PaintRasterizer.LiveMarker(
             stroke: s, bitmap: context, pointsToPixels: CGAffineTransform(scaleX: 2, y: 2),
             clip: CGRect(x: 0, y: 0, width: width, height: height)))
-        var walker = BrushPlacement.Walker(settings: s.settings, seed: s.seed,
-                                           jitter: PaintRasterizer.jitter(for: medium))
-        for sample in s.samples { marker.mark(walker.add(sample)) }
-        marker.mark(walker.finish())
+        for batch in landedBatches(s, jitter: PaintRasterizer.jitter(for: medium)) { marker.mark(batch) }
         let live = alphas(try #require(context.makeImage()))
         var differ = 0
         for i in live.indices where abs(Int(live[i]) - Int(landed[i])) > 12 { differ += 1 }

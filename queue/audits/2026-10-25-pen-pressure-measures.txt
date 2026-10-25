@@ -1,0 +1,9 @@
+medium	light w/paint	medium w/paint	heavy w/paint	mouse start/middle/end width
+Pencil	2.5 pt / 0.17	3.0 pt / 0.27	4.0 pt / 0.43	2.0 / 3.0 / 1.5
+Charcoal	9.0 pt / 0.45	12.0 pt / 0.67	17.5 pt / 0.87	3.0 / 12.0 / 3.0
+Chalk	4.5 pt / 0.39	9.0 pt / 0.50	14.0 pt / 0.59	2.0 / 6.5 / 4.0
+Crayon	11.0 pt / 0.55	12.5 pt / 0.75	13.5 pt / 0.89	4.5 / 11.5 / 5.5
+Marker	13.0 pt / 0.65	14.0 pt / 0.65	15.0 pt / 0.65	9.0 / 14.0 / 10.0
+Airbrush	10.0 pt / 0.20	10.5 pt / 0.32	11.5 pt / 0.46	10.5 / 10.5 / 12.0
+Oil Paint	15.0 pt / 0.89	17.0 pt / 0.98	20.0 pt / 0.99	12.0 / 18.0 / 6.0
+Watercolour	13.0 pt / 0.39	19.5 pt / 0.39	28.5 pt / 0.39	4.5 / 22.5 / 5.5

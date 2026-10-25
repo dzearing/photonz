@@ -145,10 +145,11 @@ struct BrushTests {
         #expect(moved.seed == 7)
     }
 
-    @Test("A stroke's bounds reach out by half its tip")
+    @Test("A stroke's bounds reach out by half its tip, as far as its medium can mark")
     func bounds() {
         let box = stroke([CGPoint(x: 10, y: 10), CGPoint(x: 30, y: 20)], size: 8).bounds
-        #expect(box == CGRect(x: 6, y: 6, width: 28, height: 18))
+        let reach = 4 * BrushMedium.charcoal.reach
+        #expect(box == CGRect(x: 10 - reach, y: 10 - reach, width: 20 + 2 * reach, height: 10 + 2 * reach))
     }
 
     // MARK: - Where the dabs go
@@ -165,7 +166,12 @@ struct BrushTests {
         }
         #expect(abs(dabs.count - (Int(100 / gap) + 1)) <= 1)
         #expect(dabs.last?.center == CGPoint(x: 100, y: 0))
-        #expect(dabs.allSatisfy { $0.diameter == 20 })
+        // A pen pressed steadily paints exactly the Size end to end.
+        let steady = (0...10).map { StrokeSample(point: CGPoint(x: Double($0) * 10, y: 0),
+                                                 pressure: BrushDynamics.steadyPress, ms: Double($0) * 40) }
+        var pen = stroke([], size: 20)
+        pen.samples = steady
+        #expect(BrushPlacement.dabs(for: pen).allSatisfy { abs($0.diameter - 20) < 1e-9 })
     }
 
     @Test("A click with no drag still leaves one dab")
@@ -219,7 +225,8 @@ struct BrushTests {
         var live: [BrushDab] = []
         for sample in s.samples { live += walker.add(sample) }
         live += walker.finish()
-        #expect(live == BrushPlacement.dabs(for: s, jitter: 0.3))
+        // Up to a mouse stroke's end, which is thinned once it is known.
+        #expect(BrushPlacement.taperedOut(live, for: s) == BrushPlacement.dabs(for: s, jitter: 0.3))
     }
 
     // MARK: - Where a stroke lands
