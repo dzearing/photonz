@@ -208,6 +208,26 @@ struct ToolSettingsCapsule: View {
             .controlSize(.small)
             .fixedSize()
             .help("What a click with the tool places. Picking one in the Library picks it here too.")
+        case .brushMedium:
+            // Seven media, so a menu (more than three exclusive options is a
+            // dropdown).
+            Picker("Medium", selection: $state.armedBrushMedium) {
+                ForEach(BrushMedium.allCases, id: \.self) { medium in
+                    Text(medium.title).tag(medium)
+                }
+            }
+            .labelsHidden()
+            .controlSize(.small)
+            .fixedSize()
+            .help("What the brush paints with.")
+        case .brushMode:
+            // Two choices, both on screen, like the callout's shape.
+            SegmentedControl("Mode", selection: $state.armedBrushMode,
+                             options: BrushMode.allCases.map { .init($0, $0.title) },
+                             form: .natural)
+            .controlSize(.small)
+            .fixedSize()
+            .help("Paint lays the medium down. Smudge drags paint that is already there.")
         case .measureShow:
             Picker("Show", selection: Binding(
                 get: { editorState.measureShowFilter },

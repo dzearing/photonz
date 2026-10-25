@@ -1,0 +1,31 @@
+{
+  "feature": "Charcoal, chalk and crayon on a paper grain, and Smudge",
+  "epic": "image-paint",
+  "summary": "The Brush's charcoal, chalk and crayon now catch on a paper grain, each in its own way, and a Smudge mode drags paint that is already there. Medium and Mode sit over the tool bar while the brush is in hand.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screenshot. Walk: Scripts/playtest/brush-dry-media-and-smudge-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press B. Medium and Mode appear over the tool bar.", "shot": "2026-10-24-dry-media-1-capsule-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag across the picture: a charcoal stroke, soft, grey and dusty, streaked along the drag." },
+    { "do": "Pick Chalk from Medium and drag again; then Crayon and drag again.", "shot": "2026-10-24-dry-media-5-closeup-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick Charcoal, click Smudge, and drag from inside the charcoal stroke out into bare paper.", "shot": "2026-10-24-dry-media-4-smudged-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z: the smudge comes off as one step, the stroke stays." },
+    { "do": "Compare the stroke sheet (one row per medium, then the plain round tip): 2026-10-24-dry-media-sheet.png.", "shot": "2026-10-24-dry-media-sheet.png" }
+  ],
+  "evaluate": [
+    "Shown the three strokes without their names, could you tell charcoal from chalk?",
+    "Does the smudge feel like a finger dragging charcoal, or like a grey blur laid on top?",
+    "Is crayon's squared, striated end closer to a real crayon than the round ends the other two have?",
+    "Do Medium and Mode over the tool bar read as the brush's own options, where you would look for them?"
+  ],
+  "rough": [
+    "Charcoal and chalk are still too close: three blind model judges named all four rows correctly but said charcoal and chalk would not survive a blind swap, and that the three share one grain at different strengths. The task stays open on that item (charcoal-chalk-and-crayon-catch-on-a-paper-grain).",
+    "No taper, no pressure: every stroke is one width end to end, which every judge called out. That is the pressure, tilt and speed slice (pen-pressure-tilt-and-pointer-speed-shape-a-brus).",
+    "The smudge only spreads paint into lighter places; it never lifts charcoal off where the finger starts, and it carries no grain. Chose that so the live smudge shows exactly what lands; written in docs/design/brushes.md (charcoal-chalk-and-crayon-catch-on-a-paper-grain).",
+    "Smudging over a bare screenshot does nothing, by the non-destructive rule: a smudge only moves paint on a Paint layer.",
+    "The retouch walkthrough draws the brush's settings as panel rows (Size, Hardness, Flow, a mode dropdown); this slice puts only Medium and Mode over the tool bar, and the panel section with the rest is each-brush-shows-its-own-settings-in-the-tool-op.",
+    "The Medium dropdown is chosen in-process by the walk, not opened by a pointer click on its face; that proof belongs to each-brush-shows-its-own-settings-in-the-tool-op. The Mode segment is clicked at its face.",
+    "Marker, airbrush, oil and watercolour are in the Medium list and still paint with the plain round tip until their slices (marker-strokes-are-flat-and-darken-where-they-cr, watercolour-strokes-are-transparent-pool-darker, oil-paint-strokes-carry-and-smear-colour-and-sho).",
+    "Speed: a dry stroke rasterizes in about 3 ms on a 2549 by 1800 layer, off the main thread (measured in the probe). The live smudge rasterizes the paint layer once at pointer down, on the main thread."
+  ]
+}

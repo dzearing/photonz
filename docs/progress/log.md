@@ -21910,3 +21910,10 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - `Tool.brush` on B, flag `next-brush` on at Next defaults; off the bar on documents with time so B stays the Blade. Stays in hand after a stroke. Live overlay in `CanvasBrush.swift`, ring cursor the size of the tip.
 - Walk `brush-paints-strokes-walk` (no flags): two strokes, held vs landed 0.06%, undo/redo stroke counts 1/2/1/2.
 - Next: the media slices, then settings in the tool options.
+
+## 2026-10-24 — Charcoal, chalk and crayon on a paper grain; Smudge
+
+- `PaperGrain` (PhotonzRender): one procedural tile (cellular dimples + value noise + fibre, evened out), read in the paint layer's own points. `DryMedia.swift`: `DryStroke` (tip broken by the paper, stick streaks, tone drift, catch runs along the drag, charcoal dust, own-smudge drag) and `SmudgeStroke` (finger carries a blurred patch, spreads it thinner, only adds). `PaintRasterizer.LiveMarker` shares the code with the canvas overlay. `PaintMeasures` reads the bar.
+- Core: `BrushMode` (Paint / Smudge) on `BrushSettings`; `PhotonzDocument.smudgeStroke` / `smudgeTarget` (paint layers only, never a new layer). Capsule: Medium dropdown + Mode segmented (`ToolSetting.brushMedium`, `.brushMode`).
+- Walk `brush-dry-media-and-smudge-walk` (no flags) paints each medium and smudges charcoal by drag; audit `queue/audits/2026-10-24-dry-media.json`.
+- Open: blind model judges name all three media but say charcoal and chalk share one grain; task left pending on that item.

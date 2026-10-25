@@ -1265,7 +1265,12 @@ final class CanvasNSView: NSView {
     }
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
-    var tool: Tool = .select
+    var tool: Tool = .select {
+        // The paper the dry media catch on is worked out once per launch;
+        // picking the Brush up starts it off the main thread, so the first
+        // stroke never waits for it.
+        didSet { if tool == .brush, oldValue != .brush { PaperGrain.prepare() } }
+    }
     /// A drag with the Hand in flight: the view follows the pointer and the
     /// document is never touched (`HandPan`).
     var handPan: HandPan?

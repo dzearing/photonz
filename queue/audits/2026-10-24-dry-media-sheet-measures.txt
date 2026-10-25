@@ -1,0 +1,4 @@
+Charcoal	gaps 0.174 (bar 0.12: passes)	tip fall-off 0.35	core 0.69
+Chalk	gaps 0.381 (bar 0.12: passes)	tip fall-off 0.30	core 0.65
+Crayon	gaps 0.350 (bar 0.12: passes)	tip fall-off 0.10	core 0.65
+Marker	gaps 0.000 (bar 0.12: fails)	tip fall-off 0.10	core 1.00

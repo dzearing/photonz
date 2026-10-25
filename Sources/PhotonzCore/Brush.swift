@@ -107,28 +107,50 @@ public struct BrushSettingSpec: Hashable, Sendable {
     }
 }
 
+/// What a stroke does: lays down the medium, or drags what is already painted
+/// along with the tip like a finger (decision 7: smudge is a mode of the brush,
+/// using the picked medium's tip, so "switch to charcoal and smudge" is one
+/// step).
+public enum BrushMode: String, CaseIterable, Codable, Hashable, Sendable {
+    case paint
+    case smudge
+
+    /// What the mode is called on screen.
+    public var title: String {
+        switch self {
+        case .paint: "Paint"
+        case .smudge: "Smudge"
+        }
+    }
+}
+
 /// A brush: a medium and a value for each of its settings, always inside the
 /// medium's ranges. Copied into every stroke, so changing the armed brush later
 /// never repaints what was already painted.
 public struct BrushSettings: Hashable, Codable, Sendable {
     public var medium: BrushMedium
     public private(set) var values: [String: Double]
+    /// Whether a stroke paints or smudges.
+    public var mode: BrushMode
 
-    public init(medium: BrushMedium, values: [String: Double] = [:]) {
+    public init(medium: BrushMedium, values: [String: Double] = [:], mode: BrushMode = .paint) {
         self.medium = medium
         var filled: [String: Double] = [:]
         for spec in medium.settings {
             filled[spec.id] = spec.clamp(values[spec.id] ?? spec.defaultValue)
         }
         self.values = filled
+        self.mode = mode
     }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         // Re-clamped on the way in, so a hand-edited file or one written by a
-        // later version with a wider range still renders inside today's.
+        // later version with a wider range still renders inside today's. A
+        // stroke from before the mode existed painted.
         self.init(medium: try c.decode(BrushMedium.self, forKey: .medium),
-                  values: try c.decodeIfPresent([String: Double].self, forKey: .values) ?? [:])
+                  values: try c.decodeIfPresent([String: Double].self, forKey: .values) ?? [:],
+                  mode: try c.decodeIfPresent(BrushMode.self, forKey: .mode) ?? .paint)
     }
 
     /// The value of one setting, or its default if somehow missing; zero for
@@ -144,10 +166,10 @@ public struct BrushSettings: Hashable, Codable, Sendable {
         values[id] = spec.clamp(value)
     }
 
-    /// The same brush in another medium: Size and Opacity carry over, the new
-    /// medium's own settings start at its defaults.
+    /// The same brush in another medium: Size, Opacity and the mode carry
+    /// over, the new medium's own settings start at its defaults.
     public func switched(to medium: BrushMedium) -> BrushSettings {
-        BrushSettings(medium: medium, values: ["size": size, "opacity": opacity])
+        BrushSettings(medium: medium, values: ["size": size, "opacity": opacity], mode: mode)
     }
 
     /// The tip's diameter, in points.
@@ -423,6 +445,42 @@ extension PhotonzDocument {
         }
         addLayerDrawnOnFrame(layer)
         return layer.id
+    }
+
+    /// Adds a smudge `stroke` (in canvas points) to the paint it drags, and
+    /// returns that layer, or nil when there is no paint to smudge.
+    ///
+    /// A smudge only ever moves paint that is already there: it never makes a
+    /// layer and never writes into a picture (the house's non-destructive
+    /// rule), so with a screenshot picked it finds the paint under the pointer
+    /// instead (`smudgeTarget`).
+    @discardableResult
+    public mutating func smudgeStroke(_ stroke: BrushStroke, onto pickedID: UUID?) -> UUID? {
+        guard let start = stroke.samples.first?.point,
+              let target = smudgeTarget(at: start, picked: pickedID),
+              let origin = canvasBounds(of: target)?.origin else { return nil }
+        let local = stroke.offsetBy(dx: -origin.x, dy: -origin.y)
+        updateLayer(id: target) { layer in
+            guard case .paint(var paint) = layer.content else { return }
+            paint.strokes.append(local)
+            layer.content = .paint(paint)
+        }
+        return target
+    }
+
+    /// The paint layer a smudge starting at `point` drags: the picked one when
+    /// it is an unlocked paint layer, otherwise the topmost shown, unlocked
+    /// paint layer whose box holds the point. Nil when there is none.
+    public func smudgeTarget(at point: CGPoint, picked pickedID: UUID?) -> UUID? {
+        if let pickedID, let picked = layer(id: pickedID), picked.paint != nil {
+            return picked.isLocked ? nil : pickedID
+        }
+        for leaf in flattenedLayers.reversed() where leaf.paint != nil {
+            guard leaf.isVisible, !leaf.isLocked,
+                  let box = canvasBounds(of: leaf.id), box.contains(point) else { continue }
+            return leaf.id
+        }
+        return nil
     }
 }
 

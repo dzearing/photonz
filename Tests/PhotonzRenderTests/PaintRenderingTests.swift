@@ -5,7 +5,9 @@ import PhotonzCore
 @testable import PhotonzRender
 
 /// A paint layer draws its strokes where they went, in their colour, with a
-/// soft round tip, and nothing else (`docs/design/brushes.md`, slice 1).
+/// soft round tip, and nothing else (`docs/design/brushes.md`, slice 1). The
+/// marker still paints with that tip until its own slice; charcoal, chalk and
+/// crayon have theirs (`DryMediaRenderingTests`).
 @Suite("Paint rendering")
 struct PaintRenderingTests {
 
@@ -37,7 +39,7 @@ struct PaintRenderingTests {
 
     private func stroke(from a: CGPoint, to b: CGPoint, size: Double = 10, opacity: Double = 100,
                         hex: String = "#0000FF") -> BrushStroke {
-        var settings = BrushSettings(medium: .charcoal)
+        var settings = BrushSettings(medium: .marker)
         settings.set("size", to: size)
         settings.set("opacity", to: opacity)
         return BrushStroke(samples: [StrokeSample(point: a, ms: 0), StrokeSample(point: b, ms: 16)],

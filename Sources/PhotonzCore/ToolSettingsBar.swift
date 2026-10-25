@@ -35,6 +35,10 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     case lensAmount
     /// Which component the Component insert tool places.
     case component
+    /// What the brush paints with: charcoal, chalk, crayon and the rest.
+    case brushMedium
+    /// Whether the brush paints or smudges.
+    case brushMode
 
     /// The word on the setting, the same one the right hand panel uses, so
     /// the two places read as one thing rather than two.
@@ -53,6 +57,8 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
         // so the capsule asks `LensAdjustment.settingTitle` rather than this.
         case .lensAmount: "Amount"
         case .component: "Component"
+        case .brushMedium: "Medium"
+        case .brushMode: "Mode"
         }
     }
 }
@@ -141,6 +147,12 @@ public enum ToolSettingsBar {
             // No flag of its own: the tool is itself behind `next-components`.
             // A tool that places one of several things has to say which.
             [.component]
+        case .brush:
+            // No flag of their own: the tool is itself behind `next-brush`.
+            // The medium first, then what the stroke does with it
+            // (`docs/design/brushes.md`, decision 7). The settings slice adds
+            // Size, Opacity and the medium's own two after these.
+            [.brushMedium, .brushMode]
         default:
             []
         }

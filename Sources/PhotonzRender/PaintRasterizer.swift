@@ -6,12 +6,14 @@ import PhotonzCore
 /// decision 4, the marking half).
 ///
 /// Every stroke is replayed in order: its dabs come from `BrushPlacement`
-/// (PhotonzCore), and each is stamped with the tip. For now that tip is one
-/// plain round with a soft edge, whatever the medium; the medium slices give
-/// each medium its own marking here, and nothing else has to change.
+/// (PhotonzCore), and each medium marks them its own way. Charcoal, chalk and
+/// crayon catch on a paper grain (`DryMedia.swift`); a smudge drags what is
+/// already painted; the media still to come are stamped with one plain round
+/// with a soft edge until their slices give them their own marking here.
 ///
-/// The live stroke on the canvas stamps with `mark(_:tip:in:)` too, so what
-/// lands when the pointer comes up is what was drawn while it moved.
+/// The live stroke on the canvas marks with `LiveMarker`, which runs the same
+/// code dab for dab, so what lands when the pointer comes up is what was drawn
+/// while it moved.
 public enum PaintRasterizer {
 
     /// How far off its line a dab may wander, as a fraction of its radius.
@@ -41,15 +43,29 @@ public enum PaintRasterizer {
         return context.makeImage()
     }
 
-    /// One whole stroke onto `context` (already in the stroke's points).
+    /// One whole stroke onto `context`, a bitmap that `rasterize` made: top-left
+    /// points at `scale` pixels each.
     ///
     /// A stroke is as opaque as its Opacity everywhere it covers, however many
-    /// of its own dabs overlap: the dabs are stamped fully inside a
-    /// transparency layer and the layer is laid down at the stroke's opacity.
-    /// Two separate strokes DO build on each other, the way two passes of a
-    /// brush do.
+    /// of its own dabs overlap: the dabs are marked fully on their own and the
+    /// result is laid down at the stroke's opacity. Two separate strokes DO
+    /// build on each other, the way two passes of a brush do.
     public static func paint(_ stroke: BrushStroke, in context: CGContext, scale: CGFloat) {
         let dabs = BrushPlacement.dabs(for: stroke, jitter: jitter(for: stroke.settings.medium))
+        let toPixels = CGAffineTransform(scaleX: scale, y: scale)
+        if stroke.settings.mode == .smudge {
+            guard let plane = PixelPlane(context) else { return }
+            var smudge = SmudgeStroke(settings: stroke.settings, toPixels: toPixels, limit: plane.box)
+            for dab in dabs { _ = smudge.mark(dab, target: plane, mirror: nil) }
+            return
+        }
+        if let look = DryLook(stroke.settings) {
+            guard let plane = PixelPlane(context), let colour = RGBA(hex: stroke.colorHex) else { return }
+            var dry = DryStroke(look: look, seed: stroke.seed, toPixels: toPixels, limit: plane.box)
+            for dab in dabs { _ = dry.mark(dab) }
+            dry.composite(into: plane, colour: colour, opacity: Float(stroke.settings.opacity / 100))
+            return
+        }
         guard let tip = Tip(stroke: stroke, scale: scale) else { return }
         context.saveGState()
         context.setAlpha(CGFloat(stroke.settings.opacity / 100))
@@ -66,6 +82,80 @@ public enum PaintRasterizer {
             let r = dab.diameter / 2
             context.draw(tip.image, in: CGRect(x: dab.center.x - r, y: dab.center.y - r,
                                                width: dab.diameter, height: dab.diameter))
+        }
+    }
+
+    /// The stroke under the pointer, marked onto the canvas's overlay bitmap a
+    /// few dabs at a time with the same code that lands it.
+    ///
+    /// The bitmap holds this stroke alone and is shown at the stroke's
+    /// opacity, except for a smudge, which is shown as it is: what a smudge
+    /// lays over the paint below it, read from `working`, a copy of that paint
+    /// in the bitmap's pixels.
+    public final class LiveMarker {
+        private enum Kind {
+            case round(Tip)
+            case dry(DryStroke, RGBA)
+            case smudge(SmudgeStroke, PixelPlane)
+        }
+
+        private let bitmap: CGContext
+        private let plane: PixelPlane?
+        private let pointsToPixels: CGAffineTransform
+        private let clip: CGRect
+        private var kind: Kind
+        // Kept alive for as long as `kind` reads its pixels.
+        private let working: CGContext?
+
+        /// `pointsToPixels` takes the stroke's points to the bitmap's pixels
+        /// (top-left), and `clip` is the pixels the stroke may mark: the box
+        /// of the layer it lands on. Nil when the bitmap is not one this can
+        /// mark, or a smudge has no paint to read.
+        public init?(stroke: BrushStroke, bitmap: CGContext, pointsToPixels: CGAffineTransform,
+                     clip: CGRect, working: CGContext? = nil) {
+            self.bitmap = bitmap
+            self.pointsToPixels = pointsToPixels
+            self.clip = clip
+            self.working = working
+            plane = PixelPlane(bitmap)
+            let limit = PixelBox(clip).intersection(plane?.box ?? .empty)
+            if stroke.settings.mode == .smudge {
+                guard let working, let read = PixelPlane(working), plane != nil else { return nil }
+                kind = .smudge(SmudgeStroke(settings: stroke.settings, toPixels: pointsToPixels, limit: limit), read)
+            } else if let look = DryLook(stroke.settings) {
+                guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
+                kind = .dry(DryStroke(look: look, seed: stroke.seed, toPixels: pointsToPixels, limit: limit),
+                            colour)
+            } else {
+                guard let tip = Tip(stroke: stroke, scale: hypot(pointsToPixels.a, pointsToPixels.b))
+                else { return nil }
+                kind = .round(tip)
+            }
+        }
+
+        /// Marks `dabs`, the next ones the walker settled.
+        public func mark(_ dabs: [BrushDab]) {
+            guard !dabs.isEmpty else { return }
+            switch kind {
+            case .round(let tip):
+                bitmap.saveGState()
+                bitmap.translateBy(x: 0, y: CGFloat(bitmap.height))
+                bitmap.scaleBy(x: 1, y: -1)
+                bitmap.clip(to: clip)
+                bitmap.concatenate(pointsToPixels)
+                PaintRasterizer.mark(dabs, tip: tip, in: bitmap)
+                bitmap.restoreGState()
+            case .dry(var dry, let colour):
+                guard let plane else { return }
+                var touched = PixelBox.empty
+                for dab in dabs { touched = touched.union(dry.mark(dab)) }
+                dry.replace(touched, in: plane, colour: colour)
+                kind = .dry(dry, colour)
+            case .smudge(var smudge, let read):
+                guard let plane else { return }
+                for dab in dabs { _ = smudge.mark(dab, target: read, mirror: plane) }
+                kind = .smudge(smudge, read)
+            }
         }
     }
 

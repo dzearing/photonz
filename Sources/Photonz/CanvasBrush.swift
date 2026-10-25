@@ -13,12 +13,18 @@ import PhotonzRender
 // decision 5: the document is not re-composited per mouse move).
 
 /// The stroke under the hand: its samples so far, in canvas points, and the
-/// bitmap its dabs have been stamped onto.
+/// marker stamping its dabs onto a bitmap the size of the view.
 struct BrushLiveStroke {
     var stroke: BrushStroke
     var walker: BrushPlacement.Walker
-    let tip: PaintRasterizer.Tip
+    /// Nil for a smudge with no paint under it: nothing to show, and nothing
+    /// lands.
+    let marker: PaintRasterizer.LiveMarker?
     let bitmap: CGContext
+    /// The top-left corner of the layer the stroke lands on, in canvas points:
+    /// the walker works in that layer's own points, the way the renderer does,
+    /// so the paper grain under the live stroke is the paper it lands on.
+    let origin: CGPoint
     let began: TimeInterval
 }
 
@@ -44,33 +50,57 @@ extension CanvasNSView {
         let height = Int((bounds.height * backing).rounded(.up))
         let stroke = BrushStroke(samples: [], settings: brushSettings, colorHex: brushColorHex,
                                  seed: UInt32.random(in: 1...UInt32.max))
+        let smudging = stroke.settings.mode == .smudge
+        // Paint shows only inside the layer it will land on, so the live
+        // stroke is cut to the same box. A smudge lands on the paint under it,
+        // or nowhere.
+        let target = smudging ? document.smudgeTarget(at: p, picked: selectedLayerID) : nil
+        let box = smudging ? target.flatMap { document.canvasBounds(of: $0) }
+                           : brushLandingBox(startingAt: p, in: document)
         guard width > 0, height > 0,
-              let tip = PaintRasterizer.Tip(stroke: stroke, scale: viewport.zoom * backing),
-              let bitmap = CGContext(
-                data: nil, width: width, height: height, bitsPerComponent: 8,
-                bytesPerRow: width * 4,
-                space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
-                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return true }
-        // Top-left view points, then canvas points: the dabs are stated in the
-        // canvas's space and drawn where the view shows it.
-        bitmap.translateBy(x: 0, y: CGFloat(height))
-        bitmap.scaleBy(x: backing, y: -backing)
-        bitmap.translateBy(x: viewport.origin.x, y: viewport.origin.y)
-        bitmap.scaleBy(x: viewport.zoom, y: viewport.zoom)
-        // Paint shows only inside the layer it will land on, so the live stroke
-        // is cut to the same box.
-        bitmap.clip(to: brushLandingBox(startingAt: p, in: document))
+              let bitmap = Self.brushBitmap(width: width, height: height) else { return true }
+        // Canvas points to the bitmap's pixels (top-left), through the view.
+        let canvasToPixels = CGAffineTransform(scaleX: backing, y: backing)
+            .translatedBy(x: viewport.origin.x, y: viewport.origin.y)
+            .scaledBy(x: viewport.zoom, y: viewport.zoom)
+        let origin = box?.origin ?? .zero
+        var marker: PaintRasterizer.LiveMarker?
+        if let box {
+            let clip = box.applying(canvasToPixels)
+            let toPixels = canvasToPixels.translatedBy(x: origin.x, y: origin.y)
+            var working: CGContext?
+            if smudging, let target, let paint = document.layer(id: target)?.paint {
+                // What the smudge drags: the paint layer as it stands, drawn
+                // into the view's pixels where it sits.
+                working = Self.brushBitmap(width: width, height: height)
+                if let raster = PaintRasterizer.rasterize(paint, size: box.size,
+                                                          scale: viewport.zoom * backing) {
+                    working?.draw(raster, in: CGRect(x: clip.minX, y: CGFloat(height) - clip.maxY,
+                                                     width: clip.width, height: clip.height))
+                }
+            }
+            marker = PaintRasterizer.LiveMarker(stroke: stroke, bitmap: bitmap, pointsToPixels: toPixels,
+                                                clip: clip, working: working)
+        }
         brushStroke = BrushLiveStroke(
             stroke: stroke,
             walker: BrushPlacement.Walker(settings: stroke.settings, seed: stroke.seed,
                                           jitter: PaintRasterizer.jitter(for: stroke.settings.medium)),
-            tip: tip, bitmap: bitmap, began: event.timestamp)
+            marker: marker, bitmap: bitmap, origin: origin, began: event.timestamp)
         brushLayer.frame = bounds
         brushLayer.contentsScale = backing
-        brushLayer.opacity = Float(stroke.settings.opacity / 100)
+        // A smudge's overlay holds what it lays over the paint, already at its
+        // strength; a stroke's holds the stroke alone, shown at its opacity.
+        brushLayer.opacity = smudging ? 1 : Float(stroke.settings.opacity / 100)
         brushLayer.isHidden = false
         addBrushSample(at: p, event: event)
         return true
+    }
+
+    private static func brushBitmap(width: Int, height: Int) -> CGContext? {
+        CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                  space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
     }
 
     func brushMouseDragged(to p: CGPoint, event: NSEvent) {
@@ -84,7 +114,7 @@ extension CanvasNSView {
     func brushMouseUp(at p: CGPoint, event: NSEvent) {
         guard var live = brushStroke else { return }
         brushStroke = nil
-        PaintRasterizer.mark(live.walker.finish(), tip: live.tip, in: live.bitmap)
+        live.marker?.mark(live.walker.finish())
         brushLayer.contents = live.bitmap.makeImage()
         brushCommitImage = image
         onBrushStroke(live.stroke)
@@ -152,8 +182,12 @@ extension CanvasNSView {
             tilt: isTablet ? CGPoint(x: event.tilt.x, y: event.tilt.y) : nil,
             ms: max(0, (event.timestamp - live.began) * 1000))
         live.stroke.samples.append(sample)
-        let dabs = live.walker.add(sample)
-        PaintRasterizer.mark(dabs, tip: live.tip, in: live.bitmap)
+        // The walker works in the landing layer's own points, as the renderer
+        // does once the stroke is stored there.
+        var local = sample
+        local.point = CGPoint(x: p.x - live.origin.x, y: p.y - live.origin.y)
+        let dabs = live.walker.add(local)
+        live.marker?.mark(dabs)
         brushStroke = live
         if !dabs.isEmpty { brushLayer.contents = live.bitmap.makeImage() }
     }

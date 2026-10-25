@@ -1,0 +1,206 @@
+{
+  "out": "/tmp/photonz-playtest/brush-dry-media-and-smudge-walk",
+  "seed": "Charcoal, chalk and crayon on one paper grain, and the brush's Smudge mode (docs/design/brushes.md, decisions 4 and 7). No flags: Next as a person gets it. B picks the Brush, the Medium dropdown over the tool bar picks each medium in turn and a pointer drag paints a stroke with it onto one Paint layer; each paint drag holds the picture with the button down against the landed one. Then Charcoal again, the Mode segment clicked to Smudge at its face, and a pointer drag drags the charcoal stroke's deposit up and away. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 2000,
+      "height": 1300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "0-brush-capsule"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-brush-capsule"
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        560
+      ],
+      "to": [
+        1240,
+        580
+      ],
+      "steps": 28,
+      "wobble": 2,
+      "hold": "1-charcoal-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "choose": "Chalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        640
+      ],
+      "to": [
+        1240,
+        660
+      ],
+      "steps": 28,
+      "wobble": 2,
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "choose": "Crayon"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        760,
+        720
+      ],
+      "to": [
+        1240,
+        740
+      ],
+      "steps": 28,
+      "wobble": 2,
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "2-three-media"
+    },
+    {
+      "do": "describe",
+      "stage": "2-three-media",
+      "note": "the Paint layer holds three strokes: charcoal, chalk, crayon"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "choose": "Charcoal"
+    },
+    {
+      "do": "press",
+      "control": "Smudge",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "3-smudge-armed"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1100,
+        575
+      ],
+      "to": [
+        1260,
+        500
+      ],
+      "steps": 28,
+      "wobble": 2,
+      "hold": "4-smudge-held"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "5-charcoal-smudged"
+    },
+    {
+      "do": "describe",
+      "stage": "5-charcoal-smudged",
+      "note": "a fourth stroke, the smudge, on the same Paint layer"
+    },
+    {
+      "do": "press",
+      "control": "Paint",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

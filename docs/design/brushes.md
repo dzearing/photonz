@@ -180,6 +180,46 @@ an anchor and the line re-paints.
   the stroke will land in, shown at the stroke's opacity. It stays up until the
   composite holding the stroke arrives.
 
+## What slice 2 settled (2026-10-24)
+
+- **The paper is the layer's, in points.** `PaperGrain` (PhotonzRender) is one
+  procedural tile, 128 points square, repeated: a cellular dimple pattern (pits
+  with a network of ridges between them, the way pressed drawing paper is made)
+  plus a little value noise and a faint fibre, evened out so a threshold of `t`
+  leaves exactly `t` of the paper bare. It is read in the paint layer's own
+  points, not the canvas's: moving a painted layer carries its paper with it,
+  and every stroke on one layer catches the same tooth. Chose that over
+  absolute canvas coordinates because a moved layer should keep its look.
+- **Dry media work on pixels, not a stamped tip.** `DryStroke` lays each dab
+  into a coverage field: a tip whose edge the paper breaks, streaked across its
+  width by the stick's uneven face (so the marks run along the drag), pressed
+  lighter and darker along its length, settling only on paper above a height
+  the press reaches. Charcoal: soft fall-off, grey body, fine tooth, dust beside
+  the stroke. Chalk: coarse tooth, ragged edge, full strength. Crayon: hard
+  edge, bare paper in the pits, strong striations, a worn flat tip that leaves
+  short squared ends. Grain 0 paints the whole tip; the streaks scale with Grain
+  too, since they are the stick's texture.
+- **Smudge is a mode in the capsule, and it only adds.** The tool options capsule
+  carries Medium (a dropdown, all seven) and Mode (Paint | Smudge, a segmented
+  control). A smudge stroke is stored on the paint layer it drags
+  (`PhotonzDocument.smudgeStroke`): the picked paint layer, or the topmost shown,
+  unlocked paint layer under the pointer, and never a picture or a new layer,
+  so a smudge on bare screenshot does nothing and adds no undo step. The finger
+  carries a blurred patch of what it passed over and spreads it thinner into
+  lighter places; it never scrapes paint off. That is what lets the live overlay
+  be honest: what it lays over the paint, laid over an empty overlay, shows the
+  same thing as the landed stroke. Real smudging also lifts; that is a known
+  departure, written here, not a bug.
+- **Charcoal and chalk's Smudge setting** is the same finger pulling the
+  stroke's own deposit along into the valleys as it goes.
+- **Measured bar.** `PaintMeasures.interiorGapFraction`: the share of a straight
+  stroke's core (within a third of its radius of the line) left under half its
+  strongest coverage. The soft round tip scores 0; the bar is 0.12; charcoal,
+  chalk and crayon at their defaults score about 0.31, 0.40 and 0.47.
+- **Live and landed share `LiveMarker`.** The canvas hands it the view's pixels
+  as a transform from the landing layer's points, so the live stroke walks the
+  same layer-local samples the renderer does.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,
