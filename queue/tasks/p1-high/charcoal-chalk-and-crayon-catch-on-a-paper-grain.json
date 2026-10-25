@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.319Z",
-  "updated": "2026-10-25T02:46:54.547Z",
+  "updated": "2026-10-25T04:20:01.194Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -58,9 +58,13 @@
     {
       "t": "2026-10-25T02:46:54.546Z",
       "note": "Slice shipped (6fddd821): grain, three media, Smudge, measured bar, walk, audit. Open: the blind model judge still cannot tell charcoal from chalk (acceptance item 2); see log."
+    },
+    {
+      "t": "2026-10-25T04:20:01.188Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-10-25T01:09:14.101Z",
+  "started": "2026-10-25T04:20:01.186Z",
   "walks": [
     "brush-dry-media-and-smudge-walk",
     "brush-paints-strokes-walk"

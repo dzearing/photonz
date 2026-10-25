@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.541Z",
-  "updated": "2026-10-24T23:41:00.098Z",
+  "updated": "2026-10-25T04:55:13.054Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-24T23:41:00.098Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    },
+    {
+      "t": "2026-10-25T04:55:13.052Z",
+      "note": "The user, 2026-10-24: 'watercolor doesn't look like watercolor'. Not built yet: DryMedia.swift:276 sends watercolour to the plain round tip until this task lands. The user also wants each brush's knobs to be the ones that make sense for that medium; Wetness and Bleed are the floor, add what a watercolourist expects (for example granulation, edge darkening) if it earns its place."
     }
   ]
 }

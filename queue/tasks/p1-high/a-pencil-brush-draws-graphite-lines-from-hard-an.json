@@ -1,0 +1,36 @@
+{
+  "id": "a-pencil-brush-draws-graphite-lines-from-hard-an",
+  "title": "A pencil brush draws graphite lines from hard and light to soft and dark, and shades when tilted",
+  "goal": "Add a Pencil to the brushes. It draws thin graphite lines that catch on the paper's grain, from a hard pale pencil to a soft dark one, gets darker the harder you press, shades in a broad soft stroke when the pen is tilted, and has a slight graphite sheen where strokes pile up. It has its own controls: how hard the lead is, the grain, and how much tilt shades.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T04:54:55.228Z",
+  "updated": "2026-10-25T04:55:12.822Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-24: \"there is no pencil.\"\n\nThe original brush ask listed charcoal, chalk, oil, watercolour, marker, crayon and airbrush (BrushMedium in Sources/PhotonzCore/Brush.swift:13), so pencil is new. Build it on the dry media engine that charcoal, chalk and crayon use (Sources/PhotonzRender/DryMedia.swift, PaperGrain.swift): it is the same grain-catching marking with a thin hard tip, so it should be a new parameter set there, not a second engine. Adding a case to BrushMedium touches every switch over it (settings, default size, DryMedia) and the MCP brush list; a stroke saved with a medium must still load.\n\nRelated: charcoal-chalk-and-crayon-catch-on-a-paper-grain (6.1) is back to pending because a model judge could not tell charcoal from chalk; pencil must read as different from both. The brush chooser task (filed the same day) shows a sample stroke per brush, so pencil needs one.",
+  "acceptance": [
+    "Pencil is one of the brushes everywhere a brush can be picked (the tool options, the panel, the brush chooser, MCP's list of brushes), named Pencil",
+    "A stroke is a thin graphite line that catches on the same paper grain as charcoal and chalk, darker with more pressure; a mouse gets a sensible simulated pressure",
+    "Its own settings from the one list in PhotonzCore, plain names: at least Hardness (a lead from hard and pale to soft and dark, shown in pencil grades such as 2H, HB, 4B, 8B), Grain, and Tilt shading; each visibly changes the stroke (a sheet per setting in the audit)",
+    "Tilting the pen (or the simulated tilt with a mouse modifier, if one is chosen) lays the side of the lead down for a broad soft shading stroke",
+    "Measured bars: line width and darkness per grade, and how much of the paper's tooth shows through at light pressure; the round tip fails them; numbers in the audit",
+    "The blind test sheet from the umbrella task is run with a pencil row and the audit says whether the runner and a model judge name it pencil and tell it from charcoal",
+    "A walk with no flags picks Pencil and draws a line and a tilted shading patch by pointer drag; painting stays smooth on a 12 MP picture, frame time MEASURED",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T04:54:55.230Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-25T04:55:12.821Z",
+      "note": "seq 3980 -> 6.15"
+    }
+  ]
+}

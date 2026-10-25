@@ -1,0 +1,36 @@
+{
+  "id": "the-airbrush-sprays-a-soft-fine-mist-that-builds",
+  "title": "The airbrush sprays a soft fine mist that builds up, with knobs for how hard and how wide it sprays",
+  "goal": "The airbrush should behave like a real one: a fine spray of tiny droplets that is densest in the middle and feathers out, builds up the longer you hold it over a spot, and spatters a little at a heavy flow. It gets its own controls for how hard it sprays, how wide the spray spreads, how fine or coarse the droplets are, and how much it builds up. Today it paints a plain round stroke.",
+  "epic": "image-paint",
+  "priority": "p1-high",
+  "seq": 6.35,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T04:54:55.110Z",
+  "updated": "2026-10-25T04:55:12.899Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-24: \"airbrush doesn't [look like airbrush] either\" and \"airbrush might have some [knobs] about the spray intencity or spread or whatever makes sense for that while other brushes might have other settings specific to them.\"\n\nCause, from reading the code (not reproduced in the app): Sources/PhotonzRender/DryMedia.swift:276 returns nil for .marker, .airbrush, .oil, .watercolour, so those media fall back to the plain round tip. Airbrush has no slice of its own in the queue; the umbrella is a-brush-tool-paints-with-realistic-charcoal-chal and its slices are 6.x. Today's airbrush settings are Flow and Softness (Sources/PhotonzCore/Brush.swift:67); rename or extend them, keeping the setting ids the MCP tools read stable or migrated.\n\nDesign: docs/design/brushes.md, read it first. Strokes are data with a seed, so the spray's droplets must come from the stroke's seed and replay identically. Expect a Core Image or Metal kernel in PhotonzRender; keep the live overlay exact. The brush chooser task (filed the same day) shows each brush's real sample stroke, so the airbrush tile shows whatever this lands.",
+  "acceptance": [
+    "Reproduced first: a sheet of the airbrush and the round tip at today's code, side by side, in the audit, showing they are the same stroke",
+    "A stroke is a soft spray of fine droplets, densest along the path and feathering out with no hard edge; holding still or going slowly over a spot builds it darker (build-up from dwell time, recorded in the stroke data so replay matches)",
+    "Its own settings, read from the one list in PhotonzCore and nowhere else, with plain names: at least Flow (how hard it sprays), Spread (how wide), Droplet size (fine mist to coarse spatter), and Build-up; each visibly changes the stroke (a sheet of strokes per setting in the audit)",
+    "Measured bars the round tip FAILS: the stroke's edge falloff (darkness across its width, profile plotted), droplet count per square point at the edge, and darkening against dwell time; numbers in the audit",
+    "Pressure and pointer speed shape it where a real airbrush would (more pressure sprays more; a fast pass is lighter)",
+    "Painting stays smooth on a 12 MP picture, frame time while painting MEASURED in the audit; a walk with no flags paints an airbrush stroke and a slow build-up by pointer drag",
+    "The blind test sheet from the umbrella task is run again with the airbrush row and the audit says whether the runner and a model judge name it as airbrush",
+    "Audit under queue/audits/ with the sheets and a short reel of spraying live; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T04:54:55.112Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-25T04:55:12.898Z",
+      "note": "seq 3970 -> 6.35"
+    }
+  ]
+}

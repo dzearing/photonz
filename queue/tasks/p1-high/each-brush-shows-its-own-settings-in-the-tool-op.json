@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.779Z",
-  "updated": "2026-10-25T02:00:15.769Z",
+  "updated": "2026-10-25T04:55:13.130Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -33,6 +33,10 @@
     {
       "t": "2026-10-25T02:00:15.767Z",
       "note": "From charcoal-chalk-and-crayon-catch-on-a-paper-grain (2026-10-24): the tool options capsule already carries Medium (a dropdown of all seven, ToolSetting.brushMedium) and Mode (Paint | Smudge, ToolSetting.brushMode) so the dry-media walk could reach chalk and crayon. This task adds Size, Opacity and the medium's own two after them, the panel section, per-medium memory, and the pointer-face proof for the Medium dropdown."
+    },
+    {
+      "t": "2026-10-25T04:55:13.129Z",
+      "note": "The user, 2026-10-24: wants 'a better chooser than a dropdown without previewing'. The Medium dropdown in this task's first acceptance item is superseded by brushes-are-picked-from-a-library-of-tiles-that (seq 6.45, built to brush-library.html): do NOT build or keep the dropdown. This task keeps per-brush settings, the panel's full list, the size ring and [ ]. The user also said each brush should have knobs specific to it ('airbrush might have some about the spray intencity or spread'): every medium's own settings must be the ones that medium needs, each visibly changing the stroke."
     }
   ]
 }
