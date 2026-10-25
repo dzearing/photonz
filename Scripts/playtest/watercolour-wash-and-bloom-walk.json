@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/watercolour-wash-and-bloom-walk",
-  "seed": "Watercolour (docs/design/brushes.md, decision 4). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the Medium dropdown over the tool bar is clicked at its face and Watercolour chosen, and the brush is given a plain blue. A pointer drag lays a see-through wash with a darker pooled edge on a new Paint layer; a second drag crossing it straight away, while it is still wet, blooms out through it; after eight seconds the wash has dried and a third drag crossing it is a plain glaze, darker only where the two overlap. Every drag holds the picture with the button down against the landed one (the live overlay replays the wet washes it blooms into) and reports how long the canvas took over each move. Canvas coordinates are document units.",
+  "seed": "Watercolour (docs/design/brushes.md, decision 4). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the brush chooser over the tool bar is opened and Watercolour's tile clicked at its face, and the brush is given a plain blue. A pointer drag lays a see-through wash with a darker pooled edge on a new Paint layer; a second drag crossing it straight away, while it is still wet, blooms out through it; after eight seconds the wash has dried and a third drag crossing it is a plain glaze, darker only where the two overlap. Every drag holds the picture with the button down against the landed one (the live overlay replays the wet washes it blooms into) and reports how long the canvas took over each move. Canvas coordinates are document units.",
   "setup": {
     "forget": [
       "tools",
@@ -30,12 +30,16 @@
       "value": "brush"
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "at": [
-        "centre"
-      ],
-      "choose": "Watercolour"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Watercolour"
     },
     {
       "do": "wait",
@@ -43,8 +47,8 @@
     },
     {
       "do": "expect",
-      "menu": "Tool Medium",
-      "reads": "Watercolour"
+      "control": "Choose brush",
+      "reads": "Tool Brush, Watercolour"
     },
     {
       "do": "action",

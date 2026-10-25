@@ -209,17 +209,12 @@ struct ToolSettingsCapsule: View {
             .fixedSize()
             .help("What a click with the tool places. Picking one in the Library picks it here too.")
         case .brushMedium:
-            // Eight media, so a menu (more than three exclusive options is a
-            // dropdown).
-            Picker("Medium", selection: $state.armedBrushMedium) {
-                ForEach(BrushMedium.allCases, id: \.self) { medium in
-                    Text(medium.title).tag(medium)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .fixedSize()
-            .help("What the brush paints with.")
+            // Picked by its stroke, not its name: the button shows the brush
+            // in hand and opens the tiles (`BrushChooser`, the user,
+            // 2026-10-24: "a better chooser than a dropdown without
+            // previewing").
+            BrushChooserButton()
+                .fixedSize()
         case .brushMode:
             // Two choices, both on screen, like the callout's shape.
             SegmentedControl("Mode", selection: $state.armedBrushMode,

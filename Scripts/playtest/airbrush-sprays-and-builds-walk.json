@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/airbrush-sprays-and-builds-walk",
-  "seed": "The airbrush (docs/design/brushes.md, What the airbrush settled). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the Medium dropdown over the tool bar is clicked at its face and Airbrush chosen. A pointer drag sprays a soft line of fine droplets, densest along the path, on a new Paint layer; a second drag holds still for a second half way with the button down and builds a dark spot there; a third drag goes slowly. The held drag is photographed with the button down against the landed picture (what the spray showed under the pointer is what lands); the other two let go straight away, since a held airbrush keeps spraying while it is photographed and reports how long the canvas took over each move. Canvas coordinates are document units.",
+  "seed": "The airbrush (docs/design/brushes.md, What the airbrush settled). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the brush chooser over the tool bar is opened and Airbrush's tile clicked at its face. A pointer drag sprays a soft line of fine droplets, densest along the path, on a new Paint layer; a second drag holds still for a second half way with the button down and builds a dark spot there; a third drag goes slowly. The held drag is photographed with the button down against the landed picture (what the spray showed under the pointer is what lands); the other two let go straight away, since a held airbrush keeps spraying while it is photographed and reports how long the canvas took over each move. Canvas coordinates are document units.",
   "setup": {
     "forget": [
       "tools",
@@ -30,12 +30,17 @@
       "value": "brush"
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "at": [
-        "centre"
-      ],
-      "choose": "Airbrush"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Airbrush",
+      "in": "Brush tiles"
     },
     {
       "do": "wait",
@@ -43,8 +48,8 @@
     },
     {
       "do": "expect",
-      "menu": "Tool Medium",
-      "reads": "Airbrush"
+      "control": "Choose brush",
+      "reads": "Tool Brush, Airbrush"
     },
     {
       "do": "action",

@@ -7,6 +7,9 @@ import Foundation
 public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
     case media
     case components
+    /// Every brush as a tile showing its own stroke (`brush-library.html`).
+    /// Only a picture offers it, and only where the brush exists.
+    case brushes
     case styles
     case systems
     /// A video's shelf of things made and animated for video, grouped by
@@ -19,15 +22,21 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
     /// in a video (the user, 2026-10-17: "Things not relevant to a video
     /// shouldn't be in the library pivots"), and components, built for
     /// mockups, are inside the catalog behind its Built for video filter.
-    public static func scopes(hasTime: Bool) -> [LibraryScope] {
-        hasTime ? [.media, .catalog] : [.media, .components, .styles, .systems]
+    ///
+    /// `brushes` says whether the release has the brush at all; a picture in
+    /// one that does gets its Brushes pivot after Components.
+    public static func scopes(hasTime: Bool, brushes: Bool = false) -> [LibraryScope] {
+        if hasTime { return [.media, .catalog] }
+        return brushes ? [.media, .components, .brushes, .styles, .systems]
+                       : [.media, .components, .styles, .systems]
     }
 
     /// The pivot to show for a stored one, in a document that may not offer
     /// it: the nearest one it does, so a shelf left on Components in a
     /// picture opens a video on its catalog and the other way round.
-    public static func resolved(_ stored: LibraryScope, hasTime: Bool) -> LibraryScope {
-        if scopes(hasTime: hasTime).contains(stored) { return stored }
+    public static func resolved(_ stored: LibraryScope, hasTime: Bool,
+                                brushes: Bool = false) -> LibraryScope {
+        if scopes(hasTime: hasTime, brushes: brushes).contains(stored) { return stored }
         return hasTime ? .catalog : .components
     }
 
@@ -37,6 +46,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         switch self {
         case .media: return "Media"
         case .components: return "Components"
+        case .brushes: return "Brushes"
         case .styles: return "Styles"
         case .systems: return "Systems"
         case .catalog: return "Catalog"
@@ -49,6 +59,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         switch self {
         case .media: return "Media"
         case .components: return "Comps"
+        case .brushes: return "Brushes"
         case .styles: return "Styles"
         case .systems: return "Systems"
         case .catalog: return "Catalog"
@@ -62,6 +73,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         switch self {
         case .media: return "Media"
         case .components: return "Component"
+        case .brushes: return "Brush"
         case .styles: return "Style"
         case .systems: return "System"
         case .catalog: return "Item"
@@ -73,6 +85,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
         switch self {
         case .media: return "Search media"
         case .components: return "Search components"
+        case .brushes: return "Search brushes"
         case .styles: return "Search styles"
         case .systems: return "Search systems"
         case .catalog: return "Search catalog"
@@ -87,6 +100,7 @@ public enum LibraryScope: String, CaseIterable, Hashable, Sendable, Codable {
             return "Pictures you place in this document show up here. "
                 + "Everything you have ever captured is in History (⇧⌘H)."
         case .components: return "Components you make will show up here."
+        case .brushes: return "Brushes show up here."
         case .styles: return "Colors and text styles you save under a name will show up here."
         case .systems: return "Design systems you add will show up here."
         case .catalog: return "Titles, backgrounds and transitions show up here."

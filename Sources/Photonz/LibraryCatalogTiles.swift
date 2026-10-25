@@ -192,7 +192,9 @@ struct LibraryBackgroundInspector: View {
 /// the only kind the shelf shows.
 struct LibraryCatalogChip: View {
     let title: String
-    let count: Int
+    /// How many the chip holds, or nil for a chip that says only its word
+    /// (the brush groups, `brush-library.html`).
+    var count: Int? = nil
     let isOn: Bool
     let pick: () -> Void
 
@@ -201,11 +203,13 @@ struct LibraryCatalogChip: View {
             HStack(spacing: 4) {
                 Text(title)
                     .lineLimit(1)
-                Text("\(count)")
-                    .monospacedDigit()
-                    // On the accent the count stays white, quieter; on the
-                    // plain chip it is the secondary label colour.
-                    .foregroundStyle(isOn ? AnyShapeStyle(Color.white.opacity(0.8)) : AnyShapeStyle(.secondary))
+                if let count {
+                    Text("\(count)")
+                        .monospacedDigit()
+                        // On the accent the count stays white, quieter; on the
+                        // plain chip it is the secondary label colour.
+                        .foregroundStyle(isOn ? AnyShapeStyle(Color.white.opacity(0.8)) : AnyShapeStyle(.secondary))
+                }
             }
             .font(.caption)
             .foregroundStyle(isOn ? AnyShapeStyle(Color.white) : AnyShapeStyle(.primary))
@@ -216,7 +220,7 @@ struct LibraryCatalogChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-        .accessibilityValue("\(count)")
+        .accessibilityValue(count.map(String.init) ?? "")
         .accessibilityAddTraits(isOn ? .isSelected : [])
         .panelHelp(title)
         .playtestControl(title, detail: "Catalog kind")

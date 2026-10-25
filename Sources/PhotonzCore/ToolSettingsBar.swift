@@ -35,7 +35,8 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     case lensAmount
     /// Which component the Component insert tool places.
     case component
-    /// What the brush paints with: charcoal, chalk, crayon and the rest.
+    /// Which brush is in hand: charcoal, chalk, crayon and the rest, picked
+    /// from tiles that each show the brush's own stroke.
     case brushMedium
     /// Whether the brush paints or smudges.
     case brushMode
@@ -57,7 +58,7 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
         // so the capsule asks `LensAdjustment.settingTitle` rather than this.
         case .lensAmount: "Amount"
         case .component: "Component"
-        case .brushMedium: "Medium"
+        case .brushMedium: "Brush"
         case .brushMode: "Mode"
         }
     }

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/marker-and-airbrush-walk",
-  "seed": "The marker and the airbrush (docs/design/brushes.md, decision 4). No flags: Next as a person gets it. B picks the Brush and the Medium dropdown over the tool bar picks Marker: a pointer drag lays one flat translucent stroke on a new Paint layer, and a second drag crossing it is darker only in the overlap, held with the button down against the landed picture (the live overlay multiplies over the paint under it, the way the landed stroke does). Then Airbrush: a pointer drag that holds still for a second half way, button down, leaves a dark built-up spot in a soft spray. Canvas coordinates are document units.",
+  "seed": "The marker and the airbrush (docs/design/brushes.md, decision 4). No flags: Next as a person gets it. B picks the Brush and the brush chooser over the tool bar picks Marker: a pointer drag lays one flat translucent stroke on a new Paint layer, and a second drag crossing it is darker only in the overlap, held with the button down against the landed picture (the live overlay multiplies over the paint under it, the way the landed stroke does). Then Airbrush: a pointer drag that holds still for a second half way, button down, leaves a dark built-up spot in a soft spray. Canvas coordinates are document units.",
   "setup": {
     "forget": [
       "tools",
@@ -40,9 +40,16 @@
       "seconds": 0.8
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "choose": "Marker"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Marker"
     },
     {
       "do": "wait",
@@ -106,9 +113,17 @@
       "note": "one Paint layer holding two marker strokes that cross"
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "choose": "Airbrush"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Airbrush",
+      "in": "Brush tiles"
     },
     {
       "do": "wait",

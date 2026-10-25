@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/oil-paint-smears-and-ridges-walk",
-  "seed": "Oil paint (docs/design/brushes.md, decision 4). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the Medium dropdown over the tool bar is clicked at its face and Oil Paint chosen. A pointer drag in the brush's black lays a thick streaked stroke with lit bristle ridges on a new Paint layer; the brush is given a plain blue and a second drag crosses the black one, picking its colour up, mixing it in and carrying it on past the crossing before the blue clears back. Every drag holds the picture with the button down against the landed one (the live overlay picks up from the same paint) and reports how long the canvas took over each move. Canvas coordinates are document units.",
+  "seed": "Oil paint (docs/design/brushes.md, decision 4). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the brush chooser over the tool bar is opened and Oil Paint's tile clicked at its face. A pointer drag in the brush's black lays a thick streaked stroke with lit bristle ridges on a new Paint layer; the brush is given a plain blue and a second drag crosses the black one, picking its colour up, mixing it in and carrying it on past the crossing before the blue clears back. Every drag holds the picture with the button down against the landed one (the live overlay picks up from the same paint) and reports how long the canvas took over each move. Canvas coordinates are document units.",
   "setup": {
     "forget": [
       "tools",
@@ -30,12 +30,16 @@
       "value": "brush"
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "at": [
-        "centre"
-      ],
-      "choose": "Oil Paint"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Oil Paint"
     },
     {
       "do": "wait",
@@ -43,8 +47,8 @@
     },
     {
       "do": "expect",
-      "menu": "Tool Medium",
-      "reads": "Oil Paint"
+      "control": "Choose brush",
+      "reads": "Tool Brush, Oil Paint"
     },
     {
       "do": "action",

@@ -31,6 +31,10 @@ enum InspectorSectionID: String, CaseIterable {
     // tool-in-hand sections, with the picked-lens section below carrying the
     // same two for one already on the canvas.
     case lensTool
+    // The brush in hand (Next, `next-brush`): its name, group and settings,
+    // driven by the tile picked in the Library or the chooser
+    // (`brush-library.html`, Properties).
+    case brushTool
     case measurements
     // Above Position & Size, because the two answer the same question at
     // different scales: where do these sit, and where does this one sit.
@@ -237,6 +241,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .cropTool: "Crop Tool"
         case .calloutTool: "Zoom Callout Tool"
         case .lensTool: "Lens Tool"
+        case .brushTool: "Brush"
         case .measurements: "Measurements"
         case .arrange: "Arrange"
         case .geometry: "Position & Size"

@@ -12,7 +12,7 @@ struct LibraryTests {
     // MARK: Scopes
 
     @Test func offersTheScopesInOrder() {
-        #expect(LibraryScope.allCases == [.media, .components, .styles, .systems, .catalog])
+        #expect(LibraryScope.allCases == [.media, .components, .brushes, .styles, .systems, .catalog])
         #expect(LibraryScope.media.title == "Media")
         #expect(LibraryScope.components.title == "Components")
         #expect(LibraryScope.styles.title == "Styles")

@@ -71,6 +71,8 @@ extension PlaytestMemory {
              // and its Built for video filter (`EditorState+VideoCatalog`).
              EditorState.videoLibraryScopeKey, EditorState.catalogCategoryKey,
              EditorState.catalogBuiltForVideoKey,
+             // ...and the brush group chip the Brushes shelf was on.
+             LibraryPanel.brushGroupKey,
              InspectorPanel.sectionOrderKey, InspectorPanel.sectionOrderVersionKey,
              InspectorPanel.collapsedKey,
              // The folds INSIDE sections, which last across launches the same

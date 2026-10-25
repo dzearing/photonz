@@ -27,6 +27,7 @@ public enum PanelToolSettings {
         "cropTool": .crop,
         "calloutTool": .zoomCallout,
         "lensTool": .lens,
+        "brushTool": .brush,
     ]
 
     /// The tool a section is the settings of, or nil when it is not a tool's.

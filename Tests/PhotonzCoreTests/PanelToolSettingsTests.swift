@@ -22,6 +22,7 @@ struct PanelToolSettingsTests {
         #expect(PanelToolSettings.tool(ofSection: "cropTool") == .crop)
         #expect(PanelToolSettings.tool(ofSection: "calloutTool") == .zoomCallout)
         #expect(PanelToolSettings.tool(ofSection: "lensTool") == .lens)
+        #expect(PanelToolSettings.tool(ofSection: "brushTool") == .brush)
         #expect(PanelToolSettings.tool(ofSection: "color") == nil)
         #expect(PanelToolSettings.tool(ofSection: "layers") == nil)
     }

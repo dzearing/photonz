@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/brush-dry-media-and-smudge-walk",
-  "seed": "Charcoal, chalk and crayon on one paper grain, and the brush's Smudge mode (docs/design/brushes.md, decisions 4 and 7). No flags: Next as a person gets it. B picks the Brush, the Medium dropdown over the tool bar picks each medium in turn and a pointer drag paints a stroke with it onto one Paint layer; each paint drag holds the picture with the button down against the landed one. Then Charcoal again, the Mode segment clicked to Smudge at its face, and a pointer drag drags the charcoal stroke's deposit up and away. Canvas coordinates are document units.",
+  "seed": "Charcoal, chalk and crayon on one paper grain, and the brush's Smudge mode (docs/design/brushes.md, decisions 4 and 7). No flags: Next as a person gets it. B picks the Brush, the brush chooser over the tool bar picks each medium in turn and a pointer drag paints a stroke with it onto one Paint layer; each paint drag holds the picture with the button down against the landed one. Then Charcoal again, the Mode segment clicked to Smudge at its face, and a pointer drag drags the charcoal stroke's deposit up and away. Canvas coordinates are document units.",
   "setup": {
     "forget": [
       "tools",
@@ -77,9 +77,16 @@
       ]
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "choose": "Chalk"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Chalk"
     },
     {
       "do": "wait",
@@ -104,9 +111,16 @@
       "seconds": 0.8
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "choose": "Crayon"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Crayon"
     },
     {
       "do": "wait",
@@ -140,9 +154,16 @@
       "note": "the Paint layer holds three strokes: charcoal, chalk, crayon"
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "choose": "Charcoal"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Charcoal"
     },
     {
       "do": "press",

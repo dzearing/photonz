@@ -1,0 +1,316 @@
+{
+  "out": "/tmp/photonz-playtest/brushes-picked-from-tiles-walk",
+  "seed": "The brush library (brush-library.html). No flags: Next as a person gets it. B picks the Brush; the brush in the tool options over the tool bar is clicked and the chooser opens, every brush a tile painted live with its own stroke in the current colour. Oil Paint's tile is clicked at its face and a drag paints with it; the chooser is opened again, Marker's tile clicked and a second drag paints with that. The arrow keys move the highlight and Return picks, Escape closes. The brush is given a blue and the tiles repaint in blue. Then the Library is opened on its Brushes shelf, grouped by kind, and a tile there is clicked. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1000,
+      "width": 1400,
+      "height": 900,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Oil Paint",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Charcoal",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "1-chooser"
+    },
+    {
+      "do": "press",
+      "control": "Oil Paint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Charcoal",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Oil Paint"
+    },
+    {
+      "do": "drag",
+      "from": [
+        260,
+        300
+      ],
+      "to": [
+        760,
+        330
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Marker"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Marker"
+    },
+    {
+      "do": "drag",
+      "from": [
+        260,
+        480
+      ],
+      "to": [
+        760,
+        510
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "2-two-strokes"
+    },
+    {
+      "do": "describe",
+      "stage": "2-two-strokes",
+      "note": "a streaked oil stroke above a flat marker stroke, each painted after its tile was clicked"
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "appKey",
+      "key": "left"
+    },
+    {
+      "do": "appKey",
+      "key": "left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "snapshot",
+      "name": "3-keys"
+    },
+    {
+      "do": "appKey",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Pencil",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Pencil"
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Pencil",
+      "present": true
+    },
+    {
+      "do": "appKey",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Pencil",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Pencil"
+    },
+    {
+      "do": "action",
+      "action": "paintToolColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "4-blue-tiles"
+    },
+    {
+      "do": "appKey",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Media",
+      "choose": "Brushes"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Pencil",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "5-library-brushes"
+    },
+    {
+      "do": "press",
+      "control": "Charcoal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Charcoal"
+    },
+    {
+      "do": "press",
+      "control": "Ink"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Charcoal",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Marker",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "6-library-ink-group"
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

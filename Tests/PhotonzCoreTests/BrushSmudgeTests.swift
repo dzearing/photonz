@@ -52,10 +52,10 @@ struct BrushSmudgeTests {
         #expect(again == smudge)
     }
 
-    @Test("Medium and Mode are what the brush puts over the tool bar")
+    @Test("Brush and Mode are what the brush puts over the tool bar")
     func capsule() {
         #expect(ToolSettingsBar.settings(for: .brush, availability: .all) == [.brushMedium, .brushMode])
-        #expect(ToolSetting.brushMedium.title == "Medium")
+        #expect(ToolSetting.brushMedium.title == "Brush")
         #expect(ToolSetting.brushMode.title == "Mode")
     }
 

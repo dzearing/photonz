@@ -29,7 +29,8 @@ extension EditorState {
     /// kind's own setting and fallen to the nearest one it offers.
     var libraryPivot: LibraryScope {
         let stored = UserDefaults.standard.string(forKey: libraryScopeKey).flatMap(LibraryScope.init(rawValue:))
-        return LibraryScope.resolved(stored ?? .media, hasTime: documentHasTime)
+        return LibraryScope.resolved(stored ?? .media, hasTime: documentHasTime,
+                                     brushes: libraryOffersBrushes)
     }
 
     /// Puts the Library on `scope`, in the open document's kind's own

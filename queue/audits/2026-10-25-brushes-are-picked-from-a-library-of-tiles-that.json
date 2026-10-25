@@ -1,0 +1,35 @@
+{
+  "feature": "Brushes picked from tiles that show their own stroke",
+  "epic": "image-paint",
+  "task": "brushes-are-picked-from-a-library-of-tiles-that",
+  "summary": "The brush in the tool options over the tool bar now opens a grid of tiles, one per brush, grouped by kind. Each tile is a stroke painted live by that brush in the current colour. The Library has a Brushes shelf with the same tiles, and the panel shows the brush in hand.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/brushes-picked-from-tiles-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a picture and press B. Click the brush beside Brush in the options over the tool bar.", "shot": "2026-10-25-brush-library-chooser.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the Oil Paint tile and paint a stroke. Open the chooser again, click Marker and paint another.", "shot": "2026-10-25-brush-library-two-strokes.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open the chooser and press the arrow keys: a white ring moves between tiles. Press Return to pick, or Escape to close.", "shot": "2026-10-25-brush-library-keys.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Change the swatch at the end of the tool bar to blue and open the chooser: every tile repaints in blue.", "shot": "2026-10-25-brush-library-blue-tiles.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With the Brush still in hand, open the Library and set its shelf to Brushes. Compare it with the mock.", "shot": "2026-10-25-brush-library-shelf.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "The mock it was built to: brush-library.html (http://127.0.0.1:8791/pages/brush-library.html).", "shot": "2026-10-25-brush-library-mock.png" },
+    { "do": "Click a group chip (Ink) on the shelf, then click a tile there to pick that brush.", "shot": "2026-10-25-brush-library-ink-group.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Can you tell which brush you want from its tile alone, before you pick it?",
+    "Is opening a grid from the tool options quicker for you than the old Medium dropdown?",
+    "Are the chooser's tiles the right size, or should they be smaller so the grid covers less of the picture?",
+    "Should picking up the Brush switch the Library to its Brushes shelf on its own?"
+  ],
+  "rough": [
+    "Measured: the chooser fills all 8 tiles in 57 ms the first time it opens and 39 to 60 ms after that, on the shipping build, painted off the main thread (system log, category brush-tiles). A debug build painting them one after another, cold, takes about 2 s, most of it the pencil's one-time paper grain.",
+    "With the Brush in hand the Library's shelf picker shows five shelves and turns into a dropdown at the dock's resting width, where the mock draws segments: the-library-shelf-picker-keeps-its-segments-when.",
+    "The Brushes shelf is offered only while the Brush is in hand, like a tool's own panel section, so everyone else keeps the four segments they had (your call on 2026-10-13: nothing in the panel that is not about the tool in hand).",
+    "The tiles are the app's eight brushes, not the mock's fifteen named ones (Technical pen, Brush pen, Bristle, Spatter and so on), and there is no Custom chip, no New brush, no Import a brush file, no Make brush from selection and no Delete brush yet: make-your-own-brushes-a-custom-group-a-brush-fil.",
+    "The mock's In the API section is not in the panel; the agent picking a brush is the-agent-can-list-set-and-paint-with-the-brushe.",
+    "The panel's Brush section shows the values but does not let you change them yet: each-brush-shows-its-own-settings-in-the-tool-op.",
+    "The mock opens its wide grid from a Browse button on the canvas; here it opens from the brush in the tool options, as you asked for on 2026-10-24 (a better chooser than a dropdown), with the mock's chips and wide tiles and no search box, since eight brushes fit on screen at once.",
+    "No mock difference: the mock's canvas sample stroke is a layer in the mock's own document, so picking a brush paints nothing on your picture.",
+    "Goes further than the mock: a tile for a dark colour (black, the brush's first colour) is painted on paper instead of the mock's dark well, so the stroke never vanishes into its tile.",
+    "The chooser popover is always dark, matching the tool bar it opens from: on a light Mac its glass made the chip words white on white."
+  ]
+}

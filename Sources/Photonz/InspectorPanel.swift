@@ -188,7 +188,7 @@ struct InspectorPanel: View {
     private var libraryScope: LibraryScope {
         let hasTime = editorState.documentHasTime
         return LibraryScope.resolved(LibraryScope(rawValue: hasTime ? videoLibraryScopeRaw : libraryScopeRaw) ?? .media,
-                                     hasTime: hasTime)
+                                     hasTime: hasTime, brushes: editorState.libraryOffersBrushes)
     }
     /// Scratch measurements for the Library reveal. A reference on purpose:
     /// see the note at the geometry reader.
@@ -1539,6 +1539,11 @@ struct InspectorPanel: View {
         if editorState.activeTool == .lens, Experiments.shared.lensEnabled {
             set.insert(.lensTool)
         }
+        // The brush in hand, while the Brush is: the tile picked in the
+        // Library or the chooser drives it (`brush-library.html`).
+        if editorState.activeTool == .brush, Experiments.shared.brushEnabled {
+            set.insert(.brushTool)
+        }
         // A piece INSIDE a copy owns nothing. Its size, its colors, its type
         // and its effects all come from the original and are written back over
         // on the next redraw, so a panel full of those controls is a panel full
@@ -1983,6 +1988,8 @@ struct InspectorPanel: View {
             CalloutToolInspector()
         case .lensTool:
             LensToolInspector()
+        case .brushTool:
+            BrushToolInspector()
         case .frame:
             if let layer = selectedLayer, layer.isFrame {
                 FrameInspector(layer: layer)

@@ -792,6 +792,14 @@ final class EditorState {
     var clickPlacementClip: UUID?
     @ObservationIgnored var clickPlacementEscape: Any?
 
+    /// Whether the brush chooser over the tool bar is open, the tile the
+    /// arrow keys have reached in it, and the group chip it is showing
+    /// (`EditorState+Brush`, `BrushChooser`).
+    var isBrushChooserOpen = false
+    var brushChooserHighlight: BrushMedium?
+    var brushChooserGroup: BrushGroup?
+    @ObservationIgnored var brushChooserKeys: Any?
+
     /// Where the grid counts from, in document points. It belongs to the
     /// DOCUMENT: a zero point lined up with the content of one screenshot means
     /// nothing in the next picture you open. While the grid is being adjusted

@@ -148,6 +148,8 @@ public enum CopyBudget {
     static let hiddenCalls: Set<String> = [
         "accessibilityIdentifier", "print", "fatalError", "precondition", "preconditionFailure",
         "assert", "assertionFailure", "NSLog",
+        // A line for the system log (`Logger.notice`), read with `log show`.
+        "notice",
         // Probes a scripted walk reads, compiled out of a release, and what a
         // screen reader says: none of it is drawn.
         "panelReadout", "playtestControl", "playtestField", "playtestHover", "panelStartProbe",

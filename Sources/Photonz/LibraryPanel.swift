@@ -32,6 +32,8 @@ struct LibraryPanel: View {
     @StoredSetting(EditorState.videoLibraryScopeKey) private var videoScopeRaw = LibraryScope.media.rawValue
     /// The kind the catalog was last showing, "" for All.
     @StoredSetting(EditorState.catalogCategoryKey) private var catalogCategoryRaw = ""
+    /// The brush group the Brushes shelf was last showing, "" for All.
+    @StoredSetting(LibraryPanel.brushGroupKey) private var brushGroupRaw = ""
     /// Whether the catalog keeps only what was made for video. On until a
     /// person turns it off: components are built for mockups.
     @StoredSetting(EditorState.catalogBuiltForVideoKey) private var builtForVideoOnly = true
@@ -102,6 +104,8 @@ struct LibraryPanel: View {
     }
 
     static let scopeKey = "library.scope"
+    /// The brush group chip the Brushes shelf is on.
+    static let brushGroupKey = "library.brushGroup"
     /// How tall the shelf may get, remembered across launches.
     static let heightKey = "inspector.libraryHeight"
     static let minHeight: CGFloat = 104
@@ -125,7 +129,7 @@ struct LibraryPanel: View {
     /// nearest one that kind offers, so the pivots follow the window in front.
     private var scope: LibraryScope {
         LibraryScope.resolved(LibraryScope(rawValue: hasTime ? videoScopeRaw : scopeRaw) ?? .media,
-                              hasTime: hasTime)
+                              hasTime: hasTime, brushes: editorState.libraryOffersBrushes)
     }
 
     var body: some View {
@@ -133,6 +137,12 @@ struct LibraryPanel: View {
             scopePicker
             searchField
             if scope == .catalog { catalogFilters }
+            if scope == .brushes {
+                BrushGroupChips(picked: BrushGroup(rawValue: brushGroupRaw), short: true) { group in
+                    query = ""
+                    brushGroupRaw = group?.rawValue ?? ""
+                }
+            }
             // A colour let go of on the shelf asks for its name HERE, right
             // above the tiles it is about to join, rather than in a dialog
             // over the picture. Same field, same keys, as the one a colour row
@@ -209,7 +219,7 @@ struct LibraryPanel: View {
         // the canvas (`panelMargins`, 2026-09-24). The drawn one becomes a
         // dropdown when its words will not fit.
         SegmentedControl("Shelf", selection: scope,
-                         options: LibraryScope.scopes(hasTime: hasTime).map { .init($0, $0.segmentTitle) },
+                         options: LibraryScope.scopes(hasTime: hasTime, brushes: editorState.libraryOffersBrushes).map { .init($0, $0.segmentTitle) },
                          fallsBackToSystem: false) {
             if hasTime { videoScopeRaw = $0.rawValue } else { scopeRaw = $0.rawValue }
         }
@@ -441,14 +451,15 @@ struct LibraryPanel: View {
     /// Whether this scope has anything to show at all, whatever the search
     /// says. The empty state and the resize grabber both hang off this.
     private var isEmpty: Bool {
-        visibleClips.isEmpty && visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
+        visibleBrushes.isEmpty && visibleClips.isEmpty && visibleMedia.isEmpty && visibleComponents.isEmpty && visibleStyles.isEmpty
             && visibleTextStyles.isEmpty && visibleEffectStyles.isEmpty && catalogGroups.isEmpty
     }
 
     /// How many tiles the shelf is showing right now, whatever scope they came
     /// from — the shelf only ever draws one scope at a time.
     private var tileCount: Int {
-        visibleClips.count + visibleMedia.count + visibleComponents.count + visibleStyles.count
+        visibleBrushes.count + visibleClips.count + visibleMedia.count + visibleComponents.count
+            + visibleStyles.count
             + visibleTextStyles.count + visibleEffectStyles.count + catalogItemCount
     }
 
@@ -625,8 +636,17 @@ struct LibraryPanel: View {
         .environment(\.libraryTile, tileMetrics)
     }
 
+    /// The brushes the Brushes shelf shows for its chip and what is typed.
+    private var visibleBrushes: [BrushMedium] {
+        guard scope == .brushes else { return [] }
+        return BrushLibrary.brushes(in: BrushGroup(rawValue: brushGroupRaw), query: query)
+    }
+
     @ViewBuilder
     private var allTiles: some View {
+        ForEach(visibleBrushes, id: \.self) { medium in
+            LibraryBrushTile(medium: medium)
+        }
         ForEach(visibleClips, id: \.entry.id) { pair in
             LibraryClipTile(item: pair.entry, clip: pair.item)
         }
@@ -746,7 +766,9 @@ struct LibraryPanel: View {
     /// Return in the search field picks the first tile showing, so the shelf
     /// can be worked without the pointer.
     private func selectFirstTile() {
-        if let first = visibleClips.first {
+        if let first = visibleBrushes.first {
+            editorState.pickBrush(first)
+        } else if let first = visibleClips.first {
             editorState.selectLibraryItem(first.entry.id)
         } else if let first = visibleMedia.first {
             editorState.selectLibraryItem(first.entry.id)

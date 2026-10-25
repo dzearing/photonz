@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/pencil-draws-and-shades-walk",
-  "seed": "The Pencil (docs/design/brushes.md). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels) zoomed in close. B picks the Brush, the Medium dropdown over the tool bar is clicked at its face and Pencil chosen, and a pointer drag draws a graphite line with the mouse's own simulated press. Then a pen step puts a pen in the walk's hand: one hard-pressed line, then five passes leaning the pen shade a patch with the side of the lead. Every paint drag holds the picture with the button down against the landed one, and reports how long the canvas took over each move. Canvas coordinates are document units.",
+  "seed": "The Pencil (docs/design/brushes.md). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels) zoomed in close. B picks the Brush, the brush chooser over the tool bar is opened and Pencil's tile clicked at its face, and a pointer drag draws a graphite line with the mouse's own simulated press. Then a pen step puts a pen in the walk's hand: one hard-pressed line, then five passes leaning the pen shade a patch with the side of the lead. Every paint drag holds the picture with the button down against the landed one, and reports how long the canvas took over each move. Canvas coordinates are document units.",
   "setup": {
     "forget": [
       "tools",
@@ -30,12 +30,16 @@
       "value": "brush"
     },
     {
-      "do": "panelMenu",
-      "menu": "Tool Medium",
-      "at": [
-        "centre"
-      ],
-      "choose": "Pencil"
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Pencil"
     },
     {
       "do": "wait",
@@ -43,8 +47,8 @@
     },
     {
       "do": "expect",
-      "menu": "Tool Medium",
-      "reads": "Pencil"
+      "control": "Choose brush",
+      "reads": "Tool Brush, Pencil"
     },
     {
       "do": "action",
