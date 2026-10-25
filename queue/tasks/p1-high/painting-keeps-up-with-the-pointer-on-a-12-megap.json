@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.236Z",
-  "updated": "2026-10-24T23:41:00.264Z",
+  "updated": "2026-10-25T08:01:14.683Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -33,6 +33,10 @@
     {
       "t": "2026-10-24T23:41:00.264Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st, charcoal-chalk-and-crayon-catch-on-a-paper-grain, marker-strokes-are-flat-and-darken-where-they-cr, watercolour-strokes-are-transparent-pool-darker, oil-paint-strokes-carry-and-smear-colour-and-sho"
+    },
+    {
+      "t": "2026-10-25T08:01:14.682Z",
+      "note": "Measured 2026-10-25 by the watercolour walk (watercolour-wash-and-bloom-walk, 4000x3000 canvas): painting moves 0.4-0.9 ms median, 1.8 ms worst, but each stroke landing holds the main thread 344-432 ms (wait notes 'longest 431.9ms') while the whole Paint layer is replayed; pencil-draws-and-shades-walk shows the same 315-414 ms. Watercolour adds one thing to keep in mind for the cached raster: a watercolour stroke blooms into earlier strokes still wet at its start (BrushStroke.wetness(when:), WetWashes in Watercolour.swift), so painting only stroke n onto a cached raster needs the wet fields of the strokes still wet, which WetWashes.under(_:earlier:toPixels:limit:) already rebuilds for the live overlay."
     }
   ]
 }

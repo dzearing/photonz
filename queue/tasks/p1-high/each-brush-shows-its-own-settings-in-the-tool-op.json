@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.779Z",
-  "updated": "2026-10-25T07:12:17.473Z",
+  "updated": "2026-10-25T08:01:54.195Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -45,6 +45,10 @@
     {
       "t": "2026-10-25T07:12:17.472Z",
       "note": "From the marker and airbrush slice (2026-10-25): the engine already honours the marker's Tip (Round or Chisel, two options so a segmented control) and Flow, and the airbrush's Flow and Softness; they only need controls. The sheet in queue/audits/2026-10-25-marker-airbrush-sheet.png shows what each does. Also: Size carries over on a medium switch, so an airbrush picked after a 14 pt marker paints a thin line; per-medium remembered values (this task's second checklist item) fixes that."
+    },
+    {
+      "t": "2026-10-25T08:01:54.194Z",
+      "note": "Watercolour now has three own settings (Wetness, Bleed, Granulation; 2026-10-25), so its capsule row has one more than the 'two own settings' the design doc assumed; the panel carries all three. Same as the pencil's three."
     }
   ]
 }
