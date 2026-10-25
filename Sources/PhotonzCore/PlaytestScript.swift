@@ -4056,6 +4056,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// drew before; `drag` with `expectFresh` holds a drag to the same claim on
     /// every move.
     case expectFresh(percent: Double)
+    /// CLAIMS the brush drag before it kept up with the hand: how long its
+    /// press held the main thread (a smudge or a wash reads the paint under it
+    /// there), the slowest of its moves at the 95th percentile, the longest
+    /// main thread pass from the press until the renders it set off settled,
+    /// and how many strokes were simulated over all of it. Waits for those
+    /// renders first. Any budget left out is only reported.
+    case expectBrushResponsive(PlaytestBrushBudget)
     /// One of a picked layer's 3D handles taken the way a hand takes it
     /// (`CanvasSpaceHandles.swift`): the pointer rests on the turn knob so the
     /// arcs come out, then presses on the arc or the depth arrow and drags it
@@ -4547,7 +4554,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4677,6 +4684,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectExpandedCut: "expectExpandedCut"
         case .expectReadout: "expectReadout"
         case .expectFresh: "expectFresh"
+        case .expectBrushResponsive: "expectBrushResponsive"
         case .spaceHandle: "spaceHandle"
         case .hoverHandles: "hoverHandles"
         case .expectLanding: "expectLanding"
@@ -4889,6 +4897,19 @@ public enum PlaytestStep: Sendable, Equatable {
                          pause: try Self.dragPause(f))
         case "expectFresh":
             self = .expectFresh(percent: try f.optionalNumber("percent") ?? 0.5)
+        case "expectBrushResponsive":
+            func budget(_ field: String) throws -> Double? {
+                guard let value = try f.optionalNumber(field) else { return nil }
+                guard value > 0 else { throw f.invalid(field, "is a budget in milliseconds, so it must be more than 0") }
+                return value
+            }
+            let simulated = try f.optionalNumber("simulatedAtMost")
+            if let simulated, simulated < 0 {
+                throw f.invalid("simulatedAtMost", "is a count of strokes, so it cannot be below 0")
+            }
+            self = .expectBrushResponsive(PlaytestBrushBudget(
+                pressUnderMS: try budget("pressUnderMS"), movesUnderMS: try budget("movesUnderMS"),
+                longestUnderMS: try budget("longestUnderMS"), simulatedAtMost: simulated.map { Int($0) }))
         case "expectReadout":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent") ?? false
@@ -6889,6 +6910,27 @@ public struct PlaytestDragWatch: Equatable, Sendable {
 
 /// Where a `drag` stops part way with the button still down, and for how
 /// long: `at` is the share of the travel, 0 to 1.
+/// What an `expectBrushResponsive` step holds the brush drag before it to.
+/// Each budget left nil is only reported.
+public struct PlaytestBrushBudget: Hashable, Sendable {
+    /// The press that starts the stroke, on the main thread.
+    public var pressUnderMS: Double?
+    /// The moves, at the 95th percentile.
+    public var movesUnderMS: Double?
+    /// The longest main thread pass from the press until its renders settled.
+    public var longestUnderMS: Double?
+    /// Strokes simulated in full from the press until those renders settled.
+    public var simulatedAtMost: Int?
+
+    public init(pressUnderMS: Double? = nil, movesUnderMS: Double? = nil, longestUnderMS: Double? = nil,
+                simulatedAtMost: Int? = nil) {
+        self.pressUnderMS = pressUnderMS
+        self.movesUnderMS = movesUnderMS
+        self.longestUnderMS = longestUnderMS
+        self.simulatedAtMost = simulatedAtMost
+    }
+}
+
 public struct PlaytestDragPause: Hashable, Sendable {
     public var at: Double
     public var seconds: Double

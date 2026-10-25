@@ -417,6 +417,8 @@ public enum PlaytestLockSafety {
         // Reads the canvas's own frame and draws the document again; it asks
         // nothing of accessibility.
         "expectFresh",
+        // Reads the brush's own clocks and the renderer's stroke count.
+        "expectBrushResponsive",
     ]
 
     /// Why a lock stops the rest, in the words the refusal says out loud.

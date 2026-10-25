@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PhotonzCore
+import Synchronization
 
 /// Turns a paint layer's strokes into pixels (`docs/design/brushes.md`,
 /// decision 4, the marking half).
@@ -29,10 +30,29 @@ public enum PaintRasterizer {
     /// bar is set against (a bar the plain round passes measures nothing).
     @TaskLocal public static var plainRound = false
 
+    /// How many strokes have been simulated in full since launch: marked onto
+    /// a layer, or replayed for their water alone so a later wash can bloom
+    /// into them. A walk reads it to say how often one drag re-ran strokes it
+    /// never touched (`expectBrushResponsive`).
+    public static var strokesSimulated: Int { simulated.withLock { $0 } }
+    private static let simulated = Mutex<Int>(0)
+    static func countSimulated(_ strokes: Int = 1) { simulated.withLock { $0 += strokes } }
+
     /// Draws `content` inside `size` (the layer's box, in document points),
     /// `scale` pixels per point. Nil for a box with no pixels in it.
+    ///
+    /// Served from the shared `PaintRasterCache`: a layer asked for again with
+    /// strokes added since is painted from the raster kept for it, only the
+    /// new strokes simulated.
     public static func rasterize(_ content: PaintContent, size: CGSize,
                                  scale: CGFloat = 1) -> CGImage? {
+        // The yardstick is drawn fresh every time and never kept.
+        if plainRound { return replay(content, size: size, scale: scale) }
+        return PaintRasterCache.shared.raster(content, size: size, scale: scale)
+    }
+
+    /// Every stroke of `content` replayed from blank paper, keeping nothing.
+    static func replay(_ content: PaintContent, size: CGSize, scale: CGFloat) -> CGImage? {
         guard scale > 0, scale.isFinite else { return nil }
         let width = Int((size.width * scale).rounded())
         let height = Int((size.height * scale).rounded())
@@ -71,6 +91,7 @@ public enum PaintRasterizer {
     /// the watercolour washes still wet when it begins, and takes this one if
     /// it is watercolour.
     static func paint(_ stroke: BrushStroke, in context: CGContext, scale: CGFloat, wet: inout WetWashes) {
+        countSimulated()
         let dabs = BrushPlacement.dabs(for: stroke, jitter: jitter(for: stroke.settings.medium))
         let toPixels = CGAffineTransform(scaleX: scale, y: scale)
         if plainRound {

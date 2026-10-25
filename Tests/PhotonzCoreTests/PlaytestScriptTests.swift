@@ -1799,6 +1799,31 @@ struct PlaytestScriptTests {
         #expect(said == 2)
     }
 
+    @Test func aBrushDragIsHeldToBudgetsAfterItLands() throws {
+        // A smudge that froze the app (2026-10-25): the drag before this step
+        // is held to how long its press and its moves took on the main thread,
+        // the longest pass from the press until its renders settled, and how
+        // many strokes were simulated over all of it. Every budget is optional:
+        // with none the step only reports, which is how the before numbers are
+        // taken.
+        let script = try decode("""
+        { "steps": [ { "do": "expectBrushResponsive", "pressUnderMS": 50, "movesUnderMS": 8.3,
+                       "longestUnderMS": 50, "simulatedAtMost": 4 },
+                     { "do": "expectBrushResponsive" } ] }
+        """)
+        guard case .expectBrushResponsive(let budget) = script.steps[0],
+              case .expectBrushResponsive(let none) = script.steps[1] else { Issue.record("steps"); return }
+        #expect(budget == PlaytestBrushBudget(pressUnderMS: 50, movesUnderMS: 8.3, longestUnderMS: 50,
+                                              simulatedAtMost: 4))
+        #expect(none == PlaytestBrushBudget())
+        #expect(script.steps[0].name == "expectBrushResponsive")
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectBrushResponsive", "movesUnderMS": 0 } ] }
+            """)
+        }
+    }
+
     @Test func aDragCanHoldStillPartWayWithTheButtonDown() throws {
         // An airbrush builds up while it is held over one spot, and a hand
         // holding still sends no moves: the drag stops part way, button down,

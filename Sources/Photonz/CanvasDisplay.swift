@@ -255,6 +255,8 @@ extension CanvasNSView {
         // drag landed, an undo moved a pill): the grab cue has to agree with
         // what is under the pointer NOW, not at the next mouse move.
         refreshGrabCursor()
+        // The paint the next brush press reads, drawn ahead of it.
+        warmBrushPaint()
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)

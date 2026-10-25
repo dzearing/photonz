@@ -231,6 +231,10 @@ private final class Run {
     private var heldColorRow: ColorTarget?
     /// The timeline's scale and the picture's zoom a `markZoom` wrote down.
     private var zoomMark: ZoomReading?
+    /// The last drag the brush painted or smudged with: what its press and
+    /// moves cost, and the stroke count when it began, for an
+    /// `expectBrushResponsive` step to hold it to.
+    private var lastBrushDrag: BrushDragReading?
     /// The recording's window a video guide opened, when the walk is in one.
     /// Nil in every other walk, and the two are never both set: a window holds
     /// a picture or a recording, never both.
@@ -1546,7 +1550,18 @@ private final class Run {
             // The grid line the drag is standing on, read the same way: which
             // lines it stepped through, and which one it was on at the end.
             var gridLines = SnapGuideTally(label: "grid lines")
-            if let event = mouseEvent(.leftMouseDown, at: a, on: canvas, flags: flags) { canvas.mouseDown(with: event) }
+            // A brush drag is timed from its press: what the press held the
+            // main thread for (a smudge reads the paint under it there), and
+            // the longest pass from then until its renders settle.
+            let brushArmed = canvas.tool == .brush
+            if brushArmed { MainThreadMeter.shared.reset() }
+            let simulatedBefore = PaintRasterizer.strokesSimulated
+            var pressMS: Double = 0
+            if let event = mouseEvent(.leftMouseDown, at: a, on: canvas, flags: flags) {
+                let began = ProcessInfo.processInfo.systemUptime
+                canvas.mouseDown(with: event)
+                pressMS = (ProcessInfo.processInfo.systemUptime - began) * 1000
+            }
             for i in 1...steps {
                 let t = CGFloat(i) / CGFloat(steps)
                 let shiver = wobble * shake[i % shake.count]
@@ -1613,6 +1628,7 @@ private final class Run {
                 await sleep(0.3)
                 heldPicture = canvas.playtestPicture()
             }
+            let simulatedByRelease = PaintRasterizer.strokesSimulated
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: laterFlags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
             var landedAsHeld = ""
@@ -1667,9 +1683,11 @@ private final class Run {
             }
             var painted = ""
             if !brushMoves.isEmpty {
-                let sorted = brushMoves.sorted()
-                painted = String(format: ", brush moves %d: median %.1f ms, worst %.1f ms",
-                                 sorted.count, sorted[sorted.count / 2], sorted[sorted.count - 1])
+                let reading = BrushDragReading(pressMS: pressMS, moves: brushMoves,
+                                               simulatedBefore: simulatedBefore,
+                                               simulatedByRelease: simulatedByRelease)
+                lastBrushDrag = brushArmed ? reading : nil
+                painted = ", " + reading.summary
             }
             note(number, step.name,
                  "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)\(fresh)\(landedAsHeld)\(painted)"
@@ -3232,6 +3250,46 @@ private final class Run {
                                smooth: smooth, halfSmooth: halfSmooth, rings: rings, width: width,
                                fill: fill, ink: ink, picked: picked, anchorAt: anchorAt),
                  state: describe())
+
+        case .expectBrushResponsive(let budget):
+            guard let drag = lastBrushDrag else {
+                throw Failure(description: "no brush drag came before this step to hold to a budget")
+            }
+            // The renders the release set off, settled: nothing more simulated
+            // for half a second, eight seconds at most.
+            var simulated = PaintRasterizer.strokesSimulated
+            var quietSince = ProcessInfo.processInfo.systemUptime
+            let deadline = quietSince + 8
+            while ProcessInfo.processInfo.systemUptime < deadline,
+                  ProcessInfo.processInfo.systemUptime - quietSince < 0.5 {
+                await sleep(0.05)
+                let now = PaintRasterizer.strokesSimulated
+                if now != simulated { simulated = now; quietSince = ProcessInfo.processInfo.systemUptime }
+            }
+            let longest = MainThreadMeter.shared.longestMS
+            let total = simulated - drag.simulatedBefore
+            let reading = drag.summary + String(
+                format: "; longest main thread pass from the press until it settled %.1f ms; "
+                    + "%d strokes simulated from the press until it settled (%d after the release)",
+                longest, total, simulated - drag.simulatedByRelease)
+            var over: [String] = []
+            if let bound = budget.pressUnderMS, drag.pressMS >= bound {
+                over.append(String(format: "the press took %.1f ms (budget %.1f)", drag.pressMS, bound))
+            }
+            if let bound = budget.movesUnderMS, drag.p95 >= bound {
+                over.append(String(format: "the moves took %.1f ms at the 95th percentile (budget %.1f)", drag.p95, bound))
+            }
+            if let bound = budget.longestUnderMS, longest >= bound {
+                over.append(String(format: "one main thread pass took %.1f ms (budget %.1f)", longest, bound))
+            }
+            if let bound = budget.simulatedAtMost, total > bound {
+                over.append("\(total) strokes were simulated (at most \(bound))")
+            }
+            guard over.isEmpty else {
+                throw Failure(description: "the brush did not keep up: " + over.joined(separator: "; ")
+                    + ". Read: " + reading)
+            }
+            note(number, step.name, reading, state: describe())
 
         case .expectFresh(let percent):
             // The render the last step asked for, landed.
@@ -20459,6 +20517,35 @@ final class TileClickClock: @unchecked Sendable {
 ///
 /// `Scripts/playtest/select-click-perf-walk.json` is the walk that reads
 /// these; the numbers it produced on 2026-09-03 are in its commit message.
+/// What one brush drag cost on the main thread, read by the `drag` step and
+/// held to a budget by `expectBrushResponsive`.
+struct BrushDragReading {
+    /// The press that started the stroke.
+    let pressMS: Double
+    /// Each move: marking its dabs and handing the overlay its picture.
+    let moves: [Double]
+    /// `PaintRasterizer.strokesSimulated` just before the press, and at the
+    /// release.
+    let simulatedBefore: Int
+    let simulatedByRelease: Int
+
+    private var sorted: [Double] { moves.sorted() }
+    var p95: Double {
+        let sorted = sorted
+        guard !sorted.isEmpty else { return 0 }
+        return sorted[min(sorted.count - 1, Int((Double(sorted.count) * 0.95).rounded(.up)) - 1)]
+    }
+
+    var summary: String {
+        let sorted = sorted
+        guard !sorted.isEmpty else { return String(format: "brush press %.1f ms, no moves", pressMS) }
+        return String(format: "brush press %.1f ms, moves %d: median %.1f ms, p95 %.1f ms, worst %.1f ms, "
+                          + "%d strokes simulated with the button down",
+                      pressMS, sorted.count, sorted[sorted.count / 2], p95, sorted[sorted.count - 1],
+                      simulatedByRelease - simulatedBefore)
+    }
+}
+
 @MainActor
 final class MainThreadMeter {
     static let shared = MainThreadMeter()

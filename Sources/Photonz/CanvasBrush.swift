@@ -28,6 +28,48 @@ struct BrushLiveStroke {
     let began: TimeInterval
 }
 
+/// The paint a brush press reads: one paint layer as it stands, drawn into a
+/// bitmap the size of the view where the layer sits on screen.
+struct BrushPaintRequest: Equatable, Sendable {
+    let layer: UUID
+    let paint: PaintContent
+    /// The layer's box, in canvas points.
+    let box: CGRect
+    let viewport: Viewport
+    let backing: CGFloat
+    let width: Int
+    let height: Int
+
+    /// The layer's raster, read at the scale the renderer bakes it at so it is
+    /// the one the last render kept, drawn into a fresh view-sized bitmap.
+    func drawn() -> CGContext? {
+        guard let working = CanvasNSView.brushBitmap(width: width, height: height) else { return nil }
+        let canvasToPixels = CGAffineTransform(scaleX: backing, y: backing)
+            .translatedBy(x: viewport.origin.x, y: viewport.origin.y)
+            .scaledBy(x: viewport.zoom, y: viewport.zoom)
+        let clip = box.applying(canvasToPixels)
+        let scale = DocumentRenderer.bakeScale(viewport.zoom * backing, box: box.size)
+        if let raster = PaintRasterizer.rasterize(paint, size: box.size, scale: scale) {
+            working.draw(raster, in: CGRect(x: clip.minX, y: CGFloat(height) - clip.maxY,
+                                            width: clip.width, height: clip.height))
+        }
+        return working
+    }
+}
+
+/// A bitmap drawn off the main thread and handed to it whole.
+struct PreparedBitmap: @unchecked Sendable {
+    // @unchecked: the drawing task lets go of the context the moment it hands
+    // it over, and only the main thread touches it after that.
+    let context: CGContext
+}
+
+/// What `warmBrushPaint` drew ahead of the next press.
+struct BrushPreparedPaint {
+    let request: BrushPaintRequest
+    let working: PreparedBitmap
+}
+
 extension CanvasNSView {
 
     func setUpBrushChrome() {
@@ -84,12 +126,18 @@ extension CanvasNSView {
                 // The washes on it still wet, that a watercolour stroke
                 // blooms into.
                 earlier = paint.strokes
-                working = Self.brushBitmap(width: width, height: height)
-                if let raster = PaintRasterizer.rasterize(paint, size: box.size,
-                                                          scale: viewport.zoom * backing) {
-                    working?.draw(raster, in: CGRect(x: clip.minX, y: CGFloat(height) - clip.maxY,
-                                                     width: clip.width, height: clip.height))
+                // Drawn ahead of the press by `warmBrushPaint` when nothing has
+                // changed since, so nothing is simulated or drawn here. Every
+                // stroke on the layer used to be replayed on this press: 420 ms
+                // with ten on a 12 megapixel canvas, 2026-10-25.
+                let request = BrushPaintRequest(layer: under, paint: paint, box: box, viewport: viewport,
+                                                backing: backing, width: width, height: height)
+                if let prepared = brushPreparedPaint, prepared.request == request {
+                    working = prepared.working.context
+                } else {
+                    working = request.drawn()
                 }
+                brushPreparedPaint = nil
             }
             marker = PaintRasterizer.LiveMarker(stroke: stroke, bitmap: bitmap, pointsToPixels: toPixels,
                                                 clip: clip, working: working, earlier: earlier)
@@ -142,7 +190,7 @@ extension CanvasNSView {
         appendBrushSample(StrokeSample(point: last.point, pressure: last.pressure, tilt: last.tilt, ms: ms))
     }
 
-    private static func brushBitmap(width: Int, height: Int) -> CGContext? {
+    nonisolated static func brushBitmap(width: Int, height: Int) -> CGContext? {
         CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                   space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
@@ -173,6 +221,48 @@ extension CanvasNSView {
         brushCommitImage = nil
         brushLayer.contents = nil
         brushLayer.isHidden = true
+    }
+
+    /// With the Brush in hand, the paint the next press reads (the picked
+    /// paint layer, drawn into the view's pixels where it sits) is drawn in
+    /// the background as soon as the document holds it, so the press finds it
+    /// ready rather than drawing the layer while the hand waits. The layer's
+    /// raster itself is usually the one the render of the last stroke kept
+    /// (`PaintRasterCache`). One drawing at a time, the newest wanted next:
+    /// a pan with the brush in hand does not queue one per frame.
+    func warmBrushPaint() {
+        guard tool == .brush, brushStroke == nil, let viewport, let document,
+              let id = pickedPaintLayer(in: document), let paint = document.layer(id: id)?.paint,
+              let box = document.canvasBounds(of: id) else {
+            brushPaintWanted = nil
+            if tool != .brush { brushPreparedPaint = nil }
+            return
+        }
+        let backing = window?.backingScaleFactor ?? 2
+        let request = BrushPaintRequest(layer: id, paint: paint, box: box, viewport: viewport, backing: backing,
+                                        width: Int((bounds.width * backing).rounded(.up)),
+                                        height: Int((bounds.height * backing).rounded(.up)))
+        guard request.width > 0, request.height > 0, brushPreparedPaint?.request != request,
+              brushPaintWanted != request else { return }
+        brushPaintWanted = request
+        guard !brushPaintDrawing else { return }
+        brushPaintDrawing = true
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let drawn = request.drawn().map(PreparedBitmap.init)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                self.brushPaintDrawing = false
+                if let drawn, self.brushPaintWanted == request {
+                    self.brushPreparedPaint = BrushPreparedPaint(request: request, working: drawn)
+                    self.brushPaintWanted = nil
+                } else {
+                    // Something newer is wanted: draw that instead.
+                    let wanted = self.brushPaintWanted
+                    self.brushPaintWanted = nil
+                    if let wanted, wanted != request { self.warmBrushPaint() }
+                }
+            }
+        }
     }
 
     /// The pointer with the Brush in hand: a ring the size of the tip at this

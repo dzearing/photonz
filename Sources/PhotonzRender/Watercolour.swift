@@ -381,6 +381,7 @@ struct WetWashes {
         var washes = WetWashes()
         for (i, earlierStroke) in earlier.enumerated() where needed[i] {
             guard let colour = RGBA(hex: earlierStroke.colorHex) else { continue }
+            PaintRasterizer.countSimulated()
             var wash = WatercolourStroke(settings: earlierStroke.settings, colour: colour, seed: earlierStroke.seed,
                                          toPixels: toPixels, limit: limit, under: washes.under(earlierStroke))
             for dab in BrushPlacement.dabs(for: earlierStroke) { _ = wash.mark(dab) }

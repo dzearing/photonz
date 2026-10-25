@@ -108,7 +108,19 @@ airbrush do not.
 - **A paint layer keeps its last raster.** The renderer remembers, per layer,
   the raster of strokes 0..n-1. When stroke n arrives (and the first n are
   unchanged), it paints only stroke n onto a copy. Undo hits the cache of the
-  shorter list.
+  shorter list. Built 2026-10-25 as `PaintRasterCache` (PhotonzRender): keyed
+  by bitmap size and scale, it keeps the bitmap and the washes still wet after
+  the last stroke, so the result is byte for byte a full replay; 128 MB, least
+  recently used let go first, emptied under memory pressure. Two requests for
+  the same layer at once wait on each other rather than both simulating it.
+- **A press reads the paint it needs ready-drawn.** A smudge, a wash and oil
+  read the layer under them. The canvas reads it at the scale the renderer
+  bakes the layer at (`DocumentRenderer.bakeScale`), so it is the raster the
+  last render kept, and with the Brush in hand it draws that into the view's
+  pixels in the background as soon as a stroke lands (`warmBrushPaint`).
+  Before this a smudge press re-simulated every stroke on the main thread:
+  420 ms with ten strokes on a 12 megapixel canvas; after, 0.1 ms
+  (`smudge-after-paint-keeps-up-walk`).
 - Budget: input to pixel under one frame (16 ms) and commit under 50 ms on a
   12 MP canvas with a few hundred strokes, measured, written in the audit.
 

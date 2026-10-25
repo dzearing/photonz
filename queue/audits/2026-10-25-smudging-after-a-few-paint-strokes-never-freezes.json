@@ -1,0 +1,29 @@
+{
+  "feature": "Smudging after paint strokes answers at once",
+  "epic": "image-editing",
+  "summary": "Starting a smudge, a wash or an oil stroke no longer re-paints every stroke already on the layer while you wait. With ten strokes on a 12 megapixel canvas the smudge press went from 419 ms to 0.1 ms, and one smudge now simulates 1 stroke instead of 32.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "File > New, 4000 by 3000, then press B for the Brush." },
+    { "do": "Pick Watercolour in the brush chooser, press ] until Size reads 150, and paint three strokes across the middle.", "shot": "2026-10-25-smudge-keeps-up-1-five-strokes-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick Oil Paint and paint two strokes down through the washes." },
+    { "do": "Click Smudge in the Mode segment and drag across the strokes.", "shot": "2026-10-25-smudge-keeps-up-3-smudged-ten-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Paint five more strokes to make ten, then smudge again, holding the button down part way.", "shot": "2026-10-25-smudge-keeps-up-4-smudge-held-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z, then smudge once more." }
+  ],
+  "evaluate": [
+    "Does the smear start under the pointer the instant you press, with ten strokes on the layer?",
+    "Does the picture stay put when you let go (no jump between what you dragged and what landed)?",
+    "Does a stroke painted right after a smudge also start without a pause?",
+    "Is undo after a smudge still instant?"
+  ],
+  "rough": [
+    "Measured with smudge-after-paint-keeps-up-walk, before then after: smudge press with five strokes 199.7 ms then 0.1 ms; with ten strokes 419.4 ms then 0.1 ms. Smudge moves at the 95th percentile 0.4 to 0.5 ms both times (under one 120 Hz frame). Longest main thread pass from the press until the renders settled 199.8 and 419.5 ms, then 18.2 and 17.8 ms.",
+    "Strokes simulated during one smudge drag, press until settled: 17 and 32 before, 1 and 1 after (the smudge itself, once).",
+    "The finished picture is unchanged: unit tests hold the kept-raster result to a full replay with zero tolerance, byte for byte, over washes blooming into wet washes, oil, charcoal and a smudge (PaintRasterCacheTests). In the app the held picture and the landed one differ over 0.00% of the canvas.",
+    "A watercolour press into a wash that is still wet still holds the main thread 90 to 100 ms, replaying the wet washes it blooms into, and its moves reach 10 ms at the 95th percentile. That is painting lag, not the smudge freeze, and belongs to every-brush-follows-the-pointer-with-no-lag-even (logged there).",
+    "Pictures show the window behind another app, so picked controls show their background look.",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}

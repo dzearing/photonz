@@ -257,6 +257,15 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// is exactly what it does today, and only layers where crisping buys
     /// something real (2x or better) take the scaled path.
     private func crispScale(_ scale: CGFloat, box: CGSize) -> CGFloat {
+        Self.bakeScale(scale, box: box)
+    }
+
+    /// The scale a layer drawn from its own content (paint, shapes, words) is
+    /// baked at when it is shown `scale` pixels per point: `crispScale`, for
+    /// anyone who wants the same bitmap the renderer draws. The brush reads
+    /// the paint under a press at this scale, so the raster the last render
+    /// kept is the one it reads (`PaintRasterCache`).
+    public static func bakeScale(_ scale: CGFloat, box: CGSize) -> CGFloat {
         guard scale > 1, scale.isFinite else { return 1 }
         let area = box.width * box.height
         guard area > 0 else { return 1 }
@@ -513,6 +522,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     public static func clearSharedCaches() {
         lightContext.clearCaches()
         webContext.clearCaches()
+        PaintRasterCache.shared.letGo()
     }
 
     /// Latest-wins re-render for the editing session. Same output as
@@ -1347,9 +1357,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         case .paint(let paint):
             // Baked at the resolution it will be shown at, like a path, so the
             // soft edge of a stroke is soft at every zoom rather than blocky.
-            // The whole list of strokes is replayed when it changes; keeping
-            // the last raster and adding only the newest stroke is the speed
-            // slice's (`docs/design/brushes.md`, decision 5).
+            // A layer with strokes added since it was last drawn paints only
+            // those onto the raster it kept (`PaintRasterCache`,
+            // `docs/design/brushes.md`, decision 5).
             let bake = crispScale(contentScale, box: boxInPoints)
             guard let raster = raster(for: layer.content, size: layer.frame.size,
                                       variant: contentScale == 1 ? "" : "crisp", rasterize: {

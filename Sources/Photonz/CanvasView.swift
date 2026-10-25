@@ -1287,6 +1287,11 @@ final class CanvasNSView: NSView {
     /// The stroke being painted with the Brush (Next, `next-brush`), nil
     /// between strokes (`CanvasBrush`).
     var brushStroke: BrushLiveStroke?
+    /// The paint drawn ahead of the next brush press, the one wanted next, and
+    /// whether one is being drawn now (`warmBrushPaint`).
+    var brushPreparedPaint: BrushPreparedPaint?
+    var brushPaintWanted: BrushPaintRequest?
+    var brushPaintDrawing = false
     /// The overlay the live stroke is stamped onto, over the composite.
     let brushLayer = CALayer()
     /// The composite on screen when the last stroke was handed over; the

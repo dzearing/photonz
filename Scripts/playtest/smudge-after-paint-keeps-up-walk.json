@@ -1,0 +1,442 @@
+{
+  "out": "/tmp/photonz-playtest/smudge-after-paint-keeps-up-walk",
+  "seed": "A smudge after a run of paint strokes keeps up with the hand (the user, 2026-10-25: 'after a few paint strokes i tried to smudge and it froze the app'). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush; three watercolour strokes at 150 pt and two oil strokes land on one Paint layer, then the Mode segment is clicked to Smudge and a pointer drag smears across them. expectBrushResponsive reads what the smudge's press and moves held the main thread for, the longest pass until its renders settled, and how many strokes were simulated. Five more strokes make ten and a second smudge is held to the same budgets: the press under 50 ms, the moves under one 120 Hz frame at the 95th percentile, no main thread pass of 50 ms or more until its renders settle, and at most two strokes simulated (the smudge itself, at the one scale the layer is drawn at). A third smudge holds the picture with the button down against the landed one. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 4000,
+      "canvasHeight": 3000,
+      "width": 1500,
+      "height": 1000,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Watercolour"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "paintToolColor"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1500,
+        1300
+      ],
+      "to": [
+        2500,
+        1340
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        1550,
+        1450
+      ],
+      "to": [
+        2450,
+        1480
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        1600,
+        1600
+      ],
+      "to": [
+        2400,
+        1620
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Oil Paint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        1700,
+        1200
+      ],
+      "to": [
+        1720,
+        1750
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        2200,
+        1200
+      ],
+      "to": [
+        2210,
+        1750
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "1-five-strokes"
+    },
+    {
+      "do": "press",
+      "control": "Smudge",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        1600,
+        1350
+      ],
+      "to": [
+        2300,
+        1550
+      ],
+      "steps": 40,
+      "wobble": 1.5
+    },
+    {
+      "do": "expectBrushResponsive",
+      "pressUnderMS": 50,
+      "movesUnderMS": 8.3,
+      "longestUnderMS": 50,
+      "simulatedAtMost": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "2-smudged-five"
+    },
+    {
+      "do": "press",
+      "control": "Paint",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        1800,
+        1150
+      ],
+      "to": [
+        1820,
+        1800
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Watercolour"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        1500,
+        1750
+      ],
+      "to": [
+        2500,
+        1760
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        1500,
+        1150
+      ],
+      "to": [
+        2500,
+        1160
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        1950,
+        1100
+      ],
+      "to": [
+        1960,
+        1850
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Oil Paint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "press",
+      "control": "Smudge",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        1550,
+        1700
+      ],
+      "to": [
+        2400,
+        1250
+      ],
+      "steps": 40,
+      "wobble": 1.5
+    },
+    {
+      "do": "expectBrushResponsive",
+      "pressUnderMS": 50,
+      "movesUnderMS": 8.3,
+      "longestUnderMS": 50,
+      "simulatedAtMost": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "3-smudged-ten"
+    },
+    {
+      "do": "drag",
+      "from": [
+        2300,
+        1700
+      ],
+      "to": [
+        1700,
+        1200
+      ],
+      "steps": 30,
+      "wobble": 1.5,
+      "hold": "4-smudge-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "5-smudged-again"
+    },
+    {
+      "do": "press",
+      "control": "Paint",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}
