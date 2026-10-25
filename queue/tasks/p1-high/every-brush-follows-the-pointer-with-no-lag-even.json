@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:32:07.793Z",
-  "updated": "2026-10-25T16:37:16.554Z",
+  "updated": "2026-10-25T16:37:46.218Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'the watercolor looks good but it's slow if i increase the size to 150pt or more, feels quite laggy', then 'actually so does oil... still trying everything but the brushes feel very laggy to use'. A cause shared by every medium (the live overlay, CanvasBrush.swift) is as likely as per-medium cost. Not reproduced in the intake window. Theories only: Sources/PhotonzRender/Watercolour.swift mark(_:) walks every pixel of a box radius*(1+farthest) around each dab on the CPU, so the work grows with the square of the size and with how close dabs are spaced; reach() loops over every earlier wet wash per pixel; WetField.ensure copies the whole field when it grows; and the live stroke (Sources/Photonz/CanvasBrush.swift) may be building a full CGImage of the overlay per drag. Measure which of these it actually is before fixing.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-10-25T16:37:16.553Z",
       "note": "Related user ask filed 2026-10-25: painting-is-what-you-see-earlier-strokes-never-r (earlier strokes re-simulated and swapped to a sharper copy on every new stroke; paint-layer raster cache keyed by the whole content). Likely the same root; do not fix it two different ways."
+    },
+    {
+      "t": "2026-10-25T16:37:46.217Z",
+      "note": "From the smudge freeze task (2026-10-25): a paint layer now keeps its last raster (PaintRasterCache in PhotonzRender) and a brush press reads the paint under it ready-drawn in the background (CanvasNSView.warmBrushPaint), so oil and watercolour presses no longer re-simulate the layer: 190-461 ms down to 0.1 ms on a 12 MP canvas. Still left for this task: a watercolour press into a wash still wet holds the main thread 90-100 ms replaying the wet washes in view pixels (WetWashes.under in LiveMarker.init), and watercolour moves reach 7-10 ms p95 (smudge-after-paint-keeps-up-walk drag lines)."
     }
   ]
 }

@@ -14186,3 +14186,29 @@
 {"t":"2026-10-25T14:06:00.450Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
 {"t":"2026-10-25T14:06:00.516Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
 {"t":"2026-10-25T14:06:00.601Z","ev":"task_done","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus","from":"in_progress","note":"Every brush answers pressure, tilt and speed (BrushDynamics in PhotonzCore, dab width and weight; charcoal/chalk side, chisel nib turns), and a mouse stroke swells in and tapers out on landing. Verified: BrushDynamicsTests + BrushDynamicsRenderingTests (synthetic pens through the real rasterizer; no tablet on this Mac), full suite green, 11 brush walks ok including the new pen-pressure-and-mouse-taper-walk at Next defaults; audit queue/audits/2026-10-25-pen-pressure-tilt-and-speed.json with the stroke sheet and a window capture. Commit 94aa67dc."}
+{"t":"2026-10-25T14:37:04.606Z","ev":"loop_started","pid":7487}
+{"t":"2026-10-25T14:37:04.654Z","ev":"loop_awake","held":true,"pid":7500,"screenLocked":false}
+{"t":"2026-10-25T15:13:06.907Z","ev":"loop_started","pid":31679}
+{"t":"2026-10-25T15:13:06.959Z","ev":"loop_awake","held":true,"pid":31692,"screenLocked":false}
+{"t":"2026-10-25T15:13:39.998Z","ev":"task_created","id":"ask-walks-share-one-model-instead-of-loading-a-f","priority":"p1-high","title":"Ask walks share one model instead of loading a fresh 23 GB copy for every walk"}
+{"t":"2026-10-25T15:13:45.772Z","ev":"task_resequenced","id":"ask-walks-share-one-model-instead-of-loading-a-f","from":3970,"to":5}
+{"t":"2026-10-25T15:31:40.804Z","ev":"task_created","id":"a-big-watercolour-brush-150-pt-and-up-paints-as","priority":"p1-high","title":"A big watercolour brush (150 pt and up) paints as smoothly as a small one"}
+{"t":"2026-10-25T15:31:48.073Z","ev":"task_resequenced","id":"a-big-watercolour-brush-150-pt-and-up-paints-as","from":3970,"to":3}
+{"t":"2026-10-25T15:32:07.797Z","ev":"task_created","id":"every-brush-follows-the-pointer-with-no-lag-even","priority":"p1-high","title":"Every brush follows the pointer with no lag, even at 150 pt and up"}
+{"t":"2026-10-25T15:32:07.909Z","ev":"task_resequenced","id":"every-brush-follows-the-pointer-with-no-lag-even","from":3970,"to":3}
+{"t":"2026-10-25T15:32:07.997Z","ev":"task_dropped","id":"a-big-watercolour-brush-150-pt-and-up-paints-as","from":"pending","note":"folded into every-brush-follows-the-pointer-with-no-lag-even (user: oil and brushes generally lag too)"}
+{"t":"2026-10-25T15:33:52.070Z","ev":"task_created","id":"smudging-after-a-few-paint-strokes-never-freezes","priority":"p1-high","title":"Smudging after a few paint strokes never freezes the app"}
+{"t":"2026-10-25T15:33:52.173Z","ev":"task_resequenced","id":"smudging-after-a-few-paint-strokes-never-freezes","from":3970,"to":2}
+{"t":"2026-10-25T15:43:11.660Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-25T15:43:11.757Z","ev":"slice_pass","walks":21,"passed":20,"failed":1,"seconds":1803,"of":1036,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-10-25T15:43:11.932Z","ev":"task_started","id":"smudging-after-a-few-paint-strokes-never-freezes","title":"Smudging after a few paint strokes never freezes the app","priority":"p1-high"}
+{"t":"2026-10-25T16:01:02.686Z","ev":"task_resequenced","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","from":80,"to":0.5}
+{"t":"2026-10-25T16:01:03.059Z","ev":"task_note","id":"measure-whether-qwen-image-2-1-can-paint-and-edi"}
+{"t":"2026-10-25T16:37:16.374Z","ev":"task_created","id":"painting-is-what-you-see-earlier-strokes-never-r","priority":"p1-high","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy"}
+{"t":"2026-10-25T16:37:16.482Z","ev":"task_resequenced","id":"painting-is-what-you-see-earlier-strokes-never-r","from":3970,"to":2.9}
+{"t":"2026-10-25T16:37:16.555Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
+{"t":"2026-10-25T16:37:16.631Z","ev":"task_note","id":"smudging-after-a-few-paint-strokes-never-freezes"}
+{"t":"2026-10-25T16:37:46.219Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
+{"t":"2026-10-25T16:37:46.290Z","ev":"task_walks","id":"smudging-after-a-few-paint-strokes-never-freezes","walks":["smudge-after-paint-keeps-up-walk"]}
+{"t":"2026-10-25T16:37:46.361Z","ev":"task_note","id":"smudging-after-a-few-paint-strokes-never-freezes"}
+{"t":"2026-10-25T16:38:15.963Z","ev":"task_done","id":"smudging-after-a-few-paint-strokes-never-freezes","from":"in_progress","note":"A paint layer now keeps its last raster (PaintRasterCache, PhotonzRender, byte-identical to a full replay, 128 MB LRU, cleared under memory pressure), and a brush press reads the paint under it ready-drawn in the background (CanvasNSView.warmBrushPaint at DocumentRenderer.bakeScale). Measured with smudge-after-paint-keeps-up-walk on a 12 MP canvas: smudge press 419 ms -> 0.1 ms with ten strokes, moves 0.5 ms p95, longest main pass 18 ms, strokes simulated per smudge 32 -> 1; the walk now fails over 50 ms / 8.3 ms / 50 ms / 2 strokes. Held vs landed 0.00%. 10 brush walks and the full suite (14605 tests) green. Commit d2efecfb. Audit queue/audits/2026-10-25-smudging-after-a-few-paint-strokes-never-freezes.json."}
