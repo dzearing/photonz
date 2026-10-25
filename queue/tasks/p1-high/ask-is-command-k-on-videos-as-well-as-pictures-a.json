@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T01:11:30.053Z",
-  "updated": "2026-10-25T03:16:07.769Z",
+  "updated": "2026-10-25T04:09:56.673Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: 'make sure that ask button has the same keystroke (cmd-k) on both image and video!. Also, when I hover over it the first time it has a nice sheen animation, but subsequent hovers do not repeat the sheen'.\n\nThe sheen is a miss on the just-shipped task the-ask-button-is-the-design-s-hero-button-a-vio (done 2026-10-24, commit 224236f2), whose acceptance said one sweep per hover.\n\nSheen SUSPECT, not reproduced: Sources/Photonz/DesignSystem/HeroButtonStyle.swift ~145 drives the band with .keyframeAnimator(initialValue: 0.0, trigger: sweeps) and a single LinearKeyframe(HeroSheen.duration). On a new trigger a keyframe animator starts from its CURRENT value, which after the first sweep is already HeroSheen.duration, so the second run animates duration to duration and nothing moves. A MoveKeyframe(0) first in the track is the likely fix. Other suspect: the ButtonStyle body's @State (hovering, sweeps) being reset or the hover callback not firing again; check onHover actually fires on re-entry (it is wrapped by playtestHover, Sources/Photonz/Playtest/PlaytestPointer.swift:94). Reproduce before fixing.\n\nCommand K: Sources/Photonz/EditorCommands.swift:524-533 (Ask item, keyboardShortcut nil when timed) and :789-795 (Split at Playhead takes Command K on the timeline, B off it); Sources/Photonz/Agent/AskViews.swift:65,69 hide the key on a video. docs/design/mocks/shared/UX-PATTERNS.md:2134 lists '⌘K split' among the video keys and must be updated; also the earlier task on-a-video-the-ask-button-never-sits-on-top-of-t. The user's explicit request overrides Premiere parity for this one key.",
@@ -38,7 +38,44 @@
     {
       "t": "2026-10-25T03:16:07.767Z",
       "note": "Reproduced before fixing: new walk Scripts/playtest/ask-sheen-every-hover-walk.json films the Ask button (new filmHover step, ScreenCaptureKit at display rate) through three hovers with the pointer leaving between. Hover 1: a white band crosses left to right (frames 263ms..530ms). Hovers 2 and 3: no band in any frame, only the pink end of the spectrum fading in. Contact sheet looked at by eye (/tmp/hover-compare.png). Matches the suspect: the keyframe animator restarts from its current value, already at the end of the sweep."
+    },
+    {
+      "t": "2026-10-25T04:08:56.742Z",
+      "note": "owns these walks: ask-is-command-k-on-a-video-walk, ask-sheen-every-hover-walk, ask-hero-button-walk, premiere-keys-on-the-timeline-walk, timeline-right-click-menus-walk, tutorial-cut-a-recording-down-walk"
+    },
+    {
+      "t": "2026-10-25T04:09:12.885Z",
+      "note": "Adversarial pass before building: a Premiere editor loses Command K for Add Edit, so the cut needs a key they would also know; Final Cut's Blade is Command B and nothing in the video editor's menus or the timeline's key map uses it (B alone stays the Blade tool, plain K stays shuttle stop). Photoshop's Command B (Color Balance) is a picture command and not built here. Chose Command B over Shift Command K-style moves because it is the other grown-up video tool's key for the same command (UX-PATTERNS 7). Chose to keep Split Everything on Premiere's Shift Command K over moving it to Shift Command B, because Ask does not want it and Shift Command B is Blur Behind Selection on a picture."
+    },
+    {
+      "t": "2026-10-25T04:09:12.971Z",
+      "note": "Sheen fix: the keyframe track now starts with MoveKeyframe(0), the band is parked at the end at rest, and a transaction keeps the face's hover animation off the band (Sources/Photonz/DesignSystem/HeroButtonStyle.swift). Which arrivals sweep is HeroSheen.sweeps in PhotonzCore, unit tested with Reduce Motion and a dimmed button. New walk step filmHover (PlaytestHoverFilm, SheenSweep, docs/design/playtest-harness.md) films a control while the pointer arrives. After the fix the walk claims a sweep on hovers 1, 2, 3, 5 (arriving mid sweep of 4) and 6, and none while the pointer stays: all pass. Looked at the contact sheet: the band crosses on the third hover as on the first."
+    },
+    {
+      "t": "2026-10-25T04:09:13.036Z",
+      "note": "Command K: Ask's Edit menu row and the title bar button carry Command K on a video; the timeline key map (TimelineKeys) gives Command B to Split at Playhead and leaves Command K to the menu. Menu bar read on a video with the probe in front (ask-is-command-k-on-a-video-walk, menus oneKeyEach): Ask ⌘K, Split at Playhead ⌘B, Split Everything ⇧⌘K, no live clash. 30 walks that pressed Command K to cut now press Command B; all 35 touched walks plus the two new ones pass. Docs: UX-PATTERNS 7 and the timeline keys list, video.md, ask.md, tutorials.md, timeline-right-click.md, video-vs-premiere.md."
+    },
+    {
+      "t": "2026-10-25T04:09:13.105Z",
+      "note": "left rough: the menu reading on a video prints ⌫ on two dimmed rows, Clip > Delete This Piece and Sequence > Track > Delete Track (menus-1-video-keys.txt). Neither is live at the same time and it was there before this task, so it did not earn its own task; noted here for a later pass on the menus."
+    },
+    {
+      "t": "2026-10-25T04:09:47.579Z",
+      "note": "Command K opens Ask on a video as on a picture; the button and its tooltip show the key in both, and the Edit menu's Ask row carries it. Split at Playhead moved to Command B (Final Cut's Blade), with no menu clash on a video (menus oneKeyEach, probe in front). The sheen sweeps on every arrival: reproduced first on film (hovers 2 and 3 drew no band), fixed with a MoveKeyframe back to the start, proven over six filmed hovers including one mid sweep, none while staying; Reduce Motion rule unit tested. New filmHover walk step. 35 touched walks plus 2 new pass; Scripts/test.sh green (14444 tests). Commit 69d1a7a9. Audit queue/audits/2026-10-24-ask-is-command-k-on-videos-as-well-as-pictures-a.json with reel and contact sheet."
+    },
+    {
+      "t": "2026-10-25T04:09:56.672Z",
+      "note": "Note: commit 69d1a7a9 also carried one line of the user's own uncommitted edit in docs/design/tutorials.md (walk set 'about 910 walks and about 245 minutes' -> 'about 1010 walks and about 290 minutes'), the same count update sitting uncommitted in CLAUDE.md and the queue docs. It was staged with my Command B line by mistake; the rest of the user's uncommitted files were left untouched."
     }
   ],
-  "started": "2026-10-25T03:01:45.147Z"
+  "started": "2026-10-25T03:01:45.147Z",
+  "walks": [
+    "ask-is-command-k-on-a-video-walk",
+    "ask-sheen-every-hover-walk",
+    "ask-hero-button-walk",
+    "premiere-keys-on-the-timeline-walk",
+    "timeline-right-click-menus-walk",
+    "tutorial-cut-a-recording-down-walk"
+  ],
+  "completed": "2026-10-25T04:09:47.580Z"
 }

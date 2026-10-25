@@ -13996,3 +13996,16 @@
 {"t":"2026-10-25T02:46:54.378Z","ev":"task_note","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain"}
 {"t":"2026-10-25T02:46:54.458Z","ev":"task_note","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain"}
 {"t":"2026-10-25T02:46:54.548Z","ev":"task_pending","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain","from":"in_progress","note":"Slice shipped (6fddd821): grain, three media, Smudge, measured bar, walk, audit. Open: the blind model judge still cannot tell charcoal from chalk (acceptance item 2); see log."}
+{"t":"2026-10-25T03:01:44.906Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":714,"of":1025,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-25T03:01:45.161Z","ev":"task_started","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","title":"Ask is Command K on videos as well as pictures, and its sheen plays on every hover","priority":"p1-high"}
+{"t":"2026-10-25T03:16:07.770Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
+{"t":"2026-10-25T03:23:47.073Z","ev":"task_created","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","priority":"p1-high","title":"Measure whether Qwen-Image-2.1 can paint and edit for Ask on a 64 GB Mac"}
+{"t":"2026-10-25T03:23:52.344Z","ev":"task_resequenced","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","from":3970,"to":8.5}
+{"t":"2026-10-25T04:08:56.744Z","ev":"task_walks","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","walks":["ask-is-command-k-on-a-video-walk","ask-sheen-every-hover-walk","ask-hero-button-walk","premiere-keys-on-the-timeline-walk","timeline-right-click-menus-walk","tutorial-cut-a-recording-down-walk"]}
+{"t":"2026-10-25T04:09:12.888Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
+{"t":"2026-10-25T04:09:12.974Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
+{"t":"2026-10-25T04:09:13.038Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
+{"t":"2026-10-25T04:09:13.107Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
+{"t":"2026-10-25T04:09:13.178Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
+{"t":"2026-10-25T04:09:47.582Z","ev":"task_done","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","from":"in_progress","note":"Command K opens Ask on a video as on a picture; the button and its tooltip show the key in both, and the Edit menu's Ask row carries it. Split at Playhead moved to Command B (Final Cut's Blade), with no menu clash on a video (menus oneKeyEach, probe in front). The sheen sweeps on every arrival: reproduced first on film (hovers 2 and 3 drew no band), fixed with a MoveKeyframe back to the start, proven over six filmed hovers including one mid sweep, none while staying; Reduce Motion rule unit tested. New filmHover walk step. 35 touched walks plus 2 new pass; Scripts/test.sh green (14444 tests). Commit 69d1a7a9. Audit queue/audits/2026-10-24-ask-is-command-k-on-videos-as-well-as-pictures-a.json with reel and contact sheet."}
+{"t":"2026-10-25T04:09:56.674Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
