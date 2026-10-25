@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.45,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T04:54:55.350Z",
-  "updated": "2026-10-25T06:19:41.676Z",
+  "updated": "2026-10-25T11:33:28.396Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"I'd love a better brush selector\" and \"There should also be a better chooser than a dropdown without previewing.\"\n\nToday: Sources/Photonz/ToolSettingsCapsule.swift:211-215 is a plain Picker(\"Medium\") over BrushMedium.allCases. The mocks already designed this: brush-library.html (tiles in the Library group, scope Brushes, groups All, Sketch, Ink, Paint, Airbrush, Texture, Custom; picking repaints the sample stroke and drives Properties) and brush-editor.html. Mocks are the floor (objectives.json principles). The mock's Custom group, importing a brush file and making a brush from a selection are NOT part of this task unless they fall out cheaply; file them as follow-ups if they clear the bar.\n\nContradiction to settle: each-brush-shows-its-own-settings-in-the-tool-op (6.5) asks for 'a Medium dropdown with the seven media'. This task wins on how a brush is picked; 6.5 keeps the per-brush settings, size ring and [ ] keys. A note has been logged on 6.5 saying so.\n\nTrap: rendering tiles must go through the same stroke rendering in PhotonzRender as the canvas (DryMedia and whatever each medium task adds), with a fixed seed per tile so tiles do not shimmer between renders; cache per brush, settings and colour with a limit (objectives: every cache has a limit).",
@@ -33,6 +33,55 @@
     {
       "t": "2026-10-25T06:19:41.675Z",
       "note": "Pencil is a medium now (first in BrushMedium.allCases); its tile needs a sample stroke. PencilSheetTests draws one."
+    },
+    {
+      "t": "2026-10-25T09:54:56.243Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T11:16:20.175Z",
+      "note": "owns these walks: brushes-picked-from-tiles-walk"
+    },
+    {
+      "t": "2026-10-25T11:16:48.444Z",
+      "note": "Adversarial review before building: a first-time user finds the brush in the options over the tool bar (where the Medium dropdown was), and Photoshop people expect a brush preset picker opened from the options bar, which this is. The mock's canvas sample stroke is the mock's own document, not chrome, so nothing is painted on the picture. Risk found: black (the default colour) on the mock's dark well would be invisible, so a dark colour is shown on paper."
+    },
+    {
+      "t": "2026-10-25T11:16:48.512Z",
+      "note": "Chose one tile per medium (the app's eight brushes, read off BrushMedium.allCases through BrushLibrary) over the mock's fifteen named presets because the acceptance asks for no second list; presets belong with custom brushes (make-your-own-brushes-a-custom-group-a-brush-fil)."
+    },
+    {
+      "t": "2026-10-25T11:16:48.582Z",
+      "note": "Chose to offer the Library's Brushes shelf only while the Brush is in hand over always, because five shelves made the picker drop to its dropdown for every picture and broke four walks plus the Library guide that click its segments; the dropdown with the Brush in hand is filed as the-library-shelf-picker-keeps-its-segments-when."
+    },
+    {
+      "t": "2026-10-25T11:16:48.652Z",
+      "note": "Chose plain Buttons for every tile over tap gestures: a tap does not take the first click in a popover or dock that is not key (a walk's press on Oil Paint landed and nothing happened), a button does. Chooser popover forced dark (presentationBackground plus window appearance) because on a light Mac its chips read white on white."
+    },
+    {
+      "t": "2026-10-25T11:16:48.727Z",
+      "note": "Measured: grid fill 57 ms first open, 39-60 ms after (release probe, system log category brush-tiles); debug sequential cold about 2 s (BrushPreviewTests prints per tile; pencil's first call pays ~760 ms of grain build). Cache: BrushPreviewCache NSCache countLimit 48, lets go under pressure."
+    },
+    {
+      "t": "2026-10-25T11:16:48.794Z",
+      "note": "Walks: brushes-picked-from-tiles-walk (no flags) clicks Oil Paint and Marker tiles at their face and paints with each, arrows+Return, Escape, colour repaint, Library Brushes shelf click and Ink chip. Ported six walks off panelMenu Tool Medium to the chooser (airbrush-sprays-and-builds, brush-dry-media-and-smudge, marker-and-airbrush, oil-paint-smears-and-ridges, pencil-draws-and-shades, watercolour-wash-and-bloom); all green, plus lists-pane-holds-still, library-tile-click-latency-picture, style-users, title-presets-library-shelf."
+    },
+    {
+      "t": "2026-10-25T11:16:48.861Z",
+      "note": "Left rough (no task): a right-click on the canvas with the Brush could open the same chooser, the way Photoshop's brush picker does; the chooser is about 470pt wide and covers a good part of a small window; a brush tile below the fold of a short shelf needs a scroll."
+    },
+    {
+      "t": "2026-10-25T11:16:48.929Z",
+      "note": "Pictures looked at before closing: 1-chooser (dark tiles, chips legible after the fix), 2-two-strokes (streaked oil then flat grey marker), 3-keys (white ring on Pencil, Marker picked), 4-blue-tiles (every tile blue on the dark well), 5-shelf and 6-ink-group (Brushes shelf, Ink chip leaves only Marker), and the mock render."
+    },
+    {
+      "t": "2026-10-25T11:33:28.393Z",
+      "note": "The tool options' Medium dropdown is replaced by a brush chooser of live stroke tiles (8 brushes, grouped by kind, current colour, arrows/Return/Escape), the Library has a Brushes shelf with the same tiles while the Brush is in hand, and the panel has a Brush section. Commit 5dcf6cff. Verified: Scripts/test.sh green (14554), brushes-picked-from-tiles-walk with no flags plus six ported brush walks and four shelf walks green, grid fill 57 ms measured on the release probe. Audit queue/audits/2026-10-25-brushes-are-picked-from-a-library-of-tiles-that.json. Follow-ups: the-library-shelf-picker-keeps-its-segments-when, make-your-own-brushes-a-custom-group-a-brush-fil."
     }
-  ]
+  ],
+  "started": "2026-10-25T09:54:56.242Z",
+  "walks": [
+    "brushes-picked-from-tiles-walk"
+  ],
+  "completed": "2026-10-25T11:33:28.395Z"
 }

@@ -1,0 +1,27 @@
+{
+  "id": "make-your-own-brushes-a-custom-group-a-brush-fil",
+  "title": "Make your own brushes: a Custom group, a brush file, a brush from a selection",
+  "goal": "The brush library mock has a Custom group where brushes you make land: start a new brush, import a brush file, or make one from a selection, and delete only custom ones. Today the library shows only the eight built in brushes and no Custom chip.",
+  "epic": "image-paint",
+  "priority": "p2-normal",
+  "seq": 4100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T11:15:03.282Z",
+  "updated": "2026-10-25T11:15:03.285Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left out of brushes-are-picked-from-a-library-of-tiles-that on purpose (its notes: the Custom group, importing and making a brush from a selection are not part of it). BrushLibrary (PhotonzCore/BrushLibrary.swift) lists BrushMedium.allCases by BrushGroup; a custom brush is a saved BrushSettings preset with a name, so BrushLibrary needs a preset list beside the media and BrushGroup a .custom case. Tiles already render any BrushSettings (BrushPreview, BrushPreviewCache). Needs brush-editor.html for what New brush opens.",
+  "acceptance": [
+    "The Library's Brushes shelf and the chooser over the tool bar show a Custom chip, and a brush you make appears there as a tile showing its own stroke",
+    "The Library's plus offers New brush, Import a brush file and Make brush from selection, as brush-library.html draws them",
+    "Only a custom brush can be deleted, from its right-click menu and the panel"
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T11:15:03.284Z",
+      "note": "created (manual)"
+    }
+  ]
+}
