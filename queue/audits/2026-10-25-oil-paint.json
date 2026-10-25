@@ -5,12 +5,30 @@
   "setup": "Photonz Dev, release Next, no flag changed from its default. A blank canvas (File, New, Image).",
   "switched": {},
   "try": [
-    { "do": "Press B, then pick Oil Paint from the Medium menu over the tool bar." },
-    { "do": "Drag a stroke down the canvas in black.", "shot": "2026-10-25-oil-paint-1-one-stroke-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Pick a blue from the colour swatch at the end of the tool bar and drag a stroke across the black one.", "shot": "2026-10-25-oil-paint-2-smeared-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Zoom in on the crossing (Command +) and look just past it, where the blue carries some black on.", "shot": "2026-10-25-oil-paint-close-sc.png" },
-    { "do": "Drag one long stroke right across the canvas and watch it break into dry streaks near the end." },
-    { "do": "Open the stroke sheet to compare Smear 0, 40 and 100 and Load 20, 70 and 100 side by side.", "shot": "2026-10-25-oil-paint-sheet.png" }
+    {
+      "do": "Press B, then pick Oil Paint from the Medium menu over the tool bar."
+    },
+    {
+      "do": "Drag a stroke down the canvas in black.",
+      "shot": "2026-10-25-oil-paint-1-one-stroke-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick a blue from the colour swatch at the end of the tool bar and drag a stroke across the black one.",
+      "shot": "2026-10-25-oil-paint-2-smeared-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Zoom in on the crossing (Command +) and look just past it, where the blue carries some black on.",
+      "shot": "2026-10-25-oil-paint-close-sc.png"
+    },
+    {
+      "do": "Drag one long stroke right across the canvas and watch it break into dry streaks near the end."
+    },
+    {
+      "do": "Open the stroke sheet to compare Smear 0, 40 and 100 and Load 20, 70 and 100 side by side.",
+      "shot": "2026-10-25-oil-paint-sheet.png"
+    }
   ],
   "evaluate": [
     "Does a stroke read as thick paint laid by a brush, rather than a flat fill?",
@@ -23,7 +41,7 @@
     "Zoomed in past about 140%, the bristles go softer when the button comes up: the renderer bakes a paint layer covering a 12 megapixel canvas at about one pixel a point. Folded into painting-keeps-up-with-the-pointer-on-a-12-megap.",
     "Pickup reads only the paint layer the stroke lands on, never the screenshot under it, so painting over a picture does not smear the picture (the house's non-destructive rule, docs/design/brushes.md decision 2).",
     "The walk can only pick black and one plain blue, so its crossing shows black carried into blue (a darkening); the sheet shows red into blue, which reads far better.",
-    "Mock comparison: no mock draws an oil stroke; the retouch mock only fixes where the brush and its options live, which this slice did not change.",
+    "No mock covers an oil stroke's look; where the Brush and its Medium menu sit is unchanged from the slice that built them.",
     "Pictures: walk captures are real windows (Screen Recording granted, screen unlocked), photographed behind another app; the close-up is a crop of 2026-10-25-oil-paint-2-smeared-sc.png. Measures in 2026-10-25-oil-paint-measures.txt."
   ]
 }
