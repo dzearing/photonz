@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.427Z",
-  "updated": "2026-10-24T23:41:00.071Z",
+  "updated": "2026-10-25T07:13:10.740Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -29,6 +29,39 @@
     {
       "t": "2026-10-24T23:41:00.071Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    },
+    {
+      "t": "2026-10-25T06:32:25.115Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T07:12:17.401Z",
+      "note": "owns these walks: marker-and-airbrush-walk"
+    },
+    {
+      "t": "2026-10-25T07:12:17.546Z",
+      "note": "Adversarial review before building: a first-time user picks Marker from the Medium dropdown and drags, which works with no new controls. A Photoshop or Procreate user expects a marker that does not build up within one stroke and darkens on a second pass, and an airbrush that keeps spraying while held (Photoshop's 'build-up'); the app cannot deliver the hold without samples arriving while the mouse is still, so the canvas now ticks samples in while the button is down. Tip, Flow and Softness have no control in the capsule yet: that is each-brush-shows-its-own-settings-in-the-tool-op, already filed and in the design doc's slice order, so not a new prerequisite."
+    },
+    {
+      "t": "2026-10-25T07:12:17.622Z",
+      "note": "Chose multiply over the earlier paint on the same layer, written as an adjusted source-over (a·C·(1−Da+D)), over a CALayer multiply filter on the overlay, because the formula makes the live overlay land exactly as drawn (walk: 0.05% apart on a crossing) where a filter would multiply over the screenshot too. Chose a fixed 45 degree chisel nib over one that follows the stroke because a real chisel keeps its angle in the hand; tilt turning it is the dynamics slice. Chose time-based dwell dabs (one per 25 ms held within a dab's spacing) over counting events, so a trembling hand still builds up and live equals landed. Tried jitter on the airbrush to break rings at a crisp stroke's ends: it made the stroke lumpy, so widened the crisp cone's fall-off instead."
+    },
+    {
+      "t": "2026-10-25T07:12:17.692Z",
+      "note": "Moved the round-tip baseline in the dry media, pencil, paint and sheet tests from .marker to .oil (oil still uses the round tip until its slice). Added drag 'pause'/'pauseAt' to the walk harness (parsed and tested in PlaytestScriptTests). Pictures looked at before closing: the stroke sheet (flat marker, darker crossings, chisel width by direction, airbrush soft spray, dwell spot, softness 0 vs 100), and the walk's 3-marker-crossed-sc and 5-airbrush-built-up-sc with close crops: marker flat and darker only at the crossing; airbrush a soft spray line with a built-up dot at the pause and at the end (the walk holds still 0.3 s there before letting go)."
+    },
+    {
+      "t": "2026-10-25T07:12:17.761Z",
+      "note": "Left rough, not filed (each covered or below the bar): Tip/Flow/Softness controls and per-medium size are folded into each-brush-shows-its-own-settings-in-the-tool-op; tilt/pressure for the marker belongs to the design doc's dynamics slice; a small held airbrush saturating to a dot is how the medium behaves. No sweep requested: the change touches only brush code and one harness option, and committing it triggers the rotating check."
+    },
+    {
+      "t": "2026-10-25T07:13:10.738Z",
+      "note": "Marker and airbrush shipped in 83b94294. Marker: max coverage within a stroke (flat even when it doubles back), multiplied over earlier paint so a crossing stroke is darker in the overlap, live overlay matches landed (walk 0.05% apart); Round and Chisel tips (chisel width changes with direction, render test: across the nib over 2x along it); Flow sets the ink. Airbrush: fine soft spray (mist plus droplets), a dab every 25 ms held, so it builds up; Flow and Softness each change it (render tests). Bars, by the real rasterizer: flat share 0.99 vs round tip 0.82 (bar 0.9); held a second vs a pass 3.3x vs round tip 1.0x (bar 1.6). marker-and-airbrush-walk paints both by pointer drag with no flags, incl. a 1.2 s hold, real window pictures in queue/audits/2026-10-25-marker-airbrush.json. Tip, Flow and Softness have no controls yet: that is each-brush-shows-its-own-settings-in-the-tool-op (noted there); the sheet shows them. Scripts/test.sh green (14,481 tests); brush, pencil and toolbar walks green."
     }
-  ]
+  ],
+  "started": "2026-10-25T06:32:25.111Z",
+  "walks": [
+    "marker-and-airbrush-walk"
+  ],
+  "completed": "2026-10-25T07:13:10.739Z"
 }
