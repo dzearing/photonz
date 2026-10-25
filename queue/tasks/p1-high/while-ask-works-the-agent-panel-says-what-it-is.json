@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T01:13:10.449Z",
-  "updated": "2026-10-25T01:13:10.554Z",
+  "updated": "2026-10-25T01:13:21.622Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: 'when the agent is in progress, I would like more frequent updates in the agents panel about what is happening. For example, if we're researching, or building out instructions, or thinking, etc, I'd like some indication of what's happening for the request.'\n\nToday: Sources/Photonz/Agent/AskViews.swift:193-208, phase .planning/.running shows a ProgressView plus AskCopy.gettingReady while a model loads, otherwise ask.asked (the request words) or AskCopy.workingLine 'Working…'. The pipeline already knows its stages and writes them to its debug log via note(...) in Sources/Photonz/Agent/AskSession.swift (reading the document ~601, asking the model ~624, turn N planned ~646, drawing plans ~483/492, look/check ~432-462, keeping an earlier drawing on retry ~301-305, done ~334) and the picture model path (AskPictureModel.swift: painting, tracing). A user-facing stage value beside note() is the natural seam; keep the words in AskCopy.\n\nNot a contradiction: AgentPanel's comment (AskViews.swift:178) records the user's 2026-10-20 rule that a request's steps are never shown. That is about FINISHED rows listing their steps; this is one live line while it works, gone when done. Keep both.\n\nRelated pending: when-ask-stops-part-way-it-says-so-and-one-refus (what the row says when it stops), and ask-can-make-a-photo-as-well-as-an-illustration (adds a photo stage).",
@@ -31,6 +31,10 @@
     {
       "t": "2026-10-25T01:13:10.553Z",
       "note": "seq 167.5 -> 9"
+    },
+    {
+      "t": "2026-10-25T01:13:21.621Z",
+      "note": "seq 9 -> 9"
     }
   ]
 }
