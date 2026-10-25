@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.892Z",
-  "updated": "2026-10-24T23:41:00.183Z",
+  "updated": "2026-10-25T05:27:29.131Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-24T23:41:00.183Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    },
+    {
+      "t": "2026-10-25T05:27:29.130Z",
+      "note": "From the dry-media blind judges (2026-10-24, five rounds): every judge's top remaining complaint on charcoal, chalk and crayon is one width and one tone end to end, no taper and no pressure-driven dark and light passages. The stroke sheet test (PHOTONZ_STROKE_SHEET=<dir> Scripts/test.sh --filter StrokeSheet) is the place to show it."
     }
   ]
 }
