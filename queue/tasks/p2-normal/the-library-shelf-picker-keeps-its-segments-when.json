@@ -4,12 +4,12 @@
   "goal": "With the Brush in hand the Library offers five shelves (Media, Comps, Brushes, Styles, Systems), and at the dock's resting width they no longer fit side by side, so the picker turns into a dropdown. The mock draws it as segments; make all five fit as segments at the resting width.",
   "epic": "image-paint",
   "priority": "p2-normal",
-  "seq": 4090,
+  "seq": 500,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T11:15:03.181Z",
-  "updated": "2026-10-25T11:15:03.184Z",
+  "updated": "2026-10-25T13:26:48.364Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by brushes-are-picked-from-a-library-of-tiles-that (2026-10-25). LibraryScope.scopes(hasTime:brushes:) adds .brushes after .components only while EditorState.libraryOffersBrushes (Brush in hand). The drawn SegmentedControl (fallsBackToSystem: false) falls back to its dropdown when the words do not fit: 236pt dock, words Media Comps Brushes Styles Systems. Options: tighter segment padding for five, shorter words, or icons with the words in tips. Picture: queue/audits/2026-10-25-brush-library-shelf.png (the Brushes dropdown). brush-library.html draws Media | Brushes | Styles | Systems (no Comps, which a later mock added).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-25T11:15:03.183Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-25T13:26:48.363Z",
+      "note": "seq 4090 -> 500"
     }
   ]
 }

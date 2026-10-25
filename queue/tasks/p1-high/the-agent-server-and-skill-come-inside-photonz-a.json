@@ -4,12 +4,12 @@
   "goal": "Someone with only the Photonz app can turn on 'use Photonz from Claude Code' or 'from GitHub Copilot' in Settings with one Install button each, and an agent in either tool can then drive Photonz. Uninstall is one click too. Today it only installs from a copy of the source, and Copilot isn't supported at all.",
   "epic": "agent-mcp",
   "priority": "p1-high",
-  "seq": 20,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:19:05.514Z",
-  "updated": "2026-10-24T12:35:54.902Z",
+  "updated": "2026-10-25T13:26:46.313Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'I'd love the skills an FRE for using photonz with copilot and claude code where there is a nice explainer and an opt in to install the skills... they can dismiss and install the skills from settings.' This task is the Settings half and the packaging. The setup-window step is a separate task that depends on this one (filed the same minute). Today: Scripts/install-mcp.sh (claude mcp add --scope user, links plugin/skills/photonz into ~/.claude/skills), and there is nothing for Copilot. Focus success gap: agent-mcp success says 'installs with one command'; today that command is Scripts/install-mcp.sh in a checkout (lines 39 and 44: claude mcp add plus a skill link). docs/design/agent-mcp.md 'Not in this slice' (line 392-397): shipping the bridge inside the app bundle. Rough lines in queue/audits/2026-10-19-agent-skill.json ('The install is a developer's') and 2026-10-19-agent-mcp-reach-read-see.json ('builds a small helper program the first time, about 4 seconds'). Skill at plugin/skills/photonz/SKILL.md, plugin/.mcp.json. The channel already listens in every build (agent-mcp.md:34-41, release.sock, dev.sock, probe.sock). Scripts/build-app.sh must copy and sign the helper; never touch dist/Photonz Dev.app from a runner, use the probe.",
@@ -54,6 +54,10 @@
     {
       "t": "2026-10-24T12:35:54.901Z",
       "note": "seq 1.1 -> 20"
+    },
+    {
+      "t": "2026-10-25T13:26:46.312Z",
+      "note": "seq 20 -> 100"
     }
   ]
 }

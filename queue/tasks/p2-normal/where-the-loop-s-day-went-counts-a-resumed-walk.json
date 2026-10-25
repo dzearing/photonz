@@ -4,12 +4,12 @@
   "goal": "The daily digest reads the loop's day from one report and is told to call out any day with more than one whole-set walk run, since each costs about five hours. That report counts the short pick-up of a stopped run as a run of its own, so a day with one run in two parts and one new run reads as three, and the digest raises an alarm that is not real.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 460,
+  "seq": 470,
   "status": "pending",
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:08:35.106Z",
-  "updated": "2026-10-24T12:35:56.902Z",
+  "updated": "2026-10-25T13:26:48.271Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the a-full-walk-check-that-gets-stopped-picks-up-whe runner on 2026-10-22 (left rough: count reads one high) and again by the 2026-10-23 digest, which had to read queue/loop.log to find that the three runs were the 2026-10-22T11:15Z run stopped at 989 of 1011, its 7 minute pick-up (queue/sweep/2026-10-22-095234.log, 25 walks), and the 2026-10-23T11:41Z run stopped at 453 of 1015 when the person came back. Code: queue/bin/loop-day.mjs.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-10-24T12:35:56.901Z",
       "note": "seq 470 -> 460"
+    },
+    {
+      "t": "2026-10-25T13:26:48.270Z",
+      "note": "seq 460 -> 470"
     }
   ]
 }

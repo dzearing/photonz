@@ -4,12 +4,12 @@
   "goal": "The pictures in an audit are how the user judges what the loop built, but walks keep the app behind other apps, so every picture shows the inactive look: switches grey instead of green or blue, blue buttons grey, picked controls dimmed. Ten of the twelve audits from 2026-10-20 and 2026-10-21 carry a note apologising for it. The pictures the user looks at should show the colours they would see.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 440,
+  "seq": 450,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T12:42:20.635Z",
-  "updated": "2026-10-24T12:35:56.835Z",
+  "updated": "2026-10-25T13:28:05.731Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: grep -l 'behind another app' queue/audits/2026-10-2*.json lists 10 of 12; for example queue/audits/2026-10-20-calm-redline-settings-after-sc.png (the Agent row switch is grey) and the rough list of queue/audits/2026-10-20-ask-rows.json ('the switch shows grey instead of the accent colour'). Walks stay behind on purpose (CLAUDE.md, Walks run while the person works; queue/bin/focus-drill.sh), so the fix must not take the front or a key while the person is at the Mac. Options to measure, not assume: render the snapshot with the window drawn in its active look (an offscreen render of the window content), or retake only the audit pictures, not every walk picture, in the whole-set window when nobody is at the Mac.",
@@ -39,6 +39,14 @@
     {
       "t": "2026-10-24T12:35:56.834Z",
       "note": "seq 450 -> 440"
+    },
+    {
+      "t": "2026-10-25T13:26:48.208Z",
+      "note": "seq 440 -> 450"
+    },
+    {
+      "t": "2026-10-25T13:28:05.730Z",
+      "note": "digest 2026-10-25: reels have the same gap. Two audits in a day shipped reels drawn offscreen frame by frame instead of filmed from the window: 2026-10-24-ask-hero-sheen (the walk's film steps leave the title bar out, and a snapshot lands after the 0.66 s sweep ends) and 2026-10-25-airbrush-reel ('a walk cannot film the app'). The user judges motion from those reels, so whatever makes pictures match the window should make reels match it too."
     }
   ]
 }

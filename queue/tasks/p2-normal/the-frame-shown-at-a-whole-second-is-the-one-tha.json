@@ -4,12 +4,12 @@
   "goal": "Asked for the picture at exactly 10 seconds, the app shows the frame that ends at 10 seconds rather than the one that begins there, one frame early. The canvas, a video export and the agent tools all use the same frames, so an edit placed at a whole second can show a frame a person did not expect.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 130,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-19T18:35:27.890Z",
-  "updated": "2026-10-24T12:35:55.804Z",
+  "updated": "2026-10-25T13:26:47.229Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-10-19 by an agent session in the try path of an-agent-can-reach-the-running-app-read-the-open (transcript: queue/audits/2026-10-19-agent-mcp-transcript.md). Reproduction: a 30 fps test recording made with `ffmpeg -f lavfi -i testsrc2=size=1280x800:rate=30:duration=15 -c:v libx264 -pix_fmt yuv420p \"Demo recording.mp4\"`; the agent tool video_frame at seconds 10 and 10.02 both drew the frame stamped 00:00:09.967 (frame 299), and 10.04 drew 00:00:10.000 (frame 300). video_frame draws through DocumentFrames, the video export path. Cause, read in code not proven: MovieRef.frameStepMS is 33 (MovieClip.swift:36) and frameIndex(atSourceMS:) is ms / 33, so 10000 ms -> index 303 -> 9999 ms, which the decoder resolves to the frame before 10.000. A 33 ms grid against 33.33 ms frames lands just short of every whole second. Check whether the decoder takes the frame AT or BEFORE the asked moment before changing the grid.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-10-24T12:35:55.803Z",
       "note": "seq 140 -> 130"
+    },
+    {
+      "t": "2026-10-25T13:26:47.228Z",
+      "note": "seq 130 -> 140"
     }
   ]
 }

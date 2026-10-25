@@ -4,12 +4,12 @@
   "goal": "The agent gets the same brushes a person has: it can list them and their settings, pick and set one, and paint strokes from a list of points with optional pressure. Its strokes look identical to a person's at the same settings and undo one at a time, and Ask can use them to paint a picture.",
   "epic": "image-paint",
   "priority": "p1-high",
-  "seq": 6.7,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.009Z",
-  "updated": "2026-10-25T06:19:41.744Z",
+  "updated": "2026-10-25T13:26:46.093Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -33,6 +33,10 @@
     {
       "t": "2026-10-25T06:19:41.743Z",
       "note": "Pencil is a medium now; its Hardness setting is a choice (options = pencil grades), and strokes take optional pressure and tilt per sample."
+    },
+    {
+      "t": "2026-10-25T13:26:46.092Z",
+      "note": "seq 6.7 -> 30"
     }
   ]
 }

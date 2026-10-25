@@ -4,12 +4,12 @@
   "goal": "When a runner hands a task back unfinished several times in a row because a judged score has not reached its bar, the loop stops claiming it again straight away and says so on the dashboard and in the digest, so one noisy score cannot use up a day of the loop while the user's other asks wait.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 470,
+  "seq": 480,
   "status": "pending",
   "release": "next",
   "area": "loop",
   "created": "2026-10-24T12:35:20.255Z",
-  "updated": "2026-10-24T12:35:56.934Z",
+  "updated": "2026-10-25T13:26:48.302Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Two days running one task took most of the loop's day. 2026-10-22/23: a-scene-of-things-doing-something-together-is-dr was claimed five times chasing a held-out total (closed by the 2026-10-23 digest). 2026-10-23/24: asking-for-a-sheet-of-components-gives-a-clean-t was claimed six times (history.jsonl task_pending events at 2026-10-23T22:49, 10-24T01:38, 05:46, 08:17, 10:54, 12:31), each pass ending 'the 8-of-10 bar is not met for Ask, so it stays open', with judge scores for Ask between 4 and 8 on the same build. Show it: node -e \"const fs=require('fs');fs.readFileSync('queue/history.jsonl','utf8').split('\\n').filter(l=>l.includes('asking-for-a-sheet')&&l.includes('task_pending')).forEach(l=>console.log(l.slice(0,120)))\" prints six hand-backs in 14 hours. Guard's MAX_TASK_FAILURES only counts crashes, not hand-backs. Loop code: queue/bin/queue-lib.mjs claimNext, readyTasks; queue/bin/go-loop.sh.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-10-24T12:35:56.933Z",
       "note": "seq 4080 -> 470"
+    },
+    {
+      "t": "2026-10-25T13:26:48.301Z",
+      "note": "seq 470 -> 480"
     }
   ]
 }

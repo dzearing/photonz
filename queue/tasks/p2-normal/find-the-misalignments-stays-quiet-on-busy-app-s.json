@@ -4,12 +4,12 @@
   "goal": "On a busy screenshot of a Mac app (selection handles, inspectors, toolbars) the misalignment check still marks things nobody would call a fault, and its scores come only from small web pages. Collect real captures with known faults and bring false marks on them to at most one per picture.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 430,
+  "seq": 440,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T03:23:52.871Z",
-  "updated": "2026-10-24T12:35:56.802Z",
+  "updated": "2026-10-25T13:26:48.179Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-20: MisalignmentScan on app-window-2x.png marks the top middle selection handle (996,928 21x14 px) as Top edge 4 pt off. Reproduce: Scripts/playtest.sh with a walk opening that file and asking find the misalignments (see the audit walks in queue/audits/2026-10-20-find-misalignments.json), or run MisalignmentScan.findings on it. Corpus: Tests/PhotonzRenderTests/Fixtures/misalign, Scripts/misalign-corpus/make-corpus.mjs.",
@@ -42,6 +42,10 @@
     {
       "t": "2026-10-24T12:35:56.801Z",
       "note": "seq 440 -> 430"
+    },
+    {
+      "t": "2026-10-25T13:26:48.178Z",
+      "note": "seq 430 -> 440"
     }
   ]
 }

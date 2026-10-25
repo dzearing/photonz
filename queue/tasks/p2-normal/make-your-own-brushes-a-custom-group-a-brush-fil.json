@@ -4,12 +4,12 @@
   "goal": "The brush library mock has a Custom group where brushes you make land: start a new brush, import a brush file, or make one from a selection, and delete only custom ones. Today the library shows only the eight built in brushes and no Custom chip.",
   "epic": "image-paint",
   "priority": "p2-normal",
-  "seq": 4100,
+  "seq": 510,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T11:15:03.282Z",
-  "updated": "2026-10-25T11:15:03.285Z",
+  "updated": "2026-10-25T13:26:48.395Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of brushes-are-picked-from-a-library-of-tiles-that on purpose (its notes: the Custom group, importing and making a brush from a selection are not part of it). BrushLibrary (PhotonzCore/BrushLibrary.swift) lists BrushMedium.allCases by BrushGroup; a custom brush is a saved BrushSettings preset with a name, so BrushLibrary needs a preset list beside the media and BrushGroup a .custom case. Tiles already render any BrushSettings (BrushPreview, BrushPreviewCache). Needs brush-editor.html for what New brush opens.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-25T11:15:03.284Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-25T13:26:48.394Z",
+      "note": "seq 4100 -> 510"
     }
   ]
 }

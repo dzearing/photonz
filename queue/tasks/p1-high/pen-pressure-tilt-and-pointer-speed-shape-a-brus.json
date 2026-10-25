@@ -4,12 +4,12 @@
   "goal": "Painting with a tablet or an Apple Pencil through Sidecar feels like a real brush: pressing harder makes the stroke bigger, darker or heavier where that medium would, tilting broadens charcoal and marker, and fast strokes thin out. With a mouse, strokes still swell in and taper out instead of starting and ending as blunt circles.",
   "epic": "image-paint",
   "priority": "p1-high",
-  "seq": 6.6,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.892Z",
-  "updated": "2026-10-25T06:19:41.610Z",
+  "updated": "2026-10-25T13:26:46.063Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -37,6 +37,10 @@
     {
       "t": "2026-10-25T06:19:41.608Z",
       "note": "The plumbing exists since the pencil (2026-10-24): BrushDab.pressure/.tilt eased between samples, BrushDynamics.mousePressure (touch-down settle + speed thinning, no taper out yet). Only DryLook.pressed (pencil) reads them; this task maps them for the other media and adds the taper. Walks can hold a pen with the new 'pen' step."
+    },
+    {
+      "t": "2026-10-25T13:26:46.062Z",
+      "note": "seq 6.6 -> 20"
     }
   ]
 }

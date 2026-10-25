@@ -4,12 +4,12 @@
   "goal": "Add a Brush tool so people can paint, not only build vector shapes. It comes with a realistic set of media: charcoal, chalk, oil paint, watercolour, markers, crayons and airbrush. Each brush has its own settings, the ones that medium needs, the way brushes do in Procreate or Photoshop (for example how wet watercolour is and how far it bleeds, how much oil paint is loaded and how it smears, how grainy chalk and charcoal are, how soft and how heavy the airbrush flow is). Pressure and speed shape the stroke. The agent can pick a brush, set it and paint strokes through MCP, so it can make painted illustrations too.",
   "epic": "image-paint",
   "priority": "p1-high",
-  "seq": 6,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-25T00:36:44.240Z",
+  "updated": "2026-10-25T13:28:05.800Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -73,6 +73,14 @@
     {
       "t": "2026-10-25T00:36:44.239Z",
       "note": "from slice 1: the image mock prints Brush (B) right after Crop; the bar puts it at the end of the drawing family (after Component insert), the rule every flag-added tool follows. Settle the slot when the epic's try path is walked."
+    },
+    {
+      "t": "2026-10-25T13:26:46.029Z",
+      "note": "seq 6 -> 10"
+    },
+    {
+      "t": "2026-10-25T13:28:05.799Z",
+      "note": "digest 2026-10-25, for the try path: with the brush settings slice the options row over the tool bar holds six controls and is about 1080 points wide, so on a laptop-sized window it wraps to two rows (2026-10-25-brush-settings audit). Walk the try path in a 1280 point window and judge whether the row needs to shed a control there."
     }
   ],
   "started": "2026-10-24T23:36:28.499Z"

@@ -4,12 +4,12 @@
   "goal": "A cut with nothing removed can now be joined back into one piece, but only from the cut's right-click. A Premiere editor picks such a cut and presses Delete, and here that does not join it, so the quickest way they know does nothing they expect. Make Delete on a picked cut with nothing removed join it, the same as Join Through Edit.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 280,
+  "seq": 290,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:01:09.195Z",
-  "updated": "2026-10-24T12:35:56.297Z",
+  "updated": "2026-10-25T13:26:47.702Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-10-17-a-cut-with-nothing-removed-can-be-joined-back-in.json: 'Delete on a picked through edit does not join it, as it does in Premiere; the task asked not to change Delete without a card, so it is left as it was.' No card was ever opened, so the gap would sit unseen. Premiere: select a through edit (the dashed edit line) and press Delete to join it. Reuse the Join Through Edit action from task a-cut-with-nothing-removed-can-be-joined-back-in; do not write a second join. Filed by the digest of 2026-10-17.",
@@ -64,6 +64,10 @@
     {
       "t": "2026-10-24T12:35:56.296Z",
       "note": "seq 290 -> 280"
+    },
+    {
+      "t": "2026-10-25T13:26:47.701Z",
+      "note": "seq 280 -> 290"
     }
   ]
 }

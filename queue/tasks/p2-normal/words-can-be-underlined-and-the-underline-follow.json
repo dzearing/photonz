@@ -4,12 +4,12 @@
   "goal": "A person (or an agent) building a web page or a link can underline words from the text controls, the way every design tool and word processor can; today the only way is a drawn line that stays the old length when the words change.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 420,
+  "seq": 430,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T02:26:02.584Z",
-  "updated": "2026-10-24T12:35:56.767Z",
+  "updated": "2026-10-25T13:26:48.147Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by scenario 4 of claude-can-make-and-edit-pictures-and-videos-in (2026-10-19): a fresh agent session rebuilding GOV.UK links drew 1 pt lines under each title and said in its summary they will not resize with the words (transcript queue/audits/2026-10-19-agent-skill-transcript.md, scenario 4). TextContent has no decoration today (Sources/PhotonzCore/Layer.swift); TextTreatment would need it for styles; SVGExporter text-decoration. Command U on a picture: check Photoshop parity (UX-PATTERNS §7) before taking it. Agent side: add_text/set_layer/add_style get an underline flag once the app has it.",
@@ -47,6 +47,10 @@
     {
       "t": "2026-10-24T12:35:56.766Z",
       "note": "seq 430 -> 420"
+    },
+    {
+      "t": "2026-10-25T13:26:48.146Z",
+      "note": "seq 420 -> 430"
     }
   ]
 }

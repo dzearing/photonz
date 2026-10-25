@@ -4,12 +4,12 @@
   "goal": "When a person asks for a set of components shown in their states, Ask and the Photonz skill lay them out as a tidy table: a title, a header for each state, one row per component, every cell lined up, one type scale throughout, and the components' own words changed rather than new words laid over them. It should look like a page from Apple's design kit.",
   "epic": "agent-skills",
   "priority": "p1-high",
-  "seq": 60,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-24T12:36:56.347Z",
+  "updated": "2026-10-25T13:26:46.449Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -247,6 +247,10 @@
     {
       "t": "2026-10-24T12:36:56.346Z",
       "note": "2026-10-24 digest design review: about 540 lines of AgentComponentSense now repaint what the model drew (an Off switch's track set to the Mac's light grey, a Disabled field's words dimmed again, a hover that only grows a shadow left out). They are written about states in general (off, on, disabled, hover), not about one request, so they sit on the right side of the user's 2026-10-20 rule (no code for a particular subject or kind of request), but only just. Before adding another rule here, check it would help any request that has states, not only a component sheet, and say so in the log. The digest asks the user whether this is the line they meant."
+    },
+    {
+      "t": "2026-10-25T13:26:46.448Z",
+      "note": "seq 60 -> 140"
     }
   ],
   "started": "2026-10-24T11:12:59.292Z",

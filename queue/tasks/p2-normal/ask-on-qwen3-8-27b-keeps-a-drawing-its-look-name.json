@@ -4,12 +4,12 @@
   "goal": "Since Qwen3.8 27B became Ask's default, Ask sometimes throws away a good drawing and says it could not make one, because the model that checks the drawing named it more precisely (a blue tit for a bird) or more broadly (a bird for a songbird) and Ask took that as a miss. A drawing whose look names the right kind of thing should be kept.",
   "epic": "agent-drivable",
   "priority": "p2-normal",
-  "seq": 75,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T20:25:49.549Z",
-  "updated": "2026-10-24T20:25:49.553Z",
+  "updated": "2026-10-25T13:26:47.043Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Trace of scene-bird-singing-on-a-branch, run 20261024-131153-ask (.ask-eval/runs/.../ask-walk/log.json): '137.4s look: a bird on a branch singing seen as blue tit -> does not read', then the model reworded the subject to 'a small songbird ...', '224.8s ... seen as hummingbird -> does not read', reworded again to 'a plump round songbird ...', '280.0s ... seen as bird -> does not read', then Ask said it could not. AskDrawingCheck.reads (AskPlanning.swift ~1151) finds no shared word, so judgeBody asks the planning model 'is what they named the main thing asked for, or a kind of it?'; Qwen3.8 answers no for a narrower species and for a broader 'bird' against 'songbird' (bird is not a kind of songbird). Ideas: judge against the request's own subject rather than the reworded one, and ask whether it is the same kind of thing named more or less precisely; or have reads() count a shared stem inside a compound ('songbird' contains 'bird'). Held-out drawing group also lower on Qwen3.8 (64.4 against 68.4) and layout (12.3 against 22.4; that group is task ask-on-the-local-model-makes-results-that-look-f's bar).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-24T20:25:49.552Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-25T13:26:47.042Z",
+      "note": "seq 75 -> 80"
     }
   ],
   "walks": []

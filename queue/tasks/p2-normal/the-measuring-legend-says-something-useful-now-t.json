@@ -4,12 +4,12 @@
   "goal": "While the Measure tool is on, a small key in the corner of the picture lists Size and Spacing with a colour swatch each. Every measurement now starts in the same blue, so both rows show the same swatch and the key tells nothing apart. Take the key away (settled on 2026-10-20, when the waiting cards were taken as recommended).",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 370,
+  "seq": 380,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T21:51:15.337Z",
-  "updated": "2026-10-24T12:35:56.596Z",
+  "updated": "2026-10-25T13:26:47.992Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows every-measurement-shares-one-remembered-look-blu (2026-10-13): MeasureStyles keeps ONE colour set for every role, so measureLegendEntries (EditorState+Measure.swift, near the end) lists Size and Spacing each swatched in its top-most measurement ink, which is now the same #3774D5 by default. The legend is behind next-measure-roles (on at Next defaults); legend-corner-slots walk covers its placement. The redline mock (docs/design/mocks/pages/redline.html) draws Size red and Spacing blue with this legend; the user overrode the colour split on 2026-10-13 (\"gap vs size shouldn't be different\").",
@@ -98,6 +98,10 @@
     {
       "t": "2026-10-24T12:35:56.595Z",
       "note": "seq 380 -> 370"
+    },
+    {
+      "t": "2026-10-25T13:26:47.991Z",
+      "note": "seq 370 -> 380"
     }
   ],
   "walks": [

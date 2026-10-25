@@ -4,12 +4,12 @@
   "goal": "The compositing mock puts a colour grade on its own track (V4) above the picture, tinting everything under it through a blend mode, and shows only where a matte layer lets it, so a whole scene or one region of it can be graded at once. Today a grade is only an effect on one clip.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 160,
+  "seq": 170,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T12:36:36.602Z",
-  "updated": "2026-10-24T12:35:55.903Z",
+  "updated": "2026-10-25T13:26:47.322Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-compositing.html lines 262 (layer list Colour grade screen), 287 (grade.look preset), 306 (add menu Colour grade), 346 (V4 colour grade track), 377-443 (blend swatches, matte masking). The per-clip Color Grade effect landed in task a-clip-can-be-colour-graded-from-add-effect: ColorGradeEffect (PhotonzCore/ColorGrade.swift) and ColorGradeFilter (PhotonzRender) can be reused as the adjustment the layer applies to the composite below it. The grade.look Library preset is part of this too.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-24T12:35:55.902Z",
       "note": "seq 170 -> 160"
+    },
+    {
+      "t": "2026-10-25T13:26:47.321Z",
+      "note": "seq 160 -> 170"
     }
   ]
 }

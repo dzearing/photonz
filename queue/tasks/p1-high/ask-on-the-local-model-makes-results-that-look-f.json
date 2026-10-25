@@ -4,12 +4,12 @@
   "goal": "What Ask builds on this Mac should look like a person made it: a pricing section whose card words replace the card's own placeholder text and sit in a tidy row, and screenshot measurements that read cleanly instead of crowding. Today the plan runs but the result is rough.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 80,
+  "seq": 160,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-10-24T20:37:36.655Z",
+  "updated": "2026-10-25T13:26:46.512Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -116,6 +116,10 @@
     {
       "t": "2026-10-24T20:37:36.624Z",
       "note": "manager 2026-10-24 21:00, probe at abc02936 on the new default Qwen3.8 27B: Scripts/playtest-all.sh --no-build ask-makes-a-pricing-section passed in 224 s and made a title, subtitle and three cards in one even row (first checklist item reads met on this run, vs one empty card on 2026-10-23). What gives it away now: every button label is dark text on the #007AFF fill, because add_text was sent with no colour and the default is dark (the call: add_shape fill #007AFF then add_text 'Choose Starter' with no color). add_component already refuses words unreadable against what is behind them (bf4dc3c2); add_text and add_shape do not. Picture: queue/manager/shots/2026-10-24-ask-pricing-qwen38.png"
+    },
+    {
+      "t": "2026-10-25T13:26:46.511Z",
+      "note": "seq 80 -> 160"
     }
   ],
   "walks": [

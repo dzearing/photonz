@@ -4,12 +4,12 @@
   "goal": "Painting never lags behind your hand, even on a big photo: the stroke under the pointer draws within a frame and letting go lands the stroke without a hitch, measured on a 12 megapixel picture with a few hundred strokes on its paint layer.",
   "epic": "image-paint",
   "priority": "p1-high",
-  "seq": 6.9,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.236Z",
-  "updated": "2026-10-25T09:34:02.119Z",
+  "updated": "2026-10-25T13:26:46.157Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -42,6 +42,10 @@
     {
       "t": "2026-10-25T09:34:02.118Z",
       "note": "From the oil paint slice (2026-10-25): DocumentRenderer bakes a paint layer at crispScale(contentScale, box: layer box), capped at 16 MP, and a Paint layer is the whole canvas, so on a 4000x3000 canvas a landed stroke is ~1.15 px/pt while the live overlay draws at screen resolution. Reproduced: Scripts/playtest/oil-paint-smears-and-ridges-walk.json with 8 zoomIn steps (displayZoom 172) fails step 24 'the picture jumped on the release: 1.3% of the canvas differs'; at 7 steps (138%) 0.73%; at 6 (110%) 0.42%. Every medium softens on release when zoomed in; oil's bristles show it most. Likely fix: bake only the strokes' bounds (or tiles) so the cap is spent where the paint is."
+    },
+    {
+      "t": "2026-10-25T13:26:46.156Z",
+      "note": "seq 6.9 -> 50"
     }
   ]
 }
