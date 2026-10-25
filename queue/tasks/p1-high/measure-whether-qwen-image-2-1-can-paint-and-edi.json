@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T03:23:47.069Z",
-  "updated": "2026-10-25T16:01:03.058Z",
+  "updated": "2026-10-25T22:16:09.072Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24, after a research pass on MOSS-Image and Qwen-Image-2.1 in the intake window: \"file the qwen 2.1 measuring task\". MOSS-Image was looked at and set aside (text-to-image only, several minutes a picture on a Mac in mflux, and its strength, words painted into a picture, is something Photonz already does better with live text layers).\n\nWhat the research found (from web sources, NOT measured here):\n- Qwen-Image-2.1 (Alibaba Qwen, 2026-09-20): 7.1B image model plus a Qwen3-VL 8B text encoder; generation and editing in one model; up to 10 reference images; edits marked by circles, painted marks or a mask; native RGBA; an 8 step Turbo; one ControlNet checkpoint (canny, depth, pose, scribble, lineart, ...) that also inpaints with --mask-image.\n- mflux commands: mflux-generate-qwen-2.1, mflux-generate-qwen-2.1-edit (--image-paths), mflux-generate-qwen-2.1-controlnet (--controlnet-image-path, --mask-image), --model qwen-image-2.1-turbo, -q 8, --small-text-encoder (Qwen3.5 0.8B plus an adapter, about 2.1 GB, English prompts only, numerals in rendered text can be wrong, not with --auto-mask). See https://github.com/mflux-community/mflux/blob/main/src/mflux/models/qwen21/README.md\n- Reported memory: bf16 about 46 GB peak; 8-bit about 27 to 31 GB peak because the 17.5 GB text encoder is never quantised; Turbo ControlNet 8-bit at 1024 about 45 s on an M5 Max. The Turbo model looks pixel-gridded below 1024.\n- Licence: reported as the Qwen Research License (research and evaluation only, commercial use needs a separate licence from Qwen), unlike Z-Image's Apache 2.0. Verify from the model card.\n\nWhere it would plug in: the picture model setup is Sources/PhotonzCore/AskPictureModelPlan.swift (pinned packages, mflux==0.23.0 at line 73; fits() at line 57 uses AskModels.memoryShare = 0.6 in Sources/PhotonzCore/AskPlanning.swift:1245) and the server is Contents/Resources/PictureModel/server.py run by AskPictureServer; tracing is Scripts/picture-model/layers.py, whose backdrop clearing is what transparent output would replace. Design doc: docs/design/ask.md, 'Painting a drawing' and 'The picture model's setup'. Do the measuring in a separate scratch Python environment so the shipped picture-tools folder and its installed.txt are untouched.\n\nBudget on 64 GB: 38.4 GB for models; the planning model holds 24.4 GB (27.6 peak), leaving about 14 GB, so 8-bit with the full encoder is expected NOT to fit beside it. That is a prediction to measure, not a fact.\n\nRelated, do not undo: ask-can-make-a-photo-as-well-as-an-illustration (seq 8) wants real photo layers; if this model is the better photo painter, say so in the audit for that task. settings-offers-several-ask-models-with-what-eac (seq 40) is where any extra picture model would be offered as a download. docs/design/separate-into-layers.md deliberately has no content-aware inpainting for Separate's patch fill; any editing this leads to belongs to Ask as an explicit request, never a silent change to Separate.",
@@ -47,6 +47,33 @@
     {
       "t": "2026-10-25T16:01:03.032Z",
       "note": "user, 2026-10-25: move it to the front"
+    },
+    {
+      "t": "2026-10-25T17:08:55.036Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T17:42:42.581Z",
+      "note": "Adversarial pass before measuring: (1) mflux 0.23.0, the version Photonz pins, already ships Qwen-Image-2.1 (generate, edit with up to ten references, --mask-image, ControlNet); --small-text-encoder is NOT in any release, only mflux main since 2026-10-22 (commit 0fea52bada), so it is measured from a second scratch env and labelled unreleased. (2) The edit path quantises the text encoder too (q8 checkpoint 17 GB on disk: 8.8 text encoder, 7.1 transformer, 0.6 VAE), so the research's 27-31 GB peak for 8-bit (encoder never quantised) applies to the txt2img command, not the edit one. (3) ps resident size undercounts MLX's Metal buffers (5 GB shown vs 23 GB footprint at load from bf16), so memory is reported as the kernel's physical footprint (held and lifetime peak) beside the eval's ps reading. (4) The shipped server caps MLX's buffer cache at 1 GB; without that cap the footprint peaked at 53 GB, with it 30.9 GB, so every measurement uses the cap."
+    },
+    {
+      "t": "2026-10-25T17:42:42.653Z",
+      "note": "Baseline for drawings: held-out run 20261024-163432-ask-held-out (Qwen3.8 27B + MTP, Next defaults, Z-Image Turbo: total 57.8, drawing 64.4; drawing lines clean 5.9, designed 5.9, didWhatWasAsked 6.3, crafted 6.0; 155.3 s a drawing request). Only two commits touched Ask since (title bar Ask button, Command K on videos), neither touches drawing. A fresh baseline started 17:14 ran 3 cases per 8 minutes (about 2 h 20 for the set) and was stopped after 6 cases to give the Mac to the Qwen run; it is incomplete and not in the history."
+    },
+    {
+      "t": "2026-10-25T22:16:08.148Z",
+      "note": "runner failed (exit 143, attempt 1): ▸ Bash S=~/Library/Caches/photonz-measure-qwen21; for i in {1..19}; do sleep 30; done; grep -c \"scored\" $S/logs/held…"
+    },
+    {
+      "t": "2026-10-25T22:16:09.071Z",
+      "note": "ran out of turn with 11 file(s) still changed: docs/design/ask.md, docs/design/references/qwen-image-2-1-measure/README.md, docs/design/references/qwen-image-2-1-measure/bench.py, docs/design/references/qwen-image-2-1-measure/beside.sh, docs/design/references/qwen-image-2-1-measure/combine.py, docs/design/references/qwen-image-2-1-measure/foot.py, docs/design/references/qwen-image-2-1-measure/make_edits.py, docs/design/references/qwen-image-2-1-measure/qwen_server.py, docs/design/references/qwen-image-2-1-measure/score_edits.py, docs/design/references/qwen-image-2-1-measure/summarize.py, docs/design/references/qwen-image-2-1-measure/zbench.py. Put aside so the next task started clean; restore with `git stash apply 3583be905c200273d515fdad8594e22ea356f695` before carrying on."
     }
-  ]
+  ],
+  "started": "2026-10-25T17:08:55.035Z",
+  "failures": 1,
+  "lastError": {
+    "at": "2026-10-25T22:16:08.147Z",
+    "exit": 143,
+    "message": "▸ Bash S=~/Library/Caches/photonz-measure-qwen21; for i in {1..19}; do sleep 30; done; grep -c \"scored\" $S/logs/held…"
+  }
 }

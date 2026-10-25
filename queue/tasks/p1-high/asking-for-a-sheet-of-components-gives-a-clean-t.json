@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-10-25T13:26:46.449Z",
+  "updated": "2026-10-25T17:08:54.704Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -251,6 +251,10 @@
     {
       "t": "2026-10-25T13:26:46.448Z",
       "note": "seq 60 -> 140"
+    },
+    {
+      "t": "2026-10-25T17:08:54.703Z",
+      "note": "rotating check 2026-10-25T17:08:54Z, 19 walks run from 103 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-builds-base-components-walk failing."
     }
   ],
   "started": "2026-10-24T11:12:59.292Z",

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-23T22:48:46.880Z",
-  "updated": "2026-10-25T13:26:46.667Z",
+  "updated": "2026-10-25T17:08:54.740Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-23 in queue/audits/2026-10-23-component-sheet-window-sc.png (Scripts/playtest.sh Scripts/playtest/ask-builds-base-components-walk.json --no-build, 1-sheet-sc.png): each copy's chip (CanvasNames.canvasNameChips, drawNameChip in CanvasComponents.swift) is a fixed screen size just above the copy, so at zoom 0.67 it covers about 30 document points, over the header row the table sets 16 points above its first row (AgentComponentSheet.swift, AgentNewComponent.headerGap). Chips of a lower row also sit in the 32 point gap and touch the row above. The earlier layout put state names UNDER looks for this reason. Headers are named <State> Header, row names <Row> Label.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-10-25T13:26:46.666Z",
       "note": "seq 130 -> 210"
+    },
+    {
+      "t": "2026-10-25T17:08:54.739Z",
+      "note": "rotating check 2026-10-25T17:08:54Z, 19 walks run from 103 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-builds-base-components-walk failing."
     }
   ],
   "walks": [
