@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.664Z",
-  "updated": "2026-10-24T23:41:00.125Z",
+  "updated": "2026-10-25T09:41:57.371Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -30,6 +30,35 @@
     {
       "t": "2026-10-24T23:41:00.125Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    },
+    {
+      "t": "2026-10-25T09:02:40.663Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T09:34:02.214Z",
+      "note": "owns these walks: oil-paint-smears-and-ridges-walk"
+    },
+    {
+      "t": "2026-10-25T09:41:45.893Z",
+      "note": "Adversarial review before building: a Photoshop/Procreate painter expects the oil brush to blend with what is on the layer and to run out; the app has no colour reservoir or height channel, so built both in the marking half. Pickup can only read the paint layer the stroke lands on (renderer replays a layer alone; non-destructive rule), so a stroke over a screenshot never smears the screenshot. Load/Smear have no controls yet: that is the settings slice (each-brush-shows-its-own-settings-in-the-tool-op), not a gap in this one."
+    },
+    {
+      "t": "2026-10-25T09:41:45.966Z",
+      "note": "Chose a flat brush footprint (square ends, bell along the stroke) over a round filbert because the round one left visible dab arcs and uneven cover at the edges; chose easing the heading at 0.15 per step because the real window showed scallops from the hand's wobble at 0.6. Chose a TaskLocal PaintRasterizer.plainRound for the round-tip yardstick over keeping .oil as the baseline, since oil now has its own marking."
+    },
+    {
+      "t": "2026-10-25T09:41:46.042Z",
+      "note": "Looked at: oil-sheet (defaults, Smear 0/40/100, Load 20/70/100, mixing, round tip), oil-close at 4x, and the walk's 4-smeared-sc crop. They show opaque streaked strokes with lit ridges, red/black carried past the crossing fading back, dry-brush ends; the round tip row is flat and carries nothing. Left rough: 12 MP paint layer bakes at ~1.15 px/pt, so zoomed past ~140% the stroke softens on release (walk failed at 172% with 1.3%); folded into painting-keeps-up-with-the-pointer-on-a-12-megap with an acceptance item. Other rough lines stay in the audit only."
+    },
+    {
+      "t": "2026-10-25T09:41:57.369Z",
+      "note": "Oil Paint is a flat bristle brush (Sources/PhotonzRender/OilPaint.swift): streaks with lit ridges (ridge contrast 0.041, bar 0.025, plain round 0.001); picks up and carries colour past a crossing, mixing, set by Smear (0.33 at default, bar 0.10; Smear 0 0.015, 100 0.65; round 0.001); runs dry by Load (6/15/21 brush widths at 20/70/100). OilRenderingTests incl. live-equals-landed; full suite green (14527). Walk oil-paint-smears-and-ridges-walk, no flags, two crossing pointer drags, real window captures in queue/audits/2026-10-25-oil-paint.json; 0.6-0.7 ms median per move, held vs landed 0.14%/0.42%. Commit fd563c17."
     }
-  ]
+  ],
+  "started": "2026-10-25T09:02:40.656Z",
+  "walks": [
+    "oil-paint-smears-and-ridges-walk"
+  ],
+  "completed": "2026-10-25T09:41:57.370Z"
 }
