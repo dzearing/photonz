@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T04:54:55.350Z",
-  "updated": "2026-10-25T04:55:12.979Z",
+  "updated": "2026-10-25T06:19:41.676Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"I'd love a better brush selector\" and \"There should also be a better chooser than a dropdown without previewing.\"\n\nToday: Sources/Photonz/ToolSettingsCapsule.swift:211-215 is a plain Picker(\"Medium\") over BrushMedium.allCases. The mocks already designed this: brush-library.html (tiles in the Library group, scope Brushes, groups All, Sketch, Ink, Paint, Airbrush, Texture, Custom; picking repaints the sample stroke and drives Properties) and brush-editor.html. Mocks are the floor (objectives.json principles). The mock's Custom group, importing a brush file and making a brush from a selection are NOT part of this task unless they fall out cheaply; file them as follow-ups if they clear the bar.\n\nContradiction to settle: each-brush-shows-its-own-settings-in-the-tool-op (6.5) asks for 'a Medium dropdown with the seven media'. This task wins on how a brush is picked; 6.5 keeps the per-brush settings, size ring and [ ] keys. A note has been logged on 6.5 saying so.\n\nTrap: rendering tiles must go through the same stroke rendering in PhotonzRender as the canvas (DryMedia and whatever each medium task adds), with a fixed seed per tile so tiles do not shimmer between renders; cache per brush, settings and colour with a limit (objectives: every cache has a limit).",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-25T04:55:12.978Z",
       "note": "seq 3990 -> 6.45"
+    },
+    {
+      "t": "2026-10-25T06:19:41.675Z",
+      "note": "Pencil is a medium now (first in BrushMedium.allCases); its tile needs a sample stroke. PencilSheetTests draws one."
     }
   ]
 }

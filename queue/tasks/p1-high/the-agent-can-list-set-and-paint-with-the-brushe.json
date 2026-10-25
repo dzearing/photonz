@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.009Z",
-  "updated": "2026-10-24T23:41:00.210Z",
+  "updated": "2026-10-25T06:19:41.744Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-24T23:41:00.210Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    },
+    {
+      "t": "2026-10-25T06:19:41.743Z",
+      "note": "Pencil is a medium now; its Hardness setting is a choice (options = pencil grades), and strokes take optional pressure and tilt per sample."
     }
   ]
 }

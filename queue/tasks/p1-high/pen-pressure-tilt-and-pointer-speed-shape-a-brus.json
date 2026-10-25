@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.892Z",
-  "updated": "2026-10-25T05:27:29.131Z",
+  "updated": "2026-10-25T06:19:41.610Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -33,6 +33,10 @@
     {
       "t": "2026-10-25T05:27:29.130Z",
       "note": "From the dry-media blind judges (2026-10-24, five rounds): every judge's top remaining complaint on charcoal, chalk and crayon is one width and one tone end to end, no taper and no pressure-driven dark and light passages. The stroke sheet test (PHOTONZ_STROKE_SHEET=<dir> Scripts/test.sh --filter StrokeSheet) is the place to show it."
+    },
+    {
+      "t": "2026-10-25T06:19:41.608Z",
+      "note": "The plumbing exists since the pencil (2026-10-24): BrushDab.pressure/.tilt eased between samples, BrushDynamics.mousePressure (touch-down settle + speed thinning, no taper out yet). Only DryLook.pressed (pencil) reads them; this task maps them for the other media and adds the taper. Walks can hold a pen with the new 'pen' step."
     }
   ]
 }

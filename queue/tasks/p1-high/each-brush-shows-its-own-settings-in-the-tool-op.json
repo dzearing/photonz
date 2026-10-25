@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.779Z",
-  "updated": "2026-10-25T04:55:13.130Z",
+  "updated": "2026-10-25T06:19:41.541Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -37,6 +37,10 @@
     {
       "t": "2026-10-25T04:55:13.129Z",
       "note": "The user, 2026-10-24: wants 'a better chooser than a dropdown without previewing'. The Medium dropdown in this task's first acceptance item is superseded by brushes-are-picked-from-a-library-of-tiles-that (seq 6.45, built to brush-library.html): do NOT build or keep the dropdown. This task keeps per-brush settings, the panel's full list, the size ring and [ ]. The user also said each brush should have knobs specific to it ('airbrush might have some about the spray intencity or spread'): every medium's own settings must be the ones that medium needs, each visibly changing the stroke."
+    },
+    {
+      "t": "2026-10-25T06:19:41.540Z",
+      "note": "Pencil (added 2026-10-24) has three own settings: Hardness (a choice of grades 4H..8B, options in BrushSettingSpec, so a dropdown), Grain, Tilt Shading. The medium test now allows more than two own settings; the capsule should carry Hardness and Grain, the panel all three."
     }
   ]
 }

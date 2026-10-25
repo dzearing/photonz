@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.15,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T04:54:55.228Z",
-  "updated": "2026-10-25T04:55:12.822Z",
+  "updated": "2026-10-25T06:20:03.886Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"there is no pencil.\"\n\nThe original brush ask listed charcoal, chalk, oil, watercolour, marker, crayon and airbrush (BrushMedium in Sources/PhotonzCore/Brush.swift:13), so pencil is new. Build it on the dry media engine that charcoal, chalk and crayon use (Sources/PhotonzRender/DryMedia.swift, PaperGrain.swift): it is the same grain-catching marking with a thin hard tip, so it should be a new parameter set there, not a second engine. Adding a case to BrushMedium touches every switch over it (settings, default size, DryMedia) and the MCP brush list; a stroke saved with a medium must still load.\n\nRelated: charcoal-chalk-and-crayon-catch-on-a-paper-grain (6.1) is back to pending because a model judge could not tell charcoal from chalk; pencil must read as different from both. The brush chooser task (filed the same day) shows a sample stroke per brush, so pencil needs one.",
@@ -31,6 +31,35 @@
     {
       "t": "2026-10-25T04:55:12.821Z",
       "note": "seq 3980 -> 6.15"
+    },
+    {
+      "t": "2026-10-25T05:37:28.088Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T06:11:03.920Z",
+      "note": "owns these walks: pencil-draws-and-shades-walk"
+    },
+    {
+      "t": "2026-10-25T06:19:41.809Z",
+      "note": "Adversarial pass before building: a mouse has no tilt, and every modifier on a brush drag is already Photoshop's (Shift line, Option colour pick, Command move, Control-Option resize). Chose pen tilt only, no mouse modifier, because UX-PATTERNS §7 gives those keys to Photoshop; walks use a new 'pen' step. Chose Pencil first in the Medium menu over last because sketching media lead in Procreate and the brush-library mock. Chose Hardness as grades (a dropdown) over a percent because grade names are what a pencil user knows."
+    },
+    {
+      "t": "2026-10-25T06:19:41.875Z",
+      "note": "Built: BrushMedium.pencil; BrushDab pressure/tilt + BrushDynamics.mousePressure (core, TDD); pencil DryLook (grade width/darkness, pressed dabs, side-of-lead patch, graphite sheen); PaintMeasures.lineProfile + bars; PencilRenderingTests, PencilSheetTests; walk step 'pen' and brush move timings; walk pencil-draws-and-shades-walk (12 MP, no flags, Medium menu clicked at its face). Full suite 14465 tests green; both older brush walks green."
+    },
+    {
+      "t": "2026-10-25T06:19:41.942Z",
+      "note": "Looked at every shipped picture: walk captures show a thin line, a darker pen line and a broad grainy shading patch; the hardness sheet widens and darkens 4H to 8B; the tilt sheet broadens with Tilt Shading; the grain sheet goes from solid to toothy; the pressure sheet runs light to hard. Rough items in the audit are covered by open tasks (settings on screen, chooser, MCP, mouse taper). Left rough, not filed: tilted shading reads a little speckly rather than a smooth grainy tone; only a pen user sees it and the umbrella's blind pass will judge it."
+    },
+    {
+      "t": "2026-10-25T06:20:03.884Z",
+      "note": "Pencil is the first brush in the Medium menu: graphite on the shared paper grain, Hardness 4H to 8B (8B is twice as wide as 2H and 2.4 times as dark), darker with pen pressure (a mouse gets a simulated press), and broad grainy shading from a leaning pen (Tilt Shading). Piled passes go silver, not black. Core and render tests are written first, with measured bars the round tip fails. Walk pencil-draws-and-shades-walk runs with no flags on a 12 MP canvas: 0.4 ms median per move for a line, 2.0 ms when shading. Blind test: two model judges named the pencil row and told it from charcoal. Full suite green (14465). Audit queue/audits/2026-10-24-pencil.json. Commit dfa0c350."
     }
-  ]
+  ],
+  "started": "2026-10-25T05:37:28.086Z",
+  "walks": [
+    "pencil-draws-and-shades-walk"
+  ],
+  "completed": "2026-10-25T06:20:03.885Z"
 }
