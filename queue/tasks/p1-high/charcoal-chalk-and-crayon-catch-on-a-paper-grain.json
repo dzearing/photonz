@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.319Z",
-  "updated": "2026-10-24T23:41:00.041Z",
+  "updated": "2026-10-25T01:09:14.108Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -30,6 +30,11 @@
     {
       "t": "2026-10-24T23:41:00.039Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    },
+    {
+      "t": "2026-10-25T01:09:14.102Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-10-25T01:09:14.101Z"
 }

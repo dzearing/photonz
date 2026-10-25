@@ -1,0 +1,35 @@
+{
+  "id": "ask-is-command-k-on-videos-as-well-as-pictures-a",
+  "title": "Ask is Command K on videos as well as pictures, and its sheen plays on every hover",
+  "goal": "Two fixes to the Ask button. First, Command K opens Ask everywhere, on a video as well as a picture, and the button shows the key in both. Today a video gives Command K to splitting a clip at the playhead instead. Second, the light sheen that sweeps across the Ask button when the pointer arrives plays every time the pointer comes back, not only the first time.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T01:11:30.053Z",
+  "updated": "2026-10-25T01:11:33.940Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-24: 'make sure that ask button has the same keystroke (cmd-k) on both image and video!. Also, when I hover over it the first time it has a nice sheen animation, but subsequent hovers do not repeat the sheen'.\n\nThe sheen is a miss on the just-shipped task the-ask-button-is-the-design-s-hero-button-a-vio (done 2026-10-24, commit 224236f2), whose acceptance said one sweep per hover.\n\nSheen SUSPECT, not reproduced: Sources/Photonz/DesignSystem/HeroButtonStyle.swift ~145 drives the band with .keyframeAnimator(initialValue: 0.0, trigger: sweeps) and a single LinearKeyframe(HeroSheen.duration). On a new trigger a keyframe animator starts from its CURRENT value, which after the first sweep is already HeroSheen.duration, so the second run animates duration to duration and nothing moves. A MoveKeyframe(0) first in the track is the likely fix. Other suspect: the ButtonStyle body's @State (hovering, sweeps) being reset or the hover callback not firing again; check onHover actually fires on re-entry (it is wrapped by playtestHover, Sources/Photonz/Playtest/PlaytestPointer.swift:94). Reproduce before fixing.\n\nCommand K: Sources/Photonz/EditorCommands.swift:524-533 (Ask item, keyboardShortcut nil when timed) and :789-795 (Split at Playhead takes Command K on the timeline, B off it); Sources/Photonz/Agent/AskViews.swift:65,69 hide the key on a video. docs/design/mocks/shared/UX-PATTERNS.md:2134 lists '⌘K split' among the video keys and must be updated; also the earlier task on-a-video-the-ask-button-never-sits-on-top-of-t. The user's explicit request overrides Premiere parity for this one key.",
+  "acceptance": [
+    "On a video at Next defaults Command K opens Ask, the title bar button shows the key as it does on a picture, and its tooltip names it; the Edit menu's Ask item carries Command K in both",
+    "Split at Playhead moves to another key that conflicts with nothing in the video editor's menus or the timeline's single-key tools; the runner picks it from what Premiere or Final Cut give the same command, checks every shortcut in the app for a clash (a test lists them), and writes the choice and why in docs/design and the task log; the timeline's own K without Command (shuttle) is untouched",
+    "Reproduced first: hover the Ask button, leave, hover again; the second and later hovers show no sweep today. Recorded in the log before fixing",
+    "After the fix, every fresh arrival of the pointer sweeps the sheen once (tested at least five times in a row, including arriving again before the previous sweep finished), it still does not repeat while the pointer stays, and Reduce Motion still skips it",
+    "A reel under queue/audits/ shows three hovers in a row each sweeping, with a contact sheet; the frames prove the band crosses the button on the third hover",
+    "Walks that press Command K on a video, or expect Split at Playhead on it, are updated and pass (Scripts/playtest-all.sh --no-build on the touched walks)",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T01:11:30.055Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-25T01:11:33.939Z",
+      "note": "seq 167.5 -> 4"
+    }
+  ]
+}
