@@ -149,11 +149,40 @@ struct Scatter {
 
 // MARK: - What makes each medium itself
 
+/// A fixed value in 0...1 for a whole-number point of a plane, from `salt`.
+@inline(__always) func hashUnit(_ i: Int, _ j: Int, _ salt: UInt32) -> Float {
+    var h = UInt64(bitPattern: Int64(i)) &* 0x9E37_79B9_7F4A_7C15
+    h ^= UInt64(bitPattern: Int64(j)) &* 0xC2B2_AE3D_27D4_EB4F
+    h ^= UInt64(salt) &* 0x1656_67B1_9E37_79F9
+    h ^= h >> 31
+    h &*= 0xBF58_476D_1CE4_E5B9
+    h ^= h >> 29
+    return Float(h >> 40) / Float(1 << 24)
+}
+
+/// Smooth value noise over a plane, 0...1, one lattice point per whole unit.
+@inline(__always) func valueNoise(_ u: Double, _ v: Double, _ salt: UInt32) -> Float {
+    let fu = u.rounded(.down), fv = v.rounded(.down)
+    let i = Int(fu), j = Int(fv)
+    var tx = Float(u - fu), ty = Float(v - fv)
+    tx = tx * tx * (3 - 2 * tx)
+    ty = ty * ty * (3 - 2 * ty)
+    let a = hashUnit(i, j, salt), b = hashUnit(i + 1, j, salt)
+    let c = hashUnit(i, j + 1, salt), d = hashUnit(i + 1, j + 1, salt)
+    return (a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty
+}
+
 /// The numbers that make charcoal, chalk and crayon three different media
 /// (the design doc's table). Nil for the media that are not dry.
+///
+/// What tells them apart, at a glance: charcoal SHADES (a smoky grey that
+/// fades out softly, fine tooth, dust); chalk is POWDER (opaque where it
+/// lands, bare where it skips, many small crisp flecks, dry streaks that
+/// break along the drag, crumbs at a ragged edge); crayon is WAX (a clean,
+/// slightly wavering edge, colour on the high tooth only, so an even fine
+/// pattern of bare pits, never fading).
 struct DryLook {
-    /// How stretched the paper is under this medium: chalk sits on a coarser
-    /// pastel tooth.
+    /// How stretched the paper is under this medium.
     var coarseness: Double
     /// How far the paper breaks the tip's edge, as a fraction of its radius,
     /// and how coarse that breakage is.
@@ -168,22 +197,30 @@ struct DryLook {
     /// 30 per cent of the paper bare.
     var reach: Float
     /// How sharply pigment stops at the tooth: wide for dusty charcoal,
-    /// narrow for wax.
+    /// narrow for powder and wax.
     var softness: Float
     /// The most a stroke lays down at a pixel.
     var strength: Float
     /// The Grain setting, 0...1: none paints the whole tip, all of it paints
     /// only what the paper's tooth catches.
     var grain: Float
+    /// Whether what the paper does not catch is still shaded in (charcoal's
+    /// smoky wash, less of it the more Grain), or simply left bare: powder and
+    /// wax are there or not, and Grain says how far into the paper they reach.
+    var wash: Bool
     /// How strongly a stroke drags its own deposit along with it (the Smudge
     /// setting), per dab.
     var drag: Float
-    /// Whether loose dust falls beside the stroke.
-    var dusty: Bool
-    /// How deeply the stick's own uneven face streaks the stroke along its
-    /// length (at full Grain), and how many streaks run across the tip.
+    /// Loose specks beside the stroke: soft charcoal dust, or crisp chalk
+    /// crumbs that fall at the edge.
+    var specks: Specks
+    /// How deeply the stick's own uneven face streaks the stroke (at full
+    /// Grain), how many streaks run across the tip, and how far, in points,
+    /// a streak runs before the face meets the paper differently. Charcoal's
+    /// run the whole stroke; chalk's skip and break every few points.
     var streaks: Float
     var streakCount: Float
+    var streakRun: Double
     /// How much the stick's press drifts along the stroke, lighter and darker
     /// passages, as a fraction of a full press.
     var toneSwing: Float
@@ -192,44 +229,61 @@ struct DryLook {
     /// rather than round ones.
     var tipLength: Float
     /// How far, in points, the stick keeps laying pigment after it catches a
-    /// ridge of the paper: the short streaks that run along a drag. Wax smears
-    /// furthest, charcoal least.
+    /// ridge of the paper: the short smears that run along a drag.
     var catchRun: Double
+    /// Chalk's powder: how much a fine grit of its own, `powderSize` points
+    /// across, breaks up the tooth it settles on, so it lands as many small
+    /// crisp flecks rather than the paper's larger dimples.
+    var powder: Float
+    var powderSize: Double
+    /// How far the stroke's edge wavers in and out as the hand moves, as a
+    /// fraction of the radius, over `wobbleRun` points.
+    var wobble: Float
+    var wobbleRun: Double
+
+    enum Specks { case none, dust, crumbs }
 
     init?(_ settings: BrushSettings) {
         let grain = Float(settings.value("grain") / 100)
+        // Squared, so the low default only softens and the top end drags hard.
+        let smudge = pow(Float(settings.value("smudge") / 100), 2) * 0.25
         switch settings.medium {
         case .charcoal:
-            // Soft and dusty: a wide fade, a grey body, tooth that shades
-            // rather than cuts, loose dust beside it.
-            self.init(coarseness: 0.8, edgeBreak: 0.3, edgeCoarseness: 1.5, inner: 0.3, outer: 1,
-                      reach: 0.84, softness: 0.22, strength: 0.92, grain: grain,
-                      drag: Float(settings.value("smudge") / 100) * 0.2, dusty: true,
-                      streaks: 0.6, streakCount: 13, toneSwing: 0.3, tipLength: 1, catchRun: 2)
+            // Velvety and smoky: a dense dark core that fades out softly over
+            // most of its radius, the tooth shading its tone rather than
+            // cutting it, long faint streaks, loose dust beside it.
+            self.init(coarseness: 0.65, edgeBreak: 0.25, edgeCoarseness: 0.7, inner: 0.45, outer: 1.1,
+                      reach: 0.64, softness: 0.12, strength: 1, grain: grain, wash: true,
+                      drag: smudge, specks: .dust, streaks: 0.15, streakCount: 14, streakRun: 60, toneSwing: 0.1,
+                      tipLength: 1, catchRun: 1.3, powder: 0, powderSize: 1, wobble: 0.06, wobbleRun: 30)
         case .chalk:
-            // Coarse and opaque: a larger tooth, a ragged edge, full strength.
-            self.init(coarseness: 1.8, edgeBreak: 0.5, edgeCoarseness: 2.5, inner: 0.65, outer: 1,
-                      reach: 0.78, softness: 0.08, strength: 1, grain: grain,
-                      drag: Float(settings.value("smudge") / 100) * 0.2, dusty: false,
-                      streaks: 0.3, streakCount: 5, toneSwing: 0.2, tipLength: 1, catchRun: 4.5)
+            // Powder: a lighter film than charcoal's carbon (chalk is mostly
+            // white binder), even where it lands and bare where it skips, a
+            // fine grit of crisp flecks all through it, a ragged edge that
+            // sheds crumbs.
+            self.init(coarseness: 0.9, edgeBreak: 0.5, edgeCoarseness: 1.4, inner: 0.6, outer: 0.85,
+                      reach: 0.72, softness: 0.04, strength: 0.8, grain: grain, wash: false,
+                      drag: smudge, specks: .crumbs, streaks: 0.6, streakCount: 13, streakRun: 14, toneSwing: 0.3,
+                      tipLength: 1, catchRun: 3, powder: 0.75, powderSize: 0.65, wobble: 0.1, wobbleRun: 12)
         case .crayon:
-            // Waxy: a hard edge, colour only on the high tooth, bare paper in
-            // the valleys, striations along the stroke. More wax is a firmer
-            // press: it reaches further into the paper.
+            // Wax: a hard edge that wavers with the hand, colour only on the
+            // high tooth, an even fine pattern of bare pits, faint striations.
+            // More wax is a firmer press: it reaches further into the paper.
             let wax = Float(settings.value("wax") / 100)
-            self.init(coarseness: 1.2, edgeBreak: 0.12, edgeCoarseness: 1, inner: 0.86, outer: 0.98,
-                      reach: 0.6 + 0.35 * wax, softness: 0.05, strength: 1, grain: min(1, grain * 1.25),
-                      drag: 0, dusty: false, streaks: 0.8, streakCount: 16, toneSwing: 0.15,
-                      tipLength: 0.55, catchRun: 7)
+            self.init(coarseness: 0.9, edgeBreak: 0.1, edgeCoarseness: 1, inner: 0.84, outer: 0.97,
+                      reach: 0.47 + 0.3 * wax, softness: 0.05, strength: 0.95, grain: grain, wash: false,
+                      drag: 0, specks: .none, streaks: 0.5, streakCount: 11, streakRun: 30, toneSwing: 0.12,
+                      tipLength: 0.55, catchRun: 4, powder: 0, powderSize: 1, wobble: 0.16, wobbleRun: 10)
         case .marker, .airbrush, .oil, .watercolour:
             return nil
         }
     }
 
     private init(coarseness: Double, edgeBreak: Float, edgeCoarseness: Double, inner: Float, outer: Float,
-                 reach: Float, softness: Float, strength: Float, grain: Float, drag: Float, dusty: Bool,
-                 streaks: Float, streakCount: Float, toneSwing: Float, tipLength: Float,
-                 catchRun: Double) {
+                 reach: Float, softness: Float, strength: Float, grain: Float, wash: Bool, drag: Float,
+                 specks: Specks,
+                 streaks: Float, streakCount: Float, streakRun: Double, toneSwing: Float, tipLength: Float,
+                 catchRun: Double, powder: Float, powderSize: Double, wobble: Float, wobbleRun: Double) {
         self.coarseness = coarseness
         self.edgeBreak = edgeBreak
         self.edgeCoarseness = edgeCoarseness
@@ -239,21 +293,50 @@ struct DryLook {
         self.softness = softness
         self.strength = strength
         self.grain = grain
+        self.wash = wash
         self.drag = drag
-        self.dusty = dusty
+        self.specks = specks
         self.streaks = streaks
         self.streakCount = streakCount
+        self.streakRun = streakRun
         self.toneSwing = toneSwing
         self.tipLength = tipLength
         self.catchRun = catchRun
+        self.powder = powder
+        self.powderSize = powderSize
+        self.wobble = wobble
+        self.wobbleRun = wobbleRun
     }
 
     /// What the tip lays down at a pixel the tip covers by `tip` (0...1),
     /// over paper of height `paper`.
     @inline(__always) func deposit(tip: Float, paper: Float) -> Float {
-        let threshold = 1 - tip * reach
+        guard wash else {
+            // No Grain reaches past the deepest pit even at the stroke's
+            // lightest passage.
+            let threshold = 1 - tip * (reach + (1 - grain) * (1 - grain) * (1.4 - reach))
+            return strength * smoothstep(threshold - softness, threshold + softness, paper)
+        }
+        // The tooth is caught to the same depth right across the tip, and the
+        // tip's own fall-off shades over it: a smoky edge with the paper's
+        // texture in it, not a ring of specks.
+        let threshold = 1 - reach
         let caught = smoothstep(threshold - softness, threshold + softness, paper)
-        return strength * (tip * (1 - grain) + caught * grain)
+        // How much the pits are still shaded in: a little at the default
+        // Grain, all of it with none.
+        let shade = (1 - grain) * (1 - grain)
+        return strength * tip * (shade + (1 - shade) * caught)
+    }
+
+    /// The paper as this medium meets it, at a point of the layer: the shared
+    /// tooth, with chalk's own grit worked in. Fixed to the layer like the
+    /// paper itself, so two passes catch the same flecks.
+    @inline(__always) func paper(_ tile: UnsafeBufferPointer<Float>, x: Double, y: Double) -> Float {
+        let tooth = PaperGrain.height(tile, x: x, y: y, coarseness: coarseness)
+        guard powder > 0 else { return tooth }
+        let grit = valueNoise(x / powderSize, y / powderSize, 0xC4A1)
+        // Spread back out to about the paper's own range.
+        return min(1, max(0, 0.5 + (tooth - 0.5) * (1 - powder) + (grit - 0.5) * powder * 1.5))
     }
 }
 
@@ -273,8 +356,8 @@ struct DryStroke {
     /// What the stroke is carrying from the dab before, for its own Smudge.
     private var carried: [Float] = []
     private var carriedSide = 0
-    /// The stick's face: how hard each part of it, across the tip, presses.
-    private let face: [Float]
+    /// This stroke's stick: its face and its hand, the same along the stroke.
+    private let stick: UInt32
     /// How the press drifts along the stroke.
     private let drift: [Float]
     private var lastCentre: CGPoint?
@@ -289,7 +372,7 @@ struct DryStroke {
         pixelsPerPoint = hypot(toPixels.a, toPixels.b)
         field = CoverageField(limit: limit)
         var scatter = Scatter(seed: seed)
-        face = (0..<64).map { _ in scatter.unit() }
+        stick = UInt32(scatter.unit() * Float(1 << 20))
         drift = (0..<64).map { _ in scatter.unit() }
         self.scatter = scatter
     }
@@ -301,35 +384,53 @@ struct DryStroke {
         return a + (b - a) * t * t * (3 - 2 * t)
     }
 
-    /// How hard the stick presses at `across` (-1...1 from one side of the
-    /// tip to the other), 0...1: one stroke's streaks, the same all along it.
-    @inline(__always) private func pressure(across: Float) -> Float {
-        let u = (across + 1) * 0.5 * look.streakCount + 0.5
-        let k = Int(u.rounded(.down)), t = u - Float(k)
-        let a = face[((k % 64) + 64) % 64], b = face[(((k + 1) % 64) + 64) % 64]
-        return smoothstep(0.2, 0.8, a + (b - a) * t * t * (3 - 2 * t))
+    /// How hard the stick's face presses at `across` (-1...1 from one side of
+    /// the tip to the other) when it is `along` points down the stroke, 0...1:
+    /// streaks that run along the drag and, for chalk, skip and break.
+    @inline(__always) private func pressure(across: Float, along: Double) -> Float {
+        let u = Double((across + 1) * 0.5 * look.streakCount)
+        let v = along / look.streakRun
+        return smoothstep(0.25, 0.75, valueNoise(u, v, stick))
     }
 
     /// Lays one dab down and hands back the pixels it touched.
     mutating func mark(_ dab: BrushDab) -> PixelBox {
         let radius = max(dab.diameter / 2, 0.25)
         let centre = dab.center.applying(toPixels)
-        let dustReach: CGFloat = look.dusty ? radius * 1.7 + 1 : 0
-        let reach = max(radius * CGFloat(1 + look.edgeBreak / 2), dustReach) * pixelsPerPoint + 1
+        let speckReach: CGFloat
+        switch look.specks {
+        case .none: speckReach = 0
+        case .dust: speckReach = radius * 1.7 + 1
+        case .crumbs: speckReach = radius * 1.35 + 1.5
+        }
+        let reach = max(radius * CGFloat(1 + look.edgeBreak / 2 + look.wobble), speckReach) * pixelsPerPoint + 1
         let box = PixelBox.around(centre, radius: reach).intersection(field.limit)
         // Rolled whatever happens, so the live stroke and the landed one draw
-        // the same dust even when a dab falls outside the bitmap.
+        // the same specks even when a dab falls outside the bitmap.
         var specks: [(CGPoint, CGFloat, Float)] = []
-        if look.dusty {
+        switch look.specks {
+        case .none:
+            break
+        case .dust:
             for _ in 0..<2 {
                 let roll = scatter.unit(), angle = scatter.unit() * 2 * .pi
                 let distance = radius * CGFloat(0.85 + 0.75 * scatter.unit())
-                let size = CGFloat(0.45 + 0.55 * scatter.unit())
-                let amount = 0.3 + 0.5 * scatter.unit()
-                if roll < 0.45 {
+                let size = CGFloat(0.35 + 0.45 * scatter.unit())
+                let amount = 0.25 + 0.4 * scatter.unit()
+                if roll < 0.3 {
                     specks.append((CGPoint(x: dab.center.x + cos(CGFloat(angle)) * distance,
                                            y: dab.center.y + sin(CGFloat(angle)) * distance), size, amount))
                 }
+            }
+        case .crumbs:
+            // Chalk breaks off at its edge: fewer, crisp, close to the stroke.
+            let roll = scatter.unit(), angle = scatter.unit() * 2 * .pi
+            let distance = radius * CGFloat(0.95 + 0.3 * scatter.unit())
+            let size = CGFloat(0.35 + 0.6 * scatter.unit())
+            let amount = 0.85 + 0.15 * scatter.unit()
+            if roll < 0.5 {
+                specks.append((CGPoint(x: dab.center.x + cos(CGFloat(angle)) * distance,
+                                       y: dab.center.y + sin(CGFloat(angle)) * distance), size, amount))
             }
         }
         // Which way the stick is travelling, so its streaks run along the
@@ -346,42 +447,53 @@ struct DryStroke {
         guard !box.isEmpty else { return .empty }
         field.ensure(box)
 
-        let tipReach = Float(1 + look.edgeBreak)
+        let tipReach = Float(1 + look.edgeBreak + look.wobble)
         let streaking = look.streaks * look.grain
-        // Sampled about every three quarters of a point, so the run reads as
-        // one streak rather than stuttered copies.
-        let catchSteps = max(1, Int((look.catchRun / 0.75).rounded()))
-        let catchSpread = Float(1 + 0.55 * look.catchRun)
-        // The tip's own pixels: the dust has boxes of its own.
+        // The run is read every pixel, so a pit narrower than a step cannot
+        // leave a comb of copies behind it.
+        let catchSteps = max(1, Int((look.catchRun * Double(pixelsPerPoint)).rounded()))
+        let catchSpread = Float(1 + 0.4 * look.catchRun)
+        // The tip's own pixels: the specks have boxes of their own.
         let tipBox = PixelBox.around(centre, radius: radius * CGFloat(tipReach) * pixelsPerPoint + 1)
             .intersection(box)
         guard !tipBox.isEmpty else {
-            for (at, size, amount) in specks { dust(at: at, size: size, amount: amount) }
+            for (at, size, amount) in specks { speck(at: at, size: size, amount: amount) }
             return box
         }
         PaperGrain.tile.withUnsafeBufferPointer { paperTile in
         for y in tipBox.minY..<tipBox.maxY {
             for x in tipBox.minX..<tipBox.maxX {
                 let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5).applying(toPoints)
-                let along = Float(((p.x - dab.center.x) * heading.dx + (p.y - dab.center.y) * heading.dy)
-                                  / radius) / look.tipLength
-                let side = Float(((p.x - dab.center.x) * -heading.dy + (p.y - dab.center.y) * heading.dx)
+                let ahead = (p.x - dab.center.x) * heading.dx + (p.y - dab.center.y) * heading.dy
+                let along = Float(ahead / radius) / look.tipLength
+                var side = Float(((p.x - dab.center.x) * -heading.dy + (p.y - dab.center.y) * heading.dx)
                                  / radius)
+                // How far down the stroke this pixel is: the stick's face and
+                // the hand's waver are read there, so they follow the curve.
+                let down = Double(travelled + ahead)
+                if look.wobble > 0 {
+                    // The hand wavers: the whole edge moves in and out
+                    // together, slowly, never in step on both sides.
+                    let near = side > 0 ? valueNoise(down / look.wobbleRun, 3.5, stick &+ 7)
+                                        : valueNoise(down / look.wobbleRun, 9.5, stick &+ 7)
+                    side /= 1 + look.wobble * (near * 2 - 1)
+                }
                 let r = (along * along + side * side).squareRoot()
                 guard r < tipReach else { continue }
                 let edge = PaperGrain.height(paperTile, x: Double(p.x) + 41.3, y: Double(p.y) + 17.9,
                                              coarseness: look.edgeCoarseness)
                 var tip = 1 - smoothstep(look.inner, look.outer, r + look.edgeBreak * (edge - 0.5))
                 guard tip > 0 else { continue }
-                if streaking > 0 { tip *= 1 - streaking * (1 - pressure(across: side)) }
+                if streaking > 0 {
+                    tip *= 1 - streaking * (1 - pressure(across: max(-1, min(1, side)), along: down))
+                }
                 tip *= press
                 // The highest ridge the stick met over its last short run.
                 var paper: Float = 0
                 for k in 0...catchSteps {
-                    let back = look.catchRun * Double(k) / Double(max(catchSteps, 1))
-                    paper = max(paper, PaperGrain.height(paperTile, x: Double(p.x) - Double(heading.dx) * back,
-                                                         y: Double(p.y) - Double(heading.dy) * back,
-                                                         coarseness: look.coarseness))
+                    let back = look.catchRun * Double(k) / Double(catchSteps)
+                    paper = max(paper, look.paper(paperTile, x: Double(p.x) - Double(heading.dx) * back,
+                                                  y: Double(p.y) - Double(heading.dy) * back))
                 }
                 // The highest of several heights runs high; spread it back out
                 // so a press reaches about the same share of the paper.
@@ -392,24 +504,27 @@ struct DryStroke {
             }
         }
         }
-        for (at, size, amount) in specks { dust(at: at, size: size, amount: amount) }
+        for (at, size, amount) in specks { speck(at: at, size: size, amount: amount) }
         if look.drag > 0 { drag(at: centre, radius: radius * pixelsPerPoint) }
         return box
     }
 
-    /// One fleck of loose charcoal, caught by the paper like the rest.
-    private mutating func dust(at point: CGPoint, size: CGFloat, amount: Float) {
+    /// One fleck beside the stroke, caught by the paper like the rest: soft
+    /// charcoal dust, or a crisp crumb of chalk.
+    private mutating func speck(at point: CGPoint, size: CGFloat, amount: Float) {
         let centre = point.applying(toPixels)
         let reach = size * pixelsPerPoint + 1
         let box = PixelBox.around(centre, radius: reach).intersection(field.box)
         guard !box.isEmpty else { return }
+        let crisp = look.specks == .crumbs
         for y in box.minY..<box.maxY {
             for x in box.minX..<box.maxX {
                 let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5).applying(toPoints)
                 let d = Float(hypot(p.x - point.x, p.y - point.y) / size)
                 guard d < 1 else { continue }
                 let paper = PaperGrain.height(x: Double(p.x), y: Double(p.y), coarseness: look.coarseness)
-                let laid = amount * (1 - smoothstep(0.4, 1, d)) * (paper > 0.35 ? 1 : 0.35) * look.strength
+                let shape = crisp ? 1 - smoothstep(0.75, 1, d) : 1 - smoothstep(0.4, 1, d)
+                let laid = amount * shape * (paper > 0.35 ? 1 : 0.35) * look.strength
                 if laid > field.value(x, y) { field.set(x, y, laid) }
             }
         }
@@ -505,6 +620,7 @@ struct DryStroke {
 /// thing over the composite as the landed stroke shows inside the layer.
 struct SmudgeStroke {
     let toPixels: CGAffineTransform
+    let toPoints: CGAffineTransform
     let pixelsPerPoint: CGFloat
     let limit: PixelBox
     /// How much of what it carries it presses down per dab.
@@ -514,6 +630,7 @@ struct SmudgeStroke {
 
     init(settings: BrushSettings, toPixels: CGAffineTransform, limit: PixelBox) {
         self.toPixels = toPixels
+        toPoints = toPixels.inverted()
         pixelsPerPoint = hypot(toPixels.a, toPixels.b)
         self.limit = limit
         strength = 0.6 * Float(settings.opacity / 100)
@@ -554,7 +671,12 @@ struct SmudgeStroke {
                     // A finger spreads what it carries thinner than it found it.
                     let spread = heldAlpha * 0.65
                     if heldAlpha > 0.004, spread > hereAlpha, hereAlpha < 1 {
-                        let w = 1 - smoothstep(0, 1, d)
+                        // What the finger presses down still sits on the
+                        // paper: more on the tooth, less in the pits, so a
+                        // smear keeps the paper's texture.
+                        let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5).applying(toPoints)
+                        let tooth = PaperGrain.height(x: Double(p.x), y: Double(p.y), coarseness: 0.65)
+                        let w = (1 - smoothstep(0, 1, d)) * (0.15 + 0.85 * smoothstep(0.25, 0.8, tooth))
                         let wanted = hereAlpha + strength * w * (spread - hereAlpha)
                         let laid = min(1, max(0, (wanted - hereAlpha) / (1 - hereAlpha)))
                         if laid > 0 {

@@ -194,11 +194,25 @@ an anchor and the line re-paints.
   into a coverage field: a tip whose edge the paper breaks, streaked across its
   width by the stick's uneven face (so the marks run along the drag), pressed
   lighter and darker along its length, settling only on paper above a height
-  the press reaches. Charcoal: soft fall-off, grey body, fine tooth, dust beside
-  the stroke. Chalk: coarse tooth, ragged edge, full strength. Crayon: hard
-  edge, bare paper in the pits, strong striations, a worn flat tip that leaves
-  short squared ends. Grain 0 paints the whole tip; the streaks scale with Grain
+  the press reaches. Grain 0 paints the whole tip; the streaks scale with Grain
   too, since they are the stick's texture.
+- **What tells the three apart** (settled by a blind test, 2026-10-24: model
+  judges beside reference photos, order shuffled every round). Charcoal
+  SHADES: a dense, velvety dark core that fades out softly over the outer half
+  of its radius, the tooth caught to the same depth right across the tip and
+  the fall-off shaded over it (a smoky edge, not a ring of specks), long faint
+  streaks, fine dust beside it. Chalk is POWDER: a lighter film than
+  charcoal's carbon (chalk is mostly white binder; every judge read the darker
+  of the two as charcoal), there or bare, never half-tone, a fine grit of its
+  own worked into the tooth so it lands as many small crisp flecks, dry streaks
+  that break along the drag, a ragged edge that sheds crisp crumbs. Crayon is
+  WAX: a hard edge that wavers with the hand, colour only on the high tooth,
+  skips smeared along the drag, a worn flat tip with short squared ends. For
+  chalk and crayon Grain says how far into the paper they reach; for charcoal
+  it says how much of the pits stay shaded. Tests: `halfToneShare`,
+  `streakAgreement`, `widthWaver` in `PaintMeasures`.
+- **A smudge keeps the paper's tooth**: what the finger presses down sits more
+  on the tooth than in the pits (`PaintMeasures.unevenness` in the smear).
 - **Smudge is a mode in the capsule, and it only adds.** The tool options capsule
   carries Medium (a dropdown, all seven) and Mode (Paint | Smudge, a segmented
   control). A smudge stroke is stored on the paint layer it drags
@@ -206,7 +220,8 @@ an anchor and the line re-paints.
   unlocked paint layer under the pointer, and never a picture or a new layer,
   so a smudge on bare screenshot does nothing and adds no undo step. The finger
   carries a blurred patch of what it passed over and spreads it thinner into
-  lighter places; it never scrapes paint off. That is what lets the live overlay
+  lighter places, more on the paper's tooth than in its pits; it never scrapes
+  paint off. That is what lets the live overlay
   be honest: what it lays over the paint, laid over an empty overlay, shows the
   same thing as the landed stroke. Real smudging also lifts; that is a known
   departure, written here, not a bug.
@@ -215,7 +230,8 @@ an anchor and the line re-paints.
 - **Measured bar.** `PaintMeasures.interiorGapFraction`: the share of a straight
   stroke's core (within a third of its radius of the line) left under half its
   strongest coverage. The soft round tip scores 0; the bar is 0.12; charcoal,
-  chalk and crayon at their defaults score about 0.31, 0.40 and 0.47.
+  chalk and crayon at their defaults score about 0.14, 0.38 and 0.25 on the
+  stroke sheet.
 - **Live and landed share `LiveMarker`.** The canvas hands it the view's pixels
   as a transform from the landing layer's points, so the live stroke walks the
   same layer-local samples the renderer does.

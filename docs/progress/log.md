@@ -21917,3 +21917,10 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - Core: `BrushMode` (Paint / Smudge) on `BrushSettings`; `PhotonzDocument.smudgeStroke` / `smudgeTarget` (paint layers only, never a new layer). Capsule: Medium dropdown + Mode segmented (`ToolSetting.brushMedium`, `.brushMode`).
 - Walk `brush-dry-media-and-smudge-walk` (no flags) paints each medium and smudges charcoal by drag; audit `queue/audits/2026-10-24-dry-media.json`.
 - Open: blind model judges name all three media but say charcoal and chalk share one grain; task left pending on that item.
+
+## 2026-10-24 — Charcoal, chalk and crayon told apart blind
+
+- `DryMedia.swift`: `DryLook` reworked so the three differ in kind, not grain strength: charcoal shades (tooth caught to one depth, tip fall-off shaded over it, dark core, fine dust), chalk is a lighter crisp film with its own grit (`powder`), dry streaks that break along the drag (`streakRun`, 2D stick noise) and crisp crumbs; crayon waxes with a wavering edge (`wobble`) and skips along the drag. Catch runs read once a pixel (the old 0.75 pt steps left comb artifacts). Smudge's own drag is squared so the default only softens. `SmudgeStroke` lays more on the tooth than in the pits.
+- `PaintMeasures`: `halfToneShare`, `streakAgreement`, `widthWaver`, `unevenness`; new tests in `DryMediaRenderingTests` (old chalk fails half-tone 0.26 and across-agreement 0.18; old crayon waver 0.017; old smudge 0.58).
+- Blind judge: five shuffled rounds, three model judges beside Wikimedia reference photos; the two larger judges named all three correctly in each of the last three rounds. Audit `queue/audits/2026-10-24-dry-media-distinct.json`.
+- Next: pressure/tilt/speed slice (taper), which every judge still asks for.

@@ -1,0 +1,29 @@
+{
+  "feature": "Charcoal, chalk and crayon read as three different media",
+  "epic": "image-paint",
+  "summary": "Charcoal is now a dense, velvety dark that fades out softly with dust beside it, chalk a lighter, gritty film that skips and crumbles at its edge, and crayon a crisp-edged waxy band with skips running along the drag. A smudge keeps the paper's tooth instead of laying down a smooth grey comet.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screenshot. Walk: Scripts/playtest/brush-dry-media-and-smudge-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press B. Medium and Mode appear over the tool bar.", "shot": "2026-10-24-dry-media-distinct-1-capsule-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag across the picture with Charcoal, then pick Chalk and drag, then Crayon and drag.", "shot": "2026-10-24-dry-media-distinct-5-closeup-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick Charcoal, click Smudge, and drag from inside the charcoal stroke out into bare paper.", "shot": "2026-10-24-dry-media-distinct-4-smudged-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the strokes without their names (crayon, chalk, charcoal, then the plain round tip) and name each.", "shot": "2026-10-24-dry-media-distinct-blind.png" },
+    { "do": "Compare the full stroke sheet: a wavy stroke, two crossing passes with a smudge, and Grain at none and full, one row per medium.", "shot": "2026-10-24-dry-media-distinct-sheet.png" }
+  ],
+  "evaluate": [
+    "Shown the blind strokes, did you name charcoal, chalk and crayon correctly?",
+    "Does charcoal now feel like the darkest, softest of the three, and chalk the lightest and driest?",
+    "Does crayon's crisp, slightly wavering edge read as a wax stick rather than a stamp?",
+    "Does the smudge look like a finger through charcoal on paper, with the paper still showing in it?"
+  ],
+  "rough": [
+    "Blind test, five rounds with the order shuffled each time, three model judges beside reference photos of each real medium: the two larger judges named all three media correctly in each of the last three rounds, at medium confidence; the smallest judge always got crayon or chalk right and swapped the other two. Every judge still names one pair it finds closest (charcoal and chalk, or chalk and crayon), so the three are told apart, not yet unmistakable.",
+    "What the judges still want: crayon's paper gaps as small flecks rather than long dashes, a powdery body to chalk, and pressure-driven dark and light passages in charcoal; its halo still reads a little like airbrush. The pressure part is the pressure, tilt and speed slice (pen-pressure-tilt-and-pointer-speed-shape-a-brus).",
+    "Chalk is now a lighter film than charcoal on purpose: chalk is mostly white binder and charcoal is carbon, and every judge read the darker of the two as charcoal. In a pale colour chalk still reads lighter than the colour picked.",
+    "No taper, no pressure: every stroke is one width end to end (pen-pressure-tilt-and-pointer-speed-shape-a-brus).",
+    "The smudge still only spreads paint into lighter places and never lifts it, so the live smudge shows exactly what lands; written in docs/design/brushes.md.",
+    "The walk paints at the canvas's fitted zoom, so its strokes are small; the close-up and the stroke sheet are where the media are judged.",
+    "Speed: about the same as before (within ten per cent in a debug timing of three long strokes), so a dry stroke stays around 3 ms on a 2549 by 1800 layer off the main thread."
+  ]
+}
