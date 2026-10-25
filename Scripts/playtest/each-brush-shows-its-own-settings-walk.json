@@ -1,0 +1,539 @@
+{
+  "out": "/tmp/photonz-playtest/each-brush-shows-its-own-settings-walk",
+  "seed": "Each brush's own settings (each-brush-shows-its-own-settings-in-the-tool-op). No flags: Next as a person gets it. B picks the Brush; the tool options over the tool bar carry Brush, Mode, Size, Opacity and the brush's own two, and the panel's Brush section every setting. ] and [ grow and shrink the brush. Grain is pressed at both ends of its track in the tool options and Opacity in the panel, a stroke after each. The marker starts at its own size, its Chisel tip is pressed in the tool options and its Flow lowered; charcoal picked again comes back as it was left. The pencil's Hardness is set to 8B from the panel's dropdown, the airbrush's Spread and Droplet Size raised, the watercolour's Bleed and the oil's Smear set, each followed by a stroke. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1000,
+      "width": 1500,
+      "height": 950,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Brush Size",
+      "reads": "16"
+    },
+    {
+      "do": "expect",
+      "field": "Brush Grain",
+      "reads": "60"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-charcoal-options"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "key",
+      "key": "]"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expect",
+      "field": "Brush Size",
+      "reads": "25"
+    },
+    {
+      "do": "key",
+      "key": "["
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expect",
+      "field": "Brush Size",
+      "reads": "20"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        120
+      ],
+      "to": [
+        520,
+        145
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Tool Grain",
+      "across": 0.02
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "panel",
+      "stage": "after-grain-low"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        240
+      ],
+      "to": [
+        520,
+        265
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Tool Grain",
+      "across": 0.98
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        360
+      ],
+      "to": [
+        520,
+        385
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Brush Opacity",
+      "across": 0.4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "panel",
+      "stage": "after-opacity"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        480
+      ],
+      "to": [
+        520,
+        505
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "2-charcoal-settings"
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Marker",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Marker"
+    },
+    {
+      "do": "expect",
+      "field": "Brush Size",
+      "reads": "14"
+    },
+    {
+      "do": "press",
+      "control": "Chisel",
+      "in": "Tool Tip"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        120
+      ],
+      "to": [
+        1100,
+        145
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Tool Flow",
+      "across": 0.1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        240
+      ],
+      "to": [
+        1100,
+        265
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Charcoal",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Charcoal"
+    },
+    {
+      "do": "expect",
+      "field": "Brush Size",
+      "reads": "20"
+    },
+    {
+      "do": "panel",
+      "stage": "charcoal-again"
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Pencil",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Pencil"
+    },
+    {
+      "do": "expect",
+      "field": "Brush Size",
+      "reads": "3"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Brush Hardness",
+      "choose": "8B"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Brush Hardness",
+      "reads": "8B"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        360
+      ],
+      "to": [
+        1100,
+        385
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Airbrush",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Airbrush"
+    },
+    {
+      "do": "expect",
+      "field": "Brush Size",
+      "reads": "40"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Tool Spread",
+      "across": 0.98
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Brush Droplet Size",
+      "across": 0.9
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        480
+      ],
+      "to": [
+        1100,
+        505
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Watercolour",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Watercolour"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Tool Bleed",
+      "across": 0.95
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        620
+      ],
+      "to": [
+        1100,
+        645
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Oil Paint",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Oil Paint"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Tool Smear",
+      "across": 0.05
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        760
+      ],
+      "to": [
+        1100,
+        785
+      ],
+      "steps": 30,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "3-every-brush"
+    },
+    {
+      "do": "describe",
+      "stage": "3-every-brush",
+      "note": "left: four charcoal strokes, low grain then high grain then lighter; right: chisel marker, a pale marker, an 8B pencil line, a wide airbrush, a bleeding watercolour wash, an oil stroke"
+    }
+  ]
+}

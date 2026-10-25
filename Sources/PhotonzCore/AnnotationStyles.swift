@@ -58,6 +58,12 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// settings, Size among them. Copied into each stroke as it is painted.
     private var brush = BrushSettings(medium: .charcoal)
 
+    /// What every other medium was last set to, so picking the airbrush after
+    /// a thin marker sprays at the airbrush's own size, and going back to the
+    /// marker finds it as it was left. The armed medium is never in here: it
+    /// is `brush`.
+    private var brushMemory: [BrushMedium: BrushSettings] = [:]
+
     /// Photoshop's foreground colour out of the box.
     public static let defaultBrushColorHex = "#000000"
 
@@ -80,6 +86,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         case penStrokeWidth
         case brushPaint
         case brush
+        case brushes
         case chosenStrokeWidths
         // Legacy single-bucket keys (pre per-shape); migrated on decode.
         case strokeColorHex, highlightColorHex, strokeWidth, arrowheadScale
@@ -98,6 +105,14 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         brushInk = try c.decodeIfPresent(Paint.self, forKey: .brushPaint)
             ?? Paint(hex: AnnotationStyles.defaultBrushColorHex)
         brush = try c.decodeIfPresent(BrushSettings.self, forKey: .brush) ?? BrushSettings(medium: .charcoal)
+        // Keyed by the medium's name; a medium a later version added and this
+        // one does not know is left out rather than failing the whole prefs.
+        let remembered = try c.decodeIfPresent([String: BrushSettings].self, forKey: .brushes) ?? [:]
+        for (name, settings) in remembered {
+            guard let medium = BrushMedium(rawValue: name), medium == settings.medium,
+                  medium != brush.medium else { continue }
+            brushMemory[medium] = settings
+        }
         if let decoded = try c.decodeIfPresent([String: ShapeDefaults].self, forKey: .shapes) {
             var shapes = decoded
             // Backfill any shape added after the prefs were written.
@@ -162,6 +177,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         }
         if brush != BrushSettings(medium: .charcoal) {
             try c.encode(brush, forKey: .brush)
+        }
+        if !brushMemory.isEmpty {
+            try c.encode(Dictionary(uniqueKeysWithValues: brushMemory.map { ($0.key.rawValue, $0.value) }),
+                         forKey: .brushes)
         }
         // Nothing at all until a weight has been chosen, so prefs that have
         // never had one write exactly what they always wrote.
@@ -487,7 +506,32 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// The brush the Brush tool is armed with.
     public var armedBrush: BrushSettings { brush }
 
-    public mutating func setArmedBrush(_ settings: BrushSettings) { brush = settings }
+    /// Arms the brush with `settings`. Arming another medium this way keeps
+    /// what the one put down was set to, as `armBrush` does.
+    public mutating func setArmedBrush(_ settings: BrushSettings) {
+        if settings.medium != brush.medium {
+            brushMemory[brush.medium] = brush
+            brushMemory[settings.medium] = nil
+        }
+        brush = settings
+    }
+
+    /// Picks up another medium: as it was last left, or at its own defaults
+    /// if it has never been used, still painting or smudging as the brush was.
+    public mutating func armBrush(_ medium: BrushMedium) {
+        guard medium != brush.medium else { return }
+        setArmedBrush(brush(for: medium))
+    }
+
+    /// What `medium` would paint with if it were picked up now: the armed
+    /// brush for its own medium, otherwise what that medium was last left at,
+    /// or its defaults, in the armed brush's mode.
+    public func brush(for medium: BrushMedium) -> BrushSettings {
+        if medium == brush.medium { return brush }
+        var settings = brushMemory[medium] ?? BrushSettings(medium: medium)
+        settings.mode = brush.mode
+        return settings
+    }
 
     // MARK: - Tool-keyed convenience (nil for non-annotation tools)
 

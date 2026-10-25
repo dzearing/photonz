@@ -40,6 +40,16 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     case brushMedium
     /// Whether the brush paints or smudges.
     case brushMode
+    /// How big the brush's tip is.
+    case brushSize
+    /// How opaque its strokes are.
+    case brushOpacity
+    /// The first and second of the medium's own settings
+    /// (`BrushMedium.toolOptionSettings`): a pencil's Hardness and Grain, an
+    /// airbrush's Flow and Spread. Which they are changes with the brush, so
+    /// the capsule prints the setting's own name rather than these words.
+    case brushOwnFirst
+    case brushOwnSecond
 
     /// The word on the setting, the same one the right hand panel uses, so
     /// the two places read as one thing rather than two.
@@ -60,6 +70,10 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
         case .component: "Component"
         case .brushMedium: "Brush"
         case .brushMode: "Mode"
+        case .brushSize: "Size"
+        case .brushOpacity: "Opacity"
+        case .brushOwnFirst: "Setting"
+        case .brushOwnSecond: "Setting"
         }
     }
 }
@@ -150,10 +164,11 @@ public enum ToolSettingsBar {
             [.component]
         case .brush:
             // No flag of their own: the tool is itself behind `next-brush`.
-            // The medium first, then what the stroke does with it
-            // (`docs/design/brushes.md`, decision 7). The settings slice adds
-            // Size, Opacity and the medium's own two after these.
-            [.brushMedium, .brushMode]
+            // The brush first, then what the stroke does with it, then
+            // Photoshop's options bar order: Size, Opacity, and the brush's
+            // own two (`docs/design/brushes.md`, decision 7). The panel's
+            // Brush section carries the whole list.
+            [.brushMedium, .brushMode, .brushSize, .brushOpacity, .brushOwnFirst, .brushOwnSecond]
         default:
             []
         }

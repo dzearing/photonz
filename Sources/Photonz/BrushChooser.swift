@@ -263,8 +263,9 @@ struct BrushChooserGrid: View {
 // MARK: - The panel's Brush section
 
 /// The brush in hand, in the panel while the Brush tool is: its name, its
-/// group, every one of its settings with the value it is at, and a line about
-/// it (`brush-library.html`, Properties driven by the picked tile).
+/// group, every one of its settings as a control, and a line about it
+/// (`brush-library.html`, Properties driven by the picked tile). The capsule
+/// over the tool bar carries the main ones; this carries them all.
 struct BrushToolInspector: View {
     @Environment(EditorState.self) private var editorState
 
@@ -274,8 +275,13 @@ struct BrushToolInspector: View {
             row("Name", brush.medium.title)
             row("Group", brush.medium.group.title)
             ForEach(brush.medium.settings, id: \.id) { spec in
-                row(spec.name, Self.reading(spec, brush.value(spec.id)))
+                PanelFieldRow(spec.name) {
+                    BrushSettingControl(spec: spec, inCapsule: false)
+                }
+                .playtestField("Brush \(spec.name)")
             }
+            // A new medium's rows are new controls, not the old ones moved.
+            .id(brush.medium)
             Text(brush.medium.blurb)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -294,16 +300,6 @@ struct BrushToolInspector: View {
                 .foregroundStyle(.primary)
         }
         .playtestField(label)
-    }
-
-    /// A setting as it reads: a choice by its word, Size in points, the rest
-    /// as a percentage.
-    static func reading(_ spec: BrushSettingSpec, _ value: Double) -> String {
-        if let options = spec.options {
-            let index = Int(value.rounded())
-            return options.indices.contains(index) ? options[index] : ""
-        }
-        return spec.id == "size" ? "\(Int(value.rounded())) pt" : "\(Int(value.rounded()))%"
     }
 }
 

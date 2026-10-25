@@ -59,6 +59,57 @@ struct ToolSettingsCapsule: View {
     /// same one the right hand panel uses, so a person who learned it in one
     /// place recognises it in the other.
     @ViewBuilder private func field(_ setting: ToolSetting) -> some View {
+        if let spec = brushSpec(setting) {
+            // The brush's own: named by the setting the brush declares, since
+            // which one it is changes with the brush.
+            HStack(spacing: 8) {
+                Text(spec.name)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                BrushSettingControl(spec: spec, inCapsule: true)
+            }
+            .playtestField("Tool \(spec.name)")
+            .background { if setting == .brushSize { brushSizeKeys } }
+        } else if !Self.isBrushSetting(setting) {
+            plainField(setting)
+        }
+    }
+
+    /// The setting of the armed brush a brush slot of the capsule stands for,
+    /// or nil for every other kind of setting and for a slot the brush in hand
+    /// has nothing for.
+    private func brushSpec(_ setting: ToolSetting) -> BrushSettingSpec? {
+        let medium = editorState.armedBrush.medium
+        switch setting {
+        case .brushSize: return medium.settings.first { $0.id == "size" }
+        case .brushOpacity: return medium.settings.first { $0.id == "opacity" }
+        case .brushOwnFirst: return medium.toolOptionSettings.first
+        case .brushOwnSecond: return medium.toolOptionSettings.dropFirst().first
+        default: return nil
+        }
+    }
+
+    /// [ and ] on the window, the way the tool bar's buttons carry their
+    /// letters: Photoshop's shrink and grow while the brush is in hand. The
+    /// menu bar's rows (Edit > Tools) say the same keys.
+    private var brushSizeKeys: some View {
+        ZStack {
+            Button("") { editorState.stepBrushSize(larger: false) }
+                .keyboardShortcut("[", modifiers: [])
+            Button("") { editorState.stepBrushSize(larger: true) }
+                .keyboardShortcut("]", modifiers: [])
+        }
+        .buttonStyle(.plain)
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
+    }
+
+    private static func isBrushSetting(_ setting: ToolSetting) -> Bool {
+        [.brushSize, .brushOpacity, .brushOwnFirst, .brushOwnSecond].contains(setting)
+    }
+
+    @ViewBuilder private func plainField(_ setting: ToolSetting) -> some View {
         HStack(spacing: 8) {
             // The lens's number is named after the adjustment in hand
             // (Strength, Block size, Amount), so its control prints its own
@@ -223,6 +274,9 @@ struct ToolSettingsCapsule: View {
             .controlSize(.small)
             .fixedSize()
             .help("Paint lays the medium down. Smudge drags paint that is already there.")
+        case .brushSize, .brushOpacity, .brushOwnFirst, .brushOwnSecond:
+            // Drawn by `field` from the brush's own list.
+            EmptyView()
         case .measureShow:
             Picker("Show", selection: Binding(
                 get: { editorState.measureShowFilter },

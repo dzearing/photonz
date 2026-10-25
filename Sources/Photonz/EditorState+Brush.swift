@@ -39,16 +39,38 @@ extension EditorState {
     /// on the tool bar's swatch.
     var armedBrush: BrushSettings { annotationStyles.armedBrush }
 
-    /// What the brush paints with. Picking another medium keeps the size,
-    /// opacity and mode, and starts the medium's own settings at their
-    /// defaults (`BrushSettings.switched(to:)`).
+    /// What the brush paints with. Picking another medium finds it as it was
+    /// last left, or at its own defaults (its own Size among them) if it has
+    /// never been used, still painting or smudging as the brush was
+    /// (`AnnotationStyles.armBrush`).
     var armedBrushMedium: BrushMedium {
         get { annotationStyles.armedBrush.medium }
         set {
             guard newValue != armedBrushMedium else { return }
-            annotationStyles.setArmedBrush(annotationStyles.armedBrush.switched(to: newValue))
+            annotationStyles.armBrush(newValue)
             saveAnnotationStyles()
         }
+    }
+
+    /// Sets one of the armed brush's settings, from the capsule over the tool
+    /// bar or the panel. The next stroke paints with it; strokes already made
+    /// keep the brush they were painted with.
+    func setArmedBrushSetting(_ id: String, to value: Double) {
+        var brush = annotationStyles.armedBrush
+        brush.set(id, to: value)
+        guard brush != annotationStyles.armedBrush else { return }
+        annotationStyles.setArmedBrush(brush)
+        saveAnnotationStyles()
+    }
+
+    /// ] grows the brush and [ shrinks it, in Photoshop's steps (`BrushSize`).
+    func stepBrushSize(larger: Bool) {
+        setArmedBrushSetting("size", to: BrushSize.stepped(armedBrush.size, larger: larger))
+    }
+
+    /// Whether [ and ] step the brush now: with it in hand on a picture.
+    var bracketsStepBrushSize: Bool {
+        Experiments.shared.brushEnabled && activeTool == .brush && document != nil
     }
 
     /// Whether the brush paints or smudges.
@@ -83,11 +105,10 @@ extension EditorState {
         if activeTool != .brush { setTool(.brush) }
     }
 
-    /// The settings a brush's tile is painted at: the brush in hand for its
-    /// own medium, and for any other what picking it would give you, Size,
-    /// Opacity and all (`BrushSettings.switched(to:)`).
+    /// The settings a brush's tile is painted at: what picking it would give
+    /// you, as that brush was last left (`AnnotationStyles.brush(for:)`).
     func brushTileSettings(_ medium: BrushMedium) -> BrushSettings {
-        medium == armedBrush.medium ? armedBrush : armedBrush.switched(to: medium)
+        annotationStyles.brush(for: medium)
     }
 
     /// The tiles the chooser shows for the chip it is on.

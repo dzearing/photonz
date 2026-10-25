@@ -1,0 +1,34 @@
+{
+  "feature": "Each brush's own settings",
+  "epic": "image-paint",
+  "summary": "With the Brush in hand you can now set Size, Opacity and the brush's own two main settings right above the tool bar, and every setting in the panel's Brush section. Each brush remembers its own values, so the airbrush no longer inherits a thin marker's size, and [ and ] shrink and grow the brush.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any picture or a blank one. Walks: Scripts/playtest/each-brush-shows-its-own-settings-walk.json and brush-settings-on-a-click-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press B. Read the options over the tool bar: Brush, Mode, Size, Opacity, then Grain and Smudge for charcoal; the panel's Brush section has every setting.", "shot": "2026-10-25-brush-settings-1-options-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press ] twice and [ once, watching the ring under the pointer and the Size number. Paint a stroke." },
+    { "do": "Drag Grain to its left end and paint, then to its right end and paint, then lower Opacity in the panel and paint: the earlier strokes stay as they were.", "shot": "2026-10-25-brush-settings-2-charcoal-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick Marker from the brush chooser: it starts at its own 14 pt. Click Chisel in the options, paint, lower Flow, paint.", "shot": "2026-10-25-brush-settings-4-marker-tip-sc.png" },
+    { "do": "Pick Charcoal again: its size and grain are as you left them. Then try Pencil (Hardness from the dropdown), Airbrush, Watercolour and Oil Paint, a stroke each.", "shot": "2026-10-25-brush-settings-3-every-brush-sc.png" },
+    { "do": "Open the sheets: one per brush, each setting painted at its low end, its default and its high end.", "shot": "2026-10-25-brush-settings-sheet-airbrush.png" },
+    { "do": "The pencil's sheet: Tilt Shading shown with a leaning pen, which is the only way it acts.", "shot": "2026-10-25-brush-settings-sheet-pencil.png" },
+    { "do": "The charcoal sheet: Smudge at 100 now blends the stroke smooth (it was barely visible before).", "shot": "2026-10-25-brush-settings-sheet-charcoal.png" }
+  ],
+  "evaluate": [
+    "Are the two settings each brush puts over the tool bar the ones you reach for most, or would you swap any?",
+    "Is the options row over the tool bar too wide with six controls, now that it runs most of the width of a normal window?",
+    "Do [ and ] step the size in amounts that feel like Photoshop's?",
+    "Should a brush picked again come back exactly as you left it (as now), or reset to its defaults?",
+    "Is Smudge 100 on charcoal now the strength you would expect from the far end of that slider?"
+  ],
+  "rough": [
+    "The brush library mock's Properties rows show plain values (Size 26 px, Hardness 70%); here they are sliders and number boxes, because this task's checklist asks for every setting to be set from the panel (each-brush-shows-its-own-settings-in-the-tool-op).",
+    "The mock's Do buttons under Properties (Use in Draw, Edit in brush editor, Delete brush) are not here; making and editing your own brushes is make-your-own-brushes-a-custom-group-a-brush-fil.",
+    "The retouch mock draws Hardness and Flow as bars with no number; the panel here uses its usual slider with a typed number box beside it, the same row every other panel slider uses (UX-PATTERNS §4).",
+    "The ring under the pointer stops growing at 250 screen points, a cursor's limit; a bigger brush at a high zoom shows a ring smaller than its tip.",
+    "With six controls the options row is about 1080 points wide; on a narrow window it wraps to two rows rather than hiding any.",
+    "The airbrush's Flow at 0 sprays nothing at all, like Opacity at its bottom; the sheet shows that row's first stroke blank on purpose.",
+    "Charcoal and chalk's Smudge got stronger at its top end; their defaults (20 and 15) moved by under a tenth, and every dry-media measure still passes.",
+    "Measured: every brush's own settings change the stroke between their two ends by at least 0.2 of it (lowest watercolour Granulation 0.24, airbrush Build-up 0.30; 2026-10-25-brush-settings-measures.txt)."
+  ]
+}

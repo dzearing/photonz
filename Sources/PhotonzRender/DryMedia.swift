@@ -262,8 +262,11 @@ struct DryLook {
 
     init?(_ settings: BrushSettings) {
         let grain = Float(settings.value("grain") / 100)
-        // Squared, so the low default only softens and the top end drags hard.
-        let smudge = pow(Float(settings.value("smudge") / 100), 2) * 0.25
+        // Squared, so the low default only softens, and steeper again at the
+        // top so the far end drags hard enough to see: the defaults (15 and
+        // 20) sit where they always did, within a tenth.
+        let s = Float(settings.value("smudge") / 100)
+        let smudge = 0.25 * s * s + 0.65 * pow(s, 4)
         switch settings.medium {
         case .charcoal:
             // Velvety and smoky: a dense dark core that fades out softly over

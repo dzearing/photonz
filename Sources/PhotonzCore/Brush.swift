@@ -68,7 +68,7 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
     /// Opacity first, then the medium's own (the design doc's table).
     public var settings: [BrushSettingSpec] {
         let shared = [
-            BrushSettingSpec(id: "size", name: "Size", range: 1...500, defaultValue: defaultSize),
+            BrushSettingSpec(id: "size", name: "Size", range: BrushSize.range, defaultValue: defaultSize),
             BrushSettingSpec(id: "opacity", name: "Opacity", range: 1...100, defaultValue: 100),
         ]
         let own: [BrushSettingSpec]
@@ -102,6 +102,14 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
         }
         return shared + own
     }
+
+    /// The medium's own settings, after Size and Opacity.
+    public var ownSettings: [BrushSettingSpec] { Array(settings.dropFirst(2)) }
+
+    /// The two of its own the tool options capsule over the tool bar carries
+    /// beside Size and Opacity: the first two, the ones the medium is most
+    /// often tuned by. The panel's Brush section carries every one.
+    public var toolOptionSettings: [BrushSettingSpec] { Array(ownSettings.prefix(2)) }
 
     func spec(_ id: String) -> BrushSettingSpec? { settings.first { $0.id == settingID(id) } }
 
@@ -138,6 +146,28 @@ public struct BrushSettingSpec: Hashable, Sendable {
 
     static func percent(_ id: String, _ name: String, _ value: Double) -> BrushSettingSpec {
         BrushSettingSpec(id: id, name: name, range: 0...100, defaultValue: value)
+    }
+
+    /// What kind of control sets it: a number is a slider; two or three
+    /// choices stay on screen side by side; more are a dropdown (UX-PATTERNS:
+    /// a list of more than three exclusive options is a dropdown).
+    public enum Control: Hashable, Sendable {
+        case slider
+        case segmented
+        case dropdown
+    }
+
+    public var control: Control {
+        guard let options else { return .slider }
+        return options.count <= 3 ? .segmented : .dropdown
+    }
+
+    /// The setting as it reads beside its control: a choice by its word,
+    /// Size in points, the rest as a percentage.
+    public func reading(_ value: Double) -> String {
+        let whole = Int(value.rounded())
+        if let options { return options.indices.contains(whole) ? options[whole] : "" }
+        return id == "size" ? "\(whole) pt" : "\(whole)%"
     }
 
     func clamp(_ value: Double) -> Double {
@@ -219,6 +249,33 @@ public struct BrushSettings: Hashable, Codable, Sendable {
     public var size: Double { value("size") }
     /// How opaque a stroke is, 1 to 100.
     public var opacity: Double { value("opacity") }
+}
+
+/// How [ and ] step the brush's size: Photoshop's steps, finer for a small
+/// tip and coarser for a big one, so a few presses reach any size and each
+/// press at a small size is still a visible change.
+public enum BrushSize {
+    /// Where the step size changes, and the step below each.
+    private static let bands: [(below: Double, step: Double)] = [
+        (10, 1), (50, 5), (100, 10), (200, 25), (300, 50), (.infinity, 100),
+    ]
+
+    public static let range: ClosedRange<Double> = 1...500
+
+    /// The next size up (]) or down ([) from `size`, landing on a whole step
+    /// and held inside `range`.
+    public static func stepped(_ size: Double, larger: Bool) -> Double {
+        guard size.isFinite else { return range.lowerBound }
+        let next: Double
+        if larger {
+            let step = bands.first { size < $0.below }?.step ?? 100
+            next = (size / step + 1e-9).rounded(.down) * step + step
+        } else {
+            let step = bands.first { size <= $0.below }?.step ?? 100
+            next = (size / step - 1e-9).rounded(.up) * step - step
+        }
+        return min(max(next, range.lowerBound), range.upperBound)
+    }
 }
 
 // MARK: - A stroke as data

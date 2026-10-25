@@ -47,9 +47,13 @@ struct EveryDropdownIsClickedByAWalkTests {
         // label, the zoom's two when set apart, and the walk names of the
         // two that share a clip's panel.
         "Curve", "Curve In", "Curve Out", "Fade curve", "Sound fade curve",
+        // A brush setting with more than three choices (`BrushSettingControl`),
+        // in the panel and the tool options: the pencil's Hardness
+        // (brush-settings-on-a-click-walk).
+        "Brush Hardness", "Tool Hardness",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 10
+    static let builtSites = 11
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run

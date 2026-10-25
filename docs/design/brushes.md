@@ -435,6 +435,44 @@ an anchor and the line re-paints.
   the live stroke drew go soft when the button comes up (the walk measured 1.3%
   of the canvas changing at 172%). Folded into the painting-speed slice.
 
+## What the settings slice settled (2026-10-25)
+
+- **The tool options carry six things** (`ToolSettingsBar`, brush): the brush
+  (its tile chooser, not a dropdown: the user, 2026-10-24), Mode, Size,
+  Opacity, and the brush's first two own settings
+  (`BrushMedium.toolOptionSettings`): a pencil's Hardness and Grain, an
+  airbrush's Flow and Spread, a watercolour's Wetness and Bleed. The panel's
+  Brush section carries every setting (`BrushMedium.settings`), Name and Group
+  above them and the mock's one line below. Both read and write the same armed
+  brush, so moving either moves both.
+- **A setting's control comes from its spec** (`BrushSettingSpec.control`): a
+  number is a slider (a short track and its reading in the tool options, a
+  track and a typed number box in the panel); two or three choices are a
+  segmented control (the marker's Round | Chisel); more are the panel's
+  dropdown (the pencil's grades). `BrushSettingSpec.reading` says each one the
+  same way everywhere: "16 pt", "60%", "HB".
+- **Each brush remembers its own.** `AnnotationStyles` keeps the armed brush
+  and, beside it, what every other medium was last left at
+  (`armBrush`, `brush(for:)`, saved under `brushes`). One never used starts at
+  its own defaults, its own Size among them, so an airbrush picked after a thin
+  marker sprays at 40 pt. Mode (Paint or Smudge) follows the brush across
+  media. The tiles paint each brush as picking it would give you.
+- **[ and ]** step Size in Photoshop's steps (`BrushSize.stepped`: by 1 under
+  10, 5 to 50, 10 to 100, 25 to 200, 50 to 300, then 100, held to 1...500),
+  from the tool options (the window's own shortcut, the way the tool bar's
+  letters work) and Edit > Tools (Decrease Brush Size, Increase Brush Size).
+  The ring under the pointer redraws at the new size at once.
+- **Walk names**: the tool options' rows are "Tool <name>", the panel's
+  "Brush <name>", apart from a picked layer's own Opacity and Size rows.
+- **Every own setting visibly changes the stroke**, measured
+  (`BrushSettingsVisibleTests`, `PaintMeasures.changedShare`): the same stroke
+  at a setting's two ends, the share of it that differs, read per pixel and per
+  four-point block, at least 0.2. A setting that acts only in its own situation
+  is painted in it: Tilt Shading with a leaning pen, Smear across paint already
+  there, Build-up held still. Charcoal's Smudge read 0.08 and was strengthened
+  at its top end (`0.25·s² + 0.65·s⁴`, defaults within a tenth of before); it
+  reads 0.47. Numbers: `queue/audits/2026-10-25-brush-settings-measures.txt`.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,
@@ -443,7 +481,7 @@ an anchor and the line re-paints.
 3. Marker and airbrush.
 4. Watercolour.
 5. Oil paint.
-6. Settings in the tool options and the panel; [ and ]; medium dropdown.
+6. Settings in the tool options and the panel; [ and ]; per-medium memory (the medium is picked from tiles).
 7. Pressure, tilt and speed; the mouse taper.
 8. MCP and the agent API; Ask paints.
 9. Brushed vector strokes.

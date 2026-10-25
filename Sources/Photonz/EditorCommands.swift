@@ -1282,6 +1282,16 @@ struct EditorCommands: Commands {
                     }))
                 .keyboardShortcut("b", modifiers: [])
             }
+            // Photoshop's [ and ] with the Brush in hand: shrink and grow it.
+            if Experiments.shared.brushEnabled, menuTools.contains(.brush) {
+                Divider()
+                Button("Decrease Brush Size") { editor?.stepBrushSize(larger: false) }
+                    .keyboardShortcut("[", modifiers: [])
+                    .disabled(!(editor?.bracketsStepBrushSize ?? false))
+                Button("Increase Brush Size") { editor?.stepBrushSize(larger: true) }
+                    .keyboardShortcut("]", modifiers: [])
+                    .disabled(!(editor?.bracketsStepBrushSize ?? false))
+            }
         }
         .disabled(editor?.document == nil)
     }

@@ -1414,8 +1414,17 @@ final class CanvasNSView: NSView {
     /// a weight nobody chose is an icon frame's to thin (`IconStrokeWeight`).
     var armedStrokeWidthIsChosen: Bool = false
     /// What the Brush is armed with, echoed from EditorState and read as each
-    /// stroke begins.
-    var brushSettings = BrushSettings(medium: .charcoal)
+    /// stroke begins. A new size redraws the ring under the pointer at once,
+    /// so a press of [ or ] shows what the next stroke will cover without
+    /// waiting for the mouse to move.
+    var brushSettings = BrushSettings(medium: .charcoal) {
+        didSet {
+            guard brushSettings.size != oldValue.size, tool == .brush, let window else { return }
+            window.invalidateCursorRects(for: self)
+            let local = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            if grabCursor == nil, bounds.contains(local) { brushCursor.set() }
+        }
+    }
     var brushColorHex = AnnotationStyles.defaultBrushColorHex
 
     /// Styled content for the active tool, echoed from EditorState; the in-flight

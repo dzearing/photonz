@@ -219,6 +219,10 @@ struct EveryMenuCommandHasANameTests {
             "picks up a tool for the pointer; an agent works through commands, not a pointer",
         "toolsMenu: \"Blade\"":
             "picks up a tool for the pointer; an agent works through commands, not a pointer",
+        "toolsMenu: \"Decrease Brush Size\"":
+            "sizes the brush in the pointer's hand; an agent sets the armed brush with the brush tools (docs/design/brushes.md, decision 8)",
+        "toolsMenu: \"Increase Brush Size\"":
+            "sizes the brush in the pointer's hand; an agent sets the armed brush with the brush tools (docs/design/brushes.md, decision 8)",
         "clipItselfRows: \"Reveal in Finder\"":
             "shows the file in Finder, outside the app",
         "placedLayerRows: TitleTime.fadeTitle(ms)":

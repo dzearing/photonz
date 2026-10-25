@@ -1,0 +1,149 @@
+{
+  "out": "/tmp/photonz-playtest/brush-settings-on-a-click-walk",
+  "seed": "The brush's own choices open and pick on a pointer click (each-brush-shows-its-own-settings-in-the-tool-op). No flags. B picks the Brush and the Pencil tile is clicked; the pencil's Hardness dropdown is clicked on its face in the middle and 8pt in from each end, in the panel's Brush section and in the tool options over the tool bar, and each pick reads back in the other. The Marker's Tip, two choices, is a segmented control whose segments are clicked in the panel and the tool options.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1000,
+      "width": 1500,
+      "height": 950,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Pencil",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Brush Hardness",
+      "reads": "HB"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Brush Hardness",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "6B"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Brush Hardness",
+      "reads": "6B"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Hardness",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "2H"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Brush Hardness",
+      "reads": "2H"
+    },
+    {
+      "do": "press",
+      "control": "Choose brush"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Marker",
+      "in": "Brush tiles"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Chisel",
+      "in": "Brush Tip"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expect",
+      "control": "Chisel",
+      "in": "Tool Tip",
+      "reads": "Tool Tip, already on Chisel, tooltip none"
+    },
+    {
+      "do": "press",
+      "control": "Round",
+      "in": "Tool Tip"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expect",
+      "control": "Round",
+      "in": "Brush Tip",
+      "reads": "Brush Tip, already on Round, tooltip none"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-marker-round"
+    }
+  ]
+}

@@ -461,6 +461,49 @@ public enum PaintMeasures {
         return variance.squareRoot() / mean
     }
 
+    /// How much of two renders of a stroke differ, the way an eye reads it:
+    /// both are averaged over `block`-pixel squares, so grain rearranged
+    /// without changing the tone counts for nothing, and of the squares
+    /// either one covers, this is the share where the two differ by more than
+    /// a tenth in any channel. Zero for the same picture; a setting whose two
+    /// ends score near zero is one nobody would see change the stroke. The
+    /// two images must be the same size.
+    public static func changedShare(_ a: CGImage, _ b: CGImage, block: Int = 8) -> Double {
+        let one = rgbaPlane(a), two = rgbaPlane(b)
+        let width = a.width, height = a.height
+        guard one.count == two.count, !one.isEmpty, block >= 1 else { return 0 }
+        var covered = 0, changed = 0
+        for by in stride(from: 0, to: height, by: block) {
+            for bx in stride(from: 0, to: width, by: block) {
+                var mean1 = [Double](repeating: 0, count: 4), mean2 = mean1
+                var n = 0.0
+                for y in by..<min(by + block, height) {
+                    for x in bx..<min(bx + block, width) {
+                        let i = (y * width + x) * 4
+                        for c in 0..<4 { mean1[c] += one[i + c]; mean2[c] += two[i + c] }
+                        n += 1
+                    }
+                }
+                guard mean1[3] / n > 0.05 || mean2[3] / n > 0.05 else { continue }
+                covered += 1
+                if (0..<4).contains(where: { abs(mean1[$0] - mean2[$0]) / n > 0.1 }) { changed += 1 }
+            }
+        }
+        return covered == 0 ? 0 : Double(changed) / Double(covered)
+    }
+
+    private static func rgbaPlane(_ image: CGImage) -> [Double] {
+        let width = image.width, height = image.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: &data, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return [] }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return data.map { Double($0) / 255 }
+    }
+
     /// The image's coverage, 0...1, top row first.
     private static func alphaPlane(_ image: CGImage) -> [Double] {
         let width = image.width, height = image.height
