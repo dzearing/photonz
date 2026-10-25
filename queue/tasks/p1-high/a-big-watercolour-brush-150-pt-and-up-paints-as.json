@@ -1,0 +1,35 @@
+{
+  "id": "a-big-watercolour-brush-150-pt-and-up-paints-as",
+  "title": "A big watercolour brush (150 pt and up) paints as smoothly as a small one",
+  "goal": "Watercolour looks right, but at 150 pt or larger the stroke lags behind the pointer and feels sluggish. A big wet brush should follow the hand with no visible delay, just like a small one, without changing how it looks.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T15:31:40.800Z",
+  "updated": "2026-10-25T15:31:48.072Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-25: 'the watercolor looks good but it's slow if i increase the size to 150pt or more, feels quite laggy'. Not reproduced in the intake window. Theories only: Sources/PhotonzRender/Watercolour.swift mark(_:) walks every pixel of a box radius*(1+farthest) around each dab on the CPU, so the work grows with the square of the size and with how close dabs are spaced; reach() loops over every earlier wet wash per pixel; WetField.ensure copies the whole field when it grows; and the live stroke (Sources/Photonz/CanvasBrush.swift) may be building a full CGImage of the overlay per drag. Measure which of these it actually is before fixing.",
+  "acceptance": [
+    "Reproduce first and MEASURE: time per drag event and the lag from pointer to painted dab for watercolour at 50, 150, 300 and 500 pt on a Retina canvas, in the probe at Next defaults, written in the audit before any change. Today's 150 pt number has to show the lag the user felt, or the task says what else it is.",
+    "After the fix, every drag event at 150 to 500 pt finishes inside one 120 Hz frame (8 ms) at p95 and the painted dab never trails the pointer by more than one frame, MEASURED with the same harness and put in the audit beside the before numbers.",
+    "The look does not change: the finished stroke at 150 and 300 pt matches today's pixel for pixel or within a measured tolerance the audit states (bloom, fingers, edge darkening and the bleed into earlier wet washes all still there), with before and after pictures.",
+    "Other brushes at large sizes (oil, marker, charcoal, airbrush) get the same timing measured; any that also miss the 8 ms bar are fixed here or filed as a follow-up.",
+    "Rendering changes carry the perf note the repo asks for. Logic in PhotonzRender is test-first.",
+    "Try path: Next defaults, pick the Brush tool, Watercolour, size 200 pt, scribble fast across the canvas; the wash keeps up with the pointer.",
+    "An audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T15:31:40.802Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-25T15:31:48.071Z",
+      "note": "seq 3970 -> 3"
+    }
+  ]
+}
