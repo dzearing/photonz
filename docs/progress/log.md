@@ -21979,3 +21979,9 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
   per move. Audit `queue/audits/2026-10-25-oil-paint.json`.
 - Open: a 12 MP paint layer is baked at ~1.15 px/pt, so zoomed in strokes soften
   on release (folded into the painting-speed task).
+
+## 2026-10-25 — pen pressure, tilt and speed; the mouse taper
+
+- Every brush now answers the hand (`BrushDynamics.response`, PhotonzCore): press sets width and weight per medium, a lean lays charcoal and chalk on their side and turns a chisel marker, a fast pen thins. A mouse stroke swells in and tapers out on landing (`BrushPlacement.taperedOut`).
+- Verified with synthetic pens (no tablet on the test Mac): new core and render tests, a stroke sheet (`PHOTONZ_DYNAMICS_SHEET`), and `pen-pressure-and-mouse-taper-walk`. Audit: `queue/audits/2026-10-25-pen-pressure-tilt-and-speed.json`.
+- Open question for the user (in the audit): is Size at the steady press right, or should a full press be the Size as in Photoshop?
