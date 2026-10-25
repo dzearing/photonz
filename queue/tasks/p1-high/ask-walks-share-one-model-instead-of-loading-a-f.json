@@ -1,0 +1,34 @@
+{
+  "id": "ask-walks-share-one-model-instead-of-loading-a-f",
+  "title": "Ask walks share one model instead of loading a fresh 23 GB copy for every walk",
+  "goal": "Every Ask walk starts a new copy of the app, and every copy loads the whole Ask model from scratch (about 23 GB, GPU at 100% for a minute or more), so a walk check with a dozen Ask walks loads it a dozen times in a row. Walks in one run should share one model that is already loaded, run gently, and is let go when the run ends.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T15:13:39.994Z",
+  "updated": "2026-10-25T15:13:45.771Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured in the intake window on 2026-10-25: one ask-annotates-a-screenshot-walk = one fresh llama-server, 22.8 GB RSS, GPU 99-100% for about 80 s, free memory 93% to 58%, no swap. The GPU-latency probe (a tiny Metal blit every 50 ms) stayed under 7 ms even under load, so this is waste and heat rather than proven keyboard theft; the focus theft the user hit was the focus drill's canary, fixed in eeaf8747. Server launch: Sources/Photonz/Agent/AskModelServer.swift (AskHelperProcess ties the server to the app pid), args: AskBuiltInServerPlan.arguments in Sources/PhotonzCore/AskBuiltInModel.swift (--parallel is already 1). Bench scripts used: the gpulat.swift and bench.sh approach (start llama-server on a spare port, one ~3000-token request, time a 1 MB Metal blit every 50 ms).",
+  "acceptance": [
+    "One walk run (rotating check, whole set, or Scripts/playtest-all.sh) starts at most one model server for the default Ask model, and every Ask walk in the run uses it. MEASURED: sample the number of llama-server processes every 2s through a rotating check that includes 5+ ask-* walks; the maximum is 1 and the model loads once (the audit shows the sample log).",
+    "The shared server is started outside the probe app with gentle settings (background scheduling, low priority, no busy polling, smaller GPU batches) and its cost is measured: prompt and generation speed vs today's settings, plus a GPU-latency probe while it works. Reference numbers from 2026-10-25: today's settings 218 t/s prompt, 28.6 t/s generation; gentle (taskpolicy -b, --ubatch-size 128 --batch-size 512 --prio -1 --poll 0 --threads 4) 196 and 26.7, GPU latency p99 2.8 ms vs 3.5.",
+    "The shared server has a bounded life: it stops when the run ends, when the loop stops, and on its own after a few idle minutes, so nothing is left loaded (queue/bin/never-leave-machine-loaded style check: after the run, no llama-server is running).",
+    "A walk that asks for a different model, or for none (askModelMissing, askModelsOnly), still gets exactly what it asks for; the people-facing app is unchanged (Ask in the dev or release app still starts and lets go of its own server).",
+    "Nothing it starts takes the front or the keyboard: queue/bin/focus-drill.sh on two ask walks reads clean.",
+    "Logic that decides whether a probe adopts the shared server lives in PhotonzCore with unit tests first."
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T15:13:39.996Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-25T15:13:45.770Z",
+      "note": "seq 3970 -> 5"
+    }
+  ]
+}
