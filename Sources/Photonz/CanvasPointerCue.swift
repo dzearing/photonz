@@ -434,6 +434,9 @@ extension CanvasNSView {
         if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
             || tool == .lens || tool == .measure || tool == .pen { return .crosshair }
         if tool == .text { return .iBeam }
+        // The tip's own outline at the size it will paint, the way every paint
+        // app shows a brush, so you can see what a stroke will cover.
+        if tool == .brush { return brushCursor }
         if tool == .hand { return handPan == nil ? .openHand : .closedHand }
         return nil
     }

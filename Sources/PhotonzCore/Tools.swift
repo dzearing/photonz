@@ -53,6 +53,11 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// it (`Hand (H)`, UX-PATTERNS D4), as Photoshop's bar does. It makes,
     /// paints and picks nothing.
     case hand
+    /// The Brush (Next, `next-brush`): drag and it paints a freehand stroke in
+    /// its colour onto a paint layer, never into a picture's pixels
+    /// (`docs/design/brushes.md`). The one making tool that stays in hand
+    /// after it lands, because painting is dozens of strokes in a row.
+    case brush
 
     /// The single key that picks this tool, everywhere in the product.
     ///
@@ -100,8 +105,8 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .text: "t"
         case .zoomCallout: "z"
         // K is one of the two letters Photoshop leaves unassigned, so a tool
-        // Photoshop has no equivalent for displaces nothing. B, E, S, J and Y
-        // all belong to brushes, erasers and stamps this app will want later.
+        // Photoshop has no equivalent for displaces nothing. E, S, J and Y
+        // all belong to erasers and stamps this app will want later.
         case .lens: "k"
         case .measure: "i"
         case .fill: "g"
@@ -120,6 +125,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // The mocks and Photoshop print H. A bar without the Hand has nothing
         // for it to pick, so it takes no letter there.
         case .hand: handOnBar ? "h" : nil
+        // Photoshop's B. On a document with time B is the Blade, and the Brush
+        // is not on that bar, so the timeline's B goes on cutting there
+        // (UX-PATTERNS §7: Photoshop's key wins on a picture).
+        case .brush: "b"
         case .rectSelect, .ellipseSelect: nil
         }
     }
@@ -145,7 +154,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .ellipse: .ellipse
         case .highlight: .highlight
         case .select, .crop, .trim, .text, .zoomCallout, .lens, .measure, .fill,
-             .rectSelect, .ellipseSelect, .wand, .frame, .pen, .component, .hand: nil
+             .rectSelect, .ellipseSelect, .wand, .frame, .pen, .component, .hand, .brush: nil
         }
     }
 
@@ -180,9 +189,12 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// take away the thing the tool was reached for.
     /// The Hand is on it because looking somewhere else is no reason to let
     /// go of what you picked, the same as in Photoshop.
+    /// The Brush is on it because the picked layer is where the strokes go: a
+    /// picked paint layer takes the next stroke, anything else gets a Paint
+    /// layer just above it (`Document.paintStroke`).
     public var preservesLayerSelection: Bool {
         self == .select || self == .fill || self == .pen || self == .trim
-            || self == .hand || isRegionSelectionTool
+            || self == .hand || self == .brush || isRegionSelectionTool
     }
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
@@ -226,7 +238,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // The Hand puts nothing on the picture either: its drags move the view.
         case .select, .crop, .trim, .rectSelect, .ellipseSelect, .wand, .hand: true
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
-             .zoomCallout, .lens, .measure, .fill, .frame, .pen, .component: false
+             .zoomCallout, .lens, .measure, .fill, .frame, .pen, .component, .brush: false
         }
     }
 
@@ -245,7 +257,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     public var createsLayers: Bool {
         switch self {
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
-             .zoomCallout, .lens, .measure, .frame, .pen, .component: true
+             .zoomCallout, .lens, .measure, .frame, .pen, .component, .brush: true
         case .select, .crop, .trim, .fill, .rectSelect, .ellipseSelect, .wand, .hand: false
         }
     }
@@ -267,7 +279,8 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // and both are drawn in the one ink the Pen is armed with, so the Pen
         // wears the same single swatch rather than a pair that would be two
         // places to set what is really one colour.
-        case .arrow, .line, .highlight, .text, .pen: .toolColor
+        // The Brush paints in one colour too.
+        case .arrow, .line, .highlight, .text, .pen, .brush: .toolColor
         // The bucket paints from the foreground/background pair, and it is the
         // only tool that does, so the pair lives with it.
         case .fill: .foregroundBackground

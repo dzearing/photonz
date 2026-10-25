@@ -66,6 +66,10 @@ public enum Fill {
         // underneath, so there is nothing for a bucket to fill.
         case .zoomCallout, .lens:
             return nil
+        // Every stroke on a paint layer, the way a bucket pointed at a path
+        // repaints all of it.
+        case .paint(let paint):
+            filled.content = .paint(paint.recoloured(colorHex))
         // A group has no paint of its own; filling one would mean deciding for
         // every layer inside it, which the bucket does not get to do.
         case .group:

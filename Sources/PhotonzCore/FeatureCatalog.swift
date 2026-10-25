@@ -206,6 +206,8 @@ public enum FeatureCatalog {
 
     public static let handToolFlag = "next-hand-tool"
 
+    public static let brushFlag = "next-brush"
+
     public static let drawLandingFlag = "next-where-the-point-will-land"
 
     public static let clickClickLineFlag = "next-click-click-draws-a-line"
@@ -1183,6 +1185,16 @@ public enum FeatureCatalog {
                     title: "Draw any shape with the Pen",
                     description: "Adds the Pen, P, for drawing corners and curves, and Combine Shapes to join shapes, cut one out of another, or keep or drop their overlap. Off means no Pen and no Combine Shapes.",
                     area: .drawing,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: brushFlag,
+                    title: "Paint with a Brush",
+                    description: "Adds the Brush to the tool bar on pictures: press B and drag to paint onto a Paint layer, leaving the picture underneath alone. Off means no Brush.",
+                    area: .tools,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

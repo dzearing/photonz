@@ -9,7 +9,7 @@
 /// and so calls every drawn shape an overlay. The mock marks the bell's body as
 /// a path and its knob as a circle, so the mark tells the shapes apart.
 public enum LayerMark: String, CaseIterable, Hashable, Sendable {
-    case path, rectangle, ellipse, arrow, line, highlight
+    case path, rectangle, ellipse, arrow, line, highlight, paint
     case text, picture, video, sound
     case group, frame, component
     case zoomCallout, lens, measure, collage
@@ -25,6 +25,7 @@ extension Layer {
         if let merged { return merged.isSoundOnly ? .sound : .video }
         switch content {
         case .path: return .path
+        case .paint: return .paint
         case .annotation(let annotation):
             switch annotation.shape {
             case .rectangle: return .rectangle

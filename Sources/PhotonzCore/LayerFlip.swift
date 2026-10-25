@@ -189,6 +189,11 @@ extension LayerContent {
                 ? CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: size.width, ty: 0)
                 : CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: size.height)
             return .path(path.transformed(by: mirror))
+        case .paint(let paint):
+            let mirror = axis == .horizontal
+                ? CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: size.width, ty: 0)
+                : CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: size.height)
+            return .paint(paint.transformed(by: mirror))
         case .annotation(var mark):
             switch mark.shape {
             case .arrow, .line:

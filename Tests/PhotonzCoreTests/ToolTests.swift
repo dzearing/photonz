@@ -550,7 +550,7 @@ struct ToolBarLayoutTests {
 
     /// The tools a flag adds, and so the ones a bar may legitimately not hold.
     /// Every OTHER tool is in every bar, exactly once.
-    private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen, .component, .hand]
+    private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen, .component, .hand, .brush]
 
     /// How many slots each tool is reachable from.
     ///
@@ -658,7 +658,7 @@ struct ToolBarLayoutTests {
     /// the frame put none there, so they get no swatches at all.
     @Test func onlyPaintingToolsCarryColour() {
         let painting: Set<Tool> = [.arrow, .line, .rectangle, .ellipse,
-                                   .highlight, .text, .fill, .pen]
+                                   .highlight, .text, .fill, .pen, .brush]
         for tool in Tool.allCases {
             #expect(tool.paints == painting.contains(tool))
             #expect((tool.colorControl == .hidden) == !painting.contains(tool))

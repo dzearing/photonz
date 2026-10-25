@@ -347,7 +347,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             node.layout = group.layout.map(Layout.make)
             let children = summarize(group.children, budget: &budget)
             node.children = children.isEmpty ? nil : children
-        case .zoomCallout, .lens, .measure, .collage, .sound:
+        case .zoomCallout, .lens, .measure, .collage, .sound, .paint:
             break
         }
         return node
@@ -359,6 +359,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         case .text: "text"
         case .annotation: "shape"
         case .path: "path"
+        case .paint: "paint"
         case .zoomCallout: "zoom-callout"
         case .lens: "lens"
         case .measure: "measurement"

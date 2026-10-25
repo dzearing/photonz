@@ -210,6 +210,10 @@ extension CanvasNSView {
         if annotationCommitImage != nil, image !== annotationCommitImage {
             clearAnnotationPreview()
         }
+        // ...and the same for a brush stroke's overlay.
+        if brushCommitImage != nil, image !== brushCommitImage, brushStroke == nil {
+            clearBrushOverlay()
+        }
         self.image = image
         self.viewport = viewport
         self.document = document

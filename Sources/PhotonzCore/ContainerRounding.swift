@@ -167,7 +167,8 @@ extension Layer {
         // Sound paints nothing anywhere, corners included.
         case .sound: return false
         case .annotation, .image, .collage, .lens, .zoomCallout: return true
-        case .text, .measure, .path: return false
+        // Paint lands where the brush went, rarely in a corner.
+        case .text, .measure, .path, .paint: return false
         // A container paints its corners when it has a surface behind its
         // contents, or a mask somebody asked for.
         // ...and when it crops, because the edge it crops at is a line you

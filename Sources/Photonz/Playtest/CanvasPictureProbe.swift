@@ -45,7 +45,10 @@ extension CanvasNSView {
         // its layers are laid out.
         context.translateBy(x: 0, y: size.height)
         context.scaleBy(x: 1, y: -1)
-        for layer in [contentLayer, crispLayer, previewSpriteLayer, previewOverlayLayer] where !layer.isHidden {
+        // The brush's live stroke too, at its opacity, so a walk can hold the
+        // stroke under the hand against the one that lands (`CanvasBrush`).
+        for layer in [contentLayer, crispLayer, previewSpriteLayer, previewOverlayLayer, brushLayer]
+        where !layer.isHidden {
             guard let contents = layer.contents else { continue }
             let image: CGImage?
             if CFGetTypeID(contents as CFTypeRef) == CGImage.typeID {
@@ -57,6 +60,7 @@ extension CanvasNSView {
             }
             guard let image else { continue }
             context.saveGState()
+            context.setAlpha(CGFloat(layer.opacity))
             context.translateBy(x: layer.position.x, y: layer.position.y)
             context.concatenate(layer.affineTransform())
             let box = layer.bounds

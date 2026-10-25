@@ -76,6 +76,8 @@ extension LayerContent {
                 return out
             }
             return .path(path)
+        case .paint(let paint):
+            return .paint(paint.rescaled(by: scale))
         case .zoomCallout(var callout):
             // What it is aimed at is a region of the canvas, so it moves with
             // the canvas exactly as it does under magnification.

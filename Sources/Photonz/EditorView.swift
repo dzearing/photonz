@@ -1317,7 +1317,7 @@ struct EditorView: View {
     /// Nil for the one-button-per-tool bar Current ships.
     private var groupedFold: ToolBarFold? {
         guard Experiments.shared.toolGroupsEnabled else { return nil }
-        let layout = Experiments.shared.toolBarLayout
+        let layout = Experiments.shared.toolBarLayout(inTime: editorState.documentHasTime)
         let lit: ToolBarLayout.Entry? = isVideoBar && editorState.isTimelineBlade
             ? .blade : layout.entry(for: editorState.activeTool)
         // A mode with tools of its own (Design) puts them in front and folds
@@ -1537,6 +1537,8 @@ struct EditorView: View {
         case component
         /// The Hand (Next, `next-hand-tool`): a drag moves the view.
         case hand
+        /// The Brush (Next, `next-brush`): drag to paint onto a Paint layer.
+        case brush
         /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
         case shapes
         /// The timeline's Blade, on a video's bar (`ToolBarFold.video`).
@@ -1587,6 +1589,7 @@ struct EditorView: View {
             case .pen: "Pen"
             case .component: Tool.component.barTitle
             case .hand: Tool.hand.barTitle
+            case .brush: Tool.brush.barTitle
             case .blade: "Blade"
             }
         }
@@ -1613,6 +1616,7 @@ struct EditorView: View {
             case .pen: "pencil.tip"
             case .component: Tool.component.barSymbol
             case .hand: Tool.hand.barSymbol
+            case .brush: Tool.brush.barSymbol
             case .blade: "scissors"
             }
         }
@@ -1653,6 +1657,7 @@ struct EditorView: View {
             case .pen: .pen
             case .component: .component
             case .hand: .hand
+            case .brush: .brush
             case .marquee, .shapes, .resize, .blade: nil
             }
         }
@@ -1668,14 +1673,17 @@ struct EditorView: View {
         let pen = Experiments.shared.penEnabled
         let component = Experiments.shared.componentsEnabled
         let hand = Experiments.shared.handToolEnabled
+        let brush = Experiments.shared.brushEnabled && !editorState.documentHasTime
         guard Experiments.shared.toolGroupsEnabled else {
             return ToolbarSlot.allCases.filter {
                 $0 != .shapes && $0 != .blade && ($0 != .frame || frames) && ($0 != .lens || lens)
                     && ($0 != .zoomCallout || !lens) && ($0 != .pen || pen)
                     && ($0 != .component || component) && ($0 != .hand || hand)
+                    && ($0 != .brush || brush)
             }
         }
-        var slots = Experiments.shared.toolBarLayout.entries.map(ToolbarSlot.init)
+        var slots = Experiments.shared.toolBarLayout(inTime: editorState.documentHasTime)
+            .entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
             slots.insert(.resize, at: crop + 1)
         }
@@ -1725,6 +1733,7 @@ struct EditorView: View {
         case .pen: toolButton(.pen, "pencil.tip", "Pen")
         case .component: componentToolButton
         case .hand: toolButton(.hand, Tool.hand.barSymbol, Tool.hand.barTitle)
+        case .brush: toolButton(.brush, Tool.brush.barSymbol, Tool.brush.barTitle)
         case .measure: measureToolButton
         case .fill:
             toolButton(.fill, help: "Fill") {
@@ -2908,6 +2917,7 @@ struct EditorView: View {
         switch editorState.activeTool {
         case .text: "Text Style"
         case .pen: "Path Style"
+        case .brush: "Brush Style"
         default: "Annotation Style"
         }
     }

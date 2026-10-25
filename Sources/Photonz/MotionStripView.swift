@@ -735,6 +735,7 @@ extension LayerMark {
         case .lens: Tool.lens.barSymbol
         case .measure: Tool.measure.barSymbol
         case .collage: "square.grid.2x2"
+        case .paint: Tool.brush.barSymbol
         }
     }
 }

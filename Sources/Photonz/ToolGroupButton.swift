@@ -28,6 +28,7 @@ extension Tool {
         // takes a system symbol.
         case .component: "square.on.square.dashed"
         case .hand: "hand.raised"
+        case .brush: "paintbrush.pointed"
         }
     }
 
@@ -56,6 +57,7 @@ extension Tool {
         // on its More row and in Edit ▸ Tools: one tool, one name.
         case .component: "Component insert"
         case .hand: "Hand"
+        case .brush: "Brush"
         }
     }
 

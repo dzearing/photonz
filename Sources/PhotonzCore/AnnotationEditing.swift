@@ -79,6 +79,10 @@ extension Layer {
         switch content {
         // Sound draws nothing and has no box on the canvas to take hold of.
         case .sound: false
+        // A paint layer is the size of the canvas or frame it was painted on,
+        // and its strokes are stated in points: stretching the box would have
+        // to restate every sample, so for now it moves and does not resize.
+        case .paint: false
         case .text: true
         case .annotation: !hasEndpointHandles
         // Calipers edit via endpoint handles; alignment guides not at all

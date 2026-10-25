@@ -221,6 +221,14 @@ struct CanvasView: NSViewRepresentable {
     /// hand has to be decided the same way the landing shape will be, or it
     /// jumps on release.
     var armedStrokeWidthIsChosen: Bool = false
+    /// The brush the Brush is armed with and its colour, echoed from
+    /// EditorState so the stroke under your hand is painted the way the one
+    /// that lands will be (`EditorState.armedBrush`).
+    var brushSettings = BrushSettings(medium: .charcoal)
+    var brushColorHex = AnnotationStyles.defaultBrushColorHex
+    /// A stroke finished with the Brush (Next, `next-brush`), in canvas
+    /// points: one undo step.
+    var onBrushStroke: (BrushStroke) -> Void = { _ in }
     /// A path finished with the Pen (Next, `next-pen`), in document
     /// coordinates: one layer, one undo step.
     let onPathCommit: (PathContent) -> Void
@@ -454,6 +462,9 @@ struct CanvasView: NSViewRepresentable {
         view.penPaint = penPaint
         view.penStrokeWidth = penStrokeWidth
         view.armedStrokeWidthIsChosen = armedStrokeWidthIsChosen
+        view.brushSettings = brushSettings
+        view.brushColorHex = brushColorHex
+        view.onBrushStroke = onBrushStroke
         view.onViewSizeChange = onViewSizeChange
         view.onViewportChange = onViewportChange
         view.onSelectionChange = onSelectionChange
@@ -662,6 +673,7 @@ final class CanvasNSView: NSView {
     var onFrameCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onLensCreate: ((CGPoint, CGPoint) -> Void) = { _, _ in }
     var onPathCommit: ((PathContent) -> Void) = { _ in }
+    var onBrushStroke: ((BrushStroke) -> Void) = { _ in }
     var onPenHintChange: ((String) -> Void) = { _ in }
     var onPenCloseRefused: (() -> Void) = {}
     var onPathPreview: ((UUID, PathContent) -> Void) = { _, _ in }
@@ -1267,6 +1279,16 @@ final class CanvasNSView: NSView {
     /// that draws over several clicks, so its state outlives a single press;
     /// every decision it makes lives in `PenSession` and is tested there.
     var penSession = PenSession()
+    /// The stroke being painted with the Brush (Next, `next-brush`), nil
+    /// between strokes (`CanvasBrush`).
+    var brushStroke: BrushLiveStroke?
+    /// The overlay the live stroke is stamped onto, over the composite.
+    let brushLayer = CALayer()
+    /// The composite on screen when the last stroke was handed over; the
+    /// overlay comes down once a different one arrives with the stroke in it.
+    var brushCommitImage: CGImage?
+    /// The ring cursor for the tip at the last size it was drawn for.
+    var brushCursorCache: (diameter: CGFloat, cursor: NSCursor)?
     /// The last line handed to the chip under the canvas. The line is worked
     /// out on every mouse move now that it answers what is under the pointer,
     /// and handing SwiftUI the same sentence sixty times a second would redraw
@@ -1382,6 +1404,10 @@ final class CanvasNSView: NSView {
     /// Whether that weight is one somebody asked for, echoed the same way. Only
     /// a weight nobody chose is an icon frame's to thin (`IconStrokeWeight`).
     var armedStrokeWidthIsChosen: Bool = false
+    /// What the Brush is armed with, echoed from EditorState and read as each
+    /// stroke begins.
+    var brushSettings = BrushSettings(medium: .charcoal)
+    var brushColorHex = AnnotationStyles.defaultBrushColorHex
 
     /// Styled content for the active tool, echoed from EditorState; the in-flight
     /// preview strokes with this so it matches the committed rasterization.
@@ -2492,6 +2518,7 @@ final class CanvasNSView: NSView {
         // top of it, then the handles, then the close ring, so the thing you
         // are aiming at is never buried under the thing you are drawing.
         setUpPenChrome()
+        setUpBrushChrome()
         setUpDrawLandingChrome()
         setUpIconSnapReadoutChrome()
         setUpMotionPivotChrome()

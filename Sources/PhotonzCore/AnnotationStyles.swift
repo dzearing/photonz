@@ -50,6 +50,17 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     /// frame where the line would land at 2, and typing 4 could not get you a 4.
     private var chosenWidths: Set<String> = []
 
+    /// The colour the BRUSH is armed with: what the next stroke is painted in.
+    /// Its own, like the Pen's, so arming the brush never repaints the boxes.
+    private var brushInk: Paint = Paint(hex: AnnotationStyles.defaultBrushColorHex)
+
+    /// The brush the BRUSH tool is armed with: its medium and that medium's
+    /// settings, Size among them. Copied into each stroke as it is painted.
+    private var brush = BrushSettings(medium: .charcoal)
+
+    /// Photoshop's foreground colour out of the box.
+    public static let defaultBrushColorHex = "#000000"
+
     /// What the Pen's chosen weight is filed under. A path is not an
     /// `AnnotationShape`, so it has no shape key to use.
     private static let penWidthKey = "pen"
@@ -67,6 +78,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         case heldColorStyleNames
         case penPaint
         case penStrokeWidth
+        case brushPaint
+        case brush
         case chosenStrokeWidths
         // Legacy single-bucket keys (pre per-shape); migrated on decode.
         case strokeColorHex, highlightColorHex, strokeWidth, arrowheadScale
@@ -82,6 +95,9 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
             ?? Paint(hex: PathContent.defaultColorHex)
         penStrokeWidth = try c.decodeIfPresent(CGFloat.self, forKey: .penStrokeWidth)
             ?? PathContent.defaultStrokeWidth
+        brushInk = try c.decodeIfPresent(Paint.self, forKey: .brushPaint)
+            ?? Paint(hex: AnnotationStyles.defaultBrushColorHex)
+        brush = try c.decodeIfPresent(BrushSettings.self, forKey: .brush) ?? BrushSettings(medium: .charcoal)
         if let decoded = try c.decodeIfPresent([String: ShapeDefaults].self, forKey: .shapes) {
             var shapes = decoded
             // Backfill any shape added after the prefs were written.
@@ -139,6 +155,13 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         }
         if penStrokeWidth != PathContent.defaultStrokeWidth {
             try c.encode(penStrokeWidth, forKey: .penStrokeWidth)
+        }
+        // The same for the brush: nothing until it has been armed.
+        if brushInk != Paint(hex: AnnotationStyles.defaultBrushColorHex) {
+            try c.encode(brushInk, forKey: .brushPaint)
+        }
+        if brush != BrushSettings(medium: .charcoal) {
+            try c.encode(brush, forKey: .brush)
         }
         // Nothing at all until a weight has been chosen, so prefs that have
         // never had one write exactly what they always wrote.
@@ -459,10 +482,18 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         shapes[shape.rawValue, default: .standard(for: shape)].captionFontSize = size
     }
 
+    // MARK: - The brush
+
+    /// The brush the Brush tool is armed with.
+    public var armedBrush: BrushSettings { brush }
+
+    public mutating func setArmedBrush(_ settings: BrushSettings) { brush = settings }
+
     // MARK: - Tool-keyed convenience (nil for non-annotation tools)
 
     public func colorHex(for tool: Tool) -> String? {
         if tool == .pen { return penInk.hex }
+        if tool == .brush { return brushInk.hex }
         guard let shape = tool.annotationShape else { return nil }
         return colorHex(forShape: shape)
     }
@@ -474,6 +505,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         // The Pen draws no annotation, so it has no shape bucket — but it is a
         // drawing tool with a line, and this is the weight it is armed with.
         if tool == .pen { return penStrokeWidth }
+        // The brush's line is its tip: the Width beside its swatch is Size.
+        if tool == .brush { return CGFloat(brush.size) }
         guard let shape = tool.annotationShape, tool.usesStrokeWidth else {
             return AnnotationContent.defaultStrokeWidth
         }
@@ -486,6 +519,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         if tool == .pen {
             penStrokeWidth = width
             chosenWidths.insert(AnnotationStyles.penWidthKey)
+            return
+        }
+        if tool == .brush {
+            brush.set("size", to: Double(width))
             return
         }
         guard let shape = tool.annotationShape, tool.usesStrokeWidth else { return }
@@ -504,6 +541,10 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
             penInk.kind = .solid
             return
         }
+        if tool == .brush {
+            brushInk = Paint(hex: hex)
+            return
+        }
         guard let shape = tool.annotationShape else { return }
         setColorHex(hex, forShape: shape)
     }
@@ -515,6 +556,7 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         // drawing tool with a swatch on the bar, and this is what that swatch
         // is showing (`Tool.colorControl`).
         if tool == .pen { return penInk }
+        if tool == .brush { return brushInk }
         guard let shape = tool.annotationShape else { return nil }
         return paint(forShape: shape)
     }
@@ -523,6 +565,12 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
     public mutating func setPaint(_ paint: Paint, for tool: Tool) {
         if tool == .pen {
             penInk = paint
+            return
+        }
+        // A stroke is one flat colour: a gradient armed here keeps its first
+        // stop until the media can carry more.
+        if tool == .brush {
+            brushInk = Paint(hex: paint.hex)
             return
         }
         guard let shape = tool.annotationShape else { return }
@@ -773,7 +821,7 @@ extension Tool {
     /// through `strokeWidth(for:)`/`setStrokeWidth(_:for:)`, both of which
     /// answer for the Pen before they ever look for a shape bucket.
     public var usesStrokeWidth: Bool {
-        if self == .pen { return true }
+        if self == .pen || self == .brush { return true }
         guard let shape = annotationShape else { return false }
         return shape != .highlight
     }

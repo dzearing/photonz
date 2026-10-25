@@ -207,19 +207,24 @@ public struct ToolBarLayout: Hashable, Sendable {
     /// inherits the slot rather than the callout keeping it because the slot is
     /// now the wider thing: six kinds, of which magnify is one.
     ///
+    /// The Brush joins the end of the drawing family like every other tool a
+    /// flag adds. The image mock prints it after Crop; the rule above wins so
+    /// no learned slot moves, and it still sits with the Pen it paints beside.
+    ///
     /// The Hand is the other exception: it is not a drawing tool, so it is a
     /// family of its own at the very end, where Photoshop keeps it and where
     /// every mock's strip ends. Being last, it is also the first slot a narrow
     /// picture window folds under More.
     public static func bar(withFrame: Bool, withLens: Bool = false,
                            withPen: Bool = false, withComponent: Bool = false,
-                           withHand: Bool = false) -> ToolBarLayout {
+                           withHand: Bool = false, withBrush: Bool = false) -> ToolBarLayout {
         var drawing: [Entry] = [.tool(.arrow), .group(.shapes), .tool(.highlight),
                                 .tool(.text)]
         drawing.append(withLens ? .tool(.lens) : .tool(.zoomCallout))
         if withFrame { drawing.append(.tool(.frame)) }
         if withPen { drawing.append(.tool(.pen)) }
         if withComponent { drawing.append(.tool(.component)) }
+        if withBrush { drawing.append(.tool(.brush)) }
         var families: [[Entry]] = [
             [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
             drawing,

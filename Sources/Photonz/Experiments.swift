@@ -504,11 +504,22 @@ extension Experiments {
     /// The tool bar's slots as this release's flags leave it: the one place
     /// the bar, its More menu and Edit ▸ Tools all read, so a tool a flag adds
     /// cannot reach one of them and miss another.
-    var toolBarLayout: ToolBarLayout {
+    var toolBarLayout: ToolBarLayout { toolBarLayout(inTime: false) }
+
+    /// The bar for a document with or without time. A document with time has
+    /// no Brush (the video workspace's tools carry none, PRODUCT-MODEL.md), so
+    /// its B stays the timeline's Blade (UX-PATTERNS §7).
+    func toolBarLayout(inTime: Bool) -> ToolBarLayout {
         ToolBarLayout.bar(withFrame: framesEnabled, withLens: lensEnabled,
                           withPen: penEnabled, withComponent: componentsEnabled,
-                          withHand: handToolEnabled)
+                          withHand: handToolEnabled, withBrush: brushEnabled && !inTime)
     }
+
+    /// `next-brush`: the Brush at the end of the drawing family on a picture,
+    /// on B, painting strokes onto a Paint layer (`docs/design/brushes.md`).
+    /// Like the Pen, the model and renderer are never flagged: a document
+    /// holding paint draws it either way.
+    var brushEnabled: Bool { isEnabled(FeatureCatalog.brushFlag) }
 
     /// `next-hand-tool`: the Hand at the end of the tool bar, whose drag on
     /// the canvas moves the view (`HandPan`).

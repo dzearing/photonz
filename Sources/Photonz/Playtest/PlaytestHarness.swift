@@ -19888,6 +19888,8 @@ private final class Run {
                 // picture.
                 case .path(let path):
                     kind = "path:\(path.anchors.count)\(path.isClosed ? " closed" : " open")"
+                // How many strokes, so a walk can prove one undo took one off.
+                case .paint(let paint): kind = "paint:\(paint.strokes.count)"
                 case .zoomCallout: kind = "callout"
                 // What the lens DOES is the whole of what it is, so the tree
                 // says it rather than making a walk read a picture.

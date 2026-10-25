@@ -48,6 +48,7 @@ extension CanvasNSView {
         // The Pen owns Return and Escape while a path is being laid down: one
         // keeps what you drew as an open line, the other throws it away.
         if penKeyDown(event) { return }
+        if brushKeyDown(event) { return }
         // Space: watch it loop, or stop watching (`next-motion`). Nothing in an
         // image window wants Space otherwise — the app's only other one is the
         // video transport, in a window this code never runs in — and a preview

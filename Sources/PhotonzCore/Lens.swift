@@ -320,7 +320,7 @@ extension LayerContent {
         // Sound draws nothing, so it reads nothing either.
         case .sound: false
         case .zoomCallout, .lens: true
-        case .image, .text, .annotation, .measure, .collage, .group, .path: false
+        case .image, .text, .annotation, .measure, .collage, .group, .path, .paint: false
         }
     }
 }

@@ -147,6 +147,8 @@ extension LayerContent {
         case .path(var path):
             path.strokeWidth *= factor
             return .path(path)
+        case .paint(let paint):
+            return .paint(paint.tipsScaled(by: factor))
         case .annotation(var annotation):
             annotation.strokeWidth *= factor
             annotation.cornerRadii = annotation.cornerRadii.scaled(by: factor)

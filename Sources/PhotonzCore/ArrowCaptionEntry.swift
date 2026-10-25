@@ -61,8 +61,13 @@ public enum ArrowCaptionEntry {
     /// 2026-09-15, "after i create a shape, it doesn't select it and switch to
     /// V tool"). `Tool.createsLayers` is the list, and the test over it is
     /// what stops a tool being added with an ending of its own.
+    ///
+    /// The Brush is the one tool that stays: painting is dozens of strokes in
+    /// a row, and every paint app keeps the brush in hand
+    /// (`docs/design/brushes.md`, decision 3). V or Escape puts it down.
     public static func toolAfterLanding(_ tool: Tool, offersCaption: Bool) -> Tool {
-        tool == .arrow && offersCaption ? .arrow : .select
+        if tool == .brush { return .brush }
+        return tool == .arrow && offersCaption ? .arrow : .select
     }
 
     /// The tool after the field closes. The Arrow tool that stayed live hands

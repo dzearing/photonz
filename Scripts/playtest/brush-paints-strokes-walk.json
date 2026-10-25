@@ -1,0 +1,208 @@
+{
+  "out": "/tmp/photonz-playtest/brush-paints-strokes-walk",
+  "seed": "The first slice of painting (docs/design/brushes.md): B picks the Brush on a picture, a drag paints a soft stroke that lands on its own Paint layer above the picture, the brush stays in hand for the next stroke, and each stroke is one undo step. No flags: this is Next as a person gets it. The first drag holds the picture with the button still down against the one after the release, which is the claim that what lands is what you saw while dragging. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 2000,
+      "height": 1300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-brush-in-hand"
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        420
+      ],
+      "to": [
+        1250,
+        640
+      ],
+      "steps": 24,
+      "wobble": 3,
+      "hold": "1-stroke-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-one-stroke"
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-stroke",
+      "note": "the layer tree says how many strokes the Paint layer holds"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        900
+      ],
+      "to": [
+        1400,
+        760
+      ],
+      "steps": 24,
+      "wobble": 3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "2-two-strokes"
+    },
+    {
+      "do": "describe",
+      "stage": "2-two-strokes",
+      "note": "the layer tree says how many strokes the Paint layer holds"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-one-undone"
+    },
+    {
+      "do": "describe",
+      "stage": "3-one-undone",
+      "note": "the layer tree says how many strokes the Paint layer holds"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Redo"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "4-both-back"
+    },
+    {
+      "do": "describe",
+      "stage": "4-both-back",
+      "note": "the layer tree says how many strokes the Paint layer holds"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

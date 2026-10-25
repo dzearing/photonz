@@ -57,7 +57,7 @@ extension Layer {
     /// a sound has nothing to reflect.
     public var canBeMirrored: Bool {
         switch content {
-        case .image, .text, .annotation, .path, .collage, .group: true
+        case .image, .text, .annotation, .path, .paint, .collage, .group: true
         case .zoomCallout, .lens, .measure, .sound: false
         }
     }

@@ -21902,3 +21902,11 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - Design: `docs/design/brushes.md`. A stroke is data (samples with pressure, tilt and time; the brush and its settings; colour; a seed) on a new Paint layer kind, never pixels in the model. Strokes land on a Paint layer above the picture, one undo step each; the brush stays in hand. One engine: dab placement in PhotonzCore (pure, tested), per-medium marking in PhotonzRender (watercolour after Curtis 1997, oil with pickup and a lit height channel). The live stroke draws its own overlay; a paint layer keeps its last raster.
 - Ten child tasks at p1 with deps, foundation first (`pressing-b-picks-a-brush-that-paints-freehand-st`, seq 5.1), then dry media, marker and airbrush, watercolour, oil, settings, pressure, MCP, brushed vector strokes, and painting speed. The umbrella waits on all ten and closes the epic with the blind test sheet, the try path and the audit.
 - No app code this run.
+
+## 2026-10-24 — Brush slice 1: B paints strokes onto a Paint layer
+
+- New layer kind `LayerContent.paint(PaintContent)`: strokes as data (samples, brush settings, colour, seed). `Brush.swift` holds the seven media and their settings, `BrushPlacement` (dab spacing, smoothing, seeded jitter) and `PhotonzDocument.paintStroke` (add to a picked paint layer, or a new Paint layer above the pick). Every switch over `LayerContent` answers for `.paint`.
+- `PaintRasterizer` (PhotonzRender) stamps a soft round tip; wired into `DocumentRenderer` like `.path`.
+- `Tool.brush` on B, flag `next-brush` on at Next defaults; off the bar on documents with time so B stays the Blade. Stays in hand after a stroke. Live overlay in `CanvasBrush.swift`, ring cursor the size of the tip.
+- Walk `brush-paints-strokes-walk` (no flags): two strokes, held vs landed 0.06%, undo/redo stroke counts 1/2/1/2.
+- Next: the media slices, then settings in the tool options.

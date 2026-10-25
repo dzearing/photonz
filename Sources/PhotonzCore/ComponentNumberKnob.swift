@@ -148,7 +148,8 @@ extension Layer {
         case .image, .collage, .group, .lens: return true
         // A path turns whatever corners its anchors turn, so a radius knob
         // over it would be a number that changes nothing.
-        case .text, .measure, .zoomCallout, .path: return false
+        // Strokes have no corners of their own either.
+        case .text, .measure, .zoomCallout, .path, .paint: return false
         }
     }
 

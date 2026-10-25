@@ -53,12 +53,15 @@ struct ArrowCaptionEntryTests {
     /// to keep itself in hand). The Pen is in here on purpose: it was the one
     /// exception and is not one any more.
     @Test func everyToolThatCreatesSomethingHandsBackToSelect() {
-        for tool in Tool.allCases where tool.createsLayers {
+        // The Brush is the one exception, on purpose: painting is dozens of
+        // strokes in a row (`docs/design/brushes.md`, decision 3).
+        for tool in Tool.allCases where tool.createsLayers && tool != .brush {
             #expect(ArrowCaptionEntry.toolAfterLanding(tool, offersCaption: false) == .select,
                     "\(tool) must hand back to Select the moment its object exists")
         }
         #expect(Tool.pen.createsLayers)
         #expect(ArrowCaptionEntry.toolAfterLanding(.pen, offersCaption: false) == .select)
+        #expect(ArrowCaptionEntry.toolAfterLanding(.brush, offersCaption: false) == .brush)
     }
 
     /// Which tools make something, so the rule above cannot be satisfied by a
@@ -67,7 +70,7 @@ struct ArrowCaptionEntryTests {
     @Test func theToolsThatCreateSomethingAreTheDrawingOnes() {
         let creating = Set(Tool.allCases.filter(\.createsLayers))
         #expect(creating == [.arrow, .line, .rectangle, .ellipse, .highlight,
-                             .text, .zoomCallout, .lens, .measure, .frame, .pen, .component])
+                             .text, .zoomCallout, .lens, .measure, .frame, .pen, .component, .brush])
         for tool in [Tool.select, .crop, .fill, .rectSelect, .ellipseSelect, .wand] {
             #expect(!tool.createsLayers)
         }

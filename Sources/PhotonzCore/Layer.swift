@@ -1223,6 +1223,10 @@ public enum LayerContent: Hashable, Codable, Sendable {
     /// annotation is a two-point mark and a path has no fixed number of points
     /// (`docs/design/vector-paths.md`).
     case path(PathContent)
+    /// Strokes a Brush painted: data, not pixels, so the picture underneath is
+    /// never written to and every stroke re-renders the same way
+    /// (`Brush.swift`, `docs/design/brushes.md`).
+    case paint(PaintContent)
     case zoomCallout(ZoomCalloutContent)
     /// A layer that draws what is composited BELOW it, through one adjustment
     /// (`Lens.swift`). Beside the zoom callout rather than in the Effects list
@@ -1258,7 +1262,8 @@ public enum LayerContent: Hashable, Codable, Sendable {
         // the right picture.
         // A path's line is stated in points like every other stroke, so a
         // sprite of it stretches when the box grows.
-        case .annotation, .text, .zoomCallout, .lens, .measure, .group, .path: false
+        // A stroke's tip is stated in points too.
+        case .annotation, .text, .zoomCallout, .lens, .measure, .group, .path, .paint: false
         }
     }
 

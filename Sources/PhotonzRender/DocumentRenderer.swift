@@ -1344,6 +1344,18 @@ public final class DocumentRenderer: @unchecked Sendable {
                 PathRasterizer.rasterize(path, size: boxInPoints, scale: bake)
             }) else { return nil }
             image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
+        case .paint(let paint):
+            // Baked at the resolution it will be shown at, like a path, so the
+            // soft edge of a stroke is soft at every zoom rather than blocky.
+            // The whole list of strokes is replayed when it changes; keeping
+            // the last raster and adding only the newest stroke is the speed
+            // slice's (`docs/design/brushes.md`, decision 5).
+            let bake = crispScale(contentScale, box: boxInPoints)
+            guard let raster = raster(for: layer.content, size: layer.frame.size,
+                                      variant: contentScale == 1 ? "" : "crisp", rasterize: {
+                PaintRasterizer.rasterize(paint, size: boxInPoints, scale: bake)
+            }) else { return nil }
+            image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .measure(let measure):
             // The label text depends on the document's pixelScale (points
             // readout), which isn't part of the cache key's content.
@@ -2152,7 +2164,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         switch layer.content {
         case .path(let path):
             return path
-        case .text, .zoomCallout, .lens, .measure, .collage, .sound:
+        case .text, .zoomCallout, .lens, .measure, .collage, .sound, .paint:
             return nil
         case .image:
             return layer.followedOutline(contentScale: contentScale, pictureEdge: edge)

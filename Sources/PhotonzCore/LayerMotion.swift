@@ -450,7 +450,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case let .text(text): return text.colorHex
         case let .path(path): return path.fill?.hex ?? path.paint.hex
         case let .collage(collage): return collage.backdropColorHex
-        case .image, .measure, .zoomCallout, .lens, .group: return nil
+        // Paint is as many colours as were painted with, so no one of them
+        // is the layer's.
+        case .image, .measure, .zoomCallout, .lens, .group, .paint: return nil
         }
     }
 

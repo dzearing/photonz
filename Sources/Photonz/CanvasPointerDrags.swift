@@ -265,6 +265,9 @@ extension CanvasNSView {
         // clicks rather than in one drag, so there is no hit test, no marquee
         // and no selection underneath it.
         if tool == .pen, penMouseDown(at: p, event: event) { return }
+        // The Brush owns every press too: a drag paints, a click leaves a dab,
+        // and nothing under it is hit-tested or picked.
+        if tool == .brush, brushMouseDown(at: p, event: event) { return }
         // Drawing tools own the pointer: every drag creates a new annotation
         // (or, for the zoom tool, defines the callout's source box).
         if tool.createsAnnotationByDrag || tool == .zoomCallout || tool == .frame
@@ -860,6 +863,10 @@ extension CanvasNSView {
             penMouseDragged(to: p, event: event)
             return
         }
+        if brushIsPainting {
+            brushMouseDragged(to: p, event: event)
+            return
+        }
         // The cancelled case belongs here too: after Escape the pivot has
         // given the drag back, and this keeps the rest of the gesture from
         // falling through to the shape the crosshair was sitting on.
@@ -1314,6 +1321,11 @@ extension CanvasNSView {
         if tool == .pen {
             penMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
                        event: event)
+            return
+        }
+        if brushIsPainting {
+            brushMouseUp(at: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)),
+                         event: event)
             return
         }
         if motionPivotDrag != nil || motionPivotCancelled {

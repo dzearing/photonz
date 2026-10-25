@@ -371,6 +371,10 @@ public enum SVGExport {
             return .vector
         case .image:
             return flatColor(of: layer, in: flatImages) == nil ? .picture(nil) : .vector
+        // Brush strokes are soft marks with no outline, so they go in as the
+        // picture they render to, the way a photograph does.
+        case .paint:
+            return .picture(nil)
         case .path(let path):
             if let reason = sweepReason(path.fill) ?? sweepReason(path.paint) {
                 return .picture(reason)

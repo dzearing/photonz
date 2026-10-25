@@ -161,6 +161,25 @@ sampling the curve into stroke samples (pressure from a taper, or later from a
 per-anchor width) and feeding the same engine. The path stays editable: move
 an anchor and the line re-paints.
 
+## What slice 1 settled (2026-10-24)
+
+- The Brush keeps the layer pick when you pick it up (`Tool.preservesLayerSelection`),
+  because the picked layer is where the strokes go: that is what lets decision 2
+  put a new Paint layer "just above the picked layer". Its handles hide while
+  the brush is in hand, as they do for every non-Select tool.
+- The armed brush lives in `AnnotationStyles` beside the Pen's ink: its own
+  colour (black out of the box, Photoshop's foreground) and a `BrushSettings`
+  starting on Charcoal. The Width behind the tool bar swatch is the brush's Size
+  until the settings slice gives it its own controls.
+- Placement walks a Catmull-Rom curve through the samples, one sample behind
+  the pointer, and lays a last dab on the very end; `BrushPlacement.Walker` is
+  shared by the live overlay and the renderer, so live and landed agree by
+  construction (the walk measured 0.06% of the canvas different between the
+  held and the landed picture).
+- The live overlay is a view-sized bitmap over the composite, cut to the box
+  the stroke will land in, shown at the stroke's opacity. It stays up until the
+  composite holding the stroke arrives.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,

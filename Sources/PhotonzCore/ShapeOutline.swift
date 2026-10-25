@@ -40,7 +40,8 @@ extension Layer {
             return group.isFrame || group.children.isEmpty ? .none : .outline
         case .image(let ref):
             return crop == nil && zoomWindow == nil && pictureHasEdge(ref) ? .outline : .none
-        case .zoomCallout, .lens, .measure, .collage, .sound:
+        // Paint is soft-edged marks, not an outline a ring could run round.
+        case .zoomCallout, .lens, .measure, .collage, .sound, .paint:
             return .none
         }
     }
@@ -82,7 +83,7 @@ extension Layer {
                   let area = drawnArea(contentScale: contentScale, pictureEdge: pictureEdge)
             else { return nil }
             return PathContent(area)
-        case .text, .zoomCallout, .lens, .measure, .collage, .sound:
+        case .text, .zoomCallout, .lens, .measure, .collage, .sound, .paint:
             return nil
         }
     }
@@ -114,7 +115,8 @@ extension Layer {
             return edge.copy(using: &stretch)
         case .sound:
             return nil
-        case .text, .zoomCallout, .lens, .measure, .collage:
+        // Paint has no silhouette worked out yet, so it stands as its box.
+        case .text, .zoomCallout, .lens, .measure, .collage, .paint:
             return boxArea()
         }
     }

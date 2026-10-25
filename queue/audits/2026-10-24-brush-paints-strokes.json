@@ -1,0 +1,54 @@
+{
+  "feature": "Brush: paint freehand strokes onto a Paint layer",
+  "epic": "image-paint",
+  "summary": "On a picture, B picks a Brush at the end of the tool bar's drawing tools. A drag paints a soft round stroke in the brush's colour onto a Paint layer above the picture, the brush stays in hand, and Command Z takes one stroke off at a time.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Open any screenshot. Walk: Scripts/playtest/brush-paints-strokes-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screenshot and press B.",
+      "shot": "2026-10-24-brush-0-brush-in-hand-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag across the picture and watch the stroke follow the pointer before you let go.",
+      "shot": "2026-10-24-brush-1-stroke-held-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Let go, then drag a second stroke without picking anything.",
+      "shot": "2026-10-24-brush-2-two-strokes-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once.",
+      "shot": "2026-10-24-brush-3-one-undone-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Shift Z to put the stroke back.",
+      "shot": "2026-10-24-brush-4-both-back-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Escape to put the brush down, then save, close and reopen the file."
+    }
+  ],
+  "evaluate": [
+    "Does the stroke under your hand look exactly like the one that lands when you let go?",
+    "Is a ring the size of the tip a better pointer than a crosshair while painting?",
+    "Is it right that the brush stays in hand after a stroke, when every other drawing tool hands back Select?",
+    "Does a Paint layer above the picture, rather than painting into the screenshot itself, feel natural?",
+    "Is the soft round tip at 16 points a sensible starting brush before the media arrive?"
+  ],
+  "rough": [
+    "Every medium paints the same plain soft round tip for now; charcoal, chalk and the rest get their own looks in charcoal-chalk-and-crayon-catch-on-a-paper-grain, marker-strokes-are-flat-and-darken-where-they-cr, watercolour-strokes-are-transparent-pool-darker and oil-paint-strokes-carry-and-smear-colour-and-sho.",
+    "The retouch mock's Size, Hardness, Flow and mode rows are not in the panel or the tool options yet; a picked Paint layer shows only the shared Appearance rows. Covered by each-brush-shows-its-own-settings-in-the-tool-op. The brush's colour and size are meant to be set from the tool bar swatch and its Width row, which I did not try while a Paint layer was picked.",
+    "The image mock prints Brush right after Crop; here it sits at the end of the drawing tools, after Component insert, where every tool a flag adds goes so no learned slot moves. Folded into a-brush-tool-paints-with-realistic-charcoal-chal to settle on the epic's try path.",
+    "The stroke under the hand is drawn over everything; a Paint layer that ends up under other layers shows the stroke slip under them when you let go.",
+    "Each new stroke replays every stroke on the layer; on a big picture with many strokes that will slow down. Measured and fixed in painting-keeps-up-with-the-pointer-on-a-12-megap.",
+    "A Paint layer moves but does not resize, because its strokes are stated in points.",
+    "On a video the Brush is not on the bar and B stays the Blade (UX-PATTERNS \u00a77); video-tool-bar-walk and timeline-keys-on-open-walk still pass.",
+    "All pictures show the window behind another app, so the picked tool and the Layers row show their background look."
+  ]
+}
