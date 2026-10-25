@@ -51,7 +51,7 @@ struct AirbrushRenderingTests {
     @Test("Measured bar: the spray feathers out from a dense middle; the round tip has a body and an edge")
     func featherBar() throws {
         let air = PaintMeasures.featherShare(try render([stroke(pass())]), from: a, to: b, diameter: 40, scale: scale)
-        let round = PaintMeasures.featherShare(try render([stroke(pass(), medium: .oil)]), from: a, to: b, diameter: 40,
+        let round = PaintMeasures.featherShare(try PaintRasterizer.$plainRound.withValue(true) { try render([stroke(pass(), medium: .oil)]) }, from: a, to: b, diameter: 40,
                                                scale: scale)
         #expect(air >= PaintMeasures.airbrushFeatherBar, "airbrush \(air)")
         #expect(round < PaintMeasures.airbrushFeatherBar, "round tip \(round)")
@@ -60,7 +60,7 @@ struct AirbrushRenderingTests {
     @Test("Measured bar: the spray's fringe is specked with droplets; the round tip's edge has none")
     func edgeDropletBar() throws {
         let air = PaintMeasures.edgeDroplets(try render([stroke(pass())]), from: a, to: b, diameter: 40, scale: scale)
-        let round = PaintMeasures.edgeDroplets(try render([stroke(pass(), medium: .oil)]), from: a, to: b, diameter: 40,
+        let round = PaintMeasures.edgeDroplets(try PaintRasterizer.$plainRound.withValue(true) { try render([stroke(pass(), medium: .oil)]) }, from: a, to: b, diameter: 40,
                                                scale: scale)
         #expect(air >= PaintMeasures.airbrushEdgeDropletBar, "airbrush \(air)")
         #expect(round < PaintMeasures.airbrushEdgeDropletBar, "round tip \(round)")
@@ -90,7 +90,7 @@ struct AirbrushRenderingTests {
             #expect(later > earlier, "airbrush \(air)")
         }
         #expect(air[3] >= air[0] * PaintMeasures.airbrushBuildUpBar, "airbrush \(air)")
-        let round = try holds.map { core(try render([pause($0, medium: .oil)])) }
+        let round = try PaintRasterizer.$plainRound.withValue(true) { try holds.map { core(try render([pause($0, medium: .oil)])) } }
         #expect((round.max() ?? 0) < (round.min() ?? 0) * 1.05, "round tip \(round)")
     }
 
@@ -100,7 +100,7 @@ struct AirbrushRenderingTests {
             core(try render([stroke(pass(speed: 0.25, pressure: 0.6), medium: medium)]))
                 / max(0.001, core(try render([stroke(pass(speed: 3, pressure: 0.6), medium: medium)])))
         }
-        let air = try ratio(.airbrush), round = try ratio(.oil)
+        let air = try ratio(.airbrush), round = try PaintRasterizer.$plainRound.withValue(true) { try ratio(.oil) }
         #expect(air >= PaintMeasures.airbrushSlowOverFastBar, "airbrush \(air)")
         #expect(round < 1.1, "round tip \(round)")
     }

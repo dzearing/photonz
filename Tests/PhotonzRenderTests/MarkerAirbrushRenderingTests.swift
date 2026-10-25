@@ -84,7 +84,7 @@ struct MarkerAirbrushRenderingTests {
     func flatnessBar() throws {
         let marker = PaintMeasures.flatShare(try render([doubledBack(.marker)]))
         #expect(marker >= PaintMeasures.markerFlatBar, "marker \(marker)")
-        let round = PaintMeasures.flatShare(try render([doubledBack(.oil)]))
+        let round = PaintMeasures.flatShare(try PaintRasterizer.$plainRound.withValue(true) { try render([doubledBack(.oil)]) })
         #expect(round < PaintMeasures.markerFlatBar, "round tip \(round)")
         // Along its length: where it covers its path twice it is no darker
         // than where it covers it once.
@@ -174,7 +174,7 @@ struct MarkerAirbrushRenderingTests {
             let passed = PaintMeasures.meanAlpha(image, around: CGPoint(x: 80, y: 80), radius: 6, scale: scale)
             return held / max(passed, 0.001)
         }
-        let air = try ratio(.airbrush), round = try ratio(.oil)
+        let air = try ratio(.airbrush), round = try PaintRasterizer.$plainRound.withValue(true) { try ratio(.oil) }
         #expect(air >= PaintMeasures.airbrushBuildUpBar, "airbrush \(air)")
         #expect(round < PaintMeasures.airbrushBuildUpBar, "round tip \(round)")
     }
@@ -184,8 +184,8 @@ struct MarkerAirbrushRenderingTests {
         let a = CGPoint(x: 30, y: 80), b = CGPoint(x: 270, y: 80)
         let air = PaintMeasures.fringeGrain(try render([stroke(.airbrush, line([a, b]), size: 40, hex: "#000000")]),
                                             from: a, to: b, diameter: 40, scale: scale)
-        let round = PaintMeasures.fringeGrain(try render([stroke(.oil, line([a, b]), size: 40, set: ["opacity": 40],
-                                                                 hex: "#000000")]),
+        let round = PaintMeasures.fringeGrain(try PaintRasterizer.$plainRound.withValue(true) { try render([stroke(.oil, line([a, b]), size: 40,
+                                                                 set: ["opacity": 40], hex: "#000000")]) },
                                               from: a, to: b, diameter: 40, scale: scale)
         #expect(air > round * 3 && air > 0.01, "airbrush \(air), round \(round)")
     }

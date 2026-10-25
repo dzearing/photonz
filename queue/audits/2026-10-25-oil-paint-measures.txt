@@ -1,0 +1,13 @@
+Bars at defaults, Size 24, 2x, mouse press.
+Oil paint	ridge contrast 0.041 (bar 0.025: passes), colour carried past a crossing 0.334 (bar 0.10: passes)
+Round tip	ridge contrast 0.001 (bar 0.025: fails), colour carried past a crossing 0.001 (bar 0.10: fails)
+Smear 0	carried 0.015
+Smear 20	carried 0.150
+Smear 40	carried 0.334
+Smear 70	carried 0.536
+Smear 100	carried 0.650
+Load 0	covers 36 pt (2.2 brush widths) before running dry
+Load 20	covers 96 pt (6.0 brush widths) before running dry
+Load 50	covers 184 pt (11.5 brush widths) before running dry
+Load 70	covers 244 pt (15.2 brush widths) before running dry
+Load 100	covers 332 pt (20.8 brush widths) before running dry

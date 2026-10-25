@@ -72,12 +72,13 @@ extension CanvasNSView {
             let clip = box.applying(canvasToPixels)
             let toPixels = canvasToPixels.translatedBy(x: origin.x, y: origin.y)
             var working: CGContext?
-            // What the smudge drags, and what a marker or a wash darkens where
-            // it crosses: the paint layer the stroke lands on, as it stands,
+            // What the smudge drags, what a marker or a wash darkens where it
+            // crosses, and what oil picks up and smears: the paint layer the
+            // stroke lands on, as it stands,
             // drawn into the view's pixels where it sits. A stroke starting a
             // new layer has no paint under it.
-            let multiplies = stroke.settings.medium == .marker || stroke.settings.medium == .watercolour
-            let under = smudging ? target : multiplies ? pickedPaintLayer(in: document) : nil
+            let readsPaint = [BrushMedium.marker, .watercolour, .oil].contains(stroke.settings.medium)
+            let under = smudging ? target : readsPaint ? pickedPaintLayer(in: document) : nil
             var earlier: [BrushStroke] = []
             if let under, let paint = document.layer(id: under)?.paint {
                 // The washes on it still wet, that a watercolour stroke
@@ -100,7 +101,7 @@ extension CanvasNSView {
             marker: marker, bitmap: bitmap, origin: origin, began: event.timestamp)
         brushLayer.frame = bounds
         brushLayer.contentsScale = backing
-        // A smudge's, a marker's or a wash's overlay holds what it lays over
+        // A smudge's, a marker's, a wash's or oil's overlay holds what it lays over
         // the paint, already at its strength; a stroke's holds the stroke
         // alone, shown at its opacity.
         brushLayer.opacity = (marker?.showsAtFullStrength ?? smudging) ? 1 : Float(stroke.settings.opacity / 100)
@@ -160,6 +161,7 @@ extension CanvasNSView {
         guard var live = brushStroke else { return }
         brushStroke = nil
         live.marker?.mark(live.walker.finish())
+        live.marker?.finish()
         brushLayer.contents = live.bitmap.makeImage()
         brushCommitImage = image
         onBrushStroke(live.stroke)

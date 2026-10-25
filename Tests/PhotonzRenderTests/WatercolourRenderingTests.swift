@@ -8,8 +8,8 @@ import PhotonzCore
 /// see-through wash whose pigment pooled darker at the edge where it dried; it
 /// bleeds past where the brush went; it settles into the paper's grain; strokes
 /// that cross once dry deepen into a glaze; and a stroke painted into a wash
-/// that is still wet blooms out through it. The plain round tip (still the oil
-/// paint's until its slice) fails both measured bars.
+/// that is still wet blooms out through it. The plain round tip
+/// (`PaintRasterizer.plainRound`) fails both measured bars.
 @Suite("Watercolour rendering")
 struct WatercolourRenderingTests {
 
@@ -92,7 +92,7 @@ struct WatercolourRenderingTests {
         let wash = PaintMeasures.edgeToCentre(try render([straight(.watercolour)]), from: a, to: b,
                                               diameter: 40, scale: scale)
         #expect(wash >= PaintMeasures.watercolourEdgeBar, "watercolour \(wash)")
-        let round = PaintMeasures.edgeToCentre(try render([straight(.oil, set: ["opacity": 50])]), from: a, to: b,
+        let round = PaintMeasures.edgeToCentre(try PaintRasterizer.$plainRound.withValue(true) { try render([straight(.oil, set: ["opacity": 50])]) }, from: a, to: b,
                                                diameter: 40, scale: scale)
         #expect(round < PaintMeasures.watercolourEdgeBar, "round tip \(round)")
     }
@@ -102,7 +102,7 @@ struct WatercolourRenderingTests {
         let wash = PaintMeasures.spreadPastPath(try render([straight(.watercolour)]), from: a, to: b,
                                                 diameter: 40, scale: scale)
         #expect(wash >= PaintMeasures.watercolourSpreadBar, "watercolour \(wash)")
-        let round = PaintMeasures.spreadPastPath(try render([straight(.oil)]), from: a, to: b,
+        let round = PaintMeasures.spreadPastPath(try PaintRasterizer.$plainRound.withValue(true) { try render([straight(.oil)]) }, from: a, to: b,
                                                  diameter: 40, scale: scale)
         #expect(round < PaintMeasures.watercolourSpreadBar, "round tip \(round)")
     }

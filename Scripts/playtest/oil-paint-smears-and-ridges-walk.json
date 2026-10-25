@@ -1,0 +1,161 @@
+{
+  "out": "/tmp/photonz-playtest/oil-paint-smears-and-ridges-walk",
+  "seed": "Oil paint (docs/design/brushes.md, decision 4). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels). B picks the Brush, the Medium dropdown over the tool bar is clicked at its face and Oil Paint chosen. A pointer drag in the brush's black lays a thick streaked stroke with lit bristle ridges on a new Paint layer; the brush is given a plain blue and a second drag crosses the black one, picking its colour up, mixing it in and carrying it on past the crossing before the blue clears back. Every drag holds the picture with the button down against the landed one (the live overlay picks up from the same paint) and reports how long the canvas took over each move. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 4000,
+      "canvasHeight": 3000,
+      "width": 1500,
+      "height": 1000,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "at": [
+        "centre"
+      ],
+      "choose": "Oil Paint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Tool Medium",
+      "reads": "Oil Paint"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "drag",
+      "from": [
+        1960,
+        1400
+      ],
+      "to": [
+        1966,
+        1610
+      ],
+      "steps": 30,
+      "wobble": 1.5,
+      "hold": "1-stroke-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "2-one-stroke"
+    },
+    {
+      "do": "describe",
+      "stage": "2-one-stroke",
+      "note": "one black oil stroke: bristle streaks along it, ridges lit from the upper left"
+    },
+    {
+      "do": "action",
+      "action": "paintToolColor"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1860,
+        1500
+      ],
+      "to": [
+        2200,
+        1506
+      ],
+      "steps": 36,
+      "wobble": 1.5,
+      "hold": "3-across-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "4-smeared"
+    },
+    {
+      "do": "describe",
+      "stage": "4-smeared",
+      "note": "a blue stroke dragged across the black one: black mixed in at the crossing and carried on past it, clearing back to blue"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

@@ -125,8 +125,8 @@ struct DryMediaRenderingTests {
 
     @Test("Measured bar: grain leaves gaps inside each dry stroke where the round tip leaves none")
     func interiorGapsBar() throws {
-        // The round soft tip from the foundation slice (still the oil paint's).
-        let round = try gaps(.oil)
+        // The round soft tip from the foundation slice.
+        let round = try PaintRasterizer.$plainRound.withValue(true) { try gaps(.oil) }
         #expect(round < 0.02, "round tip: \(round)")
         for medium in [BrushMedium.charcoal, .chalk, .crayon] {
             let g = try gaps(medium)
@@ -218,7 +218,7 @@ struct DryMediaRenderingTests {
             PaintMeasures.widthWaver(try render([stroke(m, from: line.0, to: line.1, set: ["grain": 0])]),
                                      from: line.0, to: line.1, diameter: 24, scale: 1)
         }
-        let crayon = try waver(.crayon), round = try waver(.oil)
+        let crayon = try waver(.crayon), round = try PaintRasterizer.$plainRound.withValue(true) { try waver(.oil) }
         #expect(crayon > 0.03, "crayon \(crayon)")
         #expect(round < 0.01, "round tip \(round)")
     }
@@ -235,8 +235,8 @@ struct DryMediaRenderingTests {
         // after one pass are still bare after two.
         #expect(twice > once * 0.5, "\(once) -> \(twice)")
         let round = stroke(.oil, from: a, to: b, seed: 1)
-        #expect(PaintMeasures.interiorGapFraction(try render([round, round]), from: a, to: b, diameter: 24,
-                                                  scale: 1) == 0)
+        #expect(PaintMeasures.interiorGapFraction(try PaintRasterizer.$plainRound.withValue(true) { try render([round, round]) }, from: a, to: b,
+                                                  diameter: 24, scale: 1) == 0)
     }
 
     // MARK: - Smudge

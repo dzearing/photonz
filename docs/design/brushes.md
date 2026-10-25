@@ -390,6 +390,51 @@ an anchor and the line re-paints.
   watercolour 0.25, round tip -0.03. Bleed 0 to 100 moves the spread 0.03 to
   0.45. A box of 4.5 times half the Size holds a stroke (`BrushMedium.reach`).
 
+## What oil paint settled (2026-10-25)
+
+- **A row of bristles, each with its own reservoir** (`OilPaint.swift`,
+  PhotonzRender). About one bristle a point across the brush, of uneven widths,
+  clumped in their lift and press, the outermost two carrying less. Each holds
+  a colour and how much paint it has left.
+- **A flat brush, swept.** The footprint is square to the way the brush goes:
+  the full Size across, 0.6 of half the Size either side along it, pressing
+  hardest in its middle (a smooth bell, so however the dabs fall no seams cross
+  the stroke). The heading is eased (0.15 of each new step) so a wobbling hand
+  bends the streaks rather than scalloping them. The first dab waits until the
+  brush has moved, so the stroke starts square; a click lays it four times
+  (`LiveMarker.finish()`, called on mouse-up).
+- **Load** is how far a full brush paints before it runs dry: `3 + 0.25·Load`
+  brush widths (about 15 widths of full cover at the default 70, measured),
+  each bristle lasting 0.55 to 1.45 of that, so the end of a long stroke
+  breaks into a dry brush's streaks. A fuller brush also lays the paint
+  thicker.
+- **Smear** is pickup. Under each dab each bristle averages the layer's paint
+  it passed over and moves its colour toward it by `0.3·Smear·coverage`, and
+  is reloaded a little by it; where it lands on paint the two also mix in place
+  (`0.4·Smear·coverage`). What it picked up wears off toward its own colour
+  over `0.6 + 3.4·Smear` brush widths. Pickup reads only the paint layer the
+  stroke lands on, as it stood before the stroke (a new layer has none), never
+  the picture below: the house's non-destructive rule, and what lets the live
+  overlay (handed the same layer as `working`) match.
+- **Height, lit at landing.** Each pixel keeps a height in points: eased
+  between neighbouring bristles' lifts with a shallow groove where each ran,
+  and a low rim where the paint was pushed to the sides. It is lit from the
+  upper left (diffuse plus a small gloss) when the stroke is laid down, so the
+  light is baked into the stroke's pixels; a later stroke covers it like paint.
+  Only laid, never scraped off, so live and landed agree (the walk: 0.14% and
+  0.42% of the canvas apart).
+- **Bars** (`OilRenderingTests`, `queue/audits/2026-10-25-oil-paint-measures.txt`):
+  `ridgeContrast` (the spread of lightness across a stroke's core, averaged
+  along it) at least 0.025: oil 0.041, the plain round 0.001. `carriedShare`
+  of a red stroke's colour in a blue one over the two brush widths after it
+  leaves the red, at least 0.1: oil 0.33 at the default, 0.015 at Smear 0,
+  0.65 at 100; the plain round 0.001.
+- **Known limit, not oil's own:** the renderer bakes a paint layer at most 16
+  MP, and a paint layer is the whole canvas, so on a 12 MP canvas a landed
+  stroke is about 1.15 pixels a point. Zoomed in past about 140% the bristles
+  the live stroke drew go soft when the button comes up (the walk measured 1.3%
+  of the canvas changing at 172%). Folded into the painting-speed slice.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,

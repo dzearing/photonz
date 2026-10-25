@@ -38,6 +38,9 @@ struct PaintRenderingTests {
         return context.makeImage()!
     }
 
+    /// The foundation's plain round, which these tests are about.
+    private func round<T>(_ body: () -> T) -> T { PaintRasterizer.$plainRound.withValue(true, operation: body) }
+
     private func stroke(from a: CGPoint, to b: CGPoint, size: Double = 10, opacity: Double = 100,
                         hex: String = "#0000FF") -> BrushStroke {
         var settings = BrushSettings(medium: .oil)
@@ -49,7 +52,7 @@ struct PaintRenderingTests {
 
     @Test func aStrokePaintsAlongItsLineAndNowhereElse() throws {
         let paint = PaintContent(strokes: [stroke(from: CGPoint(x: 10, y: 50), to: CGPoint(x: 90, y: 50))])
-        let image = try #require(PaintRasterizer.rasterize(paint, size: CGSize(width: 100, height: 100)))
+        let image = try #require(round { PaintRasterizer.rasterize(paint, size: CGSize(width: 100, height: 100)) })
         let middle = pixel(image, x: 50, y: 50)
         #expect(middle.a == 255 && middle.b == 255 && middle.r == 0, "solid on the line")
         #expect(pixel(image, x: 50, y: 20).a == 0, "untouched off it")
@@ -61,7 +64,7 @@ struct PaintRenderingTests {
     @Test func opacityIsTheWholeStrokesNotEachDabs() throws {
         let paint = PaintContent(strokes: [stroke(from: CGPoint(x: 10, y: 50), to: CGPoint(x: 90, y: 50),
                                                   opacity: 50)])
-        let image = try #require(PaintRasterizer.rasterize(paint, size: CGSize(width: 100, height: 100)))
+        let image = try #require(round { PaintRasterizer.rasterize(paint, size: CGSize(width: 100, height: 100)) })
         // Dozens of dabs overlap in the middle and it is still half covered.
         let middle = Int(pixel(image, x: 50, y: 50).a)
         #expect(abs(middle - 128) <= 3)
@@ -70,8 +73,8 @@ struct PaintRenderingTests {
     @Test func aSecondStrokeBuildsOnTheFirst() throws {
         let one = stroke(from: CGPoint(x: 10, y: 50), to: CGPoint(x: 90, y: 50), opacity: 50)
         let two = stroke(from: CGPoint(x: 50, y: 10), to: CGPoint(x: 50, y: 90), opacity: 50)
-        let image = try #require(PaintRasterizer.rasterize(PaintContent(strokes: [one, two]),
-                                                           size: CGSize(width: 100, height: 100)))
+        let image = try #require(round { PaintRasterizer.rasterize(PaintContent(strokes: [one, two]),
+                                                                   size: CGSize(width: 100, height: 100)) })
         #expect(pixel(image, x: 50, y: 50).a > pixel(image, x: 20, y: 50).a)
     }
 
@@ -83,8 +86,9 @@ struct PaintRenderingTests {
         doc.paintStroke(stroke(from: CGPoint(x: 20, y: 60), to: CGPoint(x: 100, y: 60), hex: "#FF0000"),
                         onto: baseID)
         let image = try #require(DocumentRenderer().render(doc, store: store))
+        // Oil paint, lit: red give or take the light on its ridges.
         let on = pixel(image, x: 60, y: 60)
-        #expect(on.r == 255 && on.g == 0 && on.b == 0)
+        #expect(on.r > 170 && on.g < 60 && on.b < 60, "\(on)")
         let off = pixel(image, x: 60, y: 20)
         #expect(off.r == 255 && off.g == 255 && off.b == 255, "the picture shows where nothing was painted")
         let reopened = try JSONDecoder().decode(PhotonzDocument.self, from: JSONEncoder().encode(doc))

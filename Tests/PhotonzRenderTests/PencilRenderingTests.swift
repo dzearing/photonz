@@ -60,8 +60,8 @@ struct PencilRenderingTests {
         #expect(last.darkness >= first.darkness * PaintMeasures.pencilGradeDarknessBar,
                 "\(first.darkness) to \(last.darkness)")
         // The plain round has no lead to soften: the bar fails it.
-        let hard = try profile(stroke(.oil, set: ["hardness": grade("2H")]))
-        let soft = try profile(stroke(.oil, set: ["hardness": grade("8B")]))
+        let hard = try PaintRasterizer.$plainRound.withValue(true) { try profile(stroke(.oil, set: ["hardness": grade("2H")])) }
+        let soft = try PaintRasterizer.$plainRound.withValue(true) { try profile(stroke(.oil, set: ["hardness": grade("8B")])) }
         #expect(soft.width < hard.width * PaintMeasures.pencilGradeWidthBar)
         #expect(soft.darkness < hard.darkness * PaintMeasures.pencilGradeDarknessBar)
     }
@@ -79,8 +79,8 @@ struct PencilRenderingTests {
         #expect(mouse > lightDark && mouse < heavyDark, "mouse \(mouse)")
         // The round tip leaves no tooth however lightly it is pressed.
         let round = stroke(.oil, pressure: 0.2)
-        #expect(PaintMeasures.interiorGapFraction(try render([round]), from: line.0, to: line.1, diameter: 4,
-                                                  scale: scale) < PaintMeasures.pencilLightToothBar)
+        #expect(PaintMeasures.interiorGapFraction(try PaintRasterizer.$plainRound.withValue(true) { try render([round]) }, from: line.0, to: line.1,
+                                                  diameter: 4, scale: scale) < PaintMeasures.pencilLightToothBar)
     }
 
     @Test("Tilted, the side of the lead lays a broad, paler, grainier band")
@@ -95,8 +95,8 @@ struct PencilRenderingTests {
         let ignored = try profile(stroke(set: ["tilt": 0], pressure: 0.6, tilt: CGPoint(x: 0, y: 0.7)))
         #expect(abs(ignored.width - up.width) <= up.width * 0.15, "\(ignored.width) against \(up.width)")
         // A leaning pen with the round tip is the same round line.
-        let round = try profile(stroke(.oil, pressure: 0.6, tilt: CGPoint(x: 0, y: 0.7)))
-        let roundUp = try profile(stroke(.oil, pressure: 0.6))
+        let round = try PaintRasterizer.$plainRound.withValue(true) { try profile(stroke(.oil, pressure: 0.6, tilt: CGPoint(x: 0, y: 0.7))) }
+        let roundUp = try PaintRasterizer.$plainRound.withValue(true) { try profile(stroke(.oil, pressure: 0.6)) }
         #expect(round.width < roundUp.width * 3)
     }
 

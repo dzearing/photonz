@@ -21962,3 +21962,20 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
   `queue/audits/2026-10-25-airbrush*`. Walk `airbrush-sprays-and-builds-walk`
   (no flags, 12 MP): 0.3-0.4 ms median per move.
 - Next: the settings need controls (each-brush-shows-its-own-settings-in-the-tool-op).
+
+## 2026-10-25 — Oil paint carries and smears colour, with bristle ridges
+
+- `OilPaint.swift` (PhotonzRender): `OilStroke`, a flat bristle brush. Per-bristle
+  reservoirs (colour, paint left) run dry by Load and pick up the layer's paint
+  by Smear, carrying it on past a crossing and mixing in place; a per-pixel
+  height (bristle lifts, grooves, a side rim) is lit from the upper left when the
+  stroke lands. Live overlay reads the picked paint layer like the marker and
+  watercolour (`LiveMarker.finish()` added for the held first dab).
+- `PaintRasterizer.plainRound` (TaskLocal): the foundation's round tip, now the
+  explicit yardstick the media tests compare against (they used `.oil` before).
+- `OilMeasures.swift`: `ridgeContrast`, `carriedShare`, `reachBeforeDry`, two
+  bars. `OilRenderingTests`, `OilSheetTests` (sheet on request).
+- Walk `oil-paint-smears-and-ridges-walk` (no flags, 12 MP, 110%): 0.6 ms median
+  per move. Audit `queue/audits/2026-10-25-oil-paint.json`.
+- Open: a 12 MP paint layer is baked at ~1.15 px/pt, so zoomed in strokes soften
+  on release (folded into the painting-speed task).
