@@ -124,7 +124,9 @@ for w in "${WALKS[@]}"; do
   ENDED="$(node -e 'console.log(Date.now())')"
   sleep 0.5
   kill "$CANARY_PID" 2>/dev/null; wait "$CANARY_PID" 2>/dev/null
-  if (( CODE == 6 )); then
+  # The canary stands down the instant a person touches the keyboard or mouse
+  # (focus-canary.swift), and the drill stops with it.
+  if (( CODE == 6 )) || grep -q '"kind":"person"' "$TRACE" 2>/dev/null; then
     printf '%-48s DEFERRED (somebody came back)\n' "$NAME"
     DEFERRED=1
     break

@@ -30,6 +30,7 @@
 // It ends itself after <seconds> whatever happens, and on SIGTERM.
 import AppKit
 import CoreGraphics
+import IOKit
 
 let args = CommandLine.arguments
 guard args.count >= 4, let lifetime = Double(args[3]) else {
@@ -49,6 +50,19 @@ func emit(_ fields: [String: Any]) {
         out.write(data)
         out.write("\n".data(using: .utf8)!)
     }
+}
+
+/// Seconds since the last keyboard, mouse or trackpad input (IOHIDSystem's
+/// HIDIdleTime, what queue/bin/person-at-mac.sh reads). Walks never post
+/// through the HID system and neither does this canary, so only a person
+/// resets it.
+func hidIdleSeconds() -> Double? {
+    let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOHIDSystem"))
+    guard service != 0 else { return nil }
+    defer { IOObjectRelease(service) }
+    let value = IORegistryEntryCreateCFProperty(service, "HIDIdleTime" as CFString, kCFAllocatorDefault, 0)
+    guard let ns = value?.takeRetainedValue() as? NSNumber else { return nil }
+    return ns.doubleValue / 1_000_000_000
 }
 
 final class Canary: NSObject, NSApplicationDelegate {
@@ -123,6 +137,14 @@ final class Canary: NSObject, NSApplicationDelegate {
     }
 
     func tick() {
+        // A person came back: give them the Mac at once instead of taking the
+        // front back from them every half second until the drill ends (the
+        // user, 2026-10-25: a window kept stealing focus and they could not
+        // type anywhere). The drill reads `person` and stops as DEFERRED.
+        if let idle = hidIdleSeconds(), idle < 1 {
+            emit(["kind": "person", "idle": idle])
+            exit(6)
+        }
         let front = NSWorkspace.shared.frontmostApplication
         let frontId = front?.bundleIdentifier ?? front?.localizedName ?? "?"
         let isKey = window.isKeyWindow
