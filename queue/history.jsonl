@@ -14180,3 +14180,9 @@
 {"t":"2026-10-25T13:28:05.801Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-10-25T13:28:17.697Z","ev":"triage","summary":"0 merged, 0 dropped, 0 priority moves, 0 resets; 2 retagged off later epics (qwen-image measure -> agent-ask, panel fold frame -> video-editing); 1 p1 bug reproduced and kept (cold Ask read 34.8 s for 7,964 tokens); 3 findings folded into existing tasks; p1/p2/p3 renumbered to steps of 10 (75 seq writes). Open: p1 31, p2 51, p3 2."}
 {"t":"2026-10-25T13:29:12.785Z","ev":"digest","file":"2026-10-25.md"}
+{"t":"2026-10-25T13:29:32.233Z","ev":"task_started","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus","title":"Pen pressure, tilt and pointer speed shape a brush stroke, and a mouse stroke tapers naturally","priority":"p1-high"}
+{"t":"2026-10-25T13:33:23.549Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
+{"t":"2026-10-25T14:05:33.451Z","ev":"task_walks","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus","walks":["pen-pressure-and-mouse-taper-walk"]}
+{"t":"2026-10-25T14:06:00.450Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
+{"t":"2026-10-25T14:06:00.516Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
+{"t":"2026-10-25T14:06:00.601Z","ev":"task_done","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus","from":"in_progress","note":"Every brush answers pressure, tilt and speed (BrushDynamics in PhotonzCore, dab width and weight; charcoal/chalk side, chisel nib turns), and a mouse stroke swells in and tapers out on landing. Verified: BrushDynamicsTests + BrushDynamicsRenderingTests (synthetic pens through the real rasterizer; no tablet on this Mac), full suite green, 11 brush walks ok including the new pen-pressure-and-mouse-taper-walk at Next defaults; audit queue/audits/2026-10-25-pen-pressure-tilt-and-speed.json with the stroke sheet and a window capture. Commit 94aa67dc."}

@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.892Z",
-  "updated": "2026-10-25T13:26:46.063Z",
+  "updated": "2026-10-25T14:06:00.600Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -41,6 +41,35 @@
     {
       "t": "2026-10-25T13:26:46.062Z",
       "note": "seq 6.6 -> 20"
+    },
+    {
+      "t": "2026-10-25T13:29:32.227Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T13:33:23.547Z",
+      "note": "Plan: a per-medium pressure response in PhotonzCore (BrushDynamics.response) sets each dab's size and weight, normalised so the mouse's steady press paints exactly the Size (defaults look as before); pen speed thins via the dab; a mouse stroke's last stretch tapers out in BrushPlacement.dabs(for:); tilt lays charcoal/chalk on their side (the pencil's lean, generalised) and turns the marker's chisel / broadens its round nib. Pre-build review: (1) the live stroke cannot know where it ends, so the tail taper only exists once the pointer lifts. Chose letting the landed composite draw the tail in (the end visibly thins as the stroke lands, the way Procreate's touch taper does) over replaying the whole stroke on the main thread at lift (a hitch on a long stroke) or holding the tail back while drawing (the line would lag the pointer by three tip widths). (2) Photoshop maps Size to the full press; here Size is what a mouse and a normal press paint, a hard press goes up to about 1.25x, because the ring under the pointer is the Size and a mouse never presses hard. (3) No tablet on this Mac is likely; pen strokes are synthetic samples through the same placement and rasterizer, and walks can hold a pen with the 'pen' step."
+    },
+    {
+      "t": "2026-10-25T14:05:33.449Z",
+      "note": "owns these walks: pen-pressure-and-mouse-taper-walk"
+    },
+    {
+      "t": "2026-10-25T14:06:00.448Z",
+      "note": "Looked at: the stroke sheet (every medium's light/medium/heavy columns differ; charcoal swell thin-thick-thin; leaned charcoal a broad pale band; mouse strokes taper both ends) and the walk's window capture (mouse line tapers, light thin grey, heavy broad black, leaned broad soft band). Held vs landed 0.07-0.20% of the canvas on all four drags. Full suite 14596 tests green; 11 brush walks ok."
+    },
+    {
+      "t": "2026-10-25T14:06:00.514Z",
+      "note": "left rough: the end of a mouse stroke draws in only as it lands (by design, in the audit); Size sits at the steady press, so a hard press goes past the ring under the pointer (in the audit's evaluate). Neither is a defect to file; the user's reaction on the audit decides."
+    },
+    {
+      "t": "2026-10-25T14:06:00.598Z",
+      "note": "Every brush answers pressure, tilt and speed (BrushDynamics in PhotonzCore, dab width and weight; charcoal/chalk side, chisel nib turns), and a mouse stroke swells in and tapers out on landing. Verified: BrushDynamicsTests + BrushDynamicsRenderingTests (synthetic pens through the real rasterizer; no tablet on this Mac), full suite green, 11 brush walks ok including the new pen-pressure-and-mouse-taper-walk at Next defaults; audit queue/audits/2026-10-25-pen-pressure-tilt-and-speed.json with the stroke sheet and a window capture. Commit 94aa67dc."
     }
-  ]
+  ],
+  "started": "2026-10-25T13:29:32.226Z",
+  "walks": [
+    "pen-pressure-and-mouse-taper-walk"
+  ],
+  "completed": "2026-10-25T14:06:00.599Z"
 }
