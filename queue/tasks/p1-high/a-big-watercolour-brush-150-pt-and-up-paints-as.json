@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:31:40.800Z",
-  "updated": "2026-10-25T15:31:48.072Z",
+  "updated": "2026-10-25T15:32:07.996Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'the watercolor looks good but it's slow if i increase the size to 150pt or more, feels quite laggy'. Not reproduced in the intake window. Theories only: Sources/PhotonzRender/Watercolour.swift mark(_:) walks every pixel of a box radius*(1+farthest) around each dab on the CPU, so the work grows with the square of the size and with how close dabs are spaced; reach() loops over every earlier wet wash per pixel; WetField.ensure copies the whole field when it grows; and the live stroke (Sources/Photonz/CanvasBrush.swift) may be building a full CGImage of the overlay per drag. Measure which of these it actually is before fixing.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-25T15:31:48.071Z",
       "note": "seq 3970 -> 3"
+    },
+    {
+      "t": "2026-10-25T15:32:07.995Z",
+      "note": "folded into every-brush-follows-the-pointer-with-no-lag-even (user: oil and brushes generally lag too)"
     }
   ]
 }
