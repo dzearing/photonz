@@ -1537,6 +1537,10 @@ private final class Run {
             let across = CGPoint(x: -along.y, y: along.x)
             let shake: [CGFloat] = [0, 1, -0.7, 0.4, -0.3, 0.9, -0.9, 0.2]
             let freshness = FreshFrameTally()
+            // How long the canvas took over each move while the brush was
+            // painting: marking the new dabs and handing the overlay its
+            // picture, all on the main thread, so the time a frame waits.
+            var brushMoves: [Double] = []
             var guides = SnapGuideTally()
             // The grid line the drag is standing on, read the same way: which
             // lines it stepped through, and which one it was on at the end.
@@ -1549,7 +1553,13 @@ private final class Run {
                 let p = CGPoint(x: a.x + (b.x - a.x) * t + along.x * shiver + across.x * sway,
                                 y: a.y + (b.y - a.y) * t + along.y * shiver + across.y * sway)
                 let moveFlags = t > 0.5 ? laterFlags : flags
-                if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: moveFlags) { canvas.mouseDragged(with: event) }
+                if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: moveFlags) {
+                    let began = ProcessInfo.processInfo.systemUptime
+                    canvas.mouseDragged(with: event)
+                    if canvas.brushIsPainting {
+                        brushMoves.append((ProcessInfo.processInfo.systemUptime - began) * 1000)
+                    }
+                }
                 guides.record(canvas.liveSnapGuides)
                 gridLines.record(canvas.liveGridSnapLines)
                 await sleep(0.02)
@@ -1649,8 +1659,14 @@ private final class Run {
                 }
                 keys = ", keys " + spell(modifiers) + " then " + spell(later)
             }
+            var painted = ""
+            if !brushMoves.isEmpty {
+                let sorted = brushMoves.sorted()
+                painted = String(format: ", brush moves %d: median %.1f ms, worst %.1f ms",
+                                 sorted.count, sorted[sorted.count / 2], sorted[sorted.count - 1])
+            }
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)\(fresh)\(landedAsHeld)"
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)\(fresh)\(landedAsHeld)\(painted)"
                      + "\(cancel ? ", called off with Escape half way and carried on to the end" : ""), "
                      + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())
@@ -1766,6 +1782,14 @@ private final class Run {
             editor.setTool(tool)
             await sleep(0.05)
             note(number, step.name, tool.rawValue, state: describe())
+
+        case .pen(let pressure, let tilt):
+            PlaytestPointer.pen = pressure == nil && tilt == nil ? nil : (pressure, tilt)
+            let said = [pressure.map { String(format: "pressure %.2f", $0) },
+                        tilt.map { String(format: "leaning %.2f right, %.2f toward you", $0.x, $0.y) }]
+                .compactMap { $0 }
+            note(number, step.name, said.isEmpty ? "a mouse again" : "a pen, " + said.joined(separator: ", "),
+                 state: describe())
 
         case .measureMode(let mode):
             let editor = try requireEditor()

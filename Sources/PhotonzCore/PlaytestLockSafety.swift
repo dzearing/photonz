@@ -308,6 +308,8 @@ public enum PlaytestLockSafety {
         "filmThumb",
         "snapshot",
         "tool", "toolBar", "type", "wait", "waitFor", "writePicture", "writeRecording", "writeSVG",
+        // Sets what the walk's own drags hand the canvas; nothing on screen.
+        "pen",
         // A video export asks the editor to write a file and then opens the
         // file: no name, no menu, and nothing on screen it depends on. Writing
         // one frame out as a picture is the same thing, one frame long.

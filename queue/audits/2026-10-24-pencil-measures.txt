@@ -1,0 +1,24 @@
+Straight strokes at Size 4, 2x, mouse press unless said.
+Pencil 4H	width 2.00 pt	darkness 0.24
+Pencil 2H	width 2.00 pt	darkness 0.31
+Pencil HB	width 3.00 pt	darkness 0.37
+Pencil 2B	width 3.00 pt	darkness 0.44
+Pencil 4B	width 3.00 pt	darkness 0.51
+Pencil 6B	width 3.50 pt	darkness 0.59
+Pencil 8B	width 4.00 pt	darkness 0.67
+Pencil HB pen pressure 0.2	width 2.00 pt	darkness 0.20	tooth showing 0.55
+Pencil HB pen pressure 0.6	width 2.50 pt	darkness 0.36	tooth showing 0.33
+Pencil HB pen pressure 1.0	width 3.00 pt	darkness 0.49	tooth showing 0.16
+Pencil HB pen leaning 0.7	width 9.00 pt	darkness 0.23
+Round tip 4H	width 4.00 pt	darkness 1.00
+Round tip 2H	width 4.00 pt	darkness 1.00
+Round tip HB	width 4.00 pt	darkness 1.00
+Round tip 2B	width 4.00 pt	darkness 1.00
+Round tip 4B	width 4.00 pt	darkness 1.00
+Round tip 6B	width 4.00 pt	darkness 1.00
+Round tip 8B	width 4.00 pt	darkness 1.00
+Round tip HB pen pressure 0.2	width 4.00 pt	darkness 1.00	tooth showing 0.00
+Round tip HB pen pressure 0.6	width 4.00 pt	darkness 1.00	tooth showing 0.00
+Round tip HB pen pressure 1.0	width 4.00 pt	darkness 1.00	tooth showing 0.00
+Round tip HB pen leaning 0.7	width 4.00 pt	darkness 1.00
+Bars: 8B at least 1.4x the width and 1.8x the darkness of 2H; tooth showing at pressure 0.2 at least 0.30

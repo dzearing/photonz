@@ -2909,6 +2909,10 @@ public enum PlaytestStep: Sendable, Equatable {
     case focus(field: String)
     /// Pick a tool directly, for when its key was not honoured.
     case tool(Tool)
+    /// Holds a pen rather than a mouse for the drags after it: each of their
+    /// moves reaches the brush as a tablet reading at this pressure (0...1)
+    /// and lean (each axis -1...1). Both left out puts the mouse back.
+    case pen(pressure: Double?, tilt: CGPoint?)
     /// Press I until the Measure tool is in this mode.
     case measureMode(MeasureToolMode)
     /// Choose a row from a tool's OWN list, the one a press and hold on its
@@ -4538,7 +4542,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
         "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
-        "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
+        "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
@@ -4578,6 +4582,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .type: "type"
         case .focus: "focus"
         case .tool: "tool"
+        case .pen: "pen"
         case .measureMode: "measureMode"
         case .toolFlyout: "toolFlyout"
         case .waitFor: "waitFor"
@@ -4919,6 +4924,21 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .focus(field: try f.string("field"))
         case "tool":
             self = .tool(try f.enumValue("tool", Tool.self))
+        case "pen":
+            let pressure = try f.optionalNumber("pressure")
+            if let pressure, !(0...1).contains(pressure) {
+                throw f.invalid("pressure", "a pen presses from 0 to 1, not \(pressure)")
+            }
+            var tilt: CGPoint?
+            if let raw = fields["tilt"] {
+                guard let pair = raw as? [NSNumber], pair.count == 2,
+                      pair.allSatisfy({ (-1...1).contains($0.doubleValue) }) else {
+                    throw f.invalid("tilt", "must be a pair of numbers each -1 to 1, [x, y]: how far the pen leans "
+                        + "right and toward you")
+                }
+                tilt = CGPoint(x: pair[0].doubleValue, y: pair[1].doubleValue)
+            }
+            self = .pen(pressure: pressure, tilt: tilt)
         case "measureMode":
             self = .measureMode(try f.enumValue("mode", MeasureToolMode.self))
         case "toolFlyout":

@@ -281,7 +281,7 @@ struct DryMediaRenderingTests {
     // MARK: - Live and landed
 
     @Test("The live stroke, marked a few dabs at a time, is the stroke that lands", arguments: [
-        BrushMedium.charcoal, .chalk, .crayon, .marker,
+        BrushMedium.pencil, .charcoal, .chalk, .crayon, .marker,
     ])
     func liveMatchesLanded(_ medium: BrushMedium) throws {
         let s = stroke(medium, from: CGPoint(x: 40, y: 50), to: CGPoint(x: 260, y: 70))

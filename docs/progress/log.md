@@ -21924,3 +21924,11 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - `PaintMeasures`: `halfToneShare`, `streakAgreement`, `widthWaver`, `unevenness`; new tests in `DryMediaRenderingTests` (old chalk fails half-tone 0.26 and across-agreement 0.18; old crayon waver 0.017; old smudge 0.58).
 - Blind judge: five shuffled rounds, three model judges beside Wikimedia reference photos; the two larger judges named all three correctly in each of the last three rounds. Audit `queue/audits/2026-10-24-dry-media-distinct.json`.
 - Next: pressure/tilt/speed slice (taper), which every judge still asks for.
+
+## 2026-10-24 — Pencil
+
+- `BrushMedium.pencil` (first in the list): Hardness as grades 4H to 8B, Grain, Tilt Shading. `BrushDab` carries `pressure` and `tilt`, eased between samples; `BrushDynamics.mousePressure` simulates a mouse's press. `BrushMedium.reach` widens a pencil stroke's box for the side of the lead.
+- `DryMedia.swift`: the pencil's `DryLook` (width by grade, pressed dabs, thinner film when light, an elliptical side-of-lead patch from the lean, graphite sheen in `shade`). `PaintMeasures.lineProfile` and three pencil bars; `PencilRenderingTests`, `PencilSheetTests` (sheets on request).
+- Walk step `pen` (pressure, lean for the drags after it); every painting drag reports its brush move times. Walk `pencil-draws-and-shades-walk` on a 12 MP canvas, no flags.
+- Next: settings in the tool options and panel, then the dynamics for the other media.
+

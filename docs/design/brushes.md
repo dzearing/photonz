@@ -65,7 +65,7 @@ Every other tool that makes something hands back Select when it lands
 of strokes in a row, and every paint app keeps the brush. V or Escape puts it
 down.
 
-### 4. One engine, seven media
+### 4. One engine, eight media
 
 The engine is in two halves.
 
@@ -81,6 +81,7 @@ blind test fails it):
 
 | Medium | What makes it read as itself | Its own settings (besides Size, Opacity) |
 | --- | --- | --- |
+| Pencil | graphite on the same paper: a thin line, wider and darker the softer the lead (grades 4H to 8B), the tooth showing more the lighter it is pressed; leaned, the side of the lead lays a broad grainy band; never black, piled passes go to a cool silver | Hardness (grade), Grain, Tilt Shading |
 | Charcoal | dab mask multiplied by a paper grain fixed to the canvas, so strokes catch the same tooth; soft dusty edge; smudge drags the deposit | Grain, Smudge |
 | Chalk | as charcoal, coarser grain, brighter and more opaque, broken edge | Grain, Smudge |
 | Crayon | waxy: hard edge, grain catches only the high tooth, builds little on a second pass | Grain, Pressure (wax) |
@@ -235,6 +236,36 @@ an anchor and the line re-paints.
 - **Live and landed share `LiveMarker`.** The canvas hands it the view's pixels
   as a transform from the landing layer's points, so the live stroke walks the
   same layer-local samples the renderer does.
+
+## What the pencil settled (2026-10-24)
+
+- **Pencil is a fourth dry medium**, not an engine of its own: a `DryLook`
+  parameter set (thin crisp tip, fine striations, no dust, no smear) on the same
+  paper. First in the Medium list, the sketching media leading. Size 3.
+- **Every dab carries a press and a lean.** `BrushDab.pressure` (0...1) and
+  `.tilt` come from the pen's samples, eased between them; a sample with no
+  pressure (a mouse) gets `BrushDynamics.mousePressure`: a light touch-down
+  settling to a steady middle press over its first few points, lighter moving
+  fast. No taper out: the live stroke cannot know where it ends. Only the
+  Pencil reads them so far; the dynamics slice gives the other media theirs.
+- **Hardness is a choice of grades** (4H, 2H, HB, 2B, 4B, 6B, 8B, default HB):
+  a softer lead is wider, darker and reaches deeper into the paper. Pressure
+  widens the line a little and darkens it a lot, and a lighter press leaves
+  more of the tooth bare and the film thinner.
+- **Tilt Shading** says how far a lean lays the side of the lead down: the tip
+  becomes a patch long the way the pen leans (up to seven times the radius),
+  paler and catching only the high tooth. A stroke's box reaches that far
+  (`BrushMedium.reach`).
+- **No mouse modifier for tilt.** Shift (straight line), Option (colour pick),
+  Command and Control-Option are all Photoshop's on a brush drag (UX-PATTERNS
+  §7), so a mouse paints upright; walks hold a pen with the `pen` step.
+- **Sheen**: graphite is never black. The colour is lifted toward a cool silver
+  by how dark it is, a little more where the deposit is densest, so passes
+  piled up converge on a silvery grey rather than black. Per stroke, so the
+  live stroke shows exactly what lands.
+- **Bars** (`PaintMeasures.lineProfile`, `PencilRenderingTests`): 8B at least
+  1.4 times the width and 1.8 times the darkness of 2H; at pressure 0.2 at least
+  0.3 of the core left to the tooth. The round tip fails all three.
 
 ## Slices (queue tasks, in order)
 

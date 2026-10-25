@@ -1,0 +1,245 @@
+{
+  "out": "/tmp/photonz-playtest/pencil-draws-and-shades-walk",
+  "seed": "The Pencil (docs/design/brushes.md). No flags: Next as a person gets it, on a blank 4000 by 3000 canvas (12 megapixels) zoomed in close. B picks the Brush, the Medium dropdown over the tool bar is clicked at its face and Pencil chosen, and a pointer drag draws a graphite line with the mouse's own simulated press. Then a pen step puts a pen in the walk's hand: one hard-pressed line, then five passes leaning the pen shade a patch with the side of the lead. Every paint drag holds the picture with the button down against the landed one, and reports how long the canvas took over each move. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 4000,
+      "canvasHeight": 3000,
+      "width": 1500,
+      "height": 1000,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Tool Medium",
+      "at": [
+        "centre"
+      ],
+      "choose": "Pencil"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Tool Medium",
+      "reads": "Pencil"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "0-pencil-in-hand"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1880,
+        1440
+      ],
+      "to": [
+        2120,
+        1450
+      ],
+      "steps": 28,
+      "wobble": 1,
+      "hold": "1-line-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "pen",
+      "pressure": 0.95
+    },
+    {
+      "do": "drag",
+      "from": [
+        1880,
+        1475
+      ],
+      "to": [
+        2120,
+        1480
+      ],
+      "steps": 28,
+      "wobble": 1,
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "pen",
+      "pressure": 0.6,
+      "tilt": [
+        0.15,
+        0.7
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        1880,
+        1505
+      ],
+      "to": [
+        2120,
+        1511
+      ],
+      "steps": 24,
+      "wobble": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        2120,
+        1512
+      ],
+      "to": [
+        1880,
+        1518
+      ],
+      "steps": 24,
+      "wobble": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        1880,
+        1519
+      ],
+      "to": [
+        2120,
+        1525
+      ],
+      "steps": 24,
+      "wobble": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        2120,
+        1526
+      ],
+      "to": [
+        1880,
+        1532
+      ],
+      "steps": 24,
+      "wobble": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        1880,
+        1533
+      ],
+      "to": [
+        2120,
+        1539
+      ],
+      "steps": 24,
+      "wobble": 1,
+      "hold": "2-shading-held",
+      "landsAsHeld": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "pen"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "3-line-and-shading"
+    },
+    {
+      "do": "describe",
+      "stage": "3-line-and-shading",
+      "note": "the Paint layer holds a mouse line, a hard-pressed pen line and five tilted shading passes"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

@@ -5783,3 +5783,31 @@ struct PlaytestScriptTests {
         #expect(action.drivesRecording)
     }
 }
+
+extension PlaytestScriptTests {
+    @Test("A pen step holds a pen at a pressure and lean for the drags after it, and an empty one is the mouse")
+    func penStep() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "pen", "pressure": 0.7, "tilt": [0.5, -0.25] },
+            { "do": "pen", "pressure": 0.3 },
+            { "do": "pen" }
+          ]
+        }
+        """)
+        guard case .pen(let pressure, let tilt) = script.steps[0] else { Issue.record("pen"); return }
+        #expect(pressure == 0.7 && tilt == CGPoint(x: 0.5, y: -0.25))
+        guard case .pen(let light, let upright) = script.steps[1] else { Issue.record("pen"); return }
+        #expect(light == 0.3 && upright == nil)
+        guard case .pen(nil, nil) = script.steps[2] else { Issue.record("mouse"); return }
+        #expect(script.steps[0].name == "pen")
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "out": "/tmp/o", "steps": [ { "do": "pen", "pressure": 2 } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "out": "/tmp/o", "steps": [ { "do": "pen", "tilt": [3, 0] } ] }"#)
+        }
+    }
+}

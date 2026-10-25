@@ -8,9 +8,11 @@ import Foundation
 
 // MARK: - Media and their settings
 
-/// One of the brush's seven media. Each declares the settings it has, so the
+/// One of the brush's eight media. Each declares the settings it has, so the
 /// tool options, the panel, MCP and the tests all read one list (decision 7).
+/// Listed the way they are offered: the sketching media first, Pencil leading.
 public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
+    case pencil
     case charcoal
     case chalk
     case crayon
@@ -22,6 +24,7 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
     /// What the medium is called on screen.
     public var title: String {
         switch self {
+        case .pencil: "Pencil"
         case .charcoal: "Charcoal"
         case .chalk: "Chalk"
         case .crayon: "Crayon"
@@ -35,6 +38,7 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
     /// The size a fresh brush of this medium starts at, in points.
     var defaultSize: Double {
         switch self {
+        case .pencil: 3
         case .charcoal: 16
         case .chalk: 20
         case .crayon: 10
@@ -45,8 +49,18 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
         }
     }
 
+    /// How far past half its Size a stroke of this medium can mark, as a
+    /// multiple: a pencil laid on its side shades a band several times as wide
+    /// as its point. One for every medium whose tip is its Size.
+    public var reach: Double {
+        self == .pencil ? 7 : 1
+    }
+
+    /// The pencil grades Hardness picks from, hard and pale to soft and dark.
+    public static let pencilGrades = ["4H", "2H", "HB", "2B", "4B", "6B", "8B"]
+
     /// Every setting this medium has, in the order they are shown: Size and
-    /// Opacity first, then the medium's own two (the design doc's table).
+    /// Opacity first, then the medium's own (the design doc's table).
     public var settings: [BrushSettingSpec] {
         let shared = [
             BrushSettingSpec(id: "size", name: "Size", range: 1...500, defaultValue: defaultSize),
@@ -54,6 +68,11 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
         ]
         let own: [BrushSettingSpec]
         switch self {
+        case .pencil:
+            own = [BrushSettingSpec(id: "hardness", name: "Hardness",
+                                    range: 0...Double(Self.pencilGrades.count - 1), defaultValue: 2,
+                                    options: Self.pencilGrades),
+                   .percent("grain", "Grain", 50), .percent("tilt", "Tilt Shading", 60)]
         case .charcoal:
             own = [.percent("grain", "Grain", 60), .percent("smudge", "Smudge", 20)]
         case .chalk:
@@ -181,9 +200,9 @@ public struct BrushSettings: Hashable, Codable, Sendable {
 // MARK: - A stroke as data
 
 /// One reading of the pointer while painting, in the layer's own top-left
-/// points. Pressure and tilt are nil for a device that has none (a mouse);
-/// nothing reads them yet, they are recorded so the dynamics slice only has to
-/// add what they do.
+/// points. Pressure and tilt are nil for a device that has none (a mouse):
+/// placement then simulates a press (`BrushDynamics`). The Pencil reads both;
+/// the other media still paint one weight end to end.
 public struct StrokeSample: Hashable, Codable, Sendable {
     public var point: CGPoint
     /// 0...1 from a tablet or pencil, nil for a mouse.
@@ -235,7 +254,7 @@ public struct BrushStroke: Hashable, Codable, Sendable {
         guard let first = samples.first?.point else { return .null }
         var box = CGRect(origin: first, size: .zero)
         for sample in samples.dropFirst() { box = box.union(CGRect(origin: sample.point, size: .zero)) }
-        let reach = settings.size / 2
+        let reach = settings.size / 2 * settings.medium.reach
         return box.insetBy(dx: -reach, dy: -reach)
     }
 }
@@ -270,12 +289,47 @@ public struct BrushDab: Hashable, Sendable {
     public var opacity: Double
     /// Radians, for tips that are not round.
     public var angle: Double
+    /// How hard the tip pressed here, 0...1: the pen's own reading, eased
+    /// between its samples, or a mouse's simulated press.
+    public var pressure: Double
+    /// The pen's lean here, each axis -1...1; zero standing upright, which is
+    /// how a mouse always paints.
+    public var tilt: CGPoint
 
-    public init(center: CGPoint, diameter: CGFloat, opacity: Double, angle: Double = 0) {
+    public init(center: CGPoint, diameter: CGFloat, opacity: Double, angle: Double = 0,
+                pressure: Double = 1, tilt: CGPoint = .zero) {
         self.center = center
         self.diameter = diameter
         self.opacity = opacity
         self.angle = angle
+        self.pressure = pressure
+        self.tilt = tilt
+    }
+}
+
+/// How a pointer with no pressure of its own presses (decision 6): a mouse
+/// stroke touches down lightly and settles to a steady middle press over its
+/// first few points, and presses lighter the faster it moves, the way a hand
+/// does. Only the end of a stroke is not shaped: the live stroke cannot know
+/// where it ends, and what lands must be what was seen.
+public enum BrushDynamics {
+
+    /// The press of a mouse moving `speed` points a millisecond, `travelled`
+    /// points into a stroke whose tip is `diameter` points across. 0...1.
+    public static func mousePressure(speed: Double, travelled: Double, diameter: Double) -> Double {
+        let settle = smooth(0, max(6, diameter * 3), travelled)
+        let press = 0.38 + (0.64 - 0.38) * settle
+        let thinned = press * (1 - 0.4 * smooth(0.4, 3, speed))
+        return min(1, max(0.1, thinned))
+    }
+
+    /// How quickly the speed a press is read from follows the pointer: a
+    /// share of each new reading, so one jittery event does not flicker it.
+    static let speedEase = 0.3
+
+    private static func smooth(_ edge0: Double, _ edge1: Double, _ x: Double) -> Double {
+        let t = min(1, max(0, (x - edge0) / (edge1 - edge0)))
+        return t * t * (3 - 2 * t)
     }
 }
 
@@ -315,6 +369,14 @@ public enum BrushPlacement {
         let jitter: CGFloat
         private var random: SeededRandom
         private var points: [CGPoint] = []
+        /// Each point's press and lean, kept beside it.
+        private var pressures: [Double] = []
+        private var tilts: [CGPoint] = []
+        /// What a mouse's press is read from: how fast it has been moving
+        /// (eased), how far it has come, and when its last sample was.
+        private var speed: Double = 0
+        private var travelled: Double = 0
+        private var lastMs: Double?
         /// How far along the path the next dab is due, from the last one.
         private var untilNext: CGFloat = 0
 
@@ -331,17 +393,34 @@ public enum BrushPlacement {
             let point = sample.point
             // A sample on top of the last one adds nothing to the curve.
             if let last = points.last, last == point { return [] }
+            if let last = points.last {
+                let distance = Double(hypot(point.x - last.x, point.y - last.y))
+                travelled += distance
+                if let lastMs, sample.ms > lastMs {
+                    speed += BrushDynamics.speedEase * (distance / (sample.ms - lastMs) - speed)
+                }
+            }
+            lastMs = sample.ms
             points.append(point)
+            pressures.append(sample.pressure.map { min(1, max(0, $0)) }
+                             ?? BrushDynamics.mousePressure(speed: speed, travelled: travelled,
+                                                            diameter: Double(diameter)))
+            tilts.append(sample.tilt.map { CGPoint(x: min(1, max(-1, $0.x)), y: min(1, max(-1, $0.y))) }
+                         ?? .zero)
             var dabs: [BrushDab] = []
             if points.count == 1 {
-                dabs.append(dab(at: point))
+                dabs.append(dab(at: point, pressure: pressures[0], tilt: tilts[0]))
                 untilNext = gap
                 return dabs
             }
             // Place the span ending at the sample BEFORE this one, now that
             // the curve's direction through it is known.
             if points.count >= 3 { walkSpan(from: points.count - 3, into: &dabs) }
-            if points.count > 4 { points.removeFirst() }
+            if points.count > 4 {
+                points.removeFirst()
+                pressures.removeFirst()
+                tilts.removeFirst()
+            }
             return dabs
         }
 
@@ -350,9 +429,10 @@ public enum BrushPlacement {
         /// reaches where the pointer let go rather than stopping short of it.
         public mutating func finish() -> [BrushDab] {
             var dabs: [BrushDab] = []
-            guard points.count >= 2, let end = points.last else { return dabs }
+            guard points.count >= 2, let end = points.last, let press = pressures.last,
+                  let lean = tilts.last else { return dabs }
             walkSpan(from: points.count - 2, into: &dabs)
-            if untilNext < gap { dabs.append(dab(at: end)) }
+            if untilNext < gap { dabs.append(dab(at: end, pressure: press, tilt: lean)) }
             return dabs
         }
 
@@ -365,19 +445,28 @@ public enum BrushPlacement {
             let p3 = k + 2 < points.count ? points[k + 2] : p2
             let length = hypot(p2.x - p1.x, p2.y - p1.y)
             guard length > 0 else { return }
+            // The press and lean ease from one sample's to the next's.
+            let press1 = pressures[k], press2 = pressures[k + 1]
+            let lean1 = tilts[k], lean2 = tilts[k + 1]
             // Enough pieces that each is well under a dab apart.
             let pieces = max(1, Int((length / max(gap * 0.5, 0.5)).rounded(.up)))
             var previous = p1
             for step in 1...pieces {
+                let t0 = CGFloat(step - 1) / CGFloat(pieces)
                 let t = CGFloat(step) / CGFloat(pieces)
                 let next = step == pieces ? p2 : catmullRom(p0, p1, p2, p3, t)
-                var segment = hypot(next.x - previous.x, next.y - previous.y)
+                let whole = hypot(next.x - previous.x, next.y - previous.y)
+                var segment = whole
                 var from = previous
                 while segment >= untilNext {
                     let f = untilNext / segment
                     let at = CGPoint(x: from.x + (next.x - from.x) * f,
                                      y: from.y + (next.y - from.y) * f)
-                    dabs.append(dab(at: at))
+                    // How far along the whole span this dab is.
+                    let u = Double(t0 + (t - t0) * (whole - segment + untilNext) / whole)
+                    dabs.append(dab(at: at, pressure: press1 + (press2 - press1) * u,
+                                    tilt: CGPoint(x: lean1.x + (lean2.x - lean1.x) * u,
+                                                  y: lean1.y + (lean2.y - lean1.y) * u)))
                     segment -= untilNext
                     from = at
                     untilNext = gap
@@ -387,7 +476,7 @@ public enum BrushPlacement {
             }
         }
 
-        private mutating func dab(at point: CGPoint) -> BrushDab {
+        private mutating func dab(at point: CGPoint, pressure: Double, tilt: CGPoint) -> BrushDab {
             var center = point
             if jitter > 0 {
                 let radius = diameter / 2 * jitter * random.unit().squareRoot()
@@ -395,7 +484,8 @@ public enum BrushPlacement {
                 center.x += cos(angle) * radius
                 center.y += sin(angle) * radius
             }
-            return BrushDab(center: center, diameter: diameter, opacity: opacity)
+            return BrushDab(center: center, diameter: diameter, opacity: opacity,
+                            pressure: pressure, tilt: tilt)
         }
 
         private func catmullRom(_ p0: CGPoint, _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint,

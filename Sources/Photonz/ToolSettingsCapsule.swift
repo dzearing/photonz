@@ -209,7 +209,7 @@ struct ToolSettingsCapsule: View {
             .fixedSize()
             .help("What a click with the tool places. Picking one in the Library picks it here too.")
         case .brushMedium:
-            // Seven media, so a menu (more than three exclusive options is a
+            // Eight media, so a menu (more than three exclusive options is a
             // dropdown).
             Picker("Medium", selection: $state.armedBrushMedium) {
                 ForEach(BrushMedium.allCases, id: \.self) { medium in

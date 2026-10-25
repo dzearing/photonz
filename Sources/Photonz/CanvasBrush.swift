@@ -172,15 +172,22 @@ extension CanvasNSView {
 
     private func addBrushSample(at p: CGPoint, event: NSEvent) {
         guard var live = brushStroke else { return }
-        // A tablet reports how hard it is pressed; a mouse reports nothing
-        // worth keeping, so its samples carry none (the dynamics slice reads
-        // these, nothing does yet).
+        // A tablet reports how hard it is pressed and how far it leans; a
+        // mouse reports nothing worth keeping, so its samples carry none and
+        // placement simulates a press (`BrushDynamics`).
         let isTablet = event.subtype == .tabletPoint
-        let sample = StrokeSample(
-            point: p,
-            pressure: isTablet ? Double(event.pressure) : nil,
-            tilt: isTablet ? CGPoint(x: event.tilt.x, y: event.tilt.y) : nil,
-            ms: max(0, (event.timestamp - live.began) * 1000))
+        var pressure: Double? = isTablet ? Double(event.pressure) : nil
+        var tilt: CGPoint? = isTablet ? CGPoint(x: event.tilt.x, y: event.tilt.y) : nil
+        #if PHOTONZ_PLAYTEST
+        // A walk holding a pen (`pen` step): its synthesized moves carry no
+        // tablet reading of their own.
+        if let pen = PlaytestPointer.pen {
+            pressure = pen.pressure ?? pressure
+            tilt = pen.tilt ?? tilt
+        }
+        #endif
+        let sample = StrokeSample(point: p, pressure: pressure, tilt: tilt,
+                                  ms: max(0, (event.timestamp - live.began) * 1000))
         live.stroke.samples.append(sample)
         // The walker works in the landing layer's own points, as the renderer
         // does once the stroke is stored there.

@@ -14,6 +14,17 @@ public enum PaintMeasures {
     /// all three dry media at their defaults pass it.
     public static let dryMediaGapBar = 0.12
 
+    /// The pencil's bars, read with `lineProfile` and `interiorGapFraction`
+    /// off straight strokes at Size 4 (`PencilRenderingTests`). The round tip
+    /// draws the same line whatever the grade and leaves no tooth at any
+    /// press, so it fails all three. An 8B is at least this many times as wide
+    /// as a 2H, and this many times as dark...
+    public static let pencilGradeWidthBar = 1.4
+    public static let pencilGradeDarknessBar = 1.8
+    /// ...and a light press (0.2) leaves at least this share of the line's
+    /// core to the paper's tooth.
+    public static let pencilLightToothBar = 0.3
+
     /// The share of the stroke's core (within a third of its radius of the
     /// line) that the paper left bare: pixels under half of the core's
     /// strongest coverage. A soft round tip covers its core solidly and
@@ -131,6 +142,28 @@ public enum PaintMeasures {
         guard mean > 0 else { return 0 }
         let variance = smoothed.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(smoothed.count)
         return variance.squareRoot() / mean
+    }
+
+    /// The stroke's width and darkness, read off its coverage averaged along
+    /// its middle stretch: the width, in points, over which that average is at
+    /// least half its peak, and the peak itself (0...1), the darkness at the
+    /// line. `reach` is how far either side of the line to look, in points.
+    /// Grain-broken strokes average out, so the reading is the line a person
+    /// sees from a step back, not one row of pixels.
+    public static func lineProfile(_ image: CGImage, from a: CGPoint, to b: CGPoint, reach: CGFloat,
+                                   scale: CGFloat) -> (width: Double, darkness: Double) {
+        guard let grid = Grid(image, from: a, to: b, diameter: reach * 2, scale: scale),
+              !grid.alongRange.isEmpty else { return (0, 0) }
+        let side = Int((reach * scale).rounded())
+        let profile = (-side...side).map { j -> Double in
+            var sum = 0.0
+            for i in grid.alongRange { sum += grid.alpha(i, j) }
+            return sum / Double(grid.alongRange.count)
+        }
+        let peak = profile.max() ?? 0
+        guard peak > 0 else { return (0, 0) }
+        let wide = profile.filter { $0 >= peak / 2 }.count
+        return (Double(wide) / Double(scale), peak)
     }
 
     /// How uneven a patch of paint is: the spread of coverage over its mean,

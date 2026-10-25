@@ -1,0 +1,32 @@
+{
+  "feature": "A graphite Pencil among the brushes",
+  "epic": "image-paint",
+  "summary": "Pencil is now the first brush in the Medium menu. It draws a thin graphite line that catches on the paper. A softer lead (4H to 8B) is wider and darker, pressing harder darkens it, and leaning a pen lays the side of the lead down as a broad, grainy shading band. Piled-up passes go to a silvery grey, never black.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Any picture, or a new blank canvas. Walk: Scripts/playtest/pencil-draws-and-shades-walk.json (a 4000 by 3000 canvas).",
+  "switched": {},
+  "try": [
+    { "do": "Press B, click the Medium menu over the tool bar and pick Pencil." },
+    { "do": "Zoom in and drag across the canvas: a thin grey graphite line.", "shot": "2026-10-24-pencil-1-line-held-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With a pen tablet, press hard for a darker line, then lean the pen and scribble to shade a patch.", "shot": "2026-10-24-pencil-2-line-and-shading-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare the grades from 4H to 8B: a line, a hard-pressed line and a hatched patch each.", "shot": "2026-10-24-pencil-sheet-hardness.png" },
+    { "do": "Compare Tilt Shading at 0, 30, 60 and 100 with the same leaning pen.", "shot": "2026-10-24-pencil-sheet-tilt.png" },
+    { "do": "Compare Grain at 0, 50 and 100.", "shot": "2026-10-24-pencil-sheet-grain.png" },
+    { "do": "Compare a light, a hard and a ramping pen press with a mouse stroke.", "shot": "2026-10-24-pencil-sheet-pressure.png" },
+    { "do": "Name each unlabelled row: pencil, charcoal, chalk, crayon, or the plain round brush. The answer is in 2026-10-24-pencil-blind-key.txt.", "shot": "2026-10-24-pencil-sheet-blind.png" }
+  ],
+  "evaluate": [
+    "Does the pencil line read as graphite on paper rather than a thin grey pen?",
+    "Is HB with a mouse dark enough for everyday sketching, or should the default press be firmer?",
+    "Does the tilted shading feel like the side of a lead, or too speckly?",
+    "Is first in the Medium menu the right place for Pencil?"
+  ],
+  "rough": [
+    "The settings (Hardness, Grain, Tilt Shading) exist in the brush's one list of settings but are not on screen yet: the tool options and panel get every medium's settings in each-brush-shows-its-own-settings-in-the-tool-op. The sheets above were drawn by the real renderer with each value set.",
+    "No brush chooser and no MCP brush list exist yet. Pencil is in the one list of media they will read: brushes-are-picked-from-a-library-of-tiles-that (the brush-library mock's Pencil tile) and the-agent-can-list-set-and-paint-with-the-brushe.",
+    "With a mouse there is no tilt: Shift, Option, Command and Control-Option on a brush drag are all Photoshop's (UX-PATTERNS §7), so a mouse paints upright and shading needs a pen or a wider Size. The walk holds a simulated pen.",
+    "A mouse stroke touches down lightly and presses lighter moving fast, but does not taper out at its end; the live stroke cannot know where it ends. Tapering for every medium is pen-pressure-tilt-and-pointer-speed-shape-a-brus.",
+    "Blind test (key: crayon, pencil, round tip, charcoal, chalk): two model judges both named the pencil row at high confidence and told it from charcoal. Both misread charcoal, the umbrella's charcoal-versus-chalk question (charcoal-chalk-and-crayon-catch-on-a-paper-grain). I wrote the sheet, so my own read is not blind. Both judges asked for more pressure variation along the line, which a pen gives and a mouse does not.",
+    "Measured (2x, Size 4, mouse press): width 2.0 pt at 2H to 4.0 pt at 8B, darkness 0.27 to 0.65; at pen pressure 0.2, 55 per cent of the line's core is bare paper, 16 per cent at full pressure. The round tip reads 4.0 pt and 1.00 at every grade and press, with no bare paper. All numbers in 2026-10-24-pencil-measures.txt.",
+    "Speed on the 12 MP canvas, measured by the walk on the main thread per pointer move: 0.4 ms median (0.7 ms worst) drawing a line, 2.0 ms median (2.6 ms worst) shading on its side. The held and landed pictures differ by 0.10 to 0.28 per cent of the canvas."
+  ]
+}

@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 
-// Charcoal, chalk and crayon, and the smudge (`docs/design/brushes.md`,
+// Pencil, charcoal, chalk and crayon, and the smudge (`docs/design/brushes.md`,
 // decisions 4 and 7). A round dab with a texture on it is explicitly not good
 // enough, so these work on pixels: each dab lays down a tip shape whose edge
 // is broken by the paper, that tip settles only on the paper's tooth
@@ -172,15 +172,18 @@ struct Scatter {
     return (a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty
 }
 
-/// The numbers that make charcoal, chalk and crayon three different media
-/// (the design doc's table). Nil for the media that are not dry.
+/// The numbers that make pencil, charcoal, chalk and crayon four different
+/// media (the design doc's table). Nil for the media that are not dry.
 ///
 /// What tells them apart, at a glance: charcoal SHADES (a smoky grey that
 /// fades out softly, fine tooth, dust); chalk is POWDER (opaque where it
 /// lands, bare where it skips, many small crisp flecks, dry streaks that
 /// break along the drag, crumbs at a ragged edge); crayon is WAX (a clean,
 /// slightly wavering edge, colour on the high tooth only, so an even fine
-/// pattern of bare pits, never fading).
+/// pattern of bare pits, never fading); pencil is GRAPHITE (a thin grey line
+/// that catches the tooth more the lighter it is pressed, wider and darker the
+/// softer its lead, a broad grainy shading laid on its side, and a silvery
+/// sheen where it piles up rather than a black).
 struct DryLook {
     /// How stretched the paper is under this medium.
     var coarseness: Double
@@ -240,6 +243,20 @@ struct DryLook {
     /// fraction of the radius, over `wobbleRun` points.
     var wobble: Float
     var wobbleRun: Double
+    /// How wide the mark is against the Size: a soft lead wears blunter.
+    var width: Float = 1
+    /// Whether each dab's press shapes it (the pencil): a harder press is a
+    /// wider, darker line reaching deeper into the paper.
+    var pressed = false
+    /// How much of the film thins with the press, so a light touch is pale as
+    /// well as broken: 0 lays the full strength wherever the paper catches.
+    var film: Float = 0
+    /// How far a lean lays the side of the lead down (the Tilt Shading
+    /// setting), 0...1.
+    var tiltShading: Float = 0
+    /// Graphite's sheen: how far the colour lifts toward a cool silver where
+    /// the deposit is densest, so passes pile up to a sheen and not a black.
+    var sheen: Float = 0
 
     enum Specks { case none, dust, crumbs }
 
@@ -274,6 +291,22 @@ struct DryLook {
                       reach: 0.47 + 0.3 * wax, softness: 0.05, strength: 0.95, grain: grain, wash: false,
                       drag: 0, specks: .none, streaks: 0.5, streakCount: 11, streakRun: 30, toneSwing: 0.12,
                       tipLength: 0.55, catchRun: 4, powder: 0, powderSize: 1, wobble: 0.16, wobbleRun: 10)
+        case .pencil:
+            // Graphite: a thin line with a clean, barely broken edge, fine
+            // striations along the drag, no dust and no smear of its own. The
+            // lead's grade sets how wide, how dark and how deep it reaches.
+            let grades = Double(BrushMedium.pencilGrades.count - 1)
+            let soft = Float(settings.value("hardness") / grades)
+            self.init(coarseness: 0.65, edgeBreak: 0.12, edgeCoarseness: 0.5, inner: 0.5, outer: 1,
+                      reach: 0.42 + 0.34 * soft, softness: 0.08, strength: 0.42 + 0.52 * soft, grain: grain,
+                      wash: false, drag: 0, specks: .none, streaks: 0.3, streakCount: 6, streakRun: 40,
+                      toneSwing: 0.05, tipLength: 1, catchRun: 0.8, powder: 0, powderSize: 1,
+                      wobble: 0.03, wobbleRun: 40)
+            width = 0.75 + 0.6 * soft
+            pressed = true
+            film = 0.7
+            tiltShading = Float(settings.value("tilt") / 100)
+            sheen = 0.35
         case .marker, .airbrush, .oil, .watercolour:
             return nil
         }
@@ -315,7 +348,8 @@ struct DryLook {
             // No Grain reaches past the deepest pit even at the stroke's
             // lightest passage.
             let threshold = 1 - tip * (reach + (1 - grain) * (1 - grain) * (1.4 - reach))
-            return strength * smoothstep(threshold - softness, threshold + softness, paper)
+            let caught = smoothstep(threshold - softness, threshold + softness, paper)
+            return strength * caught * (1 - film + film * tip)
         }
         // The tooth is caught to the same depth right across the tip, and the
         // tip's own fall-off shades over it: a smoky edge with the paper's
@@ -326,6 +360,19 @@ struct DryLook {
         // Grain, all of it with none.
         let shade = (1 - grain) * (1 - grain)
         return strength * tip * (shade + (1 - shade) * caught)
+    }
+
+    /// The colour laid where the stroke covers `coverage` (0...1), 0...1 per
+    /// channel, not premultiplied. Graphite is never black: a dark colour is
+    /// lifted toward a cool silver, a little more where the deposit is
+    /// densest, so passes piled up go to a sheen rather than to black. A pale
+    /// colour is lifted less, white not at all.
+    @inline(__always) func shade(_ r: Float, _ g: Float, _ b: Float,
+                                 coverage: Float) -> (Float, Float, Float) {
+        guard sheen > 0 else { return (r, g, b) }
+        let dark = 1 - (0.2126 * r + 0.7152 * g + 0.0722 * b)
+        let lift = sheen * dark * dark * (0.6 + 0.4 * smoothstep(0.45, 0.95, coverage))
+        return (r + (0.40 - r) * lift, g + (0.42 - g) * lift, b + (0.47 - b) * lift)
     }
 
     /// The paper as this medium meets it, at a point of the layer: the shared
@@ -395,7 +442,30 @@ struct DryStroke {
 
     /// Lays one dab down and hands back the pixels it touched.
     mutating func mark(_ dab: BrushDab) -> PixelBox {
-        let radius = max(dab.diameter / 2, 0.25)
+        var radius = max(dab.diameter / 2 * CGFloat(look.width), 0.25)
+        // A pressed medium's press: a harder one is a little wider and a good
+        // deal darker. Everything else paints its one weight.
+        var weight: Float = 1
+        // The side of the lead: how far the pen leans, as the tip's long and
+        // short reach over its upright radius, and which way.
+        var lean: Float = 0
+        var leanAxis = CGVector(dx: 1, dy: 0)
+        if look.pressed {
+            let p = Float(min(1, max(0, dab.pressure)))
+            radius *= CGFloat(0.8 + 0.35 * p)
+            weight = 0.3 + 0.7 * pow(p, 0.8)
+            let leaning = Float(hypot(dab.tilt.x, dab.tilt.y))
+            lean = smoothstep(0.12, 0.8, leaning) * look.tiltShading
+            if lean > 0.01 {
+                leanAxis = CGVector(dx: dab.tilt.x / CGFloat(leaning), dy: dab.tilt.y / CGFloat(leaning))
+                // Laid on its side the lead spreads its press over a broad
+                // patch: paler, and only the high tooth catches.
+                weight *= 1 - 0.5 * lean
+            } else {
+                lean = 0
+            }
+        }
+        let long = 1 + 6 * lean, short = 1 + 2.5 * lean
         let centre = dab.center.applying(toPixels)
         let speckReach: CGFloat
         switch look.specks {
@@ -403,7 +473,8 @@ struct DryStroke {
         case .dust: speckReach = radius * 1.7 + 1
         case .crumbs: speckReach = radius * 1.35 + 1.5
         }
-        let reach = max(radius * CGFloat(1 + look.edgeBreak / 2 + look.wobble), speckReach) * pixelsPerPoint + 1
+        let reach = max(radius * CGFloat(long) * CGFloat(1 + look.edgeBreak / 2 + look.wobble), speckReach)
+            * pixelsPerPoint + 1
         let box = PixelBox.around(centre, radius: reach).intersection(field.limit)
         // Rolled whatever happens, so the live stroke and the landed one draw
         // the same specks even when a dab falls outside the bitmap.
@@ -443,7 +514,7 @@ struct DryStroke {
         }
         lastCentre = dab.center
         // Lighter and darker passages, about every two tip widths.
-        let press = 1 - look.toneSwing * (1 - wave(drift, at: Float(travelled / (radius * 4))))
+        let press = weight * (1 - look.toneSwing * (1 - wave(drift, at: Float(travelled / (radius * 4)))))
         guard !box.isEmpty else { return .empty }
         field.ensure(box)
 
@@ -454,8 +525,10 @@ struct DryStroke {
         let catchSteps = max(1, Int((look.catchRun * Double(pixelsPerPoint)).rounded()))
         let catchSpread = Float(1 + 0.4 * look.catchRun)
         // The tip's own pixels: the specks have boxes of their own.
-        let tipBox = PixelBox.around(centre, radius: radius * CGFloat(tipReach) * pixelsPerPoint + 1)
+        let tipBox = PixelBox.around(centre, radius: radius * CGFloat(tipReach * long) * pixelsPerPoint + 1)
             .intersection(box)
+        // A lead on its side has a soft edge: its press fades out across it.
+        let inner = look.inner * (1 - 0.75 * lean)
         guard !tipBox.isEmpty else {
             for (at, size, amount) in specks { speck(at: at, size: size, amount: amount) }
             return box
@@ -478,11 +551,19 @@ struct DryStroke {
                                         : valueNoise(down / look.wobbleRun, 9.5, stick &+ 7)
                     side /= 1 + look.wobble * (near * 2 - 1)
                 }
-                let r = (along * along + side * side).squareRoot()
+                var r = (along * along + side * side).squareRoot()
+                if lean > 0 {
+                    // The patch the side of the lead lays down, long the way
+                    // the pen leans, whichever way the hand is moving.
+                    let dx = p.x - dab.center.x, dy = p.y - dab.center.y
+                    let u = Float((dx * leanAxis.dx + dy * leanAxis.dy) / radius) / long
+                    let v = Float((dx * -leanAxis.dy + dy * leanAxis.dx) / radius) / short
+                    r = (u * u + v * v).squareRoot()
+                }
                 guard r < tipReach else { continue }
                 let edge = PaperGrain.height(paperTile, x: Double(p.x) + 41.3, y: Double(p.y) + 17.9,
                                              coarseness: look.edgeCoarseness)
-                var tip = 1 - smoothstep(look.inner, look.outer, r + look.edgeBreak * (edge - 0.5))
+                var tip = 1 - smoothstep(inner, look.outer, r + look.edgeBreak * (edge - 0.5))
                 guard tip > 0 else { continue }
                 if streaking > 0 {
                     tip *= 1 - streaking * (1 - pressure(across: max(-1, min(1, side)), along: down))
@@ -571,10 +652,12 @@ struct DryStroke {
         let r = Float(colour.r), g = Float(colour.g), b = Float(colour.b)
         for y in box.minY..<box.maxY {
             for x in box.minX..<box.maxX {
-                let a = field.values[field.index(x, y)] * alpha
+                let coverage = field.values[field.index(x, y)]
+                let a = coverage * alpha
                 guard a > 0 else { continue }
                 let o = plane.offset(x, y)
                 let keep = 1 - a
+                let (r, g, b) = look.shade(r, g, b, coverage: coverage)
                 plane.data[o] = byte(r * a * 255 + Float(plane.data[o]) * keep)
                 plane.data[o + 1] = byte(g * a * 255 + Float(plane.data[o + 1]) * keep)
                 plane.data[o + 2] = byte(b * a * 255 + Float(plane.data[o + 2]) * keep)
@@ -592,8 +675,10 @@ struct DryStroke {
         let r = Float(colour.r), g = Float(colour.g), b = Float(colour.b)
         for y in box.minY..<box.maxY {
             for x in box.minX..<box.maxX {
-                let a = field.value(x, y) * alpha
+                let coverage = field.value(x, y)
+                let a = coverage * alpha
                 let o = plane.offset(x, y)
+                let (r, g, b) = look.shade(r, g, b, coverage: coverage)
                 plane.data[o] = byte(r * a * 255)
                 plane.data[o + 1] = byte(g * a * 255)
                 plane.data[o + 2] = byte(b * a * 255)

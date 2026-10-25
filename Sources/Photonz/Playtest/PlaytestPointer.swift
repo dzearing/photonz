@@ -129,6 +129,10 @@ private struct ShownHover: ViewModifier {
 /// in the editor to a tile in the capture history still leaves the button.
 @MainActor
 enum PlaytestPointer {
+    /// The pen a `pen` step put in the walk's hand: what its drags press with
+    /// and how far they lean, read by the brush in place of a mouse's nothing.
+    /// Nil is a mouse.
+    static var pen: (pressure: Double?, tilt: CGPoint?)?
     /// The regions that currently think the pointer is on them.
     private static var inside: [HoverTargetView] = []
 
@@ -170,6 +174,7 @@ enum PlaytestPointer {
         lastLocation = nil
         lastWindow = nil
         restingModifiers = []
+        pen = nil
     }
 
     /// The pointer comes to rest at `location`, in `window`'s own coordinates.

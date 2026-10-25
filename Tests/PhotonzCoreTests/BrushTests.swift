@@ -50,12 +50,12 @@ struct BrushTests {
 
     // MARK: - Media and settings
 
-    @Test("Seven media, each with Size, Opacity and its own two settings")
+    @Test("Eight media, each with Size, Opacity and at least two settings of its own")
     func media() {
-        #expect(BrushMedium.allCases.count == 7)
+        #expect(BrushMedium.allCases.count == 8)
         for medium in BrushMedium.allCases {
             let ids = medium.settings.map(\.id)
-            #expect(ids.count == 4, "\(medium) has \(ids)")
+            #expect(ids.count >= 4, "\(medium) has \(ids)")
             #expect(ids.prefix(2) == ["size", "opacity"])
             #expect(Set(ids).count == ids.count)
             #expect(!medium.title.isEmpty)
@@ -71,6 +71,7 @@ struct BrushTests {
         #expect(BrushMedium.airbrush.settings.map(\.id).suffix(2) == ["flow", "softness"])
         #expect(BrushMedium.crayon.settings.map(\.id).suffix(2) == ["grain", "wax"])
         #expect(BrushMedium.chalk.settings.map(\.id).suffix(2) == ["grain", "smudge"])
+        #expect(BrushMedium.pencil.settings.map(\.id).dropFirst(2) == ["hardness", "grain", "tilt"])
     }
 
     @Test("A marker's Tip is a choice, not a number")
