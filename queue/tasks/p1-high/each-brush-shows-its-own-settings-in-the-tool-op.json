@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.779Z",
-  "updated": "2026-10-25T08:50:24.171Z",
+  "updated": "2026-10-25T12:49:21.790Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -53,6 +53,53 @@
     {
       "t": "2026-10-25T08:50:24.170Z",
       "note": "From the airbrush slice (2026-10-25): the airbrush's own settings are now Flow, Spread, Droplet Size, Build-up (four, Softness became Spread with the old id mapped). The capsule should carry Flow and Spread, the panel all four. Sheets: queue/audits/2026-10-25-airbrush-*.png."
+    },
+    {
+      "t": "2026-10-25T11:51:16.746Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T12:48:35.552Z",
+      "note": "owns these walks: each-brush-shows-its-own-settings-walk, brush-settings-on-a-click-walk, brushes-picked-from-tiles-walk"
+    },
+    {
+      "t": "2026-10-25T12:48:54.375Z",
+      "note": "Review before building: a Photoshop user expects Size/Opacity/Flow on the options bar and [ ] for size (built); a Procreate user expects each brush to remember its own size (built, AnnotationStyles brush memory). Mock gap: brush-library.html Properties shows values only, this task's checklist asks for controls; the mock's Do buttons belong to make-your-own-brushes-a-custom-group-a-brush-fil."
+    },
+    {
+      "t": "2026-10-25T12:48:54.451Z",
+      "note": "Chose the first two of each medium's own settings for the tool options over a per-medium hand-picked pair because the settings list is already ordered most-used first (pencil Hardness+Grain, airbrush Flow+Spread as the notes asked)."
+    },
+    {
+      "t": "2026-10-25T12:48:54.522Z",
+      "note": "Chose Mode (Paint/Smudge) to follow the brush across media, and every other value to be remembered per medium, because smudging with another medium is one step (decision 7) while a size belongs to the brush."
+    },
+    {
+      "t": "2026-10-25T12:48:54.593Z",
+      "note": "Chose to put [ and ] on the window (zero-size buttons in the tool options, like the tool bar's letters) as well as in Edit > Tools: a walk's window is never key, so the menu has no editor there; a person gets the same command either way."
+    },
+    {
+      "t": "2026-10-25T12:48:54.677Z",
+      "note": "Measured bar (BrushSettingsVisibleTests): each own setting's two ends differ over >= 0.2 of the stroke. Before: charcoal Smudge 0.08 failed; strengthened at the top end (defaults within a tenth), now 0.47. Pictures looked at: all eight sheets (every row changes across its three strokes; Tilt with a leaning pen, Smear over red, Build-up held), the three walk captures and the marker tip capture."
+    },
+    {
+      "t": "2026-10-25T12:48:54.742Z",
+      "note": "Review after building: the options row is wide (~1080 pt) and wraps on narrow windows; the panel's brush rows are named 'Brush <name>' for walks and accessibility, apart from the picked paint layer's own Opacity row."
+    },
+    {
+      "t": "2026-10-25T12:48:54.808Z",
+      "note": "left rough: the size ring is a cursor image, capped at 250 screen points, so a very big brush at high zoom shows a smaller ring than its tip. Not filed: rare; fold into the painting-speed slice if it comes up."
+    },
+    {
+      "t": "2026-10-25T12:49:21.788Z",
+      "note": "Tool options carry Brush, Mode, Size, Opacity and the brush's first two own settings; the panel's Brush section has every setting as a control; each medium remembers its values; [ and ] step size (window + Edit > Tools) and the ring redraws. Verified: 14,568 tests green incl. BrushSettingsControlsTests and BrushSettingsVisibleTests (every own setting changes >= 0.2 of the stroke; charcoal Smudge strengthened 0.08 -> 0.47); walks each-brush-shows-its-own-settings-walk (no flags, pointer presses on sliders/segments in both places) and brush-settings-on-a-click-walk (Hardness dropdowns clicked at centre/start/end) plus all brush and tool-settings walks pass. Audit queue/audits/2026-10-25-brush-settings.json with per-brush sheets. Commit 5262f1d1."
     }
-  ]
+  ],
+  "started": "2026-10-25T11:51:16.745Z",
+  "walks": [
+    "each-brush-shows-its-own-settings-walk",
+    "brush-settings-on-a-click-walk",
+    "brushes-picked-from-tiles-walk"
+  ],
+  "completed": "2026-10-25T12:49:21.789Z"
 }
