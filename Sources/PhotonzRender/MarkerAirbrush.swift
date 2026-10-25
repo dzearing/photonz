@@ -154,24 +154,28 @@ struct MarkerStroke {
 // MARK: - The airbrush
 
 struct AirbrushStroke {
-    /// How much paint each dab sprays at the middle of its cloud, before the
-    /// pen's press: the stroke's Flow.
+    /// How hard it sprays, 0...1: the stroke's Flow.
     let flow: Float
-    /// 0 a crisp-edged cone of spray, 1 a cloud that fades out from its middle.
-    let softness: Float
+    /// How wide the mist reaches out from the line, 0...1: the stroke's
+    /// Spread. Narrow, the mist hugs the line inside a fine halo of droplets;
+    /// wide, it fills the tip and feathers out to its rim.
+    let spread: Float
+    /// Fine mist to coarse spatter, 0...1: the stroke's Droplet Size.
+    let droplet: Float
     let toPixels: CGAffineTransform
     let pixelsPerPoint: CGFloat
     private(set) var field: CoverageField
     private var scatter: Scatter
 
-    /// Paint per dab at full Flow and press: about six dabs overlap any point
-    /// of a steady pass, so a pass at the default Flow leaves a light veil and
-    /// holding still builds it toward solid in about a second.
-    static let sprayPerDab: Float = 0.33
+    /// Paint per dab at full Flow and press: a pass at the default Flow
+    /// leaves a light veil, and holding still builds it toward solid in
+    /// about a second.
+    static let sprayPerDab: Float = 0.55
 
     init(settings: BrushSettings, seed: UInt32, toPixels: CGAffineTransform, limit: PixelBox) {
         flow = Float(settings.value("flow") / 100)
-        softness = Float(settings.value("softness") / 100)
+        spread = Float(settings.value("spread") / 100)
+        droplet = Float(settings.value("droplet") / 100)
         self.toPixels = toPixels
         pixelsPerPoint = hypot(toPixels.a, toPixels.b)
         field = CoverageField(limit: limit)
@@ -185,54 +189,85 @@ struct AirbrushStroke {
         return (r * cos(2 * .pi * v), r * sin(2 * .pi * v))
     }
 
+    /// How wide the mist's bell is, as a share of the tip's radius.
+    var sigma: Float { 0.15 + 0.21 * spread }
+
+    /// Where a dab's droplets land, how big each is in points and how much
+    /// paint it carries, rolled from the stroke's seed whatever happens, so
+    /// the live stroke and the landed one spray the same ones even when a dab
+    /// falls off the bitmap.
+    private mutating func droplets(_ dab: BrushDab, radius: CGFloat, amount: Float,
+                                   press: Float) -> [(CGPoint, CGFloat, Float)] {
+        // Fine mist is many tiny specks, coarse spatter fewer and bigger.
+        let count = Int(((dab.diameter * 1.2 + 8) * CGFloat(2.4 - 1.9 * droplet)).rounded())
+        let size = CGFloat(0.12 + 0.75 * droplet * droplet)
+        let ink = amount * (2.6 + 1.2 * droplet)
+        var drops: [(CGPoint, CGFloat, Float)] = []
+        drops.reserveCapacity(count + 8)
+        for _ in 0..<count {
+            let (gx, gy) = bell()
+            // Most droplets ride the mist, a little wider than it; some are
+            // overspray thrown anywhere over the cone, the fine halo at the
+            // edge of a real airbrush line.
+            let halo = scatter.unit() < 0.3
+            let reach = 0.95 * scatter.unit().squareRoot(), turn = 2 * Float.pi * scatter.unit()
+            let width = sigma * 1.25
+            let x = halo ? reach * cos(turn) : gx * width
+            let y = halo ? reach * sin(turn) : gy * width
+            let grow = CGFloat(0.6 + 0.8 * scatter.unit())
+            let weight = 0.5 + scatter.unit()
+            guard x * x + y * y < 0.94 else { continue }
+            drops.append((CGPoint(x: dab.center.x + CGFloat(x) * radius, y: dab.center.y + CGFloat(y) * radius),
+                          size * grow, min(1, ink * weight)))
+        }
+        // A heavy flow pressed hard spatters: a few big drops thrown out past
+        // the mist, landing thick.
+        let heavy = max(0, flow * press - 0.5) / 0.5
+        let thrown = heavy * (1.2 + 3 * droplet) + scatter.unit()
+        for _ in 0..<Int(thrown) {
+            let reach = 0.3 + 0.62 * scatter.unit().squareRoot(), turn = 2 * Float.pi * scatter.unit()
+            let grow = CGFloat(0.6 + 0.8 * scatter.unit())
+            drops.append((CGPoint(x: dab.center.x + CGFloat(reach * cos(turn)) * radius,
+                                  y: dab.center.y + CGFloat(reach * sin(turn)) * radius),
+                          CGFloat(0.45 + 0.8 * droplet) * grow, 0.85))
+        }
+        return drops
+    }
+
     /// Sprays one dab and hands back the pixels it touched. Paint adds up the
     /// way spray does: each layer covers a share of what is still bare.
     mutating func mark(_ dab: BrushDab) -> PixelBox {
         let radiusPoints = max(dab.diameter / 2, 0.25)
-        let amount = Self.sprayPerDab * flow * Float(0.35 + 0.65 * min(1, max(0, dab.pressure)))
-        // The droplets, rolled whatever happens, so the live stroke and the
-        // landed one spray the same ones even when a dab falls off the bitmap.
-        // Thrown wider the softer the spray, and thinned toward the fringe.
-        let count = Int((dab.diameter * 1.6).rounded()) + 6
-        let spread = Float(radiusPoints) * 0.5
-        var drops: [(CGPoint, CGFloat, Float)] = []
-        drops.reserveCapacity(count)
-        for _ in 0..<count {
-            let (gx, gy) = bell()
-            // A crisp spray throws its droplets evenly over its cone; a soft
-            // one bunches them in the middle and thins them out to the edge.
-            let reach = Float(radiusPoints) * 0.95 * scatter.unit().squareRoot()
-            let turn = 2 * Float.pi * scatter.unit()
-            let size = CGFloat(0.18 + 0.22 * scatter.unit())
-            let weight = 0.6 + 0.8 * scatter.unit()
-            let x = CGFloat(reach * cos(turn) + (gx * spread - reach * cos(turn)) * softness)
-            let y = CGFloat(reach * sin(turn) + (gy * spread - reach * sin(turn)) * softness)
-            guard hypot(x, y) < radiusPoints * 0.97 else { continue }
-            drops.append((CGPoint(x: dab.center.x + x, y: dab.center.y + y), size, weight))
-        }
+        // Pressing harder opens the needle: more paint. The dab's share of
+        // the spray is how long the nozzle was over it (a fast pass is light).
+        let press = Float(min(1, max(0, dab.pressure)))
+        let amount = Self.sprayPerDab * flow * (0.2 + 0.8 * press) * Float(min(1, max(0, dab.spray)))
+        let drops = droplets(dab, radius: radiusPoints, amount: amount, press: press)
         let centre = dab.center.applying(toPixels)
         let radius = radiusPoints * pixelsPerPoint
         let box = PixelBox.around(centre, radius: radius + 2).intersection(field.limit)
         guard !box.isEmpty, amount > 0 else { return .empty }
         field.ensure(box)
-        // The cloud: a bell of paint, fading out by the edge however soft.
-        let sigma: Float = 0.3 + 0.2 * softness
-        let mist = amount * 0.9
+        // The mist: a bell of paint around the line, densest in the middle,
+        // gone before the rim. Coarse spatter carries more of the paint in
+        // its drops and less as mist.
+        let mist = amount * (0.8 - 0.45 * droplet)
+        let spreadOut = 1 / (2 * sigma * sigma)
+        let inverse = 1 / Float(radius)
         for y in box.minY..<box.maxY {
+            let dy = (Float(y) + 0.5 - Float(centre.y)) * inverse
             for x in box.minX..<box.maxX {
-                let r = Float(hypot(CGFloat(x) + 0.5 - centre.x, CGFloat(y) + 0.5 - centre.y) / radius)
-                guard r < 1 else { continue }
-                let hard = 1 - smoothstep(0.6, 1, r)
-                let soft = exp(-r * r / (2 * sigma * sigma)) * (1 - smoothstep(0.8, 1, r))
-                let laid = mist * (hard + (soft - hard) * softness)
-                guard laid > 0.0005 else { continue }
+                let dx = (Float(x) + 0.5 - Float(centre.x)) * inverse
+                let r2 = dx * dx + dy * dy
+                guard r2 < 1 else { continue }
+                let laid = mist * exp(-r2 * spreadOut) * (1 - smoothstep(0.45, 1, r2.squareRoot()))
+                guard laid > 0.0004 else { continue }
                 let i = field.index(x, y)
                 field.values[i] = 1 - (1 - field.values[i]) * (1 - laid)
             }
         }
-        // The droplets: specks of the same paint, the fine grain of a spray.
-        let drop = min(1, amount * 0.9)
-        for (point, size, weight) in drops {
+        // The droplets: specks of the same paint, the grain of a spray.
+        for (point, size, ink) in drops {
             let at = point.applying(toPixels)
             let r = max(size * pixelsPerPoint, 0.35)
             let speck = PixelBox.around(at, radius: r + 1).intersection(field.box)
@@ -242,7 +277,7 @@ struct AirbrushStroke {
                     let d = hypot(CGFloat(x) + 0.5 - at.x, CGFloat(y) + 0.5 - at.y)
                     let cover = Float(min(1, max(0, r + 0.5 - d)))
                     guard cover > 0 else { continue }
-                    let laid = min(1, drop * weight * cover)
+                    let laid = min(1, ink * cover)
                     let i = field.index(x, y)
                     field.values[i] = 1 - (1 - field.values[i]) * (1 - laid)
                 }

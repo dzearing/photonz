@@ -89,7 +89,11 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
                                     options: ["Round", "Chisel"]),
                    .percent("flow", "Flow", 60)]
         case .airbrush:
-            own = [.percent("flow", "Flow", 30), .percent("softness", "Softness", 80)]
+            // Flow is how hard it sprays, Spread how wide the mist reaches
+            // out from the line, Droplet Size fine mist to coarse spatter,
+            // Build-up how fast a held spray piles up.
+            own = [.percent("flow", "Flow", 40), .percent("spread", "Spread", 55),
+                   .percent("droplet", "Droplet Size", 25), .percent("buildup", "Build-up", 50)]
         case .oil:
             own = [.percent("load", "Load", 70), .percent("smear", "Smear", 40)]
         case .watercolour:
@@ -99,7 +103,17 @@ public enum BrushMedium: String, CaseIterable, Codable, Hashable, Sendable {
         return shared + own
     }
 
-    func spec(_ id: String) -> BrushSettingSpec? { settings.first { $0.id == id } }
+    func spec(_ id: String) -> BrushSettingSpec? { settings.first { $0.id == settingID(id) } }
+
+    /// The id a setting goes by now, for one it used to go by: the airbrush's
+    /// Softness became its Spread (2026-10-25), so a stroke saved before, or a
+    /// caller still saying softness, keeps its value.
+    func settingID(_ id: String) -> String {
+        switch (self, id) {
+        case (.airbrush, "softness"): "spread"
+        default: id
+        }
+    }
 }
 
 /// One setting a medium declares: its id (what MCP and the store say), its
@@ -160,9 +174,13 @@ public struct BrushSettings: Hashable, Codable, Sendable {
 
     public init(medium: BrushMedium, values: [String: Double] = [:], mode: BrushMode = .paint) {
         self.medium = medium
+        var given: [String: Double] = [:]
+        // A value under a setting's former id counts, unless its new id is given too.
+        for (id, value) in values where medium.settingID(id) != id { given[medium.settingID(id)] = value }
+        given.merge(values) { $1 }
         var filled: [String: Double] = [:]
         for spec in medium.settings {
-            filled[spec.id] = spec.clamp(values[spec.id] ?? spec.defaultValue)
+            filled[spec.id] = spec.clamp(given[spec.id] ?? spec.defaultValue)
         }
         self.values = filled
         self.mode = mode
@@ -181,14 +199,14 @@ public struct BrushSettings: Hashable, Codable, Sendable {
     /// The value of one setting, or its default if somehow missing; zero for
     /// an id the medium does not have.
     public func value(_ id: String) -> Double {
-        values[id] ?? medium.spec(id)?.defaultValue ?? 0
+        values[medium.settingID(id)] ?? medium.spec(id)?.defaultValue ?? 0
     }
 
     /// Sets one setting, clamped to its range. An id the medium does not have
     /// is ignored rather than stored.
     public mutating func set(_ id: String, to value: Double) {
         guard let spec = medium.spec(id), value.isFinite else { return }
-        values[id] = spec.clamp(value)
+        values[spec.id] = spec.clamp(value)
     }
 
     /// The same brush in another medium: Size, Opacity and the mode carry
@@ -335,15 +353,20 @@ public struct BrushDab: Hashable, Sendable {
     /// The pen's lean here, each axis -1...1; zero standing upright, which is
     /// how a mouse always paints.
     public var tilt: CGPoint
+    /// The share of its paint the dab lays, 0...1: an airbrush sprays by
+    /// time, so a dab on a fast pass, over in a moment, lays less than one on
+    /// a slow pass or held still. 1 for every other medium.
+    public var spray: Double
 
     public init(center: CGPoint, diameter: CGFloat, opacity: Double, angle: Double = 0,
-                pressure: Double = 1, tilt: CGPoint = .zero) {
+                pressure: Double = 1, tilt: CGPoint = .zero, spray: Double = 1) {
         self.center = center
         self.diameter = diameter
         self.opacity = opacity
         self.angle = angle
         self.pressure = pressure
         self.tilt = tilt
+        self.spray = spray
     }
 }
 
@@ -385,10 +408,27 @@ public enum BrushPlacement {
         max(0.25, diameter * 0.1)
     }
 
-    /// How often an airbrush held still lays another dab, in milliseconds:
-    /// the spray keeps coming while the trigger is down, so paint builds up
-    /// over one spot the longer the pointer stays there (decision 4).
-    public static let dwellInterval: Double = 25
+    /// How often an airbrush held still lays another dab, in milliseconds,
+    /// at the default Build-up: the spray keeps coming while the trigger is
+    /// down, so paint builds up over one spot the longer the pointer stays
+    /// there (decision 4).
+    public static let dwellInterval: Double = 40
+
+    /// How often a held airbrush lays another dab at a Build-up of 0...100:
+    /// twice as often at 100 as at the default 50, and never at 0, where the
+    /// spray lays only what a pass does.
+    public static func dwellInterval(buildUp: Double) -> Double? {
+        let b = min(100, max(0, buildUp))
+        return b < 1 ? nil : dwellInterval * 50 / b
+    }
+
+    /// The share of its paint an airbrush dab lays on a pass at `speed`
+    /// points a millisecond: all of it slow, about half at a brisk 2, never
+    /// under a quarter however fast, so a fast pass is a light veil and never
+    /// a broken line.
+    public static func spray(speed: Double) -> Double {
+        max(0.25, 1 / (1 + 0.5 * max(0, speed)))
+    }
 
     /// Every dab of a finished stroke. `jitter` moves each dab off the line by
     /// up to that fraction of its radius.
@@ -429,6 +469,8 @@ public enum BrushPlacement {
         /// staying, when it was last read there, and the time owed toward the
         /// next dab.
         let dwells: Bool
+        /// How often a held spray lays a dab, nil for one that does not.
+        let interval: Double?
         private var stay: CGPoint?
         private var stayMs: Double = 0
         private var dwellOwed: Double = 0
@@ -438,6 +480,7 @@ public enum BrushPlacement {
             opacity = settings.opacity / 100
             gap = BrushPlacement.spacing(forDiameter: diameter)
             dwells = settings.medium == .airbrush
+            interval = dwells ? BrushPlacement.dwellInterval(buildUp: settings.value("buildup")) : nil
             self.jitter = max(0, jitter)
             random = SeededRandom(seed: seed, salt: 0xB2C5)
         }
@@ -497,9 +540,10 @@ public enum BrushPlacement {
             let press = sample.pressure.map { min(1, max(0, $0)) } ?? pressures.last ?? 0.5
             let lean = sample.tilt.map { CGPoint(x: min(1, max(-1, $0.x)), y: min(1, max(-1, $0.y))) }
                 ?? tilts.last ?? .zero
-            while dwellOwed >= BrushPlacement.dwellInterval {
-                dwellOwed -= BrushPlacement.dwellInterval
-                dabs.append(dab(at: sample.point, pressure: press, tilt: lean))
+            guard let interval else { return dabs }
+            while dwellOwed >= interval {
+                dwellOwed -= interval
+                dabs.append(dab(at: sample.point, pressure: press, tilt: lean, held: true))
             }
             return dabs
         }
@@ -556,7 +600,8 @@ public enum BrushPlacement {
             }
         }
 
-        private mutating func dab(at point: CGPoint, pressure: Double, tilt: CGPoint) -> BrushDab {
+        private mutating func dab(at point: CGPoint, pressure: Double, tilt: CGPoint,
+                                  held: Bool = false) -> BrushDab {
             var center = point
             if jitter > 0 {
                 let radius = diameter / 2 * jitter * random.unit().squareRoot()
@@ -565,7 +610,8 @@ public enum BrushPlacement {
                 center.y += sin(angle) * radius
             }
             return BrushDab(center: center, diameter: diameter, opacity: opacity,
-                            pressure: pressure, tilt: tilt)
+                            pressure: pressure, tilt: tilt,
+                            spray: dwells && !held ? BrushPlacement.spray(speed: speed) : 1)
         }
 
         private func catmullRom(_ p0: CGPoint, _ p1: CGPoint, _ p2: CGPoint, _ p3: CGPoint,

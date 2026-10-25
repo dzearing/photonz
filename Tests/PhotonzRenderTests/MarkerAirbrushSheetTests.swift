@@ -82,10 +82,10 @@ struct MarkerAirbrushSheetTests {
                 s(.airbrush, pause(60, from: 400, to: 640, ms: 1000), [:], hex: ink, seed: 11),
                 s(.airbrush, path([CGPoint(x: 720, y: 60), CGPoint(x: 960, y: 60)]), ["flow": 80], hex: pink, seed: 12),
             ]),
-            ("Airbrush softness", [
-                s(.airbrush, path([CGPoint(x: 40, y: 60), CGPoint(x: 320, y: 60)]), ["softness": 0, "flow": 50],
+            ("Airbrush spread", [
+                s(.airbrush, path([CGPoint(x: 40, y: 60), CGPoint(x: 320, y: 60)]), ["spread": 0, "flow": 50],
                   hex: ink, seed: 13),
-                s(.airbrush, path([CGPoint(x: 400, y: 60), CGPoint(x: 640, y: 60)]), ["softness": 100, "flow": 50],
+                s(.airbrush, path([CGPoint(x: 400, y: 60), CGPoint(x: 640, y: 60)]), ["spread": 100, "flow": 50],
                   hex: ink, seed: 14),
                 s(.airbrush, path([CGPoint(x: 720, y: 60), CGPoint(x: 960, y: 60)]),
                   ["size": 12, "flow": 70], hex: ink, seed: 15),
@@ -161,13 +161,6 @@ struct MarkerAirbrushSheetTests {
                                                                 seed: 3)]),
                                                   from: a, to: b, diameter: 40, scale: scale)
             out.append(String(format: "%@\tfringe grain %.4f", label, grain))
-        }
-        for softness in [0.0, 100] {
-            let edge = PaintMeasures.edgeSoftness(try render([s(.airbrush, path([a, b]),
-                                                               ["size": 40, "softness": softness, "flow": 60],
-                                                               hex: "#000000", seed: 4)]),
-                                                  from: a, to: b, diameter: 40, scale: scale)
-            out.append(String(format: "Airbrush softness %.0f\tedge fall-off %.2f of the radius", softness, edge))
         }
         return out.joined(separator: "\n")
     }

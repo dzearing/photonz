@@ -179,31 +179,6 @@ struct MarkerAirbrushRenderingTests {
         #expect(round < PaintMeasures.airbrushBuildUpBar, "round tip \(round)")
     }
 
-    @Test("Flow sets how fast the airbrush lays paint")
-    func airbrushFlow() throws {
-        let path = line([CGPoint(x: 30, y: 80), CGPoint(x: 270, y: 80)])
-        func core(_ flow: Double) throws -> Double {
-            PaintMeasures.meanAlpha(try render([stroke(.airbrush, path, size: 40, set: ["flow": flow],
-                                                       hex: "#000000")]),
-                                    around: CGPoint(x: 150, y: 80), radius: 5, scale: scale)
-        }
-        let low = try core(10), high = try core(90)
-        #expect(high > low * 2.5, "flow 10 \(low), flow 90 \(high)")
-        #expect(high < 0.98, "a single pass at high flow still has room to build: \(high)")
-    }
-
-    @Test("Softness spreads the spray's edge")
-    func airbrushSoftness() throws {
-        let a = CGPoint(x: 30, y: 80), b = CGPoint(x: 270, y: 80)
-        func edge(_ softness: Double) throws -> Double {
-            PaintMeasures.edgeSoftness(try render([stroke(.airbrush, line([a, b]), size: 40,
-                                                          set: ["softness": softness, "flow": 60], hex: "#000000")]),
-                                       from: a, to: b, diameter: 40, scale: scale)
-        }
-        let hard = try edge(0), soft = try edge(100)
-        #expect(soft > hard + 0.1 && soft > hard * 1.4, "softness 0 \(hard), softness 100 \(soft)")
-    }
-
     @Test("The spray is fine grain, not a smooth blur, and the round tip is smooth")
     func fineSpray() throws {
         let a = CGPoint(x: 30, y: 80), b = CGPoint(x: 270, y: 80)

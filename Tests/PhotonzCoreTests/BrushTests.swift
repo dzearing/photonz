@@ -68,7 +68,7 @@ struct BrushTests {
         #expect(BrushMedium.marker.settings.map(\.id).suffix(2) == ["tip", "flow"])
         #expect(BrushMedium.watercolour.settings.map(\.id).dropFirst(2) == ["wetness", "bleed", "granulation"])
         #expect(BrushMedium.oil.settings.map(\.id).suffix(2) == ["load", "smear"])
-        #expect(BrushMedium.airbrush.settings.map(\.id).suffix(2) == ["flow", "softness"])
+        #expect(BrushMedium.airbrush.settings.map(\.id).dropFirst(2) == ["flow", "spread", "droplet", "buildup"])
         #expect(BrushMedium.crayon.settings.map(\.id).suffix(2) == ["grain", "wax"])
         #expect(BrushMedium.chalk.settings.map(\.id).suffix(2) == ["grain", "smudge"])
         #expect(BrushMedium.pencil.settings.map(\.id).dropFirst(2) == ["hardness", "grain", "tilt"])

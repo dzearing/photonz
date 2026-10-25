@@ -21949,3 +21949,16 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - `PaintMeasures.edgeToCentre`, `spreadPastPath` and two bars; `WatercolourRenderingTests`, `WatercolourDryingTests`, `WatercolourSheetTests` (sheet on request).
 - Walk `watercolour-wash-and-bloom-walk` (12 MP, no flags). Audit `queue/audits/2026-10-25-watercolour.json`.
 - Next: oil paint is the last medium on the round tip; the landing stall (~0.4 s per stroke at 12 MP, same for pencil) is the painting speed slice.
+
+## 2026-10-25 — Airbrush sprays a fine mist that builds up
+
+- The airbrush is a real spray now: a bell of mist densest at the line that
+  feathers out with no edge, fine droplets with an overspray halo, spatter at a
+  heavy flow pressed hard. Pressure sprays more; a fast pass is lighter
+  (`BrushDab.spray` from pointer speed); Build-up sets how fast a held spot
+  darkens. Own settings: Flow, Spread (was Softness, old id mapped), Droplet
+  Size, Build-up.
+- Bars in `AirbrushRenderingTests`, sheets/reel/blind test in
+  `queue/audits/2026-10-25-airbrush*`. Walk `airbrush-sprays-and-builds-walk`
+  (no flags, 12 MP): 0.3-0.4 ms median per move.
+- Next: the settings need controls (each-brush-shows-its-own-settings-in-the-tool-op).

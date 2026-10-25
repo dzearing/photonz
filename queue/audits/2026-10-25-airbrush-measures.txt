@@ -1,0 +1,16 @@
+Airbrush bars at Size 40, 2x. The round tip is the oil paint's until its own slice.
+Airbrush	edge feather 0.82 (bar 0.60: passes)	edge droplets 0.17 a square point (bar 0.10: passes)
+Round tip	edge feather 0.21 (bar 0.60: fails)	edge droplets 0.00 a square point (bar 0.10: fails)
+Airbrush	darkness held: 0 ms 0.28, 250 ms 0.60, 500 ms 0.81, 1000 ms 0.95, 2000 ms 1.00; a second over none 3.33x (bar 1.6: passes)
+Round tip	darkness held: 0 ms 0.40, 250 ms 0.40, 500 ms 0.40, 1000 ms 0.40, 2000 ms 0.40; a second over none 1.00x (bar 1.6: fails)
+Airbrush	slow pass 0.31, fast pass 0.15, 2.04x (bar 1.4: passes)
+Round tip	slow pass 0.40, fast pass 0.40, 1.00x (bar 1.4: fails)
+Airbrush	pen light (0.2) 0.15, hard (1.0) 0.38, 2.45x
+Airbrush Spread 0	width at half darkness 8.5 pt, edge feather 0.88
+Airbrush Spread 55	width at half darkness 14.0 pt, edge feather 0.82
+Airbrush Spread 100	width at half darkness 18.0 pt, edge feather 0.79
+Airbrush Droplet Size 0	fringe specks 0.19 a square point, 0.65 pt across
+Airbrush Droplet Size 25	fringe specks 0.17 a square point, 0.67 pt across
+Airbrush Droplet Size 100	fringe specks 0.01 a square point, 1.70 pt across
+Airbrush Flow 25, pressed hard	core 0.26, spatter 0.003 a square point
+Airbrush Flow 100, pressed hard	core 0.70, spatter 0.067 a square point

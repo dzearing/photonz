@@ -1,0 +1,34 @@
+{
+  "feature": "Airbrush spray",
+  "epic": "image-paint",
+  "summary": "The airbrush now sprays a fine mist of droplets that is densest along the line and feathers out with no edge. It builds up dark wherever you hold it, sprays more when pressed harder, is lighter on a fast pass, and spatters at a heavy flow. It has its own Flow, Spread, Droplet Size and Build-up settings.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any picture or a blank one. Walk: Scripts/playtest/airbrush-sprays-and-builds-walk.json (a blank 4000 by 3000 canvas).",
+  "switched": {},
+  "try": [
+    { "do": "Before: today's airbrush beside the round tip, ahead of this change (rows Airbrush and Round tip).", "shot": "2026-10-25-airbrush-before.png" },
+    { "do": "Press B, then pick Airbrush from the Medium dropdown over the tool bar.", "shot": "2026-10-25-airbrush-2-sprayed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag a stroke across the picture, then drag another and hold still half way with the button down for a second.", "shot": "2026-10-25-airbrush-1-built-up-held-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look closely: fine droplets feathering out from the line, and a dark soft spot where you held.", "shot": "2026-10-25-airbrush-close-sc.png" },
+    { "do": "Watch the reel of spraying: a pass, a held spot building up, and a hard-pressed pass at full Flow that spatters (2026-10-25-airbrush-reel.mp4).", "shot": "2026-10-25-airbrush-reel-contact.png" },
+    { "do": "Open the settings sheets: Flow, Spread, Droplet Size and Build-up each change the stroke.", "shot": "2026-10-25-airbrush-droplet.png" },
+    { "do": "Open the pressure and speed sheet, and the darkness profile across a stroke against the round tip.", "shot": "2026-10-25-airbrush-profile.png" },
+    { "do": "Name each unlabelled row of the blind sheet. The answer is in 2026-10-25-airbrush-blind-key.txt.", "shot": "2026-10-25-airbrush-blind.png" }
+  ],
+  "evaluate": [
+    "Does a stroke read as a real airbrush: a soft line of fine droplets with no hard edge?",
+    "Is about a second of holding still the right time to go from a light veil to a dark spot?",
+    "At Droplet Size 100, is the coarse spatter what you want from the far end of that setting?",
+    "Is a quick pass light enough, and a slow one dark enough, to shade the way you would with a real airbrush?",
+    "Does the spatter at Flow 100 pressed hard feel right, or should it start later or be rarer?"
+  ],
+  "rough": [
+    "Flow, Spread, Droplet Size and Build-up work in the engine but have no controls yet, so the sheets show them, not the app. Controls are each-brush-shows-its-own-settings-in-the-tool-op.",
+    "Size carries over from the last medium, so the airbrush picked after the default charcoal sprays at 16 points, a narrow line. Each medium remembering its own size is each-brush-shows-its-own-settings-in-the-tool-op.",
+    "The reel is drawn by the canvas's own live-stroke code, frame by frame from a recorded stroke, not a screen recording of the window: a walk cannot film the app.",
+    "A walk that photographs a stroke with the button still down leaves a dark spot at the end of that stroke (2-built-up-held), because the spray keeps building while the picture is taken. A person who lets go straight away gets no spot.",
+    "One judge said the edge specks read as separate dots more than a real mist would. Lowering Droplet Size softens them.",
+    "Measured on the 12 megapixel canvas: each pointer move took 0.3 to 0.4 ms (median), 1.0 ms at worst, across 180 moves (log of airbrush-sprays-and-builds-walk). The composite path is untouched.",
+    "Blind test: two model judges each named all eight rows correctly, and both named the airbrush at high confidence. I wrote the sheet, so my own read is not blind.",
+    "No mock draws airbrush strokes; the measured bars decide the look (2026-10-25-airbrush-measures.txt): edge feather 0.82 against the round tip's 0.21 (bar 0.6), edge droplets 0.17 a square point against 0 (bar 0.1), a second's hold 3.3 times a pass against 1.0 (bar 1.6), slow over fast 2.0 against 1.0 (bar 1.4)."
+  ]
+}

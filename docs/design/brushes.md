@@ -86,7 +86,7 @@ blind test fails it):
 | Chalk | as charcoal, coarser grain, brighter and more opaque, broken edge | Grain, Smudge |
 | Crayon | waxy: hard edge, grain catches only the high tooth, builds little on a second pass | Grain, Pressure (wax) |
 | Marker | flat within a stroke (max coverage, not sum), translucent, darkens where separate strokes cross (multiply); chisel or round tip with an angle | Tip, Flow |
-| Airbrush | gaussian spray of fine particles whose flow accumulates while the pointer dwells | Flow, Softness |
+| Airbrush | gaussian spray of fine particles whose flow accumulates while the pointer dwells | Flow, Spread, Droplet Size, Build-up |
 | Oil | carries colour: picks up what is under the brush and smears it along; bristle streaks in a height map, lit so ridges show | Load, Smear |
 | Watercolour | transparent glaze; pigment pools darker at the wet edge; wet-on-wet blooms; granulates into the grain; overlapping strokes layer | Wetness, Bleed, Granulation |
 
@@ -291,26 +291,53 @@ an anchor and the line re-paints.
   right hand's hold): along that edge the stroke is a thin line, across it the
   full width. Tilt turning the nib waits for the dynamics slice.
 - **The airbrush sprays by time.** `BrushPlacement.Walker` lays an airbrush
-  dab every `dwellInterval` (25 ms) the pointer stays within a dab's spacing of
+  dab every `dwellInterval` (40 ms at the default Build-up, see below) the pointer stays within a dab's spacing of
   where it settled, as well as its spaced dabs along the way, so a held spot
   builds up and a slow pass is darker than a fast one. The pointer sends no
   events while still, so the canvas's `brushDwellTimer` hands the stroke a
   sample where the pointer is after 25 ms without one; those samples are
   stored, so the landed stroke builds exactly what was seen.
-- **A dab is a cloud plus droplets.** A bell of mist (Softness from a crisp
-  cone fading over its outer 40 per cent to a gaussian that fades from the
-  middle) and fine droplets of 0.2 to 0.4 pt drawn from the stroke's seed,
-  evenly over the cone when crisp and bunched to the middle when soft. Paint
-  adds as spray does: each layer covers a share of what is still bare. Flow and
-  the pen's press set how much each dab sprays. Jitter was tried to break the
-  rings a crisp cone leaves at a stroke's ends and made it lumpy; a wider
-  fall-off on the crisp cone does it instead.
+- **A dab is a cloud plus droplets.** Superseded the same day by the
+  airbrush's own slice: see "What the airbrush settled" below.
 - **Bars** (`MarkerAirbrushRenderingTests`, `PaintMeasures`): `flatShare` of a
   marker stroke that doubles back at least 0.9 (marker 0.99, the round tip
   0.82); `meanAlpha` held a second over a pass at least 1.6 times (airbrush
   3.3, the round tip 1.0); `fringeGrain` of the spray at least three times the
   round tip's (0.040 against 0.005). The round tip is now the oil paint's,
   until its slice.
+
+## What the airbrush settled (2026-10-25)
+
+- **Four settings, one list.** Flow (how hard it sprays, 40), Spread (how wide
+  the mist reaches from the line, 55), Droplet Size (fine mist to coarse
+  spatter, 25) and Build-up (how fast a held spray piles up, 50), all in
+  `BrushMedium.settings`. Softness became Spread: `BrushMedium.settingID` maps
+  the old id, so a stroke saved with `softness` opens with that value as its
+  Spread and a caller still saying softness sets Spread.
+- **A dab is a bell of mist plus droplets.** `AirbrushStroke`
+  (`MarkerAirbrush.swift`): a gaussian whose width is 0.15 to 0.36 of the
+  radius by Spread, fading to nothing by the rim, so even a spot held until it
+  saturates has no edge. Droplets from the stroke's seed: most ride the mist a
+  little wider than it, three in ten are overspray anywhere over the cone (the
+  halo along a real airbrush line). Droplet Size trades many specks of 0.1 pt
+  for fewer of up to 1.4 pt, and moves paint from the mist into the drops.
+- **Spatter at a heavy flow.** When Flow times the press passes a half, each
+  dab throws a few big drops out past the mist that land thick, more with a
+  bigger Droplet Size.
+- **Pressure and speed.** The press sets the paint (0.2 to 1 of it, a pen's own
+  reading or a mouse's simulated one). Each moving dab carries `BrushDab.spray`,
+  the share of its paint it lays, from the pointer's eased speed
+  (`BrushPlacement.spray(speed:)`: all of it slow, about half at 2 pt/ms,
+  never under a quarter), so a fast pass is light. Held dabs spray all of it.
+- **Build-up sets the dwell rate.** `BrushPlacement.dwellInterval(buildUp:)`:
+  40 ms at 50, 20 ms at 100, none at 0 (a held spot then gets only what the
+  pass laid).
+- **Bars** (`AirbrushRenderingTests`, numbers in
+  `queue/audits/2026-10-25-airbrush-measures.txt`): `featherShare` at least
+  0.6 (airbrush 0.82, round tip 0.21); `edgeDroplets` at least 0.1 a square
+  point (0.17, round tip 0); held a second over none at least 1.6 times (3.3,
+  round tip 1.0, rising at every step of 0, 250, 500, 1000, 2000 ms); a slow
+  pass over a fast one at least 1.4 times (2.0, round tip 1.0).
 
 ## What watercolour settled (2026-10-25)
 

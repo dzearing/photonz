@@ -1,0 +1,8 @@
+row 1: marker
+row 2: charcoal
+row 3: airbrush
+row 4: pencil
+row 5: watercolour
+row 6: round tip
+row 7: crayon
+row 8: chalk

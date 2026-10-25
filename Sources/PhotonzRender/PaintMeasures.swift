@@ -35,6 +35,16 @@ public enum PaintMeasures {
     /// many times the coverage a steady pass does (`meanAlpha` at each). The
     /// round tip covers both the same, so it fails.
     public static let airbrushBuildUpBar = 1.6
+    /// The airbrush's spray bars, read off a straight stroke at Size 40
+    /// (`AirbrushRenderingTests`). Its width is mostly fall-off, densest at
+    /// the line and feathering out (`featherShare`)...
+    public static let airbrushFeatherBar = 0.6
+    /// ...its fringe is specked with droplets, at least this many a square
+    /// point (`edgeDroplets`), where the round tip's smooth edge has none...
+    public static let airbrushEdgeDropletBar = 0.1
+    /// ...and a slow pass leaves at least this many times the paint of a fast
+    /// one, the spray landing by time (`meanAlpha` at the middle of each).
+    public static let airbrushSlowOverFastBar = 1.4
 
     /// Watercolour's two bars, read off a straight stroke at Size 40
     /// (`WatercolourRenderingTests`). Its edge, where the pigment pooled as
@@ -187,6 +197,107 @@ public enum PaintMeasures {
             }
         }
         return cover > 0 ? off / cover : 0
+    }
+
+    /// The stroke's coverage across it, averaged along its middle stretch:
+    /// one reading a pixel from `reach` points one side of the line to `reach`
+    /// the other, each with how far off the line it is, in points. What the
+    /// audit plots, and what `featherShare` reads.
+    public static func crossProfile(_ image: CGImage, from a: CGPoint, to b: CGPoint, reach: CGFloat,
+                                    scale: CGFloat) -> [(at: Double, alpha: Double)] {
+        guard let grid = Grid(image, from: a, to: b, diameter: reach * 2, scale: scale),
+              !grid.alongRange.isEmpty else { return [] }
+        let side = Int((reach * scale).rounded())
+        return (-side...side).map { j in
+            var sum = 0.0
+            for i in grid.alongRange { sum += grid.alpha(i, j) }
+            return (at: Double(j) / Double(scale), alpha: sum / Double(grid.alongRange.count))
+        }
+    }
+
+    /// How much of a stroke's width is fall-off rather than body: across its
+    /// averaged cross profile, one less the width at nine tenths of its peak
+    /// over the width at a twentieth. A flat band with a crisp edge scores
+    /// near 0; a spray densest along the line that feathers out to nothing,
+    /// a bell, scores about 0.8.
+    public static func featherShare(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                                    scale: CGFloat) -> Double {
+        let profile = crossProfile(image, from: a, to: b, reach: diameter, scale: scale)
+        guard let peak = profile.map(\.alpha).max(), peak > 0 else { return 0 }
+        let body = profile.filter { $0.alpha >= peak * 0.9 }.count
+        let whole = profile.filter { $0.alpha >= peak * 0.05 }.count
+        return whole > 0 ? 1 - Double(body) / Double(whole) : 0
+    }
+
+    /// How many droplets a stroke's fringe holds, a square point: across the
+    /// band from half its radius out to nine tenths, either side, the pixels
+    /// that stand above all eight around them by at least `lift` (a speck of
+    /// paint, not a smooth slope), over the band's area in square points. A
+    /// smooth fall-off holds none.
+    public static func edgeDroplets(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                                    scale: CGFloat, lift: Double = 0.02) -> Double {
+        let alphas = alphaPlane(image)
+        let width = image.width, height = image.height
+        let dx = b.x - a.x, dy = b.y - a.y
+        let length = hypot(dx, dy)
+        guard !alphas.isEmpty, length > 0, diameter > 0, width > 2, height > 2 else { return 0 }
+        let radius = diameter / 2
+        var specks = 0, band = 0
+        for y in 1..<(height - 1) {
+            for x in 1..<(width - 1) {
+                let p = CGPoint(x: (CGFloat(x) + 0.5) / scale, y: (CGFloat(y) + 0.5) / scale)
+                let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (length * length)
+                guard t >= 0.1, t <= 0.9 else { continue }
+                let across = abs((p.x - a.x) * dy - (p.y - a.y) * dx) / length / radius
+                guard across >= 0.5, across <= 0.9 else { continue }
+                band += 1
+                let here = alphas[y * width + x]
+                var highest = 0.0
+                for j in -1...1 {
+                    for i in -1...1 where i != 0 || j != 0 { highest = max(highest, alphas[(y + j) * width + x + i]) }
+                }
+                if here >= highest + lift { specks += 1 }
+            }
+        }
+        guard band > 0 else { return 0 }
+        return Double(specks) / (Double(band) / Double(scale * scale))
+    }
+
+    /// How big a stroke's specks are, in points: across the band from a third
+    /// of its radius out to nine tenths, the mean length of the runs of
+    /// pixels, along each row, that stand above the average of the 7 by 7
+    /// around them by `lift`. A fine mist reads about half a point at 2x;
+    /// coarse spatter well over a point.
+    public static func speckSize(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                                 scale: CGFloat, lift: Double = 0.04) -> Double {
+        let alphas = alphaPlane(image)
+        let width = image.width, height = image.height
+        let dx = b.x - a.x, dy = b.y - a.y
+        let length = hypot(dx, dy)
+        guard !alphas.isEmpty, length > 0, diameter > 0, width > 6, height > 6 else { return 0 }
+        let radius = diameter / 2
+        var runs = 0, pixels = 0
+        for y in 3..<(height - 3) {
+            var inRun = false
+            for x in 3..<(width - 3) {
+                let p = CGPoint(x: (CGFloat(x) + 0.5) / scale, y: (CGFloat(y) + 0.5) / scale)
+                let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (length * length)
+                let across = abs((p.x - a.x) * dy - (p.y - a.y) * dx) / length / radius
+                guard t >= 0.1, t <= 0.9, across >= 1.0 / 3.0, across <= 0.9 else {
+                    inRun = false
+                    continue
+                }
+                var around = 0.0
+                for j in -3...3 { for i in -3...3 { around += alphas[(y + j) * width + x + i] } }
+                let speck = alphas[y * width + x] >= around / 49 + lift
+                if speck {
+                    pixels += 1
+                    if !inRun { runs += 1 }
+                }
+                inRun = speck
+            }
+        }
+        return runs > 0 ? Double(pixels) / Double(runs) / Double(scale) : 0
     }
 
     /// The share of the stroke's core (within a third of its radius of the
