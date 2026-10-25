@@ -406,6 +406,28 @@
     font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}
   #dashboard .db-acday{color:var(--dim)}
   #dashboard .db-acsteps{white-space:nowrap}
+  #dashboard .db-acarea{white-space:nowrap;max-width:22em;overflow:hidden;text-overflow:ellipsis}
+  /* The list is a timeline: time down the left, a rail of steps, the card. The
+     rail is drawn per row so it runs unbroken through an open card however
+     tall it grows; a day heading interrupts it where the day turns. */
+  #dashboard .db-tl{padding:var(--s2) 0}
+  #dashboard .db-tday{padding:var(--s3) var(--pad) var(--s1);font-size:11px;font-weight:640;color:var(--ink);
+    letter-spacing:.01em}
+  #dashboard .db-tday span{font-weight:400;color:var(--faint);margin-left:var(--s1)}
+  #dashboard .db-trow{display:grid;grid-template-columns:78px 22px minmax(0,1fr);align-items:stretch}
+  #dashboard .db-ttime{padding:calc(var(--s3) + 1px) 6px 0 var(--pad);font-size:10.5px;color:var(--dim);
+    font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+  #dashboard .db-trail{position:relative}
+  #dashboard .db-trail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;
+    margin-left:-.5px;background:var(--line)}
+  #dashboard .db-tday+.db-trow .db-trail::before{top:calc(var(--s3) + 6px)}
+  #dashboard .db-tdot{position:absolute;left:50%;top:calc(var(--s3) + 4px);width:7px;height:7px;margin-left:-3.5px;
+    border-radius:50%;background:var(--panel, var(--bg));border:1.5px solid var(--faint);box-sizing:border-box}
+  #dashboard .db-trow:has(.db-acard.on) .db-tdot{border-color:var(--accent);background:var(--accent)}
+  #dashboard .db-tcard{min-width:0}
+  #dashboard .db-tcard .db-acard{border-bottom:0}
+  #dashboard .db-tcard .db-acbtn{padding-left:var(--s2)}
+  #dashboard .db-tcard .db-acbody{padding-left:calc(var(--s2) + 16px + var(--gap-sm))}
   /* an audit whose setup changed a switch from the defaults: nobody running
      the release as it ships can try it yet */
   #dashboard .db-acunreach{white-space:nowrap;color:var(--warn);font-weight:600}
@@ -1642,8 +1664,10 @@
   //
   // This used to be a <select> carrying every report's file name: three hundred
   // entries you had to operate before the page showed you anything at all. Now
-  // the page opens on the newest reports as cards, grouped by the part of the
-  // app they belong to. A card says what the feature is, what you can now do,
+  // the page opens on the newest reports as one timeline, newest at the top,
+  // the time each landed down the left and a day heading where the day turns
+  // (the user, 2026-10-24: "a stepper with time on the left decending ... not
+  // grouped by objectives"). A card says what the feature is, what you can now do,
   // when it landed and how many steps trying it takes; opening one reveals that
   // report in place, one at a time. Everything older is a search or an area
   // away, never the first thing you meet.
@@ -1776,7 +1800,7 @@
     return h;
   }
 
-  function auditCard(r) {
+  function auditCard(r, area) {
     var open = auditSel === r.name;
     var id = auditBodyId(r.name);
     var h = '<div class="db-acard' + (open ? ' on' : '') + '" data-key="ac-' + esc(r.name) + '">';
@@ -1788,7 +1812,7 @@
     h += '</span>';
     h += '<span class="db-acmeta">' +
       ((r.switched || []).length ? '<span class="db-acunreach" title="Needs ' + esc(r.switched.join(', ')) + ' changed from the defaults">Not reachable yet</span>' : '') +
-      '<span class="db-acday">' + esc(landed(r.date)) + '</span>' +
+      (area ? '<span class="db-acarea">' + esc(area) + '</span>' : '<span class="db-acday">' + esc(landed(r.date)) + '</span>') +
       '<span class="db-acsteps">' + r.steps + ' step' + (r.steps === 1 ? '' : 's') + '</span></span>';
     h += '</button>';
     h += '<div class="db-acbody" id="' + id + '" role="region" aria-label="' + esc(r.feature) + ', how to try it"' +
@@ -1811,7 +1835,19 @@
     return { list: list, narrowed: narrowed, shown: (narrowed || aShowAll) ? list : list.slice(0, A_RECENT) };
   }
 
-  // the groups plus the footer line; replaced in place so typing in the search
+  // The local day and clock time a report landed. `at` is the moment (the
+  // index reads it from the file); a report without one is dated by its name
+  // and shows no time.
+  function auditDay(row) {
+    if (row.at == null) return row.date;
+    var d = new Date(row.at);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function auditClock(row) {
+    return row.at == null ? '' : new Date(row.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  // the timeline plus the footer line; replaced in place so typing in the search
   // box never loses focus and the toolbar never flickers
   function renderAuditList() {
     var map = areaMap();
@@ -1821,25 +1857,22 @@
         'No report matches that. Try a different word, or set the area back to every part of the app.' +
         '</div></div></div>';
     }
-    var groups = [], byId = {};
+    // One list, newest first as the index already orders it. A day heading
+    // where the day turns; each row has its time, then a step on the rail,
+    // then the card, with the part of the app it belongs to in the card's meta.
+    var h = '<div class="db-card"><div class="db-tl">';
+    var day = null;
     r.shown.forEach(function (row) {
-      var a = areaOf(map, row.epic);
-      if (!byId[a.id]) { byId[a.id] = { area: a, rows: [] }; groups.push(byId[a.id]); }
-      byId[a.id].rows.push(row);
+      var d = auditDay(row);
+      if (d !== day) {
+        day = d;
+        h += '<div class="db-tday">' + esc(landed(d)) + (landed(d) !== dayLabel(d) ? ' <span>' + esc(dayLabel(d)) + '</span>' : '') + '</div>';
+      }
+      h += '<div class="db-trow"><span class="db-ttime">' + esc(auditClock(row)) + '</span>' +
+        '<span class="db-trail" aria-hidden="true"><span class="db-tdot"></span></span>' +
+        '<div class="db-tcard">' + auditCard(row, areaOf(map, row.epic).title) + '</div></div>';
     });
-    // The part of the app in focus leads, whatever landed last: on 2026-10-20
-    // the user found no AI reports here because a dozen video ones sat above
-    // them. The rest keep newest-first order.
-    var focusArea = S.objectives && S.objectives.focus ? areaOf(map, S.objectives.focus).id : null;
-    groups.sort(function (x, y) { return (y.area.id === focusArea) - (x.area.id === focusArea); });
-    var h = '';
-    groups.forEach(function (g) {
-      h += '<div class="db-card"><div class="db-card-h"><i class="ic ic-layers"></i><h3>' + esc(g.area.title) + '</h3>' +
-        '<span class="k">' + g.rows.length + (g.rows.length === 1 ? ' report' : ' reports') + '</span></div>' +
-        '<div class="db-card-b tight" style="padding-left:0;padding-right:0">';
-      g.rows.forEach(function (row) { h += auditCard(row); });
-      h += '</div></div>';
-    });
+    h += '</div></div>';
     h += '<div class="db-card"><div class="db-afoot">';
     if (r.narrowed) {
       h += '<span>' + r.list.length + (r.list.length === 1 ? ' report matches' : ' reports match') + ', out of ' + (aIndex || []).length + '.</span>' +

@@ -2036,8 +2036,13 @@ export function readAudit(name) {
 // changes. Three hundred reports parse in single-digit milliseconds cold and a
 // cache hit costs one readdir plus a stat per file.
 //
-// The day a report landed comes from its FILE NAME (YYYY-MM-DD-slug.json),
-// which is also the sort key, so ordering never depends on reading anything.
+// The day a report landed comes from its FILE NAME (YYYY-MM-DD-slug.json).
+// The moment it landed is the file's creation time (`at`), trusted only when
+// it falls within a day of that name (a name is a UTC day, a clock is local; a
+// file re-created long after by a checkout is not when it landed). Rows are
+// newest first by `at`, falling back to the named day, so Ready to try reads as
+// a timeline (the user, 2026-10-24: "time on the left descending so i can see
+// the newest activity of things to try up top").
 // The switches an audit's setup changed from the release's defaults, judged
 // against the app's own list rather than the audit's word for it. An audit
 // records them as `"switched": { "<switch>": true|false }`, the same shape a
@@ -2074,9 +2079,16 @@ export function auditIndex() {
     const a = readJSON(join(AUDITS, name));
     if (!a) continue; // a half-written report must not take the whole page down
     const m = name.match(/^(\d{4}-\d{2}-\d{2})-(.*)\.json$/);
+    const day = m ? Date.parse(m[1] + 'T00:00:00Z') : NaN;
+    let born = NaN;
+    try { born = statSync(join(AUDITS, name)).birthtimeMs; } catch { /* raced with a write */ }
+    const at = Number.isFinite(day) && born >= day - 86400000 && born < day + 2 * 86400000 ? Math.round(born) : null;
     rows.push({
       name,
       date: m ? m[1] : '',
+      at,
+      // what the list sorts on: the moment when there is one, else noon of the named day
+      sortAt: at ?? (Number.isFinite(day) ? day + 43200000 : 0),
       // a report always has a feature; the slug is the fallback so a card is
       // never blank, and the date prefix is dropped because the card dates it
       feature: a.feature || (m ? m[2] : name.replace(/\.json$/, '')).replace(/-/g, ' '),
@@ -2088,6 +2100,7 @@ export function auditIndex() {
       switched: auditSwitchesChanged(a),
     });
   }
+  rows.sort((x, y) => y.sortAt - x.sortAt || (x.name < y.name ? 1 : x.name > y.name ? -1 : 0));
   auditIndexCache = { key, rows };
   return rows;
 }

@@ -49,6 +49,16 @@ write('2026-09-06-newest.json', { feature: 'Newest', epic: 'ui-building', summar
 rows = lib.auditIndex();
 check('a report arriving invalidates the cache', rows.length === 4 && rows[0].name === '2026-09-06-newest.json', rows.map((r) => r.name));
 
+console.log('timeline');
+check('a report re-created long after its named day gets no time of its own', rows.every((r) => r.at === null), rows.map((r) => r.at));
+const today = new Date().toISOString().slice(0, 10);
+write(`${today}-zz-first.json`, { feature: 'First today', epic: 'ui-building', summary: 's', try: [] });
+await new Promise((r) => setTimeout(r, 20));
+write(`${today}-aa-second.json`, { feature: 'Second today', epic: 'ui-building', summary: 's', try: [] });
+rows = lib.auditIndex();
+check('a report made today carries the moment it landed', typeof rows[0].at === 'number' && typeof rows[1].at === 'number', rows.slice(0, 2).map((r) => r.at));
+check('within a day the newest moment leads, not the name', rows[0].name === `${today}-aa-second.json` && rows[1].name === `${today}-zz-first.json`, rows.slice(0, 2).map((r) => r.name));
+
 rmSync(dir, { recursive: true, force: true });
 console.log(failures ? `\n${failures} check(s) failed` : '\nall checks passed');
 process.exit(failures ? 1 : 0);
