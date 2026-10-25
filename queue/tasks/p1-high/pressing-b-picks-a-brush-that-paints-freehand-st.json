@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 5.1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.201Z",
-  "updated": "2026-10-24T23:43:00.731Z",
+  "updated": "2026-10-25T00:38:10.797Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Umbrella: a-brush-tool-paints-with-realistic-charcoal-chal (the user's ask, 2026-10-24). Design: docs/design/brushes.md, read it first; its decisions are settled unless this task's runner finds one cannot work, in which case they say so in the log and in the doc.\n\nScope: decisions 1, 2, 3, 4 (placement half only) and 5 (live overlay) of the design doc. Marking is one plain round tip with a soft edge, used for every medium for now; the medium slices replace it. The medium enum and its settings list (decision 7) are defined here in PhotonzCore with all seven media and their settings, so later slices fill in looks rather than reshaping the model.\n\nTDD in PhotonzCore: BrushMedium (7 cases, each with its settings list: id, plain name, range, default), BrushSettings (medium + values, clamped to the spec), StrokeSample (point, pressure?, tilt?, ms), BrushStroke (samples, settings, colour hex, seed), PaintContent (strokes), LayerContent.paint, and the dab placement (spacing, size, opacity, deterministic jitter from the seed). PhotonzRender: PaintRasterizer replays strokes into a CGImage at the bake scale, wired into DocumentRenderer like .path (DocumentRenderer.swift ~1337). Every exhaustive switch over LayerContent gets an honest answer for .paint (the compiler lists them; about 25 files switch on .path). SVG export embeds the paint layer as a picture. Tool.brush with shortcut B (Tools.swift ~102 reserves B for brushes).\n\nThe brush is the one making tool that does NOT hand back Select after landing (design decision 3): ArrowCaptionEntry.toolAfterLanding must keep .brush.\n\nKEY CLASH, settled by UX-PATTERNS §7 (no card): B is already the Blade on documents with time (EditorView.swift ~1415, EditorCommands.swift ~1281 Edit > Tools Blade row, TimelineKeys.swift ~242). Photoshop's B wins on a picture; the video workspace carries no Brush (PRODUCT-MODEL.md), so the Brush is left off the bar in timed documents and B stays the Blade there. Test it: B on a picture picks the Brush, B on a video still cuts.\n\nCODE MAP (from the planning run, 2026-10-24; line numbers approximate):\n- Tools.swift: add case brush; shortcutKey \"b\"; annotationShape nil; NOT in preservesLayerSelection; doubleClickOnEmptyCanvasZoomsWindow false (ToolTests ~105); createsLayers true; colorControl .toolColor beside the Pen (that is what shows the swatches; paints = colorControl != .hidden).\n- AnnotationStyles.swift: the Pen is special-cased (strokeWidthWasChosen, colorHex, strokeWidth, setStrokeWidth, setColorHex, paint, setPaint, usesStrokeWidth); mirror for the brush's armed colour and size.\n- ToolBarLayout.swift bar(withFrame:withLens:withPen:withComponent:withHand:): add withBrush (default false) and append .tool(.brush) at the end of drawing. Experiments.swift toolBarLayout passes the flags; FeatureCatalog.swift: a next-brush flag, releases [.next], enabledByDefaultIn [.next] (the feature must be reachable at Next defaults).\n- ToolGroupButton.swift barSymbol (\"paintbrush.pointed\") and barTitle; EditorView.swift ToolbarSlot case brush, its title, menuSymbol, tool, the ungrouped-bar filter, slotButtonBody toolButton(.brush, ...), styleButtonTip. Menu row comes for free from ToolMenu.tools(layout).\n- Tests: ToolTests flaggedTools and onlyPaintingToolsCarryColour painting set; ArrowCaptionEntryTests creating set (and the brush stays in hand: ArrowCaptionEntry.toolAfterLanding must return .brush for .brush).\n- Canvas: CanvasPointerDrags.swift mouseDown (Pen dispatch ~267), mouseDragged (~859), mouseUp (~1314); mirror CanvasPen.swift (penMouseDown/Dragged/Up, setUpPenChrome, refreshPenChrome) with a CanvasBrush.swift whose live overlay is a CALayer showing a bitmap of the stroke's bounds painted by the same marking code. CanvasView.swift tool state and callbacks (onPathCommit pattern); EditorCanvasSurface.swift wiring (onPathCommit: { editorState.addPath($0) }).\n- Commit: mirror EditorState+Pen.swift addPath: one perform (EditorState.perform -> History.perform). New layer via addDrawnLayer when no paint layer is picked; otherwise append the stroke to the picked paint layer in one perform. Do NOT call finishCreating with Select.\n- Also: CanvasPointerCue.swift cursor list, CanvasDrawLanding.swift toolStartsAShape, EditorState.setTool.\n- Pressure/tilt: nothing reads them yet; record event.pressure in the handlers now (nil for a mouse) so the pressure slice only adds the dynamics.\n- Tool options capsule: ToolSettingsBar.swift (enum ToolSetting, settings(for:)) and ToolSettingsCapsule.swift; leave the capsule to the settings slice, but a Size field there is welcome if cheap.",
@@ -32,7 +32,48 @@
     {
       "t": "2026-10-24T23:43:00.726Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T00:36:59.844Z",
+      "note": "owns these walks: brush-paints-strokes-walk, design-mode-tool-strip-walk"
+    },
+    {
+      "t": "2026-10-25T00:38:04.075Z",
+      "note": "review before building: a Photoshop user expects B, a brush that stays in hand, and painting on the current layer. Here a stroke lands on a Paint layer above the picked layer (the house's non-destructive rule, design decision 2), and the mock's Size/Hardness/Flow rows wait for the settings slice."
+    },
+    {
+      "t": "2026-10-25T00:38:04.151Z",
+      "note": "Chose to keep the layer pick when the Brush is picked up (preservesLayerSelection) over dropping it as the code map said, because decision 2's 'just above the picked layer' needs a pick to exist; handles still hide under the brush."
+    },
+    {
+      "t": "2026-10-25T00:38:04.225Z",
+      "note": "Chose the brush's own swatch (toolColor, black by default, Photoshop's foreground) over sharing the bucket's foreground pair, because the code map asked for it and it gives the brush a Width row for Size until the settings slice."
+    },
+    {
+      "t": "2026-10-25T00:38:04.301Z",
+      "note": "Chose Charcoal as the armed medium out of the box; every medium paints the same soft round tip in this slice."
+    },
+    {
+      "t": "2026-10-25T00:38:04.375Z",
+      "note": "Chose a ring cursor the size of the tip over a crosshair, the way paint apps show a brush."
+    },
+    {
+      "t": "2026-10-25T00:38:04.447Z",
+      "note": "review after building (probe, walk brush-paints-strokes-walk, no flags): B picks it, two strokes land on one Paint layer, held vs landed 0.06% apart, undo/redo counts 1/2/1/2, Escape hands back Select. B on video still arms the Blade (video-tool-bar-walk, timeline-keys-on-open-walk green). design-mode-tool-strip-walk updated for Brush under More. Full suite 14415 tests: one flag description over two sentences, fixed and rechecked."
+    },
+    {
+      "t": "2026-10-25T00:38:04.530Z",
+      "note": "left rough (not filed, each covered): plain tip for all media (media slices); no Size/Hardness/Flow rows (each-brush-shows-its-own-settings-in-the-tool-op); full replay per stroke (painting-keeps-up-with-the-pointer-on-a-12-megap); bar slot vs mock folded into the umbrella. Not filed: live overlay draws over layers above the Paint layer, and a Paint layer moves but does not resize; both small, noted here and in the audit. Colour/width change with a Paint layer picked was not tried."
+    },
+    {
+      "t": "2026-10-25T00:38:10.795Z",
+      "note": "Brush (B) on the Next picture tool bar at defaults (next-brush), Tools menu row, tooltip and swatch. A drag paints a smooth soft round stroke in the armed colour with a live overlay, landing on a Paint layer above the pick that later strokes join, one undo step each, brush stays in hand, Escape puts it down. Strokes are data (LayerContent.paint) rendered by PaintRasterizer; save/reopen proved by a render test that the reopened document draws identical pixels. Verified: BrushTests (21) + PaintRenderingTests (4) + full suite, walk brush-paints-strokes-walk with no flags (held vs landed 0.06%, stroke counts 1/2/1/2 through undo and redo), B on video still the Blade. Audit queue/audits/2026-10-24-brush-paints-strokes.json. Commit 07aabd9b."
     }
   ],
-  "started": "2026-10-24T23:43:00.725Z"
+  "started": "2026-10-24T23:43:00.725Z",
+  "walks": [
+    "brush-paints-strokes-walk",
+    "design-mode-tool-strip-walk"
+  ],
+  "completed": "2026-10-25T00:38:10.796Z"
 }

@@ -13967,3 +13967,18 @@
 {"t":"2026-10-24T23:41:32.369Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-10-24T23:41:32.435Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-10-24T23:42:30.056Z","ev":"task_pending","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"Planned as an epic (docs/design/brushes.md). Ten child tasks filed at p1 with deps, foundation first (pressing-b-picks-a-brush-that-paints-freehand-st). This umbrella now depends on all ten; it comes back to the queue when they are done, to run the blind test sheet, the try path, the reel and the final audit."}
+{"t":"2026-10-24T23:43:00.732Z","ev":"task_started","id":"pressing-b-picks-a-brush-that-paints-freehand-st","title":"Pressing B picks a Brush that paints freehand strokes onto a paint layer, one undo step per stroke","priority":"p1-high"}
+{"t":"2026-10-25T00:05:36.499Z","ev":"task_created","id":"ask-can-make-a-photo-as-well-as-an-illustration","priority":"p1-high","title":"Ask can make a photo as well as an illustration"}
+{"t":"2026-10-25T00:05:36.665Z","ev":"task_resequenced","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":167.5,"to":8}
+{"t":"2026-10-25T00:06:14.633Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-25T00:06:14.710Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
+{"t":"2026-10-25T00:36:44.241Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
+{"t":"2026-10-25T00:36:59.847Z","ev":"task_walks","id":"pressing-b-picks-a-brush-that-paints-freehand-st","walks":["brush-paints-strokes-walk","design-mode-tool-strip-walk"]}
+{"t":"2026-10-25T00:38:04.079Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
+{"t":"2026-10-25T00:38:04.154Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
+{"t":"2026-10-25T00:38:04.227Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
+{"t":"2026-10-25T00:38:04.303Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
+{"t":"2026-10-25T00:38:04.378Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
+{"t":"2026-10-25T00:38:04.449Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
+{"t":"2026-10-25T00:38:04.533Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
+{"t":"2026-10-25T00:38:10.798Z","ev":"task_done","id":"pressing-b-picks-a-brush-that-paints-freehand-st","from":"in_progress","note":"Brush (B) on the Next picture tool bar at defaults (next-brush), Tools menu row, tooltip and swatch. A drag paints a smooth soft round stroke in the armed colour with a live overlay, landing on a Paint layer above the pick that later strokes join, one undo step each, brush stays in hand, Escape puts it down. Strokes are data (LayerContent.paint) rendered by PaintRasterizer; save/reopen proved by a render test that the reopened document draws identical pixels. Verified: BrushTests (21) + PaintRenderingTests (4) + full suite, walk brush-paints-strokes-walk with no flags (held vs landed 0.06%, stroke counts 1/2/1/2 through undo and redo), B on video still the Blade. Audit queue/audits/2026-10-24-brush-paints-strokes.json. Commit 07aabd9b."}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-25T00:06:14.709Z",
+  "updated": "2026-10-25T00:36:44.240Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -69,6 +69,10 @@
     {
       "t": "2026-10-25T00:06:14.708Z",
       "note": "The user 2026-10-24: 'paint a picture' in Ask must paint with these brushes"
+    },
+    {
+      "t": "2026-10-25T00:36:44.239Z",
+      "note": "from slice 1: the image mock prints Brush (B) right after Crop; the bar puts it at the end of the drawing family (after Component insert), the rule every flag-added tool follows. Settle the slot when the epic's try path is walked."
     }
   ],
   "started": "2026-10-24T23:36:28.499Z"
