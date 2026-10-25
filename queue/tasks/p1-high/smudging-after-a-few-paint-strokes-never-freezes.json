@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:33:52.066Z",
-  "updated": "2026-10-25T15:43:11.931Z",
+  "updated": "2026-10-25T16:37:16.630Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'after a few paint strokes i tried to smudge and it froze the app'. Sampled the dev app (pid 30388) right after: about 82% CPU, then 0% a few seconds later, so it recovered. The main thread was not blocked during the 3 s sample. Background tile renders (EditorState.refreshCrispTile, EditorState.swift:5629 -> DocumentRenderer.renderTile -> DocumentRenderer.raster(for:) DocumentRenderer.swift:345 -> PaintRasterizer.rasterize/paint PaintRasterizer.swift:52/112) were re-running WatercolourStroke.mark for whole strokes (Watercolour.swift:153-175, WetField.ensure :319). Theory, not confirmed: an edit to the paint layer throws its raster away and re-simulates every stroke from scratch, possibly once per tile, so the canvas stops updating until that finishes. The full sample is queue/audits/2026-10-25-smudge-freeze-sample.txt. Related: every-brush-follows-the-pointer-with-no-lag-even (lag while painting) shares the cost of the watercolour simulation; whichever runs first should say what it changed in the other's log.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-25T15:43:11.925Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T16:37:16.629Z",
+      "note": "Related user ask filed 2026-10-25: painting-is-what-you-see-earlier-strokes-never-r (earlier strokes re-simulated and swapped to a sharper copy on every new stroke; paint-layer raster cache keyed by the whole content). Likely the same root; do not fix it two different ways."
     }
   ],
   "started": "2026-10-25T15:43:11.924Z"

@@ -1,0 +1,37 @@
+{
+  "id": "painting-is-what-you-see-earlier-strokes-never-r",
+  "title": "Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy",
+  "goal": "While drawing, every earlier stroke visibly recomputes: the strokes change, then swap into a higher resolution version. That looks awkward and wastes time. Painting should be what you see is what you get: the stroke you are drawing looks exactly like it will when you let go, nothing already on the canvas repaints, flickers or changes sharpness, and the whole thing answers immediately.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 2.9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T16:37:16.370Z",
+  "updated": "2026-10-25T16:37:16.481Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
+  "acceptance": [
+    "Reproduce first in the probe at Next defaults: paint 5 strokes (watercolour, oil and one dry medium), then a 6th, zoomed out, at 100% and zoomed in. Record a video or frame sequence of the canvas from pointer down to a second after letting go, and MEASURE: how many earlier strokes are simulated again per new stroke, how many frames the earlier strokes differ from their settled pixels (the visible change and the swap to a sharper copy), and the time from letting go until the canvas is settled. All in the audit before any change.",
+    "After the fix, MEASURED the same way: adding a stroke simulates no earlier stroke again (a finished stroke is painted once onto a kept layer bitmap, and later strokes paint on top of it, except where watercolour genuinely needs the wet washes under it); across the whole recording, the pixels of earlier strokes outside the new stroke's reach differ from their settled values in 0 frames; the live stroke and the settled stroke match pixel for pixel or within a stated tolerance at the moment of letting go; there is no low-resolution stage at any zoom.",
+    "Immediate response holds at the same time: each drag event shows within one 120 Hz frame at p95 at 20 to 500 pt, on a layer with 50 strokes already on it, measured.",
+    "Undo, redo, opening a saved file and changing a stroke's settings still give exactly the same picture as today (pixel compare in tests); the document still keeps strokes, not baked pixels, and any kept bitmap is a cache that can always be rebuilt from them.",
+    "Memory stays bounded: the kept bitmaps have a limit and let go under memory pressure; the audit states the cost for a 12 megapixel canvas.",
+    "Logic in PhotonzRender is test-first; rendering changes carry the perf note.",
+    "A playtest walk paints six strokes and fails if any earlier stroke's pixels change while the sixth is drawn and settled.",
+    "Try path: Next defaults, Brush tool, paint several watercolour and oil strokes zoomed in to 200%, then keep drawing; nothing already painted moves, flickers or sharpens, and the new stroke looks the same before and after letting go.",
+    "An audit under queue/audits/ with the before and after recordings; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T16:37:16.372Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-25T16:37:16.480Z",
+      "note": "seq 3970 -> 2.9"
+    }
+  ]
+}
