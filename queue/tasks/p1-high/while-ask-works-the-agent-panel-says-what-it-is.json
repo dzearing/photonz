@@ -1,0 +1,36 @@
+{
+  "id": "while-ask-works-the-agent-panel-says-what-it-is",
+  "title": "While Ask works, the Agent panel says what it is doing right now",
+  "goal": "While a request is being worked on, its row in the Agent panel keeps saying, in a few plain words, what Ask is doing at that moment: reading the picture, thinking it through, planning the drawing, looking something up, painting, turning a painting into layers, checking the result, trying again because something did not show, placing the layers. The line changes as the work moves on, so the person can always tell it is making progress and roughly how far along it is. Today the row shows a spinner and the request's own words for the whole time, which can be half a minute or more.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-25T01:13:10.449Z",
+  "updated": "2026-10-25T01:13:10.554Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The user, 2026-10-24: 'when the agent is in progress, I would like more frequent updates in the agents panel about what is happening. For example, if we're researching, or building out instructions, or thinking, etc, I'd like some indication of what's happening for the request.'\n\nToday: Sources/Photonz/Agent/AskViews.swift:193-208, phase .planning/.running shows a ProgressView plus AskCopy.gettingReady while a model loads, otherwise ask.asked (the request words) or AskCopy.workingLine 'Working…'. The pipeline already knows its stages and writes them to its debug log via note(...) in Sources/Photonz/Agent/AskSession.swift (reading the document ~601, asking the model ~624, turn N planned ~646, drawing plans ~483/492, look/check ~432-462, keeping an earlier drawing on retry ~301-305, done ~334) and the picture model path (AskPictureModel.swift: painting, tracing). A user-facing stage value beside note() is the natural seam; keep the words in AskCopy.\n\nNot a contradiction: AgentPanel's comment (AskViews.swift:178) records the user's 2026-10-20 rule that a request's steps are never shown. That is about FINISHED rows listing their steps; this is one live line while it works, gone when done. Keep both.\n\nRelated pending: when-ask-stops-part-way-it-says-so-and-one-refus (what the row says when it stops), and ask-can-make-a-photo-as-well-as-an-illustration (adds a photo stage).",
+  "acceptance": [
+    "The working row shows one short live line under the request naming the current stage in plain words (no tool names, no model names, no em dashes), updating as each stage starts; stages come from the real pipeline, not a timer",
+    "Long stages say more as they go when it is known: which part of a multi-part request (for example 'Painting the dog, 2 of 3'), a retry and why in a few words ('Trying again: the tail did not show'), and the time spent so far once a stage passes about five seconds",
+    "The line never jumps the row's height around: it is one line, cross-fades between stages, and the Stop button stays put",
+    "When the request finishes, the row turns into today's finished row (what it made), and the live line is not kept: the user's 2026-10-20 rule that finished requests do not list their steps still holds",
+    "Measured on at least five real requests (a drawing, a scene, an edit to a picked layer, a photo once that route exists, a component sheet): the longest gap with no change of line is recorded in the audit and is under about eight seconds, or the stage that is longer says its elapsed time",
+    "The same progress reaches the agent through MCP (a status or progress the caller can read), so other agents see it too",
+    "Try path: open an empty window at Next defaults, press Command K, ask for a fox in a forest at sunset, watch the Agent panel",
+    "Audit under queue/audits/ with a reel of the panel through a whole request and the list of stages with timings; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-25T01:13:10.451Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-25T01:13:10.553Z",
+      "note": "seq 167.5 -> 9"
+    }
+  ]
+}
