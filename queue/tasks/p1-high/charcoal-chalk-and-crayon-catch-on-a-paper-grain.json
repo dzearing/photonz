@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 6.1,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.319Z",
-  "updated": "2026-10-25T01:09:14.108Z",
+  "updated": "2026-10-25T02:46:54.547Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -34,7 +34,35 @@
     {
       "t": "2026-10-25T01:09:14.102Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-25T02:00:15.537Z",
+      "note": "Adversarial review before building: a first-time user picks B and gets charcoal; with no medium control they could never reach chalk or crayon, and the settings slice (each-brush-shows-its-own-settings-in-the-tool-op) is sequenced after this one, so this slice puts Medium (dropdown, seven media) and Mode (Paint | Smudge, segmented) in the tool options capsule now; the settings slice adds Size, Opacity, the medium's own two and the panel section. A Photoshop user expects Smudge to be its own tool (R); the design doc settled it as a brush mode, kept. Smudge over a bare screenshot cannot write into the picture (non-destructive rule), so it does nothing there."
+    },
+    {
+      "t": "2026-10-25T02:00:15.610Z",
+      "note": "Chose: grain fixed to the paint layer's own points over absolute canvas coordinates because moving a painted layer should carry its look; every stroke on a layer, and every layer made on the same frame, catches the same tooth. Chose: smudge only adds (spreads thinner into lighter places) over lifting paint, because it keeps the live overlay exact and real finger-lifting is a refinement; written in docs/design/brushes.md."
+    },
+    {
+      "t": "2026-10-25T02:00:15.686Z",
+      "note": "owns these walks: brush-dry-media-and-smudge-walk, brush-paints-strokes-walk"
+    },
+    {
+      "t": "2026-10-25T02:46:54.375Z",
+      "note": "Shipped in 6fddd821: paper grain fixed to the layer, charcoal/chalk/crayon marking, Smudge mode + setting, Medium and Mode in the capsule, measured bar (interior gaps: round tip 0, bar 0.12, charcoal 0.17, chalk 0.38, crayon 0.35), walk brush-dry-media-and-smudge-walk green with 6 real window pictures, audit 2026-10-24-dry-media.json. Pictures looked at: the stroke sheet each iteration and the walk's closeup; they show three textured strokes with streaks along the drag, crayon with squared ends, a soft smudge."
+    },
+    {
+      "t": "2026-10-25T02:46:54.456Z",
+      "note": "NOT DONE, acceptance item 2: three blind model judges (sheet vs Wikimedia reference photos) named all four rows correctly (crayon and round tip high confidence, charcoal and chalk low to medium) but each said the three read as one grain at different strengths and that charcoal and chalk would not survive a blind swap. Left for the next pass: give chalk its own particle (small, powdery, lighter streaks rather than big blotches; judges called it leopard spots), keep the grain inside a charcoal smudge instead of a smooth comet, break crayon's machine-parallel edges and the fine white hairlines from the stick face. Taper and pressure (every judge's other complaint) belong to pen-pressure-tilt-and-pointer-speed-shape-a-brus. Regenerate the sheet with PHOTONZ_STROKE_SHEET=<dir> Scripts/test.sh --filter StrokeSheet."
+    },
+    {
+      "t": "2026-10-25T02:46:54.546Z",
+      "note": "Slice shipped (6fddd821): grain, three media, Smudge, measured bar, walk, audit. Open: the blind model judge still cannot tell charcoal from chalk (acceptance item 2); see log."
     }
   ],
-  "started": "2026-10-25T01:09:14.101Z"
+  "started": "2026-10-25T01:09:14.101Z",
+  "walks": [
+    "brush-dry-media-and-smudge-walk",
+    "brush-paints-strokes-walk"
+  ]
 }

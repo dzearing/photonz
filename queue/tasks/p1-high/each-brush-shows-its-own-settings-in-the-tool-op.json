@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:47.779Z",
-  "updated": "2026-10-24T23:41:00.153Z",
+  "updated": "2026-10-25T02:00:15.769Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-24T23:41:00.153Z",
       "note": "deps set by the umbrella's planning run: pressing-b-picks-a-brush-that-paints-freehand-st"
+    },
+    {
+      "t": "2026-10-25T02:00:15.767Z",
+      "note": "From charcoal-chalk-and-crayon-catch-on-a-paper-grain (2026-10-24): the tool options capsule already carries Medium (a dropdown of all seven, ToolSetting.brushMedium) and Mode (Paint | Smudge, ToolSetting.brushMode) so the dry-media walk could reach chalk and crayon. This task adds Size, Opacity and the medium's own two after them, the panel section, per-medium memory, and the pointer-face proof for the Medium dropdown."
     }
   ]
 }
