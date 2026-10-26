@@ -14273,3 +14273,8 @@
 {"t":"2026-10-26T17:23:27.176Z","ev":"task_walks","id":"the-whole-test-suite-runs-in-minutes-here-and-on","walks":[]}
 {"t":"2026-10-26T17:23:27.239Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T17:23:27.302Z","ev":"task_pending","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"Partly done: suite no longer parks on macOS 27, local 401 s -> 262 s, GitHub checkout 3.5 min -> 15 s, kept build (58 s warm vs 18.9 min cold), Run tests 53 -> 25.8 min parallel. Still open: GitHub <15 min, 3 green CI runs in a row, a measured release, local <3 min, 5 tests >10 s. See log and audit."}
+{"t":"2026-10-26T21:49:31.442Z","ev":"sweep_pass","walks":1037,"seconds":15434,"passed":645,"failed":392,"complete":true,"total":1037}
+{"t":"2026-10-26T21:49:31.632Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high"}
+{"t":"2026-10-26T22:28:03.792Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
+{"t":"2026-10-26T23:53:47.526Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
+{"t":"2026-10-26T23:53:47.600Z","ev":"task_pending","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"GitHub targets met and measured: CI Run tests 7-9 min in 3 slices, 3 green runs in a row, release dry run 9.5 min end to end, warm kept build. Still open: local Scripts/test.sh 262-270 s against 180, and 4 tests over 10 s alone (listed in the log and the audit)."}

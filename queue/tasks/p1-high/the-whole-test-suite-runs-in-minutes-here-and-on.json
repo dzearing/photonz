@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-26T06:04:45.349Z",
-  "updated": "2026-10-26T17:23:27.301Z",
+  "updated": "2026-10-26T23:53:47.599Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25, while the v0.19.0 release sat in GitHub's test step: 'we really need to improve the tests and reduce unnecessary ones, parallelize, make things faster. 45 minutes to run tests is quite long'. Facts from that evening: local Scripts/test.sh 14,605 tests in 1,248 suites, 428 s wall; the slowest suites under parallel contention were all media and real-capture ones (A busy MP4 lands at the size the sheet said 428 s, Reading a separated run back into words on a real capture 340 s, An animated export weighs the same twice 305 s, Grain stops banding in the exported movie 285 s); their in-parallel durations are inflated, so measure them alone. GitHub: ci.yml and release.yml both run Scripts/test.sh --no-parallel (comment: swift-testing launched every test at once and GPU-bound render tests wedged the headless VM); release.yml Run tests has a 65 minute timeout and the first v0.19.0 run used about 65 minutes (03:53 to 04:58 UTC), v0.18.0 used 57; ci.yml has a 55 minute timeout and the suite has grown past what its comment assumed (10,800 tests then, 14,605 now), so CI is likely timing out. Keep PhotonzCore and PhotonzRender test-first rules intact.",
@@ -60,8 +60,24 @@
     {
       "t": "2026-10-26T17:23:27.300Z",
       "note": "Partly done: suite no longer parks on macOS 27, local 401 s -> 262 s, GitHub checkout 3.5 min -> 15 s, kept build (58 s warm vs 18.9 min cold), Run tests 53 -> 25.8 min parallel. Still open: GitHub <15 min, 3 green CI runs in a row, a measured release, local <3 min, 5 tests >10 s. See log and audit."
+    },
+    {
+      "t": "2026-10-26T21:49:31.627Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-26T22:28:03.790Z",
+      "note": "Pass 2: CI run 40368389297 on 79f66a0d green, Run tests 22.6 min (tests 1267 s at width 2 on 3 cores). One runner is CPU-bound: local per-target CPU was Render 1593 s, Core 380 s, Media 80 s, so no ordering gets one 3-core VM under 15 min. Built Scripts/test.sh --shard K/N (every suite type dealt to one slice, heaviest first by Scripts/test-weights.tsv; slices sum to exactly 14,604 tests, checked locally) and rewrote ci.yml (3 test slices + a build job that makes the bundle and keeps the cache) and release.yml (3 test slices beside a package job, publish on ubuntu after both). CI skips 'release: v' commits so a release gets the macOS runners."
+    },
+    {
+      "t": "2026-10-26T23:53:47.524Z",
+      "note": "Reached (pass 2, commits f0448557, fb6c648f, b8750adc): GitHub tests in 3 slices (Scripts/test.sh --shard, weights in Scripts/test-weights.tsv). CI Run tests 7.4/6.6/8.0 min (40417574675) and 7.2/8.9/8.2 (40419872948), was 22.6; 3 green parallel CI runs in a row (40368389297, 40417574675, 40419872948). Release dry run 40421624172: whole workflow 9.5 min, slices 6.1/8.4/7.3 min beside build+sign+notarize+DMG 3.0 min (publish skipped by dry_run). Kept build split per configuration: debug restored warm builds in 13-22 s (was 4-6 min after a release build had been made in the same folder), release app build 27 s. Animated export 'written twice' 36 s -> 6 s. Chose to skip CI on 'release: v' commits over letting CI and release fight for macOS runners, because release.yml tests that same commit. Left open: local Scripts/test.sh 262-270 s (target <180: tail is serialized suites + text-read suites); 4 tests >10 s alone (whole-window separation 21.7, agent element scan 21.5, boxed-in caliper 16-18 where the cost is in core gap reads in a debug build, a document's weigh 14.5 for 3 cases). Tried and reverted: spreading the caliper grid and gap loop over the cores (no gain). left rough: slice 3 is ~1 min longer than the others because text-read suites weigh more inside a run than alone; not worth a task while every slice is under 9 min."
+    },
+    {
+      "t": "2026-10-26T23:53:47.598Z",
+      "note": "GitHub targets met and measured: CI Run tests 7-9 min in 3 slices, 3 green runs in a row, release dry run 9.5 min end to end, warm kept build. Still open: local Scripts/test.sh 262-270 s against 180, and 4 tests over 10 s alone (listed in the log and the audit)."
     }
   ],
-  "started": "2026-10-26T14:19:09.098Z",
+  "started": "2026-10-26T21:49:31.626Z",
   "walks": []
 }
