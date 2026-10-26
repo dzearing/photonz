@@ -3,6 +3,22 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # By hand, for a tag that already exists: `gh workflow run release.yml -f
+  # tag=vX.Y.Z -f skip_tests=true`. Skipping the tests is for re-running a
+  # release whose code has already been tested and only the packaging failed
+  # or the suite ran out of time on a slow runner (v0.19.0, 2026-10-26). A
+  # tag push always runs them.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release, e.g. v0.19.0"
+        required: true
+        type: string
+      skip_tests:
+        description: "Skip the test step"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,6 +41,8 @@ jobs:
       #   APPLE_TEAM_ID               10-char team id
       #   APPLE_APP_PASSWORD          app-specific password for notarytool
       HAVE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
+      # The tag being released: the pushed tag, or the one named by hand.
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
       # Collect the render timings, never gate on them. v0.15.0 failed to
       # publish twice on a shared runner that was four to eight times slower
       # than the machine the app is developed on, with nothing actually slower
@@ -35,10 +53,12 @@ jobs:
       PHOTONZ_PERF_GATE: report
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Verify tag matches VERSION
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${RELEASE_TAG#v}"
           FILE="$(cat VERSION)"
           if [[ "$TAG" != "$FILE" ]]; then
             echo "Tag v$TAG does not match VERSION file ($FILE)" >&2
@@ -46,6 +66,7 @@ jobs:
           fi
 
       - name: Run tests
+        if: ${{ !inputs.skip_tests }}
         # 65: this step builds everything as well as testing it. At 45 the
         # v0.16.0 run used nearly all of it, and the suite has grown about 15%
         # since (11,211 to 12,914 tests by v0.17.0).
@@ -141,7 +162,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "Photonz $GITHUB_REF_NAME" \
+          gh release create "$RELEASE_TAG" \
+            --title "Photonz $RELEASE_TAG" \
             --notes-file /tmp/release-notes.md \
             dist/Photonz.dmg

@@ -38,4 +38,5 @@ Determine the new semver version first:
 ## Failure handling
 
 - If the Release workflow fails after tagging: fix on `main`, delete the tag (`git tag -d vNEW && git push origin :refs/tags/vNEW`) and any draft release (`gh release delete vNEW`), then restart from step 1. Never leave a tag pointing at a broken build.
+- If the tests passed but a later step failed (or the suite only ran out of time on a slow runner) and the fix needs no new tag, or the tag was moved to the fix: re-run the release by hand without the tests, `gh workflow run release.yml -f tag=vNEW -f skip_tests=true`. It still builds, signs, checks entitlements, notarizes and publishes; it skips only the 60+ minute test step. Use it only for code that has already passed `Scripts/test.sh`.
 - If only the site deploy failed, re-run it: `gh workflow run site.yml`.
