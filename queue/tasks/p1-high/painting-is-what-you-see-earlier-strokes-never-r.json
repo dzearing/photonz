@@ -4,12 +4,12 @@
   "goal": "While drawing, every earlier stroke visibly recomputes: the strokes change, then swap into a higher resolution version. That looks awkward and wastes time. Painting should be what you see is what you get: the stroke you are drawing looks exactly like it will when you let go, nothing already on the canvas repaints, flickers or changes sharpness, and the whole thing answers immediately.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 2.9,
+  "seq": 1.1,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-25T16:37:16.481Z",
+  "updated": "2026-10-26T03:36:58.832Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -32,6 +32,14 @@
     {
       "t": "2026-10-25T16:37:16.480Z",
       "note": "seq 3970 -> 2.9"
+    },
+    {
+      "t": "2026-10-26T03:36:58.695Z",
+      "note": "User, 2026-10-25 (after the smudge fix d2efecfb landed): 'brushes are slow. at first its fine, after 3 or 4 large strokes it gets progressively worse perf. it needs to be constant and fast'. So the cost per drag GROWS with the number of strokes already on the layer. The bar for this task: per-drag time at stroke 1, 5, 10 and 50 (large brush) is MEASURED and stays flat, the 50th no slower than the 1st beyond noise, as well as inside the 8 ms p95. Suspects to measure, not assume: the live stroke reading every earlier wet wash (Watercolour under()/WetWash per pixel), a whole-layer re-rasterize per stroke, the overlay bitmap growing."
+    },
+    {
+      "t": "2026-10-26T03:36:58.831Z",
+      "note": "seq 2.9 -> 1.1"
     }
   ]
 }

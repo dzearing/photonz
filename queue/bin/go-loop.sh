@@ -487,7 +487,7 @@ say_about_the_hold() {
 }
 
 # The walk checks, run BETWEEN tasks. A runner cannot run the whole set: it is
-# about 910 walks and about 245 minutes (queue/bin/sweep-size.mjs counts it, so
+# about 1010 walks and about 290 minutes (queue/bin/sweep-size.mjs counts it, so
 # this comment cannot go stale on its own) and a runner's background work is
 # terminated at 600s, which
 # is how eight of the twenty recorded runner failures happened (2026-09-07

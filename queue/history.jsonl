@@ -12946,14 +12946,14 @@
 {"t":"2026-10-20T06:01:57.187Z","ev":"loop_started","pid":50834}
 {"t":"2026-10-20T06:01:57.243Z","ev":"loop_awake","held":true,"pid":50844,"screenLocked":false}
 {"t":"2026-10-20T06:19:04.631Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":894,"of":985,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-20T06:19:04.816Z","ev":"task_started","id":"a-video-document-shows-the-library-in-its-dock","title":"A video document shows the Library in its dock","priority":"p1-high"}
+{"t":"2026-10-20T06:19:04.816Z","ev":"task_started","id":"a-video-document-shows-the-library-in-its-dock","title":"A video document shows the Library in its dock","priority":"p1-high","repeats":1,"until":"2026-10-20T06:19:04.816Z","rolledUp":true}
 {"t":"2026-10-20T07:03:30.801Z","ev":"task_walks","id":"a-video-document-shows-the-library-in-its-dock","walks":["video-library-folded-walk"]}
 {"t":"2026-10-20T07:03:30.880Z","ev":"task_note","id":"a-video-document-shows-the-library-in-its-dock"}
 {"t":"2026-10-20T07:03:30.955Z","ev":"task_note","id":"a-video-document-shows-the-library-in-its-dock"}
 {"t":"2026-10-20T07:10:19.118Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
 {"t":"2026-10-20T07:10:40.623Z","ev":"task_done","id":"a-video-document-shows-the-library-in-its-dock","from":"in_progress","note":"A recording now shows the Library folded at the foot of the dock at Next defaults; one click opens it with the recording's tile; View > Library turns it off and on for videos only; pictures still keep it out. Verified by video-library-folded-walk (no flags, real click with the app in front, 3 real captures in the audit), 52 other Library/video-dock/header walks green, Scripts/test.sh 13936 passed. Commit a9944834. Opened-shelf height vs the mock's 118px cap folded into on-a-video-captions-and-transitions-sit-where-th."}
 {"t":"2026-10-20T11:59:07.971Z","ev":"sweep_pass","walks":986,"passed":982,"failed":4,"seconds":17282,"complete":true,"total":986}
-{"t":"2026-10-20T11:59:08.162Z","ev":"task_started","id":"arrows-on-a-video-fade-in-and-out-without-settin","title":"The next arrow you draw keeps the last one's look, fades included","priority":"p1-high"}
+{"t":"2026-10-20T11:59:08.162Z","ev":"task_started","id":"arrows-on-a-video-fade-in-and-out-without-settin","title":"The next arrow you draw keeps the last one's look, fades included","priority":"p1-high","repeats":1,"until":"2026-10-20T11:59:08.162Z","rolledUp":true}
 {"t":"2026-10-20T12:38:58.493Z","ev":"task_walks","id":"arrows-on-a-video-fade-in-and-out-without-settin","walks":["the-next-arrow-fades-like-the-last-walk"]}
 {"t":"2026-10-20T13:25:23.939Z","ev":"task_walks","id":"arrows-on-a-video-fade-in-and-out-without-settin","walks":["the-next-arrow-fades-like-the-last-walk","the-whole-look-carries-over-walk"]}
 {"t":"2026-10-20T13:25:34.754Z","ev":"task_note","id":"arrows-on-a-video-fade-in-and-out-without-settin"}
@@ -13090,7 +13090,7 @@
 {"t":"2026-10-20T13:58:49.653Z","ev":"task_resequenced","id":"find-out-whether-grid-settings-is-hard-to-read-i","from":20,"to":20}
 {"t":"2026-10-20T13:59:31.956Z","ev":"triage","summary":"merged 2 (sound lane background into sound lane height; chart negatives into the user chart task), closed 5 whose card answer left nothing to build, filed 1 doc scrub, reset 0, groomed 22 (card items rewritten to the answers taken 2026-10-20, 6 retitled), moved 2 (music longer than the edit up in p2, Captions and Transitions up in p1), renumbered p1 and p2; open 53 -> 47"}
 {"t":"2026-10-20T14:00:56.150Z","ev":"digest","file":"2026-10-20.md"}
-{"t":"2026-10-20T14:01:17.294Z","ev":"task_started","id":"a-chart-is-your-data-given-to-it-the-obvious-way","title":"A chart is your data, given to it the obvious way, and it moves when your numbers do","priority":"p1-high"}
+{"t":"2026-10-20T14:01:17.294Z","ev":"task_started","id":"a-chart-is-your-data-given-to-it-the-obvious-way","title":"A chart is your data, given to it the obvious way, and it moves when your numbers do","priority":"p1-high","repeats":1,"until":"2026-10-20T14:01:17.294Z","rolledUp":true}
 {"t":"2026-10-20T14:02:45.324Z","ev":"task_note","id":"a-chart-is-your-data-given-to-it-the-obvious-way"}
 {"t":"2026-10-20T14:35:49.331Z","ev":"task_resequenced","id":"ask-on-the-local-model-makes-results-that-look-f","from":30,"to":6}
 {"t":"2026-10-20T14:35:49.402Z","ev":"task_resequenced","id":"typing-in-ask-lists-the-commands-you-can-run","from":40,"to":7}
@@ -13139,7 +13139,7 @@
 {"t":"2026-10-20T15:19:22.155Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
 {"t":"2026-10-20T15:19:54.888Z","ev":"manager","filed":4,"readyBefore":50,"readyAfter":53,"report":"queue/manager/2026-10-20-0819.md"}
 {"t":"2026-10-20T15:20:13.853Z","ev":"manager_pass","exit":0,"ready":53}
-{"t":"2026-10-20T15:20:13.927Z","ev":"task_started","id":"ask-makes-the-change-straight-away-and-each-chan","title":"Ask makes the change straight away, and each change is one row you can turn off or delete","priority":"p1-high"}
+{"t":"2026-10-20T15:20:13.927Z","ev":"task_started","id":"ask-makes-the-change-straight-away-and-each-chan","title":"Ask makes the change straight away, and each change is one row you can turn off or delete","priority":"p1-high","repeats":1,"until":"2026-10-20T15:20:13.927Z","rolledUp":true}
 {"t":"2026-10-20T16:07:38.046Z","ev":"task_walks","id":"ask-makes-the-change-straight-away-and-each-chan","walks":["ask-annotates-a-screenshot-walk","ask-adds-a-title-page-walk","ask-makes-a-pricing-section-walk"]}
 {"t":"2026-10-20T16:22:26.169Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
 {"t":"2026-10-20T16:22:26.749Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
@@ -13150,7 +13150,7 @@
 {"t":"2026-10-20T16:22:31.058Z","ev":"task_note","id":"ask-makes-the-change-straight-away-and-each-chan"}
 {"t":"2026-10-20T16:22:36.240Z","ev":"task_done","id":"ask-makes-the-change-straight-away-and-each-chan","from":"in_progress","note":"Ask runs the moment the model is done (no Run Plan, no step list); each request is one row in the Agent group with a plain sentence, a switch (off/on via a three-way merge that keeps later edits; blocked with a one-line note when a later edit builds on it), a delete, right-click and click-to-pick. Core AskChanges.swift + AskChangesTests; full suite green; three Ask walks pass at Next defaults checking the document at run, undo, redo, off, on, delete, undo of delete. Audit queue/audits/2026-10-20-ask-rows.json."}
 {"t":"2026-10-20T16:42:02.220Z","ev":"slice_pass","walks":27,"passed":25,"failed":0,"seconds":984,"of":989,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-20T16:42:02.427Z","ev":"task_started","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","title":"A scored test set for what Ask and the Photonz skill make, so we can climb it","priority":"p1-high"}
+{"t":"2026-10-20T16:42:02.427Z","ev":"task_started","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","title":"A scored test set for what Ask and the Photonz skill make, so we can climb it","priority":"p1-high","repeats":1,"until":"2026-10-20T16:42:02.427Z","rolledUp":true}
 {"t":"2026-10-20T16:56:13.709Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
 {"t":"2026-10-20T16:56:13.775Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
 {"t":"2026-10-20T17:43:20.309Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
@@ -13161,7 +13161,7 @@
 {"t":"2026-10-20T17:43:33.401Z","ev":"task_note","id":"a-scored-test-set-for-what-ask-and-the-photonz-s"}
 {"t":"2026-10-20T17:43:54.244Z","ev":"task_done","id":"a-scored-test-set-for-what-ask-and-the-photonz-s","from":"in_progress","note":"Scripts/ask-eval.sh (Scripts/ask-eval/, README there): 17 cases run one at a time on the probe through Ask or the skill, read and rendered over MCP, scored by document rules (14 node tests), a fixed-rubric picture judge (claude-opus-5-5, 3 looks, median) and blind naming; history in queue/evals/ask-eval-history.jsonl with compare against the best, seconds per case. Judge agrees with the user (messes 1.8/1.8/1.4, hand-made clean sheet 7.6). Baselines: Ask 37.8 in 10.5 min, skill 83.9 in 24.5 min. Audit queue/audits/2026-10-20-ask-eval.json with both contact sheets. Scripts/test.sh 14008 green."}
 {"t":"2026-10-20T17:55:57.239Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":554,"of":989,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-20T17:55:57.418Z","ev":"task_started","id":"ask-draws-a-dog-you-can-tell-is-a-dog","title":"Ask draws a dog, or a smiley face icon, you can tell at a glance","priority":"p1-high"}
+{"t":"2026-10-20T17:55:57.418Z","ev":"task_started","id":"ask-draws-a-dog-you-can-tell-is-a-dog","title":"Ask draws a dog, or a smiley face icon, you can tell at a glance","priority":"p1-high","repeats":1,"until":"2026-10-20T17:55:57.418Z","rolledUp":true}
 {"t":"2026-10-20T18:04:19.312Z","ev":"task_note","id":"ask-draws-a-dog-you-can-tell-is-a-dog"}
 {"t":"2026-10-20T18:33:37.242Z","ev":"task_created","id":"an-illustration-ask-draws-looks-illustrated-natu","priority":"p1-high","title":"An illustration Ask draws looks illustrated: natural shapes, light and shadow, depth"}
 {"t":"2026-10-20T18:33:37.355Z","ev":"task_created","id":"asking-always-shows-the-agent-area-even-from-a-c","priority":"p1-high","title":"Asking always shows the Agent area, even from a closed panel or a video in View"}
@@ -13179,7 +13179,7 @@
 {"t":"2026-10-20T19:52:31.893Z","ev":"task_done","id":"ask-draws-a-dog-you-can-tell-is-a-dog","from":"in_progress","note":"Ask draws a thing in one add_drawing call: a built-in set of 992 Twemoji drawings (CC-BY 4.0, credited in Open Source Notices) or the model's own SVG, read into one named group of editable layers (SVGArtwork); icon on a blank picture becomes a 512 pt icon frame on its keylines; Ask looks with llama3.2-vision and redraws at most twice or says it could not. Eval 13 drawing cases: 35.4 -> 92, named blind 1 -> 13 of 13, median 18.4 s. Verified: 14052 tests green, ask-draws-a-dog-walk ok at Next defaults (one Command Z removes the dog; smiley icon 512x512 with eyes and mouth inside the face), icon exports as clean SVG. Commit 402dc64f. Audit queue/audits/2026-10-20-ask-draws-a-dog-you-can-tell-is-a-dog.json."}
 {"t":"2026-10-20T20:05:16.337Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-20T20:07:30.770Z","ev":"slice_pass","walks":31,"passed":30,"failed":1,"seconds":729,"of":990,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-20T20:07:30.959Z","ev":"task_started","id":"asking-always-shows-the-agent-area-even-from-a-c","title":"Asking always shows the Agent area, even from a closed panel or a video in View","priority":"p1-high"}
+{"t":"2026-10-20T20:07:30.959Z","ev":"task_started","id":"asking-always-shows-the-agent-area-even-from-a-c","title":"Asking always shows the Agent area, even from a closed panel or a video in View","priority":"p1-high","repeats":1,"until":"2026-10-20T20:07:30.959Z","rolledUp":true}
 {"t":"2026-10-20T20:37:25.812Z","ev":"task_created","id":"find-out-whether-panel-rows-go-blank-after-the-p","priority":"p2-normal","title":"Find out whether panel rows go blank after the panel is scrolled back"}
 {"t":"2026-10-20T20:37:40.256Z","ev":"task_walks","id":"asking-always-shows-the-agent-area-even-from-a-c","walks":["ask-shows-the-agent-group-from-a-closed-panel-walk","ask-shows-the-agent-group-when-folded-walk","ask-shows-the-agent-group-when-scrolled-away-walk","ask-shows-the-agent-group-from-a-video-in-view-walk","ask-shows-the-agent-group-from-a-video-in-view-with-the-panel-closed-walk"]}
 {"t":"2026-10-20T20:38:10.805Z","ev":"task_note","id":"asking-always-shows-the-agent-area-even-from-a-c"}
@@ -13190,7 +13190,7 @@
 {"t":"2026-10-20T20:38:11.179Z","ev":"task_note","id":"asking-always-shows-the-agent-area-even-from-a-c"}
 {"t":"2026-10-20T20:38:38.559Z","ev":"task_done","id":"asking-always-shows-the-agent-area-even-from-a-c","from":"in_progress","note":"Asking now always shows the Agent group with its working row: a closed panel comes out (this window only, the person's choice for new windows untouched), a folded group unfolds, a scrolled-away one scrolls back, a video in View switches to Edit. AskReveal rule in PhotonzCore with tests; EditorState+AskReveal and a retrying InspectorPanel reveal. Five ask-shows-the-agent-group walks green at Next defaults, Scripts/test.sh 14057 passed, audit queue/audits/2026-10-20-ask-reveal.json. Commit ee9fc70b."}
 {"t":"2026-10-20T20:51:46.713Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":614,"of":995,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-20T20:51:46.889Z","ev":"task_started","id":"an-illustration-ask-draws-looks-illustrated-natu","title":"An illustration Ask draws looks illustrated: natural shapes, light and shadow, depth","priority":"p1-high"}
+{"t":"2026-10-20T20:51:46.889Z","ev":"task_started","id":"an-illustration-ask-draws-looks-illustrated-natu","title":"An illustration Ask draws looks illustrated: natural shapes, light and shadow, depth","priority":"p1-high","repeats":1,"until":"2026-10-20T20:51:46.889Z","rolledUp":true}
 {"t":"2026-10-20T20:54:34.265Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
 {"t":"2026-10-20T20:54:34.339Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
 {"t":"2026-10-20T20:54:34.424Z","ev":"task_note","id":"an-illustration-ask-draws-looks-illustrated-natu"}
@@ -13223,7 +13223,7 @@
 {"t":"2026-10-21T00:14:39.549Z","ev":"task_done","id":"an-illustration-ask-draws-looks-illustrated-natu","from":"in_progress","note":"Shipped (a2585b65): scenes and named styles go to a new pass-based illustrator (PhotonzCore Illustrator, 8 checked passes, reusable pieces, real gradients, named groups, clean SVG); Ask routes and labels the look. Verified: 14,087 tests green, walks ask-draws-an-illustration-walk and ask-draws-a-dog-walk ok at Next defaults, eval illustration cases 40.4 -> 88.1, user's picture crafted 1. NOT fully met: only sun over mountains and layered sunset reach crafted 7 and designed 8; line art, silhouette badge, forest, lighthouse, fox and skyline (crafted 4 to 6) carried to every-illustration-ask-draws-reaches-the-crafted (p1). Audit: queue/audits/2026-10-20-an-illustration-ask-draws-looks-illustrated-natu.json"}
 {"t":"2026-10-21T00:27:50.317Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-10-21T00:30:03.036Z","ev":"slice_pass","walks":26,"passed":25,"failed":1,"seconds":461,"of":996,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-21T00:30:03.224Z","ev":"task_started","id":"the-test-set-cannot-be-passed-by-a-lookup-unseen","title":"The test set cannot be passed by a lookup: unseen requests, real ones, and the user's own reactions","priority":"p1-high"}
+{"t":"2026-10-21T00:30:03.224Z","ev":"task_started","id":"the-test-set-cannot-be-passed-by-a-lookup-unseen","title":"The test set cannot be passed by a lookup: unseen requests, real ones, and the user's own reactions","priority":"p1-high","repeats":1,"until":"2026-10-21T00:30:03.224Z","rolledUp":true}
 {"t":"2026-10-21T01:04:33.993Z","ev":"task_created","id":"ask-draws-any-subject-well-with-nothing-stored-o","priority":"p1-high","title":"Ask draws any subject well with nothing stored or coded for it"}
 {"t":"2026-10-21T01:04:49.027Z","ev":"task_note","id":"the-test-set-cannot-be-passed-by-a-lookup-unseen"}
 {"t":"2026-10-21T01:04:49.109Z","ev":"task_resequenced","id":"ask-draws-any-subject-well-with-nothing-stored-o","from":42.5,"to":8.2}
@@ -13248,7 +13248,7 @@
 {"t":"2026-10-21T02:20:00.819Z","ev":"task_note","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of"}
 {"t":"2026-10-21T02:20:38.037Z","ev":"manager","filed":1,"readyBefore":63,"readyAfter":63,"report":"queue/manager/2026-10-20-1920.md"}
 {"t":"2026-10-21T02:20:55.052Z","ev":"manager_pass","exit":0,"ready":63}
-{"t":"2026-10-21T02:20:55.124Z","ev":"task_started","id":"find-the-misalignments-marks-every-inconsistent","title":"\"Find the misalignments\" marks every inconsistent edge, padding and gap on a screenshot","priority":"p1-high"}
+{"t":"2026-10-21T02:20:55.124Z","ev":"task_started","id":"find-the-misalignments-marks-every-inconsistent","title":"\"Find the misalignments\" marks every inconsistent edge, padding and gap on a screenshot","priority":"p1-high","repeats":1,"until":"2026-10-21T02:20:55.124Z","rolledUp":true}
 {"t":"2026-10-21T03:23:52.809Z","ev":"task_walks","id":"find-the-misalignments-marks-every-inconsistent","walks":["ask-finds-the-misalignments-walk","ask-finds-nothing-off-walk"]}
 {"t":"2026-10-21T03:23:52.875Z","ev":"task_created","id":"find-the-misalignments-stays-quiet-on-busy-app-s","priority":"p2-normal","title":"Find the misalignments stays quiet on busy app screenshots and is scored on real captures"}
 {"t":"2026-10-21T03:24:06.450Z","ev":"task_note","id":"find-the-misalignments-marks-every-inconsistent"}
@@ -13257,7 +13257,7 @@
 {"t":"2026-10-21T03:24:06.643Z","ev":"task_note","id":"find-the-misalignments-marks-every-inconsistent"}
 {"t":"2026-10-21T03:24:37.660Z","ev":"task_done","id":"find-the-misalignments-marks-every-inconsistent","from":"in_progress","note":"Ask 'find the misalignments' / 'check the spacing' marks edges 1-8 pt off, uneven gaps, padding and border differences as one redline layer each with both measured numbers; one Ask row 'Found N misalignments' with switch and delete. Detection is code (LayoutRead + MisalignmentScan, PhotonzCore); model picks ids via find_misalignments/mark_misalignments, also in the MCP skill. Corpus of 62 Chrome-rendered 2x UIs with planted faults: P 1.00, R 0.94 (1 pt) / 1.00 (2-3 pt), clean pages 0 marks; held-out first untouched run P 0.48 (reported). Verified: full suite 14116 tests green, walks ask-finds-the-misalignments-walk and ask-finds-nothing-off-walk pass at Next defaults with qwen3:30b, five real screenshots before/after in queue/audits/2026-10-20-find-misalignments.json. Commit 506e00a8."}
 {"t":"2026-10-21T03:35:18.264Z","ev":"slice_pass","walks":26,"passed":26,"failed":0,"seconds":479,"of":999,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-21T03:35:18.460Z","ev":"task_started","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of","title":"Measuring a UI gives a calm redline: each kind of thing measured once, readouts that never collide","priority":"p1-high"}
+{"t":"2026-10-21T03:35:18.460Z","ev":"task_started","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of","title":"Measuring a UI gives a calm redline: each kind of thing measured once, readouts that never collide","priority":"p1-high","repeats":1,"until":"2026-10-21T03:35:18.460Z","rolledUp":true}
 {"t":"2026-10-21T04:26:54.139Z","ev":"task_note","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of"}
 {"t":"2026-10-21T05:16:19.355Z","ev":"task_created","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","priority":"p1-high","title":"A redline of a 2x screenshot reads in points, with dimension lines a designer reads at a glance"}
 {"t":"2026-10-21T05:16:30.077Z","ev":"task_walks","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of","walks":["ask-annotates-a-screenshot-walk","ask-redlines-a-dialog-walk","ask-redlines-a-feed-walk"]}
@@ -13267,7 +13267,7 @@
 {"t":"2026-10-21T06:34:07.830Z","ev":"task_note","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of"}
 {"t":"2026-10-21T06:34:37.627Z","ev":"task_done","id":"measuring-a-ui-gives-a-calm-redline-each-kind-of","from":"in_progress","note":"Shipped (c9200d34, aa4e3ce3, 69948446): code chooses the redline (RedlinePlan in Sources/PhotonzCore/Redline.swift): one size per kind of control, then padding, row height, section gap, button gap, label inset; 8 marks on the settings screenshot where there were 12. RedlineLayout keeps every readout off words, controls, other readouts and lines, and no leader crosses anything. New find_measurements / mark_measurements tools, used by Ask and the skill. Verified: RedlinePlanTests and RedlineToolTests on 4 screenshots, full suite green (14,129), three walks at Next defaults with real captures, eval settings case 32.5 to 47-59 for Ask, calibration on the user's picture clean 2. Not met and filed: readouts in points and the caliper look with the clean-8 bar (a-redline-of-a-2x-screenshot-reads-in-points-wit); held-out redline group fell 35.4 to 19.6 (ask-s-redlines-do-at-least-as-well-on-unseen-req). Audit: queue/audits/2026-10-20-calm-redline.json"}
 {"t":"2026-10-21T06:45:28.078Z","ev":"slice_pass","walks":27,"passed":27,"failed":0,"seconds":488,"of":1001,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-21T06:45:28.286Z","ev":"task_started","id":"a-border-follows-the-shape-it-is-on-not-the-box","title":"A border follows the shape it is on, not the box around it","priority":"p1-high"}
+{"t":"2026-10-21T06:45:28.286Z","ev":"task_started","id":"a-border-follows-the-shape-it-is-on-not-the-box","title":"A border follows the shape it is on, not the box around it","priority":"p1-high","repeats":1,"until":"2026-10-21T06:45:28.286Z","rolledUp":true}
 {"t":"2026-10-21T06:49:57.679Z","ev":"task_note","id":"a-border-follows-the-shape-it-is-on-not-the-box"}
 {"t":"2026-10-21T06:49:57.743Z","ev":"task_walks","id":"a-border-follows-the-shape-it-is-on-not-the-box","walks":["border-follows-the-shape-walk"]}
 {"t":"2026-10-21T07:49:10.057Z","ev":"task_note","id":"a-border-follows-the-shape-it-is-on-not-the-box"}
@@ -13367,7 +13367,7 @@
 {"t":"2026-10-21T12:42:53.206Z","ev":"task_resequenced","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req","from":170,"to":180}
 {"t":"2026-10-21T12:43:33.324Z","ev":"triage","summary":"merged 1 (coded-subject illustration task folded into the user ask that removes coded subjects), moved 1 (2x redline carryover p1 -> p2 -> back to p1 with the user ask units restored, sequenced after the user asks), retagged 1 (Ask redline regression to agent-ask), reset 0, filed 1 (audit pictures show the in-front look), groomed 3 (2x redline goal and checklist, docs item on the coded-subject task, runner prompt: a missed number is not done), resequenced p1 and p2 to clean steps of 10 with the user asks first"}
 {"t":"2026-10-21T12:44:34.743Z","ev":"digest","file":"2026-10-21.md"}
-{"t":"2026-10-21T12:44:54.657Z","ev":"task_started","id":"a-layer-can-be-flipped-horizontally-or-verticall","title":"A layer can be flipped horizontally or vertically","priority":"p1-high"}
+{"t":"2026-10-21T12:44:54.657Z","ev":"task_started","id":"a-layer-can-be-flipped-horizontally-or-verticall","title":"A layer can be flipped horizontally or vertically","priority":"p1-high","repeats":1,"until":"2026-10-21T12:44:54.657Z","rolledUp":true}
 {"t":"2026-10-21T12:51:02.569Z","ev":"task_note","id":"a-layer-can-be-flipped-horizontally-or-verticall"}
 {"t":"2026-10-21T12:51:02.633Z","ev":"task_note","id":"a-layer-can-be-flipped-horizontally-or-verticall"}
 {"t":"2026-10-21T13:30:36.347Z","ev":"task_walks","id":"a-layer-can-be-flipped-horizontally-or-verticall","walks":["flip-a-layer-walk","flip-by-dragging-a-handle-walk","flip-a-title-on-a-video-walk"]}
@@ -13378,7 +13378,7 @@
 {"t":"2026-10-21T13:30:51.442Z","ev":"task_note","id":"a-layer-can-be-flipped-horizontally-or-verticall"}
 {"t":"2026-10-21T13:31:17.448Z","ev":"task_done","id":"a-layer-can-be-flipped-horizontally-or-verticall","from":"in_progress","note":"Flip Horizontal / Flip Vertical in Edit > Transform and on the right-click menu, a handle dragged past the other side flips and keeps going, agents via run_command and set_layer flip. Next only (next-flip-layers, default on). Verified by unit + canvas/SVG/MP4 render tests, full suite green (14179), three walks at Next defaults, agent drill. Commit a05578a0; audit queue/audits/2026-10-21-a-layer-can-be-flipped-horizontally-or-verticall.json"}
 {"t":"2026-10-21T13:41:48.782Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":473,"of":1005,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-21T13:41:48.968Z","ev":"task_started","id":"each-ask-row-says-what-it-made-like-drew-a-cat","title":"Each Ask row says what it made, like \"Drew a cat\"","priority":"p1-high"}
+{"t":"2026-10-21T13:41:48.968Z","ev":"task_started","id":"each-ask-row-says-what-it-made-like-drew-a-cat","title":"Each Ask row says what it made, like \"Drew a cat\"","priority":"p1-high","repeats":1,"until":"2026-10-21T13:41:48.968Z","rolledUp":true}
 {"t":"2026-10-21T13:44:45.434Z","ev":"task_note","id":"each-ask-row-says-what-it-made-like-drew-a-cat"}
 {"t":"2026-10-21T13:54:30.358Z","ev":"task_walks","id":"each-ask-row-says-what-it-made-like-drew-a-cat","walks":["ask-rows-say-what-they-made-walk"]}
 {"t":"2026-10-21T14:13:21.415Z","ev":"task_note","id":"each-ask-row-says-what-it-made-like-drew-a-cat"}
@@ -13387,7 +13387,7 @@
 {"t":"2026-10-21T14:13:21.625Z","ev":"task_note","id":"each-ask-row-says-what-it-made-like-drew-a-cat"}
 {"t":"2026-10-21T14:13:44.509Z","ev":"task_done","id":"each-ask-row-says-what-it-made-like-drew-a-cat","from":"in_progress","note":"Rows in the Agent group name what a request made in the person's words: 'Drew a cat', 'Made the cat bigger', 'Drew a smiley face icon', 'Made a component sheet', and name the layer ('Resized Cat Ear') when the request is not an instruction. Sources/PhotonzCore/AskChangeWords.swift, unit tested over every climb-set eval request (AskRowWordsTests); full suite 14188 passed; walk ask-rows-say-what-they-made-walk ok at Next defaults on the real model; audit queue/audits/2026-10-21-each-ask-row-says-what-it-made-like-drew-a-cat.json. Commit 7f760796."}
 {"t":"2026-10-21T14:31:31.537Z","ev":"slice_pass","walks":31,"passed":31,"failed":0,"seconds":910,"of":1006,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-21T14:31:31.741Z","ev":"task_started","id":"a-request-typed-while-ask-is-working-waits-its-t","title":"A request typed while Ask is working waits its turn, and can be cancelled before it starts","priority":"p1-high"}
+{"t":"2026-10-21T14:31:31.741Z","ev":"task_started","id":"a-request-typed-while-ask-is-working-waits-its-t","title":"A request typed while Ask is working waits its turn, and can be cancelled before it starts","priority":"p1-high","repeats":1,"until":"2026-10-21T14:31:31.741Z","rolledUp":true}
 {"t":"2026-10-21T15:04:18.131Z","ev":"task_walks","id":"a-request-typed-while-ask-is-working-waits-its-t","walks":["ask-queues-a-request-walk","ask-cancels-a-waiting-request-walk","ask-stops-a-running-request-walk"]}
 {"t":"2026-10-21T15:04:37.855Z","ev":"task_note","id":"a-request-typed-while-ask-is-working-waits-its-t"}
 {"t":"2026-10-21T15:04:37.923Z","ev":"task_note","id":"a-request-typed-while-ask-is-working-waits-its-t"}
@@ -13395,7 +13395,7 @@
 {"t":"2026-10-21T15:04:38.060Z","ev":"task_note","id":"a-request-typed-while-ask-is-working-waits-its-t"}
 {"t":"2026-10-21T15:05:00.950Z","ev":"task_done","id":"a-request-typed-while-ask-is-working-waits-its-t","from":"in_progress","note":"A request sent while Ask works waits as a row above the working one (clock, words, X to cancel) and runs next on the document the one before left; Stop ends only the request at work. Core AskRequestLine (PhotonzCore, tested), AskSession/AskViews, close hook in EditorView, walk condition askSettled. Verified: Scripts/test.sh 14195 green; walks ask-queues-a-request-walk, ask-cancels-a-waiting-request-walk, ask-stops-a-running-request-walk and the 5 ask-shows-the-agent-group walks pass at Next defaults; audit queue/audits/2026-10-21-a-request-typed-while-ask-is-working-waits-its-t.json. Commit a0825e7d."}
 {"t":"2026-10-21T15:16:28.008Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":524,"of":1009,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-21T15:16:28.195Z","ev":"task_started","id":"the-ask-test-set-scores-video-requests-too","title":"The Ask test set scores video requests too","priority":"p1-high"}
+{"t":"2026-10-21T15:16:28.195Z","ev":"task_started","id":"the-ask-test-set-scores-video-requests-too","title":"The Ask test set scores video requests too","priority":"p1-high","repeats":1,"until":"2026-10-21T15:16:28.195Z","rolledUp":true}
 {"t":"2026-10-21T16:47:34.569Z","ev":"task_created","id":"ask-puts-a-recording-from-history-on-the-timelin","priority":"p2-normal","title":"Ask puts a recording from History on the timeline and cuts where it is asked"}
 {"t":"2026-10-21T16:48:22.256Z","ev":"task_done","id":"the-ask-test-set-scores-video-requests-too","from":"in_progress","note":"Five video cases in the climb set and three held out, scored from frames of the video as it plays (blank-frame rule, timeline rules, judge on a time-labelled contact sheet with rubric-video.md). Baselines: Ask climb 74 / video 53.4, held-out 18.2 / video 12.5; skill video 84; per case with seconds in the audit queue/audits/2026-10-21-ask-eval-video-cases.json. Ask fails the History case (no add_clip) and the dissolve; filed ask-puts-a-recording-from-history-on-the-timelin."}
 {"t":"2026-10-21T16:48:30.856Z","ev":"task_note","id":"the-ask-test-set-scores-video-requests-too"}
@@ -13405,7 +13405,7 @@
 {"t":"2026-10-21T16:48:31.118Z","ev":"task_note","id":"the-ask-test-set-scores-video-requests-too"}
 {"t":"2026-10-21T16:48:31.181Z","ev":"task_walks","id":"the-ask-test-set-scores-video-requests-too","walks":[]}
 {"t":"2026-10-21T17:00:33.385Z","ev":"slice_pass","walks":31,"passed":31,"failed":0,"seconds":554,"of":1009,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-21T17:00:33.578Z","ev":"task_started","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","title":"Ask runs on the best model this Mac can hold, picked by the scores","priority":"p1-high"}
+{"t":"2026-10-21T17:00:33.578Z","ev":"task_started","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","title":"Ask runs on the best model this Mac can hold, picked by the scores","priority":"p1-high","repeats":1,"until":"2026-10-21T17:00:33.578Z","rolledUp":true}
 {"t":"2026-10-22T00:51:27.639Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
 {"t":"2026-10-22T00:51:27.705Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
 {"t":"2026-10-22T00:51:27.767Z","ev":"task_note","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic"}
@@ -13417,7 +13417,7 @@
 {"t":"2026-10-22T00:51:28.160Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-22T00:51:49.674Z","ev":"task_done","id":"ask-runs-on-the-best-model-this-mac-can-hold-pic","from":"in_progress","note":"Ask's default is now qwen3.6:27b (held-out 35.9 vs 18.2 before, two runs), chosen by scoring 10 local models + 4 -mlx tags through Ask on Ollama 0.40.7; it does its own looking (same score as two models, 11 GB less). Automatic and the Settings download follow AskModels.ranked and a 3/5-of-memory rule. Table in the audit and docs/design/ask.md; losing models removed; tests green; ask walks pass at Next defaults. Commit 3d690661."}
 {"t":"2026-10-22T01:03:22.823Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":533,"of":1009,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-22T01:03:23.017Z","ev":"task_started","id":"try-drawing-with-a-local-picture-model-then-turn","title":"Try drawing with a local picture model, then turning the picture into editable layers","priority":"p1-high"}
+{"t":"2026-10-22T01:03:23.017Z","ev":"task_started","id":"try-drawing-with-a-local-picture-model-then-turn","title":"Try drawing with a local picture model, then turning the picture into editable layers","priority":"p1-high","repeats":1,"until":"2026-10-22T01:03:23.017Z","rolledUp":true}
 {"t":"2026-10-22T02:13:32.263Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
 {"t":"2026-10-22T02:13:32.335Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
 {"t":"2026-10-22T02:13:32.409Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
@@ -13434,7 +13434,7 @@
 {"t":"2026-10-22T05:18:18.351Z","ev":"task_note","id":"try-drawing-with-a-local-picture-model-then-turn"}
 {"t":"2026-10-22T05:18:31.939Z","ev":"task_done","id":"try-drawing-with-a-local-picture-model-then-turn","from":"in_progress","note":"Ask paints drawings with Z-Image Turbo (Apache 2.0, mflux MIT) on this Mac and traces them into named, filled layers (vtracer MIT), on at Next defaults whenever Scripts/picture-model/serve.sh is running, otherwise unchanged. Held-out 57.5 vs 35.9; drawings didWhatWasAsked 5.6 vs 3.3, clean 6.2 vs 5.9, designed 6.0 vs 4.7, crafted 6.0 vs 5.0, 31 s vs 30 s, 0% looked up; 13 GB peak beside the planning model's 29 GB. 'make the cat black' now recolours any grouped drawing (AgentGroupRecolour). Verified by ask-paints-then-edits-walk at defaults, Scripts/test.sh 14214 passed, audit queue/audits/2026-10-22-try-drawing-with-a-local-picture-model-then-turn.json."}
 {"t":"2026-10-22T05:37:01.926Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":792,"of":1010,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-22T05:37:02.127Z","ev":"task_started","id":"ask-draws-any-subject-well-with-nothing-stored-o","title":"Ask draws any subject well with nothing stored or coded for it","priority":"p1-high"}
+{"t":"2026-10-22T05:37:02.127Z","ev":"task_started","id":"ask-draws-any-subject-well-with-nothing-stored-o","title":"Ask draws any subject well with nothing stored or coded for it","priority":"p1-high","repeats":1,"until":"2026-10-22T05:37:02.127Z","rolledUp":true}
 {"t":"2026-10-22T05:39:06.110Z","ev":"task_note","id":"ask-draws-any-subject-well-with-nothing-stored-o"}
 {"t":"2026-10-22T06:12:03.986Z","ev":"task_note","id":"ask-draws-any-subject-well-with-nothing-stored-o"}
 {"t":"2026-10-22T07:04:36.366Z","ev":"task_walks","id":"ask-draws-any-subject-well-with-nothing-stored-o","walks":["ask-draws-a-dog-walk","ask-draws-an-illustration-walk","ask-paints-then-edits-walk"]}
@@ -13445,7 +13445,7 @@
 {"t":"2026-10-22T07:14:22.928Z","ev":"task_done","id":"ask-draws-any-subject-well-with-nothing-stored-o","from":"in_progress","note":"Stored drawing set (Resources/Drawings, DrawingLibrary, loader, notice, make-drawings.mjs), the builtIn switch and the whole illustrator (Illustrator, IllustrationBrief/Pieces/Passes/Geometry/Color) removed in a543dae3. Drawings are painted for the request or the model's own SVG; AgentDrawingWords reads only look, scene-kind and time words; the look-and-revise check covers every drawing. Held-out 57.1 at Next defaults (35.9 before painting, 57.5 last painting run), 0 stored, 0 template, 52 drawn. AskNothingStoredTests guards it; full suite green (14,184); walks ask-draws-a-dog, ask-draws-an-illustration, ask-paints-then-edits, ask-rows-say-what-they-made green. Docs: ask.md, SKILL.md, agent-mcp.md. Audit queue/audits/2026-10-22-ask-draws-any-subject-well-with-nothing-stored-o.json with held-out sheets named by path."}
 {"t":"2026-10-22T07:29:50.437Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-22T07:32:12.023Z","ev":"slice_pass","walks":32,"passed":31,"failed":1,"seconds":895,"of":1010,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-22T07:32:12.237Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high"}
+{"t":"2026-10-22T07:32:12.237Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high","repeats":1,"until":"2026-10-22T07:32:12.237Z","rolledUp":true}
 {"t":"2026-10-22T11:14:23.184Z","ev":"task_walks","id":"a-scene-of-things-doing-something-together-is-dr","walks":["ask-draws-a-scene-walk","ask-draws-a-dog-walk","ask-draws-an-illustration-walk","ask-paints-then-edits-walk","ask-rows-say-what-they-made-walk"]}
 {"t":"2026-10-22T11:14:23.247Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-22T11:14:23.313Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
@@ -13550,7 +13550,7 @@
 {"t":"2026-10-22T16:34:06.272Z","ev":"task_created","id":"the-daily-renumbering-never-undoes-an-order-the","priority":"p2-normal","title":"The daily renumbering never undoes an order the intake window set while it ran"}
 {"t":"2026-10-22T16:34:37.574Z","ev":"manager","filed":2,"readyBefore":65,"readyAfter":66,"report":"queue/manager/2026-10-22-0934.md"}
 {"t":"2026-10-22T16:34:50.237Z","ev":"manager_pass","exit":0,"ready":66}
-{"t":"2026-10-22T16:34:50.312Z","ev":"task_started","id":"a-full-walk-check-that-gets-stopped-picks-up-whe","title":"A full walk check that gets stopped picks up where it stopped instead of starting over","priority":"p1-high"}
+{"t":"2026-10-22T16:34:50.312Z","ev":"task_started","id":"a-full-walk-check-that-gets-stopped-picks-up-whe","title":"A full walk check that gets stopped picks up where it stopped instead of starting over","priority":"p1-high","repeats":1,"until":"2026-10-22T16:34:50.312Z","rolledUp":true}
 {"t":"2026-10-22T16:52:43.594Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
 {"t":"2026-10-22T16:52:43.664Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
 {"t":"2026-10-22T16:52:43.732Z","ev":"task_note","id":"a-full-walk-check-that-gets-stopped-picks-up-whe"}
@@ -13562,7 +13562,7 @@
 {"t":"2026-10-22T17:01:09.428Z","ev":"loop_reloaded","from":"96328c27d10f","to":"146c749d0bbf"}
 {"t":"2026-10-22T17:01:09.553Z","ev":"loop_started","pid":50834}
 {"t":"2026-10-22T17:01:09.602Z","ev":"loop_awake","held":true,"pid":50844,"screenLocked":false}
-{"t":"2026-10-22T17:01:10.378Z","ev":"task_started","id":"starting-something-new-offers-just-image-or-vide","title":"File menu works like every Mac app: New makes a new Image or Video, Open opens","priority":"p1-high"}
+{"t":"2026-10-22T17:01:10.378Z","ev":"task_started","id":"starting-something-new-offers-just-image-or-vide","title":"File menu works like every Mac app: New makes a new Image or Video, Open opens","priority":"p1-high","repeats":1,"until":"2026-10-22T17:01:10.378Z","rolledUp":true}
 {"t":"2026-10-22T17:09:25.106Z","ev":"task_walks","id":"starting-something-new-offers-just-image-or-vide","walks":["front-door-walk","front-door-recent-documents-walk","design-ui-start-walk","design-mode-tool-strip-walk","undo-shortcut-walk"]}
 {"t":"2026-10-22T17:53:20.700Z","ev":"task_dropped","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":"pending","note":"Overtaken: the user's call on 2026-10-22 (task starting-something-new-offers-just-image-or-vide) took Recent out of the New window entirely; recent documents live in File > Open Recent now, so there are no Recent cards left to give actions to."}
 {"t":"2026-10-22T17:53:34.139Z","ev":"task_walks","id":"starting-something-new-offers-just-image-or-vide","walks":["front-door-walk","file-menu-like-every-mac-app-walk","front-door-recent-documents-walk","design-ui-start-walk","design-mode-tool-strip-walk","undo-shortcut-walk"]}
@@ -13578,7 +13578,7 @@
 {"t":"2026-10-22T18:10:40.958Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-22T18:10:40.988Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-22T18:12:50.211Z","ev":"slice_pass","walks":32,"passed":30,"failed":2,"seconds":825,"of":1011,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-22T18:12:50.416Z","ev":"task_started","id":"ask-works-in-an-empty-window-and-makes-the-pictu","title":"Describe what to create makes it, and Ask works with nothing open","priority":"p1-high"}
+{"t":"2026-10-22T18:12:50.416Z","ev":"task_started","id":"ask-works-in-an-empty-window-and-makes-the-pictu","title":"Describe what to create makes it, and Ask works with nothing open","priority":"p1-high","repeats":1,"until":"2026-10-22T18:12:50.416Z","rolledUp":true}
 {"t":"2026-10-22T18:59:25.254Z","ev":"task_walks","id":"ask-works-in-an-empty-window-and-makes-the-pictu","walks":["ask-makes-a-picture-from-the-new-window-walk","ask-with-nothing-open-walk"]}
 {"t":"2026-10-22T18:59:54.536Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
 {"t":"2026-10-22T18:59:54.602Z","ev":"task_note","id":"ask-works-in-an-empty-window-and-makes-the-pictu"}
@@ -13593,7 +13593,7 @@
 {"t":"2026-10-22T19:00:52.582Z","ev":"loop_awake","held":true,"pid":50844,"screenLocked":false}
 {"t":"2026-10-22T19:09:29.088Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-22T19:11:37.911Z","ev":"slice_pass","walks":32,"passed":30,"failed":2,"seconds":515,"of":1013,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-22T19:11:38.104Z","ev":"task_started","id":"ask-works-on-a-mac-that-has-nothing-else-install","title":"Ask runs inside Photonz, with no Ollama or any other program to open","priority":"p1-high"}
+{"t":"2026-10-22T19:11:38.104Z","ev":"task_started","id":"ask-works-on-a-mac-that-has-nothing-else-install","title":"Ask runs inside Photonz, with no Ollama or any other program to open","priority":"p1-high","repeats":2,"until":"2026-10-22T22:32:24.913Z","rolledUp":true}
 {"t":"2026-10-22T20:15:58.204Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-22T20:15:58.277Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-22T20:15:58.349Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
@@ -13607,7 +13607,6 @@
 {"t":"2026-10-22T22:20:03.563Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-22T22:20:21.555Z","ev":"task_pending","id":"ask-works-on-a-mac-that-has-nothing-else-install","from":"in_progress","note":"Built in and on by default (680aab27): Ask's model runs inside Photonz (bundled llama-server, Qwen3.6 35B-A3B), downloaded from Settings > Ask, started and stopped by Photonz, no Ollama. Climb 55.3 vs Ollama's 53.1 at the same speed; walks ask-sets-itself-up-walk and ask-annotates-a-screenshot-walk pass at Next defaults. Still open: held-out set, video gap (39.5 vs 52.1), picture model setup in Settings, whole-app network-blocked run. Audit queue/audits/2026-10-22-ask-works-on-a-mac-that-has-nothing-else-install.json"}
 {"t":"2026-10-22T22:32:24.713Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":548,"of":1014,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-22T22:32:24.913Z","ev":"task_started","id":"ask-works-on-a-mac-that-has-nothing-else-install","title":"Ask runs inside Photonz, with no Ollama or any other program to open","priority":"p1-high"}
 {"t":"2026-10-22T23:14:17.122Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-23T00:08:02.908Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-23T00:17:59.967Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
@@ -13616,7 +13615,7 @@
 {"t":"2026-10-23T01:31:51.957Z","ev":"task_note","id":"ask-works-on-a-mac-that-has-nothing-else-install"}
 {"t":"2026-10-23T01:31:52.030Z","ev":"task_done","id":"ask-works-on-a-mac-that-has-nothing-else-install","from":"in_progress","note":"Ask's chat model (llama-server, Qwen3.6 35B) and picture model (Z-Image Turbo in a private Python built by the bundled uv) are both set up from Settings > Ask and started/stopped by Photonz; no Ollama, no script, nothing left after quit (1 s), let go after 5 min idle. Held-out 61 vs 60.3 before; climb 55.3 vs 53.1; video 53.1 vs 52.1 after the add_title wording fix. Offline proven with a loopback-only probe sandbox (ask-runs-with-no-network-walk; three named requests 9.5/10.2/59.3 s). Commits 4fdb14b6, 1eedf547, d3e66764; audit queue/audits/2026-10-22-ask-works-on-a-mac-that-has-nothing-else-install.json"}
 {"t":"2026-10-23T01:45:33.314Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":660,"of":1015,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-23T01:45:33.517Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high"}
+{"t":"2026-10-23T01:45:33.517Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high","repeats":4,"until":"2026-10-23T09:31:56.899Z","rolledUp":true}
 {"t":"2026-10-23T03:34:45.047Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T03:34:45.113Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T03:34:45.178Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
@@ -13625,7 +13624,6 @@
 {"t":"2026-10-23T03:34:45.371Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T03:34:51.843Z","ev":"task_pending","id":"a-scene-of-things-doing-something-together-is-dr","from":"in_progress","note":"Thin lines kept through scene tracing (kite string reaches the hand) and the missing-plan regression fixed (64766b7c, e0969844). Still short: the six scenes all at 7+ on both lines in one run (latest 6/6 on didWhatWasAsked, 5/6 on designed), and the held-out total did not rise (59.5 vs 61). Next runner: re-run held-out first; see log."}
 {"t":"2026-10-23T03:45:02.177Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":437,"of":1015,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-23T03:45:02.372Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high"}
 {"t":"2026-10-23T07:05:54.838Z","ev":"task_note","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req"}
 {"t":"2026-10-23T07:17:05.999Z","ev":"task_pending","id":"a-scene-of-things-doing-something-together-is-dr","from":"in_progress","note":"Six scenes all 7+ on both lines in one run (90.2) and the tracer keeps eyes, mouths and bellies with no shadow specks or square behind; the held-out total did not rise (58.0 vs 61 best), so the task stays open on that item."}
 {"t":"2026-10-23T07:17:17.788Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
@@ -13635,7 +13633,6 @@
 {"t":"2026-10-23T07:17:18.089Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T07:17:18.164Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T07:28:38.937Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":491,"of":1015,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-23T07:28:39.136Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high"}
 {"t":"2026-10-23T07:35:02.198Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T07:35:02.267Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T08:32:24.457Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
@@ -13646,7 +13643,6 @@
 {"t":"2026-10-23T09:20:42.137Z","ev":"task_pending","id":"a-scene-of-things-doing-something-together-is-dr","from":"in_progress","note":"Plans keep only what the words ask for, retries hold the first plan, the closest try lands (cef38a10). Climb ten of eleven poses/scenes at 90 avg; held-out 58.5 (drawings 67.2) against 61 best, so the held-out item is still not reached."}
 {"t":"2026-10-23T09:29:47.501Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-10-23T09:31:56.691Z","ev":"slice_pass","walks":34,"passed":33,"failed":1,"seconds":503,"of":1015,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-23T09:31:56.899Z","ev":"task_started","id":"a-scene-of-things-doing-something-together-is-dr","title":"A drawing shows what was asked, pose and all: a cat curled up asleep, a cat playing a piano","priority":"p1-high"}
 {"t":"2026-10-23T10:51:34.316Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T10:51:34.383Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
 {"t":"2026-10-23T11:40:41.564Z","ev":"task_note","id":"a-scene-of-things-doing-something-together-is-dr"}
@@ -13724,7 +13720,7 @@
 {"t":"2026-10-23T14:08:35.110Z","ev":"task_created","id":"where-the-loop-s-day-went-counts-a-resumed-walk","priority":"p2-normal","title":"Where the loop's day went counts a resumed walk run as part of the run it finishes"}
 {"t":"2026-10-23T14:08:35.204Z","ev":"task_resequenced","id":"where-the-loop-s-day-went-counts-a-resumed-walk","from":4080,"to":470}
 {"t":"2026-10-23T14:09:23.058Z","ev":"digest","file":"2026-10-23.md"}
-{"t":"2026-10-23T14:09:45.361Z","ev":"task_started","id":"asking-for-base-components-builds-the-real-set-w","title":"Asking for base components builds the real set, with their states, not the five starters","priority":"p1-high"}
+{"t":"2026-10-23T14:09:45.361Z","ev":"task_started","id":"asking-for-base-components-builds-the-real-set-w","title":"Asking for base components builds the real set, with their states, not the five starters","priority":"p1-high","repeats":1,"until":"2026-10-23T14:09:45.361Z","rolledUp":true}
 {"t":"2026-10-23T14:43:43.785Z","ev":"task_created","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","priority":"p1-high","title":"The Photonz menu bar icon's menu starts with New and Open, with capture below"}
 {"t":"2026-10-23T14:43:43.897Z","ev":"task_resequenced","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","from":75,"to":1}
 {"t":"2026-10-23T16:39:50.087Z","ev":"task_note","id":"asking-for-base-components-builds-the-real-set-w"}
@@ -13744,7 +13740,7 @@
 {"t":"2026-10-23T19:54:22.289Z","ev":"task_done","id":"asking-for-base-components-builds-the-real-set-w","from":"in_progress","note":"New add_component tool (MCP and Ask): a component's parts plus each state as changes, built as one Library component with its states as versions, never on top of another drawing, optional row and state names. Ask's prompt no longer points at the starters (and Ask no longer sees them), labelled rows line up as one sheet, the canvas grows when a sheet needs it, and the skill has a base components recipe. Found and fixed on the way: the built-in runtime holds tool calls to the schema's key order (add_component now goes out in writing order), a 56-step plan died on 'SF Pro Display', and an unreadable reply threw away 21 planned calls. Eval (rubric f5ae1562): Ask component-table 14.7 -> 49.4 on the final build (twelve kinds; range 40 to 49 over six runs), design-system-sheet 20.7 -> 59.2; skill component-table 75.2 -> 84.4 (thirteen kinds). Held-out 61.0 -> 60.8, whole climb set 74.9. Verified: 14,275 tests, walk ask-builds-base-components-walk at Next defaults (window capture, one Command Z takes the sheet back). Audit queue/audits/2026-10-23-asking-for-base-components-builds-the-real-set-w.json."}
 {"t":"2026-10-23T20:07:24.223Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-23T20:09:35.396Z","ev":"slice_pass","walks":35,"passed":33,"failed":2,"seconds":743,"of":1016,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-23T20:09:35.607Z","ev":"task_started","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","title":"The Photonz menu bar icon's menu starts with New and Open, with capture below","priority":"p1-high"}
+{"t":"2026-10-23T20:09:35.607Z","ev":"task_started","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","title":"The Photonz menu bar icon's menu starts with New and Open, with capture below","priority":"p1-high","repeats":1,"until":"2026-10-23T20:09:35.607Z","rolledUp":true}
 {"t":"2026-10-23T21:01:52.456Z","ev":"task_walks","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","walks":["menu-bar-icon-menu-starts-with-new-walk","menu-bar-icon-menu-picture-walk"]}
 {"t":"2026-10-23T21:02:03.956Z","ev":"task_note","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new"}
 {"t":"2026-10-23T21:02:04.026Z","ev":"task_note","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new"}
@@ -13752,7 +13748,7 @@
 {"t":"2026-10-23T21:02:18.864Z","ev":"task_done","id":"the-photonz-menu-bar-icon-s-menu-starts-with-new","from":"in_progress","note":"Menu bar icon's menu now starts New… ⌘N, New from Clipboard ⌥⌘N, Open… ⌘O, Open Recent (shared with File), then capture, app rows, Quit (MenuBarMenu in PhotonzApp.swift, commit e45ff1eb). Verified by menu-bar-icon-menu-starts-with-new-walk (order, keys, reopening from Open Recent), a real picture, focus-drill clean, 14279 tests green. Audit 2026-10-23-menu-bar-icon-menu-starts-with-new.json."}
 {"t":"2026-10-23T21:14:22.191Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-23T21:16:32.381Z","ev":"slice_pass","walks":31,"passed":30,"failed":1,"seconds":526,"of":1018,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-23T21:16:32.564Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-10-23T21:16:32.564Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high","repeats":2,"until":"2026-10-23T23:01:35.562Z","rolledUp":true}
 {"t":"2026-10-23T22:48:46.886Z","ev":"task_created","id":"the-name-chips-over-component-copies-stay-clear","priority":"p1-high","title":"The name chips over component copies stay clear of a sheet of components header row"}
 {"t":"2026-10-23T22:49:14.242Z","ev":"task_walks","id":"asking-for-a-sheet-of-components-gives-a-clean-t","walks":["ask-builds-base-components-walk"]}
 {"t":"2026-10-23T22:49:14.310Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -13763,7 +13759,6 @@
 {"t":"2026-10-23T22:49:14.639Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-23T22:49:26.662Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Table layout shipped (dafd16e6) and the skill's request clears 8 on every line, but Ask on this Mac is at 5 to 6 and the skill's design sheet has aligned 7: the 8 of 10 bar is not met, so it stays open."}
 {"t":"2026-10-23T23:01:35.377Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":557,"of":1018,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-23T23:01:35.562Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-10-24T00:45:53.719Z","ev":"task_created","id":"photonz-uses-little-memory-and-what-made-it-use","priority":"p1-high","title":"Photonz uses little memory, and what made it use 4 GB is found and fixed"}
 {"t":"2026-10-24T00:45:53.828Z","ev":"task_resequenced","id":"photonz-uses-little-memory-and-what-made-it-use","from":3970,"to":1}
 {"t":"2026-10-24T01:38:55.970Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -13779,7 +13774,7 @@
 {"t":"2026-10-24T01:56:09.178Z","ev":"task_note","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req"}
 {"t":"2026-10-24T01:56:41.014Z","ev":"manager","filed":1,"readyBefore":68,"readyAfter":69,"report":"queue/manager/2026-10-23-1905.md"}
 {"t":"2026-10-24T01:57:03.678Z","ev":"manager_pass","exit":0,"ready":69}
-{"t":"2026-10-24T01:57:03.760Z","ev":"task_started","id":"photonz-uses-little-memory-and-what-made-it-use","title":"Photonz uses little memory, and what made it use 4 GB is found and fixed","priority":"p1-high"}
+{"t":"2026-10-24T01:57:03.760Z","ev":"task_started","id":"photonz-uses-little-memory-and-what-made-it-use","title":"Photonz uses little memory, and what made it use 4 GB is found and fixed","priority":"p1-high","repeats":1,"until":"2026-10-24T01:57:03.760Z","rolledUp":true}
 {"t":"2026-10-24T02:58:50.208Z","ev":"task_walks","id":"photonz-uses-little-memory-and-what-made-it-use","walks":["closed-windows-give-their-memory-back-walk"]}
 {"t":"2026-10-24T04:07:49.329Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
 {"t":"2026-10-24T04:07:49.394Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
@@ -14220,3 +14215,9 @@
 {"t":"2026-10-25T17:42:42.655Z","ev":"task_note","id":"measure-whether-qwen-image-2-1-can-paint-and-edi"}
 {"t":"2026-10-25T22:16:08.153Z","ev":"runner_failed","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","kind":"task","exit":143,"consecutive":1,"outcome":"failed","environment":false,"signIn":false,"reason":null,"error":"▸ Bash S=~/Library/Caches/photonz-measure-qwen21; for i in {1..19}; do sleep 30; done; grep -c \"scored\" $S/logs/held…"}
 {"t":"2026-10-25T22:16:09.027Z","ev":"leftovers","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","task":"measure-whether-qwen-image-2-1-can-paint-and-edi","state":"stashed","count":11,"stash":"3583be905c200273d515fdad8594e22ea356f695"}
+{"t":"2026-10-25T22:16:20.570Z","ev":"task_held","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","by":"intake","from":"pending"}
+{"t":"2026-10-25T22:29:55.976Z","ev":"task_note","id":"measure-whether-qwen-image-2-1-can-paint-and-edi"}
+{"t":"2026-10-26T03:36:58.609Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
+{"t":"2026-10-26T03:36:58.697Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-26T03:36:58.765Z","ev":"task_resequenced","id":"every-brush-follows-the-pointer-with-no-lag-even","from":3,"to":1}
+{"t":"2026-10-26T03:36:58.833Z","ev":"task_resequenced","id":"painting-is-what-you-see-earlier-strokes-never-r","from":2.9,"to":1.1}

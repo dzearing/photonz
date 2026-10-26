@@ -1,0 +1,28 @@
+{
+  "id": "measure-whether-qwen-image-2-1-can-paint-and-edi-2026-10-25T22-16-09-026Z",
+  "task": "measure-whether-qwen-image-2-1-can-paint-and-edi",
+  "kind": "task",
+  "label": "Measure whether Qwen-Image-2.1 can paint and edit for Ask on a 64 GB Mac",
+  "title": "Measure whether Qwen-Image-2.1 can paint and edit for Ask on a 64 GB Mac",
+  "outcome": "failed",
+  "at": "2026-10-25T22:16:09.026Z",
+  "files": [
+    "docs/design/ask.md",
+    "docs/design/references/qwen-image-2-1-measure/README.md",
+    "docs/design/references/qwen-image-2-1-measure/bench.py",
+    "docs/design/references/qwen-image-2-1-measure/beside.sh",
+    "docs/design/references/qwen-image-2-1-measure/combine.py",
+    "docs/design/references/qwen-image-2-1-measure/foot.py",
+    "docs/design/references/qwen-image-2-1-measure/make_edits.py",
+    "docs/design/references/qwen-image-2-1-measure/qwen_server.py",
+    "docs/design/references/qwen-image-2-1-measure/score_edits.py",
+    "docs/design/references/qwen-image-2-1-measure/summarize.py",
+    "docs/design/references/qwen-image-2-1-measure/zbench.py"
+  ],
+  "count": 11,
+  "state": "stashed",
+  "stash": "3583be905c200273d515fdad8594e22ea356f695",
+  "restore": "git stash apply 3583be905c200273d515fdad8594e22ea356f695",
+  "why": "",
+  "handed": null
+}

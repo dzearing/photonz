@@ -42,12 +42,30 @@ export function stepsThatNeedTheMac(walk) {
   return found;
 }
 
+// Steps that run Ask's real model: a wait on Ask answering. Each loads the
+// 23 GB chat model into a fresh probe and holds the GPU at 100% for a minute
+// or more, which a person at the Mac feels (the user, 2026-10-25: "something
+// is killing the cpu, the machine is kind of laggy"). They take no keys, so
+// they are not a focus matter and the focus drill does not excuse them
+// (`--focus-only`), but they wait for the person to step away like one, and
+// inside a rotating check they are skipped and come round in the whole set.
+export function stepsThatRunTheModel(walk) {
+  const found = [];
+  (walk.steps || []).forEach((step, i) => {
+    if (step.do === 'waitFor' && (step.condition === 'askPhase' || step.condition === 'askSettled')) {
+      found.push(`step ${i + 1} (waits on Ask's model, which loads 23 GB and holds the GPU)`);
+    }
+  });
+  return found;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const file = process.argv[2];
-  if (!file) { console.error('usage: walk-needs-the-mac.mjs <walk.json>'); process.exit(2); }
+  const focusOnly = process.argv.includes('--focus-only');
+  const file = process.argv.slice(2).find((a) => !a.startsWith('--'));
+  if (!file) { console.error('usage: walk-needs-the-mac.mjs [--focus-only] <walk.json>'); process.exit(2); }
   let walk;
   try { walk = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { process.exit(1); }
-  const steps = stepsThatNeedTheMac(walk);
+  const steps = stepsThatNeedTheMac(walk).concat(focusOnly ? [] : stepsThatRunTheModel(walk));
   if (!steps.length) process.exit(1);
   console.log(`needs the Mac to itself at ${steps.join(', ')}`);
   process.exit(0);

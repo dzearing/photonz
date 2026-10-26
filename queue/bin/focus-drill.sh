@@ -131,7 +131,7 @@ for w in "${WALKS[@]}"; do
     DEFERRED=1
     break
   fi
-  EXPECTED="$(queue/bin/walk-needs-the-mac.mjs "$FILE" 2>/dev/null || true)"
+  EXPECTED="$(queue/bin/walk-needs-the-mac.mjs --focus-only "$FILE" 2>/dev/null || true)"
   OUT="$(sed -n 's/^==> Waiting up to [0-9]*s for \(.*\)\/done.json$/\1/p' "$RUN/$NAME.out" | head -1)"
   node queue/bin/focus-drill-read.mjs "$TRACE" "$OUT" "$BEGAN" "$ENDED" "$NAME" "$CODE" "$FILE" "$EXPECTED" || WORST=1
 done
