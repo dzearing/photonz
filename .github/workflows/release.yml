@@ -56,6 +56,7 @@ jobs:
       # here reads.
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.tag || github.ref }}
           sparse-checkout: |
             /*
             !/queue/audits/
@@ -81,8 +82,6 @@ jobs:
           path: .build
           key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
           restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
-        with:
-          ref: ${{ inputs.tag || github.ref }}
 
       - name: Verify tag matches VERSION
         run: |
@@ -94,6 +93,7 @@ jobs:
           fi
 
       - name: Run tests
+        if: ${{ !inputs.skip_tests }}
         # In parallel, as in ci.yml. Serial, this step was 53 minutes of a
         # v0.19.0 run and timed out at 65 on the next (2026-10-26).
         timeout-minutes: 25
