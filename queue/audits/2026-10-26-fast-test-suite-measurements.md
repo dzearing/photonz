@@ -86,3 +86,51 @@ a separated run back into words", "Turning in depth, as drawn", "The weight
 and size a page of labels comes back in", "Text turning in depth is drawn in
 perspective". With two tests at a time on three cores, every step of such a
 suite waits behind the queue. That is the next thing to cut.
+
+## Pass 2 (evening): three slices on three runners
+
+One GitHub runner has three cores. On the green run 40368389297 the whole
+suite was 1,267 s of tests at two at a time, and on this Mac the targets cost
+Render 1,593 CPU s, Core 380, Media 80 in one run each: CPU-bound, so no
+ordering gets one runner under 15 minutes. `Scripts/test.sh --shard K/N` runs
+one of N slices; every suite type goes to exactly one slice, heaviest first to
+the lightest, by `Scripts/test-weights.tsv` (each suite measured alone by
+`Scripts/test-weights.sh`). The slices sum to exactly 14,604 tests, here and
+on GitHub.
+
+| | Before | After |
+| --- | --- | --- |
+| CI Run tests (one runner, two at a time) | 22.6 min (40368389297) | 7.4 / 6.6 / 8.0 min (40417574675); 7.2 / 8.9 / 8.2 (40419872948) |
+| CI slices' own test time | 1,267 s | 338 / 374 / 446 s, 5,184 + 4,837 + 4,583 tests |
+| Release workflow, whole | 53 min of tests, then build and notarize (v0.19.0) | 9.5 min, dry run 40421624172: slices 6.1 / 8.4 / 7.3 min beside build + sign + notarize + DMG in 3.0 min |
+| Debug build from the kept folder, no source change | 4 to 6 min (the folder was saved after a release build in it) | 13 to 22 s (40421624172) |
+| Release app build from the kept folder | 4.2 min | 27 s in release.yml, 1.5 min in CI |
+| Local slices, CPU s | dealt by name: 366 / 560 / 821 | by weight: 590 / 680 / 826 |
+
+What changed in the workflows: ci.yml runs three test slices beside a bundle
+job (the queue's checks, the release bundle). release.yml runs three test
+slices beside the build, sign and package job, and a Linux job publishes when
+both are through; `dry_run=true` times all of it and publishes nothing. Each
+configuration keeps its own build (`build-debug-…` saved by slice 1 right
+after it builds, `build-release-…` by the bundle job). CI skips commits named
+`release: v…`, which release.yml tests on the tag, so a release is not
+queueing for runners behind CI.
+
+Three green CI runs in a row, all in parallel: 40368389297, 40417574675,
+40419872948.
+
+Slice 3 still runs about a minute longer than the others: the text-reading
+suites (ReadSizeGroundTruth, ReadRunAsTextFixture, ReadPageWeightFixture) cost
+far more CPU inside a full run than measured alone.
+
+### Tests over ten seconds alone, after pass 2
+
+Measured with `swift test --skip-build --no-parallel --filter <suite>`:
+
+| Test | Alone | Why |
+| --- | --- | --- |
+| written twice, a GIF is the same file and a HEIC the same pictures | 36 s -> 6.0 s | clips, formats and presets now run side by side |
+| aWholeWindowGivesUpItsBoxesAndNotJustItsWords | 21.7 s | the suite's one shared separation of a 2x whole window, debug build |
+| Every control a redliner measures is listed once | 21.5 s | the app's element scan of the settings screenshot, debug build |
+| everyBoxedInCaliperOnTheCaptureKeepsTheClassicSpot | 16 to 18 s | 13.6 s is the shared 864-point gap grid; spreading it over the cores did not shorten it, so the cost is inside each core gap read (reverted, not shipped) |
+| A document's weigh is what lands, busy or quiet (3 cases) | 14.5 s | about 5 s a case |
