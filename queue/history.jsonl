@@ -14267,3 +14267,9 @@
 {"t":"2026-10-26T14:18:49.424Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-26T14:18:49.451Z","ev":"triage","summary":"1 merged (12 MP painting speed into WYSIWYG painting, umbrella deps updated), 1 filed (rotating check stuck at walk 103, reproduced), 2 findings folded, 1 groomed (agent install try path), 0 priority moves, 0 resets, 33 seq writes; open 88 before and after"}
 {"t":"2026-10-26T14:18:49.476Z","ev":"digest","file":"2026-10-26.md"}
+{"t":"2026-10-26T14:19:09.107Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high"}
+{"t":"2026-10-26T15:07:26.942Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
+{"t":"2026-10-26T16:49:12.857Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
+{"t":"2026-10-26T17:23:27.176Z","ev":"task_walks","id":"the-whole-test-suite-runs-in-minutes-here-and-on","walks":[]}
+{"t":"2026-10-26T17:23:27.239Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
+{"t":"2026-10-26T17:23:27.302Z","ev":"task_pending","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"Partly done: suite no longer parks on macOS 27, local 401 s -> 262 s, GitHub checkout 3.5 min -> 15 s, kept build (58 s warm vs 18.9 min cold), Run tests 53 -> 25.8 min parallel. Still open: GitHub <15 min, 3 green CI runs in a row, a measured release, local <3 min, 5 tests >10 s. See log and audit."}

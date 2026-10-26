@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-26T06:04:45.349Z",
-  "updated": "2026-10-26T14:15:29.548Z",
+  "updated": "2026-10-26T17:23:27.301Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25, while the v0.19.0 release sat in GitHub's test step: 'we really need to improve the tests and reduce unnecessary ones, parallelize, make things faster. 45 minutes to run tests is quite long'. Facts from that evening: local Scripts/test.sh 14,605 tests in 1,248 suites, 428 s wall; the slowest suites under parallel contention were all media and real-capture ones (A busy MP4 lands at the size the sheet said 428 s, Reading a separated run back into words on a real capture 340 s, An animated export weighs the same twice 305 s, Grain stops banding in the exported movie 285 s); their in-parallel durations are inflated, so measure them alone. GitHub: ci.yml and release.yml both run Scripts/test.sh --no-parallel (comment: swift-testing launched every test at once and GPU-bound render tests wedged the headless VM); release.yml Run tests has a 65 minute timeout and the first v0.19.0 run used about 65 minutes (03:53 to 04:58 UTC), v0.18.0 used 57; ci.yml has a 55 minute timeout and the suite has grown past what its comment assumed (10,800 tests then, 14,605 now), so CI is likely timing out. Keep PhotonzCore and PhotonzRender test-first rules intact.",
@@ -36,6 +36,32 @@
     {
       "t": "2026-10-26T14:15:29.547Z",
       "note": "seq 0.8 -> 10"
+    },
+    {
+      "t": "2026-10-26T14:19:09.099Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-26T15:07:26.940Z",
+      "note": "Measured: local Scripts/test.sh 539s and PARKED (exit 4) at 07:30 in text reads + HEIC encodes. GitHub v0.19.0 release run 40265991947: checkout 3.2 min (3.8 GB of queue/audits pictures tracked), compile 734s inside Run tests, swift-testing serial 2365s, legibility 55s, Run tests 53.2 min; second release run timed out at 65 min. CI: every run since 2026-10-25 failed (sweep-size, since fixed) or was cancelled. Cause of the local park, reproduced 3/3: on macOS 27.0.1 a Vision text read never answers, even on its own userInitiated thread, while every Swift pool thread is blocked (drill: free pool answered true, full pool answered false in 20s). TextReadsOnAFullPoolTests alone hangs 3 of 3."
+    },
+    {
+      "t": "2026-10-26T16:49:12.855Z",
+      "note": "Landed (3d4030a9, 453ae079, aab21928, c2a0223c, afce461c, 834a5588): text reads off the pool + width cap (no more parks; uncapped run parked again at 16:24, so the cap stays); CI/release sparse checkout (3.5 min -> 15 s), content-derived mtimes + .build cache (cold build 18.9 min, warm 4.7 min with 11 test files changed; 597 MB cache, 21 s restore), tests in parallel (first run reached 99% in 25 min vs 39 serial, timed out); ~15 slow suites cut (table in queue/audits/2026-10-26-fast-test-suite-measurements.md); duplicate settlingTheSize test merged; print-only perf test gated behind PHOTONZ_PERF=1; ScaledRender hard-edge threshold 90->120 (failed on macOS 27 at 1.48x vs 1.5, pictures checked: crisp is plainly sharper, 21x at 120); CI timings report-only (dragTheWidth 61.9/48, long timeline 204/150 failed under parallel on the VM). Local Scripts/test.sh 401 s -> 262 s green."
+    },
+    {
+      "t": "2026-10-26T17:23:27.174Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-26T17:23:27.237Z",
+      "note": "Reached (2026-10-26, audit queue/audits/2026-10-26-fast-test-suite.json + -measurements.md): local Scripts/test.sh 262 s green (target <180 s, NOT reached); GitHub checkout 15 s; kept build: 58 s build step with no source change, 4.7 min with 11 test files changed, 18.9 min cold (cache item DONE, measured before/after); GitHub Run tests 25.8 min green in parallel (target <15, NOT reached); 3 green CI runs in a row NOT yet (run 1 timed out at 25 min at 99%, run 2 green tests then hit the 45 min job limit, now 70; run 3 40360149802+ in flight for ab1c0a24); release.yml not yet measured (no tag/dry run); 5 tests still >10 s alone (listed in the audit). Left, in order of payoff: (1) on GitHub the .serialized suites finish last at ~1,400 s of 1,445 because with width 2 each step waits behind the queue: un-serialize the ones that only serialized for caution (BusyVideoSize now tolerates load via early-stopping lightest; depth/title render suites), or run the serialized ones in a second swift test process started first; (2) measure release.yml with gh workflow run release.yml -f tag=<existing> -f skip_tests=false on a throwaway tag, or on the next real release; (3) the 5 tests over 10 s; (4) a larger runner is the user's call (asked in the audit). Uncapped width parks again on macOS 27 (16:24 run), so the cap stays."
+    },
+    {
+      "t": "2026-10-26T17:23:27.300Z",
+      "note": "Partly done: suite no longer parks on macOS 27, local 401 s -> 262 s, GitHub checkout 3.5 min -> 15 s, kept build (58 s warm vs 18.9 min cold), Run tests 53 -> 25.8 min parallel. Still open: GitHub <15 min, 3 green CI runs in a row, a measured release, local <3 min, 5 tests >10 s. See log and audit."
     }
-  ]
+  ],
+  "started": "2026-10-26T14:19:09.098Z",
+  "walks": []
 }
