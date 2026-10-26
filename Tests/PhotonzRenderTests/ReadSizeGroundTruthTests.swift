@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 @testable import PhotonzRender
+import Synchronization
 import Testing
 
 /// How far off a size read off a screenshot is, measured against type of a
@@ -135,14 +136,64 @@ struct ReadSizeGroundTruthTests {
 
     static func readings(of image: CGImage, captureScale: CGFloat,
                          layerScale: CGFloat) -> [TextReading.Reading] {
+        readings(ofRuns: runs(of: image), captureScale: captureScale, layerScale: layerScale)
+    }
+
+    /// The runs of text Separate into Layers cuts out of `image`.
+    static func runs(of image: CGImage) -> [CGImage] {
         guard let separated = LayerSeparator.separateText(
             image, luma: EdgeMapAnalyzer.analyzeFully(image).luma) else { return [] }
-        return TextReader.readPage(separated.runs.compactMap { $0.image },
-                                   captureScale: captureScale, layerScale: layerScale)
+        return separated.runs.compactMap { $0.image }
+    }
+
+    static func readings(ofRuns runs: [CGImage], captureScale: CGFloat,
+                         layerScale: CGFloat) -> [TextReading.Reading] {
+        TextReader.readPage(runs, captureScale: captureScale, layerScale: layerScale)
             .compactMap(\.outcome.reading)
     }
 
+    /// The app's own settings pane at 2x, cut into its runs once for the two
+    /// tests that read it at both scales.
+    static let settingsPaneRuns: [CGImage] = {
+        guard let url = Bundle.module.url(forResource: "Fixtures/settings-pane-2x", withExtension: "png"),
+              let data = try? Data(contentsOf: url), let image = ImageCodec.decode(data) else { return [] }
+        return runs(of: image)
+    }()
+
     // MARK: - The round trip
+
+    /// Every face, at 1x and 2x, at 11, 13 and 17 points: "Launch at login"
+    /// photographed in each and read back into a document `layerScale`
+    /// (nil: at the capture's own scale). The eighteen reads are spread over
+    /// the cores, on threads that are not Swift's shared pool, since one after
+    /// another they were 21 s of this Mac's time per test (2026-10-26).
+    static func knownSizeReads(layerScale: CGFloat?) throws
+        -> [(face: TextReading.Face, scale: CGFloat, size: CGFloat, read: TextReader.Read)] {
+        let faces = [TextReading.Face(fontName: "SF Pro", weight: .regular),
+                     TextReading.Face(fontName: "SF Pro", weight: .semibold),
+                     TextReading.Face(fontName: "Helvetica Neue", weight: .regular)]
+        var cases: [(face: TextReading.Face, scale: CGFloat, size: CGFloat, image: CGImage)] = []
+        for face in faces {
+            for scale in [CGFloat(1), 2] {
+                for size in [CGFloat(11), 13, 17] {
+                    let image = try #require(capture("Launch at login", face: face, size: size, scale: scale))
+                    cases.append((face, scale, size, image))
+                }
+            }
+        }
+        let reads = Mutex([Int: TextReader.Read]())
+        DispatchQueue.concurrentPerform(iterations: cases.count) { index in
+            let one = cases[index]
+            let read = TextReader.read(one.image, captureScale: one.scale, layerScale: layerScale ?? one.scale,
+                                       preferring: one.face.fontName, at: one.face.weight)
+            reads.withLock { $0[index] = read }
+        }
+        let landed = reads.withLock { $0 }
+        return try cases.indices.map { index in
+            let one = cases[index]
+            return (one.face, one.scale, one.size, try #require(landed[index]))
+        }
+    }
 
     /// The acceptance the whole study rests on: type of a known size, read back
     /// at the scale it was photographed at, comes back that size.
@@ -152,18 +203,9 @@ struct ReadSizeGroundTruthTests {
     /// is well inside it: the worst of the twenty four combinations tried while
     /// writing this was 1.2 per cent.
     @Test func typeOfAKnownSizeReadsBackAtThatSize() throws {
-        let faces = [TextReading.Face(fontName: "SF Pro", weight: .regular),
-                     TextReading.Face(fontName: "SF Pro", weight: .semibold),
-                     TextReading.Face(fontName: "Helvetica Neue", weight: .regular)]
         var worst = 0.0
         var table: [String] = []
-        for face in faces {
-            for scale in [CGFloat(1), 2] {
-                for size in [CGFloat(11), 13, 17] {
-                    let image = try #require(Self.capture("Launch at login", face: face,
-                                                          size: size, scale: scale))
-                    let read = TextReader.read(image, captureScale: scale, layerScale: scale,
-                                               preferring: face.fontName, at: face.weight)
+        for (face, scale, size, read) in try Self.knownSizeReads(layerScale: nil) {
                     let reading = try #require(read.outcome.reading,
                                                "\(face.fontName) \(face.weight) \(size)@\(scale)x")
                     let off = abs(reading.fontSize / size - 1)
@@ -176,8 +218,6 @@ struct ReadSizeGroundTruthTests {
                             \(face.fontName) \(face.weight) set at \(size) at \(scale)x \
                             came back \(reading.fontSize)
                             """)
-                }
-            }
         }
         print("Round trip at the scale the type was set at:\n  "
                 + table.joined(separator: "\n  "))
@@ -249,17 +289,8 @@ struct ReadSizeGroundTruthTests {
     /// scales: the size is the type's size times the capture's scale, whether
     /// or not the face carries an optical size.
     @Test func typeOfAKnownSizeReadIntoAPixelDocumentIsThatSizeInItsPixels() throws {
-        let faces = [TextReading.Face(fontName: "SF Pro", weight: .regular),
-                     TextReading.Face(fontName: "SF Pro", weight: .semibold),
-                     TextReading.Face(fontName: "Helvetica Neue", weight: .regular)]
         var table: [String] = []
-        for face in faces {
-            for scale in [CGFloat(1), 2] {
-                for size in [CGFloat(11), 13, 17] {
-                    let image = try #require(Self.capture("Launch at login", face: face,
-                                                          size: size, scale: scale))
-                    let read = TextReader.read(image, captureScale: scale, layerScale: 1,
-                                               preferring: face.fontName, at: face.weight)
+        for (face, scale, size, read) in try Self.knownSizeReads(layerScale: 1) {
                     let reading = try #require(read.outcome.reading,
                                                "\(face.fontName) \(face.weight) \(size)@\(scale)x")
                     let truth = size * scale
@@ -272,8 +303,6 @@ struct ReadSizeGroundTruthTests {
                             \(face.fontName) \(face.weight) set at \(size) at \(scale)x \
                             came back \(reading.fontSize) in a pixel document, not \(truth)
                             """)
-                }
-            }
         }
         print("Round trip into a document in the capture's own pixels:\n  "
                 + table.joined(separator: "\n  "))
@@ -364,10 +393,7 @@ struct ReadSizeGroundTruthTests {
     /// strongest evidence in the suite that the MEASUREMENT is sound and the
     /// gap is the conversion into document points.
     @Test func theRealSettingsPaneRowsAreThirteenPointType() throws {
-        let url = try #require(Bundle.module.url(forResource: "Fixtures/settings-pane-2x",
-                                                 withExtension: "png"))
-        let image = try #require(ImageCodec.decode(try Data(contentsOf: url)))
-        let readings = Self.readings(of: image, captureScale: 2, layerScale: 2)
+        let readings = Self.readings(ofRuns: Self.settingsPaneRuns, captureScale: 2, layerScale: 2)
         let rows = ["Launch at login", "Show in menu bar", "Copy to clipboard"]
         for words in rows {
             let reading = try #require(readings.first { $0.string == words },
@@ -381,10 +407,7 @@ struct ReadSizeGroundTruthTests {
     /// same rows read 26: the number the Size menu shows, and the size the
     /// type really was.
     @Test func theRealSettingsPaneRowsReadTwentySixInAPixelDocument() throws {
-        let url = try #require(Bundle.module.url(forResource: "Fixtures/settings-pane-2x",
-                                                 withExtension: "png"))
-        let image = try #require(ImageCodec.decode(try Data(contentsOf: url)))
-        let readings = Self.readings(of: image, captureScale: 2, layerScale: 1)
+        let readings = Self.readings(ofRuns: Self.settingsPaneRuns, captureScale: 2, layerScale: 1)
         for words in ["Launch at login", "Show in menu bar", "Copy to clipboard"] {
             let reading = try #require(readings.first { $0.string == words },
                                        "\(words) did not come back")

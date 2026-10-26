@@ -21,7 +21,7 @@ import Testing
 /// the picture the renderer asks for actually holds. The reference is the
 /// same pose drawn with room enough for anything, so the only thing measured
 /// is what the box cuts off. It is all of it, every frame.
-@Suite("Words that travel into a title are never cut off by their own box", .serialized)
+@Suite("Words that travel into a title are never cut off by their own box")
 struct TextRevealUnclippedTests {
 
     static let context = CIContext(options: [.workingColorSpace: NSNull(), .outputColorSpace: NSNull(),
@@ -85,9 +85,14 @@ struct TextRevealUnclippedTests {
     // MARK: - Every entrance a title can give its words
 
     /// "Ship it faster." on one line, in a box as tight as a title's words
-    /// sit in, with an entrance at its most travelled.
+    /// sit in, with an entrance at its most travelled. By letter, "Ship"
+    /// alone: a capital, an ascender, a dot and a descender, the first and
+    /// last at the box's two ends, which is every way a letter meets the box.
+    /// The fifteen letters of the line were five times the drawing for no
+    /// letter that differs from these (2026-10-26: 218 s of a GitHub run).
     static func tight(_ unit: TextRevealUnit) throws -> TextRevealPieces {
-        let text = TextContent(string: "Ship it faster.", fontSize: 64, colorHex: "#FFFFFF", weight: .bold)
+        let text = TextContent(string: unit == .letter ? "Ship" : "Ship it faster.", fontSize: 64,
+                               colorHex: "#FFFFFF", weight: .bold)
         let size = TextRasterizer.naturalSize(text, maxWidth: .greatestFiniteMagnitude)
         return try #require(TextRasterizer.revealPieces(text, size: CGSize(width: size.width.rounded(.up),
                                                                            height: size.height.rounded(.up)),

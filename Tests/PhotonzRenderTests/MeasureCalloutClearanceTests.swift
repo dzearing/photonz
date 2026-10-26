@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 import PhotonzRender
+import Synchronization
 import Testing
 
 /// The thumb test from UX-PATTERNS D14, run on the real capture the measure
@@ -404,9 +405,10 @@ struct MeasureCalloutClearanceTests {
     /// the elements at its feet are read off the capture and handed to the
     /// planner as what the caliper describes.
     private func caliper(from start: CGPoint, to end: CGPoint, mode: MeasureMode,
-                         headOffset: CGFloat) -> (content: MeasureContent, subjects: [CGRect]) {
-        let subjects = ElementBounds.subjects(from: start, to: end, mode: mode,
-                                              in: Self.analysis.edges, luma: Self.analysis.luma)
+                         headOffset: CGFloat, subjects known: [CGRect]? = nil)
+        -> (content: MeasureContent, subjects: [CGRect]) {
+        let subjects = known ?? ElementBounds.subjects(from: start, to: end, mode: mode,
+                                                       in: Self.analysis.edges, luma: Self.analysis.luma)
         var c = MeasureContent(mode: mode, unit: .points)
         c.headOffset = headOffset
         c.start = start
@@ -453,6 +455,24 @@ struct MeasureCalloutClearanceTests {
     /// Every distinct gap Gap mode can read anywhere on the capture, on a grid
     /// coarse enough to run in a test and fine enough to reach every band.
     /// Shared, so the two sweeps below judge the same population.
+    /// The elements at the feet of each of `gapsOnTheCapture`, in the same
+    /// order. They do not depend on where the number goes, so the three sweeps
+    /// below read them from here rather than finding them again for every
+    /// head they try: found per caliper, the sweeps were 61 s of this Mac's
+    /// time one after another (2026-10-26).
+    private static let subjectsOfTheGaps: [[CGRect]] = {
+        let gaps = gapsOnTheCapture
+        let found = Mutex([Int: [CGRect]]())
+        DispatchQueue.concurrentPerform(iterations: gaps.count) { index in
+            let gap = gaps[index]
+            let subjects = ElementBounds.subjects(from: gap.start, to: gap.end, mode: gap.axis,
+                                                  in: analysis.edges, luma: analysis.luma)
+            found.withLock { $0[index] = subjects }
+        }
+        let byIndex = found.withLock { $0 }
+        return gaps.indices.map { byIndex[$0] ?? [] }
+    }()
+
     private static let gapsOnTheCapture: [GapMeasurement] = {
         var seen = Set<String>()
         var gaps: [GapMeasurement] = []
@@ -710,12 +730,13 @@ struct MeasureCalloutClearanceTests {
     @Test func everyBoxedInCaliperOnTheCaptureKeepsTheClassicSpot() {
         var boxedIn = 0
         var offenders: [String] = []
-        for gap in Self.gapsOnTheCapture {
+        for (index, gap) in Self.gapsOnTheCapture.enumerated() {
             let ink = MeasureContent(mode: gap.axis, unit: .points)
             let gapHead = MeasureBuilder.clearingHeadOffset(content: ink, from: gap.start,
                                                             to: gap.end, canvas: Self.canvas)
             for head in [gapHead, 16, -16] {
-                let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head)
+                let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head,
+                                 subjects: Self.subjectsOfTheGaps[index])
                 guard !drawn.subjects.isEmpty,
                       !clearSpotExists(for: drawn.content, subjects: drawn.subjects) else { continue }
                 boxedIn += 1
@@ -742,13 +763,14 @@ struct MeasureCalloutClearanceTests {
         #expect(!gaps.isEmpty)
         var protected = 0
         var offenders: [String] = []
-        for gap in gaps {
+        for (index, gap) in gaps.enumerated() {
             var ink = MeasureContent(mode: gap.axis, unit: .points)
             ink.mode = gap.axis
             let gapHead = MeasureBuilder.clearingHeadOffset(content: ink, from: gap.start,
                                                             to: gap.end, canvas: Self.canvas)
             for head in [gapHead, 16, -16] {
-                let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head)
+                let drawn = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head,
+                                 subjects: Self.subjectsOfTheGaps[index])
                 guard !drawn.subjects.isEmpty else { continue }
                 protected += 1
                 let chip = drawn.content.labelRect(chipSize: drawn.content.estimatedLabelSize)
@@ -772,9 +794,10 @@ struct MeasureCalloutClearanceTests {
         var checked = 0
         var crowders: [String] = []
         var wanderers: [String] = []
-        for gap in Self.gapsOnTheCapture {
+        for (index, gap) in Self.gapsOnTheCapture.enumerated() {
             for head in [CGFloat(16), -16] {
-                let plain = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head)
+                let plain = caliper(from: gap.start, to: gap.end, mode: gap.axis, headOffset: head,
+                                 subjects: Self.subjectsOfTheGaps[index])
                 guard !plain.subjects.isEmpty else { continue }
                 checked += 1
                 var c = MeasureContent(mode: gap.axis, unit: .points)

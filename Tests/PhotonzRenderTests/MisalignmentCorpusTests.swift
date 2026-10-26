@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 import PhotonzRender
+import Synchronization
 import Testing
 
 /// "Find the misalignments" scored on screenshots with KNOWN planted faults:
@@ -83,11 +84,27 @@ struct MisalignmentCorpusTests {
         }
     }
 
+    /// What the scan finds on every page of the corpus, worked out once for
+    /// the whole suite and spread over the cores. The whole corpus and its
+    /// held-out pages were each scanned page by page, the held-out ones twice,
+    /// and that was 70 s of this Mac's time one test after another
+    /// (2026-10-26).
+    static let scanned: Result<[String: [Misalignment]], any Error> = Result {
+        let cases = try load().cases
+        let found = Mutex([String: Result<[Misalignment], any Error>]())
+        DispatchQueue.concurrentPerform(iterations: cases.count) { index in
+            let one = Result { MisalignmentScan.findings(luma: try picture(cases[index].name), pixelScale: 2) }
+            found.withLock { $0[cases[index].name] = one }
+        }
+        return try found.withLock { $0 }.mapValues { try $0.get() }
+    }
+
     static func score(_ set: String?) throws -> (Score, [String]) {
         var score = Score()
         var misses: [String] = []
+        let scanned = try Self.scanned.get()
         for c in try load().cases where set == nil || c.set == set {
-            let found = MisalignmentScan.findings(luma: try picture(c.name), pixelScale: 2)
+            let found = try #require(scanned[c.name])
             for f in found {
                 if c.faults.contains(where: { matches(f, $0) }) { score.right += 1 } else {
                     score.wrong += 1
@@ -111,7 +128,10 @@ struct MisalignmentCorpusTests {
         let truth = try Self.load()
         #expect(truth.cases.filter { !$0.faults.isEmpty }.count >= 20)
         #expect(truth.cases.contains { $0.set == "held-out" })
-        for c in truth.cases { _ = try Self.picture(c.name) }
+        for c in truth.cases {
+            let url = try #require(Bundle.module.url(forResource: "Fixtures/misalign/\(c.name)", withExtension: "png"))
+            #expect(ImageCodec.decode(try Data(contentsOf: url)) != nil, "\(c.name)")
+        }
     }
 
     @Test("The whole corpus clears the bar")

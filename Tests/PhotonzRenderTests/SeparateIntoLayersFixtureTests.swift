@@ -729,7 +729,12 @@ struct SeparateIntoLayersFixtureTests {
         return quickest
     }
 
-    @Test func separatingTheCaptureIsQuickEnoughToFeelLikeACommand() throws {
+    /// Prints what separating the capture costs and checks nothing, so it is
+    /// off in the everyday suite like the twelve megapixel one below: it was
+    /// 23 s of this Mac's time on every run for a line nobody read
+    /// (2026-10-26). `PHOTONZ_PERF=1 Scripts/test.sh --filter separatingTheCapture`.
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["PHOTONZ_PERF"] == "1"))
+    func separatingTheCaptureIsQuickEnoughToFeelLikeACommand() throws {
         let capture = try #require(Self.capture)
         let megapixels = Double(capture.width * capture.height) / 1_000_000
         let sweep = best { _ = TextRunSweep.sweep(in: Self.analysis.luma) }

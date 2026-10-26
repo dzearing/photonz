@@ -25,7 +25,7 @@ struct SeparateWholeScreenshotTests {
     /// with different heights, so it reads as WORDS: ink all the way round a
     /// component's outline is how the sweep knows a box from a sentence, and
     /// five bars of equal height would be a box.
-    private func densePage(runs count: Int, columns: Int = 4) throws -> CGImage {
+    private static func densePage(runs count: Int, columns: Int = 4) throws -> CGImage {
         let pitch = 30, columnWidth = 200
         let rows = (count + columns - 1) / columns
         let w = columns * columnWidth, h = rows * pitch + pitch
@@ -51,14 +51,22 @@ struct SeparateWholeScreenshotTests {
         return try #require(LayerSeparator.makeImage(bytes, width: w, height: h))
     }
 
-    private func separate(_ image: CGImage) throws -> LayerSeparator.Result {
+    private static func separate(_ image: CGImage) throws -> LayerSeparator.Result {
         let analysis = EdgeMapAnalyzer.analyzeFully(image)
         return try #require(LayerSeparator.separate(image, luma: analysis.luma))
     }
 
+    /// The page of two hundred runs and what one separation makes of it,
+    /// worked out once for the four tests that ask: each of them separating it
+    /// again was 33 s of this Mac's time one after another (2026-10-26).
+    private static let denseOfTwoHundred: Result<(page: CGImage, result: LayerSeparator.Result), any Error> =
+        Result {
+            let page = try densePage(runs: 200)
+            return (page, try separate(page))
+        }
+
     @Test func aDensePictureStopsAtTheLimitInsteadOfHandingBackAWall() throws {
-        let page = try densePage(runs: 200)
-        let result = try separate(page)
+        let result = try Self.denseOfTwoHundred.get().result
         #expect(result.runs.count <= SeparateBudget.maxTextRuns)
         #expect(result.crowded == 200 - SeparateBudget.maxTextRuns)
         print("WHOLE dense page: \(result.runs.count) runs out, "
@@ -69,10 +77,8 @@ struct SeparateWholeScreenshotTests {
         // The number in the pill is the number of things still in the picture.
         // Anything found and quietly dropped would make that a lie, which is
         // the one thing the notice cannot be.
-        let page = try densePage(runs: 200)
-        let analysis = EdgeMapAnalyzer.analyzeFully(page)
-        let found = TextRunSweep.sweep(in: analysis.luma).runs.count
-        let result = try #require(LayerSeparator.separate(page, luma: analysis.luma))
+        let (page, result) = try Self.denseOfTwoHundred.get()
+        let found = TextRunSweep.sweep(in: EdgeMapAnalyzer.analyzeFully(page).luma).runs.count
         #expect(found == 200)
         #expect(result.runs.count + result.left == found)
     }
@@ -81,29 +87,27 @@ struct SeparateWholeScreenshotTests {
         // What the pill tells you to do has to work. The first run takes its
         // hundred and fifty; the ones it left are still in the repaired
         // picture, so the second run finds exactly them.
-        let page = try densePage(runs: 200)
-        let first = try separate(page)
-        let second = try separate(first.background)
+        let first = try Self.denseOfTwoHundred.get().result
+        let second = try Self.separate(first.background)
         #expect(second.runs.count == 200 - SeparateBudget.maxTextRuns)
         #expect(second.crowded == 0)
         // And a third finds nothing at all: the picture is empty of text now,
         // so the pill says "nothing to separate" rather than offering another
         // run that would do nothing.
-        let third = try separate(second.background)
+        let third = try Self.separate(second.background)
         #expect(third.pieces.isEmpty)
         #expect(third.left == 0)
     }
 
     @Test func aPictureUnderTheLimitIsNotTouchedByIt() throws {
-        let page = try densePage(runs: 40)
-        let result = try separate(page)
+        let page = try Self.densePage(runs: 40)
+        let result = try Self.separate(page)
         #expect(result.runs.count == 40)
         #expect(result.crowded == 0)
     }
 
     @Test func theTreeNeverIndentsDeeperThanTheLimit() throws {
-        let page = try densePage(runs: 200)
-        let result = try separate(page)
+        let result = try Self.denseOfTwoHundred.get().result
         #expect(LayerNesting.depth(of: result.nested) <= SeparateBudget.maxDepth)
     }
 }

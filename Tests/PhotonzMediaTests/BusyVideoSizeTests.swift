@@ -31,6 +31,13 @@ import Testing
 struct BusyVideoSizeTests {
 
     static let size = CGSize(width: 1280, height: 800)
+
+    /// The size the long, quiet-then-busy files are written at. What those
+    /// check is that the weigh's stretches predict the file, which does not
+    /// hang on how big the picture is, and twenty seconds at 1280 x 800,
+    /// written six times over, was the longest test in the suite (84 s on
+    /// this Mac, 2026-10-26). A quarter of the pixels is a quarter of that.
+    static let longSize = CGSize(width: 640, height: 400)
     static let folder = VideoExportBudgetTests.folder
 
     static func bytes(_ url: URL) -> Int { VideoExportBudgetTests.bytes(of: url) }
@@ -181,7 +188,7 @@ struct BusyVideoSizeTests {
     @Test("A long recording that is quiet and then busy is weighed from stretches of it")
     func aLongRecordingIsWeighedFromStretches() async throws {
         let seconds = 24
-        let plan = DocumentVideoExport.plan(durationMS: seconds * 1000, canvasSize: Self.size,
+        let plan = DocumentVideoExport.plan(durationMS: seconds * 1000, canvasSize: Self.longSize,
                                             format: .mp4, quality: .high)
         let source = Self.folder.appendingPathComponent("quiet-then-busy.mp4")
         try await DocumentMovieWriter.write(
@@ -190,7 +197,7 @@ struct BusyVideoSizeTests {
                                                            stillUntilMS: 12_000))
         let cuts = VideoExportBudgetTests.wholeOf(source, seconds: Double(seconds))
         for quality in [VideoExportQuality.standard, .small] {
-            let recipe = quality.recipe(format: .mp4, sourceSize: Self.size, sourceFPS: 30)
+            let recipe = quality.recipe(format: .mp4, sourceSize: Self.longSize, sourceFPS: 30)
             let weighed = try await Self.lightest {
                 try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
                                                  recipe: recipe)
@@ -235,16 +242,17 @@ struct BusyVideoSizeTests {
     @Test("A document's weigh is what lands, busy or quiet", arguments: [0.0, 300.0, 900.0])
     func aDocumentsWeighIsWhatLands(speed: Double) async throws {
         let seconds = speed == 0 ? 20 : 3
+        let size = speed == 0 ? Self.longSize : Self.size
         let span = 0..<(seconds * 1000)
         for quality in VideoExportQuality.allCases {
-            let plan = DocumentVideoExport.plan(range: span, canvasSize: Self.size,
+            let plan = DocumentVideoExport.plan(range: span, canvasSize: size,
                                                 format: .mp4, quality: quality)
             // Quiet for half of it, so a long one is a still page then a busy one.
             let frames = VideoExportBudgetTests.scrollingFrames(
                 size: plan.size, pixelsPerSecond: speed == 0 ? 600 : speed,
                 stillUntilMS: speed == 0 ? 10_000 : 0)
             let weighed = try await Self.lightest {
-                try await DocumentMovieWriter.weigh(span: span, canvasSize: Self.size,
+                try await DocumentMovieWriter.weigh(span: span, canvasSize: size,
                                                     quality: quality, frames: frames)
             }
             let out = Self.folder.appendingPathComponent("doc-weighed-\(Int(speed))-\(quality.rawValue).mp4")

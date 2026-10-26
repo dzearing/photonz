@@ -166,7 +166,10 @@ struct AnimatedExportWeighTests {
         for (label, seconds, size, stillAfter, crisp) in [
             ("short", 2, CGSize(width: 640, height: 400), 99.0, false),
             ("crisp", 2, CGSize(width: 640, height: 400), 99.0, true),
-            ("longer", 6, CGSize(width: 960, height: 600), 3.0, false),
+            // Four seconds, still for the second half: long enough that the still
+            // half is most of what a smaller choice drops, at a size Standard
+            // scales down. Six seconds was a third more encoding for nothing new.
+            ("longer", 4, CGSize(width: 960, height: 600), 2.0, false),
         ] {
             let source = try await Self.screenSource(seconds: seconds, size: size,
                                                      stillAfter: stillAfter, crisp: crisp)
