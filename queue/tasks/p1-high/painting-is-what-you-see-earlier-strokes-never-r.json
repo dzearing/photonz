@@ -4,12 +4,12 @@
   "goal": "While drawing, every earlier stroke visibly recomputes: the strokes change, then swap into a higher resolution version. That looks awkward and wastes time. Painting should be what you see is what you get: the stroke you are drawing looks exactly like it will when you let go, nothing already on the canvas repaints, flickers or changes sharpness, and the whole thing answers immediately.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 1.1,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-26T03:36:58.832Z",
+  "updated": "2026-10-26T14:18:49.423Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -22,7 +22,10 @@
     "Logic in PhotonzRender is test-first; rendering changes carry the perf note.",
     "A playtest walk paints six strokes and fails if any earlier stroke's pixels change while the sixth is drawn and settled.",
     "Try path: Next defaults, Brush tool, paint several watercolour and oil strokes zoomed in to 200%, then keep drawing; nothing already painted moves, flickers or sharpens, and the new stroke looks the same before and after letting go.",
-    "An audit under queue/audits/ with the before and after recordings; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+    "An audit under queue/audits/ with the before and after recordings; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not.",
+    "On a 12 megapixel picture whose paint layer already holds a few hundred strokes, letting go of a stroke holds the app under 50 ms, and undoing that stroke is as quick (folded in from the dropped 12 megapixel task; the 2026-10-25 watercolour and pencil walks measured 315 to 432 ms per landing on a 4000 by 3000 canvas)",
+    "Those numbers are held by a perf test, so a later change that slows landing or undo fails the suite",
+    "The end of a mouse stroke no longer changes when the button comes up: today the pen-pressure slice draws the tail in to a point only on landing (2026-10-25-pen-pressure-tilt-and-speed audit, 0.13% of the canvas changing at release), which is exactly the held-then-landed change this task removes. Either the live stroke shows the taper as it goes, or the audit shows why that cannot work and the user picks on a card"
   ],
   "log": [
     {
@@ -40,6 +43,22 @@
     {
       "t": "2026-10-26T03:36:58.831Z",
       "note": "seq 2.9 -> 1.1"
+    },
+    {
+      "t": "2026-10-26T14:14:54.675Z",
+      "note": "triage 2026-10-26: folded in painting-keeps-up-with-the-pointer-on-a-12-megap (same problem, older wording). Its own logs: landing replays the whole layer for 344-432 ms on 4000x3000 (watercolour-wash-and-bloom-walk, pencil-draws-and-shades-walk); a landed paint layer bakes at ~1.15 px/pt on 4000x3000 while the live overlay draws at screen resolution, so at displayZoom 172 the settled stroke is softer than the held one (oil-paint-smears-and-ridges-walk with 8 zoomIn steps). Its remaining acceptance (landing and undo under 50 ms, perf test) is added here."
+    },
+    {
+      "t": "2026-10-26T14:15:29.683Z",
+      "note": "seq 1.1 -> 30"
+    },
+    {
+      "t": "2026-10-26T14:17:20.878Z",
+      "note": "triage 2026-10-26: the pen-pressure slice (done 2026-10-25) chose to draw a mouse stroke's tapered end in only when it lands, by design (its audit rough list). That is a visible change at the moment of letting go, against this task's ask that the stroke looks the same before and after. Added as an acceptance item."
+    },
+    {
+      "t": "2026-10-26T14:18:49.422Z",
+      "note": "triage 2026-10-26: when the taper changes, update docs/design/brushes.md (What the dynamics settled), which records the land-time taper as settled; the user's hands-on ask outranks it."
     }
   ]
 }

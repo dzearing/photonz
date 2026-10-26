@@ -4,12 +4,12 @@
   "goal": "When someone picks a small object, like a button about 140 by 45 points, its 3D turn handles (Rotation X, Rotation Y and Depth) are squeezed into the space above it, on top of the component badge, the resize squares and the turn knob. Hovering one makes all of them react, and it is hard to grab the one you mean. Each handle should have room and its own clear target, and only the handle under the pointer should respond.",
   "epic": "interaction-foundations",
   "priority": "p1-high",
-  "seq": 180,
+  "seq": 200,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T01:32:52.032Z",
-  "updated": "2026-10-25T13:26:46.574Z",
+  "updated": "2026-10-26T14:15:30.916Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user's words (2026-10-19, intake, with a screenshot of three 'Get started' component buttons, one picked with the Rotation X name showing): 'the hit targets on these 3d orbit things... not great with small selections. i hover over 1 and they all react'.\n\nWhere it lives (read, not reproduced): the handles are SpaceHandle .swing (Rotation Y), .tip (Rotation X), .depth (HandleHover.swift:107). Hit test: SpaceHandles.hit (Sources/PhotonzCore/SpaceEditing.swift:201) with grabReach 9pt off the drawing and drawnReach 4pt over the body (:56, :61), nearer wins, and a resize square or mark nearer than the handle takes the press. App side: CanvasSpaceHandles.swift:200 spaceHandleHit. Hover look: CanvasHandleHover.swift:167 styleSpaceHandles lights the hovered one (wider line) and DIMS the other two (dimmedSpaceOpacity), and widens the dark rim under all of them. That dimming plus the rim may be what reads as 'they all react'; or the 9pt reach over arcs drawn a few points apart may make the lit one flip between them as the pointer moves. Suspects, not causes: reproduce.\n\nTraps: (1) docs/design/canvas-hit-order.md sets which of the canvas's handles win a press; change it there, not with a one-off. (2) The never-cover rule (memory: overlays never sit over the picked object or its handles) applies to the component badge too. (3) Growing grabReach alone makes the overlap worse on small picks; the handles need space, not just slack.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-25T13:26:46.573Z",
       "note": "seq 100 -> 180"
+    },
+    {
+      "t": "2026-10-26T14:15:30.915Z",
+      "note": "seq 180 -> 200"
     }
   ]
 }

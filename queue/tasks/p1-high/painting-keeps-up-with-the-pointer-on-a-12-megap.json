@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.236Z",
-  "updated": "2026-10-25T13:26:46.157Z",
+  "updated": "2026-10-26T14:14:54.787Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -46,6 +46,10 @@
     {
       "t": "2026-10-25T13:26:46.156Z",
       "note": "seq 6.9 -> 50"
+    },
+    {
+      "t": "2026-10-26T14:14:54.786Z",
+      "note": "duplicate of painting-is-what-you-see-earlier-strokes-never-r (landing and undo bar folded in; per-drag lag lives in every-brush-follows-the-pointer-with-no-lag-even)"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Tests are far too slow. On GitHub's Mac runner the suite takes about an hour, nearly its whole time limit, and a release waits on it; on this Mac it takes about 7 minutes with everything else fighting it. Make the suite fast by cutting tests that add nothing, running tests in parallel wherever it is safe, and keeping the slow media tests from holding everything else up, without losing coverage that catches real bugs.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 0.8,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-26T06:04:45.349Z",
-  "updated": "2026-10-26T06:04:45.459Z",
+  "updated": "2026-10-26T14:15:29.548Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25, while the v0.19.0 release sat in GitHub's test step: 'we really need to improve the tests and reduce unnecessary ones, parallelize, make things faster. 45 minutes to run tests is quite long'. Facts from that evening: local Scripts/test.sh 14,605 tests in 1,248 suites, 428 s wall; the slowest suites under parallel contention were all media and real-capture ones (A busy MP4 lands at the size the sheet said 428 s, Reading a separated run back into words on a real capture 340 s, An animated export weighs the same twice 305 s, Grain stops banding in the exported movie 285 s); their in-parallel durations are inflated, so measure them alone. GitHub: ci.yml and release.yml both run Scripts/test.sh --no-parallel (comment: swift-testing launched every test at once and GPU-bound render tests wedged the headless VM); release.yml Run tests has a 65 minute timeout and the first v0.19.0 run used about 65 minutes (03:53 to 04:58 UTC), v0.18.0 used 57; ci.yml has a 55 minute timeout and the suite has grown past what its comment assumed (10,800 tests then, 14,605 now), so CI is likely timing out. Keep PhotonzCore and PhotonzRender test-first rules intact.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-10-26T06:04:45.457Z",
       "note": "seq 3970 -> 0.8"
+    },
+    {
+      "t": "2026-10-26T14:15:29.547Z",
+      "note": "seq 0.8 -> 10"
     }
   ]
 }

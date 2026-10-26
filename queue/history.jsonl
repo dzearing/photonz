@@ -14225,3 +14225,45 @@
 {"t":"2026-10-26T04:01:25.712Z","ev":"task_resequenced","id":"photonz-only-offers-an-update-once-that-version","from":3970,"to":1.2}
 {"t":"2026-10-26T06:04:45.353Z","ev":"task_created","id":"the-whole-test-suite-runs-in-minutes-here-and-on","priority":"p1-high","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75"}
 {"t":"2026-10-26T06:04:45.460Z","ev":"task_resequenced","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":3970,"to":0.8}
+{"t":"2026-10-26T14:12:45.094Z","ev":"loop_started","pid":9334}
+{"t":"2026-10-26T14:12:45.143Z","ev":"loop_awake","held":true,"pid":9344,"screenLocked":false}
+{"t":"2026-10-26T14:14:54.788Z","ev":"task_dropped","id":"painting-keeps-up-with-the-pointer-on-a-12-megap","from":"pending","note":"duplicate of painting-is-what-you-see-earlier-strokes-never-r (landing and undo bar folded in; per-drag lag lives in every-brush-follows-the-pointer-with-no-lag-even)"}
+{"t":"2026-10-26T14:15:29.549Z","ev":"task_resequenced","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":0.8,"to":10}
+{"t":"2026-10-26T14:15:29.617Z","ev":"task_resequenced","id":"every-brush-follows-the-pointer-with-no-lag-even","from":1,"to":20}
+{"t":"2026-10-26T14:15:29.685Z","ev":"task_resequenced","id":"painting-is-what-you-see-earlier-strokes-never-r","from":1.1,"to":30}
+{"t":"2026-10-26T14:15:29.754Z","ev":"task_resequenced","id":"photonz-only-offers-an-update-once-that-version","from":1.2,"to":40}
+{"t":"2026-10-26T14:15:29.825Z","ev":"task_resequenced","id":"ask-walks-share-one-model-instead-of-loading-a-f","from":5,"to":50}
+{"t":"2026-10-26T14:15:29.893Z","ev":"task_resequenced","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":10,"to":60}
+{"t":"2026-10-26T14:15:29.962Z","ev":"task_resequenced","id":"the-agent-can-list-set-and-paint-with-the-brushe","from":30,"to":70}
+{"t":"2026-10-26T14:15:30.031Z","ev":"task_resequenced","id":"a-vector-path-s-line-can-be-painted-with-a-brush","from":40,"to":80}
+{"t":"2026-10-26T14:15:30.103Z","ev":"task_resequenced","id":"caption-and-measurement-chips-come-in-a-set-of-p","from":60,"to":90}
+{"t":"2026-10-26T14:15:30.176Z","ev":"task_resequenced","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":70,"to":100}
+{"t":"2026-10-26T14:15:30.249Z","ev":"task_resequenced","id":"while-ask-works-the-agent-panel-says-what-it-is","from":90,"to":110}
+{"t":"2026-10-26T14:15:30.321Z","ev":"task_resequenced","id":"the-agent-server-and-skill-come-inside-photonz-a","from":100,"to":120}
+{"t":"2026-10-26T14:15:30.395Z","ev":"task_resequenced","id":"the-setup-window-walks-you-through-only-the-step","from":110,"to":130}
+{"t":"2026-10-26T14:15:30.468Z","ev":"task_resequenced","id":"settings-offers-several-ask-models-with-what-eac","from":120,"to":140}
+{"t":"2026-10-26T14:15:30.541Z","ev":"task_resequenced","id":"a-button-you-can-press-never-looks-disabled-the","from":130,"to":150}
+{"t":"2026-10-26T14:15:30.622Z","ev":"task_resequenced","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":140,"to":160}
+{"t":"2026-10-26T14:15:30.693Z","ev":"task_resequenced","id":"ask-can-mock-a-web-page-from-its-address-and-loo","from":150,"to":170}
+{"t":"2026-10-26T14:15:30.765Z","ev":"task_resequenced","id":"ask-on-the-local-model-makes-results-that-look-f","from":160,"to":180}
+{"t":"2026-10-26T14:15:30.837Z","ev":"task_resequenced","id":"typing-in-ask-lists-the-commands-you-can-run","from":170,"to":190}
+{"t":"2026-10-26T14:15:30.917Z","ev":"task_resequenced","id":"on-a-small-picked-object-the-3d-turn-handles-are","from":180,"to":200}
+{"t":"2026-10-26T14:15:30.986Z","ev":"task_resequenced","id":"when-ask-stops-part-way-it-says-so-and-one-refus","from":190,"to":210}
+{"t":"2026-10-26T14:15:31.053Z","ev":"task_resequenced","id":"ask-works-on-what-you-have-picked-so-make-this-b","from":200,"to":220}
+{"t":"2026-10-26T14:15:31.123Z","ev":"task_resequenced","id":"the-name-chips-over-component-copies-stay-clear","from":210,"to":230}
+{"t":"2026-10-26T14:15:31.191Z","ev":"task_resequenced","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","from":220,"to":240}
+{"t":"2026-10-26T14:15:31.259Z","ev":"task_resequenced","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req","from":230,"to":250}
+{"t":"2026-10-26T14:15:31.327Z","ev":"task_resequenced","id":"the-agent-coverage-check-counts-panel-controls-a","from":240,"to":260}
+{"t":"2026-10-26T14:15:31.398Z","ev":"task_resequenced","id":"ask-s-first-answer-after-its-model-loads-comes-i","from":250,"to":270}
+{"t":"2026-10-26T14:15:31.466Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":260,"to":280}
+{"t":"2026-10-26T14:15:31.535Z","ev":"task_resequenced","id":"the-keynote-clean-title-page-draws-its-starfield","from":270,"to":290}
+{"t":"2026-10-26T14:15:31.603Z","ev":"task_resequenced","id":"on-a-video-captions-and-transitions-sit-where-th","from":280,"to":300}
+{"t":"2026-10-26T14:15:31.673Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":290,"to":310}
+{"t":"2026-10-26T14:15:31.740Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":300,"to":320}
+{"t":"2026-10-26T14:15:31.807Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":310,"to":330}
+{"t":"2026-10-26T14:17:11.194Z","ev":"task_created","id":"the-rotating-walk-check-moves-on-through-the-set","priority":"p1-high","title":"The rotating walk check moves on through the set instead of re-running the same Ask walks every time"}
+{"t":"2026-10-26T14:17:20.807Z","ev":"task_note","id":"ask-walks-share-one-model-instead-of-loading-a-f"}
+{"t":"2026-10-26T14:17:29.952Z","ev":"task_resequenced","id":"the-rotating-walk-check-moves-on-through-the-set","from":3970,"to":340}
+{"t":"2026-10-26T14:18:49.424Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-26T14:18:49.451Z","ev":"triage","summary":"1 merged (12 MP painting speed into WYSIWYG painting, umbrella deps updated), 1 filed (rotating check stuck at walk 103, reproduced), 2 findings folded, 1 groomed (agent install try path), 0 priority moves, 0 resets, 33 seq writes; open 88 before and after"}
+{"t":"2026-10-26T14:18:49.476Z","ev":"digest","file":"2026-10-26.md"}
