@@ -1,0 +1,27 @@
+{
+  "feature": "A faster test suite, here and on GitHub",
+  "epic": "unmanned-loop",
+  "summary": "The suite no longer hangs on macOS 27, runs in 262 s here instead of 401 s, and runs in parallel on GitHub with a kept build and a 15 second checkout. GitHub's test step is 26 minutes, not 53, which is still short of the 15 minute target: the task stays open for that.",
+  "setup": "No app change a person can see. Measurements were taken on this Mac with Scripts/test.sh and swift test one suite at a time, and on GitHub from runs 40265991947 (before), 40349837665 and 40360149802 (after). Every number and every test that changed is in 2026-10-26-fast-test-suite-measurements.md beside this file.",
+  "switched": {},
+  "try": [
+    { "do": "Run Scripts/test.sh and time it: 262 s on 2026-10-26 with the build warm, 14,604 tests green." },
+    { "do": "Run swift test --skip-build --filter TextReadsOnAFullPoolTests three times: about 5 s each. On this Mac it hung every time this morning." },
+    { "do": "Open the newest CI run on GitHub and read the checkout step: about 15 s, it was 3 to 4 minutes." },
+    { "do": "Read the same run's Restore the build and Build steps: 21 s to restore, 4.7 min to build a commit that changed 11 test files, against 18.9 min with nothing kept." },
+    { "do": "Read its Run tests step: 25.8 min in parallel and green, where v0.19.0 took 53 min one test at a time and its next run timed out at 65." }
+  ],
+  "evaluate": [
+    "Is 4.5 minutes for the local suite fast enough to stop being a reason to skip it, or does it need to reach the 3 minute target before it changes how the loop works?",
+    "Are you comfortable with GitHub collecting render timings without failing on them, given every commit still has to pass them on this Mac first?",
+    "Would you pay for a larger GitHub runner (more cores, a real GPU) if cutting tests alone cannot get the test step under 15 minutes?"
+  ],
+  "rough": [
+    "GitHub's test step is 25.8 minutes, not under 15. On the 3 core VM only two tests run at once, and the suites that must run one test at a time (video sizes, text reading, depth and title rendering) each wait behind the queue for every step, so they finish last at about 1,400 s. This task stays open for it.",
+    "Not yet three green CI runs in a row: the first parallel run timed out at 25 minutes at 99 per cent with two stopwatch checks red under load, the second passed its tests and was then stopped by the 45 minute job limit just after its cold release build; the limit is 70 now.",
+    "The release workflow has not been run since: its test step is now parallel with the build kept, but no tag or dry run has measured it, so tag to published under 25 minutes is unproven.",
+    "Five tests still take over ten seconds on their own here: the animated export written twice (28 s), Agent find_elements on the settings screenshot (22 s), Separate into Layers on a whole app window (22 s), the boxed-in caliper sweep (about 16 s) and the first test of Reading a separated run back (12 s). The last three pay for setup shared with the rest of their suite.",
+    "GitHub CI now collects timings without gating (PHOTONZ_PERF_GATE=report), as the release already did; Scripts/test.sh on this Mac still gates them on every commit.",
+    "No pictures: this task changes no screen, so there is nothing for a walk to photograph."
+  ]
+}

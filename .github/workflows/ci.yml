@@ -16,7 +16,9 @@ jobs:
   test:
     name: Build & test (arm64)
     runs-on: macos-26
-    timeout-minutes: 45
+    # Build, tests and the release bundle. 45 cut the first run with a kept
+    # build off a minute after its cold release build (2026-10-26).
+    timeout-minutes: 70
     steps:
       # Everything but queue/audits: 3.8 GB of audit pictures nothing here
       # reads, and fetching them was three of every run's minutes (2026-10-26).
