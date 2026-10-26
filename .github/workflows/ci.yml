@@ -112,10 +112,19 @@ jobs:
         # In parallel, at most three quarters of the cores at once
         # (Scripts/test.sh): the old --no-parallel dates from before
         # RecogniserLane, when a full pool of text reads wedged the VM, and it
-        # made the run 39 minutes of one test after another (v0.19.0).
-        timeout-minutes: 25
+        # made the run 39 minutes of one test after another (v0.19.0). The
+        # first parallel run, before the slow suites were cut, reached 99 per
+        # cent of the suite in 25 minutes (2026-10-26).
+        timeout-minutes: 35
         env:
           PHOTONZ_BUILD_FLAGS: --disable-index-store
+          # Timings are collected here, never gated, as in release.yml. Every
+          # commit already gates them on the Mac the app is built on
+          # (Scripts/test.sh before every commit), and on this three core VM,
+          # two tests at a time, flat budgets failed on unchanged code: a
+          # Width drag at 61.9 ms against 48, a long timeline at 204 ms
+          # against 150 (2026-10-26).
+          PHOTONZ_PERF_GATE: report
         run: Scripts/test.sh
 
       # --release, not the bare default. The default variant is the DEV bundle,

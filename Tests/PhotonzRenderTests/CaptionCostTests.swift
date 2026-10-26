@@ -48,7 +48,11 @@ struct CaptionCostTests {
                                           scale: 1.25, drawnAlone: true)
         let size = CGSize(width: 1536, height: 151)
         _ = TextRasterizer.rasterize(text, size: size, scale: 2)
-        let each = PerfClock.fastestCallMS(batches: 5, callsPerBatch: 5) {
+        // The fastest of fifteen batches, not five: inside a whole parallel
+        // run all five could land while the thread was on a slower core, and
+        // read 8.03ms against 8 on unchanged code (2026-10-26). The claim is
+        // what a draw costs, so the quietest batch is the honest reading.
+        let each = PerfClock.fastestCallMS(batches: 15, callsPerBatch: 5) {
             _ = TextRasterizer.rasterize(text, size: size, scale: 2)
         }
         print("[perf] popping caption at 1080p, 2x: \(String(format: "%.2f", each))ms per frame")

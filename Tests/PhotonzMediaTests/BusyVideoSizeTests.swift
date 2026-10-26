@@ -57,10 +57,36 @@ struct BusyVideoSizeTests {
     /// times its budget where a quiet machine writes 1.20 every time
     /// (`VideoExportBudgetTests.aSmallerBudgetWritesASmallerFile` found the
     /// same). The lightest of three is the one written closest to quiet.
-    static func lightest(_ write: () async throws -> Int) async throws -> Int {
+    ///
+    /// Up to three, stopping at the first go whose lightest
+    /// so far is already `good`. A busy machine only ever writes heavier, so a
+    /// file that lands where it should on the first go has nothing a second
+    /// would add; on a quiet machine that is one write instead of three, and
+    /// inside a whole parallel run this suite was three hundred seconds of
+    /// writing the same files over (2026-10-26).
+    static func lightest(until good: (Int) -> Bool,
+                         _ write: () async throws -> Int) async throws -> Int {
         var best = Int.max
-        for _ in 0..<3 { best = min(best, try await write()) }
+        for _ in 0..<3 {
+            best = min(best, try await write())
+            if good(best) { break }
+        }
         return best
+    }
+
+    /// The same for a weigh and the file it weighs: up to three of each, a
+    /// weigh then a write, stopping at the first go where the lightest of each
+    /// so far are `good` together.
+    static func lightest(until good: (_ weighed: Int, _ landed: Int) -> Bool,
+                         weigh: () async throws -> Int,
+                         write: () async throws -> Int) async throws -> (weighed: Int, landed: Int) {
+        var weighed = Int.max, landed = Int.max
+        for _ in 0..<3 {
+            weighed = min(weighed, try await weigh())
+            landed = min(landed, try await write())
+            if good(weighed, landed) { break }
+        }
+        return (weighed, landed)
     }
 
     // MARK: - A recording (the recording's own Export sheet)
@@ -76,13 +102,13 @@ struct BusyVideoSizeTests {
                                                                     pixelsPerSecond: speed)
         let recipe = quality.recipe(format: .mp4, sourceSize: Self.size, sourceFPS: 30)
         let out = Self.folder.appendingPathComponent("busy-\(Int(speed))-\(quality.rawValue).mp4")
-        let landed = try await Self.lightest {
+        let budget = recipe.expectedBytes(seconds: 3, hasAudio: false)
+        let landed = try await Self.lightest(until: { Self.near($0, budget) }) {
             try await VideoExporter.exportMP4(from: source, to: out,
                                               cuts: VideoExportBudgetTests.wholeOf(source, seconds: 3),
                                               crop: nil, recipe: recipe)
             return Self.bytes(out)
         }
-        let budget = recipe.expectedBytes(seconds: 3, hasAudio: false)
         #expect(Self.near(landed, budget),
                 "\(quality.rawValue) at \(Int(speed)) px/s landed \(landed) against \(budget)")
     }
@@ -101,16 +127,24 @@ struct BusyVideoSizeTests {
         var beyondTheBudget: [String] = []
         for quality in VideoExportQuality.allCases {
             let recipe = quality.recipe(format: .mp4, sourceSize: Self.size, sourceFPS: 30)
-            let weighed = try await Self.lightest {
-                try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
-                                                 recipe: recipe)
-            }
             let out = Self.folder.appendingPathComponent("weighed-\(Int(speed))-\(quality.rawValue).mp4")
-            let landed = try await Self.lightest {
-                try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
-                                                  recipe: recipe)
-                return Self.bytes(out)
-            }
+            let (weighed, landed) = try await Self.lightest(
+                // Where the budget is required to hold, the lightest file has to
+                // land near it too before a go is good enough to stop at.
+                until: { weighed, landed in
+                    Self.near(landed, weighed)
+                        && (speed >= 600 && quality != .high
+                            || Self.near(landed, recipe.expectedBytes(seconds: 3, hasAudio: false)))
+                },
+                weigh: {
+                    try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
+                                                     recipe: recipe)
+                },
+                write: {
+                    try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
+                                                      recipe: recipe)
+                    return Self.bytes(out)
+                })
             #expect(Self.near(landed, weighed),
                     "\(quality.rawValue) at \(Int(speed)) px/s: the sheet weighed \(weighed), \(landed) landed")
             if !Self.near(landed, recipe.expectedBytes(seconds: 3, hasAudio: false)) {
@@ -142,16 +176,18 @@ struct BusyVideoSizeTests {
         let cuts = VideoExportBudgetTests.wholeOf(source, seconds: 3)
         for quality in VideoExportQuality.allCases {
             let recipe = quality.recipe(format: .mp4, sourceSize: Self.size, sourceFPS: 30)
-            let weighed = try await Self.lightest {
-                try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
-                                                 recipe: recipe)
-            }
             let out = Self.folder.appendingPathComponent("easy-weighed-\(quality.rawValue).mp4")
-            let landed = try await Self.lightest {
-                try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
-                                                  recipe: recipe)
-                return Self.bytes(out)
-            }
+            let (weighed, landed) = try await Self.lightest(
+                until: { Self.near($1, $0) },
+                weigh: {
+                    try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
+                                                     recipe: recipe)
+                },
+                write: {
+                    try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
+                                                      recipe: recipe)
+                    return Self.bytes(out)
+                })
             #expect(Self.near(landed, weighed),
                     "\(quality.rawValue): the sheet weighed \(weighed), \(landed) landed")
         }
@@ -167,16 +203,18 @@ struct BusyVideoSizeTests {
                                          VideoPiece(start: 2, end: 4)], sourceDuration: 4)
         for quality in VideoExportQuality.allCases {
             let recipe = quality.recipe(format: .mp4, sourceSize: Self.size, sourceFPS: 30)
-            let weighed = try await Self.lightest {
-                try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
-                                                 recipe: recipe)
-            }
             let out = Self.folder.appendingPathComponent("sound-weighed-\(quality.rawValue).mp4")
-            let landed = try await Self.lightest {
-                try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
-                                                  recipe: recipe)
-                return Self.bytes(out)
-            }
+            let (weighed, landed) = try await Self.lightest(
+                until: { Self.near($1, $0) },
+                weigh: {
+                    try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
+                                                     recipe: recipe)
+                },
+                write: {
+                    try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
+                                                      recipe: recipe)
+                    return Self.bytes(out)
+                })
             #expect(Self.near(landed, weighed),
                     "\(quality.rawValue): the sheet weighed \(weighed), \(landed) landed")
         }
@@ -198,16 +236,18 @@ struct BusyVideoSizeTests {
         let cuts = VideoExportBudgetTests.wholeOf(source, seconds: Double(seconds))
         for quality in [VideoExportQuality.standard, .small] {
             let recipe = quality.recipe(format: .mp4, sourceSize: Self.longSize, sourceFPS: 30)
-            let weighed = try await Self.lightest {
-                try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
-                                                 recipe: recipe)
-            }
             let out = Self.folder.appendingPathComponent("quiet-then-busy-\(quality.rawValue).mp4")
-            let landed = try await Self.lightest {
-                try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
-                                                  recipe: recipe)
-                return Self.bytes(out)
-            }
+            let (weighed, landed) = try await Self.lightest(
+                until: { Self.near($1, $0) },
+                weigh: {
+                    try await VideoExporter.weighMP4(from: source, cuts: cuts, crop: nil,
+                                                     recipe: recipe)
+                },
+                write: {
+                    try await VideoExporter.exportMP4(from: source, to: out, cuts: cuts, crop: nil,
+                                                      recipe: recipe)
+                    return Self.bytes(out)
+                })
             #expect(Self.near(landed, weighed),
                     "\(quality.rawValue): the sheet weighed \(weighed), \(landed) landed")
         }
@@ -225,16 +265,16 @@ struct BusyVideoSizeTests {
         let plan = DocumentVideoExport.plan(durationMS: 3000, canvasSize: Self.size,
                                             format: .mp4, quality: quality)
         let out = Self.folder.appendingPathComponent("doc-\(Int(speed))-\(quality.rawValue).mp4")
-        let landed = try await Self.lightest {
+        let budget = quality.recipe(format: .mp4, sourceSize: Self.size,
+                                    sourceFPS: DocumentVideoExport.movieFPS)
+            .expectedBytes(seconds: 3, hasAudio: false)
+        let landed = try await Self.lightest(until: { Self.near($0, budget) }) {
             try await DocumentMovieWriter.write(
                 plan: plan, mix: [], soundURLs: [:], to: out,
                 frames: VideoExportBudgetTests.scrollingFrames(size: plan.size,
                                                                pixelsPerSecond: speed))
             return Self.bytes(out)
         }
-        let budget = quality.recipe(format: .mp4, sourceSize: Self.size,
-                                    sourceFPS: DocumentVideoExport.movieFPS)
-            .expectedBytes(seconds: 3, hasAudio: false)
         #expect(Self.near(landed, budget),
                 "\(quality.rawValue) at \(Int(speed)) px/s landed \(landed) against \(budget)")
     }
@@ -251,16 +291,18 @@ struct BusyVideoSizeTests {
             let frames = VideoExportBudgetTests.scrollingFrames(
                 size: plan.size, pixelsPerSecond: speed == 0 ? 600 : speed,
                 stillUntilMS: speed == 0 ? 10_000 : 0)
-            let weighed = try await Self.lightest {
-                try await DocumentMovieWriter.weigh(span: span, canvasSize: size,
-                                                    quality: quality, frames: frames)
-            }
             let out = Self.folder.appendingPathComponent("doc-weighed-\(Int(speed))-\(quality.rawValue).mp4")
-            let landed = try await Self.lightest {
-                try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: out,
-                                                    frames: frames)
-                return Self.bytes(out)
-            }
+            let (weighed, landed) = try await Self.lightest(
+                until: { Self.near($1, $0) },
+                weigh: {
+                    try await DocumentMovieWriter.weigh(span: span, canvasSize: size,
+                                                        quality: quality, frames: frames)
+                },
+                write: {
+                    try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: out,
+                                                        frames: frames)
+                    return Self.bytes(out)
+                })
             #expect(Self.near(landed, weighed),
                     "\(quality.rawValue) at \(Int(speed)) px/s: the sheet weighed \(weighed), \(landed) landed")
         }

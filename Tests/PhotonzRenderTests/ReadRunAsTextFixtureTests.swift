@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 @testable import PhotonzRender
+import Synchronization
 import Testing
 
 /// Turning a separated run of text back into words, measured on a REAL
@@ -135,7 +136,8 @@ struct ReadRunAsTextFixtureTests {
         // A screenshot read in a batch and then one more label read on its own
         // must not end up with two answers. Told the family, every run is held
         // to it and nothing votes.
-        let told = TextReader.readPage(Self.runImages, captureScale: 2, preferring: "SF Pro")
+        let told = TextReader.readPage(Self.runImages, captureScale: 2, preferring: "SF Pro",
+                                       spreadingOverTheCores: true)
         let families = Set(told.compactMap(\.outcome.reading?.face.fontName))
         #expect(families == ["SF Pro"])
         #expect(told.compactMap(\.outcome.reading).count
@@ -147,7 +149,8 @@ struct ReadRunAsTextFixtureTests {
         // held to a family this capture is plainly not set in, the labels stay
         // pictures. A page that genuinely mixes families gives up readings
         // rather than handing back labels in the wrong face.
-        let wrong = TextReader.readPage(Self.runImages, captureScale: 2, preferring: "Georgia")
+        let wrong = TextReader.readPage(Self.runImages, captureScale: 2, preferring: "Georgia",
+                                       spreadingOverTheCores: true)
         #expect(!wrong.contains { $0.outcome.reading?.face.fontName == "SF Pro" })
         #expect(wrong.compactMap(\.outcome.reading).count < Self.reads.compactMap(\.outcome.reading).count)
     }
@@ -226,13 +229,22 @@ struct ReadRunAsTextFixtureTests {
         #expect(try reading(0).face.weight == .bold)
     }
 
-    @Test func settlingTheWeightNeverCostsAReading() throws {
-        // A weight a shade off is a smaller harm than a label that stays a
-        // picture, so the weight the page settled is never the reason one
-        // does. Held to the family alone, exactly as many labels come back.
-        let held = Self.runImages.map {
-            TextReader.read($0, captureScale: 2, preferring: "SF Pro")
+    /// Neither the weight nor the size the page settled is ever the reason a
+    /// label stays a picture: a weight a shade off, or a label back at the
+    /// size it fitted itself, is a smaller harm than a label that does not
+    /// come back at all. Held to the family alone, exactly as many labels come
+    /// back. (One test for both: the size's own test read the same nine runs
+    /// the same way and checked the same count, 11 s of this Mac's time each,
+    /// 2026-10-26.) The nine reads are spread over the cores, off Swift's pool.
+    @Test func settlingTheWeightOrTheSizeNeverCostsAReading() throws {
+        let runs = Self.runImages
+        let read = Mutex([Int: TextReader.Read]())
+        DispatchQueue.concurrentPerform(iterations: runs.count) { index in
+            let one = TextReader.read(runs[index], captureScale: 2, preferring: "SF Pro")
+            read.withLock { $0[index] = one }
         }
+        let held = read.withLock { $0 }.values
+        #expect(held.count == runs.count)
         #expect(held.compactMap(\.outcome.reading).count
             == Self.reads.compactMap(\.outcome.reading).count)
     }
@@ -302,17 +314,6 @@ struct ReadRunAsTextFixtureTests {
         #expect(!rows.contains(button))
     }
 
-    @Test func settlingTheSizeNeverCostsAReading() throws {
-        // The same promise the weight makes. A label back at the size it
-        // fitted itself is a smaller harm than a label that does not come back
-        // at all, so a run whose ink its cohort's size cannot account for
-        // keeps its own.
-        let held = Self.runImages.map {
-            TextReader.read($0, captureScale: 2, preferring: "SF Pro")
-        }
-        #expect(Self.reads.compactMap(\.outcome.reading).count
-            == held.compactMap(\.outcome.reading).count)
-    }
 
     @Test func theRetypedWordsAreTheSizeTheOldOnesWere() throws {
         // Set the words the app chose and measure them. They are the size the

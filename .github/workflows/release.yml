@@ -96,7 +96,7 @@ jobs:
         if: ${{ !inputs.skip_tests }}
         # In parallel, as in ci.yml. Serial, this step was 53 minutes of a
         # v0.19.0 run and timed out at 65 on the next (2026-10-26).
-        timeout-minutes: 25
+        timeout-minutes: 35
         env:
           PHOTONZ_BUILD_FLAGS: --disable-index-store
         run: Scripts/test.sh

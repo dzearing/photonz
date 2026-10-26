@@ -118,7 +118,14 @@ struct LongTimelineCostTests {
         let spent = clock.measure {
             for id in ids { _ = doc.holdDrifts(forLayer: id) }
         }
-        #expect(spent < .milliseconds(150), "173 bars took \(spent)")
+        // A stopwatch, so it collects without gating where PHOTONZ_PERF_GATE
+        // says report: on GitHub's three core VM, two tests at a time, it read
+        // 204 ms on unchanged code (2026-10-26).
+        if PerfGate.isOn {
+            #expect(spent < .milliseconds(150), "173 bars took \(spent)")
+        } else {
+            print("[perf] 173 bars asked for their hold drift in \(spent)")
+        }
     }
 
     /// Every bar on the timeline looks its layer up a few times as it draws,

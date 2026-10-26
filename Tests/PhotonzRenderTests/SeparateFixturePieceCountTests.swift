@@ -35,10 +35,16 @@ struct SeparateFixturePieceCountTests {
     /// What the app itself hands the separator, from `EditorState+Separate`:
     /// the same two numbers Size mode reads a screenshot with, at the capture's
     /// own scale.
-    private struct Taken {
+    private struct Taken: Sendable {
         let result: LayerSeparator.Result
         let document: PhotonzDocument
     }
+
+    /// Each fixture taken apart once for every test that looks at it: the
+    /// settings pane was taken apart three times over and the dense page
+    /// twice, 31 s of this Mac's time one test after another (2026-10-26).
+    private static let settingsPane = Result { try takeApart("settings-pane-2x", scale: 2) }
+    private static let densePage = Result { try takeApart("dense-page-1x", scale: 1) }
 
     private static func capture(_ name: String) -> CGImage? {
         guard let url = Bundle.module.url(forResource: "Fixtures/\(name)", withExtension: "png"),
@@ -49,8 +55,8 @@ struct SeparateFixturePieceCountTests {
     /// The capture taken apart and landed in a document exactly the way the
     /// command lands one: pieces named Text N and Box N, nested by
     /// `LayerNesting`, each group carrying the body row the app gives it.
-    private func takeApart(_ name: String, scale: CGFloat) throws -> Taken {
-        let image = try #require(Self.capture(name), "no fixture called \(name)")
+    private static func takeApart(_ name: String, scale: CGFloat) throws -> Taken {
+        let image = try #require(capture(name), "no fixture called \(name)")
         let store = ImageStore()
         let gap = Double(AlignmentScan.visibleGap * scale)
         let minElement = Double(max(10, 10 * scale))
@@ -103,7 +109,7 @@ struct SeparateFixturePieceCountTests {
     // MARK: - The settings pane
 
     @Test func theSettingsPaneComesApartIntoNineteenPieces() throws {
-        let taken = try takeApart("settings-pane-2x", scale: 2)
+        let taken = try Self.settingsPane.get()
         #expect(taken.result.runs.count == 9)
         #expect(taken.result.boxes.count == 10)
         #expect(taken.result.skipped == 0)
@@ -113,7 +119,7 @@ struct SeparateFixturePieceCountTests {
     }
 
     @Test func theSettingsPaneListIsFiveRowsOverFourGroups() throws {
-        let taken = try takeApart("settings-pane-2x", scale: 2)
+        let taken = try Self.settingsPane.get()
         // 1 background + 19 pieces + a body row for each of the four groups.
         #expect(taken.document.allLayers.count == 24)
         let top = taken.document.layers.map(\.name)
@@ -121,7 +127,7 @@ struct SeparateFixturePieceCountTests {
     }
 
     @Test func theCardsHoldTheControlsThatSatOnThem() throws {
-        let taken = try takeApart("settings-pane-2x", scale: 2)
+        let taken = try Self.settingsPane.get()
         // Box 1 and Box 2 are the two cards, and each one opens onto its own
         // picture, its three labels and the three controls that sat on it.
         for card in ["Box 1", "Box 2"] {
@@ -144,7 +150,7 @@ struct SeparateFixturePieceCountTests {
     // MARK: - The dense page
 
     @Test func theDensePageStopsAtTheCeilingRatherThanHandingBackAWall() throws {
-        let taken = try takeApart("dense-page-1x", scale: 1)
+        let taken = try Self.densePage.get()
         #expect(taken.result.runs.count == 142)
         // The box pass is the one that hits its limit on a page this dense.
         #expect(taken.result.boxes.count == SeparateBudget.maxBoxes)
@@ -166,7 +172,7 @@ struct SeparateFixturePieceCountTests {
     }
 
     @Test func theDensePageLandsAsOneHundredAndSeventyThreeLayers() throws {
-        let taken = try takeApart("dense-page-1x", scale: 1)
+        let taken = try Self.densePage.get()
         // This is the number `separate-whole-screenshot-walk` sees. It is well
         // under the 500 runs the page offers, which is the claim the walk makes
         // in words, and it is under the ceiling the budget allows at all:

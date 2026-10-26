@@ -148,7 +148,10 @@ struct ReadSizeGroundTruthTests {
 
     static func readings(ofRuns runs: [CGImage], captureScale: CGFloat,
                          layerScale: CGFloat) -> [TextReading.Reading] {
-        TextReader.readPage(runs, captureScale: captureScale, layerScale: layerScale)
+        // Spread over the cores, as the app reads a page; the answer is the
+        // same one at a time (ReadPageWeightFixtureTests holds it to that).
+        TextReader.readPage(runs, captureScale: captureScale, layerScale: layerScale,
+                            spreadingOverTheCores: true)
             .compactMap(\.outcome.reading)
     }
 

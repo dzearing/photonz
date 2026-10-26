@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 @testable import PhotonzRender
+import Synchronization
 import Testing
 
 /// The WEIGHT and the SIZE a page comes back in, measured on a real capture of
@@ -159,9 +160,16 @@ struct ReadPageWeightFixtureTests {
         // come back at all, so the weight the page settled is never the reason
         // a run stays a picture. Held to the family alone, exactly as many
         // labels come back.
-        let held = Self.runImages.map {
-            TextReader.read($0, captureScale: 2, preferring: "SF Pro")
+        // Spread over the cores, off Swift's pool: one after another these
+        // reads were 11 s of this Mac's time (2026-10-26).
+        let runs = Self.runImages
+        let read = Mutex([Int: TextReader.Read]())
+        DispatchQueue.concurrentPerform(iterations: runs.count) { index in
+            let one = TextReader.read(runs[index], captureScale: 2, preferring: "SF Pro")
+            read.withLock { $0[index] = one }
         }
+        let held = Array(read.withLock { $0 }.values)
+        #expect(held.count == runs.count)
         #expect(Self.readings.count == held.compactMap(\.outcome.reading).count)
         #expect(Self.readings.count >= 12)
     }

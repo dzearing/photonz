@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 import PhotonzRender
+import Synchronization
 import Testing
 
 /// "Annotate the ux with measurements": what a designer hands a developer.
@@ -32,7 +33,26 @@ struct RedlinePlanTests {
         let canvas: CGSize
     }
 
+    /// Every screen of `screens`, read once for the whole suite and spread
+    /// over the cores: the tests asked for the four of them sixteen times
+    /// between them (2026-10-26). What a test then does with a read is its
+    /// own, since a `Read` is a value.
+    static let readOnce: [String: Result<Read, any Error>] = {
+        let read = Mutex([String: Result<Read, any Error>]())
+        DispatchQueue.concurrentPerform(iterations: screens.count) { index in
+            let name = screens[index]
+            let one = Result { try reading(name) }
+            read.withLock { $0[name] = one }
+        }
+        return read.withLock { $0 }
+    }()
+
     static func read(_ name: String) throws -> Read {
+        if let once = readOnce[name] { return try once.get() }
+        return try reading(name)
+    }
+
+    static func reading(_ name: String) throws -> Read {
         let luma = try picture(name)
         let nodes = LayoutRead.read(luma, pixelScale: 2)
         let canvas = CGSize(width: luma.width, height: luma.height)
