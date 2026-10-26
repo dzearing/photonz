@@ -139,7 +139,12 @@ cp .build/arm64-apple-macosx/release/Photonz "$APP/Contents/MacOS/$APP_NAME"
 ASK_SERVER_SRC=$("$(dirname "$0")/vendor-llama-server.sh")
 mkdir -p "$APP/Contents/Helpers/AskModel"
 cp "$ASK_SERVER_SRC"/* "$APP/Contents/Helpers/AskModel/"
-cp Vendor/llama-server/LICENSE "$APP/Contents/Helpers/AskModel/LICENSE.txt"
+# Its licence goes in Resources, never Helpers: Helpers holds only code, and a
+# plain file there fails a Developer ID signing with "code object is not signed
+# at all" (the v0.19.0 release run, 2026-10-25; an ad-hoc --deep signing hides
+# it by signing the file into an extended attribute).
+mkdir -p "$APP/Contents/Resources/AskModel"
+cp Vendor/llama-server/LICENSE "$APP/Contents/Resources/AskModel/llama-server-LICENSE.txt"
 
 # The picture model Ask paints with (docs/design/ask.md, "The picture model"):
 # uv, which Settings > Ask runs once to build a private Python environment in
