@@ -1,0 +1,32 @@
+{
+  "id": "photonz-only-offers-an-update-once-that-version",
+  "title": "Photonz only offers an update once that version can actually be downloaded",
+  "goal": "Photonz decided 0.19.0 was out because the website's version file said so, before the download existed, and updating failed with a server error. The update check should only offer a version once its download is really there, and a failed download should say plainly that the update is not ready yet.",
+  "epic": "interaction-foundations",
+  "priority": "p1-high",
+  "seq": 1.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-26T04:01:25.610Z",
+  "updated": "2026-10-26T04:01:25.711Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-25: 'i just tried to update photonz and it said server error' and 'why is photonz detecting 0.19 if we haven't published it yet'. Cause, verified in the intake window: Sources/Photonz/UpdateChecker.swift reads https://dzearing.github.io/photonz/version.json and trusts it; the release skill committed site/version.json with the tag, so the site deployed 0.19.0 in 2.5 minutes while the Release workflow needed about 20 to publish the DMG; Sources/Photonz/SelfUpdater.swift then got a 404 from releases/download/v0.19.0/Photonz.dmg and threw downloadFailed('the server returned an unexpected response'). The skill is fixed (e493d70c: the site is announced only after the DMG answers); this task makes the app safe on its own too.",
+  "acceptance": [
+    "The update check offers version N only when the download for N answers (a HEAD request on releases/download/vN/Photonz.dmg returns 200 after redirects); otherwise it reports the app is up to date. The decision logic is in PhotonzCore with tests first (version file says newer + download answers = offer; version file says newer + download 404 = up to date; network error = the existing failure message).",
+    "If a download still fails part way, the message is plain and human, for example 'This update isn't ready to download yet. Try again in a few minutes.', never 'the server returned an unexpected response'.",
+    "MEASURED against the real servers: with the current release published, the check offers nothing on a build of that version and offers it on a build stamped one version lower; with a version number that has no release (a test stub of version.json), it offers nothing.",
+    "Try path: an installed older Photonz, Check for Updates while a release is half out: it says up to date, then offers the update once the download is published."
+  ],
+  "log": [
+    {
+      "t": "2026-10-26T04:01:25.612Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-26T04:01:25.710Z",
+      "note": "seq 3970 -> 1.2"
+    }
+  ]
+}
