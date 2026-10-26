@@ -14221,3 +14221,7 @@
 {"t":"2026-10-26T03:36:58.697Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-26T03:36:58.765Z","ev":"task_resequenced","id":"every-brush-follows-the-pointer-with-no-lag-even","from":3,"to":1}
 {"t":"2026-10-26T03:36:58.833Z","ev":"task_resequenced","id":"painting-is-what-you-see-earlier-strokes-never-r","from":2.9,"to":1.1}
+{"t":"2026-10-26T04:01:25.614Z","ev":"task_created","id":"photonz-only-offers-an-update-once-that-version","priority":"p1-high","title":"Photonz only offers an update once that version can actually be downloaded"}
+{"t":"2026-10-26T04:01:25.712Z","ev":"task_resequenced","id":"photonz-only-offers-an-update-once-that-version","from":3970,"to":1.2}
+{"t":"2026-10-26T06:04:45.353Z","ev":"task_created","id":"the-whole-test-suite-runs-in-minutes-here-and-on","priority":"p1-high","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75"}
+{"t":"2026-10-26T06:04:45.460Z","ev":"task_resequenced","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":3970,"to":0.8}

@@ -1,0 +1,37 @@
+{
+  "id": "the-whole-test-suite-runs-in-minutes-here-and-on",
+  "title": "The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75",
+  "goal": "Tests are far too slow. On GitHub's Mac runner the suite takes about an hour, nearly its whole time limit, and a release waits on it; on this Mac it takes about 7 minutes with everything else fighting it. Make the suite fast by cutting tests that add nothing, running tests in parallel wherever it is safe, and keeping the slow media tests from holding everything else up, without losing coverage that catches real bugs.",
+  "epic": "unmanned-loop",
+  "priority": "p1-high",
+  "seq": 0.8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-26T06:04:45.349Z",
+  "updated": "2026-10-26T06:04:45.459Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-25, while the v0.19.0 release sat in GitHub's test step: 'we really need to improve the tests and reduce unnecessary ones, parallelize, make things faster. 45 minutes to run tests is quite long'. Facts from that evening: local Scripts/test.sh 14,605 tests in 1,248 suites, 428 s wall; the slowest suites under parallel contention were all media and real-capture ones (A busy MP4 lands at the size the sheet said 428 s, Reading a separated run back into words on a real capture 340 s, An animated export weighs the same twice 305 s, Grain stops banding in the exported movie 285 s); their in-parallel durations are inflated, so measure them alone. GitHub: ci.yml and release.yml both run Scripts/test.sh --no-parallel (comment: swift-testing launched every test at once and GPU-bound render tests wedged the headless VM); release.yml Run tests has a 65 minute timeout and the first v0.19.0 run used about 65 minutes (03:53 to 04:58 UTC), v0.18.0 used 57; ci.yml has a 55 minute timeout and the suite has grown past what its comment assumed (10,800 tests then, 14,605 now), so CI is likely timing out. Keep PhotonzCore and PhotonzRender test-first rules intact.",
+  "acceptance": [
+    "Measure first and put it in an audit: wall time on this Mac (Scripts/test.sh) and on GitHub (ci.yml and release.yml Run tests, compile vs run split), the 50 slowest tests and suites by their own time measured one at a time (not the inflated in-parallel durations), and how much of the GitHub hour is compiling vs running.",
+    "GitHub runs the tests in parallel. Today ci.yml and release.yml pass --no-parallel because GPU-bound render tests once wedged the headless runner; instead, only the tests that need it run serialized (a serialized suite or tag for the GPU and media tests), and everything else runs in parallel. Proven by 3 green CI runs in a row with no wedge.",
+    "Tests that add nothing are removed or merged: exact duplicates, tests whose every assertion another test already makes, and long media tests that can check the same thing on a much shorter clip or a smaller picture. The audit lists each removed or shortened test and what still covers it. The count of tests may go down; the bugs they catch must not.",
+    "The slow media and real-capture tests (export, encode, recordings, captures) are shortened (smaller inputs, fewer frames) so no single test takes over 10 seconds on its own on this Mac, MEASURED and listed.",
+    "GitHub keeps the build between runs (a cache of .build keyed on the package resolution and toolchain) so the Run tests step does not compile everything from scratch, measured before and after.",
+    "A release does not wait an hour on tests that already passed: the release workflow runs the full suite in parallel and finishes Run tests in under 15 minutes, MEASURED on a real release or a dry run of release.yml.",
+    "Targets, MEASURED and in the audit: Scripts/test.sh under 3 minutes on this Mac; Run tests on GitHub under 15 minutes in ci.yml and release.yml; tag to published release under 25 minutes.",
+    "Scripts/test.sh stays the one command, keeps its signal 10/11 and parked-run handling, and CLAUDE.md's Build & test table says the new times.",
+    "An audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-26T06:04:45.351Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-26T06:04:45.457Z",
+      "note": "seq 3970 -> 0.8"
+    }
+  ]
+}
