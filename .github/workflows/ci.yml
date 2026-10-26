@@ -51,14 +51,19 @@ jobs:
           echo "cores: $(sysctl -n hw.activecpu)"
           echo "id=$( (xcodebuild -version; swift --version) 2>&1 | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
 
-      # Restored from the newest run of main on the same toolchain; only what
-      # changed since then compiles. Saved again at the end of every run on main.
+      # The debug build, restored from the newest run of main on the same
+      # toolchain; only what changed since then compiles. One kept build per
+      # configuration: a folder saved after the release bundle was built in it
+      # recompiled every debug module on the next run (4 to 6 minutes on
+      # 2026-10-26, against 4 seconds from one saved before it).
       - name: Restore the build
         uses: actions/cache/restore@v4
         with:
           path: .build
-          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
-          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+          key: build-debug-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: |
+            build-debug-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+            build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
 
       # --disable-index-store everywhere: nothing here reads the index, it is
       # a gigabyte of the build folder, and a build with it and one without
@@ -67,6 +72,16 @@ jobs:
         run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
         env:
           PHOTONZ_BUILD_FLAGS: --disable-index-store
+
+      # Kept as it stands after building, before any test runs, by one slice:
+      # all three built the same thing. Only main's runs are kept; a pull
+      # request reads them and never writes.
+      - name: Keep the build
+        if: matrix.slice == 1 && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: .build
+          key: build-debug-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
 
       - name: Run tests
         timeout-minutes: 25
@@ -111,14 +126,16 @@ jobs:
           echo "cores: $(sysctl -n hw.activecpu)"
           echo "id=$( (xcodebuild -version; swift --version) 2>&1 | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
 
-      # Restored from the newest run of main on the same toolchain; only what
-      # changed since then compiles. Saved again at the end of every run on main.
+      # The release build, kept apart from the debug one the tests use (see
+      # the test job): each configuration's folder only ever builds itself.
       - name: Restore the build
         uses: actions/cache/restore@v4
         with:
           path: .build
-          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
-          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+          key: build-release-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: |
+            build-release-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+            build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
 
       # queue/playtest.lock says "a person is playtesting on THIS machine", so it
       # is only ever true where it was made. Committed on 2026-08-23, it rode the
@@ -171,14 +188,6 @@ jobs:
       - name: A sweep that goes blind says so
         run: node queue/bin/sweep-blind-drill.mjs
 
-      # --disable-index-store everywhere: nothing here reads the index, it is
-      # a gigabyte of the build folder, and a build with it and one without
-      # are different builds, so every step passes the same flags.
-      - name: Build (all targets and tests)
-        run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
-        env:
-          PHOTONZ_BUILD_FLAGS: --disable-index-store
-
       # --release, not the bare default. The default variant is the DEV bundle,
       # which meant this step built "dist/Photonz Dev.app" while the upload
       # below asked for dist/Photonz.app and quietly got nothing.
@@ -199,4 +208,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .build
-          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          key: build-release-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}

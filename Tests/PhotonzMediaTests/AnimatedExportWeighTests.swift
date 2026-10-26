@@ -161,25 +161,49 @@ struct AnimatedExportWeighTests {
     /// pictures and leaves the bytes to the handover. It also checks the presets
     /// really are different files, since a number that never moved with the
     /// choice would be no use on the row.
+    ///
+    /// The three clips and two formats run side by side, each writing its own
+    /// files: one after another they were 36 exports and 36 seconds, the
+    /// longest test in the suite (2026-10-26). A GIF is the same bytes beside
+    /// other encodes, and a HEIC's bytes are not claimed (see above), so
+    /// nothing here depends on the machine being quiet.
     @Test("written twice, a GIF is the same file and a HEIC the same pictures")
     func theSameFileTwice() async throws {
-        for (label, seconds, size, stillAfter, crisp) in [
+        let clips: [(String, Int, CGSize, Double, Bool)] = [
             ("short", 2, CGSize(width: 640, height: 400), 99.0, false),
             ("crisp", 2, CGSize(width: 640, height: 400), 99.0, true),
             // Four seconds, still for the second half: long enough that the still
             // half is most of what a smaller choice drops, at a size Standard
             // scales down. Six seconds was a third more encoding for nothing new.
             ("longer", 4, CGSize(width: 960, height: 600), 2.0, false),
-        ] {
-            let source = try await Self.screenSource(seconds: seconds, size: size,
-                                                     stillAfter: stillAfter, crisp: crisp)
-            let trim = VideoTrim(duration: await VideoExporter.duration(of: source))
-            for format in [RecordingFormat.gif, .heic] {
-                var landed: [VideoExportQuality: Int] = [:]
-                var held: [VideoExportQuality: (count: Int, width: Int, height: Int)] = [:]
-                for quality in VideoExportQuality.allCases {
+        ]
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for (label, seconds, size, stillAfter, crisp) in clips {
+                let source = try await Self.screenSource(seconds: seconds, size: size,
+                                                         stillAfter: stillAfter, crisp: crisp)
+                let trim = VideoTrim(duration: await VideoExporter.duration(of: source))
+                for format in [RecordingFormat.gif, .heic] {
+                    group.addTask {
+                        try await Self.writtenTwice(label: label, source: source,
+                                                    trim: trim, format: format)
+                    }
+                }
+            }
+            try await group.waitForAll()
+        }
+    }
+
+    /// One clip in one format, at every preset side by side, written twice each.
+    static func writtenTwice(label: String, source: URL, trim: VideoTrim,
+                             format: RecordingFormat) async throws {
+        typealias Held = (count: Int, width: Int, height: Int)
+        var landed: [VideoExportQuality: Int] = [:]
+        var held: [VideoExportQuality: Held] = [:]
+        try await withThrowingTaskGroup(of: (VideoExportQuality, Int, Held).self) { group in
+            for quality in VideoExportQuality.allCases {
+                group.addTask {
                     var written: [Data] = []
-                    var pictures: [(count: Int, width: Int, height: Int)] = []
+                    var pictures: [Held] = []
                     for pass in 0..<2 {
                         let out = Self.folder.appendingPathComponent(
                             "\(label)-\(format.rawValue)-\(quality.rawValue)-\(pass)."
@@ -198,59 +222,62 @@ struct AnimatedExportWeighTests {
                             + "\(written[1].count): the sheet cannot promise a GIF it cannot reproduce"
                         #expect(written[0] == written[1], "\(drift)")
                     }
-                    landed[quality] = written[0].count
-                    held[quality] = pictures[0]
+                    return (quality, written[0].count, pictures[0])
                 }
-                let high = try #require(landed[.high])
-                let standard = try #require(landed[.standard])
-                let small = try #require(landed[.small])
-                let row = "\(label) \(format.rawValue) came out \(high)/\(standard)/\(small) "
-                    + "bytes at High/Standard/Small, so the preset row does not move the size"
-                // A GIF's Small is lighter than its High, and every choice
-                // writes a different file. Its Small is lighter than its
-                // Standard too, the crisp clip included: Standard keeps a
-                // recording under 800 pixels at its own size, and Small's
-                // scaling used to turn every crisp line into in-between greys
-                // that weighed more than the frames it saved (23,244 bytes at
-                // Standard against 26,988 at Small, every time). Its frames now
-                // come down in a plain last step (`GIFFrameScaling`).
-                // High against Standard: on the longer clip, still
-                // for half its length, a GIF has landed five per cent apart
-                // and the other way round, and a HEIC's High came out under its
-                // Standard with the suite running (208,988 against 234,401).
-                // The sheet weighs every choice, so it shows whichever way
-                // round they really are.
-                //
-                // A HEIC's bytes are not claimed at all, Small against High
-                // included. Its encoder gives one of two answers for the same
-                // frames, and which depends on how many other encodes share
-                // the machine: the crisp clip's Small came out 44,630 bytes
-                // alone and among nine others, and 65,158 for the writes past
-                // that. With the suite running it has landed anywhere from
-                // 55,580 to 124,540 against High's 80,862 (2026-10-16, a full
-                // run read 82,530 against 80,862). Alone, Small is the
-                // lightest on every clip here, and on a busy machine the sheet
-                // still says what lands, because the file it weighed is the
-                // export. What the choice writes is claimed below instead.
-                if format == .gif {
-                    #expect(small < high, "\(row)")
-                    #expect(small < standard, "\(row)")
-                    #expect(Set([high, standard, small]).count == 3, "\(row)")
-                }
-                // What the choice writes, as opposed to what the encoder makes
-                // of it, is exact every time: fewer frames each step down, and
-                // Small's pictures smaller than High's.
-                let frames = try #require(held[.high]?.count)
-                let fewer = try #require(held[.standard]?.count)
-                let fewest = try #require(held[.small]?.count)
-                #expect(fewest < fewer && fewer < frames,
-                        "\(label) \(format.rawValue) held \(frames)/\(fewer)/\(fewest) frames")
-                let largest = try #require(held[.high]?.width)
-                let smallest = try #require(held[.small]?.width)
-                #expect(smallest < largest && smallest <= 480,
-                        "\(label) \(format.rawValue) is \(largest) wide at High, \(smallest) at Small")
+            }
+            for try await (quality, bytes, pictures) in group {
+                landed[quality] = bytes
+                held[quality] = pictures
             }
         }
+        let high = try #require(landed[.high])
+        let standard = try #require(landed[.standard])
+        let small = try #require(landed[.small])
+        let row = "\(label) \(format.rawValue) came out \(high)/\(standard)/\(small) "
+            + "bytes at High/Standard/Small, so the preset row does not move the size"
+        // A GIF's Small is lighter than its High, and every choice
+        // writes a different file. Its Small is lighter than its
+        // Standard too, the crisp clip included: Standard keeps a
+        // recording under 800 pixels at its own size, and Small's
+        // scaling used to turn every crisp line into in-between greys
+        // that weighed more than the frames it saved (23,244 bytes at
+        // Standard against 26,988 at Small, every time). Its frames now
+        // come down in a plain last step (`GIFFrameScaling`).
+        // High against Standard: on the longer clip, still
+        // for half its length, a GIF has landed five per cent apart
+        // and the other way round, and a HEIC's High came out under its
+        // Standard with the suite running (208,988 against 234,401).
+        // The sheet weighs every choice, so it shows whichever way
+        // round they really are.
+        //
+        // A HEIC's bytes are not claimed at all, Small against High
+        // included. Its encoder gives one of two answers for the same
+        // frames, and which depends on how many other encodes share
+        // the machine: the crisp clip's Small came out 44,630 bytes
+        // alone and among nine others, and 65,158 for the writes past
+        // that. With the suite running it has landed anywhere from
+        // 55,580 to 124,540 against High's 80,862 (2026-10-16, a full
+        // run read 82,530 against 80,862). Alone, Small is the
+        // lightest on every clip here, and on a busy machine the sheet
+        // still says what lands, because the file it weighed is the
+        // export. What the choice writes is claimed below instead.
+        if format == .gif {
+            #expect(small < high, "\(row)")
+            #expect(small < standard, "\(row)")
+            #expect(Set([high, standard, small]).count == 3, "\(row)")
+        }
+        // What the choice writes, as opposed to what the encoder makes
+        // of it, is exact every time: fewer frames each step down, and
+        // Small's pictures smaller than High's.
+        let frames = try #require(held[.high]?.count)
+        let fewer = try #require(held[.standard]?.count)
+        let fewest = try #require(held[.small]?.count)
+        #expect(fewest < fewer && fewer < frames,
+                "\(label) \(format.rawValue) held \(frames)/\(fewer)/\(fewest) frames")
+        let largest = try #require(held[.high]?.width)
+        let smallest = try #require(held[.small]?.width)
+        #expect(smallest < largest && smallest <= 480,
+                "\(label) \(format.rawValue) is \(largest) wide at High, \(smallest) at Small")
     }
 
     /// The document's own writer, which is what the editor window's sheet

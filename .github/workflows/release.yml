@@ -82,8 +82,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .build
-          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
-          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+          key: build-debug-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: |
+            build-debug-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+            build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
 
       - name: Build (all targets and tests)
         run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
@@ -142,8 +144,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .build
-          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
-          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+          key: build-release-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: |
+            build-release-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+            build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
 
       - name: Verify tag matches VERSION
         if: ${{ !inputs.dry_run }}
