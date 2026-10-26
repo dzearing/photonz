@@ -5,6 +5,13 @@ on:
     branches: [main]
     paths: ["site/**"]
   workflow_dispatch:
+  # A release announces itself only once it is published: version.json is
+  # written below from the newest release whose DMG downloads, and this runs
+  # when the Release workflow finishes. A release event would not fire here,
+  # since the release is created with GITHUB_TOKEN.
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
 
 permissions:
   contents: read
@@ -24,6 +31,30 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # Installed apps read version.json to decide an update exists and then
+      # download releases/download/v<version>/Photonz.dmg. Announcing a version
+      # before that answers made every update fail (v0.19.0, 2026-10-25), so
+      # the version comes from the newest published release whose DMG really
+      # downloads, never from the committed file, whatever order a release
+      # is done in. minOS and arch still come from site/version.json.
+      - name: Announce only a version that can be downloaded
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION=""; RELEASED=""
+          while read -r tag published; do
+            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/Photonz.dmg"
+            if [ "$(curl -s -o /dev/null -L -I -w '%{http_code}' "$url")" = "200" ]; then
+              VERSION="${tag#v}"; RELEASED="${published%%T*}"; break
+            fi
+            echo "skipping ${tag}: its DMG does not download yet"
+          done < <(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=10" \
+                     --jq '.[] | select(.draft == false and .prerelease == false) | "\(.tag_name) \(.published_at)"')
+          [ -n "$VERSION" ] || { echo "no published release has a DMG that downloads"; exit 1; }
+          jq --arg v "$VERSION" --arg r "$RELEASED" '.version = $v | .released = $r' site/version.json > /tmp/version.json
+          mv /tmp/version.json site/version.json
+          echo "announcing ${VERSION}"; cat site/version.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
