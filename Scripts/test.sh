@@ -19,6 +19,11 @@ cd "$(dirname "$0")/.."
 
 DEV_DIR="$(xcode-select -p)"
 
+# Extra flags for every build this script makes, the tests' and the
+# legibility check's alike, so the two stay one build. CI sets
+# --disable-index-store (.github/workflows/ci.yml).
+read -r -a build_flags <<< "${PHOTONZ_BUILD_FLAGS:-}"
+
 run_tests() {
   if [[ "$DEV_DIR" == *CommandLineTools* ]]; then
     FW="$DEV_DIR/Library/Developer/Frameworks"
@@ -28,9 +33,9 @@ run_tests() {
       -Xlinker -F"$FW" \
       -Xlinker -rpath -Xlinker "$FW" \
       -Xlinker -rpath -Xlinker "$LIB" \
-      "$@"
+      ${build_flags[@]+"${build_flags[@]}"} "$@"
   else
-    swift test "$@"
+    swift test ${build_flags[@]+"${build_flags[@]}"} "$@"
   fi
 }
 
@@ -224,7 +229,7 @@ fi
 # measures them: Sources/Photonz/DesignSystem/LegibilitySheet.swift says how,
 # LegibilityCatalogue.swift lists what it draws. Next, at its defaults.
 if (( status == 0 )); then
-  if ! swift build >/dev/null 2>&1; then
+  if ! swift build ${build_flags[@]+"${build_flags[@]}"} >/dev/null 2>&1; then
     echo "==> The app would not build for the legibility check."
     status=1
   elif ! .build/debug/Photonz --legibility-sheet "${TMPDIR:-/tmp}/photonz-legibility" \

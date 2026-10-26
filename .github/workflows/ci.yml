@@ -6,13 +6,48 @@ on:
   pull_request:
     branches: [main]
 
+# A newer push makes an older run's answer moot, and macOS runners are few:
+# the older run stops so the newer one starts at once.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Build & test (arm64)
     runs-on: macos-26
-    timeout-minutes: 70
+    timeout-minutes: 45
     steps:
+      # Everything but queue/audits: 3.8 GB of audit pictures nothing here
+      # reads, and fetching them was three of every run's minutes (2026-10-26).
+      # A sparse checkout fetches only the blobs it writes out.
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/queue/audits/
+          sparse-checkout-cone-mode: false
+
+      # The build folder is kept between runs (see "Keep the build"), and a
+      # fresh checkout's file times would make it rebuild everything anyway.
+      - name: File times from file contents
+        run: Scripts/ci-stable-mtimes.sh
+
+      - name: Toolchain
+        id: toolchain
+        run: |
+          swift --version
+          echo "cores: $(sysctl -n hw.activecpu)"
+          echo "id=$( (xcodebuild -version; swift --version) 2>&1 | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
+      # Restored from the newest run of main on the same toolchain; only what
+      # changed since then compiles. Saved again at the end of every run on main.
+      - name: Restore the build
+        uses: actions/cache/restore@v4
+        with:
+          path: .build
+          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
 
       # queue/playtest.lock says "a person is playtesting on THIS machine", so it
       # is only ever true where it was made. Committed on 2026-08-23, it rode the
@@ -65,22 +100,23 @@ jobs:
       - name: A sweep that goes blind says so
         run: node queue/bin/sweep-blind-drill.mjs
 
-      - name: Swift version
-        run: swift --version
-
-      - name: Build (all targets)
-        run: swift build
+      # --disable-index-store everywhere: nothing here reads the index, it is
+      # a gigabyte of the build folder, and a build with it and one without
+      # are different builds, so every step passes the same flags.
+      - name: Build (all targets and tests)
+        run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
+        env:
+          PHOTONZ_BUILD_FLAGS: --disable-index-store
 
       - name: Run tests
-        # 40, not 12: by 2026-10 the suite is ~10,800 tests and the runner
-        # compiles the test targets inside this step. Every CI run from
-        # 2026-09-17 to 2026-10-04 hit 12 minutes at a different test (about
-        # 9,900 passed), so the step was out of time, not wedged.
-        timeout-minutes: 55
-        # --no-parallel: swift-testing otherwise launches every test concurrently;
-        # the GPU-bound render tests then saturate the cooperative thread pool on
-        # the headless CI VM and the whole process wedges. Serial is ~seconds here.
-        run: Scripts/test.sh --no-parallel
+        # In parallel, at most three quarters of the cores at once
+        # (Scripts/test.sh): the old --no-parallel dates from before
+        # RecogniserLane, when a full pool of text reads wedged the VM, and it
+        # made the run 39 minutes of one test after another (v0.19.0).
+        timeout-minutes: 25
+        env:
+          PHOTONZ_BUILD_FLAGS: --disable-index-store
+        run: Scripts/test.sh
 
       # --release, not the bare default. The default variant is the DEV bundle,
       # which meant this step built "dist/Photonz Dev.app" while the upload
@@ -95,3 +131,11 @@ jobs:
           path: dist/Photonz.app
           if-no-files-found: error
           retention-days: 7
+
+      # Only main's runs are kept: a pull request reads them and never writes.
+      - name: Keep the build
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: .build
+          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}

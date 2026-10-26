@@ -52,7 +52,35 @@ jobs:
       # reading on hired hardware is not a reason to hold a release.
       PHOTONZ_PERF_GATE: report
     steps:
+      # Everything but queue/audits, as in ci.yml: 3.8 GB of pictures nothing
+      # here reads.
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/queue/audits/
+          sparse-checkout-cone-mode: false
+
+      # Restores the newest build main's CI kept (debug and release), so only
+      # what changed since compiles. See Scripts/ci-stable-mtimes.sh for why
+      # the file times are set first. A tag never saves: its cache could only
+      # ever be read by the same tag.
+      - name: File times from file contents
+        run: Scripts/ci-stable-mtimes.sh
+
+      - name: Toolchain
+        id: toolchain
+        run: |
+          swift --version
+          echo "cores: $(sysctl -n hw.activecpu)"
+          echo "id=$( (xcodebuild -version; swift --version) 2>&1 | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the build
+        uses: actions/cache/restore@v4
+        with:
+          path: .build
+          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
         with:
           ref: ${{ inputs.tag || github.ref }}
 
@@ -66,13 +94,12 @@ jobs:
           fi
 
       - name: Run tests
-        if: ${{ !inputs.skip_tests }}
-        # 65: this step builds everything as well as testing it. At 45 the
-        # v0.16.0 run used nearly all of it, and the suite has grown about 15%
-        # since (11,211 to 12,914 tests by v0.17.0).
-        timeout-minutes: 65
-        # --no-parallel: see ci.yml — serial avoids the headless-runner test hang.
-        run: Scripts/test.sh --no-parallel
+        # In parallel, as in ci.yml. Serial, this step was 53 minutes of a
+        # v0.19.0 run and timed out at 65 on the next (2026-10-26).
+        timeout-minutes: 25
+        env:
+          PHOTONZ_BUILD_FLAGS: --disable-index-store
+        run: Scripts/test.sh
 
       - name: Import Developer ID certificate
         if: env.HAVE_SIGNING == 'true'
