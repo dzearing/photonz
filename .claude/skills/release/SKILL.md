@@ -27,7 +27,7 @@ Determine the new semver version first:
    - `git add VERSION CHANGELOG.md site/version.json && git commit -m "release: vNEW"`
    - `git tag vNEW && git push origin main vNEW`
 4. **Watch the pipelines** (`gh run watch` or poll `gh run list`):
-   - `Release` workflow (tag-triggered): must end green with `Photonz.dmg` attached.
+   - `Release` workflow (tag-triggered): must end green with `Photonz.dmg` attached. It tests the tag in three slices while it builds and notarizes, and publishes only when both are through. CI skips the `release: vNEW` commit on purpose: Release tests that same commit, and both at once would want more macOS runners than the account gets.
    - `Deploy site` workflow: runs again when `Release` finishes; it must end green and its log must say `announcing NEW`.
 5. **Verify end-to-end** — the release is not done until all three pass:
    - `gh release view vNEW` shows the DMG asset.
@@ -38,5 +38,5 @@ Determine the new semver version first:
 ## Failure handling
 
 - If the Release workflow fails after tagging: fix on `main`, delete the tag (`git tag -d vNEW && git push origin :refs/tags/vNEW`) and any draft release (`gh release delete vNEW`), then restart from step 1. Never leave a tag pointing at a broken build.
-- If the tests passed but a later step failed (or the suite only ran out of time on a slow runner) and the fix needs no new tag, or the tag was moved to the fix: re-run the release by hand without the tests, `gh workflow run release.yml -f tag=vNEW -f skip_tests=true`. It still builds, signs, checks entitlements, notarizes and publishes; it skips only the 60+ minute test step. Use it only for code that has already passed `Scripts/test.sh`.
+- If the tests passed but a later step failed (or the suite only ran out of time on a slow runner) and the fix needs no new tag, or the tag was moved to the fix: re-run the release by hand without the tests, `gh workflow run release.yml -f tag=vNEW -f skip_tests=true`. It still builds, signs, checks entitlements, notarizes and publishes; it skips only the three test slices (about ten minutes, run beside the build). Use it only for code that has already passed `Scripts/test.sh`.
 - If only the site deploy failed, re-run it: `gh workflow run site.yml`.

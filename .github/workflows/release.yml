@@ -19,13 +19,83 @@ on:
         required: false
         type: boolean
         default: false
+      # Everything a release does but publish, on any ref, to time it:
+      # `gh workflow run release.yml -f tag=main -f dry_run=true`.
+      dry_run:
+        description: "Build, test, sign and package, but publish nothing"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build, package & publish
+  # The tests, as three slices on three runners at once, as in ci.yml
+  # (Scripts/test.sh --shard). One runner took 53 minutes of v0.19.0's run
+  # one test at a time, and timed out at 65 on the next (2026-10-26).
+  test:
+    name: Test slice ${{ matrix.slice }} of 3
+    if: ${{ !inputs.skip_tests }}
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      fail-fast: true
+      matrix:
+        slice: [1, 2, 3]
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      # Collect the render timings, never gate on them. v0.15.0 failed to
+      # publish twice on a shared runner that was four to eight times slower
+      # than the machine the app is developed on, with nothing actually slower
+      # in the app. By the time a tag exists, that code has already been
+      # through them on the Mac it is built on, and a stopwatch reading on
+      # hired hardware is not a reason to hold a release.
+      PHOTONZ_PERF_GATE: report
+      PHOTONZ_BUILD_FLAGS: --disable-index-store
+    steps:
+      # Everything but queue/audits, as in ci.yml: 3.8 GB of pictures nothing
+      # here reads.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          sparse-checkout: |
+            /*
+            !/queue/audits/
+          sparse-checkout-cone-mode: false
+
+      # Restores the newest build main's CI kept (debug and release), so only
+      # what changed since compiles. See Scripts/ci-stable-mtimes.sh for why
+      # the file times are set first. A tag never saves: its cache could only
+      # ever be read by the same tag.
+      - name: File times from file contents
+        run: Scripts/ci-stable-mtimes.sh
+
+      - name: Toolchain
+        id: toolchain
+        run: |
+          swift --version
+          echo "cores: $(sysctl -n hw.activecpu)"
+          echo "id=$( (xcodebuild -version; swift --version) 2>&1 | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the build
+        uses: actions/cache/restore@v4
+        with:
+          path: .build
+          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+
+      - name: Build (all targets and tests)
+        run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
+
+      - name: Run tests
+        timeout-minutes: 25
+        run: Scripts/test.sh --shard ${{ matrix.slice }}/3
+
+  # Builds, signs, notarizes and packages the DMG while the tests run; the
+  # release is published only once both are through (publish, below).
+  package:
+    name: Build, sign & package
     runs-on: macos-26
     # Generous: Apple's notary service is usually minutes but can crawl for
     # 30+ min during slow stretches; don't let the job cancel a good build.
@@ -43,14 +113,6 @@ jobs:
       HAVE_SIGNING: ${{ secrets.APPLE_SIGNING_IDENTITY != '' }}
       # The tag being released: the pushed tag, or the one named by hand.
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-      # Collect the render timings, never gate on them. v0.15.0 failed to
-      # publish twice on a shared runner that was four to eight times slower
-      # than the machine the app is developed on, with nothing actually slower
-      # in the app. The budgets still gate on every push and pull request (see
-      # ci.yml), which is where a regression should be caught; by the time a
-      # tag exists, that code has already been through them, and a stopwatch
-      # reading on hired hardware is not a reason to hold a release.
-      PHOTONZ_PERF_GATE: report
     steps:
       # Everything but queue/audits, as in ci.yml: 3.8 GB of pictures nothing
       # here reads.
@@ -84,6 +146,7 @@ jobs:
           restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
 
       - name: Verify tag matches VERSION
+        if: ${{ !inputs.dry_run }}
         run: |
           TAG="${RELEASE_TAG#v}"
           FILE="$(cat VERSION)"
@@ -91,15 +154,6 @@ jobs:
             echo "Tag v$TAG does not match VERSION file ($FILE)" >&2
             exit 1
           fi
-
-      - name: Run tests
-        if: ${{ !inputs.skip_tests }}
-        # In parallel, as in ci.yml. Serial, this step was 53 minutes of a
-        # v0.19.0 run and timed out at 65 on the next (2026-10-26).
-        timeout-minutes: 35
-        env:
-          PHOTONZ_BUILD_FLAGS: --disable-index-store
-        run: Scripts/test.sh
 
       - name: Import Developer ID certificate
         if: env.HAVE_SIGNING == 'true'
@@ -171,6 +225,39 @@ jobs:
           if ! Scripts/notarize.sh dist/Photonz.dmg; then
             echo "::warning::DMG notarization did not complete; the stapled app inside still validates."
           fi
+
+      - name: Keep the DMG for publishing
+        uses: actions/upload-artifact@v4
+        with:
+          name: Photonz.dmg
+          path: dist/Photonz.dmg
+          if-no-files-found: error
+          retention-days: 7
+
+  # Published only when the package is built and every test slice passed (or
+  # the tests were skipped by hand). A Linux runner: it only uploads.
+  publish:
+    name: Publish
+    needs: [test, package]
+    if: ${{ always() && !inputs.dry_run && needs.package.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          sparse-checkout: |
+            VERSION
+            CHANGELOG.md
+          sparse-checkout-cone-mode: false
+
+      - name: Fetch the DMG
+        uses: actions/download-artifact@v4
+        with:
+          name: Photonz.dmg
+          path: dist
 
       - name: Extract release notes from CHANGELOG
         run: |

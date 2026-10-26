@@ -24,20 +24,60 @@ DEV_DIR="$(xcode-select -p)"
 # --disable-index-store (.github/workflows/ci.yml).
 read -r -a build_flags <<< "${PHOTONZ_BUILD_FLAGS:-}"
 
-run_tests() {
+# `swift test [list]` with the flags every build here shares.
+swift_test() {
+  local sub=()
+  [[ "${1:-}" == "list" ]] && { sub=(list); shift; }
   if [[ "$DEV_DIR" == *CommandLineTools* ]]; then
     FW="$DEV_DIR/Library/Developer/Frameworks"
     LIB="$DEV_DIR/Library/Developer/usr/lib"
-    swift test \
+    swift test ${sub[@]+"${sub[@]}"} \
       -Xswiftc -F"$FW" \
       -Xlinker -F"$FW" \
       -Xlinker -rpath -Xlinker "$FW" \
       -Xlinker -rpath -Xlinker "$LIB" \
       ${build_flags[@]+"${build_flags[@]}"} "$@"
   else
-    swift test ${build_flags[@]+"${build_flags[@]}"} "$@"
+    swift test ${sub[@]+"${sub[@]}"} ${build_flags[@]+"${build_flags[@]}"} "$@"
   fi
 }
+
+run_tests() {
+  swift_test ${shard_filters[@]+"${shard_filters[@]}"} "$@"
+}
+
+# --shard K/N runs only the K-th of N slices of the suite, so several machines
+# can share one run: GitHub's runners have three cores each, and the whole
+# suite on one of them was 21 minutes of tests however it was ordered
+# (2026-10-26), so CI and release run it as three jobs at once. Every suite
+# type in every test target goes to one slice, so the N slices together are
+# exactly the whole suite and a new suite lands in one by itself. They are
+# dealt heaviest first, each to the slice carrying least so far, by the
+# weights in Scripts/test-weights.tsv (measured by Scripts/test-weights.sh;
+# a suite it does not list weighs a little), so the slices finish together.
+# The checks after the tests (video kit, legibility) run in slice 1, which
+# starts with their weight already on it.
+shard=""
+args=()
+while (( $# )); do
+  case "$1" in
+    --shard) shard="${2:-}"; shift; (( $# )) && shift ;;
+    --shard=*) shard="${1#--shard=}"; shift ;;
+    *) args+=("$1"); shift ;;
+  esac
+done
+set -- ${args[@]+"${args[@]}"}
+shard_filters=()
+shard_index=1
+if [[ -n "$shard" ]]; then
+  if ! [[ "$shard" =~ ^([0-9]+)/([0-9]+)$ ]] \
+      || (( BASH_REMATCH[1] < 1 || BASH_REMATCH[1] > BASH_REMATCH[2] )); then
+    echo "==> --shard wants K/N with 1 <= K <= N, e.g. --shard 2/3 (got '$shard')."
+    exit 2
+  fi
+  shard_index=${BASH_REMATCH[1]}
+  shard_count=${BASH_REMATCH[2]}
+fi
 
 # A target that imports one of our modules without listing it in Package.swift
 # is not rebuilt when that module changes shape, and its tests then fail on
@@ -46,6 +86,50 @@ run_tests() {
 if ! gaps="$(node Scripts/check-direct-imports.mjs)"; then
   echo "$gaps"
   exit 1
+fi
+
+# The slice's suites, as one --filter each. Listing builds the tests first.
+if [[ -n "$shard" ]]; then
+  if ! listing="$(swift_test list 2>&1)"; then
+    echo "$listing" | tail -40
+    echo "==> Could not list the tests to cut slice $shard."
+    exit 1
+  fi
+  weights=Scripts/test-weights.tsv
+  [[ -f "$weights" ]] || weights=/dev/null
+  while IFS= read -r unit; do
+    shard_filters+=(--filter "^$(printf '%s' "$unit" | sed 's/[][\.()*+?^$|{}]/\\&/g')(/|\$)")
+  done < <(printf '%s\n' "$listing" \
+    | grep -E '^[A-Za-z_][A-Za-z0-9_]*Tests\.' \
+    | sed -E 's#/.*##' | LC_ALL=C sort -u \
+    | awk -F'\t' -v k="$shard_index" -v n="$shard_count" '
+        FNR == NR { if ($0 !~ /^#/ && NF >= 2) weight[$1] = $2 + 0; next }
+        { units[++count] = $1; w[count] = ($1 in weight) ? weight[$1] : 0.1 }
+        END {
+          # Heaviest first, then by name, so every slice deals the same way.
+          for (i = 2; i <= count; i++) {
+            u = units[i]; x = w[i]
+            for (j = i - 1; j >= 1 && (w[j] < x || (w[j] == x && units[j] > u)); j--) {
+              units[j + 1] = units[j]; w[j + 1] = w[j]
+            }
+            units[j + 1] = u; w[j + 1] = x
+          }
+          load[1] = 40   # the video kit and legibility checks
+          for (i = 1; i <= count; i++) {
+            best = 1
+            for (s = 2; s <= n; s++) if (load[s] < load[best]) best = s
+            load[best] += w[i]
+            if (best == k) print units[i]
+          }
+        }' "$weights" -)
+  echo "==> Slice $shard: $(( ${#shard_filters[@]} / 2 )) suites."
+  # Never a green slice that ran nothing: a listing this cannot read is an
+  # error, not an empty slice.
+  if (( ${#shard_filters[@]} == 0 )); then
+    echo "$listing" | tail -20
+    echo "==> Found no suites for slice $shard in the test listing above."
+    exit 1
+  fi
 fi
 
 # How many tests run at once: most of the cores, never all of them. A test
@@ -213,7 +297,7 @@ fi
 # it with nothing else. A typecheck of the kit alone is the guard that it never
 # starts reading app state (`Scripts/video-kit-gallery.sh`). The one pure
 # core file the kit leans on, the tile grids' column math, comes along.
-if (( status == 0 )); then
+if (( status == 0 && shard_index == 1 )); then
   if ! swiftc -typecheck -parse-as-library -swift-version 6 \
       Sources/Photonz/VideoKit/*.swift Sources/PhotonzCore/TileGridPlan.swift \
       Scripts/video-kit-gallery.swift; then
@@ -228,7 +312,7 @@ fi
 # EVER"). The debug build the tests just made draws the shipped controls and
 # measures them: Sources/Photonz/DesignSystem/LegibilitySheet.swift says how,
 # LegibilityCatalogue.swift lists what it draws. Next, at its defaults.
-if (( status == 0 )); then
+if (( status == 0 && shard_index == 1 )); then
   if ! swift build ${build_flags[@]+"${build_flags[@]}"} >/dev/null 2>&1; then
     echo "==> The app would not build for the legibility check."
     status=1

@@ -13,12 +13,81 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The tests, as three slices on three runners at once (Scripts/test.sh
+  # --shard). One runner has three cores, and the whole suite on one was 21
+  # minutes of tests however it was ordered (2026-10-26).
   test:
-    name: Build & test (arm64)
+    name: Test slice ${{ matrix.slice }} of 3
+    # A release commit is tested by release.yml on its tag, slice for slice,
+    # and both at once would ask for more macOS runners than an account gets.
+    if: "!startsWith(github.event.head_commit.message, 'release: v')"
     runs-on: macos-26
-    # Build, tests and the release bundle. 45 cut the first run with a kept
-    # build off a minute after its cold release build (2026-10-26).
-    timeout-minutes: 70
+    # A cold build is 19 minutes of this; a kept one is about one.
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        slice: [1, 2, 3]
+    steps:
+      # Everything but queue/audits: 3.8 GB of audit pictures nothing here
+      # reads, and fetching them was three of every run's minutes (2026-10-26).
+      # A sparse checkout fetches only the blobs it writes out.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/queue/audits/
+          sparse-checkout-cone-mode: false
+
+      # The build folder is kept between runs (see "Keep the build"), and a
+      # fresh checkout's file times would make it rebuild everything anyway.
+      - name: File times from file contents
+        run: Scripts/ci-stable-mtimes.sh
+
+      - name: Toolchain
+        id: toolchain
+        run: |
+          swift --version
+          echo "cores: $(sysctl -n hw.activecpu)"
+          echo "id=$( (xcodebuild -version; swift --version) 2>&1 | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
+      # Restored from the newest run of main on the same toolchain; only what
+      # changed since then compiles. Saved again at the end of every run on main.
+      - name: Restore the build
+        uses: actions/cache/restore@v4
+        with:
+          path: .build
+          key: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-${{ github.sha }}
+          restore-keys: build-${{ runner.os }}-${{ steps.toolchain.outputs.id }}-
+
+      # --disable-index-store everywhere: nothing here reads the index, it is
+      # a gigabyte of the build folder, and a build with it and one without
+      # are different builds, so every step passes the same flags.
+      - name: Build (all targets and tests)
+        run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
+        env:
+          PHOTONZ_BUILD_FLAGS: --disable-index-store
+
+      - name: Run tests
+        timeout-minutes: 25
+        env:
+          PHOTONZ_BUILD_FLAGS: --disable-index-store
+          # Timings are collected here, never gated, as in release.yml. Every
+          # commit already gates them on the Mac the app is built on
+          # (Scripts/test.sh before every commit), and on this three core VM,
+          # two tests at a time, flat budgets failed on unchanged code: a
+          # Width drag at 61.9 ms against 48, a long timeline at 204 ms
+          # against 150 (2026-10-26).
+          PHOTONZ_PERF_GATE: report
+        run: Scripts/test.sh --shard ${{ matrix.slice }}/3
+
+  # The queue's own checks, the release bundle, and the build kept for the
+  # next run, beside the test slices.
+  build:
+    name: Build app bundle (arm64)
+    if: "!startsWith(github.event.head_commit.message, 'release: v')"
+    runs-on: macos-26
+    timeout-minutes: 60
     steps:
       # Everything but queue/audits: 3.8 GB of audit pictures nothing here
       # reads, and fetching them was three of every run's minutes (2026-10-26).
@@ -109,25 +178,6 @@ jobs:
         run: swift build --build-tests $PHOTONZ_BUILD_FLAGS
         env:
           PHOTONZ_BUILD_FLAGS: --disable-index-store
-
-      - name: Run tests
-        # In parallel, at most three quarters of the cores at once
-        # (Scripts/test.sh): the old --no-parallel dates from before
-        # RecogniserLane, when a full pool of text reads wedged the VM, and it
-        # made the run 39 minutes of one test after another (v0.19.0). The
-        # first parallel run, before the slow suites were cut, reached 99 per
-        # cent of the suite in 25 minutes (2026-10-26).
-        timeout-minutes: 35
-        env:
-          PHOTONZ_BUILD_FLAGS: --disable-index-store
-          # Timings are collected here, never gated, as in release.yml. Every
-          # commit already gates them on the Mac the app is built on
-          # (Scripts/test.sh before every commit), and on this three core VM,
-          # two tests at a time, flat budgets failed on unchanged code: a
-          # Width drag at 61.9 ms against 48, a long timeline at 204 ms
-          # against 150 (2026-10-26).
-          PHOTONZ_PERF_GATE: report
-        run: Scripts/test.sh
 
       # --release, not the bare default. The default variant is the DEV bundle,
       # which meant this step built "dist/Photonz Dev.app" while the upload
