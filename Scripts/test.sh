@@ -43,6 +43,20 @@ if ! gaps="$(node Scripts/check-direct-imports.mjs)"; then
   exit 1
 fi
 
+# How many tests run at once: most of the cores, never all of them. A test
+# whose body waits on the Mac's text recogniser, HEIF writer or movie encoder
+# holds one of Swift's shared pool threads while it waits, and from macOS 27
+# those frameworks need a free thread on that same pool to answer: with every
+# pool thread held by a waiting test, nothing answers and the run parks for
+# good (2026-10-26, three runs out of three; RecogniserLane.swift says how it
+# was measured). Leaving a quarter of the pool free means a waiting test always
+# has a thread to be answered on. Set it yourself to override.
+if [[ -z "${SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH:-}" ]]; then
+  cores="$(sysctl -n hw.activecpu 2>/dev/null || echo 4)"
+  export SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=$(( cores - (cores + 3) / 4 ))
+  (( SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH < 1 )) && export SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=1
+fi
+
 # The whole output is kept only so the last lines can be looked at for a crash.
 # Everything is still printed as it happens.
 log="$(mktemp -t photonz-test-XXXXXX)"

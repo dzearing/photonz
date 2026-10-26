@@ -24,6 +24,14 @@ import Synchronization
 /// the pool never fills, and waiting on a lower priority there is a hang risk
 /// the system warns about.
 ///
+/// From macOS 27 that is not enough on its own: the recogniser also needs a
+/// free thread on the pool itself, and a read on a lane thread never answered
+/// while every pool thread was blocked (2026-10-26). A caller waiting here
+/// still blocks its own thread, so many reads asked for at once from the pool
+/// can fill it again. `offThePool` is the answer for those: the whole read,
+/// lane and all, is handed to a queue of its own and the asking task is
+/// suspended rather than blocked, so the pool keeps its threads.
+///
 /// `TextReadsOnAFullPoolTests` is the check.
 enum RecogniserLane {
 
@@ -39,6 +47,19 @@ enum RecogniserLane {
     /// A read that never handed its answer back, which the queue makes
     /// impossible; here so the lane holds no force unwrap.
     struct Unanswered: Error {}
+
+    /// Where `offThePool` runs its work: never Swift's shared pool, and as
+    /// many threads as are waiting, since each spends its time in `gate`.
+    private static let waiting = DispatchQueue(label: "photonz.text-recogniser.waiting",
+                                               qos: .userInitiated, attributes: .concurrent)
+
+    /// `work`, run on a thread that is not one of Swift's shared pool, with the
+    /// asking task suspended until it answers instead of holding its thread.
+    static func offThePool<T: Sendable>(_ work: @escaping @Sendable () -> T) async -> T {
+        await withCheckedContinuation { continuation in
+            waiting.async { continuation.resume(returning: work()) }
+        }
+    }
 
     static func run<T: Sendable>(_ work: @escaping @Sendable () -> Result<T, any Error>) -> Result<T, any Error> {
         if Thread.isMainThread { return work() }

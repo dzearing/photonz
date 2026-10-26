@@ -95,7 +95,7 @@ extension EditorState {
                 let found = await Task.detached(priority: .utility) {
                     await withTaskGroup(of: (ImageRef, String).self) { group in
                         for (ref, image) in slice {
-                            group.addTask { (ref, TextReader.words(in: image) ?? "") }
+                            group.addTask { (ref, await TextReader.wordsOffThePool(in: image) ?? "") }
                         }
                         var landed: [(ImageRef, String)] = []
                         for await one in group { landed.append(one) }

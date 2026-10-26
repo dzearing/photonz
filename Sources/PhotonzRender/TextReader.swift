@@ -519,6 +519,14 @@ public enum TextReader {
         return words.isEmpty ? nil : words
     }
 
+    /// `words(in:)` for a caller on Swift's shared pool that asks for many at
+    /// once, as a batch of rows does: the read waits without holding a pool
+    /// thread, so however many are asked for, the pool keeps threads free for
+    /// the recogniser itself (`RecogniserLane`).
+    public static func wordsOffThePool(in image: CGImage) async -> String? {
+        await RecogniserLane.offThePool { words(in: image) }
+    }
+
     // MARK: - The ink
 
     /// The shape of the ink in a picture, and samples of its colour from the

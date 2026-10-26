@@ -61,7 +61,11 @@ struct ScaledRenderTests {
                 let i = (y * w + x) * 4, j = (y * w + x - 1) * 4
                 let a = Double(data[i]) * 0.3 + Double(data[i + 1]) * 0.59 + Double(data[i + 2]) * 0.11
                 let b = Double(data[j]) * 0.3 + Double(data[j + 1]) * 0.59 + Double(data[j + 2]) * 0.11
-                if abs(a - b) > 90 { hard += 1 }
+                // 120 of 255: a jump only a stroke drawn at this size makes.
+                // At 90 the blown-up label's own steps counted too, and on
+                // macOS 27 they came within 1.48 times of the crisp one's
+                // (2026-10-26); at 120 the crisp label has 21 times as many.
+                if abs(a - b) > 120 { hard += 1 }
             }
         }
         return Double(hard) / Double(h * (w - 1))

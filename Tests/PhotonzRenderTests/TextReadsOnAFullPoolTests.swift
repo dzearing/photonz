@@ -13,6 +13,14 @@ import Testing
 /// work running). Run words reads every row of a screenshot that way, and the
 /// whole test run hung in it every time from 2026-10-10.
 ///
+/// From macOS 27 the recogniser also needs a free thread ON that pool: a read
+/// on a thread of its own never answered while every pool thread was blocked
+/// (2026-10-26, measured with a drill: answered with the pool free, silent for
+/// 20 s with it full). So a read asked for from the pool must not hold its
+/// pool thread while it waits, and `TextReader.wordsOffThePool` is the read
+/// that does not: the reads here are asked for exactly the way the app's
+/// batches ask (`EditorState+RunWords`).
+///
 /// If this regresses the test does not fail, it HANGS, taking every pool
 /// thread with it. `Scripts/test.sh` notices a run that has gone quiet and
 /// idle, names the test it is parked in and stops.
@@ -29,7 +37,7 @@ struct TextReadsOnAFullPoolTests {
         let alone = TextReader.words(in: image)
         let count = 2 * ProcessInfo.processInfo.activeProcessorCount
         let answers = await withTaskGroup(of: String?.self) { group in
-            for _ in 0..<count { group.addTask { TextReader.words(in: image) } }
+            for _ in 0..<count { group.addTask { await TextReader.wordsOffThePool(in: image) } }
             var answers: [String?] = []
             for await answer in group { answers.append(answer) }
             return answers
