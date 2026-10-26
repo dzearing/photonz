@@ -2,6 +2,26 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.19.0 — 2026-10-25
+
+**Paint with real brushes.** Press B for the Brush and paint onto a Paint layer. Pick a brush from tiles that each show its own stroke: a graphite Pencil from hard and pale to soft and dark, charcoal, chalk and crayon that catch on the paper grain, a flat marker that darkens where strokes cross, an airbrush that builds up while you hold it, oil paint that carries and smears colour and runs dry, and watercolour washes that pool, bleed, granulate and bloom into each other while wet. Smudge mode smears what is already there. A pen's pressure, tilt and speed shape every brush, and a mouse stroke tapers in and out. Each brush keeps its own settings, shown over the tool bar and in the panel.
+
+**Ask runs on your Mac, with nothing else to install.** Ask's model now runs inside Photonz. Settings > Ask downloads it once, Photonz starts it when you ask and lets it go when you are done, and it works with no network at all. Qwen3.8 27B is the new default. Ask can paint a drawing with a picture model on your Mac and trace it into layers you can edit. It plans a pose or a scene first, checks the drawing against the plan, and keeps every figure whole.
+
+**Ask makes things, not just edits them.** Describe what you want with nothing open and Ask makes it. It can build a sheet of real components with their states, laid out as one clean table. Find the misalignments marks alignment, gap, padding and border faults as redlines on a screenshot. A request sent while Ask is busy waits its turn and can be cancelled, and each row says what it made, like "Drew a cat". Command K opens Ask on videos too, and Ask in the title bar is easy to spot.
+
+**A File menu like every Mac app.** New sits at the top and makes an Image or a Video, followed by Open and Open Recent. The menu bar icon's menu starts the same way, with capture below.
+
+**Lighter on memory.** Closing a window gives its memory back, and Photonz holds itself to a memory budget however long it stays open.
+
+**Agents can drive Photonz.** An agent can reach the running app, run any menu command by name, read and see the open document, draw a picture, redline a screenshot, cut a video from History clips with titles, transitions and zooms, and build a design system.
+
+**More you can do.** A layer can be flipped horizontally or vertically. A border follows the shape it is on, not the box around it. A chart is your own data and moves when your numbers change. The next thing you draw keeps the last one's look and fade. Opening a folded panel section takes room from the sections above it.
+
+**Next is where most of this lives.** Open Experiments from the app menu to switch between Current and Next. Both ship in the same app.
+
+**Fixes worth naming.** Smudging after a few paint strokes no longer freezes the app. The Library holds still under a click. A title part's timing dragged by hand survives a change of style.
+
 ## 0.18.0 — 2026-10-19
 
 **Recording with sound works in the downloaded app.** In 0.17.0, macOS turned down the microphone for Photonz without ever asking, and the app never showed up under Privacy & Security > Microphone. That meant the released app could not record your voice at all. Now the first recording with the microphone on brings up the usual macOS prompt. Allow it once and your voice is recorded from then on.
