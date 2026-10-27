@@ -14298,3 +14298,6 @@
 {"t":"2026-10-27T01:42:51.952Z","ev":"task_resequenced","id":"the-agent-server-and-skill-come-inside-photonz-a","from":120,"to":0.5}
 {"t":"2026-10-27T01:42:52.025Z","ev":"task_note","id":"the-setup-window-walks-you-through-only-the-step"}
 {"t":"2026-10-27T01:42:52.100Z","ev":"task_resequenced","id":"the-setup-window-walks-you-through-only-the-step","from":130,"to":0.6}
+{"t":"2026-10-27T01:45:50.368Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
+{"t":"2026-10-27T02:07:17.348Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
+{"t":"2026-10-27T02:19:19.718Z","ev":"task_done","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"Local Scripts/test.sh 111-128 s (was 262-308), four swift test runs side by side on one build on 8+ core Macs, 14,608 tests green four times; no test over 10 s alone (slowest 9.7 s) after plain-loop rewrites of five debug-hot app loops, per-layer PaintRasterCache gates and a CIContext pool in one test; LongTimelineCost budgets on CPUYardstick; GitHub slices 7-9 min, CI green on 40434200943 and 40436562757; release dry run 9.5 min (pass 2). Audit queue/audits/2026-10-26-fast-test-suite.json + -measurements.md pass 3. Commits a2b9ac69, 8e6b4769, 8460c674."}

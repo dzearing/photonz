@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-26T06:04:45.349Z",
-  "updated": "2026-10-27T00:32:15.588Z",
+  "updated": "2026-10-27T02:19:19.717Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25, while the v0.19.0 release sat in GitHub's test step: 'we really need to improve the tests and reduce unnecessary ones, parallelize, make things faster. 45 minutes to run tests is quite long'. Facts from that evening: local Scripts/test.sh 14,605 tests in 1,248 suites, 428 s wall; the slowest suites under parallel contention were all media and real-capture ones (A busy MP4 lands at the size the sheet said 428 s, Reading a separated run back into words on a real capture 340 s, An animated export weighs the same twice 305 s, Grain stops banding in the exported movie 285 s); their in-parallel durations are inflated, so measure them alone. GitHub: ci.yml and release.yml both run Scripts/test.sh --no-parallel (comment: swift-testing launched every test at once and GPU-bound render tests wedged the headless VM); release.yml Run tests has a 65 minute timeout and the first v0.19.0 run used about 65 minutes (03:53 to 04:58 UTC), v0.18.0 used 57; ci.yml has a 55 minute timeout and the suite has grown past what its comment assumed (10,800 tests then, 14,605 now), so CI is likely timing out. Keep PhotonzCore and PhotonzRender test-first rules intact.",
@@ -84,8 +84,21 @@
     {
       "t": "2026-10-27T00:32:15.587Z",
       "note": "seq 10 -> 4"
+    },
+    {
+      "t": "2026-10-27T01:45:50.366Z",
+      "note": "Pass 3 (a2b9ac69): Scripts/test.sh on a Mac of 8+ cores builds once and runs four swift test processes side by side (serialized suites then ...PerfTests; PhotonzCoreTests; suites weighing >=10 s; the rest), each its own pool; legibility and kit typecheck beside them. Measured why with per-run event streams + helper CPU samples: one run used 4-8 of 16 cores, serialized steps re-queued behind 14,000 tests, core tests dealt last. Local 308 s -> 123 and 128 s green twice, 14,608 tests (target <180: DONE). Parked drill exit 4 in one run and in four; --shard 1/2/3 here 54/72/77 s summing to 14,608. GitHub keeps one run per slice (3 cores). Slow tests alone: whole-window separation 21.8->9.2, agent element scan 21.6->8.3, caliper 17.0->7.8, brush settings 11.0->7.0, title entrances 12.4->6.5, document weigh split 6.4+8.2 (not faster; side-by-side qualities tried and failed at 1.34x). Still over: ReadRunAsText first test 12.9 s (recogniser lane, width 4 for the macOS 27 hang). Chose plain index loops in app hot paths over building PhotonzCore optimized for tests because the module is 161k lines and every loop build would pay. Chose per-layer gates in PaintRasterCache over per-size because different layers of one size serialized (a real app cost too)."
+    },
+    {
+      "t": "2026-10-27T02:07:17.346Z",
+      "note": "Pass 3 finished (a2b9ac69, 8e6b4769, 8460c674): TextReading.shared plain loops took the last >10 s test (ReadRunAsText first test) 12.9 -> 5.5 s; no test measured alone is over 10 s (slowest 9.7 s). Local Scripts/test.sh 111-128 s over four green runs. CI 40434200943 green on the four-run change (slices 241/311/444 s, 14,608 tests). Fixed a CI flake on the way: export-twice picture check now judges the closest of up to three pairs (7 vs 6 on run 40427055081). left rough: Scripts/test-weights.tsv predates this pass so CI slice 3 is the long one (7.4 min vs 4.0); not filed, every slice is well under 15 min; re-run Scripts/test-weights.sh when it matters. left rough: CI run 40433332773 was cancelled by a queue push landing on top; that is the workflow's concurrency rule, not a fault."
+    },
+    {
+      "t": "2026-10-27T02:19:19.715Z",
+      "note": "Local Scripts/test.sh 111-128 s (was 262-308), four swift test runs side by side on one build on 8+ core Macs, 14,608 tests green four times; no test over 10 s alone (slowest 9.7 s) after plain-loop rewrites of five debug-hot app loops, per-layer PaintRasterCache gates and a CIContext pool in one test; LongTimelineCost budgets on CPUYardstick; GitHub slices 7-9 min, CI green on 40434200943 and 40436562757; release dry run 9.5 min (pass 2). Audit queue/audits/2026-10-26-fast-test-suite.json + -measurements.md pass 3. Commits a2b9ac69, 8e6b4769, 8460c674."
     }
   ],
   "started": "2026-10-27T00:01:40.049Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-10-27T02:19:19.716Z"
 }
