@@ -142,6 +142,54 @@ struct PaintRasterCacheTests {
         #expect(small.keptBytes == 0)
     }
 
+    @Test func aLandingAtOneScaleNeverCostsTheOtherScaleItsRaster() throws {
+        // Zoomed in, a layer is shown at two scales: the composite's and the
+        // sharp copy's, several times bigger. A landing paints the new stroke
+        // at both. On 2026-10-27 the sharp copy's raster came in first, the
+        // budget let the oldest go, and that was the composite's raster for
+        // the strokes before: the composite then replayed all nine strokes
+        // while the sharp copy's raster from one stroke back, wanted only for
+        // an undo there, stayed (painting-holds-still-walk, at 200%).
+        let small = Int(box.width) * Int(box.height) * 4
+        let big = Int(box.width * 4) * Int(box.height * 4) * 4
+        // Room for two sharp rasters and not much else, as a 200% view of a
+        // screenshot has in the shared budget.
+        let cache = PaintRasterCache(budgetBytes: 2 * big + small / 2)
+        let all = strokes
+        func at(_ count: Int, _ scale: CGFloat) -> CGImage? {
+            cache.raster(PaintContent(strokes: Array(all.prefix(count))), size: box, scale: scale)
+        }
+        _ = at(2, 1)
+        _ = at(3, 1)
+        _ = at(3, 4)
+        // The landing of stroke 4: the sharp copy's first, then the composite's.
+        _ = at(4, 4)
+        let before = cache.strokesSimulated
+        let composite = try #require(at(4, 1))
+        #expect(cache.strokesSimulated - before == 1, "the composite painted only the new stroke")
+        #expect(bytes(composite) == bytes(try #require(PaintRasterizer.replay(
+            PaintContent(strokes: Array(all.prefix(4))), size: box, scale: 1))))
+        #expect(cache.keptBytes <= cache.budgetBytes)
+    }
+
+    @Test func undoneTheShorterListIsNotTheFirstToGo() throws {
+        // After an undo the shorter list is what is on screen: a list it is
+        // the start of, used longer ago, goes before it does.
+        let one = Int(box.width * scale) * Int(box.height * scale) * 4
+        let cache = PaintRasterCache(budgetBytes: one * 2 + one / 2)
+        let all = strokes
+        func at(_ count: Int) -> CGImage? {
+            cache.raster(PaintContent(strokes: Array(all.prefix(count))), size: box, scale: scale)
+        }
+        _ = at(3)
+        _ = at(4)
+        _ = at(3)            // undo
+        _ = cache.raster(PaintContent(strokes: Array(all.suffix(1))), size: box, scale: scale)  // another layer
+        let before = cache.strokesSimulated
+        _ = at(3)
+        #expect(cache.strokesSimulated == before, "the undone state was still kept")
+    }
+
     @Test func requestsArrivingTogetherSimulateTheStrokesOnce() throws {
         // Two tiles of one render ask for the same layer at once: the second
         // waits for the first rather than doing it all again.

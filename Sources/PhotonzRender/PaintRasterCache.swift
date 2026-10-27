@@ -145,12 +145,30 @@ public final class PaintRasterCache: @unchecked Sendable {
             made.used = clock
             entries.append(made)
             var total = entries.reduce(0) { $0 + $1.byteCount }
-            while total > budgetBytes, let oldest = entries.indices.min(by: { entries[$0].used < entries[$1].used }) {
-                total -= entries[oldest].byteCount
-                entries.remove(at: oldest)
+            while total > budgetBytes, let index = leastWanted() {
+                total -= entries[index].byteCount
+                entries.remove(at: index)
             }
         }
         return made
+    }
+
+    /// The kept raster to let go of first, called under `lock`: one a longer
+    /// list at its scale has since been painted on from, wanted only for an
+    /// undo there, before any other; then the least recently used. By age
+    /// alone, a landing zoomed in let the composite's raster of the strokes
+    /// before go to keep the sharp copy's (64 MB at 200% on a screenshot),
+    /// and the composite replayed the whole layer (2026-10-27).
+    private func leastWanted() -> Int? {
+        let replaced = entries.indices.filter { i in
+            let entry = entries[i]
+            return entries.contains { other in
+                other !== entry && other.slot == entry.slot && other.used > entry.used
+                    && other.strokes.count > entry.strokes.count && entry.isPrefix(of: other.strokes)
+            }
+        }
+        let pool = replaced.isEmpty ? Array(entries.indices) : replaced
+        return pool.min { entries[$0].used < entries[$1].used }
     }
 
     struct Slot: Hashable {
