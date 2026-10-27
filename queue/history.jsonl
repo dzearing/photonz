@@ -14294,3 +14294,7 @@
 {"t":"2026-10-27T00:32:15.443Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-27T00:32:15.516Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-26","from":120,"to":3}
 {"t":"2026-10-27T00:32:15.589Z","ev":"task_resequenced","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":10,"to":4}
+{"t":"2026-10-27T01:42:51.878Z","ev":"task_note","id":"the-agent-server-and-skill-come-inside-photonz-a"}
+{"t":"2026-10-27T01:42:51.952Z","ev":"task_resequenced","id":"the-agent-server-and-skill-come-inside-photonz-a","from":120,"to":0.5}
+{"t":"2026-10-27T01:42:52.025Z","ev":"task_note","id":"the-setup-window-walks-you-through-only-the-step"}
+{"t":"2026-10-27T01:42:52.100Z","ev":"task_resequenced","id":"the-setup-window-walks-you-through-only-the-step","from":130,"to":0.6}
