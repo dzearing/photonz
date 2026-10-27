@@ -153,25 +153,38 @@ struct FieldJournal {
         let region = wanted.intersection(box)
         guard !region.isEmpty else { return }
         let run = region.width * channels
-        var out = [Float]()
-        out.reserveCapacity(run * region.height)
-        for y in region.minY..<region.maxY {
-            let from = ((y - box.minY) * box.width + (region.minX - box.minX)) * channels
-            out.append(contentsOf: values[from..<from + run])
+        // Row by row as whole runs of memory: through array slices, putting
+        // back a 500 point oil tail's five fields took 8 ms a move
+        // (2026-10-27).
+        let out = [Float](unsafeUninitializedCapacity: run * region.height) { to, count in
+            values.withUnsafeBufferPointer { from in
+                guard let source = from.baseAddress, let target = to.baseAddress else { return }
+                for (row, y) in (region.minY..<region.maxY).enumerated() {
+                    let at = ((y - box.minY) * box.width + (region.minX - box.minX)) * channels
+                    (target + row * run).update(from: source + at, count: run)
+                }
+            }
+            count = run * region.height
         }
         saved.append((region, out))
     }
 
     func restore(into values: inout [Float], box: PixelBox, channels: Int) {
-        for entry in saved.reversed() {
-            // The field may have grown since; it never shrinks, so the box is
-            // still inside it.
-            let region = entry.box.intersection(box)
-            guard region == entry.box else { continue }
-            let run = region.width * channels
-            for (row, y) in (region.minY..<region.maxY).enumerated() {
-                let to = ((y - box.minY) * box.width + (region.minX - box.minX)) * channels
-                values.replaceSubrange(to..<to + run, with: entry.values[row * run..<(row + 1) * run])
+        values.withUnsafeMutableBufferPointer { to in
+            guard let target = to.baseAddress else { return }
+            for entry in saved.reversed() {
+                // The field may have grown since; it never shrinks, so the box
+                // is still inside it.
+                let region = entry.box.intersection(box)
+                guard region == entry.box else { continue }
+                let run = region.width * channels
+                entry.values.withUnsafeBufferPointer { from in
+                    guard let source = from.baseAddress else { return }
+                    for (row, y) in (region.minY..<region.maxY).enumerated() {
+                        let at = ((y - box.minY) * box.width + (region.minX - box.minX)) * channels
+                        (target + at).update(from: source + row * run, count: run)
+                    }
+                }
             }
         }
     }

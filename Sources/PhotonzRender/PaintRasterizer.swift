@@ -484,29 +484,34 @@ public enum PaintRasterizer {
         private func takeBackTail() -> PixelBox? {
             guard let (checkpoint, drawn) = tail else { return nil }
             tail = nil
-            switch (kind, checkpoint) {
-            case (.dry(var dry, let colour), .dry(let back, _)):
+            // Each stroke is taken out with `if case` and `kind` emptied, so it
+            // is the only copy of its fields while they are put back. Taken out
+            // by a `switch` (on the pair, or on `kind` alone), a second copy
+            // lived to the end of the switch and putting the fields back copied
+            // every one of them whole first: 7.5 ms a move for a 500 point oil
+            // stroke on a 12 megapixel layer (2026-10-27).
+            if case .dry(var dry, let colour) = kind, case .dry(let back, _) = checkpoint {
                 kind = .none
                 dry.takeBackTail(to: back)
                 kind = .dry(dry, colour)
-            case (.marker(var marker, let colour, let under), .marker(let back, _, _)):
+            } else if case .marker(var marker, let colour, let under) = kind,
+                      case .marker(let back, _, _) = checkpoint {
                 kind = .none
                 marker.takeBackTail(to: back)
                 kind = .marker(marker, colour, under: under)
-            case (.watercolour(var wash, let colour, let under), .watercolour(let back, _, _)):
+            } else if case .watercolour(var wash, let colour, let under) = kind,
+                      case .watercolour(let back, _, _) = checkpoint {
                 kind = .none
                 wash.takeBackTail(to: back)
                 kind = .watercolour(wash, colour, under: under)
-            case (.airbrush(var spray, let colour), .airbrush(let back, _)):
+            } else if case .airbrush(var spray, let colour) = kind, case .airbrush(let back, _) = checkpoint {
                 kind = .none
                 spray.takeBackTail(to: back)
                 kind = .airbrush(spray, colour)
-            case (.oil(var oil, let under), .oil(let back, _)):
+            } else if case .oil(var oil, let under) = kind, case .oil(let back, _) = checkpoint {
                 kind = .none
                 oil.takeBackTail(to: back)
                 kind = .oil(oil, under: under)
-            default:
-                break
             }
             return drawn
         }
