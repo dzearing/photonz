@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-27T10:05:58.703Z",
+  "updated": "2026-10-27T11:37:19.766Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -103,9 +103,37 @@
     {
       "t": "2026-10-27T10:05:58.702Z",
       "note": "WYSIWYG painting shipped (b44c1d8b): live stroke in the layer's pixels, no frame changes earlier strokes at any zoom, live end taper, landing/undo on 12 MP with 300 strokes <= 24 / 9.6 ms, same pixels as before. Open: 500 pt brushes still 12.7-20.6 ms p95 for wet washes, pencil, charcoal, oil (bar 8.3). Audit queue/audits/2026-10-27-painting-is-what-you-see.json"
+    },
+    {
+      "t": "2026-10-27T10:13:40.528Z",
+      "note": "rotating check 2026-10-27T10:13:40Z, 32 walks run from 232 onward in the rotation: painting-holds-still-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-10-27T10:15:29.752Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-27T10:42:02.239Z",
+      "note": "Rotating check failure reproduced (1 run in 3, 9 strokes simulated at 200%): the sharp copy's 64 MB raster landing first made the cache's age-only eviction drop the composite's raster at 1x, so the composite replayed the layer. Fixed in 98e7767a: rasters superseded at their own scale go first. Tests aLandingAtOneScaleNeverCostsTheOtherScaleItsRaster, undoneTheShorterListIsNotTheFirstToGo; walk 6 of 6 green, both landing orders 1 stroke per scale."
+    },
+    {
+      "t": "2026-10-27T11:37:06.611Z",
+      "note": "6eed4155: a 500 pt brush's tail was taken back by switching on (stroke, checkpoint) as a pair; the pair held a second copy, so the rollback copied all five 2.8M-value fields first (7.5 ms a move for oil). Taken out with if-case now; journal copies whole rows. Same pixels (PaintKeepsItsPixelsTests, live-stroke tests; FieldJournalTests added). p95 at 500 pt, 12 MP, 50 strokes, 10 pt a move: oil 20.2 -> 15.3, charcoal 16.5 -> 14.7, pencil 13.8 -> 12.6, watercolour 14.1, marker 7.8; 150 pt 10.4-11.4; 20 pt 2.5-4.3."
+    },
+    {
+      "t": "2026-10-27T11:37:06.675Z",
+      "note": "Still open (why pending): one 120 Hz frame at 150 and 500 pt. Profile of 500 pt oil on the main thread: the parallel pixel loop of lay() ~65%, field growth (mostly the tail's journal saving its boxes) ~14%, the serial per-bristle sum ~10%, 6 MB of scratch allocated and zeroed per dab ~7%. Per move: settled dab ~5 ms + tail re-laid ~4.5 ms + take-back ~2.5 ms + redraw ~1 ms + screen hand-off ~1 ms. More bands (12 instead of 8) did not help. Next levers: reuse the dab scratch instead of allocating it, save the tail's journal once per move over the union rather than per dab and field, skip the rows/columns outside the rotated footprint (pixels unchanged). Getting to 8.3 ms at 500 pt likely also needs a cheaper oil/dry model, which would change how saved strokes paint (against the same-pixels item): that would be a user call. Measurement walk: 12 MP canvas, 50 strokes then each medium at 20 and 500 pt, 120 moves of 10 pt (the runner's scratch /tmp/pw2/perf.json; worth committing as a walk when the bar is in reach)."
+    },
+    {
+      "t": "2026-10-27T11:37:06.737Z",
+      "note": "Brush walks on this build: painting-holds-still-walk ok; with pickBrush in place of the tile presses, oil, pencil, watercolour, smudge-after-paint, dry media and marker/airbrush walks all ok, release checks included. The repo copies still fail on pressing a tile (walks-that-fail-in-the-full-sweep-26 owns that)."
+    },
+    {
+      "t": "2026-10-27T11:37:19.765Z",
+      "note": "Two fixes landed: 98e7767a (zoomed in, a landing never makes the composite replay the layer: the rotating check's painting-holds-still-walk failure, reproduced 1 in 3, now 6 of 6 green) and 6eed4155 (a big brush's tail taken back without copying the stroke: 500 pt oil 20.2 -> 15.3 ms p95, charcoal 16.5 -> 14.7, pencil 13.8 -> 12.6). Still open: one 120 Hz frame at 150 and 500 pt (10.4 to 15.3 ms); see the log for the profile and next levers."
     }
   ],
-  "started": "2026-10-27T07:10:23.586Z",
+  "started": "2026-10-27T10:15:29.751Z",
   "walks": [
     "painting-holds-still-walk"
   ]
