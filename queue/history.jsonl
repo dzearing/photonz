@@ -14338,3 +14338,17 @@
 {"t":"2026-10-27T06:54:16.970Z","ev":"task_note","id":"photonz-opens-at-login-on-by-default-with-a-swit"}
 {"t":"2026-10-27T06:54:17.033Z","ev":"task_note","id":"photonz-opens-at-login-on-by-default-with-a-swit"}
 {"t":"2026-10-27T06:54:36.441Z","ev":"task_done","id":"photonz-opens-at-login-on-by-default-with-a-swit","from":"in_progress","note":"Shipped in 5834e087: a new install registers itself as a login item on first launch (SMAppService.mainApp), once; Settings > General at the top of the page has the Open at login switch, read from the system each time. A login launch skips the setup window. Rules in PhotonzCore OpenAtLogin (16 tests) behind LoginItemService; the probe uses an in-memory list so walks never register. Verified: Scripts/test.sh exit 0, open-at-login-switch-in-settings-walk ok at Next defaults (pointer press on/off/on), the other Settings walks ok, real SMAppService round trip in a throwaway bundle incl. surviving a rebuild at the same path. A real logout/login was not possible unmanned: it is the audit's try path (queue/audits/2026-10-26-open-at-login.json)."}
+{"t":"2026-10-27T07:08:36.381Z","ev":"task_note","id":"the-rotating-walk-check-moves-on-through-the-set"}
+{"t":"2026-10-27T07:08:36.418Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-10-27T07:08:36.454Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-27T07:10:23.417Z","ev":"slice_pass","walks":32,"passed":19,"failed":13,"seconds":813,"of":1042,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-27T07:10:23.593Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high"}
+{"t":"2026-10-27T09:58:33.749Z","ev":"task_walks","id":"painting-is-what-you-see-earlier-strokes-never-r","walks":["painting-holds-still-walk"]}
+{"t":"2026-10-27T10:05:58.263Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-27T10:05:58.327Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-27T10:05:58.390Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-27T10:05:58.452Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-27T10:05:58.515Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-27T10:05:58.578Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-27T10:05:58.640Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-27T10:05:58.704Z","ev":"task_pending","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"WYSIWYG painting shipped (b44c1d8b): live stroke in the layer's pixels, no frame changes earlier strokes at any zoom, live end taper, landing/undo on 12 MP with 300 strokes <= 24 / 9.6 ms, same pixels as before. Open: 500 pt brushes still 12.7-20.6 ms p95 for wet washes, pencil, charcoal, oil (bar 8.3). Audit queue/audits/2026-10-27-painting-is-what-you-see.json"}

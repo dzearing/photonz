@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-27T00:32:15.219Z",
+  "updated": "2026-10-27T10:05:58.703Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -67,6 +67,46 @@
     {
       "t": "2026-10-27T00:32:15.218Z",
       "note": "seq 30 -> 1"
+    },
+    {
+      "t": "2026-10-27T07:10:23.587Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-27T09:58:33.747Z",
+      "note": "owns these walks: painting-holds-still-walk"
+    },
+    {
+      "t": "2026-10-27T10:05:58.261Z",
+      "note": "Reproduced before any change (walk films, 1x, 1600x1000 and 4000x3000): at 200% earlier strokes changed in 7 frames after the release (up to 46,481 px, the stretched composite showing until the sharp copy came 66 ms later), 9 strokes re-simulated per landing on the small canvas, held vs landed apart over 8 to 28% of the stroke. Causes: live stroke marked in view pixels over a redrawn copy of the layer (different pixel grid), overlay taken down with the composite while the sharp copy was also taken down and redrawn after 90 ms, the land-time taper, and a wet wash replaying earlier strokes per press."
+    },
+    {
+      "t": "2026-10-27T10:05:58.325Z",
+      "note": "Adversarial review before building: a Photoshop user expects the stroke to be the pixels it leaves, at any zoom; the risk was that painting the live stroke at the layer's scale costs more pixels when zoomed out (accepted: it is what makes it land unchanged). Chose painting the live stroke onto the kept raster at the shown scale over adopting the live bitmap into the cache because the cache simulating the one new stroke keeps undo/open exactness without trusting the live path, and the overlay hides the wait. Chose a live taper (tail drawn as if ending now, taken back) over a card because the media's state turned out small and uniform; tests prove held == landed per medium."
+    },
+    {
+      "t": "2026-10-27T10:05:58.388Z",
+      "note": "After (painting-holds-still-walk, 2x film): 0 frames change outside the new stroke at 50%, 100% and 200%; 1 stroke simulated per shown scale; at the release the picture matches the settled one over all but 0.13% of the stroke at 100% (no resampling); where the screen resamples, a one-pixel fringe can shift (stated tolerance, in the audit). Landing with 300 strokes on 12 MP holds main <= 24 ms, undo <= 9.6 ms (PaintLandingCostTests holds the shape). PaintKeepsItsPixelsTests: same pixels byte for byte as the code before."
+    },
+    {
+      "t": "2026-10-27T10:05:58.450Z",
+      "note": "Left open (why the task stays pending): one 120 Hz frame at p95 with a 500 pt brush. 12 MP, 50 strokes, hand pace: 20 pt every medium 2.6-7.1 ms; 500 pt marker 7.5, first wash 7.8, wash over wet washes 12.7-15.8 (was 86-112), pencil 13.6, charcoal 16.9, oil 20.6. Next: the dry media's tip loop and oil's lay are now the cost (already banded); the live tail re-marks about two dabs per new dab at 500 pt; charcoal's drag(at:) runs on one core. Measure with a walk of 50 strokes then 500 pt strokes moving 10 pt per event (a hand's pace)."
+    },
+    {
+      "t": "2026-10-27T10:05:58.513Z",
+      "note": "left rough: the probe's film frames show faint lines where the overlay's 256 px pieces meet; real window captures held mid-stroke (100% on 12 MP, 200% on 1600x1000) show none (a real seam did exist and was fixed by hard piece edges). Did not earn a task: probe drawing only."
+    },
+    {
+      "t": "2026-10-27T10:05:58.576Z",
+      "note": "left rough: the brush chooser walks fail to press a tile; owned by walks-that-fail-in-the-full-sweep-26 (logged there). With the presses swapped for pickBrush, every brush walk passes on this build, landsAsHeld checks included."
+    },
+    {
+      "t": "2026-10-27T10:05:58.702Z",
+      "note": "WYSIWYG painting shipped (b44c1d8b): live stroke in the layer's pixels, no frame changes earlier strokes at any zoom, live end taper, landing/undo on 12 MP with 300 strokes <= 24 / 9.6 ms, same pixels as before. Open: 500 pt brushes still 12.7-20.6 ms p95 for wet washes, pencil, charcoal, oil (bar 8.3). Audit queue/audits/2026-10-27-painting-is-what-you-see.json"
     }
+  ],
+  "started": "2026-10-27T07:10:23.586Z",
+  "walks": [
+    "painting-holds-still-walk"
   ]
 }
