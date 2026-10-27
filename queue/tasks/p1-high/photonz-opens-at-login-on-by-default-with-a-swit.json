@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 0.7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-27T03:17:16.056Z",
-  "updated": "2026-10-27T03:17:21.480Z",
+  "updated": "2026-10-27T06:54:36.440Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-26 intake: 'I also want as a high pri thing for an option to start photonz on startup (default to on)'. Checked from intake: nothing in Sources registers a login item today (no SMAppService, LaunchAtLogin or LoginItem anywhere). Photonz is a menu-bar app: AppCoordinator.swift:117 sets the activation policy to accessory and PhotonzApp.swift:80 has the MenuBarExtra, so starting quietly is the natural fit. Settings is Sources/Photonz/SettingsDialog.swift, a single Form page whose header comment says it only lists silenced questions; this adds a General section, so update that comment. TRAP: the task 'Settings installs the Photonz skills for Claude Code and Copilot' (the-agent-server-and-skill-come-inside-photonz-a) is editing SettingsDialog.swift right now (Agents section); land after it or rebase onto it, never undo its section. TRAP: the probe and every walk launch the app constantly; registering the probe as a login item would make the test app start on every login, so the probe must never register. SMAppService.mainApp needs the app at a stable path; a bundle run from dist/ registers that path, which is fine for Dev but say in the audit what happens when dist/ is rebuilt. Applies to Current too unless shared code makes that automatic (the porting rule).",
@@ -32,6 +32,39 @@
     {
       "t": "2026-10-27T03:17:21.479Z",
       "note": "seq 2.5 -> 0.7"
+    },
+    {
+      "t": "2026-10-27T06:25:34.938Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-27T06:53:45.444Z",
+      "note": "owns these walks: open-at-login-switch-in-settings-walk"
+    },
+    {
+      "t": "2026-10-27T06:54:16.846Z",
+      "note": "Adversarial pass: a first-time user never sees this switch until they want it off, so the default doing the right thing silently is the feature; the risk is a login launch that pops the setup window or registers the probe. Both guarded: start(launchedAtLogin:) skips the setup window, the probe gets an in-memory list. Premiere/Photoshop parity n/a; every Mac menu-bar app (CleanShot, Rectangle) puts 'Launch/Open at login' first in General, which is where this went."
+    },
+    {
+      "t": "2026-10-27T06:54:16.906Z",
+      "note": "Chose to treat a copy run from /Volumes or AppTranslocation as not-yet-installed (no register, default not used up) over registering whatever path launched first, because a DMG launch would otherwise register a path gone tomorrow and then never retry."
+    },
+    {
+      "t": "2026-10-27T06:54:16.968Z",
+      "note": "Verified: OpenAtLoginTests 16/16; Scripts/test.sh exit 0 (14,671 tests); open-at-login-switch-in-settings-walk ok at Next defaults (pointer press on the switch face, on/off/on); agents-section, ask-deletes-an-older-model, ask-offers-the-new-default-model walks ok after the Settings header moved; a-silenced-question-comes-back fails at step 31 before Settings opens, same as the last full sweep, owned by walks-that-fail-in-the-full-sweep-26. Real SMAppService round trip in a throwaway bundle (com.dzearing.photonz.logincheck): notFound -> register -> enabled -> unregister -> notRegistered; survives rm -rf and rebuild at the same path (re-signed). Not verified: an actual logout/login (keyAELaunchedAsLogInItem detection) and the needs-approval line on screen; both in the audit's rough list, the logout step is the user's try path."
+    },
+    {
+      "t": "2026-10-27T06:54:17.031Z",
+      "note": "left rough: Current gets this too through shared code (SettingsDialog, AppDelegate, AppCoordinator are shared), so no port needed. Editor window restoration at a login launch was not checked: no code restores editor windows today and none came up in any walk; if one ever does at login it is a new bug, not filed unseen."
+    },
+    {
+      "t": "2026-10-27T06:54:36.438Z",
+      "note": "Shipped in 5834e087: a new install registers itself as a login item on first launch (SMAppService.mainApp), once; Settings > General at the top of the page has the Open at login switch, read from the system each time. A login launch skips the setup window. Rules in PhotonzCore OpenAtLogin (16 tests) behind LoginItemService; the probe uses an in-memory list so walks never register. Verified: Scripts/test.sh exit 0, open-at-login-switch-in-settings-walk ok at Next defaults (pointer press on/off/on), the other Settings walks ok, real SMAppService round trip in a throwaway bundle incl. surviving a rebuild at the same path. A real logout/login was not possible unmanned: it is the audit's try path (queue/audits/2026-10-26-open-at-login.json)."
     }
-  ]
+  ],
+  "started": "2026-10-27T06:25:34.937Z",
+  "walks": [
+    "open-at-login-switch-in-settings-walk"
+  ],
+  "completed": "2026-10-27T06:54:36.439Z"
 }
