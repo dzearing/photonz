@@ -14278,3 +14278,19 @@
 {"t":"2026-10-26T22:28:03.792Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T23:53:47.526Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T23:53:47.600Z","ev":"task_pending","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"GitHub targets met and measured: CI Run tests 7-9 min in 3 slices, 3 green runs in a row, release dry run 9.5 min end to end, warm kept build. Still open: local Scripts/test.sh 262-270 s against 180, and 4 tests over 10 s alone (listed in the log and the audit)."}
+{"t":"2026-10-26T23:59:40.207Z","ev":"task_note","id":"the-rotating-walk-check-moves-on-through-the-set"}
+{"t":"2026-10-26T23:59:40.243Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-10-26T23:59:40.279Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
+{"t":"2026-10-26T23:59:40.314Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-10-26T23:59:40.350Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-10-26T23:59:40.386Z","ev":"task_note","id":"the-name-chips-over-component-copies-stay-clear"}
+{"t":"2026-10-26T23:59:40.425Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-27T00:01:39.877Z","ev":"slice_pass","walks":30,"passed":8,"failed":22,"seconds":331,"of":1037,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-27T00:01:40.056Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high"}
+{"t":"2026-10-27T00:32:15.147Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-27T00:32:15.220Z","ev":"task_resequenced","id":"painting-is-what-you-see-earlier-strokes-never-r","from":30,"to":1}
+{"t":"2026-10-27T00:32:15.292Z","ev":"task_resequenced","id":"every-brush-follows-the-pointer-with-no-lag-even","from":20,"to":2}
+{"t":"2026-10-27T00:32:15.366Z","ev":"task_reprioritized","id":"walks-that-fail-in-the-full-sweep-26","from":"p2-normal","to":"p1-high"}
+{"t":"2026-10-27T00:32:15.443Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-27T00:32:15.516Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-26","from":120,"to":3}
+{"t":"2026-10-27T00:32:15.589Z","ev":"task_resequenced","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":10,"to":4}

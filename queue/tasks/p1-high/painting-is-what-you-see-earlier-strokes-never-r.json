@@ -4,12 +4,12 @@
   "goal": "While drawing, every earlier stroke visibly recomputes: the strokes change, then swap into a higher resolution version. That looks awkward and wastes time. Painting should be what you see is what you get: the stroke you are drawing looks exactly like it will when you let go, nothing already on the canvas repaints, flickers or changes sharpness, and the whole thing answers immediately.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 30,
+  "seq": 1,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-26T14:18:49.423Z",
+  "updated": "2026-10-27T00:32:15.219Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -59,6 +59,14 @@
     {
       "t": "2026-10-26T14:18:49.422Z",
       "note": "triage 2026-10-26: when the taper changes, update docs/design/brushes.md (What the dynamics settled), which records the land-time taper as settled; the user's hands-on ask outranks it."
+    },
+    {
+      "t": "2026-10-27T00:32:15.145Z",
+      "note": "User, 2026-10-26 intake: 'brushes are kind of broken perf wise after a few strokes'. Same complaint as this task (cost grows with the strokes already on the layer); moved to the front of the queue because the user wants features before test and walk work."
+    },
+    {
+      "t": "2026-10-27T00:32:15.218Z",
+      "note": "seq 30 -> 1"
     }
   ]
 }
