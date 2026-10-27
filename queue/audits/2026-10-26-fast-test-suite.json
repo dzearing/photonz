@@ -1,12 +1,12 @@
 {
   "feature": "A faster test suite, here and on GitHub",
   "epic": "unmanned-loop",
-  "summary": "The suite no longer hangs on macOS 27 and runs in about two minutes here (123 to 128 s, from 262 to 308). On GitHub it runs as three slices on three runners with a kept build: CI's test step is 7 to 9 minutes instead of 53, and a whole release, signing and notarizing included, took 9.5 minutes on a dry run. One test still takes 12.9 s on its own.",
+  "summary": "The suite no longer hangs on macOS 27 and runs in about two minutes here (111 to 128 s, from 262 to 308), with no test over ten seconds on its own. On GitHub it runs as three slices on three runners with a kept build: CI's test step is 7 to 9 minutes instead of 53, and a whole release, signing and notarizing included, took 9.5 minutes on a dry run.",
   "setup": "No app change a person can see, except that two paint layers the same size no longer wait on each other while they render. Measured on this Mac with Scripts/test.sh, PHOTONZ_TEST_EVENTS event streams and swift test one suite at a time, and on GitHub from runs 40265991947 (before), 40368389297, 40417574675 and 40419872948 (CI, after) and 40421624172 (release dry run). Every number is in 2026-10-26-fast-test-suite-measurements.md beside this file.",
   "switched": {},
   "try": [
     {
-      "do": "Run Scripts/test.sh and time it: 123 and 128 s on 2026-10-27 with the build warm, 14,608 tests green."
+      "do": "Run Scripts/test.sh and time it: 111 to 128 s over four runs on 2026-10-27 with the build warm, 14,608 tests green."
     },
     {
       "do": "Read the end of its output: four runs reported, the rest live, then PhotonzCoreTests, the heaviest suites and the one-at-a-time suites."
@@ -31,7 +31,7 @@
     "Is a release that publishes about ten minutes after the tag fast enough, or should the tests be skipped on a commit CI already passed?"
   ],
   "rough": [
-    "One test still takes over ten seconds on its own: the first test of Reading a separated run back into words (12.9 s), which pays for the suite's one read of a 2x capture by the system's text recogniser through its four-wide lane. The lane is that narrow because of the macOS 27 hang, so widening it is not a test change. This task stays open for it.",
+    "Five pieces of app code were rewritten with plain index loops so the tests (and the debug app) stop paying for unoptimized range loops: region labelling, the box grower, the line reader, the gap walk and the text face scorer. Their answers are unchanged, held by the existing suites and a new flood fill check, but it is code a person reads, and plain loops read a little worse than for-in.",
     "A document's weigh test is split in two rather than made faster: 6.4 s and 8.2 s, the same 14.6 s in all. Writing its qualities side by side was tried and failed, a 20 s file landing 1.34 times its weigh beside the other encodes.",
     "GitHub's three core runners keep the single run per slice, which is proven green there; the four runs side by side only start on a Mac with eight cores or more.",
     "Scripts/test-weights.tsv was measured before this pass made several heavy suites faster, so GitHub's three slices may now be a little less even; re-run Scripts/test-weights.sh if one slice starts finishing well after the others.",

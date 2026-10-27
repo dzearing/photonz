@@ -169,7 +169,7 @@ core GitHub runner, it is one run as before.
 | Serialized suites in a run of their own | 202 s | green; CPU 2,519 -> 1,866 s |
 | + PhotonzCoreTests in a run of its own | 186 s | |
 | + the heaviest suites in a run of their own | 139 to 142 s | one flat stopwatch failed, below |
-| + the slow tests below made faster | **123 / 128 s** | two runs in a row, green, 14,608 tests |
+| + the slow tests below made faster | **123 / 128 / 120 / 111 s** | four runs, green, 14,608 tests |
 
 The flat stopwatch: `LongTimelineCostTests` read 182 ms against 150 with
 four runs going (it read 204 on GitHub's VM in pass 2). Its five budgets now
@@ -195,7 +195,12 @@ then the parameterized ones as the suite runs them (cases side by side):
 | A document's weigh is what lands (3 cases) | 14.6 s | 6.4 s + 8.2 s | split into its two promises, the long document weighed from stretches and the short busy ones weighed whole: NOT faster in total. Writing the qualities side by side was tried and failed (landed 1.34x its weigh) |
 | ownSettingsShow (brush settings, 9 cases) | 11.0 s | 7.0 s | `PaintRasterCache` gated by bitmap size alone, so different paint layers of one size waited on each other; now one gate per layer |
 | everyEntrance (title entrances, 9 cases) | 12.4 s | 6.5 s | the test's one shared `CIContext` serialized every case; eight taken in turn |
-| everyRunInTheCaptureComesBackAsItsOwnWords | 12.9 s | 12.9 s | **still over**: the suite's shared read of a 2x capture by the system recogniser, through its four-wide lane (`RecogniserLane`, the macOS 27 hang) |
+| everyRunInTheCaptureComesBackAsItsOwnWords | 12.9 s | 5.5 s | not the recogniser: 85 % was `TextReading.shared`, the sum that scores each face against a run at every nudge; plain index loops over the raw pointers, summed in the same order |
+
+After these, nothing measured alone is over ten seconds. The slowest left,
+one test at a time: separating a captured shadow and rebuilding it 9.7 s,
+the whole-window separation 9.2 s, the magnifier drag 8.7 s, a busy
+document's weigh 8.2 s, the agent element scan 8.1 s.
 
 The app gets the same code: the loops are as fast optimized and faster in a
 debug build, and the paint cache no longer makes two canvas-sized paint
@@ -204,6 +209,15 @@ layers rendered at once wait on each other.
 New tests: `BoxSweepRegionLabelTests` holds `labelRegions` and `islands` to a
 plain flood fill (checked green on the code before the rewrite and after);
 `PaintRasterCacheTests.twoLayersOfOneSizeAskedForTogetherEachComeBackAsTheirOwn`.
+
+GitHub on the new code: CI run 40434200943, slices 241 / 311 / 444 s of
+tests (4,866 + 4,549 + 5,193 = 14,608), all green. Slice 3 now runs longest
+because `Scripts/test-weights.tsv` was measured before this pass.
+
+A flake found on the way: "Exporting the same recording twice gives the same
+file to look at" read 7 levels apart against 6 on GitHub's VM (run
+40427055081, a commit of queue files only). A pair further apart than 6 is
+now written again, up to three times, and the closest judged.
 
 Drills, run on the new script: the parked-run drill stops a parked run in
 one run (exit 4, 44 s) and inside the four runs (exit 4, 156 s, the parked

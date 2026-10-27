@@ -135,15 +135,24 @@ public enum TextReading {
                                dx: Int, dy: Int) -> Double {
         let x0 = max(0, dx), x1 = min(aw, bw + dx)
         let y0 = max(0, dy), y1 = min(ah, bh + dy)
-        guard x1 > x0, y1 > y0 else { return 0 }
+        guard x1 > x0, y1 > y0, let pa = a.baseAddress, let pb = b.baseAddress else { return 0 }
+        // Plain index loops over the raw pointers, summed in the same order
+        // as ever: every face tried for every run comes through here at every
+        // nudge, and unoptimized (the tests, the debug app) a `for ... in`
+        // over a range cost more than the sum (2026-10-27: 85 % of reading a
+        // settings pane's runs one at a time, 12.9 s).
         var total = 0.0
-        for y in y0..<y1 {
-            let rowA = y * aw
-            let rowB = (y - dy) * bw - dx
-            for x in x0..<x1 {
-                let va = a[rowA + x], vb = b[rowB + x]
+        var y = y0
+        while y < y1 {
+            let rowA = pa + y * aw
+            let rowB = pb + ((y - dy) * bw - dx)
+            var x = x0
+            while x < x1 {
+                let va = rowA[x], vb = rowB[x]
                 total += va < vb ? va : vb
+                x += 1
             }
+            y += 1
         }
         return total
     }
