@@ -1,38 +1,41 @@
 {
   "feature": "A faster test suite, here and on GitHub",
   "epic": "unmanned-loop",
-  "summary": "The suite no longer hangs on macOS 27 and runs in about 265 s here instead of 401 s. On GitHub it runs as three slices on three runners with a kept build: CI's test step is 7 to 9 minutes instead of 53, and a whole release, tests, signing and notarizing included, took 9.5 minutes on a dry run. The local 3 minute target and the 10 second per-test bar are not reached yet.",
-  "setup": "No app change a person can see. Measured on this Mac with Scripts/test.sh and swift test one suite at a time, and on GitHub from runs 40265991947 (before), 40368389297, 40417574675 and 40419872948 (CI, after) and 40421624172 (release dry run). Every number is in 2026-10-26-fast-test-suite-measurements.md beside this file.",
+  "summary": "The suite no longer hangs on macOS 27 and runs in about two minutes here (123 to 128 s, from 262 to 308). On GitHub it runs as three slices on three runners with a kept build: CI's test step is 7 to 9 minutes instead of 53, and a whole release, signing and notarizing included, took 9.5 minutes on a dry run. One test still takes 12.9 s on its own.",
+  "setup": "No app change a person can see, except that two paint layers the same size no longer wait on each other while they render. Measured on this Mac with Scripts/test.sh, PHOTONZ_TEST_EVENTS event streams and swift test one suite at a time, and on GitHub from runs 40265991947 (before), 40368389297, 40417574675 and 40419872948 (CI, after) and 40421624172 (release dry run). Every number is in 2026-10-26-fast-test-suite-measurements.md beside this file.",
   "switched": {},
   "try": [
     {
-      "do": "Run Scripts/test.sh and time it: 262 to 270 s on 2026-10-26 with the build warm, 14,604 tests green."
+      "do": "Run Scripts/test.sh and time it: 123 and 128 s on 2026-10-27 with the build warm, 14,608 tests green."
     },
     {
-      "do": "Run Scripts/test.sh --shard 2/3: one third of the suite, and the three slices add up to all 14,604 tests."
+      "do": "Read the end of its output: four runs reported, the rest live, then PhotonzCoreTests, the heaviest suites and the one-at-a-time suites."
+    },
+    {
+      "do": "Run Scripts/test.sh --filter LongTimelineCost: one run, exactly as asked, as any run with arguments is."
+    },
+    {
+      "do": "Run Scripts/test.sh --shard 2/3: one third of the suite; the three slices add up to all 14,608 tests."
     },
     {
       "do": "Open the newest CI run on GitHub: three Test slice jobs and a bundle job side by side, Run tests about 7 to 9 minutes each."
-    },
-    {
-      "do": "Read a slice's Build step: about 15 to 20 s from the kept build when no source changed."
     },
     {
       "do": "Run gh workflow run release.yml -f tag=main -f dry_run=true: the whole release, tests, signing and notarizing, in about 10 minutes, publishing nothing."
     }
   ],
   "evaluate": [
-    "Is 4.5 minutes for the local suite fast enough to stop being a reason to skip it, or does it need to reach the 3 minute target before it changes how the loop works?",
+    "Is two minutes for the local suite fast enough that nobody skips it?",
+    "Are you comfortable that the local suite is now four test processes at once, so a run's output arrives as the main run live and the other three when they finish?",
     "Are you comfortable with GitHub collecting render timings without failing on them, given every commit still has to pass them on this Mac first?",
-    "Is it fine that CI skips the release commit itself, since the release workflow tests that same commit on its tag?",
     "Is a release that publishes about ten minutes after the tag fast enough, or should the tests be skipped on a commit CI already passed?"
   ],
   "rough": [
-    "This Mac's suite is 262 to 270 s, not under 180. The run ends on the suites that go one test at a time (video sizes, text reading, depth and title rendering) and on the text-reading suites, which cost far more CPU inside a full run than alone. This task stays open for it.",
-    "Four tests still take over ten seconds alone: separating a whole app window (21.7 s) and the agent element scan of the settings screenshot (21.5 s), both a debug-build scan shared by their suite; the boxed-in caliper sweep (16 to 18 s, the cost is inside each gap read); and A document's weigh is what lands (14.5 s for 3 cases, about 5 s each). This task stays open for it.",
-    "Slice 3 runs about a minute longer than the other two, because the text-reading suites it draws weigh more inside a run than their measured weight says.",
+    "One test still takes over ten seconds on its own: the first test of Reading a separated run back into words (12.9 s), which pays for the suite's one read of a 2x capture by the system's text recogniser through its four-wide lane. The lane is that narrow because of the macOS 27 hang, so widening it is not a test change. This task stays open for it.",
+    "A document's weigh test is split in two rather than made faster: 6.4 s and 8.2 s, the same 14.6 s in all. Writing its qualities side by side was tried and failed, a 20 s file landing 1.34 times its weigh beside the other encodes.",
+    "GitHub's three core runners keep the single run per slice, which is proven green there; the four runs side by side only start on a Mac with eight cores or more.",
+    "Scripts/test-weights.tsv was measured before this pass made several heavy suites faster, so GitHub's three slices may now be a little less even; re-run Scripts/test-weights.sh if one slice starts finishing well after the others.",
     "Tag to published is measured on a dry run (9.5 minutes, publish skipped), not on a real tag; the publish step itself is a short upload on a Linux runner.",
-    "CI now skips commits named release: v..., because the release workflow tests that commit and both at once would want more macOS runners than the account has.",
     "No pictures: this task changes no screen, so there is nothing for a walk to photograph."
   ]
 }

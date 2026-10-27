@@ -112,8 +112,13 @@ public enum TextLineBounds {
                 }
                 return background
             }()
+            // The loops from here on are plain index loops, and `abs` is
+            // spelled out: every gap a caliper reads walks lines through
+            // here, and unoptimized (the tests, the debug app) a `for ... in`
+            // over a range and the generic `abs` cost more than the reading.
             @inline(__always) func ink(_ x: Int, _ y: Int) -> Bool {
-                abs(Int(s[y * w + x]) - background) >= threshold
+                let d = Int(s[y * w + x]) - background
+                return d >= threshold || -d >= threshold
             }
 
             // 2. Seed on the ink nearest the pointer.
@@ -129,14 +134,19 @@ public enum TextLineBounds {
             guard bottom >= 0 else { return nil }
 
             func columnInked(_ x: Int) -> Bool {
-                for y in top...bottom where ink(x, y) { return true }
+                var y = top
+                while y <= bottom {
+                    if ink(x, y) { return true }
+                    y += 1
+                }
                 return false
             }
             /// Whether row `y` carries ink inside the line's extent, and the
             /// longest unbroken stretch of it.
             func rowInk(_ y: Int) -> (any: Bool, longest: Int) {
                 var any = false, longest = 0, run = 0
-                for x in left...right {
+                var x = left
+                while x <= right {
                     if ink(x, y) {
                         any = true
                         run += 1
@@ -144,6 +154,7 @@ public enum TextLineBounds {
                     } else {
                         run = 0
                     }
+                    x += 1
                 }
                 return (any, longest)
             }
@@ -187,7 +198,13 @@ public enum TextLineBounds {
                         if clean >= gapPx { break }
                     }
                 }
-                spaced = spaced || (left...right).contains { !columnInked($0) }
+                if !spaced {
+                    var x = left
+                    while x <= right {
+                        if !columnInked(x) { spaced = true; break }
+                        x += 1
+                    }
+                }
                 clean = 0
                 var y = top
                 while y > 0 {

@@ -134,3 +134,78 @@ Measured with `swift test --skip-build --no-parallel --filter <suite>`:
 | Every control a redliner measures is listed once | 21.5 s | the app's element scan of the settings screenshot, debug build |
 | everyBoxedInCaliperOnTheCaptureKeepsTheClassicSpot | 16 to 18 s | 13.6 s is the shared 864-point gap grid; spreading it over the cores did not shorten it, so the cost is inside each core gap read (reverted, not shipped) |
 | A document's weigh is what lands, busy or quiet (3 cases) | 14.5 s | about 5 s a case |
+
+## Pass 3 (2026-10-27): four runs side by side on this Mac
+
+Measured with each run's swift-testing event stream
+(`PHOTONZ_TEST_EVENTS=<folder> Scripts/test.sh`) and the helpers' CPU sampled
+every five seconds.
+
+What one run did with 16 cores (308 s, 2,519 CPU s, run of 2026-10-27 00:07):
+
+- The `.serialized` suites finished last. Each next test of one joined the
+  back of a queue of 14,000, so the five slowest (video sizes, three
+  text-reading suites, live backdrops) crawled for 195 s and then ran alone
+  for the last 80.
+- For most of the run the helper used 4 to 8 of the 16 cores: the twelve
+  slots were held by render, media and text-reading tests waiting on the
+  GPU, the encoder or the recogniser.
+- PhotonzCoreTests' 10,700 small tests were dealt last: the final 50 s.
+- The heaviest render suites (whole-window separation, the agent's element
+  scan, the caliper sweep) were dealt as late as 130 s in.
+
+`Scripts/test.sh` with no arguments on a Mac of eight cores or more now
+builds once (`swift build --build-tests`) and runs four `swift test
+--skip-build --ignore-lock` processes at once, each with its own pool and
+the same width cap: the serialized suites (the `...PerfTests` stopwatch
+suites after them), PhotonzCoreTests, the suites weighing 10 s or more in
+`Scripts/test-weights.tsv`, and the rest, printed live. The legibility check
+and the video kit typecheck run beside them. With arguments, or on a three
+core GitHub runner, it is one run as before.
+
+| Step | Wall | Note |
+| --- | --- | --- |
+| One run (start of pass 3) | 308 s | 277 s of tests + 31 s of checks after |
+| Serialized suites in a run of their own | 202 s | green; CPU 2,519 -> 1,866 s |
+| + PhotonzCoreTests in a run of its own | 186 s | |
+| + the heaviest suites in a run of their own | 139 to 142 s | one flat stopwatch failed, below |
+| + the slow tests below made faster | **123 / 128 s** | two runs in a row, green, 14,608 tests |
+
+The flat stopwatch: `LongTimelineCostTests` read 182 ms against 150 with
+four runs going (it read 204 on GitHub's VM in pass 2). Its five budgets now
+divide by `CPUYardstick` taken back to back inside each round
+(`CPUYardstick.calibratedMS`), like the core target's other timing checks:
+36 ms alone against 150.
+
+A budget in `RenderPerfTests` read 29.4 ms against 28 when the stopwatch
+suites ran beside everything at once, so they run after the side run's other
+suites; that run is done long before the main ones.
+
+### Tests over ten seconds alone, after pass 3
+
+Every serialized suite and every suite weighing 10 s or more, run alone one
+test at a time (`swift test --skip-build --no-parallel --filter <suite>`),
+then the parameterized ones as the suite runs them (cases side by side):
+
+| Test | Before | After | What changed |
+| --- | --- | --- | --- |
+| aWholeWindowGivesUpItsBoxesAndNotJustItsWords | 21.8 s | 9.2 s | `BoxSweep.labelRegions`, `islands` and `dominantRegion`: plain index loops, and region votes counted a run at a time, not a dictionary write per pixel |
+| Every control a redliner measures is listed once (agent element scan) | 21.6 s | 8.1 to 8.3 s | `ObjectBounds.grow`: the four neighbours visited by direct calls, not a four-element array made for every pixel; no runtime exclusivity check per pixel; `distance` without generic `abs`/`max` |
+| everyBoxedInCaliperOnTheCaptureKeepsTheClassicSpot | 17.0 s | 7.0 to 7.8 s | `TextLineBounds.detect` and `GapWalker.walk`: plain index loops, no list made per step |
+| A document's weigh is what lands (3 cases) | 14.6 s | 6.4 s + 8.2 s | split into its two promises, the long document weighed from stretches and the short busy ones weighed whole: NOT faster in total. Writing the qualities side by side was tried and failed (landed 1.34x its weigh) |
+| ownSettingsShow (brush settings, 9 cases) | 11.0 s | 7.0 s | `PaintRasterCache` gated by bitmap size alone, so different paint layers of one size waited on each other; now one gate per layer |
+| everyEntrance (title entrances, 9 cases) | 12.4 s | 6.5 s | the test's one shared `CIContext` serialized every case; eight taken in turn |
+| everyRunInTheCaptureComesBackAsItsOwnWords | 12.9 s | 12.9 s | **still over**: the suite's shared read of a 2x capture by the system recogniser, through its four-wide lane (`RecogniserLane`, the macOS 27 hang) |
+
+The app gets the same code: the loops are as fast optimized and faster in a
+debug build, and the paint cache no longer makes two canvas-sized paint
+layers rendered at once wait on each other.
+
+New tests: `BoxSweepRegionLabelTests` holds `labelRegions` and `islands` to a
+plain flood fill (checked green on the code before the rewrite and after);
+`PaintRasterCacheTests.twoLayersOfOneSizeAskedForTogetherEachComeBackAsTheirOwn`.
+
+Drills, run on the new script: the parked-run drill stops a parked run in
+one run (exit 4, 44 s) and inside the four runs (exit 4, 156 s, the parked
+core run named and stopped, nothing left running); `--shard 1/3`, `2/3`,
+`3/3` here were 54, 72 and 77 s, 4,866 + 4,549 + 5,193 = 14,608 tests.

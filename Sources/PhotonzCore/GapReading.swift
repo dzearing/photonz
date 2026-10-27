@@ -202,15 +202,25 @@ private final class GapWalker {
         let inkFloor = Int((TextLineBounds.inkFloor * 255).rounded())
         let window = max(1, Int(textGap.rounded()))
         let base = background
+        // Plain index loops, the samples read straight out of one array and
+        // `abs` spelled out: a caliper sweep walks thousands of these, and
+        // unoptimized (the tests, the debug app) a list made per step and a
+        // `for ... in` over a range cost more than the walking.
+        let samples = luma.samples, width = luma.width
         @inline(__always) func at(_ along: Int, _ cross: Int) -> Int {
-            vertical ? sample(cross, along) : sample(along, cross)
+            Int(vertical ? samples[along * width + cross] : samples[cross * width + along])
+        }
+        @inline(__always) func atLeast(_ difference: Int, _ bar: Int) -> Bool {
+            difference >= bar || -difference >= bar
         }
         var quietUntil = start
-        for k in 1...max(1, reach) {
+        var k = 0
+        while k < max(1, reach) {
+            k += 1
             let pos = start + step * k
             guard pos >= 0, pos < limit else { return nil }
             let behind = start + step * max(0, k - 2)
-            if abs(at(pos, across) - at(behind, across)) >= floor {
+            if atLeast(at(pos, across) - at(behind, across), floor) {
                 // Something stands right in the pointer's line. A letter of a
                 // line of text stands for its whole line; anything else is
                 // its own side.
@@ -226,11 +236,15 @@ private final class GapWalker {
             // a line of text the pointer is passing between two letters of.
             guard step * (pos - quietUntil) > 0 else { continue }
             var nearest: Int?
-            for offset in 0...window {
-                for cross in [across - offset, across + offset] where cross >= 0 && cross < crossLimit {
-                    if abs(at(pos, cross) - base) >= inkFloor { nearest = cross; break }
+            var offset = 0
+            while offset <= window, nearest == nil {
+                let lower = across - offset, upper = across + offset
+                if lower >= 0, lower < crossLimit, atLeast(at(pos, lower) - base, inkFloor) {
+                    nearest = lower
+                } else if upper >= 0, upper < crossLimit, atLeast(at(pos, upper) - base, inkFloor) {
+                    nearest = upper
                 }
-                if nearest != nil { break }
+                offset += 1
             }
             guard let seed = nearest else { continue }
             if let line = line(at: pos, cross: seed, vertical: vertical, step: step) {

@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import os
 import Testing
 import PhotonzCore
 @testable import PhotonzRender
@@ -151,6 +152,25 @@ struct PaintRasterCacheTests {
             _ = cache.raster(content, size: size, scale: scale)
         }
         #expect(cache.strokesSimulated == strokes.count)
+    }
+
+    @Test func twoLayersOfOneSizeAskedForTogetherEachComeBackAsTheirOwn() throws {
+        // Two paint layers the same size, rendered at once: neither waits on
+        // the other's strokes, and neither is handed the other's raster.
+        let cache = PaintRasterCache(budgetBytes: 64 << 20)
+        let first = Array(strokes.prefix(3)), second = Array(strokes.suffix(3))
+        let contents = [PaintContent(strokes: first), PaintContent(strokes: second)]
+        let size = box, scale = scale
+        let images = OSAllocatedUnfairLock(initialState: [Int: [UInt8]]())
+        DispatchQueue.concurrentPerform(iterations: 8) { i in
+            guard let image = cache.raster(contents[i % 2], size: size, scale: scale) else { return }
+            let data = bytes(image)
+            images.withLock { $0[i % 2] = data }
+        }
+        let got = images.withLock { $0 }
+        #expect(got[0] == (try replayed(first)))
+        #expect(got[1] == (try replayed(second)))
+        #expect(cache.strokesSimulated == first.count + second.count)
     }
 
     @Test func thePlainRoundYardstickIsNeverServedFromTheCache() throws {

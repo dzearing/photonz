@@ -21985,3 +21985,10 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - Every brush now answers the hand (`BrushDynamics.response`, PhotonzCore): press sets width and weight per medium, a lean lays charcoal and chalk on their side and turns a chisel marker, a fast pen thins. A mouse stroke swells in and tapers out on landing (`BrushPlacement.taperedOut`).
 - Verified with synthetic pens (no tablet on the test Mac): new core and render tests, a stroke sheet (`PHOTONZ_DYNAMICS_SHEET`), and `pen-pressure-and-mouse-taper-walk`. Audit: `queue/audits/2026-10-25-pen-pressure-tilt-and-speed.json`.
 - Open question for the user (in the audit): is Size at the steady press right, or should a full press be the Size as in Photoshop?
+
+## 2026-10-27 — the local suite in two minutes
+
+- `Scripts/test.sh` with no arguments, on a Mac of eight cores or more, builds once and runs four `swift test --skip-build --ignore-lock` processes side by side: the `.serialized` suites (stopwatch `...PerfTests` after them), PhotonzCoreTests, the suites `Scripts/test-weights.tsv` weighs at 10 s or more, and the rest. Each has its own pool, so the macOS 27 width cap holds in each. Legibility and the video kit typecheck run beside them. Arguments, `PHOTONZ_TEST_ONE_RUN=1` or a three core runner keep one run. `PHOTONZ_TEST_EVENTS=<folder>` keeps each run's event stream. The parked-run guard watches every helper (drilled in both modes).
+- 308 s (262 on a quieter day) to 123 and 128 s, 14,608 tests green twice in a row.
+- Debug-build hot loops made plain (same code optimized): `BoxSweep.labelRegions`/`islands`/`dominantRegion`, `ObjectBounds.grow` and `distance`, `TextLineBounds.detect`, `GapWalker.walk`. `BoxSweepRegionLabelTests` holds the labellers to a flood fill. `PaintRasterCache` now gates per layer, not per bitmap size (two canvas-sized paint layers no longer wait on each other). `LongTimelineCostTests` budgets divide by `CPUYardstick.calibratedMS`.
+- Open: one test over 10 s alone, the first of `ReadRunAsTextFixtureTests` (12.9 s, the recogniser lane). Measurements: `queue/audits/2026-10-26-fast-test-suite-measurements.md`, pass 3.

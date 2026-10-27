@@ -326,6 +326,31 @@ public enum ObjectBounds {
         var end: Int
     }
 
+    /// A growth's rim, for adding a neighbour to it. The counts it moves are
+    /// handed in rather than captured: a nested function that captured them
+    /// paid a runtime exclusivity check on every pixel, unoptimized.
+    private struct Rim {
+        let seen: UnsafeMutablePointer<UInt8>
+        let pixel: UnsafeMutablePointer<Int32>
+        let link: UnsafeMutablePointer<Int32>
+        let head: UnsafeMutablePointer<Int32>
+
+        /// Window pixel `j` (image pixel `at`) joins the rim at its rank,
+        /// unless it is already seen.
+        @inline(__always)
+        func reach<M: Metric>(_ j: Int, at: Int, metric: M, used: inout Int, lowest: inout Int) {
+            guard seen[j] == 0 else { return }
+            seen[j] = 1
+            var r = metric.rank(at)
+            if r < 0 { r = 0 } else if r > 255 { r = 255 }
+            pixel[used] = Int32(j)
+            link[used] = head[r]
+            head[r] = Int32(used)
+            used += 1
+            if r < lowest { lowest = r }
+        }
+    }
+
     /// Grows a four-way region from `seed`, always taking the lowest ranked
     /// pixel on its rim, and notes its box each time the rank rises. Stops
     /// before the first pixel ranked `stop` or more, when the region reaches an
@@ -409,19 +434,16 @@ public enum ObjectBounds {
                 link = l
                 capacity = more
             }
-            // The four neighbours, each ranked once, when first seen.
+            // The four neighbours, each ranked once, when first seen. Four
+            // calls rather than a loop over a list of them: the list was an
+            // array made and freed for every pixel grown into, which run
+            // unoptimized (the tests, the debug app) was most of a growth.
             let base = rowStart + y * imageW + x
-            for (j, at, ok) in [(i - 1, base - 1, x > 0), (i + 1, base + 1, x < w - 1),
-                                (i - w, base - imageW, y > 0), (i + w, base + imageW, y < h - 1)]
-            where ok && seen[j] == 0 {
-                seen[j] = 1
-                let r = min(255, max(0, metric.rank(at)))
-                pixel[used] = Int32(j)
-                link[used] = head[r]
-                head[r] = Int32(used)
-                used += 1
-                if r < lowest { lowest = r }
-            }
+            let rim = Rim(seen: seen, pixel: pixel, link: link, head: head)
+            if x > 0 { rim.reach(i - 1, at: base - 1, metric: metric, used: &used, lowest: &lowest) }
+            if x < w - 1 { rim.reach(i + 1, at: base + 1, metric: metric, used: &used, lowest: &lowest) }
+            if y > 0 { rim.reach(i - w, at: base - imageW, metric: metric, used: &used, lowest: &lowest) }
+            if y < h - 1 { rim.reach(i + w, at: base + imageW, metric: metric, used: &used, lowest: &lowest) }
         }
         if complete, level >= 0 {
             steps.append(Step(level: level, x0: x0, y0: y0, x1: x1, y1: y1))
@@ -597,10 +619,18 @@ public enum ObjectBounds {
                 : Colour(l: Int(l[i]), rg: 128, yb: 128)
         }
 
+        /// Spelled out rather than `max(abs(...), ...)`: every pixel a growth
+        /// ranks comes through here, and unoptimized the generic `abs` and
+        /// `max` were a fifth of an element scan.
         @inline(__always) func distance(_ i: Int, _ c: Colour) -> Int {
-            let dl = abs(Int(l[i]) - c.l)
+            var dl = Int(l[i]) - c.l
+            if dl < 0 { dl = -dl }
             guard hasColour else { return dl }
-            return max(dl, abs(Int(rg[i]) - c.rg), abs(Int(yb[i]) - c.yb))
+            var drg = Int(rg[i]) - c.rg
+            if drg < 0 { drg = -drg }
+            var dyb = Int(yb[i]) - c.yb
+            if dyb < 0 { dyb = -dyb }
+            return dl > drg ? (dl > dyb ? dl : dyb) : (drg > dyb ? drg : dyb)
         }
 
         func clamp(x0: Int, y0: Int, x1: Int, y1: Int) -> Window {

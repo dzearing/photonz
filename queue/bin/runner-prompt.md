@@ -107,8 +107,8 @@ The machine you run on is the user's. Anything you start, you finish.
   So anything whose answer you need, you run in the FOREGROUND and wait for
   inside the turn, with a timeout that fits it. Never `run_in_background` for
   it, and never end a turn to wait.
-  - `Scripts/test.sh`, the whole suite: **about 4m30s** (262s measured on
-    2026-10-26, 14,604 tests, build warm). Run it in the foreground with the Bash tool's
+  - `Scripts/test.sh`, the whole suite: **about 2 minutes** (123 to 128 s
+    measured on 2026-10-27, 14,608 tests, build warm). Run it in the foreground with the Bash tool's
     `timeout: 600000`, the ten minute ceiling, which leaves room for a slow
     machine or the wrapper's one rebuild after a signal 10 or 11.
   - `swift build` and a handful of walks: foreground, same timeout.

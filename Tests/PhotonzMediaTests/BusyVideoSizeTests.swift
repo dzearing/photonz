@@ -279,8 +279,21 @@ struct BusyVideoSizeTests {
                 "\(quality.rawValue) at \(Int(speed)) px/s landed \(landed) against \(budget)")
     }
 
-    @Test("A document's weigh is what lands, busy or quiet", arguments: [0.0, 300.0, 900.0])
+    /// Two tests rather than one with three cases, because they are two
+    /// promises: a long document is weighed from stretches of it, a short
+    /// one whole (`VideoExportSample`). As one test it was 14.6 s on its own.
+    @Test("A long document, still and then busy, weighs from its stretches what lands")
+    func aLongDocumentsWeighIsWhatLands() async throws {
+        try await Self.weighIsWhatLands(speed: 0)
+    }
+
+    @Test("A busy document's weigh is what lands", arguments: [300.0, 900.0])
     func aDocumentsWeighIsWhatLands(speed: Double) async throws {
+        try await Self.weighIsWhatLands(speed: speed)
+    }
+
+    /// Speed 0 is the long one: twenty seconds, still for the first ten.
+    static func weighIsWhatLands(speed: Double) async throws {
         let seconds = speed == 0 ? 20 : 3
         let size = speed == 0 ? Self.longSize : Self.size
         let span = 0..<(seconds * 1000)

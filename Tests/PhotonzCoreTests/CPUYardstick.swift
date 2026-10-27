@@ -66,4 +66,34 @@ enum CPUYardstick {
         }
         sink += total
     }
+
+    /// Milliseconds of CPU this thread has used.
+    static func threadCPUMS() -> Double {
+        var t = timespec()
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &t)
+        return Double(t.tv_sec) * 1000 + Double(t.tv_nsec) / 1_000_000
+    }
+
+    /// What `subject` costs in the calibration machine's milliseconds: each
+    /// round takes the ruler and then the subject back to back, and the middle
+    /// ratio of the two is scaled by the ruler's own baseline. Alone on the
+    /// calibration machine that reads what a stopwatch reads; on a busy one
+    /// both halves slow together and it stays put. `LongTimelineCostTests`
+    /// read 182 ms against 150 on a stopwatch with four test runs side by side
+    /// (2026-10-27) and 204 on GitHub's VM, for code that reads about 30 alone.
+    static func calibratedMS(rounds: Int = 5, _ subject: () -> Void) -> Double {
+        var ratios: [Double] = []
+        for _ in 0..<rounds {
+            var started = threadCPUMS()
+            round()
+            let ruler = threadCPUMS() - started
+            started = threadCPUMS()
+            subject()
+            let spent = threadCPUMS() - started
+            if ruler > 0 { ratios.append(spent / ruler) }
+        }
+        guard !ratios.isEmpty else { return .infinity }
+        ratios.sort()
+        return ratios[ratios.count / 2] * baselineMS
+    }
 }

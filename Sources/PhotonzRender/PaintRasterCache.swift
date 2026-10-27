@@ -36,10 +36,14 @@ public final class PaintRasterCache: @unchecked Sendable {
     private var entries: [Entry] = []
     private var clock: UInt64 = 0
     private var simulated = 0
-    /// One gate per bitmap size and scale, held while strokes are simulated
-    /// for it, so a second request for the same layer waits for the first and
-    /// takes its result instead of doing the same work alongside it.
-    private var gates: [Slot: OSAllocatedUnfairLock<Void>] = [:]
+    /// One gate per layer, held while strokes are simulated for it, so a
+    /// second request for the same layer waits for the first and takes its
+    /// result instead of doing the same work alongside it. A layer is told
+    /// apart by its bitmap's size and scale and its first stroke: keyed by
+    /// size alone, every paint layer the size of the canvas waited on every
+    /// other (2026-10-27: a test painting nine brushes at once spent most of
+    /// its eleven seconds in this lock).
+    private var gates: [Gate: OSAllocatedUnfairLock<Void>] = [:]
 
     public init(budgetBytes: Int) {
         self.budgetBytes = budgetBytes
@@ -67,10 +71,15 @@ public final class PaintRasterCache: @unchecked Sendable {
         // Only what can mark the box decides its pixels.
         let strokes = content.strokes.filter { $0.bounds.intersects(visible) }
         let slot = Slot(width: width, height: height, scale: Double(scale))
+        let key = Gate(slot: slot, firstStroke: strokes.first?.hashValue ?? 0)
         let gate = lock.withLock {
-            if let gate = gates[slot] { return gate }
+            if let gate = gates[key] { return gate }
+            // One gate a layer would pile up over a long session. Letting the
+            // lot go is safe: a request already holding one keeps it, and the
+            // worst a dropped gate costs is one layer painted twice at once.
+            if gates.count >= 256 { gates.removeAll() }
             let gate = OSAllocatedUnfairLock()
-            gates[slot] = gate
+            gates[key] = gate
             return gate
         }
         gate.lock()
@@ -134,6 +143,14 @@ public final class PaintRasterCache: @unchecked Sendable {
         let width: Int
         let height: Int
         let scale: Double
+    }
+
+    /// Which layer a request is for, as far as waiting goes: two that share
+    /// a gate only wait for each other, so a hash that collides costs time,
+    /// never a wrong picture.
+    private struct Gate: Hashable {
+        let slot: Slot
+        let firstStroke: Int
     }
 
     /// One kept raster: the strokes it holds, its bytes, and the washes still

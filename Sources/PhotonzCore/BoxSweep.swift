@@ -590,13 +590,23 @@ public enum BoxSweep {
     /// Chaining down a slow ramp is deliberate: a page with a gentle gradient on
     /// it is still one page, and treating it as one is what lets the things
     /// sitting on it be found.
+    ///
+    /// Written with plain index loops and the four channels spelled out: the
+    /// tests and the debug app run this unoptimized, where every `for ... in`
+    /// over a range goes through the generic collection machinery, and this
+    /// loop visits every pixel of a 2x window twice (2026-10-27: a whole
+    /// window's separation was 22 s in the tests, most of it here).
+    /// `BoxSweepRegionLabelTests` holds it to a plain flood fill.
     static func labelRegions(_ px: [UInt8], _ w: Int, _ h: Int) -> [Int32] {
         let count = w * h
         var parent = [Int32](repeating: 0, count: count)
         let tol = Int32(colorTolerance)
-        px.withUnsafeBufferPointer { source in
-            parent.withUnsafeMutableBufferPointer { p in
-                for i in 0..<count { p[i] = Int32(i) }
+        px.withUnsafeBufferPointer { sourceBuffer in
+            parent.withUnsafeMutableBufferPointer { parentBuffer in
+                guard count > 0, let source = sourceBuffer.baseAddress,
+                      let p = parentBuffer.baseAddress else { return }
+                var i = 0
+                while i < count { p[i] = Int32(i); i += 1 }
                 func find(_ start: Int32) -> Int32 {
                     var i = start
                     while p[Int(i)] != i {
@@ -609,23 +619,29 @@ public enum BoxSweep {
                     let ra = find(a), rb = find(b)
                     if ra != rb { p[Int(max(ra, rb))] = min(ra, rb) }
                 }
+                func close(_ a: UInt8, _ b: UInt8) -> Bool {
+                    let d = Int32(a) - Int32(b)
+                    return d <= tol && d >= -tol
+                }
                 func same(_ i: Int, _ j: Int) -> Bool {
                     let a = i * 4, b = j * 4
-                    for channel in 0..<4 {
-                        let d = Int32(source[a + channel]) - Int32(source[b + channel])
-                        if d > tol || d < -tol { return false }
-                    }
-                    return true
+                    return close(source[a], source[b]) && close(source[a + 1], source[b + 1])
+                        && close(source[a + 2], source[b + 2]) && close(source[a + 3], source[b + 3])
                 }
-                for y in 0..<h {
+                var y = 0
+                while y < h {
                     let base = y * w
-                    for x in 0..<w {
+                    var x = 0
+                    while x < w {
                         let i = base + x
                         if x > 0, same(i, i - 1) { union(Int32(i), Int32(i - 1)) }
                         if y > 0, same(i, i - w) { union(Int32(i), Int32(i - w)) }
+                        x += 1
                     }
+                    y += 1
                 }
-                for i in 0..<count { p[i] = find(Int32(i)) }
+                i = 0
+                while i < count { p[i] = find(Int32(i)); i += 1 }
             }
         }
         return parent
@@ -688,9 +704,14 @@ public enum BoxSweep {
                         droppingCut: Bool = true) -> ([Int32], [Island]) {
         let count = w * h
         var parent = [Int32](repeating: 0, count: count)
-        backdrop.withUnsafeBufferPointer { back in
-            parent.withUnsafeMutableBufferPointer { p in
-                for i in 0..<count { p[i] = back[i] == 1 ? -1 : Int32(i) }
+        // Plain index loops, like `labelRegions` and for the same reason: run
+        // unoptimized, a `for ... in` over a range costs more than the work.
+        backdrop.withUnsafeBufferPointer { backBuffer in
+            parent.withUnsafeMutableBufferPointer { parentBuffer in
+                guard count > 0, let back = backBuffer.baseAddress,
+                      let p = parentBuffer.baseAddress else { return }
+                var i = 0
+                while i < count { p[i] = back[i] == 1 ? -1 : Int32(i); i += 1 }
                 func find(_ start: Int32) -> Int32 {
                     var i = start
                     while p[Int(i)] != i {
@@ -703,15 +724,25 @@ public enum BoxSweep {
                     let ra = find(a), rb = find(b)
                     if ra != rb { p[Int(max(ra, rb))] = min(ra, rb) }
                 }
-                for y in 0..<h {
+                var y = 0
+                while y < h {
                     let base = y * w
-                    for x in 0..<w where p[base + x] != -1 {
+                    var x = 0
+                    while x < w {
                         let i = base + x
-                        if x > 0, p[i - 1] != -1 { union(Int32(i), Int32(i - 1)) }
-                        if y > 0, p[i - w] != -1 { union(Int32(i), Int32(i - w)) }
+                        if p[i] != -1 {
+                            if x > 0, p[i - 1] != -1 { union(Int32(i), Int32(i - 1)) }
+                            if y > 0, p[i - w] != -1 { union(Int32(i), Int32(i - w)) }
+                        }
+                        x += 1
                     }
+                    y += 1
                 }
-                for i in 0..<count where p[i] != -1 { p[i] = find(Int32(i)) }
+                i = 0
+                while i < count {
+                    if p[i] != -1 { p[i] = find(Int32(i)) }
+                    i += 1
+                }
             }
         }
         // Roots into dense numbers, so the per-pixel work is an array index
@@ -721,27 +752,32 @@ public enum BoxSweep {
         var found: [Island] = []
         var clipped: [Bool] = []
         var labels = [Int32](repeating: 0, count: count)
-        for y in 0..<h {
-            for x in 0..<w {
+        var y = 0
+        while y < h {
+            var x = 0
+            while x < w {
                 let i = y * w + x
                 let root = parent[i]
-                guard root != -1 else { continue }
-                var id = dense[Int(root)]
-                if id == 0 {
-                    found.append(Island(id: Int32(found.count + 1), x0: x, y0: y, x1: x, y1: y))
-                    clipped.append(false)
-                    id = Int32(found.count)
-                    dense[Int(root)] = id
+                if root != -1 {
+                    var id = dense[Int(root)]
+                    if id == 0 {
+                        found.append(Island(id: Int32(found.count + 1), x0: x, y0: y, x1: x, y1: y))
+                        clipped.append(false)
+                        id = Int32(found.count)
+                        dense[Int(root)] = id
+                    }
+                    let slot = Int(id) - 1
+                    if x < found[slot].x0 { found[slot].x0 = x }
+                    if x > found[slot].x1 { found[slot].x1 = x }
+                    if y < found[slot].y0 { found[slot].y0 = y }
+                    if y > found[slot].y1 { found[slot].y1 = y }
+                    found[slot].area += 1
+                    labels[i] = id
+                    if x == 0 || y == 0 || x == w - 1 || y == h - 1 { clipped[slot] = true }
                 }
-                let slot = Int(id) - 1
-                found[slot].x0 = min(found[slot].x0, x)
-                found[slot].x1 = max(found[slot].x1, x)
-                found[slot].y0 = min(found[slot].y0, y)
-                found[slot].y1 = max(found[slot].y1, y)
-                found[slot].area += 1
-                labels[i] = id
-                if x == 0 || y == 0 || x == w - 1 || y == h - 1 { clipped[slot] = true }
+                x += 1
             }
+            y += 1
         }
         guard droppingCut else {
             for slot in found.indices { found[slot].cut = clipped[slot] }
@@ -764,12 +800,31 @@ public enum BoxSweep {
     /// one pass after pass.
     static func dominantRegion(of island: Island, in regions: [Int32],
                                islands: [Int32], width w: Int) -> Int32? {
+        // Neighbouring pixels are nearly always one region, so a run of them
+        // is counted before it is filed: one dictionary write per run rather
+        // than per pixel, which over a whole window was seconds unoptimized.
         var votes: [Int32: Int] = [:]
-        for y in island.y0...island.y1 {
-            for x in island.x0...island.x1 where islands[y * w + x] == island.id {
-                votes[regions[y * w + x], default: 0] += 1
+        var last: Int32 = 0, run = 0
+        var y = island.y0
+        while y <= island.y1 {
+            var i = y * w + island.x0
+            let end = y * w + island.x1
+            while i <= end {
+                if islands[i] == island.id {
+                    let region = regions[i]
+                    if run > 0 && region == last {
+                        run += 1
+                    } else {
+                        if run > 0 { votes[last, default: 0] += run }
+                        last = region
+                        run = 1
+                    }
+                }
+                i += 1
             }
+            y += 1
         }
+        if run > 0 { votes[last, default: 0] += run }
         guard let best = mostVoted(votes),
               Double(best.value) >= minPaintShare * Double(island.area) else { return nil }
         return best.key

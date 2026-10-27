@@ -114,17 +114,16 @@ struct LongTimelineCostTests {
     func holdDriftsOnALongTalk() {
         let doc = Self.longTalk()
         let ids = doc.captionLayers.map(\.id)
-        let clock = ContinuousClock()
-        let spent = clock.measure {
+        let spentMS = CPUYardstick.calibratedMS {
             for id in ids { _ = doc.holdDrifts(forLayer: id) }
         }
-        // A stopwatch, so it collects without gating where PHOTONZ_PERF_GATE
-        // says report: on GitHub's three core VM, two tests at a time, it read
-        // 204 ms on unchanged code (2026-10-26).
+        // Collects without gating where PHOTONZ_PERF_GATE says report: on
+        // GitHub's three core VM, two tests at a time, a stopwatch read 204 ms
+        // on unchanged code (2026-10-26).
         if PerfGate.isOn {
-            #expect(spent < .milliseconds(150), "173 bars took \(spent)")
+            #expect(spentMS < 150, "173 bars took \(spentMS) ms of the calibration machine's time")
         } else {
-            print("[perf] 173 bars asked for their hold drift in \(spent)")
+            print("[perf] 173 bars asked for their hold drift in \(spentMS) ms")
         }
     }
 
@@ -135,15 +134,15 @@ struct LongTimelineCostTests {
     func lookUpEveryCue() {
         let doc = Self.longTalk()
         let ids = doc.captionLayers.map(\.id)
-        let clock = ContinuousClock()
         var found = 0
-        let spent = clock.measure {
+        let rounds = 5
+        let spentMS = CPUYardstick.calibratedMS(rounds: rounds) {
             for _ in 0..<5 { for id in ids where doc.layer(id: id) != nil { found += 1 } }
         }
-        #expect(found == ids.count * 5)
+        #expect(found == ids.count * 5 * rounds)
         // About 25ms in a debug build; the bound catches a return to copying
         // whole layers per step, not a millisecond here or there.
-        #expect(spent < .milliseconds(150), "865 lookups took \(spent)")
+        #expect(spentMS < 150, "865 lookups took \(spentMS) ms of the calibration machine's time")
     }
 
     /// A caption bar can be drawn without asking about holds at all when no
@@ -172,9 +171,8 @@ struct LongTimelineCostTests {
         for (cue, layer) in zip(cues, doc.captionLayers) {
             #expect(cue.words == layer.captionWords)
         }
-        let clock = ContinuousClock()
-        let spent = clock.measure { for _ in 0..<5 { _ = doc.captionCues } }
-        #expect(spent < .milliseconds(150), "5 readings took \(spent)")
+        let spentMS = CPUYardstick.calibratedMS { for _ in 0..<5 { _ = doc.captionCues } }
+        #expect(spentMS < 150, "5 readings took \(spentMS) ms of the calibration machine's time")
     }
 
     /// The menu bar asks whether Add Edit to All Tracks would cut anything at
@@ -204,14 +202,13 @@ struct LongTimelineCostTests {
     func arrangeAmongCaptions() throws {
         let doc = Self.longTalk()
         let first = try #require(doc.captionLayers.first)
-        let clock = ContinuousClock()
         var found: ArrangeContainer?
-        let spent = clock.measure {
+        let spentMS = CPUYardstick.calibratedMS {
             for _ in 0..<10 { found = doc.arrangeContainer(of: first.id) }
         }
         let group = try #require(doc.layers.first { $0.isCaptionGroup })
         if let found { #expect(found.id == group.id) }
-        #expect(spent < .milliseconds(100), "10 askings took \(spent)")
+        #expect(spentMS < 100, "10 askings took \(spentMS) ms of the calibration machine's time")
     }
 
     @Test("Finding a layer anywhere inside another agrees with the flattened list")
@@ -232,13 +229,12 @@ struct LongTimelineCostTests {
         var doc = Self.longTalk()
         doc.setMarkIn(atMS: 75_000)
         doc.setMarkOut(atMS: 150_000)
-        let clock = ContinuousClock()
         var answer = false
-        let spent = clock.measure {
+        let spentMS = CPUYardstick.calibratedMS {
             for _ in 0..<20 { answer = doc.canTakeOutMarkedStretch }
         }
         #expect(answer)
-        // Twenty askings, generous for a debug build on a loaded machine.
-        #expect(spent < .milliseconds(50), "20 askings took \(spent)")
+        // Twenty askings, generous for a debug build.
+        #expect(spentMS < 50, "20 askings took \(spentMS) ms of the calibration machine's time")
     }
 }

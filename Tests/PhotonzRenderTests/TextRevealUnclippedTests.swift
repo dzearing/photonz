@@ -1,6 +1,7 @@
 import CoreGraphics
 import CoreImage
 import Foundation
+import os
 import PhotonzCore
 @testable import PhotonzRender
 import Testing
@@ -24,8 +25,20 @@ import Testing
 @Suite("Words that travel into a title are never cut off by their own box")
 struct TextRevealUnclippedTests {
 
-    static let context = CIContext(options: [.workingColorSpace: NSNull(), .outputColorSpace: NSNull(),
-                                             .workingFormat: NSNumber(value: CIFormat.RGBAf.rawValue)])
+    /// A few contexts taken in turn: a context renders one picture at a
+    /// time, and with one for the whole suite the cases running side by side
+    /// spent most of their time waiting on its lock (2026-10-27).
+    static let contexts = (0..<8).map { _ in
+        CIContext(options: [.workingColorSpace: NSNull(), .outputColorSpace: NSNull(),
+                            .workingFormat: NSNumber(value: CIFormat.RGBAf.rawValue)])
+    }
+    static let turn = OSAllocatedUnfairLock(initialState: 0)
+    static var context: CIContext {
+        contexts[turn.withLock { n in
+            n += 1
+            return n % contexts.count
+        }]
+    }
 
     /// The total alpha in `image`, over its whole extent.
     static func ink(_ image: CIImage) -> Double {
