@@ -5,13 +5,31 @@
   "setup": "Photonz Dev, release Next, no flag changed from its default. A 1600 by 1000 canvas (a screenshot's size) or a 4000 by 3000 one for the speed numbers.",
   "switched": {},
   "try": [
-    { "do": "Press B for the Brush, pick Watercolour, and paint three or four washes and two Oil Paint strokes across them.", "shot": "2026-10-27-paint-holds-still-100-sc.png" },
-    { "do": "Zoom to 200% (View, Zoom In until the pill reads 200%) and paint another wash across the earlier strokes.", "shot": "2026-10-27-paint-holds-still-200-sc.png" },
-    { "do": "Let go, and watch the earlier strokes and the end of the new one as the button comes up." },
-    { "do": "Play the before reel (6x slow motion): at 66 ms after letting go every stroke goes soft, then sharpens.", "shot": "2026-10-27-paint-holds-still-before-strip.png" },
-    { "do": "Play the after reel: held, the moment of letting go, 47 ms on, settled. Nothing moves.", "shot": "2026-10-27-paint-holds-still-after-strip.png" },
-    { "do": "With a mouse, paint a slow Pencil line and watch its end: it thins in as you go, not when you let go." },
-    { "do": "Paint a dozen large (500 pt) watercolour strokes quickly, one over the next, and feel whether the brush stays as quick as the first." }
+    {
+      "do": "Press B for the Brush, pick Watercolour, and paint three or four washes and two Oil Paint strokes across them.",
+      "shot": "2026-10-27-paint-holds-still-100-sc.png"
+    },
+    {
+      "do": "Zoom to 200% (View, Zoom In until the pill reads 200%) and paint another wash across the earlier strokes.",
+      "shot": "2026-10-27-paint-holds-still-200-sc.png"
+    },
+    {
+      "do": "Let go, and watch the earlier strokes and the end of the new one as the button comes up."
+    },
+    {
+      "do": "Play the before reel (6x slow motion): at 66 ms after letting go every stroke goes soft, then sharpens.",
+      "shot": "2026-10-27-paint-holds-still-before-strip.png"
+    },
+    {
+      "do": "Play the after reel: held, the moment of letting go, 47 ms on, settled. Nothing moves.",
+      "shot": "2026-10-27-paint-holds-still-after-strip.png"
+    },
+    {
+      "do": "With a mouse, paint a slow Pencil line and watch its end: it thins in as you go, not when you let go."
+    },
+    {
+      "do": "Paint a dozen large (500 pt) watercolour strokes quickly, one over the next, and feel whether the brush stays as quick as the first."
+    }
   ],
   "evaluate": [
     "Zoomed in to 200%, does anything already painted change at all when you let go of a stroke?",
@@ -21,7 +39,8 @@
   ],
   "rough": [
     "Reels: 2026-10-27-paint-holds-still-before.mp4 and 2026-10-27-paint-holds-still-after.mp4 (both 6x slow motion, 200% on a 1600 by 1000 canvas, from the walk's frame by frame film). Measured before: at 200% earlier strokes changed in 7 frames after the release (up to 46,481 pixels), 9 strokes were simulated again after one landed, and the held stroke differed from the landed one over 8 to 28% of its reach. After, in painting-holds-still-walk: 0 frames change anything outside the new stroke at 50%, 100% and 200%; one new stroke simulated per scale the layer is shown at; settled 2 to 69 ms after the release.",
-    "Not reached yet, so the task stays open: one 120 Hz frame (8.3 ms) at the 95th percentile with a 500 pt brush. Measured on a 12 megapixel canvas with 50 strokes under it, a hand's pace: every medium at 20 pt 2.6 to 7.1 ms; at 500 pt the marker 7.5 ms and a first wash 7.8 ms, but a wash over wet washes 12.7 to 15.8 ms (86 to 112 ms before this work), pencil 13.6, charcoal 16.9, oil 20.6. The 500 pt dry media and oil spend it on their own per-pixel marking, already split across cores, and on drawing the tail again each new dab.",
+    "At 200% on a screenshot, about one landing in three made the composite paint every stroke on the layer again (the sharp copy's 64 MB raster pushed out the composite's). Fixed the same day: the kept rasters given up first are the ones a newer raster at the same zoom has replaced. painting-holds-still-walk passed 6 of 6 runs afterwards, in both landing orders.",
+    "Not reached yet, so the task stays open: one 120 Hz frame (8.3 ms) at the 95th percentile at every size. Measured again on 2026-10-27 after the tail fix, 12 megapixel canvas, 50 strokes under it, a hand's pace: every medium at 20 pt 2.5 to 4.3 ms; at 150 pt 10.4 to 11.4 ms; at 500 pt marker 7.8, pencil 12.6 (was 13.8), watercolour 14.1, charcoal 14.7 (was 16.5), oil 15.3 (was 20.2). What is left is the media's own per-pixel work: one full 500 point oil dab costs about 5 ms and the thinned end drawn again on every move about 4.5 ms more, and the pixels must stay exactly what saved strokes paint today.",
     "Where the screen resamples the layer (zoomed out, or a 12 megapixel picture at 100% or more), a one-pixel fringe along the new stroke's soft edges and oil's grooves can shift by a few levels as you let go: the live stroke and the picture under it are each filtered on their own before they are laid together. At 100% on a screenshot-sized canvas, where nothing is resampled, the release differs over 0.12% of the stroke. Zoomed 4x on the captures I could not see it.",
     "The probe's film frames (the reels and strips) show faint lines where the live stroke's 256 pixel pieces meet. The real window does not: captures held mid-stroke at 100% on 12 megapixels and at 200% on 1600 by 1000 show no seam (a real one did, and was fixed by hard piece edges).",
     "Zoomed out, the live stroke paints the layer's full pixels rather than the screen's, which is what makes it land unchanged; it costs more pixels a move than before when far zoomed out.",
