@@ -320,14 +320,29 @@ struct VideoExportBudgetTests {
         #expect(abs(ranFirst - ranSecond) < 0.05)
         // And they show the same picture, to the eye: a couple of levels out of
         // 255 is what the encoder's own decisions move, and nothing a person
-        // sees.
-        for at in [0.2, 1.0, 1.8] {
-            let left = try await Self.colour(of: first, atSeconds: at)
-            let right = try await Self.colour(of: second, atSeconds: at)
-            let apart = zip(left, right).map { abs(Int($0) - Int($1)) }.max() ?? 0
-            #expect(apart <= 6,
-                    "the two exports are \(apart) levels apart at \(at)s: \(left) and \(right)")
+        // sees. On a busy machine the encoder spends its bits differently, as
+        // with the sizes above: GitHub's VM read 7 against 6 once on unchanged
+        // code (2026-10-27). So a pair further apart than that is written
+        // again, up to three times, and the closest is the one judged; a
+        // picture that really changed is far apart every time.
+        var worst: (apart: Int, at: Double, left: [UInt8], right: [UInt8]) = (.max, 0, [], [])
+        for attempt in 0..<3 {
+            if attempt > 0 {
+                try await VideoExporter.exportMP4(from: source, to: second, cuts: cuts, crop: nil,
+                                                  recipe: recipe)
+            }
+            var pair: (apart: Int, at: Double, left: [UInt8], right: [UInt8]) = (0, 0, [], [])
+            for at in [0.2, 1.0, 1.8] {
+                let left = try await Self.colour(of: first, atSeconds: at)
+                let right = try await Self.colour(of: second, atSeconds: at)
+                let apart = zip(left, right).map { abs(Int($0) - Int($1)) }.max() ?? 0
+                if apart > pair.apart || pair.left.isEmpty { pair = (apart, at, left, right) }
+            }
+            if pair.apart < worst.apart { worst = pair }
+            if worst.apart <= 6 { break }
         }
+        #expect(worst.apart <= 6,
+                "the two exports are \(worst.apart) levels apart at \(worst.at)s: \(worst.left) and \(worst.right)")
     }
 
     /// What colour the written file shows at a moment, squeezed into one pixel.
