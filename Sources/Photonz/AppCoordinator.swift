@@ -110,7 +110,9 @@ final class AppCoordinator {
 
     /// Runs once at launch (from the `AppDelegate`). Becomes a menu-bar agent
     /// (`.accessory`: no Dock icon, stays alive windowless) and starts capture.
-    func start() {
+    /// Started by the login item, it opens nothing but the menu bar icon: the
+    /// setup window waits for a launch a person made.
+    func start(launchedAtLogin: Bool = false) {
         // Agent lifecycle: no Dock icon, the app keeps running with no windows.
         // The bundled app also sets LSUIElement, but this makes plain
         // `swift build` dev runs behave the same.
@@ -186,7 +188,7 @@ final class AppCoordinator {
         // the one launch where setup is done and nobody has been offered the
         // tour yet.
         welcome.startTour = { [weak self] in self?.startFirstRunTour() }
-        welcome.presentIfNeeded(capture: capture)
+        if !launchedAtLogin { welcome.presentIfNeeded(capture: capture) }
         // Background update discovery (badge on the menu-bar icon).
         startUpdateChecks()
     }

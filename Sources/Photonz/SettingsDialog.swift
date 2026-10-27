@@ -2,11 +2,11 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// The Settings window's one page: the questions you have told Photonz to stop
-/// asking, and the way back from each of them.
+/// The Settings window's one page: General (opening at login) at the top, then
+/// the questions you have told Photonz to stop asking and the way back from
+/// each of them, then the sections a Next switch adds.
 ///
-/// The window exists for this and nothing else yet, so there is no sidebar and
-/// no second page to pick between. The page lists ONLY what was actually
+/// One page, so there is no sidebar. The questions list ONLY what was actually
 /// silenced: a page of unticked switches would be an invitation to go and turn
 /// warnings off, which is the opposite of what this is for (UX-PATTERNS §3,
 /// "The question you can silence").
@@ -25,8 +25,10 @@ struct SettingsDialog: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
             Form {
+                // Whether Photonz opens by itself at login. First, because it
+                // is the one setting every copy of the app has.
+                GeneralSettingsSection()
                 Section {
                     if rows.isEmpty {
                         emptyRow
@@ -35,6 +37,8 @@ struct SettingsDialog: View {
                             questionRow(row)
                         }
                     }
+                } header: {
+                    header
                 }
                 // Which model answers Ask (Next, `next-ask`).
                 if Experiments.shared.askEnabled {
@@ -48,14 +52,13 @@ struct SettingsDialog: View {
             }
             .formStyle(.grouped)
         }
-        // The header sits outside the Form, which paints its own backdrop, so
-        // the whole surface gets the window background explicitly.
         .background(Color(nsColor: .windowBackgroundColor))
         // Sized to what is actually on the page rather than to what a settings
         // window usually looks like: with one question silenced, a window of the
         // usual height is two thirds empty and reads as unfinished. This holds
-        // both of today's questions without scrolling and grows from there.
-        .frame(minWidth: 460, idealWidth: 520, minHeight: 220, idealHeight: 320)
+        // the General switch and both of today's questions without scrolling
+        // and grows from there.
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 260, idealHeight: 400)
         .animation(.easeOut(duration: 0.18), value: rows)
         // Silencing happens in an editor window while this one is open, so the
         // page re-reads whenever it comes back to the front.
@@ -66,19 +69,17 @@ struct SettingsDialog: View {
 
     // MARK: - Header
 
+    /// The questions section's heading, styled like every other section's,
+    /// with the sentence saying how a question gets here under it.
     private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(SettingsWindowModel.questionsTitle)
-                .font(.title2.weight(.semibold))
             Text(SettingsWindowModel.questionsBlurb)
-                .font(.callout)
+                .font(.callout.weight(.regular))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
-        .padding(.bottom, 4)
     }
 
     // MARK: - Rows

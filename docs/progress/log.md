@@ -22008,3 +22008,12 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - View `Sources/Photonz/Welcome/SetupStepsView.swift`; `WelcomeController` picks it when `next-setup-steps` is on (Next default). Current keeps the one page window.
 - Walk actions `setupNeedsNothing`, `setupNeedsEverything`, `setupSkip`, `setupContinue`, `setupInstall`; three new walks; first-run and never-granting walks updated.
 - Open question: a walk's posted click does not land on this window's buttons; walks press through accessibility.
+
+## 2026-10-26 — Photonz opens at login
+
+- New install registers itself as a login item on first launch (`SMAppService.mainApp`), once; turning it off sticks. Settings > General (top of the page) has the Open at login switch, read from the system every time the window comes forward.
+- Pure rules in `Sources/PhotonzCore/OpenAtLogin.swift` (who may register, the once-only default under `openAtLogin.defaultApplied`, the row, the flip) behind `LoginItemService`; tests `OpenAtLoginTests`. App wrapper `Sources/Photonz/LoginItem.swift`, view `GeneralSettingsSection.swift`.
+- The probe uses `InMemoryLoginItemService` (starts on) so walks never register the test app. A copy run from the disk image or a translocated copy waits for the real install.
+- A launch by the login item (`keyAELaunchedAsLogInItem`) skips the setup window.
+- Walk `open-at-login-switch-in-settings-walk`. Audit `queue/audits/2026-10-26-open-at-login.json`.
+- Open: a real logout/login was not possible unmanned; that is the audit's try path.

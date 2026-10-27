@@ -93,10 +93,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         MainActor.assumeIsolated {
+            // Read while the open event that started the app is still the
+            // current one: a launch by the login item opens no window at all.
+            let launchedAtLogin = LoginItem.wasLaunchedAtLogin
             // Read the running release's switches before anything draws, so
             // the first frame is mixed the way that release mixes.
             _ = Experiments.shared
-            AppDelegate.coordinator?.start()
+            AppDelegate.coordinator?.start(launchedAtLogin: launchedAtLogin)
+            // A new install opens at login from now on (Settings > General).
+            LoginItem.applyDefaultOnLaunch()
             if let coordinator = AppDelegate.coordinator { EditorWarmUp.run(coordinator: coordinator) }
             if let coordinator = AppDelegate.coordinator { AgentChannel.startIfEnabled(coordinator: coordinator) }
             MemoryRelief.watchForPressure { EditorState.liveEditors }

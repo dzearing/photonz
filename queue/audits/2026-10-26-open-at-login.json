@@ -1,0 +1,28 @@
+{
+  "feature": "Photonz opens at login",
+  "epic": "agent-drivable",
+  "summary": "Photonz now starts by itself when you log in, quietly in the menu bar, so capture shortcuts and the agent connection are always there. It is on from the first launch, and Settings > General has one switch to turn it off.",
+  "setup": "Photonz Dev (or the shipping Photonz from Applications), release Next or Current, no flag changed from its default. The probe the loop tests with uses a pretend login item list, so the walk flips the switch without the test app ever starting at login.",
+  "switched": {},
+  "try": [
+    { "do": "Launch Photonz once after this update lands (the loop's refreshed Dev app counts as that first launch)." },
+    { "do": "Open System Settings > General > Login Items: Photonz (Dev) is listed under Open at Login." },
+    { "do": "In Photonz, press Command-comma: General sits at the top with Open at login switched on.", "shot": "2026-10-26-open-at-login-1-on-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Log out and back in: the Photonz icon is in the menu bar, and no window, Dock icon or setup window came up." },
+    { "do": "Click the switch off, then check Login Items: Photonz is gone from the list.", "shot": "2026-10-26-open-at-login-2-off-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Turn it back on in Login Items instead, then reopen Settings: the switch reads on again." }
+  ],
+  "evaluate": [
+    "After a login, did Photonz come up with nothing but its menu bar icon?",
+    "Is General at the top of Settings the place you would look for this switch?",
+    "Does 'Open at login' say what it does, without needing the help text?",
+    "Was it right for the Dev app to register itself too, the same as the shipping app?"
+  ],
+  "rough": [
+    "Not proved by a real login: a runner cannot log your session out, and registering the shipping Photonz from a runner would make it start at your login. The log-out step above is yours to try. What was proved: the switch on, off and on again by a click on its face (open-at-login-switch-in-settings-walk), and the real macOS login item call in a throwaway app of its own id: a new app reads not registered, registering makes it on, unregistering makes it off, and a bundle deleted and rebuilt at the same path keeps its login item, which is what the loop's Dev app rebuilds do.",
+    "The 'waiting for your OK' and 'macOS would not add Photonz' lines, with their Open Login Items button, are unit tested but were never seen on screen: macOS did not ask for approval on this Mac, and the probe's pretend list never refuses.",
+    "The first launch registers only when the app runs from a lasting place: a copy opened straight from the disk image or a quarantined copy waits, and Settings says 'Works once Photonz is in Applications.' The first launch from Applications then turns it on.",
+    "The default is applied once. Turn it off, here or in Login Items, and no later launch turns it back on.",
+    "The Questions you have silenced heading moved from a big title over the whole page into its own section header, so General can sit above it. No mock covers the Settings window."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/open-at-login-switch-in-settings-walk",
+  "clock": 60,
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expect", "control": "General Open at login", "reads": "on" },
+    { "do": "expect", "row": "Photonz is asking you every question it knows how to ask.", "present": true },
+    { "do": "describe", "stage": "1-on", "note": "Settings at Next defaults: General at the top of the page, Open at login switched on, the way a new install starts" },
+    { "do": "snapshot", "name": "1-open-at-login-on", "window": "Settings" },
+    { "do": "press", "control": "General Open at login" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "General Open at login", "reads": "off" },
+    { "do": "describe", "stage": "2-off", "note": "a press on the switch turned it off; the probe's login item list lives only in memory, so the test app is never registered" },
+    { "do": "snapshot", "name": "2-open-at-login-off", "window": "Settings" },
+    { "do": "press", "control": "General Open at login" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "General Open at login", "reads": "on" }
+  ]
+}
