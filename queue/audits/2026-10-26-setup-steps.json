@@ -1,0 +1,31 @@
+{
+  "feature": "The setup window walks you through only the steps you still need",
+  "epic": "agent-drivable",
+  "summary": "The window that asks for permissions now goes one step at a time and shows only what this Mac still needs and you have not seen: Screen Recording, Microphone, the screenshot keys, and a new step for using Photonz from Claude Code and Copilot with an Install for each tool found. Each step shows once; a Mac that finished the old setup sees only the agents step.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default (the new behaviour is the switch Setup shows only the steps you still need, on in Next). Walks: setup-steps-brand-new-mac-walk, setup-steps-after-old-setup-walk, setup-steps-everything-done-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Launch Photonz Dev. Since you finished the old setup, the window opens on the agents step alone.", "shot": "2026-10-26-setup-steps-old-setup-agents-only.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Install on Claude Code. The row turns to Installed and Skip becomes Continue.", "shot": "2026-10-26-setup-steps-5-installed.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Continue (or Skip). Quit and relaunch Photonz: nothing opens." },
+    { "do": "Open the menu bar icon menu and pick Welcome & Permissions. It opens on what is still left to do, or every step shown as done." },
+    { "do": "What a brand new Mac sees, step 1 of 4.", "shot": "2026-10-26-setup-steps-1-screen-recording.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Step 4 of 4 on a brand new Mac, before anything is installed.", "shot": "2026-10-26-setup-steps-4-agents.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "The last page on a brand new Mac: the tour offer and the line about Settings.", "shot": "2026-10-26-setup-steps-6-tour.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does the agents step tell you in one glance what installing does?",
+    "Is closing the window (or Skip on any step) never asking again what you expected, or should an unreached step come back next launch?",
+    "Is one fixed window height right, or does the empty space under the short permission steps feel unfinished?",
+    "Should the agents step read as done (Continue) once one tool is installed, with the other tool's Install still there?"
+  ],
+  "rough": [
+    "No mock covers the setup window, so nothing here is a departure from one; the layout is my call: centred page, counter top right, Skip and Continue bottom right.",
+    "Chose: closing the window counts every step in that showing as seen, not only the page on screen, because the counter said how many were left and the person chose to stop. The one exception is a close that is the Screen Recording restart, which leaves the later steps for after the restart.",
+    "Chose: a step counts as seen the moment it is on screen, so quitting with it up does not bring it back.",
+    "Chose: a microphone turned down in macOS counts as answered and is not shown again; Welcome & Permissions still opens it.",
+    "The walks press the setup window's buttons through its accessibility, as the tour offer's walks always have: a posted click does not land on this window's buttons while a walk drives it, in front or behind (measured on 2026-10-27). A person's click is the ordinary one.",
+    "The short permission pages leave space under them because the window keeps one height for every page, so it does not jump between steps.",
+    "Pictures are of the probe, so the app names itself Photonz Next (Probe) in the copy; yours says Photonz Next (Dev)."
+  ]
+}

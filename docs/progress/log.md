@@ -22000,3 +22000,11 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - Shipped: the MCP bridge and skill inside every bundle; Settings > Agents rows with Install/Uninstall for Claude Code and GitHub Copilot (VS Code + Copilot CLI); PhotonzCore AgentSetup with tests; walk setup `agentHome`.
 - Verified with fresh claude and copilot sessions from an empty folder (queue/audits/2026-10-26-agents-settings-sessions.md).
 - Next: the setup window step (the-setup-window-walks-you-through-only-the-step); walk presses in the Settings window do not land (a-walk-can-press-the-buttons-in-the-settings-win).
+
+## 2026-10-26 — Setup window as steps (Next)
+
+- The setup window shows one step at a time, only the steps still needed and never seen: Screen Recording, Microphone, the screenshot keys, and a new agents step (picture, two sentences, Install per tool found, same install as Settings > Agents). Ends on the tour offer when owed; last page says skipped steps are in Settings and the menu bar menu.
+- Pure rules in `Sources/PhotonzCore/SetupSteps.swift` (`SetupFlow`, `SetupRun`), tested in `SetupStepsTests`. Seen is stored per step (`setup.stepsSeen`); the old one page setup is migrated once (`setup.stepsMigrated`), so a Mac that finished it sees only the agents step.
+- View `Sources/Photonz/Welcome/SetupStepsView.swift`; `WelcomeController` picks it when `next-setup-steps` is on (Next default). Current keeps the one page window.
+- Walk actions `setupNeedsNothing`, `setupNeedsEverything`, `setupSkip`, `setupContinue`, `setupInstall`; three new walks; first-run and never-granting walks updated.
+- Open question: a walk's posted click does not land on this window's buttons; walks press through accessibility.

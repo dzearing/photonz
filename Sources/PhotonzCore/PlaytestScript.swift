@@ -1839,6 +1839,18 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// without this a walk can never reach the half of the first run that
     /// belongs to somebody who only wants to draw.
     case screenRecordingOff, screenRecordingOn
+    /// Stand on a Mac with the rest of setup done (`setupNeedsNothing`: the
+    /// microphone answered, the screenshot keys free, Photonz already in every
+    /// agent tool) or on a brand new one (`setupNeedsEverything`: none of it).
+    /// Like the two above, these change what the app READS and nothing else;
+    /// Screen Recording keeps whatever those two say. The agents rows on the
+    /// page are still the real ones, so pair `setupNeedsEverything` with
+    /// `agentHome` in the walk's setup.
+    case setupNeedsNothing, setupNeedsEverything
+    /// The setup window's own buttons, pressed the way the tour offer's are
+    /// (`takeTheTour`, `startWorking`): Skip, Continue (or Done on the last
+    /// step), and the first Install on the agents step.
+    case setupSkip, setupContinue, setupInstall
     /// Reach for a screenshot the way ⇧⌘4 does, from a walk. Only useful
     /// after `screenRecordingOff`: the point is the moment somebody who said
     /// no to setup finds out what saying no cost them, which has to be the

@@ -4302,6 +4302,10 @@ private final class Run {
         // editor: the setup window belongs to the menu-bar agent and comes up
         // before there is any document at all.
         case .action(let action) where action == .freshInstall:
+            // A setup window the probe's own launch put up belongs to the Mac
+            // the walk is pretending is not this one: closed first, so what
+            // it records on closing is forgotten with the rest.
+            await closeSetupWindow()
             for key in Self.firstRunKeys { UserDefaults.standard.removeObject(forKey: key) }
             UserDefaults.standard.removeObject(forKey: TutorialController.progressKey)
             TutorialController.shared.forgetAllProgress()
@@ -4312,6 +4316,7 @@ private final class Run {
         case .action(let action) where action == .oldInstall:
             // An install that finished its setup months ago, before any of this
             // existed. Nothing has ever been asked, and nothing ever should be.
+            await closeSetupWindow()
             for key in Self.firstRunKeys { UserDefaults.standard.removeObject(forKey: key) }
             UserDefaults.standard.set(true, forKey: WelcomeController.completedDefaultsKey)
             note(number, step.name,
@@ -4329,6 +4334,41 @@ private final class Run {
             note(number, step.name,
                  "from here Photonz reads Screen Recording as "
                  + (granted ? "granted" : "never granted") + "; \(Self.firstRunReading)")
+
+        case .action(let action) where action == .setupNeedsNothing
+            || action == .setupNeedsEverything:
+            let done = action == .setupNeedsNothing
+            PlaytestSetupPretend.microphoneAnswered = done
+            PlaytestSetupPretend.screenshotKeysFree = done
+            // Brand new reads the agent rows for real (a walk's own home), so
+            // the step's Install buttons are the real ones.
+            PlaytestSetupPretend.agentsToSetUp = done ? false : nil
+            note(number, step.name,
+                 (done ? "from here the microphone reads answered, the screenshot keys free and every agent tool set up"
+                       : "from here the microphone reads never asked, the screenshot keys taken and the agent tools as this walk's home has them")
+                 + "; \(Self.firstRunReading)")
+
+        // Pressed through the window's own accessibility, the way the tour
+        // offer's two buttons are: a posted click does not land on this
+        // window's SwiftUI buttons (measured 2026-10-27, behind and in front).
+        case .action(let action) where action == .setupSkip || action == .setupContinue
+            || action == .setupInstall:
+            guard WelcomeProbe.window() != nil else {
+                throw Failure(description: "the setup window is not open")
+            }
+            let titles = switch action {
+            case .setupSkip: [SetupFlow.skipButtonTitle]
+            case .setupContinue: [SetupFlow.continueButtonTitle, SetupFlow.doneButtonTitle]
+            default: [SetupFlow.installButtonTitle]
+            }
+            guard let welcome = WelcomeProbe.window(),
+                  let pressed = WindowReadProbe.press(startingWith: titles, in: welcome) else {
+                throw Failure(description: "the setup window offers no "
+                              + titles.joined(separator: " or ") + " button; it reads:\n  "
+                              + (WelcomeProbe.window().map(WindowReadProbe.reading(in:)) ?? "nothing"))
+            }
+            await sleep(action == .setupInstall ? 0.3 : 0.7)
+            note(number, step.name, "pressed \"\(pressed)\"; \(Self.firstRunReading)")
 
         case .action(let action) where action == .tryToCapture:
             coordinator.capture.beginRectCapture()
@@ -7762,7 +7802,8 @@ private final class Run {
                 break // handled above: neither needs an editor
             case .freshInstall, .oldInstall, .launchHook, .expectWelcome,
                  .expectNoWelcome, .readWelcome, .takeTheTour, .startWorking,
-                 .showWelcomeAgain, .screenRecordingOff, .screenRecordingOn, .tryToCapture:
+                 .showWelcomeAgain, .screenRecordingOff, .screenRecordingOn, .tryToCapture,
+                 .setupNeedsNothing, .setupNeedsEverything, .setupSkip, .setupContinue, .setupInstall:
                 break // handled above: the first run happens before any document
             case .closeTutorials:
                 NSApp.windows.first { $0.title == TutorialHubModel.windowTitle }?.close()
@@ -7984,7 +8025,10 @@ private final class Run {
         // and never press it. It is last, so a word it shares with the
         // document's own panel ("All") finds the document's first.
         let history = NSApp.windows.filter { $0.title == "Capture History" && $0.isVisible }
-        return [host] + attached + sheet + settings + history
+        // The setup window belongs to the menu-bar agent, like Settings, and
+        // its pages carry the same markers.
+        let welcome = WelcomeProbe.window().map { [$0] } ?? []
+        return [host] + attached + sheet + settings + history + welcome
     }
 
     /// Every named thing the panel and whatever is open above it are showing
@@ -8112,6 +8156,11 @@ private final class Run {
                 + " Bring it in with a \"reveal\" step first. A `panel` step lists every control, "
                 + "and says of each one it cannot reach why not.")
         }
+        // Outside a walk the setup window opens as the app's key window
+        // (`AppFront.present`); a walk only orders it to the back. A click on
+        // a window that is not key is spent making it key, so it is given the
+        // keys the person's would have. Key inside this app only: the app is
+        // never activated, so the person's keyboard stays where it is.
         await takeTheMarkersDownForATimedStep()
         let flags = eventFlags(modifiers)
         // A double click is two clicks, the way a hand sends it: the first
@@ -19291,12 +19340,20 @@ private final class Run {
 
     /// The window's content drawn offscreen at 2x, so the picture matches
     /// what a person would see on a Retina display.
+    private func closeSetupWindow() async {
+        guard let open = WelcomeProbe.window() else { return }
+        open.close()
+        await sleep(0.3)
+    }
+
     /// Everything the setup window remembers about whether it has run, so a
     /// walk can forget the lot by name rather than spelling keys again.
     static let firstRunKeys = [WelcomeController.completedDefaultsKey,
                                WelcomeController.dismissedDefaultsKey,
                                WelcomeController.firstRunOfferKey,
-                               WelcomeController.firstRunMigratedKey]
+                               WelcomeController.firstRunMigratedKey,
+                               WelcomeController.stepsSeenKey,
+                               WelcomeController.stepsMigratedKey]
 
     /// What is on file about the first run, for the log: this is the thing the
     /// whole feature is about, so every step that touches it says it out loud.
@@ -19305,8 +19362,10 @@ private final class Run {
         let answer = WelcomeController.firstRunAnswer.map(\.rawValue) ?? "never asked"
         let said = defaults.bool(forKey: WelcomeController.dismissedDefaultsKey)
             ? "waved away" : "never answered"
+        let seen = SetupFlow.encode(WelcomeController.stepsSeen)
         return "setup \(defaults.bool(forKey: WelcomeController.completedDefaultsKey) ? "finished" : "unfinished"), "
-            + "setup \(said), tour offer \(answer)"
+            + "setup \(said), tour offer \(answer), steps seen: "
+            + (seen.isEmpty ? "none" : seen.joined(separator: ", "))
     }
 
     /// Runs work that is the harness's own, not the app's, and takes its time

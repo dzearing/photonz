@@ -13,6 +13,10 @@
     },
     {
       "do": "action",
+      "action": "setupNeedsNothing"
+    },
+    {
+      "do": "action",
       "action": "launchHook"
     },
     {
@@ -79,6 +83,10 @@
     },
     {
       "do": "action",
+      "action": "setupNeedsNothing"
+    },
+    {
+      "do": "action",
       "action": "launchHook"
     },
     {
@@ -113,6 +121,10 @@
     {
       "do": "action",
       "action": "oldInstall"
+    },
+    {
+      "do": "action",
+      "action": "setupNeedsNothing"
     },
     {
       "do": "action",

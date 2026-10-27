@@ -391,6 +391,11 @@ extension Experiments {
         isEnabled(FeatureCatalog.setupTakesNoForAnAnswerFlag)
     }
 
+    /// `next-setup-steps`: the setup window as one step at a time, only the
+    /// steps still needed and never seen (`SetupFlow`). Exists only in the Next
+    /// release's catalog, so Current keeps the one page window.
+    var setupStepsEnabled: Bool { isEnabled(FeatureCatalog.setupStepsFlag) }
+
     /// Separate into Layers, on a picture's row menu and in the Layer menu
     /// (Next, `next-separate-into-layers`). Exists only in the Next release's
     /// catalog, so Current never offers the command.

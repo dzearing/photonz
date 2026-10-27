@@ -39,6 +39,13 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     /// launch, it would stamp the new person as answered the moment they
     /// restart for the Screen Recording grant, and eat the offer they were owed.
     static let firstRunMigratedKey = "tutorials.firstRunOffer.migrated"
+    /// The setup steps this person has seen, one name each (`SetupFlow`).
+    /// Stored per step so a step added later shows once and nothing else
+    /// comes back.
+    static let stepsSeenKey = "setup.stepsSeen"
+    /// Set the first time a build that shows setup as steps launches, so the
+    /// old one page setup is read into `stepsSeenKey` exactly once.
+    static let stepsMigratedKey = "setup.stepsMigrated"
 
     private var panel: NSPanel?
     private var poll: Timer?
@@ -62,6 +69,21 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     /// is done but nobody has ever been offered the tour.
     func presentIfNeeded(capture: CaptureCenter) {
         Self.migrateFirstRunOfferOnce()
+        if Self.stepped {
+            Self.migrateStepsOnce()
+            Task { @MainActor in
+                // Give the menu-bar agent a beat to settle before taking focus.
+                try? await Task.sleep(for: .milliseconds(600))
+                let agents = await WelcomeState.readAgentStatuses()
+                let facts = WelcomeState.facts(agents: agents)
+                let steps = SetupFlow.steps(facts: facts, seen: Self.stepsSeen)
+                let tourPending = Experiments.shared.tutorialsEnabled && Self.firstRunAnswer == nil
+                guard SetupFlow.presentsAtLaunch(steps: steps, tourPending: tourPending) else { return }
+                self.open(capture: capture,
+                          run: SetupRun(pages: steps, endsWithTour: tourPending), agents: agents)
+            }
+            return
+        }
         let defaults = UserDefaults.standard
         guard FirstRunOffer.presentsAtLaunch(
             setupCompleted: defaults.bool(forKey: Self.completedDefaultsKey),
@@ -76,8 +98,34 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         }
     }
 
-    /// Menu re-entry ("Welcome & Permissions…"): always presents.
+    /// Menu re-entry ("Welcome & Permissions…"): always presents. As steps,
+    /// it shows what is still needed whatever was seen, or every step as done
+    /// when nothing is, and never the tour offer.
     func present(capture: CaptureCenter) {
+        if let panel {
+            AppFront.activate()
+            AppFront.present(panel)
+            return
+        }
+        guard Self.stepped else {
+            open(capture: capture, run: nil, agents: [:])
+            return
+        }
+        Task { @MainActor in
+            let agents = await WelcomeState.readAgentStatuses()
+            let steps = SetupFlow.reopenedSteps(
+                facts: WelcomeState.facts(agents: agents),
+                agentToolOnThisMac: agents.values.contains { $0.state != .notFound })
+            self.open(capture: capture,
+                      run: SetupRun(pages: steps, endsWithTour: false, passesOverDone: false),
+                      agents: agents)
+        }
+    }
+
+    /// Puts the window up: the stepped setup when `run` is given, the one
+    /// page window otherwise.
+    private func open(capture: CaptureCenter, run: SetupRun?,
+                      agents: [AgentSetup.Tool: AgentInstaller.Status]) {
         if let panel {
             AppFront.activate()
             AppFront.present(panel)
@@ -87,30 +135,49 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         answeredThisRun = nil
         let state = WelcomeState(screenGrantedAtLaunch: hadScreenPermissionAtLaunch,
                                  tourAlreadyAnswered: Self.firstRunAnswer != nil)
+        state.run = run
+        state.agentStatuses = agents
         self.state = state
+        // Seen the moment it is on screen: quitting with it up does not bring
+        // it back (`SetupRun.shown`).
+        if let run { Self.recordSeen(run.shown) }
 
-        let view = WelcomeView(
-            state: state,
-            onTakeTour: { [weak self] in self?.takeTheTour() },
-            onGrantScreenRecording: { [weak self] in
-                self?.state?.noteScreenRecordingGrantAttempt()
-                self?.capture?.requestScreenRecordingAccess()
-            },
-            onGrantMicrophone: { [weak self] in self?.grantMicrophone() },
-            onOpenKeyboardSettings: { Self.openKeyboardSettings() },
-            onRelaunch: { [weak self] in self?.relaunch() },
-            onFinish: { [weak self] in self?.panel?.close() })
+        let onGrantScreenRecording: () -> Void = { [weak self] in
+            self?.state?.noteScreenRecordingGrantAttempt()
+            self?.capture?.requestScreenRecordingAccess()
+        }
+        let rootView: AnyView
+        if run != nil {
+            rootView = AnyView(SetupStepsView(
+                state: state,
+                onTakeTour: { [weak self] in self?.takeTheTour() },
+                onGrantScreenRecording: onGrantScreenRecording,
+                onGrantMicrophone: { [weak self] in self?.grantMicrophone() },
+                onOpenKeyboardSettings: { Self.openKeyboardSettings() },
+                onRelaunch: { [weak self] in self?.relaunch() },
+                onMoveOn: { [weak self] in self?.moveOn() },
+                onFinish: { [weak self] in self?.panel?.close() }))
+        } else {
+            rootView = AnyView(WelcomeView(
+                state: state,
+                onTakeTour: { [weak self] in self?.takeTheTour() },
+                onGrantScreenRecording: onGrantScreenRecording,
+                onGrantMicrophone: { [weak self] in self?.grantMicrophone() },
+                onOpenKeyboardSettings: { Self.openKeyboardSettings() },
+                onRelaunch: { [weak self] in self?.relaunch() },
+                onFinish: { [weak self] in self?.panel?.close() }))
+        }
 
         let panel = WelcomeKeyPanel(
             contentRect: CGRect(origin: .zero, size: CGSize(width: 480, height: 560)),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered, defer: false)
+        panel.isFloatingPanel = true
         // Named so anything that finds a window by its name can find this one.
         // Nothing draws it: the title bar text is hidden.
         panel.title = FirstRunOffer.windowTitle
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
-        panel.isFloatingPanel = true
         panel.level = .floating
         // Floating panels hide when the app deactivates BY DEFAULT — which made
         // this window vanish the instant the microphone TCC prompt (a separate
@@ -119,7 +186,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
         panel.delegate = self
-        let hosting = NSHostingView(rootView: view)
+        let hosting = FirstClickHostingView(rootView: rootView)
         panel.contentView = hosting
         panel.setContentSize(hosting.fittingSize)
         panel.center()
@@ -142,6 +209,12 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         poll?.invalidate()
         poll = nil
+        // Closing is a no to every step in this run, except the close that is
+        // a restart, which leaves the steps after it for the other side
+        // (`SetupRun.seenOnClose`).
+        if let run = state?.run {
+            Self.recordSeen(run.seenOnClose(needsRelaunch: state?.needsRelaunch ?? false))
+        }
         // Setup counts as done once the required permission is in place; until
         // then, keep offering the walkthrough at launch.
         if state?.screenRecordingGranted == true {
@@ -189,6 +262,44 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         Self.recordFirstRunAnswer(.tour)
         panel?.close()
         DispatchQueue.main.async { [weak self] in self?.startTour?() }
+    }
+
+    /// Skip or Continue: the page is seen from this moment, so a restart
+    /// halfway through does not show it again, and the next page comes up.
+    private func moveOn() {
+        guard let state, var run = state.run else { return }
+        run.advance(facts: state.facts)
+        Self.recordSeen(run.shown)
+        state.run = run
+        if run.isFinished { panel?.close() }
+    }
+
+    // MARK: - The steps seen
+
+    /// Whether this release shows setup as steps (`next-setup-steps`).
+    static var stepped: Bool { Experiments.shared.setupStepsEnabled }
+
+    static var stepsSeen: Set<SetupStep> {
+        SetupFlow.decode(UserDefaults.standard.stringArray(forKey: stepsSeenKey) ?? [])
+    }
+
+    private static func recordSeen(_ seen: Set<SetupStep>) {
+        let all = stepsSeen.union(seen)
+        UserDefaults.standard.set(SetupFlow.encode(all), forKey: stepsSeenKey)
+    }
+
+    /// An install that finished (or waved away) the one page setup has seen
+    /// its permission steps. Once ever: see `SetupFlow` for why not every
+    /// launch.
+    private static func migrateStepsOnce() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: stepsMigratedKey) else { return }
+        let seen = SetupFlow.migratedSeen(
+            seen: stepsSeen,
+            setupCompleted: defaults.bool(forKey: completedDefaultsKey),
+            setupDismissed: defaults.bool(forKey: dismissedDefaultsKey))
+        defaults.set(SetupFlow.encode(seen), forKey: stepsSeenKey)
+        defaults.set(true, forKey: stepsMigratedKey)
     }
 
     // MARK: - The remembered answer
@@ -267,6 +378,13 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     }
 }
 
+/// The setup window's buttons answer the first click even while the window
+/// is not key: somebody coming back from System Settings clicks Continue once,
+/// not once to bring the window forward and again to press it.
+private final class FirstClickHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 private final class WelcomeKeyPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
@@ -321,11 +439,119 @@ final class WelcomeState {
         tourOfferPending = Experiments.shared.tutorialsEnabled && !tourAlreadyAnswered
         takesNoForAnAnswer = WelcomeController.takesNoForAnAnswer
         screenRecordingGranted = ScreenCapturer.hasPermission
-        microphone = AVCaptureDevice.authorizationStatus(for: .audio)
-        let conflicts = Self.currentShortcutConflicts()
+        microphone = Self.microphoneStatus()
+        let conflicts = Self.setupShortcutConflicts()
         conflictingShortcuts = conflicts
         hadShortcutConflictsAtOpen = !conflicts.isEmpty
         needsRelaunch = screenRecordingGranted && !screenGrantedAtLaunch
+    }
+
+    // MARK: The steps (`next-setup-steps`)
+
+    /// This showing's pages and where the person is; nil for the one page window.
+    var run: SetupRun?
+    /// Claude Code and Copilot as this Mac has them, for the agents step.
+    var agentStatuses: [AgentSetup.Tool: AgentInstaller.Status] = [:]
+    /// The tool an Install is running for.
+    var agentBusy: AgentSetup.Tool?
+    /// What went wrong installing, in a plain sentence, per tool.
+    var agentTrouble: [AgentSetup.Tool: String] = [:]
+
+    /// What this Mac has sorted right now, for passing over a step that got
+    /// done while an earlier one was on show.
+    var facts: SetupFacts {
+        SetupFacts(screenRecordingGranted: screenRecordingGranted,
+                   microphoneAnswered: microphone != .notDetermined,
+                   screenshotKeysFree: conflictingShortcuts.isEmpty,
+                   agentsToSetUp: Self.agentsToSetUp(agentStatuses))
+    }
+
+    /// Whether the step on show has nothing left to do.
+    func isDone(_ step: SetupStep) -> Bool {
+        switch step {
+        case .screenRecording: screenRecordingGranted && !needsRelaunch
+        case .microphone: microphone == .authorized
+        case .screenshotKeys: conflictingShortcuts.isEmpty
+        // Done once any tool has Photonz: Continue takes over from Skip, and
+        // the other tool's Install stays there to press.
+        case .agents: agentStatuses.values.contains { $0.state == .installed }
+            || (!agentStatuses.isEmpty && !Self.agentsToSetUp(agentStatuses))
+        }
+    }
+
+    /// The tools on this Mac, in the order the step lists them.
+    var agentToolsHere: [AgentSetup.Tool] {
+        AgentSetup.Tool.allCases.filter { (agentStatuses[$0]?.state ?? .notFound) != .notFound }
+    }
+
+    /// Install (or update) Photonz in one tool, the same install Settings >
+    /// Agents runs, off the main thread.
+    func installAgent(_ tool: AgentSetup.Tool) {
+        agentBusy = tool
+        agentTrouble[tool] = nil
+        let installer = AgentInstaller.forThisApp
+        Task {
+            let failure: String? = await Task.detached {
+                do {
+                    try installer.install(tool)
+                    return nil
+                } catch let trouble as AgentInstaller.Trouble {
+                    return trouble.words
+                } catch {
+                    return "Could not finish. \(error.localizedDescription)"
+                }
+            }.value
+            agentTrouble[tool] = failure
+            agentStatuses = await Self.readAgentStatuses()
+            agentBusy = nil
+        }
+    }
+
+    /// A tool here that Photonz is not set up in, in a release that lets
+    /// agents in at all.
+    static func agentsToSetUp(_ statuses: [AgentSetup.Tool: AgentInstaller.Status]) -> Bool {
+        #if PHOTONZ_PLAYTEST
+        if let pretended = PlaytestSetupPretend.agentsToSetUp { return pretended }
+        #endif
+        guard Experiments.shared.agentChannelEnabled else { return false }
+        return statuses.values.contains { $0.state == .notInstalled }
+    }
+
+    /// Both tools' rows, read off the main thread (files, and looking for the
+    /// tools themselves). Empty where the release does not let agents in.
+    static func readAgentStatuses() async -> [AgentSetup.Tool: AgentInstaller.Status] {
+        guard Experiments.shared.agentChannelEnabled else { return [:] }
+        let installer = AgentInstaller.forThisApp
+        return await Task.detached {
+            Dictionary(uniqueKeysWithValues: AgentSetup.Tool.allCases.map { ($0, installer.status($0)) })
+        }.value
+    }
+
+    /// The facts read fresh, for deciding at launch which steps show.
+    static func facts(agents: [AgentSetup.Tool: AgentInstaller.Status]) -> SetupFacts {
+        SetupFacts(screenRecordingGranted: ScreenCapturer.hasPermission,
+                   microphoneAnswered: microphoneStatus() != .notDetermined,
+                   screenshotKeysFree: setupShortcutConflicts().isEmpty,
+                   agentsToSetUp: agentsToSetUp(agents))
+    }
+
+    static func microphoneStatus() -> AVAuthorizationStatus {
+        #if PHOTONZ_PLAYTEST
+        if let pretended = PlaytestSetupPretend.microphoneAnswered {
+            return pretended ? .authorized : .notDetermined
+        }
+        #endif
+        return AVCaptureDevice.authorizationStatus(for: .audio)
+    }
+
+    /// `currentShortcutConflicts`, as the setup window reads it.
+    static func setupShortcutConflicts() -> [SystemScreenshotShortcuts.Shortcut] {
+        #if PHOTONZ_PLAYTEST
+        if let pretended = PlaytestSetupPretend.screenshotKeysFree {
+            return pretended ? [] : [.fullScreen, .region]
+        }
+        #endif
+        return currentShortcutConflicts()
     }
 
     var everythingReady: Bool {
@@ -338,8 +564,8 @@ final class WelcomeState {
 
     func refresh() {
         screenRecordingGranted = ScreenCapturer.hasPermission
-        microphone = AVCaptureDevice.authorizationStatus(for: .audio)
-        conflictingShortcuts = Self.currentShortcutConflicts()
+        microphone = Self.microphoneStatus()
+        conflictingShortcuts = Self.setupShortcutConflicts()
         needsRelaunch = screenRecordingGranted && !screenGrantedAtLaunch
     }
 
@@ -366,3 +592,23 @@ final class WelcomeState {
         return String(cString: buffer)
     }()
 }
+
+#if PHOTONZ_PLAYTEST
+/// What a walk has told the setup window to read the microphone, the
+/// screenshot keys and the agents step as, or nil to read the real thing. The
+/// same idea as `ScreenCapturer.playtestPretendedPermission`: nothing about
+/// macOS or the tools is touched, and it exists so a walk can stand on a brand
+/// new Mac and on one with everything done. Probe builds only.
+@MainActor
+enum PlaytestSetupPretend {
+    static var microphoneAnswered: Bool?
+    static var screenshotKeysFree: Bool?
+    static var agentsToSetUp: Bool?
+
+    static func forget() {
+        microphoneAnswered = nil
+        screenshotKeysFree = nil
+        agentsToSetUp = nil
+    }
+}
+#endif

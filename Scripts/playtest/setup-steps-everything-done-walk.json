@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/setup-steps-everything-done-walk",
+  "seed": "A Mac with all of setup already done: Screen Recording on, the microphone answered, the screenshot keys free and Photonz in every agent tool. An install that is past its first launch sees no window at all. A brand new install on such a Mac skips every step and is shown only the tour offer, once. At Next defaults, no switch changed.",
+  "setup": {
+    "forget": ["tutorials"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 800, "canvasHeight": 500, "width": 1000, "height": 700 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "oldInstall" },
+    { "do": "action", "action": "screenRecordingOn" },
+    { "do": "action", "action": "setupNeedsNothing" },
+    { "do": "action", "action": "launchHook" },
+    { "do": "action", "action": "expectNoWelcome" },
+    { "do": "describe", "stage": "1-nothing-to-do", "note": "everything done and the first run long over: launching shows no window" },
+    { "do": "action", "action": "freshInstall" },
+    { "do": "action", "action": "launchHook" },
+    { "do": "action", "action": "expectWelcome" },
+    { "do": "expect", "control": "Setup tour", "present": true },
+    { "do": "expect", "control": "Setup screenRecording", "present": false },
+    { "do": "expect", "control": "Setup Skip", "present": false },
+    { "do": "action", "action": "readWelcome" },
+    { "do": "describe", "stage": "2-only-the-tour", "note": "a new install on a Mac with everything done: no step shows, only the tour offer" },
+    { "do": "snapshot", "name": "2-only-tour", "window": "Welcome" },
+    { "do": "action", "action": "startWorking" },
+    { "do": "action", "action": "launchHook" },
+    { "do": "action", "action": "expectNoWelcome" },
+    { "do": "action", "action": "showWelcomeAgain" },
+    { "do": "describe", "stage": "3-reopened-all-done", "note": "Welcome & Permissions in the menu bar still opens, on every step shown as done" }
+  ]
+}

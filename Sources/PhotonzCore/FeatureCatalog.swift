@@ -231,6 +231,10 @@ public enum FeatureCatalog {
 
     public static let setupTakesNoForAnAnswerFlag = "next-setup-takes-no-for-an-answer"
 
+    /// The setup window shows one step at a time, only the steps still needed
+    /// and never seen, ending with using Photonz from your agents (`SetupFlow`).
+    public static let setupStepsFlag = "next-setup-steps"
+
     public static let separateIntoLayersFlag = "next-separate-into-layers"
 
     public static let doubleClickReadsALabelFlag = "next-double-click-reads-a-label"
@@ -754,6 +758,16 @@ public enum FeatureCatalog {
                     name: setupTakesNoForAnAnswerFlag,
                     title: "Saying no to the setup window sticks",
                     description: "Closing the setup window without Screen Recording is remembered, and a later capture offers a button to open setup. Off means the setup window returns at every launch until the permission is on.",
+                    area: .app,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: setupStepsFlag,
+                    title: "Setup shows only the steps you still need",
+                    description: "The setup window shows one step at a time, leaving out any step already done or seen once, and ends on using Photonz from Claude Code or Copilot. Off means the one page setup window.",
                     area: .app,
                     isEnabled: false,
                     parameters: []),

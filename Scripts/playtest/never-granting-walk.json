@@ -4,13 +4,20 @@
   "setup": {
     "forget": [
       "tutorials"
-    ],
-    "flags": {
-      "next-setup-takes-no-for-an-answer": true,
-      "next-tutorials": true
-    }
+    ]
   },
   "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 800,
+      "canvasHeight": 500,
+      "width": 1000,
+      "height": 700
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
     {
       "do": "action",
       "action": "freshInstall"
@@ -21,6 +28,10 @@
     },
     {
       "do": "action",
+      "action": "setupNeedsNothing"
+    },
+    {
+      "do": "action",
       "action": "launchHook"
     },
     {
@@ -28,18 +39,32 @@
       "action": "expectWelcome"
     },
     {
-      "do": "action",
-      "action": "readWelcome"
+      "do": "expect",
+      "control": "Setup screenRecording",
+      "present": true
     },
     {
       "do": "describe",
       "stage": "1-nothing-is-required",
-      "note": "first launch on a machine that will never grant the screen. The Screen Recording step is badged Needed to capture rather than Required, and says in plain words that everything else works without it, so the window no longer demands something this person does not want. Both ways on are still offered."
+      "note": "first launch on a machine that will never grant the screen, with the rest of setup done. The setup window opens on its one step, Screen Recording, which says in plain words that everything else works without it, with Skip beside the button that opens Settings."
     },
     {
       "do": "snapshot",
       "name": "1-needed-to-capture",
       "window": "Welcome"
+    },
+    {
+      "do": "action",
+      "action": "setupSkip"
+    },
+    {
+      "do": "expect",
+      "control": "Setup tour",
+      "present": true
+    },
+    {
+      "do": "action",
+      "action": "readWelcome"
     },
     {
       "do": "action",

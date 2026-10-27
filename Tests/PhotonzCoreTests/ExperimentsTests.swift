@@ -807,6 +807,8 @@ struct FeatureAreaTests {
         FeatureCatalog.releaseTagFlag,
         FeatureCatalog.tutorialsFlag,
         FeatureCatalog.setupTakesNoForAnAnswerFlag,
+        // The setup window as steps: the app's own first launch.
+        FeatureCatalog.setupStepsFlag,
         FeatureCatalog.settingsWindowFlag,
     ]
 

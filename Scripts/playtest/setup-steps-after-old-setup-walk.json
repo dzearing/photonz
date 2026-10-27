@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/setup-steps-after-old-setup-walk",
+  "seed": "Somebody who finished the old one page setup window long ago, upgrading to the setup that goes one step at a time. The microphone and the screenshot keys are still not sorted on this Mac, but they saw those once already, so the only step they are shown is the new one: using Photonz from Claude Code and Copilot. Once. Then the menu bar's Welcome & Permissions still shows what is left whenever they ask. At Next defaults, no switch changed.",
+  "setup": {
+    "forget": ["tutorials"],
+    "agentHome": true
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 800, "canvasHeight": 500, "width": 1000, "height": 700 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "oldInstall" },
+    { "do": "action", "action": "setupNeedsEverything" },
+    { "do": "action", "action": "launchHook" },
+    { "do": "action", "action": "expectWelcome" },
+    { "do": "expect", "control": "Setup agents", "present": true },
+    { "do": "expect", "control": "Setup microphone", "present": false },
+    { "do": "expect", "control": "Setup 1 of 1", "present": false },
+    { "do": "expect", "control": "Setup Skip", "present": true },
+    { "do": "describe", "stage": "1-only-the-new-step", "note": "an install that finished the old setup sees only the agents step, with no counter since it is the only one, and the line about doing it later from Settings" },
+    { "do": "snapshot", "name": "1-only-agents", "window": "Welcome" },
+    { "do": "action", "action": "setupSkip" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "expectNoWelcome" },
+    { "do": "action", "action": "launchHook" },
+    { "do": "action", "action": "expectNoWelcome" },
+    { "do": "describe", "stage": "2-once", "note": "Skip closed the window and the next launch shows nothing: the agents step was seen once" },
+    { "do": "action", "action": "showWelcomeAgain" },
+    { "do": "describe", "stage": "3-asked-for", "note": "Welcome & Permissions in the menu bar opens it again on what is still to do, and never asks about the tour" }
+  ]
+}
