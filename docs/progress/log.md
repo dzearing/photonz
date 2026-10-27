@@ -22030,3 +22030,9 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - The rotating check's `painting-holds-still-walk` failure was real and timing dependent (about 1 run in 3): at 200% the sharp copy's 64 MB raster could land first and the paint cache, letting go by age alone, dropped the composite's raster, so the composite replayed every stroke. The cache now lets go first of rasters a newer one at the same scale has replaced (98e7767a, two new `PaintRasterCacheTests`).
 - A mouse stroke's tail was taken back through a `switch` on a pair, which held a second copy of the stroke and made every take-back copy all its fields whole: 7.5 ms a move at 500 pt. Fixed with `if case` (6eed4155); 500 pt oil 20.2 -> 15.3 ms p95, charcoal 16.5 -> 14.7, pencil 13.8 -> 12.6, same pixels.
 - Next: the task stays open on one 120 Hz frame at 150 and 500 pt (10.4 to 15.3 ms). The rest is the media's own per-pixel work; levers and the profile are in the task log.
+
+## 2026-10-27 — Release v0.20.0
+
+- Shipped v0.20.0 (`e6c1df57`, tag `v0.20.0`): painting holds still when a stroke lands and big brushes are quicker, Photonz opens at login (switch in Settings > General), Settings > Agents installs Photonz for Claude Code and Copilot (Next), one-step-at-a-time setup (Next).
+- Preflight: the first local `Scripts/test.sh` missed two timing budgets (`theWholeGridPaintsWithoutAStall` 3.3 s vs 3 s, an animated chart 37.4 ms vs 36.8 ms) while macOS Photos analysis held about two cores; both suites passed alone and the full rerun was green. Worth watching if those two budgets keep slipping under background load.
+- Release workflow green, `Photonz.dmg` attached and `releases/latest/download` answers 200; Deploy site announced 0.20.0 and the live `version.json` reports it.
