@@ -5,11 +5,11 @@
   "epic": "agent-mcp",
   "priority": "p1-high",
   "seq": 0.5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:19:05.514Z",
-  "updated": "2026-10-27T03:40:42.860Z",
+  "updated": "2026-10-27T03:41:09.645Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'I'd love the skills an FRE for using photonz with copilot and claude code where there is a nice explainer and an opt in to install the skills... they can dismiss and install the skills from settings.' This task is the Settings half and the packaging. The setup-window step is a separate task that depends on this one (filed the same minute). Today: Scripts/install-mcp.sh (claude mcp add --scope user, links plugin/skills/photonz into ~/.claude/skills), and there is nothing for Copilot. Focus success gap: agent-mcp success says 'installs with one command'; today that command is Scripts/install-mcp.sh in a checkout (lines 39 and 44: claude mcp add plus a skill link). docs/design/agent-mcp.md 'Not in this slice' (line 392-397): shipping the bridge inside the app bundle. Rough lines in queue/audits/2026-10-19-agent-skill.json ('The install is a developer's') and 2026-10-19-agent-mcp-reach-read-see.json ('builds a small helper program the first time, about 4 seconds'). Skill at plugin/skills/photonz/SKILL.md, plugin/.mcp.json. The channel already listens in every build (agent-mcp.md:34-41, release.sock, dev.sock, probe.sock). Scripts/build-app.sh must copy and sign the helper; never touch dist/Photonz Dev.app from a runner, use the probe.",
@@ -98,10 +98,15 @@
     {
       "t": "2026-10-27T03:40:42.859Z",
       "note": "Left rough (not filed): VS Code mcp.json is rewritten in JSONSerialization's formatting (content kept); no shell-PATH lookup for claude/copilot beyond the usual install folders; the installed skill does not refresh itself after an app update (the row offers Update). The first-run setup window half is its own task (the-setup-window-walks-you-through-only-the-step)."
+    },
+    {
+      "t": "2026-10-27T03:41:09.643Z",
+      "note": "Settings > Agents installs and uninstalls the Photonz server and skill for Claude Code and GitHub Copilot (VS Code and the Copilot CLI) with one button each; the bridge and skill ship signed inside every bundle (codesign --verify --deep passes on probe and release). Proved with fresh claude -p and copilot -p sessions from an empty folder that read and rendered the probe's picture (queue/audits/2026-10-26-agents-settings-sessions.md); config transforms tested on sample files; full suite green. Commit cf3ad7b2. Audit: queue/audits/2026-10-26-agents-settings-install.json. Walk presses in Settings do not land: filed a-walk-can-press-the-buttons-in-the-settings-win."
     }
   ],
   "started": "2026-10-27T02:32:57.229Z",
   "walks": [
     "agents-section-in-settings-walk"
-  ]
+  ],
+  "completed": "2026-10-27T03:41:09.644Z"
 }

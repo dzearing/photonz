@@ -14301,3 +14301,17 @@
 {"t":"2026-10-27T01:45:50.368Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-27T02:07:17.348Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-27T02:19:19.718Z","ev":"task_done","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"Local Scripts/test.sh 111-128 s (was 262-308), four swift test runs side by side on one build on 8+ core Macs, 14,608 tests green four times; no test over 10 s alone (slowest 9.7 s) after plain-loop rewrites of five debug-hot app loops, per-layer PaintRasterCache gates and a CIContext pool in one test; LongTimelineCost budgets on CPUYardstick; GitHub slices 7-9 min, CI green on 40434200943 and 40436562757; release dry run 9.5 min (pass 2). Audit queue/audits/2026-10-26-fast-test-suite.json + -measurements.md pass 3. Commits a2b9ac69, 8e6b4769, 8460c674."}
+{"t":"2026-10-27T02:31:10.478Z","ev":"task_note","id":"the-rotating-walk-check-moves-on-through-the-set"}
+{"t":"2026-10-27T02:31:10.513Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-10-27T02:31:10.548Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-27T02:32:57.065Z","ev":"slice_pass","walks":30,"passed":11,"failed":19,"seconds":310,"of":1037,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-27T02:32:57.236Z","ev":"task_started","id":"the-agent-server-and-skill-come-inside-photonz-a","title":"Settings installs the Photonz skills for Claude Code and Copilot with one click, from the app alone","priority":"p1-high"}
+{"t":"2026-10-27T02:36:45.983Z","ev":"task_note","id":"the-agent-server-and-skill-come-inside-photonz-a"}
+{"t":"2026-10-27T02:36:46.059Z","ev":"task_note","id":"the-agent-server-and-skill-come-inside-photonz-a"}
+{"t":"2026-10-27T03:17:16.060Z","ev":"task_created","id":"photonz-opens-at-login-on-by-default-with-a-swit","priority":"p1-high","title":"Photonz opens at login, on by default, with a switch in Settings to turn it off"}
+{"t":"2026-10-27T03:17:21.481Z","ev":"task_resequenced","id":"photonz-opens-at-login-on-by-default-with-a-swit","from":2.5,"to":0.7}
+{"t":"2026-10-27T03:40:32.664Z","ev":"task_created","id":"a-walk-can-press-the-buttons-in-the-settings-win","priority":"p2-normal","title":"A walk can press the buttons in the Settings window"}
+{"t":"2026-10-27T03:40:42.718Z","ev":"task_walks","id":"the-agent-server-and-skill-come-inside-photonz-a","walks":["agents-section-in-settings-walk"]}
+{"t":"2026-10-27T03:40:42.795Z","ev":"task_note","id":"the-agent-server-and-skill-come-inside-photonz-a"}
+{"t":"2026-10-27T03:40:42.861Z","ev":"task_note","id":"the-agent-server-and-skill-come-inside-photonz-a"}
+{"t":"2026-10-27T03:41:09.646Z","ev":"task_done","id":"the-agent-server-and-skill-come-inside-photonz-a","from":"in_progress","note":"Settings > Agents installs and uninstalls the Photonz server and skill for Claude Code and GitHub Copilot (VS Code and the Copilot CLI) with one button each; the bridge and skill ship signed inside every bundle (codesign --verify --deep passes on probe and release). Proved with fresh claude -p and copilot -p sessions from an empty folder that read and rendered the probe's picture (queue/audits/2026-10-26-agents-settings-sessions.md); config transforms tested on sample files; full suite green. Commit cf3ad7b2. Audit: queue/audits/2026-10-26-agents-settings-install.json. Walk presses in Settings do not land: filed a-walk-can-press-the-buttons-in-the-settings-win."}
