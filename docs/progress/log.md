@@ -22017,3 +22017,10 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - A launch by the login item (`keyAELaunchedAsLogInItem`) skips the setup window.
 - Walk `open-at-login-switch-in-settings-walk`. Audit `queue/audits/2026-10-26-open-at-login.json`.
 - Open: a real logout/login was not possible unmanned; that is the audit's try path.
+
+## 2026-10-27 — Painting is what you see (Next)
+
+- The live stroke is painted in its layer's own pixels at the scale the canvas shows that layer, onto the raster the layer keeps, by the code that lands it (`PaintLayerStroke`, `PaintRasterCache.base`); its overlay is shown in 256 px pieces in the screen's colours. The overlay and the sharp copy stay up until the picture holding the stroke arrives, drawn at once (`settleBrushLandings`, `refreshCrispTile`). A mouse stroke thins its end as it goes (`LiveMarker` tail, `FieldJournal`).
+- Speed, byte for byte the same pixels (`PaintKeepsItsPixelsTests` fingerprint): media rows split across cores (`PixelBands`), a wash skips water it cannot reach, fields grow by a dab or a quarter, the live marker no longer copies its fields every move.
+- Walk steps `filmCanvas`, `expectPaintStill`, `pickBrush`; actions `zoomActualSize`, `zoomDouble`; walk `painting-holds-still-walk`. Audit `queue/audits/2026-10-27-painting-is-what-you-see.json` with before/after reels.
+- Open: 500 pt brushes are still over one 120 Hz frame for wet washes, pencil, charcoal and oil (12.7 to 20.6 ms p95); the task stays open on that.

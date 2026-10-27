@@ -101,10 +101,28 @@ airbrush do not.
 
 ### 5. Staying smooth on a 12 megapixel picture
 
-- **The live stroke paints itself.** While the pointer moves, the canvas draws
-  the stroke in progress on its own overlay, adding only the new dabs to a
-  bitmap the size of the stroke's bounds, with the same marking code. The
-  document is not re-composited per mouse move.
+- **The live stroke paints itself, in its layer's own pixels.** While the
+  pointer moves, the stroke is painted onto the raster its layer keeps, at the
+  scale the canvas shows that layer (the sharp copy's when one is up, the
+  composite's otherwise: `CanvasNSView.shownPaintScale`), by the code that
+  lands it (`PaintLayerStroke`, PhotonzRender). Its overlay is the layer's
+  size, shown in 256 pixel pieces that are each handed only the pixels a move
+  touched, in the screen's colours, magnified the way the picture under them
+  is. So what the hand sees is what lands, pixel for pixel in the layer
+  (tests), and the document is not re-composited per mouse move. Before
+  2026-10-27 the live stroke was marked in the view's pixels over a copy of
+  the layer drawn into them, and a wash's grain, a bristle's ridges and the
+  paper all fell on a different grid: the stroke changed on the release over a
+  tenth of what it covered (the user: "they change and then swap into this
+  higher resolution").
+- **Nothing on the canvas changes as a stroke lands.** The overlay stays up
+  until the picture holding the stroke is on screen, the sharp copy included,
+  and the sharp copy on screen stays up over the new composite until the one
+  with the stroke replaces it, drawn straight away rather than after the
+  usual 90 ms (`settleBrushLandings`, `EditorState.refreshCrispTile`). Before,
+  the stretched composite showed for that tenth of a second and every stroke on
+  the layer went soft and sharpened again. `painting-holds-still-walk` films
+  every frame and holds it to none changing outside the new stroke.
 - **A paint layer keeps its last raster.** The renderer remembers, per layer,
   the raster of strokes 0..n-1. When stroke n arrives (and the first n are
   unchanged), it paints only stroke n onto a copy. Undo hits the cache of the
@@ -113,16 +131,31 @@ airbrush do not.
   the last stroke, so the result is byte for byte a full replay; 128 MB, least
   recently used let go first, emptied under memory pressure. Two requests for
   the same layer at once wait on each other rather than both simulating it.
-- **A press reads the paint it needs ready-drawn.** A smudge, a wash and oil
-  read the layer under them. The canvas reads it at the scale the renderer
-  bakes the layer at (`DocumentRenderer.bakeScale`), so it is the raster the
-  last render kept, and with the Brush in hand it draws that into the view's
-  pixels in the background as soon as a stroke lands (`warmBrushPaint`).
-  Before this a smudge press re-simulated every stroke on the main thread:
-  420 ms with ten strokes on a 12 megapixel canvas; after, 0.1 ms
-  (`smudge-after-paint-keeps-up-walk`).
-- Budget: input to pixel under one frame (16 ms) and commit under 50 ms on a
-  12 MP canvas with a few hundred strokes, measured, written in the audit.
+  The live stroke paints onto the same kept raster (`PaintRasterCache.base`)
+  and takes its wet washes from it, so a press replays nothing.
+- **A press reads the paint it needs ready-kept.** With the Brush in hand the
+  picked layer's raster at the shown scale is read in the background as soon
+  as a stroke lands (`warmBrushPaint`). Before 2026-10-25 a smudge press
+  re-simulated every stroke on the main thread: 420 ms with ten strokes on a
+  12 megapixel canvas; after, 0.1 ms (`smudge-after-paint-keeps-up-walk`).
+- **The media share a move between the cores.** Every pixel of a mark, a
+  redraw or a landing depends only on that pixel, so the rows are split into
+  bands worked side by side (`PixelBands`); oil adds up what each bristle
+  passed over a pixel at a time afterwards, in the order it always did. A wash
+  works out where its water can reach only where it can (a wet wash under a
+  big brush had every dab work out the bloom four radii round), and a field
+  grows by a dab or a quarter of itself rather than 96 pixels at a time. None
+  of it moves a pixel: `PaintKeepsItsPixelsTests` holds a layer of every
+  medium to its fingerprint from before.
+- Budget: each move shown within one 120 Hz frame (8.3 ms) at the 95th
+  percentile, and a landing or an undo holding the app under 50 ms on a 12 MP
+  canvas with a few hundred strokes. Measured 2026-10-27 on 12 MP with 50
+  strokes under it: every medium at 20 pt 2.6 to 7.1 ms; at 500 pt the marker
+  7.5 and a first wash 7.8, but a wash over wet washes 12.7 to 15.8, pencil
+  13.6, charcoal 16.9 and oil 20.6, still over (the task stays open on them).
+  Landing with 300 strokes under it held the app at most 24 ms, undo 9.6 ms;
+  `PaintLandingCostTests` holds a landing to the cost of landing on an empty
+  layer and an undo to nothing simulated.
 
 ### 6. Pressure, tilt, speed, and the mouse
 
@@ -258,7 +291,7 @@ an anchor and the line re-paints.
   `.tilt` come from the pen's samples, eased between them; a sample with no
   pressure (a mouse) gets `BrushDynamics.mousePressure`: a light touch-down
   settling to a steady middle press over its first few points, lighter moving
-  fast. No taper out: the live stroke cannot know where it ends. Only the
+  fast. (Taper out: see "The mouse taper" below.) Only the
   Pencil reads them so far; the dynamics slice gives the other media theirs.
 - **Hardness is a choice of grades** (4H, 2H, HB, 2B, 4B, 6B, 8B, default HB):
   a softer lead is wider, darker and reaches deeper into the paper. Pressure
@@ -508,14 +541,18 @@ an anchor and the line re-paints.
   eased speed instead (`penThinning`, up to 0.3 by 4 pt/ms).
 - **The mouse taper.** A stroke whose first sample has no pressure swells in
   from `1 - taperDepth` of its width over `taperLength` (twice the Size, 10 to
-  60 points) as it is drawn, and once the pointer lifts its last stretch thins
-  the same way (`BrushPlacement.taperedOut`, applied by `dabs(for:)`). The
-  live stroke cannot know where it ends, so the tail draws in as the stroke
-  lands, the way a finger's taper does in other paint apps: chose that over
-  replaying the whole stroke on the main thread at release (a hitch on a long
-  stroke) and over holding the tail back while drawing (the line would trail
-  the pointer by two tip widths). The walk measured 0.13% of the canvas
-  changing between held and landed. A click is a light touch, as before. The
+  60 points) as it is drawn, and its last stretch thins the same way
+  (`BrushPlacement.taperedOut`, applied by `dabs(for:)`). Since 2026-10-27 the
+  live stroke thins its end as it goes: the last `taperLength` is drawn as if
+  the stroke ended where the pointer is, and taken back and drawn again when
+  the pointer moves on, so nothing changes as the button comes up (the user
+  asked that the stroke look the same before and after letting go; the
+  2026-10-25 slice drew the tail in only on landing, 0.13% of the canvas
+  changing). Taking a tail back costs nothing for watercolour and the marker,
+  whose fields only take the larger value, so a thinner dab is covered by the
+  same dab drawn full; the dry media and oil keep a journal of what the tail
+  wrote and put it back (`FieldJournal`). A pen's press thins its own end, so
+  a pen stroke has none of this. A click is a light touch, as before. The
   airbrush does not taper (its spray already feathers) and a smudge is a
   finger: no press, no taper.
 - **Tilt.** `BrushDynamics.lean(_:)` is the one reading (none under 0.12, all

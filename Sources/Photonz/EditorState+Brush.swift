@@ -25,11 +25,17 @@ extension EditorState {
             guard document?.smudgeTarget(at: stroke.samples[0].point, picked: selectedLayerID) != nil
             else { return }
             let picked = selectedLayerID
+            crispTileForLandingStroke = true
+            defer { crispTileForLandingStroke = false }
             perform { $0.smudgeStroke(stroke, onto: picked) }
             return
         }
         let picked = selectedLayerID
         var landed: UUID?
+        // The sharp copy of what you can see follows the stroke straight away
+        // and the one on screen stays up until it does (`refreshCrispTile`).
+        crispTileForLandingStroke = true
+        defer { crispTileForLandingStroke = false }
         perform { landed = $0.paintStroke(stroke, onto: picked) }
         guard let landed, landed != picked else { return }
         finishCreating(landed, tool: ArrowCaptionEntry.toolAfterLanding(.brush, offersCaption: false))

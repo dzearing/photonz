@@ -419,6 +419,8 @@ public enum PlaytestLockSafety {
         "expectFresh",
         // Reads the brush's own clocks and the renderer's stroke count.
         "expectBrushResponsive",
+        // Film the canvas's own layers; nothing asks accessibility.
+        "filmCanvas", "expectPaintStill", "pickBrush",
     ]
 
     /// Why a lock stops the rest, in the words the refusal says out loud.

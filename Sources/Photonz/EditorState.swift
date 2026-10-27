@@ -235,6 +235,15 @@ final class EditorState {
     /// The tile on screen was drawn for a moment the canvas has moved on
     /// from, and goes with the next picture to land (`refreshCrispTile`).
     @ObservationIgnored private var crispTileOutOfDate = false
+    /// A brush stroke is landing: the sharp copy on screen stays up over the
+    /// new composite until the one with the stroke in it replaces it, and that
+    /// one is drawn straight away. The canvas holds the stroke's own overlay
+    /// up until then (`CanvasNSView.settleBrushLandings`), so the picture never
+    /// drops to the stretched composite in between, which made every stroke on
+    /// the layer go soft for a tenth of a second and sharpen again (the user,
+    /// 2026-10-25).
+    @ObservationIgnored var crispTileForLandingStroke = false
+    @ObservationIgnored private var crispTileKeptUntilReplaced = false
     var isImporterPresented = false
     var isResizeDialogPresented = false
     var isCanvasSizeDialogPresented = false
@@ -5594,9 +5603,13 @@ final class EditorState {
                                   withTheNextFrame: Bool = false) {
         crispTileTask?.cancel()
         crispTileTask = nil
+        let landing = crispTileForLandingStroke
+        crispTileForLandingStroke = false
+        crispTileKeptUntilReplaced = false
         // Anything on screen was drawn for a different moment than this one.
         if withTheNextFrame, crispTile != nil {
             crispTileOutOfDate = true
+            crispTileKeptUntilReplaced = landing
         } else {
             crispTileOutOfDate = false
             crispTile = nil
@@ -5606,10 +5619,16 @@ final class EditorState {
         guard Experiments.shared.crispZoomEnabled,
               dragPreview == nil,
               let viewport,
-              let settled = history?.current else { return }
+              let settled = history?.current else {
+            crispTileKeptUntilReplaced = false
+            return
+        }
         let document = preview ?? settled
         let scale = viewport.zoom * (hostWindow?.backingScaleFactor ?? 2)
-        guard scale > 1.01, let region = visibleDocumentRect(viewport) else { return }
+        guard scale > 1.01, let region = visibleDocumentRect(viewport) else {
+            crispTileKeptUntilReplaced = false
+            return
+        }
 
         let display = (preview == nil ? nil : displayed) ?? displayDocument(document)
         let renderer = tileRenderer
@@ -5623,7 +5642,9 @@ final class EditorState {
             // immediately either way; this only decides how soon the sharp copy
             // follows it, and drawing one per keystroke would spend a whole
             // window's worth of pixels on a frame nobody looks at.
-            try? await Task.sleep(for: .milliseconds(90))
+            // A landed brush stroke is one edit, not a run of keystrokes, and
+            // its overlay is holding the picture until this arrives.
+            if !landing { try? await Task.sleep(for: .milliseconds(90)) }
             guard !Task.isCancelled else { return }
             let tile = await Task.detached(priority: .userInitiated) {
                 renderer.renderTile(display, store: store, region: region,
@@ -5631,7 +5652,16 @@ final class EditorState {
             }.value
             guard !Task.isCancelled, let self else { return }
             // The camera or the document may have moved on while this drew.
-            guard self.viewport == viewport, self.history?.current == settled else { return }
+            guard self.viewport == viewport, self.history?.current == settled else {
+                if self.crispTileKeptUntilReplaced {
+                    self.crispTileKeptUntilReplaced = false
+                    self.crispTileOutOfDate = false
+                    self.crispTile = nil
+                    self.crispTileViewport = nil
+                }
+                return
+            }
+            self.crispTileKeptUntilReplaced = false
             self.crispTileOutOfDate = false
             self.crispTile = tile
             self.crispTileViewport = viewport
@@ -5690,7 +5720,7 @@ final class EditorState {
                     // Drop the frame if the document was closed while rendering.
                     guard let self, self.history != nil, !self.windowClosed else { return }
                     self.renderedImage = frame.image
-                    if self.crispTileOutOfDate {
+                    if self.crispTileOutOfDate, !self.crispTileKeptUntilReplaced {
                         self.crispTileOutOfDate = false
                         self.crispTile = nil
                         self.crispTileViewport = nil

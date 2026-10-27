@@ -91,28 +91,37 @@ struct MarkerStroke {
         let thick = max(half * Self.chiselThickness, 0.5)
         let corner = thick * 0.5
         let axis = Self.nibAxis(lean: lean, toward: leanAxis)
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let dx = CGFloat(x) + 0.5 - centre.x, dy = CGFloat(y) + 0.5 - centre.y
-                let distance: CGFloat
-                if chisel {
-                    // A rounded box: the nib's width along its axis, its
-                    // thickness across.
-                    let u = abs(dx * axis.dx + dy * axis.dy) - (half - corner)
-                    let v = abs(-dx * axis.dy + dy * axis.dx) - (thick - corner)
-                    distance = hypot(max(u, 0), max(v, 0)) + min(max(u, v), 0) - corner
-                } else if lean > 0 {
-                    // An ellipse, long along the lean.
-                    let u = (dx * leanAxis.dx + dy * leanAxis.dy) / side
-                    let v = -dx * leanAxis.dy + dy * leanAxis.dx
-                    distance = hypot(u, v) - half
-                } else {
-                    distance = hypot(dx, dy) - half
+        let chisel = self.chisel
+        let fieldBox = field.box
+        // Each pixel takes the larger of its ink and the nib's, so the rows go
+        // side by side (`PixelBands`).
+        field.values.withUnsafeMutableBufferPointer { buffer in
+            guard let values = buffer.baseAddress else { return }
+            PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+                for y in minRow..<maxRow {
+                    for x in box.minX..<box.maxX {
+                        let dx = CGFloat(x) + 0.5 - centre.x, dy = CGFloat(y) + 0.5 - centre.y
+                        let distance: CGFloat
+                        if chisel {
+                            // A rounded box: the nib's width along its axis, its
+                            // thickness across.
+                            let u = abs(dx * axis.dx + dy * axis.dy) - (half - corner)
+                            let v = abs(-dx * axis.dy + dy * axis.dx) - (thick - corner)
+                            distance = hypot(max(u, 0), max(v, 0)) + min(max(u, v), 0) - corner
+                        } else if lean > 0 {
+                            // An ellipse, long along the lean.
+                            let u = (dx * leanAxis.dx + dy * leanAxis.dy) / side
+                            let v = -dx * leanAxis.dy + dy * leanAxis.dx
+                            distance = hypot(u, v) - half
+                        } else {
+                            distance = hypot(dx, dy) - half
+                        }
+                        let cover = Float(min(1, max(0, 0.5 - distance / feather)))
+                        guard cover > 0 else { continue }
+                        let i = (y - fieldBox.minY) * fieldBox.width + (x - fieldBox.minX)
+                        if cover > values[i] { values[i] = cover }
+                    }
                 }
-                let cover = Float(min(1, max(0, 0.5 - distance / feather)))
-                guard cover > 0 else { continue }
-                let i = field.index(x, y)
-                if cover > field.values[i] { field.values[i] = cover }
             }
         }
         return box
@@ -138,19 +147,21 @@ struct MarkerStroke {
         let box = field.box.intersection(plane.box)
         guard !box.isEmpty else { return }
         let c = (Float(colour.r), Float(colour.g), Float(colour.b))
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let cover = field.values[field.index(x, y)]
-                guard cover > 0 else { continue }
-                let o = plane.offset(x, y)
-                let d = (Float(plane.data[o]) / 255, Float(plane.data[o + 1]) / 255,
-                         Float(plane.data[o + 2]) / 255, Float(plane.data[o + 3]) / 255)
-                let s = over(cover, colour: c, under: d)
-                let keep = 1 - s.3
-                plane.data[o] = byte((s.0 + d.0 * keep) * 255)
-                plane.data[o + 1] = byte((s.1 + d.1 * keep) * 255)
-                plane.data[o + 2] = byte((s.2 + d.2 * keep) * 255)
-                plane.data[o + 3] = byte((s.3 + d.3 * keep) * 255)
+        PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in box.minX..<box.maxX {
+                    let cover = field.values[field.index(x, y)]
+                    guard cover > 0 else { continue }
+                    let o = plane.offset(x, y)
+                    let d = (Float(plane.data[o]) / 255, Float(plane.data[o + 1]) / 255,
+                             Float(plane.data[o + 2]) / 255, Float(plane.data[o + 3]) / 255)
+                    let s = over(cover, colour: c, under: d)
+                    let keep = 1 - s.3
+                    plane.data[o] = byte((s.0 + d.0 * keep) * 255)
+                    plane.data[o + 1] = byte((s.1 + d.1 * keep) * 255)
+                    plane.data[o + 2] = byte((s.2 + d.2 * keep) * 255)
+                    plane.data[o + 3] = byte((s.3 + d.3 * keep) * 255)
+                }
             }
         }
     }
@@ -162,20 +173,22 @@ struct MarkerStroke {
         let box = box.intersection(overlay.box)
         guard !box.isEmpty else { return }
         let c = (Float(colour.r), Float(colour.g), Float(colour.b))
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                var d: (Float, Float, Float, Float) = (0, 0, 0, 0)
-                if let under, x < under.width, y < under.height {
-                    let u = under.offset(x, y)
-                    d = (Float(under.data[u]) / 255, Float(under.data[u + 1]) / 255,
-                         Float(under.data[u + 2]) / 255, Float(under.data[u + 3]) / 255)
+        PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in box.minX..<box.maxX {
+                    var d: (Float, Float, Float, Float) = (0, 0, 0, 0)
+                    if let under, x < under.width, y < under.height {
+                        let u = under.offset(x, y)
+                        d = (Float(under.data[u]) / 255, Float(under.data[u + 1]) / 255,
+                             Float(under.data[u + 2]) / 255, Float(under.data[u + 3]) / 255)
+                    }
+                    let s = over(field.value(x, y), colour: c, under: d)
+                    let o = overlay.offset(x, y)
+                    overlay.data[o] = byte(s.0 * 255)
+                    overlay.data[o + 1] = byte(s.1 * 255)
+                    overlay.data[o + 2] = byte(s.2 * 255)
+                    overlay.data[o + 3] = byte(s.3 * 255)
                 }
-                let s = over(field.value(x, y), colour: c, under: d)
-                let o = overlay.offset(x, y)
-                overlay.data[o] = byte(s.0 * 255)
-                overlay.data[o + 1] = byte(s.1 * 255)
-                overlay.data[o + 2] = byte(s.2 * 255)
-                overlay.data[o + 3] = byte(s.3 * 255)
             }
         }
     }
@@ -323,16 +336,18 @@ struct AirbrushStroke {
         guard !box.isEmpty else { return }
         let alpha = Float(colour.a) * opacity
         let r = Float(colour.r), g = Float(colour.g), b = Float(colour.b)
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let a = field.values[field.index(x, y)] * alpha
-                guard a > 0 else { continue }
-                let o = plane.offset(x, y)
-                let keep = 1 - a
-                plane.data[o] = byte(r * a * 255 + Float(plane.data[o]) * keep)
-                plane.data[o + 1] = byte(g * a * 255 + Float(plane.data[o + 1]) * keep)
-                plane.data[o + 2] = byte(b * a * 255 + Float(plane.data[o + 2]) * keep)
-                plane.data[o + 3] = byte(a * 255 + Float(plane.data[o + 3]) * keep)
+        PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in box.minX..<box.maxX {
+                    let a = field.values[field.index(x, y)] * alpha
+                    guard a > 0 else { continue }
+                    let o = plane.offset(x, y)
+                    let keep = 1 - a
+                    plane.data[o] = byte(r * a * 255 + Float(plane.data[o]) * keep)
+                    plane.data[o + 1] = byte(g * a * 255 + Float(plane.data[o + 1]) * keep)
+                    plane.data[o + 2] = byte(b * a * 255 + Float(plane.data[o + 2]) * keep)
+                    plane.data[o + 3] = byte(a * 255 + Float(plane.data[o + 3]) * keep)
+                }
             }
         }
     }
@@ -345,15 +360,71 @@ struct AirbrushStroke {
         guard !box.isEmpty else { return }
         let alpha = Float(colour.a)
         let r = Float(colour.r), g = Float(colour.g), b = Float(colour.b)
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let a = field.value(x, y) * alpha
-                let o = plane.offset(x, y)
-                plane.data[o] = byte(r * a * 255)
-                plane.data[o + 1] = byte(g * a * 255)
-                plane.data[o + 2] = byte(b * a * 255)
-                plane.data[o + 3] = byte(a * 255)
+        PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in box.minX..<box.maxX {
+                    let a = field.value(x, y) * alpha
+                    let o = plane.offset(x, y)
+                    plane.data[o] = byte(r * a * 255)
+                    plane.data[o + 1] = byte(g * a * 255)
+                    plane.data[o + 2] = byte(b * a * 255)
+                    plane.data[o + 3] = byte(a * 255)
+                }
             }
         }
+    }
+}
+
+/// The tail of a live stroke (`LiveMarker`): drawn as if the stroke ended where
+/// the pointer is, then taken back on the next move. The checkpoint is the
+/// stroke apart from its fields, which keep what the tail wrote instead, so
+/// neither copies a field the size of the stroke.
+extension MarkerStroke {
+    mutating func beginTail() -> MarkerStroke {
+        var held = [CoverageField(limit: field.limit)]
+        swap(&held[0], &field)
+        let checkpoint = self
+        swap(&held[0], &field)
+        field.record()
+        return checkpoint
+    }
+
+    mutating func takeBackTail(to checkpoint: MarkerStroke) {
+        field.rollBack()
+        var held = [CoverageField(limit: field.limit)]
+        swap(&held[0], &field)
+        self = checkpoint
+        swap(&held[0], &field)
+    }
+
+    mutating func keepTail() {
+        field.keep()
+    }
+}
+
+/// The tail of a live stroke (`LiveMarker`): drawn as if the stroke ended where
+/// the pointer is, then taken back on the next move. The checkpoint is the
+/// stroke apart from its fields, which keep what the tail wrote instead, so
+/// neither copies a field the size of the stroke.
+extension AirbrushStroke {
+    mutating func beginTail() -> AirbrushStroke {
+        var held = [CoverageField(limit: field.limit)]
+        swap(&held[0], &field)
+        let checkpoint = self
+        swap(&held[0], &field)
+        field.record()
+        return checkpoint
+    }
+
+    mutating func takeBackTail(to checkpoint: AirbrushStroke) {
+        field.rollBack()
+        var held = [CoverageField(limit: field.limit)]
+        swap(&held[0], &field)
+        self = checkpoint
+        swap(&held[0], &field)
+    }
+
+    mutating func keepTail() {
+        field.keep()
     }
 }

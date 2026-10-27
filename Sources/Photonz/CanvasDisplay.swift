@@ -210,12 +210,18 @@ extension CanvasNSView {
         if annotationCommitImage != nil, image !== annotationCommitImage {
             clearAnnotationPreview()
         }
-        // ...and the same for a brush stroke's overlay.
-        if brushCommitImage != nil, image !== brushCommitImage, brushStroke == nil {
-            clearBrushOverlay()
-        }
         self.image = image
         self.viewport = viewport
+        // A brush stroke's overlay comes down once the picture holding the
+        // stroke is up, and follows the camera until then.
+        settleBrushLandings()
+        if let viewport {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            brushStroke?.overlay.place(in: viewport)
+            for overlay in brushLandings { overlay.place(in: viewport) }
+            CATransaction.commit()
+        }
         self.document = document
         self.selectedLayerID = selectedLayerID
         self.dragPreview = dragPreview
@@ -315,6 +321,9 @@ extension CanvasNSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         refreshCrispDisplay()
+        // In the same pass the sharp copy goes up, so the two never both show
+        // or both miss the stroke.
+        settleBrushLandings()
         CATransaction.commit()
     }
 

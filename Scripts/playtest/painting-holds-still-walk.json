@@ -1,0 +1,320 @@
+{
+  "out": "/tmp/photonz-playtest/painting-holds-still-walk",
+  "seed": "Painting is what you see (the user, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution'). No flags: Next as a person gets it, on a 1600 by 1000 canvas the size of a screenshot. Five strokes land on one Paint layer (two watercolour washes, two oil strokes, a pencil line), then a sixth, seventh and eighth are painted zoomed out, at 100% and at 200%, each filmed at the screen's own resolution from before the press until 1.5 s after the release (filmCanvas, expectPaintStill). Each claims: no frame changes anything outside the new stroke's reach (nothing already painted redraws, flickers or swaps to a sharper copy), the canvas settles within 400 ms, and at 100% and 200% the picture the moment the button comes up is the settled one but for 1% and 10% of the stroke (at 200% the screen magnifies the layer, and the live stroke and the picture under it are each filtered on their own: a one-pixel fringe). expectBrushResponsive holds each to one new stroke simulated per scale the layer is shown at. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel",
+      "shapes"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1000,
+      "width": 900,
+      "height": 640,
+      "pixelScale": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "action",
+      "action": "zoomActualSize"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "pickBrush",
+      "medium": "watercolour"
+    },
+    {
+      "do": "action",
+      "action": "paintToolColor"
+    },
+    {
+      "do": "drag",
+      "from": [
+        650,
+        425
+      ],
+      "to": [
+        950,
+        430
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "drag",
+      "from": [
+        650,
+        530
+      ],
+      "to": [
+        950,
+        535
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "pickBrush",
+      "medium": "oil"
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        375
+      ],
+      "to": [
+        705,
+        625
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "drag",
+      "from": [
+        875,
+        375
+      ],
+      "to": [
+        880,
+        625
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "pickBrush",
+      "medium": "pencil"
+    },
+    {
+      "do": "drag",
+      "from": [
+        660,
+        590
+      ],
+      "to": [
+        940,
+        595
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "pickBrush",
+      "medium": "watercolour"
+    },
+    {
+      "do": "action",
+      "action": "zoomToFit"
+    },
+    {
+      "do": "action",
+      "action": "zoomOut"
+    },
+    {
+      "do": "action",
+      "action": "zoomOut"
+    },
+    {
+      "do": "action",
+      "action": "zoomOut"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "1-zoomed-out-before"
+    },
+    {
+      "do": "filmCanvas",
+      "name": "1-zoomed-out",
+      "scale": 2
+    },
+    {
+      "do": "drag",
+      "from": [
+        675,
+        480
+      ],
+      "to": [
+        925,
+        485
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "expectBrushResponsive",
+      "simulatedAtMost": 2,
+      "longestUnderMS": 100
+    },
+    {
+      "do": "expectPaintStill",
+      "name": "1-zoomed-out",
+      "settleSeconds": 1.5,
+      "changedFramesAtMost": 0,
+      "settledWithinMS": 400
+    },
+    {
+      "do": "snapshot",
+      "name": "1-zoomed-out-after"
+    },
+    {
+      "do": "pickBrush",
+      "medium": "oil"
+    },
+    {
+      "do": "action",
+      "action": "zoomActualSize"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "2-actual-size-before"
+    },
+    {
+      "do": "filmCanvas",
+      "name": "2-actual-size",
+      "scale": 2
+    },
+    {
+      "do": "drag",
+      "from": [
+        770,
+        370
+      ],
+      "to": [
+        775,
+        620
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "expectBrushResponsive",
+      "simulatedAtMost": 2,
+      "longestUnderMS": 100
+    },
+    {
+      "do": "expectPaintStill",
+      "name": "2-actual-size",
+      "settleSeconds": 1.5,
+      "changedFramesAtMost": 0,
+      "liveVsLandedPercent": 1,
+      "settledWithinMS": 400
+    },
+    {
+      "do": "snapshot",
+      "name": "2-actual-size-after"
+    },
+    {
+      "do": "pickBrush",
+      "medium": "watercolour"
+    },
+    {
+      "do": "action",
+      "action": "zoomDouble"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "3-double-before"
+    },
+    {
+      "do": "filmCanvas",
+      "name": "3-double",
+      "scale": 2
+    },
+    {
+      "do": "drag",
+      "from": [
+        675,
+        565
+      ],
+      "to": [
+        925,
+        560
+      ],
+      "steps": 30,
+      "wobble": 1.5
+    },
+    {
+      "do": "expectBrushResponsive",
+      "simulatedAtMost": 2,
+      "longestUnderMS": 100
+    },
+    {
+      "do": "expectPaintStill",
+      "name": "3-double",
+      "settleSeconds": 1.5,
+      "changedFramesAtMost": 0,
+      "liveVsLandedPercent": 10,
+      "settledWithinMS": 400
+    },
+    {
+      "do": "snapshot",
+      "name": "3-double-after"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    }
+  ]
+}

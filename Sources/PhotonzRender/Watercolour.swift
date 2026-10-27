@@ -99,52 +99,86 @@ struct WatercolourStroke {
     /// How far the water reaches past the brush at a pixel, as a share of the
     /// radius, how wet the earlier washes are there, and the paper and the
     /// wash's own unevenness there: worked out the first time a dab comes
-    /// near the pixel, then kept.
-    @inline(__always)
-    private mutating func reach(_ x: Int, _ y: Int, _ i: Int) -> Float {
-        let kept = field.values[i + 2]
-        if kept > 0 { return kept - 1 }
-        let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5).applying(toPoints)
-        let px = Double(p.x), py = Double(p.y)
-        // The point measured in the brush's own size, so a big brush has big
-        // lobes and a small one small ones.
-        let size = Double(radius / pixelsPerPoint)
-        // Every wash's edge wanders a little, never a perfect circle.
-        let wobble = (valueNoise(px / (size * 0.9), py / (size * 0.9), salt) - 0.5) * 0.14
-            + (valueNoise(px / 2.5, py / 2.5, salt &+ 7) - 0.5) * 0.05
-        var reach = wobble
-        if creep > 0 {
-            // Lobes and fingers: the water runs out further along some paths
-            // of the paper than others.
-            let lobe = valueNoise(px / (size * 0.6), py / (size * 0.6), salt &+ 11)
-            let fine = valueNoise(px / (size * 0.2), py / (size * 0.2), salt &+ 13)
-            let finger = min(1, max(0, lobe * 0.85 + fine * 0.25 - 0.05))
-            reach += creep * (0.35 + 1.1 * finger * finger.squareRoot())
+    /// near the pixel, then kept in the pixel's fields (`v`, its six values).
+    /// Everything it reads but the fields, apart from the stroke, so the
+    /// bands of a dab can work it out side by side.
+    struct Reacher {
+        let toPoints: CGAffineTransform
+        let radius: CGFloat
+        let pixelsPerPoint: CGFloat
+        let salt: UInt32
+        let creep: Float
+        let flood: Float
+        let under: [WetWash]
+
+        /// The most the water can reach where no earlier wash is wet: the
+        /// wobble and the creep at their highest. Past it, a pixel with no
+        /// wet wash under it can never be reached, so its reach is never
+        /// worked out (a wash still wet under a big brush made every dab
+        /// work out the bloom four radii round, 2026-10-27).
+        var dryReach: Float { 0.07 + 0.025 + creep * 1.45 + 0.01 }
+
+        /// Whether any earlier wash is wet at the pixel.
+        @inline(__always)
+        func isWet(_ x: Int, _ y: Int) -> Bool {
+            for earlier in under where earlier.wash.water(x, y) * earlier.wetness > 0 { return true }
+            return false
         }
-        var wet: Float = 0
-        for earlier in under {
-            wet = max(wet, earlier.wash.water(x, y) * earlier.wetness)
+
+        @inline(__always)
+        func reach(_ x: Int, _ y: Int, _ v: UnsafeMutablePointer<Float>) -> Float {
+            let kept = v[2]
+            if kept > 0 { return kept - 1 }
+            let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5).applying(toPoints)
+            let px = Double(p.x), py = Double(p.y)
+            // The point measured in the brush's own size, so a big brush has big
+            // lobes and a small one small ones.
+            let size = Double(radius / pixelsPerPoint)
+            // Every wash's edge wanders a little, never a perfect circle.
+            let wobble = (valueNoise(px / (size * 0.9), py / (size * 0.9), salt) - 0.5) * 0.14
+                + (valueNoise(px / 2.5, py / 2.5, salt &+ 7) - 0.5) * 0.05
+            var reach = wobble
+            if creep > 0 {
+                // Lobes and fingers: the water runs out further along some paths
+                // of the paper than others.
+                let lobe = valueNoise(px / (size * 0.6), py / (size * 0.6), salt &+ 11)
+                let fine = valueNoise(px / (size * 0.2), py / (size * 0.2), salt &+ 13)
+                let finger = min(1, max(0, lobe * 0.85 + fine * 0.25 - 0.05))
+                reach += creep * (0.35 + 1.1 * finger * finger.squareRoot())
+            }
+            var wet: Float = 0
+            for earlier in under {
+                wet = max(wet, earlier.wash.water(x, y) * earlier.wetness)
+            }
+            if wet > 0 {
+                // A bloom's front is ragged at the scale of cauliflower florets,
+                // and of smaller florets on those.
+                let floret = valueNoise(px / (size * 0.5), py / (size * 0.5), salt &+ 17)
+                let small = valueNoise(px / (size * 0.17), py / (size * 0.17), salt &+ 19)
+                reach += wet * flood * (0.25 + 1.1 * floret * floret + 0.08 * small)
+            }
+            reach = min(WatercolourStroke.maximumReach, max(-0.2, reach))
+            // A wash is never quite even: the pigment gathers in soft blotches the
+            // size of the brush and smaller.
+            let mottle = 1 + 0.4 * (valueNoise(px / (size * 0.5), py / (size * 0.5), salt &+ 23) - 0.5)
+                + 0.2 * (valueNoise(px / 4, py / 4, salt &+ 29) - 0.5)
+            v[2] = reach + 1
+            v[3] = wet
+            v[4] = mottle
+            v[5] = PaperGrain.height(x: px, y: py, coarseness: 2)
+            return reach
         }
-        if wet > 0 {
-            // A bloom's front is ragged at the scale of cauliflower florets,
-            // and of smaller florets on those.
-            let floret = valueNoise(px / (size * 0.5), py / (size * 0.5), salt &+ 17)
-            let small = valueNoise(px / (size * 0.17), py / (size * 0.17), salt &+ 19)
-            reach += wet * flood * (0.25 + 1.1 * floret * floret + 0.08 * small)
-        }
-        reach = min(Self.maximumReach, max(-0.2, reach))
-        // A wash is never quite even: the pigment gathers in soft blotches the
-        // size of the brush and smaller.
-        let mottle = 1 + 0.4 * (valueNoise(px / (size * 0.5), py / (size * 0.5), salt &+ 23) - 0.5)
-            + 0.2 * (valueNoise(px / 4, py / 4, salt &+ 29) - 0.5)
-        field.values[i + 2] = reach + 1
-        field.values[i + 3] = wet
-        field.values[i + 4] = mottle
-        field.values[i + 5] = PaperGrain.height(x: px, y: py, coarseness: 2)
-        return reach
     }
 
-    /// Lays one dab and hands back the pixels whose wash changed.
+    private var reacher: Reacher {
+        Reacher(toPoints: toPoints, radius: radius, pixelsPerPoint: pixelsPerPoint, salt: salt, creep: creep,
+                flood: flood, under: under)
+    }
+
+    /// Lays one dab and hands back the pixels whose wash changed: where it
+    /// laid water, or deepened the brush's path where there is water. (Where
+    /// there is none the path changes nothing anyone sees, and counting it
+    /// made a dab beside a wet wash redraw four radii round on every move.)
     mutating func mark(_ dab: BrushDab) -> PixelBox {
         let centre = dab.center.applying(toPixels)
         let r = max(dab.diameter / 2 * pixelsPerPoint, 0.5)
@@ -153,38 +187,50 @@ struct WatercolourStroke {
         field.ensure(box)
         let pad = Float(radius) * Self.maximumReach + 1
         let rf = Float(r)
-        var changed = PixelBox.empty
-        var minX = Int.max, minY = Int.max, maxX = Int.min, maxY = Int.min
-        for y in box.minY..<box.maxY {
-            let dy = Float(CGFloat(y) + 0.5 - centre.y)
-            for x in box.minX..<box.maxX {
-                let dx = Float(CGFloat(x) + 0.5 - centre.x)
-                let d = (dx * dx + dy * dy).squareRoot()
-                // Nothing this dab could reach, wherever the water ran.
-                guard d < rf * (1 + farthest) + 1 else { continue }
-                let i = field.index(x, y)
-                let reach = self.reach(x, y, i)
-                let water = rf * (1 + reach) - d + 0.5
-                let path = rf - d + pad
-                var touched = false
-                if water > field.values[i] {
-                    field.values[i] = water
-                    touched = true
+        let reacher = self.reacher
+        let anyWet = !reacher.under.isEmpty
+        let reachable = rf * (1 + farthest) + 1
+        let dry = rf * (1 + reacher.dryReach) + 1
+        let fieldBox = field.box
+        return field.values.withUnsafeMutableBufferPointer { buffer -> PixelBox in
+            guard let values = buffer.baseAddress else { return .empty }
+            return PixelBands.union(box) { minRow, maxRow in
+                var minX = Int.max, minY = Int.max, maxX = Int.min, maxY = Int.min
+                for y in minRow..<maxRow {
+                    let dy = Float(CGFloat(y) + 0.5 - centre.y)
+                    for x in box.minX..<box.maxX {
+                        let dx = Float(CGFloat(x) + 0.5 - centre.x)
+                        let d = (dx * dx + dy * dy).squareRoot()
+                        // Nothing this dab could reach, wherever the water ran.
+                        guard d < reachable else { continue }
+                        let v = values + ((y - fieldBox.minY) * fieldBox.width + (x - fieldBox.minX))
+                            * WetField.channels
+                        var seen = false
+                        // Past the dry reach only a pixel already worked out, or
+                        // one a wet wash lies under, can take the water.
+                        if d < dry || v[2] > 0 || (anyWet && reacher.isWet(x, y)) {
+                            let water = rf * (1 + reacher.reach(x, y, v)) - d + 0.5
+                            if water > v[0] {
+                                v[0] = water
+                                seen = true
+                            }
+                        }
+                        let path = rf - d + pad
+                        if path > v[1] {
+                            v[1] = path
+                            if v[0] > 0 { seen = true }
+                        }
+                        if seen {
+                            minX = min(minX, x)
+                            maxX = max(maxX, x)
+                            minY = min(minY, y)
+                            maxY = max(maxY, y)
+                        }
+                    }
                 }
-                if path > field.values[i + 1] {
-                    field.values[i + 1] = path
-                    touched = true
-                }
-                if touched {
-                    minX = min(minX, x)
-                    maxX = max(maxX, x)
-                    minY = min(minY, y)
-                    maxY = max(maxY, y)
-                }
+                return minX <= maxX ? PixelBox(minX: minX, minY: minY, maxX: maxX + 1, maxY: maxY + 1) : .empty
             }
         }
-        if minX <= maxX { changed = PixelBox(minX: minX, minY: minY, maxX: maxX + 1, maxY: maxY + 1) }
-        return changed
     }
 
     /// How much light the wash takes at a pixel, 0...1, from its fields and
@@ -252,19 +298,21 @@ struct WatercolourStroke {
         let box = field.box.intersection(plane.box)
         guard !box.isEmpty else { return }
         let c = (Float(colour.r), Float(colour.g), Float(colour.b))
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let a = pigment(x, y, field.index(x, y))
-                guard a > 0 else { continue }
-                let o = plane.offset(x, y)
-                let d = (Float(plane.data[o]) / 255, Float(plane.data[o + 1]) / 255,
-                         Float(plane.data[o + 2]) / 255, Float(plane.data[o + 3]) / 255)
-                let s = over(a, colour: c, under: d)
-                let keep = 1 - s.3
-                plane.data[o] = byte((s.0 + d.0 * keep) * 255)
-                plane.data[o + 1] = byte((s.1 + d.1 * keep) * 255)
-                plane.data[o + 2] = byte((s.2 + d.2 * keep) * 255)
-                plane.data[o + 3] = byte((s.3 + d.3 * keep) * 255)
+        PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in box.minX..<box.maxX {
+                    let a = pigment(x, y, field.index(x, y))
+                    guard a > 0 else { continue }
+                    let o = plane.offset(x, y)
+                    let d = (Float(plane.data[o]) / 255, Float(plane.data[o + 1]) / 255,
+                             Float(plane.data[o + 2]) / 255, Float(plane.data[o + 3]) / 255)
+                    let s = over(a, colour: c, under: d)
+                    let keep = 1 - s.3
+                    plane.data[o] = byte((s.0 + d.0 * keep) * 255)
+                    plane.data[o + 1] = byte((s.1 + d.1 * keep) * 255)
+                    plane.data[o + 2] = byte((s.2 + d.2 * keep) * 255)
+                    plane.data[o + 3] = byte((s.3 + d.3 * keep) * 255)
+                }
             }
         }
     }
@@ -276,20 +324,22 @@ struct WatercolourStroke {
         let box = box.intersection(overlay.box).intersection(field.box)
         guard !box.isEmpty else { return }
         let c = (Float(colour.r), Float(colour.g), Float(colour.b))
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                var d: (Float, Float, Float, Float) = (0, 0, 0, 0)
-                if let under, x < under.width, y < under.height {
-                    let u = under.offset(x, y)
-                    d = (Float(under.data[u]) / 255, Float(under.data[u + 1]) / 255,
-                         Float(under.data[u + 2]) / 255, Float(under.data[u + 3]) / 255)
+        PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in box.minX..<box.maxX {
+                    var d: (Float, Float, Float, Float) = (0, 0, 0, 0)
+                    if let under, x < under.width, y < under.height {
+                        let u = under.offset(x, y)
+                        d = (Float(under.data[u]) / 255, Float(under.data[u + 1]) / 255,
+                             Float(under.data[u + 2]) / 255, Float(under.data[u + 3]) / 255)
+                    }
+                    let s = over(pigment(x, y, field.index(x, y)), colour: c, under: d)
+                    let o = overlay.offset(x, y)
+                    overlay.data[o] = byte(s.0 * 255)
+                    overlay.data[o + 1] = byte(s.1 * 255)
+                    overlay.data[o + 2] = byte(s.2 * 255)
+                    overlay.data[o + 3] = byte(s.3 * 255)
                 }
-                let s = over(pigment(x, y, field.index(x, y)), colour: c, under: d)
-                let o = overlay.offset(x, y)
-                overlay.data[o] = byte(s.0 * 255)
-                overlay.data[o + 1] = byte(s.1 * 255)
-                overlay.data[o + 2] = byte(s.2 * 255)
-                overlay.data[o + 3] = byte(s.3 * 255)
             }
         }
     }
@@ -311,8 +361,14 @@ struct WetField {
 
     mutating func ensure(_ wanted: PixelBox) {
         let wanted = wanted.intersection(limit)
+        defer { journal?.save(wanted, from: values, box: box, channels: WetField.channels) }
         guard !box.contains(wanted) else { return }
-        let margin = 96
+        // Grown in proportion to the dab and to what it already holds, so a
+        // stroke copies its field a handful of times rather than on every
+        // move: by a fixed 96 pixels, a 500 point brush outran it on nearly
+        // every move and copied a field as big as the stroke each time
+        // (2026-10-27, 60 to 120 ms a move on a 12 megapixel canvas).
+        let margin = max(96, max(wanted.width, wanted.height), max(box.width, box.height) / 4)
         let grown = box.union(PixelBox(minX: wanted.minX - margin, minY: wanted.minY - margin,
                                        maxX: wanted.maxX + margin, maxY: wanted.maxY + margin))
             .intersection(limit)
@@ -327,6 +383,22 @@ struct WetField {
         box = grown
         values = next
     }
+
+    /// What it held over each box it was asked for since `record`, so a live
+    /// stroke's tail, drawn as if the stroke ended where the pointer is, can
+    /// be taken back on the next move (`LiveMarker`).
+    private(set) var journal: FieldJournal?
+
+    mutating func record() { journal = FieldJournal() }
+
+    /// Puts back everything written since `record`.
+    mutating func rollBack() {
+        journal?.restore(into: &values, box: box, channels: WetField.channels)
+        journal = nil
+    }
+
+    /// Keeps what was written since `record`.
+    mutating func keep() { journal = nil }
 
     @inline(__always) func index(_ x: Int, _ y: Int) -> Int {
         ((y - box.minY) * box.width + (x - box.minX)) * WetField.channels
@@ -388,5 +460,32 @@ struct WetWashes {
             washes.add(earlierStroke, wash)
         }
         return washes.under(stroke)
+    }
+}
+
+/// The tail of a live stroke (`LiveMarker`): drawn as if the stroke ended where
+/// the pointer is, then taken back on the next move. The checkpoint is the
+/// stroke apart from its fields, which keep what the tail wrote instead, so
+/// neither copies a field the size of the stroke.
+extension WatercolourStroke {
+    mutating func beginTail() -> WatercolourStroke {
+        var held = [WetField(limit: field.limit)]
+        swap(&held[0], &field)
+        let checkpoint = self
+        swap(&held[0], &field)
+        field.record()
+        return checkpoint
+    }
+
+    mutating func takeBackTail(to checkpoint: WatercolourStroke) {
+        field.rollBack()
+        var held = [WetField(limit: field.limit)]
+        swap(&held[0], &field)
+        self = checkpoint
+        swap(&held[0], &field)
+    }
+
+    mutating func keepTail() {
+        field.keep()
     }
 }

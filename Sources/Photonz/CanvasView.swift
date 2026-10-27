@@ -1292,11 +1292,12 @@ final class CanvasNSView: NSView {
     var brushPreparedPaint: BrushPreparedPaint?
     var brushPaintWanted: BrushPaintRequest?
     var brushPaintDrawing = false
-    /// The overlay the live stroke is stamped onto, over the composite.
+    /// Holds the live stroke's overlay over the composite, and the overlays
+    /// of strokes handed over whose picture is not on screen yet.
     let brushLayer = CALayer()
-    /// The composite on screen when the last stroke was handed over; the
-    /// overlay comes down once a different one arrives with the stroke in it.
-    var brushCommitImage: CGImage?
+    /// Strokes handed over, each overlay up until the picture holding it is
+    /// (`settleBrushLandings`).
+    var brushLandings: [BrushOverlay] = []
     /// Keeps a held airbrush spraying: while the button is down and the
     /// pointer still, it hands the stroke another sample where the pointer is
     /// (`CanvasBrush`, `BrushPlacement.dwellInterval`).

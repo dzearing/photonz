@@ -185,68 +185,109 @@ struct OilStroke {
         guard !box.isEmpty else { return .empty }
         for field in [\OilStroke.red, \.green, \.blue, \.cover, \.height] { self[keyPath: field].ensure(box) }
         let count = bristles.count
+        let press = Float(min(1, 0.55 + dab.pressure))
+        let rim = Float(0.25)
+        // Every pixel's paint depends only on that pixel and the bristles as
+        // they were when the dab began, so the rows are laid side by side
+        // (`PixelBands`). What each bristle passed over is added up after, a
+        // pixel at a time in the order it always was, so the sums round the
+        // same and the brush picks up exactly what it did.
+        let width = box.width
+        var passed = [Float](repeating: 0, count: box.width * box.height * 5)
+        var bands = [Int32](repeating: -1, count: box.width * box.height)
+        var held = (CoverageField(limit: red.limit), CoverageField(limit: red.limit), CoverageField(limit: red.limit),
+                    CoverageField(limit: red.limit), CoverageField(limit: red.limit))
+        swap(&held.0, &red); swap(&held.1, &green); swap(&held.2, &blue); swap(&held.3, &cover); swap(&held.4, &height)
+        let reader = self
+        swap(&held.0, &red); swap(&held.1, &green); swap(&held.2, &blue); swap(&held.3, &cover); swap(&held.4, &height)
+        let fieldBox = red.box
+        red.values.withUnsafeMutableBufferPointer { r in
+        green.values.withUnsafeMutableBufferPointer { g in
+        blue.values.withUnsafeMutableBufferPointer { b in
+        cover.values.withUnsafeMutableBufferPointer { c in
+        height.values.withUnsafeMutableBufferPointer { h in
+        passed.withUnsafeMutableBufferPointer { passedOut in
+        bands.withUnsafeMutableBufferPointer { bandsOut in
+            guard let r = r.baseAddress, let g = g.baseAddress, let b = b.baseAddress, let c = c.baseAddress,
+                  let h = h.baseAddress, let passedOut = passedOut.baseAddress,
+                  let bandsOut = bandsOut.baseAddress else { return }
+            PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+                for y in minRow..<maxRow {
+                    for x in box.minX..<box.maxX {
+                        let dx = CGFloat(x) + 0.5 - centre.x, dy = CGFloat(y) + 0.5 - centre.y
+                        let u = (dx * across.dx + dy * across.dy) / radius
+                        let v = (dx * along.dx + dy * along.dy) / length
+                        // A pixel's soft edge: how far inside the footprint, in pixels.
+                        guard abs(v) < 1 else { continue }
+                        let w = Float(min(1, max(0, (1 - abs(u)) * radius + 0.5))) * (0.5 + 0.5 * Float(cos(.pi * v)))
+                        guard w > 0 else { continue }
+                        let (k, f) = reader.band(Float(min(0.9999, max(0, (u + 1) / 2))))
+                        // Paint under the bristle, unpremultiplied, and how much.
+                        var under4: (Float, Float, Float, Float) = (0, 0, 0, 0)
+                        let slot = (y - box.minY) * width + (x - box.minX)
+                        bandsOut[slot] = Int32(k)
+                        passedOut[slot * 5] = w
+                        if let under, x >= 0, y >= 0, x < under.width, y < under.height {
+                            let o = under.offset(x, y)
+                            under4 = (Float(under.data[o]) / 255, Float(under.data[o + 1]) / 255,
+                                      Float(under.data[o + 2]) / 255, Float(under.data[o + 3]) / 255)
+                            passedOut[slot * 5 + 1] = under4.0
+                            passedOut[slot * 5 + 2] = under4.1
+                            passedOut[slot * 5 + 3] = under4.2
+                            passedOut[slot * 5 + 4] = under4.3
+                        } else {
+                            // Nothing under it: counted, but finds nothing.
+                            passedOut[slot * 5 + 4] = -1
+                        }
+                        let bristle = reader.bristles[k]
+                        // The paint stands as high as the bristles it lies between,
+                        // eased from one to the next, with a shallow groove where
+                        // each bristle ran.
+                        let next = reader.bristles[min(count - 1, k + (f < 0.5 ? 0 : 1))]
+                        let prev = reader.bristles[max(0, k - (f < 0.5 ? 1 : 0))]
+                        let t = f < 0.5 ? f + 0.5 : f - 0.5
+                        let ease = 0.5 - 0.5 * cos(Float.pi * t)
+                        let lift = prev.lift + (next.lift - prev.lift) * ease
+                        let ridge = 0.5 - 0.5 * cos(2 * Float.pi * f)
+                        let flow = smoothstep(0.02, 0.5, bristle.paint) * (0.6 + 0.4 * bristle.press) * press
+                        // A loaded brush covers solid; a dry one only along its bristles.
+                        let laid = min(1, w * flow) * (1 - 0.6 * (1 - flow) * (1 - ridge))
+                        guard laid > 0.0005 else { continue }
+                        // Mixed in place with the wet paint it lands on.
+                        var tint = (bristle.r * bristle.tint, bristle.g * bristle.tint, bristle.b * bristle.tint)
+                        if under4.3 > 0.004 {
+                            let mix = 0.4 * reader.smear * under4.3
+                            tint.0 += mix * (under4.0 / under4.3 - tint.0)
+                            tint.1 += mix * (under4.1 / under4.3 - tint.1)
+                            tint.2 += mix * (under4.2 / under4.3 - tint.2)
+                        }
+                        let i = (y - fieldBox.minY) * fieldBox.width + (x - fieldBox.minX)
+                        let keep = 1 - laid
+                        r[i] = tint.0 * laid + r[i] * keep
+                        g[i] = tint.1 * laid + g[i] * keep
+                        b[i] = tint.2 * laid + b[i] * keep
+                        c[i] = laid + c[i] * keep
+                        // The paint pushed aside piles up at the stroke's sides.
+                        let side = rim * smoothstep(0.8, 0.97, Float(abs(u))) * (1 - smoothstep(0.97, 1, Float(abs(u))))
+                        let target = reader.thickness * ((0.65 + 0.35 * ridge) * lift * (0.45 + 0.55 * flow) + side)
+                        h[i] += laid * (target - h[i])
+                    }
+                }
+            }
+        }}}}}}}
         // What each bristle passed over this dab, to pick up once it is done.
         var weight = [Float](repeating: 0, count: count)
         var found = [Float](repeating: 0, count: count * 4)
-        let press = Float(min(1, 0.55 + dab.pressure))
-        let rim = Float(0.25)
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let dx = CGFloat(x) + 0.5 - centre.x, dy = CGFloat(y) + 0.5 - centre.y
-                let u = (dx * across.dx + dy * across.dy) / radius
-                let v = (dx * along.dx + dy * along.dy) / length
-                // A pixel's soft edge: how far inside the footprint, in pixels.
-                guard abs(v) < 1 else { continue }
-                let w = Float(min(1, max(0, (1 - abs(u)) * radius + 0.5))) * (0.5 + 0.5 * Float(cos(.pi * v)))
-                guard w > 0 else { continue }
-                let (k, f) = band(Float(min(0.9999, max(0, (u + 1) / 2))))
-                // Paint under the bristle, unpremultiplied, and how much.
-                var under4: (Float, Float, Float, Float) = (0, 0, 0, 0)
-                if let under, x >= 0, y >= 0, x < under.width, y < under.height {
-                    let o = under.offset(x, y)
-                    under4 = (Float(under.data[o]) / 255, Float(under.data[o + 1]) / 255,
-                              Float(under.data[o + 2]) / 255, Float(under.data[o + 3]) / 255)
-                    weight[k] += w
-                    found[k * 4] += w * under4.0
-                    found[k * 4 + 1] += w * under4.1
-                    found[k * 4 + 2] += w * under4.2
-                    found[k * 4 + 3] += w * under4.3
-                } else {
-                    weight[k] += w
-                }
-                let bristle = bristles[k]
-                // The paint stands as high as the bristles it lies between,
-                // eased from one to the next, with a shallow groove where
-                // each bristle ran.
-                let next = bristles[min(count - 1, k + (f < 0.5 ? 0 : 1))]
-                let prev = bristles[max(0, k - (f < 0.5 ? 1 : 0))]
-                let t = f < 0.5 ? f + 0.5 : f - 0.5
-                let ease = 0.5 - 0.5 * cos(Float.pi * t)
-                let lift = prev.lift + (next.lift - prev.lift) * ease
-                let ridge = 0.5 - 0.5 * cos(2 * Float.pi * f)
-                let flow = smoothstep(0.02, 0.5, bristle.paint) * (0.6 + 0.4 * bristle.press) * press
-                // A loaded brush covers solid; a dry one only along its bristles.
-                let laid = min(1, w * flow) * (1 - 0.6 * (1 - flow) * (1 - ridge))
-                guard laid > 0.0005 else { continue }
-                // Mixed in place with the wet paint it lands on.
-                var c = (bristle.r * bristle.tint, bristle.g * bristle.tint, bristle.b * bristle.tint)
-                if under4.3 > 0.004 {
-                    let mix = 0.4 * smear * under4.3
-                    c.0 += mix * (under4.0 / under4.3 - c.0)
-                    c.1 += mix * (under4.1 / under4.3 - c.1)
-                    c.2 += mix * (under4.2 / under4.3 - c.2)
-                }
-                let i = red.index(x, y)
-                let keep = 1 - laid
-                red.values[i] = c.0 * laid + red.values[i] * keep
-                green.values[i] = c.1 * laid + green.values[i] * keep
-                blue.values[i] = c.2 * laid + blue.values[i] * keep
-                cover.values[i] = laid + cover.values[i] * keep
-                // The paint pushed aside piles up at the stroke's sides.
-                let side = rim * smoothstep(0.8, 0.97, Float(abs(u))) * (1 - smoothstep(0.97, 1, Float(abs(u))))
-                let target = thickness * ((0.65 + 0.35 * ridge) * lift * (0.45 + 0.55 * flow) + side)
-                height.values[i] += laid * (target - height.values[i])
-            }
+        for slot in bands.indices {
+            let k = Int(bands[slot])
+            guard k >= 0 else { continue }
+            let w = passed[slot * 5]
+            weight[k] += w
+            guard passed[slot * 5 + 4] >= 0 else { continue }
+            found[k * 4] += w * passed[slot * 5 + 1]
+            found[k * 4 + 1] += w * passed[slot * 5 + 2]
+            found[k * 4 + 2] += w * passed[slot * 5 + 3]
+            found[k * 4 + 3] += w * passed[slot * 5 + 4]
         }
         pickUp(weight: weight, found: found)
         return box
@@ -341,16 +382,18 @@ struct OilStroke {
     func composite(into plane: PixelPlane) {
         let box = cover.box.intersection(plane.box)
         guard !box.isEmpty else { return }
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let s = lit(x, y)
-                guard s.3 > 0 else { continue }
-                let o = plane.offset(x, y)
-                let keep = 1 - s.3
-                plane.data[o] = byte(s.0 * 255 + Float(plane.data[o]) * keep)
-                plane.data[o + 1] = byte(s.1 * 255 + Float(plane.data[o + 1]) * keep)
-                plane.data[o + 2] = byte(s.2 * 255 + Float(plane.data[o + 2]) * keep)
-                plane.data[o + 3] = byte(s.3 * 255 + Float(plane.data[o + 3]) * keep)
+        PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in box.minX..<box.maxX {
+                    let s = lit(x, y)
+                    guard s.3 > 0 else { continue }
+                    let o = plane.offset(x, y)
+                    let keep = 1 - s.3
+                    plane.data[o] = byte(s.0 * 255 + Float(plane.data[o]) * keep)
+                    plane.data[o + 1] = byte(s.1 * 255 + Float(plane.data[o + 1]) * keep)
+                    plane.data[o + 2] = byte(s.2 * 255 + Float(plane.data[o + 2]) * keep)
+                    plane.data[o + 3] = byte(s.3 * 255 + Float(plane.data[o + 3]) * keep)
+                }
             }
         }
     }
@@ -362,15 +405,72 @@ struct OilStroke {
         let grown = PixelBox(minX: box.minX - 1, minY: box.minY - 1, maxX: box.maxX + 1, maxY: box.maxY + 1)
             .intersection(overlay.box).intersection(cover.limit)
         guard !grown.isEmpty else { return }
-        for y in grown.minY..<grown.maxY {
-            for x in grown.minX..<grown.maxX {
-                let s = lit(x, y)
-                let o = overlay.offset(x, y)
-                overlay.data[o] = byte(s.0 * 255)
-                overlay.data[o + 1] = byte(s.1 * 255)
-                overlay.data[o + 2] = byte(s.2 * 255)
-                overlay.data[o + 3] = byte(s.3 * 255)
+        PixelBands.run(grown, bands: PixelBands.count(for: grown)) { _, minRow, maxRow in
+            for y in minRow..<maxRow {
+                for x in grown.minX..<grown.maxX {
+                    let s = lit(x, y)
+                    let o = overlay.offset(x, y)
+                    overlay.data[o] = byte(s.0 * 255)
+                    overlay.data[o + 1] = byte(s.1 * 255)
+                    overlay.data[o + 2] = byte(s.2 * 255)
+                    overlay.data[o + 3] = byte(s.3 * 255)
+                }
             }
         }
+    }
+}
+
+/// The tail of a live stroke (`LiveMarker`): drawn as if the stroke ended where
+/// the pointer is, then taken back on the next move. The checkpoint is the
+/// stroke apart from its fields, which keep what the tail wrote instead, so
+/// neither copies a field the size of the stroke.
+extension OilStroke {
+    mutating func beginTail() -> OilStroke {
+        var held = [CoverageField(limit: red.limit), CoverageField(limit: green.limit), CoverageField(limit: blue.limit), CoverageField(limit: cover.limit), CoverageField(limit: height.limit)]
+        swap(&held[0], &red)
+        swap(&held[1], &green)
+        swap(&held[2], &blue)
+        swap(&held[3], &cover)
+        swap(&held[4], &height)
+        let checkpoint = self
+        swap(&held[0], &red)
+        swap(&held[1], &green)
+        swap(&held[2], &blue)
+        swap(&held[3], &cover)
+        swap(&held[4], &height)
+        red.record()
+        green.record()
+        blue.record()
+        cover.record()
+        height.record()
+        return checkpoint
+    }
+
+    mutating func takeBackTail(to checkpoint: OilStroke) {
+        red.rollBack()
+        green.rollBack()
+        blue.rollBack()
+        cover.rollBack()
+        height.rollBack()
+        var held = [CoverageField(limit: red.limit), CoverageField(limit: green.limit), CoverageField(limit: blue.limit), CoverageField(limit: cover.limit), CoverageField(limit: height.limit)]
+        swap(&held[0], &red)
+        swap(&held[1], &green)
+        swap(&held[2], &blue)
+        swap(&held[3], &cover)
+        swap(&held[4], &height)
+        self = checkpoint
+        swap(&held[0], &red)
+        swap(&held[1], &green)
+        swap(&held[2], &blue)
+        swap(&held[3], &cover)
+        swap(&held[4], &height)
+    }
+
+    mutating func keepTail() {
+        red.keep()
+        green.keep()
+        blue.keep()
+        cover.keep()
+        height.keep()
     }
 }

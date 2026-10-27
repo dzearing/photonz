@@ -235,6 +235,8 @@ private final class Run {
     /// moves cost, and the stroke count when it began, for an
     /// `expectBrushResponsive` step to hold it to.
     private var lastBrushDrag: BrushDragReading?
+    /// Films of the canvas's picture under way (`filmCanvas`), by name.
+    private var canvasFilms: [String: CanvasFilm] = [:]
     /// The recording's window a video guide opened, when the walk is in one.
     /// Nil in every other walk, and the two are never both set: a window holds
     /// a picture or a recording, never both.
@@ -1630,6 +1632,7 @@ private final class Run {
             }
             let simulatedByRelease = PaintRasterizer.strokesSimulated
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: laterFlags) { canvas.mouseUp(with: event) }
+            for film in canvasFilms.values where film.releasedAt == nil { film.released(canvas) }
             await sleep(0.05)
             var landedAsHeld = ""
             if landsAsHeld {
@@ -3290,6 +3293,61 @@ private final class Run {
                     + ". Read: " + reading)
             }
             note(number, step.name, reading, state: describe())
+
+        case .pickBrush(let medium, let size):
+            let editor = try requireEditor()
+            editor.pickBrush(medium)
+            if let size { editor.setArmedBrushSetting("size", to: size) }
+            await sleep(0.2)
+            note(number, step.name, "\(medium.title) in hand at \(Int(editor.armedBrush.size)) pt", state: describe())
+
+        case .filmCanvas(let name, let scale):
+            let canvas = try requireCanvas()
+            guard let film = CanvasFilm(canvas: canvas, scale: CGFloat(scale)) else {
+                throw Failure(description: "the canvas has no size to film")
+            }
+            canvasFilms[name] = film
+            note(number, step.name, "filming the canvas's picture as \(name)", state: describe())
+
+        case .expectPaintStill(let claim):
+            let canvas = try requireCanvas()
+            guard let film = canvasFilms.removeValue(forKey: claim.name) else {
+                throw Failure(description: "no film called \(claim.name) is running: a filmCanvas step starts one")
+            }
+            guard let released = film.releasedAt else {
+                throw Failure(description: "the film \(claim.name) saw no drag let go")
+            }
+            let rest = claim.settleSeconds - (ProcessInfo.processInfo.systemUptime - released)
+            if rest > 0 { await sleep(rest) }
+            film.stop(canvas)
+            guard let reading = film.read() else {
+                throw Failure(description: "the film \(claim.name) has too few frames to judge")
+            }
+            film.write(to: out, name: claim.name, reading: reading)
+            let said = String(format: "%d frames; %d of them differ from the settled picture outside the "
+                + "stroke's reach (worst %d of %d pixels); the picture the moment the button came up differs "
+                + "from the settled one over %.2f%% of the stroke's reach (%d pixels), the last one with it "
+                + "down, a pointer sample behind, over %.2f%%; settled %.0f ms after the release; film in "
+                + "%@-film", reading.frames, reading.changedFrames,
+                reading.worstChangedPixels, reading.outsidePixels, reading.liveVsLanded * 100,
+                reading.reachPixels, reading.heldVsLanded * 100, reading.settledMS, claim.name)
+            var over: [String] = []
+            if let bound = claim.changedFramesAtMost, reading.changedFrames > bound {
+                over.append("\(reading.changedFrames) frames changed what was already painted (at most \(bound))")
+            }
+            if let bound = claim.liveVsLandedPercent, reading.liveVsLanded * 100 > bound {
+                over.append(String(format: "the stroke changed on landing over %.2f%% of its reach (at most %.2f%%)",
+                                   reading.liveVsLanded * 100, bound))
+            }
+            if let bound = claim.settledWithinMS, reading.settledMS > bound {
+                over.append(String(format: "the canvas settled %.0f ms after the release (at most %.0f)",
+                                   reading.settledMS, bound))
+            }
+            guard over.isEmpty else {
+                throw Failure(description: "the paint did not hold still: " + over.joined(separator: "; ")
+                    + ". Read: " + said)
+            }
+            note(number, step.name, said, state: describe())
 
         case .expectFresh(let percent):
             // The render the last step asked for, landed.
@@ -7307,6 +7365,8 @@ private final class Run {
             case .zoomIn: editor.zoomIn()
             case .zoomOut: editor.zoomOut()
             case .zoomToFit: editor.zoomToFit()
+            case .zoomActualSize: editor.zoomToActualSize()
+            case .zoomDouble: editor.setZoom(2 / editor.documentPixelScale)
             case .undo: editor.undo()
             case .redo: editor.redo()
             case .positionAndSize:

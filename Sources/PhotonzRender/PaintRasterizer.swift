@@ -189,6 +189,11 @@ public enum PaintRasterizer {
             case airbrush(AirbrushStroke, RGBA)
             case oil(OilStroke, under: PixelPlane?)
             case smudge(SmudgeStroke, PixelPlane)
+            /// Held for a moment while a stroke is changed, so the one being
+            /// changed is the only copy of its fields and is changed in
+            /// place: changed while this still held it, every move copied
+            /// fields as big as the stroke.
+            case none
         }
 
         /// Whether the canvas shows the bitmap as it is, rather than at the
@@ -202,17 +207,49 @@ public enum PaintRasterizer {
         // Kept alive for as long as `kind` reads its pixels.
         private let working: CGContext?
 
+        /// Whether the end of the stroke is thinned in as it goes: a mouse
+        /// stroke's, which lands thinned out over its last stretch
+        /// (`BrushPlacement.taperedOut`). The last stretch is drawn as if the
+        /// stroke ended where the pointer is, and taken back and drawn again
+        /// on the next move, so the stroke under the hand is the stroke that
+        /// lands, end and all. A pen's press thins its own end.
+        public var tapersItsEnd: Bool
+        /// A stroke of these settings with no press, which is all
+        /// `taperedOut` needs to know.
+        private let taperTemplate: BrushStroke
+        private let taperLength: CGFloat
+        /// The dabs the walker settled that a later one could still thin: the
+        /// last `taperLength` of the stroke.
+        private var pending: [BrushDab] = []
+        /// The stroke before its tail was drawn, and the pixels the tail drew.
+        private var tail: (checkpoint: Kind, drawn: PixelBox)?
+
         /// `pointsToPixels` takes the stroke's points to the bitmap's pixels
         /// (top-left), and `clip` is the pixels the stroke may mark: the box
         /// of the layer it lands on. Nil when the bitmap is not one this can
         /// mark, or a smudge has no paint to read.
-        public init?(stroke: BrushStroke, bitmap: CGContext, pointsToPixels: CGAffineTransform,
-                     clip: CGRect, working: CGContext? = nil, earlier: [BrushStroke] = []) {
+        public convenience init?(stroke: BrushStroke, bitmap: CGContext, pointsToPixels: CGAffineTransform,
+                                 clip: CGRect, working: CGContext? = nil, earlier: [BrushStroke] = []) {
+            self.init(stroke: stroke, bitmap: bitmap, pointsToPixels: pointsToPixels, clip: clip,
+                      working: working, earlier: earlier, wet: nil)
+        }
+
+        /// The same, handed the washes still wet under the stroke rather than
+        /// replaying the `earlier` strokes for them (`PaintLayerStroke`).
+        init?(stroke: BrushStroke, bitmap: CGContext, pointsToPixels: CGAffineTransform,
+              clip: CGRect, working: CGContext?, earlier: [BrushStroke], wet: [WetWash]?) {
             self.bitmap = bitmap
             self.pointsToPixels = pointsToPixels
             self.clip = clip
             self.working = working
             plane = PixelPlane(bitmap)
+            // Only the live stroke on its layer thins its end as it goes; a
+            // caller marking the landed dabs (already thinned) asks for none.
+            let response = BrushDynamics.response(for: stroke.settings)
+            tapersItsEnd = wet != nil && response.taperDepth > 0 && stroke.samples.first?.pressure == nil
+            taperTemplate = BrushStroke(samples: [StrokeSample(point: .zero, ms: 0)], settings: stroke.settings,
+                                        colorHex: stroke.colorHex, seed: stroke.seed)
+            taperLength = CGFloat(BrushDynamics.taperLength(diameter: stroke.settings.size))
             let limit = PixelBox(clip).intersection(plane?.box ?? .empty)
             showsAtFullStrength = stroke.settings.mode == .smudge || stroke.settings.medium == .marker
                 || stroke.settings.medium == .watercolour || stroke.settings.medium == .oil
@@ -226,7 +263,9 @@ public enum PaintRasterizer {
                                colour, under: working.flatMap { PixelPlane($0) })
             } else if stroke.settings.medium == .watercolour {
                 guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
-                let under = WetWashes.under(stroke, earlier: earlier, toPixels: pointsToPixels, limit: limit)
+                // Handed the washes still wet when the layer's raster was kept,
+                // or worked out by replaying the earlier strokes' water.
+                let under = wet ?? WetWashes.under(stroke, earlier: earlier, toPixels: pointsToPixels, limit: limit)
                 kind = .watercolour(WatercolourStroke(settings: stroke.settings, colour: colour, seed: stroke.seed,
                                                       toPixels: pointsToPixels, limit: limit, under: under),
                                     colour, under: working.flatMap { PixelPlane($0) })
@@ -254,15 +293,101 @@ public enum PaintRasterizer {
         /// anything a medium was holding back goes down (oil holds its first
         /// dab until it knows which way the brush is going, so a click lays
         /// it here).
-        public func finish() {
-            guard case .oil(var oil, let under) = kind, let plane else { return }
-            oil.replace(oil.finish(under: under), in: plane)
+        @discardableResult
+        public func finish() -> CGRect {
+            // The tail on screen was drawn for exactly this end: it stays.
+            if tail != nil || (keepsPreviews && tapersItsEnd) {
+                keepTail()
+                tail = nil
+                pending = []
+            } else if !pending.isEmpty {
+                let box = markRaw(BrushPlacement.taperedOut(pending, for: taperTemplate))
+                pending = []
+                redraw(box)
+            }
+            guard case .oil(var oil, let under) = kind, let plane else { return .null }
+            let touched = oil.finish(under: under)
+            oil.replace(touched, in: plane)
             kind = .oil(oil, under: under)
+            return touched.rect
         }
 
-        /// Marks `dabs`, the next ones the walker settled.
-        public func mark(_ dabs: [BrushDab]) {
-            guard !dabs.isEmpty else { return }
+        /// Marks `dabs`, the next ones the walker settled, and says which of
+        /// the bitmap's pixels changed (top-left), or null for none.
+        @discardableResult
+        public func mark(_ dabs: [BrushDab]) -> CGRect {
+            guard tapersItsEnd, canTakeBack else {
+                guard !dabs.isEmpty else { return .null }
+                let touched = markRaw(dabs)
+                redraw(touched)
+                return clipped(touched).rect
+            }
+            // No new dab, no new end: the tail on screen is already right.
+            guard !dabs.isEmpty else { return .null }
+            // The tail drawn for the last move comes back off, unless the
+            // medium keeps the larger of what is there and what a dab lays:
+            // then a thinner dab drawn early is covered by the same dab drawn
+            // full, and taking it back would only cost a copy of the stroke's
+            // fields (a wet wash's are 4.5 radii round, 2026-10-27).
+            var touched = PixelBox.empty
+            if !keepsPreviews, let drawn = takeBackTail() { touched = drawn }
+            pending += dabs
+            if let end = pending.last?.along {
+                // Far enough from the end, a dab is never thinned however the
+                // stroke ends: it goes down for good.
+                let settled = pending.firstIndex { CGFloat(end - $0.along) < taperLength } ?? pending.count
+                if settled > 0 {
+                    touched = touched.union(markRaw(Array(pending[..<settled])))
+                    pending.removeFirst(settled)
+                }
+                if !pending.isEmpty {
+                    let checkpoint = keepsPreviews ? nil : beginTail()
+                    let drawn = markRaw(BrushPlacement.taperedOut(pending, for: taperTemplate))
+                    if let checkpoint { tail = (checkpoint, drawn) }
+                    touched = touched.union(drawn)
+                }
+            }
+            redraw(touched)
+            return clipped(touched).rect
+        }
+
+        private func clipped(_ box: PixelBox) -> PixelBox {
+            guard let plane else { return box }
+            // Oil lights a pixel from its neighbours, so its redraw reaches
+            // one further.
+            if case .oil = kind {
+                return PixelBox(minX: box.minX - 1, minY: box.minY - 1, maxX: box.maxX + 1, maxY: box.maxY + 1)
+                    .intersection(plane.box)
+            }
+            return box.intersection(plane.box)
+        }
+
+        /// Whether a dab drawn thinner never lays more anywhere than the same
+        /// dab drawn full: watercolour's water and path, and a marker's ink,
+        /// only ever take the larger value, grow with the dab, and keep no
+        /// other running state. Their tail is never taken back.
+        private var keepsPreviews: Bool {
+            switch kind {
+            case .watercolour, .marker: true
+            default: false
+            }
+        }
+
+        /// Whether this medium's marks can be taken back: everything but the
+        /// plain round, which stamps straight into the bitmap, and a smudge,
+        /// which moves paint and never thins.
+        private var canTakeBack: Bool {
+            switch kind {
+            case .round, .smudge, .none: false
+            default: true
+            }
+        }
+
+        /// Marks `dabs` into the stroke's fields, and the round and the smudge
+        /// into the bitmap; says which pixels changed.
+        private func markRaw(_ dabs: [BrushDab]) -> PixelBox {
+            guard !dabs.isEmpty else { return .empty }
+            var touched = PixelBox.empty
             switch kind {
             case .round(let tip):
                 bitmap.saveGState()
@@ -272,40 +397,144 @@ public enum PaintRasterizer {
                 bitmap.concatenate(pointsToPixels)
                 PaintRasterizer.mark(dabs, tip: tip, in: bitmap)
                 bitmap.restoreGState()
+                for dab in dabs {
+                    let r = dab.diameter / 2
+                    let rect = CGRect(x: dab.center.x - r, y: dab.center.y - r, width: dab.diameter,
+                                      height: dab.diameter).applying(pointsToPixels).insetBy(dx: -1, dy: -1)
+                    touched = touched.union(PixelBox(rect))
+                }
+                touched = touched.intersection(PixelBox(clip))
             case .dry(var dry, let colour):
-                guard let plane else { return }
-                var touched = PixelBox.empty
+                kind = .none
                 for dab in dabs { touched = touched.union(dry.mark(dab)) }
-                dry.replace(touched, in: plane, colour: colour)
                 kind = .dry(dry, colour)
             case .marker(var marker, let colour, let under):
-                guard let plane else { return }
-                var touched = PixelBox.empty
+                kind = .none
                 for dab in dabs { touched = touched.union(marker.mark(dab)) }
-                marker.replace(touched, in: plane, under: under, colour: colour)
                 kind = .marker(marker, colour, under: under)
             case .watercolour(var wash, let colour, let under):
-                guard let plane else { return }
-                var touched = PixelBox.empty
+                kind = .none
                 for dab in dabs { touched = touched.union(wash.mark(dab)) }
-                wash.replace(touched, in: plane, under: under, colour: colour)
                 kind = .watercolour(wash, colour, under: under)
             case .airbrush(var spray, let colour):
-                guard let plane else { return }
-                var touched = PixelBox.empty
+                kind = .none
                 for dab in dabs { touched = touched.union(spray.mark(dab)) }
-                spray.replace(touched, in: plane, colour: colour)
                 kind = .airbrush(spray, colour)
             case .oil(var oil, let under):
-                guard let plane else { return }
-                var touched = PixelBox.empty
+                kind = .none
                 for dab in dabs { touched = touched.union(oil.mark(dab, under: under)) }
-                oil.replace(touched, in: plane)
                 kind = .oil(oil, under: under)
             case .smudge(var smudge, let read):
-                guard let plane else { return }
-                for dab in dabs { _ = smudge.mark(dab, target: read, mirror: plane) }
+                guard let plane else { return .empty }
+                kind = .none
+                for dab in dabs { touched = touched.union(smudge.mark(dab, target: read, mirror: plane)) }
                 kind = .smudge(smudge, read)
+            case .none:
+                break
+            }
+            return touched
+        }
+
+        /// Writes the stroke's fields over `box` of the bitmap.
+        private func redraw(_ box: PixelBox) {
+            guard let plane, !box.isEmpty else { return }
+            switch kind {
+            case .round, .smudge, .none: break
+            case .dry(let dry, let colour): dry.replace(box, in: plane, colour: colour)
+            case .marker(let marker, let colour, let under): marker.replace(box, in: plane, under: under, colour: colour)
+            case .watercolour(let wash, let colour, let under): wash.replace(box, in: plane, under: under, colour: colour)
+            case .airbrush(let spray, let colour): spray.replace(box, in: plane, colour: colour)
+            case .oil(let oil, _): oil.replace(box, in: plane)
+            }
+        }
+
+        private func beginTail() -> Kind {
+            switch kind {
+            case .dry(var dry, let colour):
+                kind = .none
+                let checkpoint = dry.beginTail()
+                kind = .dry(dry, colour)
+                return .dry(checkpoint, colour)
+            case .marker(var marker, let colour, let under):
+                kind = .none
+                let checkpoint = marker.beginTail()
+                kind = .marker(marker, colour, under: under)
+                return .marker(checkpoint, colour, under: under)
+            case .watercolour(var wash, let colour, let under):
+                kind = .none
+                let checkpoint = wash.beginTail()
+                kind = .watercolour(wash, colour, under: under)
+                return .watercolour(checkpoint, colour, under: under)
+            case .airbrush(var spray, let colour):
+                kind = .none
+                let checkpoint = spray.beginTail()
+                kind = .airbrush(spray, colour)
+                return .airbrush(checkpoint, colour)
+            case .oil(var oil, let under):
+                kind = .none
+                let checkpoint = oil.beginTail()
+                kind = .oil(oil, under: under)
+                return .oil(checkpoint, under: under)
+            case .round, .smudge, .none:
+                return kind
+            }
+        }
+
+        /// Takes the drawn tail back off, and says which pixels it drew.
+        private func takeBackTail() -> PixelBox? {
+            guard let (checkpoint, drawn) = tail else { return nil }
+            tail = nil
+            switch (kind, checkpoint) {
+            case (.dry(var dry, let colour), .dry(let back, _)):
+                kind = .none
+                dry.takeBackTail(to: back)
+                kind = .dry(dry, colour)
+            case (.marker(var marker, let colour, let under), .marker(let back, _, _)):
+                kind = .none
+                marker.takeBackTail(to: back)
+                kind = .marker(marker, colour, under: under)
+            case (.watercolour(var wash, let colour, let under), .watercolour(let back, _, _)):
+                kind = .none
+                wash.takeBackTail(to: back)
+                kind = .watercolour(wash, colour, under: under)
+            case (.airbrush(var spray, let colour), .airbrush(let back, _)):
+                kind = .none
+                spray.takeBackTail(to: back)
+                kind = .airbrush(spray, colour)
+            case (.oil(var oil, let under), .oil(let back, _)):
+                kind = .none
+                oil.takeBackTail(to: back)
+                kind = .oil(oil, under: under)
+            default:
+                break
+            }
+            return drawn
+        }
+
+        private func keepTail() {
+            switch kind {
+            case .dry(var dry, let colour):
+                kind = .none
+                dry.keepTail()
+                kind = .dry(dry, colour)
+            case .marker(var marker, let colour, let under):
+                kind = .none
+                marker.keepTail()
+                kind = .marker(marker, colour, under: under)
+            case .watercolour(var wash, let colour, let under):
+                kind = .none
+                wash.keepTail()
+                kind = .watercolour(wash, colour, under: under)
+            case .airbrush(var spray, let colour):
+                kind = .none
+                spray.keepTail()
+                kind = .airbrush(spray, colour)
+            case .oil(var oil, let under):
+                kind = .none
+                oil.keepTail()
+                kind = .oil(oil, under: under)
+            case .round, .smudge, .none:
+                break
             }
         }
     }

@@ -182,3 +182,67 @@ struct PaintRasterCacheTests {
         #expect(bytes(plain) != bytes(medium))
     }
 }
+
+/// Letting go of a stroke on a 12 megapixel picture whose paint layer already
+/// holds a few hundred strokes, and undoing it. Measured in the app on
+/// 2026-10-27 with 300 strokes on a 4000 by 3000 layer: the landing held the
+/// main thread at most 24 ms and the undo 9.6 ms, against 344 to 432 ms a
+/// landing when the whole layer was replayed (2026-10-25). The suite runs
+/// unoptimised, where one stroke's simulation alone takes several times that,
+/// so what it holds is the shape: a landing simulates the new stroke and
+/// nothing else, costs no more with 300 strokes under it than with one, and an
+/// undo simulates nothing and hands back the raster kept for it.
+@Suite("Landing and undo on a big layer")
+struct PaintLandingCostTests {
+    private let size = CGSize(width: 4000, height: 3000)
+
+    private func dot(_ i: Int) -> BrushStroke {
+        let x = CGFloat(40 + (i * 137) % 3900), y = CGFloat(40 + (i * 89) % 2900)
+        return BrushStroke(samples: [StrokeSample(point: CGPoint(x: x, y: y), ms: 0),
+                                     StrokeSample(point: CGPoint(x: x + 6, y: y + 2), ms: 16)],
+                           settings: BrushSettings(medium: .marker, values: ["size": 4]), colorHex: "#203040",
+                           seed: UInt32(i + 1), startedAt: Double(i))
+    }
+
+    private var landing: BrushStroke {
+        // A marker: cheap to simulate unoptimised, so what is timed is what the
+        // layer adds around it, not the stroke.
+        let samples = (0...12).map { StrokeSample(point: CGPoint(x: 800 + CGFloat($0) * 50, y: 1500), ms: Double($0) * 16) }
+        return BrushStroke(samples: samples, settings: BrushSettings(medium: .marker, values: ["size": 60]),
+                           colorHex: "#2060E0", seed: 99, startedAt: 10_000)
+    }
+
+    private func ms(_ duration: Duration) -> Double {
+        Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
+    }
+
+    @Test func landingOnThreeHundredStrokesCostsWhatLandingOnOneDoes() throws {
+        let clock = ContinuousClock()
+        let many = (0..<300).map(dot)
+        let crowded = PaintRasterCache(budgetBytes: 256 << 20)
+        let kept = try #require(crowded.raster(PaintContent(strokes: many), size: size, scale: 1))
+        let lone = PaintRasterCache(budgetBytes: 256 << 20)
+        _ = try #require(lone.raster(PaintContent(strokes: [dot(0)]), size: size, scale: 1))
+        let new = landing
+
+        // Land on the layer with one stroke, then on the one with 300.
+        var before = lone.strokesSimulated
+        let alone = ms(clock.measure { _ = lone.raster(PaintContent(strokes: [dot(0), new]), size: size, scale: 1) })
+        #expect(lone.strokesSimulated - before == 1)
+        before = crowded.strokesSimulated
+        let crowd = ms(clock.measure { _ = crowded.raster(PaintContent(strokes: many + [new]), size: size, scale: 1) })
+        #expect(crowded.strokesSimulated - before == 1, "landing simulated only the new stroke")
+        print(String(format: "landing on a 12 MP layer: %.1f ms with 1 stroke under it, %.1f ms with 300", alone, crowd))
+        #expect(crowd < alone * MachineSpeed.tolerance + 60,
+                "landing grew with the strokes already on the layer: \(Int(crowd)) ms against \(Int(alone))")
+
+        // Undo: the raster kept for the 300 comes straight back.
+        before = crowded.strokesSimulated
+        var undone: CGImage?
+        let undo = ms(clock.measure { undone = crowded.raster(PaintContent(strokes: many), size: size, scale: 1) })
+        print(String(format: "undo on a 12 MP layer of 300 strokes: %.1f ms", undo))
+        #expect(crowded.strokesSimulated == before, "undo simulated nothing")
+        #expect(undone === kept)
+        #expect(undo < 50, "undo took \(Int(undo)) ms")
+    }
+}

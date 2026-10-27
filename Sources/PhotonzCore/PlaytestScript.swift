@@ -871,6 +871,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// curve a walk needs to show the keys cannot say.
     case keyAtPlayhead, curveThePath, easingEaseOutBack
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
+    /// View ▸ Actual Size, and the picture at exactly twice that: a brush walk
+    /// films a stroke at 100% and at 200%, where the canvas lays a sharper
+    /// copy over the stretched composite.
+    case zoomActualSize, zoomDouble
     /// What the window is set up for (`WindowModes`, `next-window-modes`). Each
     /// one is View ▸ Mode ▸ … and ⌃1 … ⌃3, so every one of them hangs off the
     /// focused window and is dimmed for the whole of a walk; a walk reaches
@@ -4081,6 +4085,29 @@ public enum PlaytestStep: Sendable, Equatable {
     /// and how many strokes were simulated over all of it. Waits for those
     /// renders first. Any budget left out is only reported.
     case expectBrushResponsive(PlaytestBrushBudget)
+    /// Starts filming the canvas's PICTURE (the composite, the crisp tile,
+    /// any sprite and the brush's live stroke, `playtestPicture`) every
+    /// frame, under `name`, for `expectPaintStill` to judge once the next
+    /// drag has landed and settled. A frame is kept only when the picture
+    /// changed, so holding still costs nothing. `scale` is pixels per point,
+    /// 2 for the picture as a Retina screen shows it.
+    case filmCanvas(name: String, scale: Double)
+    /// Puts a brush in hand by its medium (`pencil`, `watercolour`, `oil` and
+    /// so on), the way picking its tile does, for a walk about painting rather
+    /// than about the chooser. `size`, when given, is its Size in points.
+    case pickBrush(BrushMedium, size: Double?)
+    /// CLAIMS what `filmCanvas` filmed through the brush drag after it: every
+    /// frame, from before the press until `settleSeconds` after the release,
+    /// is held against the picture the canvas settled on. Outside the new
+    /// stroke's reach (where the picture before the press and the settled one
+    /// agree) at most `changedFramesAtMost` frames may differ, so nothing
+    /// already painted redraws, flickers or swaps to a sharper copy; the last
+    /// picture with the button down differs from the settled one over at
+    /// most `liveVsLandedPercent` of the stroke's reach; and the canvas is
+    /// settled within `settledWithinMS` of the release. Writes the film, a
+    /// contact sheet and the numbers beside the walk's pictures. Any claim
+    /// left out is only reported.
+    case expectPaintStill(PlaytestPaintStill)
     /// One of a picked layer's 3D handles taken the way a hand takes it
     /// (`CanvasSpaceHandles.swift`): the pointer rests on the turn knob so the
     /// arcs come out, then presses on the arc or the depth arrow and drags it
@@ -4572,7 +4599,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4703,6 +4730,9 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectReadout: "expectReadout"
         case .expectFresh: "expectFresh"
         case .expectBrushResponsive: "expectBrushResponsive"
+        case .filmCanvas: "filmCanvas"
+        case .pickBrush: "pickBrush"
+        case .expectPaintStill: "expectPaintStill"
         case .spaceHandle: "spaceHandle"
         case .hoverHandles: "hoverHandles"
         case .expectLanding: "expectLanding"
@@ -4928,6 +4958,23 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectBrushResponsive(PlaytestBrushBudget(
                 pressUnderMS: try budget("pressUnderMS"), movesUnderMS: try budget("movesUnderMS"),
                 longestUnderMS: try budget("longestUnderMS"), simulatedAtMost: simulated.map { Int($0) }))
+        case "pickBrush":
+            self = .pickBrush(try f.enumValue("medium", BrushMedium.self), size: try f.optionalNumber("size"))
+        case "filmCanvas":
+            let scale = try f.optionalNumber("scale") ?? 1
+            guard (1...3).contains(scale) else { throw f.invalid("scale", "is pixels per point, 1 to 3") }
+            self = .filmCanvas(name: try f.string("name"), scale: scale)
+        case "expectPaintStill":
+            let changed = try f.optionalNumber("changedFramesAtMost")
+            if let changed, changed < 0 {
+                throw f.invalid("changedFramesAtMost", "is a count of frames, so it cannot be below 0")
+            }
+            self = .expectPaintStill(PlaytestPaintStill(
+                name: try f.string("name"),
+                settleSeconds: try f.optionalNumber("settleSeconds") ?? 1.5,
+                changedFramesAtMost: changed.map { Int($0) },
+                liveVsLandedPercent: try f.optionalNumber("liveVsLandedPercent"),
+                settledWithinMS: try f.optionalNumber("settledWithinMS")))
         case "expectReadout":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent") ?? false
@@ -6928,6 +6975,31 @@ public struct PlaytestDragWatch: Equatable, Sendable {
 
 /// Where a `drag` stops part way with the button still down, and for how
 /// long: `at` is the share of the travel, 0 to 1.
+/// What an `expectPaintStill` step claims about the film `filmCanvas` took.
+public struct PlaytestPaintStill: Hashable, Sendable {
+    /// The film, as `filmCanvas` named it.
+    public var name: String
+    /// How long after the release the film runs on.
+    public var settleSeconds: Double
+    /// Frames in which anything outside the new stroke's reach differs from
+    /// the settled picture.
+    public var changedFramesAtMost: Int?
+    /// The most of the stroke's reach, in percent, the last picture with the
+    /// button down may differ from the settled one over.
+    public var liveVsLandedPercent: Double?
+    /// The longest the canvas may take to settle after the release.
+    public var settledWithinMS: Double?
+
+    public init(name: String, settleSeconds: Double = 1.5, changedFramesAtMost: Int? = nil,
+                liveVsLandedPercent: Double? = nil, settledWithinMS: Double? = nil) {
+        self.name = name
+        self.settleSeconds = settleSeconds
+        self.changedFramesAtMost = changedFramesAtMost
+        self.liveVsLandedPercent = liveVsLandedPercent
+        self.settledWithinMS = settledWithinMS
+    }
+}
+
 /// What an `expectBrushResponsive` step holds the brush drag before it to.
 /// Each budget left nil is only reported.
 public struct PlaytestBrushBudget: Hashable, Sendable {

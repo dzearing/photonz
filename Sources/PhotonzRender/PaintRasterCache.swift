@@ -63,6 +63,18 @@ public final class PaintRasterCache: @unchecked Sendable {
     /// `content` drawn inside `size` at `scale` pixels per point, as
     /// `PaintRasterizer.rasterize` draws it.
     public func raster(_ content: PaintContent, size: CGSize, scale: CGFloat) -> CGImage? {
+        entry(content, size: size, scale: scale)?.image
+    }
+
+    /// The same raster as the paper a live stroke is painted on
+    /// (`PaintLayerStroke`): its bytes and the washes still wet on it. Kept
+    /// like any other, so the press reads the raster the last render kept and
+    /// the render after the release paints only the new stroke onto it.
+    public func base(_ content: PaintContent, size: CGSize, scale: CGFloat) -> PaintLayerBase? {
+        entry(content, size: size, scale: scale).map(PaintLayerBase.init)
+    }
+
+    private func entry(_ content: PaintContent, size: CGSize, scale: CGFloat) -> Entry? {
         guard scale > 0, scale.isFinite else { return nil }
         let width = Int((size.width * scale).rounded())
         let height = Int((size.height * scale).rounded())
@@ -94,7 +106,7 @@ public final class PaintRasterCache: @unchecked Sendable {
             }
             return best
         }
-        if let base, base.strokes.count == strokes.count { return base.image }
+        if let base, base.strokes.count == strokes.count { return base }
 
         let byteCount = width * height * 4
         let storage = NSMutableData(length: byteCount)
@@ -124,22 +136,24 @@ public final class PaintRasterCache: @unchecked Sendable {
                 provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
         else { return nil }
 
+        let made = Entry(slot: slot, strokes: strokes, storage: storage, image: image, wet: wet,
+                         byteCount: byteCount, used: 0)
         lock.withLock {
             simulated += strokes.count - from
             guard byteCount * 2 <= budgetBytes else { return }
             clock += 1
-            entries.append(Entry(slot: slot, strokes: strokes, storage: storage, image: image, wet: wet,
-                                 byteCount: byteCount, used: clock))
+            made.used = clock
+            entries.append(made)
             var total = entries.reduce(0) { $0 + $1.byteCount }
             while total > budgetBytes, let oldest = entries.indices.min(by: { entries[$0].used < entries[$1].used }) {
                 total -= entries[oldest].byteCount
                 entries.remove(at: oldest)
             }
         }
-        return image
+        return made
     }
 
-    private struct Slot: Hashable {
+    struct Slot: Hashable {
         let width: Int
         let height: Int
         let scale: Double
@@ -156,7 +170,7 @@ public final class PaintRasterCache: @unchecked Sendable {
     /// One kept raster: the strokes it holds, its bytes, and the washes still
     /// wet after the last of them. Never changed once made, but for `used`,
     /// which only changes under the cache's lock.
-    private final class Entry {
+    final class Entry {
         let slot: Slot
         let strokes: [BrushStroke]
         let storage: NSMutableData
@@ -180,4 +194,26 @@ public final class PaintRasterCache: @unchecked Sendable {
             strokes.count <= list.count && list.starts(with: strokes)
         }
     }
+}
+
+/// A paint layer as it stands, at one scale: what a live stroke is painted on
+/// (`PaintLayerStroke`). Never changed once made.
+public struct PaintLayerBase: @unchecked Sendable {
+    // @unchecked: the entry it holds is never written after it is made.
+    let entry: PaintRasterCache.Entry
+
+    init(_ entry: PaintRasterCache.Entry) { self.entry = entry }
+
+    /// The layer's raster.
+    public var image: CGImage { entry.image }
+    public var width: Int { entry.image.width }
+    public var height: Int { entry.image.height }
+    /// Pixels per point.
+    public var scale: CGFloat { CGFloat(entry.slot.scale) }
+    /// The strokes painted into it.
+    public var strokeCount: Int { entry.strokes.count }
+    /// Its bytes, premultiplied RGBA, top row first, four bytes a pixel.
+    var bytes: UnsafeRawPointer { entry.storage.bytes }
+    /// The watercolour washes still wet after its last stroke.
+    var wet: WetWashes { entry.wet }
 }
