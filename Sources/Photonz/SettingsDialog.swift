@@ -40,6 +40,11 @@ struct SettingsDialog: View {
                 if Experiments.shared.askEnabled {
                     AskSettingsSection()
                 }
+                // Using Photonz from Claude Code and Copilot (Next,
+                // `next-agent-channel`): the server and skill ship in the app.
+                if Experiments.shared.agentChannelEnabled {
+                    AgentsSettingsSection()
+                }
             }
             .formStyle(.grouped)
         }

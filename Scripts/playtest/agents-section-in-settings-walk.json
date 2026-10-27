@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/agents-section-in-settings-walk",
+  "clock": 60,
+  "setup": {
+    "forget": ["all"],
+    "agentHome": true
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "reveal", "control": "Agents Claude Code Install" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Agents Claude Code Install", "present": true },
+    { "do": "expect", "control": "Agents GitHub Copilot Install", "present": true },
+    { "do": "expect", "control": "Agents Claude Code Uninstall", "present": false },
+    { "do": "describe", "stage": "1-agents", "note": "Settings > Agents at Next defaults, nothing installed yet: a row each for Claude Code and GitHub Copilot, each saying it was found on this Mac, each with Install" },
+    { "do": "snapshot", "name": "1-agents", "window": "Settings" }
+  ]
+}

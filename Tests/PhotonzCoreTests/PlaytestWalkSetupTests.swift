@@ -425,3 +425,28 @@ struct PlaytestOfflineSetupTests {
         #expect(profile.hasPrefix("(version 1)"))
     }
 }
+
+/// A walk that presses Install in Settings > Agents gives the probe a home
+/// folder of its own to install into, so the person's Claude Code and Copilot
+/// are never touched by a walk.
+@Suite("A walk can give Settings > Agents a home of its own")
+struct PlaytestAgentHomeSetupTests {
+
+    @Test("it reads yes, and saying nothing installs into the real home")
+    func reads() throws {
+        let own = try PlaytestScript.decode(Data("""
+        { "setup": { "agentHome": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(own.setup.agentHome)
+        #expect(own.setup.isEmpty == false)
+        let unsaid = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(unsaid.setup.agentHome == false)
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "agentHome": 1 }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+}

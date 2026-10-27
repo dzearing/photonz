@@ -42,11 +42,28 @@ public enum AgentChannelAddress {
     /// sent to the probe. An unmanned runner must never drive the Dev app a
     /// person is working in, and the server a person installs for themselves
     /// is also in every runner's session.
-    public static func choice(environment: [String: String]) -> String? {
+    ///
+    /// A bridge that ships inside an app (`Contents/Helpers/photonz-mcp`,
+    /// installed from Settings > Agents) passes that app's bundle id as
+    /// `ownBundleID`, and with nothing else said it reaches that app alone: a
+    /// server installed from the shipping app never drives a Dev build.
+    public static func choice(environment: [String: String], ownBundleID: String? = nil) -> String? {
         if let named = environment["PHOTONZ_APP"], !named.trimmingCharacters(in: .whitespaces).isEmpty {
             return named
         }
-        return environment["GO_LOOP_PID"] == nil ? nil : "probe"
+        return environment["GO_LOOP_PID"] == nil ? ownBundleID : "probe"
+    }
+
+    /// The app bundle a bundled bridge sits in, from the bridge's own path
+    /// (`<app>.app/Contents/Helpers/<bridge>`), or nil for a bridge built
+    /// anywhere else.
+    public static func bundle(containingHelper path: String) -> String? {
+        let parts = (path as NSString).standardizingPath.split(separator: "/", omittingEmptySubsequences: false)
+        guard parts.count >= 4,
+              parts[parts.count - 2] == "Helpers",
+              parts[parts.count - 3] == "Contents",
+              parts[parts.count - 4].hasSuffix(".app") else { return nil }
+        return parts.dropLast(3).joined(separator: "/")
     }
 
     public static func candidates(for choice: String?) -> [String] {

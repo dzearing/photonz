@@ -12,7 +12,43 @@ slice (`an-agent-can-reach-the-running-app-read-the-open`).
 
 ## Install
 
-One command, from the repo:
+**From the app (anyone).** Settings > Agents has a row for Claude Code and one
+for GitHub Copilot (VS Code and the Copilot CLI). Each says whether that tool
+is on this Mac and has one button: Install, Uninstall, or Update when Photonz
+was set up from another copy or an older version. Right-click a row for Copy
+Setup Command, for a person who would rather run it themselves. Nothing is
+built: every build of the app carries the bridge (`Contents/Helpers/photonz-mcp`,
+signed with the app) and the skill (`Contents/Resources/AgentSkill/photonz`),
+put there by `Scripts/build-app.sh`.
+
+| Tool | Server | Skill |
+| --- | --- | --- |
+| Claude Code | `claude mcp add-json --scope user <name>` (its own command: `~/.claude.json` is Claude Code's and its running sessions rewrite it constantly) | copied to `~/.claude/skills/photonz` |
+| Copilot CLI | `~/.copilot/mcp-config.json`, `mcpServers`, type `local` (always written: it costs one file and the CLI finds Photonz the day it is installed) | copied to `~/.copilot/skills/photonz` |
+| VS Code (Copilot built in) | `~/Library/Application Support/Code/User/mcp.json`, `servers`, type `stdio` (and Code - Insiders) | VS Code's Copilot reads `~/.copilot/skills` too |
+
+`<name>` is one per build, `photonz`, `photonz-dev` or `photonz-probe`, so the
+shipping app and a Dev build install side by side. The rules
+(`AgentSetup`, PhotonzCore, tested on sample config files; the file and process
+work is `AgentInstaller` in the app):
+
+* **Install adds its own entry and Uninstall takes out only that.** A server
+  of the same name whose command is not a Photonz bridge, or a `photonz` skill
+  folder Photonz did not make, is left alone and the row says so. A config
+  with comments (VS Code's mcp.json may have them) is refused rather than
+  rewritten without them. Every file is checked before any is written.
+* **The skill is a copy, marked** with `.installed-by-photonz`, so it works
+  after the app moves and Uninstall knows it is Photonz's. The repo's link
+  (below) counts as Photonz's too. Uninstall keeps the skill while another
+  build's Photonz server is still set up in that tool, since it reads it too.
+* **The bundled bridge reaches the app it ships in**, and launches it with
+  `open -g -a <that bundle>` when it is closed, unless `PHOTONZ_APP` names
+  another; a go loop session still gets the probe.
+* An app opened from the Finder has no shell PATH, so `claude` and `copilot`
+  are looked for where their installers put them (`~/.local/bin`,
+  `/opt/homebrew/bin`, `/usr/local/bin`, nvm's node folders and a few more).
+
+**From the repo (developers).** One command:
 
 ```
 Scripts/install-mcp.sh            # registers "photonz" with Claude Code for this user
@@ -20,10 +56,11 @@ Scripts/install-mcp.sh --probe    # registers "photonz-probe", which drives the 
 ```
 
 It runs `claude mcp add --scope user photonz -- <repo>/Scripts/photonz-mcp.sh`.
-`Scripts/photonz-mcp.sh` builds the small bridge program (`photonz-mcp`, in its
+`Scripts/photonz-mcp.sh` builds the same bridge program (`photonz-mcp`, in its
 own build folder `.build-mcp` so it never waits on the app's build) the first
 time and whenever its source changed, then runs it. Remove with
-`claude mcp remove photonz`.
+`Scripts/install-mcp.sh --remove`. Settings reads a repo install as Photonz's
+own and offers Update, which swaps it for the bundled copy.
 
 ## How it reaches the app
 
@@ -513,5 +550,5 @@ The first slice's run of exactly that is in
 
 * Notifications when the person changes the document while the agent works:
   the agent reads again when it needs to.
-* Shipping the bridge inside the app bundle so a release user needs no repo.
-  Until then the install command is a developer's.
+* Keeping an installed skill current by itself after the app updates: the
+  row says Update and one press does it.

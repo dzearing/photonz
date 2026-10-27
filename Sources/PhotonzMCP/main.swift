@@ -15,6 +15,9 @@ import PhotonzAgentLink
 //   PHOTONZ_APP_PATH  the app bundle to launch when none is running, when
 //                     LaunchServices cannot find it by bundle id.
 //
+// Shipped inside an app (Contents/Helpers/photonz-mcp, what Settings > Agents
+// installs), with neither set it reaches and launches that app alone.
+//
 // Nothing but protocol goes to stdout; what it has to say goes to stderr.
 
 final class Bridge: @unchecked Sendable {
@@ -25,8 +28,14 @@ final class Bridge: @unchecked Sendable {
     private var waiting: Set<String> = []
     private let candidates: [String]
     private let home = NSHomeDirectory()
-    private let launchPath = ProcessInfo.processInfo.environment["PHOTONZ_APP_PATH"]
-    private let choice = AgentChannelAddress.choice(environment: ProcessInfo.processInfo.environment)
+    /// The app this bridge ships inside, when it does (Settings > Agents
+    /// installs that copy): the one it reaches and launches unless told otherwise.
+    private static let ownBundle = AgentChannelAddress.bundle(
+        containingHelper: Bundle.main.executableURL?.resolvingSymlinksInPath().path ?? CommandLine.arguments[0])
+    private let launchPath = ProcessInfo.processInfo.environment["PHOTONZ_APP_PATH"] ?? Bridge.ownBundle
+    private let choice = AgentChannelAddress.choice(
+        environment: ProcessInfo.processInfo.environment,
+        ownBundleID: Bridge.ownBundle.flatMap { Bundle(path: $0)?.bundleIdentifier })
 
     static let launchPatience: TimeInterval = 25
 

@@ -5,11 +5,11 @@
   "epic": "agent-mcp",
   "priority": "p1-high",
   "seq": 0.5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T15:19:05.514Z",
-  "updated": "2026-10-27T01:42:51.951Z",
+  "updated": "2026-10-27T03:40:42.860Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'I'd love the skills an FRE for using photonz with copilot and claude code where there is a nice explainer and an opt in to install the skills... they can dismiss and install the skills from settings.' This task is the Settings half and the packaging. The setup-window step is a separate task that depends on this one (filed the same minute). Today: Scripts/install-mcp.sh (claude mcp add --scope user, links plugin/skills/photonz into ~/.claude/skills), and there is nothing for Copilot. Focus success gap: agent-mcp success says 'installs with one command'; today that command is Scripts/install-mcp.sh in a checkout (lines 39 and 44: claude mcp add plus a skill link). docs/design/agent-mcp.md 'Not in this slice' (line 392-397): shipping the bridge inside the app bundle. Rough lines in queue/audits/2026-10-19-agent-skill.json ('The install is a developer's') and 2026-10-19-agent-mcp-reach-read-see.json ('builds a small helper program the first time, about 4 seconds'). Skill at plugin/skills/photonz/SKILL.md, plugin/.mcp.json. The channel already listens in every build (agent-mcp.md:34-41, release.sock, dev.sock, probe.sock). Scripts/build-app.sh must copy and sign the helper; never touch dist/Photonz Dev.app from a runner, use the probe.",
@@ -74,6 +74,34 @@
     {
       "t": "2026-10-27T01:42:51.950Z",
       "note": "seq 120 -> 0.5"
+    },
+    {
+      "t": "2026-10-27T02:32:57.230Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-27T02:36:45.981Z",
+      "note": "Review before building: a person with only the app has no claude mcp command to copy and no repo; the installer must find claude/VS Code/copilot without the shell PATH (an app from Finder has none), must not clobber a server or skill of the same name that is not ours, must survive VS Code's mcp.json being JSONC, and the server must reach the app it was installed from (a release user with Dev never installed). Found here: claude at ~/.local/bin, VS Code 1.129 (Copilot built in, its bundled agent reads ~/.copilot/skills), no copilot CLI (a temp copy in /tmp/copilot-cli authenticates with the gh token, for the proof). Copilot CLI reads ~/.copilot/mcp-config.json (mcpServers, type local) and personal skills from ~/.copilot/skills; VS Code reads ~/Library/Application Support/Code/User/mcp.json (servers, type stdio)."
+    },
+    {
+      "t": "2026-10-27T02:36:46.057Z",
+      "note": "Chose: Claude Code's server goes in through its own claude mcp add-json/remove (it owns ~/.claude.json, which running sessions rewrite all the time) over editing that file, with the is-it-ours check read from the file first; Copilot's two configs are edited by Photonz (pure transforms in PhotonzCore, tested on sample files), refusing a file with comments rather than rewriting it. One server name per build (photonz, photonz-dev, photonz-probe) so Dev and release install side by side; the bundled bridge reaches the app it sits in unless PHOTONZ_APP says otherwise (a go loop session still gets the probe). The skill is copied (with a marker file) into ~/.claude/skills/photonz and ~/.copilot/skills/photonz."
+    },
+    {
+      "t": "2026-10-27T03:40:42.716Z",
+      "note": "owns these walks: agents-section-in-settings-walk"
+    },
+    {
+      "t": "2026-10-27T03:40:42.793Z",
+      "note": "Built: PhotonzCore AgentSetup (config transforms, ownership, row state; 22 tests on sample Copilot CLI, VS Code and ~/.claude.json files), the bundled bridge reaches its own app (AgentChannelAddress.bundle(containingHelper:), tested), Scripts/build-app.sh copies + signs Contents/Helpers/photonz-mcp and Contents/Resources/AgentSkill/photonz (codesign --verify --deep --strict passes on the probe and release bundles; dev signs the same way as probe), app AgentInstaller + AgentsSettingsSection (Settings > Agents, shown with next-agent-channel, on at Next defaults), walk setup agentHome. Proof: Install pressed on the real buttons via the accessibility tree (a walk press does not reach Settings buttons, filed as a-walk-can-press-the-buttons-in-the-settings-win), then fresh claude -p and copilot -p (Copilot CLI 1.0.104 from /tmp/copilot-cli) sessions in an empty /tmp folder each loaded the photonz skill and called list_documents, read_document, render_picture on the probe: queue/audits/2026-10-26-agents-settings-sessions.md. Uninstall restored ~/.claude.json's servers and VS Code's mcp.json to their backed-up content and removed both skill copies; VS Code's file was then put back byte for byte from the backup, and ~/.copilot (made by my CLI runs, absent before) removed. Bundled bridge with GO_LOOP_PID unset launched and answered from its own probe bundle, never Dev. Scripts/install-mcp.sh --probe and --remove still work. Full suite green (one run had a TitleBackgroundsRenderTests flake that passed alone and on the rerun)."
+    },
+    {
+      "t": "2026-10-27T03:40:42.859Z",
+      "note": "Left rough (not filed): VS Code mcp.json is rewritten in JSONSerialization's formatting (content kept); no shell-PATH lookup for claude/copilot beyond the usual install folders; the installed skill does not refresh itself after an app update (the row offers Update). The first-run setup window half is its own task (the-setup-window-walks-you-through-only-the-step)."
     }
+  ],
+  "started": "2026-10-27T02:32:57.229Z",
+  "walks": [
+    "agents-section-in-settings-walk"
   ]
 }

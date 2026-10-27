@@ -1,0 +1,31 @@
+{
+  "id": "a-walk-can-press-the-buttons-in-the-settings-win",
+  "title": "A walk can press the buttons in the Settings window",
+  "goal": "Scripted checks can find buttons in the Settings window but pressing one does nothing, so nothing in Settings (Install for agents, deleting an Ask model, asking a silenced question again) can be proved by a walk the way a person clicks it.",
+  "epic": "agent-mcp",
+  "priority": "p2-normal",
+  "seq": 85,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-27T03:40:32.660Z",
+  "updated": "2026-10-27T03:40:32.663Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-26 on the probe (screen unlocked, Screen Recording granted, with and without setup front:true). Walk step: press \"Agents Claude Code Install\" -> log says in Install at window (460, 119), one click, the point is on the button in the -sc.png, but the button action never runs (a temporary NSLog at the top of AgentsSettingsSection.act never printed: /usr/bin/log show --last 2m --predicate eventMessage CONTAINS PZDEBUG was empty), and the next expect fails: no control called Agents Claude Code Uninstall. Two clicks (count 2) did nothing either; removing the row contextMenu and help did not change it. Scripts/playtest.sh Scripts/playtest/ask-deletes-an-older-model-walk.json --no-build passes, but its 2-delete-asks-sc.png shows no dialog after the press, so it never proved the press. The same buttons pressed through the accessibility tree (osascript, AXPress) worked at once. Press delivery: PlaytestHarness.swift around 8160-8215 (postEvent up, sendEvent down to the target window); panelWindows() includes the Settings window (around 7974). Suspect the synthetic mouse down into a non-key Settings window (SettingsWindowController hosts an NSHostingController in a plain NSWindow) is taken as a click to make it key.",
+  "acceptance": [
+    "A walk pressing Install on the Claude Code row of Settings > Agents (with setup agentHome) sees the row change to Uninstall",
+    "The ask-deletes-an-older-model walk shows the Delete question after its press",
+    "agents-section-in-settings-walk presses Install and Uninstall on both rows and stays green"
+  ],
+  "log": [
+    {
+      "t": "2026-10-27T03:40:32.662Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "agents-section-in-settings-walk",
+    "ask-deletes-an-older-model-walk"
+  ]
+}

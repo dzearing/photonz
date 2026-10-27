@@ -223,6 +223,10 @@ struct PlaytestSetupRunner {
             said.append("Ask has only \(only.isEmpty ? "no model" : only.joined(separator: ", ")) downloaded")
         }
         if setup.offline { said.append(PlaytestSetupRunner.goOffline()) }
+        // Every walk says afresh: Settings > Agents installs into the real
+        // home unless the walk gives it an empty one of its own.
+        AgentInstaller.walkHome = setup.agentHome ? PlaytestSetupRunner.emptyAgentHome() : nil
+        if setup.agentHome { said.append("Settings > Agents installs into a home folder of the walk's own") }
         if setup.timelineOpen == true {
             said.append("a recording opens in Edit mode")
         }
@@ -296,6 +300,14 @@ struct PlaytestSetupRunner {
         }
         return reached.value ? "could NOT go offline: huggingface.co still answered"
             : "offline: nothing beyond this Mac answers (huggingface.co refused)"
+    }
+
+    /// An empty home for Settings > Agents to install into, made afresh.
+    static func emptyAgentHome() -> String {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "photonz-walk-agent-home")
+        try? FileManager.default.removeItem(at: folder)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder.path
     }
 
     static func emptyAskModels() -> URL {

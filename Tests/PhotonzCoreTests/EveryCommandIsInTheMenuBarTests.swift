@@ -137,6 +137,7 @@ struct EveryCommandIsInTheMenuBarTests {
         "Delete Style": "a saved caption style is a tile in the Captions section, and nothing about the document says which one is in hand",
         "Delete Preset": "a saved title preset is a tile on the Library shelf, and nothing about the document says which one is in hand",
         "Insert at Playhead": "a title tile's preset is in the bar already, by name, under Sequence > Insert Title Page and Insert Name Card, whose rows are built from the preset list",
+        "Copy Setup Command": "a Settings > Agents row's own fallback, the Terminal line for that one tool; Settings is not a document and the menu bar's rows act on one",
     ]
 
     // MARK: Reading the source

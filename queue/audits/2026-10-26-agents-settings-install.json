@@ -1,0 +1,30 @@
+{
+  "feature": "Install the Photonz server and skill for Claude Code and Copilot from Settings",
+  "epic": "agent-mcp",
+  "summary": "Settings now has an Agents section with a row for Claude Code and one for GitHub Copilot. One Install press sets Photonz up in that tool (its server and its skill, both shipped inside the app), and one Uninstall press takes only Photonz's own entries back out. No Terminal, no repo, nothing built on first use.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default (Agents can work in Photonz is on by default in Next). Claude Code and/or VS Code or the Copilot CLI on the Mac.",
+  "switched": {},
+  "try": [
+    { "do": "Open any picture, then press Command-comma and scroll to Agents.", "shot": "2026-10-26-agents-settings-1-not-installed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Install on the Claude Code row.", "shot": "2026-10-26-agents-settings-2-installed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Install on the GitHub Copilot row." },
+    { "do": "In Terminal, cd to any folder with no Photonz source, run claude, and ask it to describe the picture open in Photonz." },
+    { "do": "Do the same in VS Code's Copilot chat (agent mode) or with copilot in Terminal." },
+    { "do": "Right-click a row and choose Copy Setup Command to see the one line it would have run." },
+    { "do": "Press Uninstall on both rows, then run claude mcp list to see Photonz gone and your other servers still there." }
+  ],
+  "evaluate": [
+    "Is one line per row (what it gives you, and whether the tool was found) enough to know what Install will do?",
+    "Should the Agents section sit above Ask in Settings, since it is the newer and more common thing to set up?",
+    "Is it right that the Copilot row also writes the Copilot CLI's config when only VS Code is on the Mac, so the CLI finds Photonz the day it is installed?",
+    "Do you want Update to happen by itself after the app updates, instead of the row saying Set up from another copy with an Update button?"
+  ],
+  "rough": [
+    "No mock covers the Settings window's Agents section; the rows follow the existing Settings page (a title, one secondary line, a button on the right).",
+    "The walk proves the section and both Install buttons are there at Next defaults, but a walk's press does not reach buttons in the Settings window (the existing Ask Delete walk shows the same: its dialog never appears). Install and Uninstall were pressed through the accessibility tree instead, on the real buttons, and the sessions in 2026-10-26-agents-settings-sessions.md ran on what those presses installed. Filed as its own task (see the task log).",
+    "Proof ran on the Probe build, whose server is named photonz-probe; the shipping app installs as photonz and Dev as photonz-dev, so the three sit side by side.",
+    "Install rewrites VS Code's mcp.json and the Copilot CLI's config with every entry kept but in its own formatting (sorted keys, two space indent); a file with comments is refused rather than rewritten.",
+    "Claude Code is found where its installers put it (~/.local/bin, Homebrew, nvm's node folders and a few more); a claude installed somewhere unusual reads as Not on this Mac.",
+    "VS Code's Copilot was not driven headlessly: its config and skill folder were checked on disk (VS Code 1.129 reads ~/.copilot/skills), and the live Copilot session is the Copilot CLI."
+  ]
+}

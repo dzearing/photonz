@@ -156,6 +156,18 @@ cp "$UV_SRC/uv" "$APP/Contents/Helpers/PictureModel/uv"
 cp Vendor/uv/LICENSE "$APP/Contents/Resources/PictureModel/uv-LICENSE.txt"
 cp Scripts/picture-model/server.py Scripts/picture-model/layers.py "$APP/Contents/Resources/PictureModel/"
 
+# The agent server and skill (docs/design/agent-mcp.md, "Install"): the small
+# bridge program an agent's MCP client runs, and the Photonz skill, which
+# Settings > Agents installs into Claude Code and Copilot. Built by the same
+# `swift build` as the app, so a first agent session compiles nothing. The
+# bridge reaches the app it ships in.
+MCP_BIN=.build/arm64-apple-macosx/release/PhotonzMCP
+[[ -x "$MCP_BIN" ]] \
+  || { echo "==> FAILED: the build did not make the agent bridge ($MCP_BIN)" >&2; exit 1; }
+mkdir -p "$APP/Contents/Helpers" "$APP/Contents/Resources/AgentSkill"
+cp "$MCP_BIN" "$APP/Contents/Helpers/photonz-mcp"
+cp -R plugin/skills/photonz "$APP/Contents/Resources/AgentSkill/photonz"
+
 # The type a component tile carries while it is being dragged. EVERY variant
 # declares it, the probe included: a type identifier the system has never heard
 # of is written onto the drag pasteboard with ZERO BYTES behind it, so the
@@ -370,14 +382,15 @@ DEV_SIGNING_WANTED=1
 # Privacy & Security > Microphone): v0.17.0 shipped that way. Dev and probe
 # builds are not hardened, so they never needed it and are left as they are.
 ENTITLEMENTS="Resources/Photonz.entitlements"
-# Ask's model server and its libraries, and the picture model's uv, are signed first, inside out, with the
+# Ask's model server and its libraries, the picture model's uv and the agent
+# bridge are signed first, inside out, with the
 # same identity as the app: notarization wants every Mach-O in the bundle
 # signed (hardened, timestamped), and a helper signed by someone else would not
 # load its libraries under the app's runtime.
 sign_ask_server() {
   local identity="$1"; shift
   for f in "$APP/Contents/Helpers/AskModel/"*.dylib "$APP/Contents/Helpers/AskModel/llama-server" \
-           "$APP/Contents/Helpers/PictureModel/uv"; do
+           "$APP/Contents/Helpers/PictureModel/uv" "$APP/Contents/Helpers/photonz-mcp"; do
     codesign --force "$@" --sign "$identity" "$f"
   done
 }
