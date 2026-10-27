@@ -21994,3 +21994,9 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - `TextReading.shared` (the face scorer's sum) the same way: the first text-reading test 12.9 -> 5.5 s. No test is over 10 s alone now. Whole suite 111 s. Measurements: `queue/audits/2026-10-26-fast-test-suite-measurements.md`, pass 3.
 - A CI flake fixed on the way: an export written twice is judged on its closest of up to three pairs.
 - Open: `Scripts/test-weights.tsv` predates this pass (CI slice 3 is now the long one, 7.4 min); re-measure when it matters.
+
+## 2026-10-26 — Settings > Agents installs Photonz for Claude Code and Copilot
+
+- Shipped: the MCP bridge and skill inside every bundle; Settings > Agents rows with Install/Uninstall for Claude Code and GitHub Copilot (VS Code + Copilot CLI); PhotonzCore AgentSetup with tests; walk setup `agentHome`.
+- Verified with fresh claude and copilot sessions from an empty folder (queue/audits/2026-10-26-agents-settings-sessions.md).
+- Next: the setup window step (the-setup-window-walks-you-through-only-the-step); walk presses in the Settings window do not land (a-walk-can-press-the-buttons-in-the-settings-win).
