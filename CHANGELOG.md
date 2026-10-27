@@ -2,6 +2,16 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.20.0 — 2026-10-27
+
+**Painting holds still.** When you let go of a stroke, nothing you painted before it moves. Earlier strokes no longer go soft and then sharpen, flicker, or redraw, at any zoom. The end of a mouse stroke now thins as you draw, not when you let go. Big brushes keep up better too: large pencil, charcoal and oil strokes are a good deal quicker, and painting zoomed in no longer slows down after a few strokes.
+
+**Opens at login.** Photonz now starts when you log in, with only its menu bar icon showing, so capture is ready from the start. The Open at login switch is at the top of Settings > General, and turning it off there or in System Settings stays off.
+
+**Use Photonz from Claude Code and Copilot.** In Next, Settings > Agents has an Install button for Claude Code and one for GitHub Copilot. It sets them up to reach Photonz, and Uninstall takes it back out. Nothing else needs installing.
+
+**A shorter setup.** In Next, the setup window goes one step at a time and shows only the steps you still need. The last step offers to set up your agents.
+
 ## 0.19.0 — 2026-10-25
 
 **Paint with real brushes.** Press B for the Brush and paint onto a Paint layer. Pick a brush from tiles that each show its own stroke: a graphite Pencil from hard and pale to soft and dark, charcoal, chalk and crayon that catch on the paper grain, a flat marker that darkens where strokes cross, an airbrush that builds up while you hold it, oil paint that carries and smears colour and runs dry, and watercolour washes that pool, bleed, granulate and bloom into each other while wet. Smudge mode smears what is already there. A pen's pressure, tilt and speed shape every brush, and a mouse stroke tapers in and out. Each brush keeps its own settings, shown over the tool bar and in the panel.
