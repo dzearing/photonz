@@ -1,0 +1,34 @@
+{
+  "id": "ask-makes-a-real-photo-when-asked-like-a-kitten",
+  "title": "Ask makes a real photo when asked, like a kitten walking in the snow",
+  "goal": "Typing something like \"generate a photo of a kitten walking in the snow\" into Ask puts a real, photo-style picture on the canvas as a picture layer, made on this Mac. Today Ask's picture model is only used for drawings, and everything it paints is traced into flat vector shapes, so a photo request can never come back as a photo.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 2.5,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-28T01:50:53.738Z",
+  "updated": "2026-10-28T01:51:09.776Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-27, intake: \"i specifically want to be able to say 'generate a photo of a kitten walking in the snow' and it will do that, for example. I don't know who it was set aside\". The last sentence is about MOSS-Image: it was set aside on 2026-10-24 by the intake session's research pass, written into the notes of queue/tasks/p1-high/measure-whether-qwen-image-2-1-can-paint-and-edi.json, NOT by the user. The user never decided it; reconsider it here on measured numbers, not on that note.\n\nWhat exists: Ask's picture model is Z-Image Turbo q8 on mflux/MLX behind a loopback server (Sources/PhotonzCore/AskPictureModelPlan.swift; docs/design/ask.md 'The picture model', ~line 360). Its output is always traced into vector layers by vtracer (Scripts/picture-model/layers.py) and it only serves add_drawing. There is no tool or route that keeps generated pixels as a picture layer; that is the missing piece, and Z-Image Turbo can probably already make photos, so the first step may be a route plus an untraced landing rather than a new model.\n\nOverlap: the in-progress Qwen-Image-2.1 measuring task is measuring the same model for drawings and editing. Share its numbers, do not measure it twice; whichever lands second reads the other's audit.\n\nTraps: never store or code subjects or example pictures (memory: no hardcoded generated content); the picture model needs ~12 GB resident beside the chat model (AskPictureModelPlan.fits); a pasted pixel layer goes through History.perform like any other layer; pixels live in ImageStore, never in the document model.",
+  "acceptance": [
+    "Asking Ask for a photo (\"generate a photo of a kitten walking in the snow\", \"a photo of a red bicycle against a brick wall\") lands one new picture layer holding the generated pixels, untraced, at Next defaults, as one undo step",
+    "Asking for a drawing, an icon or an illustration still goes the existing route (painted then traced into editable layers, or the model's own SVG); Ask picks the route from the request itself, never from stored subjects or hardcoded examples",
+    "The model is picked on MEASURED numbers on this Mac (64 GB M4 Max) and written into the audit: candidates at least Z-Image Turbo already installed (kept untraced), Qwen-Image-2.1, and MOSS-Image, each with seconds per 1024 px picture, peak memory beside the chat model, and a contact sheet of the same 8 photo prompts (people, animals, food, a landscape, a product shot, text on a sign) so the user can compare by eye",
+    "With no picture model on the Mac, a photo request says so in one plain sentence with the Set Up button, and Settings > Ask offers the download with its size",
+    "Walk proving the try path: open a blank canvas, Ask for a photo, a picture layer of the asked size lands and its pixels are not a flat or traced fill (measured: distinct colours and edge detail above a bar that today's traced output FAILS)",
+    "Audit under queue/audits/ with the contact sheets and numbers; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-28T01:50:53.740Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-28T01:51:09.775Z",
+      "note": "folded into ask-can-make-a-photo-as-well-as-an-illustration"
+    }
+  ]
+}
