@@ -14375,3 +14375,5 @@
 {"t":"2026-10-28T13:45:47.585Z","ev":"task_created","id":"history-pane-runs-edge-to-edge-along-the-top","priority":"p1-high","title":"History pane runs edge to edge along the top"}
 {"t":"2026-10-28T13:45:54.087Z","ev":"task_resequenced","id":"history-keeps-the-focused-tile-on-screen-while-a","from":3970,"to":0.000005}
 {"t":"2026-10-28T13:45:54.156Z","ev":"task_resequenced","id":"history-pane-runs-edge-to-edge-along-the-top","from":3980,"to":0.000006}
+{"t":"2026-10-28T13:47:54.939Z","ev":"task_created","id":"capture-toast-is-half-the-size-and-far-less-in-t","priority":"p1-high","title":"Capture toast is half the size and far less in the way"}
+{"t":"2026-10-28T13:47:58.344Z","ev":"task_resequenced","id":"capture-toast-is-half-the-size-and-far-less-in-t","from":3970,"to":0.000007}
