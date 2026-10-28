@@ -132,6 +132,8 @@ struct CaptureThumbnailImage: View {
     /// as the picture's own shape asks for" — the history strip's free width.
     let available: CGSize
     var cornerRadius: CGFloat = 8
+    /// Smaller play badge and pills, for a picture drawn small (the toast).
+    var compactBadges: Bool = false
     /// Accent ring on the PICTURE (the focused or just-captured history tile),
     /// rather than on the wider hit target around a small capture.
     var ringed: Bool = false
@@ -165,7 +167,8 @@ struct CaptureThumbnailImage: View {
             if entry.kind == .video {
                 VideoBadgeOverlay(duration: thumbnail.duration,
                                   saving: store?.writingVideos[entry.url],
-                                  edited: store?.editedVideos.contains(entry.url) == true)
+                                  edited: store?.editedVideos.contains(entry.url) == true,
+                                  compact: compactBadges)
             }
         }
         .overlay {
@@ -203,11 +206,13 @@ struct VideoBadgeOverlay: View {
     var saving: VideoSaveProgress? = nil
     /// The tile is an edit of the recording, kept beside it as a project.
     var edited: Bool = false
+    /// Drawn small: a smaller badge and pills that keep clear of each other.
+    var compact: Bool = false
 
     var body: some View {
         ZStack {
             Image(systemName: "play.circle.fill")
-                .font(.system(size: 34))
+                .font(.system(size: compact ? 20 : 34))
                 .foregroundStyle(.white, .black.opacity(0.45))
                 .shadow(radius: 3)
             VStack(spacing: 0) {
@@ -237,12 +242,13 @@ struct VideoBadgeOverlay: View {
     /// White on a dark capsule: readable over any recording's poster.
     private func pill(_ text: String) -> some View {
         Text(text)
-            .font(.caption2.weight(.semibold).monospacedDigit())
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
+            .font(compact ? .system(size: 8, weight: .semibold).monospacedDigit()
+                          : .caption2.weight(.semibold).monospacedDigit())
+            .padding(.horizontal, compact ? 3 : 5)
+            .padding(.vertical, compact ? 1 : 2)
             .background(.black.opacity(0.55), in: Capsule())
             .foregroundStyle(.white)
-            .padding(5)
+            .padding(compact ? 3 : 5)
     }
 }
 

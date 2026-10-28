@@ -22099,3 +22099,35 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
   Photonz MCP server calls a tool, and the helper inside
   `/Applications/Photonz.app` opens its own app. `PHOTONZ_APP=dev` in the
   server's env points it at the dev build.
+
+## 2026-10-28 — History: remembers its filter, edge to edge, resizable, keeps up with a held arrow; a smaller capture toast
+
+- Built in this session at the user's ask instead of left to the loop (the
+  five p1 tasks filed this morning).
+- Filter: `HistoryFilterChoice` opens on the filter picked last
+  (`HistoryOverlay.filterKey`). New walk memory area `history` (filter and
+  pane height); the four History walks that did not forget everything now
+  forget it. Walk `history-remembers-the-filter-walk`.
+- Edge to edge: `HistoryOverlayLayout.edgeToEdge`, full width and hard under
+  the menu bar; the 8pt outer padding is gone and only the bottom corners are
+  round. Standard height is 192 (`HistoryPaneSize.standard`), the same strip.
+- Resize: a grip along the bottom edge (resize cursor, a small bar on hover)
+  drags the pane between 150pt and 60% of the screen; the height is kept
+  (`HistoryOverlayController.heightKey`). Tiles grow with it through
+  `HistoryPaneMetrics`, worked out from the pane height. Measuring the height
+  in each strip with a GeometryReader made filter switches stall 100 to
+  220ms (`history-filter-switch-speed-walk` failed 2 of 3; 3 of 3 pass now).
+  No walk drags the edge yet: the grip lives in the History panel, which
+  `dragGrip` cannot post into.
+- Held arrow: reproduced with a new `holdAppKey` step (one press, repeats,
+  one release; fails if the focused tile leaves the strip): Right held went
+  off screen 7 times. Each repeat restarted a 0.18s centring slide. Held, the
+  strip now jumps straight to the focus; a single press slides only as far as
+  it takes, like Finder. Walk `history-keeps-up-with-a-held-arrow-walk`.
+- Toast: thumbnail box 196x124 down to 128x80, padding 12 to 8, corner 16 to
+  12, caption2 text, 20pt hover buttons, compact video badges. The card is
+  about 160pt wide, from about 236.
+- Drag picture: rebuilt around `beginDraggingSession` on the strip's host, so
+  it holds the session and hides the picture the moment the ghost appears.
+  The user reported the first version did nothing; still to be confirmed
+  under a real pointer.

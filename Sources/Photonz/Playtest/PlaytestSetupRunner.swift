@@ -131,6 +131,8 @@ extension PlaytestMemory {
             [RecentDocumentsStore.defaultsKey]
         case .titlePresets:
             [TitlePresetStore.key]
+        case .history:
+            [HistoryOverlay.filterKey, HistoryOverlayController.heightKey]
         }
     }
 }

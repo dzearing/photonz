@@ -1273,6 +1273,10 @@ private final class Run {
             await sleep(0.2)
             note(number, step.name, "\(chord) reached \(destination.path) and it ran", state: describe())
 
+        case .holdAppKey(let key, let modifiers, let repeats, let everyMS):
+            note(number, step.name, try await holdAppKey(key, modifiers: modifiers, repeats: repeats,
+                                                         everyMS: everyMS),
+                 state: describe())
         case .appKey(let key, let modifiers, let longestUnderMS):
             // Handed to the application, not posted into the window, because an
             // application-wide event monitor is the only thing that sees a
@@ -19239,6 +19243,68 @@ private final class Run {
     /// which is how a walk came to "prove" the selection slot cycling that a
     /// person's keyboard could not (2026-09-03). Get the window wrong and
     /// ordinary typing stops landing in the inspector's fields.
+    /// A key held down (`holdAppKey`): one press, the repeats a keyboard
+    /// sends while it is held, one release. While History is up the focused
+    /// tile has to be on screen after every one of them, and a quarter of a
+    /// second after the release: holding an arrow used to leave the focus far
+    /// off the right hand end (user 2026-10-28).
+    private func holdAppKey(_ key: PlaytestKey, modifiers: [PlaytestModifier], repeats: Int,
+                            everyMS: Double) async throws -> String {
+        let strip = NSApp.windows.first { $0.isVisible && $0.title == "Capture History" }
+        let window = try strip ?? appKeyTarget()
+        let flags = eventFlags(modifiers)
+        func send(down: Bool, repeating: Bool) {
+            let typed = Self.typedCharacters(key, flags: flags, down: down)
+            guard let event = NSEvent.keyEvent(
+                with: down ? .keyDown : .keyUp, location: .zero, modifierFlags: flags,
+                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+                context: nil, characters: typed.characters,
+                charactersIgnoringModifiers: typed.ignoringModifiers,
+                isARepeat: repeating, keyCode: key.keyCode) else { return }
+            NSApp.sendEvent(event)
+            if window === strip, NSApp.keyWindow == nil, window.isVisible { window.sendEvent(event) }
+        }
+        /// Where the focused tile is, or why it is not on screen.
+        func offScreen() -> String? {
+            guard let strip, let reading = HistoryOverlayProbe.shared.read?(),
+                  let focused = reading.focused else { return nil }
+            let name = focused.url.deletingPathExtension().lastPathComponent
+            guard let tile = try? panelTarget(name, kind: .tile), tile.window === strip else {
+                return "\(name) has the focus and has no tile built at all"
+            }
+            let frame = tile.convert(tile.bounds, to: nil)
+            let width = strip.contentView?.bounds.width ?? strip.frame.width
+            guard frame.minX >= -0.5, frame.maxX <= width + 0.5 else {
+                return "\(name) has the focus and is drawn at x \(Int(frame.minX)) to \(Int(frame.maxX)), "
+                    + "outside the strip's 0 to \(Int(width))"
+            }
+            return nil
+        }
+        var misses: [String] = []
+        send(down: true, repeating: false)
+        for index in 0...repeats {
+            if index > 0 { send(down: true, repeating: true) }
+            await sleep(everyMS / 1000)
+            if let miss = offScreen() { misses.append("after repeat \(index): \(miss)") }
+        }
+        send(down: false, repeating: false)
+        await sleep(0.25)
+        let landed = HistoryOverlayProbe.shared.read?().focused?.url.lastPathComponent ?? "nothing"
+        if let miss = offScreen() {
+            throw Failure(description: "held \(Self.chord(key, modifiers)) for \(repeats) repeats, "
+                + "\(Int(everyMS))ms apart, and once it was let go \(miss)"
+                + (misses.isEmpty ? "" : "; it fell behind \(misses.count) times while held, first "
+                   + misses[0]))
+        }
+        if !misses.isEmpty {
+            throw Failure(description: "held \(Self.chord(key, modifiers)) for \(repeats) repeats, "
+                + "\(Int(everyMS))ms apart, and the focused tile went off screen \(misses.count) "
+                + "times while it was held, first \(misses[0]); it ended on \(landed)")
+        }
+        return "held \(Self.chord(key, modifiers)) for \(repeats) repeats \(Int(everyMS))ms apart; "
+            + "the focused tile stayed on screen after every one and ended on \(landed)"
+    }
+
     private func keyEvent(_ key: PlaytestKey, flags: NSEvent.ModifierFlags,
                           down: Bool, in window: NSWindow) -> NSEvent? {
         let typed = Self.typedCharacters(key, flags: flags, down: down)

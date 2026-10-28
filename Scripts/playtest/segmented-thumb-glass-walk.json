@@ -2,7 +2,7 @@
   "out": "/tmp/photonz-playtest/segmented-thumb-glass",
   "seed": "The user, 2026-09-30: 'this IS the native slider, but it's ugly and I want to go back to our custom one', with the picked choice a TINTED Liquid Glass chip, white word on it, and every word readable in every state ('I do not want white on white or black on black cases EVER'). At Next defaults with no flag set, this walk picks a label so the Text section's Across and Down rows show, photographs them in dark and light, presses Center and then Right with the pointer on their faces (photographing straight after the press to catch the chip mid-travel) and checks each pick took, then opens a recording and switches the title bar's View | Edit with Cmd-2 and with the pointer both ways, photographing it in light and dark. Last it opens the history bar and photographs its filter in light and dark: the same rail, the same tinted chip. segmented-history-film-walk clicks and films the history filter.",
   "setup": {
-    "forget": [
+    "forget": ["history", 
       "text",
       "shapes",
       "tools"

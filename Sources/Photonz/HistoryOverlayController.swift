@@ -27,9 +27,14 @@ final class HistoryOverlayController {
 
     var isShown: Bool { panel != nil }
 
-    private static let panelHeight: CGFloat = 208
-    /// Gap between the screen's visible top edge and the panel's top.
-    private static let topInset: CGFloat = 8
+    /// How tall the pane was last dragged (`HistoryPaneSize`).
+    static let heightKey = "history.paneHeight"
+    /// The display the pane is on, and the room taken by the permission
+    /// hint, while it is up.
+    private var screenFrame: CGRect = .zero
+    private var reserve: CGFloat = 0
+    /// How far under the pane's bottom edge the pointer took hold of it.
+    private var grabbedBelowBottom: CGFloat?
     /// Extra panel height reserved when the Screen-Recording permission hint is
     /// shown, so the banner adds to the panel instead of stealing height from the
     /// capture strip (which clipped the thumbnails' action buttons). The banner is
@@ -39,18 +44,16 @@ final class HistoryOverlayController {
 
     func show(content: some View, on screen: NSScreen, reserveForPermissionHint: Bool = false) {
         if panel != nil { return }
-        let panelHeight = Self.panelHeight + (reserveForPermissionHint ? Self.permissionHintReserve : 0)
-        // Equal insets: make the left/right screen margin match the *physical*
-        // top margin (the menu-bar strip plus `topInset`), so the overlay is
-        // framed evenly and the content area is much wider than the old fixed
-        // 1100pt cap. Computed per-display so it's exact on notch vs external
-        // screens. `maxWidth` is lifted so the inset — not a cap — sets the width.
-        let menuBar = max(0, screen.frame.maxY - screen.visibleFrame.maxY)
-        let sideInset = menuBar + Self.topInset
-        let layout = HistoryOverlayLayout(screen: screen.visibleFrame, height: panelHeight,
-                                          maxWidth: .greatestFiniteMagnitude,
-                                          horizontalInset: sideInset,
-                                          topInset: Self.topInset)
+        // Edge to edge under the menu bar (user 2026-10-28: "These gaps
+        // shouldn't be here, it should be edge to edge hugging the top"), as
+        // tall as it was last dragged.
+        reserve = reserveForPermissionHint ? Self.permissionHintReserve : 0
+        screenFrame = screen.visibleFrame
+        let kept = UserDefaults.standard.object(forKey: Self.heightKey) as? Double
+        let panelHeight = HistoryPaneSize.height(kept: kept.map { CGFloat($0) },
+                                                 screenHeight: screenFrame.height) + reserve
+        HistoryPaneMetrics.shared.paneIs(panelHeight - reserve)
+        let layout = HistoryOverlayLayout.edgeToEdge(screen: screenFrame, height: panelHeight)
         self.layout = layout
 
         let panel = HistoryOverlayPanel(
@@ -114,6 +117,34 @@ final class HistoryOverlayController {
             // main-actor `orderOut` call is statically clean under Swift 6.
             MainActor.assumeIsolated { panel.orderOut(nil) }
         })
+    }
+
+    // MARK: - Resizing from the bottom edge
+
+    /// The bottom edge was taken hold of.
+    func beginResize() {
+        guard let panel else { return }
+        grabbedBelowBottom = panel.frame.minY - NSEvent.mouseLocation.y
+    }
+
+    /// The bottom edge follows the pointer; the top stays under the menu bar.
+    func resizeToPointer() {
+        guard let panel, let grabbed = grabbedBelowBottom else { return }
+        let height = HistoryPaneSize.dragged(top: panel.frame.maxY, pointerY: NSEvent.mouseLocation.y,
+                                             grabbedBelowBottom: grabbed,
+                                             screenHeight: screenFrame.height) + reserve
+        guard abs(height - panel.frame.height) >= 0.5 else { return }
+        HistoryPaneMetrics.shared.paneIs(height - reserve)
+        let layout = HistoryOverlayLayout.edgeToEdge(screen: screenFrame, height: height)
+        self.layout = layout
+        panel.setFrame(layout.presentedFrame, display: true)
+    }
+
+    /// Let go: the height is kept for next time.
+    func endResize() {
+        grabbedBelowBottom = nil
+        guard let panel else { return }
+        UserDefaults.standard.set(Double(panel.frame.height - reserve), forKey: Self.heightKey)
     }
 
     // MARK: - Dismiss monitors

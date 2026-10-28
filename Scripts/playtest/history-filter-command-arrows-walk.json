@@ -1,7 +1,7 @@
 {
  "out": "/tmp/photonz-playtest/history-filter-command-arrows",
  "setup": {
-  "forget": [
+  "forget": ["history", 
    "text",
    "shapes",
    "tools"

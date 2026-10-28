@@ -561,23 +561,26 @@ private struct ToastView: View {
     var fadeSeconds: Double = FeatureCatalog.captureToastFadeSeconds
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 5) {
             thumbnail
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Image(systemName: said.symbol)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(said.state == .done ? .green : said.state == .failed ? .orange : .secondary)
                 Text(said.words)
-                    .font(.caption.weight(.medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
             }
+            .frame(maxWidth: Self.thumbnailSize.width)
             if case .always(let shortcut) = editAction {
                 editRow(shortcut: shortcut)
             }
         }
-        .padding(12)
-        .regularGlass(in: .rect(cornerRadius: 16))
-        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .padding(8)
+        .regularGlass(in: .rect(cornerRadius: 12))
+        .contentShape(RoundedRectangle(cornerRadius: 12))
         // Double-click anywhere on the toast = Edit (same as the hover button).
         .onTapGesture(count: 2, perform: onEdit)
         .overlay(alignment: .topTrailing) { hoverControls }
@@ -602,7 +605,10 @@ private struct ToastView: View {
 
     /// The box the toast gives a capture. The picture is centred in it at
     /// whatever size `ThumbnailFit` allows, so the box never changes shape.
-    private static let thumbnailSize = CGSize(width: 196, height: 124)
+    /// About half what it was (user 2026-10-28: "I want the thumbnail to be
+    /// about half the size if possible, the card must be a lot less
+    /// obnoxiously large").
+    private static let thumbnailSize = CGSize(width: 128, height: 80)
 
     /// The capture's thumbnail, read live from the store: screenshots show
     /// immediately; a recording's poster frame pops in when its async generation
@@ -615,16 +621,17 @@ private struct ToastView: View {
                 // cropped rather than squeezed into a sliver inside this box,
                 // and a small one is shown at its own size rather than blown up.
                 CaptureThumbnailImage(entry: entry, thumbnail: thumbnail,
-                                      available: Self.thumbnailSize, cornerRadius: 10, store: store)
+                                      available: Self.thumbnailSize, cornerRadius: 7, compactBadges: true,
+                                      store: store)
             } else {
                 ZStack {
                     Rectangle().fill(.quaternary)
                     Image(systemName: entry?.kind == .image ? "photo" : "film")
-                        .font(.system(size: 28))
+                        .font(.system(size: 18))
                         .foregroundStyle(.secondary)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.primary.opacity(0.12)))
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+                .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(.primary.opacity(0.12)))
             }
         }
         .frame(width: Self.thumbnailSize.width, height: Self.thumbnailSize.height)
@@ -651,7 +658,7 @@ private struct ToastView: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(PillActionButtonStyle(prominent: true))
-        .frame(width: 196)
+        .frame(width: Self.thumbnailSize.width)
         .help(shortcut.map { "Edit (\($0))" } ?? "Edit")
     }
 
@@ -672,10 +679,10 @@ private struct ToastView: View {
                 Button(action: onDismiss) { Image(systemName: "xmark") }
                     .help("Dismiss")
             }
-            .buttonStyle(IconActionButtonStyle(diameter: 24))
-            .padding(6)
+            .buttonStyle(IconActionButtonStyle(diameter: 20))
+            .padding(4)
             .background(.thinMaterial, in: Capsule())
-            .padding(6)
+            .padding(4)
             .transition(.opacity.combined(with: .scale(scale: 0.9)))
         }
     }

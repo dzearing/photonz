@@ -13,60 +13,62 @@ import SwiftUI
 // what is being carried; carried off the timeline again, the picture comes
 // back.
 //
-// Only the drag's SOURCE can change that picture once a drag has begun, and
-// the source of a SwiftUI drag is the hosting view it started in, whose own
-// dragging methods are not open to override. Every specialisation of
-// `NSHostingView` is an Objective-C class of its own, though, so the strip's
-// host is a subclass that adds its own "moved to" at run time, calls the one
-// SwiftUI wrote and then looks at the timeline. Nothing outside that one
-// subclass is touched.
+// Only the drag's own session can change that picture once a drag has begun,
+// and a drop target is never handed it. The view a drag is started from is:
+// AppKit hands the session back from `beginDraggingSession`, so the History
+// strip is hosted in a view that keeps it (`GhostingDragHostingView`), and the
+// picture is changed the moment a ghost comes up or goes.
 
-/// Which editors are drawing a file's ghost on their timeline right now, and
-/// the picture each drag in the air was carrying before it was taken away.
+/// The drag in the air out of History, and which editors are drawing a file's
+/// ghost on their timeline right now.
 @MainActor enum TimelineDragPicture {
 
     /// Editors with a file ghost up, by identity.
     private static var ghosts: Set<ObjectIdentifier> = []
 
-    /// The drag whose picture is put away, and what it was, item by item.
-    private static var session: ObjectIdentifier?
-    private static var kept: [Int: [NSDraggingImageComponent]] = [:]
+    /// The drag a History tile started, while it is in the air.
+    private static var session: NSDraggingSession?
+
+    /// What its picture was, item by item, while it is put away.
+    private static var kept: [Int: [NSDraggingImageComponent]]?
+
+    /// A drag began off a History tile.
+    static func began(_ dragging: NSDraggingSession) {
+        session = dragging
+        kept = nil
+        refresh()
+    }
 
     /// An editor's ghost came up or went.
     static func ghost(_ shown: Bool, in editor: ObjectIdentifier) {
         if shown { ghosts.insert(editor) } else { ghosts.remove(editor) }
+        refresh()
     }
 
-    static var isGhostUp: Bool { !ghosts.isEmpty }
-
-    /// The drag moved: its picture goes while a ghost is up and comes back
-    /// when it is not. Free when nothing changed, since it runs on every move.
-    static func follow(_ dragging: NSDraggingSession) {
-        let id = ObjectIdentifier(dragging)
-        if session != id {
-            guard isGhostUp else { return }
-            session = id
-            kept = [:]
-        }
-        let hide = isGhostUp
-        guard hide == kept.isEmpty else { return }
+    /// The picture goes while a ghost is up and comes back when it is not.
+    private static func refresh() {
+        guard let session else { return }
+        let hide = !ghosts.isEmpty
+        guard hide != (kept != nil) else { return }
         var items: [(NSDraggingItem, Int)] = []
-        dragging.enumerateDraggingItems(options: [], for: nil, classes: [NSPasteboardItem.self],
-                                        searchOptions: [:]) { item, index, _ in
+        session.enumerateDraggingItems(options: [], for: nil, classes: [NSPasteboardItem.self],
+                                       searchOptions: [:]) { item, index, _ in
             items.append((item, index))
         }
         if hide {
+            var pictures: [Int: [NSDraggingImageComponent]] = [:]
             for (item, index) in items {
-                kept[index] = item.imageComponents ?? []
+                pictures[index] = item.imageComponents ?? []
                 item.imageComponentsProvider = { [] }
             }
+            kept = pictures
         } else {
+            let pictures = kept ?? [:]
             for (item, index) in items {
-                let picture = kept[index] ?? []
+                let picture = pictures[index] ?? []
                 item.imageComponentsProvider = { picture }
             }
-            kept = [:]
-            session = nil
+            kept = nil
         }
     }
 }
@@ -74,37 +76,10 @@ import SwiftUI
 /// A hosting view whose drags hand their picture over to the timeline's
 /// ghost (`TimelineDragPicture`). What the History strip is hosted in.
 final class GhostingDragHostingView<Content: View>: NSHostingView<Content> {
-
-    required init(rootView: Content) {
-        Self.followDrags()
-        super.init(rootView: rootView)
+    override func beginDraggingSession(with items: [NSDraggingItem], event: NSEvent,
+                                       source: any NSDraggingSource) -> NSDraggingSession {
+        let session = super.beginDraggingSession(with: items, event: event, source: source)
+        TimelineDragPicture.began(session)
+        return session
     }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) is not used")
-    }
-
-    /// Adds "moved to" to this class, once: SwiftUI's, then a look at the
-    /// timeline.
-    private static func followDrags() {
-        let cls: AnyClass = self
-        let selector = #selector(NSDraggingSource.draggingSession(_:movedTo:))
-        guard !TimelineDragFollowers.added.contains(ObjectIdentifier(cls)),
-              let parent = class_getSuperclass(cls),
-              let method = class_getInstanceMethod(parent, selector) else { return }
-        TimelineDragFollowers.added.insert(ObjectIdentifier(cls))
-        typealias MovedTo = @convention(c) (AnyObject, Selector, NSDraggingSession, NSPoint) -> Void
-        let swiftUIs = unsafeBitCast(method_getImplementation(method), to: MovedTo.self)
-        let moved: @convention(block) (AnyObject, NSDraggingSession, NSPoint) -> Void = { view, dragging, point in
-            swiftUIs(view, selector, dragging, point)
-            MainActor.assumeIsolated { TimelineDragPicture.follow(dragging) }
-        }
-        class_addMethod(cls, selector, imp_implementationWithBlock(moved), method_getTypeEncoding(method))
-    }
-}
-
-/// The hosting classes that already follow their drags.
-@MainActor private enum TimelineDragFollowers {
-    static var added: Set<ObjectIdentifier> = []
 }
