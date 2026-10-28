@@ -201,6 +201,12 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// for a clip on V1 is a walk about something else. False or nil leaves
     /// it to the app.
     public var timelineOpen: Bool?
+    /// True: every recording this walk opens is zoomed out to twice its
+    /// length, with room after the end, the way a person's opens
+    /// (`TimelineZoom.opening`). False opens it at Fit, because nearly every
+    /// walk clicks at window points measured with the recording across the
+    /// whole lane, and those points would land on other moments.
+    public var timelineRoom: Bool
     /// The probe is the ACTIVE app for the whole walk.
     ///
     /// A walk leaves the person's keyboard alone and never brings the probe
@@ -251,7 +257,8 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
-                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false,
+                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, timelineRoom: Bool = false,
+                front: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false) {
         self.offline = offline
@@ -261,6 +268,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         self.askModelMissing = askModelMissing
         self.history = history
         self.timelineOpen = timelineOpen
+        self.timelineRoom = timelineRoom
         self.front = front
         self.forget = forget
         self.captures = captures
@@ -271,7 +279,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil && !front && history == nil && !timedWithoutMarkers
+            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome
     }
 
@@ -283,7 +291,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     /// The known keys, named in the error when a walk uses another one.
     static let knownKeys = ["agentHome", "askModelMissing", "askModelsOnly", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
-                            "timedWithoutMarkers", "timelineOpen"]
+                            "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
     /// never run Photonz.
@@ -341,6 +349,7 @@ public struct PlaytestSetup: Sendable, Equatable {
                                                   field: "expectNoControl"),
                   flags: try Self.choices(fields["flags"]),
                   timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"),
+                  timelineRoom: try Self.yesOrNo(fields["timelineRoom"], field: "timelineRoom") ?? false,
                   front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
                   history: try Self.count(fields["history"], field: "history"),
                   timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],

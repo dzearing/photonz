@@ -90,7 +90,10 @@ struct TimelineZoomTests {
         let out = TimelineZoom.fit.steppedOut(anchorMS: 6000, documentMS: Self.eightSeconds)
         let back = out.steppedIn(anchorMS: 6000, documentMS: Self.eightSeconds)
         #expect(back.isFit)
-        #expect(back.startMS == 0)
+        // The moment it zoomed about stays where it was on screen, which the
+        // room after the end now leaves it free to do.
+        let span = back.visibleMS(documentMS: Self.eightSeconds)
+        #expect(abs((6000 - back.startMS) / span - 6000.0 / 16_000) < 0.0001)
     }
 
     @Test func aRulerZoomedOutMeasuresPastTheEnd() {
@@ -198,15 +201,14 @@ struct TimelineZoomTests {
 
     // MARK: - The window never runs off either end
 
-    @Test func theWindowIsAlwaysInsideTheDocument() {
-        for scale in [1.0, 2.0, 9.0, 60.0, 300.0, 5000.0] {
+    @Test func theWindowNeverRunsMoreThanHalfPastTheEnd() {
+        for scale in [0.5, 1.0, 2.0, 9.0, 60.0, 300.0, 5000.0] {
             for start in [-90_000.0, 0, 42_000, 299_000, 900_000] {
                 let zoom = TimelineZoom(scale: scale, startMS: start)
                     .clamped(documentMS: Self.fiveMinutes)
                 let span = zoom.visibleMS(documentMS: Self.fiveMinutes)
                 #expect(zoom.startMS >= 0)
-                #expect(zoom.startMS + span <= Self.fiveMinutes + 0.001)
-                #expect(zoom.scale >= 1)
+                #expect(zoom.startMS + span * TimelineZoom.roomShare <= Self.fiveMinutes + 0.001)
                 #expect(zoom.scale >= TimelineZoom.farthestOutScale)
             }
         }
@@ -216,7 +218,47 @@ struct TimelineZoomTests {
         let zoom = TimelineZoom(scale: 10).clamped(documentMS: Self.fiveMinutes)
         #expect(zoom.panned(byMS: -100_000, documentMS: Self.fiveMinutes).startMS == 0)
         let far = zoom.panned(byMS: 900_000, documentMS: Self.fiveMinutes)
-        #expect(abs(far.startMS + far.visibleMS(documentMS: Self.fiveMinutes) - Self.fiveMinutes) < 0.001)
+        // As far along as it goes, half the window is room after the end
+        // (user 2026-10-27: "at least half a screens worth of blank space
+        // always").
+        let span = far.visibleMS(documentMS: Self.fiveMinutes)
+        #expect(abs(far.startMS + span / 2 - Self.fiveMinutes) < 0.001)
+    }
+
+    @Test func atEveryZoomThereIsHalfAWindowOfRoomToScrollInto() {
+        for scale in [1.0, 2.0, 16.0, 1200.0] {
+            let end = TimelineZoom(scale: scale, startMS: .infinity).clamped(documentMS: Self.fiveMinutes)
+            let span = end.visibleMS(documentMS: Self.fiveMinutes)
+            let room = end.startMS + span - Self.fiveMinutes
+            #expect(abs(room - span / 2) < 0.001)
+            #expect(end.canScroll(documentMS: Self.fiveMinutes))
+            #expect(abs(end.scrollableMS(documentMS: Self.fiveMinutes) - (Self.fiveMinutes + span / 2)) < 0.001)
+        }
+    }
+
+    @Test func fitScrollsIntoTheRoomToo() {
+        let fit = TimelineZoom.fit
+        #expect(fit.canScroll(documentMS: Self.eightSeconds))
+        let along = fit.panned(byMS: 60_000, documentMS: Self.eightSeconds)
+        #expect(along.startMS == 4000)
+        #expect(along.reading(documentMS: Self.eightSeconds) == "0:04 to 0:12")
+    }
+
+    @Test func fitFromTheStartShowsAllAndScrolledAlongDoesNot() {
+        #expect(TimelineZoom.fit.showsAll(documentMS: Self.eightSeconds))
+        #expect(TimelineZoom.opening.showsAll(documentMS: Self.eightSeconds))
+        let along = TimelineZoom.fit.panned(byMS: 2000, documentMS: Self.eightSeconds)
+        #expect(!along.showsAll(documentMS: Self.eightSeconds))
+        #expect(!TimelineZoom(scale: 2).showsAll(documentMS: Self.eightSeconds))
+    }
+
+    @Test func aRecordingOpensWithRoomAfterIt() {
+        // What the timeline opens at (user 2026-10-27): twice the recording,
+        // so there is room for the next clip without a press.
+        #expect(TimelineZoom.opening.scale == TimelineZoom.farthestOutScale)
+        #expect(TimelineZoom.opening.startMS == 0)
+        #expect(!TimelineZoom.opening.canScroll(documentMS: Self.eightSeconds))
+        #expect(TimelineZoom.opening.scrollableMS(documentMS: Self.eightSeconds) == 16_000)
     }
 
     // MARK: - Playing does not leave the playhead behind
@@ -252,7 +294,8 @@ struct TimelineZoomTests {
         let moved = zoom.revealing(ms: Self.fiveMinutes, documentMS: Self.fiveMinutes)
         let span = moved.visibleMS(documentMS: Self.fiveMinutes)
         #expect(moved.startMS >= 0)
-        #expect(moved.startMS + span <= Self.fiveMinutes + 0.001)
+        #expect(moved.startMS + span * TimelineZoom.roomShare <= Self.fiveMinutes + 0.001)
+        #expect(moved.contains(ms: Self.fiveMinutes, documentMS: Self.fiveMinutes))
     }
 
     // MARK: - What it says it is showing

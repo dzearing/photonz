@@ -44,6 +44,19 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
     /// the end by aiming at the very last pixel of the lane.
     public static let farthestOutScale: Double = 0.5
 
+    /// What a recording's timeline opens at: as far out as it goes, so the
+    /// room for the next clip is there without a press (user 2026-10-27: "by
+    /// default, we should be zoomed out to that extent").
+    public static let opening = TimelineZoom(scale: farthestOutScale)
+
+    /// How much of the window is always left to scroll past the end, as a
+    /// share of it: at any zoom the window goes on along until half of it is
+    /// empty room after the last clip (user 2026-10-27: "allow them to scroll
+    /// at least half a screens worth of blank space always"). Until then a
+    /// window stopped with the end of the recording on its right hand edge,
+    /// and a clip could only be dropped past the end from Fit or further out.
+    public static let roomShare: Double = 0.5
+
     /// One press of the plus or the minus. Doubling is the step every timeline
     /// in the world uses, and it means five minutes reaches its closest window
     /// in eight presses rather than in fifty.
@@ -78,9 +91,9 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
     /// Exactly the whole document across the width: what Fit puts back.
     public var isFit: Bool { abs(scale - 1) <= 0.0001 }
 
-    /// All of the document is on screen, at Fit or zoomed out past it into
-    /// the room after its end. Nothing is hidden, so there is nothing to
-    /// scroll to and nothing for a playhead to chase.
+    /// The window is at least as wide as the document, at Fit or zoomed out
+    /// past it into the room after its end. Scrolled along into that room,
+    /// the start of the document can still be off screen (`canScroll`).
     public var showsWholeDocument: Bool { scale <= 1.0001 }
 
     public var canZoomOut: Bool { scale > Self.farthestOutScale + 0.0001 }
@@ -89,16 +102,44 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
         scale < Self.widestScale(documentMS: documentMS) - 0.0001
     }
 
+    /// The furthest along a window this wide may start: where half of it is
+    /// room after the end (`roomShare`).
+    static func latestStartMS(span: Double, documentMS length: Double) -> Double {
+        max(0, length - span * roomShare)
+    }
+
     /// Inside the document, at a scale it is allowed to be. Every way of
     /// making one of these ends here, so a window can never hang off the
-    /// start of the strip, and only runs past the end when it is wider than
-    /// the whole document, which is the room a clip is dropped into.
+    /// start of the strip, and runs past the end by no more than the room a
+    /// clip is dropped into (`roomShare`).
     public func clamped(documentMS: Double) -> TimelineZoom {
         let length = max(1, documentMS)
         let scale = Self.allowed(self.scale, documentMS: length)
         let span = length / scale
-        let start = min(max(0, startMS), max(0, length - span))
+        let start = min(max(0, startMS), Self.latestStartMS(span: span, documentMS: length))
         return TimelineZoom(scale: scale, startMS: start)
+    }
+
+    /// How much time a scroll can reach: the document and the room after
+    /// it, or the window itself where that is wider.
+    public func scrollableMS(documentMS: Double) -> Double {
+        let length = max(1, documentMS)
+        let span = visibleMS(documentMS: length)
+        return max(span, Self.latestStartMS(span: span, documentMS: length) + span)
+    }
+
+    /// Every moment of the document is on screen: from its start, and at
+    /// least as wide as it. Scrolled along into the room after the end, the
+    /// start is not.
+    public func showsAll(documentMS: Double) -> Bool {
+        startMS < 0.5 && visibleMS(documentMS: documentMS) >= max(1, documentMS) - 0.5
+    }
+
+    /// Whether there is anywhere along to scroll to, which is what puts the
+    /// scroller up. At Fit there is: half a window of room after the end.
+    public func canScroll(documentMS: Double) -> Bool {
+        let length = max(1, documentMS)
+        return Self.latestStartMS(span: visibleMS(documentMS: length), documentMS: length) > 0.5
     }
 
     public func contains(ms: Double, documentMS: Double) -> Bool {
@@ -163,7 +204,7 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
     /// permanently against the right hand edge, where there is nothing ahead
     /// of it to see and the whole strip slides under the pointer.
     public func revealing(ms: Double, documentMS: Double) -> TimelineZoom {
-        guard !showsWholeDocument, !contains(ms: ms, documentMS: documentMS) else { return self }
+        guard !contains(ms: ms, documentMS: documentMS) else { return self }
         let span = visibleMS(documentMS: documentMS)
         return TimelineZoom(scale: scale, startMS: ms - span * 0.1)
             .clamped(documentMS: documentMS)
@@ -174,8 +215,10 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
     /// What is on screen, in the words the transport uses: `1:00 to 1:30`, or
     /// `all 5:00` when the whole thing is.
     public func reading(documentMS: Double) -> String {
-        guard !showsWholeDocument else { return "all " + MotionStripRuler.timecode(documentMS) }
         let span = visibleMS(documentMS: documentMS)
+        guard !showsAll(documentMS: documentMS) else {
+            return "all " + MotionStripRuler.timecode(documentMS)
+        }
         return MotionStripRuler.timecode(startMS) + " to "
             + MotionStripRuler.timecode(startMS + span)
     }
@@ -262,7 +305,7 @@ public struct TimelineDrawnStretch: Hashable, Sendable {
     /// against the end of a shorter document is held back no further than
     /// the anchor is.
     public func leftEdgeMS(visibleMS: Double, documentMS: Double) -> ClosedRange<Double> {
-        let anchor = min(anchorMS, max(0, documentMS - visibleMS))
+        let anchor = min(anchorMS, TimelineZoom.latestStartMS(span: visibleMS, documentMS: documentMS))
         return anchor...(anchor + stepMS)
     }
 

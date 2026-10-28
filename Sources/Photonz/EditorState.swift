@@ -1529,6 +1529,20 @@ final class EditorState {
     /// every recording in Edit, as a person who goes straight to editing does.
     static var walkOpensRecordingsInEdit = false
 
+    /// What a recording's timeline opens at: twice its length, with room
+    /// after the end (`TimelineZoom.opening`). A walk opens it at Fit unless
+    /// it says `setup.timelineRoom`, because nearly every walk clicks at
+    /// window points measured with the recording across the whole lane.
+    static var openingTimelineZoom: TimelineZoom {
+        #if PHOTONZ_PLAYTEST
+        if PlaytestHarness.isDrivingAWalk, !walkOpensTimelinesWithRoom { return .fit }
+        #endif
+        return .opening
+    }
+    #if PHOTONZ_PLAYTEST
+    static var walkOpensTimelinesWithRoom = false
+    #endif
+
     /// The window is a player right now: no tool bar, no tracks, no panel, no
     /// handles. Everything that folds away in View reads this one answer.
     var isWatching: Bool { documentHasTime && viewEditMode == .view }
@@ -1679,7 +1693,7 @@ final class EditorState {
             if stretch != timelineDrawnStretch { timelineDrawnStretch = stretch }
         }
     }
-    private(set) var timelineZoomScale: Double = 1
+    private(set) var timelineZoomScale: Double = EditorState.openingTimelineZoom.scale
     private(set) var timelineZoomStartMS: Double = 0
     /// Where the window stood the last time it had moved half its own width:
     /// what a clip's bar is cut down to, so a scroll redraws a bar only that
@@ -2040,7 +2054,14 @@ final class EditorState {
     /// A sound or a recording held over the timeline: where it would land if
     /// it were let go of now, which the lanes draw as a ghost
     /// (`EditorState+TimelineDrop`).
-    var timelineFileHover: TimelineFileHover?
+    var timelineFileHover: TimelineFileHover? {
+        didSet {
+            // The picture on the pointer gives way to the ghost.
+            if (oldValue == nil) != (timelineFileHover == nil) {
+                TimelineDragPicture.ghost(timelineFileHover != nil, in: ObjectIdentifier(self))
+            }
+        }
+    }
     /// The file behind that ghost, read off the drag once it arrives.
     @ObservationIgnored var timelineFileInAir: TimelineFileInAir?
     /// The picture each file brought into the Library was read as, so
@@ -3748,7 +3769,7 @@ final class EditorState {
         // reason the playhead goes back to the first frame: how far you had
         // opened out the last recording says nothing about this one
         // (`EditorState+TimelineZoom`).
-        timelineZoom = .fit
+        timelineZoom = Self.openingTimelineZoom
         timelineRowZoom = .compact
         timelineTracksScroll = ScrollPosition(edge: .top)
         // ...and whether it is a player or the editor is this document's

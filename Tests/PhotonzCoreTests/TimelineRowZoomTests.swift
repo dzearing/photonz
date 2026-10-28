@@ -161,7 +161,7 @@ struct TimelineViewMemoryTests {
     @Test func aTimelineAtItsDefaultsLeavesNoRecord() {
         var memory = TimelineViewMemory()
         memory.remember(zoom: TimelineZoom(scale: 4), rows: .compact, for: Self.file)
-        memory.remember(zoom: .fit, rows: .compact, for: Self.file)
+        memory.remember(zoom: .opening, rows: .compact, for: Self.file)
         #expect(memory.isEmpty)
         #expect(memory.recall(for: Self.file) == nil)
     }

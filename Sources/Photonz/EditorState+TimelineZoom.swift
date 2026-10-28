@@ -100,9 +100,24 @@ extension EditorState {
     var canZoomTimelineOut: Bool { canOpenOutTheTimeline && timelineWindow.canZoomOut }
 
     /// Whether the strip is showing less than the whole document, which is
-    /// what puts the overview bar up. Zoomed out past Fit is not: all of the
-    /// document is on screen, with room after it.
-    var isTimelineOpenedOut: Bool { canOpenOutTheTimeline && !timelineWindow.showsWholeDocument }
+    /// what puts the overview bar and the "1:00 to 1:30" reading up. Fit from
+    /// the start is not, so the strip does not grow at Fit.
+    var isTimelineOpenedOut: Bool {
+        canOpenOutTheTimeline && !timelineWindow.showsAll(documentMS: timelineLengthForZoomMS)
+    }
+
+    /// Whether the window has anywhere along to go, which is what puts the
+    /// scroller up and lets a scroll, a drag at the edge or the playhead move
+    /// it. At Fit it has: half a window of room after the end
+    /// (`TimelineZoom.roomShare`). As far out as it goes it has not.
+    var canScrollTimeline: Bool {
+        canOpenOutTheTimeline && timelineWindow.canScroll(documentMS: timelineLengthForZoomMS)
+    }
+
+    /// How much time the scroller spans: the document and the room after it.
+    var timelineScrollableMS: Double {
+        timelineWindow.scrollableMS(documentMS: timelineLengthForZoomMS)
+    }
 
     /// Whether Fit would change anything: zoomed in, or out past the end.
     var canFitTimeline: Bool { canOpenOutTheTimeline && !timelineWindow.isFit }
@@ -147,7 +162,7 @@ extension EditorState {
     /// Slide the window, in the strip's own points. What dragging the overview
     /// does.
     func panTimeline(byMS delta: Double) {
-        guard isTimelineOpenedOut else { return }
+        guard canScrollTimeline else { return }
         setTimelineWindow(timelineWindow.panned(byMS: delta,
                                                 documentMS: timelineLengthForZoomMS))
         rememberTimelineView()
@@ -157,14 +172,14 @@ extension EditorState {
     /// (`TimelineEdgeScroll`). Remembered once, when the drag lets go, rather
     /// than sixty times a second.
     func edgePanTimeline(byMS delta: Double) {
-        guard isTimelineOpenedOut else { return }
+        guard canScrollTimeline else { return }
         setTimelineWindow(timelineWindow.panned(byMS: delta,
                                                 documentMS: timelineLengthForZoomMS))
     }
 
     /// Put the window around a moment. What clicking the overview does.
     func centreTimeline(onMS ms: Double) {
-        guard isTimelineOpenedOut else { return }
+        guard canScrollTimeline else { return }
         setTimelineWindow(timelineWindow.centred(onMS: ms,
                                                  documentMS: timelineLengthForZoomMS))
         rememberTimelineView()
@@ -186,7 +201,7 @@ extension EditorState {
         timelineFollowedMS = documentTimeMS
         // A drag scrolling the timeline at its edge has the window; the
         // playhead does not pull it back from under the hand.
-        guard moved, isTimelineOpenedOut, !timelineEdgeScroll.isFollowing else { return }
+        guard moved, canScrollTimeline, !timelineEdgeScroll.isFollowing else { return }
         setTimelineWindow(timelineWindow.revealing(ms: Double(documentTimeMS),
                                                    documentMS: timelineLengthForZoomMS))
     }

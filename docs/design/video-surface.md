@@ -857,10 +857,17 @@ press, from however far in.
 
 Fit is not the widest view (user 2026-10-27). One press of minus past it shows
 **twice the document**: the recording on the left half and empty room after its
-last clip, which is where a new clip is dropped. With the whole document on
-screen there is nothing to scroll to, so the overview bar stays down and the
-window is pinned to the start. A press that would cross Fit, in or out, stops
-on it (`TimelineZoom.farthestOutScale`, `steppedIn`, `steppedOut`).
+last clip, which is where a new clip is dropped. A recording OPENS there
+(`TimelineZoom.opening`, user 2026-10-28), so the room is there without a
+press. A press that would cross Fit, in or out, stops on it
+(`TimelineZoom.farthestOutScale`, `steppedIn`, `steppedOut`).
+
+At every zoom the window scrolls on past the end until half of it is empty
+room (`TimelineZoom.roomShare`, user 2026-10-28: "allow them to scroll at
+least half a screens worth of blank space always"). So Fit has somewhere to
+scroll to, and the time scroller shows there; only as far out as it goes,
+where half the window is already room, has it nowhere to go. The scroller's
+thumb runs along the document and that room (`scrollableMS`, `canScroll`).
 
 The closest window is **one second across the width**, which on an ordinary
 lane is about six hundred points a second: a spoken word of a third of a second

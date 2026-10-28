@@ -118,7 +118,7 @@ final class TimelineEdgeScroll: NSObject {
         var moved = false
 
         let laneWidth = editor.timelineLaneWidth
-        if editor.isTimelineOpenedOut, laneWidth > 0 {
+        if editor.canScrollTimeline, laneWidth > 0 {
             let points = EdgeAutoscroll.time(laneWidth: laneWidth)
                 .speed(at: hand.laneX, along: laneWidth, arming: timeArming)
                 * CGFloat(seconds)

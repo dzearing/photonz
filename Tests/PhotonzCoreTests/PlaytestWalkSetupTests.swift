@@ -215,6 +215,22 @@ struct PlaytestTimelineSetupTests {
         #expect(away.setup.timelineOpen == false)
     }
 
+    /// Walks click at window points measured with a recording at Fit, so a
+    /// recording opens at Fit in a walk unless it asks for the room after the
+    /// end that a person's recording opens with (`TimelineZoom.opening`).
+    @Test("it can ask for the room after the end a recording opens with")
+    func room() throws {
+        let roomy = try PlaytestScript.decode(Data("""
+        { "setup": { "timelineRoom": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(roomy.setup.timelineRoom)
+        #expect(roomy.setup.isEmpty == false)
+        let plain = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(!plain.setup.timelineRoom)
+    }
+
     @Test("saying nothing leaves it to the app")
     func unsaid() throws {
         let script = try PlaytestScript.decode(Data("""

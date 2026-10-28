@@ -400,8 +400,10 @@ private struct HistoryStripHost: NSViewRepresentable {
     let strip: HistoryStrip
     let shown: Bool
 
+    /// A tile carried over the timeline hands its picture over to the
+    /// clip's ghost there (`TimelineDragPicture`).
     func makeNSView(context: Context) -> NSHostingView<HistoryStrip> {
-        let view = NSHostingView(rootView: strip)
+        let view = GhostingDragHostingView(rootView: strip)
         // It fills whatever room the bar gives it; its content never sizes
         // the bar.
         view.sizingOptions = []

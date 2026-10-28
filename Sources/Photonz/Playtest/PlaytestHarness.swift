@@ -6940,9 +6940,9 @@ private final class Run {
                 }
                 inward ? editor.zoomTimelineIn() : editor.zoomTimelineOut()
             case .timelinePanAlong:
-                guard editor.isTimelineOpenedOut else {
-                    throw Failure(description: "the timeline is showing the whole document, so "
-                        + "there is nowhere to scroll it along to")
+                guard editor.canScrollTimeline else {
+                    throw Failure(description: "the timeline is showing the whole document and the "
+                        + "room after it, so there is nowhere to scroll it along to")
                 }
                 let before = editor.timelineWindow.startMS
                 editor.panTimeline(byMS: editor.timelineWindow
@@ -21125,8 +21125,15 @@ extension Run {
         }
         guard release else {
             taker.draggingExited(info)
-            await sleep(0.1)
+            await sleep(0.3)
+            // Carried away again without landing, the ghost goes with it,
+            // and the picture on the pointer comes back (`TimelineDragPicture`).
+            if let left = editor.timelineFileHover {
+                throw Failure(description: "\(url.lastPathComponent) was carried off the timeline without "
+                    + "landing and its ghost stayed behind, saying \"\(left.note)\"")
+            }
             return "\(url.lastPathComponent) held over \(track) at \(seconds)s, saying \"\(sentence)\"\(held)"
+                + ", then carried off again, and the ghost went with it"
         }
         let before = document.allLayers.count
         // Letting go is the press a person makes, so it is timed like one:
@@ -21597,7 +21604,7 @@ extension Run {
         func atAnEndOfTime() -> Bool {
             let window = editor.timelineWindow
             let span = window.visibleMS(documentMS: length)
-            return window.startMS < 1 || window.startMS + span > length - 1
+            return window.startMS < 1 || window.startMS + span * TimelineZoom.roomShare > length - 1
                 || !editor.canOpenOutTheTimeline
         }
         func atAnEndOfRows() -> Bool {

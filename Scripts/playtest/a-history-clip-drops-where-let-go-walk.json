@@ -7,7 +7,8 @@
     "timelineOpen": true,
     "captures": [
       "sample-recording"
-    ]
+    ],
+    "timelineRoom": true
   },
   "steps": [
     {
@@ -21,6 +22,10 @@
     {
       "do": "action",
       "action": "videoPause"
+    },
+    {
+      "do": "expectTimeline",
+      "zoomScale": 0.5
     },
     {
       "do": "shortcut",
@@ -40,6 +45,24 @@
       "do": "describe",
       "stage": "0-history-over-a-recording",
       "note": "An eight second recording open, and History down from the top with that same recording in it. Each History tile carries the very payload its own drag hands over, so what lands here is what a pointer pulls off the tile"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Tutorial Sample.mp4",
+      "track": "V1",
+      "seconds": 6,
+      "release": false,
+      "says": "V1 \u00b7 0:06"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "0-carried-off",
+      "note": "Held over V1 at six seconds and carried off again without letting go: the ghost goes with the drag and nothing lands"
     },
     {
       "do": "dropOnTimeline",
@@ -118,14 +141,6 @@
       "seconds": 0.6
     },
     {
-      "do": "action",
-      "action": "timelineZoomOut"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
-    },
-    {
       "do": "expectTimeline",
       "zoomScale": 0.5
     },
@@ -153,7 +168,7 @@
     {
       "do": "describe",
       "stage": "3-past-the-end",
-      "note": "Zoomed out one press past Fit, there is room after the last clip. Let go at twelve seconds, four past the end, the clip lands at 0:12 with the gap kept before it, and the recording now runs to twenty seconds"
+      "note": "A recording opens zoomed out to twice its length, so there is room after the last clip without a press. Let go at twelve seconds, four past the end, the clip lands at 0:12 with the gap kept before it, and the recording now runs to twenty seconds"
     },
     {
       "do": "snapshot",

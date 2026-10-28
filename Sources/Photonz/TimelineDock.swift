@@ -711,7 +711,7 @@ struct TimelineDock: View {
             return true
         }
         let sideways = abs(dx) > abs(dy) ? dx : (event.modifierFlags.contains(.shift) ? dy : 0)
-        guard sideways != 0, editorState.isTimelineOpenedOut else { return false }
+        guard sideways != 0, editorState.canScrollTimeline else { return false }
         let ms = editorState.motionStripRuler.msSpanning(fraction: Double(-sideways / laneWidth))
         editorState.panTimeline(byMS: ms)
         return true

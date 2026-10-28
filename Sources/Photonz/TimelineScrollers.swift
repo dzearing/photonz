@@ -26,11 +26,13 @@ struct TimelineTimeScroller: View {
 
     var body: some View {
         let length = editorState.timelineLengthForZoomMS
+        // The thumb runs along the document and the room after it.
+        let reach = editorState.timelineScrollableMS
         let window = editorState.timelineWindow
         let span = window.visibleMS(documentMS: length)
-        let showing = editorState.isTimelineOpenedOut
-        let x = laneWidth * CGFloat(window.startMS / length)
-        let width = max(24, laneWidth * CGFloat(span / length))
+        let showing = editorState.canScrollTimeline
+        let x = laneWidth * CGFloat(window.startMS / reach)
+        let width = max(24, laneWidth * CGFloat(span / reach))
         let active = isHovered || grabbedAtMS != nil
         ZStack(alignment: .leading) {
             Capsule()
@@ -41,7 +43,7 @@ struct TimelineTimeScroller: View {
                 Capsule()
                     .fill(VideoKit.Palette.accent.opacity(0.7))
                     .frame(width: 1.5, height: Self.height)
-                    .offset(x: min(max(0, laneWidth * CGFloat(Double(editorState.documentTimeMS) / length)),
+                    .offset(x: min(max(0, laneWidth * CGFloat(Double(editorState.documentTimeMS) / reach)),
                                    laneWidth - 1.5))
                 Capsule()
                     .fill(Color.primary.opacity(active ? 0.45 : 0.28))
@@ -55,17 +57,17 @@ struct TimelineTimeScroller: View {
         .animation(.easeOut(duration: 0.12), value: active)
         .contentShape(Rectangle())
         .playtestHover("Timeline overview") { isHovered = $0 }
-        .gesture(drag(length: length, span: span), including: showing ? .all : .none)
+        .gesture(drag(length: length, reach: reach, span: span), including: showing ? .all : .none)
         .accessibilityLabel("Where you are in the recording")
         .panelHelp(showing ? "Drag to move along the recording" : "")
         .playtestField("Timeline overview")
         .panelReadout("overview \(editorState.timelineWindowReading)")
     }
 
-    private func drag(length: Double, span: Double) -> some Gesture {
+    private func drag(length: Double, reach: Double, span: Double) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                let ms = Double(min(max(0, value.location.x), laneWidth) / max(1, laneWidth)) * length
+                let ms = Double(min(max(0, value.location.x), laneWidth) / max(1, laneWidth)) * reach
                 let held: Double
                 if let grabbedAtMS {
                     held = grabbedAtMS

@@ -22068,3 +22068,34 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
   AppKit drop destination, SwiftUI's DropDelegate cannot touch the drag image);
   then the default zoom of twice the length with half a window of room (Core
   tests written, set aside uncommitted).
+
+## 2026-10-28 — Recordings open zoomed out; the tile picture gives way to the ghost
+
+- A recording's timeline opens at `TimelineZoom.opening` (twice its length),
+  and at every zoom the window scrolls on until half of it is room after the
+  end (`TimelineZoom.roomShare`, `scrollableMS`, `canScroll`). Fit can scroll
+  into that room, so the time scroller shows at Fit; only fully zoomed out has
+  nowhere to go. `canScrollTimeline` (new) drives the scroller, scroll wheel,
+  edge scroll and playhead following; `isTimelineOpenedOut` now means "not all
+  of the document is on screen" (`TimelineZoom.showsAll`) and only puts up the
+  overview bar and the reading, so nothing moves at Fit. Zooming in from
+  the room keeps the anchor where it is on screen rather than snapping to 0.
+  `TimelineViewMemory` leaves no record for the opening view instead of Fit.
+- Walks open recordings at Fit (`EditorState.openingTimelineZoom`): nearly
+  every walk clicks at window points measured with the recording across the
+  lane, and the first run of the opening zoom moved those points onto other
+  clips (`a-click-on-a-clip-piece-picks-it-walk`, `a-gap-between-clips-closes-walk`).
+  A walk that wants what a person gets says `"timelineRoom": true` in its
+  setup; `a-history-clip-drops-where-let-go-walk` does.
+- The History strip is hosted in `GhostingDragHostingView`, which adds its own
+  `draggingSession(_:movedTo:)` to that one class at run time (SwiftUI's is
+  not open to override), calls SwiftUI's, then empties the drag's picture
+  while a file ghost is up on any timeline and puts it back when the ghost
+  goes (`TimelineDragPicture`). NOT verified under a real pointer: walks
+  cannot start a drag session and this terminal has no Accessibility grant.
+- `dropOnTimeline` with `"release": false` now fails if the ghost outlives the
+  drag; the History walk carries a tile over and off again.
+- Found why the installed Photonz keeps reopening: a Claude session with the
+  Photonz MCP server calls a tool, and the helper inside
+  `/Applications/Photonz.app` opens its own app. `PHOTONZ_APP=dev` in the
+  server's env points it at the dev build.
