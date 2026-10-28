@@ -4,12 +4,12 @@
   "goal": "Every icon button that works looks like it works. The x that removes an effect, the reorder grip beside it, and every other active icon button in the panels are drawn at the same strength as their working neighbours (like the eye). Faint grey is kept for things that really are disabled.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 180,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:28:55.368Z",
-  "updated": "2026-10-26T14:15:30.540Z",
+  "updated": "2026-10-28T14:26:10.398Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'the \"remove\" x button on effects seems disabled but it is not. buttons which are active should not look diminished. look at the eye visibility icon button next to it.' Screenshot: queue/audits/2026-10-24-user-effect-remove-looks-disabled.png (Shadow effect: grip, eye bright, x faint). Confirmed in code: Sources/Photonz/EffectsListRow.swift:220-232 removeButton sets .foregroundStyle(.tertiary) on an enabled button, and the grip at :200-204 is .tertiary at rest. The same pattern is likely elsewhere: there are 93 .foregroundStyle(.tertiary) uses in Sources/Photonz, most of them text, so sort buttons from labels. Candidates to check: MotionListInspector.swift:186, PropertyKeysInspector.swift:689, MotionStripView.swift:247 and TimelineTrackRows.swift:1627 (xmarks), plus the Motion header's play button in the same screenshot, which also looks dim. Keep the mock's quiet look: quiet means the same tone as the eye, not fainter.",
@@ -44,6 +44,10 @@
     {
       "t": "2026-10-26T14:15:30.539Z",
       "note": "seq 130 -> 150"
+    },
+    {
+      "t": "2026-10-28T14:26:10.397Z",
+      "note": "seq 150 -> 180"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "Scripted checks can find buttons in the Settings window but pressing one does nothing, so nothing in Settings (Install for agents, deleting an Ask model, asking a silenced question again) can be proved by a walk the way a person clicks it.",
   "epic": "agent-mcp",
   "priority": "p2-normal",
-  "seq": 85,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-27T03:40:32.660Z",
-  "updated": "2026-10-27T06:54:16.783Z",
+  "updated": "2026-10-28T14:26:42.271Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-26 on the probe (screen unlocked, Screen Recording granted, with and without setup front:true). Walk step: press \"Agents Claude Code Install\" -> log says in Install at window (460, 119), one click, the point is on the button in the -sc.png, but the button action never runs (a temporary NSLog at the top of AgentsSettingsSection.act never printed: /usr/bin/log show --last 2m --predicate eventMessage CONTAINS PZDEBUG was empty), and the next expect fails: no control called Agents Claude Code Uninstall. Two clicks (count 2) did nothing either; removing the row contextMenu and help did not change it. Scripts/playtest.sh Scripts/playtest/ask-deletes-an-older-model-walk.json --no-build passes, but its 2-delete-asks-sc.png shows no dialog after the press, so it never proved the press. The same buttons pressed through the accessibility tree (osascript, AXPress) worked at once. Press delivery: PlaytestHarness.swift around 8160-8215 (postEvent up, sendEvent down to the target window); panelWindows() includes the Settings window (around 7974). Suspect the synthetic mouse down into a non-key Settings window (SettingsWindowController hosts an NSHostingController in a plain NSWindow) is taken as a click to make it key.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-10-27T06:54:16.782Z",
       "note": "data point 2026-10-26: a posted press on a SWITCH in the Settings window does land. open-at-login-switch-in-settings-walk presses 'General Open at login' (window 472,336) and the expect after it reads off, then on again, and 2-open-at-login-off-sc.png shows it off. So the non-key-window theory does not cover toggles; whatever eats the click is specific to Buttons (or to the first press making the window key, then a toggle's mouse-up still flips it)."
+    },
+    {
+      "t": "2026-10-28T14:26:12.149Z",
+      "note": "seq 85 -> 90"
+    },
+    {
+      "t": "2026-10-28T14:26:42.270Z",
+      "note": "triage 2026-10-28: the same wall hit the next task too. The setup window runner (the-setup-window-walks-you-through-only-the-step, 2026-10-27) found a walk's posted click does not land on that window's SwiftUI buttons either, in front or behind, NSPanel or NSWindow, and added setupSkip, setupContinue and setupInstall walk actions that press through accessibility, like takeTheTour and startWorking before them. So this is now three windows with three hand-made workarounds (tour offer, setup window, Settings); whatever fixes Settings should say whether those actions can go back to plain presses"
     }
   ],
   "walks": [

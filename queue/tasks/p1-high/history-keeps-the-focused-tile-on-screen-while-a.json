@@ -2,14 +2,14 @@
   "id": "history-keeps-the-focused-tile-on-screen-while-a",
   "title": "History keeps the focused tile on screen while an arrow is held",
   "goal": "Holding Left or Right in the History pane scrolls the strip so the focused tile is always on screen, every repeat, at full key repeat speed. Letting go never leaves focus off screen.",
-  "epic": "",
+  "epic": "measure-redline",
   "priority": "p1-high",
-  "seq": 0.000005,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-28T13:45:47.464Z",
-  "updated": "2026-10-28T13:45:54.086Z",
+  "updated": "2026-10-28T14:26:09.067Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User 2026-10-28: \"when i hold the arrow key down, the pane doesn't stay scrolled to the focused item. I let go and focused item is far to the right off screen. I believe we should be keeping up, not getting into this weird cases where we can't.\" Screenshot: focus ends far right, off screen.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-10-28T13:45:54.085Z",
       "note": "seq 3970 -> 0.000005"
+    },
+    {
+      "t": "2026-10-28T14:25:21.948Z",
+      "note": "triage 2026-10-28: tagged measure-redline (capture, History and the capture toast are the capture-and-redline flow, as earlier History and toast tasks were)"
+    },
+    {
+      "t": "2026-10-28T14:26:09.066Z",
+      "note": "seq 0.000005 -> 40"
     }
   ]
 }

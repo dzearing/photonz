@@ -2,14 +2,14 @@
   "id": "capture-toast-is-half-the-size-and-far-less-in-t",
   "title": "Capture toast is half the size and far less in the way",
   "goal": "The toast that comes up after a capture to show its thumbnail takes far less of the screen: the thumbnail about half its current size, and the card around it trimmed to match, so it reads as a quiet note rather than a big panel.",
-  "epic": "",
+  "epic": "measure-redline",
   "priority": "p1-high",
-  "seq": 0.000007,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-28T13:47:54.935Z",
-  "updated": "2026-10-28T13:47:58.343Z",
+  "updated": "2026-10-28T14:26:09.256Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User 2026-10-28: \"when the photonz toast comes up, to indicate a thumbnail was recorded, it's consuming too much space. I want the thumbnail to be about half the size if possible, the card must be a lot less obnoxiously large.\" The toast thumbnail is drawn by CaptureThumbnailImage (CaptureThumbnailView.swift).",
@@ -26,6 +26,14 @@
     {
       "t": "2026-10-28T13:47:58.342Z",
       "note": "seq 3970 -> 0.000007"
+    },
+    {
+      "t": "2026-10-28T14:25:22.515Z",
+      "note": "triage 2026-10-28: tagged measure-redline (capture, History and the capture toast are the capture-and-redline flow, as earlier History and toast tasks were)"
+    },
+    {
+      "t": "2026-10-28T14:26:09.255Z",
+      "note": "seq 0.000007 -> 60"
     }
   ]
 }
