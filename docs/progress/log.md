@@ -22043,3 +22043,28 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - History tiles carry a walk marker with their own drag payload (`CaptureThumbnailView.dragPayload`), so `dropOnTimeline tile: "@<file>"` drops a History capture through the timeline's real drop target. Walks: `timeline-zooms-out-past-the-end-walk`, `a-history-clip-drops-where-let-go-walk` (middle, start, and past the end once zoomed out).
 - What was reproduced for the History drop: through the tile's own payload the timeline already shows a ghost with Overwrite/Insert, track and time, snaps, and lands the clip where it was let go; the one missing piece was past the end, which needed the room above. NOT reproduced: whether a person's pull on a History tile starts a drag at all. `pickUpTile` cannot answer it (walks keep the History panel from taking key, and a screenshot tile failed the same way as a video tile, so the step is blind there), and this terminal has no Accessibility grant for a real CGEvent drag.
 - Open: the user's own account of how the History drag fails, or an Accessibility grant to drive a real drag, before anything about the pickup is changed.
+
+## 2026-10-28 — A real History drag lands on the timeline
+
+- Reproduced the user's "no ghost, the timeline is not a drop target": a real
+  drag from a History tile reaches the timeline as a FILE PROMISE, and every way
+  of asking SwiftUI's provider for its file (`loadObject(URL)`, in-place file
+  representation) answers nil. Logged from the user's own drags (DROPDIAG,
+  removed again).
+- Walks never saw it because `PlaytestPanelDrag.pasteboard(from:)` wrote the
+  tile's data as plain data. It now writes a movie/sound/picture tile as a
+  promise with its link beside it (`PromisedFileWriter`), which reproduces
+  "drew no ghost" with the fix off.
+- Fix: `CaptureThumbnailView.lifted` remembers the tile a drag began on, and
+  `FileDrop.fileURL(from:)` falls back to it. The system drag pasteboard is NOT
+  read: it is the whole Mac's and held the person's drag from the night before,
+  so a walk landed the wrong recording.
+- A file let go under the tracks now draws a clip-shaped ghost where its new
+  track will be (`TimelineNewTrackGhost`), under the sound row, instead of the
+  2pt line, which was drawn between V1 and its sound row.
+- Walk `a-history-clip-drops-where-let-go-walk` gained a drop below the tracks
+  (`"track": "below"`). Passes.
+- Next: the tile picture morphing into the ghost over the timeline (needs an
+  AppKit drop destination, SwiftUI's DropDelegate cannot touch the drag image);
+  then the default zoom of twice the length with half a window of room (Core
+  tests written, set aside uncommitted).

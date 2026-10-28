@@ -494,6 +494,9 @@ struct TimelineDock: View {
                         .overlay(alignment: .topLeading) {
                             TimelineLaneBoxView(laneWidth: laneWidth, leading: Self.lanesLeading)
                         }
+                        .overlay(alignment: .topLeading) {
+                            TimelineNewTrackGhost(laneWidth: laneWidth, leading: Self.lanesLeading)
+                        }
                         .onDrop(of: TimelineFileDropDelegate.types, delegate: TimelineFileDropDelegate(editorState: editorState))
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                             editorState.timelineTracksFrame = frame

@@ -21037,7 +21037,12 @@ extension Run {
             board.writeObjects([url as NSURL])
         }
         let tracks = document.timelineTracks
-        guard let trackID = tracks.first(where: { $0.name == track })?.id else {
+        // "below" is the empty space under the last track, where a file let
+        // go makes a track of its own (user 2026-10-28: "I CANT DRAG IT HERE").
+        let below = track == "below"
+        let trackID = below ? editor.trackDropRows.values.max { $0.maxY < $1.maxY }?.trackID
+                            : tracks.first(where: { $0.name == track })?.id
+        guard let trackID else {
             throw Failure(description: "no track is called \"\(track)\"; the tracks: "
                 + tracks.map(\.name).joined(separator: ", "))
         }
@@ -21051,8 +21056,11 @@ extension Run {
             let frame = editor.timelineTracksFrame
             let row = editor.trackDropRows[trackID] ?? row
             let fraction = editor.motionStripRuler.fraction(ofMS: seconds * 1000)
+            let y = below ? min(row.maxY + TimelineDock.rowSpacing + TimelineDock.laneHeight / 2,
+                               frame.height - TimelineDock.rowSpacing - 2)
+                          : (row.minY + row.maxY) / 2
             let global = CGPoint(x: frame.minX + TimelineDock.lanesLeading + editor.timelineLaneWidth * fraction,
-                                 y: frame.minY + (row.minY + row.maxY) / 2)
+                                 y: frame.minY + y)
             return (global, try self.windowPoint(PlaytestPoint(global, space: .window)))
         }
         let frame = editor.timelineTracksFrame

@@ -1,44 +1,197 @@
 {
   "out": "/tmp/photonz-playtest/a-history-clip-drops-where-let-go-walk",
   "setup": {
-    "forget": ["all"],
+    "forget": [
+      "all"
+    ],
     "timelineOpen": true,
-    "captures": ["sample-recording"]
+    "captures": [
+      "sample-recording"
+    ]
   },
   "steps": [
-    { "do": "action", "action": "openSampleRecording" },
-    { "do": "wait", "seconds": 2.0 },
-    { "do": "action", "action": "videoPause" },
-    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
-    { "do": "wait", "seconds": 1.5 },
-    { "do": "describe", "stage": "0-history-over-a-recording", "note": "An eight second recording open, and History down from the top with that same recording in it. Each History tile carries the very payload its own drag hands over, so what lands here is what a pointer pulls off the tile" },
-
-    { "do": "dropOnTimeline", "tile": "@Tutorial Sample.mp4", "track": "V1", "seconds": 4, "hold": "1-middle-in-the-air", "says": "V1 · 0:04" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "expectClip", "clip": "Tutorial Sample", "count": 2 },
-    { "do": "expectTimeline", "lengthMS": 12000 },
-    { "do": "describe", "stage": "1-middle", "note": "Held over V1 at four seconds, the ghost says where it goes before letting go (Overwrite, V1, 0:04), and the clip lands right there over the second half of the recording, which now runs to twelve seconds" },
-    { "do": "snapshot", "name": "1-middle" },
-    { "do": "action", "action": "undo" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "expectClip", "clip": "Tutorial Sample", "count": 1 },
-
-    { "do": "dropOnTimeline", "tile": "@Tutorial Sample.mp4", "track": "V1", "seconds": 0, "hold": "2-start-in-the-air", "says": "V1 · 0:00" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "expectTimeline", "lengthMS": 8000 },
-    { "do": "describe", "stage": "2-start", "note": "Let go at the very start of V1 it lands at 0:00. It is Overwrite, so an eight second clip let go over an eight second one takes its place; holding Command makes it Insert instead" },
-    { "do": "snapshot", "name": "2-start" },
-    { "do": "action", "action": "undo" },
-    { "do": "wait", "seconds": 0.6 },
-
-    { "do": "action", "action": "timelineZoomOut" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "expectTimeline", "zoomScale": 0.5 },
-    { "do": "dropOnTimeline", "tile": "@Tutorial Sample.mp4", "track": "V1", "seconds": 12, "hold": "3-past-the-end-in-the-air", "says": "V1 · 0:12" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "expectClip", "clip": "Tutorial Sample", "count": 2 },
-    { "do": "expectTimeline", "lengthMS": 20000 },
-    { "do": "describe", "stage": "3-past-the-end", "note": "Zoomed out one press past Fit, there is room after the last clip. Let go at twelve seconds, four past the end, the clip lands at 0:12 with the gap kept before it, and the recording now runs to twenty seconds" },
-    { "do": "snapshot", "name": "3-past-the-end" }
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "shortcut",
+      "key": "h",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Show History",
+      "checked": false
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "0-history-over-a-recording",
+      "note": "An eight second recording open, and History down from the top with that same recording in it. Each History tile carries the very payload its own drag hands over, so what lands here is what a pointer pulls off the tile"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Tutorial Sample.mp4",
+      "track": "V1",
+      "seconds": 4,
+      "hold": "1-middle-in-the-air",
+      "says": "V1 \u00b7 0:04"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 2
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 12000
+    },
+    {
+      "do": "describe",
+      "stage": "1-middle",
+      "note": "Held over V1 at four seconds, the ghost says where it goes before letting go (Overwrite, V1, 0:04), and the clip lands right there over the second half of the recording, which now runs to twelve seconds"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-middle"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Tutorial Sample.mp4",
+      "track": "V1",
+      "seconds": 0,
+      "hold": "2-start-in-the-air",
+      "says": "V1 \u00b7 0:00"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 8000
+    },
+    {
+      "do": "describe",
+      "stage": "2-start",
+      "note": "Let go at the very start of V1 it lands at 0:00. It is Overwrite, so an eight second clip let go over an eight second one takes its place; holding Command makes it Insert instead"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-start"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomOut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimeline",
+      "zoomScale": 0.5
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Tutorial Sample.mp4",
+      "track": "V1",
+      "seconds": 12,
+      "hold": "3-past-the-end-in-the-air",
+      "says": "V1 \u00b7 0:12"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 2
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 20000
+    },
+    {
+      "do": "describe",
+      "stage": "3-past-the-end",
+      "note": "Zoomed out one press past Fit, there is room after the last clip. Let go at twelve seconds, four past the end, the clip lands at 0:12 with the gap kept before it, and the recording now runs to twenty seconds"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-past-the-end"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "@Tutorial Sample.mp4",
+      "track": "below",
+      "seconds": 10,
+      "hold": "4-below-the-tracks-in-the-air",
+      "says": "New"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 2
+    },
+    {
+      "do": "describe",
+      "stage": "4-below-the-tracks",
+      "note": "Let go in the empty space under the tracks, the clip is drawn in the air as a clip-shaped ghost where its new track will be, not a thin line, and lands at 0:10 on a track of its own"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-below-the-tracks"
+    }
   ]
 }

@@ -75,10 +75,31 @@ struct CaptureThumbnailView: View {
                         payload: { Self.dragPayload(entry, store: store) })
     }
 
-    /// What pulling the tile puts in the air: the capture's file.
+    /// The file of the tile last pulled out of History. A drag the app makes
+    /// of its own reaches its own drop targets as a promised movie, which a
+    /// drop target cannot read in time to draw anything, so the timeline asks
+    /// for this instead (`FileDrop.fileURL`).
+    @MainActor static var lifted: URL?
+
+    /// What pulling the tile puts in the air: the capture's file, as a link
+    /// first and its contents after. Only the contents went until 2026-10-27,
+    /// and once a real drag had carried them across, the timeline asking for
+    /// a file got nothing, so a recording dragged out of History drew no ghost
+    /// and landed nowhere.
     static func dragPayload(_ entry: CaptureEntry, store: CaptureStore) -> NSItemProvider {
+        lifted = store.fileURL(for: entry)
         if store.isWritingVideo(entry.url) { return whenWritten(entry.url, store: store) }
-        return NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider()
+        let url = store.fileURL(for: entry)
+        let provider = NSItemProvider(object: url as NSURL)
+        provider.suggestedName = url.deletingPathExtension().lastPathComponent
+        if let type = UTType(filenameExtension: url.pathExtension) {
+            provider.registerFileRepresentation(forTypeIdentifier: type.identifier,
+                                                fileOptions: [], visibility: .all) { done in
+                done(url, true, nil)
+                return nil
+            }
+        }
+        return provider
     }
 
     /// A drag of a tile whose edited video is still being written: the file

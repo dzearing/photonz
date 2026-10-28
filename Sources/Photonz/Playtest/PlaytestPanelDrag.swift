@@ -64,6 +64,43 @@ import UniformTypeIdentifiers
     }
 }
 
+/// A file put on a drag the way SwiftUI's `onDrag` puts one: a promise of the
+/// file, with its link beside it (`PlaytestPanelDrag.promisedFile`).
+// Unchecked: it holds one immutable URL, and AppKit asks it for the promise on
+// a queue of its own, so it cannot be tied to the main actor.
+final class PromisedFileWriter: NSFilePromiseProvider, NSFilePromiseProviderDelegate, @unchecked Sendable {
+    let url: URL
+
+    init(url: URL, type: UTType) {
+        self.url = url
+        super.init()
+        fileType = type.identifier
+        delegate = self
+    }
+
+    override func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
+        super.writableTypes(for: pasteboard) + [.fileURL, .URL]
+    }
+
+    override func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
+        if type == .fileURL || type == .URL { return url.absoluteString }
+        return super.pasteboardPropertyList(forType: type)
+    }
+
+    func filePromiseProvider(_ provider: NSFilePromiseProvider, fileNameForType fileType: String) -> String {
+        url.lastPathComponent
+    }
+
+    func filePromiseProvider(_ provider: NSFilePromiseProvider, writePromiseTo destination: URL,
+                             completionHandler: @escaping (Error?) -> Void) {
+        completionHandler(Result { try FileManager.default.copyItem(at: url, to: destination) }.error)
+    }
+}
+
+private extension Result where Failure == Error {
+    var error: Error? { if case .failure(let error) = self { return error } else { return nil } }
+}
+
 /// Everything the harness needs to hand one thing in the panel to something
 /// that accepts drops.
 enum PlaytestPanelDrag {
@@ -73,6 +110,10 @@ enum PlaytestPanelDrag {
     static func pasteboard(from provider: NSItemProvider, named name: String) async throws -> NSPasteboard {
         let board = NSPasteboard(name: NSPasteboard.Name("photonz.playtest.\(name)"))
         board.clearContents()
+        if let promised = await promisedFile(provider) {
+            board.writeObjects([promised])
+            return board
+        }
         let item = NSPasteboardItem()
         var wrote: [String] = []
         for identifier in provider.registeredTypeIdentifiers {
@@ -91,6 +132,27 @@ enum PlaytestPanelDrag {
         }
         board.writeObjects([item])
         return board
+    }
+
+    /// A provider holding a file of a kind SwiftUI promises rather than hands
+    /// over: a movie, a sound or a picture, as a History tile's is.
+    ///
+    /// SwiftUI's `onDrag` does not put such a file on the drag as the file:
+    /// it puts it there as a FILE PROMISE, with a link alongside, and the
+    /// drop at the far end is handed a provider that offers only the movie
+    /// and answers every request for its file with nothing. Until 2026-10-28
+    /// a walk carried the provider's data as plain data, so every History
+    /// drop walk passed while a real drag drew no ghost and landed nowhere.
+    /// This is that pasteboard as a real drag leaves it, read off the drag
+    /// pasteboard of a real History drag on 2026-10-27.
+    private static func promisedFile(_ provider: NSItemProvider) async -> NSPasteboardWriting? {
+        let media: [UTType] = [.movie, .audio, .image]
+        guard let type = provider.registeredTypeIdentifiers.compactMap(UTType.init)
+                .first(where: { found in media.contains { found.conforms(to: $0) } }),
+              provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier),
+              let data = try? await provider.loadData(forTypeIdentifier: UTType.fileURL.identifier),
+              let text = String(data: data, encoding: .utf8), let url = URL(string: text) else { return nil }
+        return PromisedFileWriter(url: url, type: type)
     }
 
     /// Whether AppKit would deliver this drag to this view at all.
