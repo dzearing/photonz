@@ -855,6 +855,13 @@ moments (`1:00 to 1:30`), and Fit. Doubling reaches the closest window in eight
 presses and every press is the same size. Fit is the whole way back in one
 press, from however far in.
 
+Fit is not the widest view (user 2026-10-27). One press of minus past it shows
+**twice the document**: the recording on the left half and empty room after its
+last clip, which is where a new clip is dropped. With the whole document on
+screen there is nothing to scroll to, so the overview bar stays down and the
+window is pinned to the start. A press that would cross Fit, in or out, stops
+on it (`TimelineZoom.farthestOutScale`, `steppedIn`, `steppedOut`).
+
 The closest window is **one second across the width**, which on an ordinary
 lane is about six hundred points a second: a spoken word of a third of a second
 is two hundred points of timeline, so a cut goes in the middle of a word rather

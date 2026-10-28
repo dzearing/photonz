@@ -21,13 +21,11 @@ extension EditorState {
     /// (`motionStripCycleMS`).
     var timelineLengthForZoomMS: Double { Double(max(1, motionStripCycleMS)) }
 
-    /// Whether this timeline can be opened out at all: the feature is on, the
-    /// strip is measuring a document that finishes, and the document is long
-    /// enough that there is something to open out into.
+    /// Whether this timeline zooms at all: the feature is on and the strip is
+    /// measuring a document that finishes. Any length of document zooms OUT,
+    /// into room after its end; how far IN is `canZoomTimelineIn`.
     var canOpenOutTheTimeline: Bool {
-        Experiments.shared.timelineZoomEnabled
-            && motionStripMeasuresADocument
-            && TimelineZoom.widestScale(documentMS: timelineLengthForZoomMS) > 1
+        Experiments.shared.timelineZoomEnabled && motionStripMeasuresADocument
     }
 
     /// The window on the document, always inside it. Read by the ruler, so
@@ -102,8 +100,12 @@ extension EditorState {
     var canZoomTimelineOut: Bool { canOpenOutTheTimeline && timelineWindow.canZoomOut }
 
     /// Whether the strip is showing less than the whole document, which is
-    /// what puts the overview bar up.
-    var isTimelineOpenedOut: Bool { canOpenOutTheTimeline && !timelineWindow.isFit }
+    /// what puts the overview bar up. Zoomed out past Fit is not: all of the
+    /// document is on screen, with room after it.
+    var isTimelineOpenedOut: Bool { canOpenOutTheTimeline && !timelineWindow.showsWholeDocument }
+
+    /// Whether Fit would change anything: zoomed in, or out past the end.
+    var canFitTimeline: Bool { canOpenOutTheTimeline && !timelineWindow.isFit }
 
     /// What the local bar says is on screen: `1:00 to 1:30`, or `all 5:00`.
     var timelineWindowReading: String {
@@ -127,7 +129,7 @@ extension EditorState {
     /// The whole document back across the width. One press, from however far
     /// in: the way back out is never a sequence of presses.
     func fitTimeline() {
-        guard canOpenOutTheTimeline else { return }
+        guard canFitTimeline else { return }
         setTimelineWindow(.fit)
     }
 

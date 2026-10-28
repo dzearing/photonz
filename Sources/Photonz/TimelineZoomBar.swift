@@ -53,9 +53,9 @@ struct TimelineZoomControl: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .foregroundStyle(editorState.isTimelineOpenedOut
+            .foregroundStyle(editorState.canFitTimeline
                              ? AnyShapeStyle(.secondary) : AnyShapeStyle(.quaternary))
-            .disabled(!editorState.isTimelineOpenedOut)
+            .disabled(!editorState.canFitTimeline)
             .accessibilityLabel("Fit The Timeline")
             .panelHelp("Put the whole recording back across the width")
             .playtestControl("Timeline Fit", detail: "Timing strip")

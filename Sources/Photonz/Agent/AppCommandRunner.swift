@@ -620,7 +620,7 @@ extension EditorState {
         case .copySpecList: return visibleMeasurementCount > 0
         case .copyMeasurements: return !selectedMeasureLayerIDs.isEmpty
         case .zoomIn, .zoomOut, .zoomToFit, .actualSize: return hasDocument
-        case .zoomTimelineToFit: return isTimelineOpenedOut
+        case .zoomTimelineToFit: return canFitTimeline
         case .compactTracks: return !timelineRowZoom.isCompact
         case .captionSafeAreas: return hasCaptions
         case .resetCamera: return canResetCamera

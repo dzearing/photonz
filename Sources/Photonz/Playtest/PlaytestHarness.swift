@@ -6930,9 +6930,8 @@ private final class Run {
                         + FeatureCatalog.timelineZoomFlag)
                 }
                 guard editor.canOpenOutTheTimeline else {
-                    throw Failure(description: "this document is "
-                        + "\(editor.documentLengthMS) ms long, which is shorter than the closest "
-                        + "window the timeline opens out to, so there is nothing to open out into")
+                    throw Failure(description: "this timeline does not zoom: it is not measuring "
+                        + "a document that finishes")
                 }
                 guard inward ? editor.canZoomTimelineIn : editor.canZoomTimelineOut else {
                     throw Failure(description: "the timeline is already showing "
@@ -6953,12 +6952,12 @@ private final class Run {
                         + "(\(editor.timelineWindowReading)), so it did not scroll")
                 }
             case .timelineFit:
-                guard editor.isTimelineOpenedOut else {
+                guard editor.canFitTimeline else {
                     throw Failure(description: "the timeline is already showing the whole "
                         + "document, so Fit has nothing to put back")
                 }
                 editor.fitTimeline()
-                guard !editor.isTimelineOpenedOut else {
+                guard !editor.canFitTimeline else {
                     throw Failure(description: "Fit left the timeline showing "
                         + "\(editor.timelineWindowReading)")
                 }

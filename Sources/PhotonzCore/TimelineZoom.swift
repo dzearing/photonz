@@ -22,7 +22,8 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
 
     /// How many times smaller the window is than the document. One is the
     /// whole document across the width, which is what the strip has always
-    /// done and what Fit goes back to.
+    /// done and what Fit goes back to. Under one is wider than the document:
+    /// the document on the left and empty room after its end.
     public var scale: Double
     /// The moment at the left hand edge of the strip.
     public var startMS: Double
@@ -36,6 +37,12 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
     /// document down to single frames you can put a cut between (user
     /// 2026-09-28). It was a whole second, thirty frames across, until then.
     public static let closestVisibleMS: Double = 250
+
+    /// As far out as it goes: twice the document across the width, so there
+    /// is room after the last clip to drop a new one into (user 2026-10-27).
+    /// Fit used to be the widest view, and a clip could only be dropped past
+    /// the end by aiming at the very last pixel of the lane.
+    public static let farthestOutScale: Double = 0.5
 
     /// One press of the plus or the minus. Doubling is the step every timeline
     /// in the world uses, and it means five minutes reaches its closest window
@@ -51,32 +58,44 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
 
     /// The most a document of this length can be opened out. A document
     /// already shorter than the closest window has nothing to open out into,
-    /// so it stays at fit: a timeline mostly made of nothing is not a zoom.
+    /// so it goes no further in than fit.
     public static func widestScale(documentMS: Double) -> Double {
         max(1, documentMS / closestVisibleMS)
     }
 
-    /// How much time is on screen.
-    public func visibleMS(documentMS: Double) -> Double {
-        let length = max(1, documentMS)
-        return length / min(max(1, scale), Self.widestScale(documentMS: length))
+    /// A scale kept between as far out and as far in as this document goes.
+    static func allowed(_ scale: Double, documentMS: Double) -> Double {
+        min(max(farthestOutScale, scale), widestScale(documentMS: documentMS))
     }
 
-    /// The whole document is on screen.
-    public var isFit: Bool { scale <= 1.0001 }
+    /// How much time is on screen. More than the document once it is zoomed
+    /// out past Fit.
+    public func visibleMS(documentMS: Double) -> Double {
+        let length = max(1, documentMS)
+        return length / Self.allowed(scale, documentMS: length)
+    }
 
-    public var canZoomOut: Bool { !isFit }
+    /// Exactly the whole document across the width: what Fit puts back.
+    public var isFit: Bool { abs(scale - 1) <= 0.0001 }
+
+    /// All of the document is on screen, at Fit or zoomed out past it into
+    /// the room after its end. Nothing is hidden, so there is nothing to
+    /// scroll to and nothing for a playhead to chase.
+    public var showsWholeDocument: Bool { scale <= 1.0001 }
+
+    public var canZoomOut: Bool { scale > Self.farthestOutScale + 0.0001 }
 
     public func canZoomIn(documentMS: Double) -> Bool {
         scale < Self.widestScale(documentMS: documentMS) - 0.0001
     }
 
     /// Inside the document, at a scale it is allowed to be. Every way of
-    /// making one of these ends here, so a window can never hang off either
-    /// end of the strip or draw room that has nothing in it.
+    /// making one of these ends here, so a window can never hang off the
+    /// start of the strip, and only runs past the end when it is wider than
+    /// the whole document, which is the room a clip is dropped into.
     public func clamped(documentMS: Double) -> TimelineZoom {
         let length = max(1, documentMS)
-        let scale = min(max(1, self.scale), Self.widestScale(documentMS: length))
+        let scale = Self.allowed(self.scale, documentMS: length)
         let span = length / scale
         let start = min(max(0, startMS), max(0, length - span))
         return TimelineZoom(scale: scale, startMS: start)
@@ -101,18 +120,25 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
         let length = max(1, documentMS)
         let span = visibleMS(documentMS: length)
         let through = min(max(0, (anchorMS - startMS) / span), 1)
-        let scale = min(max(1, wanted), Self.widestScale(documentMS: length))
+        let scale = Self.allowed(wanted, documentMS: length)
         let landing = length / scale
         return TimelineZoom(scale: scale, startMS: anchorMS - through * landing)
             .clamped(documentMS: length)
     }
 
+    /// A press stops on Fit when it crosses it, whichever way it is going, so
+    /// the whole document across the width is always one press away rather
+    /// than skipped between 1.2x and 0.6x.
     public func steppedIn(anchorMS: Double, documentMS: Double) -> TimelineZoom {
-        zoomed(toScale: scale * Self.step, anchorMS: anchorMS, documentMS: documentMS)
+        let wanted = scale * Self.step
+        return zoomed(toScale: scale < 0.9999 && wanted > 1 ? 1 : wanted,
+                      anchorMS: anchorMS, documentMS: documentMS)
     }
 
     public func steppedOut(anchorMS: Double, documentMS: Double) -> TimelineZoom {
-        zoomed(toScale: scale / Self.step, anchorMS: anchorMS, documentMS: documentMS)
+        let wanted = scale / Self.step
+        return zoomed(toScale: scale > 1.0001 && wanted < 1 ? 1 : wanted,
+                      anchorMS: anchorMS, documentMS: documentMS)
     }
 
     // MARK: Moving along
@@ -137,7 +163,7 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
     /// permanently against the right hand edge, where there is nothing ahead
     /// of it to see and the whole strip slides under the pointer.
     public func revealing(ms: Double, documentMS: Double) -> TimelineZoom {
-        guard !isFit, !contains(ms: ms, documentMS: documentMS) else { return self }
+        guard !showsWholeDocument, !contains(ms: ms, documentMS: documentMS) else { return self }
         let span = visibleMS(documentMS: documentMS)
         return TimelineZoom(scale: scale, startMS: ms - span * 0.1)
             .clamped(documentMS: documentMS)
@@ -148,7 +174,7 @@ public struct TimelineZoom: Hashable, Sendable, Codable {
     /// What is on screen, in the words the transport uses: `1:00 to 1:30`, or
     /// `all 5:00` when the whole thing is.
     public func reading(documentMS: Double) -> String {
-        guard !isFit else { return "all " + MotionStripRuler.timecode(documentMS) }
+        guard !showsWholeDocument else { return "all " + MotionStripRuler.timecode(documentMS) }
         let span = visibleMS(documentMS: documentMS)
         return MotionStripRuler.timecode(startMS) + " to "
             + MotionStripRuler.timecode(startMS + span)

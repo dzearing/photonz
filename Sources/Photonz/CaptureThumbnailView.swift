@@ -67,10 +67,18 @@ struct CaptureThumbnailView: View {
         // Drag the capture's media (PNG or MP4) straight out to Finder / apps.
         // An edit still being written over a recording is handed over when it
         // lands, never the recording it is replacing.
-        .onDrag {
-            if store.isWritingVideo(entry.url) { return Self.whenWritten(entry.url, store: store) }
-            return NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider()
-        }
+        .onDrag { Self.dragPayload(entry, store: store) }
+        // A walk finds the tile by its file and carries the very payload a
+        // pointer pulls off it (`PanelTarget.swift`).
+        .playtestTarget(entry.url.deletingPathExtension().lastPathComponent, kind: .tile,
+                        steady: [entry.url.lastPathComponent],
+                        payload: { Self.dragPayload(entry, store: store) })
+    }
+
+    /// What pulling the tile puts in the air: the capture's file.
+    static func dragPayload(_ entry: CaptureEntry, store: CaptureStore) -> NSItemProvider {
+        if store.isWritingVideo(entry.url) { return whenWritten(entry.url, store: store) }
+        return NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider()
     }
 
     /// A drag of a tile whose edited video is still being written: the file
