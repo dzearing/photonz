@@ -14367,3 +14367,7 @@
 {"t":"2026-10-28T01:51:09.777Z","ev":"task_dropped","id":"ask-makes-a-real-photo-when-asked-like-a-kitten","from":"pending","note":"folded into ask-can-make-a-photo-as-well-as-an-illustration"}
 {"t":"2026-10-28T01:51:09.840Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
 {"t":"2026-10-28T01:51:09.912Z","ev":"task_resequenced","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":100,"to":0.000002}
+{"t":"2026-10-28T13:39:52.890Z","ev":"task_created","id":"history-remembers-the-filter-you-last-chose","priority":"p1-high","title":"History remembers the filter you last chose"}
+{"t":"2026-10-28T13:39:53.000Z","ev":"task_created","id":"history-pane-resizes-from-its-outer-edge","priority":"p1-high","title":"History pane resizes from its outer edge"}
+{"t":"2026-10-28T13:39:59.679Z","ev":"task_resequenced","id":"history-remembers-the-filter-you-last-chose","from":3970,"to":0.000003}
+{"t":"2026-10-28T13:39:59.748Z","ev":"task_resequenced","id":"history-pane-resizes-from-its-outer-edge","from":3980,"to":0.000004}

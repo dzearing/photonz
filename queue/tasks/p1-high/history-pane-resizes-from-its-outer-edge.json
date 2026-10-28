@@ -1,0 +1,32 @@
+{
+  "id": "history-pane-resizes-from-its-outer-edge",
+  "title": "History pane resizes from its outer edge",
+  "goal": "The History pane can be made taller or shorter (or wider, whichever is its outer edge) by dragging its outer edge, with a resize cursor on hover, and keeps that size across reopening and relaunching.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 0.000004,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-28T13:39:52.996Z",
+  "updated": "2026-10-28T13:39:59.747Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User 2026-10-28: \"i would like the pane to be resizable on the outer edge.\" History is an NSPanel built by HistoryOverlayController.",
+  "acceptance": [
+    "Hovering the outer edge shows a resize cursor",
+    "Dragging it resizes the pane smoothly, within sensible limits",
+    "The size is kept after closing and reopening, and after relaunch",
+    "Walk with a real edge drag, run through focus-drill"
+  ],
+  "log": [
+    {
+      "t": "2026-10-28T13:39:52.998Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-28T13:39:59.746Z",
+      "note": "seq 3980 -> 0.000004"
+    }
+  ]
+}

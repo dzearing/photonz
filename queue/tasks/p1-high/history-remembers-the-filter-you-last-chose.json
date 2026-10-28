@@ -1,0 +1,31 @@
+{
+  "id": "history-remembers-the-filter-you-last-chose",
+  "title": "History remembers the filter you last chose",
+  "goal": "The History pane opens on the filter (All, Screenshots, Videos, and so on) the person picked last time, across closing the pane and relaunching the app, instead of resetting to All.",
+  "epic": "",
+  "priority": "p1-high",
+  "seq": 0.000003,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-28T13:39:52.886Z",
+  "updated": "2026-10-28T13:39:59.678Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User 2026-10-28: \"in the history pane, I keep switching the filter. Can you just remember what i chose last?\" Filter state is HistoryOverlay.swift:185 `private(set) var filter: CaptureFilter = .all`, never persisted.",
+  "acceptance": [
+    "Pick a filter, close History, reopen: same filter",
+    "Pick a filter, quit and relaunch: same filter",
+    "A walk covers both"
+  ],
+  "log": [
+    {
+      "t": "2026-10-28T13:39:52.888Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-28T13:39:59.677Z",
+      "note": "seq 3970 -> 0.000003"
+    }
+  ]
+}
