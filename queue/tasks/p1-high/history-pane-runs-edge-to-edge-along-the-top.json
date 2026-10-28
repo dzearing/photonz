@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-28T13:45:47.581Z",
-  "updated": "2026-10-28T14:26:09.160Z",
+  "updated": "2026-10-28T17:12:38.852Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User 2026-10-28 redline: 48px gaps left and right, 12px gap above the pane: \"These gaps shouldn't be here, it should be edge to edge hugging the top.\" History is an NSPanel built by HistoryOverlayController. Related: history-pane-resizes-from-its-outer-edge (the outer edge is the bottom once it is edge to edge).",
@@ -34,6 +34,10 @@
     {
       "t": "2026-10-28T14:26:09.158Z",
       "note": "seq 0.000006 -> 50"
+    },
+    {
+      "t": "2026-10-28T17:12:38.851Z",
+      "note": "taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"
     }
   ]
 }

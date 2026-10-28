@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-28T13:39:52.996Z",
-  "updated": "2026-10-28T14:26:08.968Z",
+  "updated": "2026-10-28T17:12:38.773Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User 2026-10-28: \"i would like the pane to be resizable on the outer edge.\" History is an NSPanel built by HistoryOverlayController.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-28T14:26:08.967Z",
       "note": "seq 0.000004 -> 30"
+    },
+    {
+      "t": "2026-10-28T17:12:38.772Z",
+      "note": "taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"
     }
   ]
 }

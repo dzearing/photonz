@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-28T13:39:52.886Z",
-  "updated": "2026-10-28T14:26:08.877Z",
+  "updated": "2026-10-28T17:12:38.693Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User 2026-10-28: \"in the history pane, I keep switching the filter. Can you just remember what i chose last?\" Filter state is HistoryOverlay.swift:185 `private(set) var filter: CaptureFilter = .all`, never persisted.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-10-28T14:26:08.876Z",
       "note": "seq 0.000003 -> 20"
+    },
+    {
+      "t": "2026-10-28T17:12:38.692Z",
+      "note": "taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"
     }
   ]
 }
