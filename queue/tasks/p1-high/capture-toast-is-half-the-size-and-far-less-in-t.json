@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-28T13:47:54.935Z",
-  "updated": "2026-10-28T17:54:24.954Z",
+  "updated": "2026-10-28T18:25:08.931Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User 2026-10-28: \"when the photonz toast comes up, to indicate a thumbnail was recorded, it's consuming too much space. I want the thumbnail to be about half the size if possible, the card must be a lot less obnoxiously large.\" The toast thumbnail is drawn by CaptureThumbnailImage (CaptureThumbnailView.swift).",
@@ -38,6 +38,11 @@
     {
       "t": "2026-10-28T17:54:24.953Z",
       "note": "taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"
+    },
+    {
+      "t": "2026-10-28T18:25:08.929Z",
+      "note": "Built on users/dzearing/timeline-room-history-drop (commit 02577842); see docs/progress/log.md 2026-10-28. Lands on main with that branch."
     }
-  ]
+  ],
+  "completed": "2026-10-28T18:25:08.930Z"
 }
