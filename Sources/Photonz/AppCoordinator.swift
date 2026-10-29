@@ -659,6 +659,19 @@ final class AppCoordinator {
                         quality: VideoExportQuality, to url: URL,
                         onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
         guard let sourceURL = state.editSourceURL else { throw CocoaError(.fileNoSuchFile) }
+        // Written beside `url` and swapped in whole: the save box offers the
+        // recording's own name, and a verbatim copy over its own source
+        // removed the recording and then had nothing to copy (`FileSwap`).
+        try await FileSwap.write(to: url) { scratch in
+            try await writeRecording(state, from: sourceURL, as: format, quality: quality,
+                                     to: scratch, onProgress: onProgress)
+        }
+    }
+
+    private func writeRecording(_ state: VideoEditorState, from sourceURL: URL,
+                                as format: RecordingFormat, quality: VideoExportQuality,
+                                to url: URL,
+                                onProgress: (@Sendable (Double) -> Void)?) async throws {
         let cuts = state.exportCuts
         let crop = state.crop
         let source = state.exportSource
@@ -714,9 +727,14 @@ final class AppCoordinator {
         defer { try? FileManager.default.removeItem(at: weighed) }
         guard (try? weighed.resourceValues(forKeys: [.fileSizeKey]).fileSize).map({ $0 > 0 })
                 == true else { return false }
-        try? FileManager.default.removeItem(at: url)
         do {
-            try FileManager.default.moveItem(at: weighed, to: url)
+            // Swapped in, never removed first: `url` may be the recording the
+            // file was made from, and a move that then failed left neither.
+            if FileManager.default.fileExists(atPath: url.path) {
+                _ = try FileManager.default.replaceItemAt(url, withItemAt: weighed)
+            } else {
+                try FileManager.default.moveItem(at: weighed, to: url)
+            }
             return true
         } catch {
             // A move across volumes, or a folder that will not take it. Copy

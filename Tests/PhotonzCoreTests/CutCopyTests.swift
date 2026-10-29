@@ -245,6 +245,22 @@ struct CutCopyTests {
         #expect(drawn.map { frames[$0.index].showsAt } == (35..<60).map { Int64($0) * 10 })
     }
 
+    /// Frames made again by an encoder that reorders come out in decode
+    /// order, and each takes the next of the run's decode times: the frame
+    /// keeps where it is and how long it shows, and only its decode moves.
+    @Test func aFrameMadeAgainCanBeDecodedAtAnotherOfItsRunsTimes() throws {
+        let frames = storedFrames(count: 90, gop: 30)
+        let plan = try #require(CutCopyPlan.make(frames: frames, pieces: [350..<900]))
+        guard case .render(_, let drawn) = plan.runs.first, drawn.count > 2 else {
+            Issue.record("the piece should open on frames drawn again"); return
+        }
+        let moved = drawn[2].decoded(at: drawn[1].decodesAt)
+        #expect(moved.decodesAt == drawn[1].decodesAt)
+        #expect(moved.index == drawn[2].index)
+        #expect(moved.showsAt == drawn[2].showsAt)
+        #expect(moved.lastsFor == drawn[2].lastsFor)
+    }
+
     @Test func aPieceEndingBetweenKeyFramesDrawsItsLastFramesAgain() throws {
         let frames = storedFrames(count: 90, gop: 30)
         // 0..<450: the first group copied, 30..<45 drawn (the group they sit in

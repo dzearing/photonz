@@ -47,8 +47,12 @@ enum TestClip {
     /// recording: a key frame every second and frames reordered (an I, then
     /// the P it shows later, then the Bs between), which leaves its pictures
     /// stamped late in the file with an edit list pulling them back.
+    /// `profile` is the H.264 profile it is stored in: the Mac's own screen
+    /// recorder (`SCRecordingOutput`) writes Main, which is not what an
+    /// encoder asked for nothing in particular picks.
     static func write(to url: URL, seconds: Double, size: CGSize = CGSize(width: 160, height: 120),
-                      likeAScreenRecording: Bool = false) async throws {
+                      likeAScreenRecording: Bool = false,
+                      profile: String = AVVideoProfileLevelH264HighAutoLevel) async throws {
         try? FileManager.default.removeItem(at: url)
         let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
         var settings: [String: Any] = [
@@ -60,7 +64,7 @@ enum TestClip {
             settings[AVVideoCompressionPropertiesKey] = [
                 AVVideoAllowFrameReorderingKey: true,
                 AVVideoMaxKeyFrameIntervalDurationKey: 1,
-                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+                AVVideoProfileLevelKey: profile,
             ] as [String: Any]
         }
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
