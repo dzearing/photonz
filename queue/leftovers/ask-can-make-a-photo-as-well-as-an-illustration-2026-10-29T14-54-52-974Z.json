@@ -1,0 +1,32 @@
+{
+  "id": "ask-can-make-a-photo-as-well-as-an-illustration-2026-10-29T14-54-52-974Z",
+  "task": "ask-can-make-a-photo-as-well-as-an-illustration",
+  "kind": "task",
+  "label": "Ask picks how to make a picture (loop stopped by hand on 2026-10-28 for CPU)",
+  "title": "Ask picks how to make a picture from what you say: a photo, vector art or an icon, or painting with brushes",
+  "outcome": "interrupted",
+  "at": "2026-10-29T14:54:52.974Z",
+  "files": [
+    "Scripts/ask-eval/engines.mjs",
+    "Scripts/ask-eval/eval.mjs",
+    "Scripts/ask-eval/judge.mjs",
+    "Scripts/ask-eval/scoring.mjs",
+    "Tests/PhotonzCoreTests/AgentToolsTests.swift",
+    "plugin/skills/photonz/SKILL.md",
+    "Scripts/ask-eval/cases/photo-dog-on-a-beach.json",
+    "Scripts/ask-eval/cases/photo-kitten-walking-in-the-snow.json",
+    "Scripts/ask-eval/cases/photo-photorealistic-lighthouse-at-dusk.json",
+    "Scripts/ask-eval/cases/photo-realistic-coffee-on-a-table.json",
+    "Scripts/ask-eval/rubric-photo.md",
+    "Scripts/playtest/ask-makes-a-photo-walk.json",
+    "Scripts/playtest/ask-makes-it-again-as-a-photo-walk.json",
+    "Scripts/playtest/ask-paints-before-brushes-walk.json",
+    "Tests/PhotonzCoreTests/AskPhotoTests.swift"
+  ],
+  "count": 15,
+  "state": "stashed",
+  "stash": "107574a45d0a6784e34daf9a9bfde06400f7d9dc",
+  "restore": "git stash apply 107574a45d0a6784e34daf9a9bfde06400f7d9dc",
+  "why": "",
+  "handed": null
+}
