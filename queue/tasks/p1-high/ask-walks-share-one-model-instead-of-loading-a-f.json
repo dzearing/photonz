@@ -4,12 +4,12 @@
   "goal": "Every Ask walk starts a new copy of the app, and every copy loads the whole Ask model from scratch (about 23 GB, GPU at 100% for a minute or more), so a walk check with a dozen Ask walks loads it a dozen times in a row. Walks in one run should share one model that is already loaded, run gently, and is let go when the run ends.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 50,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:13:39.994Z",
-  "updated": "2026-10-26T14:17:20.806Z",
+  "updated": "2026-10-28T14:26:09.750Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured in the intake window on 2026-10-25: one ask-annotates-a-screenshot-walk = one fresh llama-server, 22.8 GB RSS, GPU 99-100% for about 80 s, free memory 93% to 58%, no swap. The GPU-latency probe (a tiny Metal blit every 50 ms) stayed under 7 ms even under load, so this is waste and heat rather than proven keyboard theft; the focus theft the user hit was the focus drill's canary, fixed in eeaf8747. Server launch: Sources/Photonz/Agent/AskModelServer.swift (AskHelperProcess ties the server to the app pid), args: AskBuiltInServerPlan.arguments in Sources/PhotonzCore/AskBuiltInModel.swift (--parallel is already 1). Bench scripts used: the gpulat.swift and bench.sh approach (start llama-server on a spare port, one ~3000-token request, time a 1 MB Metal blit every 50 ms).",
@@ -37,6 +37,10 @@
     {
       "t": "2026-10-26T14:17:20.805Z",
       "note": "triage 2026-10-26: the rotating check has been stuck on the Ask block (cursor 103) since 2026-10-25 midday, stopped on its 30 minute clock three times running. Moving the cursor is its own task, the-rotating-walk-check-moves-on-through-the-set; this one makes each Ask walk cheaper."
+    },
+    {
+      "t": "2026-10-28T14:26:09.749Z",
+      "note": "seq 50 -> 110"
     }
   ]
 }

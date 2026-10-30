@@ -4,12 +4,12 @@
   "goal": "Ask reads how the person wants a picture made and uses that kind of tool. \"Make a photorealistic image of...\" or \"a photo of...\" makes a real photographic picture layer. \"Make vector art of...\", \"draw...\" or \"create an icon...\" makes editable vector layers, as today. \"Paint a picture of...\" paints with the brush tools once those exist, stroke by stroke as a person would; until then it says plainly that painting is not ready yet and offers the closest other kind. Today every request becomes traced vector shapes.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 100,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T00:05:36.495Z",
-  "updated": "2026-10-26T14:15:30.175Z",
+  "updated": "2026-10-29T14:55:09.006Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"I'd like to say \\\"paint a picture\\\" and it will use brush tools when they're ready, or make a photorealistic image of ..., and it will generate an image, or \\\"make vector art of ...\\\" or \\\"create an icon\\\" and it would use the vector tools\"\n\nThe user, 2026-10-24: 'i see we have zimage but it's not seemingly able to generate photos - only illustrations with vector art. I'd like to be able to be able to do both.'\n\nCause, from reading the code (not reproduced in the app): Z-Image Turbo is used only as a step on the way to vector. Every add_drawing goes to the picture model with a forced flat look (Scripts/picture-model/server.py:31 LOOK 'flat vector illustration... a few flat colours', :55 ICON, :59 SCENE; prompt_for at :65) and the result is always traced into paths (Scripts/picture-model/layers.py, vtracer). There is no route that keeps the painted pixels. Design write-up: docs/design/ask.md:226-366 ('Painting a drawing', 'The picture model'). Swift side: Sources/Photonz/Agent/AskPictureModel.swift, Sources/PhotonzCore/AskPictureModelPlan.swift, PictureModelRequest in Sources/PhotonzCore/AgentDrawingPlacement.swift.\n\nLikely shape: a new agent command (e.g. add_photo) or a 'photo' kind on the request, a server endpoint that returns the PNG without tracing and with a photographic prompt, and an image layer added via the ImageStore through History.perform. Z-Image Turbo is good at photoreal; check resolution limits and memory beside the 29 GB planning model (ask.md:355-358). Memory rule: no hardcoded subjects or stored content, quality via model, prompt and general techniques (see memory no-hardcoded-generated-content). The ask-eval set lives under Scripts/ask-eval; queue/tasks/p1-high/the-ask-test-set-scores-video-requests-too.json is a precedent for extending it.",
@@ -44,6 +44,39 @@
     {
       "t": "2026-10-26T14:15:30.174Z",
       "note": "seq 70 -> 100"
+    },
+    {
+      "t": "2026-10-28T01:51:09.838Z",
+      "note": "The user asked again 2026-10-27: \"i specifically want to be able to say 'generate a photo of a kitten walking in the snow' and it will do that\". Moved back to the front: it had been resequenced from 8 to 70 to 100, which the intake rule forbids for a user ask. Also asked about MOSS-Image: it was set aside on 2026-10-24 by the intake session's research note in measure-whether-qwen-image-2-1-can-paint-and-edi, NOT by the user. Measure Z-Image Turbo (kept untraced), Qwen-Image-2.1 (share that task's numbers) and MOSS-Image on the same photo prompts, seconds and peak memory each, contact sheet in the audit, and pick on the numbers."
+    },
+    {
+      "t": "2026-10-28T01:51:09.910Z",
+      "note": "seq 100 -> 0.000002"
+    },
+    {
+      "t": "2026-10-28T14:26:08.778Z",
+      "note": "seq 0.000002 -> 10"
+    },
+    {
+      "t": "2026-10-28T14:28:37.234Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-29T14:54:53.019Z",
+      "note": "ran out of turn with 15 file(s) still changed: Scripts/ask-eval/engines.mjs, Scripts/ask-eval/eval.mjs, Scripts/ask-eval/judge.mjs, Scripts/ask-eval/scoring.mjs, Tests/PhotonzCoreTests/AgentToolsTests.swift, plugin/skills/photonz/SKILL.md, Scripts/ask-eval/cases/photo-dog-on-a-beach.json, Scripts/ask-eval/cases/photo-kitten-walking-in-the-snow.json, Scripts/ask-eval/cases/photo-photorealistic-lighthouse-at-dusk.json, Scripts/ask-eval/cases/photo-realistic-coffee-on-a-table.json, Scripts/ask-eval/rubric-photo.md, Scripts/playtest/ask-makes-a-photo-walk.json, Scripts/playtest/ask-makes-it-again-as-a-photo-walk.json, Scripts/playtest/ask-paints-before-brushes-walk.json, Tests/PhotonzCoreTests/AskPhotoTests.swift. Put aside so the next task started clean; restore with `git stash apply 107574a45d0a6784e34daf9a9bfde06400f7d9dc` before carrying on."
+    },
+    {
+      "t": "2026-10-29T14:55:04.740Z",
+      "note": "Interrupted 2026-10-28 08:41 when the loop was stopped by hand (Mac was busy). The runner's work is in TWO stashes, restore both before going on: (1) its 15 uncommitted files (ask-eval photo cases, rubric-photo.md, eval/judge/scoring/engines edits, AskPhotoTests.swift, AgentToolsTests.swift, SKILL.md, walks ask-makes-a-photo / ask-makes-it-again-as-a-photo / ask-paints-before-brushes): git stash apply 107574a45d0a6784e34daf9a9bfde06400f7d9dc ; (2) its own earlier backup 'photo-route-wip (ask-can-make-a-photo)': find it with git stash list and apply it, resolving any overlap with (1). Last step it was on: scoring today's traced path on the photo requests as the baseline. Then drop both stashes."
+    },
+    {
+      "t": "2026-10-29T14:55:04.827Z",
+      "note": "back to pending after a hand stop; its work is stashed, see the log"
+    },
+    {
+      "t": "2026-10-29T14:55:09.005Z",
+      "note": "The photo-route-wip backup stash is commit 9a03bded8b07cd5ac9c0618eebda4c11d21bfa11 (git stash apply 9a03bded8b07cd5ac9c0618eebda4c11d21bfa11)."
     }
-  ]
+  ],
+  "started": "2026-10-28T14:28:37.233Z"
 }

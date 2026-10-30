@@ -1,0 +1,48 @@
+{
+  "id": "history-remembers-the-filter-you-last-chose",
+  "title": "History remembers the filter you last chose",
+  "goal": "The History pane opens on the filter (All, Screenshots, Videos, and so on) the person picked last time, across closing the pane and relaunching the app, instead of resetting to All.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-28T13:39:52.886Z",
+  "updated": "2026-10-28T18:25:08.690Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User 2026-10-28: \"in the history pane, I keep switching the filter. Can you just remember what i chose last?\" Filter state is HistoryOverlay.swift:185 `private(set) var filter: CaptureFilter = .all`, never persisted.",
+  "acceptance": [
+    "Pick a filter, close History, reopen: same filter",
+    "Pick a filter, quit and relaunch: same filter",
+    "A walk covers both"
+  ],
+  "log": [
+    {
+      "t": "2026-10-28T13:39:52.888Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-28T13:39:59.677Z",
+      "note": "seq 3970 -> 0.000003"
+    },
+    {
+      "t": "2026-10-28T14:25:21.413Z",
+      "note": "triage 2026-10-28: tagged measure-redline (capture, History and the capture toast are the capture-and-redline flow, as earlier History and toast tasks were)"
+    },
+    {
+      "t": "2026-10-28T14:26:08.876Z",
+      "note": "seq 0.000003 -> 20"
+    },
+    {
+      "t": "2026-10-28T17:12:38.692Z",
+      "note": "taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"
+    },
+    {
+      "t": "2026-10-28T18:25:08.688Z",
+      "note": "Built on users/dzearing/timeline-room-history-drop (commit 02577842); see docs/progress/log.md 2026-10-28. Lands on main with that branch."
+    }
+  ],
+  "completed": "2026-10-28T18:25:08.689Z"
+}

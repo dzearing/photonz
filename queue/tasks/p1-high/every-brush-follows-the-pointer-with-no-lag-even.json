@@ -4,12 +4,12 @@
   "goal": "The brushes look good but feel laggy to use: watercolour and oil clearly trail the pointer at 150 pt or more, and the user finds brushes laggy in general. Every brush, at every size, should keep up with the hand with no visible delay, without changing how it looks.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 2,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:32:07.793Z",
-  "updated": "2026-10-27T00:32:15.291Z",
+  "updated": "2026-10-28T14:26:09.457Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'the watercolor looks good but it's slow if i increase the size to 150pt or more, feels quite laggy', then 'actually so does oil... still trying everything but the brushes feel very laggy to use'. A cause shared by every medium (the live overlay, CanvasBrush.swift) is as likely as per-medium cost. Not reproduced in the intake window. Theories only: Sources/PhotonzRender/Watercolour.swift mark(_:) walks every pixel of a box radius*(1+farthest) around each dab on the CPU, so the work grows with the square of the size and with how close dabs are spaced; reach() loops over every earlier wet wash per pixel; WetField.ensure copies the whole field when it grows; and the live stroke (Sources/Photonz/CanvasBrush.swift) may be building a full CGImage of the overlay per drag. Measure which of these it actually is before fixing.",
@@ -20,7 +20,8 @@
     "Every medium meets the 8 ms p95 bar at every measured size, including small sizes (the user called brushes laggy in general, not only big ones); the table in the audit shows before and after for all of them.",
     "Rendering changes carry the perf note the repo asks for. Logic in PhotonzRender is test-first.",
     "Try path: Next defaults, Brush tool, for watercolour and oil at 200 pt and every other medium at 50 pt, scribble fast across the canvas; the paint keeps up with the pointer.",
-    "An audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+    "An audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not.",
+    "Measured on a 12 megapixel canvas whose paint layer already holds 50 strokes (moved from painting-is-what-you-see-earlier-strokes-never-r on 2026-10-28), as well as on an empty layer"
   ],
   "log": [
     {
@@ -54,6 +55,14 @@
     {
       "t": "2026-10-27T00:32:15.290Z",
       "note": "seq 20 -> 2"
+    },
+    {
+      "t": "2026-10-28T14:25:23.314Z",
+      "note": "triage 2026-10-28, folded from painting-is-what-you-see-earlier-strokes-never-r: its 2026-10-27 pass took 500 pt oil from 20.2 to 15.3 ms p95 (charcoal 16.5 to 14.7, pencil 13.8 to 12.6, watercolour 14.1, marker 7.8; 150 pt 10.4 to 11.4; 20 pt 2.5 to 4.3) on 12 MP with 50 strokes. Profile of 500 pt oil on the main thread: the parallel pixel loop of lay() about 65%, field growth (mostly the tail journal saving its boxes) about 14%, the serial per-bristle sum about 10%, 6 MB of scratch allocated and zeroed per dab about 7%. Per move: settled dab about 5 ms, tail re-laid about 4.5, take-back about 2.5, redraw about 1, screen hand-off about 1. 12 bands instead of 8 did not help. Next levers named there: reuse the dab scratch, save the tail journal once per move over the union rather than per dab and field, skip rows and columns outside the rotated footprint. Reaching 8.3 ms at 500 pt may need a cheaper oil or dry model, which would change how saved strokes paint: that is a card for the user, not a quiet change"
+    },
+    {
+      "t": "2026-10-28T14:26:09.456Z",
+      "note": "seq 2 -> 80"
     }
   ]
 }

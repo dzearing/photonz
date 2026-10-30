@@ -14363,3 +14363,82 @@
 {"t":"2026-10-27T11:37:06.677Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-27T11:37:06.739Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-27T11:37:19.767Z","ev":"task_pending","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"Two fixes landed: 98e7767a (zoomed in, a landing never makes the composite replay the layer: the rotating check's painting-holds-still-walk failure, reproduced 1 in 3, now 6 of 6 green) and 6eed4155 (a big brush's tail taken back without copying the stroke: 500 pt oil 20.2 -> 15.3 ms p95, charcoal 16.5 -> 14.7, pencil 13.8 -> 12.6). Still open: one 120 Hz frame at 150 and 500 pt (10.4 to 15.3 ms); see the log for the profile and next levers."}
+{"t":"2026-10-28T01:50:53.742Z","ev":"task_created","id":"ask-makes-a-real-photo-when-asked-like-a-kitten","priority":"p1-high","title":"Ask makes a real photo when asked, like a kitten walking in the snow"}
+{"t":"2026-10-28T01:51:09.777Z","ev":"task_dropped","id":"ask-makes-a-real-photo-when-asked-like-a-kitten","from":"pending","note":"folded into ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-28T01:51:09.840Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-28T01:51:09.912Z","ev":"task_resequenced","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":100,"to":0.000002}
+{"t":"2026-10-28T13:39:52.890Z","ev":"task_created","id":"history-remembers-the-filter-you-last-chose","priority":"p1-high","title":"History remembers the filter you last chose"}
+{"t":"2026-10-28T13:39:53.000Z","ev":"task_created","id":"history-pane-resizes-from-its-outer-edge","priority":"p1-high","title":"History pane resizes from its outer edge"}
+{"t":"2026-10-28T13:39:59.679Z","ev":"task_resequenced","id":"history-remembers-the-filter-you-last-chose","from":3970,"to":0.000003}
+{"t":"2026-10-28T13:39:59.748Z","ev":"task_resequenced","id":"history-pane-resizes-from-its-outer-edge","from":3980,"to":0.000004}
+{"t":"2026-10-28T13:45:47.468Z","ev":"task_created","id":"history-keeps-the-focused-tile-on-screen-while-a","priority":"p1-high","title":"History keeps the focused tile on screen while an arrow is held"}
+{"t":"2026-10-28T13:45:47.585Z","ev":"task_created","id":"history-pane-runs-edge-to-edge-along-the-top","priority":"p1-high","title":"History pane runs edge to edge along the top"}
+{"t":"2026-10-28T13:45:54.087Z","ev":"task_resequenced","id":"history-keeps-the-focused-tile-on-screen-while-a","from":3970,"to":0.000005}
+{"t":"2026-10-28T13:45:54.156Z","ev":"task_resequenced","id":"history-pane-runs-edge-to-edge-along-the-top","from":3980,"to":0.000006}
+{"t":"2026-10-28T13:47:54.939Z","ev":"task_created","id":"capture-toast-is-half-the-size-and-far-less-in-t","priority":"p1-high","title":"Capture toast is half the size and far less in the way"}
+{"t":"2026-10-28T13:47:58.344Z","ev":"task_resequenced","id":"capture-toast-is-half-the-size-and-far-less-in-t","from":3970,"to":0.000007}
+{"t":"2026-10-28T14:19:59.713Z","ev":"loop_started","pid":51963}
+{"t":"2026-10-28T14:19:59.765Z","ev":"loop_awake","held":true,"pid":51977,"screenLocked":false}
+{"t":"2026-10-28T14:25:24.176Z","ev":"task_walks","id":"the-rotating-walk-check-moves-on-through-the-set","walks":[]}
+{"t":"2026-10-28T14:25:24.522Z","ev":"task_reprioritized","id":"the-rotating-walk-check-moves-on-through-the-set","from":"p1-high","to":"p2-normal"}
+{"t":"2026-10-28T14:26:08.589Z","ev":"task_resequenced","id":"the-rotating-walk-check-moves-on-through-the-set","from":340,"to":9999}
+{"t":"2026-10-28T14:26:08.780Z","ev":"task_resequenced","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":0.000002,"to":10}
+{"t":"2026-10-28T14:26:08.878Z","ev":"task_resequenced","id":"history-remembers-the-filter-you-last-chose","from":0.000003,"to":20}
+{"t":"2026-10-28T14:26:08.969Z","ev":"task_resequenced","id":"history-pane-resizes-from-its-outer-edge","from":0.000004,"to":30}
+{"t":"2026-10-28T14:26:09.068Z","ev":"task_resequenced","id":"history-keeps-the-focused-tile-on-screen-while-a","from":0.000005,"to":40}
+{"t":"2026-10-28T14:26:09.161Z","ev":"task_resequenced","id":"history-pane-runs-edge-to-edge-along-the-top","from":0.000006,"to":50}
+{"t":"2026-10-28T14:26:09.257Z","ev":"task_resequenced","id":"capture-toast-is-half-the-size-and-far-less-in-t","from":0.000007,"to":60}
+{"t":"2026-10-28T14:26:09.354Z","ev":"task_resequenced","id":"painting-is-what-you-see-earlier-strokes-never-r","from":1,"to":70}
+{"t":"2026-10-28T14:26:09.458Z","ev":"task_resequenced","id":"every-brush-follows-the-pointer-with-no-lag-even","from":2,"to":80}
+{"t":"2026-10-28T14:26:09.550Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-26","from":3,"to":90}
+{"t":"2026-10-28T14:26:09.649Z","ev":"task_resequenced","id":"photonz-only-offers-an-update-once-that-version","from":40,"to":100}
+{"t":"2026-10-28T14:26:09.751Z","ev":"task_resequenced","id":"ask-walks-share-one-model-instead-of-loading-a-f","from":50,"to":110}
+{"t":"2026-10-28T14:26:09.843Z","ev":"task_resequenced","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":60,"to":120}
+{"t":"2026-10-28T14:26:09.936Z","ev":"task_resequenced","id":"the-agent-can-list-set-and-paint-with-the-brushe","from":70,"to":130}
+{"t":"2026-10-28T14:26:10.029Z","ev":"task_resequenced","id":"a-vector-path-s-line-can-be-painted-with-a-brush","from":80,"to":140}
+{"t":"2026-10-28T14:26:10.120Z","ev":"task_resequenced","id":"caption-and-measurement-chips-come-in-a-set-of-p","from":90,"to":150}
+{"t":"2026-10-28T14:26:10.214Z","ev":"task_resequenced","id":"while-ask-works-the-agent-panel-says-what-it-is","from":110,"to":160}
+{"t":"2026-10-28T14:26:10.309Z","ev":"task_resequenced","id":"settings-offers-several-ask-models-with-what-eac","from":140,"to":170}
+{"t":"2026-10-28T14:26:10.399Z","ev":"task_resequenced","id":"a-button-you-can-press-never-looks-disabled-the","from":150,"to":180}
+{"t":"2026-10-28T14:26:10.491Z","ev":"task_resequenced","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":160,"to":190}
+{"t":"2026-10-28T14:26:10.574Z","ev":"task_resequenced","id":"ask-can-mock-a-web-page-from-its-address-and-loo","from":170,"to":200}
+{"t":"2026-10-28T14:26:10.657Z","ev":"task_resequenced","id":"ask-on-the-local-model-makes-results-that-look-f","from":180,"to":210}
+{"t":"2026-10-28T14:26:10.750Z","ev":"task_resequenced","id":"typing-in-ask-lists-the-commands-you-can-run","from":190,"to":220}
+{"t":"2026-10-28T14:26:10.834Z","ev":"task_resequenced","id":"on-a-small-picked-object-the-3d-turn-handles-are","from":200,"to":230}
+{"t":"2026-10-28T14:26:10.918Z","ev":"task_resequenced","id":"when-ask-stops-part-way-it-says-so-and-one-refus","from":210,"to":240}
+{"t":"2026-10-28T14:26:11.004Z","ev":"task_resequenced","id":"ask-works-on-what-you-have-picked-so-make-this-b","from":220,"to":250}
+{"t":"2026-10-28T14:26:11.093Z","ev":"task_resequenced","id":"the-name-chips-over-component-copies-stay-clear","from":230,"to":260}
+{"t":"2026-10-28T14:26:11.192Z","ev":"task_resequenced","id":"on-a-video-the-ask-button-never-sits-on-top-of-t","from":240,"to":270}
+{"t":"2026-10-28T14:26:11.279Z","ev":"task_resequenced","id":"ask-s-redlines-do-at-least-as-well-on-unseen-req","from":250,"to":280}
+{"t":"2026-10-28T14:26:11.373Z","ev":"task_resequenced","id":"the-agent-coverage-check-counts-panel-controls-a","from":260,"to":290}
+{"t":"2026-10-28T14:26:11.460Z","ev":"task_resequenced","id":"ask-s-first-answer-after-its-model-loads-comes-i","from":270,"to":300}
+{"t":"2026-10-28T14:26:11.549Z","ev":"task_resequenced","id":"a-redline-of-a-2x-screenshot-reads-in-points-wit","from":280,"to":310}
+{"t":"2026-10-28T14:26:11.652Z","ev":"task_resequenced","id":"the-keynote-clean-title-page-draws-its-starfield","from":290,"to":320}
+{"t":"2026-10-28T14:26:11.756Z","ev":"task_resequenced","id":"on-a-video-captions-and-transitions-sit-where-th","from":300,"to":330}
+{"t":"2026-10-28T14:26:11.846Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":310,"to":340}
+{"t":"2026-10-28T14:26:11.959Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":320,"to":350}
+{"t":"2026-10-28T14:26:12.059Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":330,"to":360}
+{"t":"2026-10-28T14:26:12.151Z","ev":"task_resequenced","id":"a-walk-can-press-the-buttons-in-the-settings-win","from":85,"to":90}
+{"t":"2026-10-28T14:26:12.243Z","ev":"task_resequenced","id":"captions-of-a-clip-move-with-it-when-a-freeze-mo","from":90,"to":100}
+{"t":"2026-10-28T14:26:12.332Z","ev":"task_resequenced","id":"trimming-a-clip-start-into-a-speed-stop-freeze-k","from":100,"to":110}
+{"t":"2026-10-28T14:26:12.426Z","ev":"task_resequenced","id":"the-design-rules-and-the-premiere-gap-report-sto","from":110,"to":120}
+{"t":"2026-10-28T14:26:12.512Z","ev":"task_resequenced","id":"the-rotating-walk-check-moves-on-through-the-set","from":9999,"to":520}
+{"t":"2026-10-28T14:26:42.272Z","ev":"task_note","id":"a-walk-can-press-the-buttons-in-the-settings-win"}
+{"t":"2026-10-28T14:26:42.349Z","ev":"task_note","id":"audit-pictures-show-the-window-the-way-a-person"}
+{"t":"2026-10-28T14:26:42.381Z","ev":"triage","summary":"0 merged, 1 overlap folded (WYSIWYG painting 8 ms bar into the brush lag task), 1 moved (rotating walk check p1 to p2: symptom stopped, six checks advanced), 1 finding folded with reproduction (loop-day counts a stopped loop as building), 2 findings logged, 5 tagged with an epic, 41 renumbered, 0 reset, 0 leftovers settled (1 open, task still open); open 91 before and after"}
+{"t":"2026-10-28T14:28:09.783Z","ev":"digest","file":"2026-10-28.md"}
+{"t":"2026-10-28T14:28:37.246Z","ev":"task_started","id":"ask-can-make-a-photo-as-well-as-an-illustration","title":"Ask picks how to make a picture from what you say: a photo, vector art or an icon, or painting with brushes","priority":"p1-high"}
+{"t":"2026-10-28T17:12:38.694Z","ev":"task_in_progress","id":"history-remembers-the-filter-you-last-chose","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
+{"t":"2026-10-28T17:12:38.774Z","ev":"task_in_progress","id":"history-pane-resizes-from-its-outer-edge","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
+{"t":"2026-10-28T17:12:38.853Z","ev":"task_in_progress","id":"history-pane-runs-edge-to-edge-along-the-top","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
+{"t":"2026-10-28T17:54:24.877Z","ev":"task_in_progress","id":"history-keeps-the-focused-tile-on-screen-while-a","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
+{"t":"2026-10-28T17:54:24.955Z","ev":"task_in_progress","id":"capture-toast-is-half-the-size-and-far-less-in-t","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
+{"t":"2026-10-28T18:25:08.691Z","ev":"task_done","id":"history-remembers-the-filter-you-last-chose","from":"in_progress","note":"Built on users/dzearing/timeline-room-history-drop (commit 02577842); see docs/progress/log.md 2026-10-28. Lands on main with that branch."}
+{"t":"2026-10-28T18:25:08.769Z","ev":"task_done","id":"history-pane-runs-edge-to-edge-along-the-top","from":"in_progress","note":"Built on users/dzearing/timeline-room-history-drop (commit 02577842); see docs/progress/log.md 2026-10-28. Lands on main with that branch."}
+{"t":"2026-10-28T18:25:08.854Z","ev":"task_done","id":"history-keeps-the-focused-tile-on-screen-while-a","from":"in_progress","note":"Built on users/dzearing/timeline-room-history-drop (commit 02577842); see docs/progress/log.md 2026-10-28. Lands on main with that branch."}
+{"t":"2026-10-28T18:25:08.932Z","ev":"task_done","id":"capture-toast-is-half-the-size-and-far-less-in-t","from":"in_progress","note":"Built on users/dzearing/timeline-room-history-drop (commit 02577842); see docs/progress/log.md 2026-10-28. Lands on main with that branch."}
+{"t":"2026-10-28T18:25:09.000Z","ev":"task_done","id":"history-pane-resizes-from-its-outer-edge","from":"in_progress","note":"Built on users/dzearing/timeline-room-history-drop; no walk drags the edge yet (the grip is in the History panel, which dragGrip cannot post into)."}
+{"t":"2026-10-29T14:54:52.975Z","ev":"leftovers","id":"ask-can-make-a-photo-as-well-as-an-illustration","task":"ask-can-make-a-photo-as-well-as-an-illustration","state":"stashed","count":15,"stash":"107574a45d0a6784e34daf9a9bfde06400f7d9dc"}
+{"t":"2026-10-29T14:55:04.742Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-29T14:55:04.829Z","ev":"task_pending","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":"in_progress","note":"back to pending after a hand stop; its work is stashed, see the log"}
+{"t":"2026-10-29T14:55:09.007Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}

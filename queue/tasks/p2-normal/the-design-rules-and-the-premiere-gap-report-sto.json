@@ -4,12 +4,12 @@
   "goal": "On 2026-10-19 every waiting card was taken as recommended and cards became rare, but the design rules runners read and the report that measures Photonz against Premiere still say some questions are open cards. A runner reading them is told to wait for, or open, a card that no longer exists, and the gap report reads further behind than the app is.",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 120,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-10-20T13:58:02.156Z",
-  "updated": "2026-10-25T13:28:05.666Z",
+  "updated": "2026-10-28T14:26:12.425Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-20 digest's rule review. The cards were taken as recommended in 624a8e3a; runner-prompt.md and manager-prompt.md were updated then, the design documents were not. Docs only: no app code, so no walk check is started by it.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-10-25T13:28:05.665Z",
       "note": "digest 2026-10-25: since 2026-10-24 Command K is Ask on a video (the user's call) and Split at Playhead is Command B. UX-PATTERNS §7 and the gap report's key table already say so, but docs/design/video-vs-premiere.md lines 144 to 147 still count the cut workflow's presses with 'Command K', and the video-beats-premiere success line in queue/objectives.json still lists Command K among the Premiere keys that must do their Premiere job. Both read as a broken promise to a runner checking the bar; fix the counts and flag the objectives line to the manager pass."
+    },
+    {
+      "t": "2026-10-28T14:26:12.424Z",
+      "note": "seq 110 -> 120"
     }
   ]
 }

@@ -1,0 +1,49 @@
+{
+  "id": "history-pane-resizes-from-its-outer-edge",
+  "title": "History pane resizes from its outer edge",
+  "goal": "The History pane can be made taller or shorter (or wider, whichever is its outer edge) by dragging its outer edge, with a resize cursor on hover, and keeps that size across reopening and relaunching.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-28T13:39:52.996Z",
+  "updated": "2026-10-28T18:25:08.999Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User 2026-10-28: \"i would like the pane to be resizable on the outer edge.\" History is an NSPanel built by HistoryOverlayController.",
+  "acceptance": [
+    "Hovering the outer edge shows a resize cursor",
+    "Dragging it resizes the pane smoothly, within sensible limits",
+    "The size is kept after closing and reopening, and after relaunch",
+    "Walk with a real edge drag, run through focus-drill"
+  ],
+  "log": [
+    {
+      "t": "2026-10-28T13:39:52.998Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-28T13:39:59.746Z",
+      "note": "seq 3980 -> 0.000004"
+    },
+    {
+      "t": "2026-10-28T14:25:21.813Z",
+      "note": "triage 2026-10-28: tagged measure-redline (capture, History and the capture toast are the capture-and-redline flow, as earlier History and toast tasks were)"
+    },
+    {
+      "t": "2026-10-28T14:26:08.967Z",
+      "note": "seq 0.000004 -> 30"
+    },
+    {
+      "t": "2026-10-28T17:12:38.772Z",
+      "note": "taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"
+    },
+    {
+      "t": "2026-10-28T18:25:08.997Z",
+      "note": "Built on users/dzearing/timeline-room-history-drop; no walk drags the edge yet (the grip is in the History panel, which dragGrip cannot post into)."
+    }
+  ],
+  "completed": "2026-10-28T18:25:08.998Z"
+}

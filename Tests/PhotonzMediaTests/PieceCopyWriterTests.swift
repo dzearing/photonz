@@ -13,6 +13,12 @@ struct PieceCopyWriterTests {
 
     private static let fps = Double(TestClip.fps)
 
+    /// Big enough to be stored at a level the encoder can be asked for by
+    /// name (3.1), as every real screen recording is (5.2 at 3456 by 2234).
+    /// A clip the size of a stamp is stored at 1.3, which the encoder has no
+    /// setting for, so its frames could never be made again its way.
+    private static let recordingSize = CGSize(width: 1280, height: 720)
+
     /// Which frame of the source the timeline shows at a moment of it.
     private static func sourceFrame(atMS ms: Double) -> Int { Int((ms / 1000 * fps).rounded(.down)) }
 
@@ -65,7 +71,7 @@ struct PieceCopyWriterTests {
         let dir = TestClip.makeScratchDirectory()
         defer { TestClip.cleanUp(dir) }
         let source = dir.appendingPathComponent("recording.mp4")
-        try await TestClip.write(to: source, seconds: 8, size: CGSize(width: 320, height: 240),
+        try await TestClip.write(to: source, seconds: 8, size: Self.recordingSize,
                                  likeAScreenRecording: true)
         let out = dir.appendingPathComponent("edit.mp4")
         // Mid-frame cuts, a piece carried earlier, and one shorter than a
@@ -79,6 +85,71 @@ struct PieceCopyWriterTests {
         let landed = await TestClip.duration(of: out)
         #expect(abs(landed - length) < 1 / Self.fps, "ran \(landed)s, the edit is \(length)s")
         try await expectFramesMatch(out, pieces: pieces)
+    }
+
+    /// The parameter sets each of a file's ways of storing its pictures
+    /// carries (its `avcC`), one entry per sample description.
+    private static func parameterSets(of url: URL) async throws -> [Data] {
+        let track = try #require(try await AVURLAsset(url: url).loadTracks(withMediaType: .video).first)
+        return try await track.load(.formatDescriptions).map { format in
+            let atoms = CMFormatDescriptionGetExtension(
+                format, extensionKey: kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms)
+                as? [String: Any]
+            return (atoms?["avcC"] as? Data) ?? Data()
+        }
+    }
+
+    /// A file holding its pictures two ways (a second `avcC` for the frames
+    /// made again at a cut) plays in QuickTime and nowhere else: Chrome, and
+    /// so Teams and Slack, stop on the first made frame with a decode error
+    /// (-12909). The Mac's recorder stores Main and the encoder picked High,
+    /// which is what a saved cut of a real recording did from 0.17.0 on.
+    @Test("A cut recording comes out stored one way, the recording's own",
+          arguments: [AVVideoProfileLevelH264MainAutoLevel, AVVideoProfileLevelH264HighAutoLevel])
+    func oneWayOfStoringThePictures(profile: String) async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let source = dir.appendingPathComponent("recording.mp4")
+        try await TestClip.write(to: source, seconds: 5, size: Self.recordingSize,
+                                 likeAScreenRecording: true, profile: profile)
+        let out = dir.appendingPathComponent("edit.mp4")
+        let pieces = [450..<2_017, 3_210..<4_600]
+        let outcome = try await PieceCopyWriter.write(source: source, ranges: pieces, mix: [],
+                                                      soundURLs: [:], to: out)
+        #expect(outcome.renderedFrames > 0)
+        let written = try await Self.parameterSets(of: out)
+        let recorded = try await Self.parameterSets(of: source)
+        #expect(written.count == 1, "the file stores its pictures \(written.count) ways")
+        #expect(written == recorded)
+        // Frames made again keep what the encoder said of them: a key frame
+        // opens each run, and the rest lean on it, rather than every one of
+        // them claiming to be a key frame a seek can start on.
+        let keys = try await Self.keyFrameMS(of: out).count
+        let frames = Int(Double(pieces.reduce(0) { $0 + $1.count }) / 1000 * Self.fps)
+        #expect(keys > 0 && keys * 4 < frames, "\(keys) of about \(frames) frames are key frames")
+        try await expectFramesMatch(out, pieces: pieces)
+    }
+
+    /// Where the encoder cannot be made to store frames the recording's way,
+    /// nothing is left behind and the caller draws the edit instead, rather
+    /// than a file only QuickTime can play.
+    @Test("A recording the encoder cannot match is left to the ordinary path")
+    func aRecordingItCannotMatchIsNotCopied() async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let source = dir.appendingPathComponent("recording.mp4")
+        try await TestClip.write(to: source, seconds: 5, size: CGSize(width: 320, height: 240),
+                                 likeAScreenRecording: true,
+                                 profile: AVVideoProfileLevelH264MainAutoLevel)
+        let out = dir.appendingPathComponent("edit.mp4")
+        await #expect {
+            try await PieceCopyWriter.write(source: source, ranges: [450..<2_017], mix: [],
+                                            soundURLs: [:], to: out)
+        } throws: { error in
+            if case PieceCopyWriter.CopyError.notCopyable = error { return true }
+            return false
+        }
+        #expect(!FileManager.default.fileExists(atPath: out.path))
     }
 
     @Test("Cuts on key frames copy every frame and draw none")
@@ -106,7 +177,7 @@ struct PieceCopyWriterTests {
         let dir = TestClip.makeScratchDirectory()
         defer { TestClip.cleanUp(dir) }
         let source = dir.appendingPathComponent("recording.mp4")
-        try await TestClip.write(to: source, seconds: 6, size: CGSize(width: 320, height: 240),
+        try await TestClip.write(to: source, seconds: 6, size: Self.recordingSize,
                                  likeAScreenRecording: true)
         let tone = dir.appendingPathComponent("tone.m4a")
         try TestTone.writeFlat(to: tone, seconds: 4)

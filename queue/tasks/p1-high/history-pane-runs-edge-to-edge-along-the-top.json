@@ -1,0 +1,48 @@
+{
+  "id": "history-pane-runs-edge-to-edge-along-the-top",
+  "title": "History pane runs edge to edge along the top",
+  "goal": "The History pane spans the full width of the screen and hugs the top edge, with no gap at the left, right or top (today about 48px each side and 12px above, measured by the user).",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 50,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-28T13:45:47.581Z",
+  "updated": "2026-10-28T18:25:08.768Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User 2026-10-28 redline: 48px gaps left and right, 12px gap above the pane: \"These gaps shouldn't be here, it should be edge to edge hugging the top.\" History is an NSPanel built by HistoryOverlayController. Related: history-pane-resizes-from-its-outer-edge (the outer edge is the bottom once it is edge to edge).",
+  "acceptance": [
+    "No gap at the left, right or top of the screen, measured on a screenshot",
+    "Rounded corners only where the pane does not meet a screen edge",
+    "Still clears the menu bar correctly"
+  ],
+  "log": [
+    {
+      "t": "2026-10-28T13:45:47.583Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-28T13:45:54.154Z",
+      "note": "seq 3980 -> 0.000006"
+    },
+    {
+      "t": "2026-10-28T14:25:22.248Z",
+      "note": "triage 2026-10-28: tagged measure-redline (capture, History and the capture toast are the capture-and-redline flow, as earlier History and toast tasks were)"
+    },
+    {
+      "t": "2026-10-28T14:26:09.158Z",
+      "note": "seq 0.000006 -> 50"
+    },
+    {
+      "t": "2026-10-28T17:12:38.851Z",
+      "note": "taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"
+    },
+    {
+      "t": "2026-10-28T18:25:08.766Z",
+      "note": "Built on users/dzearing/timeline-room-history-drop (commit 02577842); see docs/progress/log.md 2026-10-28. Lands on main with that branch."
+    }
+  ],
+  "completed": "2026-10-28T18:25:08.767Z"
+}

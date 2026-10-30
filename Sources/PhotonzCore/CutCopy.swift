@@ -152,6 +152,15 @@ public struct CutCopyPlan: Hashable, Sendable {
         public internal(set) var decodesAt: Int64
         /// How long it shows for.
         public internal(set) var lastsFor: Int64
+
+        /// The same frame decoded at another moment: a frame made again by an
+        /// encoder that reorders takes the decode times of its run in the
+        /// order the encoder hands the frames over.
+        public func decoded(at moment: Int64) -> Placed {
+            var frame = self
+            frame.decodesAt = moment
+            return frame
+        }
     }
 
     /// A stretch of the new file, in the order it is written.

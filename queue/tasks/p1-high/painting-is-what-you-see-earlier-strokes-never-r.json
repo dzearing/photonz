@@ -4,19 +4,19 @@
   "goal": "While drawing, every earlier stroke visibly recomputes: the strokes change, then swap into a higher resolution version. That looks awkward and wastes time. Painting should be what you see is what you get: the stroke you are drawing looks exactly like it will when you let go, nothing already on the canvas repaints, flickers or changes sharpness, and the whole thing answers immediately.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 1,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-27T11:37:19.766Z",
+  "updated": "2026-10-28T14:26:09.353Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
   "acceptance": [
     "Reproduce first in the probe at Next defaults: paint 5 strokes (watercolour, oil and one dry medium), then a 6th, zoomed out, at 100% and zoomed in. Record a video or frame sequence of the canvas from pointer down to a second after letting go, and MEASURE: how many earlier strokes are simulated again per new stroke, how many frames the earlier strokes differ from their settled pixels (the visible change and the swap to a sharper copy), and the time from letting go until the canvas is settled. All in the audit before any change.",
     "After the fix, MEASURED the same way: adding a stroke simulates no earlier stroke again (a finished stroke is painted once onto a kept layer bitmap, and later strokes paint on top of it, except where watercolour genuinely needs the wet washes under it); across the whole recording, the pixels of earlier strokes outside the new stroke's reach differ from their settled values in 0 frames; the live stroke and the settled stroke match pixel for pixel or within a stated tolerance at the moment of letting go; there is no low-resolution stage at any zoom.",
-    "Immediate response holds at the same time: each drag event shows within one 120 Hz frame at p95 at 20 to 500 pt, on a layer with 50 strokes already on it, measured.",
+    "Immediate response is not made worse by this work: drag events at 20 to 500 pt on a layer with 50 strokes already on it are measured before and after and are no slower. The one 120 Hz frame (8 ms at p95) bar at 150 and 500 pt belongs to every-brush-follows-the-pointer-with-no-lag-even (folded there by the 2026-10-28 triage), so this task can close without it",
     "Undo, redo, opening a saved file and changing a stroke's settings still give exactly the same picture as today (pixel compare in tests); the document still keeps strokes, not baked pixels, and any kept bitmap is a cache that can always be rebuilt from them.",
     "Memory stays bounded: the kept bitmaps have a limit and let go under memory pressure; the audit states the cost for a 12 megapixel canvas.",
     "Logic in PhotonzRender is test-first; rendering changes carry the perf note.",
@@ -131,6 +131,14 @@
     {
       "t": "2026-10-27T11:37:19.765Z",
       "note": "Two fixes landed: 98e7767a (zoomed in, a landing never makes the composite replay the layer: the rotating check's painting-holds-still-walk failure, reproduced 1 in 3, now 6 of 6 green) and 6eed4155 (a big brush's tail taken back without copying the stroke: 500 pt oil 20.2 -> 15.3 ms p95, charcoal 16.5 -> 14.7, pencil 13.8 -> 12.6). Still open: one 120 Hz frame at 150 and 500 pt (10.4 to 15.3 ms); see the log for the profile and next levers."
+    },
+    {
+      "t": "2026-10-28T14:25:22.908Z",
+      "note": "triage 2026-10-28: the only item the 2026-10-27 pass left open was one 120 Hz frame at 150 and 500 pt, which is the same bar every-brush-follows-the-pointer-with-no-lag-even already holds. Two tasks were chasing the same 8 ms. Item 3 now asks only that this work did not slow drawing down; the 8 ms bar, the 50-stroke condition and the profile with its next levers moved to that task. The next runner here checks the remaining items and closes it, or says which one is still short"
+    },
+    {
+      "t": "2026-10-28T14:26:09.352Z",
+      "note": "seq 1 -> 70"
     }
   ],
   "started": "2026-10-27T10:15:29.751Z",

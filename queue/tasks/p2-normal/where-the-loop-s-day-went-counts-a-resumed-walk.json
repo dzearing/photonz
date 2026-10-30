@@ -1,7 +1,7 @@
 {
   "id": "where-the-loop-s-day-went-counts-a-resumed-walk",
-  "title": "Where the loop's day went counts a resumed walk run as part of the run it finishes",
-  "goal": "The daily digest reads the loop's day from one report and is told to call out any day with more than one whole-set walk run, since each costs about five hours. That report counts the short pick-up of a stopped run as a run of its own, so a day with one run in two parts and one new run reads as three, and the digest raises an alarm that is not real.",
+  "title": "Where the loop's day went tells the truth about a stopped loop and a resumed walk run",
+  "goal": "The daily digest reads the loop's day from one report and is told to call out any day with more than one whole-set walk run, since each costs about five hours. That report counts the short pick-up of a stopped run as a run of its own, so a day with one run in two parts and one new run reads as three, and the digest raises an alarm that is not real. It also counts a stopped loop as building: on 2026-10-28 it said the loop spent all 24 hours on one task, when the loop had been stopped since 04:45 the day before and no task ran at all.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 470,
@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:08:35.106Z",
-  "updated": "2026-10-25T13:26:48.271Z",
+  "updated": "2026-10-28T14:25:34.392Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the a-full-walk-check-that-gets-stopped-picks-up-whe runner on 2026-10-22 (left rough: count reads one high) and again by the 2026-10-23 digest, which had to read queue/loop.log to find that the three runs were the 2026-10-22T11:15Z run stopped at 989 of 1011, its 7 minute pick-up (queue/sweep/2026-10-22-095234.log, 25 walks), and the 2026-10-23T11:41Z run stopped at 453 of 1015 when the person came back. Code: queue/bin/loop-day.mjs.",
@@ -17,7 +17,8 @@
     "Reproduce first: run node queue/bin/loop-day.mjs --hours 24 over the window ending 2026-10-23T14:02Z (or a drill that plants the same events) and record that it prints 3 full-set runs for the 2026-10-22 run, its 25-walk pick-up, and the 2026-10-23 run",
     "A pick-up that finishes a stopped run is counted with the run it finishes (its minutes still count), so that window reads 2 runs, and the line says when a run was finished in parts",
     "A run stopped part way and not yet picked up says so beside the count",
-    "A drill covers both cases and runs with the other sweep drills"
+    "A drill covers both cases and runs with the other sweep drills",
+    "A task handed back unfinished (task_pending) or a loop that stops or restarts (loop_started, and a loop that died with no line) ends the task's time. Reproduce first: node queue/bin/loop-day.mjs --since 2026-10-27T14:20:42Z --until 2026-10-28T14:20:42Z printed 'tasks 1440m 100.0% 1 task(s)' on 2026-10-28, from painting-is-what-you-see-earlier-strokes-never-r's task_started at 2026-10-27T10:15:29Z, its task_pending at 11:37:19Z, and the loop dying in the 11:38Z rotating check with nothing after it until loop_started at 2026-10-28T14:19:59Z. Fixed, that window reads 0 minutes on tasks and the line says the loop was not running for most of it"
   ],
   "log": [
     {
@@ -35,6 +36,10 @@
     {
       "t": "2026-10-25T13:26:48.270Z",
       "note": "seq 460 -> 470"
+    },
+    {
+      "t": "2026-10-28T14:25:23.905Z",
+      "note": "triage 2026-10-28, folded in: the report also counts a dead loop as building. Ran node queue/bin/loop-day.mjs --hours 24 at 2026-10-28T14:20Z and it printed 'tasks 1440m 100.0% 1 task(s) ... The loop spent the majority of this window building', yet no task ran in that window: the last task_started was 2026-10-27T10:15:29Z, it went back to pending at 11:37:19Z, the loop died during the 11:38Z rotating check (queue/sweep/slice-2026-10-27-043801.log stops mid-walk at crisp-zoom-walk, no stop line in queue/loop.log) and the next event is loop_started at 2026-10-28T14:19:59Z. spansFrom in loop-day.mjs ends a task only on task_done, task_blocked, task_dropped, task_reset, runner_failed or the next start; task_pending and loop_started are not ends, so the span ran to now. The digest is told to quote this number, so it read the day upside down."
     }
   ]
 }

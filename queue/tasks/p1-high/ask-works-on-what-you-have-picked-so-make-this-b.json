@@ -4,12 +4,12 @@
   "goal": "A person picks a layer (a button on a screenshot, a card, a title on a video) and asks Ask to make this bigger, round its corners or give it the accent colour. Ask should change the picked thing, the way the agent-edit mock shows with its 1 selected scope, and the way generative fill acts on a selection in Photoshop. Today Ask is never told what is picked, so this has nothing to aim at and the model has to guess from the words.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 220,
+  "seq": 250,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-22T16:33:50.886Z",
-  "updated": "2026-10-26T14:15:31.052Z",
+  "updated": "2026-10-28T14:26:11.003Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence (read, 2026-10-22, HEAD b5be5bb0): Sources/PhotonzCore/AgentDocumentRead.swift carries no selection field (grep selected|selection|picked: nothing), AskPlanning.swift instructions never mention it, and AskViews.swift draws only the Agent title, on-device and the close button. Mock: docs/design/mocks/pages/agent-edit.html, the Agent group header reads 1 selected over the typed request make the CTA bigger and use the accent color round the corners more and add a soft shadow; the mock proposal and Accept card are NOT wanted (the user replaced Run plan with straight-away changes and rows on 2026-10-20). Competitors: Photoshop generative fill and Canva Magic Edit act on what is selected; Figma AI acts on the selection. Shared path: AgentTools.request and AgentWork.run serve both Ask and the server, so add it to the read once. Hard rule from queue/bin/runner-prompt.md: nothing stored or coded for any subject or request.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-10-26T14:15:31.051Z",
       "note": "seq 200 -> 220"
+    },
+    {
+      "t": "2026-10-28T14:26:11.002Z",
+      "note": "seq 220 -> 250"
     }
   ]
 }
