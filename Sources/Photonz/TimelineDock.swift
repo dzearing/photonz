@@ -435,6 +435,11 @@ struct TimelineDock: View {
                             let listening = editorState.isWritingCaptions
                             let listeningBefore = listening
                                 ? editorState.captionsListeningRowID(in: drawn) : nil
+                            // A file in the air has a new track to go on at
+                            // the top (`TimelineNewTrackSlot`).
+                            if editorState.timelineDropRoomMS != nil {
+                                TimelineNewTrackSlot(laneWidth: laneWidth)
+                            }
                             ForEach(drawn) { row in
                                 if listening, row.id == listeningBefore {
                                     TimelineCaptionsListeningRow(laneWidth: laneWidth)
@@ -493,6 +498,9 @@ struct TimelineDock: View {
                         // tracks' own space so they scroll with them.
                         .overlay(alignment: .topLeading) {
                             TimelineLaneBoxView(laneWidth: laneWidth, leading: Self.lanesLeading)
+                        }
+                        .overlay(alignment: .topLeading) {
+                            TimelineNewTrackGhost(laneWidth: laneWidth, leading: Self.lanesLeading)
                         }
                         .onDrop(of: TimelineFileDropDelegate.types, delegate: TimelineFileDropDelegate(editorState: editorState))
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
@@ -708,7 +716,7 @@ struct TimelineDock: View {
             return true
         }
         let sideways = abs(dx) > abs(dy) ? dx : (event.modifierFlags.contains(.shift) ? dy : 0)
-        guard sideways != 0, editorState.isTimelineOpenedOut else { return false }
+        guard sideways != 0, editorState.canScrollTimeline else { return false }
         let ms = editorState.motionStripRuler.msSpanning(fraction: Double(-sideways / laneWidth))
         editorState.panTimeline(byMS: ms)
         return true

@@ -201,6 +201,12 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// for a clip on V1 is a walk about something else. False or nil leaves
     /// it to the app.
     public var timelineOpen: Bool?
+    /// True: every recording this walk opens is zoomed out to twice its
+    /// length, with room after the end, the way a person's opens
+    /// (`TimelineZoom.opening`). False opens it at Fit, because nearly every
+    /// walk clicks at window points measured with the recording across the
+    /// whole lane, and those points would land on other moments.
+    public var timelineRoom: Bool
     /// The probe is the ACTIVE app for the whole walk.
     ///
     /// A walk leaves the person's keyboard alone and never brings the probe
@@ -251,7 +257,8 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
-                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false,
+                flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, timelineRoom: Bool = false,
+                front: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false) {
         self.offline = offline
@@ -261,6 +268,7 @@ public struct PlaytestSetup: Sendable, Equatable {
         self.askModelMissing = askModelMissing
         self.history = history
         self.timelineOpen = timelineOpen
+        self.timelineRoom = timelineRoom
         self.front = front
         self.forget = forget
         self.captures = captures
@@ -271,7 +279,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil && !front && history == nil && !timedWithoutMarkers
+            && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && history == nil && !timedWithoutMarkers
             && !askModelMissing && askModelsOnly == nil && !offline && !agentHome
     }
 
@@ -283,7 +291,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     /// The known keys, named in the error when a walk uses another one.
     static let knownKeys = ["agentHome", "askModelMissing", "askModelsOnly", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
-                            "timedWithoutMarkers", "timelineOpen"]
+                            "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
     /// never run Photonz.
@@ -341,6 +349,7 @@ public struct PlaytestSetup: Sendable, Equatable {
                                                   field: "expectNoControl"),
                   flags: try Self.choices(fields["flags"]),
                   timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"),
+                  timelineRoom: try Self.yesOrNo(fields["timelineRoom"], field: "timelineRoom") ?? false,
                   front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
                   history: try Self.count(fields["history"], field: "history"),
                   timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],
@@ -474,6 +483,9 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// (`video-library-catalog-walk` on 2026-10-17 could not reach Split Wipe
     /// behind two name cards other walks had saved).
     case titlePresets
+    /// Which filter History opens on, which is the one picked last, and how
+    /// tall its pane was dragged.
+    case history
 }
 
 /// One feature a walk switches on or off for the length of its run.
@@ -2831,6 +2843,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// in the key's own window (the press until what it changed is laid out)
     /// took that long or longer, the way it does on a `press`.
     case appKey(PlaytestKey, [PlaytestModifier], longestUnderMS: Double? = nil)
+    /// A key held down and handed to the app: one press, `repeats` repeats
+    /// `everyMS` apart, one release. While History is up, every repeat and
+    /// the release must leave its focused tile on screen.
+    case holdAppKey(PlaytestKey, [PlaytestModifier], repeats: Int, everyMS: Double)
     /// Move the pointer without pressing anything, so a walk can read what the
     /// canvas SAYS a press would do there AND what resting on something makes
     /// the app do. `control` rests on a control by the name the panel gives it,
@@ -4594,7 +4610,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
+        "action", "appKey", "holdAppKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
@@ -4631,6 +4647,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .key: "key"
         case .shortcut: "shortcut"
         case .appKey: "appKey"
+        case .holdAppKey: "holdAppKey"
         case .move: "move"
         case .pinch: "pinch"
         case .timelinePinch: "timelinePinch"
@@ -4880,6 +4897,20 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("longestUnderMS", "must be a positive number of milliseconds")
             }
             self = .appKey(key, try f.modifiers(), longestUnderMS: bound)
+        case "holdAppKey":
+            let keyName = try f.string("key")
+            guard let key = PlaytestKey(keyName) else {
+                throw f.invalid("key", "\"\(keyName)\" is not a key; use a single character or return, escape, tab, space, delete, left, right, up, down")
+            }
+            let repeats = try f.number("repeats")
+            guard repeats >= 1, repeats == repeats.rounded() else {
+                throw f.invalid("repeats", "is how many times the held key repeats, a whole number from 1")
+            }
+            let every = try f.optionalNumber("everyMS") ?? 33
+            guard every > 0, every.isFinite else {
+                throw f.invalid("everyMS", "must be a positive number of milliseconds")
+            }
+            self = .holdAppKey(key, try f.modifiers(), repeats: Int(repeats), everyMS: every)
         case "move":
             if let control = try f.optionalString("control") {
                 self = .move(.control(control, in: try f.optionalString("in")), try f.modifiers())

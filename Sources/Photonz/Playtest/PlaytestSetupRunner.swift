@@ -131,6 +131,8 @@ extension PlaytestMemory {
             [RecentDocumentsStore.defaultsKey]
         case .titlePresets:
             [TitlePresetStore.key]
+        case .history:
+            [HistoryOverlay.filterKey, HistoryOverlayController.heightKey]
         }
     }
 }
@@ -215,6 +217,8 @@ struct PlaytestSetupRunner {
         // Every walk says afresh, so one walk's Edit never leaks into the
         // next walk's View.
         EditorState.walkOpensRecordingsInEdit = setup.timelineOpen == true
+        EditorState.walkOpensTimelinesWithRoom = setup.timelineRoom
+        if setup.timelineRoom { said.append("a recording opens zoomed out with room after its end") }
         // Every walk says afresh too: Ask on a Mac with no model downloaded.
         AskModelServer.walkFolder = setup.askModelMissing ? PlaytestSetupRunner.emptyAskModels() : nil
         if setup.askModelMissing { said.append("Ask has no model downloaded") }

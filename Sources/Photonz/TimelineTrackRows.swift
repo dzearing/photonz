@@ -682,15 +682,11 @@ struct TimelineTrackRow: View {
         }
     }
 
-    /// Where new tracks would be made by what is in the air: a clip carried
-    /// between two tracks, several carried past either end, or a file let go
-    /// there.
+    /// Where new tracks would be made by a clip carried between two tracks,
+    /// or several carried past either end. A file let go there draws the clip
+    /// itself where its track will be instead (`TimelineNewTrackGhost`).
     private var newTrackPlaces: Set<Int> {
-        var places = editorState.clipTrackDrop?.newTrackPlaces ?? []
-        if let hover = editorState.timelineFileHover, case .newTrack(let at) = hover.landing.target {
-            places.insert(at)
-        }
-        return places
+        editorState.clipTrackDrop?.newTrackPlaces ?? []
     }
 
     // MARK: The mock's words for kinds

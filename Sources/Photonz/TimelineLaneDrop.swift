@@ -1,4 +1,5 @@
 import AppKit
+import OSLog
 import PhotonzCore
 import SwiftUI
 import UniformTypeIdentifiers
@@ -14,6 +15,11 @@ import UniformTypeIdentifiers
 /// to the innermost target and never lets it fall through (`FileDrop`).
 struct TimelineFileDropDelegate: DropDelegate {
     let editorState: EditorState
+
+    /// One line each time a drag comes over the timeline, is let go or
+    /// leaves: what a real drag did, which no walk can make
+    /// (`log show --predicate 'category == "timeline-drop"'`).
+    static let log = Logger(subsystem: "com.dzearing.photonz", category: "timeline-drop")
 
     #if PHOTONZ_PLAYTEST
     /// The keys a walk says are held, since it cannot hold ⌘ down itself.
@@ -118,11 +124,16 @@ struct TimelineFileDropDelegate: DropDelegate {
             return
         }
         editorState.moveTimelineFileHover(to: info.location, insert: Self.insertHeld)
-        guard let provider = info.itemProviders(for: [.fileURL]).first else { return }
-        let editorState = editorState
-        _ = provider.loadObject(ofClass: URL.self) { url, _ in
-            guard let url else { return }
-            Task { @MainActor in editorState.beginTimelineFileHover(url) }
+        let providers = info.itemProviders(for: [.fileURL])
+        Self.log.notice("a drag came over the timeline at \(Int(info.location.x), privacy: .public),\(Int(info.location.y), privacy: .public), \(providers.count, privacy: .public) carrying a file")
+        guard let provider = providers.first else { return }
+        Task { @MainActor [editorState] in
+            guard let url = await FileDrop.fileURL(from: provider) else {
+                Self.log.notice("the file on that drag could not be read")
+                return
+            }
+            editorState.beginTimelineFileHover(url)
+            Self.log.notice("its file is \(url.lastPathComponent, privacy: .public)")
         }
     }
 
@@ -166,6 +177,7 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropExited(info: DropInfo) {
+        Self.log.notice("the drag left the timeline")
         editorState.endPictureHover()
         editorState.endBackgroundHover()
         editorState.endTitleHover()
@@ -217,6 +229,7 @@ struct TimelineFileDropDelegate: DropDelegate {
             TransitionDrag.load(info) { [editorState] kind in editorState.dropTransition(kind, at: point) }
             return true
         }
+        Self.log.notice("let go over the timeline at \(Int(info.location.x), privacy: .public),\(Int(info.location.y), privacy: .public), the ghost saying \(editorState.timelineFileHover?.note ?? "nothing", privacy: .public)")
         if let hover = editorState.timelineFileHover, !hover.landing.allowed {
             editorState.endTimelineFileHover()
             return false
@@ -228,23 +241,21 @@ struct TimelineFileDropDelegate: DropDelegate {
         let point = info.location
         let insert = Self.insertHeld
         let editorState = editorState
-        _ = provider.loadObject(ofClass: URL.self) { url, _ in
-            guard let url else { return }
-            Task { @MainActor in
-                // A sound, a recording or a picture lands on the timeline.
-                // Anything else is answered the way the rest of the window
-                // answers it.
-                if MediaFiles.kind(of: url) != nil, editorState.document?.hasTime == true {
-                    await editorState.dropTimelineFile(url, at: point, insert: insert)
-                } else if editorState.dropPictureFileOnTimeline(url, at: point) {
-                    // A logo or a photo from the Finder: on the shelf and on a track.
+        Task { @MainActor in
+            guard let url = await FileDrop.fileURL(from: provider) else { return }
+            // A sound, a recording or a picture lands on the timeline.
+            // Anything else is answered the way the rest of the window
+            // answers it.
+            if MediaFiles.kind(of: url) != nil, editorState.document?.hasTime == true {
+                await editorState.dropTimelineFile(url, at: point, insert: insert)
+            } else if editorState.dropPictureFileOnTimeline(url, at: point) {
+                // A logo or a photo from the Finder: on the shelf and on a track.
+            } else {
+                editorState.endTimelineFileHover()
+                if editorState.mediaDropAnswer(for: url) != nil {
+                    editorState.dropMedia(at: url)
                 } else {
-                    editorState.endTimelineFileHover()
-                    if editorState.mediaDropAnswer(for: url) != nil {
-                        editorState.dropMedia(at: url)
-                    } else {
-                        editorState.addImageLayerOrOpen(at: url)
-                    }
+                    editorState.addImageLayerOrOpen(at: url)
                 }
             }
         }
@@ -377,6 +388,81 @@ struct TimelineFileGhost: View {
         .offset(x: x0)
         .allowsHitTesting(false)
         .panelReadout("landing: \(hover.note)")
+    }
+}
+
+/// The ghost of a clip that will land on a track of its own: a lane's worth
+/// of clip, drawn where the new track will be, rather than only the line a
+/// track carried between two others draws (user 2026-10-28: "I want it to
+/// look like a ghost of the other rectangle video representation").
+struct TimelineNewTrackGhost: View {
+    @Environment(EditorState.self) private var editorState
+    let laneWidth: CGFloat
+    let leading: CGFloat
+
+    var body: some View {
+        if let hover = editorState.timelineFileHover, case .newTrack(let at) = hover.landing.target,
+           let y = top(at: at) {
+            TimelineFileGhost(hover: hover, laneWidth: laneWidth, height: TimelineDock.laneHeight)
+                .frame(width: laneWidth, alignment: .leading)
+                .offset(x: leading, y: y)
+                .allowsHitTesting(false)
+        }
+    }
+
+    /// Where the new track's lane would start: just under the track it goes
+    /// after, or, at the very top, just over the first.
+    private func top(at index: Int) -> CGFloat? {
+        // Over all the others, while a file is in the air, is the slot made
+        // for it at the very top (`TimelineNewTrackSlot`). The rows' measured
+        // places are not watched, so a ghost worked out from them as the slot
+        // slid in stayed where the first row had been.
+        if index == 0, editorState.timelineDropRoomMS != nil { return TimelineDock.rowSpacing }
+        let tracks = editorState.document?.timelineTracks ?? []
+        let order = tracks.map(\.id)
+        // A track and the sound row under it are one place to drop, so the
+        // ghost goes under the sound row, not over it.
+        let joined = TrackDropRow.joiningSoundRows(editorState.trackDropRows.values.sorted { $0.minY < $1.minY },
+                                                   of: tracks)
+        let rows = Dictionary(joined.map { ($0.trackID, $0) }, uniquingKeysWith: { first, _ in first })
+        if index > 0, index - 1 < order.count, let above = rows[order[index - 1]] {
+            return above.maxY + TimelineDock.rowSpacing
+        }
+        if index < order.count, let below = rows[order[index]] {
+            return below.minY - TimelineDock.rowSpacing - TimelineDock.laneHeight
+        }
+        return rows.values.map(\.maxY).max().map { $0 + TimelineDock.rowSpacing }
+    }
+}
+
+/// A track that is not there yet, at the very top, while a file is in the
+/// air over the timeline: the place a clip goes when it should go on a track
+/// of its own (user 2026-10-28: "an extra track that it could drop into that
+/// was sort of like a dotted line new track at the top ... and made sure we're
+/// scrolled up to it so that way we could always start there"). Until then a
+/// new track above the first could only be aimed at with the top few points
+/// of the first, and its ghost was drawn above the tracks, out of sight.
+///
+/// Let go over it, the clip lands on a new track over all the others
+/// (`TrackDrop.newTrack(at: 0)`), and its ghost is drawn in it.
+struct TimelineNewTrackSlot: View {
+    let laneWidth: CGFloat
+
+    var body: some View {
+        HStack(spacing: TimelineDock.gap) {
+            Label("New track", systemImage: "plus")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(VideoKit.Palette.dim)
+                .labelStyle(.titleAndIcon)
+                .lineLimit(1)
+                .padding(.leading, 6)
+                .frame(width: TimelineDock.gutter, alignment: .leading)
+            TimelineEmptySlot(readout: "new track slot")
+                .frame(width: laneWidth, height: TimelineDock.laneHeight)
+        }
+        .frame(height: TimelineDock.laneHeight)
+        .allowsHitTesting(false)
+        .transition(.opacity.combined(with: .move(edge: .top)))
     }
 }
 

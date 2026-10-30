@@ -21,13 +21,11 @@ extension EditorState {
     /// (`motionStripCycleMS`).
     var timelineLengthForZoomMS: Double { Double(max(1, motionStripCycleMS)) }
 
-    /// Whether this timeline can be opened out at all: the feature is on, the
-    /// strip is measuring a document that finishes, and the document is long
-    /// enough that there is something to open out into.
+    /// Whether this timeline zooms at all: the feature is on and the strip is
+    /// measuring a document that finishes. Any length of document zooms OUT,
+    /// into room after its end; how far IN is `canZoomTimelineIn`.
     var canOpenOutTheTimeline: Bool {
-        Experiments.shared.timelineZoomEnabled
-            && motionStripMeasuresADocument
-            && TimelineZoom.widestScale(documentMS: timelineLengthForZoomMS) > 1
+        Experiments.shared.timelineZoomEnabled && motionStripMeasuresADocument
     }
 
     /// The window on the document, always inside it. Read by the ruler, so
@@ -102,8 +100,27 @@ extension EditorState {
     var canZoomTimelineOut: Bool { canOpenOutTheTimeline && timelineWindow.canZoomOut }
 
     /// Whether the strip is showing less than the whole document, which is
-    /// what puts the overview bar up.
-    var isTimelineOpenedOut: Bool { canOpenOutTheTimeline && !timelineWindow.isFit }
+    /// what puts the overview bar and the "1:00 to 1:30" reading up. Fit from
+    /// the start is not, so the strip does not grow at Fit.
+    var isTimelineOpenedOut: Bool {
+        canOpenOutTheTimeline && !timelineWindow.showsAll(documentMS: timelineLengthForZoomMS)
+    }
+
+    /// Whether the window has anywhere along to go, which is what puts the
+    /// scroller up and lets a scroll, a drag at the edge or the playhead move
+    /// it. At Fit it has: half a window of room after the end
+    /// (`TimelineZoom.roomShare`). As far out as it goes it has not.
+    var canScrollTimeline: Bool {
+        canOpenOutTheTimeline && timelineWindow.canScroll(documentMS: timelineLengthForZoomMS)
+    }
+
+    /// How much time the scroller spans: the document and the room after it.
+    var timelineScrollableMS: Double {
+        timelineWindow.scrollableMS(documentMS: timelineLengthForZoomMS)
+    }
+
+    /// Whether Fit would change anything: zoomed in, or out past the end.
+    var canFitTimeline: Bool { canOpenOutTheTimeline && !timelineWindow.isFit }
 
     /// What the local bar says is on screen: `1:00 to 1:30`, or `all 5:00`.
     var timelineWindowReading: String {
@@ -127,7 +144,7 @@ extension EditorState {
     /// The whole document back across the width. One press, from however far
     /// in: the way back out is never a sequence of presses.
     func fitTimeline() {
-        guard canOpenOutTheTimeline else { return }
+        guard canFitTimeline else { return }
         setTimelineWindow(.fit)
     }
 
@@ -145,7 +162,7 @@ extension EditorState {
     /// Slide the window, in the strip's own points. What dragging the overview
     /// does.
     func panTimeline(byMS delta: Double) {
-        guard isTimelineOpenedOut else { return }
+        guard canScrollTimeline else { return }
         setTimelineWindow(timelineWindow.panned(byMS: delta,
                                                 documentMS: timelineLengthForZoomMS))
         rememberTimelineView()
@@ -155,14 +172,14 @@ extension EditorState {
     /// (`TimelineEdgeScroll`). Remembered once, when the drag lets go, rather
     /// than sixty times a second.
     func edgePanTimeline(byMS delta: Double) {
-        guard isTimelineOpenedOut else { return }
+        guard canScrollTimeline else { return }
         setTimelineWindow(timelineWindow.panned(byMS: delta,
                                                 documentMS: timelineLengthForZoomMS))
     }
 
     /// Put the window around a moment. What clicking the overview does.
     func centreTimeline(onMS ms: Double) {
-        guard isTimelineOpenedOut else { return }
+        guard canScrollTimeline else { return }
         setTimelineWindow(timelineWindow.centred(onMS: ms,
                                                  documentMS: timelineLengthForZoomMS))
         rememberTimelineView()
@@ -184,7 +201,7 @@ extension EditorState {
         timelineFollowedMS = documentTimeMS
         // A drag scrolling the timeline at its edge has the window; the
         // playhead does not pull it back from under the hand.
-        guard moved, isTimelineOpenedOut, !timelineEdgeScroll.isFollowing else { return }
+        guard moved, canScrollTimeline, !timelineEdgeScroll.isFollowing, timelineZoomGlide == nil else { return }
         setTimelineWindow(timelineWindow.revealing(ms: Double(documentTimeMS),
                                                    documentMS: timelineLengthForZoomMS))
     }
@@ -193,6 +210,7 @@ extension EditorState {
     /// off this and a playing recording would otherwise redraw it thirty times
     /// a second for nothing.
     private func setTimelineWindow(_ window: TimelineZoom) {
+        endTimelineGlide()
         let landing = window.clamped(documentMS: timelineLengthForZoomMS)
         guard landing != timelineZoom else { return }
         let scaleChanged = landing.scale != timelineZoom.scale
@@ -432,3 +450,79 @@ struct TimelineRowToReveal: Equatable {
     let trackID: UUID
     let heightBefore: CGFloat?
 }
+
+// MARK: - Through a change of length (user 2026-10-28)
+
+// "we go from one zoom level to another not gracefully; there's no transition
+// but it just immediately snaps". The zoom is a share of the length, so a clip
+// let go past the end, the room made for one in the air, or an undo of either
+// rescaled every second on the strip in one frame (`TimelineZoomGlide`).
+extension EditorState {
+
+    /// The length the strip measures may have changed: keep the seconds on
+    /// screen, or, showing the whole recording with nothing in the air, glide
+    /// to the same share of the new length. Called after every edit, undo and redo (`rerender`)
+    /// and whenever the room for a file in the air comes or goes.
+    func noteTimelineLength() {
+        let now = Double(max(1, motionStripCycleMSPastAGlide))
+        guard let was = timelineZoomMeasuredMS else {
+            timelineZoomMeasuredMS = now
+            return
+        }
+        guard abs(now - was) > 0.5 else { return }
+        timelineZoomMeasuredMS = now
+        guard canOpenOutTheTimeline else { return }
+        endTimelineGlide()
+        let window = timelineZoom.clamped(documentMS: was)
+        if let chosen = timelineWholeRecordingScale, timelineDropRoomMS == nil,
+           let glide = TimelineZoomGlide(from: window, documentMS: was, to: now, landingScale: chosen) {
+            beginTimelineGlide(glide)
+        } else {
+            keepingTheZoomChoice { timelineZoom = window.holdingSpan(fromDocumentMS: was, toDocumentMS: now) }
+        }
+    }
+
+    /// A window the app writes for itself, which leaves what the person last
+    /// chose (`timelineWholeRecordingScale`) as it was.
+    private func keepingTheZoomChoice(_ write: () -> Void) {
+        timelineZoomKeepsItsChoice = true
+        write()
+        timelineZoomKeepsItsChoice = false
+    }
+
+    private func beginTimelineGlide(_ glide: TimelineZoomGlide) {
+        timelineZoomGlideHeldMS = Int(glide.heldMS.rounded())
+        keepingTheZoomChoice { timelineZoom = glide.zoom(at: 0) }
+        let task = Task { @MainActor [weak self] in
+            // Paced by the clock, and never more than a twelfth of the way in
+            // one frame: the edit that changed the length is still landing
+            // (thumbnails, a waveform), and a glide timed by the clock alone
+            // spent its first tenth of a second behind that work and arrived
+            // most of the way there in a single frame.
+            var progress = 0.0
+            var last = ProcessInfo.processInfo.systemUptime
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(16))
+                guard let self, !Task.isCancelled else { return }
+                let now = ProcessInfo.processInfo.systemUptime
+                progress += min((now - last) / TimelineZoomGlide.seconds, 1.0 / 12)
+                last = now
+                guard progress < 1 else { break }
+                self.keepingTheZoomChoice { self.timelineZoom = glide.zoom(at: progress) }
+            }
+            guard !Task.isCancelled else { return }
+            self?.endTimelineGlide()
+        }
+        timelineZoomGlide = (glide, task)
+    }
+
+    /// Straight to where a glide in flight was going.
+    func endTimelineGlide() {
+        guard let (glide, task) = timelineZoomGlide else { return }
+        task.cancel()
+        timelineZoomGlide = nil
+        timelineZoomGlideHeldMS = nil
+        timelineZoom = glide.landing
+    }
+}
+

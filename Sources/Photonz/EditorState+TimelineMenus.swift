@@ -912,7 +912,7 @@ extension EditorState {
     /// to compact. The zoom itself is a pinch (user 2026-09-28).
     func timelineViewMenuRows() -> [MenuRow] {
         var rows: [MenuRow] = [
-            .command("Zoom to Fit", TimelineMenuKeys.zoomToFit, enabled: isTimelineOpenedOut) {
+            .command("Zoom to Fit", TimelineMenuKeys.zoomToFit, enabled: canFitTimeline) {
                 self.fitTimeline()
             },
         ]

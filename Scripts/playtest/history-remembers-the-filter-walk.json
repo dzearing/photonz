@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/history-remembers-the-filter-walk",
+  "setup": { "forget": ["all"], "history": 12 },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "The user, 2026-10-28: \"in the history pane, I keep switching the filter. Can you just remember what i chose last?\" Over a made-up history of 12 captures, History opens on All the first time, the filter is stepped to Screenshots, History is put away and brought back, and it comes back on Screenshots." },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1360, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "h", "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 2 },
+    { "do": "expectHistory", "filter": "all" },
+    { "do": "appKey", "key": "right", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectHistory", "filter": "screenshots" },
+    { "do": "appKey", "key": "escape" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "h", "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 2 },
+    { "do": "expectHistory", "filter": "screenshots", "capture": "Screenshot 0000.png" },
+    { "do": "describe", "stage": "1-reopened-on-screenshots", "note": "THE TEST: put away on Screenshots and brought back, History is on Screenshots, focused on its newest screenshot." }
+  ]
+}

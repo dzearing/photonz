@@ -1671,6 +1671,30 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// A key HELD, the way a person holds an arrow down: one press, then
+    /// repeats at the keyboard's rate, then one release. The history strip
+    /// fell behind a held arrow and left the focus off screen (user
+    /// 2026-10-28), which no number of single presses shows.
+    @Test func aKeyCanBeHeldDown() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "holdAppKey", "key": "right", "repeats": 30, "everyMS": 33 } ] }
+        """)
+        guard case .holdAppKey(let key, let modifiers, let repeats, let everyMS) = script.steps[0] else {
+            Issue.record("holdAppKey"); return
+        }
+        #expect(key == PlaytestKey("right"))
+        #expect(modifiers.isEmpty)
+        #expect(repeats == 30)
+        #expect(everyMS == 33)
+        #expect(PlaytestStep.names.contains("holdAppKey"))
+        let plain = try decode(#"{ "steps": [ { "do": "holdAppKey", "key": "left", "repeats": 5 } ] }"#)
+        guard case .holdAppKey(_, _, _, let rate) = plain.steps[0] else { Issue.record("holdAppKey"); return }
+        #expect(rate == 33)
+        #expect(throws: PlaytestScriptError.self) {
+            try decode(#"{ "steps": [ { "do": "holdAppKey", "key": "left", "repeats": 0 } ] }"#)
+        }
+    }
+
     @Test func anAppKeyStepNeedsAKeyItKnows() {
         #expect(throws: PlaytestScriptError.self) {
             try decode(#"{ "steps": [ { "do": "appKey", "key": "wiggle" } ] }"#)
@@ -4765,6 +4789,17 @@ struct PlaytestScriptTests {
     // component is picked on the Library shelf". "all" means a machine that has
     // never run Photonz, and such a machine has an empty shared shelf, so the
     // leak heals itself at the start of the next walk that asks.
+    // History opens on the filter picked last (user 2026-10-28), so a walk
+    // that switched it would hand every later walk a History on Videos.
+    @Test("Forgetting everything forgets how History was left")
+    func setupForgetsHistory() throws {
+        let script = try decode("""
+        { "setup": { "forget": ["all"] },
+          "steps": [ { "do": "blank" } ] }
+        """)
+        #expect(script.setup.forget.contains(.history))
+    }
+
     @Test("Forgetting everything empties the shared component shelf too")
     func setupForgetsTheSharedShelf() throws {
         #expect(PlaytestMemory.allCases.contains(.shelf))
@@ -4934,7 +4969,8 @@ struct PlaytestScriptTests {
     @Test func everyMemoryNameIsAPlainWord() throws {
         #expect(PlaytestMemory.allCases.map(\.rawValue)
                 == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid",
-                    "frames", "tutorials", "motion", "shelf", "questions", "recent", "titlePresets"])
+                    "frames", "tutorials", "motion", "shelf", "questions", "recent", "titlePresets",
+                    "history"])
     }
 
     @Test func waitForReadsASectionByItsHeaderText() {

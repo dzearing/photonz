@@ -776,6 +776,11 @@ final class AppCoordinator {
         MainMenuState.markHistory(isShown: true)
     }
 
+    /// The History pane's bottom edge, dragged (`HistoryOverlayController`).
+    func beginResizingHistory() { historyOverlay.beginResize() }
+    func resizeHistoryToPointer() { historyOverlay.resizeToPointer() }
+    func endResizingHistory() { historyOverlay.endResize() }
+
     func hideHistory() {
         historyOverlay.hide(notify: false)
         isHistoryShown = false

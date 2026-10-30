@@ -22037,6 +22037,142 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
 - Preflight: the first local `Scripts/test.sh` missed two timing budgets (`theWholeGridPaintsWithoutAStall` 3.3 s vs 3 s, an animated chart 37.4 ms vs 36.8 ms) while macOS Photos analysis held about two cores; both suites passed alone and the full rerun was green. Worth watching if those two budgets keep slipping under background load.
 - Release workflow green, `Photonz.dmg` attached and `releases/latest/download` answers 200; Deploy site announced 0.20.0 and the live `version.json` reports it.
 
+## 2026-10-27 — Timeline room past the end, and History drops (Next)
+
+- The timeline zooms out past Fit to twice the document (`TimelineZoom.farthestOutScale` 0.5), so there is empty room after the last clip to drop into. `isFit` is now exactly scale 1; `showsWholeDocument` (scale <= 1) keeps the overview bar, scrollers and playhead following off while all of the document is on screen. Presses stop on Fit when they cross it. Fit is enabled whenever the view is not exactly Fit (`canFitTimeline`: zoom bar, menu, agent command). Any length of document now zooms out (`canOpenOutTheTimeline` no longer needs a document longer than the closest window). Tests in `TimelineZoomTests`.
+- History tiles carry a walk marker with their own drag payload (`CaptureThumbnailView.dragPayload`), so `dropOnTimeline tile: "@<file>"` drops a History capture through the timeline's real drop target. Walks: `timeline-zooms-out-past-the-end-walk`, `a-history-clip-drops-where-let-go-walk` (middle, start, and past the end once zoomed out).
+- What was reproduced for the History drop: through the tile's own payload the timeline already shows a ghost with Overwrite/Insert, track and time, snaps, and lands the clip where it was let go; the one missing piece was past the end, which needed the room above. NOT reproduced: whether a person's pull on a History tile starts a drag at all. `pickUpTile` cannot answer it (walks keep the History panel from taking key, and a screenshot tile failed the same way as a video tile, so the step is blind there), and this terminal has no Accessibility grant for a real CGEvent drag.
+- Open: the user's own account of how the History drag fails, or an Accessibility grant to drive a real drag, before anything about the pickup is changed.
+
+## 2026-10-28 — A real History drag lands on the timeline
+
+- Reproduced the user's "no ghost, the timeline is not a drop target": a real
+  drag from a History tile reaches the timeline as a FILE PROMISE, and every way
+  of asking SwiftUI's provider for its file (`loadObject(URL)`, in-place file
+  representation) answers nil. Logged from the user's own drags (DROPDIAG,
+  removed again).
+- Walks never saw it because `PlaytestPanelDrag.pasteboard(from:)` wrote the
+  tile's data as plain data. It now writes a movie/sound/picture tile as a
+  promise with its link beside it (`PromisedFileWriter`), which reproduces
+  "drew no ghost" with the fix off.
+- Fix: `CaptureThumbnailView.lifted` remembers the tile a drag began on, and
+  `FileDrop.fileURL(from:)` falls back to it. The system drag pasteboard is NOT
+  read: it is the whole Mac's and held the person's drag from the night before,
+  so a walk landed the wrong recording.
+- A file let go under the tracks now draws a clip-shaped ghost where its new
+  track will be (`TimelineNewTrackGhost`), under the sound row, instead of the
+  2pt line, which was drawn between V1 and its sound row.
+- Walk `a-history-clip-drops-where-let-go-walk` gained a drop below the tracks
+  (`"track": "below"`). Passes.
+- Next: the tile picture morphing into the ghost over the timeline (needs an
+  AppKit drop destination, SwiftUI's DropDelegate cannot touch the drag image);
+  then the default zoom of twice the length with half a window of room (Core
+  tests written, set aside uncommitted).
+
+## 2026-10-28 — Recordings open zoomed out; the tile picture gives way to the ghost
+
+- A recording's timeline opens at `TimelineZoom.opening` (twice its length),
+  and at every zoom the window scrolls on until half of it is room after the
+  end (`TimelineZoom.roomShare`, `scrollableMS`, `canScroll`). Fit can scroll
+  into that room, so the time scroller shows at Fit; only fully zoomed out has
+  nowhere to go. `canScrollTimeline` (new) drives the scroller, scroll wheel,
+  edge scroll and playhead following; `isTimelineOpenedOut` now means "not all
+  of the document is on screen" (`TimelineZoom.showsAll`) and only puts up the
+  overview bar and the reading, so nothing moves at Fit. Zooming in from
+  the room keeps the anchor where it is on screen rather than snapping to 0.
+  `TimelineViewMemory` leaves no record for the opening view instead of Fit.
+- Walks open recordings at Fit (`EditorState.openingTimelineZoom`): nearly
+  every walk clicks at window points measured with the recording across the
+  lane, and the first run of the opening zoom moved those points onto other
+  clips (`a-click-on-a-clip-piece-picks-it-walk`, `a-gap-between-clips-closes-walk`).
+  A walk that wants what a person gets says `"timelineRoom": true` in its
+  setup; `a-history-clip-drops-where-let-go-walk` does.
+- The History strip is hosted in `GhostingDragHostingView`, which adds its own
+  `draggingSession(_:movedTo:)` to that one class at run time (SwiftUI's is
+  not open to override), calls SwiftUI's, then empties the drag's picture
+  while a file ghost is up on any timeline and puts it back when the ghost
+  goes (`TimelineDragPicture`). NOT verified under a real pointer: walks
+  cannot start a drag session and this terminal has no Accessibility grant.
+- `dropOnTimeline` with `"release": false` now fails if the ghost outlives the
+  drag; the History walk carries a tile over and off again.
+- Found why the installed Photonz keeps reopening: a Claude session with the
+  Photonz MCP server calls a tool, and the helper inside
+  `/Applications/Photonz.app` opens its own app. `PHOTONZ_APP=dev` in the
+  server's env points it at the dev build.
+
+## 2026-10-28 — History: remembers its filter, edge to edge, resizable, keeps up with a held arrow; a smaller capture toast
+
+- Built in this session at the user's ask instead of left to the loop (the
+  five p1 tasks filed this morning).
+- Filter: `HistoryFilterChoice` opens on the filter picked last
+  (`HistoryOverlay.filterKey`). New walk memory area `history` (filter and
+  pane height); the four History walks that did not forget everything now
+  forget it. Walk `history-remembers-the-filter-walk`.
+- Edge to edge: `HistoryOverlayLayout.edgeToEdge`, full width and hard under
+  the menu bar; the 8pt outer padding is gone and only the bottom corners are
+  round. Standard height is 192 (`HistoryPaneSize.standard`), the same strip.
+- Resize: a grip along the bottom edge (resize cursor, a small bar on hover)
+  drags the pane between 150pt and 60% of the screen; the height is kept
+  (`HistoryOverlayController.heightKey`). Tiles grow with it through
+  `HistoryPaneMetrics`, worked out from the pane height. Measuring the height
+  in each strip with a GeometryReader made filter switches stall 100 to
+  220ms (`history-filter-switch-speed-walk` failed 2 of 3; 3 of 3 pass now).
+  No walk drags the edge yet: the grip lives in the History panel, which
+  `dragGrip` cannot post into.
+- Held arrow: reproduced with a new `holdAppKey` step (one press, repeats,
+  one release; fails if the focused tile leaves the strip): Right held went
+  off screen 7 times. Each repeat restarted a 0.18s centring slide. Held, the
+  strip now jumps straight to the focus; a single press slides only as far as
+  it takes, like Finder. Walk `history-keeps-up-with-a-held-arrow-walk`.
+- Toast: thumbnail box 196x124 down to 128x80, padding 12 to 8, corner 16 to
+  12, caption2 text, 20pt hover buttons, compact video badges. The card is
+  about 160pt wide, from about 236.
+- Drag picture: rebuilt around `beginDraggingSession` on the strip's host, so
+  it holds the session and hides the picture the moment the ghost appears.
+  The user reported the first version did nothing; still to be confirmed
+  under a real pointer.
+
+## 2026-10-28 (evening) — History drop: no snap, a New track row, the drag picture caught app-wide
+
+The user dragged a History video onto the timeline for real: it landed, but
+the zoom snapped, there was nowhere obvious to put it on a track of its own,
+on one try it landed at 0:00 with no ghost, the tile's picture stayed over
+the ghost, and pinching in seemed to stop short.
+
+- Snap, reproduced: 0.5x on 8s showed 16s; carrying a clip over added 8s of
+  room and the strip showed 32s; letting go at 12s showed 40s, each in one
+  frame. `TimelineZoom.holdingSpan` keeps the seconds on screen through any
+  change of length into a stretch; showing the whole recording (Fit or
+  wider) with nothing in the air, `TimelineZoomGlide` glides to the same share
+  of the new length (0.28s, at most a twelfth
+  of the way a frame, so the landing's own work cannot make it leap).
+  `EditorState.noteTimelineLength` runs from `rerender` and the drop room's
+  didSet. `dropOnTimeline` now fails on a move of more than 35% in one frame
+  (a-history-clip-drops-where-let-go: 13% at most now).
+- New track: a dashed New track row at the top of the tracks while a file is
+  in the air (`TimelineNewTrackSlot`), scrolled up to; its ghost is drawn in
+  it (the row positions it was worked out from are not watched, so it was
+  drawn above the tracks, out of sight). File drags now edge-scroll the
+  tracks like a carried clip. Walk `a-history-clip-gets-a-new-track-at-the-top`
+  (also drops onto a new empty video's V1 at 3s, which lands at 3s).
+- Drag picture: the user's drags left no line from the logging build (that
+  the build carried the lines is not certain: Swift's short strings do not
+  show up in `strings`). Rather than rely on the strip's host being the view
+  SwiftUI drags from, `NSView.beginDraggingSession` is now caught app-wide
+  and the drag that follows a History tile being pulled is kept
+  (`TimelineDragPicture.listen`). Still needs one real drag to confirm: the
+  `drag-picture` and `timeline-drop` log categories say what happened.
+- Not reproduced: landing at 0:00 with no ghost (an empty video's V1 and the
+  space under the tracks both take the drop where aimed through the real drop
+  target), and the pinch limit (8s reaches 32x and, after a drop past the end,
+  20s reaches 80x, both the 250ms closest view).
+
+## 2026-10-29 (morning): History drag picture, video length follows its last clip
+
+- **The picture carried out of History is now the app's own** (`HistoryDragPicture`). Three ways of hiding AppKit's drag picture (the strip's hosting view, every `beginDraggingSession`, every window and view the drag passed over) never fired in a real drag, so the tile hands AppKit an empty preview and a borderless panel carries a still picture of the tile, moved on a display link and faded out while the timeline's ghost is up (`TimelineDragPicture.ghost`). Unverified with a real pointer at commit time; waiting on the user's drag.
+- **A video's written length that ended with its last clip goes on ending with it** (`DurationFollowsClips.swift`, applied in `History.preparing`). Deleting or moving back the clip that stretched it now shrinks it, so the zoom-out limit (twice the length) follows. A blank video longer than its clips keeps its length; deleting every clip leaves it alone. User confirmed fixed.
+- Open: `a-cut-opens-into-its-two-clips-walk` and `copy-and-paste-a-range-walk` land at 5.96s / 13.95s instead of 6.0s / 14.0s on this branch only (likely the span held during a hover changing the snap reach); seven other failing walks fail on the base commit too.
+
 ## 2026-10-28 — Saved videos that only QuickTime could play
 
 - **Found and fixed (since v0.17.0):** saving or exporting an edit that is nothing but cuts (the piece copy, `PieceCopyWriter`) wrote an MP4 with TWO sample descriptions: the recording's own `avcC` (Main 5.2, what `SCRecordingOutput` writes) for copied frames and a second (High 5.1) for frames encoded again at each cut. QuickTime follows that; Chrome stops on the first such frame with `PIPELINE_ERROR_DECODE (-12909)`, so the saved file would not play in Teams, Slack, a browser or anything Chromium. Reproduced on real recordings, before and after, in Chrome. The encoder now takes the recording's profile and level (`StoredWay`) and reorders where the recording does (an encoder told not to writes 6 reference frames against 4); frames made again must carry the recording's parameter sets byte for byte and are stored under its very format description, keeping the encoder's sync attachments, else `notCopyable` and the edit is drawn. Frames come out in decode order and take their run's decode times in that order (`CutCopyPlan.Placed.decoded(at:)`). Test clips "like a screen recording" are now 1280x720 so their level (3.1) is one the encoder can be asked for by name; a 1.3 clip is the refusal test.

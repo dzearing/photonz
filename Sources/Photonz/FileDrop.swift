@@ -127,10 +127,56 @@ enum FileDrop {
     /// so this waits for it rather than blocking the pointer. Nil when the item
     /// turns out not to be a file after all, which is the same as dropping
     /// nothing.
-    private static func fileURL(from provider: NSItemProvider) async -> URL? {
-        await withCheckedContinuation { continuation in
+    ///
+    /// A drag can say it carries a file and still only hand over what is in
+    /// it: a History tile's recording crossed the drag pasteboard as a
+    /// promised movie, and asking it for its link failed, so it landed
+    /// nowhere and drew no ghost (user 2026-10-27). So a movie, a sound or a
+    /// picture that will not give its link is read as the file itself.
+    /// The History tile the drag in the air began on, when its file is still
+    /// there. The provider SwiftUI hands a drop of a History tile answers
+    /// "nothing" to every way of asking it for its file (user 2026-10-28: "the
+    /// timeline is not a droptarget at all"). The drag pasteboard is not read
+    /// instead: it is the whole Mac's, and still holds the last drag made
+    /// anywhere, so a walk read off it the person's own drag of the night
+    /// before and landed the wrong recording.
+    static func draggedFile() -> URL? {
+        guard let lifted = CaptureThumbnailView.lifted,
+              FileManager.default.fileExists(atPath: lifted.path) else { return nil }
+        return lifted
+    }
+
+    static func fileURL(from provider: NSItemProvider) async -> URL? {
+        let linked: URL? = await withCheckedContinuation { continuation in
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
                 continuation.resume(returning: url)
+            }
+        }
+        if let linked { return linked }
+        if let carried = draggedFile() { return carried }
+        let media: [UTType] = [.movie, .audio, .image]
+        guard let type = provider.registeredTypeIdentifiers.first(where: { id in
+            UTType(id).map { found in media.contains { found.conforms(to: $0) } } ?? false
+        }) else { return nil }
+        let name = provider.suggestedName
+        return await withCheckedContinuation { continuation in
+            _ = provider.loadInPlaceFileRepresentation(forTypeIdentifier: type) { url, inPlace, _ in
+                guard let url else { return continuation.resume(returning: nil) }
+                if inPlace { return continuation.resume(returning: url) }
+                // A copy made for the drop is thrown away when this returns,
+                // so it is kept somewhere of the app's own first.
+                let folder = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("Dropped", isDirectory: true)
+                    .appendingPathComponent(UUID().uuidString, isDirectory: true)
+                let kept = folder.appendingPathComponent(
+                    name.map { $0 + "." + url.pathExtension } ?? url.lastPathComponent)
+                do {
+                    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                    try FileManager.default.copyItem(at: url, to: kept)
+                    continuation.resume(returning: kept)
+                } catch {
+                    continuation.resume(returning: nil)
+                }
             }
         }
     }

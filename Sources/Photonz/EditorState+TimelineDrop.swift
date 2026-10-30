@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import SwiftUI
 import PhotonzCore
 import PhotonzMedia
 
@@ -81,7 +82,15 @@ extension EditorState {
             }
             // Room at the end for it, held for as long as it is in the air,
             // so a clip let go after the last one has a lane to be drawn on.
-            if let length = self?.timelineFileInAir?.lengthMS { self?.timelineDropRoomMS = length }
+            if let length = self?.timelineFileInAir?.lengthMS {
+                // ...and a new track at the top, scrolled up to, so a clip
+                // can always start there and be carried down to the track it
+                // goes on (`TimelineNewTrackSlot`).
+                withAnimation(.easeOut(duration: 0.18)) {
+                    self?.timelineDropRoomMS = length
+                    self?.timelineTracksScroll.scrollTo(edge: .top)
+                }
+            }
             self?.refreshTimelineFileHover()
         }
     }
@@ -91,6 +100,19 @@ extension EditorState {
     func moveTimelineFileHover(to point: CGPoint, insert: Bool) {
         timelineFilePointer = TimelineFilePointer(point: point, insert: insert)
         refreshTimelineFileHover()
+        // Held at an edge, the timeline scrolls under it: along time at the
+        // lanes' ends, up and down the tracks at their top and foot, the way
+        // it does under a clip carried along it (`TimelineEdgeScroll`).
+        guard timelineFileInAir != nil else { return }
+        timelineEdgeScroll.follow(.init(laneX: point.x - TimelineDock.lanesLeading, contentY: point.y),
+                                  editor: self) { [weak self] scroll in
+            guard let self, self.timelineFileInAir != nil, var pointer = self.timelineFilePointer,
+                  let hand = scroll.hand else { return false }
+            pointer.point = CGPoint(x: hand.laneX + TimelineDock.lanesLeading, y: hand.contentY ?? pointer.point.y)
+            self.timelineFilePointer = pointer
+            self.refreshTimelineFileHover()
+            return true
+        }
     }
 
     func refreshTimelineFileHover() {
@@ -106,6 +128,7 @@ extension EditorState {
 
     /// The file has left the timeline without landing.
     func endTimelineFileHover() {
+        if timelineFileInAir != nil { timelineEdgeScroll.end() }
         timelineFilePointer = nil
         timelinePictureFileInAir = nil
         timelineFileInAir = nil

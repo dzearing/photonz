@@ -126,7 +126,7 @@ public enum PlaytestLockSafety {
     ///
     /// A step kind joins this list by being watched, not by looking safe.
     public static let stepsThatSurviveALock: Set<String> = [
-        "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
+        "action", "appKey", "holdAppKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
         // Added 2026-10-04 by reading: it asks the document for a path's

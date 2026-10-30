@@ -1,0 +1,17 @@
+{
+  "out": "/tmp/photonz-playtest/history-keeps-up-with-a-held-arrow-walk",
+  "setup": { "forget": ["all"], "history": 60 },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "The user, 2026-10-28: \"when i hold the arrow key down, the pane doesn't stay scrolled to the focused item. I let go and focused item is far to the right off screen.\" Over a made-up history of 60 captures, Right is held for 40 repeats at a fast keyboard's rate, then Left for 40 back, and the focused tile has to be on screen after every repeat and once each key is let go." },
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1360, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "h", "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 2 },
+    { "do": "expectHistory", "filter": "all", "capture": "Screenshot 0000.png" },
+    { "do": "holdAppKey", "key": "right", "repeats": 40, "everyMS": 33 },
+    { "do": "describe", "stage": "1-held-right", "note": "THE TEST: Right held for 40 repeats, the focus is on screen after every repeat and where it stopped." },
+    { "do": "holdAppKey", "key": "left", "repeats": 40, "everyMS": 33 },
+    { "do": "expectHistory", "capture": "Screenshot 0000.png" },
+    { "do": "describe", "stage": "2-held-left", "note": "Left held for 40 back to the newest capture, on screen all the way." }
+  ]
+}

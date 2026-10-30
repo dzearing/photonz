@@ -151,11 +151,12 @@ public struct TimelineViewMemory: Codable, Sendable, Equatable {
 
     public mutating func remember(zoom: TimelineZoom, rows: TimelineRowZoom, for key: String,
                                   at now: Date = Date()) {
-        guard !zoom.isFit || !rows.isCompact else {
+        let opening = abs(zoom.scale - TimelineZoom.opening.scale) <= 0.0001 && zoom.startMS < 0.5
+        guard !opening || !rows.isCompact else {
             files[key] = nil
             return
         }
-        files[key] = Entry(scale: zoom.scale, startMS: zoom.isFit ? 0 : zoom.startMS,
+        files[key] = Entry(scale: zoom.scale, startMS: zoom.startMS,
                            rowScale: rows.scale, usedAt: now)
         guard files.count > Self.capacity else { return }
         let stale = files

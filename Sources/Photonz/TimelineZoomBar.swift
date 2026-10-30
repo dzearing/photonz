@@ -53,9 +53,9 @@ struct TimelineZoomControl: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .foregroundStyle(editorState.isTimelineOpenedOut
+            .foregroundStyle(editorState.canFitTimeline
                              ? AnyShapeStyle(.secondary) : AnyShapeStyle(.quaternary))
-            .disabled(!editorState.isTimelineOpenedOut)
+            .disabled(!editorState.canFitTimeline)
             .accessibilityLabel("Fit The Timeline")
             .panelHelp("Put the whole recording back across the width")
             .playtestControl("Timeline Fit", detail: "Timing strip")
@@ -106,10 +106,12 @@ struct TimelineOverviewBar: View {
 
     var body: some View {
         let length = editorState.timelineLengthForZoomMS
+        // The thumb runs along the document and the room after it.
+        let reach = editorState.timelineScrollableMS
         let window = editorState.timelineWindow
         let span = window.visibleMS(documentMS: length)
-        let x = laneWidth * CGFloat(window.startMS / length)
-        let width = max(6, laneWidth * CGFloat(span / length))
+        let x = laneWidth * CGFloat(window.startMS / reach)
+        let width = max(6, laneWidth * CGFloat(span / reach))
         ZStack(alignment: .leading) {
             Capsule()
                 .fill(.quaternary.opacity(0.7))
@@ -119,7 +121,7 @@ struct TimelineOverviewBar: View {
             Capsule()
                 .fill(.secondary)
                 .frame(width: 1.5, height: Self.height - 2)
-                .offset(x: min(max(0, laneWidth * CGFloat(Double(editorState.documentTimeMS) / length)),
+                .offset(x: min(max(0, laneWidth * CGFloat(Double(editorState.documentTimeMS) / reach)),
                                laneWidth - 1.5))
             RoundedRectangle(cornerRadius: 3)
                 .fill(Color.accentColor.opacity(0.45))
@@ -132,17 +134,17 @@ struct TimelineOverviewBar: View {
         }
         .frame(width: laneWidth, height: Self.height, alignment: .leading)
         .contentShape(Rectangle())
-        .gesture(drag(length: length, span: span))
+        .gesture(drag(length: length, reach: reach, span: span))
         .accessibilityLabel("Where you are in the recording")
         .panelHelp("Where you are in the whole recording. Drag it to move along.")
         .playtestField("Timeline overview")
         .panelReadout("overview \(editorState.timelineWindowReading)")
     }
 
-    private func drag(length: Double, span: Double) -> some Gesture {
+    private func drag(length: Double, reach: Double, span: Double) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                let ms = Double(min(max(0, value.location.x), laneWidth) / max(1, laneWidth)) * length
+                let ms = Double(min(max(0, value.location.x), laneWidth) / max(1, laneWidth)) * reach
                 let held: Double
                 if let grabbedAtMS {
                     held = grabbedAtMS

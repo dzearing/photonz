@@ -16,6 +16,10 @@ import SwiftUI
 struct HistoryOverlay: View {
     let coordinator: AppCoordinator
 
+    /// The filter picked last, which History opens on (user 2026-10-28: "I
+    /// keep switching the filter. Can you just remember what i chose last?").
+    static let filterKey = "history.filter"
+
     /// Which filter is picked. Held in an object only the filter bar and the
     /// strips read while drawing, so a switch never runs this view's body:
     /// when it did, the overlay's fresh key handlers reached every tile in
@@ -44,8 +48,10 @@ struct HistoryOverlay: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .glassEffect(.regular, in: .rect(cornerRadius: 20))
-        .padding(8)
+        // Square where it meets the screen's edges, round where it does not.
+        .glassEffect(.regular, in: UnevenRoundedRectangle(bottomLeadingRadius: 20,
+                                                          bottomTrailingRadius: 20))
+        .overlay(alignment: .bottom) { HistoryResizeGrip(coordinator: coordinator) }
         // The whole overlay is the keyboard target so ← / → / Return / ⌫ reach
         // the focused item no matter where the pointer is.
         .focusable()
@@ -58,7 +64,7 @@ struct HistoryOverlay: View {
             if press.modifiers.contains(.command), Experiments.shared.historyFilterKeysEnabled {
                 return stepFilter(by: delta)
             }
-            return moveSelection(by: delta)
+            return moveSelection(by: delta, held: press.phase == .repeat)
         }
         .onKeyPress(.return) { activateSelection() }
         .onKeyPress(.delete) { deleteSelection() }
@@ -142,10 +148,11 @@ struct HistoryOverlay: View {
     }
 
     @discardableResult
-    private func moveSelection(by delta: Int) -> KeyPress.Result {
+    private func moveSelection(by delta: Int, held: Bool) -> KeyPress.Result {
         let shown = entries
         guard !shown.isEmpty else { return .ignored }
         focus.byKeys = true
+        focus.held = held
         focus.selection = HistorySelection.move(focus.selection, by: delta, count: shown.count)
         return .handled
     }
@@ -182,17 +189,27 @@ struct HistoryOverlay: View {
 /// only the strips read `showing`, so each frame redraws only its own part.
 @MainActor @Observable
 private final class HistoryFilterChoice {
-    private(set) var filter: CaptureFilter = .all
-    private(set) var showing: CaptureFilter = .all
+    private(set) var filter: CaptureFilter
+    private(set) var showing: CaptureFilter
     /// The last pick, before its frames have shown it: a second ⌘→ pressed
     /// before the first has landed steps on from here, not from `filter`.
-    @ObservationIgnored private(set) var wanted: CaptureFilter = .all
+    @ObservationIgnored private(set) var wanted: CaptureFilter
+
+    /// Opens on the filter picked last time.
+    init() {
+        let kept = UserDefaults.standard.string(forKey: HistoryOverlay.filterKey)
+            .flatMap(CaptureFilter.init(rawValue:)) ?? .all
+        filter = kept
+        showing = kept
+        wanted = kept
+    }
     /// The next step, waiting for its frame. A pick that overtakes it takes
     /// its place.
     @ObservationIgnored private var pending: Task<Void, Never>?
 
     func pick(_ picked: CaptureFilter) {
         wanted = picked
+        UserDefaults.standard.set(picked.rawValue, forKey: HistoryOverlay.filterKey)
         pending?.cancel()
         pending = Task { [weak self] in
             await NextRunLoopPass.start()
@@ -311,6 +328,9 @@ private final class HistoryStripFocus {
     /// filter switch or a deletion. Only read when the focus has moved, never
     /// while drawing.
     @ObservationIgnored var byKeys = false
+    /// The arrow is being held down, so the strip keeps up with every
+    /// repeat rather than sliding to each one (`HistoryStripScroller`).
+    @ObservationIgnored var held = false
     /// Bumped to put the strip back at its start at once, with no scroll
     /// through what lies between. Read only by the strip's scroller.
     var rewinds = 0
@@ -459,6 +479,14 @@ private struct HistoryStrip: View {
     }
 
     private func strip(_ shown: [CaptureEntry]) -> some View {
+        // The tiles are as tall as the pane lets them be, so dragging the
+        // pane taller makes them bigger (`HistoryPaneSize`). Read from the
+        // pane's height, never measured here: a strip measuring itself laid
+        // every tile out again on each filter switch, 100 to 220ms of it.
+        strip(shown, tileHeight: HistoryPaneMetrics.shared.tileHeight)
+    }
+
+    private func strip(_ shown: [CaptureEntry], tileHeight: CGFloat) -> some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: 14) {
@@ -467,6 +495,7 @@ private struct HistoryStrip: View {
                     ForEach(Array(shown.enumerated()), id: \.element.id) { index, entry in
                         HistoryOverlayFocusedCell(
                             index: index,
+                            tileHeight: tileHeight,
                             focus: focus,
                             entry: entry,
                             coordinator: coordinator,
@@ -491,13 +520,14 @@ private struct HistoryStrip: View {
 /// cheap, and the tile itself is rebuilt only when the answer changes.
 private struct HistoryOverlayFocusedCell: View {
     let index: Int
+    let tileHeight: CGFloat
     let focus: HistoryStripFocus
     let entry: CaptureEntry
     let coordinator: AppCoordinator
     let highlighted: Bool
 
     var body: some View {
-        HistoryOverlayCell(entry: entry, coordinator: coordinator, focus: focus,
+        HistoryOverlayCell(entry: entry, tileHeight: tileHeight, coordinator: coordinator, focus: focus,
                            focused: focus.selection == index, highlighted: highlighted)
     }
 }
@@ -528,11 +558,26 @@ private struct HistoryStripScroller: View {
                     return
                 }
                 let target = ids[selection]
+                // A held arrow repeats faster than a slide can finish, and
+                // each repeat started the slide again, so the strip fell
+                // further behind the focus the longer it was held (user
+                // 2026-10-28: "I let go and focused item is far to the right
+                // off screen"). Held, the strip goes straight to the focus,
+                // only as far as it takes to show it.
+                if focus.held {
+                    var still = Transaction()
+                    still.disablesAnimations = true
+                    withTransaction(still) { proxy.scrollTo(target) }
+                    return
+                }
                 pending = Task { @MainActor in
                     await NextRunLoopPass.start()
                     guard !Task.isCancelled else { return }
+                    // Only as far as it takes, the way Finder does: a press
+                    // whose tile is already in view leaves the strip still,
+                    // so there is no slide in flight for a hold to fight.
                     withAnimation(.easeOut(duration: 0.18)) {
-                        proxy.scrollTo(target, anchor: .center)
+                        proxy.scrollTo(target)
                     }
                 }
             }
@@ -559,6 +604,7 @@ private struct HistoryStripScroller: View {
 
 private struct HistoryOverlayCell: View {
     let entry: CaptureEntry
+    let tileHeight: CGFloat
     let coordinator: AppCoordinator
     let focus: HistoryStripFocus
     /// Keyboard-focused (selected) tile: accent outline + action buttons shown.
@@ -595,7 +641,7 @@ private struct HistoryOverlayCell: View {
         let _ = ViewBuildMeter.shared.built(.historyTile)
         #endif
         VStack(spacing: 6) {
-            CaptureThumbnailView(entry: entry, store: store, fixedHeight: 100, minWidth: 96,
+            CaptureThumbnailView(entry: entry, store: store, fixedHeight: tileHeight, minWidth: 96,
                                  ringed: focused || highlighted,
                                  onActivate: entry.kind == .video ? {
                                      coordinator.openRecording(entry.url)
@@ -768,3 +814,58 @@ private struct HistoryOverlayCell: View {
     }
 }
 
+
+/// The pane's bottom edge, which drags it taller or shorter (user 2026-10-28:
+/// "i'd like the pane to be resizable on the outer edge"). A resize cursor
+/// over it, and a small bar once the pointer is near.
+private struct HistoryResizeGrip: View {
+    let coordinator: AppCoordinator
+
+    @State private var hovered = false
+    @State private var dragging = false
+
+    var body: some View {
+        ZStack {
+            Capsule()
+                .fill(Color.primary.opacity(hovered || dragging ? 0.35 : 0))
+                .frame(width: 36, height: 4)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 10)
+        .contentShape(Rectangle())
+        .playtestHover("History resize edge") { inside in
+            hovered = inside
+            if inside { NSCursor.resizeUpDown.push() } else if !dragging { NSCursor.pop() }
+        }
+        .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
+            .onChanged { _ in
+                if !dragging {
+                    dragging = true
+                    coordinator.beginResizingHistory()
+                }
+                coordinator.resizeHistoryToPointer()
+            }
+            .onEnded { _ in
+                dragging = false
+                coordinator.endResizingHistory()
+                if !hovered { NSCursor.pop() }
+            })
+        .animation(.easeOut(duration: 0.15), value: hovered || dragging)
+        .help("Drag to make History taller or shorter")
+        .playtestTarget("History resize edge", kind: .control)
+    }
+}
+
+/// How tall the History pane's tiles are right now, which only a drag on its
+/// bottom edge changes (`HistoryOverlayController`).
+@MainActor @Observable
+final class HistoryPaneMetrics {
+    static let shared = HistoryPaneMetrics()
+    private(set) var tileHeight = HistoryPaneSize.standardTile
+
+    /// The pane is this tall, less any room kept for the permission hint.
+    func paneIs(_ height: CGFloat) {
+        let tile = HistoryPaneSize.tileHeight(paneHeight: height)
+        if abs(tile - tileHeight) >= 0.5 { tileHeight = tile }
+    }
+}

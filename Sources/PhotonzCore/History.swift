@@ -123,6 +123,9 @@ public struct History: Sendable {
         // told to say something longer has a label that just grew, and the
         // stack around it has to close up in this same step.
         if sync.updatedInstances > 0 { next.reflowLayouts() }
+        // A video that ended with its last clip still does, however the clip
+        // was moved or taken away (`DurationFollowsClips.swift`).
+        next.followLastClip(from: current)
         guard next != current else {
             return PreparedEdit(next: current, report: EditReport(), changed: false)
         }

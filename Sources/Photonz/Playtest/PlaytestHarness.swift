@@ -1273,6 +1273,10 @@ private final class Run {
             await sleep(0.2)
             note(number, step.name, "\(chord) reached \(destination.path) and it ran", state: describe())
 
+        case .holdAppKey(let key, let modifiers, let repeats, let everyMS):
+            note(number, step.name, try await holdAppKey(key, modifiers: modifiers, repeats: repeats,
+                                                         everyMS: everyMS),
+                 state: describe())
         case .appKey(let key, let modifiers, let longestUnderMS):
             // Handed to the application, not posted into the window, because an
             // application-wide event monitor is the only thing that sees a
@@ -6930,9 +6934,8 @@ private final class Run {
                         + FeatureCatalog.timelineZoomFlag)
                 }
                 guard editor.canOpenOutTheTimeline else {
-                    throw Failure(description: "this document is "
-                        + "\(editor.documentLengthMS) ms long, which is shorter than the closest "
-                        + "window the timeline opens out to, so there is nothing to open out into")
+                    throw Failure(description: "this timeline does not zoom: it is not measuring "
+                        + "a document that finishes")
                 }
                 guard inward ? editor.canZoomTimelineIn : editor.canZoomTimelineOut else {
                     throw Failure(description: "the timeline is already showing "
@@ -6941,9 +6944,9 @@ private final class Run {
                 }
                 inward ? editor.zoomTimelineIn() : editor.zoomTimelineOut()
             case .timelinePanAlong:
-                guard editor.isTimelineOpenedOut else {
-                    throw Failure(description: "the timeline is showing the whole document, so "
-                        + "there is nowhere to scroll it along to")
+                guard editor.canScrollTimeline else {
+                    throw Failure(description: "the timeline is showing the whole document and the "
+                        + "room after it, so there is nowhere to scroll it along to")
                 }
                 let before = editor.timelineWindow.startMS
                 editor.panTimeline(byMS: editor.timelineWindow
@@ -6953,12 +6956,12 @@ private final class Run {
                         + "(\(editor.timelineWindowReading)), so it did not scroll")
                 }
             case .timelineFit:
-                guard editor.isTimelineOpenedOut else {
+                guard editor.canFitTimeline else {
                     throw Failure(description: "the timeline is already showing the whole "
                         + "document, so Fit has nothing to put back")
                 }
                 editor.fitTimeline()
-                guard !editor.isTimelineOpenedOut else {
+                guard !editor.canFitTimeline else {
                     throw Failure(description: "Fit left the timeline showing "
                         + "\(editor.timelineWindowReading)")
                 }
@@ -19240,6 +19243,68 @@ private final class Run {
     /// which is how a walk came to "prove" the selection slot cycling that a
     /// person's keyboard could not (2026-09-03). Get the window wrong and
     /// ordinary typing stops landing in the inspector's fields.
+    /// A key held down (`holdAppKey`): one press, the repeats a keyboard
+    /// sends while it is held, one release. While History is up the focused
+    /// tile has to be on screen after every one of them, and a quarter of a
+    /// second after the release: holding an arrow used to leave the focus far
+    /// off the right hand end (user 2026-10-28).
+    private func holdAppKey(_ key: PlaytestKey, modifiers: [PlaytestModifier], repeats: Int,
+                            everyMS: Double) async throws -> String {
+        let strip = NSApp.windows.first { $0.isVisible && $0.title == "Capture History" }
+        let window = try strip ?? appKeyTarget()
+        let flags = eventFlags(modifiers)
+        func send(down: Bool, repeating: Bool) {
+            let typed = Self.typedCharacters(key, flags: flags, down: down)
+            guard let event = NSEvent.keyEvent(
+                with: down ? .keyDown : .keyUp, location: .zero, modifierFlags: flags,
+                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+                context: nil, characters: typed.characters,
+                charactersIgnoringModifiers: typed.ignoringModifiers,
+                isARepeat: repeating, keyCode: key.keyCode) else { return }
+            NSApp.sendEvent(event)
+            if window === strip, NSApp.keyWindow == nil, window.isVisible { window.sendEvent(event) }
+        }
+        /// Where the focused tile is, or why it is not on screen.
+        func offScreen() -> String? {
+            guard let strip, let reading = HistoryOverlayProbe.shared.read?(),
+                  let focused = reading.focused else { return nil }
+            let name = focused.url.deletingPathExtension().lastPathComponent
+            guard let tile = try? panelTarget(name, kind: .tile), tile.window === strip else {
+                return "\(name) has the focus and has no tile built at all"
+            }
+            let frame = tile.convert(tile.bounds, to: nil)
+            let width = strip.contentView?.bounds.width ?? strip.frame.width
+            guard frame.minX >= -0.5, frame.maxX <= width + 0.5 else {
+                return "\(name) has the focus and is drawn at x \(Int(frame.minX)) to \(Int(frame.maxX)), "
+                    + "outside the strip's 0 to \(Int(width))"
+            }
+            return nil
+        }
+        var misses: [String] = []
+        send(down: true, repeating: false)
+        for index in 0...repeats {
+            if index > 0 { send(down: true, repeating: true) }
+            await sleep(everyMS / 1000)
+            if let miss = offScreen() { misses.append("after repeat \(index): \(miss)") }
+        }
+        send(down: false, repeating: false)
+        await sleep(0.25)
+        let landed = HistoryOverlayProbe.shared.read?().focused?.url.lastPathComponent ?? "nothing"
+        if let miss = offScreen() {
+            throw Failure(description: "held \(Self.chord(key, modifiers)) for \(repeats) repeats, "
+                + "\(Int(everyMS))ms apart, and once it was let go \(miss)"
+                + (misses.isEmpty ? "" : "; it fell behind \(misses.count) times while held, first "
+                   + misses[0]))
+        }
+        if !misses.isEmpty {
+            throw Failure(description: "held \(Self.chord(key, modifiers)) for \(repeats) repeats, "
+                + "\(Int(everyMS))ms apart, and the focused tile went off screen \(misses.count) "
+                + "times while it was held, first \(misses[0]); it ended on \(landed)")
+        }
+        return "held \(Self.chord(key, modifiers)) for \(repeats) repeats \(Int(everyMS))ms apart; "
+            + "the focused tile stayed on screen after every one and ended on \(landed)"
+    }
+
     private func keyEvent(_ key: PlaytestKey, flags: NSEvent.ModifierFlags,
                           down: Bool, in window: NSWindow) -> NSEvent? {
         let typed = Self.typedCharacters(key, flags: flags, down: down)
@@ -21038,7 +21103,16 @@ extension Run {
             board.writeObjects([url as NSURL])
         }
         let tracks = document.timelineTracks
-        guard let trackID = tracks.first(where: { $0.name == track })?.id else {
+        // "below" is the empty space under the last track, where a file let
+        // go makes a track of its own (user 2026-10-28: "I CANT DRAG IT HERE").
+        let below = track == "below"
+        // "top" is the new track the timeline makes room for over all the
+        // others while a file is in the air (`TimelineNewTrackSlot`).
+        let top = track == "top"
+        let trackID = below ? editor.trackDropRows.values.max { $0.maxY < $1.maxY }?.trackID
+                    : top ? editor.trackDropRows.values.min { $0.minY < $1.minY }?.trackID
+                            : tracks.first(where: { $0.name == track })?.id
+        guard let trackID else {
             throw Failure(description: "no track is called \"\(track)\"; the tracks: "
                 + tracks.map(\.name).joined(separator: ", "))
         }
@@ -21052,8 +21126,12 @@ extension Run {
             let frame = editor.timelineTracksFrame
             let row = editor.trackDropRows[trackID] ?? row
             let fraction = editor.motionStripRuler.fraction(ofMS: seconds * 1000)
+            let y = below ? min(row.maxY + TimelineDock.rowSpacing + TimelineDock.laneHeight / 2,
+                               frame.height - TimelineDock.rowSpacing - 2)
+                          : top ? max(2, row.minY - TimelineDock.rowSpacing - TimelineDock.laneHeight / 2)
+                          : (row.minY + row.maxY) / 2
             let global = CGPoint(x: frame.minX + TimelineDock.lanesLeading + editor.timelineLaneWidth * fraction,
-                                 y: frame.minY + (row.minY + row.maxY) / 2)
+                                 y: frame.minY + y)
             return (global, try self.windowPoint(PlaytestPoint(global, space: .window)))
         }
         let frame = editor.timelineTracksFrame
@@ -21065,6 +21143,8 @@ extension Run {
         TimelineFileDropDelegate.walkHoldsInsert = insert
         defer { TimelineFileDropDelegate.walkHoldsInsert = nil }
         let chain = Self.visibleDestinations(at: windowPoint, in: content)
+        // The room made for the file in the air moves no second on screen.
+        let spanBeforeTheAir = editor.timelineWindow.visibleMS(documentMS: editor.timelineLengthForZoomMS)
         var taker: NSView?
         for view in chain where view.draggingEntered(info) != [] {
             taker = view
@@ -21110,6 +21190,13 @@ extension Run {
             throw Failure(description: "the timeline said \"\(sentence)\" about \(url.lastPathComponent), "
                 + "and the walk expected \"\(says)\"")
         }
+        let spanInTheAir = editor.timelineWindow.visibleMS(documentMS: editor.timelineLengthForZoomMS)
+        if abs(spanInTheAir - spanBeforeTheAir) / max(1, spanBeforeTheAir) > 0.35 {
+            taker.draggingExited(info)
+            throw Failure(description: String(format: "carrying \(url.lastPathComponent) over the timeline "
+                + "moved it: %.1fs on screen before, %.1fs with the file in the air", spanBeforeTheAir / 1000,
+                spanInTheAir / 1000))
+        }
         var held = ""
         if let hold {
             try snapshot(content, name: hold)
@@ -21118,8 +21205,15 @@ extension Run {
         }
         guard release else {
             taker.draggingExited(info)
-            await sleep(0.1)
+            await sleep(0.3)
+            // Carried away again without landing, the ghost goes with it,
+            // and the picture on the pointer comes back (`TimelineDragPicture`).
+            if let left = editor.timelineFileHover {
+                throw Failure(description: "\(url.lastPathComponent) was carried off the timeline without "
+                    + "landing and its ghost stayed behind, saying \"\(left.note)\"")
+            }
             return "\(url.lastPathComponent) held over \(track) at \(seconds)s, saying \"\(sentence)\"\(held)"
+                + ", then carried off again, and the ghost went with it"
         }
         let before = document.allLayers.count
         // Letting go is the press a person makes, so it is timed like one:
@@ -21129,19 +21223,37 @@ extension Run {
         await takeTheMarkersDownForATimedStep()
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
+        // How much time the strip shows, frame by frame, from just before
+        // letting go until it has settled: a change of length must never
+        // move it in one frame (user 2026-10-28, `TimelineZoomGlide`).
+        func spanOnScreen() -> Double {
+            editor.timelineWindow.visibleMS(documentMS: editor.timelineLengthForZoomMS)
+        }
+        var spans = [spanOnScreen()]
         let took = taker.performDragOperation(info)
         guard took else {
             throw Failure(description: "the timeline would not take \(url.lastPathComponent), "
                 + "having said \"\(sentence)\"")
         }
         waited = 0
-        while (editor.document?.allLayers.count ?? before) == before, waited < 4 {
-            await sleep(0.1)
-            waited += 0.1
+        var settledFor = 0.0
+        while waited < 5, settledFor < 0.5 {
+            await sleep(0.016)
+            waited += 0.016
+            spans.append(spanOnScreen())
+            let landed = (editor.document?.allLayers.count ?? before) != before
+            settledFor = landed && editor.timelineZoomGlide == nil ? settledFor + 0.016 : 0
+        }
+        let jump = zip(spans, spans.dropFirst()).map { abs($1 - $0) / max(1, $0) }.max() ?? 0
+        let span = String(format: "the strip showed %.1fs before letting go and %.1fs once settled, "
+                          + "%.0f%% at most in one frame", spans[0] / 1000, (spans.last ?? 0) / 1000, jump * 100)
+        if jump > 0.35 {
+            throw Failure(description: "letting go of \(url.lastPathComponent) moved the timeline in one frame: "
+                + span + " (user 2026-10-28: \"it just immediately snaps\")")
         }
         return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
             + "saying \"\(sentence)\"\(held); the document now holds "
-            + "\(editor.document?.allLayers.count ?? 0) layers, was \(before); \(MainThreadMeter.shared.report)"
+            + "\(editor.document?.allLayers.count ?? 0) layers, was \(before); \(span); \(MainThreadMeter.shared.report)"
             + (markersDownCost.isEmpty ? "" : "; " + markersDownCost)
     }
 
@@ -21590,7 +21702,7 @@ extension Run {
         func atAnEndOfTime() -> Bool {
             let window = editor.timelineWindow
             let span = window.visibleMS(documentMS: length)
-            return window.startMS < 1 || window.startMS + span > length - 1
+            return window.startMS < 1 || window.startMS + span * TimelineZoom.roomShare > length - 1
                 || !editor.canOpenOutTheTimeline
         }
         func atAnEndOfRows() -> Bool {

@@ -37,4 +37,12 @@ public struct HistoryOverlayLayout: Equatable, Sendable {
         presentedFrame = CGRect(x: x, y: presentedY, width: width, height: height)
         hiddenFrame = CGRect(x: x, y: hiddenY, width: width, height: height)
     }
+
+    /// Across the whole width of the display and hard against the top of
+    /// what is visible of it, just under the menu bar (user 2026-10-28: "it
+    /// should be edge to edge hugging the top").
+    public static func edgeToEdge(screen: CGRect, height: CGFloat) -> HistoryOverlayLayout {
+        HistoryOverlayLayout(screen: screen, height: height, maxWidth: .greatestFiniteMagnitude,
+                             horizontalInset: 0, topInset: 0)
+    }
 }

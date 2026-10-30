@@ -67,10 +67,47 @@ struct CaptureThumbnailView: View {
         // Drag the capture's media (PNG or MP4) straight out to Finder / apps.
         // An edit still being written over a recording is handed over when it
         // lands, never the recording it is replacing.
+        // AppKit is handed an empty picture and the app carries the tile
+        // itself, so it can give way to the timeline's ghost
+        // (`HistoryDragPicture`).
         .onDrag {
-            if store.isWritingVideo(entry.url) { return Self.whenWritten(entry.url, store: store) }
-            return NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider()
+            HistoryDragPicture.lift(entry, store: store, height: fixedHeight ?? 72)
+            return Self.dragPayload(entry, store: store)
+        } preview: {
+            Color.clear.frame(width: 1, height: 1)
         }
+        // A walk finds the tile by its file and carries the very payload a
+        // pointer pulls off it (`PanelTarget.swift`).
+        .playtestTarget(entry.url.deletingPathExtension().lastPathComponent, kind: .tile,
+                        steady: [entry.url.lastPathComponent],
+                        payload: { Self.dragPayload(entry, store: store) })
+    }
+
+    /// The file of the tile last pulled out of History. A drag the app makes
+    /// of its own reaches its own drop targets as a promised movie, which a
+    /// drop target cannot read in time to draw anything, so the timeline asks
+    /// for this instead (`FileDrop.fileURL`).
+    @MainActor static var lifted: URL?
+
+    /// What pulling the tile puts in the air: the capture's file, as a link
+    /// first and its contents after. Only the contents went until 2026-10-27,
+    /// and once a real drag had carried them across, the timeline asking for
+    /// a file got nothing, so a recording dragged out of History drew no ghost
+    /// and landed nowhere.
+    static func dragPayload(_ entry: CaptureEntry, store: CaptureStore) -> NSItemProvider {
+        lifted = store.fileURL(for: entry)
+        if store.isWritingVideo(entry.url) { return whenWritten(entry.url, store: store) }
+        let url = store.fileURL(for: entry)
+        let provider = NSItemProvider(object: url as NSURL)
+        provider.suggestedName = url.deletingPathExtension().lastPathComponent
+        if let type = UTType(filenameExtension: url.pathExtension) {
+            provider.registerFileRepresentation(forTypeIdentifier: type.identifier,
+                                                fileOptions: [], visibility: .all) { done in
+                done(url, true, nil)
+                return nil
+            }
+        }
+        return provider
     }
 
     /// A drag of a tile whose edited video is still being written: the file
@@ -103,6 +140,8 @@ struct CaptureThumbnailImage: View {
     /// as the picture's own shape asks for" — the history strip's free width.
     let available: CGSize
     var cornerRadius: CGFloat = 8
+    /// Smaller play badge and pills, for a picture drawn small (the toast).
+    var compactBadges: Bool = false
     /// Accent ring on the PICTURE (the focused or just-captured history tile),
     /// rather than on the wider hit target around a small capture.
     var ringed: Bool = false
@@ -136,7 +175,8 @@ struct CaptureThumbnailImage: View {
             if entry.kind == .video {
                 VideoBadgeOverlay(duration: thumbnail.duration,
                                   saving: store?.writingVideos[entry.url],
-                                  edited: store?.editedVideos.contains(entry.url) == true)
+                                  edited: store?.editedVideos.contains(entry.url) == true,
+                                  compact: compactBadges)
             }
         }
         .overlay {
@@ -174,11 +214,13 @@ struct VideoBadgeOverlay: View {
     var saving: VideoSaveProgress? = nil
     /// The tile is an edit of the recording, kept beside it as a project.
     var edited: Bool = false
+    /// Drawn small: a smaller badge and pills that keep clear of each other.
+    var compact: Bool = false
 
     var body: some View {
         ZStack {
             Image(systemName: "play.circle.fill")
-                .font(.system(size: 34))
+                .font(.system(size: compact ? 20 : 34))
                 .foregroundStyle(.white, .black.opacity(0.45))
                 .shadow(radius: 3)
             VStack(spacing: 0) {
@@ -208,12 +250,13 @@ struct VideoBadgeOverlay: View {
     /// White on a dark capsule: readable over any recording's poster.
     private func pill(_ text: String) -> some View {
         Text(text)
-            .font(.caption2.weight(.semibold).monospacedDigit())
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
+            .font(compact ? .system(size: 8, weight: .semibold).monospacedDigit()
+                          : .caption2.weight(.semibold).monospacedDigit())
+            .padding(.horizontal, compact ? 3 : 5)
+            .padding(.vertical, compact ? 1 : 2)
             .background(.black.opacity(0.55), in: Capsule())
             .foregroundStyle(.white)
-            .padding(5)
+            .padding(compact ? 3 : 5)
     }
 }
 
