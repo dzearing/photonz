@@ -1,0 +1,36 @@
+{
+  "id": "choosing-a-transition-between-two-clips-is-one-o",
+  "title": "Choosing a transition between two clips is one obvious place, not scattered fade rows",
+  "goal": "Today a clip's right-click menu offers Fade In, Fade Out, Fade In and Out and a dip to black alongside Add Transition. They overlap, each acts on one side of one clip, and none says what happens between the two clips. Picking how one clip becomes the next should happen in one obvious place, at the cut: hover the place where two clips meet, click, and pick from transitions that preview with your own two clips. Fading a clip from or to black at a free end stays available, but where it belongs (the clip's end handles), not as menu rows competing with transitions.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 6e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-30T01:54:13.151Z",
+  "updated": "2026-10-30T01:54:13.256Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-29 (intake): 'like transition fade out, fade in, black out. these are super redundant and one sided. wondering if there is a nicer way to select a transition between 2 clips'. Same session as any-transition-goes-on-any-two-clips-that-touch (3D transitions refused between two touching recordings). Code: clip menu fade rows come from EditorState+PictureFade.swift (pictureFadeMenuRows, fadeInAndOutMenuRow) and EditorState+TimelineMenus.swift; Add Transition from EditorState+TransitionTargets.swift (addTransitionMenuRow, aimed at both ends of a clip); the picker at a cut is TransitionPicker.swift; the panel is TransitionsGroup.swift. Grown-up tool check: Premiere and Final Cut select the edit point and put the transition on it; fades are opacity handles or a dissolve at the edge.",
+  "acceptance": [
+    "At Next defaults, the place where two clips meet on a track shows a clear affordance on hover (Final Cut and Premiere show the edit point). One click opens the transition picker there, already aimed at that cut: the user's mock docs/design/mocks/pages/video-transition-wt.html (#transPick) and video-transitions.html are the floor.",
+    "Each tile previews the transition with the two real clips at that cut (their last and first frames), not a generic icon, so the person sees what they get before choosing. A tile plays its motion on hover.",
+    "The clip right-click menu no longer lists Fade In, Fade Out, Fade In and Out and Add Transition as separate competing rows. One row for what happens at the cut ('Transition…' opening the same picker) when the clip meets another; fades from and to black only at an end that meets nothing, and as the end handles they already are. Dip to black and dip to white are transitions in the picker, not separate menu items.",
+    "No one-sided naming at a cut: the picker says what happens between the two clips (for example 'Cube: Recording A turns into Recording B').",
+    "Right-click on the cut itself offers the same picker plus the cut's own actions (length, curve, remove), nothing about one clip's fade.",
+    "Walks cover: hover and click a cut between two different recordings, pick Cube from a previewing tile, the transition plays; the clip menu shows no redundant fade rows; a free end still fades from black by its handle. Builds on any-transition-goes-on-any-two-clips-that-touch (a picked transition always lands).",
+    "Audit under queue/audits/ with before and after screenshots of the clip menu and the picker, marked.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-30T01:54:13.153Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-30T01:54:13.255Z",
+      "note": "seq 3970 -> 6e-7"
+    }
+  ]
+}

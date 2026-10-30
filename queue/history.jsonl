@@ -14445,3 +14445,5 @@
 {"t":"2026-10-30T01:14:07.585Z","ev":"task_created","id":"any-transition-goes-on-any-two-clips-that-touch","priority":"p1-high","title":"Any transition goes on any two clips that touch: Cube between two recordings just works"}
 {"t":"2026-10-30T01:14:07.697Z","ev":"task_resequenced","id":"any-transition-goes-on-any-two-clips-that-touch","from":3970,"to":5e-7}
 {"t":"2026-10-30T01:53:21.722Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T01:54:13.155Z","ev":"task_created","id":"choosing-a-transition-between-two-clips-is-one-o","priority":"p1-high","title":"Choosing a transition between two clips is one obvious place, not scattered fade rows"}
+{"t":"2026-10-30T01:54:13.257Z","ev":"task_resequenced","id":"choosing-a-transition-between-two-clips-is-one-o","from":3970,"to":6e-7}
