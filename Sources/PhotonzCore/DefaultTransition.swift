@@ -28,35 +28,30 @@ extension ClipTransitionKind {
 extension ClipCut {
 
     /// The transition putting `kind` on this cut would write: the length that
-    /// is there now, else the usual length for `kind`, never longer than this
-    /// cut can pay for. Nil where it cannot take `kind` at all.
+    /// is there now, else the usual length for `kind`, never longer than the
+    /// pieces either side can hold. Nil only where they are too short.
     ///
-    /// It sits where the one there now sits when that side can pay, else
-    /// across the cut, else on whichever side has the spare: a clip dropped
-    /// from its first frame has nothing before its in point, and Premiere puts
-    /// a dissolve there after the cut rather than refusing it. A dip keeps the
-    /// hold the cut has; anything else holds nothing. The curve stays, as the
-    /// length does: changing what happens at a cut is not changing how it moves.
+    /// It sits where the one there now sits, else across the cut, else on
+    /// whichever side has the spare, the first of those where real footage
+    /// pays for all of it: a clip dropped from its first frame has nothing
+    /// before its in point, and Premiere puts a dissolve there after the cut
+    /// rather than refusing it. Where no placement is paid for in full, it
+    /// sits where it would have and the edge frames hold for the rest
+    /// (`ClipCut.placement`). A dip keeps the hold the cut has; anything else
+    /// holds nothing. The curve stays, as the length does: changing what
+    /// happens at a cut is not changing how it moves.
     public func fitted(_ kind: ClipTransitionKind) -> ClipTransition? {
         let asked = transition?.lengthMS ?? kind.defaultLengthMS
         let hold = kind.needsOverlap ? 0 : (transition?.holdMS ?? 0)
-        var order: [ClipTransitionAlignment] = [transition?.alignment ?? .across, .across]
-        order += ClipTransitionAlignment.allCases
-            .filter { !order.contains($0) }
-            .sorted { longestMS(of: kind, aligned: $0) > longestMS(of: kind, aligned: $1) }
-        for alignment in order {
-            let longest = longestMS(of: kind, aligned: alignment)
-            guard longest >= ClipTransition.shortestMS else { continue }
-            // A curve somebody chose stays; one nobody changed follows the
-            // kind, so a flat dissolve turned into a cube eases in and out.
-            let curve = transition.map { $0.curve == $0.kind.defaultCurve ? kind.defaultCurve : $0.curve }
-                ?? kind.defaultCurve
-            return ClipTransition(kind: kind, lengthMS: min(max(ClipTransition.shortestMS, asked), longest),
-                                  alignment: alignment, holdMS: hold, curve: curve,
-                                  direction: transition?.direction ?? .left,
-                                  motionBlur: transition?.motionBlur ?? false)
-        }
-        return nil
+        guard let placed = placement(of: kind, lengthMS: asked,
+                                     preferring: transition?.alignment ?? .across) else { return nil }
+        // A curve somebody chose stays; one nobody changed follows the kind,
+        // so a flat dissolve turned into a cube eases in and out.
+        let curve = transition.map { $0.curve == $0.kind.defaultCurve ? kind.defaultCurve : $0.curve }
+            ?? kind.defaultCurve
+        return ClipTransition(kind: kind, lengthMS: placed.lengthMS, alignment: placed.alignment,
+                              holdMS: hold, curve: curve, direction: transition?.direction ?? .left,
+                              motionBlur: transition?.motionBlur ?? false)
     }
 }
 
@@ -64,9 +59,9 @@ extension ClipCut {
 public enum DefaultTransitionRefusal: Hashable, Sendable {
     /// No cut is picked, and none is close enough to the playhead to mean it.
     case noCutNearby
-    /// The cut cannot pay for this kind: it needs spare frames either side and
-    /// there are none.
-    case noSpare(ClipTransitionKind)
+    /// The pieces either side of the cut are too short to hold this kind.
+    /// Never for want of spare footage: the edge frames hold for that.
+    case tooShort(ClipTransitionKind)
     /// The end of a clip that meets nothing, and a kind that only means
     /// something between two pictures (`TransitionTargets.swift`).
     case needsTwoClips(ClipTransitionKind)
@@ -75,7 +70,7 @@ public enum DefaultTransitionRefusal: Hashable, Sendable {
     public var detail: String {
         switch self {
         case .noCutNearby: "There is no cut at the playhead"
-        case .noSpare(let kind): "\(kind.title) needs spare frames either side of this cut"
+        case .tooShort(let kind): "The clips here are too short for \(kind.title)"
         case .needsTwoClips(let kind): "\(kind.title) needs a clip on both sides"
         }
     }
@@ -151,7 +146,7 @@ extension PhotonzDocument {
 
     private static func plan(_ kind: ClipTransitionKind, on target: DocumentCut?) -> DefaultTransitionPlan {
         guard let target else { return .refused(.noCutNearby) }
-        guard let transition = target.cut.fitted(kind) else { return .refused(.noSpare(kind)) }
+        guard let transition = target.cut.fitted(kind) else { return .refused(.tooShort(kind)) }
         return .put(transition, at: target.place)
     }
 }
@@ -159,8 +154,8 @@ extension PhotonzDocument {
 // MARK: - Every cut at once
 
 /// What one transition put on every cut did: the cuts it went on, in time
-/// order, and how many it could not go on because they have no spare frames
-/// to pay for it. The mock's Apply to every cut, and Premiere's Apply Default
+/// order, and how many it could not go on because the clips there are too
+/// short to hold it. The mock's Apply to every cut, and Premiere's Apply Default
 /// Transitions to Selection.
 public struct EveryCutOutcome: Hashable, Sendable {
     public var put: [TimelineCutPlace]
@@ -177,8 +172,8 @@ public struct EveryCutOutcome: Hashable, Sendable {
         guard !put.isEmpty else {
             switch skipped {
             case 0: return "There are no cuts"
-            case 1: return "1 cut has no spare frames"
-            default: return "\(skipped) cuts have no spare frames"
+            case 1: return "1 cut is too short"
+            default: return "\(skipped) cuts are too short"
             }
         }
         let on = put.count == 1 ? "On 1 cut" : "On \(put.count) cuts"

@@ -295,7 +295,7 @@ enum AgentVideoWork {
         }
         if let kind, cut.cut.fitted(kind) == nil {
             let fits = ClipTransitionKind.allCases.filter { cut.cut.fitted($0) != nil }.map(\.rawValue)
-            throw Failure("\(kind.rawValue) needs spare frames either side of this cut, and it has none. It can take "
+            throw Failure("The clips at this cut are too short for \(kind.rawValue). It can take "
                           + (fits.isEmpty ? "no transition." : fits.joined(separator: ", ") + "."))
         }
         editor.asOneUndoStep {

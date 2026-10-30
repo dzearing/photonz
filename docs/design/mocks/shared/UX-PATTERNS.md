@@ -982,6 +982,21 @@ the kind ("Rectangle is not text, so it cannot wear Heading"); this is already
 true ("This text is already Heading"). A surface that refuses by going quiet is
 the thing every one of these replaced.
 
+**Make room rather than refuse.** When what the person asked for is clear and
+Photonz can make room for it (hold a frame, slide or trim a clip, ripple what
+follows), it does that as one undoable step instead of refusing. A refusal is
+only for what cannot be done at all. The user, 2026-10-29, about a cube between
+two clips that touch with no spare footage: "wouldn't it just pause the frame on
+one? And then pause the frame on the other and rotate the view, and then play
+the other one when the transition's done?" So a transition at a cut with no
+spare footage holds the edge frames (Premiere's repeated frames), and a clip
+slid over another on its own track covers it (Premiere's overwrite) rather than
+lying on top of it with no cut between. Before this rule the rules above only
+taught how to refuse well, and that is how "needs spare frames" passed review.
+When making room changes something the person may not want (frames held), say
+it where the value lives (the Paid with row reads "0.8s of held frames") and
+offer the other way next to it (Or, Shorten the cut), never as a warning.
+
 **One spelling for the whole family.** It is what letting go DOES, in the
 present tense, not what you are doing: "Sets this text in Heading". It names the
 PART it will change and not the layer, where the outline already says which

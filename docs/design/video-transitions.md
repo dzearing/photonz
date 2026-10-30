@@ -82,19 +82,28 @@ arithmetic (`trimStartRange`, `trimEndRange`).
 - **Dip to black** and **dip to white** need none. Each piece plays the frames it
   already had, and the picture goes through a colour between them.
 
-Two limits, and the smaller one wins (`ClipCut.longestMS(of:)`):
+**Where the spare runs out, the edge frame holds** (the user, 2026-10-29: "pause
+the frame on one ... pause the frame on the other and rotate the view"). The
+outgoing piece holds its last frame for whatever of its share its recording
+cannot pay for, and the incoming piece its first, side by side and separately:
+Premiere's repeated frames. `readingOn` already clamps to the recording, so
+the renderer needed nothing new. `ClipCut.heldFromOutgoingMS` and
+`heldFromIncomingMS` say how much; the Paid with row says "0.8s of held frames".
 
-1. **It may not reach past the middle of either piece it joins**, so two cuts on
-   one piece can never fight over the same frames — which is what makes "at most
-   one transition is running at any moment" true by construction rather than by
-   housekeeping.
-2. One that needs an overlap may not spend spare media that is not there.
+One limit (`ClipCut.longestMS(of:aligned:)`): **it may not reach past the middle
+of either piece it joins**, so two cuts on one piece can never fight over the
+same frames, which is what makes "at most one transition is running at any
+moment" true by construction. `ClipCut.footageMS(of:aligned:)` is the old second
+limit, the longest real footage pays for, and placement (`ClipCut.placement`)
+prefers wherever footage pays for the whole length (where it sits now, across
+the cut, then the side with the most spare) before it holds frames. It never
+trades length for footage.
 
-**A cut that cannot pay says so.** `setTransition` REFUSES a length the cut
-cannot afford rather than quietly making a shorter one; the surface clamps with
-`longestMS(of:)` first and then asks, so the gesture lands where the hand put it
-and the model never guesses. In the panel, a kind that cannot be afforded is
-unavailable and says "no spare", and the sentence under it says why.
+**Only a cut whose pieces are too short refuses** (`DefaultTransitionRefusal
+.tooShort`, "The clips here are too short for Cube"). `setTransition` still
+refuses a length past the middles rather than quietly making a shorter one. The
+mock's Or, Shorten the cut (`ShortenTheCut.swift`) is offered at a cut whose
+transition holds frames, as the way to play real footage instead.
 
 ### The invisible dissolve, said out loud
 
@@ -248,9 +257,10 @@ T alone is the Text tool). The key works wherever the keyboard is, like ⌘K.
   every edit point on a picture track, in time order),
   `defaultTransitionPlan(_:picked:atMS:reachMS:)` (picked cut first, else the
   nearest free cut in reach; locked tracks skipped) and `ClipCut.fitted(_:)`
-  (the length there, else the usual one, clamped; nil when it cannot pay).
-- A refusal ("There is no cut at the playhead", "Cross dissolve needs spare
-  frames either side of this cut") is a canvas notice, never a silent key.
+  (the length there, else the usual one, holding edge frames where the footage
+  runs out; nil only when the pieces are too short).
+- A refusal ("There is no cut at the playhead", "The clips here are too short
+  for Cross dissolve") is a canvas notice, never a silent key.
 - The default is an app preference (`DefaultTransitionStore`,
   `video.defaultTransition`), forgotten with a walk's `motion` memory. A right
   click on any picker tile offers Set as Default Transition; the default tile

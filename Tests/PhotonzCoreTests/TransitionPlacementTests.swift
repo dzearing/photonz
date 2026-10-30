@@ -91,13 +91,17 @@ struct TransitionPlacementTests {
         let cut = try #require(doc.documentCut(at: .edit(outgoing: take, incoming: broll))).cut
         // Two seconds after the take's out point, a second and a half before
         // b-roll's in point.
-        #expect(cut.longestMS(of: .dissolve, aligned: .across) == 3000)
+        #expect(cut.footageMS(of: .dissolve, aligned: .across) == 3000)
         // Before the cut, b-roll reads early: only its 1.5s before counts.
-        #expect(cut.longestMS(of: .dissolve, aligned: .before) == 1500)
+        #expect(cut.footageMS(of: .dissolve, aligned: .before) == 1500)
         // After it, the take runs on: its 2.0s, but no further than b-roll's
         // middle.
-        #expect(cut.longestMS(of: .dissolve, aligned: .after) == 2000)
-        #expect(cut.longestMS(of: .dissolve) == 3000)
+        #expect(cut.footageMS(of: .dissolve, aligned: .after) == 2000)
+        // Past the footage the edge frames hold, so only the middles of the
+        // two clips limit it.
+        #expect(cut.longestMS(of: .dissolve, aligned: .across) == 4000)
+        #expect(cut.longestMS(of: .dissolve, aligned: .before) == 4000)
+        #expect(cut.longestMS(of: .dissolve) == 4000)
     }
 
     @Test("A cut with spare on one side only can take a dissolve placed on that side")
@@ -106,13 +110,15 @@ struct TransitionPlacementTests {
         let place = TimelineCutPlace.edit(outgoing: take, incoming: broll)
         let cut = try #require(doc.documentCut(at: place)).cut
         #expect(cut.spareBeforeInMS == 0)
-        #expect(cut.longestMS(of: .dissolve, aligned: .across) == 0)
-        #expect(cut.longestMS(of: .dissolve, aligned: .before) == 0)
-        #expect(cut.longestMS(of: .dissolve, aligned: .after) == 2000)
+        #expect(cut.footageMS(of: .dissolve, aligned: .across) == 0)
+        #expect(cut.footageMS(of: .dissolve, aligned: .before) == 0)
+        #expect(cut.footageMS(of: .dissolve, aligned: .after) == 2000)
         #expect(cut.canAfford(.dissolve))
-        // Across is refused, after is taken.
-        let did1 = doc.setTransition(ClipTransition(kind: .dissolve, lengthMS: 1000), at: place)
-        #expect(did1 == false)
+        // Across goes on too, b-roll holding its first frame for its half.
+        var across = doc
+        let did1 = across.setTransition(ClipTransition(kind: .dissolve, lengthMS: 1000), at: place)
+        #expect(did1)
+        #expect(across.documentCut(at: place)?.cut.heldFromIncomingMS == 500)
         let did2 = doc.setTransition(ClipTransition(kind: .dissolve, lengthMS: 1000, alignment: .after), at: place)
         #expect(did2)
         // Nothing moved.

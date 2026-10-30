@@ -578,8 +578,13 @@ extension EditorState {
             guard landing.movedMS != 0 else { break }
             perform { $0.rippleTrimClipEdge(id, session.grab, byMS: landing.movedMS) }
         case .clipStart:
+            // Pulled out over the clip before it on its track, it covers what
+            // it now lies over (`overwriteUnder`), so the two meet at a cut.
             guard landing.movedMS != 0 else { break }
-            perform { $0.trimClipStart(id, ofPiece: 0, byMS: landing.movedMS) }
+            perform {
+                $0.trimClipStart(id, ofPiece: 0, byMS: landing.movedMS)
+                $0.overwriteUnder(id)
+            }
         case .seam(let after) where session.drag.pieces.piece(at: after)?.isHeld == true:
             // A freeze's end is its length: the clips after it on its track
             // (or on every track, for a freeze of every track) come with it,
@@ -588,7 +593,10 @@ extension EditorState {
             perform { $0.setHoldLength(id, ofPiece: after, toMS: was + landing.movedMS) }
         case .seam(let after):
             guard landing.movedMS != 0 else { break }
-            perform { $0.trimClipEnd(id, ofPiece: after, byMS: landing.movedMS) }
+            perform {
+                $0.trimClipEnd(id, ofPiece: after, byMS: landing.movedMS)
+                $0.overwriteUnder(id)
+            }
         case .body where !session.extras.isEmpty:
             // A box's pick: its clips and the zooms and keys beside them, all
             // by the same time on the tracks they are on, as one step.
@@ -619,7 +627,11 @@ extension EditorState {
                 }
             }
             guard landing.movedMS != 0 else { break }
-            perform { $0.moveClips([id] + Array(session.along.keys), byMS: landing.movedMS) }
+            perform { doc in
+                let moved = [id] + Array(session.along.keys)
+                doc.moveClips(moved, byMS: landing.movedMS)
+                for clip in moved { doc.overwriteUnder(clip, sparing: Set(moved)) }
+            }
         case .body:
             // Carried onto another track, or onto a new one between two: the
             // slide and the change of track land as one step.
@@ -631,7 +643,13 @@ extension EditorState {
                 }
             }
             guard landing.movedMS != 0 else { break }
-            perform { $0.moveClip(id, toInMS: landing.clipStartMS) }
+            // Slid over another clip on its own track, it covers what it now
+            // lies over, Premiere's overwrite: two clips on one track never
+            // sit on top of each other with no cut between them.
+            perform {
+                $0.moveClip(id, toInMS: landing.clipStartMS)
+                $0.overwriteUnder(id)
+            }
         case .carry(let piece):
             guard let to = landing.dropIndex else { break }
             perform { $0.moveClipPiece(id, from: piece, to: to) }

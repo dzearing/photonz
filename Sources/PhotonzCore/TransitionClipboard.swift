@@ -39,26 +39,19 @@ public struct CopiedTransition: Hashable, Codable, Sendable {
 extension ClipCut {
 
     /// `copied` as it would land on this cut: its kind, curve, direction and
-    /// blur as they are, sitting where it sat when this cut can pay for that,
-    /// else across the cut, else on whichever side has the most spare, and
-    /// never longer than this cut can pay for. A dip keeps the hold this cut
-    /// already has. Nil where this cut cannot take the kind at all.
+    /// blur as they are, sitting where it sat when real footage here pays for
+    /// it, else across the cut, else on whichever side has the most spare,
+    /// and the edge frames held for what footage cannot pay
+    /// (`ClipCut.placement`). A dip keeps the hold this cut already has. Nil
+    /// only where the pieces here are too short to hold it.
     public func fitted(pasting copied: ClipTransition) -> ClipTransition? {
         let kind = copied.kind
-        var order: [ClipTransitionAlignment] = [copied.alignment, .across]
-        order += ClipTransitionAlignment.allCases
-            .filter { !order.contains($0) }
-            .sorted { longestMS(of: kind, aligned: $0) > longestMS(of: kind, aligned: $1) }
-        for alignment in order {
-            let longest = longestMS(of: kind, aligned: alignment)
-            guard longest >= ClipTransition.shortestMS else { continue }
-            return ClipTransition(kind: kind, lengthMS: min(copied.lengthMS, longest),
-                                  alignment: alignment,
-                                  holdMS: kind.needsOverlap ? 0 : (transition?.holdMS ?? 0),
-                                  curve: copied.curve, direction: copied.direction,
-                                  motionBlur: copied.motionBlur)
-        }
-        return nil
+        guard let placed = placement(of: kind, lengthMS: copied.lengthMS,
+                                     preferring: copied.alignment) else { return nil }
+        return ClipTransition(kind: kind, lengthMS: placed.lengthMS, alignment: placed.alignment,
+                              holdMS: kind.needsOverlap ? 0 : (transition?.holdMS ?? 0),
+                              curve: copied.curve, direction: copied.direction,
+                              motionBlur: copied.motionBlur)
     }
 }
 
@@ -78,7 +71,7 @@ extension PhotonzDocument {
             return .refused(.noCutNearby)
         }
         guard let fitted = cut.cut.fitted(pasting: copied.transition) else {
-            return .refused(.noSpare(copied.transition.kind))
+            return .refused(.tooShort(copied.transition.kind))
         }
         return .put(fitted, at: place)
     }

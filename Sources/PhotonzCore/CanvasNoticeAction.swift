@@ -63,7 +63,7 @@ public enum CanvasNoticeAction: Hashable, Sendable {
     case undo
     /// Put the transition a cut CAN take on the cut that just refused one
     /// (`TransitionTargets.swift`, `nearestTransition`): a dissolve asked of a
-    /// cut with no spare frames, answered with a dip, which spends none. The
+    /// cut whose clips are too short for it, answered with a dip. The
     /// cut is the one refused, captured then, for the reason the cases above
     /// carry theirs.
     case putTransition(ClipTransitionKind, at: TimelineCutPlace)

@@ -72,7 +72,7 @@ struct TransitionClipboardTests {
         #expect(pasted.curve == .easeIn)
     }
 
-    @Test("A cut with no spare for the kind is left as it was, counted, and says why")
+    @Test("A cut with no spare takes the paste anyway, holding the edge frames")
     func refusesWhatCannotPay() throws {
         var (doc, take, broll) = try EveryCutTransitionTests.threeCuts()
         let did = doc.trimClipEnd(take, ofPiece: 2, byMS: 2000)
@@ -82,12 +82,13 @@ struct TransitionClipboardTests {
         }
         let edit = TimelineCutPlace.edit(outgoing: take, incoming: broll)
         let copied = CopiedTransition(Self.tuned)
-        #expect(doc.transitionPastePlan(copied, on: edit) == .refused(.noSpare(.dissolve)))
+        #expect(doc.transitionPastePlan(copied, on: edit).lands)
         let outcome = doc.pasteTransition(copied, on: [edit])
-        #expect(outcome.put.isEmpty)
-        #expect(outcome.skipped == 1)
-        #expect(doc.documentCut(at: edit)?.cut.transition == nil)
-        // A dip spends no spare, so the same cut takes a copied dip.
+        #expect(outcome.put == [edit])
+        #expect(outcome.skipped == 0)
+        #expect(doc.documentCut(at: edit)?.cut.transition?.kind == .dissolve)
+        #expect(doc.documentCut(at: edit)?.cut.holdsFrames == true)
+        // A copied dip goes on the same cut too.
         let dip = CopiedTransition(ClipTransition(kind: .dipToBlack, lengthMS: 600))
         let dipped = doc.pasteTransition(dip, on: [edit])
         #expect(dipped.put == [edit])

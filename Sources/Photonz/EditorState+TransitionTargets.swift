@@ -9,16 +9,18 @@ import PhotonzCore
 extension EditorState {
 
     /// Put `kind` on each of `targets` as ONE step to undo: a cut gets the
-    /// transition, an end of a clip that meets nothing fades. Whatever could
-    /// not take it is said on the canvas, and a cut with no spare frames is
-    /// offered the kind it can take. False where nothing went on.
+    /// transition, holding edge frames where its footage runs out, and an end
+    /// of a clip that meets nothing fades. Why nothing went on is said on the
+    /// canvas, and a cut too short for it is offered the kind it can take; a
+    /// free end that could not take it beside a cut that did is not news.
+    /// False where nothing went on.
     @discardableResult
     func putTransition(_ kind: ClipTransitionKind, on targets: [TransitionTarget]) -> Bool {
         guard Experiments.shared.transitionsAtACutEnabled, documentHasTime,
               var trial = document, !targets.isEmpty else { return false }
         let starved = targets.compactMap { target -> TimelineCutPlace? in
             guard case .cut(let place) = target,
-                  case .refused(.noSpare) = trial.transitionPlan(kind, on: target) else { return nil }
+                  case .refused(.tooShort) = trial.transitionPlan(kind, on: target) else { return nil }
             return place
         }
         let outcome = trial.putTransition(kind, on: targets)
@@ -38,9 +40,9 @@ extension EditorState {
             if !outcome.put.isEmpty, let at = document?.documentCut(at: place)?.atMS {
                 raiseCanvasNotice(.transitionCutSkipped(atMS: at), action: action)
             } else {
-                raiseCanvasNotice(.defaultTransitionRefused(.noSpare(kind)), action: action)
+                raiseCanvasNotice(.defaultTransitionRefused(.tooShort(kind)), action: action)
             }
-        } else if outcome.put.isEmpty, let why = outcome.refused.first {
+        } else if let why = outcome.headline {
             raiseCanvasNotice(.defaultTransitionRefused(why))
         }
         return !outcome.put.isEmpty

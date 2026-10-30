@@ -123,7 +123,7 @@ struct DefaultTransitionTests {
 
     // MARK: - What goes on
 
-    @Test("The length already on the cut is kept, the usual length otherwise, never past what it can pay for")
+    @Test("The length already on the cut is kept, the usual length otherwise, held where footage runs out")
     func lengths() throws {
         var (doc, take, broll) = try EditPointTransitionTests.edit()
         let place = TimelineCutPlace.edit(outgoing: take, incoming: broll)
@@ -132,12 +132,13 @@ struct DefaultTransitionTests {
         let did7 = doc.setTransition(ClipTransition(kind: .dipToBlack, lengthMS: 3500), at: place)
         #expect(did7)
         let dipped = try #require(doc.documentCut(at: place)).cut
-        // 3.5s of dip, but a dissolve here can spend no more than 3s.
-        #expect(dipped.fitted(.dissolve) == ClipTransition(kind: .dissolve, lengthMS: 3000))
+        // 3.5s of dip, and a dissolve keeps it: footage pays for 3s of it
+        // and b-roll holds its first frame for the rest.
+        #expect(dipped.fitted(.dissolve) == ClipTransition(kind: .dissolve, lengthMS: 3500))
         #expect(dipped.fitted(.dipToWhite) == ClipTransition(kind: .dipToWhite, lengthMS: 3500))
     }
 
-    @Test("With no spare frames a cross dissolve is refused, and says which one")
+    @Test("With no spare frames a cross dissolve still goes on, across the cut, holding the edge frames")
     func noSpare() throws {
         var (doc, take, broll) = try EditPointTransitionTests.edit()
         // Both sides used right up to the ends of their recordings.
@@ -155,9 +156,9 @@ struct DefaultTransitionTests {
         let cut = try #require(doc.documentCut(at: place)).cut
         #expect(cut.spareAfterOutMS == 0)
         #expect(cut.spareBeforeInMS == 0)
-        #expect(cut.fitted(.dissolve) == nil)
+        #expect(cut.fitted(.dissolve) == ClipTransition(kind: .dissolve))
         #expect(doc.defaultTransitionPlan(.dissolve, picked: nil, atMS: 8000, reachMS: 500)
-                == .refused(.noSpare(.dissolve)))
+                == .put(ClipTransition(kind: .dissolve), at: place))
         // A dip needs none.
         #expect(doc.defaultTransitionPlan(.dipToBlack, picked: nil, atMS: 8000, reachMS: 500)
                 == .put(ClipTransition(kind: .dipToBlack), at: place))
@@ -166,7 +167,7 @@ struct DefaultTransitionTests {
     @Test("What the refusals say, in plain words")
     func refusalWords() {
         #expect(DefaultTransitionRefusal.noCutNearby.detail == "There is no cut at the playhead")
-        #expect(DefaultTransitionRefusal.noSpare(.dissolve).detail
-                == "Cross dissolve needs spare frames either side of this cut")
+        #expect(DefaultTransitionRefusal.tooShort(.dissolve).detail
+                == "The clips here are too short for Cross dissolve")
     }
 }

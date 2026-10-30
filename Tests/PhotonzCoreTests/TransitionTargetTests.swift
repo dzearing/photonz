@@ -76,7 +76,7 @@ struct TransitionTargetTests {
         #expect(doc.transitionPlan(.dissolve, on: .fade(clip: take, .in)) == .fade(clip: take, .in, lengthMS: 500))
     }
 
-    @Test("At a cut the plan is the cut's own: fitted, or refused for want of spare frames")
+    @Test("At a cut the plan is the cut's own: fitted, holding edge frames where there is no spare")
     func atACut() throws {
         let (doc, take, broll) = try EditPointTransitionTests.edit()
         let place = TimelineCutPlace.edit(outgoing: take, incoming: broll)
@@ -84,8 +84,7 @@ struct TransitionTargetTests {
 
         let (bare, a, b) = try Self.untrimmed()
         let edit = TimelineCutPlace.edit(outgoing: a, incoming: b)
-        #expect(bare.transitionPlan(.dissolve, on: .cut(edit)) == .refused(.noSpare(.dissolve)))
-        // A dip spends nothing, so it is always the way through.
+        #expect(bare.transitionPlan(.dissolve, on: .cut(edit)) == .put(ClipTransition(kind: .dissolve), at: edit))
         #expect(bare.transitionPlan(.dipToBlack, on: .cut(edit)) == .put(ClipTransition(kind: .dipToBlack), at: edit))
     }
 
@@ -145,14 +144,12 @@ struct TransitionTargetTests {
 
     // MARK: - The way through a refusal
 
-    @Test("A cut with no spare frames is offered the nearest kind it can take: a dip, which spends none")
+    @Test("A cut with no spare frames is offered the kind asked for, since it holds the edge frames")
     func nearestThatWorks() throws {
         let (bare, a, b) = try Self.untrimmed()
         let edit = TimelineCutPlace.edit(outgoing: a, incoming: b)
-        #expect(bare.nearestTransition(to: .dissolve, at: edit) == .dipToBlack)
-        #expect(bare.nearestTransition(to: .push, at: edit) == .dipToBlack)
-        // White asked for and refused only when white itself cannot go on,
-        // which never happens: a dip always fits.
+        #expect(bare.nearestTransition(to: .dissolve, at: edit) == .dissolve)
+        #expect(bare.nearestTransition(to: .push, at: edit) == .push)
         let (doc, take, broll) = try EditPointTransitionTests.edit()
         #expect(doc.nearestTransition(to: .dissolve, at: .edit(outgoing: take, incoming: broll)) == .dissolve)
     }
@@ -191,16 +188,16 @@ struct TransitionWayThroughTests {
 
     @Test func theNoticeSaysWhyAndStaysUpLongEnoughToPress() {
         let place = TimelineCutPlace.edit(outgoing: UUID(), incoming: UUID())
-        let notice = CopyConfirmation(subject: .defaultTransitionRefused(.noSpare(.dissolve)), shownAt: Date(),
+        let notice = CopyConfirmation(subject: .defaultTransitionRefused(.tooShort(.dissolve)), shownAt: Date(),
                                       action: .putTransition(.dipToBlack, at: place))
-        #expect(notice.detail.contains("needs spare frames"))
+        #expect(notice.detail == "The clips here are too short for Cross dissolve")
         #expect(notice.lifetime == CopyConfirmation.actionLifetime)
     }
 
     @Test func aCutSkippedWhileTheOtherEndTookItSaysWhichAndWhy() {
         let notice = CopyConfirmation(subject: .transitionCutSkipped(atMS: 15_500), shownAt: Date())
         #expect(notice.title == "1 cut skipped")
-        #expect(notice.detail == "No spare frames at 0:15")
+        #expect(notice.detail == "Too short at 0:15")
         #expect(notice.lifetime == CopyConfirmation.breakLifetime)
     }
 

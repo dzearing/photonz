@@ -66,9 +66,11 @@ struct EditPointTransitionTests {
         #expect(cut.cut.spareAfterOutMS == 2000)
         #expect(cut.cut.spareBeforeInMS == 1500)
         // Twice the smaller spare, since a dissolve across the cut spends
-        // half its length from each side.
-        #expect(cut.cut.longestMS(of: .dissolve) == 3000)
-        #expect(cut.cut.longestMS(of: .push) == 3000)
+        // half its length from each side...
+        #expect(cut.cut.footageMS(of: .dissolve, aligned: .across) == 3000)
+        // ...and past that the edge frames hold, up to the clips' middles.
+        #expect(cut.cut.longestMS(of: .dissolve) == 4000)
+        #expect(cut.cut.longestMS(of: .push) == 4000)
         // A dip spends none, so only the middles of the clips limit it.
         #expect(cut.cut.longestMS(of: .dipToBlack) == 4000)
         #expect(cut.cut.transition == nil)
@@ -102,11 +104,15 @@ struct EditPointTransitionTests {
                 == "0.3s + 0.3s of spare")
     }
 
-    @Test("Longer than the spare can pay for is refused, and a dip still fits")
+    @Test("Longer than the spare holds the edge frames, longer than the clips is refused, and a dip still fits")
     func refusedPastTheSpare() throws {
         var (doc, take, broll) = try Self.edit()
         let place = TimelineCutPlace.edit(outgoing: take, incoming: broll)
-        let tooLong = doc.setTransition(ClipTransition(kind: .dissolve, lengthMS: 3500), at: place)
+        var held = doc
+        let pastTheSpare = held.setTransition(ClipTransition(kind: .dissolve, lengthMS: 3500), at: place)
+        #expect(pastTheSpare)
+        #expect(held.documentCut(at: place)?.cut.heldFromIncomingMS == 250)
+        let tooLong = doc.setTransition(ClipTransition(kind: .dissolve, lengthMS: 4500), at: place)
         #expect(tooLong == false)
         let dip = doc.setTransition(ClipTransition(kind: .dipToBlack, lengthMS: 3500), at: place)
         #expect(dip)

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/transitions-where-clips-meet-walk",
-  "seed": "Three recordings back to back at Next defaults, no flag set, nothing picked. The Transitions section says what its tiles are for; a tile clicked with no cut picked lights every place it could go; a tile held mid clip says where to drop it; held over the join it says what lands, and let go it dissolves there, photographed mid dissolve. Right-click a clip and Add Transition puts it at both its ends: the join it can pay for dissolves, the join with no spare frames says so and offers Dip to black, and an end that meets nothing fades from black. The ruler's right-click offers it at the cut too.",
+  "seed": "Three recordings back to back at Next defaults, no flag set, nothing picked. The Transitions section says what its tiles are for; a tile clicked with no cut picked lights every place it could go; a tile held mid clip says where to drop it; held over either join it says what lands, the one with no spare frames included, and let go it dissolves there, photographed mid dissolve. Right-click a clip and Add Transition puts it at both its ends: both joins dissolve, the one with no spare frames holding its edge frames, with no notice, and an end that meets nothing fades from black. A wipe let go on the join with no spare reads Paid with 0.4s of held frames. The ruler's right-click offers it at the cut too.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -101,7 +101,7 @@
     {
       "do": "describe",
       "stage": "1-places-lit",
-      "note": "THE CLICK: Cross dissolve clicked with no cut picked lights every place it could go on V1: the start of the first clip, the join at 7.5s, the end of the last clip in accent, and the join at 15.5s faint red, because neither side of it has spare frames"
+      "note": "THE CLICK: Cross dissolve clicked with no cut picked lights every place it could go on V1: the start of the first clip, both joins at 7.5s and 15.5s, and the end of the last clip, all in accent. The join at 15.5s has no spare frames either side and takes it anyway, holding the edge frames"
     },
     {
       "do": "snapshot",
@@ -123,7 +123,7 @@
       "seconds": 15.5,
       "release": false,
       "hold": "2b-held-over-a-join-with-no-spare",
-      "says": "Needs spare frames"
+      "says": "Cross dissolve"
     },
     {
       "do": "dropOnTimeline",
@@ -179,20 +179,23 @@
     },
     {
       "do": "expectNotice",
-      "says": "No spare frames at 0:15"
+      "absent": true
     },
     {
       "do": "describe",
       "stage": "5-right-clicked",
-      "note": "THE RIGHT CLICK: Add Transition > Cross dissolve on the middle clip dissolves its start at 7.5s, shown half way through, and says the cut at 15.5s was skipped for want of spare frames, offering Dip to black"
+      "note": "THE RIGHT CLICK: Add Transition > Cross dissolve on the middle clip dissolves both its ends, 7.5s shown half way through, and the join at 15.5s with no spare frames takes it too, holding its edge frames. No notice: nothing failed"
     },
     {
       "do": "snapshot",
       "name": "5-right-click-mid-dissolve"
     },
     {
-      "do": "press",
-      "control": "Use Dip to black"
+      "do": "dropOnTimeline",
+      "tile": "Wipe",
+      "track": "V1",
+      "seconds": 15.5,
+      "says": "Wipe"
     },
     {
       "do": "wait",
@@ -201,16 +204,21 @@
     {
       "do": "expect",
       "menu": "Type",
-      "reads": "Dip to black"
+      "reads": "Wipe"
+    },
+    {
+      "do": "expect",
+      "field": "Paid with",
+      "reads": "0.4s of held frames"
     },
     {
       "do": "describe",
-      "stage": "6-dip-instead",
-      "note": "Use Dip to black on the notice put a dip on the join at 15.5s"
+      "stage": "6-wipe-holds-frames",
+      "note": "A Wipe let go on the join at 15.5s, which has no spare either side, goes on: c-roll holds its last frame and b-roll its first while the wipe runs. Paid with reads 0.4s of held frames"
     },
     {
       "do": "snapshot",
-      "name": "6-dip-instead"
+      "name": "6-wipe-holds-frames"
     },
     {
       "do": "rightClick",

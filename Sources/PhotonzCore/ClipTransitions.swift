@@ -20,7 +20,11 @@ import Foundation
 // The other rule worth stating once: **an overlap is paid for with spare media,
 // never with position.** Putting a dissolve on a cut moves no piece, changes no
 // length and shifts nothing after it. What it spends is frames the recording
-// already has and the clip is not playing.
+// already has and the clip is not playing; and where the recording has none
+// left, the side that ran out holds its edge frame for the rest, the way
+// Premiere fills a transition with repeated frames. A transition is never
+// refused for want of spare (the user, 2026-10-29: "wouldn't it just pause the
+// frame on one? And then pause the frame on the other and rotate the view").
 
 /// What happens at a cut.
 ///
@@ -388,13 +392,27 @@ public struct ClipCut: Hashable, Sendable {
 
     /// The longest a transition of this kind may be here, placed `aligned`.
     ///
-    /// Two limits, and the smaller one wins. **It may not reach past the middle
-    /// of either piece it joins**, so two cuts on one piece can never fight
-    /// over the same frames; and one that needs an overlap may not spend spare
-    /// media that is not there, and spends it only from the side it borrows:
-    /// before the cut the incoming piece reads early, after it the outgoing one
-    /// runs on, and across it each does half.
+    /// **It may not reach past the middle of either piece it joins**, so two
+    /// cuts on one piece can never fight over the same frames. Spare media
+    /// does not limit it: what the recording cannot pay for, the edge frame
+    /// holds (`heldFromOutgoingMS`). Before the cut the whole of it lies over
+    /// the outgoing piece, after it over the incoming one, and across it half
+    /// over each.
     public func longestMS(of kind: ClipTransitionKind, aligned: ClipTransitionAlignment) -> Int {
+        let middles = min(outgoing.lengthMS, incoming.lengthMS)
+        guard kind.needsOverlap else { return middles }
+        switch aligned {
+        case .across: return middles
+        case .before: return outgoing.lengthMS / 2
+        case .after: return incoming.lengthMS / 2
+        }
+    }
+
+    /// The longest REAL FOOTAGE pays for here, placed `aligned`, with no frame
+    /// held: the smaller of `longestMS(of:aligned:)` and the spare on the side
+    /// it borrows from (before the cut the incoming piece reads early, after
+    /// it the outgoing one runs on, and across it each does half).
+    public func footageMS(of kind: ClipTransitionKind, aligned: ClipTransitionAlignment) -> Int {
         let middles = min(outgoing.lengthMS, incoming.lengthMS)
         guard kind.needsOverlap else { return middles }
         switch aligned {
@@ -411,6 +429,30 @@ public struct ClipCut: Hashable, Sendable {
     /// The longest this very transition may be here, where it sits.
     public func longestMS(for transition: ClipTransition) -> Int {
         longestMS(of: transition.kind, aligned: transition.alignment)
+    }
+
+    /// Where `kind`, `lengthMS` long, sits on this cut and how long it is
+    /// there, preferring `alignment`: wherever real footage pays for all of
+    /// it, tried at `alignment`, then across the cut, then on the side with
+    /// the most spare; else at `alignment`, or across, with the edge frames
+    /// held for what footage cannot pay. Nil only where the pieces are too
+    /// short to hold it at all.
+    public func placement(of kind: ClipTransitionKind, lengthMS asked: Int,
+                          preferring alignment: ClipTransitionAlignment)
+        -> (alignment: ClipTransitionAlignment, lengthMS: Int)? {
+        var order: [ClipTransitionAlignment] = [alignment, .across]
+        order += ClipTransitionAlignment.allCases
+            .filter { !order.contains($0) }
+            .sorted { footageMS(of: kind, aligned: $0) > footageMS(of: kind, aligned: $1) }
+        let wanted = max(ClipTransition.shortestMS, asked)
+        func length(_ aligned: ClipTransitionAlignment) -> Int { min(wanted, longestMS(of: kind, aligned: aligned)) }
+        func fits(_ aligned: ClipTransitionAlignment) -> Bool { length(aligned) >= ClipTransition.shortestMS }
+        guard let first = order.first(where: fits) else { return nil }
+        // The length it gets where it would sit; footage elsewhere wins only
+        // at that same length, so a held frame never costs it length.
+        let full = length(first)
+        let paid = order.first { length($0) >= full && footageMS(of: kind, aligned: $0) >= full }
+        return (paid ?? first, full)
     }
 
     /// The smaller of the two sides' spare, or nil when neither side has
@@ -446,15 +488,32 @@ public struct ClipCut: Hashable, Sendable {
     /// point. Nought for anything that needs no overlap.
     public var spentFromOutgoingMS: Int {
         guard let drawn = drawnTransition, drawn.kind.needsOverlap else { return 0 }
-        return drawn.afterMS
+        return min(drawn.afterMS, spareAfterOutMS ?? .max)
     }
 
     /// How much spare the incoming side is spending, coming up before its in
     /// point.
     public var spentFromIncomingMS: Int {
         guard let drawn = drawnTransition, drawn.kind.needsOverlap else { return 0 }
-        return drawn.beforeMS
+        return min(drawn.beforeMS, spareBeforeInMS ?? .max)
     }
+
+    /// How long the outgoing side holds its last frame, running on past the
+    /// end of its recording: what of its share the spare could not pay for.
+    public var heldFromOutgoingMS: Int {
+        guard let drawn = drawnTransition, drawn.kind.needsOverlap else { return 0 }
+        return drawn.afterMS - spentFromOutgoingMS
+    }
+
+    /// How long the incoming side holds its first frame, coming up before the
+    /// start of its recording.
+    public var heldFromIncomingMS: Int {
+        guard let drawn = drawnTransition, drawn.kind.needsOverlap else { return 0 }
+        return drawn.beforeMS - spentFromIncomingMS
+    }
+
+    /// Whether the transition here holds an edge frame anywhere.
+    public var holdsFrames: Bool { heldFromOutgoingMS + heldFromIncomingMS > 0 }
 }
 
 /// What one clip looks like at one moment: the frame it is playing, the frame
@@ -815,13 +874,22 @@ public enum ClipTransitionCopy {
     /// What the transition on a cut is spending, for the Paid with row: both
     /// sides across the cut, and only the side it borrows from otherwise, in
     /// the words of the Spare after and Spare before fields.
+    /// Where the spare ran out, the frames held for the rest say so after it.
     public static func paidWith(_ cut: ClipCut) -> String {
-        switch cut.drawnTransition?.drawnAlignment ?? .across {
+        let spent = switch cut.drawnTransition?.drawnAlignment ?? .across {
         case .across: "\(seconds(cut.spentFromOutgoingMS)) + \(seconds(cut.spentFromIncomingMS)) of spare"
         case .before: "\(seconds(cut.spentFromIncomingMS)) of spare before"
         case .after: "\(seconds(cut.spentFromOutgoingMS)) of spare after"
         }
+        let held = cut.heldFromOutgoingMS + cut.heldFromIncomingMS
+        guard held > 0 else { return spent }
+        guard cut.spentFromOutgoingMS + cut.spentFromIncomingMS > 0 else { return "\(seconds(held)) of held frames" }
+        return "\(spent), \(seconds(held)) held"
     }
+
+    /// What is behind the Paid with row's question mark when it holds frames.
+    public static let holdsEdgeFramesHelp = "There is not enough footage past this cut, so the last frame "
+        + "before it and the first frame after it hold while the transition plays."
 
     /// The mock's line about what spare media is (`#pSpareNote`), behind the
     /// Edit point section's question mark: longer than a panel row may be.
@@ -903,10 +971,9 @@ public enum ClipTransitionCopy {
         "Both sides of this cut read the same frames, so a cross dissolve here would blend the "
         + "picture with itself and show nothing. A dip goes through a colour and does show."
 
-    /// Why a kind is not on offer at this cut.
+    /// Why a kind is not on offer at this cut: only ever that the pieces
+    /// either side are too short to hold it.
     public static func cannotAfford(_ kind: ClipTransitionKind, at cut: ClipCut) -> String {
-        guard kind.needsOverlap else { return "" }
-        return "\(kind.title) needs both pieces on screen at once, and there are no spare frames "
-            + "either side of this cut to pay for it."
+        "The clips here are too short for \(kind.title)"
     }
 }

@@ -68,7 +68,7 @@ struct TimelineTransitionHover: Equatable {
         switch plan {
         case .put: "\(kind.title) · \(CaptionProgress.clock(atMS))"
         case .fade(_, let end, _): "\(kind.title) · \(end.title)"
-        case .refused(.noSpare): "Needs spare frames"
+        case .refused(.tooShort): "Clips too short"
         case .refused(.needsTwoClips): "Needs a clip on both sides"
         case .refused(.noCutNearby): Self.nowhereNote
         }

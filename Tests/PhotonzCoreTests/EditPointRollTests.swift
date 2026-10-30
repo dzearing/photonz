@@ -112,7 +112,7 @@ struct EditPointRollTests {
         #expect(!apart.canRollCut(at: place, toMS: 8500))
     }
 
-    @Test("A transition on the cut stays on it, and a roll it could not pay for is refused")
+    @Test("A transition on the cut stays on it, and a roll that leaves a side too short to hold it is refused")
     func keepsTheTransition() throws {
         var (doc, take, broll, _) = try Self.edit()
         let place = TimelineCutPlace.edit(outgoing: take, incoming: broll)
@@ -124,15 +124,16 @@ struct EditPointRollTests {
         #expect(doc.documentCut(at: place)?.cut.transition == dissolve)
         #expect(doc.documentCut(at: place)?.atMS == 9000)
 
-        // A long dissolve spends 1.4s from each side; rolling a second either
-        // way leaves one side with less than that.
+        // A long dissolve reaches 1.4s into each side. Rolled where footage
+        // runs out it holds the edge frames (the user, 2026-10-29); rolled
+        // until b-roll is shorter than the dissolve, it cannot hold it at all.
         var (long, take2, broll2, _) = try Self.edit()
         let place2 = TimelineCutPlace.edit(outgoing: take2, incoming: broll2)
         let putLong = long.setTransition(ClipTransition(kind: .dissolve, lengthMS: 2800), at: place2)
         #expect(putLong)
-        #expect(!long.canRollCut(at: place2, toMS: 9000))
-        #expect(!long.canRollCut(at: place2, toMS: 7000))
-        #expect(long.canRollCut(at: place2, toMS: 8400))
+        #expect(long.canRollCut(at: place2, toMS: 9000))
+        #expect(long.canRollCut(at: place2, toMS: 7000))
+        #expect(!long.canRollCut(at: place2, toMS: 10_000))
     }
 
     @Test("A dip that holds on its colour keeps its hold through a roll")

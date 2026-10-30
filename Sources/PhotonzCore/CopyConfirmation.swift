@@ -207,10 +207,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         case transitionCopied(CopiedTransition)
         /// One transition went on every cut, or every cut among the clips
         /// picked (`EveryCutOutcome`). Most of those cuts are off screen, so
-        /// the count says what happened, and how many had no spare to pay.
+        /// the count says what happened, and how many were too short to hold it.
         case transitionOnEveryCut(ClipTransitionKind, EveryCutOutcome)
-        /// A transition was asked to sit on a side of its cut with no spare
-        /// frames to pay for it (`#rowAlign`). The segment stays where it
+        /// A transition was asked to sit on a side of its cut whose piece is
+        /// too short to hold it (`#rowAlign`). The segment stays where it
         /// was, so it says why.
         case transitionSideRefused(ClipTransitionAlignment)
         /// A through edit was joined back into one piece and the transition
@@ -232,7 +232,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// as broken and the person goes hunting for what is in the way.
         case gapNotClosed(GapCloseRefusal)
         /// A transition asked of a clip went on one end and not the other:
-        /// the cut at `atMS` has no spare frames to pay for it
+        /// the clips at the cut at `atMS` are too short to hold it
         /// (`TransitionTargets.swift`). "No transition added" would be false,
         /// so it says which cut was left as it was.
         case transitionCutSkipped(atMS: Int)
@@ -497,9 +497,9 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .transitionOnEveryCut(_, let outcome):
             return outcome.countLine
         case .transitionCutSkipped(let ms):
-            return "No spare frames at \(CaptionProgress.clock(ms))"
+            return "Too short at \(CaptionProgress.clock(ms))"
         case .transitionSideRefused:
-            return "No spare frames on that side"
+            return "Too short on that side"
         case .throughEditJoined(let kind):
             return "\(kind.title) taken off"
         case .speedNeedsAClip:

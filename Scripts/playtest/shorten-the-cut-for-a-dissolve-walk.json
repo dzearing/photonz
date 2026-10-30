@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/shorten-the-cut-for-a-dissolve-walk",
-  "seed": "The recording used to its last frame and a second clip dropped after it at full length leave a cut with no spare frames either side. The picker greys the transitions that need an overlap, Properties says why and offers Shorten the cut by 0.4s, and choosing it trims 0.2s off each clip end, closes the gap and puts the cross dissolve on, as one step to undo. Command T at the same cut keeps its dip fallback. At Next defaults, no flag set.",
+  "seed": "The recording used to its last frame and a second clip dropped after it at full length leave a cut with no spare frames either side. A cross dissolve put on it from the cut's right-click goes on anyway, holding the edge frames (Paid with 0.4s of held frames), and Properties offers Or, Shorten the cut by 0.4s to play real footage instead. Choosing it trims 0.2s off each clip end, closes the gap and keeps the cross dissolve, now paid with real footage, as one step to undo. At Next defaults, no flag set.",
   "setup": {
     "front": true,
     "timelineOpen": true,
@@ -12,75 +12,215 @@
     ]
   },
   "steps": [
-    { "do": "action", "action": "openSampleRecording" },
-    { "do": "wait", "seconds": 2.0 },
-    { "do": "action", "action": "videoPause" },
-    { "do": "tool", "tool": "select" },
-    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
-    { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 7.96 },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 8.0, "endsAt": 16.0, "count": 1 },
-    { "do": "press", "control": "Edit point Tutorial Sample to b-roll" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "control": "Cross dissolve", "present": true },
-    { "do": "expect", "field": "Spare after", "reads": "0.0s" },
-    { "do": "expect", "field": "Spare before", "reads": "0.0s" },
-    { "do": "panel", "stage": "1-no-spare" },
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0,
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 7.96
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 16.0,
+      "count": 1
+    },
+    {
+      "do": "rightClick",
+      "on": "Edit point Tutorial Sample to b-roll",
+      "choose": "Add Transition > Cross dissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "expect",
+      "field": "Spare after",
+      "reads": "0.0s"
+    },
+    {
+      "do": "expect",
+      "field": "Spare before",
+      "reads": "0.0s"
+    },
+    {
+      "do": "expect",
+      "field": "Paid with",
+      "reads": "0.4s of held frames"
+    },
+    {
+      "do": "expect",
+      "field": "Transition warning",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Shorten the cut",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "1-held-frames"
+    },
     {
       "do": "describe",
       "stage": "1-a-cut-with-no-spare",
-      "note": "THE FIRST TEST: both clips run to their own last and first frames, so the cut has nothing either side to borrow. The picker greys Cross dissolve, Push, Wipe and Blur through and says spare 0.0s / 0.0s along its top; the dips stay available. Properties says No spare frames for an overlap and offers Or, Shorten the cut by 0.4s"
+      "note": "THE FIRST TEST: both clips run to their own last and first frames, so the cut has nothing either side to borrow. The cross dissolve goes on anyway, each side holding its edge frame: Paid with reads 0.4s of held frames, and Properties offers Or, Shorten the cut by 0.4s"
     },
-    { "do": "snapshot", "name": "1-a-cut-with-no-spare" },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "expect", "field": "Transition warning", "reads": "No spare frames for an overlap" },
-    { "do": "expect", "control": "Shorten the cut", "present": true },
-    { "do": "panel", "stage": "1b-the-offer" },
-    { "do": "snapshot", "name": "1b-the-offer" },
-    { "do": "press", "control": "Shorten the cut" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 7.8, "count": 1 },
-    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 7.8, "endsAt": 15.6, "count": 1 },
-    { "do": "expect", "control": "Transition Tutorial Sample to b-roll", "present": true },
-    { "do": "expect", "menu": "Type", "reads": "Cross dissolve" },
-    { "do": "expect", "menu": "Length", "reads": "0.4s" },
-    { "do": "expect", "field": "Paid with", "reads": "0.2s + 0.2s of spare" },
-    { "do": "expect", "field": "Spare after", "reads": "0.2s" },
-    { "do": "expect", "field": "Spare before", "reads": "0.2s" },
-    { "do": "expect", "field": "Spare before strip", "reads": "0.2s spare" },
-    { "do": "expect", "control": "Shorten the cut", "present": false },
-    { "do": "expect", "field": "Transition warning", "present": false },
+    {
+      "do": "snapshot",
+      "name": "1-a-cut-with-no-spare"
+    },
+    {
+      "do": "press",
+      "control": "Shorten the cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 7.8,
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.8,
+      "endsAt": 15.6,
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "control": "Transition Tutorial Sample to b-roll",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "expect",
+      "menu": "Length",
+      "reads": "0.4s"
+    },
+    {
+      "do": "expect",
+      "field": "Paid with",
+      "reads": "0.2s + 0.2s of spare"
+    },
+    {
+      "do": "expect",
+      "field": "Spare after",
+      "reads": "0.2s"
+    },
+    {
+      "do": "expect",
+      "field": "Spare before",
+      "reads": "0.2s"
+    },
+    {
+      "do": "expect",
+      "field": "Spare before strip",
+      "reads": "0.2s spare"
+    },
+    {
+      "do": "expect",
+      "control": "Shorten the cut",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "Transition warning",
+      "present": false
+    },
     {
       "do": "describe",
       "stage": "2-shortened-and-dissolving",
       "note": "THE SECOND TEST: one click took 0.2s off the end of the recording and 0.2s off the start of b-roll, closed the gap so b-roll now starts at 0:07.8, and put a 0.4s cross dissolve on the cut, paid for with exactly the frames it trimmed. The dashed spare strips either side of the band, the Spare after and Spare before fields and Paid with all agree: 0.2s each side. The playhead is half way through, so the canvas shows both shots"
     },
-    { "do": "snapshot", "name": "2-shortened-and-dissolving" },
-    { "do": "action", "action": "undo" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
-    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 8.0, "endsAt": 16.0, "count": 1 },
-    { "do": "expect", "control": "Transition Tutorial Sample to b-roll", "present": false },
+    {
+      "do": "snapshot",
+      "name": "2-shortened-and-dissolving"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0,
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 16.0,
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "control": "Transition Tutorial Sample to b-roll",
+      "present": true
+    },
     {
       "do": "describe",
       "stage": "3-one-undo",
-      "note": "THE THIRD TEST: one undo puts both clip ends back and takes the dissolve off: the cut is at 0:08 again and hard"
+      "note": "THE THIRD TEST: one undo puts both clip ends back: the cut is at 0:08 again, with the cross dissolve holding its edge frames as before"
     },
-    { "do": "snapshot", "name": "3-one-undo" },
-    { "do": "press", "control": "Edit point Tutorial Sample to b-roll" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "t", "modifiers": ["command"] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "expectNotice", "says": "No transition added" },
-    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 8.0, "count": 1 },
     {
-      "do": "describe",
-      "stage": "4-command-t-keeps-the-dip",
-      "note": "Command T at the same cut does not shorten anything: a key never moves clips. It says No transition added and offers the dip the cut can take, and nothing on the timeline moved"
-    },
-    { "do": "snapshot", "name": "4-command-t-keeps-the-dip" }
+      "do": "snapshot",
+      "name": "3-one-undo"
+    }
   ]
 }

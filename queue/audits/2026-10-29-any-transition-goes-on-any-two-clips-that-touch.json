@@ -1,0 +1,31 @@
+{
+  "feature": "Any transition goes on two clips that touch",
+  "epic": "video-transitions-motion",
+  "summary": "A cube, flip, swing, doorway, revolve, push in depth, dissolve, push, wipe or blur through now goes on any cut between two clips that touch, even with no spare footage: the outgoing clip holds its last frame and the incoming one its first while it plays. A clip slid over another on its own track now covers it, so they meet at a cut instead of lying on top of each other.",
+  "setup": "Photonz Next, no switch changed from its default. Open the sample recording and drop a second recording right after it on V1, so the first is used to its last frame and the second from its first. Walk: Scripts/playtest/cube-between-two-recordings-with-no-spare-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Put two recordings back to back on V1, the first used to its very last frame.", "shot": "2026-10-29-held-frames-0-two-recordings-touch-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the first clip and choose Add Transition > Cube. No notice appears.", "shot": "2026-10-29-held-frames-1-cube-on-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Read Paid with in Properties: 0.8s of held frames." },
+    { "do": "Scrub across the cut and watch the box turn between the two held frames.", "shot": "2026-10-29-held-frames-reel-3-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the second clip and choose Add Transition > Flip.", "shot": "2026-10-29-held-frames-3-flip-from-the-second-clip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag Swing from the Transitions panel onto the cut.", "shot": "2026-10-29-held-frames-4-swing-from-the-panel-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the second clip back about a second over the first.", "shot": "2026-10-29-held-frames-7-slid-over-is-a-cut-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does the cube read the way you described it: the first clip pauses, the box turns, the second plays on?",
+    "Is 0.8s of held frames on the Paid with row enough to tell you frames are being held, without reading as a warning?",
+    "When you slide a clip over another on the same track, is covering it (Premiere's overwrite) what you expect, or would you rather it stopped at the other clip?",
+    "Should a transition with no spare footage default to a shorter length so the held part is less noticeable?"
+  ],
+  "rough": [
+    "The reel: queue/audits/2026-10-29-cube-held-frames-reel.mp4 and its contact sheet 2026-10-29-cube-held-frames-sheet.png, seven frames from 7.55s to 8.45s. The bar the old version failed: at 7.85s the canvas shows both recordings on the faces of a turning box. Before this change the cube was refused, and 7.85s showed one flat picture.",
+    "The mock's step 10 (video-transition-wt.html, #warnBox and #pickNote) greys the overlap kinds at a cut with no spare and offers only Shorten the cut. Built instead: every kind goes on and holds the edge frames, the warning box is gone, and the Or, Shorten the cut row stays as the way to real footage. Settled by your words on 2026-10-29 (\"wouldn't it just pause the frame on one?\") and this task, any-transition-goes-on-any-two-clips-that-touch. The mock page is left as drawn.",
+    "Clicking Shorten the cut does nothing: the button is there but its action never runs. Reproduced and filed as clicking-shorten-the-cut-trims-the-clips-and-pla. The core edit it calls works in tests.",
+    "Sliding a clip, or pulling one of its edges, over a neighbour on the same track now covers the neighbour. Premiere stops an edge trim at the neighbour instead. Chose to cover in both cases so no edit can leave two clips on top of each other.",
+    "A document saved before this change with two clips already overlapping on one track stays that way until one of them is moved.",
+    "Seven transition walks were already red before this change (the picker not opening on a press of the cut, and others). Logged on walks-that-fail-in-the-full-sweep-26.",
+    "The agent tool set_transition uses the same placement, so it now puts a cube on a cut with no spare. That is covered by unit tests, not a walk."
+  ]
+}

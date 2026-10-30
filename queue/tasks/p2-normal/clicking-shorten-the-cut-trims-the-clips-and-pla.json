@@ -1,0 +1,30 @@
+{
+  "id": "clicking-shorten-the-cut-trims-the-clips-and-pla",
+  "title": "Clicking Shorten the cut trims the clips and plays the transition on real footage",
+  "goal": "At a cut whose transition holds its edge frames, Properties offers Or, Shorten the cut by 0.4s. Clicking it today does nothing at all, so the one way to swap held frames for real footage is a dead button.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-30T03:20:02.944Z",
+  "updated": "2026-10-30T03:20:02.947Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-29 by the runner on any-transition-goes-on-any-two-clips-that-touch. Command: Scripts/playtest.sh Scripts/playtest/shorten-the-cut-for-a-dissolve-walk.json --no-build. Output: steps 1-21 pass (Paid with reads 0.4s of held frames, control Shorten the cut present), then [22 expectClip] FAILED: no clip called \"Tutorial Sample\" is on V1, starting at 0.0s, ending at 7.8s; the timeline: b-roll on V1 8.00s to 16.00s. The press lands on the button (the walk log says window (1565, 539) in Or, Shorten the cut by 0.8s, and the screenshot puts the button there; hit test reaches the panel hosting view), yet EditorState.shortenCutInHand is never called: a debug write as its first line never ran, with the window in back or in front (setup front: true). Removing .fixedSize() and .panelHelp from the button changed nothing. The core path works: HeldFrameTransitionTests shorteningStillOffered calls shortenCut(offer, at:) and gets the cut back. The same-styled Add transition button presses fine in default-transition-key-walk. Button: TransitionInspector.shorten(_:incomingName:). Cause not found; suspects: something between mouse down and up rebuilding the Or row (cutShorteningInHand runs a trial shortenCut in body), or a gesture above it in the dock.",
+  "acceptance": [
+    "A pointer click on Shorten the cut trims the clips either side, closes the gap and keeps the transition, now paid with real footage (Paid with reads 0.2s + 0.2s of spare for a 0.4s dissolve)",
+    "shorten-the-cut-for-a-dissolve-walk passes at Next defaults, its press a pointer click on the button",
+    "One undo puts both clip ends back"
+  ],
+  "log": [
+    {
+      "t": "2026-10-30T03:20:02.946Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "shorten-the-cut-for-a-dissolve-walk"
+  ]
+}

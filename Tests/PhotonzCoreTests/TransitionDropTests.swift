@@ -76,7 +76,7 @@ struct TransitionDropTests {
                 == .refused(.noCutNearby))
     }
 
-    @Test("A cut that cannot pay for the tile says so rather than taking it")
+    @Test("A cut with no spare takes the tile anyway, holding the edge frames")
     func noSpare() throws {
         var (doc, take, broll) = try EditPointTransitionTests.edit()
         // Both sides used right up to the ends of their recordings.
@@ -88,7 +88,7 @@ struct TransitionDropTests {
         }
         let track = try #require(doc.trackID(ofClip: broll))
         #expect(doc.transitionDropPlan(.dissolve, atMS: 8000, onTrack: track, reachMS: 300)
-                == .refused(.noSpare(.dissolve)))
+                == .put(ClipTransition(kind: .dissolve), at: .edit(outgoing: take, incoming: broll)))
         // A dip needs none.
         #expect(doc.transitionDropPlan(.dipToBlack, atMS: 8000, onTrack: track, reachMS: 300)
                 == .put(ClipTransition(kind: .dipToBlack), at: .edit(outgoing: take, incoming: broll)))

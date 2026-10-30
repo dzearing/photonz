@@ -322,8 +322,8 @@ extension EditorState {
     }
 
     /// The mock's **Or · Shorten the cut** (`#rowForce`): at a cut in hand
-    /// that cannot pay for an overlap, what shortening it would take to pay
-    /// for one (`ShortenTheCut.swift`). Nil where nothing needs paying for or
+    /// whose transition holds edge frames, what shortening it would take to
+    /// play real footage through it instead (`ShortenTheCut.swift`). Nil where nothing needs paying for or
     /// it cannot be done, so the row is there only when it would work.
     var cutShorteningInHand: ClipCutShortening? {
         guard canWorkWithClipTransitions, clipTransitionDrag == nil, let inHand = cutInHand, var trial = document,
@@ -449,7 +449,7 @@ extension EditorState {
         case .refused(let why):
             // A cut in hand that cannot pay says why, and offers the kind it
             // can take (`putTransition`).
-            if case .noSpare = why, let at = place ?? pickedCutPlace {
+            if case .tooShort = why, let at = place ?? pickedCutPlace {
                 putTransition(defaultTransitionKind, on: [.cut(at)])
             } else {
                 raiseCanvasNotice(.defaultTransitionRefused(why))

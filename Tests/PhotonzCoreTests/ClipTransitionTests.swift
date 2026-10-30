@@ -131,7 +131,7 @@ struct ClipTransitionTests {
         #expect(cut.longestMS(of: .dipToBlack) == 3000)
     }
 
-    @Test("With no spare media, the ones that need an overlap cannot be afforded and the dips can")
+    @Test("With no spare media, the ones that need an overlap hold the edge frames, and footage pays for none of it")
     func noSpareMeansNoOverlap() throws {
         // Both pieces read the file from its very first frame and to its very
         // last: there is nothing either side to spend.
@@ -148,20 +148,23 @@ struct ClipTransitionTests {
         let tightCut = try #require(tight.cut(at: 1))
         #expect(tightCut.spareAfterOutMS == 0)
         #expect(tightCut.spareBeforeInMS == 0)
-        #expect(tightCut.canAfford(.dissolve) == false)
-        #expect(tightCut.longestMS(of: .dissolve) == 0)
+        // The user, 2026-10-29: it goes on anyway, holding the edge frames.
+        #expect(tightCut.canAfford(.dissolve))
+        #expect(tightCut.longestMS(of: .dissolve) == 5000)
+        #expect(tightCut.footageMS(of: .dissolve, aligned: .across) == 0)
         #expect(tightCut.canAfford(.dipToBlack))
         #expect(tightCut.longestMS(of: .dipToBlack) == 5000)
     }
 
-    @Test("A dissolve longer than the cut can pay for is refused, not quietly shortened")
+    @Test("A dissolve with no spare holds its edge frames, and one longer than the pieces can hold is refused")
     func tooLongIsRefused() {
         var tight = ClipPieces(pieces: [ClipPiece(sourceInMS: 5000, lengthMS: 5000),
                                         ClipPiece(sourceInMS: 0, lengthMS: 5000)],
                                sourceLengthMS: 10_000)
         let did11 = tight.setTransition(ClipTransition(kind: .dissolve, lengthMS: 400), atCut: 1)
-        #expect(did11 == false)
-        #expect(tight.transition(atCut: 1) == nil)
+        #expect(did11)
+        #expect(tight.cut(at: 1)?.heldFromOutgoingMS == 200)
+        #expect(tight.cut(at: 1)?.heldFromIncomingMS == 200)
         var room = Self.cutClip()
         let did12 = room.setTransition(ClipTransition(kind: .dissolve, lengthMS: 9000), atCut: 1)
         #expect(did12 == false)

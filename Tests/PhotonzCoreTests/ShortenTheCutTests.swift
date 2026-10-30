@@ -43,13 +43,13 @@ struct ShortenTheCutTests {
 
     // MARK: - The arithmetic
 
-    @Test("A cut with nothing either side cannot take a dissolve, and shortening by its length pays for it")
+    @Test("A cut with nothing either side holds its edge frames for a dissolve, and shortening by its length plays real footage")
     func bothSidesEmpty() throws {
         let (doc, place, _, _, _) = try Self.edit()
         let cut = try #require(doc.documentCut(at: place)?.cut)
         #expect(cut.spareAfterOutMS == 0)
         #expect(cut.spareBeforeInMS == 0)
-        #expect(cut.canAfford(.dissolve) == false)
+        #expect(cut.canAfford(.dissolve))
         // A dip needs no overlap, so it never asks for the cut to shorten.
         #expect(cut.canAfford(.dipToBlack))
         #expect(cut.shortening(for: .dipToBlack) == nil)
@@ -70,7 +70,7 @@ struct ShortenTheCutTests {
         let (doc, place, _, _, _) = try Self.edit(spareAfter: 50)
         let cut = try #require(doc.documentCut(at: place)?.cut)
         #expect(cut.spareAfterOutMS == 50)
-        #expect(cut.canAfford(.dissolve) == false)
+        #expect(cut.canAfford(.dissolve))
         let shortening = try #require(cut.shortening(for: .dissolve))
         #expect(shortening.fromOutgoingMS == 150)
         #expect(shortening.fromIncomingMS == 200)
@@ -106,17 +106,22 @@ struct ShortenTheCutTests {
 
     // MARK: - What it offers
 
-    @Test("The offer is the overlap on the cut, else the default kind, else a cross dissolve")
+    @Test("The offer is the transition on the cut, and only while it holds edge frames")
     func whichKind() throws {
         var (doc, place, _, _, _) = try Self.edit()
         var cut = try #require(doc.documentCut(at: place)?.cut)
-        #expect(cut.shorteningOffer(defaultKind: .dipToBlack)?.transition.kind == .dissolve)
-        #expect(cut.shorteningOffer(defaultKind: .wipe)?.transition.kind == .wipe)
-        // A dip on the cut (the mock's step 10) is still offered the dissolve.
+        // A hard cut holds nothing, so there is nothing to offer.
+        #expect(cut.shorteningOffer(defaultKind: .wipe) == nil)
+        let wiped = doc.setTransition(ClipTransition(kind: .wipe), at: place)
+        #expect(wiped)
+        cut = try #require(doc.documentCut(at: place)?.cut)
+        #expect(cut.holdsFrames)
+        #expect(cut.shorteningOffer(defaultKind: .dissolve)?.transition.kind == .wipe)
+        // A dip holds no frames: each clip fades inside the time it has.
         let dipped = doc.setTransition(ClipTransition(kind: .dipToBlack), at: place)
         #expect(dipped)
         cut = try #require(doc.documentCut(at: place)?.cut)
-        #expect(cut.shorteningOffer(defaultKind: .dissolve)?.transition.kind == .dissolve)
+        #expect(cut.shorteningOffer(defaultKind: .dissolve) == nil)
     }
 
     // MARK: - Doing it
@@ -185,7 +190,7 @@ struct ShortenTheCutTests {
         #expect(moved)
         let place = TimelineCutPlace.join(clip: take, index: 1)
         let cut = try #require(doc.documentCut(at: place)?.cut)
-        #expect(cut.canAfford(.dissolve) == false)
+        #expect(cut.footageMS(of: .dissolve, aligned: .across) == 0)
         let landed = doc.shortenCut(for: .dissolve, at: place)
         #expect(landed == place)
         #expect(doc.layer(id: take)?.time?.outMS == 7600)

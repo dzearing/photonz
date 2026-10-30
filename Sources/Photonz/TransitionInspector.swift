@@ -119,6 +119,8 @@ struct TransitionInspector: View {
                                     VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut))
                                         .panelReadout(ClipTransitionCopy.paidWith(inHand.cut))
                                 }
+                                .panelHelp(inHand.cut.holdsFrames ? ClipTransitionCopy.holdsEdgeFramesHelp
+                                           : "The spare footage it plays either side of the cut")
                                 .playtestField("Paid with")
                             }
                             if transition.kind.needsOverlap {
@@ -154,7 +156,7 @@ struct TransitionInspector: View {
                         .playtestField("Transition warning")
                 }
                 if let shortening {
-                    shorten(shortening)
+                    shorten(shortening, incomingName: inHand.incomingName)
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -164,34 +166,31 @@ struct TransitionInspector: View {
     }
 
     /// The one hint this section ever shows, and only when something is off:
-    /// a later trim took the spare a transition was spending, or both sides
-    /// read the same frames so a dissolve would show nothing.
-    /// A label, with the reason in its hover tip.
+    /// a later trim made the clips too short for the transition, or both
+    /// sides read the same frames so a dissolve would show nothing. A label,
+    /// with the reason in its hover tip. Frames held where the footage ran
+    /// out are not something off: the Paid with row says so, and the Or row
+    /// offers real footage instead.
     private func warning(_ inHand: DocumentCut, shortening: ClipCutShortening?) -> (line: String, help: String)? {
         let cut = inHand.cut
         if cut.transition != nil, cut.drawnTransition == nil {
-            return (line: "Plays as a hard cut", help: "No spare footage is left at this cut")
+            return (line: "Plays as a hard cut", help: "The clips here are too short for it")
         }
         if let drawn = cut.drawnTransition, let asked = cut.transition, drawn.lengthMS < asked.lengthMS {
             let now = ClipTransitionCopy.seconds(drawn.lengthMS)
-            return (line: "Shortened to \(now)", help: "A trim took the spare footage it was using")
+            return (line: "Shortened to \(now)", help: "A trim made the clips too short for it")
         }
         if cut.isContinuous, cut.transition?.kind.needsOverlap ?? false {
             return (line: "Shows nothing here", help: "Both sides are the same frames")
         }
-        // The mock's warning box (`#warnBox`): its first words on the row,
-        // its sentence behind them.
-        if let shortening {
-            return (line: ClipTransitionCopy.noSpareForAnOverlap,
-                    help: ClipTransitionCopy.shorteningHelp(shortening, incomingName: inHand.incomingName))
-        }
         return nil
     }
 
-    /// **Or · Shorten the cut by 0.4s** (`#rowForce`): the one way left to pay
-    /// for an overlap at a cut with no spare. Offered, never taken, because
-    /// it moves the incoming clip and everything after it.
-    private func shorten(_ shortening: ClipCutShortening) -> some View {
+    /// **Or · Shorten the cut by 0.4s** (`#rowForce`): at a cut whose
+    /// transition holds edge frames, the way to play real footage through it
+    /// instead. Offered, never taken, because it moves the incoming clip and
+    /// everything after it.
+    private func shorten(_ shortening: ClipCutShortening, incomingName: String) -> some View {
         let title = ClipTransitionCopy.shortenTheCut(shortening)
         return VideoKit.FieldRow(label: "Or") {
             Button {
@@ -205,7 +204,7 @@ struct TransitionInspector: View {
             // would cut the length off the end of its words.
             .fixedSize()
             .playtestControl("Shorten the cut", detail: title)
-            .panelHelp(ClipTransitionCopy.shorteningTip(shortening))
+            .panelHelp(ClipTransitionCopy.shorteningHelp(shortening, incomingName: incomingName))
         }
         .playtestField("Or")
     }

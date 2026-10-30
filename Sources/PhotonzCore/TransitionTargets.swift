@@ -63,6 +63,11 @@ public struct TransitionTargetOutcome: Hashable, Sendable {
         self.put = put
         self.refused = refused
     }
+
+    /// What the canvas says, if anything: only why nothing went on. A clip's
+    /// free end that cannot take a cube is not news once the cut beside it
+    /// took one, and saying it would read as if the whole thing failed.
+    public var headline: DefaultTransitionRefusal? { put.isEmpty ? refused.first : nil }
 }
 
 extension ClipTransitionKind {
@@ -142,7 +147,7 @@ extension PhotonzDocument {
         switch target {
         case .cut(let place):
             guard let cut = documentCut(at: place) else { return .refused(.noCutNearby) }
-            guard let transition = cut.cut.fitted(kind) else { return .refused(.noSpare(kind)) }
+            guard let transition = cut.cut.fitted(kind) else { return .refused(.tooShort(kind)) }
             return .put(transition, at: place)
         case let .fade(clip, end):
             guard kind.fadesAtAFreeEnd else { return .refused(.needsTwoClips(kind)) }
@@ -151,7 +156,7 @@ extension PhotonzDocument {
             if now > 0 { return .fade(clip: clip, end, lengthMS: now) }
             let fits = ([TransitionTargetPlan.fadeLengthMS] + PictureFade.stopsMS.reversed())
                 .first { $0 > 0 && $0 <= TransitionTargetPlan.fadeLengthMS && layer.canSetPictureFade(end, toMS: $0) }
-            guard let fits else { return .refused(.noSpare(kind)) }
+            guard let fits else { return .refused(.tooShort(kind)) }
             return .fade(clip: clip, end, lengthMS: fits)
         }
     }
@@ -169,7 +174,7 @@ extension PhotonzDocument {
                 // Read again just before it is written: a dip that holds puts
                 // real time in and moves everything after it.
                 if putTransition(kind, onEvery: [place]).put.isEmpty {
-                    outcome.refused.append(.noSpare(kind))
+                    outcome.refused.append(.tooShort(kind))
                 } else {
                     outcome.put.append(target)
                 }
@@ -184,8 +189,8 @@ extension PhotonzDocument {
     }
 
     /// The kind to offer when `kind` cannot go on the cut at `place`: `kind`
-    /// itself where it fits, else a dip to black, which spends no spare frames
-    /// and so always fits.
+    /// itself where it fits, else a dip to black, which overlaps nothing and
+    /// so needs the least of the pieces either side.
     public func nearestTransition(to kind: ClipTransitionKind, at place: TimelineCutPlace) -> ClipTransitionKind? {
         guard let cut = documentCut(at: place)?.cut else { return nil }
         if cut.fitted(kind) != nil { return kind }

@@ -70,7 +70,7 @@ struct EveryCutTransitionTests {
         #expect(outcome.countLine == "On 3 cuts")
     }
 
-    @Test("A cut that cannot pay for it is left as it was and counted as skipped")
+    @Test("A cut with no spare takes it too, holding the edge frames, and none is skipped")
     func skipsWhatCannotPay() throws {
         var (doc, take, broll) = try Self.threeCuts()
         // The edit point used right up to both ends of its recordings: no
@@ -82,15 +82,12 @@ struct EveryCutTransitionTests {
         }
         let edit = TimelineCutPlace.edit(outgoing: take, incoming: broll)
         let tight = try #require(doc.documentCut(at: edit)).cut
-        guard tight.fitted(.dissolve) == nil else {
-            Issue.record("the edit point still has spare: \(tight)")
-            return
-        }
+        #expect(tight.smallestSpareMS == 0)
         let outcome = doc.putTransitionOnEveryCut(.dissolve)
-        #expect(outcome.skipped == 1)
-        #expect(outcome.put.count == 2)
-        #expect(!outcome.put.contains(edit))
-        #expect(doc.documentCut(at: edit)?.cut.transition == nil)
+        #expect(outcome.skipped == 0)
+        #expect(outcome.put.count == 3)
+        #expect(outcome.put.contains(edit))
+        #expect(doc.documentCut(at: edit)?.cut.holdsFrames == true)
     }
 
     @Test("Nothing to put on anywhere changes nothing")
@@ -144,8 +141,8 @@ struct EveryCutTransitionTests {
         let places = (1...12).map { TimelineCutPlace.join(clip: UUID(), index: $0) }
         #expect(EveryCutOutcome(put: places, skipped: 0).countLine == "On 12 cuts")
         #expect(EveryCutOutcome(put: places, skipped: 3).countLine == "On 12 cuts, 3 skipped")
-        #expect(EveryCutOutcome(put: [], skipped: 2).countLine == "2 cuts have no spare frames")
-        #expect(EveryCutOutcome(put: [], skipped: 1).countLine == "1 cut has no spare frames")
+        #expect(EveryCutOutcome(put: [], skipped: 2).countLine == "2 cuts are too short")
+        #expect(EveryCutOutcome(put: [], skipped: 1).countLine == "1 cut is too short")
         #expect(EveryCutOutcome(put: [], skipped: 0).countLine == "There are no cuts")
     }
 
@@ -163,6 +160,6 @@ struct EveryCutTransitionTests {
         let none = CopyConfirmation(subject: .transitionOnEveryCut(.push, EveryCutOutcome(put: [], skipped: 3)),
                                     shownAt: Date())
         #expect(none.title == "No transition added")
-        #expect(none.detail == "3 cuts have no spare frames")
+        #expect(none.detail == "3 cuts are too short")
     }
 }

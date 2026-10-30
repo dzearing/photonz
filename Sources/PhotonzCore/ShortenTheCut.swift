@@ -6,9 +6,10 @@ import Foundation
 // An overlap is paid for with spare media, never with position
 // (`ClipTransitions.swift`). A cut with no spare either side, which is what a
 // second clip dropped at full length after a recording used to its last frame
-// leaves, can therefore pay for none of them. Final Cut's answer is to overlap
-// the clips anyway and make the project shorter; the mock's is the same edit,
-// OFFERED rather than taken, because it moves the incoming clip and
+// leaves, holds its edge frames for the transition instead (the user,
+// 2026-10-29). Final Cut's other answer is to overlap the clips and make the
+// project shorter, so the transition plays real footage; the mock's is the
+// same edit, OFFERED rather than taken, because it moves the incoming clip and
 // everything after it.
 //
 // **What it costs is exactly the frames the overlap needs.** The overlap sits
@@ -36,16 +37,20 @@ public struct ClipCutShortening: Hashable, Sendable {
 extension ClipCut {
 
     /// What shortening this cut would take to pay for `kind`, `lengthMS` long
-    /// (the kind's usual length when nil). Nil where nothing needs paying for
-    /// (a dip, or a cut that can already afford it) and where a side is too
-    /// short to give up the frames and still hold the overlap.
+    /// (the kind's usual length when nil), with real footage and no frame
+    /// held. Nil where nothing needs paying for (a dip, or a cut whose spare
+    /// pays for it wherever it sits) and where a side is too short to give up
+    /// the frames and still hold the overlap.
     public func shortening(for kind: ClipTransitionKind, lengthMS: Int? = nil) -> ClipCutShortening? {
         shortening(for: ClipTransition(kind: kind, lengthMS: lengthMS))
     }
 
     /// The same for one transition, kept as it is but placed across the cut.
     public func shortening(for asked: ClipTransition) -> ClipCutShortening? {
-        guard asked.kind.needsOverlap, !canAfford(asked.kind) else { return nil }
+        guard asked.kind.needsOverlap,
+              !ClipTransitionAlignment.allCases.contains(where: {
+                  footageMS(of: asked.kind, aligned: $0) >= asked.lengthMS
+              }) else { return nil }
         var transition = asked
         transition.alignment = .across
         transition.holdMS = 0
@@ -60,15 +65,12 @@ extension ClipCut {
                                  fromIncomingMS: fromIncoming)
     }
 
-    /// What Properties offers at a cut that cannot pay for an overlap: the
-    /// overlapping transition already on it at the length asked for, else the
-    /// default transition when it is one that overlaps, else a cross
-    /// dissolve, the one an editor reaches for.
+    /// What Properties offers at a cut whose transition holds edge frames:
+    /// the same transition, at its length, played on real footage. Nothing
+    /// where the transition there holds none, or where there is none.
     public func shorteningOffer(defaultKind: ClipTransitionKind) -> ClipCutShortening? {
-        if let asked = transition, asked.kind.needsOverlap {
-            return shortening(for: asked)
-        }
-        return shortening(for: defaultKind.needsOverlap ? defaultKind : .dissolve)
+        guard holdsFrames, let asked = drawnTransition else { return nil }
+        return shortening(for: asked)
     }
 }
 
@@ -123,9 +125,12 @@ extension PhotonzDocument {
         trial.markInMS = trial.markInMS.map(squeeze)
         trial.markOutMS = trial.markOutMS.map(squeeze)
         if let markIn = trial.markInMS, let markOut = trial.markOutMS, markOut <= markIn { trial.clearMarkInOut() }
+        // The cut may already wear exactly this transition, holding the frames
+        // it now plays for real: that is it on, not a refusal.
         guard let cut = trial.documentCut(at: place)?.cut,
               shortening.transition.lengthMS <= cut.longestMS(for: shortening.transition),
-              trial.setTransition(shortening.transition, at: place) else { return nil }
+              cut.transition == shortening.transition
+                || trial.setTransition(shortening.transition, at: place) else { return nil }
         self = trial
         return place
     }
@@ -143,14 +148,11 @@ extension ClipTransitionCopy {
         "\(shortening.transition.kind.title), \(seconds(shortening.transition.lengthMS))"
     }
 
-    /// The one line Properties says above it, short enough for a panel row.
-    public static let noSpareForAnOverlap = "No spare frames for an overlap"
-
-    /// The mock's own sentence about it (`#warnBox`), behind that line.
+    /// The button's own sentence, behind the line above it: what shortening
+    /// does instead of holding the edge frames.
     public static func shorteningHelp(_ shortening: ClipCutShortening, incomingName: String) -> String {
-        "\(shortening.transition.kind.title) needs spare frames either side of the cut, and there are "
-            + "not enough here. It can only be paid for by shortening the cut by "
-            + "\(seconds(shortening.totalMS)), which moves \(incomingName) and everything after it. "
-            + "That is a decision, so it is offered rather than taken."
+        "Shortening the cut by \(seconds(shortening.totalMS)) plays real footage through the "
+            + "\(shortening.transition.kind.title.lowercased()) instead of held frames. It moves "
+            + "\(incomingName) and everything after it, so it is offered rather than taken."
     }
 }

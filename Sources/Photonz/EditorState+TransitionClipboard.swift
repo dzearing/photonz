@@ -114,7 +114,7 @@ extension EditorState {
                 // The picker's own refusal, and the kind this cut can take.
                 let offer = document?.nearestTransition(to: kind, at: only)
                 let action: CanvasNoticeAction? = offer.flatMap { $0 == kind ? nil : .putTransition($0, at: only) }
-                raiseCanvasNotice(.defaultTransitionRefused(.noSpare(kind)), action: action)
+                raiseCanvasNotice(.defaultTransitionRefused(.tooShort(kind)), action: action)
             } else {
                 showPastedTransition(at: only)
             }

@@ -262,10 +262,35 @@ extension PhotonzDocument {
         return id
     }
 
+    /// **Two clips on one track never sit on top of each other.** A clip slid
+    /// or trimmed over another on its own track covers what it now lies over,
+    /// the way Premiere's drag overwrites: the clip under it is trimmed back
+    /// to it, split round it, or taken away when wholly covered. Nothing on
+    /// another track and nothing on a locked one is touched.
+    ///
+    /// Before 2026-10-29 the clip simply lay on top: two clips on one track
+    /// with no cut between them, so nothing could go where they met.
+    ///
+    /// `sparing` is the other clips that moved with it, which it never covers.
+    public mutating func overwriteUnder(_ id: UUID, sparing: Set<UUID> = []) {
+        guard let time = layer(id: id)?.time, let trackID = trackID(ofClip: id),
+              track(id: trackID)?.isLocked != true else { return }
+        clearTrack(trackID, from: time.inMS, to: time.outMS, except: sparing.union([id]))
+    }
+
+    /// Whether any two clips on one track overlap in time.
+    public var clipsOverlapOnATrack: Bool {
+        timelineTracks.contains { track in
+            let spans = clipIDs(onTrack: track.id).compactMap { layer(id: $0)?.time }
+                .sorted { $0.inMS < $1.inMS }
+            return zip(spans, spans.dropFirst()).contains { $1.inMS < $0.outMS }
+        }
+    }
+
     /// Make room for a clip from `start` to `end` on one track: trim what
     /// overlaps an end, split what spans both, take away what is covered.
-    private mutating func clearTrack(_ trackID: UUID, from start: Int, to end: Int) {
-        for id in clipIDs(onTrack: trackID) {
+    private mutating func clearTrack(_ trackID: UUID, from start: Int, to end: Int, except kept: Set<UUID> = []) {
+        for id in clipIDs(onTrack: trackID) where !kept.contains(id) {
             guard let clip = layer(id: id), let time = clip.time,
                   time.inMS < end, start < time.outMS else { continue }
             let before = time.inMS < start ? clip.clipPart(fromMS: time.inMS, toMS: start) : nil
