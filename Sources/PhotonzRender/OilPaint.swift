@@ -58,6 +58,10 @@ struct OilStroke {
     private(set) var blue: CoverageField
     private(set) var cover: CoverageField
     private(set) var height: CoverageField
+    /// What each dab's pixels passed to its bristles, kept from dab to dab:
+    /// made new for every dab, a 500 point dab's 13 MB was handed out and
+    /// zeroed page by page each time (2026-10-30).
+    private let scratch = OilScratch()
 
     struct Bristle {
         var r: Float, g: Float, b: Float
@@ -193,26 +197,35 @@ struct OilStroke {
         // pixel at a time in the order it always was, so the sums round the
         // same and the brush picks up exactly what it did.
         let width = box.width
-        var passed = [Float](repeating: 0, count: box.width * box.height * 5)
-        var bands = [Int32](repeating: -1, count: box.width * box.height)
+        scratch.reserve(box.width * box.height)
         var held = (CoverageField(limit: red.limit), CoverageField(limit: red.limit), CoverageField(limit: red.limit),
                     CoverageField(limit: red.limit), CoverageField(limit: red.limit))
         swap(&held.0, &red); swap(&held.1, &green); swap(&held.2, &blue); swap(&held.3, &cover); swap(&held.4, &height)
         let reader = self
         swap(&held.0, &red); swap(&held.1, &green); swap(&held.2, &blue); swap(&held.3, &cover); swap(&held.4, &height)
         let fieldBox = red.box
+        // What each bristle lays at this dab, the same at every pixel it
+        // runs over: worked out once here rather than at each of them.
+        let flows = bristles.map { smoothstep(0.02, 0.5, $0.paint) * (0.6 + 0.4 * $0.press) * press }
+        let tints = bristles.map { ($0.r * $0.tint, $0.g * $0.tint, $0.b * $0.tint) }
         red.values.withUnsafeMutableBufferPointer { r in
         green.values.withUnsafeMutableBufferPointer { g in
         blue.values.withUnsafeMutableBufferPointer { b in
         cover.values.withUnsafeMutableBufferPointer { c in
         height.values.withUnsafeMutableBufferPointer { h in
-        passed.withUnsafeMutableBufferPointer { passedOut in
-        bands.withUnsafeMutableBufferPointer { bandsOut in
+        scratch.passed.withUnsafeMutableBufferPointer { passedOut in
+        scratch.bands.withUnsafeMutableBufferPointer { bandsOut in
             guard let r = r.baseAddress, let g = g.baseAddress, let b = b.baseAddress, let c = c.baseAddress,
                   let h = h.baseAddress, let passedOut = passedOut.baseAddress,
                   let bandsOut = bandsOut.baseAddress else { return }
             PixelBands.run(box, bands: PixelBands.count(forDab: box)) { _, minRow, maxRow in
                 for y in minRow..<maxRow {
+                    // A pixel the brush misses passes nothing to any bristle;
+                    // one it reaches writes all five of its values below.
+                    (bandsOut + (y - box.minY) * width).update(repeating: -1, count: width)
+                    // Along a row the bristle under the pixel changes a step at
+                    // a time, so each search starts from the one before.
+                    var near = 0
                     for x in box.minX..<box.maxX {
                         let dx = CGFloat(x) + 0.5 - centre.x, dy = CGFloat(y) + 0.5 - centre.y
                         let u = (dx * across.dx + dy * across.dy) / radius
@@ -221,7 +234,7 @@ struct OilStroke {
                         guard abs(v) < 1 else { continue }
                         let w = Float(min(1, max(0, (1 - abs(u)) * radius + 0.5))) * (0.5 + 0.5 * Float(cos(.pi * v)))
                         guard w > 0 else { continue }
-                        let (k, f) = reader.band(Float(min(0.9999, max(0, (u + 1) / 2))))
+                        let (k, f) = reader.band(Float(min(0.9999, max(0, (u + 1) / 2))), near: &near)
                         // Paint under the bristle, unpremultiplied, and how much.
                         var under4: (Float, Float, Float, Float) = (0, 0, 0, 0)
                         let slot = (y - box.minY) * width + (x - box.minX)
@@ -239,7 +252,6 @@ struct OilStroke {
                             // Nothing under it: counted, but finds nothing.
                             passedOut[slot * 5 + 4] = -1
                         }
-                        let bristle = reader.bristles[k]
                         // The paint stands as high as the bristles it lies between,
                         // eased from one to the next, with a shallow groove where
                         // each bristle ran.
@@ -249,12 +261,12 @@ struct OilStroke {
                         let ease = 0.5 - 0.5 * cos(Float.pi * t)
                         let lift = prev.lift + (next.lift - prev.lift) * ease
                         let ridge = 0.5 - 0.5 * cos(2 * Float.pi * f)
-                        let flow = smoothstep(0.02, 0.5, bristle.paint) * (0.6 + 0.4 * bristle.press) * press
+                        let flow = flows[k]
                         // A loaded brush covers solid; a dry one only along its bristles.
                         let laid = min(1, w * flow) * (1 - 0.6 * (1 - flow) * (1 - ridge))
                         guard laid > 0.0005 else { continue }
                         // Mixed in place with the wet paint it lands on.
-                        var tint = (bristle.r * bristle.tint, bristle.g * bristle.tint, bristle.b * bristle.tint)
+                        var tint = tints[k]
                         if under4.3 > 0.004 {
                             let mix = 0.4 * reader.smear * under4.3
                             tint.0 += mix * (under4.0 / under4.3 - tint.0)
@@ -275,33 +287,21 @@ struct OilStroke {
                 }
             }
         }}}}}}}
-        // What each bristle passed over this dab, to pick up once it is done.
-        var weight = [Float](repeating: 0, count: count)
-        var found = [Float](repeating: 0, count: count * 4)
-        for slot in bands.indices {
-            let k = Int(bands[slot])
-            guard k >= 0 else { continue }
-            let w = passed[slot * 5]
-            weight[k] += w
-            guard passed[slot * 5 + 4] >= 0 else { continue }
-            found[k * 4] += w * passed[slot * 5 + 1]
-            found[k * 4 + 1] += w * passed[slot * 5 + 2]
-            found[k * 4 + 2] += w * passed[slot * 5 + 3]
-            found[k * 4 + 3] += w * passed[slot * 5 + 4]
-        }
+        let (weight, found) = scratch.passedOver(slots: box.width * box.height, bristles: count)
         pickUp(weight: weight, found: found)
         return box
     }
 
     /// Which bristle's band a place across the brush (0...1) falls in, and
-    /// how far across that band, 0...1.
+    /// how far across that band, 0...1: the first band ending past it, found
+    /// by stepping from `near` (the last one found), and left there.
     @inline(__always)
-    private func band(_ across: Float) -> (Int, Float) {
-        var low = 0, high = bands.count - 1
-        while low < high {
-            let mid = (low + high) / 2
-            if bands[mid] > across { high = mid } else { low = mid + 1 }
-        }
+    private func band(_ across: Float, near: inout Int) -> (Int, Float) {
+        let last = bands.count - 1
+        var low = min(max(near, 0), last)
+        while low > 0, bands[low - 1] > across { low -= 1 }
+        while low < last, !(bands[low] > across) { low += 1 }
+        near = low
         let start = low == 0 ? 0 : bands[low - 1]
         return (low, min(1, max(0, (across - start) / max(bands[low] - start, 1e-6))))
     }
@@ -417,6 +417,63 @@ struct OilStroke {
                 }
             }
         }
+    }
+}
+
+/// What one oil dab's pixels passed to its bristles: for each pixel of the
+/// dab's box, the bristle that ran over it (or -1 for none), and how hard it
+/// pressed there with the paint it found (`passed`, five values a pixel).
+/// Kept by a stroke from dab to dab; one dab at a time uses it.
+final class OilScratch {
+    var passed: [Float] = []
+    var bands: [Int32] = []
+
+    /// Room for `slots` pixels. What is there is left as it is: every pixel a
+    /// dab reaches writes its own values, and its rows' bands are reset first.
+    func reserve(_ slots: Int) {
+        guard bands.count < slots else { return }
+        bands = [Int32](repeating: -1, count: slots)
+        passed = [Float](repeating: 0, count: slots * 5)
+    }
+
+    /// What each of `bristles` passed over, summed pixel by pixel in the
+    /// order of the box, so every bristle's sum rounds as it always has.
+    /// The bristles are shared out across cores, each core adding up only
+    /// its own, still in that order: on one core this was a quarter of a
+    /// 500 point oil move (2026-10-30).
+    func passedOver(slots: Int, bristles: Int) -> (weight: [Float], found: [Float]) {
+        var weight = [Float](repeating: 0, count: bristles)
+        var found = [Float](repeating: 0, count: bristles * 4)
+        let ways = slots >= 1 << 14 ? min(PixelBands.ways, bristles) : 1
+        weight.withUnsafeMutableBufferPointer { weightOut in
+        found.withUnsafeMutableBufferPointer { foundOut in
+        passed.withUnsafeBufferPointer { passed in
+        bands.withUnsafeBufferPointer { bands in
+            guard let weightOut = weightOut.baseAddress, let foundOut = foundOut.baseAddress,
+                  let passed = passed.baseAddress, let bands = bands.baseAddress else { return }
+            let sum = { (first: Int32, last: Int32) in
+                for slot in 0..<slots {
+                    let band = bands[slot]
+                    guard band >= first, band < last else { continue }
+                    let k = Int(band)
+                    let w = passed[slot * 5]
+                    weightOut[k] += w
+                    guard passed[slot * 5 + 4] >= 0 else { continue }
+                    foundOut[k * 4] += w * passed[slot * 5 + 1]
+                    foundOut[k * 4 + 1] += w * passed[slot * 5 + 2]
+                    foundOut[k * 4 + 2] += w * passed[slot * 5 + 3]
+                    foundOut[k * 4 + 3] += w * passed[slot * 5 + 4]
+                }
+            }
+            if ways <= 1 {
+                sum(0, Int32(bristles))
+            } else {
+                DispatchQueue.concurrentPerform(iterations: ways) { part in
+                    sum(Int32(bristles * part / ways), Int32(bristles * (part + 1) / ways))
+                }
+            }
+        }}}}
+        return (weight, found)
     }
 }
 

@@ -455,6 +455,11 @@ extension CanvasNSView {
     /// the dabs it settles.
     private func appendBrushSample(_ sample: StrokeSample) {
         guard var live = brushStroke else { return }
+        // A core kept running between moves, so the next dab is worked out at
+        // full speed rather than by cores the gap let slow down
+        // (`CoresReady`). It stops by itself a moment after the last move,
+        // which also covers the stroke landing after the release.
+        CoresReady.shared.keep()
         // Never back in time: a tick and an event can cross.
         var sample = sample
         if let last = live.stroke.samples.last { sample.ms = max(sample.ms, last.ms) }

@@ -102,8 +102,20 @@ struct PixelPlane {
 /// 2026-10-26: "brushes are kind of broken perf wise after a few strokes"; a
 /// 500 point wash read 4 million pixels a dab on one core.
 enum PixelBands {
-    /// Leaves a couple of cores for the renderer and the window server.
-    static let ways = max(1, min(8, ProcessInfo.processInfo.activeProcessorCount - 2))
+    /// Leaves a couple of cores for the renderer and the window server, and
+    /// on a Mac with many performance cores uses all of them but one: a dab
+    /// at 500 points worked out on 11 of an M4 Max's 12 rather than 8 took
+    /// a fifth less time (2026-10-30). Splitting cannot change a pixel: every
+    /// band works out its own rows from the same inputs.
+    static let ways = max(1, min(8, ProcessInfo.processInfo.activeProcessorCount - 2), performanceCores - 1)
+
+    /// How many performance cores the Mac has, or 0 when it does not say.
+    static let performanceCores: Int = {
+        var count: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        guard sysctlbyname("hw.perflevel0.physicalcpu", &count, &size, nil, 0) == 0 else { return 0 }
+        return Int(count)
+    }()
 
     /// How many bands `box` is split into.
     static func count(for box: PixelBox) -> Int {
@@ -351,6 +363,83 @@ struct Scatter {
     return (a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty
 }
 
+/// `hashUnit` worked out once for every whole-number point of a rectangle,
+/// so the value noise read at every pixel of a dab looks its corners up
+/// rather than hashing them: neighbouring pixels share nearly all of them, and
+/// a chalk dab read each of its pixels' noise seven times, four hashes each
+/// (2026-10-30). The same numbers, so the same noise to the last bit; a point
+/// outside the rectangle is hashed as before.
+struct HashLattice {
+    let salt: UInt32
+    private let minI: Int
+    private let minJ: Int
+    private let width: Int
+    private let height: Int
+    private let values: [Float]
+
+    /// Every point with `i` in `columns` and `j` in `rows`.
+    init(salt: UInt32, columns: ClosedRange<Int>, rows: ClosedRange<Int>) {
+        self.salt = salt
+        minI = columns.lowerBound
+        minJ = rows.lowerBound
+        let width = columns.count, height = rows.count
+        self.width = width
+        self.height = height
+        let minI = columns.lowerBound, minJ = rows.lowerBound
+        values = [Float](unsafeUninitializedCapacity: width * height) { out, count in
+            guard let out = out.baseAddress else { return }
+            let all = PixelBox(minX: 0, minY: 0, maxX: width, maxY: height)
+            PixelBands.run(all, bands: PixelBands.count(for: all)) { _, first, end in
+                for y in first..<end {
+                    for x in 0..<width { (out + y * width + x).initialize(to: hashUnit(minI + x, minJ + y, salt)) }
+                }
+            }
+            count = width * height
+        }
+    }
+
+    /// The lattice for value noise read at `u` in `us` and `v` in `vs`, or
+    /// nil when that would be more points than reading the noise costs.
+    init?(salt: UInt32, us: ClosedRange<Double>, vs: ClosedRange<Double>, reads: Int) {
+        guard us.lowerBound.isFinite, us.upperBound.isFinite, vs.lowerBound.isFinite, vs.upperBound.isFinite,
+              abs(us.lowerBound) < 1e12, abs(us.upperBound) < 1e12, abs(vs.lowerBound) < 1e12,
+              abs(vs.upperBound) < 1e12 else { return nil }
+        let columns = (Int(us.lowerBound.rounded(.down)) - 1)...(Int(us.upperBound.rounded(.down)) + 2)
+        let rows = (Int(vs.lowerBound.rounded(.down)) - 1)...(Int(vs.upperBound.rounded(.down)) + 2)
+        guard columns.count * rows.count <= max(64, reads) else { return nil }
+        self.init(salt: salt, columns: columns, rows: rows)
+    }
+
+    @inline(__always) func value(_ i: Int, _ j: Int) -> Float {
+        let x = i &- minI, y = j &- minJ
+        guard x >= 0, y >= 0, x < width, y < height else { return hashUnit(i, j, salt) }
+        return values.withUnsafeBufferPointer { $0[y * width + x] }
+    }
+
+    /// `valueNoise(u, v, salt)`, to the last bit.
+    @inline(__always) func noise(_ u: Double, _ v: Double) -> Float {
+        let fu = u.rounded(.down), fv = v.rounded(.down)
+        let i = Int(fu), j = Int(fv)
+        var tx = Float(u - fu), ty = Float(v - fv)
+        tx = tx * tx * (3 - 2 * tx)
+        ty = ty * ty * (3 - 2 * ty)
+        let a = value(i, j), b = value(i + 1, j)
+        let c = value(i, j + 1), d = value(i + 1, j + 1)
+        return (a + (b - a) * tx) * (1 - ty) + (c + (d - c) * tx) * ty
+    }
+}
+
+/// The value noise a batch of dry dabs reads at its pixels: looked up from
+/// lattices worked out for the batch when that pays, hashed when not.
+struct DryNoise {
+    /// The hand's waver along the stroke.
+    var wobble: HashLattice?
+    /// The stick's streaks.
+    var streaks: HashLattice?
+    /// Chalk's grit.
+    var grit: HashLattice?
+}
+
 /// The numbers that make pencil, charcoal, chalk and crayon four different
 /// media (the design doc's table). Nil for the media that are not dry.
 ///
@@ -562,13 +651,17 @@ struct DryLook {
         return (r + (0.40 - r) * lift, g + (0.42 - g) * lift, b + (0.47 - b) * lift)
     }
 
+    /// The salt of chalk's grit.
+    static let gritSalt: UInt32 = 0xC4A1
+
     /// The paper as this medium meets it, at a point of the layer: the shared
     /// tooth, with chalk's own grit worked in. Fixed to the layer like the
     /// paper itself, so two passes catch the same flecks.
-    @inline(__always) func paper(_ tile: UnsafeBufferPointer<Float>, x: Double, y: Double) -> Float {
+    @inline(__always) func paper(_ tile: UnsafeBufferPointer<Float>, x: Double, y: Double,
+                                 grit lattice: HashLattice? = nil) -> Float {
         let tooth = PaperGrain.height(tile, x: x, y: y, coarseness: coarseness)
         guard powder > 0 else { return tooth }
-        let grit = valueNoise(x / powderSize, y / powderSize, 0xC4A1)
+        let grit = lattice?.noise(x / powderSize, y / powderSize) ?? valueNoise(x / powderSize, y / powderSize, Self.gritSalt)
         // Spread back out to about the paper's own range.
         return min(1, max(0, 0.5 + (tooth - 0.5) * (1 - powder) + (grit - 0.5) * powder * 1.5))
     }
@@ -621,10 +714,52 @@ struct DryStroke {
     /// How hard the stick's face presses at `across` (-1...1 from one side of
     /// the tip to the other) when it is `along` points down the stroke, 0...1:
     /// streaks that run along the drag and, for chalk, skip and break.
-    @inline(__always) private func pressure(across: Float, along: Double) -> Float {
+    @inline(__always) private func pressure(across: Float, along: Double, lattice: HashLattice?) -> Float {
         let u = Double((across + 1) * 0.5 * look.streakCount)
         let v = along / look.streakRun
-        return smoothstep(0.25, 0.75, valueNoise(u, v, stick))
+        return smoothstep(0.25, 0.75, lattice?.noise(u, v) ?? valueNoise(u, v, stick))
+    }
+
+    /// The lattices `tips` read their noise from: the hand's waver and the
+    /// stick's streaks along the stretch of stroke they cover, and chalk's
+    /// grit over the paper they and their catch run reach.
+    func noise(for tips: [TipPass]) -> DryNoise {
+        var noise = DryNoise()
+        guard let first = tips.first else { return noise }
+        var reads = 0
+        var down = (low: Double.infinity, high: -Double.infinity)
+        var box = CGRect.null
+        for tip in tips {
+            reads += tip.box.width * tip.box.height
+            // The tip's pixels in points: every pixel's distance down the
+            // stroke lies within its farthest corner of the dab's centre.
+            let points = CGRect(x: tip.box.minX, y: tip.box.minY, width: tip.box.width, height: tip.box.height)
+                .applying(toPoints)
+            box = box.union(points)
+            let c = tip.dab.center
+            let reach = [CGPoint(x: points.minX, y: points.minY), CGPoint(x: points.maxX, y: points.minY),
+                         CGPoint(x: points.minX, y: points.maxY), CGPoint(x: points.maxX, y: points.maxY)]
+                .map { hypot($0.x - c.x, $0.y - c.y) }.max() ?? 0
+            down.low = min(down.low, Double(tip.travelled - reach) - 1)
+            down.high = max(down.high, Double(tip.travelled + reach) + 1)
+        }
+        guard down.low <= down.high, !box.isNull else { return noise }
+        if look.wobble > 0 {
+            noise.wobble = HashLattice(salt: stick &+ 7, us: (down.low / look.wobbleRun)...(down.high / look.wobbleRun),
+                                       vs: 3.5...9.5, reads: reads)
+        }
+        if first.streaking > 0 {
+            noise.streaks = HashLattice(salt: stick, us: 0...Double(look.streakCount),
+                                        vs: (down.low / look.streakRun)...(down.high / look.streakRun), reads: reads)
+        }
+        if look.powder > 0 {
+            let run = look.catchRun + 1
+            noise.grit = HashLattice(salt: DryLook.gritSalt,
+                                     us: Double(box.minX - run) / look.powderSize...Double(box.maxX + run) / look.powderSize,
+                                     vs: Double(box.minY - run) / look.powderSize...Double(box.maxY + run) / look.powderSize,
+                                     reads: reads * (first.catchSteps + 1))
+        }
+        return noise
     }
 
     /// Lays one dab down and hands back the pixels it touched.
@@ -752,13 +887,21 @@ struct DryStroke {
         field.ensure(box)
 
         let tipReach = Float(1 + look.edgeBreak + look.wobble)
+        // How far out the tip can lay anything at all: past its outer edge
+        // by at most half its edge break, the paper being 0...1 high
+        // (`laid`), with a hundredth to spare. Chalk's reach above is half as
+        // far again, and its pixels out there were worked out only to lay
+        // nothing (2026-10-30).
+        let cutoff = min(tipReach, look.outer + look.edgeBreak * 0.5 + 0.01)
+        // The hand's waver widens the tip by up to `wobble`, a lean by `long`.
+        let tipExtent = min(tipReach, cutoff * (1 + look.wobble)) * long
         let streaking = look.streaks * look.grain
         // The run is read every pixel, so a pit narrower than a step cannot
         // leave a comb of copies behind it.
         let catchSteps = max(1, Int((look.catchRun * Double(pixelsPerPoint)).rounded()))
         let catchSpread = Float(1 + 0.4 * look.catchRun)
         // The tip's own pixels: the specks have boxes of their own.
-        let tipBox = PixelBox.around(centre, radius: radius * CGFloat(tipReach * long) * pixelsPerPoint + 1)
+        let tipBox = PixelBox.around(centre, radius: radius * CGFloat(tipExtent) * pixelsPerPoint + 1)
             .intersection(box)
         // A lead on its side has a soft edge: its press fades out across it.
         // A stick's side keeps more of its own edge.
@@ -766,7 +909,7 @@ struct DryStroke {
         // Each speck lands inside the field as it stood after its own dab.
         guard !tipBox.isEmpty else { return (box, nil, specks, field.box, centre, radius) }
         let tip = TipPass(dab: dab, box: tipBox, heading: heading, travelled: travelled, radius: radius,
-                          long: long, short: short, lean: lean, leanAxis: leanAxis, tipReach: tipReach,
+                          long: long, short: short, lean: lean, leanAxis: leanAxis, tipReach: cutoff,
                           inner: inner, press: press, streaking: streaking, catchSteps: catchSteps,
                           catchSpread: catchSpread)
         return (box, tip, specks, field.box, centre, radius)
@@ -785,6 +928,7 @@ struct DryStroke {
         let reader = self
         swap(&held, &field)
         let fieldBox = field.box
+        let noise = noise(for: tips)
         field.values.withUnsafeMutableBufferPointer { buffer in
             guard let values = buffer.baseAddress else { return }
             PaperGrain.tile.withUnsafeBufferPointer { paperTile in
@@ -793,7 +937,7 @@ struct DryStroke {
                         let tipBox = tip.box
                         for y in max(minRow, tipBox.minY)..<max(max(minRow, tipBox.minY), min(maxRow, tipBox.maxY)) {
                             for x in tipBox.minX..<tipBox.maxX {
-                                guard let laid = reader.laid(x, y, tip, paperTile) else { continue }
+                                guard let laid = reader.laid(x, y, tip, paperTile, noise) else { continue }
                                 let i = (y - fieldBox.minY) * fieldBox.width + (x - fieldBox.minX)
                                 if laid > values[i] { values[i] = laid }
                             }
@@ -1090,6 +1234,7 @@ struct TipPass {
     let short: Float
     let lean: Float
     let leanAxis: CGVector
+    /// How far out, in radii, the tip can lay anything: nothing at or past it.
     let tipReach: Float
     let inner: Float
     let press: Float
@@ -1102,7 +1247,8 @@ extension DryStroke {
     /// How much the dab lays at a pixel, or nil for none: read only from the
     /// stroke, so the bands of a dab work it out side by side.
     @inline(__always)
-    func laid(_ x: Int, _ y: Int, _ t: TipPass, _ paperTile: UnsafeBufferPointer<Float>) -> Float? {
+    func laid(_ x: Int, _ y: Int, _ t: TipPass, _ paperTile: UnsafeBufferPointer<Float>,
+              _ noise: DryNoise = DryNoise()) -> Float? {
         let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5).applying(toPoints)
         let ahead = (p.x - t.dab.center.x) * t.heading.dx + (p.y - t.dab.center.y) * t.heading.dy
         let along = Float(ahead / t.radius) / look.tipLength
@@ -1111,11 +1257,18 @@ extension DryStroke {
         // How far down the stroke this pixel is: the stick's face and
         // the hand's waver are read there, so they follow the curve.
         let down = Double(t.travelled + ahead)
+        // The waver divides `side` by at most 1 + wobble, so a pixel this far
+        // out stays out whatever it reads: no need to read it.
+        if t.lean <= 0, look.wobble > 0 {
+            let least = side / (1 + look.wobble)
+            guard (along * along + least * least).squareRoot() < t.tipReach * 1.0001 else { return nil }
+        }
         if look.wobble > 0 {
             // The hand wavers: the whole edge moves in and out
             // together, slowly, never in step on both sides.
-            let near = side > 0 ? valueNoise(down / look.wobbleRun, 3.5, stick &+ 7)
-                        : valueNoise(down / look.wobbleRun, 9.5, stick &+ 7)
+            let row = side > 0 ? 3.5 : 9.5
+            let near = noise.wobble?.noise(down / look.wobbleRun, row)
+                ?? valueNoise(down / look.wobbleRun, row, stick &+ 7)
             side /= 1 + look.wobble * (near * 2 - 1)
         }
         var r = (along * along + side * side).squareRoot()
@@ -1133,7 +1286,7 @@ extension DryStroke {
         var tip = 1 - smoothstep(t.inner, look.outer, r + look.edgeBreak * (edge - 0.5))
         guard tip > 0 else { return nil }
         if t.streaking > 0 {
-            tip *= 1 - t.streaking * (1 - pressure(across: max(-1, min(1, side)), along: down))
+            tip *= 1 - t.streaking * (1 - pressure(across: max(-1, min(1, side)), along: down, lattice: noise.streaks))
         }
         tip *= t.press
         // The highest ridge the stick met over its last short run.
@@ -1141,7 +1294,7 @@ extension DryStroke {
         for k in 0...t.catchSteps {
             let back = look.catchRun * Double(k) / Double(t.catchSteps)
             paper = max(paper, look.paper(paperTile, x: Double(p.x) - Double(t.heading.dx) * back,
-                          y: Double(p.y) - Double(t.heading.dy) * back))
+                          y: Double(p.y) - Double(t.heading.dy) * back, grit: noise.grit))
         }
         // The highest of several heights runs high; spread it back out
         // so a press reaches about the same share of the paper.

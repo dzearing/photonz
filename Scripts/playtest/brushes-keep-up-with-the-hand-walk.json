@@ -1,0 +1,293 @@
+{
+ "out": "/tmp/photonz-playtest/brushes-keep-up-with-the-hand-walk",
+ "seed": "Every brush keeps up with the hand (the user, 2026-10-25: 'the brushes feel very laggy to use'). No flags: Next as a person gets it, on a blank screenshot-size canvas (1600 by 1000) zoomed to fit on the Retina screen, which paints about 1.5 layer pixels a point. B picks the Brush; watercolour and oil at 200 pt, then pencil, charcoal, chalk, crayon, marker and airbrush at 50 pt, each dragged fast across the canvas at 10 pt a move. expectBrushResponsive holds every drag's moves under one 120 Hz frame (8.3 ms) at the 95th percentile. The snapshot shows the eight strokes. Canvas coordinates are document units.",
+ "setup": {
+  "forget": [
+   "tools",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1000,
+   "width": 1500,
+   "height": 1000,
+   "pixelScale": 1
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "key",
+   "key": "b"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "brush"
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "paintToolColor"
+  },
+  {
+   "do": "pickBrush",
+   "medium": "watercolour",
+   "size": 200
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    110
+   ],
+   "to": [
+    1440,
+    150
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "oil",
+   "size": 200
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    215
+   ],
+   "to": [
+    1440,
+    255
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "pencil",
+   "size": 50
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    320
+   ],
+   "to": [
+    1440,
+    360
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "charcoal",
+   "size": 50
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    425
+   ],
+   "to": [
+    1440,
+    465
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "chalk",
+   "size": 50
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    530
+   ],
+   "to": [
+    1440,
+    570
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "crayon",
+   "size": 50
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    635
+   ],
+   "to": [
+    1440,
+    675
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "marker",
+   "size": 50
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    740
+   ],
+   "to": [
+    1440,
+    780
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "airbrush",
+   "size": 50
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "drag",
+   "from": [
+    160,
+    845
+   ],
+   "to": [
+    1440,
+    885
+   ],
+   "steps": 128,
+   "wobble": 3
+  },
+  {
+   "do": "expectBrushResponsive",
+   "movesUnderMS": 8.3
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "1-every-brush"
+  }
+ ]
+}

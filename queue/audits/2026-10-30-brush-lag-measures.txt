@@ -1,0 +1,68 @@
+Brush time per pointer move, p95 in ms, measured in the probe at Next defaults on this Mac (M4 Max,
+Retina screen at 2x), 10 pt a move, 120 moves a drag, before -> after this change
+(every-brush-follows-the-pointer-with-no-lag-even, 2026-10-30). Same walks both columns:
+2026-10-30-brush-lag-m-*.walk (made by 2026-10-30-brush-lag-walks.py), run with
+Scripts/playtest.sh <file> --no-build. "Before" is the code at the start of the task
+(dc527729; the empty-layer chalk/crayon/marker/airbrush before was not measured).
+
+Why it lagged: a hand sends a move every 8 to 16 ms and a big brush lays a dab only every
+few moves (one every 50 pt at 500 pt), so the cores sat idle between dabs and the system
+slowed them down. The same 500 pt oil dab took 4.8 ms with moves back to back, 10.7 ms with
+8 ms gaps between them, and 5.3 ms with one core kept running beside it (release build,
+bench linked against PhotonzRender). So most of the lag was not the medium at all.
+
+What changed:
+- One core is kept running while a stroke is under way (CoresReady): every move asks for a
+  quarter second more, it stops by itself after the last move. One thread, never more.
+- Pixel work split across all performance cores but one (11 here, was 8).
+- Oil: per-dab scratch (13 MB at 500 pt on a screenshot) kept from dab to dab instead of
+  allocated and zeroed every dab; what the bristles picked up summed across cores, each core
+  its own bristles in the original order; each bristle's flow and tint once a dab, not once
+  a pixel; the bristle under a pixel found by stepping from its neighbour's.
+- Dry media: value-noise corners read from a lattice worked out once a dab (same numbers);
+  a tip's box cut to where it can lay anything (chalk scanned 1.6 radii, can lay to 1.1).
+- Byte for byte the same pixels: BigBrushKeepsItsPixelsTests (every medium, 160 pt at 1.5x,
+  landed and as drawn) and PaintKeepsItsPixelsTests hold fingerprints taken before the change.
+
+12 megapixel (4000 x 3000), paint layer already holding 50 strokes, zoomed to fit
+medium                   20 pt           50 pt          150 pt          300 pt          500 pt
+watercolour       1.7 -> 0.7      3.1 -> 1.3      5.8 -> 1.6      7.9 -> 2.3     15.8 -> 5.7  
+oil               2.4 -> 0.9      5.0 -> 1.5      6.2 -> 2.3      8.0 -> 2.8     13.7 -> 5.0  
+pencil            1.8 -> 0.7      2.9 -> 0.9      4.2 -> 1.4      6.6 -> 2.1     12.0 -> 4.6  
+charcoal          3.4 -> 0.9      4.7 -> 1.5      5.8 -> 1.9      7.9 -> 2.9     13.6 -> 5.8  
+chalk             3.9 -> 1.0      5.7 -> 1.9      5.7 -> 2.2      8.0 -> 3.3     14.5 -> 6.7  
+crayon            1.8 -> 0.7      2.9 -> 0.8      4.9 -> 1.3      6.0 -> 2.2     10.6 -> 4.3  
+marker            1.5 -> 0.5      2.1 -> 0.7      3.0 -> 1.0      3.3 -> 1.3      6.5 -> 2.2  
+airbrush          1.2 -> 0.5      1.7 -> 0.5      2.6 -> 0.8      4.4 -> 1.5      8.7 -> 3.0  
+
+Screenshot size (1600 x 1000), 50 strokes, zoomed to fit (1.48 layer pixels a point on the Retina screen)
+medium                   20 pt           50 pt          150 pt          300 pt          500 pt
+watercolour       2.3 -> 1.0      5.6 -> 1.8      7.3 -> 2.4     13.0 -> 4.7     16.2 -> 8.2  
+oil               3.3 -> 1.3      6.3 -> 2.1      8.3 -> 3.1     10.7 -> 4.1     22.3 -> 9.0  
+pencil            2.7 -> 0.8      4.3 -> 1.2      6.5 -> 2.2     10.6 -> 3.6     16.4 -> 6.1  
+charcoal          5.5 -> 1.4      6.0 -> 2.0      7.5 -> 2.9     12.4 -> 4.3     20.8 -> 10.2 
+chalk             5.9 -> 1.5      6.3 -> 2.6      8.1 -> 3.4     12.9 -> 5.1     23.3 -> 12.6 
+crayon            2.6 -> 0.8      4.2 -> 1.2      6.5 -> 2.0     10.2 -> 3.4     17.4 -> 7.1  
+marker            2.0 -> 0.6      2.5 -> 0.9      2.8 -> 1.3      5.5 -> 2.0      8.0 -> 2.9  
+airbrush          1.4 -> 0.5      1.6 -> 0.6      3.3 -> 1.0      7.1 -> 2.4     10.5 -> 5.1  
+
+12 megapixel, empty layer
+medium                   20 pt           50 pt          150 pt          300 pt          500 pt
+watercolour       1.7 -> 0.7      3.9 -> 1.4      5.2 -> 1.7      7.7 -> 2.4     15.4 -> 6.0  
+oil               2.9 -> 0.9      4.7 -> 1.5      7.4 -> 2.5      8.6 -> 2.9     13.5 -> 4.9  
+pencil            2.3 -> 0.7      2.6 -> 0.8      4.8 -> 1.4      7.3 -> 2.2     11.3 -> 4.6  
+charcoal          2.8 -> 0.9      5.0 -> 1.6      5.1 -> 1.9      7.7 -> 3.0     13.2 -> 5.5  
+chalk               - -> 1.0        - -> 1.9        - -> 2.2        - -> 3.3        - -> 6.8  
+crayon              - -> 0.7        - -> 0.8        - -> 1.4        - -> 2.1        - -> 4.3  
+marker              - -> 0.5        - -> 0.7        - -> 1.1        - -> 1.3        - -> 2.1  
+airbrush            - -> 0.5        - -> 0.5        - -> 0.9        - -> 1.6        - -> 3.1  
+
+The number of strokes already on the layer no longer matters: 50 strokes against an empty
+layer, 500 pt after: oil 5.0 / 4.9, watercolour 5.7 / 6.0, chalk 6.7 / 6.8.
+
+Still over one 120 Hz frame (8.3 ms): 500 pt on a screenshot-size picture zoomed to fit,
+watercolour 8.2 (just under), oil 9.0, charcoal 10.2, chalk 12.6. Release bench, same case,
+with the live thinned end of a mouse stroke switched off (never committed): oil 7.1 -> 4.0,
+chalk 10.5 -> 6.1, charcoal 8.2 -> 5.3. What is left is the end of the stroke laid again on
+every move so it lands as drawn: the user's open card on painting-is-what-you-see (option b,
+mouse strokes end at full width) is what decides it.

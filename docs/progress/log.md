@@ -22231,3 +22231,20 @@ the ghost, and pinching in seemed to stop short.
 
 - Held-out run `20261030-122139-ask-held-out` finished with the person away (guarded): **held-out 57.2** over 45 cases beside **climb 90.2** (`Scripts/ask-eval.sh report`). Same planning model's last held-out (Qwen3.8 27B, 2026-10-24): 57.8. Layout 12.3 to 43.6, redline 22.3 to 34.6 up; drawings 64.4 to 60.3 down (did what was asked 6.3 to 5.8). Why drawings fell is unknown (held-out cases are not read); drawing scores across past runs ranged 60 to 70. Watch it on the next held-out run; a no-kind request can now come back as a photo.
 - Task `ask-can-make-a-photo-as-well-as-an-illustration` done. Next: brushes wire the paint route (Brush tool task).
+
+## 2026-10-30 — Brushes keep up with the hand (every-brush-follows-the-pointer-with-no-lag-even)
+
+- Found the main cause of brush lag: a big brush lays a dab only every few moves, so the
+  cores idled and slowed between dabs; the same 500 pt oil dab cost 4.8 ms back to back and
+  10.7 ms with 8 ms gaps. `CoresReady` (PhotonzRender) keeps one core running while a stroke
+  is under way, a quarter second past the last move.
+- Cheaper dabs, same pixels: pixel bands over all performance cores but one; oil scratch
+  kept between dabs, pickup sums split across cores by bristle in the original order,
+  per-bristle flow and tint once a dab, stepped bristle search; dry media read noise corners
+  from a per-dab `HashLattice` and scan only where a tip can lay paint.
+- New tests: `BigBrushKeepsItsPixelsTests` (fingerprints of 160 pt strokes, every medium,
+  landed and live), `CoresReadyTests`. New walk: brushes-keep-up-with-the-hand-walk.
+- Every medium at every size is under 8 ms p95 a move on 12 MP; on a screenshot all are
+  except 500 pt chalk 12.6, charcoal 10.2, oil 9.0 (was 23.3, 20.8, 22.3). Tables:
+  queue/audits/2026-10-30-brush-lag-measures.txt. The rest is the live thinned end, which
+  the user's open card on painting-is-what-you-see decides.

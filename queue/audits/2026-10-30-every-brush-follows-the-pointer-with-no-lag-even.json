@@ -1,0 +1,26 @@
+{
+  "feature": "Brushes keep up with the hand",
+  "epic": "image-editing",
+  "summary": "Every brush now keeps up with the pointer at every size on a 12 megapixel picture, and at every size up to 300 pt on a screenshot. Small and medium brushes went from 2 to 8 ms a move to about 1 to 3 ms, and nothing painted looks any different.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is Scripts/playtest/brushes-keep-up-with-the-hand-walk.json; every number is in 2026-10-30-brush-lag-measures.txt.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot and press B for the Brush.", "shot": "2026-10-30-brush-lag-1-every-brush-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick Watercolour, set Size to 200 pt and scribble fast across the picture." },
+    { "do": "Pick Oil Paint at 200 pt and scribble fast across the watercolour." },
+    { "do": "Pick Pencil, Charcoal, Chalk and Crayon in turn at 50 pt and scribble fast with each." },
+    { "do": "Paint ten more big strokes, then scribble again: it should feel the same as the first." },
+    { "do": "Set Chalk to 500 pt and scribble fast: this is the one case still over a frame on a screenshot." }
+  ],
+  "evaluate": [
+    "Does the paint stay under the pointer while you scribble fast, at 50 and at 200 pt?",
+    "After a dozen strokes, does painting feel exactly as quick as the first stroke did?",
+    "At 500 pt on a screenshot, can you feel chalk or charcoal trailing the pointer?",
+    "Do you notice the Mac's fans or battery more while you paint than before?"
+  ],
+  "rough": [
+    "500 pt on a screenshot-size picture zoomed to fit is still over one 120 Hz frame: chalk 12.6 ms, charcoal 10.2, oil 9.0 (was 23.3, 20.8, 22.3). The remaining cost is the mouse stroke's thinned end, laid again on every move so the stroke lands as drawn; the open card on painting-is-what-you-see (option b, mouse strokes end at full width) decides it, and in the bench that option brings all three to 4 to 6 ms.",
+    "Most of the lag was the Mac slowing its cores between dabs, not the brushes. The fix keeps one core running while the button is down and stops it a quarter second after the last move, so painting uses a little more power while you paint, and none once you stop.",
+    "No mock covers this: it is speed, not a surface."
+  ]
+}
