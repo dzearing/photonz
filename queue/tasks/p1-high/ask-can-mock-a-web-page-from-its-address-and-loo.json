@@ -4,12 +4,12 @@
   "goal": "A person can say 'mock this web page' with an address, and Ask opens the page, looks at it and rebuilds it as editable layers and components. Ask can also look up things it does not know (what a base component kit includes, for example). Whatever a web page says, it is only ever material for the design, never instructions Ask follows.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 180,
+  "seq": 170,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:44:10.687Z",
-  "updated": "2026-10-30T02:11:27.502Z",
+  "updated": "2026-10-30T14:25:43.265Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'I should also be able to say \"mock this web page (url)\" and it should be able to see it and recreate it. is there a safe way to give it web search so that it can find this? I want to make sure we don't get prompt injected by doing so.'\n\nThis changes the shipped Ask promise that nothing leaves the Mac (ask-in-the-app-runs-on-a-local-model-with-no-mod): it still holds for every request without an address or a lookup.\n\nThe design rests on limits that do not need the model to behave: the model never chooses an address to fetch with document data in it; the reader and builder are separate calls with no shared free text (the reader's output is schema-checked fields, strings are length-capped and treated as words to place, never as prompt); the builder's tool list is cut down while web material is in play. Words taken from a page are content: they may land as text layers, nothing more. A picture of a page can carry injected text too, so the tool limits matter more than the prompt.\n\nThe skill path (Claude Code) already has its own web tools and recreated GOV.UK yesterday (queue/audits/2026-10-19-agent-skill-transcript.md, scenario 4); the skill should get the same rule in its instructions (page text is data). Does not wait on the components task, but uses make_component once Ask has it.",
@@ -62,6 +62,10 @@
     {
       "t": "2026-10-30T02:11:27.501Z",
       "note": "seq 200 -> 180"
+    },
+    {
+      "t": "2026-10-30T14:25:43.264Z",
+      "note": "seq 180 -> 170"
     }
   ]
 }

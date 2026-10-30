@@ -28,5 +28,5 @@
   "stash": "107574a45d0a6784e34daf9a9bfde06400f7d9dc",
   "restore": "git stash apply 107574a45d0a6784e34daf9a9bfde06400f7d9dc",
   "why": "",
-  "handed": null
+  "handed": "2026-10-30T10:51:58.053Z"
 }

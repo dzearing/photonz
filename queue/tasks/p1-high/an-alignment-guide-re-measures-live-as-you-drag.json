@@ -4,12 +4,12 @@
   "goal": "An alignment guide judges the edges it crosses only once, when it is first drawn. Moving or resizing it afterwards moves the line but keeps the old result, so the guide only works if it was drawn perfectly the first time, which makes it unusable for redlining. Dragging a guide (moving it, or pulling either end) must re-find the edges it crosses and update its verdict, its settled position and its readout continuously while the drag is under way, fast enough to feel instant.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 3e-7,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T13:34:01.549Z",
-  "updated": "2026-10-30T13:34:01.662Z",
+  "updated": "2026-10-30T14:25:42.217Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-30 (intake): 'when i draw an alignment guide and move it, it does not recompute! It's super annoying and makes it unusable. I have to draw the alignemnt line perfectly for it to be usable. please make it recompute when i drag it around (do it quickly ideally)'. Redlining is the user's primary use of the app (memory: photonz-primary-use-ux-redlining). Cause, from code: EditorState+Measure.swift addAlignmentCheck(axis:position:span:) scans once on commit (AlignmentScan.items over snappingEdgeMap + measureLumaField, merged with AlignmentScan.drawnItems from LayerElements.boxes), builds AlignmentCheck, settles the line on the verdict's reference and writes one measure layer; CanvasPointerDrags.swift ~293/920/1342 handles the drawing drag (alignmentDrag, refreshAlignmentPreview, which already previews live while DRAWING). Nothing re-runs the scan when the committed layer is moved or its ends are dragged later. refreshAlignmentPreview is the live path to reuse.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-30T13:34:01.661Z",
       "note": "seq 3970 -> 3e-7"
+    },
+    {
+      "t": "2026-10-30T14:25:42.216Z",
+      "note": "seq 3e-7 -> 10"
     }
   ]
 }

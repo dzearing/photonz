@@ -4,12 +4,12 @@
   "goal": "Photonz decided 0.19.0 was out because the website's version file said so, before the download existed, and updating failed with a server error. The update check should only offer a version once its download is really there, and a failed download should say plainly that the update is not ready yet.",
   "epic": "interaction-foundations",
   "priority": "p1-high",
-  "seq": 80,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-26T04:01:25.610Z",
-  "updated": "2026-10-30T02:11:26.757Z",
+  "updated": "2026-10-30T14:25:42.392Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'i just tried to update photonz and it said server error' and 'why is photonz detecting 0.19 if we haven't published it yet'. Cause, verified in the intake window: Sources/Photonz/UpdateChecker.swift reads https://dzearing.github.io/photonz/version.json and trusts it; the release skill committed site/version.json with the tag, so the site deployed 0.19.0 in 2.5 minutes while the Release workflow needed about 20 to publish the DMG; Sources/Photonz/SelfUpdater.swift then got a 404 from releases/download/v0.19.0/Photonz.dmg and threw downloadFailed('the server returned an unexpected response'). The skill is fixed (e493d70c: the site is announced only after the DMG answers); this task makes the app safe on its own too.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-10-30T02:11:26.756Z",
       "note": "seq 100 -> 80"
+    },
+    {
+      "t": "2026-10-30T14:25:42.391Z",
+      "note": "seq 80 -> 70"
     }
   ]
 }

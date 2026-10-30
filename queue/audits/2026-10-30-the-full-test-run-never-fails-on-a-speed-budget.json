@@ -1,0 +1,48 @@
+{
+  "feature": "The full test run never fails on a speed budget that passes alone",
+  "epic": "video-share",
+  "summary": "Speed tests now run last, on their own, three at a time, and are judged beside a ruler read in the same rounds, so a full run no longer goes red on a speed test that passes alone. Each one still fails when its code does twice the work.",
+  "setup": "This Mac, Scripts/test.sh with no arguments, the go loop idle apart from this task. No app flag involved: this is the test runner, not the app.",
+  "switched": {},
+  "try": [
+    { "do": "Run Scripts/test.sh and read the block headed 'The stopwatch suites (...PerfTests), run last with nothing beside them'." },
+    { "do": "In it, read each '[perf] budget:' line: what the test read, its budget, and the ruler beside it." },
+    { "do": "Run Scripts/test.sh --filter BrushGridPerfTests and compare its reading with the one from the full run." },
+    { "do": "Read docs/progress/perf.md, the 2026-10-30 entry, for why each budget is read the way it is." }
+  ],
+  "measured": [
+    "Before, 5 full runs (115 to 124 s): 3 of them missed a speed budget on unchanged code.",
+    "Run 2: ExportSizerTests weighing, second weigh 113.5 ms against first 113.2 ms (a stopwatch race).",
+    "Run 3: AnimatedChartRenderTests worst chart 71.7 ms against 52.7; PaintLandingCostTests undo 54.7 ms against a flat 50 (it reads 0.2 to 1.1 ms in every other run).",
+    "Never missed in the 5 runs, but close every time: the brush grid's slowest tile at 1552 to 2458 ms against a flat 3000; the 1 MP lossy WebP at 2.7 to 7.1 s against a flat 8; the chart's bound came from a filter graph factor read once at process start that ranged from 1.08x to 3.76x.",
+    "Caption: popping caption 6.6 to 7.5 ms against 8 x factor, pill size 43 to 48 us against 200. Neither close; the popping caption had missed once, at 8.03 against 8, on 2026-10-26.",
+    "CI, where timings are only reported (PHOTONZ_PERF_GATE=report): the paint landing failed slice 1 on 2026-10-30 (1275 vs 1066 ms) and the punch-in composite on 2026-10-28 (292 vs a flat 200), because neither asked whether to gate."
+  ],
+  "twiceTheWork": [
+    "On a scratch branch, never committed, each measured call made to spin for as long as it took (twice the time on wall and CPU clocks alike), then one full Scripts/test.sh. Every one failed:",
+    "Brush grid 2092 ms against 1520. Dearest chart 21.0 ms against 14.2. WebP lossy 2459 against 2000, lossless 1585 against 1312. Popping caption 10.1 against 8.0. Punch-in composite 6.6 against 5.1.",
+    "Paint landing on 300 strokes made twice as dear as on one: 1.91 times against 1.6 (2.15 in a first run).",
+    "Undo made to paint the 300 strokes again: fails on strokes simulated, on the raster handed back, and on 1104 ms against a tenth of a landing (33 ms).",
+    "Export sizer made to drop its kept render: fails on renders counted (2, not 1). A stopwatch cannot see this reliably; a count can.",
+    "A first attempt divided the chart and punch-in by their ruler: twice the work then read 25.4 against 24 and 6.9 against 8.5, too close or a pass, so both are now judged on their own clock with the ruler only loosening the bound."
+  ],
+  "tenRuns": [
+    "Ten full Scripts/test.sh runs in a row after the change: 127, 126, 126, 133, 128, 131, 127, 123, 124, 125 s. No speed-budget failure in any of them.",
+    "Tightest readings against their bounds over the ten: brush grid 1133 of 1520, chart 10.6 of 14.2, WebP lossy 1286 of 2000, lossless 814 of 1312, punch-in 3.6 of 5.1, caption 5.3 of 8.0, paint landing 1.14 of 1.6 times, undo 0.23 ms of about 33.",
+    "Runs 4 and 6 failed on video checks that are not speed budgets: BusyVideoSizeTests (a size estimate a quarter off) and VideoCutExportTests (no picture from a reader for 30 s). Filed as the-full-test-run-never-fails-on-a-video-check-t.",
+    "The three --shard slices on this Mac all pass, each with its own stopwatch stage, and add up to the same 14,756 tests as the whole run."
+  ],
+  "evaluate": [
+    "Does a release now go green on its first Scripts/test.sh run?",
+    "Is a run of 123 to 128 s (8 s of it the stopwatch stage) an acceptable price for speed budgets that hold?",
+    "When a speed test does fail now, does its message tell you whether the code or the machine got slower?"
+  ],
+  "rough": [
+    "Green runs take 123 to 128 s, inside the old range, but the stage adds about 8 s after the slowest run: runs 4 and 6, with a failure in them, took 131 and 133 s.",
+    "The stage runs three at a time because four at a time read the brush grid at 2060 ms against 1500. That number was measured on this 12 performance core Mac; another Mac may want a different width.",
+    "The CPU ruler (arrays made and let go) slows down more than these subjects under load, so a long subject is read against the fastest ruler round just before and just after it. Another Mac or a busy Mac could still put a reading on the wrong side of its bound. A ruler more than 3x off its own number makes an over-budget reading a known issue, not a failure.",
+    "The first brush tile painted in a process costs about 550 ms of one-time setup. The grid is now timed warm, so that setup is printed but no longer judged. Left in this task's log: nobody has seen it grow.",
+    "CI still only reports timings, as before. Its slices go green on these tests because they never gate there; the structural checks (renders counted, strokes simulated) still gate on CI.",
+    "No mock covers this: it is the test runner, with no screen to compare."
+  ]
+}

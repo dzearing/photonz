@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-14T03:26:52.669Z",
-  "updated": "2026-10-30T02:11:28.457Z",
+  "updated": "2026-10-30T14:25:27.224Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-right-panel-shows-only-what-the-picked-thing (2026-10-13). Measured on the laptop window (windowLaptop, sound picked): with Captions and Transitions in the pane at 40 per cent of a ~395pt column, the pick part was 235pt and Fades (244-352) fell under it; sound-fades-in-the-panel-walk step 12 and video-panel-order-walk step 45 failed. Both are forms the pane cannot shorten (not in DockMetrics.scrollingSections). Code: PanelListsPane.listSections (PhotonzCore), InspectorPanel.paneSplit.",
@@ -145,6 +145,10 @@
     {
       "t": "2026-10-30T02:11:28.456Z",
       "note": "seq 330 -> 310"
+    },
+    {
+      "t": "2026-10-30T14:25:27.223Z",
+      "note": "triage 2026-10-30: the user's ask the-transitions-panel-stays-out-of-the-way-close (2026-10-30) decides when the Transitions section shows at all (closed until there is a cut to work on). Whatever this task decides about where Transitions sits must agree with it; that ask runs first."
     }
   ],
   "walks": [

@@ -4,12 +4,12 @@
   "goal": "On a blank picture, asking Ask to make a pricing section on brand made a title, a subtitle and one empty card, then stopped. The row in the Agent group still says Made a pricing section on brand, and Ask said nothing about the rest. A person ends up believing the change is done when most of it was never made. Ask should keep going past one step it got wrong, and when it does stop short it should say in one short line what it did not make, in the row and where Ask answers.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 220,
+  "seq": 210,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T01:55:58.347Z",
-  "updated": "2026-10-30T02:11:27.793Z",
+  "updated": "2026-10-30T14:25:43.612Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the manager pass 2026-10-23 19:00 on the probe built 18:39 from HEAD bf4dc3c2: Scripts/playtest-all.sh --no-build ask-annotates-a-screenshot ask-adds-a-title-page ask-makes-a-pricing-section -> 3 passed (walks pass whatever was made). Pricing trace (qwen3.6-35b-a3b): turn 3 add_text Subtitle; turn 4 add_shape rectangle with frame 320x480 at 120,240 (one card); turns 5, 6, 7 each add_shape {shape: rectangle, stroke: #D2D2D7, strokeWidth: 1} with NO frame -> 'refused: Not planned. add_shape: a rectangle needs a frame.' three times -> 'done'. Final ask state: says '', skipped [], changes ['Made a pricing section on brand (on)']. Picture: queue/manager/shots/2026-10-23-ask-pricing-one-empty-card.png. Code: Sources/PhotonzCore/AskPlanning.swift, refuse() counts sameRefusals; the early stop at 'if sameRefusals >= Self.mostSameRefusals, !steps.isEmpty, looks.isEmpty' returns .planned(AskPlan(steps:, summary: \"\")) silently (mostSameRefusals = 2, added in 6052b7d0 on 2026-10-23); the add_component special case just above it (removeLast(2), 'Leave X out ... plan the next kind') is the pattern to make general. The refusal text itself could name what is missing with an example from the call before it (the previous add_shape had a frame), which may be what the small model needs. Row words: AskSession.swift and AskCopy. Related, not the same: one-step-ask-cannot-run-no-longer-throws-away-th (p2) is a step failing at RUN time; ask-on-the-local-model-makes-results-that-look-f (p1) is how good a finished result looks.",
@@ -57,6 +57,10 @@
     {
       "t": "2026-10-30T02:11:27.792Z",
       "note": "seq 240 -> 220"
+    },
+    {
+      "t": "2026-10-30T14:25:43.611Z",
+      "note": "seq 220 -> 210"
     }
   ]
 }

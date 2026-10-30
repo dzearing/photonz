@@ -4,12 +4,12 @@
   "goal": "Any path drawn with the Pen can have its line painted with one of the brushes instead of a plain stroke, so drawings get a hand-made look while the path stays fully editable: move a point and the brushed line repaints along the new curve.",
   "epic": "image-paint",
   "priority": "p1-high",
-  "seq": 120,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.125Z",
-  "updated": "2026-10-30T02:11:27.053Z",
+  "updated": "2026-10-30T14:25:42.738Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -45,6 +45,10 @@
     {
       "t": "2026-10-30T02:11:27.052Z",
       "note": "seq 140 -> 120"
+    },
+    {
+      "t": "2026-10-30T14:25:42.737Z",
+      "note": "seq 120 -> 110"
     }
   ]
 }

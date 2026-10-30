@@ -4,12 +4,12 @@
   "goal": "Opening a video shows the inspector's Transitions section already open with nothing picked, and every transition tile in it animates nonstop. It is noise: it pulls the eye away from the video, does nothing useful with nothing picked, and costs CPU. The section should only be open when there is a cut to work on, and its tiles should be still pictures that play their motion only while the pointer is over one.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 4e-7,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T13:29:02.531Z",
-  "updated": "2026-10-30T13:29:02.645Z",
+  "updated": "2026-10-30T14:26:37.569Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-30 (intake): 'i opened a video editor and the transitions panel is both 1. open (it doesn't even need to be there when i have nothing selected) and 2. animating every possible transition obnoxiously'. Code: the section is InspectorSection .transitions (InspectorSections.swift ~218, InspectorPanel.swift ~2102 shows TransitionsGroup()). Each tile in TransitionsGroup.swift tile(_:) renders VideoKit.AnimatedTransitionThumbnail, which animates all the time; the same view is used in TransitionPicker.swift and LibraryCatalogTiles.swift. The picker-at-the-cut task (500f1363, choosing-a-transition-between-two-clips-is-one-o) asked for 'A tile plays its motion on hover', not always. Related: the CPU complaint 2026-10-28 where WindowServer sat at 45 to 55% while things on screen redrew constantly.",
@@ -28,6 +28,18 @@
     {
       "t": "2026-10-30T13:29:02.644Z",
       "note": "seq 3970 -> 4e-7"
+    },
+    {
+      "t": "2026-10-30T14:25:27.297Z",
+      "note": "triage 2026-10-30: the picker at a cut already rests still and plays on hover since 500f1363 (choosing-a-transition-between-two-clips-is-one-o), but that task changed only the picker; the inspector's Transitions section and the Library catalog still use the always-playing tile. Make the three share one tile so they cannot drift again."
+    },
+    {
+      "t": "2026-10-30T14:25:42.303Z",
+      "note": "seq 4e-7 -> 20"
+    },
+    {
+      "t": "2026-10-30T14:26:37.568Z",
+      "note": "triage 2026-10-30, left rough (not added to acceptance, the user's call): ten of the twelve tiles carry the fixed note 'needs overlap' (ClipTransitionKind.note, from the mock's video-transition-wt.html tiles), shown even on a cut with spare footage (audit picture 2026-10-29-transition-at-the-cut-3-tiles-at-the-cut.png: spare 1.1s / 1.9s and every tile says needs overlap). Since 2026-10-29 every one of them goes on any cut, holding frames where footage runs out, so the note now reads like a refusal the app no longer makes. Raised in the 2026-10-30 digest for the user to decide, since it is the mock's own copy."
     }
   ]
 }

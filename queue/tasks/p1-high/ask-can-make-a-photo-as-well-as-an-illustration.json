@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T00:05:36.495Z",
-  "updated": "2026-10-30T14:15:43.551Z",
+  "updated": "2026-10-30T14:25:27.371Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"I'd like to say \\\"paint a picture\\\" and it will use brush tools when they're ready, or make a photorealistic image of ..., and it will generate an image, or \\\"make vector art of ...\\\" or \\\"create an icon\\\" and it would use the vector tools\"\n\nThe user, 2026-10-24: 'i see we have zimage but it's not seemingly able to generate photos - only illustrations with vector art. I'd like to be able to be able to do both.'\n\nCause, from reading the code (not reproduced in the app): Z-Image Turbo is used only as a step on the way to vector. Every add_drawing goes to the picture model with a forced flat look (Scripts/picture-model/server.py:31 LOOK 'flat vector illustration... a few flat colours', :55 ICON, :59 SCENE; prompt_for at :65) and the result is always traced into paths (Scripts/picture-model/layers.py, vtracer). There is no route that keeps the painted pixels. Design write-up: docs/design/ask.md:226-366 ('Painting a drawing', 'The picture model'). Swift side: Sources/Photonz/Agent/AskPictureModel.swift, Sources/PhotonzCore/AskPictureModelPlan.swift, PictureModelRequest in Sources/PhotonzCore/AgentDrawingPlacement.swift.\n\nLikely shape: a new agent command (e.g. add_photo) or a 'photo' kind on the request, a server endpoint that returns the PNG without tracing and with a photographic prompt, and an image layer added via the ImageStore through History.perform. Z-Image Turbo is good at photoreal; check resolution limits and memory beside the 29 GB planning model (ask.md:355-358). Memory rule: no hardcoded subjects or stored content, quality via model, prompt and general techniques (see memory no-hardcoded-generated-content). The ask-eval set lives under Scripts/ask-eval; queue/tasks/p1-high/the-ask-test-set-scores-video-requests-too.json is a precedent for extending it.",
@@ -134,6 +134,10 @@
     {
       "t": "2026-10-30T14:15:43.550Z",
       "note": "Photo, vector and paint routes shipped and verified (eval 24.2 -> 90.2, audit written); open: held-out total (17 of 45, stopped when the person came back) and the three-model photo comparison (Z-Image done, Qwen and MOSS ready to run), both need the Mac to itself"
+    },
+    {
+      "t": "2026-10-30T14:25:27.370Z",
+      "note": "triage 2026-10-30: the Qwen-Image-2.1 part of the three-model photo comparison overlaps the held task measure-whether-qwen-image-2-1-can-paint-and-edi (drawings and edits on the same model, same Mac, also only while the person is away). Load it once for both if they run on the same night, and put back any probe setting it changes, as that task's log asks."
     }
   ],
   "started": "2026-10-30T10:51:58.048Z",
