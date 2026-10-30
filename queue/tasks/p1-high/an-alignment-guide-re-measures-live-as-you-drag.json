@@ -1,0 +1,35 @@
+{
+  "id": "an-alignment-guide-re-measures-live-as-you-drag",
+  "title": "An alignment guide re-measures live as you drag it",
+  "goal": "An alignment guide judges the edges it crosses only once, when it is first drawn. Moving or resizing it afterwards moves the line but keeps the old result, so the guide only works if it was drawn perfectly the first time, which makes it unusable for redlining. Dragging a guide (moving it, or pulling either end) must re-find the edges it crosses and update its verdict, its settled position and its readout continuously while the drag is under way, fast enough to feel instant.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 3e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-30T13:34:01.549Z",
+  "updated": "2026-10-30T13:34:01.662Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-30 (intake): 'when i draw an alignment guide and move it, it does not recompute! It's super annoying and makes it unusable. I have to draw the alignemnt line perfectly for it to be usable. please make it recompute when i drag it around (do it quickly ideally)'. Redlining is the user's primary use of the app (memory: photonz-primary-use-ux-redlining). Cause, from code: EditorState+Measure.swift addAlignmentCheck(axis:position:span:) scans once on commit (AlignmentScan.items over snappingEdgeMap + measureLumaField, merged with AlignmentScan.drawnItems from LayerElements.boxes), builds AlignmentCheck, settles the line on the verdict's reference and writes one measure layer; CanvasPointerDrags.swift ~293/920/1342 handles the drawing drag (alignmentDrag, refreshAlignmentPreview, which already previews live while DRAWING). Nothing re-runs the scan when the committed layer is moved or its ends are dragged later. refreshAlignmentPreview is the live path to reuse.",
+  "acceptance": [
+    "At Next defaults, on a real UI screenshot: draw a vertical alignment guide off to one side of a column of buttons, then drag it across onto their left edges. While the pointer moves, the guide's items, verdict (aligned or off by N px), reference edge and inspector readout update on every move, and on release it settles onto the reference edge exactly as a freshly drawn guide at that spot would. The same for a horizontal guide, and for dragging either end to lengthen or shorten its span.",
+    "The result after any drag is identical to drawing a new guide at the final position and span (same items, same tolerance verdict, same settled position): a unit test in PhotonzCore holds the two equal for vertical and horizontal guides over drawn boxes and over picture edges.",
+    "Fast: the re-scan during a drag stays inside one 120 Hz frame (8.3 ms) at the 95th percentile on a 12 megapixel screenshot, MEASURED with the edge map already built, and recorded in the audit. If the full scan cannot make that, the live drag uses a cheaper pass and the exact one runs on release, but the person never sees a stale verdict while the pointer moves.",
+    "The whole drag is one undo step. Undo puts the guide back where it was with its old verdict.",
+    "Moving the guide with the arrow keys, the inspector's position field, or by an agent re-measures too: every way the guide's line changes, not only the pointer.",
+    "Walks: draw a guide off target and drag it on, see the verdict change mid-drag (snapshots at least three positions); drag an end; undo. Before and after reel in the audit under queue/audits/.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-30T13:34:01.551Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-30T13:34:01.661Z",
+      "note": "seq 3970 -> 3e-7"
+    }
+  ]
+}
