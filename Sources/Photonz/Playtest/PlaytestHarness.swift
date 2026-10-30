@@ -21106,7 +21106,11 @@ extension Run {
         // "below" is the empty space under the last track, where a file let
         // go makes a track of its own (user 2026-10-28: "I CANT DRAG IT HERE").
         let below = track == "below"
+        // "top" is the new track the timeline makes room for over all the
+        // others while a file is in the air (`TimelineNewTrackSlot`).
+        let top = track == "top"
         let trackID = below ? editor.trackDropRows.values.max { $0.maxY < $1.maxY }?.trackID
+                    : top ? editor.trackDropRows.values.min { $0.minY < $1.minY }?.trackID
                             : tracks.first(where: { $0.name == track })?.id
         guard let trackID else {
             throw Failure(description: "no track is called \"\(track)\"; the tracks: "
@@ -21124,6 +21128,7 @@ extension Run {
             let fraction = editor.motionStripRuler.fraction(ofMS: seconds * 1000)
             let y = below ? min(row.maxY + TimelineDock.rowSpacing + TimelineDock.laneHeight / 2,
                                frame.height - TimelineDock.rowSpacing - 2)
+                          : top ? max(2, row.minY - TimelineDock.rowSpacing - TimelineDock.laneHeight / 2)
                           : (row.minY + row.maxY) / 2
             let global = CGPoint(x: frame.minX + TimelineDock.lanesLeading + editor.timelineLaneWidth * fraction,
                                  y: frame.minY + y)
@@ -21138,6 +21143,8 @@ extension Run {
         TimelineFileDropDelegate.walkHoldsInsert = insert
         defer { TimelineFileDropDelegate.walkHoldsInsert = nil }
         let chain = Self.visibleDestinations(at: windowPoint, in: content)
+        // The room made for the file in the air moves no second on screen.
+        let spanBeforeTheAir = editor.timelineWindow.visibleMS(documentMS: editor.timelineLengthForZoomMS)
         var taker: NSView?
         for view in chain where view.draggingEntered(info) != [] {
             taker = view
@@ -21183,6 +21190,13 @@ extension Run {
             throw Failure(description: "the timeline said \"\(sentence)\" about \(url.lastPathComponent), "
                 + "and the walk expected \"\(says)\"")
         }
+        let spanInTheAir = editor.timelineWindow.visibleMS(documentMS: editor.timelineLengthForZoomMS)
+        if abs(spanInTheAir - spanBeforeTheAir) / max(1, spanBeforeTheAir) > 0.35 {
+            taker.draggingExited(info)
+            throw Failure(description: String(format: "carrying \(url.lastPathComponent) over the timeline "
+                + "moved it: %.1fs on screen before, %.1fs with the file in the air", spanBeforeTheAir / 1000,
+                spanInTheAir / 1000))
+        }
         var held = ""
         if let hold {
             try snapshot(content, name: hold)
@@ -21209,19 +21223,37 @@ extension Run {
         await takeTheMarkersDownForATimedStep()
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
+        // How much time the strip shows, frame by frame, from just before
+        // letting go until it has settled: a change of length must never
+        // move it in one frame (user 2026-10-28, `TimelineZoomGlide`).
+        func spanOnScreen() -> Double {
+            editor.timelineWindow.visibleMS(documentMS: editor.timelineLengthForZoomMS)
+        }
+        var spans = [spanOnScreen()]
         let took = taker.performDragOperation(info)
         guard took else {
             throw Failure(description: "the timeline would not take \(url.lastPathComponent), "
                 + "having said \"\(sentence)\"")
         }
         waited = 0
-        while (editor.document?.allLayers.count ?? before) == before, waited < 4 {
-            await sleep(0.1)
-            waited += 0.1
+        var settledFor = 0.0
+        while waited < 5, settledFor < 0.5 {
+            await sleep(0.016)
+            waited += 0.016
+            spans.append(spanOnScreen())
+            let landed = (editor.document?.allLayers.count ?? before) != before
+            settledFor = landed && editor.timelineZoomGlide == nil ? settledFor + 0.016 : 0
+        }
+        let jump = zip(spans, spans.dropFirst()).map { abs($1 - $0) / max(1, $0) }.max() ?? 0
+        let span = String(format: "the strip showed %.1fs before letting go and %.1fs once settled, "
+                          + "%.0f%% at most in one frame", spans[0] / 1000, (spans.last ?? 0) / 1000, jump * 100)
+        if jump > 0.35 {
+            throw Failure(description: "letting go of \(url.lastPathComponent) moved the timeline in one frame: "
+                + span + " (user 2026-10-28: \"it just immediately snaps\")")
         }
         return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
             + "saying \"\(sentence)\"\(held); the document now holds "
-            + "\(editor.document?.allLayers.count ?? 0) layers, was \(before); \(MainThreadMeter.shared.report)"
+            + "\(editor.document?.allLayers.count ?? 0) layers, was \(before); \(span); \(MainThreadMeter.shared.report)"
             + (markersDownCost.isEmpty ? "" : "; " + markersDownCost)
     }
 

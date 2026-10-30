@@ -435,6 +435,11 @@ struct TimelineDock: View {
                             let listening = editorState.isWritingCaptions
                             let listeningBefore = listening
                                 ? editorState.captionsListeningRowID(in: drawn) : nil
+                            // A file in the air has a new track to go on at
+                            // the top (`TimelineNewTrackSlot`).
+                            if editorState.timelineDropRoomMS != nil {
+                                TimelineNewTrackSlot(laneWidth: laneWidth)
+                            }
                             ForEach(drawn) { row in
                                 if listening, row.id == listeningBefore {
                                     TimelineCaptionsListeningRow(laneWidth: laneWidth)

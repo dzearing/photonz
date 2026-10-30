@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/a-history-clip-gets-a-new-track-at-the-top-walk",
+  "seed": "User 2026-10-28: carrying a History clip over the timeline there was nowhere to put it on a track of its own except the last few points under the tracks, and the ghost of a new track above the first was drawn out of sight. Now, while a file is in the air, the tracks make room for a dashed New track row at the very top, scrolled up to, and a clip let go there lands on a new track over all the others. The room for it moves no second on screen.",
+  "setup": {
+    "forget": ["all"],
+    "timelineOpen": true,
+    "captures": ["sample-recording"],
+    "timelineRoom": true
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "shortcut", "key": "h", "modifiers": ["command", "shift"], "menuItem": "Show History", "checked": false },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "dropOnTimeline", "tile": "@Tutorial Sample.mp4", "track": "top", "seconds": 2, "hold": "1-over-the-new-track-in-the-air", "says": "New" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "count": 2 },
+    { "do": "describe", "stage": "1-on-a-new-track-at-the-top", "note": "Held over the dashed New track row at the top of the tracks, the ghost is drawn in it, and let go at two seconds the clip lands on a new track over all the others" },
+    { "do": "snapshot", "name": "2-landed-at-the-top" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "count": 1 },
+    { "do": "blankVideo" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "dropOnTimeline", "tile": "@Tutorial Sample.mp4", "track": "V1", "seconds": 3, "hold": "3-over-an-empty-video-in-the-air", "says": "V1 · 0:03" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "count": 1 },
+    { "do": "describe", "stage": "3-on-an-empty-video", "note": "A new empty video: the ghost is drawn on its empty V1 where the clip will land, and it lands there at three seconds, not at the start" },
+    { "do": "snapshot", "name": "4-landed-on-the-empty-video" }
+  ]
+}

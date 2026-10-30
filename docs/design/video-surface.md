@@ -869,6 +869,27 @@ scroll to, and the time scroller shows there; only as far out as it goes,
 where half the window is already room, has it nowhere to go. The scroller's
 thumb runs along the document and that room (`scrollableMS`, `canScroll`).
 
+A change of length never moves the strip in one frame (user 2026-10-28: "it
+just immediately snaps"). The zoom is kept as a share of the length, so a clip
+let go past the end, the room made for a file in the air, or an undo of either
+used to rescale every second on screen at once. Now, zoomed to some stretch,
+the seconds on screen stay as they were (`TimelineZoom.holdingSpan`); showing
+the whole recording (Fit, or opened right out), with nothing in the air, the
+strip glides in a little over a quarter of a second to the same share of the
+new length, Fit to Fit and twice to twice (`TimelineZoomGlide`, measured
+against the longer of the two lengths while it runs, and never more than a
+twelfth of the way in one frame). `EditorState.noteTimelineLength` runs after
+every edit, undo and redo and whenever the room for a file in the air comes or
+goes. The `dropOnTimeline` walk step fails if the strip moves more than 35% in
+one frame, carried or let go.
+
+While a file is in the air the tracks make room for a dashed **New track** row
+at the very top, scrolled up to (`TimelineNewTrackSlot`); let go there, the
+clip lands on a new track over all the others, and its ghost is drawn in it. A
+file held at an edge of the tracks scrolls them, along time at the lanes' ends
+and up and down at their top and foot, as a carried clip does
+(`TimelineEdgeScroll`).
+
 The closest window is **one second across the width**, which on an ordinary
 lane is about six hundred points a second: a spoken word of a third of a second
 is two hundred points of timeline, so a cut goes in the middle of a word rather

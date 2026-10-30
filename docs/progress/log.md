@@ -22131,3 +22131,44 @@ Queue task `a-brush-tool-paints-with-realistic-charcoal-chal` (the user's ask: a
   it holds the session and hides the picture the moment the ghost appears.
   The user reported the first version did nothing; still to be confirmed
   under a real pointer.
+
+## 2026-10-28 (evening) — History drop: no snap, a New track row, the drag picture caught app-wide
+
+The user dragged a History video onto the timeline for real: it landed, but
+the zoom snapped, there was nowhere obvious to put it on a track of its own,
+on one try it landed at 0:00 with no ghost, the tile's picture stayed over
+the ghost, and pinching in seemed to stop short.
+
+- Snap, reproduced: 0.5x on 8s showed 16s; carrying a clip over added 8s of
+  room and the strip showed 32s; letting go at 12s showed 40s, each in one
+  frame. `TimelineZoom.holdingSpan` keeps the seconds on screen through any
+  change of length into a stretch; showing the whole recording (Fit or
+  wider) with nothing in the air, `TimelineZoomGlide` glides to the same share
+  of the new length (0.28s, at most a twelfth
+  of the way a frame, so the landing's own work cannot make it leap).
+  `EditorState.noteTimelineLength` runs from `rerender` and the drop room's
+  didSet. `dropOnTimeline` now fails on a move of more than 35% in one frame
+  (a-history-clip-drops-where-let-go: 13% at most now).
+- New track: a dashed New track row at the top of the tracks while a file is
+  in the air (`TimelineNewTrackSlot`), scrolled up to; its ghost is drawn in
+  it (the row positions it was worked out from are not watched, so it was
+  drawn above the tracks, out of sight). File drags now edge-scroll the
+  tracks like a carried clip. Walk `a-history-clip-gets-a-new-track-at-the-top`
+  (also drops onto a new empty video's V1 at 3s, which lands at 3s).
+- Drag picture: the user's drags left no line from the logging build (that
+  the build carried the lines is not certain: Swift's short strings do not
+  show up in `strings`). Rather than rely on the strip's host being the view
+  SwiftUI drags from, `NSView.beginDraggingSession` is now caught app-wide
+  and the drag that follows a History tile being pulled is kept
+  (`TimelineDragPicture.listen`). Still needs one real drag to confirm: the
+  `drag-picture` and `timeline-drop` log categories say what happened.
+- Not reproduced: landing at 0:00 with no ghost (an empty video's V1 and the
+  space under the tracks both take the drop where aimed through the real drop
+  target), and the pinch limit (8s reaches 32x and, after a drop past the end,
+  20s reaches 80x, both the 250ms closest view).
+
+## 2026-10-29 (morning): History drag picture, video length follows its last clip
+
+- **The picture carried out of History is now the app's own** (`HistoryDragPicture`). Three ways of hiding AppKit's drag picture (the strip's hosting view, every `beginDraggingSession`, every window and view the drag passed over) never fired in a real drag, so the tile hands AppKit an empty preview and a borderless panel carries a still picture of the tile, moved on a display link and faded out while the timeline's ghost is up (`TimelineDragPicture.ghost`). Unverified with a real pointer at commit time; waiting on the user's drag.
+- **A video's written length that ended with its last clip goes on ending with it** (`DurationFollowsClips.swift`, applied in `History.preparing`). Deleting or moving back the clip that stretched it now shrinks it, so the zoom-out limit (twice the length) follows. A blank video longer than its clips keeps its length; deleting every clip leaves it alone. User confirmed fixed.
+- Open: `a-cut-opens-into-its-two-clips-walk` and `copy-and-paste-a-range-walk` land at 5.96s / 13.95s instead of 6.0s / 14.0s on this branch only (likely the span held during a hover changing the snap reach); seven other failing walks fail on the base commit too.

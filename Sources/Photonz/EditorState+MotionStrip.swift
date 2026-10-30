@@ -77,6 +77,13 @@ extension EditorState {
     /// ruler under the hand doing the dragging, and the bar would chase the
     /// pointer instead of following it.
     var motionStripCycleMS: Int {
+        // ...and through a glide to a new length (`TimelineZoomGlide`).
+        if let held = timelineZoomGlideHeldMS { return held }
+        return motionStripCycleMSPastAGlide
+    }
+
+    /// The length the strip measures, apart from one held through a glide.
+    var motionStripCycleMSPastAGlide: Int {
         if let drag = motionTimingDrag { return drag.heldCycleMS }
         // ...and the same for a CLIP's bar, for the same reason
         // (`EditorState+ClipBar`).

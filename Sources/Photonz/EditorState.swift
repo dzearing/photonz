@@ -1691,8 +1691,25 @@ final class EditorState {
             let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,
                                                visibleMS: newValue.visibleMS(documentMS: timelineLengthForZoomMS))
             if stretch != timelineDrawnStretch { timelineDrawnStretch = stretch }
+            if !timelineZoomKeepsItsChoice {
+                timelineWholeRecordingScale = newValue.showsWholeDocument ? newValue.scale : nil
+            }
         }
     }
+    /// The share of the length the person last left the timeline at, when it
+    /// showed the whole recording (Fit or wider): a change of length glides
+    /// to the same share of the new one (`noteTimelineLength`). Nil when they
+    /// left it on a stretch. Windows the app writes for itself through a
+    /// change of length keep it.
+    @ObservationIgnored var timelineWholeRecordingScale: Double? = EditorState.openingTimelineZoom.scale
+    @ObservationIgnored var timelineZoomKeepsItsChoice = false
+    /// The length the zoom was last measured against; nil until the document
+    /// in the window has been seen once.
+    @ObservationIgnored var timelineZoomMeasuredMS: Double?
+    /// The length held while the timeline glides to a new one
+    /// (`TimelineZoomGlide`).
+    var timelineZoomGlideHeldMS: Int?
+    @ObservationIgnored var timelineZoomGlide: (glide: TimelineZoomGlide, task: Task<Void, Never>)?
     private(set) var timelineZoomScale: Double = EditorState.openingTimelineZoom.scale
     private(set) var timelineZoomStartMS: Double = 0
     /// Where the window stood the last time it had moved half its own width:
@@ -2077,7 +2094,9 @@ final class EditorState {
     @ObservationIgnored var timelineFilePointer: TimelineFilePointer?
     /// The room the timeline makes past its end while a file of this length
     /// is in the air over it.
-    var timelineDropRoomMS: Int?
+    var timelineDropRoomMS: Int? {
+        didSet { if timelineDropRoomMS != oldValue { noteTimelineLength() } }
+    }
     /// Where the tracks sit in the window, in SwiftUI's global space, and how
     /// wide a lane is. Written as they lay out; read to turn a place on a
     /// lane into a moment, and by a walk to find one.
@@ -3712,6 +3731,8 @@ final class EditorState {
         // A space Edit Original had open belongs to the picture going out.
         originalSpace = nil
         history = History(document: document)
+        // A new document's length is its own, not a change of the last one's.
+        timelineZoomMeasuredMS = nil
         savedDocument = document
         documentURL = url
         // The outgoing picture's open groups mean nothing to the incoming one,
@@ -3769,6 +3790,7 @@ final class EditorState {
         // reason the playhead goes back to the first frame: how far you had
         // opened out the last recording says nothing about this one
         // (`EditorState+TimelineZoom`).
+        endTimelineGlide()
         timelineZoom = Self.openingTimelineZoom
         timelineRowZoom = .compact
         timelineTracksScroll = ScrollPosition(edge: .top)
@@ -5404,6 +5426,9 @@ final class EditorState {
             iconPreviews = [:]
             return
         }
+        // A change of length moves no second on the timeline in one frame
+        // (`TimelineZoomGlide`).
+        noteTimelineLength()
         // A title's sounds are made, not shipped: any score this document
         // plays that has no file yet gets one now (`TitleSoundFiles`).
         TitleSoundFiles.prepare(for: document)

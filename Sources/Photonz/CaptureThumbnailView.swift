@@ -67,7 +67,15 @@ struct CaptureThumbnailView: View {
         // Drag the capture's media (PNG or MP4) straight out to Finder / apps.
         // An edit still being written over a recording is handed over when it
         // lands, never the recording it is replacing.
-        .onDrag { Self.dragPayload(entry, store: store) }
+        // AppKit is handed an empty picture and the app carries the tile
+        // itself, so it can give way to the timeline's ghost
+        // (`HistoryDragPicture`).
+        .onDrag {
+            HistoryDragPicture.lift(entry, store: store, height: fixedHeight ?? 72)
+            return Self.dragPayload(entry, store: store)
+        } preview: {
+            Color.clear.frame(width: 1, height: 1)
+        }
         // A walk finds the tile by its file and carries the very payload a
         // pointer pulls off it (`PanelTarget.swift`).
         .playtestTarget(entry.url.deletingPathExtension().lastPathComponent, kind: .tile,
