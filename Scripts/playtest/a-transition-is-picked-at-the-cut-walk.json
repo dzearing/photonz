@@ -1,0 +1,279 @@
+{
+  "out": "/tmp/photonz-playtest/a-transition-is-picked-at-the-cut-walk",
+  "seed": "At Next defaults, no flag set: two different recordings meet on V1 at 0:07. The recording's right-click has one Transition… row and no Fade In, Fade Out or Fade In and Out; it opens the tiles At this cut, naming both clips, every tile showing the two recordings themselves and the one under the pointer playing. Cube picked from its tile goes on the cut. The cut's own right-click opens the same tiles and offers nothing about one clip's fade. The recording's free start still fades from black by the handle on its bar. The user, 2026-10-29: 'these are super redundant and one sided. wondering if there is a nicer way to select a transition between 2 clips'.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "clipDragStartIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "BEFORE: the recording's right-click, with one Transition… row for the cut at its end and no fade rows.",
+      "do": "rightClick",
+      "on": "Tutorial Sample clip",
+      "across": 0.5,
+      "shot": "1-clip-menu",
+      "lacks": [
+        "Add Transition",
+        "Fade In",
+        "Fade Out",
+        "Fade In and Out"
+      ],
+      "rows": [
+        "Freeze Frame at 0:00.00…",
+        "Speed",
+        "—",
+        "Transition…",
+        "Detach Audio",
+        "Audio",
+        "—",
+        "Cut",
+        "Copy",
+        "Delete",
+        "Ripple Delete",
+        "—",
+        "More"
+      ],
+      "more": [
+        "Punch In",
+        "Add Zoom",
+        "Add Click at 0:00.00…",
+        "—",
+        "Animate",
+        "Add Key at 0:00.00",
+        "—",
+        "Select Forward",
+        "Duplicate",
+        "Rename…",
+        "Reveal in Finder"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "THE FIRST TEST: the recording's one Transition… row opens the tiles at the cut where it meets b-roll.",
+      "do": "rightClick",
+      "on": "Tutorial Sample clip",
+      "across": 0.5,
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Clips at this cut: Tutorial Sample → b-roll",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Clips at this cut: Tutorial Sample → b-roll",
+      "present": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-tiles-at-the-cut",
+      "note": "THE SECOND TEST: the tiles at the cut name both clips along their top, and every tile is the two recordings themselves (the last frame of Tutorial Sample, the first of b-roll), resting part way through"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-tiles-at-the-cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "comment": "A walk cannot press inside the tiles on this Mac yet (walks-that-fail-in-the-full-sweep-26), so Cube goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Cube"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cube"
+    },
+    {
+      "do": "expect",
+      "control": "Transition Tutorial Sample to b-roll",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-cube-on-the-cut",
+      "note": "THE THIRD TEST: Cube from its tile goes on the cut, drawn as the band over both clips, the canvas half way through the turn"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-cube-on-the-cut"
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "comment": "THE FOURTH TEST: the cut's own right-click opens the same tiles, beside its length, curve and remove, and nothing about one clip's fade.",
+      "do": "rightClick",
+      "on": "Transition Tutorial Sample to b-roll",
+      "shot": "5-cut-menu",
+      "lacks": [
+        "Fade In",
+        "Fade Out",
+        "Fade In and Out",
+        "Add Transition",
+        "Change Transition"
+      ],
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expect",
+      "control": "Clips at this cut: Tutorial Sample → b-roll",
+      "present": true
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "THE FIFTH TEST: the recording's free start still fades from black, by the handle at its top left corner.",
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dragGrip",
+      "control": "Tutorial Sample picture fade in",
+      "by": 60,
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Fade In",
+      "reads": "0.5s"
+    },
+    {
+      "do": "describe",
+      "stage": "6-free-end-fades",
+      "note": "The handle at the recording's free start dragged right: it fades up from black, and the Time section reads it. Its end, which meets b-roll, has no fade handle"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-free-end-fades"
+    }
+  ]
+}

@@ -257,7 +257,7 @@ extension EditorState {
             }]
 
         // What it does
-        case .addTransition:
+        case .transition:
             return clip.onTheSound ? [] : clipTransitionMenuRows(layerID: layerID, piece: index)
         case .detachAudio:
             if document?.canDetachSound(ofLayer: layerID) == true, clip.plan.offersDetachAudio {
@@ -700,7 +700,7 @@ extension EditorState {
             ? cutTransitionMenuRows(at: place, cut: cut) : [:]
         return timelineMenu(.join) { row in
             switch row {
-            case .applyDefaultTransition, .addTransition, .transitionLength, .transitionCurve,
+            case .applyDefaultTransition, .transition, .transitionLength, .transitionCurve,
                  .removeTransition:
                 return transitions[row].map { [$0] } ?? []
             case .copyTransition:
@@ -749,7 +749,7 @@ extension EditorState {
                                                   TimelineMenuKeys.applyDefaultTransition) {
                     self.applyDefaultTransition(at: place)
                 },
-                .addTransition: addTransitionMenuRow([.cut(place)]),
+                .transition: transitionPickerMenuRow(at: place),
             ]
         }
         let kind = cut.drawnTransition?.kind ?? transition.kind
@@ -759,8 +759,7 @@ extension EditorState {
         lengths.insert(now)
         let curves = EasingCurve.named.prefix(EasingCurve.standardCount)
         return [
-            .addTransition: addTransitionMenuRow([.cut(place)], current: transition.kind,
-                                                 title: "Change Transition"),
+            .transition: transitionPickerMenuRow(at: place),
             .transitionLength: .submenu("Length", lengths.sorted().map { ms in
                 .toggle(ClipTransitionCopy.lengthChoice(ms, of: kind), isOn: ms == now) {
                     self.pickCut(place)

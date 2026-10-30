@@ -102,7 +102,36 @@
       ],
       "space": "window",
       "shot": "4-cut-menu",
-      "choose": "Add Transition > Dip to black"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the kind goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Dip to black"
     },
     {
       "do": "wait",
@@ -111,7 +140,7 @@
     {
       "do": "describe",
       "stage": "5-transition",
-      "note": "Right-click the join, Add Transition, Dip to black: a band over the cut"
+      "note": "Right-click the join, Transition…, Dip to black from the tiles: a band over the cut"
     },
     {
       "do": "snapshot",

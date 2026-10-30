@@ -549,7 +549,7 @@ struct TimelineEditPointView: View {
         let x = laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(point.atMS))
         let picked = editorState.isEditPointPicked(point)
         let warn = VideoKit.Palette.warn
-        let lit = picked || isHovered
+        let lit = picked || isHovered || editorState.editPointUnderGrip == place
         return ZStack {
             if picked {
                 RoundedRectangle(cornerRadius: 3)

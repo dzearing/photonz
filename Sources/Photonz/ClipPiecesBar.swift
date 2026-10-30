@@ -1037,6 +1037,26 @@ struct ClipPiecesBar: View {
 
     /// Whether this bar's picture can fade: a clip, a title, a shape, a
     /// picture, on the dock, and never a sound.
+    /// The cut between this clip and the one it meets at its start (edge 0)
+    /// or its end (the last edge), nil at a join, a free end, or on a sound.
+    private func editPointAt(_ edge: Int, of pieces: ClipPieces) -> TimelineEditPoint? {
+        guard edge == 0 || edge == pieces.count, !isSound, !isLinkedSound,
+              let document = editorState.document, let track = document.trackID(ofClip: layerID) else { return nil }
+        return document.editPoints(onTrack: track).first {
+            edge == 0 ? $0.incoming == layerID : $0.outgoing == layerID
+        }
+    }
+
+    /// Whether this recording's start and end each meet another clip on its
+    /// track. Never for a title or a picture, whose fades are how they come
+    /// and go.
+    private var recordingMeets: (start: Bool, end: Bool) {
+        guard let document = editorState.document, document.layer(id: layerID)?.movie != nil,
+              let track = document.trackID(ofClip: layerID) else { return (false, false) }
+        let points = document.editPoints(onTrack: track)
+        return (points.contains { $0.incoming == layerID }, points.contains { $0.outgoing == layerID })
+    }
+
     private var fadesPicture: Bool {
         kind != nil && !isSound && !isLinkedSound && editorState.pictureFadeLayer(layerID) != nil
     }
@@ -1073,12 +1093,20 @@ struct ClipPiecesBar: View {
                 .frame(height: barHeight)
         }
         if whole >= Self.smallestGrabbablePiece * 2, isPicked || isHovered || pictureFadeDrag != nil {
-            pictureFadeHandle(isIn: true, fromMS: layer?.pictureFadeMS(.in) ?? 0,
-                              roomMS: length - fadeOut, ruler: ruler)
-                .offset(x: min(x0 + whole - 9, x0 + max(1, inWidth - 4)))
-            pictureFadeHandle(isIn: false, fromMS: layer?.pictureFadeMS(.out) ?? 0,
-                              roomMS: length - fadeIn, ruler: ruler)
-                .offset(x: max(x0, x0 + whole - max(9, outWidth + 4)))
+            // A recording's end that meets another clip is a cut, and what
+            // happens there is its transition: the handle is only at an end
+            // that meets nothing, or one already fading, so it can be undone.
+            let meets = recordingMeets
+            if fadeIn > 0 || !meets.start {
+                pictureFadeHandle(isIn: true, fromMS: layer?.pictureFadeMS(.in) ?? 0,
+                                  roomMS: length - fadeOut, ruler: ruler)
+                    .offset(x: min(x0 + whole - 9, x0 + max(1, inWidth - 4)))
+            }
+            if fadeOut > 0 || !meets.end {
+                pictureFadeHandle(isIn: false, fromMS: layer?.pictureFadeMS(.out) ?? 0,
+                                  roomMS: length - fadeIn, ruler: ruler)
+                    .offset(x: max(x0, x0 + whole - max(9, outWidth + 4)))
+            }
         }
     }
 
@@ -1330,6 +1358,14 @@ struct ClipPiecesBar: View {
                 .playtestHover("\(Self.gripName(layerName: fieldName, edge: edge, of: pieces.count)) grip") { inside in
                     if inside { hoveredGrip = edge } else if hoveredGrip == edge { hoveredGrip = nil }
                     editorState.clipBarGripHover("\(layerID)-\(edge)", inside: inside)
+                    if let cut = editPointAt(edge, of: pieces) {
+                        let place = TimelineCutPlace.edit(outgoing: cut.outgoing, incoming: cut.incoming)
+                        if inside, editorState.editPointUnderGrip != place {
+                            editorState.editPointUnderGrip = place
+                        } else if !inside, editorState.editPointUnderGrip == place {
+                            editorState.editPointUnderGrip = nil
+                        }
+                    }
                 }
                 .gesture(edgeDrag(pieces, edge: edge, ruler: ruler))
                 // A join is a CUT, and a cut is a thing you can pick: one click
@@ -1339,7 +1375,16 @@ struct ClipPiecesBar: View {
                 // With transitions on, the click also opens the tiles right at
                 // the cut (`video-transition-wt.html`, "At this cut").
                 .onTapGesture {
-                    guard edge > 0, edge < pieces.count else { return }
+                    // An end grip sits over the cut where this clip meets
+                    // the next, so a click there is a click on that cut: it
+                    // is picked and its tiles open, as they do on the cut.
+                    if edge == 0 || edge == pieces.count {
+                        guard kind != nil, !isLinkedSound, Experiments.shared.transitionsAtACutEnabled,
+                              let point = editPointAt(edge, of: pieces) else { return }
+                        editorState.pickEditPoint(point)
+                        editorState.openTransitionPicker(at: .edit(outgoing: point.outgoing, incoming: point.incoming))
+                        return
+                    }
                     editorState.selectClipCut(layerID: layerID, index: edge)
                     guard kind != nil, !isLinkedSound else { return }
                     // The tiles open a pass after the pick, so the ring and

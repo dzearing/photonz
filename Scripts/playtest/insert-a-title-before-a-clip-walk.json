@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/insert-a-title-before-a-clip-walk",
-  "seed": "Putting a title page in front of a recording is one move, at Next defaults with no flag set: pick the recording, double click a title page tile in the Library, and the page lands on V1 right before the clip, the clip moved later by the page's length, with a cross dissolve on the join between them instead of a fade baked into the title. The join is an edit point like any other: right-click it and Change Transition > Cube turns it into a cube, which plays as the page turns away into the recording; picked, Delete takes the transition off and leaves a straight cut, nothing moving. Last, with all of that undone, the Film Super tile dragged onto V1 says Insert there at 0:00, and let go it lands in front of the recording the same way, its join dissolving.",
+  "seed": "Putting a title page in front of a recording is one move, at Next defaults with no flag set: pick the recording, double click a title page tile in the Library, and the page lands on V1 right before the clip, the clip moved later by the page's length, with a cross dissolve on the join between them instead of a fade baked into the title. The join is an edit point like any other: right-click it and Transition…, Cube from the tiles turns it into a cube, which plays as the page turns away into the recording; picked, Delete takes the transition off and leaves a straight cut, nothing moving. Last, with all of that undone, the Film Super tile dragged onto V1 says Insert there at 0:00, and let go it lands in front of the recording the same way, its join dissolving.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -120,7 +120,36 @@
       "do": "rightClick",
       "on": "Transition Title Page to Tutorial Sample",
       "shot": "1b-the-join-menu",
-      "choose": "Change Transition > Cube"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the kind goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Cube"
     },
     {
       "do": "wait",
@@ -142,7 +171,7 @@
     {
       "do": "describe",
       "stage": "2-cube",
-      "note": "THE SECOND TEST: right-click on the join, Change Transition > Cube, and the page turns away on a cube into the recording, shown here part way through"
+      "note": "THE SECOND TEST: right-click on the join, Transition…, Cube from the tiles, and the page turns away on a cube into the recording, shown here part way through"
     },
     {
       "do": "snapshot",
@@ -224,7 +253,36 @@
       "do": "rightClick",
       "on": "Edit point Title Page to Tutorial Sample",
       "shot": "4-the-bare-join-menu",
-      "choose": "Add Transition > Dip to black"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the kind goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Dip to black"
     },
     {
       "do": "wait",

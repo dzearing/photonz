@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/transitions-where-clips-meet-walk",
-  "seed": "Three recordings back to back at Next defaults, no flag set, nothing picked. The Transitions section says what its tiles are for; a tile clicked with no cut picked lights every place it could go; a tile held mid clip says where to drop it; held over either join it says what lands, the one with no spare frames included, and let go it dissolves there, photographed mid dissolve. Right-click a clip and Add Transition puts it at both its ends: both joins dissolve, the one with no spare frames holding its edge frames, with no notice, and an end that meets nothing fades from black. A wipe let go on the join with no spare reads Paid with 0.4s of held frames. The ruler's right-click offers it at the cut too.",
+  "seed": "Three recordings back to back at Next defaults, no flag set, nothing picked. The Transitions section says what its tiles are for; a tile clicked with no cut picked lights every place it could go; a tile held mid clip says where to drop it; held over either join it says what lands, the one with no spare frames included, and let go it dissolves there, photographed mid dissolve. Right-click a clip and Transition opens the tiles at either of its cuts: both joins dissolve, the one with no spare frames holding its edge frames, with no notice; the first clip offers no fade rows, since its free end fades by its handle. A wipe let go on the join with no spare reads Paid with 0.4s of held frames. The ruler's right-click offers it at the cut too.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -166,7 +166,78 @@
         893
       ],
       "space": "window",
-      "choose": "Add Transition > Cross dissolve"
+      "choose": "Transition > At the Start…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the kind goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Cross dissolve"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        890,
+        893
+      ],
+      "space": "window",
+      "choose": "Transition > At the End…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the kind goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Cross dissolve"
     },
     {
       "do": "wait",
@@ -184,7 +255,7 @@
     {
       "do": "describe",
       "stage": "5-right-clicked",
-      "note": "THE RIGHT CLICK: Add Transition > Cross dissolve on the middle clip dissolves both its ends, 7.5s shown half way through, and the join at 15.5s with no spare frames takes it too, holding its edge frames. No notice: nothing failed"
+      "note": "THE RIGHT CLICK: Transition, At the Start and At the End on the middle clip each open the tiles at that cut, and Cross dissolve from each dissolves both its ends, the join at 15.5s with no spare frames included, holding its edge frames. No notice: nothing failed"
     },
     {
       "do": "snapshot",
@@ -227,25 +298,35 @@
         893
       ],
       "space": "window",
-      "choose": "Add Transition > Cross dissolve"
+      "choose": "Transition…",
+      "lacks": [
+        "Add Transition",
+        "Fade In",
+        "Fade Out",
+        "Fade In and Out"
+      ]
     },
     {
       "do": "wait",
-      "seconds": 0.6
+      "seconds": 0.8
     },
     {
       "do": "expect",
-      "menu": "Fade In",
-      "reads": "1s"
+      "control": "Cross dissolve",
+      "present": true
+    },
+    {
+      "do": "key",
+      "key": "escape"
     },
     {
       "do": "describe",
-      "stage": "7-fade-from-black",
-      "note": "Add Transition > Cross dissolve on the first clip: its start meets nothing, so it fades up from black over a second; its end already dissolves"
+      "stage": "7-first-clip-menu",
+      "note": "The first clip's right-click has one Transition… row for the cut at its end, and no Fade In, Fade Out or Add Transition rows: its free start fades by its handle on the bar"
     },
     {
       "do": "snapshot",
-      "name": "7-fade-from-black"
+      "name": "7-first-clip-menu"
     },
     {
       "do": "clickRuler",
@@ -266,7 +347,36 @@
         860
       ],
       "space": "window",
-      "choose": "Add Transition > Wipe"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the kind goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Wipe"
     },
     {
       "do": "wait",
@@ -280,7 +390,7 @@
     {
       "do": "describe",
       "stage": "8-ruler",
-      "note": "The ruler's right click at 7.5s offers Add Transition for the cut there: Wipe replaces the dissolve"
+      "note": "The ruler's right click at 7.5s offers Transition… for the cut there: the tiles open at it, and Wipe replaces the dissolve"
     },
     {
       "do": "snapshot",

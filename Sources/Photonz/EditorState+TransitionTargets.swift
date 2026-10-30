@@ -2,8 +2,9 @@ import Foundation
 import PhotonzCore
 
 // Putting a transition where the clips meet (`TransitionTargets.swift`): from
-// a clip's right click, the ruler's, a tile let go over the timeline and a
-// tile clicked in the panel. Every door comes through `putTransition`, so each
+// a tile let go over the timeline and a tile clicked in the panel. A right
+// click on a clip, a cut or the ruler opens the tiles at the cut instead
+// (`transitionPickerMenuRow`). Every door comes through `putTransition`, so each
 // says the same thing when a place cannot take what was asked, and offers what
 // it can take.
 extension EditorState {
@@ -70,37 +71,55 @@ extension EditorState {
 
     // MARK: The rows
 
-    /// **Add Transition ▸** with every kind, Cross dissolve first, putting
-    /// the one chosen on `targets`. Never greyed: a place that cannot take a
-    /// kind says so in words when it is chosen, which a greyed row cannot.
-    func addTransitionMenuRow(_ targets: [TransitionTarget], current: ClipTransitionKind? = nil,
-                              title: String = "Add Transition") -> MenuRow {
-        func row(_ kind: ClipTransitionKind) -> MenuRow {
-            if kind == current { return .toggle(kind.title, isOn: true) {} }
-            return .command(kind.title) { self.putTransition(kind, on: targets) }
-        }
-        // The flat ones, then the ones that turn in depth.
-        return .submenu(title, ClipTransitionKind.allCases.filter { !$0.isInDepth }.map(row)
-                            + [.separator] + ClipTransitionKind.inDepth.map(row))
+    /// **Transition…**: the tiles at one cut (`TransitionPicker`), the same
+    /// ones a click on the cut opens. Opened a pass after the menu that asked
+    /// for them has gone, since a popover asked for while a menu is still
+    /// closing does not open.
+    func transitionPickerMenuRow(at place: TimelineCutPlace,
+                                 title: String = TimelineMenuTable.title(.transition, playheadMS: 0) ?? "") -> MenuRow {
+        .command(title) { self.openTransitionPickerAfterMenu(at: place) }
     }
 
-    /// The clip menu's Add Transition: at both ends of the piece clicked.
+    func openTransitionPickerAfterMenu(at place: TimelineCutPlace) {
+        Task { @MainActor [weak self] in
+            await NextRunLoopPass.start()
+            self?.openTransitionPicker(at: place)
+        }
+    }
+
+    /// The clip menu's one row about where it meets another clip: Transition…
+    /// at the one cut it has, or, where it meets clips at both ends, At the
+    /// Start… and At the End… under Transition. Nothing at an end that meets
+    /// nothing: that end fades by its handle on the bar.
     func clipTransitionMenuRows(layerID: UUID, piece index: Int) -> [MenuRow] {
         guard Experiments.shared.transitionsAtACutEnabled, documentHasTime,
-              let targets = document?.transitionTargets(ofClip: layerID, piece: index).map(\.target),
-              !targets.isEmpty else { return [] }
-        return [addTransitionMenuRow(targets)]
+              let spots = document?.transitionTargets(ofClip: layerID, piece: index) else { return [] }
+        let ends = spots.compactMap { spot -> (start: Bool, place: TimelineCutPlace)? in
+            guard case .cut(let place) = spot.target else { return nil }
+            // The cut the piece arrives at: the join before it, or the edit
+            // where this clip comes in.
+            let start = switch place {
+            case let .join(_, cut): cut == index
+            case let .edit(_, incoming): incoming == layerID
+            }
+            return (start: start, place: place)
+        }
+        guard let only = ends.first else { return [] }
+        guard ends.count > 1 else { return [transitionPickerMenuRow(at: only.place)] }
+        return [.submenu("Transition", ends.map { end in
+            transitionPickerMenuRow(at: end.place, title: end.start ? "At the Start\u{2026}" : "At the End\u{2026}")
+        })]
     }
 
-    /// The ruler's and the scrub bar's Add Transition: on the cut nearest the
-    /// moment clicked, when one is close enough to mean it.
+    /// The ruler's and the scrub bar's Transition…: the tiles at the cut
+    /// nearest the moment clicked, when one is close enough to mean it.
     func rulerTransitionMenuRows(atMS ms: Int) -> [MenuRow] {
         guard Experiments.shared.transitionsAtACutEnabled, documentHasTime, let document else { return [] }
         let cut = document.transitionCuts(among: nil)
             .filter { abs($0.atMS - ms) <= clipCutReachMS }
             .min { abs($0.atMS - ms) < abs($1.atMS - ms) }
         guard let cut else { return [] }
-        return [addTransitionMenuRow([.cut(cut.place)], current: cut.cut.transition?.kind)]
+        return [transitionPickerMenuRow(at: cut.place)]
     }
 
     // MARK: Lit places

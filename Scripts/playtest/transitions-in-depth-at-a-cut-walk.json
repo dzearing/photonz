@@ -75,7 +75,36 @@
     {
       "do": "rightClick",
       "on": "b-roll clip",
-      "choose": "Add Transition > Cube"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the kind goes on through the default key and the panel's Type.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "t",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Cube"
     },
     {
       "do": "wait",

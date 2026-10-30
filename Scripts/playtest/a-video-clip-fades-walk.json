@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-video-clip-fades-walk",
-  "seed": "A recording, nothing switched from its default. Right-click the video clip: Fade In ▸ 1s and Fade Out ▸ 1s. The clip's bar shades each fade, the panel's Time section reads both, and the picture rises out of black and sinks back into it. Its brightness is measured at a quarter, half and three quarters of each fade, stopped, playing and in an exported MP4, and the three must agree. Then a title typed over it fades in the same way, from its own right-click, over the recording rather than over black.",
+  "seed": "A recording, nothing switched from its default. Its right-click offers no fade rows; Fade In 1s and Fade Out 1s from the Time section. The clip's bar shades each fade, the panel's Time section reads both, and the picture rises out of black and sinks back into it. Its brightness is measured at a quarter, half and three quarters of each fade, stopped, playing and in an exported MP4, and the three must agree. Then a title typed over it fades in the same way, from its own right-click, over the recording rather than over black.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -23,16 +23,19 @@
       "keys": { "Cut": "⌘X", "Detach Audio": "⌃⇧D" }
     },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "rightClick", "at": [928.3, 893], "space": "window", "choose": "More > Fade In > 1s" },
+    { "comment": "A recording's right-click has no fade rows any more (the user, 2026-10-29: redundant and one sided): its free ends fade from the Time section and by the handles on its bar.",
+      "do": "rightClick", "at": [928.3, 893], "space": "window", "lacks": ["Fade In", "Fade Out", "Fade In and Out", "Add Transition"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panelMenu", "menu": "Fade In", "choose": "1s" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "rightClick", "at": [928.3, 893], "space": "window", "choose": "More > Fade Out > 1s" },
+    { "do": "panelMenu", "menu": "Fade Out", "choose": "1s" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "menu": "Fade In", "reads": "1s" },
     { "do": "expect", "menu": "Fade Out", "reads": "1s" },
     {
       "do": "describe",
       "stage": "2-faded",
-      "note": "Both ends faded from the right-click: the clip's bar is shaded at each end, and Time reads Fade In 1s, Fade Out 1s"
+      "note": "Both ends faded from the Time section: the clip's bar is shaded at each end, and Time reads Fade In 1s, Fade Out 1s"
     },
     { "do": "panel", "stage": "2-faded" },
     { "do": "snapshot", "name": "2-faded" },

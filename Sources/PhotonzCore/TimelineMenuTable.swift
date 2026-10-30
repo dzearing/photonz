@@ -45,7 +45,7 @@ public enum TimelineMenuRow: String, CaseIterable, Sendable {
     // At the playhead
     case split, freezeFrame, speed, startAtPlayhead, endAtPlayhead
     // What a clip does
-    case addTransition, detachAudio, audio, normalize, cleanNoise, resetGain, animateIn, animateOut
+    case transition, detachAudio, audio, normalize, cleanNoise, resetGain, animateIn, animateOut
     // The clipboard and the deletes
     case cut, copy, delete, rippleDelete
     // One level down
@@ -77,7 +77,7 @@ public enum TimelineMenuTable {
         switch thing {
         case .videoClip:
             [[.split, .freezeFrame, .speed],
-             [.addTransition, .detachAudio, .audio],
+             [.transition, .detachAudio, .audio],
              [.cut, .copy, .delete, .rippleDelete],
              [.more]]
         case .linkedSound, .soundClip:
@@ -88,7 +88,7 @@ public enum TimelineMenuTable {
         // Fade In and Out leads what it does: the user, 2026-10-19, had to
         // pick each arrow, add a fade in, then add a fade out. Add Transition,
         // which only acts where two of them meet, went one level down to make
-        // the room.
+        // the room. They meet no clip, so their fades are how they come and go.
         case .title, .picture:
             [[.split, .startAtPlayhead, .endAtPlayhead],
              [.fadeInAndOut, .animateIn, .animateOut],
@@ -102,7 +102,7 @@ public enum TimelineMenuTable {
             [[.followCursor, .zoomAmount],
              [.deleteZoom]]
         case .join:
-            [[.applyDefaultTransition, .addTransition, .transitionLength, .transitionCurve, .removeTransition,
+            [[.applyDefaultTransition, .transition, .transitionLength, .transitionCurve, .removeTransition,
               .expandCut],
              [.copyTransition, .pasteTransition],
              [.rollEdit, .joinThroughEdit]]
@@ -122,9 +122,14 @@ public enum TimelineMenuTable {
     /// What is one level down, under `moreRow(for:)`, group by group.
     public static func moreGroups(for thing: TimelineMenuThing) -> [[TimelineMenuRow]] {
         switch thing {
+        // No fade rows on a recording: the user, 2026-10-29, "like transition
+        // fade out, fade in, black out. these are super redundant and one
+        // sided." Where it meets another clip, Transition… opens the tiles at
+        // that cut, the dips among them; an end that meets nothing fades by
+        // its handle on the bar.
         case .videoClip:
             [[.showPicture, .rippleTrimStart, .rippleTrimEnd],
-             [.fadeInAndOut, .fadeIn, .fadeOut, .punchIn, .addZoom, .suggestZooms, .addClick],
+             [.punchIn, .addZoom, .suggestZooms, .addClick],
              [.animate, .addKey, .pasteKeys],
              [.breakApart, .selectForward, .duplicate, .rename, .revealInFinder]]
         case .linkedSound, .soundClip:
@@ -132,7 +137,7 @@ public enum TimelineMenuTable {
              [.addCaptions],
              [.breakApart, .selectForward, .duplicate, .rename, .revealInFinder]]
         case .title, .picture:
-            [[.fadeIn, .fadeOut, .addTransition, .animate, .addKey, .pasteKeys],
+            [[.fadeIn, .fadeOut, .transition, .animate, .addKey, .pasteKeys],
              [.replayTitle, .saveAsPreset],
              [.selectForward, .duplicate, .rename]]
         case .caption:
@@ -169,6 +174,8 @@ public enum TimelineMenuTable {
         // ⌥E"), capitalised as a menu row is (UX-PATTERNS §7). A toggle: its
         // tick says the cut is open.
         case .expandCut: "Expand the Cut"
+        // It opens the tiles at the cut, so it ends in an ellipsis.
+        case .transition: "Transition\u{2026}"
         case .cut: "Cut"
         case .copy: "Copy"
         case .more: "More"

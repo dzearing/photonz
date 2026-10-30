@@ -1,0 +1,129 @@
+{
+  "out": "/tmp/photonz-playtest/a-click-on-the-cut-opens-its-tiles-walk",
+  "seed": "At Next defaults, no flag set: two different recordings meet on V1 at 0:07, the first one picked, so its end grip sits over the cut. The pointer rests on the cut and it lights; one real click there, by pointer, picks the cut and opens the tiles At this cut, naming both clips. A click is the proof a person can do it: a press by name would only prove the cut exists.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "clipDragStartIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "move",
+      "at": [
+        986,
+        893
+      ],
+      "space": "window"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-cut-lit",
+      "note": "The pointer rests on the place the two recordings meet, and the cut lights"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-cut-lit"
+    },
+    {
+      "comment": "THE FIRST TEST: one real click on the cut, by pointer, opens the tiles right there.",
+      "do": "windowClick",
+      "lane": "V1",
+      "seconds": 7.0
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "2b-after-the-click"
+    },
+    {
+      "do": "expect",
+      "control": "Clips at this cut: Tutorial Sample → b-roll",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "3-tiles-after-a-click",
+      "note": "One click on the cut, by pointer, and the tiles are open at it"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-tiles-after-a-click"
+    }
+  ]
+}

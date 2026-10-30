@@ -320,56 +320,73 @@ extension VideoKit {
         let lapSeconds: Double
     }
 
-    /// One frame of a transition between the kit's two stand-in shots.
+    /// One frame of a transition between the kit's two stand-in shots, or
+    /// between two real pictures where it is handed them: the last frame of
+    /// the clip going out and the first of the one coming in, each filling
+    /// the tile the way the canvas fills the frame.
     struct TransitionMovie: View {
         let style: TransitionThumbnail.Style
         let progress: Double
+        var outgoing: CGImage?
+        var incoming: CGImage?
 
         var body: some View {
             Canvas { context, size in
                 let p = min(max(progress, 0), 1)
                 let whole = CGRect(origin: .zero, size: size)
-                func shotA(_ rect: CGRect) {
+                func shotA(_ rect: CGRect, in context: GraphicsContext) {
+                    if let outgoing { return Self.fill(outgoing, rect, in: context) }
                     context.fill(Path(rect), with: .linearGradient(
                         Gradient(colors: [rgb(0x12C2E9), rgb(0x7C4DFF)]),
                         startPoint: rect.origin, endPoint: CGPoint(x: rect.maxX, y: rect.maxY)))
                 }
-                func shotB(_ rect: CGRect, opacity: Double = 1) {
+                func shotB(_ rect: CGRect, opacity: Double = 1, in context: GraphicsContext) {
                     var layer = context
                     layer.opacity = opacity
+                    if let incoming { return Self.fill(incoming, rect, in: layer) }
                     layer.fill(Path(rect), with: .linearGradient(
                         Gradient(colors: [rgb(0xFF9D5C), rgb(0xFF5D8F)]),
                         startPoint: rect.origin, endPoint: CGPoint(x: rect.maxX, y: rect.maxY)))
                 }
                 switch style {
                 case .dissolve, .morph:
-                    shotA(whole)
-                    shotB(whole, opacity: p)
+                    shotA(whole, in: context)
+                    shotB(whole, opacity: p, in: context)
                 case .blurThrough:
                     var soft = context
                     soft.addFilter(.blur(radius: 5 * (1 - abs(2 * p - 1))))
-                    soft.fill(Path(whole), with: .color(rgb(0x12C2E9)))
-                    var over = soft
-                    over.opacity = p
-                    over.fill(Path(whole), with: .color(rgb(0xFF9D5C)))
+                    if outgoing == nil {
+                        soft.fill(Path(whole), with: .color(rgb(0x12C2E9)))
+                    } else {
+                        shotA(whole, in: soft)
+                    }
+                    if incoming == nil {
+                        var over = soft
+                        over.opacity = p
+                        over.fill(Path(whole), with: .color(rgb(0xFF9D5C)))
+                    } else {
+                        shotB(whole, opacity: p, in: soft)
+                    }
                 case .dipToBlack, .dipToWhite:
-                    if p < 0.5 { shotA(whole) } else { shotB(whole) }
+                    if p < 0.5 { shotA(whole, in: context) } else { shotB(whole, in: context) }
                     let amount = p < 0.5 ? p * 2 : 2 - p * 2
                     var dip = context
                     dip.opacity = amount
                     dip.fill(Path(whole), with: .color(style == .dipToWhite ? .white : rgb(0x05060A)))
                 case .push, .slide:
-                    shotA(whole.offsetBy(dx: -p * size.width, dy: 0))
-                    shotB(whole.offsetBy(dx: (1 - p) * size.width, dy: 0))
+                    shotA(whole.offsetBy(dx: -p * size.width, dy: 0), in: context)
+                    shotB(whole.offsetBy(dx: (1 - p) * size.width, dy: 0), in: context)
                 case .wipe:
-                    shotA(whole)
-                    shotB(CGRect(x: 0, y: 0, width: p * size.width, height: size.height))
+                    shotA(whole, in: context)
+                    var revealed = context
+                    revealed.clip(to: Path(CGRect(x: 0, y: 0, width: p * size.width, height: size.height)))
+                    shotB(whole, in: revealed)
                     if p > 0.02, p < 0.98 {
                         context.fill(Path(CGRect(x: p * size.width - 0.5, y: 0, width: 1, height: size.height)),
                                      with: .color(.white.opacity(0.8)))
                     }
                 case .cut:
-                    if p < 0.5 { shotA(whole) } else { shotB(whole) }
+                    if p < 0.5 { shotA(whole, in: context) } else { shotB(whole, in: context) }
                 case .flip, .cube, .swing, .doorway, .revolve, .pushInDepth:
                     context.fill(Path(whole), with: .color(rgb(0x05060A)))
                     #if canImport(PhotonzCore)
@@ -381,18 +398,59 @@ extension VideoKit {
                         path.closeSubpath()
                         var face = context
                         face.opacity = part.opacity
-                        let box = path.boundingRect
-                        let colours = part.shot == .outgoing ? [rgb(0x12C2E9), rgb(0x7C4DFF)]
-                                                             : [rgb(0xFF9D5C), rgb(0xFF5D8F)]
-                        face.fill(path, with: .linearGradient(Gradient(colors: colours), startPoint: box.origin,
-                                                              endPoint: CGPoint(x: box.maxX, y: box.maxY)))
+                        let picture = part.shot == .outgoing ? outgoing : incoming
+                        if let picture, let onto = Self.mapping(part.window, of: size, onto: quad) {
+                            // The picture turned with the face: flat in its
+                            // own box, carried onto the face's corners. At a
+                            // tile's size the face's slant reads as depth.
+                            var turned = face
+                            turned.clip(to: path)
+                            turned.concatenate(onto)
+                            Self.fill(picture, whole, in: turned)
+                        } else {
+                            let box = path.boundingRect
+                            let colours = part.shot == .outgoing ? [rgb(0x12C2E9), rgb(0x7C4DFF)]
+                                                                 : [rgb(0xFF9D5C), rgb(0xFF5D8F)]
+                            face.fill(path, with: .linearGradient(Gradient(colors: colours), startPoint: box.origin,
+                                                                  endPoint: CGPoint(x: box.maxX, y: box.maxY)))
+                        }
                         face.stroke(path, with: .color(.white.opacity(0.35)), lineWidth: 0.5)
                     }
                     #else
-                    if p < 0.5 { shotA(whole) } else { shotB(whole) }
+                    if p < 0.5 { shotA(whole, in: context) } else { shotB(whole, in: context) }
                     #endif
                 }
             }
+        }
+
+        /// A picture filling `rect` the way the canvas fills the frame:
+        /// scaled to cover it, centred, the overflow cut off.
+        nonisolated static func fill(_ picture: CGImage, _ rect: CGRect, in context: GraphicsContext) {
+            let width = CGFloat(picture.width), height = CGFloat(picture.height)
+            guard width > 0, height > 0, rect.width > 0, rect.height > 0 else { return }
+            let scale = max(rect.width / width, rect.height / height)
+            let drawn = CGSize(width: width * scale, height: height * scale)
+            var inside = context
+            inside.clip(to: Path(rect))
+            inside.draw(Image(decorative: picture, scale: 1),
+                        in: CGRect(x: rect.midX - drawn.width / 2, y: rect.midY - drawn.height / 2,
+                                   width: drawn.width, height: drawn.height))
+        }
+
+        /// What carries the part of the shot in `window` (a fraction of a
+        /// tile of `size`) onto a face's four corners, top left first: the
+        /// flat mapping of its top left, top right and bottom left.
+        nonisolated static func mapping(_ window: CGRect, of size: CGSize, onto quad: [CGPoint]) -> CGAffineTransform? {
+            guard quad.count == 4 else { return nil }
+            let box = CGRect(x: window.minX * size.width, y: window.minY * size.height,
+                             width: window.width * size.width, height: window.height * size.height)
+            guard box.width > 0, box.height > 0 else { return nil }
+            let q0 = quad[0], q1 = quad[1], q3 = quad[3]
+            let a = (q1.x - q0.x) / box.width, b = (q1.y - q0.y) / box.width
+            let c = (q3.x - q0.x) / box.height, d = (q3.y - q0.y) / box.height
+            return CGAffineTransform(a: a, b: b, c: c, d: d,
+                                     tx: q0.x - a * box.minX - c * box.minY,
+                                     ty: q0.y - b * box.minX - d * box.minY)
         }
 
         #if canImport(PhotonzCore)

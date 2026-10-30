@@ -339,7 +339,7 @@ struct EveryMenuCommandHasANameTests {
         case .speed: .command(.setSpeed)
         case .startAtPlayhead: .command(.startAtPlayhead)
         case .endAtPlayhead: .command(.endAtPlayhead)
-        case .addTransition: .command(.setTransition)
+        case .transition: .command(.setTransition)
         case .detachAudio: .command(.detachAudio)
         case .audio, .more, .track, .captionsTrack, .trackRows: .holds
         case .normalize: .command(.normalizeLoudness)

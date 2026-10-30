@@ -52,22 +52,36 @@ struct TimelineMenuTableTests {
     @Test func aVideoClipLeadsWithThePlayheadAndEndsWithMore() {
         #expect(TimelineMenuTable.groups(for: .videoClip) == [
             [.split, .freezeFrame, .speed],
-            [.addTransition, .detachAudio, .audio],
+            [.transition, .detachAudio, .audio],
             [.cut, .copy, .delete, .rippleDelete],
             [.more],
         ])
     }
 
     /// The video clip's long tail is one level down, grouped, and every row the
-    /// old menu had is still there.
+    /// old menu had is still there, but for the fades the transition took over.
     @Test func everyRowTheOldVideoMenuHadIsStillOffered() {
         let offered = Set(TimelineMenuTable.groups(for: .videoClip).flatMap { $0 }
             + TimelineMenuTable.moreGroups(for: .videoClip).flatMap { $0 })
         let before: [Row] = [.split, .rippleTrimStart, .rippleTrimEnd, .freezeFrame, .punchIn, .addClick,
-                             .addZoom, .suggestZooms, .speed, .fadeIn, .fadeOut, .addTransition, .animate,
+                             .addZoom, .suggestZooms, .speed, .transition, .animate,
                              .addKey, .detachAudio, .audio, .selectForward, .rename, .duplicate,
                              .revealInFinder, .delete, .rippleDelete, .showPicture, .breakApart, .pasteKeys]
         #expect(before.allSatisfy(offered.contains), "missing: \(before.filter { !offered.contains($0) })")
+    }
+
+    /// The user, 2026-10-29: "like transition fade out, fade in, black out.
+    /// these are super redundant and one sided." A recording's menu says what
+    /// happens where it meets the next clip in ONE row, Transition…, which
+    /// opens the tiles at that cut; the dips are tiles there. Fading from and
+    /// to black at an end that meets nothing is the bar's end handles, so no
+    /// fade row competes with it.
+    @Test func aVideoClipHasOneTransitionRowAndNoFadeRows() {
+        let offered = TimelineMenuTable.groups(for: .videoClip).flatMap { $0 }
+            + TimelineMenuTable.moreGroups(for: .videoClip).flatMap { $0 }
+        #expect(offered.filter { $0 == .transition }.count == 1)
+        #expect(!offered.contains(.fadeIn) && !offered.contains(.fadeOut) && !offered.contains(.fadeInAndOut))
+        #expect(TimelineMenuTable.title(.transition, playheadMS: 0) == "Transition\u{2026}")
     }
 
     /// A sound, linked under its video or on its own: the sound's verbs, never
@@ -76,7 +90,7 @@ struct TimelineMenuTableTests {
     func aSoundOffersNoPictureRows(_ thing: TimelineMenuThing) {
         let all = Set(TimelineMenuTable.groups(for: thing).flatMap { $0 }
             + TimelineMenuTable.moreGroups(for: thing).flatMap { $0 })
-        let picture: Set<Row> = [.freezeFrame, .punchIn, .addZoom, .suggestZooms, .addClick, .addTransition,
+        let picture: Set<Row> = [.freezeFrame, .punchIn, .addZoom, .suggestZooms, .addClick, .transition,
                                  .fadeIn, .fadeOut, .fadeInAndOut, .animate, .addKey, .animateIn, .animateOut]
         #expect(all.isDisjoint(with: picture))
         #expect(TimelineMenuTable.groups(for: thing)[1].first == .detachAudio)
@@ -94,22 +108,15 @@ struct TimelineMenuTableTests {
     /// The user, 2026-10-19: "I had to select each one, add a fade in, then
     /// add a fade out." Fading both ends is the first thing a placed picture
     /// or title offers after when it is on screen, one click from the
-    /// right-click; each end on its own stays one level down, and so does Add
-    /// Transition, which only acts where two of them meet.
+    /// right-click; each end on its own stays one level down, and so does
+    /// Transition…, which only acts where two of them meet.
     @Test(arguments: [TimelineMenuThing.title, .picture])
     func somethingPlacedInTimeFadesInAndOutInOneClick(_ thing: TimelineMenuThing) {
         let groups = TimelineMenuTable.groups(for: thing)
         #expect(groups[1].first == .fadeInAndOut)
         let more = TimelineMenuTable.moreGroups(for: thing).flatMap { $0 }
-        #expect(more.contains(.fadeIn) && more.contains(.fadeOut) && more.contains(.addTransition))
+        #expect(more.contains(.fadeIn) && more.contains(.fadeOut) && more.contains(.transition))
         #expect(groups.flatMap { $0 }.count <= TimelineMenuTable.mostTopLevelRows)
-    }
-
-    /// A clip fades both ends from the same row as its single ends, one level
-    /// down, where its top level has no room.
-    @Test func aVideoClipFadesInAndOutBesideItsSingleEnds() {
-        let fades = TimelineMenuTable.moreGroups(for: .videoClip).first { $0.contains(.fadeIn) } ?? []
-        #expect(fades.prefix(3) == [.fadeInAndOut, .fadeIn, .fadeOut])
     }
 
     /// The things that are not clips have short menus of their own.
@@ -122,10 +129,11 @@ struct TimelineMenuTableTests {
 
     /// A cut opens into its two clips from its own right-click, beside its
     /// transition, the way the mock's Edit point group puts Expand the cut
-    /// under Add transition (`video-transition-wt.html`, `#cmdMenu`).
+    /// under Add transition (`video-transition-wt.html`, `#cmdMenu`). Its
+    /// Transition… opens the same tiles a click on the cut does.
     @Test func aCutOpensIntoItsTwoClipsFromItsRightClick() {
         let first = TimelineMenuTable.groups(for: .join).first ?? []
-        let add = first.firstIndex(of: .addTransition)
+        let add = first.firstIndex(of: .transition)
         let expand = first.firstIndex(of: .expandCut)
         #expect(add != nil && expand != nil)
         #expect((add ?? 0) < (expand ?? 0))

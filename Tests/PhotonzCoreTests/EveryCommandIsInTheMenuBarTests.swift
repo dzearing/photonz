@@ -73,6 +73,9 @@ struct EveryCommandIsInTheMenuBarTests {
         "Rename": "Rename Layer…",
         "Edit Words": "Rename…",
         "Add Transition": "Transition at Cut",
+        // A clip's Transition ▸ At the Start… / At the End…: the tiles at the
+        // cut, whose kinds the bar's Transition at Cut lists for the cut in hand.
+        "Transition": "Transition at Cut",
         // A click's tick on a recording's bar: the Clip menu acts on the
         // click at the playhead, and steps the playhead on to the next one.
         "Hide This Click": "Hide Click at Playhead",

@@ -65,7 +65,27 @@
     {
       "do": "rightClick",
       "on": "Edit point Tutorial Sample to b-roll",
-      "choose": "Add Transition > Doorway"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the same kind is let go on the cut from the Transitions panel, which puts it on the same way.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Doorway",
+      "track": "V1",
+      "seconds": 8.0,
+      "says": "Doorway"
     },
     {
       "do": "wait",
@@ -159,7 +179,27 @@
     {
       "do": "rightClick",
       "on": "Tutorial Sample clip",
-      "choose": "Add Transition > Cube"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the same kind is let go on the cut from the Transitions panel, which puts it on the same way.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Cube",
+      "track": "V1",
+      "seconds": 8.0,
+      "says": "Cube"
     },
     {
       "do": "wait",
@@ -294,7 +334,27 @@
     {
       "do": "rightClick",
       "on": "b-roll clip",
-      "choose": "Add Transition > Flip"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the same kind is let go on the cut from the Transitions panel, which puts it on the same way.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Flip",
+      "track": "V1",
+      "seconds": 8.0,
+      "says": "Flip"
     },
     {
       "do": "wait",
@@ -346,7 +406,27 @@
     {
       "do": "rightClick",
       "on": "Transition Tutorial Sample to b-roll",
-      "choose": "Change Transition > Push in depth"
+      "choose": "Transition…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "The tiles opened at the cut. A walk cannot press inside them on this Mac yet (walks-that-fail-in-the-full-sweep-26), so the same kind is let go on the cut from the Transitions panel, which puts it on the same way.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Push in depth",
+      "track": "V1",
+      "seconds": 8.0,
+      "says": "Push in depth"
     },
     {
       "do": "wait",

@@ -1,0 +1,30 @@
+{
+  "feature": "Pick a transition at the cut, from tiles of your own two clips",
+  "epic": "video-transitions-motion",
+  "summary": "How one clip becomes the next is chosen in one place, at the cut: the tiles there show your two clips themselves and name both of them. A recording's right-click has one Transition… row instead of Fade In, Fade Out, Fade In and Out and Add Transition, and fading from black lives on the free end's handle.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Two recordings butted together on V1 (drop a second one onto the end of the first).",
+  "switched": {},
+  "try": [
+    { "do": "Right-click the first recording: one Transition… row, no fade rows (before: Add Transition ▸, plus Fade In and Out, Fade In, Fade Out under More).", "shot": "2026-10-29-transition-at-the-cut-1-clip-menu-before.png", "shotNote": "BEFORE. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "The same right-click now.", "shot": "2026-10-29-transition-at-the-cut-2-clip-menu-after.png", "shotNote": "AFTER. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Choose Transition…, or click right on the cut: the tiles open there, named Tutorial Sample → b-roll, each one your two clips.", "shot": "2026-10-29-transition-at-the-cut-3-tiles-at-the-cut.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Rest the pointer on Cube: its tile plays the turn. Its tip reads Cube: Tutorial Sample turns into b-roll." },
+    { "do": "Click Cube: it goes on the cut as a band over both clips.", "shot": "2026-10-29-transition-at-the-cut-6-cube-on-the-cut.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the band: Transition… opens the same tiles, beside Length, Curve and Remove Transition.", "shot": "2026-10-29-transition-at-the-cut-5-cut-menu-after.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick the first recording and drag the diamond at its top left corner to the right: it fades up from black. The corner that meets b-roll has no diamond.", "shot": "2026-10-29-transition-at-the-cut-7-free-end-fades.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does Transition… in the clip's right-click feel like the one obvious way, now the fade rows are gone?",
+    "Can you tell the tiles apart at a glance now they show your own clips at 26 points tall, or do the turning kinds read too small?",
+    "Where a clip meets others at both ends, is Transition ▸ At the Start… / At the End… clear enough?",
+    "Is the line naming both clips (Tutorial Sample → b-roll) the right amount of words above the tiles?"
+  ],
+  "rough": [
+    "The line naming both clips above the tiles is not in the mock (video-transition-wt.html #transPick); it is the user's own ask of 2026-10-29 that the picker say what happens between the two clips, approved as written that day.",
+    "The tiles show the two clips' real frames instead of the mock's colour swatches, and rest part way through, playing only under the pointer: the user's own ask of 2026-10-29.",
+    "No walk can rest the pointer on a tile or press one inside the picker on this Mac, nor click the timeline by pointer (walks-that-fail-in-the-full-sweep-26), so hover playback and the click on the cut were checked by build and by eye in code, not watched. a-click-on-the-cut-opens-its-tiles-walk is the pointer proof and waits on that task.",
+    "A clip's right-click no longer puts a transition on both its ends at once; ⌘T with several clips picked still does every cut among them.",
+    "Titles and pictures keep Fade In and Out: they meet no clip, and their fade is how they come and go (the user asked for that row on 2026-10-19).",
+    "The real frames are read at 192 pixels, so on two recordings of the same dark screen most tiles are mostly dark."
+  ]
+}

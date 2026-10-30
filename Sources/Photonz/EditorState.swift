@@ -2163,6 +2163,11 @@ final class EditorState {
     /// The cut whose transition picker is open, nil while none is
     /// (`EditorState+ClipTransitions`, "At this cut").
     var transitionPickerPlace: TimelineCutPlace?
+    /// The cut between two clips the pointer is on by way of a picked clip's
+    /// end grip, which covers it: lit as if the pointer were on the cut
+    /// itself, since a click there opens its tiles. Written only when it
+    /// changes.
+    var editPointUnderGrip: TimelineCutPlace?
     /// The Freeze Frame popover while it is up, nil while it is not
     /// (`EditorState+FreezeAsk`).
     var freezeAsk: FreezeAsk?
