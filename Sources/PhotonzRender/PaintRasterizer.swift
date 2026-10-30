@@ -107,7 +107,7 @@ public enum PaintRasterizer {
         if let look = DryLook(stroke.settings) {
             guard let plane = PixelPlane(context), let colour = RGBA(hex: stroke.colorHex) else { return }
             var dry = DryStroke(look: look, seed: stroke.seed, toPixels: toPixels, limit: plane.box)
-            for dab in dabs { _ = dry.mark(dab) }
+            _ = dry.mark(dabs)
             dry.composite(into: plane, colour: colour, opacity: Float(stroke.settings.opacity / 100))
             return
         }
@@ -406,7 +406,7 @@ public enum PaintRasterizer {
                 touched = touched.intersection(PixelBox(clip))
             case .dry(var dry, let colour):
                 kind = .none
-                for dab in dabs { touched = touched.union(dry.mark(dab)) }
+                touched = dry.mark(dabs)
                 kind = .dry(dry, colour)
             case .marker(var marker, let colour, let under):
                 kind = .none

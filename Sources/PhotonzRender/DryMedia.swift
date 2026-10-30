@@ -113,6 +113,25 @@ enum PixelBands {
         return min(ways, box.height, max(1, area >> 14))
     }
 
+    /// How many bands a dab's own pixels are split into: a dab works out a
+    /// good deal at every pixel (the paper's tooth, a stick's streaks, an oil
+    /// brush's bristles), so a box an eighth the size `count(for:)` splits
+    /// is worth it. Under that, every dab of the thinned end a mouse stroke
+    /// draws as it goes, and a whole 150 point oil dab, was laid on the main
+    /// thread alone: half of every move at 150 points (2026-10-30).
+    static func count(forDab box: PixelBox) -> Int {
+        guard !box.isEmpty else { return 0 }
+        return count(pixels: box.width * box.height, rows: box.height)
+    }
+
+    /// The same for several dabs laid together over `rows` rows: `pixels`
+    /// is the sum of their boxes, the work there is to share.
+    static func count(pixels: Int, rows: Int) -> Int {
+        guard pixels > 0, rows > 0 else { return 0 }
+        guard pixels >= 1 << 12, rows >= 2 else { return 1 }
+        return min(ways, rows, max(1, pixels >> 11))
+    }
+
     /// Runs `band(index, minY, maxY)` over each band of `box`'s rows.
     static func run(_ box: PixelBox, bands: Int, _ band: (Int, Int, Int) -> Void) {
         guard bands > 0 else { return }
@@ -129,8 +148,8 @@ enum PixelBands {
 
     /// The same, collecting the box each band reports and handing back their
     /// union.
-    static func union(_ box: PixelBox, _ band: (Int, Int) -> PixelBox) -> PixelBox {
-        let bands = count(for: box)
+    static func union(_ box: PixelBox, bands: Int? = nil, _ band: (Int, Int) -> PixelBox) -> PixelBox {
+        let bands = bands ?? count(for: box)
         guard bands > 0 else { return .empty }
         var found = [PixelBox](repeating: .empty, count: bands)
         found.withUnsafeMutableBufferPointer { out in
@@ -141,17 +160,43 @@ enum PixelBands {
     }
 }
 
-/// The values a field held over the boxes it was asked for, in the order it
-/// was asked, so they can be put back. Every write a stroke makes lands inside
-/// a box it asked its field for first, so putting the boxes back, last first,
-/// leaves the field exactly as it was: where two overlap, the earlier holds
-/// what was there before either.
+/// The values a field held over the boxes it was asked for, so they can be
+/// put back. Every write a stroke makes lands inside a box it asked its field
+/// for first, so a pixel is saved once, the first time a box reaches it, and
+/// holds what was there before any of them. What it keeps is the box round
+/// everything asked for, saved a strip at a time as that grows: a pixel inside
+/// it no box asked for was never written, so it is saved as it always was.
+/// Saving each box whole copied the thinned end of a live stroke over and
+/// over, its dabs lying nearly on top of each other (2026-10-30).
 struct FieldJournal {
     private var saved: [(box: PixelBox, values: [Float])] = []
+    /// The box round everything saved.
+    private var covered = PixelBox.empty
+
+    /// How many values it holds, every channel counted once.
+    var savedValues: Int { saved.reduce(0) { $0 + $1.box.width * $1.box.height } }
 
     mutating func save(_ wanted: PixelBox, from values: [Float], box: PixelBox, channels: Int) {
         let region = wanted.intersection(box)
-        guard !region.isEmpty else { return }
+        guard !region.isEmpty, !covered.contains(region) else { return }
+        let grown = covered.union(region)
+        if covered.isEmpty {
+            copy(grown, from: values, box: box, channels: channels)
+        } else {
+            // What the box gained: the rows above and below it, then the
+            // columns either side of what it was.
+            for strip in [PixelBox(minX: grown.minX, minY: grown.minY, maxX: grown.maxX, maxY: covered.minY),
+                          PixelBox(minX: grown.minX, minY: covered.maxY, maxX: grown.maxX, maxY: grown.maxY),
+                          PixelBox(minX: grown.minX, minY: covered.minY, maxX: covered.minX, maxY: covered.maxY),
+                          PixelBox(minX: covered.maxX, minY: covered.minY, maxX: grown.maxX, maxY: covered.maxY)]
+            where !strip.isEmpty {
+                copy(strip, from: values, box: box, channels: channels)
+            }
+        }
+        covered = grown
+    }
+
+    private mutating func copy(_ region: PixelBox, from values: [Float], box: PixelBox, channels: Int) {
         let run = region.width * channels
         // Row by row as whole runs of memory: through array slices, putting
         // back a 500 point oil tail's five fields took 8 ms a move
@@ -217,10 +262,15 @@ struct CoverageField {
             .intersection(limit)
         var next = [Float](repeating: 0, count: grown.width * grown.height)
         if !box.isEmpty {
-            for y in box.minY..<box.maxY {
-                let from = (y - box.minY) * box.width
-                let to = (y - grown.minY) * grown.width + (box.minX - grown.minX)
-                for x in 0..<box.width { next[to + x] = values[from + x] }
+            let old = box
+            next.withUnsafeMutableBufferPointer { to in
+                values.withUnsafeBufferPointer { from in
+                    guard let target = to.baseAddress, let source = from.baseAddress else { return }
+                    for y in old.minY..<old.maxY {
+                        (target + (y - grown.minY) * grown.width + (old.minX - grown.minX))
+                            .update(from: source + (y - old.minY) * old.width, count: old.width)
+                    }
+                }
             }
         }
         box = grown
@@ -579,6 +629,43 @@ struct DryStroke {
 
     /// Lays one dab down and hands back the pixels it touched.
     mutating func mark(_ dab: BrushDab) -> PixelBox {
+        let placed = place(dab)
+        if let tip = placed.tip { lay([tip]) }
+        for (at, size, amount) in placed.specks { speck(at: at, size: size, amount: amount, inside: placed.clip) }
+        if look.drag > 0, !placed.box.isEmpty { drag(at: placed.centre, radius: placed.radius * pixelsPerPoint) }
+        return placed.box
+    }
+
+    /// Lays `dabs` down in order and hands back the pixels they touched: the
+    /// same field as laying them one at a time, worked out side by side. A
+    /// tip and a speck only ever raise a pixel to the larger of what is there
+    /// and what they lay, so once each dab's place is settled, in order, their
+    /// pixels can land in any order. A stick that drags what it laid along
+    /// (charcoal, chalk) reads the field between dabs, so goes one at a time.
+    mutating func mark(_ dabs: [BrushDab]) -> PixelBox {
+        guard look.drag <= 0, dabs.count > 1 else {
+            return dabs.reduce(PixelBox.empty) { $0.union(mark($1)) }
+        }
+        var touched = PixelBox.empty
+        var tips: [TipPass] = []
+        var specks: [(at: CGPoint, size: CGFloat, amount: Float, inside: PixelBox)] = []
+        tips.reserveCapacity(dabs.count)
+        for dab in dabs {
+            let placed = place(dab)
+            touched = touched.union(placed.box)
+            if let tip = placed.tip { tips.append(tip) }
+            for (at, size, amount) in placed.specks { specks.append((at, size, amount, placed.clip)) }
+        }
+        lay(tips)
+        for speck in specks { self.speck(at: speck.at, size: speck.size, amount: speck.amount, inside: speck.inside) }
+        return touched
+    }
+
+    /// Where one dab goes and what it lays, with the stroke moved on past it
+    /// and its field grown to hold it, before any of its pixels are laid.
+    private mutating func place(_ dab: BrushDab) -> (box: PixelBox, tip: TipPass?,
+                                                    specks: [(CGPoint, CGFloat, Float)], clip: PixelBox,
+                                                    centre: CGPoint, radius: CGFloat) {
         var radius = max(dab.diameter / 2 * CGFloat(look.width), 0.25)
         // The press has already set the width (the dab's diameter) and the
         // weight for charcoal, chalk and crayon; the pencil's own press is a
@@ -661,7 +748,7 @@ struct DryStroke {
         lastCentre = dab.center
         // Lighter and darker passages, about every two tip widths.
         let press = weight * (1 - look.toneSwing * (1 - wave(drift, at: Float(travelled / (radius * 4)))))
-        guard !box.isEmpty else { return .empty }
+        guard !box.isEmpty else { return (.empty, nil, [], .empty, centre, radius) }
         field.ensure(box)
 
         let tipReach = Float(1 + look.edgeBreak + look.wobble)
@@ -676,16 +763,23 @@ struct DryStroke {
         // A lead on its side has a soft edge: its press fades out across it.
         // A stick's side keeps more of its own edge.
         let inner = look.inner * (1 - (look.pressed ? 0.75 : 0.3) * lean)
-        guard !tipBox.isEmpty else {
-            for (at, size, amount) in specks { speck(at: at, size: size, amount: amount) }
-            return box
-        }
-        // Every pixel's lay depends only on that pixel, so the tip's rows are
-        // worked on side by side (`PixelBands`), by a copy of the stroke that
-        // holds no field, writing straight into the field.
-        let tip = TipPass(dab: dab, radius: radius, long: long, short: short, lean: lean, leanAxis: leanAxis,
-                          tipReach: tipReach, inner: inner, press: press, streaking: streaking,
-                          catchSteps: catchSteps, catchSpread: catchSpread)
+        // Each speck lands inside the field as it stood after its own dab.
+        guard !tipBox.isEmpty else { return (box, nil, specks, field.box, centre, radius) }
+        let tip = TipPass(dab: dab, box: tipBox, heading: heading, travelled: travelled, radius: radius,
+                          long: long, short: short, lean: lean, leanAxis: leanAxis, tipReach: tipReach,
+                          inner: inner, press: press, streaking: streaking, catchSteps: catchSteps,
+                          catchSpread: catchSpread)
+        return (box, tip, specks, field.box, centre, radius)
+    }
+
+    /// Lays `tips` into the field. Every pixel's lay depends only on that
+    /// pixel and its tip, and keeps the larger value, so the rows of them all
+    /// are worked on side by side (`PixelBands`), by a copy of the stroke that
+    /// holds no field, writing straight into the field.
+    private mutating func lay(_ tips: [TipPass]) {
+        guard !tips.isEmpty else { return }
+        let all = tips.reduce(PixelBox.empty) { $0.union($1.box) }
+        let work = tips.reduce(0) { $0 + $1.box.width * $1.box.height }
         var held = CoverageField(limit: field.limit)
         swap(&held, &field)
         let reader = self
@@ -694,28 +788,28 @@ struct DryStroke {
         field.values.withUnsafeMutableBufferPointer { buffer in
             guard let values = buffer.baseAddress else { return }
             PaperGrain.tile.withUnsafeBufferPointer { paperTile in
-                PixelBands.run(tipBox, bands: PixelBands.count(for: tipBox)) { _, minRow, maxRow in
-                    for y in minRow..<maxRow {
-                        for x in tipBox.minX..<tipBox.maxX {
-                            guard let laid = reader.laid(x, y, tip, paperTile) else { continue }
-                            let i = (y - fieldBox.minY) * fieldBox.width + (x - fieldBox.minX)
-                            if laid > values[i] { values[i] = laid }
+                PixelBands.run(all, bands: PixelBands.count(pixels: work, rows: all.height)) { _, minRow, maxRow in
+                    for tip in tips {
+                        let tipBox = tip.box
+                        for y in max(minRow, tipBox.minY)..<max(max(minRow, tipBox.minY), min(maxRow, tipBox.maxY)) {
+                            for x in tipBox.minX..<tipBox.maxX {
+                                guard let laid = reader.laid(x, y, tip, paperTile) else { continue }
+                                let i = (y - fieldBox.minY) * fieldBox.width + (x - fieldBox.minX)
+                                if laid > values[i] { values[i] = laid }
+                            }
                         }
                     }
                 }
             }
         }
-        for (at, size, amount) in specks { speck(at: at, size: size, amount: amount) }
-        if look.drag > 0 { drag(at: centre, radius: radius * pixelsPerPoint) }
-        return box
     }
 
     /// One fleck beside the stroke, caught by the paper like the rest: soft
     /// charcoal dust, or a crisp crumb of chalk.
-    private mutating func speck(at point: CGPoint, size: CGFloat, amount: Float) {
+    private mutating func speck(at point: CGPoint, size: CGFloat, amount: Float, inside clip: PixelBox) {
         let centre = point.applying(toPixels)
         let reach = size * pixelsPerPoint + 1
-        let box = PixelBox.around(centre, radius: reach).intersection(field.box)
+        let box = PixelBox.around(centre, radius: reach).intersection(clip)
         guard !box.isEmpty else { return }
         let crisp = look.specks == .crumbs
         for y in box.minY..<box.maxY {
@@ -744,23 +838,36 @@ struct DryStroke {
             carriedSide = side
         }
         let pickup: Float = 0.12
-        for oy in -half...half {
-            for ox in -half...half {
-                let x = cx + ox, y = cy + oy
-                let i = (oy + half) * side + (ox + half)
-                let d = Float(hypot(CGFloat(ox), CGFloat(oy)) / radius)
-                let inside = x >= field.box.minX && x < field.box.maxX && y >= field.box.minY && y < field.box.maxY
-                if !fresh, d < 1, inside {
-                    let here = field.value(x, y), held = carried[i]
-                    if held > here {
-                        let w = 1 - smoothstep(0.3, 1, d)
-                        field.set(x, y, here + look.drag * w * (held - here))
+        let strength = look.drag
+        let fieldBox = field.box
+        // Each pixel reads and writes only itself and what the stick carried
+        // over it, so the rows go side by side (`PixelBands`): one core took
+        // a 150 point charcoal's every move here (2026-10-30).
+        let rows = PixelBox(minX: -half, minY: -half, maxX: half + 1, maxY: half + 1)
+        field.values.withUnsafeMutableBufferPointer { values in
+        carried.withUnsafeMutableBufferPointer { carried in
+            guard let values = values.baseAddress, let carried = carried.baseAddress else { return }
+            PixelBands.run(rows, bands: PixelBands.count(forDab: rows)) { _, minRow, maxRow in
+                for oy in minRow..<maxRow {
+                    for ox in -half...half {
+                        let x = cx + ox, y = cy + oy
+                        let i = (oy + half) * side + (ox + half)
+                        let d = Float(hypot(CGFloat(ox), CGFloat(oy)) / radius)
+                        let inside = x >= fieldBox.minX && x < fieldBox.maxX && y >= fieldBox.minY && y < fieldBox.maxY
+                        let at = inside ? (y - fieldBox.minY) * fieldBox.width + (x - fieldBox.minX) : 0
+                        if !fresh, d < 1, inside {
+                            let here = values[at], held = carried[i]
+                            if held > here {
+                                let w = 1 - smoothstep(0.3, 1, d)
+                                values[at] = here + strength * w * (held - here)
+                            }
+                        }
+                        let under = inside ? values[at] : 0
+                        carried[i] = fresh ? under : carried[i] + pickup * (under - carried[i])
                     }
                 }
-                let under = inside ? field.value(x, y) : 0
-                carried[i] = fresh ? under : carried[i] + pickup * (under - carried[i])
             }
-        }
+        }}
     }
 
     /// Lays the coverage over `plane` in `colour` (premultiplied), at
@@ -972,6 +1079,12 @@ extension DryStroke {
 /// stroke's own state: the numbers `mark` works out once a dab.
 struct TipPass {
     let dab: BrushDab
+    /// The tip's own pixels.
+    let box: PixelBox
+    /// Which way the stick was travelling and how far it had come at this
+    /// dab: its streaks run along the stroke from here.
+    let heading: CGVector
+    let travelled: CGFloat
     let radius: CGFloat
     let long: Float
     let short: Float
@@ -991,13 +1104,13 @@ extension DryStroke {
     @inline(__always)
     func laid(_ x: Int, _ y: Int, _ t: TipPass, _ paperTile: UnsafeBufferPointer<Float>) -> Float? {
         let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5).applying(toPoints)
-        let ahead = (p.x - t.dab.center.x) * heading.dx + (p.y - t.dab.center.y) * heading.dy
+        let ahead = (p.x - t.dab.center.x) * t.heading.dx + (p.y - t.dab.center.y) * t.heading.dy
         let along = Float(ahead / t.radius) / look.tipLength
-        var side = Float(((p.x - t.dab.center.x) * -heading.dy + (p.y - t.dab.center.y) * heading.dx)
+        var side = Float(((p.x - t.dab.center.x) * -t.heading.dy + (p.y - t.dab.center.y) * t.heading.dx)
                  / t.radius)
         // How far down the stroke this pixel is: the stick's face and
         // the hand's waver are read there, so they follow the curve.
-        let down = Double(travelled + ahead)
+        let down = Double(t.travelled + ahead)
         if look.wobble > 0 {
             // The hand wavers: the whole edge moves in and out
             // together, slowly, never in step on both sides.
@@ -1027,8 +1140,8 @@ extension DryStroke {
         var paper: Float = 0
         for k in 0...t.catchSteps {
             let back = look.catchRun * Double(k) / Double(t.catchSteps)
-            paper = max(paper, look.paper(paperTile, x: Double(p.x) - Double(heading.dx) * back,
-                          y: Double(p.y) - Double(heading.dy) * back))
+            paper = max(paper, look.paper(paperTile, x: Double(p.x) - Double(t.heading.dx) * back,
+                          y: Double(p.y) - Double(t.heading.dy) * back))
         }
         // The highest of several heights runs high; spread it back out
         // so a press reaches about the same share of the paper.

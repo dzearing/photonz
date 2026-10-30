@@ -37,7 +37,10 @@ struct BrushLiveStroke {
 /// magnifies the picture under it, so the two agree pixel for pixel.
 @MainActor
 final class BrushOverlay {
-    static let piece = 256
+    /// A move hands over every piece it touched whole, matched to the
+    /// screen's colours: at 256 a 20 point brush's move turned 67,000 pixels
+    /// to hand over a few hundred, a third of the move (2026-10-30).
+    static let piece = 128
     static let apron: CGFloat = 2
     let layer = CALayer()
     /// The layer's box, in canvas points, and its pixels per point.

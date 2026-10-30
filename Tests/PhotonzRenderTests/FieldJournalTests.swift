@@ -15,23 +15,39 @@ struct FieldJournalTests {
         var journal = FieldJournal()
         let first = PixelBox(minX: 12, minY: 22, maxX: 30, maxY: 40)
         let second = PixelBox(minX: 25, minY: 30, maxX: 60, maxY: 50)  // runs past the field
-        journal.save(first, from: values, box: box, channels: channels)
-        for i in values.indices { values[i] = -1 }
-        journal.save(second, from: values, box: box, channels: channels)
-        for i in values.indices { values[i] = -2 }
-        journal.restore(into: &values, box: box, channels: channels)
-
-        let inside = { (x: Int, y: Int, b: PixelBox) in x >= b.minX && x < b.maxX && y >= b.minY && y < b.maxY }
-        for y in box.minY..<box.maxY {
-            for x in box.minX..<box.maxX {
-                let at = ((y - box.minY) * box.width + (x - box.minX)) * channels
-                for c in 0..<channels {
-                    let expected: Float = inside(x, y, first) ? before[at + c]
-                        : inside(x, y, second) ? -1 : -2
-                    #expect(values[at + c] == expected, "pixel \(x),\(y) channel \(c)")
+        // Every write lands inside a box saved first, as a stroke's do.
+        func write(_ value: Float, over wanted: PixelBox) {
+            let region = wanted.intersection(box)
+            for y in region.minY..<region.maxY {
+                for x in region.minX..<region.maxX {
+                    let at = ((y - box.minY) * box.width + (x - box.minX)) * channels
+                    for c in 0..<channels { values[at + c] = value }
                 }
             }
         }
+        journal.save(first, from: values, box: box, channels: channels)
+        write(-1, over: first)
+        journal.save(second, from: values, box: box, channels: channels)
+        write(-2, over: second)
+        journal.save(first, from: values, box: box, channels: channels)
+        write(-3, over: first)
+        journal.restore(into: &values, box: box, channels: channels)
+        #expect(values == before)
+    }
+
+    @Test func aPixelIsSavedOnceHoweverManyBoxesOverlapIt() {
+        // A thinned end's dabs nearly cover each other: saving each dab's box
+        // whole copied the same pixels four times over at 150 points, twenty
+        // at 20 (2026-10-30).
+        let box = PixelBox(minX: 0, minY: 0, maxX: 400, maxY: 300)
+        let values = [Float](repeating: 1, count: box.width * box.height)
+        var journal = FieldJournal()
+        for k in 0..<20 {
+            journal.save(PixelBox(minX: 100 + k * 2, minY: 100, maxX: 124 + k * 2, maxY: 124),
+                         from: values, box: box, channels: 1)
+        }
+        // The dabs reach from 100 to 162 across and 24 down.
+        #expect(journal.savedValues == 62 * 24)
     }
 
     @Test func aFieldThatGrewSinceIsPutBackInItsNewPlace() {

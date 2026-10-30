@@ -194,7 +194,7 @@ struct WatercolourStroke {
         let fieldBox = field.box
         return field.values.withUnsafeMutableBufferPointer { buffer -> PixelBox in
             guard let values = buffer.baseAddress else { return .empty }
-            return PixelBands.union(box) { minRow, maxRow in
+            return PixelBands.union(box, bands: PixelBands.count(forDab: box)) { minRow, maxRow in
                 var minX = Int.max, minY = Int.max, maxX = Int.min, maxY = Int.min
                 for y in minRow..<maxRow {
                     let dy = Float(CGFloat(y) + 0.5 - centre.y)

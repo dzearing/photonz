@@ -97,7 +97,7 @@ struct MarkerStroke {
         // side by side (`PixelBands`).
         field.values.withUnsafeMutableBufferPointer { buffer in
             guard let values = buffer.baseAddress else { return }
-            PixelBands.run(box, bands: PixelBands.count(for: box)) { _, minRow, maxRow in
+            PixelBands.run(box, bands: PixelBands.count(forDab: box)) { _, minRow, maxRow in
                 for y in minRow..<maxRow {
                     for x in box.minX..<box.maxX {
                         let dx = CGFloat(x) + 0.5 - centre.x, dy = CGFloat(y) + 0.5 - centre.y
