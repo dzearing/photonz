@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:32:07.793Z",
-  "updated": "2026-10-30T20:14:06.997Z",
+  "updated": "2026-10-30T21:03:38.241Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'the watercolor looks good but it's slow if i increase the size to 150pt or more, feels quite laggy', then 'actually so does oil... still trying everything but the brushes feel very laggy to use'. A cause shared by every medium (the live overlay, CanvasBrush.swift) is as likely as per-medium cost. Not reproduced in the intake window. Theories only: Sources/PhotonzRender/Watercolour.swift mark(_:) walks every pixel of a box radius*(1+farthest) around each dab on the CPU, so the work grows with the square of the size and with how close dabs are spaced; reach() loops over every earlier wet wash per pixel; WetField.ensure copies the whole field when it grows; and the live stroke (Sources/Photonz/CanvasBrush.swift) may be building a full CGImage of the overlay per drag. Measure which of these it actually is before fixing.",
@@ -71,6 +71,10 @@
     {
       "t": "2026-10-30T20:14:06.996Z",
       "note": "From painting-is-what-you-see (2026-10-30): measured against the code before the WYSIWYG change, 150 pt oil, pencil, charcoal and marker got 2-3x slower per move (screenshot at fit: oil 4.5->11.3 ms p95, pencil 3.1->10.1), 500 pt got quicker. Half of a 150 pt oil move is laying the live thinned end again (4 dabs a move). Tables, profile and both walks: queue/audits/2026-10-30-paint-move-cost.txt. Getting under 8 ms here likely closes that task's last item too."
+    },
+    {
+      "t": "2026-10-30T21:03:38.240Z",
+      "note": "From painting-is-what-you-see (d233562c, 2026-10-30): dab pixels now split across cores at a far smaller size, pencil/crayon dabs batched, charcoal smear by rows, tail journal saves once, overlay pieces 128 px. 12 MP at fit p95: 150 pt oil 6.4, pencil 4.6, charcoal 5.5, marker 2.9, watercolour 5.1; 500 pt watercolour 13.7, oil 13.5, pencil 11.9, charcoal 13.8, marker 6.1. 1600x1000 at fit, 500 pt: oil 20.8, charcoal 17.4, pencil 16.5. Remaining per-move cost is the dab work itself (oil lay per pixel, dry tip paper/streak reads) times the re-laid tail. Measurement walks: queue/audits/2026-10-30-paint-move-cost-*.walk."
     }
   ]
 }

@@ -13785,7 +13785,7 @@
 {"t":"2026-10-24T04:07:49.728Z","ev":"task_note","id":"photonz-uses-little-memory-and-what-made-it-use"}
 {"t":"2026-10-24T04:08:30.453Z","ev":"task_done","id":"photonz-uses-little-memory-and-what-made-it-use","from":"in_progress","note":"Found and fixed what made Photonz grow: closed windows stayed in memory (inspector fold-store retain cycle, a tool bar walk hook in every build, the walk harness's strong list), and macOS 26's allocator kept freed pictures counted (MallocLargeCache=0 via LSEnvironment). Editors now empty themselves on close; memory pressure clears render caches. Long session, Photonz idle with all closed: 1247 MB before, 180 MB after; one screenshot 165 MB (budget 300). Budget in docs/design/memory.md + MemoryBudget (tested); walk step memory; closed-windows-give-their-memory-back-walk in every rotating check (proven red with the cycle put back). Ask helpers measured: chat ~3 GB, picture model 13 GB painting / 5 GB loaded, both released 5 idle min after use and within 2 s of quit. Charts and audit: queue/audits/2026-10-23-photonz-uses-little-memory.json. Commit 38e4992c; Scripts/test.sh green (14,317)."}
 {"t":"2026-10-24T04:24:20.961Z","ev":"slice_pass","walks":37,"passed":37,"failed":0,"seconds":783,"of":1019,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-24T04:24:21.144Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-10-24T04:24:21.144Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high","repeats":4,"until":"2026-10-24T11:12:59.301Z","rolledUp":true}
 {"t":"2026-10-24T05:46:41.696Z","ev":"task_note","id":"find-out-why-ask-sometimes-waits-five-minutes-fo"}
 {"t":"2026-10-24T05:46:41.762Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T05:46:41.834Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -13795,7 +13795,6 @@
 {"t":"2026-10-24T05:46:47.990Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"No more empty cells, an even row rhythm and sane widths shipped (f4fe5124); the skill reaches 8 on every line for the user's request (88.8), but its design-system sheet has 7s on aligned and designed, and Ask on this Mac is at 5 to 6 because of its own drawings: the 8-of-10 bar is not met, so it stays open."}
 {"t":"2026-10-24T06:02:33.352Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-24T06:04:44.705Z","ev":"slice_pass","walks":36,"passed":35,"failed":1,"seconds":904,"of":1019,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-24T06:04:44.891Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-10-24T08:17:53.807Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T08:17:53.873Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T08:17:53.938Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -13803,7 +13802,6 @@
 {"t":"2026-10-24T08:17:54.070Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T08:17:59.523Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"One grid with left edges, kept columns and wide sections on whole columns, plus Off/Disabled sense, one type scale and a planning-time build check shipped (a9c8c518). The skill is at 8 on every line but aligned (7); Ask on this Mac is at 5 to 7 (its own drawings): the 8-of-10 bar is not met, so it stays open."}
 {"t":"2026-10-24T08:34:26.470Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":813,"of":1019,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-24T08:34:26.665Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-10-24T09:12:37.764Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T10:34:13.875Z","ev":"task_note","id":"find-out-why-ask-sometimes-waits-five-minutes-fo"}
 {"t":"2026-10-24T10:54:01.609Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -13813,7 +13811,6 @@
 {"t":"2026-10-24T10:54:01.889Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T10:54:01.955Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Title-edge table, page margin, word wrap, parts held in their box and Off/On sense shipped (7e12ebd2..f76e3ddd). The skill is at 8 or 9 on every line but aligned (7) for both cases; Ask on this Mac is 5 to 7. The 8-of-10 bar is not met, so it stays open."}
 {"t":"2026-10-24T11:12:59.091Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":648,"of":1019,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-24T11:12:59.301Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-10-24T12:11:00.301Z","ev":"task_created","id":"the-setup-window-walks-you-through-only-the-step","priority":"p1-high","title":"The setup window walks you through only the steps you still need, including using Photonz from Claude Code and Copilot"}
 {"t":"2026-10-24T12:11:00.445Z","ev":"task_created","id":"settings-offers-several-ask-models-with-what-eac","priority":"p1-high","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one"}
 {"t":"2026-10-24T12:11:10.521Z","ev":"task_resequenced","id":"the-agent-server-and-skill-come-inside-photonz-a","from":110,"to":1.1}
@@ -13905,7 +13902,7 @@
 {"t":"2026-10-24T12:36:56.348Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-24T12:36:56.384Z","ev":"triage","summary":"72 open before, 71 after (p1 22->22, p2 48->47, p3 2). Merged 2: one-step-ask-cannot-run-no-longer-throws-away-th into when-ask-stops-part-way-it-says-so-and-one-refus (run-time and plan-time stops are one fix), open-settings-from-ask-lands-on-the-ask-section into settings-offers-several-ask-models-with-what-eac (same screen being rebuilt). Filed 1: a-task-that-keeps-coming-back-short-of-a-scored (six hand-backs of the sheet task in 14 hours). Evidence checked on 2 new loop p1s (name chips, Ask stops part way): both reproduce, both stay p1. Renumbered p1 and p2 to steps of 10: user asks, then focus, then the rest. No resets, no leftovers, no open decisions."}
 {"t":"2026-10-24T12:37:45.101Z","ev":"digest","file":"2026-10-24.md"}
-{"t":"2026-10-24T12:38:04.620Z","ev":"task_started","id":"ask-uses-qwen3-8-27b-at-4-bit-by-default-instead","title":"Ask uses Qwen3.8 27B at 4-bit by default instead of Qwen3.6 35B","priority":"p1-high"}
+{"t":"2026-10-24T12:38:04.620Z","ev":"task_started","id":"ask-uses-qwen3-8-27b-at-4-bit-by-default-instead","title":"Ask uses Qwen3.8 27B at 4-bit by default instead of Qwen3.6 35B","priority":"p1-high","repeats":1,"until":"2026-10-24T12:38:04.620Z","rolledUp":true}
 {"t":"2026-10-24T13:11:06.440Z","ev":"task_note","id":"ask-uses-qwen3-8-27b-at-4-bit-by-default-instead"}
 {"t":"2026-10-24T14:31:22.581Z","ev":"task_created","id":"the-ask-button-is-the-design-s-hero-button-a-vio","priority":"p1-high","title":"The Ask button is the design's hero button: a violet spectrum pill that sheens on hover"}
 {"t":"2026-10-24T14:32:04.479Z","ev":"task_created","id":"a-brush-tool-paints-with-realistic-charcoal-chal","priority":"p1-high","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it"}
@@ -13927,7 +13924,7 @@
 {"t":"2026-10-24T20:37:36.728Z","ev":"task_note","id":"ask-s-first-answer-after-its-model-loads-comes-i"}
 {"t":"2026-10-24T20:38:13.552Z","ev":"manager","filed":0,"readyBefore":75,"readyAfter":76,"report":"queue/manager/2026-10-24-2105.md"}
 {"t":"2026-10-24T20:38:34.884Z","ev":"manager_pass","exit":0,"ready":76}
-{"t":"2026-10-24T20:38:34.963Z","ev":"task_started","id":"opening-a-folded-section-of-the-panel-leaves-the","title":"Opening a folded section of the panel leaves the sections past it alone, and folds sections on the other side if it needs room","priority":"p1-high"}
+{"t":"2026-10-24T20:38:34.963Z","ev":"task_started","id":"opening-a-folded-section-of-the-panel-leaves-the","title":"Opening a folded section of the panel leaves the sections past it alone, and folds sections on the other side if it needs room","priority":"p1-high","repeats":1,"until":"2026-10-24T20:38:34.963Z","rolledUp":true}
 {"t":"2026-10-24T20:59:24.798Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
 {"t":"2026-10-24T22:20:10.885Z","ev":"task_created","id":"folding-a-section-that-lets-the-panel-fit-again","priority":"p2-normal","title":"Folding a section that lets the panel fit again never holds a frame"}
 {"t":"2026-10-24T22:55:56.421Z","ev":"task_walks","id":"opening-a-folded-section-of-the-panel-leaves-the","walks":["opening-a-section-folds-the-near-side-walk","section-fold-motion-walk","every-section-header-opens-walk"]}
@@ -13941,13 +13938,13 @@
 {"t":"2026-10-24T22:56:19.075Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
 {"t":"2026-10-24T22:56:19.143Z","ev":"task_note","id":"opening-a-folded-section-of-the-panel-leaves-the"}
 {"t":"2026-10-24T22:56:36.339Z","ev":"task_done","id":"opening-a-folded-section-of-the-panel-leaves-the","from":"in_progress","note":"Opening a folded panel section now takes its room from the sections above it, nearest first, Appearance and Effects last, and leaves the sections under it folded or open as they were and on screen. Rule in PhotonzCore PanelOpenRoom (13 tests), fed by InspectorPanel.roomToOpen; commit 2548e042. Reproduced first (Library opening cut Appearance and pushed Motion out of view in a picture, and pushed Appearance and Effects out of view in a recording). Verified by opening-a-section-folds-the-near-side-walk at Next defaults (foot, middle, top, roomy window, recording) and every-section-header-opens-walk; 14375 unit tests pass. Exception: Layers at the top has nothing above it, so in a short panel it still pushes the pick down as before (asked in the audit). Audit 2026-10-24-opening-a-folded-section-of-the-panel-leaves-the.json; follow-up folding-a-section-that-lets-the-panel-fit-again (p2)."}
-{"t":"2026-10-24T22:57:11.747Z","ev":"task_started","id":"the-ask-button-is-the-design-s-hero-button-a-vio","title":"The Ask button is the design's hero button: a violet spectrum pill that sheens on hover","priority":"p1-high"}
+{"t":"2026-10-24T22:57:11.747Z","ev":"task_started","id":"the-ask-button-is-the-design-s-hero-button-a-vio","title":"The Ask button is the design's hero button: a violet spectrum pill that sheens on hover","priority":"p1-high","repeats":1,"until":"2026-10-24T22:57:11.747Z","rolledUp":true}
 {"t":"2026-10-24T22:59:30.937Z","ev":"task_note","id":"the-ask-button-is-the-design-s-hero-button-a-vio"}
 {"t":"2026-10-24T23:28:39.282Z","ev":"task_walks","id":"the-ask-button-is-the-design-s-hero-button-a-vio","walks":["ask-hero-button-walk"]}
 {"t":"2026-10-24T23:35:22.542Z","ev":"task_note","id":"the-ask-button-is-the-design-s-hero-button-a-vio"}
 {"t":"2026-10-24T23:35:22.608Z","ev":"task_note","id":"on-a-video-the-ask-button-never-sits-on-top-of-t"}
 {"t":"2026-10-24T23:35:28.835Z","ev":"task_done","id":"the-ask-button-is-the-design-s-hero-button-a-vio","from":"in_progress","note":"Title bar Ask is now the design's hero pill (HeroButtonStyle on AskTitlebarButton, core model HeroButtonLook with 15 tests): spectrum at rest, wider pink spectrum + bigger bloom + one 0.66s sheen on hover, held-down look while open, violet focus ring, Reduce Motion skips the sweep. Measured: ends #7C88FF/#BD70FE vs design #7887FF/#BB70FF; key 2.7-3.0:1 and legibility check green; 87x24pt sized to content. Verified with ask-hero-button-walk (4 real captures), video walk, full Scripts/test.sh green (14390 tests). Audit queue/audits/2026-10-24-the-ask-button-is-the-design-s-hero-button-a-vio.json with side-by-side, poses, sheen reel."}
-{"t":"2026-10-24T23:36:28.506Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high"}
+{"t":"2026-10-24T23:36:28.506Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high","repeats":1,"until":"2026-10-24T23:36:28.506Z","rolledUp":true}
 {"t":"2026-10-24T23:40:47.205Z","ev":"task_created","id":"pressing-b-picks-a-brush-that-paints-freehand-st","priority":"p1-high","title":"Pressing B picks a Brush that paints freehand strokes onto a paint layer, one undo step per stroke"}
 {"t":"2026-10-24T23:40:47.323Z","ev":"task_created","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain","priority":"p1-high","title":"Charcoal, chalk and crayon catch on a paper grain and can be smudged"}
 {"t":"2026-10-24T23:40:47.431Z","ev":"task_created","id":"marker-strokes-are-flat-and-darken-where-they-cr","priority":"p1-high","title":"Marker strokes are flat and darken where they cross, and the airbrush sprays softly and builds up"}
@@ -13962,7 +13959,7 @@
 {"t":"2026-10-24T23:41:32.369Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-10-24T23:41:32.435Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-10-24T23:42:30.056Z","ev":"task_pending","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"Planned as an epic (docs/design/brushes.md). Ten child tasks filed at p1 with deps, foundation first (pressing-b-picks-a-brush-that-paints-freehand-st). This umbrella now depends on all ten; it comes back to the queue when they are done, to run the blind test sheet, the try path, the reel and the final audit."}
-{"t":"2026-10-24T23:43:00.732Z","ev":"task_started","id":"pressing-b-picks-a-brush-that-paints-freehand-st","title":"Pressing B picks a Brush that paints freehand strokes onto a paint layer, one undo step per stroke","priority":"p1-high"}
+{"t":"2026-10-24T23:43:00.732Z","ev":"task_started","id":"pressing-b-picks-a-brush-that-paints-freehand-st","title":"Pressing B picks a Brush that paints freehand strokes onto a paint layer, one undo step per stroke","priority":"p1-high","repeats":1,"until":"2026-10-24T23:43:00.732Z","rolledUp":true}
 {"t":"2026-10-25T00:05:36.499Z","ev":"task_created","id":"ask-can-make-a-photo-as-well-as-an-illustration","priority":"p1-high","title":"Ask can make a photo as well as an illustration"}
 {"t":"2026-10-25T00:05:36.665Z","ev":"task_resequenced","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":167.5,"to":8}
 {"t":"2026-10-25T00:06:14.633Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
@@ -13978,7 +13975,7 @@
 {"t":"2026-10-25T00:38:04.533Z","ev":"task_note","id":"pressing-b-picks-a-brush-that-paints-freehand-st"}
 {"t":"2026-10-25T00:38:10.798Z","ev":"task_done","id":"pressing-b-picks-a-brush-that-paints-freehand-st","from":"in_progress","note":"Brush (B) on the Next picture tool bar at defaults (next-brush), Tools menu row, tooltip and swatch. A drag paints a smooth soft round stroke in the armed colour with a live overlay, landing on a Paint layer above the pick that later strokes join, one undo step each, brush stays in hand, Escape puts it down. Strokes are data (LayerContent.paint) rendered by PaintRasterizer; save/reopen proved by a render test that the reopened document draws identical pixels. Verified: BrushTests (21) + PaintRenderingTests (4) + full suite, walk brush-paints-strokes-walk with no flags (held vs landed 0.06%, stroke counts 1/2/1/2 through undo and redo), B on video still the Blade. Audit queue/audits/2026-10-24-brush-paints-strokes.json. Commit 07aabd9b."}
 {"t":"2026-10-25T01:09:13.909Z","ev":"sweep_pass","walks":82,"seconds":1669,"passed":81,"failed":1,"complete":false,"total":1024,"interrupted":true}
-{"t":"2026-10-25T01:09:14.109Z","ev":"task_started","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain","title":"Charcoal, chalk and crayon catch on a paper grain and can be smudged","priority":"p1-high"}
+{"t":"2026-10-25T01:09:14.109Z","ev":"task_started","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain","title":"Charcoal, chalk and crayon catch on a paper grain and can be smudged","priority":"p1-high","repeats":2,"until":"2026-10-25T04:20:01.195Z","rolledUp":true}
 {"t":"2026-10-25T01:11:30.057Z","ev":"task_created","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","priority":"p1-high","title":"Ask is Command K on videos as well as pictures, and its sheen plays on every hover"}
 {"t":"2026-10-25T01:11:33.941Z","ev":"task_resequenced","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","from":167.5,"to":4}
 {"t":"2026-10-25T01:13:10.453Z","ev":"task_created","id":"while-ask-works-the-agent-panel-says-what-it-is","priority":"p1-high","title":"While Ask works, the Agent panel says what it is doing right now"}
@@ -13992,7 +13989,7 @@
 {"t":"2026-10-25T02:46:54.458Z","ev":"task_note","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain"}
 {"t":"2026-10-25T02:46:54.548Z","ev":"task_pending","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain","from":"in_progress","note":"Slice shipped (6fddd821): grain, three media, Smudge, measured bar, walk, audit. Open: the blind model judge still cannot tell charcoal from chalk (acceptance item 2); see log."}
 {"t":"2026-10-25T03:01:44.906Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":714,"of":1025,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T03:01:45.161Z","ev":"task_started","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","title":"Ask is Command K on videos as well as pictures, and its sheen plays on every hover","priority":"p1-high"}
+{"t":"2026-10-25T03:01:45.161Z","ev":"task_started","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","title":"Ask is Command K on videos as well as pictures, and its sheen plays on every hover","priority":"p1-high","repeats":1,"until":"2026-10-25T03:01:45.161Z","rolledUp":true}
 {"t":"2026-10-25T03:16:07.770Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
 {"t":"2026-10-25T03:23:47.073Z","ev":"task_created","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","priority":"p1-high","title":"Measure whether Qwen-Image-2.1 can paint and edit for Ask on a 64 GB Mac"}
 {"t":"2026-10-25T03:23:52.344Z","ev":"task_resequenced","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","from":3970,"to":8.5}
@@ -14005,7 +14002,6 @@
 {"t":"2026-10-25T04:09:47.582Z","ev":"task_done","id":"ask-is-command-k-on-videos-as-well-as-pictures-a","from":"in_progress","note":"Command K opens Ask on a video as on a picture; the button and its tooltip show the key in both, and the Edit menu's Ask row carries it. Split at Playhead moved to Command B (Final Cut's Blade), with no menu clash on a video (menus oneKeyEach, probe in front). The sheen sweeps on every arrival: reproduced first on film (hovers 2 and 3 drew no band), fixed with a MoveKeyframe back to the start, proven over six filmed hovers including one mid sweep, none while staying; Reduce Motion rule unit tested. New filmHover walk step. 35 touched walks plus 2 new pass; Scripts/test.sh green (14444 tests). Commit 69d1a7a9. Audit queue/audits/2026-10-24-ask-is-command-k-on-videos-as-well-as-pictures-a.json with reel and contact sheet."}
 {"t":"2026-10-25T04:09:56.674Z","ev":"task_note","id":"ask-is-command-k-on-videos-as-well-as-pictures-a"}
 {"t":"2026-10-25T04:20:00.970Z","ev":"slice_pass","walks":20,"passed":20,"failed":0,"seconds":436,"of":1027,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T04:20:01.195Z","ev":"task_started","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain","title":"Charcoal, chalk and crayon catch on a paper grain and can be smudged","priority":"p1-high"}
 {"t":"2026-10-25T04:54:55.114Z","ev":"task_created","id":"the-airbrush-sprays-a-soft-fine-mist-that-builds","priority":"p1-high","title":"The airbrush sprays a soft fine mist that builds up, with knobs for how hard and how wide it sprays"}
 {"t":"2026-10-25T04:54:55.232Z","ev":"task_created","id":"a-pencil-brush-draws-graphite-lines-from-hard-an","priority":"p1-high","title":"A pencil brush draws graphite lines from hard and light to soft and dark, and shades when tilted"}
 {"t":"2026-10-25T04:54:55.354Z","ev":"task_created","id":"brushes-are-picked-from-a-library-of-tiles-that","priority":"p1-high","title":"Brushes are picked from a library of tiles that each show that brush's real stroke"}
@@ -14021,7 +14017,7 @@
 {"t":"2026-10-25T05:27:29.132Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
 {"t":"2026-10-25T05:27:33.658Z","ev":"task_done","id":"charcoal-chalk-and-crayon-catch-on-a-paper-grain","from":"in_progress","note":"Second pass shipped in 95e86da3: charcoal shades (dense core, smoky edge, dust), chalk is a lighter crisp film with grit, broken streaks and crumbs, crayon a wavering hard edge with wax skips; smudge keeps the paper's tooth. Verified by new measured tests that fail the old version, the whole suite (14448 green), brush-dry-media-and-smudge-walk and brush-paints-strokes-walk green with no flags and 6 real window pictures each, and a blind test in which the two larger model judges named all three media correctly in each of the last three shuffled rounds. Measured bar unchanged and passing (gaps: round tip 0, bar 0.12, charcoal 0.14, chalk 0.38, crayon 0.25). Audit queue/audits/2026-10-24-dry-media-distinct.json."}
 {"t":"2026-10-25T05:37:27.887Z","ev":"slice_pass","walks":27,"passed":27,"failed":0,"seconds":431,"of":1027,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T05:37:28.095Z","ev":"task_started","id":"a-pencil-brush-draws-graphite-lines-from-hard-an","title":"A pencil brush draws graphite lines from hard and light to soft and dark, and shades when tilted","priority":"p1-high"}
+{"t":"2026-10-25T05:37:28.095Z","ev":"task_started","id":"a-pencil-brush-draws-graphite-lines-from-hard-an","title":"A pencil brush draws graphite lines from hard and light to soft and dark, and shades when tilted","priority":"p1-high","repeats":1,"until":"2026-10-25T05:37:28.095Z","rolledUp":true}
 {"t":"2026-10-25T06:11:03.922Z","ev":"task_walks","id":"a-pencil-brush-draws-graphite-lines-from-hard-an","walks":["pencil-draws-and-shades-walk"]}
 {"t":"2026-10-25T06:19:41.542Z","ev":"task_note","id":"each-brush-shows-its-own-settings-in-the-tool-op"}
 {"t":"2026-10-25T06:19:41.611Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
@@ -14032,7 +14028,7 @@
 {"t":"2026-10-25T06:19:41.945Z","ev":"task_note","id":"a-pencil-brush-draws-graphite-lines-from-hard-an"}
 {"t":"2026-10-25T06:20:03.887Z","ev":"task_done","id":"a-pencil-brush-draws-graphite-lines-from-hard-an","from":"in_progress","note":"Pencil is the first brush in the Medium menu: graphite on the shared paper grain, Hardness 4H to 8B (8B is twice as wide as 2H and 2.4 times as dark), darker with pen pressure (a mouse gets a simulated press), and broad grainy shading from a leaning pen (Tilt Shading). Piled passes go silver, not black. Core and render tests are written first, with measured bars the round tip fails. Walk pencil-draws-and-shades-walk runs with no flags on a 12 MP canvas: 0.4 ms median per move for a line, 2.0 ms when shading. Blind test: two model judges named the pencil row and told it from charcoal. Full suite green (14465). Audit queue/audits/2026-10-24-pencil.json. Commit dfa0c350."}
 {"t":"2026-10-25T06:32:24.914Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":579,"of":1028,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T06:32:25.121Z","ev":"task_started","id":"marker-strokes-are-flat-and-darken-where-they-cr","title":"Marker strokes are flat and darken where they cross, and the airbrush sprays softly and builds up","priority":"p1-high"}
+{"t":"2026-10-25T06:32:25.121Z","ev":"task_started","id":"marker-strokes-are-flat-and-darken-where-they-cr","title":"Marker strokes are flat and darken where they cross, and the airbrush sprays softly and builds up","priority":"p1-high","repeats":1,"until":"2026-10-25T06:32:25.121Z","rolledUp":true}
 {"t":"2026-10-25T07:12:17.403Z","ev":"task_walks","id":"marker-strokes-are-flat-and-darken-where-they-cr","walks":["marker-and-airbrush-walk"]}
 {"t":"2026-10-25T07:12:17.474Z","ev":"task_note","id":"each-brush-shows-its-own-settings-in-the-tool-op"}
 {"t":"2026-10-25T07:12:17.548Z","ev":"task_note","id":"marker-strokes-are-flat-and-darken-where-they-cr"}
@@ -14041,7 +14037,7 @@
 {"t":"2026-10-25T07:12:17.764Z","ev":"task_note","id":"marker-strokes-are-flat-and-darken-where-they-cr"}
 {"t":"2026-10-25T07:13:10.741Z","ev":"task_done","id":"marker-strokes-are-flat-and-darken-where-they-cr","from":"in_progress","note":"Marker and airbrush shipped in 83b94294. Marker: max coverage within a stroke (flat even when it doubles back), multiplied over earlier paint so a crossing stroke is darker in the overlap, live overlay matches landed (walk 0.05% apart); Round and Chisel tips (chisel width changes with direction, render test: across the nib over 2x along it); Flow sets the ink. Airbrush: fine soft spray (mist plus droplets), a dab every 25 ms held, so it builds up; Flow and Softness each change it (render tests). Bars, by the real rasterizer: flat share 0.99 vs round tip 0.82 (bar 0.9); held a second vs a pass 3.3x vs round tip 1.0x (bar 1.6). marker-and-airbrush-walk paints both by pointer drag with no flags, incl. a 1.2 s hold, real window pictures in queue/audits/2026-10-25-marker-airbrush.json. Tip, Flow and Softness have no controls yet: that is each-brush-shows-its-own-settings-in-the-tool-op (noted there); the sheet shows them. Scripts/test.sh green (14,481 tests); brush, pencil and toolbar walks green."}
 {"t":"2026-10-25T07:24:22.397Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":512,"of":1029,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T07:24:22.608Z","ev":"task_started","id":"watercolour-strokes-are-transparent-pool-darker","title":"Watercolour strokes are transparent, pool darker at their edges, bloom and layer where they overlap","priority":"p1-high"}
+{"t":"2026-10-25T07:24:22.608Z","ev":"task_started","id":"watercolour-strokes-are-transparent-pool-darker","title":"Watercolour strokes are transparent, pool darker at their edges, bloom and layer where they overlap","priority":"p1-high","repeats":1,"until":"2026-10-25T07:24:22.608Z","rolledUp":true}
 {"t":"2026-10-25T07:28:14.963Z","ev":"task_note","id":"watercolour-strokes-are-transparent-pool-darker"}
 {"t":"2026-10-25T08:01:14.684Z","ev":"task_note","id":"painting-keeps-up-with-the-pointer-on-a-12-megap"}
 {"t":"2026-10-25T08:01:54.196Z","ev":"task_note","id":"each-brush-shows-its-own-settings-in-the-tool-op"}
@@ -14049,7 +14045,7 @@
 {"t":"2026-10-25T08:01:54.326Z","ev":"task_note","id":"watercolour-strokes-are-transparent-pool-darker"}
 {"t":"2026-10-25T08:01:59.639Z","ev":"task_done","id":"watercolour-strokes-are-transparent-pool-darker","from":"in_progress","note":"Watercolour paints a see-through mottled wash pooled darker at its dried edge, creeping past the brush by Bleed, granulating (new Granulation setting), skipping as a dry brush at low Wetness, glazing where dry strokes cross, and blooming through washes still wet (strokes now record their start time; 1.5-8 s drying by Wetness). Sources/PhotonzRender/Watercolour.swift, live overlay replays the wet washes. Verified: 19 watercolour tests incl. bars edge-to-centre 1.41 (bar 1.3, round tip 1.00) and spread 0.25 (bar 0.15, round tip -0.03), live=landed; full suite 14500 green; walk watercolour-wash-and-bloom-walk on 12 MP with no flags: two crossings by pointer drag, moves 0.4-0.9 ms median, 1.8 ms worst. Audit queue/audits/2026-10-25-watercolour.json with stroke sheet."}
 {"t":"2026-10-25T08:17:31.047Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":759,"of":1030,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T08:17:31.274Z","ev":"task_started","id":"the-airbrush-sprays-a-soft-fine-mist-that-builds","title":"The airbrush sprays a soft fine mist that builds up, with knobs for how hard and how wide it sprays","priority":"p1-high"}
+{"t":"2026-10-25T08:17:31.274Z","ev":"task_started","id":"the-airbrush-sprays-a-soft-fine-mist-that-builds","title":"The airbrush sprays a soft fine mist that builds up, with knobs for how hard and how wide it sprays","priority":"p1-high","repeats":1,"until":"2026-10-25T08:17:31.274Z","rolledUp":true}
 {"t":"2026-10-25T08:19:50.466Z","ev":"task_note","id":"the-airbrush-sprays-a-soft-fine-mist-that-builds"}
 {"t":"2026-10-25T08:49:57.425Z","ev":"task_walks","id":"the-airbrush-sprays-a-soft-fine-mist-that-builds","walks":["airbrush-sprays-and-builds-walk"]}
 {"t":"2026-10-25T08:50:23.819Z","ev":"task_note","id":"the-airbrush-sprays-a-soft-fine-mist-that-builds"}
@@ -14060,7 +14056,7 @@
 {"t":"2026-10-25T08:50:24.172Z","ev":"task_note","id":"each-brush-shows-its-own-settings-in-the-tool-op"}
 {"t":"2026-10-25T08:50:38.553Z","ev":"task_done","id":"the-airbrush-sprays-a-soft-fine-mist-that-builds","from":"in_progress","note":"Airbrush is a real spray (540c94df): a bell of mist densest at the line that feathers out with no edge, fine droplets with an overspray halo, spatter at heavy flow; pressure sprays more, a fast pass is lighter, holding builds up (stored samples, replay matches). Own settings Flow, Spread (Softness mapped), Droplet Size, Build-up, each on a sheet. Bars vs round tip: feather 0.82/0.21, edge droplets 0.17/0, hold 3.3x/1.0x, slow/fast 2.0x/1.0x. Walk airbrush-sprays-and-builds-walk, no flags, 12 MP: 0.3-0.4 ms per move. Blind test: two model judges named it. Full suite green (14516 tests). Audit queue/audits/2026-10-25-airbrush.json with sheets and reel."}
 {"t":"2026-10-25T09:02:40.457Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":548,"of":1031,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T09:02:40.669Z","ev":"task_started","id":"oil-paint-strokes-carry-and-smear-colour-and-sho","title":"Oil paint strokes carry and smear colour and show bristle ridges","priority":"p1-high"}
+{"t":"2026-10-25T09:02:40.669Z","ev":"task_started","id":"oil-paint-strokes-carry-and-smear-colour-and-sho","title":"Oil paint strokes carry and smear colour and show bristle ridges","priority":"p1-high","repeats":1,"until":"2026-10-25T09:02:40.669Z","rolledUp":true}
 {"t":"2026-10-25T09:34:02.120Z","ev":"task_note","id":"painting-keeps-up-with-the-pointer-on-a-12-megap"}
 {"t":"2026-10-25T09:34:02.216Z","ev":"task_walks","id":"oil-paint-strokes-carry-and-smear-colour-and-sho","walks":["oil-paint-smears-and-ridges-walk"]}
 {"t":"2026-10-25T09:41:45.895Z","ev":"task_note","id":"oil-paint-strokes-carry-and-smear-colour-and-sho"}
@@ -14068,7 +14064,7 @@
 {"t":"2026-10-25T09:41:46.045Z","ev":"task_note","id":"oil-paint-strokes-carry-and-smear-colour-and-sho"}
 {"t":"2026-10-25T09:41:57.372Z","ev":"task_done","id":"oil-paint-strokes-carry-and-smear-colour-and-sho","from":"in_progress","note":"Oil Paint is a flat bristle brush (Sources/PhotonzRender/OilPaint.swift): streaks with lit ridges (ridge contrast 0.041, bar 0.025, plain round 0.001); picks up and carries colour past a crossing, mixing, set by Smear (0.33 at default, bar 0.10; Smear 0 0.015, 100 0.65; round 0.001); runs dry by Load (6/15/21 brush widths at 20/70/100). OilRenderingTests incl. live-equals-landed; full suite green (14527). Walk oil-paint-smears-and-ridges-walk, no flags, two crossing pointer drags, real window captures in queue/audits/2026-10-25-oil-paint.json; 0.6-0.7 ms median per move, held vs landed 0.14%/0.42%. Commit fd563c17."}
 {"t":"2026-10-25T09:54:56.038Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":614,"of":1032,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T09:54:56.249Z","ev":"task_started","id":"brushes-are-picked-from-a-library-of-tiles-that","title":"Brushes are picked from a library of tiles that each show that brush's real stroke","priority":"p1-high"}
+{"t":"2026-10-25T09:54:56.249Z","ev":"task_started","id":"brushes-are-picked-from-a-library-of-tiles-that","title":"Brushes are picked from a library of tiles that each show that brush's real stroke","priority":"p1-high","repeats":1,"until":"2026-10-25T09:54:56.249Z","rolledUp":true}
 {"t":"2026-10-25T11:15:03.185Z","ev":"task_created","id":"the-library-shelf-picker-keeps-its-segments-when","priority":"p2-normal","title":"The Library shelf picker keeps its segments when the Brushes shelf is offered"}
 {"t":"2026-10-25T11:15:03.286Z","ev":"task_created","id":"make-your-own-brushes-a-custom-group-a-brush-fil","priority":"p2-normal","title":"Make your own brushes: a Custom group, a brush file, a brush from a selection"}
 {"t":"2026-10-25T11:16:20.177Z","ev":"task_walks","id":"brushes-are-picked-from-a-library-of-tiles-that","walks":["brushes-picked-from-tiles-walk"]}
@@ -14082,7 +14078,7 @@
 {"t":"2026-10-25T11:16:48.931Z","ev":"task_note","id":"brushes-are-picked-from-a-library-of-tiles-that"}
 {"t":"2026-10-25T11:33:28.397Z","ev":"task_done","id":"brushes-are-picked-from-a-library-of-tiles-that","from":"in_progress","note":"The tool options' Medium dropdown is replaced by a brush chooser of live stroke tiles (8 brushes, grouped by kind, current colour, arrows/Return/Escape), the Library has a Brushes shelf with the same tiles while the Brush is in hand, and the panel has a Brush section. Commit 5dcf6cff. Verified: Scripts/test.sh green (14554), brushes-picked-from-tiles-walk with no flags plus six ported brush walks and four shelf walks green, grid fill 57 ms measured on the release probe. Audit queue/audits/2026-10-25-brushes-are-picked-from-a-library-of-tiles-that.json. Follow-ups: the-library-shelf-picker-keeps-its-segments-when, make-your-own-brushes-a-custom-group-a-brush-fil."}
 {"t":"2026-10-25T11:51:16.589Z","ev":"slice_pass","walks":29,"passed":29,"failed":0,"seconds":578,"of":1033,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-25T11:51:16.751Z","ev":"task_started","id":"each-brush-shows-its-own-settings-in-the-tool-op","title":"Each brush shows its own settings in the tool options and the panel, and each one visibly changes the stroke","priority":"p1-high"}
+{"t":"2026-10-25T11:51:16.751Z","ev":"task_started","id":"each-brush-shows-its-own-settings-in-the-tool-op","title":"Each brush shows its own settings in the tool options and the panel, and each one visibly changes the stroke","priority":"p1-high","repeats":1,"until":"2026-10-25T11:51:16.751Z","rolledUp":true}
 {"t":"2026-10-25T12:48:35.559Z","ev":"task_walks","id":"each-brush-shows-its-own-settings-in-the-tool-op","walks":["each-brush-shows-its-own-settings-walk","brush-settings-on-a-click-walk","brushes-picked-from-tiles-walk"]}
 {"t":"2026-10-25T12:48:54.377Z","ev":"task_note","id":"each-brush-shows-its-own-settings-in-the-tool-op"}
 {"t":"2026-10-25T12:48:54.453Z","ev":"task_note","id":"each-brush-shows-its-own-settings-in-the-tool-op"}
@@ -14175,7 +14171,7 @@
 {"t":"2026-10-25T13:28:05.801Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-10-25T13:28:17.697Z","ev":"triage","summary":"0 merged, 0 dropped, 0 priority moves, 0 resets; 2 retagged off later epics (qwen-image measure -> agent-ask, panel fold frame -> video-editing); 1 p1 bug reproduced and kept (cold Ask read 34.8 s for 7,964 tokens); 3 findings folded into existing tasks; p1/p2/p3 renumbered to steps of 10 (75 seq writes). Open: p1 31, p2 51, p3 2."}
 {"t":"2026-10-25T13:29:12.785Z","ev":"digest","file":"2026-10-25.md"}
-{"t":"2026-10-25T13:29:32.233Z","ev":"task_started","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus","title":"Pen pressure, tilt and pointer speed shape a brush stroke, and a mouse stroke tapers naturally","priority":"p1-high"}
+{"t":"2026-10-25T13:29:32.233Z","ev":"task_started","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus","title":"Pen pressure, tilt and pointer speed shape a brush stroke, and a mouse stroke tapers naturally","priority":"p1-high","repeats":1,"until":"2026-10-25T13:29:32.233Z","rolledUp":true}
 {"t":"2026-10-25T13:33:23.549Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
 {"t":"2026-10-25T14:05:33.451Z","ev":"task_walks","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus","walks":["pen-pressure-and-mouse-taper-walk"]}
 {"t":"2026-10-25T14:06:00.450Z","ev":"task_note","id":"pen-pressure-tilt-and-pointer-speed-shape-a-brus"}
@@ -14196,7 +14192,7 @@
 {"t":"2026-10-25T15:33:52.173Z","ev":"task_resequenced","id":"smudging-after-a-few-paint-strokes-never-freezes","from":3970,"to":2}
 {"t":"2026-10-25T15:43:11.660Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-10-25T15:43:11.757Z","ev":"slice_pass","walks":21,"passed":20,"failed":1,"seconds":1803,"of":1036,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-10-25T15:43:11.932Z","ev":"task_started","id":"smudging-after-a-few-paint-strokes-never-freezes","title":"Smudging after a few paint strokes never freezes the app","priority":"p1-high"}
+{"t":"2026-10-25T15:43:11.932Z","ev":"task_started","id":"smudging-after-a-few-paint-strokes-never-freezes","title":"Smudging after a few paint strokes never freezes the app","priority":"p1-high","repeats":1,"until":"2026-10-25T15:43:11.932Z","rolledUp":true}
 {"t":"2026-10-25T16:01:02.686Z","ev":"task_resequenced","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","from":80,"to":0.5}
 {"t":"2026-10-25T16:01:03.059Z","ev":"task_note","id":"measure-whether-qwen-image-2-1-can-paint-and-edi"}
 {"t":"2026-10-25T16:37:16.374Z","ev":"task_created","id":"painting-is-what-you-see-earlier-strokes-never-r","priority":"p1-high","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy"}
@@ -14210,10 +14206,10 @@
 {"t":"2026-10-25T17:08:54.705Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-10-25T17:08:54.741Z","ev":"task_note","id":"the-name-chips-over-component-copies-stay-clear"}
 {"t":"2026-10-25T17:08:54.872Z","ev":"slice_pass","walks":19,"passed":18,"failed":1,"seconds":1804,"of":1037,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-10-25T17:08:55.042Z","ev":"task_started","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","title":"Measure whether Qwen-Image-2.1 can paint and edit for Ask on a 64 GB Mac","priority":"p1-high"}
+{"t":"2026-10-25T17:08:55.042Z","ev":"task_started","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","title":"Measure whether Qwen-Image-2.1 can paint and edit for Ask on a 64 GB Mac","priority":"p1-high","repeats":1,"until":"2026-10-25T17:08:55.042Z","rolledUp":true}
 {"t":"2026-10-25T17:42:42.583Z","ev":"task_note","id":"measure-whether-qwen-image-2-1-can-paint-and-edi"}
 {"t":"2026-10-25T17:42:42.655Z","ev":"task_note","id":"measure-whether-qwen-image-2-1-can-paint-and-edi"}
-{"t":"2026-10-25T22:16:08.153Z","ev":"runner_failed","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","kind":"task","exit":143,"consecutive":1,"outcome":"failed","environment":false,"signIn":false,"reason":null,"error":"▸ Bash S=~/Library/Caches/photonz-measure-qwen21; for i in {1..19}; do sleep 30; done; grep -c \"scored\" $S/logs/held…"}
+{"t":"2026-10-25T22:16:08.153Z","ev":"runner_failed","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","kind":"task","exit":143,"consecutive":1,"outcome":"failed","environment":false,"signIn":false,"reason":null,"error":"▸ Bash S=~/Library/Caches/photonz-measure-qwen21; for i in {1..19}; do sleep 30; done; grep -c \"scored\" $S/logs/held…","repeats":1,"until":"2026-10-25T22:16:08.153Z","rolledUp":true}
 {"t":"2026-10-25T22:16:09.027Z","ev":"leftovers","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","task":"measure-whether-qwen-image-2-1-can-paint-and-edi","state":"stashed","count":11,"stash":"3583be905c200273d515fdad8594e22ea356f695"}
 {"t":"2026-10-25T22:16:20.570Z","ev":"task_held","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","by":"intake","from":"pending"}
 {"t":"2026-10-25T22:29:55.976Z","ev":"task_note","id":"measure-whether-qwen-image-2-1-can-paint-and-edi"}
@@ -14267,14 +14263,13 @@
 {"t":"2026-10-26T14:18:49.424Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-26T14:18:49.451Z","ev":"triage","summary":"1 merged (12 MP painting speed into WYSIWYG painting, umbrella deps updated), 1 filed (rotating check stuck at walk 103, reproduced), 2 findings folded, 1 groomed (agent install try path), 0 priority moves, 0 resets, 33 seq writes; open 88 before and after"}
 {"t":"2026-10-26T14:18:49.476Z","ev":"digest","file":"2026-10-26.md"}
-{"t":"2026-10-26T14:19:09.107Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high"}
+{"t":"2026-10-26T14:19:09.107Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high","repeats":2,"until":"2026-10-26T21:49:31.632Z","rolledUp":true}
 {"t":"2026-10-26T15:07:26.942Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T16:49:12.857Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T17:23:27.176Z","ev":"task_walks","id":"the-whole-test-suite-runs-in-minutes-here-and-on","walks":[]}
 {"t":"2026-10-26T17:23:27.239Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T17:23:27.302Z","ev":"task_pending","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"Partly done: suite no longer parks on macOS 27, local 401 s -> 262 s, GitHub checkout 3.5 min -> 15 s, kept build (58 s warm vs 18.9 min cold), Run tests 53 -> 25.8 min parallel. Still open: GitHub <15 min, 3 green CI runs in a row, a measured release, local <3 min, 5 tests >10 s. See log and audit."}
 {"t":"2026-10-26T21:49:31.442Z","ev":"sweep_pass","walks":1037,"seconds":15434,"passed":645,"failed":392,"complete":true,"total":1037}
-{"t":"2026-10-26T21:49:31.632Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high"}
 {"t":"2026-10-26T22:28:03.792Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T23:53:47.526Z","ev":"task_note","id":"the-whole-test-suite-runs-in-minutes-here-and-on"}
 {"t":"2026-10-26T23:53:47.600Z","ev":"task_pending","id":"the-whole-test-suite-runs-in-minutes-here-and-on","from":"in_progress","note":"GitHub targets met and measured: CI Run tests 7-9 min in 3 slices, 3 green runs in a row, release dry run 9.5 min end to end, warm kept build. Still open: local Scripts/test.sh 262-270 s against 180, and 4 tests over 10 s alone (listed in the log and the audit)."}
@@ -14286,7 +14281,7 @@
 {"t":"2026-10-26T23:59:40.386Z","ev":"task_note","id":"the-name-chips-over-component-copies-stay-clear"}
 {"t":"2026-10-26T23:59:40.425Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-27T00:01:39.877Z","ev":"slice_pass","walks":30,"passed":8,"failed":22,"seconds":331,"of":1037,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-27T00:01:40.056Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high"}
+{"t":"2026-10-27T00:01:40.056Z","ev":"task_started","id":"the-whole-test-suite-runs-in-minutes-here-and-on","title":"The whole test suite runs in minutes, here and on GitHub, so a release takes 20 minutes, not 75","priority":"p1-high","repeats":1,"until":"2026-10-27T00:01:40.056Z","rolledUp":true}
 {"t":"2026-10-27T00:32:15.147Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-27T00:32:15.220Z","ev":"task_resequenced","id":"painting-is-what-you-see-earlier-strokes-never-r","from":30,"to":1}
 {"t":"2026-10-27T00:32:15.292Z","ev":"task_resequenced","id":"every-brush-follows-the-pointer-with-no-lag-even","from":20,"to":2}
@@ -14305,7 +14300,7 @@
 {"t":"2026-10-27T02:31:10.513Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-10-27T02:31:10.548Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-27T02:32:57.065Z","ev":"slice_pass","walks":30,"passed":11,"failed":19,"seconds":310,"of":1037,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-27T02:32:57.236Z","ev":"task_started","id":"the-agent-server-and-skill-come-inside-photonz-a","title":"Settings installs the Photonz skills for Claude Code and Copilot with one click, from the app alone","priority":"p1-high"}
+{"t":"2026-10-27T02:32:57.236Z","ev":"task_started","id":"the-agent-server-and-skill-come-inside-photonz-a","title":"Settings installs the Photonz skills for Claude Code and Copilot with one click, from the app alone","priority":"p1-high","repeats":1,"until":"2026-10-27T02:32:57.236Z","rolledUp":true}
 {"t":"2026-10-27T02:36:45.983Z","ev":"task_note","id":"the-agent-server-and-skill-come-inside-photonz-a"}
 {"t":"2026-10-27T02:36:46.059Z","ev":"task_note","id":"the-agent-server-and-skill-come-inside-photonz-a"}
 {"t":"2026-10-27T03:17:16.060Z","ev":"task_created","id":"photonz-opens-at-login-on-by-default-with-a-swit","priority":"p1-high","title":"Photonz opens at login, on by default, with a switch in Settings to turn it off"}
@@ -14319,7 +14314,7 @@
 {"t":"2026-10-27T03:48:42.805Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-10-27T03:48:42.840Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-27T03:50:08.180Z","ev":"slice_pass","walks":30,"passed":17,"failed":13,"seconds":421,"of":1038,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-27T03:50:08.348Z","ev":"task_started","id":"the-setup-window-walks-you-through-only-the-step","title":"The setup window walks you through only the steps you still need, including using Photonz from Claude Code and Copilot","priority":"p1-high"}
+{"t":"2026-10-27T03:50:08.348Z","ev":"task_started","id":"the-setup-window-walks-you-through-only-the-step","title":"The setup window walks you through only the steps you still need, including using Photonz from Claude Code and Copilot","priority":"p1-high","repeats":1,"until":"2026-10-27T03:50:08.348Z","rolledUp":true}
 {"t":"2026-10-27T06:15:52.987Z","ev":"task_walks","id":"the-setup-window-walks-you-through-only-the-step","walks":["setup-steps-brand-new-mac-walk","setup-steps-after-old-setup-walk","setup-steps-everything-done-walk","first-run-walk","never-granting-walk"]}
 {"t":"2026-10-27T06:16:07.950Z","ev":"task_note","id":"the-setup-window-walks-you-through-only-the-step"}
 {"t":"2026-10-27T06:16:08.013Z","ev":"task_note","id":"the-setup-window-walks-you-through-only-the-step"}
@@ -14330,7 +14325,7 @@
 {"t":"2026-10-27T06:23:46.789Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-10-27T06:23:46.822Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-27T06:25:34.773Z","ev":"slice_pass","walks":32,"passed":22,"failed":10,"seconds":406,"of":1041,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-27T06:25:34.943Z","ev":"task_started","id":"photonz-opens-at-login-on-by-default-with-a-swit","title":"Photonz opens at login, on by default, with a switch in Settings to turn it off","priority":"p1-high"}
+{"t":"2026-10-27T06:25:34.943Z","ev":"task_started","id":"photonz-opens-at-login-on-by-default-with-a-swit","title":"Photonz opens at login, on by default, with a switch in Settings to turn it off","priority":"p1-high","repeats":1,"until":"2026-10-27T06:25:34.943Z","rolledUp":true}
 {"t":"2026-10-27T06:53:45.446Z","ev":"task_walks","id":"photonz-opens-at-login-on-by-default-with-a-swit","walks":["open-at-login-switch-in-settings-walk"]}
 {"t":"2026-10-27T06:54:16.784Z","ev":"task_note","id":"a-walk-can-press-the-buttons-in-the-settings-win"}
 {"t":"2026-10-27T06:54:16.848Z","ev":"task_note","id":"photonz-opens-at-login-on-by-default-with-a-swit"}
@@ -14342,7 +14337,7 @@
 {"t":"2026-10-27T07:08:36.418Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-10-27T07:08:36.454Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-27T07:10:23.417Z","ev":"slice_pass","walks":32,"passed":19,"failed":13,"seconds":813,"of":1042,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-27T07:10:23.593Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high"}
+{"t":"2026-10-27T07:10:23.593Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high","repeats":2,"until":"2026-10-27T10:15:29.757Z","rolledUp":true}
 {"t":"2026-10-27T09:58:33.749Z","ev":"task_walks","id":"painting-is-what-you-see-earlier-strokes-never-r","walks":["painting-holds-still-walk"]}
 {"t":"2026-10-27T10:05:58.263Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-27T10:05:58.327Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
@@ -14357,7 +14352,6 @@
 {"t":"2026-10-27T10:13:40.530Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-27T10:13:40.562Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-10-27T10:15:29.588Z","ev":"slice_pass","walks":32,"passed":19,"failed":13,"seconds":431,"of":1043,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-10-27T10:15:29.757Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high"}
 {"t":"2026-10-27T10:42:02.241Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-27T11:37:06.613Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-27T11:37:06.677Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
@@ -14427,7 +14421,7 @@
 {"t":"2026-10-28T14:26:42.349Z","ev":"task_note","id":"audit-pictures-show-the-window-the-way-a-person"}
 {"t":"2026-10-28T14:26:42.381Z","ev":"triage","summary":"0 merged, 1 overlap folded (WYSIWYG painting 8 ms bar into the brush lag task), 1 moved (rotating walk check p1 to p2: symptom stopped, six checks advanced), 1 finding folded with reproduction (loop-day counts a stopped loop as building), 2 findings logged, 5 tagged with an epic, 41 renumbered, 0 reset, 0 leftovers settled (1 open, task still open); open 91 before and after"}
 {"t":"2026-10-28T14:28:09.783Z","ev":"digest","file":"2026-10-28.md"}
-{"t":"2026-10-28T14:28:37.246Z","ev":"task_started","id":"ask-can-make-a-photo-as-well-as-an-illustration","title":"Ask picks how to make a picture from what you say: a photo, vector art or an icon, or painting with brushes","priority":"p1-high"}
+{"t":"2026-10-28T14:28:37.246Z","ev":"task_started","id":"ask-can-make-a-photo-as-well-as-an-illustration","title":"Ask picks how to make a picture from what you say: a photo, vector art or an icon, or painting with brushes","priority":"p1-high","repeats":1,"until":"2026-10-28T14:28:37.246Z","rolledUp":true}
 {"t":"2026-10-28T17:12:38.694Z","ev":"task_in_progress","id":"history-remembers-the-filter-you-last-chose","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
 {"t":"2026-10-28T17:12:38.774Z","ev":"task_in_progress","id":"history-pane-resizes-from-its-outer-edge","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
 {"t":"2026-10-28T17:12:38.853Z","ev":"task_in_progress","id":"history-pane-runs-edge-to-edge-along-the-top","from":"pending","note":"taken by the timeline-room-history-drop session at the user's ask (2026-10-28)"}
@@ -14624,3 +14618,9 @@
 {"t":"2026-10-30T20:14:06.998Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
 {"t":"2026-10-30T20:14:18.672Z","ev":"task_pending","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"Every item rechecked on today's build; all met but item 3: drawing at 150 pt is 2-3x slower per move than before the change for oil, pencil, charcoal and marker (oil 4.5->11.3 ms p95), and 2-4x at 20 pt, because the live thinned end is laid again every move. Measured tables in queue/audits/2026-10-30-paint-move-cost.txt"}
 {"t":"2026-10-30T20:14:27.736Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T20:15:07.625Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high"}
+{"t":"2026-10-30T21:03:38.022Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T21:03:38.095Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T21:03:38.169Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T21:03:38.242Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
+{"t":"2026-10-30T21:03:41.996Z","ev":"task_pending","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"Brush moves cheaper with identical pixels (d233562c): 150 pt on 12 MP oil 9.9->6.4 ms, pencil 8.4->4.6, charcoal 8.8->5.5. Item 3 still short: 20 and 150 pt slower than before the change for oil, pencil, charcoal and marker, because the live thinned end is laid again every move. Tables in queue/audits/2026-10-30-paint-move-cost.txt"}

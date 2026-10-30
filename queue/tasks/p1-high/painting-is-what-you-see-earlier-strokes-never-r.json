@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-30T20:14:27.735Z",
+  "updated": "2026-10-30T21:03:41.995Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -171,9 +171,29 @@
     {
       "t": "2026-10-30T20:14:27.734Z",
       "note": "Correction to the line above: 500 pt is quicker on the screenshot-size canvas only. On 12 MP zoomed to fit, 500 pt is slower for all but watercolour (oil 9.2->12.9, pencil 9.4->10.9, charcoal 10.5->12.8, marker 3.6->5.1; watercolour 16.3->13.0): there the live stroke paints layer pixels, ~2.7x the screen's."
+    },
+    {
+      "t": "2026-10-30T20:15:07.620Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T21:03:38.020Z",
+      "note": "2026-10-30 evening (d233562c): profiled 150 pt pencil and oil and 20 pt pencil on the probe. The thinned end's dabs, being thinner, each fell under the size work splits across cores at and ran on the main thread alone (1658 of 3068 tail samples for pencil); so did a whole 150 pt oil dab. Fixed, same pixels byte for byte: dab pixels split at an eighth of the copy threshold; pencil and crayon dabs laid as one batch across cores (max-only, order cannot matter); charcoal/chalk smear split by rows; the tail's journal saves each pixel once; the overlay goes to the screen in 128 px pieces (a 20 pt move converted 67,000 px). 12 MP at fit, 150 pt: oil 9.9 -> 6.4 ms p95, pencil 8.4 -> 4.6, charcoal 8.8 -> 5.5, marker 3.8 -> 2.9. Tables: queue/audits/2026-10-30-paint-move-cost.txt"
+    },
+    {
+      "t": "2026-10-30T21:03:38.093Z",
+      "note": "Rechecked after the change: painting-holds-still-walk green (0 frames change outside the new stroke at 50/100/200%; at release 18.6% zoomed out, 0.15% at 100%, 3.9% at 200%, the same as before it); every brush walk green with pickBrush in place of the tile press (oil, pencil, watercolour, marker/airbrush, airbrush, dry media, smudge-after-paint, brush-paints-strokes); full suite green, 14,810 tests."
+    },
+    {
+      "t": "2026-10-30T21:03:38.167Z",
+      "note": "STILL SHORT, item 3: slower than the before column at 20 and 150 pt for oil, pencil, charcoal and marker (12 MP: oil 150 pt 1.4 before vs 6.4 now; screenshot: oil 150 pt 4.5 vs 8.6, pencil 3.1 vs 6.3), and at 500 pt on 12 MP. 500 pt on the screenshot canvas and watercolour at 150 and 500 pt beat it. What is left is the thinned end itself: laid again every move (about 20 dabs at 20 pt, 4 at 150) so the stroke held is the stroke landed (item 12), where before the end was laid once on release; and on a big canvas zoomed out the live stroke paints layer pixels (item 2). Meeting this column means making each dab several times cheaper (oil's lay and the dry tip's per-pixel paper and streak reads), the same work every-brush-follows-the-pointer-with-no-lag-even needs for its 8 ms bar. Left pending."
+    },
+    {
+      "t": "2026-10-30T21:03:41.994Z",
+      "note": "Brush moves cheaper with identical pixels (d233562c): 150 pt on 12 MP oil 9.9->6.4 ms, pencil 8.4->4.6, charcoal 8.8->5.5. Item 3 still short: 20 and 150 pt slower than before the change for oil, pencil, charcoal and marker, because the live thinned end is laid again every move. Tables in queue/audits/2026-10-30-paint-move-cost.txt"
     }
   ],
-  "started": "2026-10-30T19:43:47.096Z",
+  "started": "2026-10-30T20:15:07.619Z",
   "walks": [
     "painting-holds-still-walk"
   ]
