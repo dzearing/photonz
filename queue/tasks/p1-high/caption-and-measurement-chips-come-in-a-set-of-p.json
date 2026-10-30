@@ -4,12 +4,12 @@
   "goal": "The label chip on arrows and measurements is one look today: a dark pill in the arrow's colour with a coloured outline. Give it a small set of premade, professional chip styles to pick from the same way arrow styles are picked (a row of picture tiles). Not every style is a pill: some are squircles or soft rectangles, some are flat and some are glass with a subtle inner border, and every one looks like it belongs in a polished Mac app or a professional design spec, never like a home-made web page. The chosen style applies to the text chip of that arrow or measurement and can be changed any time without losing the words or colour.",
   "epic": "epic-uehjr1",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:36:38.642Z",
-  "updated": "2026-10-28T14:26:10.119Z",
+  "updated": "2026-10-30T02:11:27.135Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24 (picture: queue/audits/2026-10-24-user-caption-chip.png, a dark red pill with a brighter red outline reading 'hi' at the tail of a brush arrow): 'I don't love the style of the chip for arrows and measurements. I would love to have some style options for the chip, just like we have for the arrow, where you can choose different premade professional looking chips for typing text. Some might not be pills, maybe we do squirqle shaped, or the border might be more glass like with a suble inner border. Maybe some are flat and others are glass like. Each option should look professional and not like a kid made it for his myspace.'\n\nWhere: the plate rule is Sources/PhotonzCore/LabelPlate.swift (tone darkened to luminance 0.24, white ink, shadow 4 blur / 2 offset); drawn by Sources/PhotonzRender/PillRasterizer.swift; also used by canvas name chips (Sources/Photonz/CanvasComponents.swift), which must NOT change unless the runner decides on purpose and logs why. Arrow style pattern to copy: Sources/PhotonzCore/ArrowStyle.swift (enum, Codable, standard default) + Sources/Photonz/ArrowStyleTiles.swift. Grep captionChipColor for the caption's colour path. Measurement readouts sit on their caliper with no shadow (LabelPlate comment): a style must fit both.\n\nTraps: glass over a picture renders differently on canvas (live material) than in export (no backdrop); the export must look the same, so glass is probably drawn as a rendered blur of the picture under it in PhotonzRender, not a SwiftUI material. The coloured outline in today's chip is part of what the user dislikes; do not keep it as the default without a reason. Related done tasks: arrow-tool-captions-legible-pill-labels-like-the, captions-are-one-layer-positioned-and-styled-lik.",
@@ -43,6 +43,10 @@
     {
       "t": "2026-10-28T14:26:10.118Z",
       "note": "seq 90 -> 150"
+    },
+    {
+      "t": "2026-10-30T02:11:27.134Z",
+      "note": "seq 150 -> 130"
     }
   ]
 }

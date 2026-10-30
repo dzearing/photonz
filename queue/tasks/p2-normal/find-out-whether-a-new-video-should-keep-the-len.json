@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T00:12:12.028Z",
-  "updated": "2026-10-25T13:26:47.261Z",
+  "updated": "2026-10-30T02:11:07.835Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-19 by the runner through the agent tools on the probe: new_video {width:1920,height:1080,seconds:6} answered durationSeconds 6; add_title {seconds:0, style:\"Keynote Clean\", text:\"Hello\"} answered durationSeconds 4. Cause: PhotonzDocument.landTitle calls refreshDuration(), which sets durationMS to the latest out point whenever a duration is written. Not checked through the menu by a person; it may be meant (a video is as long as what is on it, the rule a trim follows). Found during an-agent-can-cut-a-video-from-history-clips-with.",
@@ -54,6 +54,10 @@
     {
       "t": "2026-10-25T13:26:47.260Z",
       "note": "seq 140 -> 150"
+    },
+    {
+      "t": "2026-10-30T02:11:07.834Z",
+      "note": "triage 2026-10-29: commit 087b8cb7 (2026-10-29) added DurationFollowsClips: a written length that ended with the last clip now follows that clip after any edit. That is close to this task's rule but not the same (a 10 s video given a 4 s title still ended past its last clip, so it should stay 10 s). Check this task against the new behaviour before building; it may only need the walk."
     }
   ]
 }

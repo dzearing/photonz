@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-27T03:40:32.660Z",
-  "updated": "2026-10-28T14:26:42.271Z",
+  "updated": "2026-10-30T02:12:57.646Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-26 on the probe (screen unlocked, Screen Recording granted, with and without setup front:true). Walk step: press \"Agents Claude Code Install\" -> log says in Install at window (460, 119), one click, the point is on the button in the -sc.png, but the button action never runs (a temporary NSLog at the top of AgentsSettingsSection.act never printed: /usr/bin/log show --last 2m --predicate eventMessage CONTAINS PZDEBUG was empty), and the next expect fails: no control called Agents Claude Code Uninstall. Two clicks (count 2) did nothing either; removing the row contextMenu and help did not change it. Scripts/playtest.sh Scripts/playtest/ask-deletes-an-older-model-walk.json --no-build passes, but its 2-delete-asks-sc.png shows no dialog after the press, so it never proved the press. The same buttons pressed through the accessibility tree (osascript, AXPress) worked at once. Press delivery: PlaytestHarness.swift around 8160-8215 (postEvent up, sendEvent down to the target window); panelWindows() includes the Settings window (around 7974). Suspect the synthetic mouse down into a non-key Settings window (SettingsWindowController hosts an NSHostingController in a plain NSWindow) is taken as a click to make it key.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-10-28T14:26:42.270Z",
       "note": "triage 2026-10-28: the same wall hit the next task too. The setup window runner (the-setup-window-walks-you-through-only-the-step, 2026-10-27) found a walk's posted click does not land on that window's SwiftUI buttons either, in front or behind, NSPanel or NSWindow, and added setupSkip, setupContinue and setupInstall walk actions that press through accessibility, like takeTheTour and startWorking before them. So this is now three windows with three hand-made workarounds (tour offer, setup window, Settings); whatever fixes Settings should say whether those actions can go back to plain presses"
+    },
+    {
+      "t": "2026-10-30T02:12:57.645Z",
+      "note": "triage 2026-10-29: a fourth window with the same gap. The History pane's new resize grip (2026-10-28, history-pane-resizes-from-its-outer-edge) closed with no walk because dragGrip cannot post into the History panel, and the History drag picture is still unconfirmed under a real pointer because walks cannot start a drag session there (docs/progress/log.md, 2026-10-28 entries). Walks also missed the History drop bug for weeks because they wrote the tile as plain data, not the file promise a real drag carries. Whatever fix lands here should cover the History panel too."
     }
   ],
   "walks": [

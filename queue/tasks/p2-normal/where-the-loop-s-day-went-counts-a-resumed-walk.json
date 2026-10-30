@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:08:35.106Z",
-  "updated": "2026-10-28T14:25:34.392Z",
+  "updated": "2026-10-30T02:11:07.686Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the a-full-walk-check-that-gets-stopped-picks-up-whe runner on 2026-10-22 (left rough: count reads one high) and again by the 2026-10-23 digest, which had to read queue/loop.log to find that the three runs were the 2026-10-22T11:15Z run stopped at 989 of 1011, its 7 minute pick-up (queue/sweep/2026-10-22-095234.log, 25 walks), and the 2026-10-23T11:41Z run stopped at 453 of 1015 when the person came back. Code: queue/bin/loop-day.mjs.",
@@ -40,6 +40,10 @@
     {
       "t": "2026-10-28T14:25:23.905Z",
       "note": "triage 2026-10-28, folded in: the report also counts a dead loop as building. Ran node queue/bin/loop-day.mjs --hours 24 at 2026-10-28T14:20Z and it printed 'tasks 1440m 100.0% 1 task(s) ... The loop spent the majority of this window building', yet no task ran in that window: the last task_started was 2026-10-27T10:15:29Z, it went back to pending at 11:37:19Z, the loop died during the 11:38Z rotating check (queue/sweep/slice-2026-10-27-043801.log stops mid-walk at crisp-zoom-walk, no stop line in queue/loop.log) and the next event is loop_started at 2026-10-28T14:19:59Z. spansFrom in loop-day.mjs ends a task only on task_done, task_blocked, task_dropped, task_reset, runner_failed or the next start; task_pending and loop_started are not ends, so the span ran to now. The digest is told to quote this number, so it read the day upside down."
+    },
+    {
+      "t": "2026-10-30T02:11:07.685Z",
+      "note": "triage 2026-10-29, reproduced again: 'node queue/bin/loop-day.mjs --hours 24' at 2026-10-30T02:08Z printed 'tasks 1440m 100.0% 1 task(s) ... The loop spent the majority of this window building'. The loop was stopped by hand on 2026-10-28 at 08:41 Mac time (the photo task's log says so) and not started again until 2026-10-29 18:55, so no task ran for any of that window. Second digest in a row whose day report is wrong for this reason."
     }
   ]
 }

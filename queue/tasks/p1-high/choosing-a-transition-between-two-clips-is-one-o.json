@@ -4,12 +4,12 @@
   "goal": "Today a clip's right-click menu offers Fade In, Fade Out, Fade In and Out and a dip to black alongside Add Transition. They overlap, each acts on one side of one clip, and none says what happens between the two clips. Picking how one clip becomes the next should happen in one obvious place, at the cut: hover the place where two clips meet, click, and pick from transitions that preview with your own two clips. Fading a clip from or to black at a free end stays available, but where it belongs (the clip's end handles), not as menu rows competing with transitions.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 6e-7,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T01:54:13.151Z",
-  "updated": "2026-10-30T01:54:41.672Z",
+  "updated": "2026-10-30T02:11:26.296Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-29 (intake): 'like transition fade out, fade in, black out. these are super redundant and one sided. wondering if there is a nicer way to select a transition between 2 clips'. Same session as any-transition-goes-on-any-two-clips-that-touch (3D transitions refused between two touching recordings). Code: clip menu fade rows come from EditorState+PictureFade.swift (pictureFadeMenuRows, fadeInAndOutMenuRow) and EditorState+TimelineMenus.swift; Add Transition from EditorState+TransitionTargets.swift (addTransitionMenuRow, aimed at both ends of a clip); the picker at a cut is TransitionPicker.swift; the panel is TransitionsGroup.swift. Grown-up tool check: Premiere and Final Cut select the edit point and put the transition on it; fades are opacity handles or a dissolve at the edge.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-30T01:54:41.671Z",
       "note": "User approved this design as written, 2026-10-29 ('yes that'): pick at the cut (hover highlights the edit, one click opens the picker), tiles preview with the two real clips and name both sides, one Transition… row in the clip menu replacing Fade In / Fade Out / Fade In and Out / Add Transition, dips live in the picker, free-end fades stay as the end handles. Build it; no decision card needed for these points."
+    },
+    {
+      "t": "2026-10-30T02:11:26.295Z",
+      "note": "seq 6e-7 -> 20"
     }
   ]
 }

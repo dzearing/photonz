@@ -4,12 +4,12 @@
   "goal": "None of the 3D transitions (Flip, Cube, Swing, Doorway, Revolve, Push in depth) are usable today. When two clips touch and the person picks a transition, Photonz does whatever it takes to make it happen: it uses spare footage where there is some, holds the edge frames where there is none, and adjusts the clips' positions on the timeline if the transition needs it. It never refuses with a message the person cannot act on. Dragging one clip to overlap the next must also end in a working transition or be impossible, never two clips stacked with no cut.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 5e-7,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T01:14:07.581Z",
-  "updated": "2026-10-30T01:53:21.721Z",
+  "updated": "2026-10-30T02:12:21.097Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user 2026-10-29 in the intake window, frustrated: 'There's no way I have ever been able to use this transition. I can't see how you can get it to work.' and 'If I have two clips that are butt up against each other, and I have a cube transition, wouldn't it just pause the frame on one? And then pause the frame on the other and rotate the view, and then play the other one when the transition's done? This is so unintuitive.' Code today: a cut's transition is fitted to spare footage either side (ClipCut.fitted) and refused with noSpare when there is none; a clip's right-click aims at BOTH its ends (TransitionTargets.swift transitionTargets(ofClip:)) and a free end refuses every kind but dissolve and dip to black with needsTwoClips; editPoints(onTrack:) counts two clips as meeting only at a gap of exactly 0 ms, so an overlap on one track is no cut at all. The user's first recording (Recording 2026-10-28 at 14.21.13, 9.147 s) was used to its last frame, so Cube had no spare on that side. Premiere does the transition anyway with repeated frames ('Insufficient media. This transition will contain repeated frames'); Final Cut offers to overlap or uses freeze frames. The user was running the timeline-room-history-drop worktree's dev build when this happened.",
@@ -22,6 +22,7 @@
     "Two clips dragged to overlap on the same track (the user did this on 2026-10-29: 0 to 9.147 s and 8.176 to 18.248 s on V2, which the document reads as having no cut at all): decide and build the Premiere/Final Cut answer. Either a drag on one track can never leave an overlap (it trims or ripples, as Premiere's overwrite does), or the overlap becomes the transition's length. No state where two clips sit on top of each other on one track and the timeline shows no cut.",
     "The agent tool set_transition and the timeline agree on what a cut is. Measured today: read_document listed a cut at 9.147 s while the clips touched; the tool refused only after they overlapped. Add a walk with two DIFFERENT recordings touching (the existing transitions-in-depth-at-a-cut walk uses one sample recording cut in two, which always has spare footage, so it never met this case).",
     "Walks: Cube between two touching recordings with no spare, by right-click on the cut, right-click on each clip and the Transitions panel drag; the overlap case. A filmed reel of the cube turning across the held frames goes in the audit under queue/audits/.",
+    "UX-PATTERNS (docs/design/mocks/shared/UX-PATTERNS.md, \"What it says when the surface will refuse\") gains the user’s rule from 2026-10-29: when what the person asked for is clear and Photonz can make room for it (hold frames, slide or trim clips, ripple what follows), it does that as one undoable step instead of refusing. A refusal is only for what cannot be done at all. Today the rules only teach how to refuse well, which is how the noSpare and needsTwoClips refusals passed review.",
     "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
   ],
   "log": [
@@ -36,6 +37,18 @@
     {
       "t": "2026-10-30T01:53:21.720Z",
       "note": "User, 2026-10-29, widened it: none of the 3D transitions work or are easy to use. If two videos are touching and a 3D transition is picked, do what it takes to make it happen, adjusting positions if the transition needs it. 'It is so weird right now.' Title, goal and the first two acceptance items rewritten to say so."
+    },
+    {
+      "t": "2026-10-30T02:11:20.127Z",
+      "note": "triage 2026-10-29: in the last whole-set run (2026-10-26) these transition walks were already red: transition-picker-at-a-cut, transitions-where-clips-meet, transition-placement-and-hold, transition-band-reads-as-the-mock, transition-edge-follows-the-pointer, transition-tile-comes-away, transitions-group, shorten-the-cut-for-a-dissolve, tutorial-put-a-transition-on-a-cut. Read them before writing new ones: some may be the same refusal the user hit."
+    },
+    {
+      "t": "2026-10-30T02:11:26.221Z",
+      "note": "seq 5e-7 -> 10"
+    },
+    {
+      "t": "2026-10-30T02:12:21.097Z",
+      "note": "triage 2026-10-29: added the UX-PATTERNS rule item to acceptance, so the next refusal of this shape is caught by the rules runners read, not by the user."
     }
   ]
 }
