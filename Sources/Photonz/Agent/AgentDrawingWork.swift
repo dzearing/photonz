@@ -27,6 +27,8 @@ enum AgentDrawingWork {
             return try add(AgentDrawing.layer(for: path), to: editor)
         case .addDrawing(let id, let call):
             return try await addDrawing(call, to: AgentDocuments.editor(id).get())
+        case .addPhoto(let id, let call):
+            return try await addPhoto(call, to: AgentDocuments.editor(id).get())
         case .addText(let id, let text):
             let editor = try AgentDocuments.editor(id).get()
             return try addText(text, to: editor)
@@ -171,6 +173,44 @@ enum AgentDrawingWork {
         }
         return .json(DrawnDrawing(layer: made.uuidString, name: layer.name, frame: Box(AgentDrawing.box(of: layer)),
                                   from: from, parts: drawing.parts.count, canUndo: editor.canUndo))
+    }
+
+    struct MadePhoto: Encodable {
+        let layer: String
+        let name: String
+        let frame: Box
+        /// "painted: <model>, W x H in S s".
+        let from: String
+        let canUndo: Bool
+    }
+
+    /// A photo painted for the request by the picture model and kept as
+    /// pixels: one ordinary picture layer filling the box asked for, the
+    /// pixel selection, or the canvas, picked, as one undo step.
+    private static func addPhoto(_ call: AgentPhotoCall, to editor: EditorState) async throws -> Answer {
+        let document = try AgentWork.document(of: editor)
+        var asked = call.frame
+        if asked == nil, editor.selectionTargetsPixels, let region = editor.selection { asked = region.bounds }
+        let box = AgentPhotoPlacement.box(asked, on: document.canvasSize)
+        guard let painting = await AskPictureModel.photo(call, box: box.size) else {
+            throw Failure("add_photo: Photonz cannot paint a photo on this Mac until its picture model is set up in Settings, Ask.")
+        }
+        let photo = try painting.get()
+        guard editor.document != nil else { throw Failure("The document was closed before the photo was ready.") }
+        let ref = editor.store.register(photo.image)
+        let name = PlacedImageNaming.layerName(named: call.layerName,
+                                               taken: Set(editor.document?.allLayers.map(\.name) ?? []))
+        let layer = Layer(name: name, content: .image(ref), frame: box)
+        editor.asOneUndoStep {
+            editor.addDrawnLayer(layer, remembering: false)
+            editor.selectLayer(layer.id)
+        }
+        guard let landed = editor.document?.layer(id: layer.id) else {
+            throw Failure("Photonz could not add that photo to \(AgentWork.title(of: editor)).")
+        }
+        return .json(MadePhoto(layer: layer.id.uuidString, name: landed.name, frame: Box(landed.frame),
+                               from: "painted: \(photo.model), \(photo.width) x \(photo.height) in \(Int(photo.seconds.rounded())) s",
+                               canUndo: editor.canUndo))
     }
 
     /// Whether the picture holds nothing anybody made: no layers, or only a

@@ -17,20 +17,32 @@ const NAMING = readFileSync(path.join(here, "naming.md"), "utf8");
 /// added to the rubric for those cases only, so every other case is asked
 /// exactly what it was asked before.
 export const CRAFTED = readFileSync(path.join(here, "rubric-crafted.md"), "utf8").trim();
+/// The extra line a photo is judged on (a case with "photo": true). It is
+/// left out of RUBRIC_ID on purpose: it adds a line to photo cases only, which
+/// no run before 2026-10-28 had, and every other case is asked exactly what it
+/// was asked before, so older runs still compare.
+export const PHOTO = readFileSync(path.join(here, "rubric-photo.md"), "utf8").trim();
 /// A video case is judged on a contact sheet of the frames it plays, with
 /// flow in place of aligned (2026-10-21).
 export const VIDEO_RUBRIC = readFileSync(path.join(here, "rubric-video.md"), "utf8");
 /// Which rubric scored a run: a run scored by another rubric is not compared.
 export const RUBRIC_ID = createHash("sha256").update(RUBRIC + NAMING + CRAFTED + VIDEO_RUBRIC + JUDGE_MODEL).digest("hex").slice(0, 8);
-export const LINES = ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted"];
+export const LINES = ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic"];
 
 /// The rubric for one case: with the crafted line for an illustration, and
 /// the video rubric for a video.
-export function rubricFor({ crafted, video = false }) {
+export function rubricFor({ crafted, video = false, photo = false }) {
   if (video) return VIDEO_RUBRIC;
-  if (!crafted) return RUBRIC;
-  return RUBRIC.replace("\nRead the picture at", `${CRAFTED}\n\nRead the picture at`)
-    .replace('"didWhatWasAsked": n,', '"didWhatWasAsked": n, "crafted": n,');
+  let rubric = RUBRIC;
+  if (crafted) {
+    rubric = rubric.replace("\nRead the picture at", `${CRAFTED}\n\nRead the picture at`)
+      .replace('"didWhatWasAsked": n,', '"didWhatWasAsked": n, "crafted": n,');
+  }
+  if (photo) {
+    rubric = rubric.replace("\nRead the picture at", `${PHOTO}\n\nRead the picture at`)
+      .replace('"didWhatWasAsked": n,', '"didWhatWasAsked": n, "photographic": n,');
+  }
+  return rubric;
 }
 
 /// Runs a command with a time limit, killing its whole process group when it
@@ -90,14 +102,15 @@ const median = (values) => {
 };
 
 /// The rubric, `runs` times at once: each line's median, and their mean.
-export async function judgePicture({ picture, request, context, runs = 3, crafted = false, video = false }) {
-  const prompt = rubricFor({ crafted, video }).replaceAll("{{request}}", request)
+export async function judgePicture({ picture, request, context, runs = 3, crafted = false, video = false, photo = false }) {
+  const prompt = rubricFor({ crafted, video, photo }).replaceAll("{{request}}", request)
     .replaceAll("{{context}}", context ? `It was made on ${context}: judge what the request did to it, not the picture underneath.` : "");
   const answers = (await Promise.all(Array.from({ length: runs }, () => ask(picture, prompt)))).filter(Boolean);
   if (!answers.length) return { score: null, lines: {}, why: "the judge gave no answer", answers };
   const lines = {};
   for (const line of LINES) {
     if (line === "crafted" && !crafted) continue;
+    if (line === "photographic" && !photo) continue;
     // A picture is never judged on flow, nor a video on alignment.
     if ((line === "flow") !== video && (line === "flow" || line === "aligned")) continue;
     const values = answers.map((a) => a[line]);

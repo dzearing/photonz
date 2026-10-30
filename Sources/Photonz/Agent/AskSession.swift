@@ -78,6 +78,9 @@ final class AskSession {
     @ObservationIgnored var isRevealPending = false
     /// How long the last plan took, from Ask to the plan on screen.
     private(set) var lastPlanSeconds: Double?
+    /// One line about the last request beside its row: that it made another
+    /// kind of picture than the one asked for, and why.
+    private(set) var said: String?
 
     @ObservationIgnored private var work: Task<Void, Never>?
     /// What the last plan did, a line a turn and a line a look, for a walk
@@ -190,7 +193,10 @@ final class AskSession {
         start(words, in: editor)
     }
 
-    private func start(_ words: String, in editor: EditorState) {
+    private func start(_ typed: String, in editor: EditorState) {
+        // "As a photo" makes the last request again that way.
+        let words = AgentPictureKind.remade(typed, after: changes.rows.first?.asked) ?? typed
+        said = nil
         asked = words
         current = words
         plan = nil
@@ -332,6 +338,7 @@ final class AskSession {
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
+            said = talk.note
             phase = .ran
             revealRows()
             return

@@ -214,6 +214,13 @@ struct AgentPanel: View {
                         .playtestControl("Ask Set Up", detail: AskCopy.setUp)
                 }
             case .idle, .ran:
+                if ask.phase == .ran, let said = ask.said {
+                    Text(said)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .playtestControl("Ask Says", detail: said)
+                }
                 if rows.isEmpty && waiting.isEmpty {
                     Text(AskCopy.empty).font(.system(size: 11.5)).foregroundStyle(.secondary)
                 }

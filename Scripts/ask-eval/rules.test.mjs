@@ -228,3 +228,13 @@ test("hidden words overlap nothing: a copy showing one of three option words is 
     [option("Option 2", 60, false), option("Option 3", 60, false)])]), sheet);
   assert.ok(shown.rules.noOverlap.score < 10, shown.rules.noOverlap.note);
 });
+
+test("a photo filling the canvas over the Background is made, not taken for the starting picture", () => {
+  const photo = { id: "p", name: "A dog on a beach", kind: "image", frame: { x: 0, y: 0, width: 1440, height: 1024 } };
+  const result = score(read([photo]), { group: "photo", photo: true, expect: { words: false } });
+  assert.notEqual(result.rules.made?.note, "nothing was made");
+  assert.ok(result.score > 0, JSON.stringify(result.rules));
+  // A screenshot under the work, canvas-sized and unnamed, is still the starting picture.
+  const shot = { id: "s", name: "Screenshot", kind: "image", frame: { x: 0, y: 0, width: 1440, height: 1024 } };
+  assert.equal(score({ canvas, layers: [shot] }, { expect: {} }).rules.made?.note, "nothing was made");
+});

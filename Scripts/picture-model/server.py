@@ -6,12 +6,16 @@ with PHOTONZ_PICTURE_PORT and PHOTONZ_PICTURE_MODEL set, the first time Ask pain
 
 POST /draw {"subject": "...", "style": "...", "seed": 1, "size": 768}
   -> {"svg": "...", "paths": 27, "palette": [...], "seconds": 26.1, "picture": "/tmp/....png"}
+POST /photo {"prompt": "...", "width": 1184, "height": 880, "seed": 1}
+  -> {"picture": "/tmp/....png", "width": 1184, "height": 880, "seconds": 59.6}
 GET /health -> {"model": "...", "ready": true}
 
 The picture comes from Z-Image Turbo (Apache 2.0, through mflux, MIT) and is
 traced into named, filled paths by trace.py (vtracer, MIT). The prompt is the
 request's own words plus a general description of a flat, traceable look:
-nothing in here knows about any particular subject.
+nothing in here knows about any particular subject. A photo (/photo) is the
+same model's picture kept as it is painted, from a prompt the app writes
+(`PictureModelPhotoRequest`), never traced.
 """
 from __future__ import annotations
 
@@ -102,6 +106,28 @@ def draw(subject: str, style: str | None, seed: int, size: int, colors: int, ico
             "paintSeconds": round(painted, 1)}
 
 
+def side(value, fallback: int) -> int:
+    """A side the model paints: a multiple of 16 from 256 to 2048."""
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        value = fallback
+    return max(256, min(2048, round(value / 16) * 16))
+
+
+def photo(prompt: str, width: int, height: int, seed: int) -> dict:
+    command, args, loaded = model
+    args.width, args.height = width, height
+    started = time.time()
+    made = command.generate(loaded, args, seed, prompt)
+    import mlx.core as mx
+    mx.clear_cache()
+    path = tempfile.NamedTemporaryFile(prefix="photonz-photo-", suffix=".png", delete=False).name
+    made.image.save(path)
+    return {"model": MODEL, "prompt": prompt, "picture": path, "width": width, "height": height,
+            "seconds": round(time.time() - started, 1)}
+
+
 class Handler(BaseHTTPRequestHandler):
     def reply(self, status: int, body: dict):
         data = json.dumps(body).encode()
@@ -118,10 +144,18 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(404, {"error": "no such page"})
 
     def do_POST(self):
-        if self.path != "/draw":
+        if self.path not in ("/draw", "/photo"):
             return self.reply(404, {"error": "no such page"})
         try:
             asked = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            if self.path == "/photo":
+                prompt = str(asked.get("prompt", "")).strip()
+                if not prompt:
+                    return self.reply(400, {"error": "say what the photo shows"})
+                result = photo(prompt, side(asked.get("width"), 1024), side(asked.get("height"), 1024),
+                               int(asked.get("seed", 1)))
+                print(f"photo {result['width']}x{result['height']} in {result['seconds']}s", flush=True)
+                return self.reply(200, result)
             subject = str(asked.get("subject", "")).strip()
             if not subject:
                 return self.reply(400, {"error": "say what to draw"})

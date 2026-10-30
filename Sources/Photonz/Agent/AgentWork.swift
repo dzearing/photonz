@@ -80,7 +80,7 @@ enum AgentWork {
             return try listCommands(AgentDocuments.editor(id).get(), area: area, readyOnly: readyOnly)
         case .runCommand(let id, let call):
             return try await runCommand(AgentDocuments.editor(id).get(), call)
-        case .newPicture, .addShape, .addPath, .addDrawing, .addText, .setLayer, .findElements,
+        case .newPicture, .addShape, .addPath, .addDrawing, .addPhoto, .addText, .setLayer, .findElements,
              .addMeasurement, .findMeasurements, .markMeasurements, .findMisalignments, .markMisalignments, .listComponents, .placeComponent, .export:
             return try await AgentDrawingWork.answer(request)
         case .newVideo, .addClip, .cut, .trim, .moveClip, .setTransition, .addTitle, .listTitles,

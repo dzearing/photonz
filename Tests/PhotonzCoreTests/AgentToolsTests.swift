@@ -19,7 +19,7 @@ struct AgentToolsTests {
             "list_documents", "list_history", "open_document", "read_document",
             "render_picture", "video_frame", "contact_sheet", "undo", "redo",
             "list_commands", "run_command",
-            "new_picture", "add_shape", "add_path", "add_drawing", "add_text", "set_layer", "find_elements",
+            "new_picture", "add_shape", "add_path", "add_drawing", "add_photo", "add_text", "set_layer", "find_elements",
             "add_measurement", "find_measurements", "mark_measurements", "find_misalignments", "mark_misalignments",
             "list_components", "place_component",
             "export", "new_video", "add_clip", "cut", "trim", "move_clip", "set_transition", "add_title",

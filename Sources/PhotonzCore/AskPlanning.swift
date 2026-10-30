@@ -21,7 +21,7 @@ public enum AskTools {
     /// window, writes a file or steps the history, so the whole plan lands in
     /// the asking document's own undo history as one step.
     public static let doing: [String] = [
-        "add_drawing", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "mark_measurements", "mark_misalignments",
+        "add_drawing", "add_photo", "add_shape", "add_path", "add_text", "set_layer", "add_measurement", "mark_measurements", "mark_misalignments",
         "place_component", "add_component",
         "add_style", "apply_style", "set_layout", "run_command",
         "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
@@ -281,6 +281,9 @@ public struct AskConversation: Sendable {
 
     public private(set) var messages: [AgentJSON]
     public private(set) var steps: [AskStep] = []
+    /// One line Ask says beside what it made: that it made a different kind
+    /// of picture from the one asked for, and why.
+    public private(set) var note: String?
     /// What list_components named each id.
     public private(set) var names: [String: String] = [:]
     /// How many times the model has been asked; the app stops at `mostRounds`.
@@ -410,7 +413,19 @@ public struct AskConversation: Sendable {
                     refuse(name, arguments, "Not planned: the table names its own rows and states, and words of your own would land on it. Plan the next component, or finish.")
                     continue
                 }
-                let arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
+                // A photo, a drawing or a painting, as the person's words say.
+                var name = name, arguments = arguments
+                if name == "add_drawing" || name == "add_photo" {
+                    let routed = Self.routed(name, arguments, request: request, paints: paints)
+                    if let refusal = routed.refusal {
+                        tell(name, refusal)
+                        continue
+                    }
+                    (name, arguments) = (routed.tool, routed.arguments)
+                    if let line = routed.note { note = line }
+                    step = AskStep(tool: name, arguments: arguments)
+                }
+                arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
                     brokenCalls += 1
                     tell(name, "Not planned. \(problem)")
@@ -593,6 +608,54 @@ public struct AskConversation: Sendable {
             let shares = step.map { width(steps[index].arguments) + gap <= $0 && fits(index, $0) } ?? false
             arguments["step"] = shares ? step.map(AgentJSON.number) : nil
             steps[index] = AskStep(tool: "add_component", arguments: .object(arguments))
+        }
+    }
+
+    /// What Ask says when it was asked to paint before the brushes can.
+    public static let brushesNotReady = "No brushes yet, so I made one image."
+    public static let brushesNotReadyDrawn = "No brushes yet, so I drew vector art."
+    /// Told to the model when a photo is asked for and nothing on this Mac can paint one.
+    static let noPhotos = "Not planned: Photonz cannot paint a photo on this Mac until its picture model is set up in Settings, Ask. Call no more tools and answer: I can't make photos until the picture model is set up in Settings, Ask."
+
+    /// Which tool makes the picture the person asked for
+    /// (`AgentPictureKind`): a photo when their words say photo, layers when
+    /// they say vector art, a drawing or an icon, and the model's own choice
+    /// when they say neither. A painting is made the nearest way until the
+    /// brushes can paint one, with a line saying so.
+    static func routed(_ tool: String, _ arguments: AgentJSON, request: String, paints: Bool)
+        -> (tool: String, arguments: AgentJSON, note: String?, refusal: String?) {
+        guard var object = arguments.objectValue else { return (tool, arguments, nil, nil) }
+        let kind = AgentPictureKind.asked(in: request)
+        func asPhoto(_ look: AgentPhotoCall.Look) -> AgentJSON {
+            var photo: [String: AgentJSON] = ["subject": object["subject"] ?? "", "asked": .string(request)]
+            for key in ["frame", "name"] { photo[key] = object[key] }
+            if look != .photo { photo["look"] = .string(look.rawValue) }
+            return .object(photo)
+        }
+        if tool == "add_drawing" {
+            if object["icon"]?.boolValue == true { return (tool, arguments, nil, nil) }
+            switch kind {
+            case .photo? where paints: return ("add_photo", asPhoto(.photo), nil, nil)
+            case .paint? where paints: return ("add_photo", asPhoto(.painting), Self.brushesNotReady, nil)
+            case .paint?: return (tool, arguments, Self.brushesNotReadyDrawn, nil)
+            default: return (tool, arguments, nil, nil)
+            }
+        }
+        // add_photo
+        switch kind {
+        case .vector?:
+            var drawing: [String: AgentJSON] = ["subject": object["subject"] ?? ""]
+            for key in ["frame", "name"] { drawing[key] = object[key] }
+            return ("add_drawing", .object(drawing), nil, nil)
+        case _ where !paints:
+            return (tool, arguments, nil, Self.noPhotos)
+        case .paint?:
+            object["look"] = .string(AgentPhotoCall.Look.painting.rawValue)
+            object["asked"] = .string(request)
+            return (tool, .object(object), Self.brushesNotReady, nil)
+        default:
+            object["asked"] = .string(request)
+            return (tool, .object(object), nil, nil)
         }
     }
 
@@ -910,6 +973,12 @@ public struct AskConversation: Sendable {
         drawing from add_shape or add_path, and put no words, components or backdrop on it unless they \
         were asked for. A request with two or more things, or one thing in a pose, an action or a view, is ONE \
         add_drawing of the whole picture, never one per thing.
+        - A photo (a photo, a photograph, photorealistic, realistic) is add_photo, once, with subject set to the \
+        whole of what it shows in the person's words: what it is, what it is doing, where, the light. It is painted \
+        as one real photograph filling the picture, or the frame given. A drawing, vector art, an icon, a logo or an \
+        illustration is add_drawing. When the request says neither, pick: add_photo for a real place, animal, \
+        person or moment as a camera would see it, add_drawing for a thing to design with (an icon, a symbol, \
+        a mascot, a sticker).
         - When the request names more than the thing, give add_drawing a plan: one to four short statements, \
         each one someone looking at the picture can answer yes or no, for exactly what the request names: each \
         pose, action, view, mood and relationship ("a horse rearing up": it stands on its hind legs; its \

@@ -27,9 +27,14 @@ export function flatten(layers, origin = { x: 0, y: 0 }, parent = null, out = []
 /// Background, or an image that covers the canvas).
 export function made(read) {
   const canvas = read.canvas;
-  const isBase = (layer) => layer.kind === "image" && (layer.name === "Background" || layer.locked
-    || (Math.abs(layer.frame.width - canvas.width) < 2 && Math.abs(layer.frame.height - canvas.height) < 2));
-  return (read.layers ?? []).filter((layer) => !isBase(layer));
+  // The picture the case started on: the Background, anything locked, or a
+  // canvas-sized picture at the bottom (a screenshot). A canvas-sized picture
+  // above the bottom was made: a photo Ask painted to fill the canvas.
+  const layers = read.layers ?? [];
+  const isBase = (layer, index) => layer.kind === "image" && (layer.name === "Background" || layer.locked
+    || (index === layers.length - 1
+      && Math.abs(layer.frame.width - canvas.width) < 2 && Math.abs(layer.frame.height - canvas.height) < 2));
+  return layers.filter((layer, index) => !isBase(layer, index));
 }
 
 const area = (f) => Math.max(0, f.width) * Math.max(0, f.height);

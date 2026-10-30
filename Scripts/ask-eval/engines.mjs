@@ -45,7 +45,7 @@ function startSteps(testCase, { waitForCopies = false } = {}) {
 async function walk(dir, name, steps, { clock, build, testCase, switched }) {
   const out = path.join(dir, name);
   const script = path.join(dir, `${name}.json`);
-  const setup = { forget: ["all"], ...(testCase.start.sample ? { timelineOpen: true } : {}), ...(testCase.setup ?? {}) };
+  const setup = { forget: ["all"], front: true, ...(testCase.start.sample ? { timelineOpen: true } : {}), ...(testCase.setup ?? {}) };
   if (switched && Object.keys(switched).length) setup.flags = { ...(setup.flags ?? {}), ...switched };
   writeFileSync(script, JSON.stringify({
     out, seed: "ask-eval: one case of the scored test set (Scripts/ask-eval)", clock,
@@ -202,9 +202,13 @@ async function runAskOnce(testCase, dir, { build, switched }) {
   const limit = testCase.timeout ?? 300;
   const steps = [
     ...startSteps(testCase, { waitForCopies: true }),
-    { do: "press", control: "Ask" }, { do: "wait", seconds: 0.5 },
+    // Command K and Return, with the probe in front (`front` in the walk's
+    // setup): on 2026-10-28 a click on the title bar's Ask button and on Send
+    // reached nothing in a walk, so every Ask walk and case stopped at its
+    // first word, while the keys a person uses still worked.
+    { do: "key", key: "k", modifiers: ["command"] }, { do: "wait", seconds: 0.5 },
     { do: "type", text: testCase.request }, { do: "wait", seconds: 0.3 },
-    { do: "press", control: "Ask Send" },
+    { do: "key", key: "return" },
     // Ask starts at once: a Send that did not take is found in seconds, not
     // after the whole limit (two held-out cases sat 300 s idle, 2026-10-20).
     { do: "waitFor", condition: "askPhase", value: "planning|running|ran|stopped", timeout: 15 },

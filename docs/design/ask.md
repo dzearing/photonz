@@ -383,6 +383,43 @@ with crafted 3.0: a scene on plain white loses its sky.
   takes effect when the weights are whole and the tools installed
   (`AskPictureServer.isInstalled`) at the start of a request.
 
+## A photo, a drawing or a painting
+
+The user, 2026-10-24: "I'd like to say 'paint a picture' and it will use brush
+tools when they're ready, or make a photorealistic image of ..., and it will
+generate an image, or 'make vector art of ...' or 'create an icon' and it would
+use the vector tools". Ask reads which kind the person asked for and uses that
+tool (`AgentPictureKind`, `Sources/PhotonzCore/AgentPhoto.swift`):
+
+* **A photo** ("a photo of", "photograph", "photorealistic", "realistic"):
+  `add_photo`, the same picture model's painting KEPT AS PIXELS, one ordinary
+  picture layer (its pixels in the image store) filling the canvas, the pixel
+  selection or the frame asked for, as one undo step. The prompt is the
+  subject, the person's words, and a general photographic look
+  (`PictureModelPhotoRequest`): none of the flat-look words a traced drawing
+  needs. It is painted at the box's aspect at about a million pixels, every
+  side a multiple of 16 (`/photo` in `Scripts/picture-model/server.py`).
+* **Vector layers** ("vector art", "draw", "illustration", "icon", "logo",
+  "line art"): `add_drawing`, painted and traced as before. An icon or vector
+  word wins over a photo word ("a photo icon" is an icon).
+* **A painting** ("paint", "painting", "brush"): the brushes are not ready, so
+  until the Brush tool task lands it is painted as ONE picture layer in a
+  painted look, and Ask says so in a line above the rows: "No brushes yet,
+  so I made one image." With no picture model it is drawn as vector art and
+  the line says "No brushes yet, so I drew vector art."
+* **Neither**: the planning model picks (the instructions: a real place,
+  animal, person or moment is a photo; a thing to design with is a drawing),
+  and the row says which it made ("Made a photo of a dog on a beach", "Drew a
+  dog").
+* **The other way**: "as a photo", "as vector art", "try it as a painting" on
+  its own makes the last request again that way (`AgentPictureKind.remade`).
+  The words that named the earlier kind are left out of the new prompt
+  (`withoutOtherKinds`), so "make vector art of a fox" made again as a photo
+  is not painted as vector art.
+
+Only the general words for a kind are read; nothing about any subject. Agents
+get the same tool over MCP (`add_photo`).
+
 ## What was taken out (2026-10-22)
 
 Queue task `ask-draws-any-subject-well-with-nothing-stored-o`. Taken out, with
@@ -671,6 +708,14 @@ Agent group.
 * `Scripts/playtest/ask-builds-base-components-walk.json`: a blank canvas, the
   user's "create a table of apple like quality base components that show
   different states and text" (one Command Z takes the whole sheet back).
+* `Scripts/playtest/ask-makes-a-photo-walk.json`: a blank canvas, Command K,
+  "a photo of a dog on a beach" (one picture layer, "Made a photo of..."),
+  then "an illustration of a dog" (vector layers, "Drew a dog").
+* `Scripts/playtest/ask-makes-it-again-as-a-photo-walk.json`: "make vector art
+  of a fox", then "as a photo".
+* `Scripts/playtest/ask-paints-before-brushes-walk.json`: "paint a picture of a
+  sunset over the sea" makes one painted picture and says brushes are not
+  ready.
 
 Each presses the Ask button, types, sends, waits for `ran`, then undoes and
 redoes the request, turns its row off and on with the switch, deletes it, and

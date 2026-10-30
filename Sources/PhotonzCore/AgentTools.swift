@@ -42,6 +42,7 @@ public enum AgentRequest: Hashable, Sendable {
     case addShape(document: String?, shape: AgentShape)
     case addPath(document: String?, path: AgentPath)
     case addDrawing(document: String?, drawing: AgentDrawingCall)
+    case addPhoto(document: String?, photo: AgentPhotoCall)
     case addText(document: String?, text: AgentText)
     case setLayer(document: String?, layer: String, change: AgentLayerChange)
     case findElements(document: String?, region: CGRect?, limit: Int)
@@ -323,6 +324,18 @@ public enum AgentTools {
                 "plan": ["type": "array", "items": ["type": "string"], "description": "Only when the request names more than the thing: one to four short statements someone looking at the picture can answer yes or no, for each pose, action, view, mood and relationship the request names, and when two things act together which parts touch (its paws on the keys) and what is in front. Nothing the request did not ask for. Painted from, and checked against the drawing once it is made."],
             ], required: ["subject"])),
         AgentTool(
+            name: "add_photo",
+            description: "Make a photo: a real photograph of anything (a dog on a beach, a kitten walking in the snow) painted for the request by the picture model on this Mac, as one picture layer filling the canvas or the frame given. For a photo, photograph or photorealistic picture; a drawing, vector art or an icon is add_drawing. Nothing is looked up. One undo step.",
+            inputSchema: schema([
+                "document": documentProperty,
+                "subject": ["type": "string", "description": "What the photo shows, in the person's words: what it is, what it is doing, where, the light."],
+                "asked": ["type": "string", "description": "The person's own words for it, when they say more than the subject does."],
+                "frame": boxProperty("The box the photo fills, in canvas points. The whole canvas when left out."),
+                "name": ["type": "string", "description": "The layer's name in the Layers list. The subject when left out."],
+                "look": ["type": "string", "enum": .array(AgentPhotoCall.Look.allCases.map { .string($0.rawValue) }),
+                         "description": "photo when left out; painting for a painted picture."],
+            ], required: ["subject"])),
+        AgentTool(
             name: "add_text",
             description: "Set words with the Text tool, their top left at x and y. The box is measured to fit them. One undo step.",
             inputSchema: schema([
@@ -520,7 +533,7 @@ public enum AgentTools {
         case "run_command":
             return AppCommandTable.call(args["command"]?.stringValue ?? "", arguments: args["arguments"])
                 .map { .runCommand(document: document, call: $0) }
-        case "new_picture", "add_shape", "add_path", "add_drawing", "add_text", "set_layer", "find_elements",
+        case "new_picture", "add_shape", "add_path", "add_drawing", "add_photo", "add_text", "set_layer", "find_elements",
              "add_measurement", "find_measurements", "mark_measurements", "find_misalignments", "mark_misalignments",
              "list_components", "place_component", "export":
             return drawingRequest(name, args, document: document)
@@ -627,6 +640,20 @@ public enum AgentTools {
                 style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 },
                 asked: args["asked"]?.stringValue, scene: args["scene"]?.boolValue ?? false,
                 plan: AgentDrawingCall.statements(args["plan"]))))
+        case "add_photo":
+            let subject = (args["subject"]?.stringValue ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !subject.isEmpty else { return fail("subject is empty: say what the photo shows.") }
+            if let frame = region(args["frame"]), frame.width < 1 || frame.height < 1 {
+                return fail("the frame needs a width and height of at least 1.")
+            }
+            var look = AgentPhotoCall.Look.photo
+            if let said = args["look"]?.stringValue {
+                guard let read = AgentPhotoCall.Look(rawValue: said) else { return fail("look is \(said); give photo or painting.") }
+                look = read
+            }
+            return .success(.addPhoto(document: document, photo: AgentPhotoCall(
+                subject: subject, asked: args["asked"]?.stringValue, frame: region(args["frame"]),
+                name: args["name"]?.stringValue, look: look)))
         case "add_text":
             let words = args["text"]?.stringValue ?? ""
             guard !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return fail("text is empty.") }

@@ -1,0 +1,130 @@
+{
+  "out": "/tmp/photonz-playtest/ask-makes-a-photo-walk",
+  "seed": "ask-can-make-a-photo-as-well-as-an-illustration: at Next defaults with the picture model set up in Settings > Ask, an empty picture, Command K, 'a photo of a dog on a beach' makes one photographic picture layer filling the canvas and the row says it made a photo; then 'an illustration of a dog' draws vector layers and its row says it drew",
+  "clock": 560,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 900,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "a photo of a dog on a beach"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 260
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Words",
+      "reads": "Made a photo of a dog on a beach"
+    },
+    {
+      "do": "describe",
+      "stage": "1-photo",
+      "note": "one picture layer, a photograph of a dog on a beach, filling the canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-photo"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "an illustration of a dog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 260
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Words",
+      "reads": "Drew a dog"
+    },
+    {
+      "do": "describe",
+      "stage": "2-illustration",
+      "note": "a group of traced vector paths, the dog, over the photo"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-illustration"
+    }
+  ]
+}

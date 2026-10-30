@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import Observation
 import PhotonzCore
 
@@ -58,6 +59,62 @@ enum AskPictureModel {
         }
         return .success(Painted(svg: svg, model: AskPictureModelPlan.name, paths: Int(json["paths"]?.doubleValue ?? 0),
                                 seconds: json["seconds"]?.doubleValue ?? 0))
+    }
+
+    /// A photo takes about a minute at a million pixels; a first one also loads the model.
+    static let photoPatienceSeconds: TimeInterval = 300
+
+    struct Photo {
+        let image: CGImage
+        let model: String
+        let width: Int
+        let height: Int
+        let seconds: Double
+    }
+
+    /// The photo `call` asks for, painted to fill a box of `box` points and
+    /// kept as pixels (add_photo); nil when the picture model is not set up.
+    static func photo(_ call: AgentPhotoCall, box: CGSize) async -> Result<Photo, AgentWork.Failure>? {
+        guard isReady() else { return nil }
+        let server = AskPictureServer.shared
+        server.busy += 1
+        defer {
+            server.busy -= 1
+            server.lastUsed = Date()
+        }
+        guard let port = try? await server.ready(),
+              let url = AskPictureModelPlan.base(port: port)?.appending(path: "photo") else {
+            return .failure(AgentWork.Failure("add_photo: the picture model did not start."))
+        }
+        let asked = PictureModelPhotoRequest(call, box: box)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = photoPatienceSeconds
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var body = (try? JSONEncoder().encode(asked))
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
+        // Asked again, a new photo, not the same one.
+        body["seed"] = Int.random(in: 1...999_999)
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let json = try? AgentJSON.parse(data) else {
+            return .failure(AgentWork.Failure("add_photo: the picture model did not answer."))
+        }
+        guard (response as? HTTPURLResponse)?.statusCode == 200, let path = json["picture"]?.stringValue else {
+            return .failure(AgentWork.Failure("add_photo: the picture model said \(json["error"]?.stringValue ?? "nothing")."))
+        }
+        let file = URL(fileURLWithPath: path)
+        defer { try? FileManager.default.removeItem(at: file) }
+        // Read and decoded now: a picture decoded later from a file deleted
+        // here draws black.
+        let decodeNow = [kCGImageSourceShouldCacheImmediately: true] as CFDictionary
+        guard let bytes = try? Data(contentsOf: file),
+              let source = CGImageSourceCreateWithData(bytes as CFData, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, decodeNow) else {
+            return .failure(AgentWork.Failure("add_photo: the picture model's photo could not be read."))
+        }
+        return .success(Photo(image: image, model: AskPictureModelPlan.name, width: image.width, height: image.height,
+                              seconds: json["seconds"]?.doubleValue ?? 0))
     }
 }
 

@@ -1,0 +1,19 @@
+{
+  "request": "make a photorealistic image of a lighthouse on a cliff at dusk",
+  "group": "photo",
+  "photo": true,
+  "from": "ask-can-make-a-photo-as-well-as-an-illustration (the user, 2026-10-24 and 2026-10-27: 'generate a photo of a kitten walking in the snow')",
+  "start": {
+    "blank": [
+      1440,
+      900
+    ]
+  },
+  "names": [
+    "lighthouse"
+  ],
+  "expect": {
+    "words": false
+  },
+  "timeout": 420
+}

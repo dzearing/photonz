@@ -22,6 +22,9 @@ public enum AskChangeWords {
         case "mark_misalignments": Kind(verb: "Found", one: "a misalignment", many: "misalignments")
         case "add_shape", "add_path": Kind(verb: "Drew", one: "a shape", many: "shapes")
         case "add_drawing": Kind(verb: "Drew", one: "a picture", many: "pictures")
+        case "add_photo" where step.arguments["look"]?.stringValue == AgentPhotoCall.Look.painting.rawValue:
+            Kind(verb: "Painted", one: "a picture", many: "pictures")
+        case "add_photo": Kind(verb: "Made", one: "a photo", many: "photos")
         case "add_text": Kind(verb: "Added", one: "text", many: "texts")
         case "add_title": Kind(verb: "Added", one: "a title", many: "titles")
         case "place_component": Kind(verb: "Placed", one: "a component", many: "components")
@@ -43,7 +46,7 @@ public enum AskChangeWords {
     /// Steps whose own words already say what was made: a drawing's subject,
     /// the words of a text, a count of marks.
     private static let saysWhatItMade: Set<String> = [
-        "add_drawing", "add_text", "add_title", "add_measurement", "mark_measurements", "mark_misalignments",
+        "add_drawing", "add_photo", "add_text", "add_title", "add_measurement", "mark_measurements", "mark_misalignments",
     ]
 
     /// What one set_layer did, by which of its values it set.
@@ -109,6 +112,18 @@ public enum AskChangeWords {
 
         func phrase(_ group: (key: String, kind: Kind, steps: [AskStep]), room: Int, alone: Bool) -> String {
             let first = group.steps[0]
+            if first.tool == "add_photo" {
+                // "a photo of a dog on a beach", so the row says which kind it made.
+                let photo = group.kind.one == "a photo"
+                let subjects = group.steps.compactMap { step in
+                    subjectPhrase(step.arguments["subject"]?.stringValue ?? "", icon: false, asked: asked)
+                        .map { photo ? "a photo of \($0)" : $0 }
+                }
+                if subjects.count == group.steps.count, let listed = list(subjects, room: room, alone: alone) {
+                    return listed
+                }
+                return group.steps.count > 1 ? "\(group.steps.count) \(group.kind.many)" : group.kind.one
+            }
             if first.tool == "add_drawing" {
                 let subjects = group.steps.compactMap { step in
                     subjectPhrase(step.arguments["subject"]?.stringValue ?? "",

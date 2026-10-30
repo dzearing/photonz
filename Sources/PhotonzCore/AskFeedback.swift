@@ -25,7 +25,7 @@ public enum AskDrawingSource: String, Codable, Hashable, Sendable, CaseIterable 
     public static func of(tool: String, answer: String) -> AskDrawingSource? {
         switch tool {
         case "add_shape", "add_path": return .drawn
-        case "add_drawing":
+        case "add_drawing", "add_photo":
             guard let data = answer.data(using: .utf8),
                   let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let from = object["from"] as? String else { return nil }

@@ -1,0 +1,20 @@
+{
+  "request": "generate a photo of a kitten walking in the snow",
+  "group": "photo",
+  "photo": true,
+  "from": "ask-can-make-a-photo-as-well-as-an-illustration (the user, 2026-10-24 and 2026-10-27: 'generate a photo of a kitten walking in the snow')",
+  "start": {
+    "blank": [
+      1440,
+      900
+    ]
+  },
+  "names": [
+    "kitten",
+    "cat"
+  ],
+  "expect": {
+    "words": false
+  },
+  "timeout": 420
+}

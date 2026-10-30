@@ -35,7 +35,7 @@ checked.
 | --- | --- |
 | Documents | `list_documents`, `list_history` (screenshots and recordings, newest first), `open_document` (a path or a History index), `new_picture`, `new_video` |
 | Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
-| Drawing | `add_drawing` (anything, a thing or a scene, as editable layers: painted for the request by Photonz's picture model and traced when it is running, else your own SVG; nothing is looked up; `icon` for an icon frame, `style` for a look the person named, `scene` for a place with its own sky), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words, `flip` to mirror it in place; `run_command mirror_across_center` makes the mirrored second half of a symmetrical drawing) |
+| Drawing | `add_photo` (a real photograph of anything, painted by Photonz's picture model and kept as one picture layer filling the canvas or `frame`; `look: painting` for a painted picture), `add_drawing` (anything, a thing or a scene, as editable layers: painted for the request by Photonz's picture model and traced when it is running, else your own SVG; nothing is looked up; `icon` for an icon frame, `style` for a look the person named, `scene` for a place with its own sky), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words, `flip` to mirror it in place; `run_command mirror_across_center` makes the mirrored second half of a symmetrical drawing) |
 | Measuring a screenshot | `find_measurements` (the redline code chooses: one size of each kind of control, then the spacing), `mark_measurements` (lays the ids you pick, readouts kept clear); `find_elements` and `add_measurement` for one particular thing |
 | Checking a screenshot's consistency | `find_misalignments` (edges that miss by 1 to 8 points, uneven gaps, padding or borders that differ, every number measured), `mark_misalignments` (redlines for the ids you pick) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
@@ -144,6 +144,16 @@ Photonz work should look designed, not assembled.
 4. Make them look like the kit: the system font at one small type scale, the
    platform's own colours, one corner radius per kind, padding on the 8 grid.
 5. `render_picture` the sheet and fix what reads wrong.
+
+### A photo
+
+"A photo of a dog on a beach", "a photorealistic kitten in the snow": `add_photo` with
+`subject` in the person's words (what it shows, what it is doing, where, the light). It is
+painted by Photonz's picture model on this Mac at the canvas's shape, about a minute, and
+lands as one ordinary picture layer: effects, crop and masks work on it. It is not traced,
+so it is pixels, not paths: when the person wants editable shapes, an icon or vector art,
+use `add_drawing` instead. With no picture model set up it answers that it cannot, and
+Settings, Ask is where it is set up.
 
 ### An icon or a drawing as SVG
 

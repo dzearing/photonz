@@ -1,0 +1,77 @@
+{
+  "out": "/tmp/photonz-playtest/ask-paints-before-brushes-walk",
+  "seed": "ask-can-make-a-photo-as-well-as-an-illustration: until the Brush tool lands, 'paint a picture of a sunset over the sea' paints one picture layer in a painted look, and Ask says in one line that painting with brushes is not ready yet and what it made instead",
+  "clock": 400,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 900,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "paint a picture of a sunset over the sea"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Ask Says",
+      "reads": "No brushes yet, so I made one image."
+    },
+    {
+      "do": "describe",
+      "stage": "1-painted",
+      "note": "one picture layer, painted, and the line about brushes under the row"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-painted"
+    }
+  ]
+}

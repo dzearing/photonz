@@ -1,0 +1,125 @@
+{
+  "out": "/tmp/photonz-playtest/ask-makes-it-again-as-a-photo-walk",
+  "seed": "ask-can-make-a-photo-as-well-as-an-illustration: at Next defaults with the picture model set up, 'make vector art of a fox' draws vector layers, then 'as a photo' makes that same request again as a photo layer, and the row says it made a photo of a fox",
+  "clock": 560,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 900,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make vector art of a fox"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 260
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-vector",
+      "note": "a group of traced vector paths, the fox"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-vector"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "as a photo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 260
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Words",
+      "reads": "Made a photo of a fox"
+    },
+    {
+      "do": "describe",
+      "stage": "2-as-a-photo",
+      "note": "the fox made again as one photo layer"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-as-a-photo"
+    }
+  ]
+}

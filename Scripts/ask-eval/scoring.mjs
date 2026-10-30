@@ -13,7 +13,8 @@ export const ASKED_FLOOR = 7;
 export function combine(testCase, rules, judge, named) {
   if (!rules || rules.score === 0) return 0;
   const j = judge?.score ?? 0;
-  const named3 = testCase.group === "drawing" && (testCase.names ?? []).length > 0;
+  // A photo is named blind like a drawing: a dog on a beach should read as a dog.
+  const named3 = ["drawing", "photo"].includes(testCase.group) && (testCase.names ?? []).length > 0;
   let value = named3 ? 3 * rules.score + 4 * j + 3 * (named?.score ?? 0) : 4 * rules.score + 6 * j;
   const asked = judge?.lines?.didWhatWasAsked;
   if (typeof asked === "number" && asked < ASKED_FLOOR) value *= asked / ASKED_FLOOR;
