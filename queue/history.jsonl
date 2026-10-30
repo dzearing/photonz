@@ -14634,3 +14634,9 @@
 {"t":"2026-10-30T21:34:28.735Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-30T21:34:28.801Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-30T21:34:28.880Z","ev":"task_blocked","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"Item 3 (no slower than before) can't be met while the stroke under the hand is the stroke that lands: with no thinned end at all, a 150 pt move on a 12 MP picture is still 3x the before column. Card asks: keep the cost, end mouse strokes at full width, or go back to the preview."}
+{"t":"2026-10-30T21:34:59.318Z","ev":"task_started","id":"every-brush-follows-the-pointer-with-no-lag-even","title":"Every brush follows the pointer with no lag, even at 150 pt and up","priority":"p1-high"}
+{"t":"2026-10-30T23:47:25.854Z","ev":"task_walks","id":"every-brush-follows-the-pointer-with-no-lag-even","walks":["brushes-keep-up-with-the-hand-walk","painting-holds-still-walk"]}
+{"t":"2026-10-30T23:47:25.932Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
+{"t":"2026-10-30T23:47:26.008Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
+{"t":"2026-10-30T23:47:26.084Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T23:47:26.170Z","ev":"task_pending","id":"every-brush-follows-the-pointer-with-no-lag-even","from":"in_progress","note":"Most of the bar reached (8bc940fb): every size on 12 MP and up to 300 pt on a screenshot under 8 ms; 500 pt chalk, charcoal and oil on a screenshot still 9 to 12.6 ms, waiting on the thinned-end card"}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-30T21:34:28.879Z",
+  "updated": "2026-10-30T23:47:26.083Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -207,6 +207,10 @@
     {
       "t": "2026-10-30T21:34:28.875Z",
       "note": "Item 3 (no slower than before) can't be met while the stroke under the hand is the stroke that lands: with no thinned end at all, a 150 pt move on a 12 MP picture is still 3x the before column. Card asks: keep the cost, end mouse strokes at full width, or go back to the preview."
+    },
+    {
+      "t": "2026-10-30T23:47:26.082Z",
+      "note": "From every-brush-follows-the-pointer (8bc940fb, 2026-10-30): with a core kept running while painting and cheaper dabs, 20 and 150 pt moves are now 0.7-3.4 ms p95 on both the 12 MP and screenshot canvases (screenshot 150 pt oil 4.5 before the WYSIWYG change -> 3.1 now, pencil 3.1 -> 2.2; 12 MP 150 pt oil 1.4 -> 2.3), so option a on the card costs far less than its text says. Only 500 pt on a screenshot still misses a frame (chalk 12.6, charcoal 10.2, oil 9.0); with the live end off they bench at 4-6 ms. Tables: queue/audits/2026-10-30-brush-lag-measures.txt"
     }
   ],
   "started": "2026-10-30T21:16:55.811Z",

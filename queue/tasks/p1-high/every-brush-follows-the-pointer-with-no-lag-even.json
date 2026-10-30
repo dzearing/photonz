@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:32:07.793Z",
-  "updated": "2026-10-30T21:03:38.241Z",
+  "updated": "2026-10-30T23:47:26.169Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'the watercolor looks good but it's slow if i increase the size to 150pt or more, feels quite laggy', then 'actually so does oil... still trying everything but the brushes feel very laggy to use'. A cause shared by every medium (the live overlay, CanvasBrush.swift) is as likely as per-medium cost. Not reproduced in the intake window. Theories only: Sources/PhotonzRender/Watercolour.swift mark(_:) walks every pixel of a box radius*(1+farthest) around each dab on the CPU, so the work grows with the square of the size and with how close dabs are spaced; reach() loops over every earlier wet wash per pixel; WetField.ensure copies the whole field when it grows; and the live stroke (Sources/Photonz/CanvasBrush.swift) may be building a full CGImage of the overlay per drag. Measure which of these it actually is before fixing.",
@@ -75,6 +75,31 @@
     {
       "t": "2026-10-30T21:03:38.240Z",
       "note": "From painting-is-what-you-see (d233562c, 2026-10-30): dab pixels now split across cores at a far smaller size, pencil/crayon dabs batched, charcoal smear by rows, tail journal saves once, overlay pieces 128 px. 12 MP at fit p95: 150 pt oil 6.4, pencil 4.6, charcoal 5.5, marker 2.9, watercolour 5.1; 500 pt watercolour 13.7, oil 13.5, pencil 11.9, charcoal 13.8, marker 6.1. 1600x1000 at fit, 500 pt: oil 20.8, charcoal 17.4, pencil 16.5. Remaining per-move cost is the dab work itself (oil lay per pixel, dry tip paper/streak reads) times the re-laid tail. Measurement walks: queue/audits/2026-10-30-paint-move-cost-*.walk."
+    },
+    {
+      "t": "2026-10-30T21:34:59.314Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T23:47:25.850Z",
+      "note": "owns these walks: brushes-keep-up-with-the-hand-walk, painting-holds-still-walk"
+    },
+    {
+      "t": "2026-10-30T23:47:25.930Z",
+      "note": "Reproduced and measured (8bc940fb): the lag was mostly the cores slowing between dabs (same 500 pt oil dab 4.8 ms back to back, 10.7 ms with 8 ms gaps). Fixed with a core kept running while painting (CoresReady) plus cheaper oil and dry dabs, same pixels byte for byte (BigBrushKeepsItsPixelsTests). p95 a move, before -> after: every medium at 20/50/150/300/500 pt on 12 MP (50 strokes and empty) now under 8 ms (500 pt worst chalk 14.5 -> 6.7); 50 strokes vs empty layer flat (oil 500 5.0 vs 4.9). Screenshot size (1600x1000 at fit) all under 8 ms except 500 pt: chalk 23.3 -> 12.6, charcoal 20.8 -> 10.2, oil 22.3 -> 9.0, watercolour 16.2 -> 8.2. Tables: queue/audits/2026-10-30-brush-lag-measures.txt; audit 2026-10-30-every-brush-follows-the-pointer-with-no-lag-even.json."
+    },
+    {
+      "t": "2026-10-30T23:47:26.006Z",
+      "note": "Left open: items 2 and 4 (8 ms at every size) still miss at 500 pt on a screenshot-size canvas for chalk, charcoal, oil (watercolour borderline). Release bench, same case, with the live thinned end off: oil 7.1 -> 4.0, chalk 10.5 -> 6.1, charcoal 8.2 -> 5.3, so the remainder is the end re-laid each move, which the user's pending card on painting-is-what-you-see (option b) decides. Tried and dropped: skipping dry pixels a dab could not raise (streaks keep the bound too high, no gain). Six brush walks fail at the brush chooser; all were already failing in the last sweep and are owned by walks-that-fail-in-the-full-sweep-26, not this change."
+    },
+    {
+      "t": "2026-10-30T23:47:26.168Z",
+      "note": "Most of the bar reached (8bc940fb): every size on 12 MP and up to 300 pt on a screenshot under 8 ms; 500 pt chalk, charcoal and oil on a screenshot still 9 to 12.6 ms, waiting on the thinned-end card"
     }
+  ],
+  "started": "2026-10-30T21:34:59.313Z",
+  "walks": [
+    "brushes-keep-up-with-the-hand-walk",
+    "painting-holds-still-walk"
   ]
 }
