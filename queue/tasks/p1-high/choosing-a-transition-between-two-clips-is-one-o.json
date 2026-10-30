@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T01:54:13.151Z",
-  "updated": "2026-10-30T02:11:26.296Z",
+  "updated": "2026-10-30T04:33:43.307Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-29 (intake): 'like transition fade out, fade in, black out. these are super redundant and one sided. wondering if there is a nicer way to select a transition between 2 clips'. Same session as any-transition-goes-on-any-two-clips-that-touch (3D transitions refused between two touching recordings). Code: clip menu fade rows come from EditorState+PictureFade.swift (pictureFadeMenuRows, fadeInAndOutMenuRow) and EditorState+TimelineMenus.swift; Add Transition from EditorState+TransitionTargets.swift (addTransitionMenuRow, aimed at both ends of a clip); the picker at a cut is TransitionPicker.swift; the panel is TransitionsGroup.swift. Grown-up tool check: Premiere and Final Cut select the edit point and put the transition on it; fades are opacity handles or a dissolve at the edge.",
@@ -39,6 +39,51 @@
     {
       "t": "2026-10-30T02:11:26.295Z",
       "note": "seq 6e-7 -> 20"
+    },
+    {
+      "t": "2026-10-30T03:21:54.410Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T03:25:45.444Z",
+      "note": "Review before building: most of the mock already ships (hover lights the edit point, a click opens At this cut). What is missing: tiles draw stand-in colours, not the two clips; tiles all play at once rather than on hover; the picker never names the two sides; the clip menu still has Fade In / Fade Out / Fade In and Out under More and Add Transition on top (both ends at once); the cut's own menu has an Add Transition submenu, not the picker; and the fade handles show at an end that meets another clip, where a fade competes with the transition. Premiere/FCP: click edit point, pick, done; fades are opacity handles. Risk: losing 'Add Transition at both ends' — ⌘T on several picked clips still does every cut among them. Chose a Transition ▸ At the Start… / At the End… submenu over one row guessing a side when a clip meets others at both ends, because a context menu does not know which end the click was nearer. Chose to leave titles and pictures' Fade In and Out alone (user asked for it on 2026-10-19; they meet no clip) and change only recordings."
+    },
+    {
+      "t": "2026-10-30T04:30:01.726Z",
+      "note": "owns these walks: a-transition-is-picked-at-the-cut-walk, a-click-on-the-cut-opens-its-tiles-walk, timeline-right-click-menus-walk, transitions-where-clips-meet-walk, a-video-clip-fades-walk"
+    },
+    {
+      "t": "2026-10-30T04:30:19.454Z",
+      "note": "Built: core TimelineMenuTable .addTransition -> .transition ('Transition…'); recordings lose Fade In / Fade Out / Fade In and Out from More; CutShots.swift (cutShots(at:), ClipTransitionCopy.between/sides) with CutShotsTests; app: clipTransitionMenuRows (Transition… or Transition ▸ At the Start…/At the End…), cut menu and ruler open the picker (openTransitionPickerAfterMenu, a pass after the menu closes); TransitionPicker names both clips and draws tiles from the clips' real frames (ClipFilmstripFrames, 192px) via VideoKit.TransitionMovie(outgoing:incoming:), still at rest, TimelineView-played on hover; fade handles hidden at an end that meets a clip unless already fading; a picked clip's end grip over a cut now opens the tiles at that cut on click and lights it on hover (it used to swallow the click)."
+    },
+    {
+      "t": "2026-10-30T04:30:19.526Z",
+      "note": "Found while building: with the first clip picked, a pointer click right on the cut landed on its end grip, which ignored taps, so the tiles never opened; fixed in ClipPiecesBar (editPointAt, editPointUnderGrip)."
+    },
+    {
+      "t": "2026-10-30T04:30:19.600Z",
+      "note": "Walks: new a-transition-is-picked-at-the-cut-walk (green, no flags) and a-click-on-the-cut-opens-its-tiles-walk (pointer proof; red on this Mac because windowClick does not reach the timeline, folded into walks-that-fail-in-the-full-sweep-26). Updated 11 walks that chose Add Transition ▸ / Change Transition ▸ / More ▸ Fade on a recording; green: timeline-right-click-menus, timeline-right-click, transitions-where-clips-meet, cube-between-two-recordings, transitions-in-depth, transition-direction-on-a-click, join-through-edit, a-video-clip-fades. Still red for reasons already red on 10-26 and outside these steps: shorten-the-cut-for-a-dissolve (step 26, the shorten offer), insert-a-title-before-a-clip (step 13, Keynote Section tile)."
+    },
+    {
+      "t": "2026-10-30T04:30:19.672Z",
+      "note": "Pictures looked at: before/after clip menu (Add Transition ▸ and a fade diamond on the corner meeting b-roll -> Transition…, no diamond), tiles (both clips named, real frames, 240 going out and 0 coming in; Flip was blank at half way so turning kinds now rest at 0.3), cut menu (Transition… first), free start faded 0.5s by its handle. Not watched: a tile playing on hover, since no walk can rest the pointer in the popover."
+    },
+    {
+      "t": "2026-10-30T04:30:19.744Z",
+      "note": "left rough: tiles read mostly dark on two recordings of the same dark screen at 192px/26pt; no task, the mock fixes the tile height."
+    },
+    {
+      "t": "2026-10-30T04:33:43.305Z",
+      "note": "Shipped in 500f1363 (Next, no flags): a recording's right-click has one Transition… row (At the Start…/At the End… under Transition where it meets clips at both ends) and no Fade In / Fade Out / Fade In and Out / Add Transition; the cut's menu and the ruler's open the same tiles; the tiles name both clips (Tutorial Sample → b-roll, tip 'Cube: Tutorial Sample turns into b-roll') and draw the two clips' real edge frames, still at rest and playing under the pointer; fade handles only at a free end; a picked clip's end grip over a cut now opens the tiles on click. Verified: CutShotsTests + TimelineMenuTableTests written first, full Scripts/test.sh green; a-transition-is-picked-at-the-cut-walk green with real pictures, 8 updated walks green; audit queue/audits/2026-10-29-transition-at-the-cut.json with marked before/after. Not watched by a walk: hover playback and the pointer click on the cut, because walks cannot point inside the popover or click the timeline on this Mac (folded into walks-that-fail-in-the-full-sweep-26; a-click-on-the-cut-opens-its-tiles-walk waits on it)."
     }
-  ]
+  ],
+  "started": "2026-10-30T03:21:54.409Z",
+  "walks": [
+    "a-transition-is-picked-at-the-cut-walk",
+    "a-click-on-the-cut-opens-its-tiles-walk",
+    "timeline-right-click-menus-walk",
+    "transitions-where-clips-meet-walk",
+    "a-video-clip-fades-walk"
+  ],
+  "completed": "2026-10-30T04:33:43.306Z"
 }
