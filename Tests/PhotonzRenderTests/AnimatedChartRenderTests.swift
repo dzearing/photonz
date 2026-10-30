@@ -119,38 +119,52 @@ struct AnimatedChartRenderTests {
             #expect(played[ms] == TitleBackgroundsRenderTests.bytes(exported), "differs at \(ms)")
         }
     }
+}
+
+/// The animated charts' frame budget. Serialized and named ...PerfTests, so
+/// `Scripts/test.sh` holds it until every other test has finished.
+@Suite("Animated charts draw inside a frame", .serialized)
+struct AnimatedChartPerfTests {
 
     /// Every chart at 1080p through the canvas's own render, over twenty
-    /// frames of its build, the numbers counting. Printed for the perf note.
+    /// frames of its build, the numbers counting, each frame beside the 1080p
+    /// frame yardstick taken in the same round. Printed for the perf note.
+    ///
+    /// It was a stopwatch against a bound scaled once, when the process
+    /// started, by the filter graph: that factor read 1.08x to 3.76x across
+    /// five full runs on one Mac, and the worst chart read 19 to 72 ms, so the
+    /// gate failed on unchanged code in releases v0.20.0 and v0.21.0 and
+    /// passed alone at a fifth of its bound. Beside a ruler drawn in the same
+    /// round, the machine's mood divides out.
     @Test("Every chart at 1080p draws inside a frame while it builds")
     func insideAFrame() throws {
         let store = ImageStore()
         var report: [String] = []
-        var worstMedian = 0.0
+        var dearest: (kind: ChartKind, reading: MachineSpeed.Interleaved)?
         for kind in ChartKind.allCases {
-            let (doc, _) = try Self.placed(kind)
-            let renderer = DocumentRenderer(privateContext: CIContext(options: [.cacheIntermediates: true]))
+            let (doc, _) = try AnimatedChartRenderTests.placed(kind)
+            let renderer = MachineSpeed.timedRenderer()
             // Warmed up the way playback is: the moving background's kernels
             // compile on a fresh context's first frames.
             for ms in stride(from: 200, to: 600, by: 50) { _ = renderer.renderInteractive(doc.drawn(atTimeMS: ms), store: store) }
-            var samples: [Double] = []
-            for ms in stride(from: 616, to: 616 + 20 * 50, by: 50) {
-                let shown = doc.drawn(atTimeMS: ms)
-                let began = ContinuousClock.now
-                _ = renderer.renderInteractive(shown, store: store)
-                samples.append(TitleBackgroundsRenderTests.milliseconds(ContinuousClock.now - began))
+            let reading = MachineSpeed.measureFrames(frames: 20) { frame in
+                _ = renderer.renderInteractive(doc.drawn(atTimeMS: 616 + frame * 50), store: store)
             }
-            let median = samples.sorted()[samples.count / 2]
-            worstMedian = max(worstMedian, median)
-            report.append(String(format: "%@: median %.1fms, worst %.1fms over %d frames",
-                                 kind.name, median, samples.max() ?? 0, samples.count))
+            if reading.rawMS > (dearest?.reading.rawMS ?? -1) { dearest = (kind, reading) }
+            report.append(String(format: "%@: median %.1fms here, %.1fms on the calibration machine's clock",
+                                 kind.name, reading.rawMS, reading.normalizedMS))
         }
         print("[perf] animated charts building, 1920x1080:\n  " + report.joined(separator: "\n  "))
-        let factor = MachineSpeed.factor(.filterGraph)
-        if MachineSpeed.isGating {
-            // Measured alone at 5.1 to 10.3 ms a chart on 2026-10-17 (the donut
-            // the dearest); the gate is the shared one, scaled by this machine.
-            #expect(worstMedian < MachineSpeed.budget(baselineMS: 10.5, factor: factor), "worst median \(worstMedian)ms")
-        }
+        let worst = try #require(dearest)
+        // The dearest chart alone on the calibration machine: 8.8 to 9.3 ms
+        // beside a frame ruler reading 2.0 against its own 3.3, and 9.1 to
+        // 10.5 in the stopwatch run (2026-10-30). Twice the drawing read 19.4
+        // and fails 1.5 times that. Judged on its own clock, the yardstick
+        // only loosening the bound when it reads slow: divided by it, the
+        // same doubling read 25.4 against 24, by a hair.
+        MachineSpeed.judgeScaled("the dearest animated chart (\(worst.kind.name)) at 1080p", worst.reading,
+                                 baselineMS: 9.5, tolerance: 1.5,
+                                 sourceLocation: SourceLocation(fileID: #fileID, filePath: #filePath,
+                                                                line: #line, column: #column))
     }
 }

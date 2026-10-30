@@ -1,4 +1,5 @@
 import Foundation
+import Testing
 
 // MARK: Timing without the machine's mood in it
 //
@@ -117,5 +118,134 @@ enum PerfClock {
         let result = Comparison(subject: subjectReadings, reference: referenceReadings)
         result.report(name, rounds: rounds)
         return result
+    }
+
+    // MARK: A budget against the CPU ruler, for work done on this thread
+
+    /// What one ruler round cost on the calibration machine (the arm64 Mac this
+    /// repo is developed on, a debug build, the rest of the suite quiet),
+    /// measured 2026-10-30. The same work as `CPUYardstick` in
+    /// PhotonzCoreTests, which reads 4.5 there: re-record it only when the
+    /// calibration machine changes, never to make a gate pass.
+    static let rulerBaselineMS: Double = 4.5
+
+    /// Kept so the compiler cannot decide the ruler's work had no effect.
+    nonisolated(unsafe) static var sink: Double = 0
+
+    /// One round of the CPU ruler: arrays made, written, read and let go,
+    /// running no Photonz code. `CPUYardstick` says how this shape was chosen:
+    /// of the rulers tried beside a busy full suite it was the one that slowed
+    /// down exactly as much as the work being judged did.
+    static func rulerRound() {
+        var total = 0.0
+        for k in 0..<24_000 {
+            var candidates = [Double](repeating: Double(k), count: 64)
+            candidates[3] += 1
+            total += candidates[3]
+        }
+        sink += total
+    }
+
+    /// Work timed against the ruler, each round the ruler first and the
+    /// subject straight after on this thread's CPU clock.
+    struct Calibrated {
+        /// Each round's subject, in this machine's milliseconds of CPU.
+        let subject: [Double]
+        /// Each round's ruler, the fastest of its ruler rounds, in the same.
+        let ruler: [Double]
+
+        private var ratios: [Double] {
+            zip(subject, ruler).filter { $0.1 > 0 }.map { $0.0 / $0.1 }
+        }
+
+        /// A typical round of the subject, in the calibration machine's
+        /// milliseconds: the middle ratio, scaled by the ruler's baseline.
+        var medianMS: Double {
+            MachineSpeed.median(of: ratios).map { $0 * PerfClock.rulerBaselineMS } ?? .infinity
+        }
+
+        /// Every round of the subject added up, scaled by the ruler's middle
+        /// reading: for rounds that are different work (one per brush), where
+        /// no one round's ratio is typical of the rest.
+        var summedMS: Double {
+            guard !subject.isEmpty, rulerMS > 0, rulerMS.isFinite else { return .infinity }
+            return subject.reduce(0, +) / rulerMS * PerfClock.rulerBaselineMS
+        }
+
+        /// What the ruler itself read here, against its own baseline.
+        var rulerMS: Double { MachineSpeed.median(of: ruler) ?? .infinity }
+    }
+
+    /// Times `subject(round)` against the ruler for `rounds` rounds. A subject
+    /// much longer than the ruler takes `rulerRounds` of it each round, half
+    /// just before and half just after, and is read against the fastest of
+    /// them: what this core does when nothing
+    /// takes it away, which is the hardware's speed. Read against their
+    /// average instead, a WebP encode in the stopwatch run read 843ms against
+    /// the 1220 it costs alone (2026-10-30): the encode ran exactly as fast as
+    /// alone while the ruler, made of arrays let go, was slowed half as much
+    /// again by the 12 megapixel exports beside it, so twice the encode would
+    /// have passed.
+    static func calibrated(rounds: Int, rulerRounds: Int = 1,
+                           subject: (Int) -> Void) -> Calibrated {
+        rulerRound()  // warm: the first round pays for pages the rest reuse
+        var subjectMS: [Double] = []
+        var rulerMS: [Double] = []
+        func fastestRuler(_ count: Int) -> Double {
+            var fastest = Double.infinity
+            for _ in 0..<count {
+                let start = nowMS()
+                rulerRound()
+                fastest = min(fastest, nowMS() - start)
+            }
+            return fastest
+        }
+        let before = max(1, (rulerRounds + 1) / 2), after = rulerRounds - before
+        for round in 0..<rounds {
+            let ahead = fastestRuler(before)
+            let start = nowMS()
+            subject(round)
+            subjectMS.append(nowMS() - start)
+            // The rest of the ruler straight after: a stretch of slow ruler
+            // rounds on one side of the subject (the thread on an efficiency
+            // core, say, and back on a performance core for the subject) does
+            // not decide the round.
+            rulerMS.append(after > 0 ? min(ahead, fastestRuler(after)) : ahead)
+        }
+        return Calibrated(subject: subjectMS, ruler: rulerMS)
+    }
+
+    /// The gate every CPU budget here goes through: `ms` is a `Calibrated`
+    /// reading, the calibration machine's milliseconds, judged against
+    /// `baselineMS x tolerance`. Inside it passes however busy the machine
+    /// was; over it fails, unless the ruler read so far off its own number
+    /// that the machine was too busy to judge, which is said as a known issue.
+    /// Never gates under `PHOTONZ_PERF_GATE=report`, as CI and release run.
+    static func check(_ label: String, ms: Double, rulerMS: Double, baselineMS: Double,
+                      tolerance: Double,
+                      fileID: String = #fileID, filePath: String = #filePath,
+                      line: Int = #line, column: Int = #column) {
+        let bound = baselineMS * tolerance
+        let message = String(format: "%@ — %.1fms on the calibration machine's CPU clock against a "
+                             + "budget of %.1fms (baseline %.1fms x %.1f), beside a CPU ruler "
+                             + "reading %.2fms against its own %.2fms",
+                             label, ms, bound, baselineMS, tolerance, rulerMS, rulerBaselineMS)
+        print("[perf] budget: \(message)")
+        guard MachineSpeed.isGating else { return }
+        let location = SourceLocation(fileID: fileID, filePath: filePath, line: line, column: column)
+        switch MachineSpeed.reading(normalizedMS: ms, boundMS: bound, yardstickMS: rulerMS,
+                                    yardstickBaselineMS: rulerBaselineMS) {
+        case .withinBudget:
+            return
+        case .overBudget:
+            Issue.record(Comment(rawValue: "\(label) regressed: \(message)"), sourceLocation: location)
+        case .untrusted:
+            print("[perf] not judged: \(label), the CPU ruler read \(rulerMS)ms against its own \(rulerBaselineMS)ms")
+            withKnownIssue("\(label) could not be measured: the machine was too busy",
+                           sourceLocation: location) {
+                Issue.record(Comment(rawValue: "\(label) over budget on a machine too busy to judge it: \(message)"),
+                             sourceLocation: location)
+            }
+        }
     }
 }

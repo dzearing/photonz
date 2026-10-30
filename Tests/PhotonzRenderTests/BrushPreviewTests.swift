@@ -117,35 +117,48 @@ struct BrushPreviewTests {
         cache.removeAll()
         #expect(cache.count == 0)
     }
+}
+
+/// The brush grid's cost. Serialized and named ...PerfTests, so
+/// `Scripts/test.sh` holds it until every other test has finished and nothing
+/// else competes for the cores while it is read.
+@Suite("The brush grid paints without a stall", .serialized)
+struct BrushGridPerfTests {
 
     /// The whole grid at the size the chooser draws them, twice the points for
-    /// a Retina screen, one after another and cold. Measured for the audit.
-    /// The app paints its tiles off the main thread, each on its own, so this
-    /// is never a stall a person sees; the bar is a guard against a medium
-    /// whose one tile suddenly costs seconds. A debug build's numbers (this run) are
+    /// a Retina screen, one after another. The app paints its tiles
+    /// off the main thread, each on its own, so this is never a stall a person
+    /// sees; the bar is a guard against the painting getting dearer, a medium
+    /// whose one tile suddenly costs seconds or every tile twice what it did.
+    ///
+    /// Read against the CPU ruler, taken just before each tile on this
+    /// thread's CPU clock, because a stopwatch could not tell a slower brush
+    /// from a busier machine: a flat 3000 ms on the slowest tile, which reads
+    /// 300 ms alone, failed whole runs at 3.3, 3.5 and 3.7 s on unchanged
+    /// code (releases v0.20.0 and v0.21.0) while the chalk tile read 1.5 to
+    /// 2.5 s in every full run. A debug build's numbers (this run) are
     /// several times the shipping build's.
     @Test func theWholeGridPaintsWithoutAStall() throws {
         let wide = CGSize(width: 148, height: 76)
-        let clock = ContinuousClock()
-        var each: [String] = []
-        var slowest = 0.0
-        let elapsed = clock.measure {
-            for medium in BrushMedium.allCases {
-                let one = clock.measure {
-                    _ = BrushPreview.image(settings: BrushSettings(medium: medium), colorHex: "#ff5d8f",
-                                           size: wide, scale: 2)
-                }
-                slowest = max(slowest, Double(one.components.seconds) * 1000
-                              + Double(one.components.attoseconds) / 1e15)
-                each.append("\(medium.rawValue) \(one.components.attoseconds / 1_000_000_000_000_000 + one.components.seconds * 1000)")
-            }
+        let media = BrushMedium.allCases
+        // Each medium once on a tiny tile first, so what is timed is painting
+        // a tile and not what a process does once: the first tile painted, a
+        // pencil, read 590 to 1030 ms from run to run, and 37 ms warm.
+        for medium in media {
+            _ = BrushPreview.image(settings: BrushSettings(medium: medium), colorHex: "#000000",
+                                   size: CGSize(width: 24, height: 12), scale: 1)
         }
-        print("brush tiles, ms each: \(each.joined(separator: ", "))")
-        let ms = Double(elapsed.components.attoseconds) / 1e15 + Double(elapsed.components.seconds) * 1000
-        print("brush grid of \(BrushMedium.allCases.count) tiles at 148x76@2x: \(Int(ms)) ms")
-        // Per tile, and with room for a test run that has every core busy:
-        // the whole grid's time is printed, not judged, since a loaded run
-        // doubles it.
-        #expect(slowest < 3000, "one tile took \(Int(slowest)) ms")
+        let reading = PerfClock.calibrated(rounds: media.count, rulerRounds: 20) { round in
+            _ = BrushPreview.image(settings: BrushSettings(medium: media[round]), colorHex: "#ff5d8f",
+                                   size: wide, scale: 2)
+        }
+        let each = zip(media, reading.subject).map { "\($0.rawValue) \(Int($1))" }
+        print("brush tiles, ms of CPU each: \(each.joined(separator: ", "))")
+        print("brush grid of \(media.count) tiles at 148x76@2x: \(Int(reading.subject.reduce(0, +))) ms of CPU")
+        // The grid summed, alone on the calibration machine: 942 to 957 ms
+        // (2026-10-30). Twice the painting reads about 1900, so 1.6 times
+        // fails it.
+        PerfClock.check("brush grid of \(media.count) tiles", ms: reading.summedMS, rulerMS: reading.rulerMS,
+                        baselineMS: 950, tolerance: 1.6)
     }
 }

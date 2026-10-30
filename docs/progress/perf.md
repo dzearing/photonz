@@ -231,3 +231,50 @@ never alone. Two causes, both measured:
 Calibration machine, 2026-10-14: the `.frame` yardstick reads 3.1 to 3.3ms
 beside a frame, recorded as 3.3ms. Budgets unchanged. A renderer drawing every
 frame ten times over still fails six of the seven suites, quiet or loaded.
+
+## 2026-10-30 — Speed budgets read last, on their own, beside a ruler
+
+Releases v0.20.0 and v0.21.0 each needed a second full run because a speed
+budget failed in the first and passed alone. Five full runs measured first:
+three of them missed a budget on unchanged code (the export sizer's "second
+weigh quicker than the first" at 113.5 against 113.2 ms, the dearest chart at
+71.7 against 52.7 ms, a paint undo at 54.7 against a flat 50 for a lookup that
+reads 0.2), and the brush grid's slowest tile and the 1 MP WebP encode came
+within a fifth of their flat limits every run. On CI, where timings are only
+reported, the paint landing and the punch-in composite failed anyway because
+they never asked.
+
+What changed:
+
+- `Scripts/test.sh` holds every `.serialized` suite named `...PerfTests` back
+  until the four parallel runs and the checks beside them have finished, then
+  runs them three at a time. Four at a time read the brush grid at 2060 ms
+  twice running against 1500 alone; three read it as alone. The stage is about
+  8 s; green full runs took 123 to 128 s.
+- A same-moment ruler alone did not fix it. Inside the full suite every ruler
+  tried (arrays let go, plain arithmetic, a pass over a 1 MB buffer, the frame
+  and filter graph yardsticks) slowed more than the work beside it, so divided
+  readings fell (the brush grid to 938 against 1440, a WebP encode to 492
+  against 1220) and twice the work would have passed.
+- `PerfClock.calibrated` times CPU work on the thread's CPU clock beside a new
+  CPU ruler (`CPUYardstick`'s arrays, 4.5 ms baseline), taking for a long
+  subject the fastest of the ruler rounds just before and after it: the
+  encoder ran at its alone speed while every one of 60 ruler rounds beside it
+  read slow. Brush grid, WebP and the popping caption go through it.
+- `MachineSpeed.judgeScaled` judges a short GPU subject on its own clock, the
+  frame yardstick from the same rounds only loosening the bound when it reads
+  slow. The animated charts and the punch-in go through it: divided by the
+  ruler, a punch-in read 4.3 to 5.6 ms for 3.3 ms of work, and twice the work
+  passed.
+- The export sizer counts its renders; the paint landing is judged as the
+  middle of five alternating rounds' ratio of a landing on 300 strokes to one
+  on one, and its undo against a tenth of a landing.
+
+Every budget fails twice the work in a full run (each measured call made to
+spin for as long as it took, on a scratch branch): brush grid 2092 against
+1520, dearest chart 21.0 against 14.2, WebP 2459 against 2000 and 1585
+against 1312, popping caption 10.1 against 8, punch-in 6.6 against 5.1, paint
+landing 1.91 times against 1.6; the undo and the export sizer fail on the
+work they skip. Ten full runs in a row then had no speed-budget failure, the
+tightest reading at three quarters of its bound. Calibration machine numbers
+are in each test's comment.

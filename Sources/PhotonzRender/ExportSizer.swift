@@ -59,6 +59,11 @@ public actor ExportSizer {
     /// big document is seconds of waiting for bytes we already had.
     private var encoded: (of: Encoding, data: Data)?
 
+    /// How many times this sizer has rendered the document, for a test that
+    /// proves a quality change re-encodes the kept render rather than drawing
+    /// it again.
+    private(set) var rendersMade = 0
+
     public init(renderer: DocumentRenderer, store: ImageStore) {
         self.renderer = renderer
         self.store = store
@@ -119,6 +124,7 @@ public actor ExportSizer {
         let target = background == .drop
             ? scoped.drawn(with: .drop, flatImages: FlatBitmap.colors(in: scoped, store: store))
             : scoped
+        rendersMade += 1
         guard let image = renderer.render(target, store: store, scale: scale) else { return nil }
         kept = (key, image)
         return image

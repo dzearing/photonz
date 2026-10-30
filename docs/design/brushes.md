@@ -154,7 +154,7 @@ airbrush do not.
   7.5 and a first wash 7.8, but a wash over wet washes 12.7 to 15.8, pencil
   13.6, charcoal 16.9 and oil 20.6, still over (the task stays open on them).
   Landing with 300 strokes under it held the app at most 24 ms, undo 9.6 ms;
-  `PaintLandingCostTests` holds a landing to the cost of landing on an empty
+  `PaintLandingPerfTests` holds a landing to the cost of landing on an empty
   layer and an undo to nothing simulated.
 
 ### 6. Pressure, tilt, speed, and the mouse

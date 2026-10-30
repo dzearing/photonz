@@ -240,8 +240,8 @@ struct PaintRasterCacheTests {
 /// so what it holds is the shape: a landing simulates the new stroke and
 /// nothing else, costs no more with 300 strokes under it than with one, and an
 /// undo simulates nothing and hands back the raster kept for it.
-@Suite("Landing and undo on a big layer")
-struct PaintLandingCostTests {
+@Suite("Landing and undo on a big layer", .serialized)
+struct PaintLandingPerfTests {
     private let size = CGSize(width: 4000, height: 3000)
 
     private func dot(_ i: Int) -> BrushStroke {
@@ -264,33 +264,80 @@ struct PaintLandingCostTests {
         Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
     }
 
+    /// A stroke landing in round `round`: the same marker, a different seed
+    /// and a later start, so every round lands something new.
+    private func landing(_ round: Int) -> BrushStroke {
+        var stroke = landing
+        stroke.seed = UInt32(99 + round)
+        stroke.startedAt = 10_000 + Double(round)
+        return stroke
+    }
+
+    /// Timed on this thread's CPU clock, the landing on one stroke and the
+    /// landing on 300 back to back in every round, and judged as the middle
+    /// round's ratio of the two: whatever else the machine is doing slows both
+    /// halves of a round alike. A stopwatch on one landing each failed CI at
+    /// 1275 ms against 1066 (2026-10-30), and a stopwatch on one undo read 54.7
+    /// ms against a flat 50 in a full run here, for a lookup that reads under
+    /// a millisecond in every other run.
     @Test func landingOnThreeHundredStrokesCostsWhatLandingOnOneDoes() throws {
-        let clock = ContinuousClock()
         let many = (0..<300).map(dot)
-        let crowded = PaintRasterCache(budgetBytes: 256 << 20)
+        // Room for every raster the rounds below make, 48 MB each, so the 300
+        // on their own are still kept for the undo after them.
+        let crowded = PaintRasterCache(budgetBytes: 512 << 20)
         let kept = try #require(crowded.raster(PaintContent(strokes: many), size: size, scale: 1))
-        let lone = PaintRasterCache(budgetBytes: 256 << 20)
+        let lone = PaintRasterCache(budgetBytes: 512 << 20)
         _ = try #require(lone.raster(PaintContent(strokes: [dot(0)]), size: size, scale: 1))
-        let new = landing
 
-        // Land on the layer with one stroke, then on the one with 300.
-        var before = lone.strokesSimulated
-        let alone = ms(clock.measure { _ = lone.raster(PaintContent(strokes: [dot(0), new]), size: size, scale: 1) })
-        #expect(lone.strokesSimulated - before == 1)
-        before = crowded.strokesSimulated
-        let crowd = ms(clock.measure { _ = crowded.raster(PaintContent(strokes: many + [new]), size: size, scale: 1) })
-        #expect(crowded.strokesSimulated - before == 1, "landing simulated only the new stroke")
-        print(String(format: "landing on a 12 MP layer: %.1f ms with 1 stroke under it, %.1f ms with 300", alone, crowd))
-        #expect(crowd < alone * MachineSpeed.tolerance + 60,
-                "landing grew with the strokes already on the layer: \(Int(crowd)) ms against \(Int(alone))")
+        // Land on the layer with one stroke and on the one with 300, each
+        // round the other way round, so neither always goes second.
+        var alone: [Double] = [], crowd: [Double] = []
+        for round in 0..<5 {
+            let new = landing(round)
+            func landAlone() {
+                let before = lone.strokesSimulated
+                let start = PerfClock.nowMS()
+                _ = lone.raster(PaintContent(strokes: [dot(0), new]), size: size, scale: 1)
+                alone.append(PerfClock.nowMS() - start)
+                #expect(lone.strokesSimulated - before == 1)
+            }
+            func landCrowded() {
+                let before = crowded.strokesSimulated
+                let start = PerfClock.nowMS()
+                _ = crowded.raster(PaintContent(strokes: many + [new]), size: size, scale: 1)
+                crowd.append(PerfClock.nowMS() - start)
+                #expect(crowded.strokesSimulated - before == 1, "landing simulated only the new stroke")
+            }
+            if round.isMultiple(of: 2) { landAlone(); landCrowded() } else { landCrowded(); landAlone() }
+        }
+        let ratio = MachineSpeed.median(of: zip(crowd, alone).map { $0 / max($1, 0.001) }) ?? .infinity
+        let aloneMS = MachineSpeed.median(of: alone) ?? 0
+        print(String(format: "landing on a 12 MP layer, ms of CPU: %.1f with 1 stroke under it, %.1f with 300 "
+                     + "(%.2f times, the middle of %d rounds)",
+                     aloneMS, MachineSpeed.median(of: crowd) ?? 0, ratio, alone.count))
+        // Alone the two read 0.94 to 1.01 times each other (2026-10-30): the 300
+        // strokes are already in the kept raster, so landing paints one. A
+        // landing that grew with the strokes under it reads twice or more.
+        if MachineSpeed.isGating {
+            #expect(ratio < 1.6, "landing grew with the strokes already on the layer: \(ratio) times a landing on one")
+        }
 
-        // Undo: the raster kept for the 300 comes straight back.
-        before = crowded.strokesSimulated
+        // Undo: the raster kept for the 300 comes straight back, simulating
+        // nothing. The fastest of five, against the landing it is undoing: a
+        // lookup is a sliver of a landing, a lookup that paints is a landing.
+        let before = crowded.strokesSimulated
         var undone: CGImage?
-        let undo = ms(clock.measure { undone = crowded.raster(PaintContent(strokes: many), size: size, scale: 1) })
-        print(String(format: "undo on a 12 MP layer of 300 strokes: %.1f ms", undo))
+        var undo = Double.infinity
+        for _ in 0..<5 {
+            let start = PerfClock.nowMS()
+            undone = crowded.raster(PaintContent(strokes: many), size: size, scale: 1)
+            undo = min(undo, PerfClock.nowMS() - start)
+        }
+        print(String(format: "undo on a 12 MP layer of 300 strokes: %.2f ms of CPU", undo))
         #expect(crowded.strokesSimulated == before, "undo simulated nothing")
         #expect(undone === kept)
-        #expect(undo < 50, "undo took \(Int(undo)) ms")
+        if MachineSpeed.isGating {
+            #expect(undo < aloneMS / 10, "undo took \(undo) ms of CPU, against \(aloneMS) for a landing")
+        }
     }
 }

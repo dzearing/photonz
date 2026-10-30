@@ -8,8 +8,8 @@ import Testing
 /// can tell the label apart from the blank picture beside it. This is the
 /// budget that made that affordable: a document with twenty captioned arrows
 /// spends well under a millisecond deciding what a click landed on.
-@Suite("Caption measuring cost")
-struct CaptionCostTests {
+@Suite("Caption measuring cost", .serialized)
+struct CaptionCostPerfTests {
 
     @Test func measuringACaptionIsCheapEnoughForEveryClick() {
         var a = AnnotationContent(shape: .arrow, strokeWidth: 4, colorHex: "#FF3B30")
@@ -48,22 +48,22 @@ struct CaptionCostTests {
                                           scale: 1.25, drawnAlone: true)
         let size = CGSize(width: 1536, height: 151)
         _ = TextRasterizer.rasterize(text, size: size, scale: 2)
-        // The fastest of fifteen batches, not five: inside a whole parallel
-        // run all five could land while the thread was on a slower core, and
-        // read 8.03ms against 8 on unchanged code (2026-10-26). The claim is
-        // what a draw costs, so the quietest batch is the honest reading.
-        let each = PerfClock.fastestCallMS(batches: 15, callsPerBatch: 5) {
+        // Each draw beside the fastest of three CPU ruler rounds, both on this
+        // thread's CPU clock, and the middle round's ratio scaled to the
+        // calibration machine. It was
+        // the fastest of fifteen batches against 8ms scaled by the filter
+        // graph read once when the process started: 6.6 to 7.5ms against
+        // bounds of 8.6 to 30 across five full runs (2026-10-30), and 8.03
+        // against 8 once on unchanged code (2026-10-26), since a Core Image
+        // ruler read at a quiet moment knows nothing about a busy CPU now.
+        let reading = PerfClock.calibrated(rounds: 15, rulerRounds: 3) { _ in
             _ = TextRasterizer.rasterize(text, size: size, scale: 2)
         }
+        let each = MachineSpeed.median(of: reading.subject) ?? .infinity
         print("[perf] popping caption at 1080p, 2x: \(String(format: "%.2f", each))ms per frame")
-        // Half a 60fps frame on the calibration machine, scaled by how much
-        // slower this one measures, the way every budget in MachineSpeed is.
-        // It was a flat 8ms until 2026-10-13: this machine reads about 4.5ms,
-        // and the GitHub VM read 6.5 to 12.5ms on unchanged code, so CI failed
-        // on it in about half its runs.
-        let bound = 8 * max(1, MachineSpeed.factor(.filterGraph))
-        if MachineSpeed.isGating {
-            #expect(each < bound, "half a 60fps frame at most, on a machine this fast")
-        }
+        // Half a 60fps frame on the calibration machine, where it reads 4.9 to
+        // 5.1ms alone (2026-10-30): twice the drawing crosses it.
+        PerfClock.check("a popping caption at 1080p, 2x", ms: reading.medianMS, rulerMS: reading.rulerMS,
+                        baselineMS: 5, tolerance: 1.6)
     }
 }

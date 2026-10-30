@@ -183,10 +183,23 @@ fi
 #   * everything else, printed as it runs.
 #
 # Each run has its own pool, so the width above holds in each and no run can
-# park another. The serialized stopwatch suites (named ...PerfTests) go in
-# the side run after the others, not with them: a budget read while all the
-# runs were at their busiest read 29.4 ms against 28 for code that reads 8
-# alone (2026-10-27). The side run is done long before the others.
+# park another.
+#
+# The serialized suites named ...PerfTests, the stopwatch suites, are held
+# back from all four and run last, on their own, three at a time, once every
+# other run and the checks beside them have finished. Read beside the rest, a
+# budget read whatever the rest was doing at that moment: 29.4 ms against 28
+# for code that reads 8 alone (2026-10-27), a brush tile at 3.7 s against 3
+# that reads 0.7 alone, the dearest chart at 64 ms against 55 that reads 9
+# (releases v0.20.0 and v0.21.0). A same-moment ruler does not rescue that:
+# the rulers slow down more than the work they are beside, so a gate that
+# divides by one passes a real doubling under that load. Quiet, the budgets
+# are tight enough that twice the work fails, and the timing run is a few
+# seconds of the whole. Three at a time and they read what they read alone:
+# the brush grid read 2060 ms four at a time, twice running, against 1490 to
+# 1610 three or two at a time and 1500 alone (2026-10-30).
+# Declare a new stopwatch suite `.serialized` and name it ...PerfTests and it
+# lands there by itself.
 #
 # A run given its own arguments (--filter, -c release, ...) stays one run,
 # exactly as asked, and so does a Mac with fewer than eight cores (GitHub's
@@ -210,14 +223,13 @@ if (( split_runs )); then
       Scripts/test-weights.tsv 2>/dev/null | LC_ALL=C sort -u)
   is_serialized() { printf '%s\n' ${serial[@]+"${serial[@]}"} | grep -qxF "$1"; }
   is_heavy() { printf '%s\n' ${heavy[@]+"${heavy[@]}"} | grep -qxF "$1"; }
-  side() {
-    if [[ "$1" == *PerfTests ]]; then timing_filters+=(--filter "$(unit_pattern "$1")")
-    else serial_filters+=(--filter "$(unit_pattern "$1")"); fi
-  }
+  # A serialized stopwatch suite: it runs last, alone.
+  is_timing() { [[ "$1" == *PerfTests ]] && is_serialized "$1"; }
   if [[ -n "$shard" ]]; then
     # This slice's own suites, split between the runs.
     for unit in ${shard_units[@]+"${shard_units[@]}"}; do
-      if is_serialized "$unit"; then side "$unit"
+      if is_timing "$unit"; then timing_filters+=(--filter "$(unit_pattern "$unit")")
+      elif is_serialized "$unit"; then serial_filters+=(--filter "$(unit_pattern "$unit")")
       elif [[ "$unit" == PhotonzCoreTests.* ]]; then core_args+=(--filter "$(unit_pattern "$unit")")
       elif is_heavy "$unit"; then heavy_args+=(--filter "$(unit_pattern "$unit")")
       else rest_args+=(--filter "$(unit_pattern "$unit")"); fi
@@ -227,7 +239,8 @@ if (( split_runs )); then
     core_args=(--filter '^PhotonzCoreTests\.')
     rest_args=(--skip '^PhotonzCoreTests\.')
     for unit in ${serial[@]+"${serial[@]}"}; do
-      side "$unit"
+      if is_timing "$unit"; then timing_filters+=(--filter "$(unit_pattern "$unit")")
+      else serial_filters+=(--filter "$(unit_pattern "$unit")"); fi
       core_args+=(--skip "$(unit_pattern "$unit")")
       rest_args+=(--skip "$(unit_pattern "$unit")")
     done
@@ -246,9 +259,10 @@ log="$(mktemp -t photonz-test-XXXXXX)"
 serial_log="$(mktemp -t photonz-test-serial-XXXXXX)"
 core_log="$(mktemp -t photonz-test-core-XXXXXX)"
 heavy_log="$(mktemp -t photonz-test-heavy-XXXXXX)"
+timing_log="$(mktemp -t photonz-test-timing-XXXXXX)"
 checks_log="$(mktemp -t photonz-test-checks-XXXXXX)"
 parked="$(mktemp -t photonz-test-parked-XXXXXX)"
-trap 'rm -f "$log" "$serial_log" "$core_log" "$heavy_log" "$checks_log" "$parked"
+trap 'rm -f "$log" "$serial_log" "$core_log" "$heavy_log" "$timing_log" "$checks_log" "$parked"
       for p in ${watch_pid:-} ${serial_pid:-} ${core_pid:-} ${heavy_pid:-} ${checks_pid:-}; do kill "$p" 2>/dev/null; done' EXIT
 
 # A run that goes quiet AND idle is stopped, with the tests it is parked in
@@ -296,7 +310,7 @@ watch_for_a_parked_run() {
   local size=-1 quiet=0 helpers="" cpu_then=0
   while sleep 10; do
     local now_size now_helpers
-    now_size=$(cat "$log" "$serial_log" "$core_log" "$heavy_log" 2>/dev/null | wc -c)
+    now_size=$(cat "$log" "$serial_log" "$core_log" "$heavy_log" "$timing_log" 2>/dev/null | wc -c)
     now_helpers=$(our_helpers)
     if [[ "$now_size" != "$size" || "$now_helpers" != "$helpers" || -z "${now_helpers// /}" ]]; then
       size=$now_size; helpers=$now_helpers; quiet=0
@@ -387,7 +401,7 @@ events() {
 
 # Runs the tests once, and with split runs the checks beside them. Sets status.
 run_suite() {
-  : > "$log"; : > "$serial_log"; : > "$core_log"; : > "$heavy_log"; : > "$checks_log"
+  : > "$log"; : > "$serial_log"; : > "$core_log"; : > "$heavy_log"; : > "$timing_log"; : > "$checks_log"
   serial_pid=""; core_pid=""; heavy_pid=""; checks_pid=""; checks_status=0; checks_done=0
   if (( ! split_runs )); then
     swiftpm test ${shard_filters[@]+"${shard_filters[@]}"} "$@" 2>&1 | tee "$log"
@@ -402,17 +416,8 @@ run_suite() {
     checks_pid=$!
   fi
   # shellcheck disable=SC2046
-  if (( ${#serial_filters[@]} + ${#timing_filters[@]} )); then
-    {
-      side_status=0
-      if (( ${#serial_filters[@]} )); then
-        swiftpm test --skip-build --ignore-lock $(events serial) "${serial_filters[@]}" || side_status=1
-      fi
-      if (( ${#timing_filters[@]} )); then
-        swiftpm test --skip-build --ignore-lock $(events timing) "${timing_filters[@]}" || side_status=1
-      fi
-      exit "$side_status"
-    } > "$serial_log" 2>&1 &
+  if (( ${#serial_filters[@]} )); then
+    swiftpm test --skip-build --ignore-lock $(events serial) "${serial_filters[@]}" > "$serial_log" 2>&1 &
     serial_pid=$!
   fi
   # shellcheck disable=SC2046
@@ -459,6 +464,17 @@ run_suite() {
     wait "$checks_pid"; checks_status=$?
     checks_pid=""; checks_done=1
   fi
+  # The stopwatch suites, last and alone: nothing else of this run is left.
+  # shellcheck disable=SC2046
+  if (( ${#timing_filters[@]} )); then
+    SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH=$(( SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH < 3 ? SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH : 3 )) \
+      swiftpm test --skip-build --ignore-lock $(events timing) "${timing_filters[@]}" > "$timing_log" 2>&1
+    run_status=$?
+    echo
+    echo "==> The stopwatch suites (...PerfTests), run last with nothing beside them:"
+    cat "$timing_log"
+    (( status == 0 )) && status=$run_status
+  fi
 }
 
 watch_for_a_parked_run &
@@ -488,7 +504,7 @@ fi
 # A genuine crash in the app gives the same signals, and that is fine: the
 # second run finds it again and says so.
 crashed_on_memory() {
-  grep -qE 'unexpected signal code (10|11)|signal code (10|11)|Segmentation fault|Bus error' "$log" "$serial_log" "$core_log" "$heavy_log"
+  grep -qE 'unexpected signal code (10|11)|signal code (10|11)|Segmentation fault|Bus error' "$log" "$serial_log" "$core_log" "$heavy_log" "$timing_log"
 }
 
 if (( status != 0 )) && crashed_on_memory && [[ "${PHOTONZ_TEST_REBUILT:-0}" != "1" ]]; then

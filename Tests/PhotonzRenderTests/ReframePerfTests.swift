@@ -6,13 +6,13 @@ import Testing
 
 /// What a punch-in costs the composite path.
 ///
-/// Not a gate, a MEASUREMENT: the renderer change this feature needed (a photo
+/// A MEASUREMENT first, with a loose gate under it: the renderer change this feature needed (a photo
 /// enlarged past its own pixels gets the good resampler in an ordinary render,
 /// not only on a magnified one) only ever fires while something is being blown
 /// up, and this says what that costs on a document the size of a screen
 /// recording.
-@Suite("What a punch-in costs the composite")
-struct ReframePerfProbe {
+@Suite("What a punch-in costs the composite", .serialized)
+struct ReframePerfTests {
 
     @Test("A 12 megapixel frame punched in to 200% still composites well inside a frame")
     func punchedInCompositeIsFast() throws {
@@ -40,20 +40,32 @@ struct ReframePerfProbe {
                                       atTimeMS: 4000)
         #expect(landed)
 
-        let renderer = DocumentRenderer()
+        // A renderer on a context of its own, each frame beside the 1080p
+        // frame yardstick in the same round: a stopwatch against a flat 200ms
+        // read 292ms on GitHub's VM (2026-10-28), where timings are only ever
+        // reported, and it was the one budget there that did not ask.
+        let renderer = MachineSpeed.timedRenderer()
         // Warm, so the measurement is the composite and not the first-run cost
         // of building a Core Image context.
         _ = renderer.render(document.drawn(atTimeMS: 4000), store: store)
-        var worst = 0.0
-        for ms in [3900, 4000, 4400, 5000] {
-            let shown = document.drawn(atTimeMS: ms)
-            let began = Date()
-            _ = renderer.render(shown, store: store)
-            worst = max(worst, Date().timeIntervalSince(began) * 1000)
+        let moments = [3900, 4000, 4400, 5000]
+        var round = 0
+        let reading = MachineSpeed.measureInterleaved(yardstick: .frame, rounds: 32) {
+            _ = renderer.render(document.drawn(atTimeMS: moments[round % moments.count]), store: store)
+            round += 1
         }
         // Printed rather than only asserted, so the number lands in the log a
         // perf note is written from.
-        print("punched-in composite, worst of four frames: \(Int(worst))ms")
-        #expect(worst < 200)
+        print(String(format: "punched-in composite, typical of 32 frames: %.1fms", reading.rawMS))
+        // Alone on the calibration machine, 3.2 to 3.4ms beside a frame ruler
+        // reading 1.9 to 2.6 against its own 3.3 (2026-10-30), and 3.3 to 3.9
+        // in the stopwatch run: twice the composite fails 1.5 times that. The
+        // frame ruler, not the filter graph: beside the other stopwatch
+        // suites' 12 megapixel exports the filter graph read 9 to 13ms against
+        // its own 8 while the composite read what it reads alone.
+        MachineSpeed.judgeScaled("a 12 megapixel frame punched in to 200%", reading,
+                                 baselineMS: 3.4, tolerance: 1.5,
+                                 sourceLocation: SourceLocation(fileID: #fileID, filePath: #filePath,
+                                                                line: #line, column: #column))
     }
 }

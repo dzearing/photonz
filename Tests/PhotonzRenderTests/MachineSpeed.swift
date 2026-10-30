@@ -57,8 +57,15 @@ enum MachineSpeed {
     /// The bound a measurement has to stay under.
     /// `factor` is clamped at 1: a probe reading fast must never tighten a
     /// budget below what it was calibrated to allow.
-    static func budget(baselineMS: Double, factor: Double) -> Double {
-        (baselineMS * tolerance + jitterSlackMS) * max(1, factor)
+    ///
+    /// A gate read beside a yardstick taken in the same round can pass a
+    /// tighter `tolerance` and less `slackMS`: the room above was for a machine
+    /// busier at the moment of the reading than when the factor was taken,
+    /// and the yardstick divides that out. Tight enough that twice the work
+    /// fails is what lets such a gate catch a doubling (2026-10-30).
+    static func budget(baselineMS: Double, factor: Double,
+                       tolerance: Double = tolerance, slackMS: Double = jitterSlackMS) -> Double {
+        (baselineMS * tolerance + slackMS) * max(1, factor)
     }
 
     /// The middle of a set of readings. Used instead of a mean so that one
@@ -399,9 +406,31 @@ enum MachineSpeed {
     static func checkInterleaved(_ label: String, baselineMS: Double,
                                  yardstick: Yardstick = .filterGraph,
                                  rounds: Int = 15,
+                                 tolerance: Double = tolerance, slackMS: Double = jitterSlackMS,
                                  fileID: String = #fileID, filePath: String = #filePath,
                                  line: Int = #line, column: Int = #column,
                                  subject: () -> Void) -> Double {
+        let reading = measureInterleaved(yardstick: yardstick, rounds: rounds, subject: subject)
+        judge(label, reading, baselineMS: baselineMS, tolerance: tolerance, slackMS: slackMS,
+              sourceLocation: SourceLocation(fileID: fileID, filePath: filePath,
+                                             line: line, column: column))
+        return reading.rawMS
+    }
+
+    /// One interleaved reading: the subject on the calibration machine's
+    /// clock, its own median on this one, and the yardstick taken with it.
+    struct Interleaved {
+        let normalizedMS: Double
+        let rawMS: Double
+        let yardstickMS: Double
+        let yardstick: Yardstick
+        let rounds: Int
+    }
+
+    /// The measuring half of `checkInterleaved`, for a gate that reads several
+    /// subjects and judges the dearest (`AnimatedChartRenderTests`).
+    static func measureInterleaved(yardstick: Yardstick = .filterGraph, rounds: Int = 15,
+                                   subject: () -> Void) -> Interleaved {
         let reference = round(for: yardstick)
         // Warm both, so neither pays for a pipeline the other gets for free.
         reference()
@@ -414,27 +443,75 @@ enum MachineSpeed {
             referenceMS.append(ms(clock.measure { reference() }))
             subjectMS.append(ms(clock.measure { subject() }))
         }
+        return Interleaved(normalizedMS: normalizedMS(subject: subjectMS, reference: referenceMS,
+                                                      referenceBaselineMS: yardstick.baselineMS),
+                           rawMS: median(of: subjectMS) ?? .infinity,
+                           yardstickMS: median(of: referenceMS) ?? .infinity,
+                           yardstick: yardstick, rounds: rounds)
+    }
 
-        let normalized = normalizedMS(subject: subjectMS, reference: referenceMS,
-                                      referenceBaselineMS: yardstick.baselineMS)
-        let bound = budget(baselineMS: baselineMS, factor: 1)
-        let rawMedian = median(of: subjectMS) ?? .infinity
-        let referenceMedian = median(of: referenceMS) ?? .infinity
+    /// The judging half for a subject whose ratio to the yardstick is noisier
+    /// than the subject itself: its own median on this clock, against a
+    /// budget scaled by how much slower than its own number the yardstick
+    /// read in the same rounds. Scaled, never tightened: on a machine where
+    /// the yardstick reads under its baseline the bound is the baseline's.
+    ///
+    /// A punch-in composite is 3ms of GPU work beside a 2ms frame ruler, and
+    /// in the stopwatch run their ratio read 4.3 to 5.6ms on unchanged code
+    /// while the composite itself read 3.3 to 3.9; twice the composite read
+    /// 6.2ms and, divided by a ruler the work beside it had slowed, only 6.9
+    /// against a budget of 8.5 (2026-10-30).
+    static func judgeScaled(_ label: String, _ reading: Interleaved, baselineMS: Double,
+                            tolerance: Double, slackMS: Double = 0,
+                            sourceLocation location: SourceLocation) {
+        let factor = reading.yardstickMS / reading.yardstick.baselineMS
+        let bound = budget(baselineMS: baselineMS, factor: factor, tolerance: tolerance, slackMS: slackMS)
+        let message = String(format: "%@ — %.1fms here against a budget of %.1fms (baseline %.1fms x %.1f "
+                             + "tolerance + %.0fms, x %.2f for a %@ yardstick reading %.1fms against "
+                             + "its own %.1fms in the same %d rounds)",
+                             label, reading.rawMS, bound, baselineMS, tolerance, slackMS, max(1, factor),
+                             reading.yardstick.rawValue, reading.yardstickMS,
+                             reading.yardstick.baselineMS, reading.rounds)
+        print("[perf] budget: \(message)")
+        guard isGating else { return }
+        switch self.reading(normalizedMS: reading.rawMS, boundMS: bound, yardstickMS: reading.yardstickMS,
+                            yardstickBaselineMS: reading.yardstick.baselineMS) {
+        case .withinBudget:
+            return
+        case .overBudget:
+            Issue.record(Comment(rawValue: "\(label) regressed: \(message)"), sourceLocation: location)
+        case .untrusted:
+            print("[perf] not judged: \(label), the machine was too busy: \(message)")
+            withKnownIssue("\(label) could not be measured: the machine was too busy",
+                           sourceLocation: location) {
+                Issue.record(Comment(rawValue: "\(label) over budget on a machine too busy to judge it: \(message)"),
+                             sourceLocation: location)
+            }
+        }
+    }
+
+    /// The judging half: inside the budget passes, over it fails, and over it
+    /// beside a yardstick too far off its own number to mean anything is said
+    /// out loud as a known issue.
+    static func judge(_ label: String, _ reading: Interleaved, baselineMS: Double,
+                      tolerance: Double = tolerance, slackMS: Double = jitterSlackMS,
+                      sourceLocation location: SourceLocation) {
+        let bound = budget(baselineMS: baselineMS, factor: 1, tolerance: tolerance, slackMS: slackMS)
+        let yardstick = reading.yardstick
         let message = String(format: "%@ — %.1fms on the calibration machine's clock against a "
-                             + "budget of %.0fms (baseline %.1fms x %.1f tolerance). "
+                             + "budget of %.1fms (baseline %.1fms x %.1f tolerance + %.0fms). "
                              + "Read %.1fms here beside a %@ yardstick reading %.1fms "
                              + "against its own %.1fms, over %d interleaved rounds",
-                             label, normalized, bound, baselineMS, tolerance,
-                             rawMedian, yardstick.rawValue, referenceMedian,
-                             yardstick.baselineMS, rounds)
+                             label, reading.normalizedMS, bound, baselineMS, tolerance, slackMS,
+                             reading.rawMS, yardstick.rawValue, reading.yardstickMS,
+                             yardstick.baselineMS, reading.rounds)
         print("[perf] budget: \(message)")
-        guard isGating else { return rawMedian }
-        let location = SourceLocation(fileID: fileID, filePath: filePath,
-                                      line: line, column: column)
-        switch reading(normalizedMS: normalized, boundMS: bound,
-                       yardstickMS: referenceMedian, yardstickBaselineMS: yardstick.baselineMS) {
+        guard isGating else { return }
+        switch self.reading(normalizedMS: reading.normalizedMS, boundMS: bound,
+                            yardstickMS: reading.yardstickMS,
+                            yardstickBaselineMS: yardstick.baselineMS) {
         case .withinBudget:
-            return rawMedian
+            return
         case .overBudget:
             Issue.record(Comment(rawValue: "\(label) regressed: \(message)"),
                          sourceLocation: location)
@@ -443,7 +520,7 @@ enum MachineSpeed {
             // known issue" rather than green or red: nothing was learned here.
             let why = String(format: "the %@ yardstick read %.1fms against its own %.1fms, so "
                              + "this machine was too busy for the reading to mean anything",
-                             yardstick.rawValue, referenceMedian, yardstick.baselineMS)
+                             yardstick.rawValue, reading.yardstickMS, yardstick.baselineMS)
             print("[perf] not judged: \(label), \(why)")
             withKnownIssue("\(label) could not be measured: \(why)", sourceLocation: location) {
                 Issue.record(Comment(rawValue: "\(label) over budget on a machine too busy "
@@ -451,7 +528,6 @@ enum MachineSpeed {
                              sourceLocation: location)
             }
         }
-        return rawMedian
     }
 
     /// The interleaved gate over a run of frames, beside the 1080p frame
@@ -469,13 +545,21 @@ enum MachineSpeed {
     /// code. Five frame gates failed that way in one run.
     @discardableResult
     static func checkFrames(_ label: String, baselineMS: Double, frames: Int,
+                            tolerance: Double = tolerance, slackMS: Double = jitterSlackMS,
                             fileID: String = #fileID, filePath: String = #filePath,
                             line: Int = #line, column: Int = #column,
                             draw: (Int) -> Void) -> Double {
+        let reading = measureFrames(frames: frames, draw: draw)
+        judge(label, reading, baselineMS: baselineMS, tolerance: tolerance, slackMS: slackMS,
+              sourceLocation: SourceLocation(fileID: fileID, filePath: filePath,
+                                             line: line, column: column))
+        return reading.rawMS
+    }
+
+    /// The measuring half of `checkFrames`.
+    static func measureFrames(frames: Int, draw: (Int) -> Void) -> Interleaved {
         var next = 0
-        return checkInterleaved(label, baselineMS: baselineMS, yardstick: .frame,
-                                rounds: frames, fileID: fileID, filePath: filePath,
-                                line: line, column: column) {
+        return measureInterleaved(yardstick: .frame, rounds: frames) {
             draw(next)
             next += 1
         }

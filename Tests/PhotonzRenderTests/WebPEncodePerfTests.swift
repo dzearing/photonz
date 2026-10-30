@@ -11,8 +11,8 @@ import Testing
 /// audit; a debug build runs this C about thirty times slower, so a twelve
 /// megapixel version of this test would add twenty seconds to every run of the
 /// suite to say something the audit says better.
-@Suite("WebP encoding speed")
-struct WebPEncodeSpeedTests {
+@Suite("WebP encoding speed", .serialized)
+struct WebPEncodePerfTests {
 
     private func megapixel() -> CGImage {
         let side = 1024
@@ -37,20 +37,32 @@ struct WebPEncodeSpeedTests {
         return context.makeImage()!
     }
 
+    /// Each encode timed on this thread's CPU clock against the CPU ruler
+    /// taken just before it, since the encoder does all its work on the
+    /// calling thread. A stopwatch against a flat 8 s read the lossy encode at
+    /// 2.7 to 7.1 s across five full runs on one Mac (2026-10-30), a hair from
+    /// failing on unchanged code; beside the ruler the machine's mood divides
+    /// out, so the bar can be close enough to catch the encoder getting twice
+    /// as slow rather than ten times.
     @Test func oneMegapixelIsQuickBothWays() throws {
         let image = megapixel()
         var lossyBytes = 0, losslessBytes = 0
-        let lossyStart = Date()
-        lossyBytes = try #require(WebPEncoder.encode(image, quality: 0.9)).count
-        let lossy = Date().timeIntervalSince(lossyStart)
-        let losslessStart = Date()
-        losslessBytes = try #require(WebPEncoder.encode(image, quality: 1)).count
-        let lossless = Date().timeIntervalSince(losslessStart)
-        print(String(format: "1MP WebP: lossy 90%% %.2fs (%d bytes), lossless %.2fs (%d bytes)",
-                     lossy, lossyBytes, lossless, losslessBytes))
-        // Deliberately loose, and sized for a debug build. This catches "it got
-        // ten times worse", not "it got ten percent worse".
-        #expect(lossy < 8)
-        #expect(lossless < 8)
+        let lossy = PerfClock.calibrated(rounds: 1, rulerRounds: 60) { _ in
+            lossyBytes = WebPEncoder.encode(image, quality: 0.9)?.count ?? 0
+        }
+        let lossless = PerfClock.calibrated(rounds: 1, rulerRounds: 60) { _ in
+            losslessBytes = WebPEncoder.encode(image, quality: 1)?.count ?? 0
+        }
+        #expect(lossyBytes > 0)
+        #expect(losslessBytes > 0)
+        print(String(format: "1MP WebP, s of CPU: lossy 90%% %.2fs (%d bytes), lossless %.2fs (%d bytes)",
+                     lossy.subject.reduce(0, +) / 1000, lossyBytes,
+                     lossless.subject.reduce(0, +) / 1000, losslessBytes))
+        // Alone on the calibration machine, a debug build: lossy 1251 to 1254
+        // ms, lossless 810 to 828 (2026-10-30). Twice either fails.
+        PerfClock.check("1 MP lossy WebP", ms: lossy.medianMS, rulerMS: lossy.rulerMS,
+                        baselineMS: 1250, tolerance: 1.6)
+        PerfClock.check("1 MP lossless WebP", ms: lossless.medianMS, rulerMS: lossless.rulerMS,
+                        baselineMS: 820, tolerance: 1.6)
     }
 }

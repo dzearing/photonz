@@ -134,7 +134,8 @@ struct ExportSizerTests {
     /// The number the acceptance list asked for. Not a pass/fail on a
     /// millisecond count, which would flake on a loaded machine: this prints
     /// what a twelve megapixel document costs to render once and to re-encode
-    /// per slider stop, which is what the audit reports.
+    /// per slider stop, which is what the audit reports, and counts the
+    /// renders, which is what the kept render saves.
     @Test func weighingATwelveMegapixelDocumentIsPrintedForTheAudit() async throws {
         let document = busyDocument(width: 4000, height: 3000)
         let sizer = sizer()
@@ -150,9 +151,12 @@ struct ExportSizerTests {
             (render + encode), next quality \(Int(againMS)) ms (encode only, render kept). \
             JPEG at 90% is \(ExportQuality.fileSize(bytes: first)).
             """)
-        // Loose enough never to flake, tight enough to catch the kept render
-        // being dropped, which would put a whole render back on every stop.
-        #expect(againMS < firstMS)
+        // The kept render being dropped would put a whole render back on
+        // every stop. Counted, not timed: "the second weigh is quicker than
+        // the first" read 113.5 against 113.2 ms in a full run on unchanged
+        // code (2026-10-30), when the encode alone was slowed by the rest of
+        // the suite to what render and encode had cost a moment earlier.
+        #expect(await sizer.rendersMade == 1, "the second quality re-encoded the kept render")
     }
 
     /// Pressing Export after reading the size must not encode the file twice.

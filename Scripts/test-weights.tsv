@@ -59,7 +59,7 @@ PhotonzRenderTests.ElementDetectionFixtureTests	2.8
 PhotonzRenderTests.AnimatedChartRenderTests	2.0
 PhotonzCoreTests.MenuRowsAreTitleCaseTests	1.9
 PhotonzCoreTests.EveryMenuCommandHasANameTests	1.9
-PhotonzRenderTests.WebPEncodeSpeedTests	1.8
+PhotonzRenderTests.WebPEncodePerfTests	1.8
 PhotonzMediaTests.SectionCleaningSeamExportTests	1.8
 PhotonzCoreTests.CrowdWordsDriftTests	1.8
 PhotonzCoreTests.ShapeBoundsTests	1.4
@@ -90,6 +90,6 @@ PhotonzCoreTests.ChromeNeverSaysHowTests	0.6
 PhotonzCoreTests.ChromeCopyBudgetTests	0.6
 PhotonzRenderTests.MeasureChipBadgeTests	0.5
 PhotonzRenderTests.IncrementalRenderTests	0.5
-PhotonzRenderTests.CaptionCostTests	0.5
+PhotonzRenderTests.CaptionCostPerfTests	0.5
 PhotonzMediaTests.AudioGainTests	0.5
 PhotonzCoreTests.TextRunSweepTests	0.5

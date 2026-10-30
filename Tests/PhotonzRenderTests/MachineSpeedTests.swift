@@ -130,6 +130,18 @@ struct MachineSpeedTests {
         #expect(5 * 4.5 > bound, "a 4.5x regression on a 5ms baseline fails")
     }
 
+    @Test func aGateReadBesideItsYardstickCanCatchADoubling() {
+        // A gate whose yardstick is taken in the same round has the machine's
+        // mood divided out already, so it can drop the slack and most of the
+        // tolerance: twice the work then fails where the default lets it by.
+        let tight = MachineSpeed.budget(baselineMS: 5, factor: 1, tolerance: 1.6, slackMS: 0)
+        #expect(tight == 8)
+        #expect(5 * 1.3 < tight, "a reading a little over its baseline passes")
+        #expect(5 * 2 > tight, "twice the work fails")
+        #expect(5 * 2 < MachineSpeed.budget(baselineMS: 5, factor: 1), "the default tolerance lets it by")
+        #expect(MachineSpeed.budget(baselineMS: 5, factor: 2, tolerance: 1.6, slackMS: 0) == 16)
+    }
+
     @Test func aYardstickThatMeasuredNothingFailsRatherThanPasses() {
         // No rounds, or a reference that read zero, means the comparison never
         // happened. That must never come out as a pass.
