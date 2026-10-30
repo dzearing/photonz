@@ -14585,3 +14585,11 @@
 {"t":"2026-10-30T14:25:55.021Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, reset 0, renumbered 26 (p1 user asks then focus then rest; the standing walk task 70 -> 280; two new p2 tasks to 530 and 540), folded 5 findings into open tasks (walk failure causes grouped, photo request planning time, transitions panel tile shared by three surfaces, two cross-links), groomed 0 (all 90 open tasks have goal, acceptance, epic, seq)"}
 {"t":"2026-10-30T14:26:37.570Z","ev":"task_note","id":"the-transitions-panel-stays-out-of-the-way-close"}
 {"t":"2026-10-30T14:27:33.925Z","ev":"digest","file":"2026-10-30.md"}
+{"t":"2026-10-30T14:28:08.883Z","ev":"task_started","id":"an-alignment-guide-re-measures-live-as-you-drag","title":"An alignment guide re-measures live as you drag it","priority":"p1-high"}
+{"t":"2026-10-30T15:46:35.891Z","ev":"task_note","id":"an-alignment-guide-re-measures-live-as-you-drag"}
+{"t":"2026-10-30T15:46:35.964Z","ev":"task_note","id":"an-alignment-guide-re-measures-live-as-you-drag"}
+{"t":"2026-10-30T15:54:09.801Z","ev":"task_walks","id":"an-alignment-guide-re-measures-live-as-you-drag","walks":["an-alignment-guide-re-measures-as-you-drag-walk"]}
+{"t":"2026-10-30T15:55:17.192Z","ev":"task_note","id":"an-alignment-guide-re-measures-live-as-you-drag"}
+{"t":"2026-10-30T15:55:17.265Z","ev":"task_note","id":"an-alignment-guide-re-measures-live-as-you-drag"}
+{"t":"2026-10-30T15:55:17.338Z","ev":"task_note","id":"an-alignment-guide-re-measures-live-as-you-drag"}
+{"t":"2026-10-30T15:55:17.425Z","ev":"task_done","id":"an-alignment-guide-re-measures-live-as-you-drag","from":"in_progress","note":"Placed alignment guides re-measure on every change of their line: drag (live per move, chip + Measurements row + Name update mid-drag), new end handles, arrow keys, agent moves; one undo step. Core: AlignmentRemeasure.swift + tests holding moved == freshly drawn (vertical/horizontal, drawn boxes, picture edges, nested). Scan 15x faster with identical answers (EdgeMap band queries, raw-sample grouping): p95 0.50 ms/move on 12 MP release. Walk an-alignment-guide-re-measures-as-you-drag-walk green with verdict claims; test.sh green; audit + reel in queue/audits. Commit 61dcde6c."}

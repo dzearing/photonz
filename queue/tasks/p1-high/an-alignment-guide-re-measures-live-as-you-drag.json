@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T13:34:01.549Z",
-  "updated": "2026-10-30T14:25:42.217Z",
+  "updated": "2026-10-30T15:55:17.424Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-30 (intake): 'when i draw an alignment guide and move it, it does not recompute! It's super annoying and makes it unusable. I have to draw the alignemnt line perfectly for it to be usable. please make it recompute when i drag it around (do it quickly ideally)'. Redlining is the user's primary use of the app (memory: photonz-primary-use-ux-redlining). Cause, from code: EditorState+Measure.swift addAlignmentCheck(axis:position:span:) scans once on commit (AlignmentScan.items over snappingEdgeMap + measureLumaField, merged with AlignmentScan.drawnItems from LayerElements.boxes), builds AlignmentCheck, settles the line on the verdict's reference and writes one measure layer; CanvasPointerDrags.swift ~293/920/1342 handles the drawing drag (alignmentDrag, refreshAlignmentPreview, which already previews live while DRAWING). Nothing re-runs the scan when the committed layer is moved or its ends are dragged later. refreshAlignmentPreview is the live path to reuse.",
@@ -34,6 +34,43 @@
     {
       "t": "2026-10-30T14:25:42.216Z",
       "note": "seq 3e-7 -> 10"
+    },
+    {
+      "t": "2026-10-30T14:28:08.877Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T15:46:35.889Z",
+      "note": "Reproduced first (old probe): guide drawn at x=130 read '6 items, off 3 px'; dragged onto the label edges at x=97 it still read 'off 3 px' and carried its old ticks along. Cause: a move floated a picture of the guide and committed only the frame; ends had no handles at all."
+    },
+    {
+      "t": "2026-10-30T15:46:35.962Z",
+      "note": "Adversarial pass: (1) box snapping held the guide's whole box (line + chip) on the canvas edge so the guide would not move: a guide now moves free of box snapping, its magnet is the re-measure itself; (2) the X,Y drag pill showed the box corner, meaningless for a guide: dropped for guides; (3) a 1-px nudge on a guide sitting on an edge settles back on that edge (that is what a guide drawn there does); Shift-arrow steps 10 px and does move it on."
+    },
+    {
+      "t": "2026-10-30T15:54:09.799Z",
+      "note": "owns these walks: an-alignment-guide-re-measures-as-you-drag-walk"
+    },
+    {
+      "t": "2026-10-30T15:55:17.190Z",
+      "note": "Chose the exact scan on every move over a cheaper live pass because the exact one is p95 0.5 ms per move on 12 MP in release (was 7.6 ms before the band query and raw-sample grouping; same items found). Debug test build p95 ~34 ms, gated in AlignmentRedragPerfTests."
+    },
+    {
+      "t": "2026-10-30T15:55:17.263Z",
+      "note": "Acceptance 'inspector position field': a guide has none (the panel shows From, To, Edge as readouts, which update live). Arrow keys and agent moves verified: walk stage 8 (Shift-arrow x3) and the core document pass every perform runs."
+    },
+    {
+      "t": "2026-10-30T15:55:17.336Z",
+      "note": "left rough: the blue selection outline of a picked guide is its whole box (line + chip), much wider than the line; pre-existing and only cosmetic, did not earn a task. A 1 px nudge on a guide sitting on an edge settles back on it (same as drawing there); asked in the audit's evaluate list rather than filed."
+    },
+    {
+      "t": "2026-10-30T15:55:17.422Z",
+      "note": "Placed alignment guides re-measure on every change of their line: drag (live per move, chip + Measurements row + Name update mid-drag), new end handles, arrow keys, agent moves; one undo step. Core: AlignmentRemeasure.swift + tests holding moved == freshly drawn (vertical/horizontal, drawn boxes, picture edges, nested). Scan 15x faster with identical answers (EdgeMap band queries, raw-sample grouping): p95 0.50 ms/move on 12 MP release. Walk an-alignment-guide-re-measures-as-you-drag-walk green with verdict claims; test.sh green; audit + reel in queue/audits. Commit 61dcde6c."
     }
-  ]
+  ],
+  "started": "2026-10-30T14:28:08.876Z",
+  "walks": [
+    "an-alignment-guide-re-measures-as-you-drag-walk"
+  ],
+  "completed": "2026-10-30T15:55:17.423Z"
 }
