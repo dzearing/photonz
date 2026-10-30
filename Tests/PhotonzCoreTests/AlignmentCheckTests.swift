@@ -628,10 +628,12 @@ struct AlignmentBuilderTests {
         #expect(abs(items[0].spanStart + resized.frame.minY - 80) < 0.5)
     }
 
-    @Test func alignmentGuidesExposeNoEndpointOrFrameHandles() {
+    @Test func alignmentGuidesExposeEndpointButNoFrameHandles() {
         let layer = MeasureBuilder.layer(content: docContent(),
                                          from: CGPoint(x: 100, y: 30), to: CGPoint(x: 100, y: 210))
-        #expect(layer.hasEndpointHandles == false)
+        // Its two ends stretch it (and it is measured again along the new
+        // span); the eight frame handles would only distort it.
+        #expect(layer.hasEndpointHandles == true)
         #expect(layer.allowsFrameResize == false)
         // A plain caliper keeps its endpoint handles.
         let caliper = MeasureBuilder.layer(content: MeasureContent(),

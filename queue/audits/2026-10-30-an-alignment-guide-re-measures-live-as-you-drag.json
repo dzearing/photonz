@@ -1,0 +1,32 @@
+{
+  "feature": "An alignment guide re-measures live as you drag it",
+  "epic": "image-editing",
+  "summary": "A placed alignment guide now checks the edges under it again on every move: drag it, pull either end, press the arrow keys, or have an agent move it, and the verdict, item count and settled edge follow it live. Before, it kept the answer from where it was first drawn.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any UI screenshot (the walk uses Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png). Walk: Scripts/playtest/an-alignment-guide-re-measures-as-you-drag-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press I until the Measure tool is in Alignment, and drag a vertical guide in the empty margin left of a column of labels.", "shot": "2026-10-30-alignment-guide-redrag-1-drawn-off-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the guide right, slowly, across the card edges and onto the labels' left edges, and watch the chip and the Measurements row while the button is still down.", "shot": "2026-10-30-alignment-guide-redrag-3-held-on-the-labels-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Keep dragging past the labels into the words, then let go.", "shot": "2026-10-30-alignment-guide-redrag-4-held-in-the-words-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once.", "shot": "2026-10-30-alignment-guide-redrag-5-undone-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Grab the round handle at the guide's bottom end and pull it up to the first card.", "shot": "2026-10-30-alignment-guide-redrag-6-held-end-pulled-up-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Shift-Right Arrow three times.", "shot": "2026-10-30-alignment-guide-redrag-8-nudged-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare before and after: the reel and the contact sheet.", "shot": "2026-10-30-alignment-guide-redrag-contact-sheet.png" }
+  ],
+  "evaluate": [
+    "Does dragging a guide near an edge feel like it catches the edge, rather than fighting you?",
+    "Is it clear enough that the round handles at each end lengthen or shorten what the guide checks?",
+    "Is it fine that the X, Y pill no longer shows while you drag a guide, with the guide's own chip saying what it reads instead?",
+    "Within about 6 points of an edge, a guide settles back onto it, so a single arrow press can look like it did nothing. Is that acceptable, or should an arrow press always step off the edge?"
+  ],
+  "rough": [
+    "Speed, with the edge map already built, on a 12 megapixel screenshot, timed per move in a release build: p95 0.50 ms for a 2800 px vertical guide and 0.66 ms for a 3800 px horizontal one, against a 120 Hz frame of 8.3 ms. Before the scan was sped up it was 7.6 ms and 8.1 ms. The same items were found before and after (439, 846 and 51 across three sweeps). In the debug test build the per-move p95 is about 34 ms, and AlignmentRedragPerfTests guards that.",
+    "No cheaper live pass: every move runs the same scan the release does, so what you see mid-drag is always the final answer.",
+    "A guide moves free of the canvas's box magnets (its box is the line plus the readout, which nobody aims at). Its magnet is the measuring itself: it settles on the edges it lands near. Pinned guides and the grid no longer catch a dragged alignment guide.",
+    "The blue selection outline round a picked guide is still its whole box, chip included, so it is much wider than the line. That was already so before this change.",
+    "A guide has no editable position field in the panel. Details shows From, To and Edge as readouts, and they update live during the drag. Agent moves go through the same edit path as the arrow keys (checked by unit tests, not walked with an agent).",
+    "A picked guide no longer shows the turn knob and 3D handles it used to wear. It is aimed by its ends now, like a caliper.",
+    "Pictures were taken with the probe behind another app (Screen Recording granted, screen unlocked).",
+    "No mock covers dragging a guide, and the guide looks exactly as it did before this change."
+  ]
+}

@@ -99,6 +99,12 @@ extension EditorState {
         // A floated sprite can be stretched but not mirrored, so a flipped
         // drag is drawn for real on every move, as a fixed-size look is.
         if !flips.isEmpty, dragPreview?.layerID == id { discardDragPreview() }
+        // An alignment guide reads what is under it again on every move, so
+        // it is drawn for real rather than floated as a picture of its old
+        // verdict.
+        if dragPreview?.layerID == id, document?.layer(id: id)?.alignmentGuideLine != nil {
+            discardDragPreview()
+        }
         guard dragPreview?.layerID != id else { return }
         guard var doc = document, doc.layer(id: id) != nil else { return }
         // A card that has been turned swings about the middle of what is in
@@ -112,6 +118,7 @@ extension EditorState {
                 doc.updateLayer(id: id) { $0 = $0.resized(to: frame, chosenByHand: byHand).mirroredInPlace(flips) }
             }
         }
+        remeasureGuidesInPreview(&doc)
         submit(doc)
     }
 

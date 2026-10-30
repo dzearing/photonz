@@ -63,6 +63,18 @@ public struct EdgeMap: Equatable, Sendable {
     private let vLuma: [Double]
     private let colBlocks: Int
     private let rowBlocks: Int
+    /// The strongest summed response anywhere along one block (`…Max[b]`) and
+    /// along two neighbouring blocks together (`…PairMax[b]`, blocks b and
+    /// b + 1): `vRowMax` over the columns of a row block, `hColMax` over the
+    /// rows of a column block. A candidate's strength is measured against the
+    /// strongest edge in the WHOLE row, so these are what let a query near
+    /// one line (`verticalEdges(inYRange:near:)`) answer without summing the
+    /// whole row on every call. A guide's samples are narrower than two
+    /// blocks, so these cover every one of them.
+    private let vRowMax: [Double]
+    private let vPairMax: [Double]
+    private let hColMax: [Double]
+    private let hPairMax: [Double]
 
     /// Builds the map from directional gradient magnitude fields in top-left row
     /// order (`buffer[row * width + col]`), plus an optional PERCEPTUAL luma
@@ -81,6 +93,7 @@ public struct EdgeMap: Equatable, Sendable {
             self.width = 0; self.height = 0; self.blockSize = max(blockSize, 1)
             hSums = []; vSums = []; hLuma = []; vLuma = []
             colBlocks = 0; rowBlocks = 0
+            vRowMax = []; vPairMax = []; hColMax = []; hPairMax = []
             return
         }
         self.width = width
@@ -124,12 +137,41 @@ public struct EdgeMap: Equatable, Sendable {
         vSums = blockCols(gxMagnitude)
         hLuma = luma.map(blockRows) ?? []
         vLuma = luma.map(blockCols) ?? []
+        (vRowMax, vPairMax) = Self.blockMaxima(vSums, blocks: rb, length: width)
+        (hColMax, hPairMax) = Self.blockMaxima(hSums, blocks: cb, length: height)
     }
 
     private init(empty: Void) {
         width = 0; height = 0; blockSize = 16
         hSums = []; vSums = []; hLuma = []; vLuma = []
         colBlocks = 0; rowBlocks = 0
+        vRowMax = []; vPairMax = []; hColMax = []; hPairMax = []
+    }
+
+    /// Each block's strongest summed response, and each neighbouring pair's,
+    /// added in the order a query adds them so the maxima are bit for bit the
+    /// ones it would find.
+    private static func blockMaxima(_ sums: [Double], blocks: Int,
+                                    length: Int) -> (single: [Double], pair: [Double]) {
+        var single = [Double](repeating: 0, count: blocks)
+        var pair = [Double](repeating: 0, count: max(blocks - 1, 0))
+        sums.withUnsafeBufferPointer { s in
+            for b in 0..<blocks {
+                let base = b * length
+                var best = 0.0, bestPair = 0.0
+                for i in 0..<length {
+                    let v = 0 + s[base + i]
+                    if v > best { best = v }
+                    if b + 1 < blocks {
+                        let w = v + s[base + length + i]
+                        if w > bestPair { bestPair = w }
+                    }
+                }
+                single[b] = best
+                if b + 1 < blocks { pair[b] = bestPair }
+            }
+        }
+        return (single, pair)
     }
 
     public static let empty = EdgeMap(empty: ())
@@ -188,6 +230,133 @@ public struct EdgeMap: Equatable, Sendable {
         }
         return refinedPeaks(profile, luma: luma, pixels: pixels, threshold: threshold,
                             minSeparation: minSeparation, floor: floor)
+    }
+
+    /// The vertical boundaries `verticalEdges(inYRange:)` finds whose position
+    /// lies in `band`, exactly (strengths still measured against the whole
+    /// row), found by reading only the stretch of the row around `band`. What
+    /// an alignment guide asks on every sample of every move: on a 12
+    /// megapixel screenshot the whole-row query cost the guide 0.6 s a move.
+    public func verticalEdges(inYRange range: ClosedRange<Double>, near band: ClosedRange<Double>,
+                              threshold: Double = 0, minSeparation: Int = 3,
+                              floor: Double = EdgeMap.defaultFloor) -> [EdgeCandidate] {
+        guard !isEmpty,
+              let blocks = blockRange(range, limit: height, blockCount: rowBlocks) else { return [] }
+        return peaksNear(band, sums: vSums, luma: vLuma, length: width, blocks: blocks,
+                         blockLimit: height, single: vRowMax, pair: vPairMax,
+                         threshold: threshold, minSeparation: minSeparation, floor: floor)
+    }
+
+    /// The horizontal analog of `verticalEdges(inYRange:near:)`.
+    public func horizontalEdges(inXRange range: ClosedRange<Double>, near band: ClosedRange<Double>,
+                                threshold: Double = 0, minSeparation: Int = 3,
+                                floor: Double = EdgeMap.defaultFloor) -> [EdgeCandidate] {
+        guard !isEmpty,
+              let blocks = blockRange(range, limit: width, blockCount: colBlocks) else { return [] }
+        return peaksNear(band, sums: hSums, luma: hLuma, length: height, blocks: blocks,
+                         blockLimit: width, single: hColMax, pair: hPairMax,
+                         threshold: threshold, minSeparation: minSeparation, floor: floor)
+    }
+
+    /// How far past the band the profile is read. A peak in the band is
+    /// judged against its neighbours (`minSeparation`) and refined against
+    /// the brightness either side (`landingReach`), so reading this much
+    /// further keeps both exactly as the whole row would have them.
+    private static let nearMargin = 32
+
+    /// The shared half of the two queries above: `peaks` and the landing
+    /// refinement, run on a slice of the profile around `band`, against the
+    /// whole profile's strongest value.
+    private func peaksNear(_ band: ClosedRange<Double>, sums: [Double], luma lumaSums: [Double],
+                           length: Int, blocks: ClosedRange<Int>, blockLimit: Int,
+                           single: [Double], pair: [Double], threshold: Double,
+                           minSeparation: Int, floor: Double) -> [EdgeCandidate] {
+        let first = max(0, Int(band.lowerBound.rounded(.up)))
+        let last = min(length - 1, Int(band.upperBound.rounded(.down)))
+        guard first <= last else { return [] }
+        var pixels = 0
+        for b in blocks { pixels += min((b + 1) * blockSize, blockLimit) - b * blockSize }
+        guard pixels > 0 else { return [] }
+        let inv = 1 / Double(pixels)
+        // The strongest summed value in the whole profile: stored for one or
+        // two blocks, summed for anything wider.
+        let maxSum: Double
+        switch blocks.count {
+        case 1: maxSum = single[blocks.lowerBound]
+        case 2: maxSum = pair[blocks.lowerBound]
+        default:
+            var best = 0.0
+            for i in 0..<length {
+                var v = 0.0
+                for b in blocks { v += sums[b * length + i] }
+                if v > best { best = v }
+            }
+            maxSum = best
+        }
+        let maxV = maxSum * inv
+        guard maxV > 0, maxV >= floor else { return [] }
+        let cutoff = max(maxV * min(max(threshold, 0), 1), floor)
+
+        // The slice, one past each end so every point in it can be judged a
+        // local maximum the way `EdgeProfile.peaks` judges it.
+        let lo = max(0, first - Self.nearMargin), hi = min(length - 1, last + Self.nearMargin)
+        let readLo = max(0, lo - 1), readHi = min(length - 1, hi + 1)
+        let count = readHi - readLo + 1
+        // Summed through raw buffers: this runs for every sample of every
+        // move of a dragged guide, and checked subscripts were most of its
+        // cost.
+        var profile = [Double](repeating: 0, count: count)
+        var luma = lumaSums.isEmpty ? [] : [Double](repeating: 0, count: count)
+        var locals: [EdgeCandidate] = []
+        profile.withUnsafeMutableBufferPointer { out in
+            sums.withUnsafeBufferPointer { src in
+                for b in blocks {
+                    let base = b * length + readLo
+                    for i in 0..<count { out[i] += src[base + i] }
+                }
+            }
+            for i in 0..<count { out[i] *= inv }
+            for i in lo...hi {
+                let k = i - readLo
+                let v = out[k]
+                if v < cutoff { continue }
+                let leftOK = i == 0 || out[k - 1] <= v
+                let rightOK = i == length - 1 || out[k + 1] <= v
+                if leftOK && rightOK {
+                    locals.append(EdgeCandidate(position: Double(i), strength: v / maxV))
+                }
+            }
+        }
+        if !lumaSums.isEmpty {
+            luma.withUnsafeMutableBufferPointer { out in
+                lumaSums.withUnsafeBufferPointer { src in
+                    for b in blocks {
+                        let base = b * length + readLo
+                        for i in 0..<count { out[i] += src[base + i] }
+                    }
+                }
+            }
+        }
+        let sep = Double(max(minSeparation, 1))
+        var accepted: [EdgeCandidate] = []
+        let ranked = locals.sorted { a, b in
+            a.strength != b.strength ? a.strength > b.strength : a.position < b.position
+        }
+        for cand in ranked {
+            if accepted.contains(where: { abs($0.position - cand.position) < sep }) { continue }
+            accepted.append(cand)
+        }
+        var peaks = accepted.filter { band.contains($0.position) }.sorted { $0.position < $1.position }
+        guard !luma.isEmpty, !peaks.isEmpty else { return peaks }
+        for i in luma.indices { luma[i] *= inv }
+        for i in peaks.indices {
+            let p = Int(peaks[i].position) - readLo
+            peaks[i].edgeBefore = Self.landing(from: p, direction: -1, luma: luma, gradient: profile)
+                + Double(readLo)
+            peaks[i].edgeAfter = Self.landing(from: p, direction: 1, luma: luma, gradient: profile)
+                + Double(readLo)
+        }
+        return peaks
     }
 
     /// Mean |Gx| per pixel over the columns `xRange` within the rows `range`

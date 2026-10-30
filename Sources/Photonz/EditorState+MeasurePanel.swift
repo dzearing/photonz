@@ -18,7 +18,49 @@ extension EditorState {
     /// selection, visibility, and delete are the layer operations.
     var measurePanelLayers: [Layer] {
         guard let document else { return [] }
-        return MeasureSpecList.measureLayers(in: document)
+        let layers = MeasureSpecList.measureLayers(in: document)
+        guard !liveGuideLayers.isEmpty else { return layers }
+        return layers.map { liveGuideLayers[$0.id] ?? $0 }
+    }
+
+    /// A measurement as it reads right now: mid-drag, a guide's fresh reading
+    /// (`liveGuideLayers`); otherwise the document's.
+    func measureLayerAsShown(_ id: UUID) -> Layer? {
+        liveGuideLayers[id] ?? document?.layer(id: id)
+    }
+
+    /// The picture alignment guides read when they are measured again. A
+    /// canvas with no picture has only the boxes it drew to offer; a picture
+    /// whose edges are still being found gives nil, so a guide moved in that
+    /// moment keeps what it found instead of finding nothing.
+    var alignmentPicture: AlignmentPicture? {
+        guard let document else { return nil }
+        guard let ref = document.layers.compactMap(\.imageRef).first else { return AlignmentPicture.none }
+        guard let ready = readyEdgeMaps[ref.id] else { return nil }
+        return AlignmentPicture(edges: ready.edges, luma: ready.luma, pixelScale: document.pixelScale)
+    }
+
+    /// A preview of an edit (a drag still in the hand) with every guide it
+    /// moved measured again, exactly as the release will measure it, so the
+    /// verdict on screen is never the one from before the drag. The guides'
+    /// new readings go to the panel through `liveGuideLayers`, and their
+    /// settled frames to `previewMoves`. True when it touched a guide.
+    @discardableResult
+    func remeasureGuidesInPreview(_ doc: inout PhotonzDocument) -> Bool {
+        guard let before = document else { return false }
+        let picture = alignmentPicture
+        doc.keepAlignmentGuidesMeasured(since: before, picture: picture)
+        var live: [UUID: Layer] = [:]
+        doc.forEachLayer { layer in
+            guard layer.alignmentGuideLine != nil, layer != before.layer(id: layer.id) else { return }
+            live[layer.id] = layer
+        }
+        guard !live.isEmpty || !liveGuideLayers.isEmpty else { return false }
+        liveGuideLayers = live
+        for id in live.keys {
+            if let frame = doc.canvasLayer(id: id)?.frame { previewMoves[id] = frame }
+        }
+        return !live.isEmpty
     }
 
     /// How many measurements the document holds (the toolbar pill's number).
@@ -390,6 +432,9 @@ extension EditorState {
                                          readout: readout)
         }
         if let frame = doc.canvasLayer(id: id)?.frame { previewMoves = [id: frame] }
+        // A guide's end pulled along: what it crosses changed, so it is read
+        // again on every move rather than only on the release.
+        remeasureGuidesInPreview(&doc)
         submit(doc)
     }
 
@@ -398,6 +443,7 @@ extension EditorState {
     /// render just settles back onto what the document already says.
     func cancelMeasureEndpointDrag() {
         previewMoves = [:]
+        liveGuideLayers = [:]
         rerender()
     }
 

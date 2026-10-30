@@ -1291,6 +1291,12 @@ final class EditorState {
     /// the canvas puts every layer it carries in here at once, so the numbers
     /// in the inspector track all of them rather than just one.
     var previewMoves: [UUID: CGRect] = [:]
+    /// Alignment guides as they read right now, while one is being dragged or
+    /// stretched: measured again on every move, so the Measurements row and
+    /// the inspector say what the canvas chip says instead of the verdict
+    /// from before the drag. Empty once the edit lands (`perform`) or is
+    /// called off.
+    var liveGuideLayers: [UUID: Layer] = [:]
     /// The setting a lens's slider is being pulled to right now (Next,
     /// `next-lens`), committed to history only when the slider is let go.
     /// It cannot ride in `previewMoves` because a blur strength is not a box:
@@ -5156,6 +5162,10 @@ final class EditorState {
         // layer goes when the edit leaves it with nothing on it, so a deleted
         // or grouped shape never leaves a row behind (`EmptyTracks.swift`).
         let landing = landingTrack
+        if !liveGuideLayers.isEmpty { liveGuideLayers = [:] }
+        // An alignment guide this edit moved or stretched is measured again
+        // in the same step, however it moved (`AlignmentRemeasure.swift`).
+        let guidePicture = alignmentPicture
         if let prepared = history?.preparing({ document in
             let was = document
             mutate(&document)
@@ -5168,6 +5178,7 @@ final class EditorState {
             // A measurement's name says what it reads ("Gap 16", "Size 320 ×
             // 48"), so the edit that adds or changes one names it in the same
             // step (`MeasureNaming`).
+            document.keepAlignmentGuidesMeasured(since: was, picture: guidePicture)
             document.keepMeasureNamesInStep(since: was)
             document.dropTracksEmptied(since: was)
         }) {

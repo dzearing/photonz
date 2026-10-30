@@ -31,14 +31,15 @@ struct MeasureInspector: View {
     @StoredSetting(MeasureInspector.detailsOpenKey) private var isDetailsOpen = false
     static let detailsOpenKey = "inspector.measureDetailsOpen"
 
+    /// Read as it is shown, so a guide being dragged says what it reads now.
     private var content: MeasureContent? {
-        editorState.document?.layer(id: layer.id)?.measure
+        editorState.measureLayerAsShown(layer.id)?.measure
     }
 
     /// The name the Measurements row shows: derived until renamed, then the
     /// custom name. The Name field edits exactly this.
     private var displayName: String {
-        MeasureSpecList.displayName(for: editorState.document?.layer(id: layer.id) ?? layer)
+        MeasureSpecList.displayName(for: editorState.measureLayerAsShown(layer.id) ?? layer)
     }
 
     /// Whether this section has anything left to show. With the parts split on
@@ -241,7 +242,7 @@ struct MeasureInspector: View {
     /// no new model state. A guide (§9) reads Length instead of Distance, and
     /// adds the edge it settled on and how many things it checked.
     @ViewBuilder private func geometryGrid(_ c: MeasureContent) -> some View {
-        let frame = editorState.document?.layer(id: layer.id)?.frame ?? layer.frame
+        let frame = editorState.measureLayerAsShown(layer.id)?.frame ?? layer.frame
         let g = c.caliperGeometry()
         let scale = editorState.document?.pixelScale ?? 1
         VStack(alignment: .leading, spacing: 4) {

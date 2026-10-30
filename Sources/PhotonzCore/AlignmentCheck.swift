@@ -450,11 +450,15 @@ public enum AlignmentScan {
         for i in 0...sampleCount {
             let t = span.lowerBound + length * CGFloat(i) / CGFloat(sampleCount)
             let window = (Double(t) - half)...(Double(t) + half)
+            // Only the stretch of each row the guide can capture from is read
+            // (`near:`), with strengths still judged against the whole row: a
+            // guide is measured again on every move of a drag, and reading the
+            // whole width per sample cost 0.6 s a move on 12 megapixels.
+            let band = (Double(position) - Double(captureRadius))...(Double(position) + Double(captureRadius))
             let candidates = (axis == .vertical
-                ? edges.verticalEdges(inYRange: window)
-                : edges.horizontalEdges(inXRange: window))
-                .filter { $0.strength >= elementStrength * weakElementFraction
-                    && abs($0.position - Double(position)) <= Double(captureRadius) }
+                ? edges.verticalEdges(inYRange: window, near: band)
+                : edges.horizontalEdges(inXRange: window, near: band))
+                .filter { $0.strength >= elementStrength * weakElementFraction }
             readings.append(candidates)
             positions.append(t)
         }
@@ -536,47 +540,68 @@ public enum AlignmentScan {
         let bandLo = Int(sideBand.lowerBound), bandHi = Int(sideBand.upperBound)
         let drift = Int(boundaryDrift.rounded(.up))
 
-        func response(along t: Int, cross c: Int) -> Double {
-            switch axis {
-            case .vertical: luma.verticalResponse(x: c, y: t)
-            case .horizontal: luma.horizontalResponse(x: t, y: c)
-            }
-        }
-
-        // Presence along the guide.
+        // Presence along the guide. Read straight off the samples (the same
+        // arithmetic as `LumaField.verticalResponse`/`horizontalResponse`, so
+        // the same answers): this walks every pixel of the guide on every move
+        // of a drag, and the per-pixel accessors were most of its cost.
+        let w = luma.width, h = luma.height
         var present = [Bool](repeating: false, count: hi - lo + 1)
-        var next = 0  // first run whose end is not before t
-        for t in lo...hi {
-            while next < runs.count, runs[next].end < CGFloat(t) { next += 1 }
-            // The runs bracketing t: the one containing it, else its neighbours.
-            var edges: [CGFloat] = []
-            if next < runs.count, runs[next].start <= CGFloat(t) {
-                edges = [runs[next].edge]
-            } else {
-                if next > 0 { edges.append(runs[next - 1].edge) }
-                if next < runs.count { edges.append(runs[next].edge) }
-            }
-            guard let minEdge = edges.min(), let maxEdge = edges.max() else { continue }
-            let low = Int(minEdge.rounded()) - drift
-            let high = Int(maxEdge.rounded()) + drift
-            var found = false
-            for c in low...high where response(along: t, cross: c) >= boundaryFloor {
-                found = true
-                break
-            }
-            if !found {
-                // Ink on either side of the edge: the element's own body.
-                let after = (Int(maxEdge.rounded()) + bandLo)...(Int(maxEdge.rounded()) + bandHi)
-                let before = (Int(minEdge.rounded()) - bandHi)...(Int(minEdge.rounded()) - bandLo)
-                for band in [after, before] {
-                    for c in band where response(along: t, cross: c) >= inkFloor {
-                        found = true
-                        break
-                    }
-                    if found { break }
+        luma.samples.withUnsafeBufferPointer { px in
+            // Whether any pixel across `range` on line `t` of the guide reads a
+            // boundary at least `floor` strong. A pixel's response is the
+            // largest of the three central differences around it, so each
+            // difference is read once and shared with the two neighbours that
+            // also use it: the same numbers, a third of the reads.
+            func any(_ range: ClosedRange<Int>, at t: Int, reaching floor: Double) -> Bool {
+                let vertical = axis == .vertical
+                let line = vertical ? min(max(t, 0), h - 1) : min(max(t, 0), w - 1)
+                let limit = vertical ? w - 1 : h - 1
+                func lum(_ c: Int) -> Double {
+                    let k = min(max(c, 0), limit)
+                    return Double(px[vertical ? line * w + k : k * w + line]) / 255
                 }
+                func difference(_ c: Int) -> Double { abs(lum(c + 1) - lum(c - 1)) }
+                var before = difference(range.lowerBound - 1)
+                var here = difference(range.lowerBound)
+                for c in range {
+                    let after = difference(c + 1)
+                    if max(before, here, after) >= floor { return true }
+                    before = here
+                    here = after
+                }
+                return false
             }
-            present[t - lo] = found
+            var next = 0  // first run whose end is not before t
+            for t in lo...hi {
+                while next < runs.count, runs[next].end < CGFloat(t) { next += 1 }
+                // The runs bracketing t: the one containing it, else its neighbours.
+                let minEdge: CGFloat, maxEdge: CGFloat
+                if next < runs.count, runs[next].start <= CGFloat(t) {
+                    minEdge = runs[next].edge
+                    maxEdge = runs[next].edge
+                } else if next > 0, next < runs.count {
+                    minEdge = min(runs[next - 1].edge, runs[next].edge)
+                    maxEdge = max(runs[next - 1].edge, runs[next].edge)
+                } else if next > 0 {
+                    minEdge = runs[next - 1].edge
+                    maxEdge = minEdge
+                } else if next < runs.count {
+                    minEdge = runs[next].edge
+                    maxEdge = minEdge
+                } else {
+                    continue
+                }
+                let low = Int(minEdge.rounded()) - drift
+                let high = Int(maxEdge.rounded()) + drift
+                // A boundary near the edge, else ink on either side of it:
+                // the element's own body.
+                let found = any(low...high, at: t, reaching: boundaryFloor)
+                    || any((Int(maxEdge.rounded()) + bandLo)...(Int(maxEdge.rounded()) + bandHi),
+                           at: t, reaching: inkFloor)
+                    || any((Int(minEdge.rounded()) - bandHi)...(Int(minEdge.rounded()) - bandLo),
+                           at: t, reaching: inkFloor)
+                present[t - lo] = found
+            }
         }
 
         // Stretches: split on any clean run of `gap` px or more.

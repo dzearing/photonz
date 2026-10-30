@@ -110,6 +110,10 @@ extension CanvasNSView {
         /// down, dropped the moment it comes up. Nil for a free drag and for
         /// every head drag (⇧ does not hold a readout).
         var heldLine: MeasureLineHold?
+        /// True for an alignment guide's end: it slides along the guide's own
+        /// line and never off it, so pulling an end changes what the guide
+        /// spans and not where it sits (that is a drag of the guide itself).
+        var alongGuide = false
         /// The two feet as they are DRAWN right now — this drag's if it has
         /// moved, the caliper's as placed if the press has not travelled yet.
         /// This is what "the line it is on at that moment" is read from, so
@@ -132,6 +136,19 @@ extension CanvasNSView {
         func params() -> (start: CGPoint, end: CGPoint, headOffset: CGFloat,
                           readout: MeasureReadoutPlacement?) {
             var s = originalStart, e = originalEnd, off = originalHeadOffset
+            if alongGuide {
+                // `.vertical` is a guide down the screen: its x stays put.
+                let slid: (CGPoint) -> CGPoint = { p in
+                    self.mode == .vertical ? CGPoint(x: p.x, y: self.current.y)
+                                           : CGPoint(x: self.current.x, y: p.y)
+                }
+                switch handle {
+                case .footA: s = slid(originalStart)
+                case .footB: e = slid(originalEnd)
+                case .head: break
+                }
+                return (s, e, 0, nil)
+            }
             switch handle {
             case .head:
                 off = head ?? ((mode == .horizontal ? current.y - s.y : current.x - s.x) - grabCross)
@@ -162,9 +179,13 @@ extension CanvasNSView {
 
     /// The three draggable handles of a placed caliper in document space: the two
     /// feet (the measuring line) and the head (the chip bar's offset point).
+    /// An alignment guide offers its two ends and no head: pulling an end
+    /// lengthens or shortens what it checks, and it is measured again as it
+    /// goes.
     func measureHandles(_ layer: Layer) -> [(handle: MeasureHandle, point: CGPoint)] {
-        guard let m = layer.measure, m.alignment == nil,
+        guard let m = layer.measure,
               let s = layer.measureEndpoint(.start), let e = layer.measureEndpoint(.end) else { return [] }
+        if m.alignment != nil { return [(.footA, s), (.footB, e)] }
         let g = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e, headOffset: m.headOffset)
         return [(.footA, g.footA), (.footB, g.footB), (.head, g.labelAnchor)]
     }

@@ -1,0 +1,319 @@
+{
+  "out": "/tmp/photonz-playtest/an-alignment-guide-re-measures-as-you-drag-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "waitFor",
+      "condition": "edgeMap",
+      "timeout": 15
+    },
+    {
+      "do": "measureMode",
+      "mode": "alignment"
+    },
+    {
+      "do": "drag",
+      "from": [
+        30,
+        170
+      ],
+      "to": [
+        30,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-drawn-off",
+      "note": "a guide drawn in the empty margin, left of everything"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "no edges"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "1-drawn-off"
+    },
+    {
+      "do": "drag",
+      "from": [
+        30,
+        420
+      ],
+      "to": [
+        66,
+        420
+      ],
+      "steps": 12,
+      "hold": "2-held-on-the-card-edges"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-on-the-card-edges",
+      "note": "dragged right onto the left edges of the two cards"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "aligned"
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        66,
+        420
+      ],
+      "to": [
+        97,
+        420
+      ],
+      "steps": 12,
+      "hold": "3-held-on-the-labels"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-on-the-labels",
+      "note": "dragged on again onto the left edges of the six labels"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "off 4 px"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "3-on-the-labels"
+    },
+    {
+      "do": "drag",
+      "from": [
+        97,
+        420
+      ],
+      "to": [
+        128,
+        420
+      ],
+      "steps": 12,
+      "hold": "4-held-in-the-words"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "4-in-the-words",
+      "note": "dragged past the labels into the words"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "off 2 px"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "one undo puts the guide back on the labels with that verdict"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "off 4 px"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "5-undone"
+    },
+    {
+      "do": "drag",
+      "from": [
+        97,
+        700
+      ],
+      "to": [
+        97,
+        440
+      ],
+      "steps": 12,
+      "hold": "6-held-end-pulled-up"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "6-end-pulled-up",
+      "note": "the bottom end pulled up so the guide spans only the first card"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "aligned"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "6-end-pulled-up"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "7-end-undone",
+      "note": "undo puts the full span back"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "off 4 px"
+      ]
+    },
+    {
+      "do": "key",
+      "key": "right",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "key",
+      "key": "right",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "key",
+      "key": "right",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "8-nudged",
+      "note": "three shift-right presses carry the guide 30 px into the words, measured again on each press"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1,
+      "reads": [
+        "off 3 px"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "8-nudged"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "measureMode",
+      "mode": "alignment"
+    },
+    {
+      "do": "drag",
+      "from": [
+        97,
+        170
+      ],
+      "to": [
+        97,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "9-fresh-on-the-labels",
+      "note": "a guide drawn fresh where the dragged one landed in stage 3 reads the same"
+    },
+    {
+      "do": "expectMeasures",
+      "count": 2,
+      "reads": [
+        "off 3 px",
+        "off 4 px"
+      ]
+    }
+  ]
+}

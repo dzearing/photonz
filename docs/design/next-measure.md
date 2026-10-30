@@ -756,8 +756,26 @@ wobble is half a point, not a misalignment):
   (headOffset 0, feet = guide ends). Old documents decode with nil; the § 5
   role model can treat `alignment != nil` as the Align role when it lands.
   The committed guide settles on the reference edge, one undo step, then
-  draw-then-select as usual. No endpoint/frame handles (a stretched guide
-  would carry a stale scan) — move, restyle, or delete and redraw.
+  draw-then-select as usual. Two end handles, no frame handles.
+- **A placed guide is measured again whenever its line changes (2026-10-30,
+  the user: "when i draw an alignment guide and move it, it does not
+  recompute").** Moving it (drag, arrow keys, an agent), or pulling either
+  end along its own line, runs the very scan a fresh guide gets
+  (`AlignmentScan.measure`, `PhotonzCore/AlignmentRemeasure.swift`) along the
+  new line, so the result is exactly a guide drawn there: items, verdict,
+  settled edge, readout. Every edit gets it from `perform`
+  (`PhotonzDocument.keepAlignmentGuidesMeasured`, beside the naming pass, so
+  the move and the new verdict are one undo step); a drag still in the hand
+  gets it per move (`EditorState.remeasureGuidesInPreview`), the guide is drawn
+  for real rather than floated, and `liveGuideLayers` lets the Measurements
+  row and the inspector read the live verdict. A guide moves free of the
+  box magnets (its box is line plus chip); its magnet is the re-measure, which
+  settles it on any edge within the 12 device px capture. A picture whose
+  edges are not built yet leaves a moved guide as it was rather than empty.
+  Cost per move on 12 MP with `-O`: p95 0.5 ms (2800 px guide), from 7.6 ms,
+  after the scan stopped summing whole rows (`EdgeMap.verticalEdges(inYRange:
+  near:)`, exact: strengths still judged against the row's stored maximum)
+  and per-pixel accessors (`groupedByPixels`); `AlignmentRedragPerfTests`.
 - **Render.** `MeasureRasterizer` branch, and the whole point is that the
   answer is legible without reading the chip:
   - The guide is **dashed where it is only travelling and solid across every

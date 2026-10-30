@@ -74,7 +74,10 @@ extension CanvasNSView {
         if !barCarries, let resizeDrag, resizeDrag.frame != resizeDrag.startFrame {
             return reading(.resize, canvasBox: resizeDrag.frame, of: resizeDrag.layerID)
         }
-        if let moveDrag, moveDrag.moved, !barCarries || moveDrag.copying {
+        // An alignment guide's box is its line plus its readout chip, so its
+        // corner is a number nobody can use; the chip says what it reads.
+        if let moveDrag, moveDrag.moved, !barCarries || moveDrag.copying,
+           document?.canvasLayer(id: moveDrag.layerID)?.alignmentGuideLine == nil {
             let box = CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size)
             return reading(.move, canvasBox: box, of: moveDrag.layerID)
         }

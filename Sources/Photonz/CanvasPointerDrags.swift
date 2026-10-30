@@ -473,6 +473,7 @@ extension CanvasNSView {
                     originalReadout: MeasureReadoutPlacement(nudge: m.labelNudge,
                                                              pinned: m.labelPinned),
                     pressPoint: q, current: q)
+                drag.alongGuide = m.alignment != nil
                 if best.handle == .head {
                     let head = MeasureContent.caliperGeometry(mode: m.mode, start: s, end: e,
                                                               headOffset: m.headOffset).labelAnchor
@@ -1118,7 +1119,11 @@ extension CanvasNSView {
                 // The press has become a drag: now the sprite is worth making.
                 if drag.moved, !drag.copying {
                     onDragBegin(drag.layerID)
-                    announceTransform(.move)
+                    // A guide's X and Y are the corner of a box nobody sees;
+                    // its own chip says what it reads as it goes.
+                    if document?.canvasLayer(id: drag.layerID)?.alignmentGuideLine == nil {
+                        announceTransform(.move)
+                    }
                 }
             }
             if drag.moved {
@@ -1126,7 +1131,13 @@ extension CanvasNSView {
                 // region corner: one key that means "ignore the magnets"
                 // everywhere on the canvas.
                 let held = snapHold(freeing: event.modifierFlags.contains(.command))
-                if held.isFree {
+                // An alignment guide's box is its line plus its readout, a
+                // shape nobody aims; lining that box up with the canvas edge
+                // held the guide still while the hand moved on. Its magnet is
+                // the measuring itself: it settles on the edges it lands near,
+                // measured again on every move.
+                let isGuide = document?.canvasLayer(id: drag.layerID)?.alignmentGuideLine != nil
+                if held.isFree || isGuide {
                     drag.snapped = Snapping.Result(origin: proposed)
                 } else {
                     // The picture's edges, the grid and the rulers are all

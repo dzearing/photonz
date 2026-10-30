@@ -26,13 +26,12 @@ extension Layer {
         return nil
     }
 
-    /// Lines/arrows and measures edit by dragging their two endpoints.
-    /// Alignment guides don't: their items were scanned for the drawn span, so
-    /// the guide is redrawn rather than stretched (a stale scan would lie).
+    /// Lines/arrows and measures edit by dragging their two endpoints. An
+    /// alignment guide does too: pulling an end measures it again along the
+    /// new span (`keepAlignmentGuidesMeasured`), so the stretch never lies.
     public var hasEndpointHandles: Bool {
         if let a = annotation { return a.shape == .line || a.shape == .arrow }
-        if let m = measure { return m.alignment == nil }
-        return false
+        return measure != nil
     }
 
     /// Whether this layer has nothing painted on it yet, so it has no box.
@@ -85,8 +84,8 @@ extension Layer {
         case .paint: false
         case .text: true
         case .annotation: !hasEndpointHandles
-        // Calipers edit via endpoint handles; alignment guides not at all
-        // (move/delete only) — neither offers the eight frame handles.
+        // Calipers and alignment guides edit via their endpoint handles;
+        // neither offers the eight frame handles.
         case .measure: false
         // A group resizes, and everything in it scales with the box
         // (`docs/design/ui-building.md`). A COPY of a component is the one

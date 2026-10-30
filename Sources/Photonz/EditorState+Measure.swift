@@ -256,46 +256,29 @@ extension EditorState {
     /// edge (the median — the drawn drag was the question, the reference is the
     /// answer), and commit the check as one undoable layer in the caliper's ink.
     func addAlignmentCheck(axis: MeasureMode, position: CGFloat, span: ClosedRange<CGFloat>) {
-        guard document != nil, Experiments.shared.measureAlignEnabled else { return }
-        let pixelScale = document?.pixelScale ?? 1
+        guard let document, Experiments.shared.measureAlignEnabled else { return }
         // The picture itself, so the scan counts elements rather than edge
         // runs; empty only in the moment before the analysis lands, and then
-        // the check says its items are not counted.
-        let luma = measureLumaField
-        // The boxes the app drew are known to the pixel, so they are handed to
-        // the check rather than guessed at: a guide across two rectangles you
-        // made counts them even on a canvas with no picture in it.
-        let drawn = document.map {
-            AlignmentScan.drawnItems(axis: axis, position: position, span: span,
-                                     boxes: LayerElements.boxes(in: $0))
-        } ?? []
-        let items = AlignmentScan.merged(
-            drawn: drawn,
-            picture: AlignmentScan.items(axis: axis, position: position, span: span,
-                                         in: snappingEdgeMap, luma: luma, pixelScale: pixelScale))
+        // the check says its items are not counted. The boxes the app drew are
+        // known to the pixel, so they are handed to the check rather than
+        // guessed at: a guide across two rectangles you made counts them even
+        // on a canvas with no picture in it. The same scan measures the guide
+        // again whenever it moves (`keepAlignmentGuidesMeasured`), so a guide
+        // dragged here reads exactly what this one does.
+        let picture = AlignmentPicture(edges: snappingEdgeMap, luma: measureLumaField,
+                                       pixelScale: document.pixelScale)
+        // The Experiments number is in logical px, like every readout; the
+        // items are device px, so a Retina capture gets twice the room.
+        let found = AlignmentScan.measure(
+            AlignmentGuideLine(axis: axis, position: position, span: span), picture: picture,
+            boxes: LayerElements.boxes(in: document),
+            tolerance: AlignmentCheck.deviceTolerance(logical: Experiments.shared.measureAlignTolerance,
+                                                      pixelScale: document.pixelScale))
         var content = measureStyle
         content.mode = axis
         content.headOffset = 0
-        // The Experiments number is in logical px, like every readout; the
-        // items are device px, so a Retina capture gets twice the room.
-        content.alignment = AlignmentCheck(
-            items: items,
-            tolerance: AlignmentCheck.deviceTolerance(logical: Experiments.shared.measureAlignTolerance,
-                                                      pixelScale: pixelScale),
-            // Counted only when the count means something: the picture was read,
-            // or every item on the list is a box the app drew, which is exactly
-            // one element each.
-            itemsAreElements: !luma.isEmpty || items.count == drawn.count)
-        let reference = content.alignment?.verdict?.reference ?? items.first?.edge ?? position
-        let start: CGPoint, end: CGPoint
-        switch axis {
-        case .vertical:
-            start = CGPoint(x: reference, y: span.lowerBound)
-            end = CGPoint(x: reference, y: span.upperBound)
-        case .horizontal:
-            start = CGPoint(x: span.lowerBound, y: reference)
-            end = CGPoint(x: span.upperBound, y: reference)
-        }
+        content.alignment = found.check
+        let start = found.settled.start, end = found.settled.end
         planReadout(&content, from: start, to: end)
         var layer = MeasureBuilder.layer(content: content, from: start, to: end)
         layer.style = measureStyles.layerStyle

@@ -238,6 +238,8 @@ extension EditorState {
         previewMoves = moves.reduce(into: [:]) { frames, move in
             frames[move.key] = doc.canvasBounds(of: move.key)
         }
+        // A guide carried along with the rest reads what it lands on, live.
+        remeasureGuidesInPreview(&doc)
         submit(doc)
     }
 
