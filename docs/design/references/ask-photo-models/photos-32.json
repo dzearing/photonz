@@ -1,0 +1,30 @@
+[
+ {
+  "name": "dog-on-a-beach",
+  "prompt": "a photo of a dog on a beach. A real photograph taken with a camera: natural light, true colours, sharp focus, fine realistic detail. No text, no watermark, no border.",
+  "width": 1280,
+  "height": 800,
+  "seed": 7
+ },
+ {
+  "name": "kitten-in-the-snow",
+  "prompt": "generate a photo of a kitten walking in the snow. A real photograph taken with a camera: natural light, true colours, sharp focus, fine realistic detail. No text, no watermark, no border.",
+  "width": 1280,
+  "height": 800,
+  "seed": 7
+ },
+ {
+  "name": "lighthouse-at-dusk",
+  "prompt": "make a photorealistic image of a lighthouse on a cliff at dusk. A real photograph taken with a camera: natural light, true colours, sharp focus, fine realistic detail. No text, no watermark, no border.",
+  "width": 1280,
+  "height": 800,
+  "seed": 7
+ },
+ {
+  "name": "coffee-on-a-table",
+  "prompt": "a realistic picture of a cup of coffee on a wooden table. A real photograph taken with a camera: natural light, true colours, sharp focus, fine realistic detail. No text, no watermark, no border.",
+  "width": 1280,
+  "height": 800,
+  "seed": 7
+ }
+]
