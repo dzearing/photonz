@@ -14531,3 +14531,17 @@
 {"t":"2026-10-30T06:41:40.603Z","ev":"task_note","id":"the-full-test-run-never-fails-on-a-speed-budget"}
 {"t":"2026-10-30T06:41:40.676Z","ev":"task_note","id":"the-full-test-run-never-fails-on-a-speed-budget"}
 {"t":"2026-10-30T06:53:36.706Z","ev":"task_done","id":"the-full-test-run-never-fails-on-a-speed-budget","from":"in_progress","note":"Speed tests now run last in Scripts/test.sh (serialized ...PerfTests suites, three at a time, after the four parallel runs) and are judged beside a ruler read in the same rounds; the export sizer counts renders. Measured first (5 runs, 3 with a speed miss), every budget fails twice the work in a full run (scratch branch), ten runs in a row with no speed-budget failure (green 123-128 s), CI green on all three slices. Commits 29b8a1b5, 22635732; audit queue/audits/2026-10-30-the-full-test-run-never-fails-on-a-speed-budget.json; perf note in docs/progress/perf.md. Two non-speed video flakes filed as the-full-test-run-never-fails-on-a-video-check-t."}
+{"t":"2026-10-30T10:51:57.866Z","ev":"sweep_pass","walks":1051,"seconds":13950,"passed":654,"failed":397,"complete":true,"total":1051}
+{"t":"2026-10-30T10:51:58.056Z","ev":"leftovers_handed","id":"ask-can-make-a-photo-as-well-as-an-illustration","task":"ask-can-make-a-photo-as-well-as-an-illustration","count":1}
+{"t":"2026-10-30T10:51:58.058Z","ev":"task_started","id":"ask-can-make-a-photo-as-well-as-an-illustration","title":"Ask picks how to make a picture from what you say: a photo, vector art or an icon, or painting with brushes","priority":"p1-high"}
+{"t":"2026-10-30T10:52:12.584Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T12:21:19.708Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-30T12:21:29.656Z","ev":"task_walks","id":"ask-can-make-a-photo-as-well-as-an-illustration","walks":["ask-makes-a-photo-walk","ask-makes-it-again-as-a-photo-walk","ask-paints-before-brushes-walk"]}
+{"t":"2026-10-30T12:32:40.673Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T12:32:40.747Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T12:32:40.820Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T12:32:40.893Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T12:32:40.966Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T13:16:48.951Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T13:29:02.535Z","ev":"task_created","id":"the-transitions-panel-stays-out-of-the-way-close","priority":"p1-high","title":"The Transitions panel stays out of the way: closed until there is a cut to work on, and still until you hover a tile"}
+{"t":"2026-10-30T13:29:02.646Z","ev":"task_resequenced","id":"the-transitions-panel-stays-out-of-the-way-close","from":3970,"to":4e-7}

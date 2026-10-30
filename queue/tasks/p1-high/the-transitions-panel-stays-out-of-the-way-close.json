@@ -1,0 +1,33 @@
+{
+  "id": "the-transitions-panel-stays-out-of-the-way-close",
+  "title": "The Transitions panel stays out of the way: closed until there is a cut to work on, and still until you hover a tile",
+  "goal": "Opening a video shows the inspector's Transitions section already open with nothing picked, and every transition tile in it animates nonstop. It is noise: it pulls the eye away from the video, does nothing useful with nothing picked, and costs CPU. The section should only be open when there is a cut to work on, and its tiles should be still pictures that play their motion only while the pointer is over one.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 4e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-30T13:29:02.531Z",
+  "updated": "2026-10-30T13:29:02.645Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-30 (intake): 'i opened a video editor and the transitions panel is both 1. open (it doesn't even need to be there when i have nothing selected) and 2. animating every possible transition obnoxiously'. Code: the section is InspectorSection .transitions (InspectorSections.swift ~218, InspectorPanel.swift ~2102 shows TransitionsGroup()). Each tile in TransitionsGroup.swift tile(_:) renders VideoKit.AnimatedTransitionThumbnail, which animates all the time; the same view is used in TransitionPicker.swift and LibraryCatalogTiles.swift. The picker-at-the-cut task (500f1363, choosing-a-transition-between-two-clips-is-one-o) asked for 'A tile plays its motion on hover', not always. Related: the CPU complaint 2026-10-28 where WindowServer sat at 45 to 55% while things on screen redrew constantly.",
+  "acceptance": [
+    "At Next defaults, opening a recording (and a new video) with nothing picked: the Transitions section is collapsed or not shown at all. It opens on its own when a cut is picked or clicked, and goes back to how the person left it after. A person who opens it by hand and leaves it open is respected across launches.",
+    "Transition tiles everywhere (the inspector's Transitions section, the picker at a cut, the Library catalog) are still at rest, showing a representative frame of their motion. A tile plays its motion only while the pointer is over it, and stops when the pointer leaves. Nothing animates on screen unless the person is hovering it or playing the video.",
+    "Measured, in the audit: WindowServer and app CPU with the video editor open and idle, before and after (today every tile runs its own animation). After: no frame is drawn by the panel while idle, checked with a frame counter or Instruments.",
+    "Walks: open a recording with nothing picked and the section is not open; pick a cut and it opens; hover a tile and it moves; leave and it stops. Screenshots before and after in the audit under queue/audits/.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-30T13:29:02.533Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-30T13:29:02.644Z",
+      "note": "seq 3970 -> 4e-7"
+    }
+  ]
+}
