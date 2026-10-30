@@ -22194,3 +22194,9 @@ the ghost, and pinching in seemed to stop short.
 - UX-PATTERNS gained "Make room rather than refuse"; `video-transitions.md` §3 rewritten.
 - New walk `cube-between-two-recordings-with-no-spare-walk` (every door, a 7-frame reel, the overlap). Reel: `queue/audits/2026-10-29-cube-held-frames-reel.mp4`.
 - Open: clicking Shorten the cut runs nothing (filed, reproduced, cause unknown); seven transition walks red since 2026-10-26 because the picker does not open on a press of the cut (logged on the standing walk task).
+
+## 2026-10-30 — Speed budgets read last, on their own, beside a ruler
+
+- **The full test run no longer fails on a speed test that passes alone.** `Scripts/test.sh` holds every `.serialized` `...PerfTests` suite until the four parallel runs finish and runs them three at a time; the brush grid, animated charts, WebP encode, popping caption, paint landing and punch-in composite moved into such suites and are judged beside a ruler read in the same rounds (`PerfClock.calibrated`, `MachineSpeed.judgeScaled`). The export sizer counts renders instead of racing stopwatches.
+- Measured first (5 runs, 3 with a speed miss), then each budget shown failing twice the work on a scratch branch, then ten runs in a row with no speed-budget failure (green 123 to 128 s). Numbers: `docs/progress/perf.md`, audit `queue/audits/2026-10-30-the-full-test-run-never-fails-on-a-speed-budget.json`. CI green on all three slices.
+- Open: two video checks (BusyVideoSizeTests, a VideoCutExport reader stall) failed once or twice in ~25 full runs and pass alone; filed as `the-full-test-run-never-fails-on-a-video-check-t`.
