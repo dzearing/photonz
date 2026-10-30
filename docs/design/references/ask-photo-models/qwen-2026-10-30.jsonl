@@ -1,0 +1,5 @@
+{"event": "loaded", "model": "qwen", "footprintGB": 19.65, "maxFootprintGB": 19.65, "seconds": 4.6, "peakFootprintGB": 16.51}
+{"event": "picture", "model": "qwen", "footprintGB": 20.19, "maxFootprintGB": 30.6, "name": "dog-on-a-beach", "seconds": 61.8, "peakFootprintGB": 29.44, "mlxPeakGB": 32.07, "path": "out/qwen-dog-on-a-beach.png"}
+{"event": "picture", "model": "qwen", "footprintGB": 20.82, "maxFootprintGB": 30.6, "name": "kitten-in-the-snow", "seconds": 64.6, "peakFootprintGB": 24.91, "mlxPeakGB": 32.07, "path": "out/qwen-kitten-in-the-snow.png"}
+{"event": "picture", "model": "qwen", "footprintGB": 20.2, "maxFootprintGB": 30.61, "name": "lighthouse-at-dusk", "seconds": 78.6, "peakFootprintGB": 29.72, "mlxPeakGB": 32.07, "path": "out/qwen-lighthouse-at-dusk.png"}
+{"event": "picture", "model": "qwen", "footprintGB": 20.82, "maxFootprintGB": 30.61, "name": "coffee-on-a-table", "seconds": 81.5, "peakFootprintGB": 29.43, "mlxPeakGB": 32.07, "path": "out/qwen-coffee-on-a-table.png"}

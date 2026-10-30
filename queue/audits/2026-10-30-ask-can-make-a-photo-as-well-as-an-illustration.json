@@ -5,21 +5,46 @@
   "setup": "Photonz Dev, release Next, no flag changed from its default, with the picture model set up in Settings, Ask.",
   "switched": {},
   "try": [
-    { "do": "Open an empty picture, press Command K, type \"a photo of a dog on a beach\" and press Return.", "shot": "2026-10-30-ask-photo-1-photo.png" },
-    { "do": "Press Command K again and type \"an illustration of a dog\".", "shot": "2026-10-30-ask-photo-2-illustration.png" },
-    { "do": "In a new picture ask for \"make vector art of a fox\".", "shot": "2026-10-30-ask-photo-3-vector-fox.png" },
-    { "do": "Then type just \"as a photo\".", "shot": "2026-10-30-ask-photo-4-fox-as-a-photo.png" },
-    { "do": "In a new picture ask for \"a painting of a harbour at dawn\".", "shot": "2026-10-30-ask-photo-5-painted.png" },
-    { "do": "Ask for \"create an icon of a camera\".", "shot": "2026-10-30-ask-photo-6-icon.png" },
-    { "do": "Ask for \"a dog on a beach\", naming no kind: Ask picks, and the row says which.", "shot": "2026-10-30-ask-photo-7-neither.png" },
-    { "do": "Select a photo layer and add a shadow, round its corners or mask it, as with any picture." , "shot": "2026-10-30-ask-photo-8-mcp-frame.png" }
+    {
+      "do": "Open an empty picture, press Command K, type \"a photo of a dog on a beach\" and press Return.",
+      "shot": "2026-10-30-ask-photo-1-photo.png"
+    },
+    {
+      "do": "Press Command K again and type \"an illustration of a dog\".",
+      "shot": "2026-10-30-ask-photo-2-illustration.png"
+    },
+    {
+      "do": "In a new picture ask for \"make vector art of a fox\".",
+      "shot": "2026-10-30-ask-photo-3-vector-fox.png"
+    },
+    {
+      "do": "Then type just \"as a photo\".",
+      "shot": "2026-10-30-ask-photo-4-fox-as-a-photo.png"
+    },
+    {
+      "do": "In a new picture ask for \"a painting of a harbour at dawn\".",
+      "shot": "2026-10-30-ask-photo-5-painted.png"
+    },
+    {
+      "do": "Ask for \"create an icon of a camera\".",
+      "shot": "2026-10-30-ask-photo-6-icon.png"
+    },
+    {
+      "do": "Ask for \"a dog on a beach\", naming no kind: Ask picks, and the row says which.",
+      "shot": "2026-10-30-ask-photo-7-neither.png"
+    },
+    {
+      "do": "Select a photo layer and add a shadow, round its corners or mask it, as with any picture.",
+      "shot": "2026-10-30-ask-photo-8-mcp-frame.png"
+    }
   ],
   "evaluate": [
     "Do the photos look like photographs you would keep, at the picture's own shape?",
     "Is about a minute for a photo an acceptable wait, with the row saying what is happening?",
     "Does \"No brushes yet, so I made one image.\" tell you clearly what you got when you asked to paint?",
     "When you name no kind, does Ask's pick (a photo for a real place, animal or moment, a drawing for an icon or mascot) match what you meant?",
-    "Is typing \"as a photo\" or \"as vector art\" after a result the way you would want to flip it?"
+    "Is typing \"as a photo\" or \"as vector art\" after a result the way you would want to flip it?",
+    "On the model sheet, is Z-Image's look good enough, or would you trade memory or time for Qwen's or MOSS's?"
   ],
   "rough": [
     "Measured bar, Ask eval photo cases (contact sheet 2026-10-30-ask-photo-contact-sheet.png): before, the traced path scored 21.5, 21.5, 33.3 and 20.3 (mean 24.2), judged photographic 1, 1, 2, 1; now 93.6, 96, 76.1 and 95.2 (mean 90.2), photographic 9, 9, 7, 9.",
@@ -29,6 +54,7 @@
     "A photo is pixels, not paths: \"make it vector art\" makes a new drawing rather than converting the photo.",
     "Painting with brushes stroke by stroke waits on the Brush tool task (a-brush-tool-paints-with-realistic-charcoal-chal); until then a paint request makes one painted image.",
     "No mock covers making a photo with Ask; the one line Ask says above its rows sits where the Agent group already shows its rows.",
-    "Held-out total and the Z-Image, Qwen-Image-2.1 and MOSS-Image comparison: see the task log for where they stand."
+    "Photo model comparison (sheet 2026-10-30-ask-photo-models-sheet.png, same four prompts, this Mac): Z-Image Turbo 55 to 74 s a photo at 13.4 GB, Qwen-Image-2.1 62 to 82 s at 30.6 GB, MOSS-Image 683 to 691 s at 21.2 GB. Z-Image stays: Qwen beside the 29 GB planning model would hold about 60 of 64 GB, MOSS is ten times slower. Qwen and MOSS did put the lighthouse on the cliff.",
+    "Held-out total: see the task log."
   ]
 }

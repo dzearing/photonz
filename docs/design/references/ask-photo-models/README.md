@@ -16,9 +16,23 @@ and MOSS-Image-SFT downloaded to `~/Library/Caches/photonz-measure-photo/hf`
 
 ## 2026-10-30
 
-* Z-Image Turbo q8 (what ships): 54.8, 59.5, 67.9 and 73.7 s; peak 13.4 GB
-  (`zimage-2026-10-30.jsonl`). In the app the same requests took 60 to 64 s.
-* Qwen-Image-2.1 Turbo q8: loaded at 19.7 GB, then refused 1296 x 816 (fixed:
-  `photos-32.json`). Not yet painted.
-* MOSS-Image-SFT 8-bit, 50 steps: loaded at 15.5 GB; stopped before its first
-  picture when the person came back to the Mac.
+Contact sheet: `queue/audits/2026-10-30-ask-photo-models-sheet.png` (columns Z-Image,
+Qwen, MOSS; rows dog, kitten, lighthouse, coffee). One line per picture in
+`zimage-`, `qwen-` and `moss-2026-10-30.jsonl`.
+
+| Model | Seconds a photo (dog, kitten, lighthouse, coffee) | Peak footprint |
+| --- | --- | --- |
+| Z-Image Turbo q8, 9 steps (what ships) | 54.8, 59.5, 67.9, 73.7 | 13.4 GB |
+| Qwen-Image-2.1 Turbo q8, 8 steps, 1280 x 800 | 61.8, 64.6, 78.6, 81.5 | 30.6 GB |
+| MOSS-Image-SFT 8-bit, 50 steps | 685.5, 685.7, 690.7, 683.0 | 21.2 GB |
+
+All twelve read as real photographs. Qwen and MOSS put the lighthouse on a
+cliff as asked, where Z-Image put it on shore rocks; MOSS has the richest light
+and texture, Qwen adds props nobody asked for (latte art, a saucer).
+
+**Picked: Z-Image Turbo stays.** Qwen-Image-2.1 is as quick but holds 30.6 GB,
+which beside the planning model's 29 GB is about 60 of this Mac's 64 GB, with
+the person's own apps still to fit. MOSS-Image takes eleven and a half minutes
+a photo, about ten times Z-Image's minute. Worth measuring again if the
+planning model is ever let go while a picture is painted (Qwen) or MOSS gains a
+few step turbo.
