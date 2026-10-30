@@ -55,6 +55,6 @@
     "Painting with brushes stroke by stroke waits on the Brush tool task (a-brush-tool-paints-with-realistic-charcoal-chal); until then a paint request makes one painted image.",
     "No mock covers making a photo with Ask; the one line Ask says above its rows sits where the Agent group already shows its rows.",
     "Photo model comparison (sheet 2026-10-30-ask-photo-models-sheet.png, same four prompts, this Mac): Z-Image Turbo 55 to 74 s a photo at 13.4 GB, Qwen-Image-2.1 62 to 82 s at 30.6 GB, MOSS-Image 683 to 691 s at 21.2 GB. Z-Image stays: Qwen beside the 29 GB planning model would hold about 60 of 64 GB, MOSS is ten times slower. Qwen and MOSS did put the lighthouse on the cliff.",
-    "Held-out total: see the task log."
+    "Ask eval after the photo route: climb 90.2 (the four photo cases), held-out 57.2 over 45 cases (run 20261030-122139-ask-held-out). Against the last held-out run on the same planning model (Qwen3.8 27B, 2026-10-24) that is 57.8 to 57.2: layout 12.3 to 43.6 and redline 22.3 to 34.6 went up, drawings 64.4 to 60.3 went down (did what was asked 6.3 to 5.8). The held-out cases are never read one by one, so why the drawings fell is not known; a request that names no kind can now come back as a photo."
   ]
 }

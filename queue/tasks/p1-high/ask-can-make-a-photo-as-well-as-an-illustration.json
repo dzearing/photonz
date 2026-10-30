@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T00:05:36.495Z",
-  "updated": "2026-10-30T19:29:50.099Z",
+  "updated": "2026-10-30T19:43:13.813Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"I'd like to say \\\"paint a picture\\\" and it will use brush tools when they're ready, or make a photorealistic image of ..., and it will generate an image, or \\\"make vector art of ...\\\" or \\\"create an icon\\\" and it would use the vector tools\"\n\nThe user, 2026-10-24: 'i see we have zimage but it's not seemingly able to generate photos - only illustrations with vector art. I'd like to be able to be able to do both.'\n\nCause, from reading the code (not reproduced in the app): Z-Image Turbo is used only as a step on the way to vector. Every add_drawing goes to the picture model with a forced flat look (Scripts/picture-model/server.py:31 LOOK 'flat vector illustration... a few flat colours', :55 ICON, :59 SCENE; prompt_for at :65) and the result is always traced into paths (Scripts/picture-model/layers.py, vtracer). There is no route that keeps the painted pixels. Design write-up: docs/design/ask.md:226-366 ('Painting a drawing', 'The picture model'). Swift side: Sources/Photonz/Agent/AskPictureModel.swift, Sources/PhotonzCore/AskPictureModelPlan.swift, PictureModelRequest in Sources/PhotonzCore/AgentDrawingPlacement.swift.\n\nLikely shape: a new agent command (e.g. add_photo) or a 'photo' kind on the request, a server endpoint that returns the PNG without tracing and with a photographic prompt, and an image layer added via the ImageStore through History.perform. Z-Image Turbo is good at photoreal; check resolution limits and memory beside the 29 GB planning model (ask.md:355-358). Memory rule: no hardcoded subjects or stored content, quality via model, prompt and general techniques (see memory no-hardcoded-generated-content). The ask-eval set lives under Scripts/ask-eval; queue/tasks/p1-high/the-ask-test-set-scores-video-requests-too.json is a precedent for extending it.",
@@ -154,12 +154,29 @@
     {
       "t": "2026-10-30T19:29:50.098Z",
       "note": "Photo model comparison done (Z-Image Turbo kept: Qwen-Image-2.1 30.6 GB, MOSS-Image ten times slower; sheet in the audit). Only the held-out total is open: run 20261030-122139-ask-held-out at 41 of 45, about 10 minutes left, needs the person away."
+    },
+    {
+      "t": "2026-10-30T19:30:04.407Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T19:43:09.645Z",
+      "note": "Held-out run 20261030-122139-ask-held-out finished with the person away (guarded, cases 42 to 45, probe quit after): held-out 57.2 over 45 beside climb 90.2 (Scripts/ask-eval.sh report). Same planner's last held-out (Qwen3.8 27B, 2026-10-24) was 57.8: layout 12.3 to 43.6, redline 22.3 to 34.6, drawings 64.4 to 60.3 (did what was asked 6.3 to 5.8). Written into the audit's rough list."
+    },
+    {
+      "t": "2026-10-30T19:43:09.727Z",
+      "note": "left rough: held-out drawings fell 4.1 against the same planner. Not filed: the cases cannot be read one by one, so it is not reproduced, and past held-out drawing scores ranged 60.3 to 69.5, so it sits at the low edge of run-to-run spread. If the next held-out run shows drawings still near 60, file it as a look-into (does a request naming no kind now come back as a photo where a drawing was wanted)."
+    },
+    {
+      "t": "2026-10-30T19:43:13.811Z",
+      "note": "Photo, vector and paint routes shipped earlier today (e8ad11ea, 0def111e); photo cases 24.2 -> 90.2; photo model picked on measurements (Z-Image Turbo, 841cf2f6). Held-out run finished: held-out 57.2 beside climb 90.2 (same planner was 57.8: layout and redline up, drawings 64.4 -> 60.3). Audit queue/audits/2026-10-30-ask-can-make-a-photo-as-well-as-an-illustration.json."
     }
   ],
-  "started": "2026-10-30T17:23:27.360Z",
+  "started": "2026-10-30T19:30:04.406Z",
   "walks": [
     "ask-makes-a-photo-walk",
     "ask-makes-it-again-as-a-photo-walk",
     "ask-paints-before-brushes-walk"
-  ]
+  ],
+  "completed": "2026-10-30T19:43:13.812Z"
 }

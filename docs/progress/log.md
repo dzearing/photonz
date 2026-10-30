@@ -22226,3 +22226,8 @@ the ghost, and pinching in seemed to stop short.
 
 - **Z-Image Turbo stays the photo model** (task `ask-can-make-a-photo-as-well-as-an-illustration`, the user's ask of 2026-10-27). Same four photo prompts on this Mac: Z-Image 55 to 74 s at 13.4 GB, Qwen-Image-2.1 62 to 82 s at 30.6 GB, MOSS-Image 683 to 691 s at 21.2 GB. Qwen beside the 29 GB planning model would hold about 60 of 64 GB; MOSS is ten times slower. Both did put "a lighthouse on a cliff" on a cliff where Z-Image did not. Numbers and how to rerun: `docs/design/references/ask-photo-models/`; sheet `queue/audits/2026-10-30-ask-photo-models-sheet.png`.
 - Open: the held-out run `20261030-122139-ask-held-out` reached 41 of 45 before the person came back at 12:29; about 10 minutes left, resumable, only while they are away.
+
+## 2026-10-30 (evening): Ask photo route closed
+
+- Held-out run `20261030-122139-ask-held-out` finished with the person away (guarded): **held-out 57.2** over 45 cases beside **climb 90.2** (`Scripts/ask-eval.sh report`). Same planning model's last held-out (Qwen3.8 27B, 2026-10-24): 57.8. Layout 12.3 to 43.6, redline 22.3 to 34.6 up; drawings 64.4 to 60.3 down (did what was asked 6.3 to 5.8). Why drawings fell is unknown (held-out cases are not read); drawing scores across past runs ranged 60 to 70. Watch it on the next held-out run; a no-kind request can now come back as a photo.
+- Task `ask-can-make-a-photo-as-well-as-an-illustration` done. Next: brushes wire the paint route (Brush tool task).
