@@ -14624,3 +14624,13 @@
 {"t":"2026-10-30T21:03:38.169Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-30T21:03:38.242Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
 {"t":"2026-10-30T21:03:41.996Z","ev":"task_pending","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"Brush moves cheaper with identical pixels (d233562c): 150 pt on 12 MP oil 9.9->6.4 ms, pencil 8.4->4.6, charcoal 8.8->5.5. Item 3 still short: 20 and 150 pt slower than before the change for oil, pencil, charcoal and marker, because the live thinned end is laid again every move. Tables in queue/audits/2026-10-30-paint-move-cost.txt"}
+{"t":"2026-10-30T21:15:06.129Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-10-30T21:15:06.163Z","ev":"task_note","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b"}
+{"t":"2026-10-30T21:15:06.198Z","ev":"task_note","id":"a-picked-cut-opens-from-a-chevron-on-its-track-h"}
+{"t":"2026-10-30T21:15:06.232Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-30T21:16:55.644Z","ev":"slice_pass","walks":42,"passed":22,"failed":20,"seconds":650,"of":1056,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-30T21:16:55.818Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high"}
+{"t":"2026-10-30T21:34:01.980Z","ev":"decision_opened","id":"painting-is-what-you-see-earlier-strokes-never-r-brushes-now-draw-exactly-what-la","taskId":"painting-is-what-you-see-earlier-strokes-never-r","question":"Brushes now draw exactly what lands. That costs more per move than the old rough preview. Keep the cost, drop the thinned end on mouse strokes, or go back to the preview?"}
+{"t":"2026-10-30T21:34:28.735Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T21:34:28.801Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T21:34:28.880Z","ev":"task_blocked","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"Item 3 (no slower than before) can't be met while the stroke under the hand is the stroke that lands: with no thinned end at all, a 150 pt move on a 12 MP picture is still 3x the before column. Card asks: keep the cost, end mouse strokes at full width, or go back to the preview."}

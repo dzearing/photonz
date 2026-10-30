@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-18T06:28:51.470Z",
-  "updated": "2026-10-30T02:11:07.911Z",
+  "updated": "2026-10-30T21:15:06.197Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html line 376 #btnExpand (.xbtn chevron-down in the V1 .tl), step 5 data-cue #btnExpand. Today: TimelineTrackRows.swift twist (hasKeyLanes / hasParts arrow). Expand the Cut itself shipped in a-cut-opens-into-its-two-clips-on-their-own-rows (EditorState+ExpandedCut.toggleExpandedCut, ExpandedCutRows). Walk to extend: Scripts/playtest/expand-the-cut-from-its-menus-walk.json.",
@@ -74,6 +74,10 @@
     {
       "t": "2026-10-30T02:11:07.910Z",
       "note": "triage 2026-10-29: the user approved a new way to pick a transition at a cut (choosing-a-transition-between-two-clips-is-one-o: hover the edit, one click opens the picker). This chevron opens the cut's A and B rows, a different job, so it stays; whoever builds either keeps the two from fighting over the same click."
+    },
+    {
+      "t": "2026-10-30T21:15:06.196Z",
+      "note": "rotating check 2026-10-30T21:15:06Z, 42 walks run from 335 onward in the rotation: expand-the-cut-from-its-menus-walk failing. This task was picked because its words name the walk; if it is not yours, say so with node queue/bin/queue.mjs walks a-picked-cut-opens-from-a-chevron-on-its-track-h --none and the next check writes it onto the standing walk task instead."
     }
   ]
 }
