@@ -2,6 +2,16 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.21.0 — 2026-10-29
+
+**Saved videos play everywhere again.** Since 0.17.0, a video you cut and saved could play in QuickTime but stop partway through in Chrome, Teams, Slack and other players. Saved videos now play the whole way through in all of them. Exporting a video over the recording it came from no longer deletes the recording, and a save that fails leaves your old file untouched.
+
+**Room after the end of your video.** The timeline now zooms out to twice the length of your video, and recordings open that way, so there is empty space after the last clip to drop new ones into. When a clip changes the video's length, the timeline glides to fit instead of jumping.
+
+**Drag clips from History straight onto the timeline.** Drag any recording from History and drop it where you want it: between clips, at the start, or past the end. A clip-shaped preview shows where it will land. Drop it above the tracks to put it on a new track of its own, and the timeline scrolls as you near its edges.
+
+**History is easier to live with.** History remembers the filter you picked last, runs edge to edge under the menu bar, and resizes from its bottom edge. Holding an arrow key keeps the picked tile on screen. The toast after a capture is smaller and less in the way.
+
 ## 0.20.0 — 2026-10-27
 
 **Painting holds still.** When you let go of a stroke, nothing you painted before it moves. Earlier strokes no longer go soft and then sharpen, flicker, or redraw, at any zoom. The end of a mouse stroke now thins as you draw, not when you let go. Big brushes keep up better too: large pencil, charcoal and oil strokes are a good deal quicker, and painting zoomed in no longer slows down after a few strokes.

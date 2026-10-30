@@ -1,6 +1,6 @@
 {
-  "version": "0.20.0",
-  "released": "2026-10-27",
+  "version": "0.21.0",
+  "released": "2026-10-29",
   "minOS": "macOS 26.0",
   "arch": "arm64"
 }
