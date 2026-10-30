@@ -113,6 +113,11 @@ public enum PieceCopyWriter {
         let frames: [CutCopyPlan.StoredFrame]
         let dataRate: Float
 
+        /// Whether any frame is decoded out of the order it shows in.
+        var reorders: Bool {
+            zip(frames, frames.dropFirst()).contains { $0.showsAt > $1.showsAt }
+        }
+
         static func load(_ url: URL) async throws -> Recording {
             let asset = AVURLAsset(url: url)
             guard let track = try await asset.loadTracks(withMediaType: .video).first else {
@@ -257,8 +262,9 @@ public enum PieceCopyWriter {
                         try append(sample, as: placed)
                     }
                 case .render(let group, let frames):
-                    let made = try render(recording, group: group, frames: frames)
-                    for (sample, placed) in zip(made, frames) { try append(sample, as: placed) }
+                    for (sample, placed) in try render(recording, group: group, frames: frames) {
+                        try append(sample, as: placed)
+                    }
                 }
             }
         } catch {
@@ -278,15 +284,25 @@ public enum PieceCopyWriter {
         return Outcome(copiedFrames: plan.copiedFrames, renderedFrames: plan.renderedFrames)
     }
 
-    /// One group of frames decoded, and the ones listed encoded afresh in the
-    /// order they show, opening on a key frame of their own, without
-    /// reordering and with the recording's own colour tags.
+    /// One group of frames decoded, and the ones listed encoded afresh,
+    /// opening on a key frame of their own, stored exactly the way the
+    /// recording's own frames are (`sameWay`) and with its colour tags.
+    /// Handed back in the order they are decoded, each with its place.
+    ///
+    /// The encoder reorders frames where the recording does: the Mac's
+    /// recorder does, and an encoder told not to writes different parameter
+    /// sets (six reference frames against the recording's four, measured on a
+    /// Main 5.2 recording on 2026-10-28), which the file cannot hold both of.
+    /// The frames then come out in decode order, and take the decode times
+    /// the plan gave the run in that order: the plan leads a run by the
+    /// recording's own reordering, which is what this encoder does too. Where
+    /// a frame would be decoded after it shows, it is `notCopyable`.
     ///
     /// The bit rate is twice the recording's average, with a floor: these are
     /// a second of frames at most, so it costs nothing worth weighing, and a
     /// join is never a visible step down in sharpness.
     private static func render(_ recording: Recording, group: Range<Int>,
-                               frames: [CutCopyPlan.Placed]) throws -> [CMSampleBuffer] {
+                               frames: [CutCopyPlan.Placed]) throws -> [(CMSampleBuffer, CutCopyPlan.Placed)] {
         let wanted = Set(frames.map { recording.frames[$0.index].showsAt })
         let shows = group.map { recording.frames[$0].showsAt }
         guard let from = shows.min(), let last = shows.max(), !wanted.isEmpty else { return [] }
@@ -316,12 +332,13 @@ public enum PieceCopyWriter {
         defer { VTCompressionSessionInvalidate(session) }
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_RealTime, value: kCFBooleanFalse)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AllowFrameReordering,
-                             value: kCFBooleanFalse)
+                             value: recording.reorders ? kCFBooleanTrue : kCFBooleanFalse)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_MaxKeyFrameInterval,
                              value: 100_000 as CFNumber)
-        if codec == kCMVideoCodecType_H264 {
-            VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel,
-                                 value: kVTProfileLevel_H264_High_AutoLevel)
+        // The recording's own profile and level, so the frames made here can
+        // carry the recording's own parameter sets (`sameWay`).
+        if let profile = StoredWay.encoderProfile(of: recording.format) {
+            VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel, value: profile)
         }
         let rate = max(Double(recording.dataRate) * 2, 4_000_000)
         VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AverageBitRate,
@@ -354,11 +371,65 @@ public enum PieceCopyWriter {
             fed += 1
         }
         VTCompressionSessionCompleteFrames(session, untilPresentationTimeStamp: .invalid)
-        let samples = try encoded.inShowingOrder()
+        let samples = try encoded.inDecodeOrder()
         guard samples.count == wanted.count else {
             throw CopyError.failed("\(samples.count) of \(wanted.count) frames came out of the encoder")
         }
-        return samples
+        var placedAt: [Int64: CutCopyPlan.Placed] = [:]
+        for frame in frames { placedAt[recording.frames[frame.index].showsAt] = frame }
+        let decodeTimes = frames.map(\.decodesAt).sorted()
+        return try zip(samples, decodeTimes).map { sample, decodesAt in
+            guard let fileTicks = ticks(CMSampleBufferGetPresentationTimeStamp(sample), on: recording.clock)
+                    .map({ $0 + recording.editOffset }),
+                  let frame = placedAt[fileTicks]
+            else { throw CopyError.failed("a frame came out of the encoder at a moment nobody asked for") }
+            guard decodesAt <= frame.showsAt else {
+                throw CopyError.notCopyable("the encoder reorders further than the plan leaves room for")
+            }
+            return (try sameWay(sample, as: recording.format), frame.decoded(at: decodesAt))
+        }
+    }
+
+    /// A frame made here, put in the file the way the recording's own frames
+    /// are, or `notCopyable` when it cannot be.
+    ///
+    /// A frame whose parameter sets are not the recording's would make the
+    /// writer add a second way of storing pictures to the file (a second
+    /// `avcC`). QuickTime follows that; Chrome, and so Teams, Slack and the
+    /// web, stops on the first such frame with a decode error, so the saved
+    /// video plays nowhere else (measured 2026-10-28 on a real recording,
+    /// Main profile from the Mac's recorder against High from the encoder).
+    /// Where the encoder said the same thing the recording did, the frame
+    /// takes the recording's very format description and the file keeps one.
+    private static func sameWay(_ sample: CMSampleBuffer,
+                                as format: CMFormatDescription) throws -> CMSampleBuffer {
+        guard let made = CMSampleBufferGetFormatDescription(sample),
+              StoredWay.parameterSets(of: made) == StoredWay.parameterSets(of: format),
+              StoredWay.parameterSets(of: format) != nil
+        else { throw CopyError.notCopyable("the encoder will not store frames the way the recording does") }
+        guard let data = CMSampleBufferGetDataBuffer(sample) else {
+            throw CopyError.failed("a frame came out of the encoder empty")
+        }
+        var timing = CMSampleTimingInfo()
+        CMSampleBufferGetSampleTimingInfo(sample, at: 0, timingInfoOut: &timing)
+        var size = CMSampleBufferGetSampleSize(sample, at: 0)
+        var rewrapped: CMSampleBuffer?
+        guard CMSampleBufferCreateReady(allocator: nil, dataBuffer: data, formatDescription: format,
+                                        sampleCount: 1, sampleTimingEntryCount: 1,
+                                        sampleTimingArray: &timing, sampleSizeEntryCount: 1,
+                                        sampleSizeArray: &size, sampleBufferOut: &rewrapped) == noErr,
+              let rewrapped
+        else { throw CopyError.failed("a frame could not be stored the recording's way") }
+        // What the encoder said about each frame (a key frame or not, what it
+        // leans on) goes with it.
+        // Without it every frame made here would be written as a key frame,
+        // and a seek landing on one would show a broken picture.
+        if let from = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: false) as? [NSDictionary],
+           let to = CMSampleBufferGetSampleAttachmentsArray(rewrapped, createIfNecessary: true) as? [NSMutableDictionary],
+           let source = from.first, let target = to.first {
+            target.addEntries(from: source as? [AnyHashable: Any] ?? [:])
+        }
+        return rewrapped
     }
 }
 
@@ -417,13 +488,11 @@ private final class EncodedFrames: @unchecked Sendable {
         if let buffer { frames.append(buffer) }
     }
 
-    func inShowingOrder() throws -> [CMSampleBuffer] {
+    /// In the order the encoder handed them over, which is decode order.
+    func inDecodeOrder() throws -> [CMSampleBuffer] {
         lock.lock(); defer { lock.unlock() }
         guard failure == noErr else { throw PieceCopyWriter.CopyError.failed("the encoder failed (\(failure))") }
-        return frames.sorted {
-            CMTimeCompare(CMSampleBufferGetPresentationTimeStamp($0),
-                          CMSampleBufferGetPresentationTimeStamp($1)) < 0
-        }
+        return frames
     }
 }
 

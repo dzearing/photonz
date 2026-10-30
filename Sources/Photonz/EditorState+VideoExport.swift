@@ -357,6 +357,24 @@ extension EditorState {
                            range: VideoExportRange = .marked,
                            mayCopyPieces: Bool = true,
                            onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> VideoWriteRoute {
+        // Written beside `url` and swapped in whole: `url` may be the very
+        // recording this plays (the save box offers the recording's own name),
+        // and every route below starts by removing its destination
+        // (`FileSwap`).
+        try await FileSwap.write(to: url) { scratch in
+            try await writeVideoUnswapped(
+                of: document, pictures: store, format: format, quality: quality, size: size,
+                to: scratch, captions: captions, range: range, mayCopyPieces: mayCopyPieces,
+                onProgress: onProgress)
+        }
+    }
+
+    private static func writeVideoUnswapped(of document: PhotonzDocument, pictures store: ImageStore,
+                                            format: RecordingFormat, quality: VideoExportQuality,
+                                            size: VideoExportSize?, to url: URL,
+                                            captions: CaptionExport, range: VideoExportRange,
+                                            mayCopyPieces: Bool,
+                                            onProgress: (@Sendable (Double) -> Void)?) async throws -> VideoWriteRoute {
         let document = document.forExport(captions: captions)
         guard document.hasTime else { throw CocoaError(.fileNoSuchFile) }
         // The In to the Out where they are set, and all of it otherwise
