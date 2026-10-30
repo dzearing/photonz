@@ -24,7 +24,7 @@ struct PanelSectionFoldsTests {
         let folds = PanelSectionFolds(stored: "time,captions")
         #expect(folds.contains("time"))
         #expect(folds.contains("captions"))
-        #expect(!folds.contains("transitions"))
+        #expect(!folds.contains("audio"))
     }
 
     @Test("Written back sorted, so the same folds always store the same words")
@@ -81,7 +81,7 @@ struct PanelSectionFoldsTests {
 
     @Test("The Library starts folded with nothing stored")
     func libraryStartsFolded() {
-        #expect(PanelSectionFolds.startFolded == ["library"])
+        #expect(PanelSectionFolds.startFolded.contains("library"))
         let folds = PanelSectionFolds(stored: nil)
         #expect(folds.contains("library"))
         #expect(!folds.contains("time"))
@@ -126,6 +126,99 @@ struct PanelSectionFoldsTests {
         after.open("library")
         #expect(after.flipped(from: before) == ["library"])
         #expect(before.flipped(from: after) == ["library"])
+    }
+
+    // MARK: Transitions: folded until there is a cut to work on
+
+    // The user, 2026-10-30: "i opened a video editor and the transitions panel
+    // is both 1. open (it doesn't even need to be there when i have nothing
+    // selected) and 2. animating every possible transition obnoxiously". So
+    // the Transitions section starts folded like the Library, opens on its own
+    // while a cut is picked (a hold, never written down), and goes back to how
+    // the person left it once the cut is let go.
+
+    @Test("Transitions starts folded with nothing stored, and opening it by hand is kept")
+    func transitionsStartsFolded() {
+        var folds = PanelSectionFolds(stored: nil)
+        #expect(PanelSectionFolds.startFolded == ["library", "transitions"])
+        #expect(folds.contains("transitions"))
+        folds.toggle("transitions")
+        #expect(!folds.contains("transitions"))
+        #expect(folds.stored == "+transitions")
+        #expect(!PanelSectionFolds(stored: folds.stored).contains("transitions"))
+    }
+
+    @Test("Held open, a folded section reads open and nothing is stored")
+    func heldOpenIsNotStored() {
+        var folds = PanelSectionFolds(stored: "time")
+        folds.hold("transitions", open: true)
+        #expect(!folds.contains("transitions"))
+        #expect(folds.stored == "time")
+        #expect(folds.isHeldOpen("transitions"))
+        folds.hold("transitions", open: false)
+        #expect(folds.contains("transitions"))
+        #expect(!folds.isHeldOpen("transitions"))
+    }
+
+    @Test("Letting go of the hold goes back to how the person left it")
+    func holdReleasedGoesBack() {
+        var opened = PanelSectionFolds(stored: "+transitions")
+        opened.hold("transitions", open: true)
+        opened.hold("transitions", open: false)
+        #expect(!opened.contains("transitions"))
+        #expect(opened.stored == "+transitions")
+    }
+
+    @Test("Folding a held section by hand folds it, and it stays folded once the hold goes")
+    func foldingAHeldSection() {
+        var folds = PanelSectionFolds(stored: "+transitions")
+        folds.hold("transitions", open: true)
+        folds.toggle("transitions")
+        #expect(folds.contains("transitions"))
+        #expect(!folds.isHeldOpen("transitions"))
+        #expect(folds.stored == "")
+        folds.hold("transitions", open: false)
+        #expect(folds.contains("transitions"))
+    }
+
+    @Test("Folding a held section that was folded anyway stores nothing new")
+    func foldingAHeldFoldedSection() {
+        var folds = PanelSectionFolds(stored: nil)
+        folds.hold("transitions", open: true)
+        folds.toggle("transitions")
+        #expect(folds.contains("transitions"))
+        #expect(folds.stored == "")
+    }
+
+    @Test("Opening a held section by command stores it open, so it stays when the hold goes")
+    func openingAHeldSection() {
+        var folds = PanelSectionFolds(stored: nil)
+        folds.hold("transitions", open: true)
+        let changed = folds.open("transitions")
+        #expect(changed)
+        #expect(folds.stored == "+transitions")
+        folds.hold("transitions", open: false)
+        #expect(!folds.contains("transitions"))
+    }
+
+    @Test("A hold is a flip only when it changes what is shown")
+    func holdFlips() {
+        let before = PanelSectionFolds(stored: nil)
+        var held = before
+        held.hold("transitions", open: true)
+        #expect(held.flipped(from: before) == ["transitions"])
+        var openAnyway = PanelSectionFolds(stored: "+transitions")
+        let beforeOpen = openAnyway
+        openAnyway.hold("transitions", open: true)
+        #expect(openAnyway.flipped(from: beforeOpen).isEmpty)
+    }
+
+    @Test("The same stored words with this window's holds carried over read the same")
+    func holdsCarryOver() {
+        var mine = PanelSectionFolds(stored: "time")
+        mine.hold("transitions", open: true)
+        let read = PanelSectionFolds(stored: "time").holding(mine.heldOpen)
+        #expect(read == mine)
     }
 
     // MARK: Telling a stored setting's own change from anybody else's

@@ -661,6 +661,14 @@ struct InspectorPanel: View {
           .onChange(of: belowIsEmpty && split.lists.contains(.layers), initial: true) { _, alone in
               if alone, isCollapsed(.layers) { expand(.layers) }
           }
+          // A cut picked holds Transitions open, without writing it down, and
+          // letting the cut go puts it back the way the person left it: with
+          // no cut there is nothing to put a tile on (the user, 2026-10-30).
+          .onChange(of: editorState.isACutPicked, initial: true) { _, picked in
+              withAnimation(foldMotion) {
+                  refold { folds.hold(.transitions, open: picked) }
+              }
+          }
             if Experiments.shared.panelSectionsEnabled, editorState.document != nil {
                 PanelSectionsFooter(offered: offeredOptionalSections,
                                     situation: editorState.panelSectionSituation)

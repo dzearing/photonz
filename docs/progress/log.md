@@ -22214,3 +22214,10 @@ the ghost, and pinching in seemed to stop short.
 - **The scan is 15 times faster** with identical answers: `EdgeMap.verticalEdges/horizontalEdges(…near:)` read only the band around the guide (whole-row maxima stored at build), `groupedByPixels` reads raw samples with shared differences. Per move on 12 MP, release: p95 0.50 ms (was 7.6). Equivalence pinned in `EdgeMapNearTests` and on a real capture.
 - Walk `an-alignment-guide-re-measures-as-you-drag-walk` (claims every stage's verdict); audit + reel `queue/audits/2026-10-30-alignment-guide-redrag-*`.
 - Open: a 1 px nudge on a guide sitting on an edge settles back on it (consistent with drawing; asked in the audit).
+
+## 2026-10-30 — Transitions panel stays out of the way
+
+- The inspector's Transitions section starts folded (`PanelSectionFolds.startFolded` gains `transitions`), is held open while a cut is picked (`PanelSectionFolds.hold`, never stored; `InspectorPanel` watches `isACutPicked`), and goes back to the stored fold when the cut is let go. A hand open is stored as `+transitions`.
+- One transition tile everywhere: `TransitionTileFace` (TransitionPicker.swift) rests on a representative frame and plays only on hover; the always-playing `VideoKit.AnimatedTransitionThumbnail` is gone.
+- Measured: idle panel captures 0.5s apart changed 27,876 / 119,627 pixels before, 0 / 0 after. Audit `queue/audits/2026-10-30-transitions-out-of-the-way.json`.
+- Open: header presses do not land in walks on this Mac (pre-existing, standing walk task).

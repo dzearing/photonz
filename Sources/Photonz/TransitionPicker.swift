@@ -102,7 +102,7 @@ struct TransitionPicker: View {
                           detail: kind.note ?? " ",
                           isSelected: isOn, isDisabled: !afford, emphasis: .cut,
                           thumbnailHeight: 26) {
-                CutTransitionFace(style: Self.style(kind), pictures: pictures, plays: hovered == kind)
+                TransitionTileFace(style: Self.style(kind), pictures: pictures, plays: hovered == kind)
             }
             .overlay(alignment: .topTrailing) {
                 if isDefault { Self.defaultKeycap(kind, in: "At this cut") }
@@ -204,12 +204,19 @@ struct CutPictures: Equatable {
     }
 }
 
-/// One tile's picture at a cut: still on the moment that shows the most of
-/// both clips, and playing the transition's lap while the pointer is on it.
+/// A transition tile's picture, the one every transition tile draws: at a
+/// cut, in the panel's Transitions section and in the Library's catalog. Still
+/// on the moment that shows the most of both shots, and playing the
+/// transition's lap only while the pointer is on it, so nothing on screen
+/// moves until someone asks (the user, 2026-10-30, on the panel's tiles all
+/// playing at once: "animating every possible transition obnoxiously").
 /// Still for anyone who has asked the system to reduce motion.
-struct CutTransitionFace: View {
+///
+/// At a cut it is handed the two clips' frames; anywhere else it draws the
+/// kit's two stand-in shots.
+struct TransitionTileFace: View {
     let style: VideoKit.TransitionThumbnail.Style
-    let pictures: CutPictures
+    var pictures = CutPictures()
     let plays: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -227,34 +234,27 @@ struct CutTransitionFace: View {
 
     var body: some View {
         if plays, !reduceMotion {
-            TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
-                let seconds = context.date.timeIntervalSinceReferenceDate
-                movie(TransitionTileLoop.progress(atSeconds: seconds))
-            }
+            Playing(style: style, pictures: pictures)
         } else {
-            movie(Self.restingProgress(style))
+            VideoKit.TransitionMovie(style: style, progress: Self.restingProgress(style),
+                                     outgoing: pictures.outgoing, incoming: pictures.incoming)
         }
     }
 
-    private func movie(_ progress: Double) -> some View {
-        VideoKit.TransitionMovie(style: style, progress: progress,
-                                 outgoing: pictures.outgoing, incoming: pictures.incoming)
-    }
-}
+    /// The lap, from its start each time the pointer arrives, so a hover
+    /// always shows the whole move rather than joining it part way.
+    private struct Playing: View {
+        let style: VideoKit.TransitionThumbnail.Style
+        let pictures: CutPictures
+        @State private var start = Date()
 
-// MARK: - Every transition tile plays on the one loop
-
-extension VideoKit.ProgressLoop {
-    /// `TransitionTileLoop`, the way the kit takes it.
-    static let transitionTile: VideoKit.ProgressLoop = {
-        let reel = TransitionTileLoop.reel
-        return VideoKit.ProgressLoop(progress: reel.shots.map(\.frame), keyTimes: reel.keyTimes,
-                                     lapSeconds: Double(reel.lapMS) / 1000)
-    }()
-}
-
-extension VideoKit.AnimatedTransitionThumbnail {
-    init(style: VideoKit.TransitionThumbnail.Style) {
-        self.init(style: style, loop: .transitionTile)
+        var body: some View {
+            TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
+                VideoKit.TransitionMovie(
+                    style: style,
+                    progress: TransitionTileLoop.progress(atSeconds: context.date.timeIntervalSince(start)),
+                    outgoing: pictures.outgoing, incoming: pictures.incoming)
+            }
+        }
     }
 }

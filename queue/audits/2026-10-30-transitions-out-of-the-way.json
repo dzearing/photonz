@@ -1,0 +1,31 @@
+{
+  "feature": "The Transitions panel stays out of the way",
+  "epic": "video-transitions-motion",
+  "summary": "A video now opens with the Transitions section folded and nothing moving in the panel. Pick a cut and the section opens on its own with every tile still; only the tile under the pointer plays, and letting go of the cut folds it back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/transitions-stay-out-of-the-way-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and leave nothing picked. Transitions is a folded header.", "shot": "2026-10-30-transitions-out-of-the-way-1-nothing-picked.png" },
+    { "do": "Compare with how it opened before this change: open, every tile playing.", "shot": "2026-10-30-transitions-out-of-the-way-0-before.png" },
+    { "do": "Press B at the middle of the clip, then click the cut between the two pieces. Transitions opens on its own, every tile still.", "shot": "2026-10-30-transitions-out-of-the-way-2-cut-picked.png" },
+    { "do": "Rest the pointer on the Push tile. It plays its move; move off and it stops.", "shot": "2026-10-30-transitions-out-of-the-way-3-hover.png" },
+    { "do": "Press Escape to let go of the cut. Transitions folds back.", "shot": "2026-10-30-transitions-out-of-the-way-4-let-go.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the Transitions header to open it by hand, quit and relaunch: it stays open." },
+    { "do": "Open the Library's transitions shelf and hover a tile: same still tile, same play on hover." }
+  ],
+  "evaluate": [
+    "With nothing picked, does the panel now feel calm enough to leave open while you watch the video?",
+    "When you pick a cut, is Transitions opening on its own welcome, or would you rather open it yourself?",
+    "Does each still tile show enough of its move that you can tell the twelve apart without hovering?",
+    "Is playing only the tile under the pointer enough to judge a transition before picking it?"
+  ],
+  "rough": [
+    "Measured, pixel for pixel: two window captures half a second apart, 3456x1980. Before, with nothing picked, 27,876 pixels changed, all in the panel; with a cut picked 119,627. After: 0 and 0. Pointer on Push: 14,003 pixels change (that tile only). Pointer gone: 0.",
+    "CPU barely moved, and honestly so: the old tiles were played by Core Animation, so the app itself was idle either way (probe 5.2% before, 5.0% after with nothing picked; 2.7% and 2.6% with a cut picked, 2 second samples over 14 seconds). WindowServer read 63% before and 63% after, but it reads 61% on this Mac with no Photonz running at all, so something else on the machine owns that load and this change cannot be judged by it.",
+    "The mock (video-transitions.html, #gEffects) draws the Transitions group open. It is folded until a cut is picked because you asked for that on 2026-10-30 (your call on 2026-10-30).",
+    "All three kinds of tile (at the cut, in the panel, in the Library) now draw one shared picture, so they cannot drift apart again. The Library's resting tile used to be a flat diagram; it is now the same frame of the real move the others show.",
+    "A hover starts the move from its beginning each time, so you always see the whole move.",
+    "With a clip picked and the playhead sitting on a join, the Edit point section shows but Transitions stays folded: only a picked cut opens it, since a tile click only lands on a cut you actually picked.",
+    "Clicking a section header by hand did not register in walks on this Mac today, before and after this change alike (every-section-header-opens-walk, section-fold-motion-walk, transitions-group-walk, all red in this morning's sweep on the old code). Those three are updated for the folded Transitions and stay with walks-that-fail-in-the-full-sweep-26."
+  ]
+}

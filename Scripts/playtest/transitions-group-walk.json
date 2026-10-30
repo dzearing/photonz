@@ -52,6 +52,17 @@
       "seconds": 0.6
     },
     {
+      "do": "waitFor",
+      "condition": "sectionFolded",
+      "value": "Transitions",
+      "timeout": 2
+    },
+    {
+      "do": "expect",
+      "control": "Search transitions",
+      "present": false
+    },
+    {
       "do": "action",
       "action": "clipPickFirstCut"
     },
@@ -62,7 +73,13 @@
     {
       "do": "describe",
       "stage": "0-two-joins",
-      "note": "the recording cut at 1.75s and 3.5s, both hard, nothing picked on the timeline but the clip"
+      "note": "the recording cut at 1.75s and 3.5s, both hard, and the first join picked: Transitions, folded with no cut in hand, opens on its own"
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionOpen",
+      "value": "Transitions",
+      "timeout": 2
     },
     {
       "do": "reveal",

@@ -53,7 +53,7 @@
   {
    "do": "describe",
    "stage": "1-recording-nothing-picked",
-   "note": "A recording with nothing picked: Time, Captions and Transitions each clicked shut and open again by their headers, every click held under 16ms in any one pass of main thread work. A fold redraws its own section and nothing else: not the editor, not the panel (it used to rebuild both, 2026-10-04)"
+   "note": "A recording with nothing picked: Time and Captions each clicked shut and open again by their headers, and Transitions, folded until there is a cut (the user, 2026-10-30), clicked open, every click held under 16ms in any one pass of main thread work. A fold redraws its own section and nothing else: not the editor, not the panel (it used to rebuild both, 2026-10-04)"
   },
   {
    "do": "press",
@@ -111,15 +111,6 @@
    "seconds": 0.4
   },
   {
-   "do": "press",
-   "control": "Transitions section",
-   "longestUnderMS": 16
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
    "do": "waitFor",
    "condition": "sectionOpen",
    "value": "Transitions",
@@ -128,7 +119,7 @@
   {
    "do": "describe",
    "stage": "1-transitions-took-its-room",
-   "note": "Transitions opened needs its whole height, so the sections above it, Captions then Time, fold to make the room, and nothing under it moves (PanelOpenRoom, the user 2026-10-24). Each is opened again by its header before the clip is picked"
+   "note": "Transitions clicked open needs its whole height, so the sections above it, Captions then Time, fold to make the room, and nothing under it moves (PanelOpenRoom, the user 2026-10-24). Each is opened again by its header before the clip is picked"
   },
   {
    "do": "waitFor",

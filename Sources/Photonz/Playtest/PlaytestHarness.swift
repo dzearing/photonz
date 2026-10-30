@@ -18999,6 +18999,7 @@ private final class Run {
             InspectorLayoutProbe.shared.measured.first { $0.title == title }.map { section in
                 let folds = PanelSectionFolds(
                     stored: UserDefaults.standard.string(forKey: InspectorPanel.collapsedKey))
+                    .holding(PanelSectionFoldStore.heldOpenInAnyWindow)
                 let isFolded = folds.contains(section.id.rawValue)
                 if case .sectionFolded = condition { return isFolded }
                 return !isFolded
@@ -20530,6 +20531,7 @@ private final class Run {
             "dockFolded": {
                 let folds = PanelSectionFolds(
                     stored: UserDefaults.standard.string(forKey: InspectorPanel.collapsedKey))
+                    .holding(PanelSectionFoldStore.heldOpenInAnyWindow)
                 return InspectorLayoutProbe.shared.measured
                     .filter { folds.contains($0.id.rawValue) }.map(\.title)
             }(),

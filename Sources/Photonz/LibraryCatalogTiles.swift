@@ -74,7 +74,6 @@ struct LibraryBackgroundTile: View {
 struct LibraryTransitionTile: View {
     @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let kind: ClipTransitionKind
     @State private var isHovered = false
 
@@ -95,7 +94,7 @@ struct LibraryTransitionTile: View {
             editorState.transitionTileLifted = kind
             return TransitionDrag.itemProvider(kind)
         } preview: {
-            VideoKit.AnimatedTransitionThumbnail(style: TransitionPicker.style(kind))
+            TransitionTileFace(style: TransitionPicker.style(kind), plays: false)
                 .frame(width: tileMetrics.pictureWidth, height: tileMetrics.pictureHeight)
                 .clipShape(RoundedRectangle(cornerRadius: 5))
         }
@@ -115,14 +114,8 @@ struct LibraryTransitionTile: View {
             .fill(Color.black)
             .frame(height: tileMetrics.pictureHeight)
             .overlay {
-                Group {
-                    if isHovered && !reduceMotion {
-                        VideoKit.AnimatedTransitionThumbnail(style: TransitionPicker.style(kind))
-                    } else {
-                        VideoKit.TransitionThumbnail(style: TransitionPicker.style(kind))
-                    }
-                }
-                .allowsHitTesting(false)
+                TransitionTileFace(style: TransitionPicker.style(kind), plays: isHovered)
+                    .allowsHitTesting(false)
             }
         .clipped()
         .playtestHover("Transition tile \(kind.title)") { isHovered = $0 }

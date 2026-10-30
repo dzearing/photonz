@@ -36,8 +36,8 @@ final class PanelSectionFoldStore {
     @ObservationIgnored private var folds = PanelSectionFolds(stored: nil)
     @ObservationIgnored private var cells: [InspectorSectionID: PanelFoldCell] = [:]
     @ObservationIgnored private var isAttached = false
-    /// A fold another window made, on its way here.
-    @ObservationIgnored private var expected: PanelSectionFolds?
+    /// A fold another window made, on its way here: its stored words.
+    @ObservationIgnored private var expected: String?
 
     /// Nothing is read or watched until the panel first asks: SwiftUI makes a
     /// throwaway one of these every time the panel's parent is redrawn.
@@ -76,6 +76,18 @@ final class PanelSectionFoldStore {
         return true
     }
 
+    /// Holds a section open for now, or lets go (Transitions while a cut is
+    /// picked). This window only, and never written down.
+    func hold(_ id: InspectorSectionID, open: Bool) {
+        attach()
+        var next = folds
+        next.hold(id.rawValue, open: open)
+        guard next != folds else { return }
+        let flipped = next.flipped(from: folds)
+        folds = next
+        tellCells(flipped)
+    }
+
     /// Folds these sections in one write (`PanelOpenRoom`).
     func fold(_ ids: [InspectorSectionID]) {
         attach()
@@ -88,7 +100,7 @@ final class PanelSectionFoldStore {
     private func apply(_ next: PanelSectionFolds) {
         let flipped = next.flipped(from: folds)
         folds = next
-        for store in Self.attached where store !== self { store.expected = next }
+        for store in Self.attached where store !== self { store.expected = next.stored }
         UserDefaults.standard.set(next.stored, forKey: InspectorPanel.collapsedKey)
         tellCells(flipped)
     }
@@ -97,12 +109,12 @@ final class PanelSectionFoldStore {
     /// here and changes nothing. Another window's fold is told to the sections
     /// it flipped; anybody else's to those sections and to the panel.
     private func readSetting() {
-        let now = Self.storedFolds
+        let now = Self.storedFolds.holding(folds.heldOpen)
         guard now != folds else { return }
         let flipped = now.flipped(from: folds)
         folds = now
         tellCells(flipped)
-        if now == expected {
+        if now.stored == expected {
             expected = nil
             onFoldFromAnotherWindow?()
         } else {
@@ -125,6 +137,12 @@ final class PanelSectionFoldStore {
         folds = Self.storedFolds
         Self.panels.append(Weak(store: self))
         Self.watchDefaults()
+    }
+
+    /// The sections some window holds open right now, for a walk reading the
+    /// folds off the setting, which never has them.
+    static var heldOpenInAnyWindow: Set<String> {
+        attached.reduce(into: Set<String>()) { $0.formUnion($1.folds.heldOpen) }
     }
 
     private static var storedFolds: PanelSectionFolds {

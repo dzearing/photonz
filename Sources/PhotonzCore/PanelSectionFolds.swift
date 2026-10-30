@@ -9,11 +9,17 @@ import Foundation
 ///
 /// A few sections START folded (`startFolded`), and for those the setting
 /// remembers the other way round: `+library` once the person has opened it.
+///
+/// A section can also be HELD open by what is in hand (Transitions while a cut
+/// is picked): it reads open, nothing about it is stored, and letting go of the
+/// hold puts it back the way the person left it.
 public struct PanelSectionFolds: Equatable, Sendable {
     /// The sections folded by hand. Never holds a section that starts folded.
     public private(set) var folded: Set<String>
     /// The sections that start folded and have been opened by hand.
     public private(set) var opened: Set<String>
+    /// The sections held open for now, never stored.
+    public private(set) var heldOpen: Set<String> = []
 
     /// The sections that are folded until somebody opens them. The Library:
     /// a video shows it without being asked, folded, so the media pool costs
@@ -22,7 +28,11 @@ public struct PanelSectionFolds: Equatable, Sendable {
     /// user said on 2026-10-18 that it should never arrive "expanded by
     /// default". View ▸ Library, and anything else that brings the shelf
     /// forward, opens it.
-    public static let startFolded: Set<String> = ["library"]
+    ///
+    /// And Transitions: twelve tiles to browse with nothing to put them on
+    /// until a cut is picked, which holds it open (the user, 2026-10-30: "it
+    /// doesn't even need to be there when i have nothing selected").
+    public static let startFolded: Set<String> = ["library", "transitions"]
 
     private static let openedMark = "+"
 
@@ -48,20 +58,49 @@ public struct PanelSectionFolds: Equatable, Sendable {
         (folded.map { $0 } + opened.map { Self.openedMark + $0 }).sorted().joined(separator: ",")
     }
 
+    /// Whether the section reads folded: folded as stored, and not held open.
     public func contains(_ section: String) -> Bool {
+        !heldOpen.contains(section) && isStoredFolded(section)
+    }
+
+    public func isHeldOpen(_ section: String) -> Bool {
+        heldOpen.contains(section)
+    }
+
+    private func isStoredFolded(_ section: String) -> Bool {
         Self.startFolded.contains(section) ? !opened.contains(section) : folded.contains(section)
     }
 
+    /// A click on the header. A section held open folds, and stays folded
+    /// once the hold goes: the click said shut.
     public mutating func toggle(_ section: String) {
+        if heldOpen.remove(section) != nil {
+            if !isStoredFolded(section) { set(section, folded: true) }
+            return
+        }
         set(section, folded: !contains(section))
     }
 
-    /// Opens a section, and says whether it was folded at all.
+    /// Opens a section, and says whether that changed anything. A section
+    /// held open is stored open too, so it stays open once the hold goes.
     @discardableResult
     public mutating func open(_ section: String) -> Bool {
-        guard contains(section) else { return false }
+        guard isStoredFolded(section) else { return false }
         set(section, folded: false)
         return true
+    }
+
+    /// Holds a section open for now, or lets go of the hold. Nothing stored.
+    public mutating func hold(_ section: String, open: Bool) {
+        if open { heldOpen.insert(section) } else { heldOpen.remove(section) }
+    }
+
+    /// The same folds with these sections held open: another window's write
+    /// read here keeps this window's own holds.
+    public func holding(_ sections: Set<String>) -> PanelSectionFolds {
+        var copy = self
+        copy.heldOpen = sections
+        return copy
     }
 
     private mutating func set(_ section: String, folded isFolded: Bool) {
@@ -75,8 +114,9 @@ public struct PanelSectionFolds: Equatable, Sendable {
     /// The sections folded in one of these and open in the other: what a
     /// change of the setting actually flipped.
     public func flipped(from other: PanelSectionFolds) -> Set<String> {
-        folded.symmetricDifference(other.folded)
-            .union(opened.symmetricDifference(other.opened))
+        let named = folded.union(other.folded).union(opened).union(other.opened)
+            .union(heldOpen).union(other.heldOpen).union(Self.startFolded)
+        return named.filter { contains($0) != other.contains($0) }
     }
 }
 

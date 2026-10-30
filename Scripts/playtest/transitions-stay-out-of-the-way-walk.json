@@ -1,0 +1,189 @@
+{
+  "out": "/tmp/photonz-playtest/transitions-stay-out-of-the-way-walk",
+  "seed": "The user, 2026-10-30: a video opened with the Transitions section open and every tile in it animating. At Next defaults, no flag set: a recording with nothing picked shows Transitions folded; picking a cut opens it on its own with every tile still; the pointer on a tile plays that tile alone and leaving stops it; letting go of the cut folds it again. Each still moment is photographed twice, half a second apart, so the pair can be compared pixel for pixel (no change while idle; 0 of 3456x1980 pixels on 2026-10-30, against 27,876 and 119,627 before).",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "snapshot",
+      "name": "1-nothing-picked"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "1-nothing-picked-later"
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionFolded",
+      "value": "Transitions",
+      "timeout": 2
+    },
+    {
+      "do": "expect",
+      "control": "Search transitions",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "A-idle-nothing-picked",
+      "note": "nothing picked: Transitions is folded"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "clipPickFirstCut"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "snapshot",
+      "name": "2-cut-picked"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "2-cut-picked-later"
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionOpen",
+      "value": "Transitions",
+      "timeout": 2
+    },
+    {
+      "do": "expect",
+      "control": "Search transitions",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "B-idle-cut-picked",
+      "note": "the cut picked: Transitions opened on its own, every tile still"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "reveal",
+      "control": "Push",
+      "in": "Transitions"
+    },
+    {
+      "do": "move",
+      "control": "Push",
+      "in": "Transitions"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "3-hover-push"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "snapshot",
+      "name": "3-hover-push-later"
+    },
+    {
+      "do": "move",
+      "at": [
+        400,
+        400
+      ],
+      "space": "window"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "4-left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "4-left-later"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "waitFor",
+      "condition": "sectionFolded",
+      "value": "Transitions",
+      "timeout": 2
+    },
+    {
+      "do": "describe",
+      "stage": "5-cut-let-go",
+      "note": "the cut let go: Transitions folds back the way it was left"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-cut-let-go"
+    }
+  ]
+}

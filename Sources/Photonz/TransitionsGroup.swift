@@ -14,6 +14,8 @@ import SwiftUI
 struct TransitionsGroup: View {
     @Environment(EditorState.self) private var editorState
     @State private var query = ""
+    /// The one tile playing, the one under the pointer. The rest are still.
+    @State private var hovered: ClipTransitionKind?
 
     /// The mock's line under the grid, longer than the panel's budget, so it
     /// sits behind the header's question mark in the mock's words. Its first
@@ -107,7 +109,7 @@ struct TransitionsGroup: View {
         return VideoKit.Tile(name: kind.title, detail: Self.blurb(kind),
                              isSelected: editorState.transitionsGroupKind == kind,
                              emphasis: .cut, thumbnailHeight: 30) {
-            VideoKit.AnimatedTransitionThumbnail(style: TransitionPicker.style(kind))
+            TransitionTileFace(style: TransitionPicker.style(kind), plays: hovered == kind)
         }
         .overlay(alignment: .topTrailing) {
             if isDefault { TransitionPicker.defaultKeycap(kind, in: "Transitions") }
@@ -118,7 +120,7 @@ struct TransitionsGroup: View {
             editorState.transitionTileLifted = kind
             return TransitionDrag.itemProvider(kind)
         } preview: {
-            VideoKit.AnimatedTransitionThumbnail(style: TransitionPicker.style(kind))
+            TransitionTileFace(style: TransitionPicker.style(kind), plays: false)
                 .frame(width: 64, height: 30)
                 .clipShape(RoundedRectangle(cornerRadius: 5))
         }
@@ -126,6 +128,9 @@ struct TransitionsGroup: View {
             Button("Apply to Every Cut") { editorState.putTransitionOnEveryCut(kind) }
             Button("Set as Default Transition") { editorState.setDefaultTransition(kind) }
                 .disabled(isDefault)
+        }
+        .playtestHover("\(kind.title) tile in Transitions") { inside in
+            if inside { hovered = kind } else if hovered == kind { hovered = nil }
         }
         // One name for a walk: a tile it can press and pick up.
         .playtestTarget(kind.title, kind: .tile, detail: "Transitions",
