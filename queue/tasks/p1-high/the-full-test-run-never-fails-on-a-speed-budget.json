@@ -1,0 +1,34 @@
+{
+  "id": "the-full-test-run-never-fails-on-a-speed-budget",
+  "title": "The full test run never fails on a speed budget that passes alone",
+  "goal": "A handful of speed tests fail when the whole suite runs and pass every time on their own, so a green release has needed a second full run (about two minutes each) and every session has to stop and prove the failure was load, not a regression. A speed test should catch a real slowdown without failing just because the rest of the suite is running beside it.",
+  "epic": "video-share",
+  "priority": "p1-high",
+  "seq": 7e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-30T04:21:02.064Z",
+  "updated": "2026-10-30T04:21:02.178Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User asked for this 2026-10-29 after the v0.21.0 release. History: release v0.20.0 (2026-10-27) first run missed the brush grid (3.3 s) and the animated chart (37.4 vs 36.8 ms), rerun green; the timeline-room worktree's commits noted the same kind of misses (AnimatedChartRender + CaptionCost, then WebPEncodeSpeed, then the brush grid at 3.5 s); release v0.21.0 first run missed the brush grid (3.7 s) and the chart (64.0 vs 54.8 ms), rerun green. Each passed alone in a fraction of its limit (brush suite 2.6 s, chart suite 1.4 s). Tests live in Tests/PhotonzRenderTests (BrushPreviewTests.swift around line 149, AnimatedChartRenderTests.swift line 153, CaptionCostTests.swift, WebPEncodeSpeedTests.swift). Scripts/test.sh splits the suite into four parallel runs using Scripts/test-weights.tsv and a .serialized group; read CLAUDE.md's test section before changing how it splits. Do not lift SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH.",
+  "acceptance": [
+    "Measured first: run Scripts/test.sh in full at least five times and record, for each speed test that ever misses, how often and by how much, in the audit. Known repeat offenders: BrushPreviewTests theWholeGridPaintsWithoutAStall (a fixed 3000 ms limit on the slowest tile; missed at 3.3, 3.5 and 3.7 s), AnimatedChartRenderTests 'Every chart at 1080p draws inside a frame while it builds' (MachineSpeed.budget 10.5 ms baseline; missed at 37.4 vs 36.8 and 64.0 vs 54.8 ms), and also seen once each: CaptionCostTests and WebPEncodeSpeedTests.",
+    "Fix the cause, not the number alone: either such a test runs where nothing else competes for the cores (its own run in Scripts/test.sh, like the .serialized group), or its limit is judged against a yardstick measured under the same load at the same moment (as MachineSpeed does for other budgets), or both. A fixed millisecond limit with no yardstick (the brush grid's 3000) goes.",
+    "Each test still catches a real regression: show, in the audit, that making the measured code 2x slower fails the test in the full run (put the slowdown in on a scratch branch, never committed).",
+    "Ten full Scripts/test.sh runs in a row with no speed-budget failure, on this Mac with the go loop idle, recorded in the audit. The whole run takes no longer than today's 123 to 128 s.",
+    "CI's three slices also stay green on them (check the last few Release and CI runs for these names).",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-30T04:21:02.066Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-30T04:21:02.177Z",
+      "note": "seq 3970 -> 7e-7"
+    }
+  ]
+}

@@ -14509,3 +14509,7 @@
 {"t":"2026-10-30T03:20:45.442Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
 {"t":"2026-10-30T03:21:13.786Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
 {"t":"2026-10-30T03:21:13.872Z","ev":"task_done","id":"any-transition-goes-on-any-two-clips-that-touch","from":"in_progress","note":"Every transition goes on two touching clips, holding edge frames where footage runs out (ClipCut.placement, PhotonzCore), at every door; a slid or trimmed clip overwrites what it covers on its own track; UX-PATTERNS rule added. Verified by HeldFrameTransitionTests and the full Scripts/test.sh, the new cube-between-two-recordings-with-no-spare-walk (no flags) and the rewritten transitions-where-clips-meet-walk; reel in queue/audits. Commit 29543b5c. Follow-up: clicking-shorten-the-cut-trims-the-clips-and-pla (dead button)."}
+{"t":"2026-10-30T03:21:54.416Z","ev":"task_started","id":"choosing-a-transition-between-two-clips-is-one-o","title":"Choosing a transition between two clips is one obvious place, not scattered fade rows","priority":"p1-high"}
+{"t":"2026-10-30T03:25:45.446Z","ev":"task_note","id":"choosing-a-transition-between-two-clips-is-one-o"}
+{"t":"2026-10-30T04:21:02.068Z","ev":"task_created","id":"the-full-test-run-never-fails-on-a-speed-budget","priority":"p1-high","title":"The full test run never fails on a speed budget that passes alone"}
+{"t":"2026-10-30T04:21:02.179Z","ev":"task_resequenced","id":"the-full-test-run-never-fails-on-a-speed-budget","from":3970,"to":7e-7}
