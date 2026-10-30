@@ -14547,3 +14547,6 @@
 {"t":"2026-10-30T13:29:02.646Z","ev":"task_resequenced","id":"the-transitions-panel-stays-out-of-the-way-close","from":3970,"to":4e-7}
 {"t":"2026-10-30T13:34:01.553Z","ev":"task_created","id":"an-alignment-guide-re-measures-live-as-you-drag","priority":"p1-high","title":"An alignment guide re-measures live as you drag it"}
 {"t":"2026-10-30T13:34:01.663Z","ev":"task_resequenced","id":"an-alignment-guide-re-measures-live-as-you-drag","from":3970,"to":3e-7}
+{"t":"2026-10-30T14:15:26.325Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T14:15:26.397Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T14:15:43.552Z","ev":"task_pending","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":"in_progress","note":"Photo, vector and paint routes shipped and verified (eval 24.2 -> 90.2, audit written); open: held-out total (17 of 45, stopped when the person came back) and the three-model photo comparison (Z-Image done, Qwen and MOSS ready to run), both need the Mac to itself"}
