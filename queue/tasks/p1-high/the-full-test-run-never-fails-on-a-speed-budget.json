@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 7e-7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T04:21:02.064Z",
-  "updated": "2026-10-30T04:21:02.178Z",
+  "updated": "2026-10-30T06:53:36.705Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User asked for this 2026-10-29 after the v0.21.0 release. History: release v0.20.0 (2026-10-27) first run missed the brush grid (3.3 s) and the animated chart (37.4 vs 36.8 ms), rerun green; the timeline-room worktree's commits noted the same kind of misses (AnimatedChartRender + CaptionCost, then WebPEncodeSpeed, then the brush grid at 3.5 s); release v0.21.0 first run missed the brush grid (3.7 s) and the chart (64.0 vs 54.8 ms), rerun green. Each passed alone in a fraction of its limit (brush suite 2.6 s, chart suite 1.4 s). Tests live in Tests/PhotonzRenderTests (BrushPreviewTests.swift around line 149, AnimatedChartRenderTests.swift line 153, CaptionCostTests.swift, WebPEncodeSpeedTests.swift). Scripts/test.sh splits the suite into four parallel runs using Scripts/test-weights.tsv and a .serialized group; read CLAUDE.md's test section before changing how it splits. Do not lift SWT_EXPERIMENTAL_MAXIMUM_PARALLELIZATION_WIDTH.",
@@ -29,6 +29,45 @@
     {
       "t": "2026-10-30T04:21:02.177Z",
       "note": "seq 3970 -> 7e-7"
+    },
+    {
+      "t": "2026-10-30T04:34:10.737Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T04:47:28.140Z",
+      "note": "Measured 5 full Scripts/test.sh runs (115-124 s). Misses: run 2 ExportSizerTests weighing (again 113.5 vs first 113.2 ms); run 3 AnimatedChart worst median 71.7 vs 52.7 and PaintLandingCost undo 54.7 vs 50 ms (reads 0.5-1.1 ms the other 4 runs). Near misses: brush slowest tile (chalk) 1552-2458 of 3000 ms; WebP lossy 2.7-7.1 of 8 s; chart 34.6-38.8 against 37-80 (its bound uses a filter-graph factor measured once at process start, 1.08x to 3.76x across runs). Caption pop 6.6-7.5 against 8xfactor, pillSize 43-48 of 200 us: never close. CI: PaintLandingCost crowd-vs-alone failed slice 1 on 2026-10-30 (1275 vs 1066), ReframePerfProbe flat 200 ms failed 2026-10-28 (292)."
+    },
+    {
+      "t": "2026-10-30T06:41:40.314Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-30T06:41:40.389Z",
+      "note": "Chose a quiet last stage AND same-round rulers over either alone because: rulers alone could not catch a doubling under full-suite load (every ruler tried slowed more than its subject: brush 938 vs 1440, WebP 492 vs 1220 normalized), and a quiet stage alone has no answer for another worktree loading the Mac."
+    },
+    {
+      "t": "2026-10-30T06:41:40.459Z",
+      "note": "Chose three at a time in the stage over four or twelve because: four read the brush grid at 2060 ms twice (1500 alone); three read 1488; two cost 3 s more. Kept the existing rule (.serialized + ...PerfTests) over 'every PerfTests suite' because moving TitleSetPerfTests etc. made the stage 8 s with its 7 s title set as the long pole; those suites never flaked."
+    },
+    {
+      "t": "2026-10-30T06:41:40.530Z",
+      "note": "Scratch doubling (each measured call spun for as long as it took, never committed): every gate failed in a full run (numbers in the audit). Ten full runs after: no speed-budget failure, 123-133 s (green 123-128). Shards 1-3 pass locally, 14,756 tests total."
+    },
+    {
+      "t": "2026-10-30T06:41:40.601Z",
+      "note": "left rough: the first brush tile in a process pays ~550 ms one-time setup; the grid is now timed warm so that setup is printed, not judged. Did not earn a task: nobody has seen it grow, and the app paints tiles off the main thread."
+    },
+    {
+      "t": "2026-10-30T06:41:40.674Z",
+      "note": "Filed the-full-test-run-never-fails-on-a-video-check-t (p2): BusyVideoSizeTests twice and VideoCutExportTests reader stall once in ~25 full runs; not speed budgets."
+    },
+    {
+      "t": "2026-10-30T06:53:36.703Z",
+      "note": "Speed tests now run last in Scripts/test.sh (serialized ...PerfTests suites, three at a time, after the four parallel runs) and are judged beside a ruler read in the same rounds; the export sizer counts renders. Measured first (5 runs, 3 with a speed miss), every budget fails twice the work in a full run (scratch branch), ten runs in a row with no speed-budget failure (green 123-128 s), CI green on all three slices. Commits 29b8a1b5, 22635732; audit queue/audits/2026-10-30-the-full-test-run-never-fails-on-a-speed-budget.json; perf note in docs/progress/perf.md. Two non-speed video flakes filed as the-full-test-run-never-fails-on-a-video-check-t."
     }
-  ]
+  ],
+  "started": "2026-10-30T04:34:10.736Z",
+  "walks": [],
+  "completed": "2026-10-30T06:53:36.704Z"
 }

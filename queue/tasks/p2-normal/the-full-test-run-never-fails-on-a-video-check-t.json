@@ -1,0 +1,27 @@
+{
+  "id": "the-full-test-run-never-fails-on-a-video-check-t",
+  "title": "The full test run never fails on a video check that passes alone",
+  "goal": "Two video checks fail now and then in a full test run and pass on their own, so a green release can still need a second run: the busy-video size estimate lands about a quarter off what it said, and a cut export now and then gets no picture from its recording for 30 seconds. Either the check reads something the rest of the suite changes, or the app has a real problem under load; find out which and fix it.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 4090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-30T06:40:25.170Z",
+  "updated": "2026-10-30T06:40:25.173Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen while measuring the-full-test-run-never-fails-on-a-speed-budget, 2026-10-30, in about 25 full Scripts/test.sh runs on this Mac (16 cores, go loop idle):\n- BusyVideoSizeTests.swift:251 (A long recording that is quiet and then busy is weighed from stretches of it): near(landed 2102302, weighed 1597442) failed, once.\n- BusyVideoSizeTests.swift:148 (Where the budget cannot hold, what the sheet weighs is what lands, speed 900): near(landed 1712276, weighed 1339509) failed, once.\n- VideoCutExportTests.swift:35 (Exporting a recording with the middle dropped writes only what is left): Caught error .readerGaveUp(\"no picture came out of the recording for 30 seconds\"), once.\nBoth BusyVideoSizeTests are in the .serialized run (Scripts/test.sh side run). Command: Scripts/test.sh with no arguments; output lines above are verbatim from those runs. Neither is a speed budget, so they were left out of the speed-budget task.",
+  "acceptance": [
+    "Each failure is reproduced or explained: what about a busy machine makes the weighed size miss what lands, and what holds the reader for 30 seconds.",
+    "Neither check fails in ten full Scripts/test.sh runs in a row on this Mac.",
+    "A real defect in the app found on the way (an estimate that is wrong under load, a reader that stalls) is fixed, not loosened in the test."
+  ],
+  "log": [
+    {
+      "t": "2026-10-30T06:40:25.172Z",
+      "note": "created (manual)"
+    }
+  ]
+}
