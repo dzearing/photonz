@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T00:05:36.495Z",
-  "updated": "2026-10-30T14:25:27.371Z",
+  "updated": "2026-10-30T19:29:50.099Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: \"I'd like to say \\\"paint a picture\\\" and it will use brush tools when they're ready, or make a photorealistic image of ..., and it will generate an image, or \\\"make vector art of ...\\\" or \\\"create an icon\\\" and it would use the vector tools\"\n\nThe user, 2026-10-24: 'i see we have zimage but it's not seemingly able to generate photos - only illustrations with vector art. I'd like to be able to be able to do both.'\n\nCause, from reading the code (not reproduced in the app): Z-Image Turbo is used only as a step on the way to vector. Every add_drawing goes to the picture model with a forced flat look (Scripts/picture-model/server.py:31 LOOK 'flat vector illustration... a few flat colours', :55 ICON, :59 SCENE; prompt_for at :65) and the result is always traced into paths (Scripts/picture-model/layers.py, vtracer). There is no route that keeps the painted pixels. Design write-up: docs/design/ask.md:226-366 ('Painting a drawing', 'The picture model'). Swift side: Sources/Photonz/Agent/AskPictureModel.swift, Sources/PhotonzCore/AskPictureModelPlan.swift, PictureModelRequest in Sources/PhotonzCore/AgentDrawingPlacement.swift.\n\nLikely shape: a new agent command (e.g. add_photo) or a 'photo' kind on the request, a server endpoint that returns the PNG without tracing and with a photographic prompt, and an image layer added via the ImageStore through History.perform. Z-Image Turbo is good at photoreal; check resolution limits and memory beside the 29 GB planning model (ask.md:355-358). Memory rule: no hardcoded subjects or stored content, quality via model, prompt and general techniques (see memory no-hardcoded-generated-content). The ask-eval set lives under Scripts/ask-eval; queue/tasks/p1-high/the-ask-test-set-scores-video-requests-too.json is a precedent for extending it.",
@@ -23,7 +23,7 @@
     "Time and memory per photo MEASURED on this Mac and written in the audit beside the illustration path's",
     "Try path: open an empty window at Next defaults, press Command K, ask for a photo of a dog on a beach; then ask for an illustration of a dog",
     "Audit under queue/audits/ with a contact sheet of photo and illustration results for the same subjects; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not",
-    "The held-out total is reported beside the climb total (Scripts/ask-eval.sh report) after the photo route: finish run 20261030-122139-ask-held-out (17 of 45 done) with Scripts/ask-eval.sh run --engine ask --resume 20261030-122139-ask-held-out --no-build, only while the person is away",
+    "The held-out total is reported beside the climb total (Scripts/ask-eval.sh report) after the photo route: finish run 20261030-122139-ask-held-out (41 of 45 done, about 10 minutes left) with Scripts/ask-eval.sh run --engine ask --resume 20261030-122139-ask-held-out --no-build, only while the person is away (wrap it in docs/design/references/ask-photo-models/guarded.sh <log> so it stops when they come back)",
     "Z-Image Turbo, Qwen-Image-2.1 and MOSS-Image each paint the same four photo prompts on this Mac, seconds and peak memory for each, a contact sheet of the three in the audit, and the photo model is picked on those numbers (the user's ask of 2026-10-27; docs/design/references/ask-photo-models)"
   ],
   "log": [
@@ -138,9 +138,25 @@
     {
       "t": "2026-10-30T14:25:27.370Z",
       "note": "triage 2026-10-30: the Qwen-Image-2.1 part of the three-model photo comparison overlaps the held task measure-whether-qwen-image-2-1-can-paint-and-edi (drawings and edits on the same model, same Mac, also only while the person is away). Load it once for both if they run on the same night, and put back any probe setting it changes, as that task's log asks."
+    },
+    {
+      "t": "2026-10-30T17:23:27.361Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T18:15:36.007Z",
+      "note": "Three-model photo comparison done with the person away (guarded): Z-Image Turbo 54.8/59.5/67.9/73.7 s, 13.4 GB; Qwen-Image-2.1 61.8/64.6/78.6/81.5 s, 30.6 GB; MOSS-Image 685.5/685.7/690.7/683.0 s, 21.2 GB. Chose to keep Z-Image Turbo over Qwen-Image-2.1 because Qwen beside the 29 GB planning model would hold about 60 of 64 GB, and over MOSS-Image because it is ten times slower; both did put the lighthouse on a cliff where Z-Image did not. Sheet queue/audits/2026-10-30-ask-photo-models-sheet.png, numbers docs/design/references/ask-photo-models/. Held-out run resumed at case 18 of 45."
+    },
+    {
+      "t": "2026-10-30T19:29:36.855Z",
+      "note": "Held-out run 20261030-122139-ask-held-out resumed at 18 and reached 41 of 45 (cases ran about 2.5 min each) before the person came back at 12:29; the guard stopped it and quit the probe, two leftover walk processes killed by hand and checked gone. About 10 minutes left: resume with the same command, guarded, while they are away. That is the only item still open."
+    },
+    {
+      "t": "2026-10-30T19:29:50.098Z",
+      "note": "Photo model comparison done (Z-Image Turbo kept: Qwen-Image-2.1 30.6 GB, MOSS-Image ten times slower; sheet in the audit). Only the held-out total is open: run 20261030-122139-ask-held-out at 41 of 45, about 10 minutes left, needs the person away."
     }
   ],
-  "started": "2026-10-30T10:51:58.048Z",
+  "started": "2026-10-30T17:23:27.360Z",
   "walks": [
     "ask-makes-a-photo-walk",
     "ask-makes-it-again-as-a-photo-walk",

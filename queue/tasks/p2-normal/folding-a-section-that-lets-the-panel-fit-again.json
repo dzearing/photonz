@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T22:20:10.881Z",
-  "updated": "2026-10-25T13:26:48.333Z",
+  "updated": "2026-10-30T17:21:39.116Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-24 (task opening-a-folded-section-of-the-panel-leaves-the): Scripts/playtest.sh Scripts/playtest/section-fold-motion-walk.json, three runs: [88 press] pressing \"Transitions section\" held the main thread for 28.2ms / 25.4ms / 21.4ms in one pass, starting 5-9ms after the click; note says inspectorPanel bodies 1. The shut path is unchanged code (PanelOpenRoom only runs on an open); what changed is the fold state: the open-room rule now folds the audio sections when Captions/Audio Gain reopen in a 670pt panel, so shutting the 541pt Transitions takes the pick from overflowing to fitting. InspectorPanel.checkFoldBudget sees the ceilings change (Appearance squeezed 145 -> natural 171) and bumps foldBudgetPass, which redraws the whole panel (about the 23ms pick floor measured 2026-09-17). Before the rule the walk kept everything open, the pick overflowed before and after, the ceilings never changed and the shut cost 8-13ms. Same cost is reachable by hand without the rule: fold those sections yourself and shut Transitions. Likely fix: hand each section its ceiling through its own cell (like PanelSectionFoldStore does for folds) so a ceiling change redraws only the sections whose ceiling moved. The reopen measured 27.9ms / 25.6ms the same way (fits -> too tall).",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-25T13:26:48.332Z",
       "note": "seq 4080 -> 490"
+    },
+    {
+      "t": "2026-10-30T17:21:39.115Z",
+      "note": "rotating check 2026-10-30T17:21:38Z, 40 walks run from 302 onward in the rotation: section-fold-motion-walk (its script changed since the last check) failing."
     }
   ],
   "walks": [
