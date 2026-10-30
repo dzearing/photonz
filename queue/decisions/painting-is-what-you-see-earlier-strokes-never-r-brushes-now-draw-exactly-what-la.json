@@ -1,0 +1,55 @@
+{
+  "id": "painting-is-what-you-see-earlier-strokes-never-r-brushes-now-draw-exactly-what-la",
+  "taskId": "painting-is-what-you-see-earlier-strokes-never-r",
+  "question": "Brushes now draw exactly what lands. That costs more per move than the old rough preview. Keep the cost, drop the thinned end on mouse strokes, or go back to the preview?",
+  "context": "Since 2026-10-27 the stroke under the pointer is exactly the stroke that lands. Nothing redraws, flickers or sharpens when you let go, and the end of a mouse stroke thins as you draw (boxed in the picture). This task also asks that no brush be slower per move than before that change. Measured today (queue/audits/2026-10-30-paint-move-cost.txt), that can't be met while the stroke stays what lands. On a 12 MP picture zoomed out, a 150 pt oil move costs 7.8 ms against 1.4 before. With the thinned end turned off it's 4.2: the live stroke paints the picture's own pixels, about 2.8 per screen pixel, so it lands unchanged. On a screenshot, turning the end off brings the cost back to the old numbers. Every size under 150 pt is already under one 120 Hz frame (8.3 ms).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep the thinned end, accept the cost",
+      "summary": "Strokes stay exactly as they look under the pointer, thinned end included, and nothing changes when you let go. A move costs 2 to 5 times what it did before that change, and stays within about one 120 Hz frame (8.3 ms) at 20 and 150 pt (8.4 at worst).",
+      "pros": [
+        "Nothing on the canvas changes when you let go, at any zoom",
+        "Mouse strokes keep their thinned ends"
+      ],
+      "cons": [
+        "Small and medium brushes cost 2 to 5 times per move what they did before (oil 150 pt on a 12 MP picture: 1.4 to 7.8 ms)",
+        "Big brushes (500 pt) still miss one 120 Hz frame"
+      ],
+      "mitigation": "The 500 pt frame stays with the brush speed task, which works on making each dab cheaper. That also brings these numbers down.",
+      "shot": "2026-10-30-paint-ends-thinned.png"
+    },
+    {
+      "id": "b",
+      "label": "Mouse strokes end at full width",
+      "summary": "A mouse stroke still thins where it starts, but ends at full width where you let go, as in Photoshop with a mouse. Nothing changes when you let go. Pen strokes still thin from your pressure.",
+      "pros": [
+        "About half the cost per move: oil 150 pt on a screenshot goes from 8.4 to 4.3 ms, back to the old cost",
+        "Nothing changes when you let go"
+      ],
+      "cons": [
+        "Mouse strokes lose their thinned ends, so watercolour and pencil look blunter",
+        "A 12 MP picture zoomed out still costs about 3 times the old number at 150 pt (oil 4.2 against 1.4)"
+      ],
+      "mitigation": "A thinned end could come back later as a per-brush setting, once each dab is cheaper.",
+      "shot": "2026-10-30-paint-ends-full.png"
+    },
+    {
+      "id": "c",
+      "label": "Back to a rougher preview while drawing",
+      "summary": "While you draw, the stroke is drawn at screen sharpness with no thinned end, then redrawn properly when you let go. That's the only way to fully get back the old speed on a big picture.",
+      "pros": [
+        "Matches the old cost per move at every size"
+      ],
+      "cons": [
+        "The stroke changes when you let go: the end thins and it gets sharper, which is what you asked to get rid of on 2026-10-25"
+      ],
+      "mitigation": "None that keeps what you see the same as what lands.",
+      "shot": "2026-10-30-paint-ends-thinned.png"
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-30T21:34:01.979Z",
+  "shot": "2026-10-30-paint-ends-thinned.png"
+}

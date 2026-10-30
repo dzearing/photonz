@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-30T21:03:41.995Z",
+  "updated": "2026-10-30T21:34:28.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -191,9 +191,25 @@
     {
       "t": "2026-10-30T21:03:41.994Z",
       "note": "Brush moves cheaper with identical pixels (d233562c): 150 pt on 12 MP oil 9.9->6.4 ms, pencil 8.4->4.6, charcoal 8.8->5.5. Item 3 still short: 20 and 150 pt slower than before the change for oil, pencil, charcoal and marker, because the live thinned end is laid again every move. Tables in queue/audits/2026-10-30-paint-move-cost.txt"
+    },
+    {
+      "t": "2026-10-30T21:16:55.812Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T21:34:28.733Z",
+      "note": "2026-10-30 late, ba12f274: measured where the floor is. Same two walks, today vs a scratch build with the live thinned end off (never committed). 12 MP at fit, 150 pt: oil before 1.4 / today 7.8 / no end 4.2, pencil 1.0 / 5.5 / 3.0. Screenshot 150 pt: oil 4.5 / 8.4 / 4.3. So even with no end at all, a big picture zoomed out is ~3x the before column (the live stroke paints the picture's own pixels so it lands unchanged, item 2); on a screenshot, dropping the live end alone meets it. Tables appended to queue/audits/2026-10-30-paint-move-cost.txt."
+    },
+    {
+      "t": "2026-10-30T21:34:28.799Z",
+      "note": "Item 3 cannot be met while items 2 and 12 hold, and item 12 itself names a card as the way out. Four runs have now closed the gap only partly. Opened a card with marked captures (2026-10-30-paint-ends-thinned.png, -full.png): A keep the live thinned end and close item 3 against one 120 Hz frame at 20/150 pt (recommended), B mouse strokes end at full width (half the cost, old numbers on a screenshot), C back to the rough preview. Every other item stays met as the 20:14 check recorded."
+    },
+    {
+      "t": "2026-10-30T21:34:28.875Z",
+      "note": "Item 3 (no slower than before) can't be met while the stroke under the hand is the stroke that lands: with no thinned end at all, a 150 pt move on a 12 MP picture is still 3x the before column. Card asks: keep the cost, end mouse strokes at full width, or go back to the preview."
     }
   ],
-  "started": "2026-10-30T20:15:07.619Z",
+  "started": "2026-10-30T21:16:55.811Z",
   "walks": [
     "painting-holds-still-walk"
   ]

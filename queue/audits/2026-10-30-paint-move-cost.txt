@@ -60,3 +60,34 @@ mouse stroke's last min(60, 2 x size) points are laid again on every move (about
 was laid once, on the release; and on a big canvas zoomed out the live stroke paints the
 layer's pixels (about 2.7 times the screen's at 0.3) so it lands unchanged. Both are what
 items 2 and 12 ask for.
+
+2026-10-30 late: where the floor is. Same walks on main (ba12f274), then the same build with
+the live thinned end switched off (a scratch build, never committed: tapersItsEnd forced
+false), to see what the move costs with no end laid again at all. p95 ms per move.
+before the WYSIWYG change / today / today with no live thinned end
+
+12 megapixel (4000 x 3000), zoomed to fit (0.3)
+medium        20 pt              150 pt              500 pt
+watercolour   0.9 / 2.0 / 1.6    3.8 / 5.7 / 4.7    16.3 / 13.7 / 11.7
+oil           0.7 / 3.5 / 1.4    1.4 / 7.8 / 4.2     9.2 / 14.2 /  9.9
+pencil        0.4 / 2.7 / 1.4    1.0 / 5.5 / 3.0     9.4 / 12.3 /  9.5
+charcoal      0.4 / 3.8 / 1.7    1.3 / 6.6 / 3.6    10.5 / 14.1 / 11.6
+marker        0.4 / 1.9 / 1.5    0.6 / 3.4 / 1.9     3.6 /  6.9 /  5.0
+
+Screenshot size (1600 x 1000), zoomed to fit (0.74)
+medium        20 pt              150 pt              500 pt
+watercolour   1.8 / 1.6 / 1.2   18.3 / 7.5 / 5.6    39.2 / 16.4 / 14.4
+oil           1.7 / 3.4 / 1.9    4.5 / 8.4 / 4.3    26.5 / 20.8 / 14.0
+pencil        0.7 / 1.9 / 1.5    3.1 / 6.2 / 3.2    24.1 / 15.3 / 13.6
+charcoal      0.9 / 4.2 / 2.1    4.8 / 7.8 / 5.2    28.3 / 18.5 / 12.7
+marker        0.5 / 1.4 / 1.2    1.6 / 2.9 / 1.9    12.1 /  8.5 /  6.3
+
+What it says: with no thinned end at all, the screenshot-size canvas is at or under the
+before column at 150 and 500 pt and about 1 ms over at 20 pt. The 12 megapixel canvas
+zoomed out is still about 3 times the before column at 150 pt (oil 4.2 against 1.4) with
+no end at all: the live stroke paints the picture's own pixels (about 2.8 per screen pixel
+at 0.3) so that it lands unchanged, where the before build painted screen pixels and then
+swapped to the picture's own on release. So the before column cannot be met on a big
+picture while the stroke under the hand is the stroke that lands (items 2 and 12), and on
+a screenshot it is met only by not thinning a mouse stroke's end as it goes. Put to the
+user on a card with pictures: 2026-10-30-paint-ends-thinned.png, 2026-10-30-paint-ends-full.png.
