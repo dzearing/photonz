@@ -1,0 +1,34 @@
+{
+  "feature": "Ask makes a photo, vector art or a painting, from how you ask",
+  "epic": "agent-ask",
+  "summary": "Ask now reads how you want a picture made. \"A photo of a kitten walking in the snow\" makes one real photograph as a picture layer, \"vector art\", \"draw\" or \"an icon\" makes editable vector layers as before, and \"paint\" makes one painted picture and says brushes are not ready yet.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, with the picture model set up in Settings, Ask.",
+  "switched": {},
+  "try": [
+    { "do": "Open an empty picture, press Command K, type \"a photo of a dog on a beach\" and press Return.", "shot": "2026-10-30-ask-photo-1-photo.png" },
+    { "do": "Press Command K again and type \"an illustration of a dog\".", "shot": "2026-10-30-ask-photo-2-illustration.png" },
+    { "do": "In a new picture ask for \"make vector art of a fox\".", "shot": "2026-10-30-ask-photo-3-vector-fox.png" },
+    { "do": "Then type just \"as a photo\".", "shot": "2026-10-30-ask-photo-4-fox-as-a-photo.png" },
+    { "do": "In a new picture ask for \"a painting of a harbour at dawn\".", "shot": "2026-10-30-ask-photo-5-painted.png" },
+    { "do": "Ask for \"create an icon of a camera\".", "shot": "2026-10-30-ask-photo-6-icon.png" },
+    { "do": "Ask for \"a dog on a beach\", naming no kind: Ask picks, and the row says which.", "shot": "2026-10-30-ask-photo-7-neither.png" },
+    { "do": "Select a photo layer and add a shadow, round its corners or mask it, as with any picture." , "shot": "2026-10-30-ask-photo-8-mcp-frame.png" }
+  ],
+  "evaluate": [
+    "Do the photos look like photographs you would keep, at the picture's own shape?",
+    "Is about a minute for a photo an acceptable wait, with the row saying what is happening?",
+    "Does \"No brushes yet, so I made one image.\" tell you clearly what you got when you asked to paint?",
+    "When you name no kind, does Ask's pick (a photo for a real place, animal or moment, a drawing for an icon or mascot) match what you meant?",
+    "Is typing \"as a photo\" or \"as vector art\" after a result the way you would want to flip it?"
+  ],
+  "rough": [
+    "Measured bar, Ask eval photo cases (contact sheet 2026-10-30-ask-photo-contact-sheet.png): before, the traced path scored 21.5, 21.5, 33.3 and 20.3 (mean 24.2), judged photographic 1, 1, 2, 1; now 93.6, 96, 76.1 and 95.2 (mean 90.2), photographic 9, 9, 7, 9.",
+    "Time and memory on this Mac (M4 Max, 64 GB): a photo is painted in 60 to 64 s at 1296 x 816 and the whole request takes 153 to 159 s; the picture model peaks at 13.3 GB. A traced drawing of the same requests: 35 to 52 s a painting, two or three paintings a request, 146 to 355 s in all, 13.4 to 14.0 GB at its peak.",
+    "The lighthouse \"on a cliff\" came out on low shore rocks (scored 76.1, did what was asked 6 of 10): the picture model's reading of the words, not routing.",
+    "A painting can carry a faint painted signature in a corner (the harbour, bottom right) although the prompt asks for none.",
+    "A photo is pixels, not paths: \"make it vector art\" makes a new drawing rather than converting the photo.",
+    "Painting with brushes stroke by stroke waits on the Brush tool task (a-brush-tool-paints-with-realistic-charcoal-chal); until then a paint request makes one painted image.",
+    "No mock covers making a photo with Ask; the one line Ask says above its rows sits where the Agent group already shows its rows.",
+    "Held-out total and the Z-Image, Qwen-Image-2.1 and MOSS-Image comparison: see the task log for where they stand."
+  ]
+}
