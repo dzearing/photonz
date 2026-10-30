@@ -14442,3 +14442,5 @@
 {"t":"2026-10-29T14:55:04.742Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
 {"t":"2026-10-29T14:55:04.829Z","ev":"task_pending","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":"in_progress","note":"back to pending after a hand stop; its work is stashed, see the log"}
 {"t":"2026-10-29T14:55:09.007Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
+{"t":"2026-10-30T01:14:07.585Z","ev":"task_created","id":"any-transition-goes-on-any-two-clips-that-touch","priority":"p1-high","title":"Any transition goes on any two clips that touch: Cube between two recordings just works"}
+{"t":"2026-10-30T01:14:07.697Z","ev":"task_resequenced","id":"any-transition-goes-on-any-two-clips-that-touch","from":3970,"to":5e-7}
