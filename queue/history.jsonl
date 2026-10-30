@@ -14593,3 +14593,14 @@
 {"t":"2026-10-30T15:55:17.265Z","ev":"task_note","id":"an-alignment-guide-re-measures-live-as-you-drag"}
 {"t":"2026-10-30T15:55:17.338Z","ev":"task_note","id":"an-alignment-guide-re-measures-live-as-you-drag"}
 {"t":"2026-10-30T15:55:17.425Z","ev":"task_done","id":"an-alignment-guide-re-measures-live-as-you-drag","from":"in_progress","note":"Placed alignment guides re-measure on every change of their line: drag (live per move, chip + Measurements row + Name update mid-drag), new end handles, arrow keys, agent moves; one undo step. Core: AlignmentRemeasure.swift + tests holding moved == freshly drawn (vertical/horizontal, drawn boxes, picture edges, nested). Scan 15x faster with identical answers (EdgeMap band queries, raw-sample grouping): p95 0.50 ms/move on 12 MP release. Walk an-alignment-guide-re-measures-as-you-drag-walk green with verdict claims; test.sh green; audit + reel in queue/audits. Commit 61dcde6c."}
+{"t":"2026-10-30T16:12:37.259Z","ev":"slice_pass","walks":33,"passed":20,"failed":0,"seconds":512,"of":1055,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-30T16:12:37.429Z","ev":"task_started","id":"the-transitions-panel-stays-out-of-the-way-close","title":"The Transitions panel stays out of the way: closed until there is a cut to work on, and still until you hover a tile","priority":"p1-high"}
+{"t":"2026-10-30T17:10:55.973Z","ev":"task_walks","id":"the-transitions-panel-stays-out-of-the-way-close","walks":["transitions-stay-out-of-the-way-walk"]}
+{"t":"2026-10-30T17:11:17.213Z","ev":"task_note","id":"the-transitions-panel-stays-out-of-the-way-close"}
+{"t":"2026-10-30T17:11:17.285Z","ev":"task_note","id":"the-transitions-panel-stays-out-of-the-way-close"}
+{"t":"2026-10-30T17:11:17.358Z","ev":"task_note","id":"the-transitions-panel-stays-out-of-the-way-close"}
+{"t":"2026-10-30T17:11:17.432Z","ev":"task_note","id":"the-transitions-panel-stays-out-of-the-way-close"}
+{"t":"2026-10-30T17:11:17.505Z","ev":"task_note","id":"the-transitions-panel-stays-out-of-the-way-close"}
+{"t":"2026-10-30T17:11:17.577Z","ev":"task_note","id":"the-transitions-panel-stays-out-of-the-way-close"}
+{"t":"2026-10-30T17:11:17.649Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-30T17:11:31.721Z","ev":"task_done","id":"the-transitions-panel-stays-out-of-the-way-close","from":"in_progress","note":"Transitions starts folded, is held open while a cut is picked and folds back after; a hand open is stored. One shared still-until-hovered tile in the picker, the panel and the Library. Verified: 14,802 tests green, new transitions-stay-out-of-the-way-walk passes at defaults, idle captures 0 changed pixels (27,876 / 119,627 before). Audit queue/audits/2026-10-30-transitions-out-of-the-way.json."}

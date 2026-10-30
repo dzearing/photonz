@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T13:29:02.531Z",
-  "updated": "2026-10-30T14:26:37.569Z",
+  "updated": "2026-10-30T17:11:31.720Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-30 (intake): 'i opened a video editor and the transitions panel is both 1. open (it doesn't even need to be there when i have nothing selected) and 2. animating every possible transition obnoxiously'. Code: the section is InspectorSection .transitions (InspectorSections.swift ~218, InspectorPanel.swift ~2102 shows TransitionsGroup()). Each tile in TransitionsGroup.swift tile(_:) renders VideoKit.AnimatedTransitionThumbnail, which animates all the time; the same view is used in TransitionPicker.swift and LibraryCatalogTiles.swift. The picker-at-the-cut task (500f1363, choosing-a-transition-between-two-clips-is-one-o) asked for 'A tile plays its motion on hover', not always. Related: the CPU complaint 2026-10-28 where WindowServer sat at 45 to 55% while things on screen redrew constantly.",
@@ -40,6 +40,47 @@
     {
       "t": "2026-10-30T14:26:37.568Z",
       "note": "triage 2026-10-30, left rough (not added to acceptance, the user's call): ten of the twelve tiles carry the fixed note 'needs overlap' (ClipTransitionKind.note, from the mock's video-transition-wt.html tiles), shown even on a cut with spare footage (audit picture 2026-10-29-transition-at-the-cut-3-tiles-at-the-cut.png: spare 1.1s / 1.9s and every tile says needs overlap). Since 2026-10-29 every one of them goes on any cut, holding frames where footage runs out, so the note now reads like a refusal the app no longer makes. Raised in the 2026-10-30 digest for the user to decide, since it is the mock's own copy."
+    },
+    {
+      "t": "2026-10-30T16:12:37.423Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T17:10:55.971Z",
+      "note": "owns these walks: transitions-stay-out-of-the-way-walk"
+    },
+    {
+      "t": "2026-10-30T17:11:17.211Z",
+      "note": "Adversarial pass: a Premiere user finds Video Transitions in the Effects panel collapsed by default and opens it when they want one; folding it until a cut is picked matches that, and holding it open while a cut is in hand puts the tiles where the click will land. Risk: someone who opened it by hand expects it to stay; covered, a hand open is stored (+transitions) and survives launches."
+    },
+    {
+      "t": "2026-10-30T17:11:17.283Z",
+      "note": "Chose a hold (open while a cut is picked, never stored) over writing the fold, because the acceptance says it goes back to how the person left it. A header click while held folds it and it stays folded; commands that open a section store it open."
+    },
+    {
+      "t": "2026-10-30T17:11:17.356Z",
+      "note": "Chose one shared tile (TransitionTileFace, TransitionPicker.swift) for the picker, the panel and the Library, resting on restingProgress and playing a TimelineView lap from its start on hover; removed VideoKit.AnimatedTransitionThumbnail and ProgressLoop, which nothing else used."
+    },
+    {
+      "t": "2026-10-30T17:11:17.430Z",
+      "note": "Measured: paired captures 0.5s apart, before 27,876 / 119,627 changed pixels idle (nothing picked / cut picked), after 0 / 0; hover 14,003, left 0. App CPU unchanged (Core Animation played the old reels), WindowServer at 61% with no Photonz running, so not attributable. Pictures looked at: before nothing picked (open, tiles), after nothing picked (folded), cut picked (open, still), hover, let go (folded)."
+    },
+    {
+      "t": "2026-10-30T17:11:17.503Z",
+      "note": "Walks: every-section-header-opens, section-fold-motion and transitions-group updated for Transitions starting folded; all three fail at the same steps they failed in this morning's sweep on old code (header presses and a drop not landing), owned by walks-that-fail-in-the-full-sweep-26. New walk transitions-stay-out-of-the-way-walk passes at defaults."
+    },
+    {
+      "t": "2026-10-30T17:11:17.575Z",
+      "note": "left rough: with a clip picked and the playhead on a join the Edit point section shows but Transitions stays folded (only a picked cut holds it open). Not filed: nothing breaks, a click on the cut opens it."
+    },
+    {
+      "t": "2026-10-30T17:11:31.718Z",
+      "note": "Transitions starts folded, is held open while a cut is picked and folds back after; a hand open is stored. One shared still-until-hovered tile in the picker, the panel and the Library. Verified: 14,802 tests green, new transitions-stay-out-of-the-way-walk passes at defaults, idle captures 0 changed pixels (27,876 / 119,627 before). Audit queue/audits/2026-10-30-transitions-out-of-the-way.json."
     }
-  ]
+  ],
+  "started": "2026-10-30T16:12:37.422Z",
+  "walks": [
+    "transitions-stay-out-of-the-way-walk"
+  ],
+  "completed": "2026-10-30T17:11:31.719Z"
 }
