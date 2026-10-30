@@ -22221,3 +22221,8 @@ the ghost, and pinching in seemed to stop short.
 - One transition tile everywhere: `TransitionTileFace` (TransitionPicker.swift) rests on a representative frame and plays only on hover; the always-playing `VideoKit.AnimatedTransitionThumbnail` is gone.
 - Measured: idle panel captures 0.5s apart changed 27,876 / 119,627 pixels before, 0 / 0 after. Audit `queue/audits/2026-10-30-transitions-out-of-the-way.json`.
 - Open: header presses do not land in walks on this Mac (pre-existing, standing walk task).
+
+## 2026-10-30 (afternoon): Ask's photo model picked on measurements
+
+- **Z-Image Turbo stays the photo model** (task `ask-can-make-a-photo-as-well-as-an-illustration`, the user's ask of 2026-10-27). Same four photo prompts on this Mac: Z-Image 55 to 74 s at 13.4 GB, Qwen-Image-2.1 62 to 82 s at 30.6 GB, MOSS-Image 683 to 691 s at 21.2 GB. Qwen beside the 29 GB planning model would hold about 60 of 64 GB; MOSS is ten times slower. Both did put "a lighthouse on a cliff" on a cliff where Z-Image did not. Numbers and how to rerun: `docs/design/references/ask-photo-models/`; sheet `queue/audits/2026-10-30-ask-photo-models-sheet.png`.
+- Open: the held-out run `20261030-122139-ask-held-out` reached 41 of 45 before the person came back at 12:29; about 10 minutes left, resumable, only while they are away.
