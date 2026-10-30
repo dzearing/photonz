@@ -14448,3 +14448,5 @@
 {"t":"2026-10-30T01:54:13.155Z","ev":"task_created","id":"choosing-a-transition-between-two-clips-is-one-o","priority":"p1-high","title":"Choosing a transition between two clips is one obvious place, not scattered fade rows"}
 {"t":"2026-10-30T01:54:13.257Z","ev":"task_resequenced","id":"choosing-a-transition-between-two-clips-is-one-o","from":3970,"to":6e-7}
 {"t":"2026-10-30T01:54:41.673Z","ev":"task_note","id":"choosing-a-transition-between-two-clips-is-one-o"}
+{"t":"2026-10-30T01:55:46.057Z","ev":"loop_started","pid":36690}
+{"t":"2026-10-30T01:55:46.105Z","ev":"loop_awake","held":true,"pid":36700,"screenLocked":false}
