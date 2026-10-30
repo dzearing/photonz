@@ -1,0 +1,1159 @@
+{
+ "out": "/tmp/photonz-playtest/pw-verify-perf",
+ "seed": "perf scratch: 12 MP, 50 strokes, each medium at 20/150/500 pt, 10 pt a move",
+ "setup": {
+  "forget": [
+   "tools",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 4000,
+   "canvasHeight": 3000,
+   "width": 1500,
+   "height": 1000,
+   "pixelScale": 1
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "key",
+   "key": "b"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "brush"
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "paintToolColor"
+  },
+  {
+   "do": "pickBrush",
+   "medium": "watercolour",
+   "size": 40
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    150
+   ],
+   "to": [
+    3700,
+    180
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    205
+   ],
+   "to": [
+    3700,
+    235
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    260
+   ],
+   "to": [
+    3700,
+    290
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    315
+   ],
+   "to": [
+    3700,
+    345
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    370
+   ],
+   "to": [
+    3700,
+    400
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    425
+   ],
+   "to": [
+    3700,
+    455
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    480
+   ],
+   "to": [
+    3700,
+    510
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    535
+   ],
+   "to": [
+    3700,
+    565
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    590
+   ],
+   "to": [
+    3700,
+    620
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    645
+   ],
+   "to": [
+    3700,
+    675
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "pencil",
+   "size": 40
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    700
+   ],
+   "to": [
+    3700,
+    730
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    755
+   ],
+   "to": [
+    3700,
+    785
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    810
+   ],
+   "to": [
+    3700,
+    840
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    865
+   ],
+   "to": [
+    3700,
+    895
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    920
+   ],
+   "to": [
+    3700,
+    950
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    975
+   ],
+   "to": [
+    3700,
+    1005
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1030
+   ],
+   "to": [
+    3700,
+    1060
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1085
+   ],
+   "to": [
+    3700,
+    1115
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1140
+   ],
+   "to": [
+    3700,
+    1170
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1195
+   ],
+   "to": [
+    3700,
+    1225
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "oil",
+   "size": 40
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1250
+   ],
+   "to": [
+    3700,
+    1280
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1305
+   ],
+   "to": [
+    3700,
+    1335
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1360
+   ],
+   "to": [
+    3700,
+    1390
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1415
+   ],
+   "to": [
+    3700,
+    1445
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1470
+   ],
+   "to": [
+    3700,
+    1500
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1525
+   ],
+   "to": [
+    3700,
+    1555
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1580
+   ],
+   "to": [
+    3700,
+    1610
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1635
+   ],
+   "to": [
+    3700,
+    1665
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1690
+   ],
+   "to": [
+    3700,
+    1720
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1745
+   ],
+   "to": [
+    3700,
+    1775
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "marker",
+   "size": 40
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1800
+   ],
+   "to": [
+    3700,
+    1830
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1855
+   ],
+   "to": [
+    3700,
+    1885
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1910
+   ],
+   "to": [
+    3700,
+    1940
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    1965
+   ],
+   "to": [
+    3700,
+    1995
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2020
+   ],
+   "to": [
+    3700,
+    2050
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2075
+   ],
+   "to": [
+    3700,
+    2105
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2130
+   ],
+   "to": [
+    3700,
+    2160
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2185
+   ],
+   "to": [
+    3700,
+    2215
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2240
+   ],
+   "to": [
+    3700,
+    2270
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2295
+   ],
+   "to": [
+    3700,
+    2325
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "pickBrush",
+   "medium": "charcoal",
+   "size": 40
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2350
+   ],
+   "to": [
+    3700,
+    2380
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2405
+   ],
+   "to": [
+    3700,
+    2435
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2460
+   ],
+   "to": [
+    3700,
+    2490
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2515
+   ],
+   "to": [
+    3700,
+    2545
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2570
+   ],
+   "to": [
+    3700,
+    2600
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2625
+   ],
+   "to": [
+    3700,
+    2655
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2680
+   ],
+   "to": [
+    3700,
+    2710
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2735
+   ],
+   "to": [
+    3700,
+    2765
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2790
+   ],
+   "to": [
+    3700,
+    2820
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    2845
+   ],
+   "to": [
+    3700,
+    2875
+   ],
+   "steps": 20,
+   "wobble": 1.5
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "pickBrush",
+   "medium": "watercolour",
+   "size": 20
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    400
+   ],
+   "to": [
+    2000,
+    700
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "watercolour",
+   "size": 150
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    1300
+   ],
+   "to": [
+    2000,
+    1600
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "watercolour",
+   "size": 500
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    2200
+   ],
+   "to": [
+    2000,
+    2500
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "oil",
+   "size": 20
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    400
+   ],
+   "to": [
+    2000,
+    700
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "oil",
+   "size": 150
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    1300
+   ],
+   "to": [
+    2000,
+    1600
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "oil",
+   "size": 500
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    2200
+   ],
+   "to": [
+    2000,
+    2500
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "pencil",
+   "size": 20
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    400
+   ],
+   "to": [
+    2000,
+    700
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "pencil",
+   "size": 150
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    1300
+   ],
+   "to": [
+    2000,
+    1600
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "pencil",
+   "size": 500
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    2200
+   ],
+   "to": [
+    2000,
+    2500
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "charcoal",
+   "size": 20
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    400
+   ],
+   "to": [
+    2000,
+    700
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "charcoal",
+   "size": 150
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    1300
+   ],
+   "to": [
+    2000,
+    1600
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "charcoal",
+   "size": 500
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    2200
+   ],
+   "to": [
+    2000,
+    2500
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "marker",
+   "size": 20
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    400
+   ],
+   "to": [
+    2000,
+    700
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "marker",
+   "size": 150
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    1300
+   ],
+   "to": [
+    2000,
+    1600
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "pickBrush",
+   "medium": "marker",
+   "size": 500
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    2200
+   ],
+   "to": [
+    2000,
+    2500
+   ],
+   "steps": 120,
+   "wobble": 1.5
+  },
+  {
+   "do": "expectBrushResponsive"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  }
+ ]
+}

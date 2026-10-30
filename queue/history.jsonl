@@ -14616,3 +14616,11 @@
 {"t":"2026-10-30T19:43:09.647Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
 {"t":"2026-10-30T19:43:09.729Z","ev":"task_note","id":"ask-can-make-a-photo-as-well-as-an-illustration"}
 {"t":"2026-10-30T19:43:13.814Z","ev":"task_done","id":"ask-can-make-a-photo-as-well-as-an-illustration","from":"in_progress","note":"Photo, vector and paint routes shipped earlier today (e8ad11ea, 0def111e); photo cases 24.2 -> 90.2; photo model picked on measurements (Z-Image Turbo, 841cf2f6). Held-out run finished: held-out 57.2 beside climb 90.2 (same planner was 57.8: layout and redline up, drawings 64.4 -> 60.3). Audit queue/audits/2026-10-30-ask-can-make-a-photo-as-well-as-an-illustration.json."}
+{"t":"2026-10-30T19:43:47.103Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high"}
+{"t":"2026-10-30T20:14:06.703Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T20:14:06.775Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T20:14:06.857Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T20:14:06.928Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
+{"t":"2026-10-30T20:14:06.998Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
+{"t":"2026-10-30T20:14:18.672Z","ev":"task_pending","id":"painting-is-what-you-see-earlier-strokes-never-r","from":"in_progress","note":"Every item rechecked on today's build; all met but item 3: drawing at 150 pt is 2-3x slower per move than before the change for oil, pencil, charcoal and marker (oil 4.5->11.3 ms p95), and 2-4x at 20 pt, because the live thinned end is laid again every move. Measured tables in queue/audits/2026-10-30-paint-move-cost.txt"}
+{"t":"2026-10-30T20:14:27.736Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}

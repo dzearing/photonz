@@ -9,14 +9,14 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-30T02:11:26.529Z",
+  "updated": "2026-10-30T20:14:27.735Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
   "acceptance": [
     "Reproduce first in the probe at Next defaults: paint 5 strokes (watercolour, oil and one dry medium), then a 6th, zoomed out, at 100% and zoomed in. Record a video or frame sequence of the canvas from pointer down to a second after letting go, and MEASURE: how many earlier strokes are simulated again per new stroke, how many frames the earlier strokes differ from their settled pixels (the visible change and the swap to a sharper copy), and the time from letting go until the canvas is settled. All in the audit before any change.",
     "After the fix, MEASURED the same way: adding a stroke simulates no earlier stroke again (a finished stroke is painted once onto a kept layer bitmap, and later strokes paint on top of it, except where watercolour genuinely needs the wet washes under it); across the whole recording, the pixels of earlier strokes outside the new stroke's reach differ from their settled values in 0 frames; the live stroke and the settled stroke match pixel for pixel or within a stated tolerance at the moment of letting go; there is no low-resolution stage at any zoom.",
-    "Immediate response is not made worse by this work: drag events at 20 to 500 pt on a layer with 50 strokes already on it are measured before and after and are no slower. The one 120 Hz frame (8 ms at p95) bar at 150 and 500 pt belongs to every-brush-follows-the-pointer-with-no-lag-even (folded there by the 2026-10-28 triage), so this task can close without it",
+    "Immediate response is not made worse by this work: drag events at 20 to 500 pt on a layer with 50 strokes already on it are measured before and after and are no slower. The one 120 Hz frame (8 ms at p95) bar at 150 and 500 pt belongs to every-brush-follows-the-pointer-with-no-lag-even (folded there by the 2026-10-28 triage), so this task can close without it. The before numbers were measured on 2026-10-30 (queue/audits/2026-10-30-paint-move-cost.txt, with the two .walk files beside it to run the same walk again): no medium at 20, 150 or 500 pt may be slower per move than that table's before column, on the 12 megapixel and the screenshot-size canvas",
     "Undo, redo, opening a saved file and changing a stroke's settings still give exactly the same picture as today (pixel compare in tests); the document still keeps strokes, not baked pixels, and any kept bitmap is a cache that can always be rebuilt from them.",
     "Memory stays bounded: the kept bitmaps have a limit and let go under memory pressure; the audit states the cost for a 12 megapixel canvas.",
     "Logic in PhotonzRender is test-first; rendering changes carry the perf note.",
@@ -143,9 +143,37 @@
     {
       "t": "2026-10-30T02:11:26.528Z",
       "note": "seq 70 -> 50"
+    },
+    {
+      "t": "2026-10-30T19:43:47.097Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T20:14:06.701Z",
+      "note": "2026-10-30 check of every item on today's build (7233411e). Met: (1,2,7) painting-holds-still-walk green, 0 frames change outside the new stroke at 50/100/200%, 1 stroke simulated per shown scale, settled 5-47 ms; (4,6) Paint keeps its pixels, Paint raster cache, live stroke and live-taper suites pass; (10,11) PaintLandingPerfTests: landing on 300 strokes 0.95x a landing on one, undo 0.45 ms CPU; (5,8,9,12) in the 2026-10-27 audit. Held vs settled at release: 0.13% of the stroke at 100%; 3.84% at 200% and 19.6% zoomed out, which on the film is the one-pixel edge fringe plus the probe-only lines where overlay pieces meet (the stated tolerance)."
+    },
+    {
+      "t": "2026-10-30T20:14:06.773Z",
+      "note": "SHORT, item 3 (no slower): measured before (b44c1d8b^ built in a scratch worktree, only pickBrush added) against today, same walk, 50 strokes, 10 pt a move. 500 pt is quicker for every brush (screenshot: watercolour 39.2->14.4 ms p95, oil 26.5->21.9). 150 pt is 2-3x SLOWER for oil, pencil, charcoal, marker (screenshot at fit: oil 4.5->11.3, pencil 3.1->10.1, charcoal 4.8->9.7, marker 1.6->3.0; 12 MP at fit: oil 1.4->9.9, pencil 1.0->8.4). 20 pt 2-4x slower, all under 4.1 ms. Tables and walks: queue/audits/2026-10-30-paint-move-cost.txt (.walk files beside it)."
+    },
+    {
+      "t": "2026-10-30T20:14:06.855Z",
+      "note": "Why item 3 is short: a sample of 150 pt oil puts half the move in laying the live thinned end again (722 of 1506 samples; settled dabs 241, fields to pixels 307, screen hand-off 157). The end is min(60, 2 x size) pt with dabs every size/10, so every move re-lays 4 dabs at 150 pt and ~20 at 20 pt for under one new dab; zoomed out on 12 MP the live stroke also paints ~2.7x the pixels (layer pixels, not screen). Skipping or throttling the tail brings back the change at release (item 12), so the fix is a cheaper tail or medium: lay only the part of the end whose width changed (per-dab checkpoints in FieldJournal), or settle the end into a cheaper preview that lands identical. Same code every-brush-follows-the-pointer-with-no-lag-even needs for its 8 ms bar; noted there."
+    },
+    {
+      "t": "2026-10-30T20:14:06.926Z",
+      "note": "left rough: my own background profiling walk, on giving up, quit the probe a second walk was using, which read as CRASHED with no report (13:08:30 both). Not an app fault; did not file."
+    },
+    {
+      "t": "2026-10-30T20:14:18.670Z",
+      "note": "Every item rechecked on today's build; all met but item 3: drawing at 150 pt is 2-3x slower per move than before the change for oil, pencil, charcoal and marker (oil 4.5->11.3 ms p95), and 2-4x at 20 pt, because the live thinned end is laid again every move. Measured tables in queue/audits/2026-10-30-paint-move-cost.txt"
+    },
+    {
+      "t": "2026-10-30T20:14:27.734Z",
+      "note": "Correction to the line above: 500 pt is quicker on the screenshot-size canvas only. On 12 MP zoomed to fit, 500 pt is slower for all but watercolour (oil 9.2->12.9, pencil 9.4->10.9, charcoal 10.5->12.8, marker 3.6->5.1; watercolour 16.3->13.0): there the live stroke paints layer pixels, ~2.7x the screen's."
     }
   ],
-  "started": "2026-10-27T10:15:29.751Z",
+  "started": "2026-10-30T19:43:47.096Z",
   "walks": [
     "painting-holds-still-walk"
   ]
