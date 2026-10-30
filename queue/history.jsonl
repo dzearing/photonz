@@ -14496,3 +14496,16 @@
 {"t":"2026-10-30T02:12:57.647Z","ev":"task_note","id":"a-walk-can-press-the-buttons-in-the-settings-win"}
 {"t":"2026-10-30T02:12:57.677Z","ev":"triage","summary":"0 merged, 0 dropped, 0 moved, 0 reset; 7 findings folded into open tasks (loop-day misreport reproduced again, walk set unchecked since v0.21.0 code landed, new video length vs DurationFollowsClips, transition picker cross-links on the chevron and panel tasks, red transition walks onto the 3D transition ask, D18 new-track slot onto the rules scrub, History panel onto the walk-press task); 1 acceptance item added (refuse-or-do-it rule in UX-PATTERNS on the 3D transition ask); p1 renumbered to steps of 10 (34 writes), p2 and p3 already clean. Open: p0 0, p1 34, p2 52, p3 2 = 88."}
 {"t":"2026-10-30T02:13:57.332Z","ev":"digest","file":"2026-10-29.md"}
+{"t":"2026-10-30T02:14:18.278Z","ev":"task_started","id":"any-transition-goes-on-any-two-clips-that-touch","title":"Every 3D transition is easy and always works: pick one for two touching clips and Photonz makes it happen","priority":"p1-high"}
+{"t":"2026-10-30T03:20:02.948Z","ev":"task_created","id":"clicking-shorten-the-cut-trims-the-clips-and-pla","priority":"p2-normal","title":"Clicking Shorten the cut trims the clips and plays the transition on real footage"}
+{"t":"2026-10-30T03:20:12.775Z","ev":"task_walks","id":"any-transition-goes-on-any-two-clips-that-touch","walks":["cube-between-two-recordings-with-no-spare-walk","transitions-where-clips-meet-walk"]}
+{"t":"2026-10-30T03:20:12.846Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-30T03:20:44.988Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:20:45.061Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:20:45.145Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:20:45.218Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:20:45.290Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:20:45.364Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:20:45.442Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:21:13.786Z","ev":"task_note","id":"any-transition-goes-on-any-two-clips-that-touch"}
+{"t":"2026-10-30T03:21:13.872Z","ev":"task_done","id":"any-transition-goes-on-any-two-clips-that-touch","from":"in_progress","note":"Every transition goes on two touching clips, holding edge frames where footage runs out (ClipCut.placement, PhotonzCore), at every door; a slid or trimmed clip overwrites what it covers on its own track; UX-PATTERNS rule added. Verified by HeldFrameTransitionTests and the full Scripts/test.sh, the new cube-between-two-recordings-with-no-spare-walk (no flags) and the rewritten transitions-where-clips-meet-walk; reel in queue/audits. Commit 29543b5c. Follow-up: clicking-shorten-the-cut-trims-the-clips-and-pla (dead button)."}

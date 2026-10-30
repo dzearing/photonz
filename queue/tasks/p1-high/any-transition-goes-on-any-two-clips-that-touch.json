@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-30T01:14:07.581Z",
-  "updated": "2026-10-30T02:12:21.097Z",
+  "updated": "2026-10-30T03:21:13.871Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reported by the user 2026-10-29 in the intake window, frustrated: 'There's no way I have ever been able to use this transition. I can't see how you can get it to work.' and 'If I have two clips that are butt up against each other, and I have a cube transition, wouldn't it just pause the frame on one? And then pause the frame on the other and rotate the view, and then play the other one when the transition's done? This is so unintuitive.' Code today: a cut's transition is fitted to spare footage either side (ClipCut.fitted) and refused with noSpare when there is none; a clip's right-click aims at BOTH its ends (TransitionTargets.swift transitionTargets(ofClip:)) and a free end refuses every kind but dissolve and dip to black with needsTwoClips; editPoints(onTrack:) counts two clips as meeting only at a gap of exactly 0 ms, so an overlap on one track is no cut at all. The user's first recording (Recording 2026-10-28 at 14.21.13, 9.147 s) was used to its last frame, so Cube had no spare on that side. Premiere does the transition anyway with repeated frames ('Insufficient media. This transition will contain repeated frames'); Final Cut offers to overlap or uses freeze frames. The user was running the timeline-room-history-drop worktree's dev build when this happened.",
@@ -49,6 +49,56 @@
     {
       "t": "2026-10-30T02:12:21.097Z",
       "note": "triage 2026-10-29: added the UX-PATTERNS rule item to acceptance, so the next refusal of this shape is caught by the rules runners read, not by the user."
+    },
+    {
+      "t": "2026-10-30T02:14:18.273Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-30T03:20:12.773Z",
+      "note": "owns these walks: cube-between-two-recordings-with-no-spare-walk, transitions-where-clips-meet-walk"
+    },
+    {
+      "t": "2026-10-30T03:20:44.986Z",
+      "note": "Adversarial review before building: a Premiere editor picks a cube for two clips that touch and expects it to play, using repeated frames where media runs out (Premiere: 'Insufficient media. This transition will contain repeated frames'). The app refused at every door: ClipCut.fitted returned nil with no spare, so the picker greyed tiles, the menu said 'needs spare frames', the key fell back to a dip. Renderer already clamps a borrowed frame to the recording (readingOn), so holding an edge frame needed no render change, only the limit."
+    },
+    {
+      "t": "2026-10-30T03:20:45.059Z",
+      "note": "Chose to keep spare footage first and hold frames only for the rest, per side (ClipCut.placement): footage elsewhere wins only at the same length, so a held frame never costs the transition its length. Chose across the cut for a no-spare cut over before/after because the user described both sides pausing."
+    },
+    {
+      "t": "2026-10-30T03:20:45.143Z",
+      "note": "Chose Premiere's overwrite for a clip slid or edge-trimmed over a neighbour on its own track (PhotonzDocument.overwriteUnder, wired in commitClipBarDrag) over making the overlap the transition's length, because it is what Premiere does on a drag and it leaves a plain cut the transition can sit on. Left rough: Premiere stops an edge trim at the neighbour instead of covering it; and a document already saved with an overlap keeps it until a clip is moved (did not earn a task: nothing new creates one now)."
+    },
+    {
+      "t": "2026-10-30T03:20:45.216Z",
+      "note": "Chose to show held frames on the Paid with row ('0.8s of held frames', help behind it) and keep the mock's Or, Shorten the cut as the way to real footage, over an orange warning, because nothing failed (UX-PATTERNS 'Make room rather than refuse', added this task)."
+    },
+    {
+      "t": "2026-10-30T03:20:45.288Z",
+      "note": "Review after building, on the probe: every door puts every kind on at a cut with no spare (cut right-click, either clip's right-click, panel tile drag, Command T, paste, set_transition via core tests). Right-click on the first clip (free start) now raises no notice (TransitionTargetOutcome.headline). Shorten the cut is shown but its click does nothing: reproduced, filed clicking-shorten-the-cut-trims-the-clips-and-pla, which owns shorten-the-cut-for-a-dissolve-walk."
+    },
+    {
+      "t": "2026-10-30T03:20:45.362Z",
+      "note": "Pictures looked at: contact sheet 2026-10-29-cube-held-frames-sheet.png, 7 frames 7.55s-8.45s: 7.55 and 7.7 the first recording's last frame (Finished 240) tilting away, 7.85 both on a turning box, 8.0-8.15 the second recording's first frame (Ready 0) coming round, 8.3-8.45 flat and playing. 7-slid-over: b-roll 7.03s-15.03s with Tutorial Sample ending at 7.03s and the transition band on the cut."
+    },
+    {
+      "t": "2026-10-30T03:20:45.440Z",
+      "note": "Walks run: cube-between-two-recordings-with-no-spare (new, ok, no flags), transitions-where-clips-meet (rewritten for the new rule, ok), transitions-at-a-cut, trim-is-a-tool, transitions-in-depth-at-a-cut, default-transition-key and 5 more transition walks ok. Seven transition walks red before this change are still red for unrelated reasons (picker does not open on press); logged on walks-that-fail-in-the-full-sweep-26. Scripts/test.sh green."
+    },
+    {
+      "t": "2026-10-30T03:21:13.784Z",
+      "note": "Every kind on two different recordings at a cut with no spare: all twelve in HeldFrameTransitionTests (everyKindFits, everyDoor); in walks, Doorway, Command T's dissolve, Cube, Flip, Swing and Push in depth (cube walk) and Wipe (clips-meet walk). Revolve, Push and Blur through are proven by the unit tests only, not filmed."
+    },
+    {
+      "t": "2026-10-30T03:21:13.869Z",
+      "note": "Every transition goes on two touching clips, holding edge frames where footage runs out (ClipCut.placement, PhotonzCore), at every door; a slid or trimmed clip overwrites what it covers on its own track; UX-PATTERNS rule added. Verified by HeldFrameTransitionTests and the full Scripts/test.sh, the new cube-between-two-recordings-with-no-spare-walk (no flags) and the rewritten transitions-where-clips-meet-walk; reel in queue/audits. Commit 29543b5c. Follow-up: clicking-shorten-the-cut-trims-the-clips-and-pla (dead button)."
     }
-  ]
+  ],
+  "started": "2026-10-30T02:14:18.272Z",
+  "walks": [
+    "cube-between-two-recordings-with-no-spare-walk",
+    "transitions-where-clips-meet-walk"
+  ],
+  "completed": "2026-10-30T03:21:13.870Z"
 }
