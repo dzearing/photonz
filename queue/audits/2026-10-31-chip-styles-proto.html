@@ -7,6 +7,9 @@
 <style>
   :root {
     --ink: #ff375f;
+    --plate: #e0244c;
+    --on-plate: #ffffff;
+    --ink-text: #d70f3e;
     --page: #f5f5f7;
     --text: #1d1d1f;
     --muted: #6e6e73;
@@ -90,27 +93,27 @@
   .chip.num { font-variant-numeric: tabular-nums; }
 
   /* 1. Today: dark plate in the ink, bright ink outline */
-  .s-today .chip { background: color-mix(in srgb, var(--ink) 35%, #111); color: #fff;
+  .s-today .chip { background: color-mix(in srgb, var(--plate) 35%, #111); color: #fff;
     border: 2px solid var(--ink); border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
 
   /* 2. Solid pill: no edge; a lit fill, lighter at the top, light along the top inside */
-  .s-solid .chip { color: #fff; border-radius: 999px;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 82%, #fff), var(--ink) 55%, color-mix(in srgb, var(--ink) 88%, #000));
+  .s-solid .chip { color: var(--on-plate); border-radius: 999px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--plate) 90%, #fff), var(--plate) 55%, color-mix(in srgb, var(--plate) 92%, #000));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 1px 3px rgba(0,0,0,.22);
-    text-shadow: 0 .5px 0 rgba(0,0,0,.18); }
+    text-shadow: none; }
 
   /* 3. Flat squircle: truly flat. No edge, no shadow */
-  .s-squircle .chip { background: var(--ink); color: #fff; border-radius: 7px; padding: 6px 8px; }
+  .s-squircle .chip { background: var(--plate); color: var(--on-plate); border-radius: 7px; padding: 6px 8px; }
 
   /* 4. Hairline plate: the one style defined by its outline; flat, no shadow */
-  .s-hairline .chip { background: #fff; color: color-mix(in srgb, var(--ink) 80%, #000);
+  .s-hairline .chip { background: #fff; color: var(--ink-text);
     border: 1px solid var(--ink); border-radius: 5px; padding: 5px 8px; }
 
   /* 5. Glass: frosted, lit fill; a gradient rim that catches light top-left and
      bottom-right and fades away along the sides */
   .s-glass .chip { color: #fff; border-radius: 10px; padding: 6px 10px; border: 1px solid transparent;
     background:
-      linear-gradient(180deg, color-mix(in srgb, var(--ink) 30%, rgba(255,255,255,.14)), color-mix(in srgb, var(--ink) 42%, rgba(10,10,12,.22))) padding-box,
+      linear-gradient(180deg, color-mix(in srgb, var(--plate) 52%, rgba(16,16,18,.30)), color-mix(in srgb, var(--plate) 62%, rgba(10,10,12,.42))) padding-box,
       linear-gradient(135deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.14) 35%, rgba(255,255,255,0) 55%, rgba(255,255,255,.2) 80%, rgba(255,255,255,.6) 100%) border-box;
     backdrop-filter: blur(5px) saturate(180%) brightness(.82); -webkit-backdrop-filter: blur(5px) saturate(180%) brightness(.82);
     box-shadow: inset 0 1px 1px rgba(255,255,255,.3), 0 6px 18px rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.16);
@@ -136,8 +139,8 @@
     margin-top: -3px; border-radius: 50%; background: var(--ink); }
 
   /* 8. Lit tag: lit ink fill like 2, but squarer, smaller corners */
-  .s-callout .chip { color: #fff; border-radius: 4px; padding: 6px 9px;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 84%, #fff), var(--ink));
+  .s-callout .chip { color: var(--on-plate); border-radius: 4px; padding: 6px 9px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--plate) 90%, #fff), var(--plate));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 2px 6px rgba(0,0,0,.22); }
 
   /* ---------- Markers: the style's own accent, none, or a status icon ---------- */
@@ -294,15 +297,58 @@
     fig.appendChild(cap);
     grid.appendChild(fig);
   }
+  // ---------- Legible plates ----------
+  // The line keeps the ink as picked. The plate behind the words is derived
+  // from it so the words always reach 4.5:1: a mid or dark ink is darkened
+  // just enough for white words; a light ink (green, orange, yellow, white)
+  // keeps its colour and takes dark words instead, since darkening it that
+  // far turns it to mud.
+  const hex2rgb = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+  const rgb2hex = c => "#" + c.map(v => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, "0")).join("");
+  const lum = c => { const l = c.map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * l[0] + .7152 * l[1] + .0722 * l[2]; };
+  const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const WHITE = [1, 1, 1], DARK = hex2rgb("#1d1d1f");
+  function darkenUntil(c, against, target) {
+    for (let k = 0; k <= 1.0001; k += .01) { const d = c.map(v => v * (1 - k)); if (ratio(d, against) >= target) return [d, k]; }
+    return [[0, 0, 0], 1];
+  }
+  function plateFor(hex) {
+    const ink = hex2rgb(hex);
+    const [dark, k] = darkenUntil(ink, WHITE, 4.8);
+    const useDarkText = k > .22 && ratio(ink, DARK) >= 4.5;
+    const plate = useDarkText ? ink : dark;
+    const onPlate = useDarkText ? "#1d1d1f" : "#ffffff";
+    const inkText = rgb2hex(darkenUntil(ink, WHITE, 4.5)[0]);
+    return { plate: rgb2hex(plate), onPlate, inkText, contrast: ratio(plate, useDarkText ? DARK : WHITE) };
+  }
+  function setInk(el, hex) {
+    const p = plateFor(hex);
+    el.style.setProperty("--ink", hex);
+    el.style.setProperty("--plate", p.plate);
+    el.style.setProperty("--on-plate", p.onPlate);
+    el.style.setProperty("--ink-text", p.inkText);
+    return p;
+  }
+
   // ---------- Inspector prototype ----------
   const stage = document.getElementById("pstage");
   stage.appendChild(tpl.content.cloneNode(true));
   const scap = document.createElement("figcaption");
   stage.appendChild(scap);
   const ptiles = document.getElementById("ptiles");
+  let stageInk = "#ff375f", stageName = "6. Paper";
+  function captionStage() {
+    const p = setInk(stage, stageInk);
+    const chip = stage.querySelector(".chip.caption");
+    const cs = getComputedStyle(chip);
+    const toRgb = v => (v.match(/[\d.]+/g) || []).slice(0, 3).map(n => +n / 255);
+    const bgc = cs.backgroundColor === "rgba(0, 0, 0, 0)" ? p.plate : null;
+    scap.textContent = stageName + ". The line, head and chip follow one colour. Words on the plate: "
+      + p.contrast.toFixed(1) + ":1 (" + (p.onPlate === "#ffffff" ? "white" : "dark") + " words on " + p.plate + ").";
+  }
   let setStageStyle = (cls, name) => {
     stage.className = "stage " + cls;
-    scap.textContent = name + ". Pick a colour: the line, head and chip all follow it, each the way this style uses it.";
+    stageName = name; captionStage();
     ptiles.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.cls === cls));
     paintWells();
   };
@@ -321,7 +367,7 @@
     b.setAttribute("aria-pressed", c === "#ff375f");
     b.addEventListener("click", () => {
       pdots.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
-      stage.style.setProperty("--ink", c);
+      stageInk = c; captionStage();
       paintWells();
     });
     pdots.appendChild(b);
@@ -385,7 +431,9 @@
   }));
   document.querySelectorAll(".swatch").forEach(b => b.addEventListener("click", () => {
     document.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed", x === b));
-    document.documentElement.style.setProperty("--ink", b.dataset.ink);
+    setInk(document.documentElement, b.dataset.ink);
+    stageInk = b.dataset.ink; captionStage(); paintWells(); paintMarkers();
+    pdots.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.ink === b.dataset.ink));
   }));
 </script>
 </body>

@@ -14731,3 +14731,4 @@
 {"t":"2026-10-31T12:13:07.390Z","ev":"task_created","id":"copy-is-on-the-clipboard-the-instant-you-press-i","priority":"p1-high","title":"Copy is on the clipboard the instant you press it, so a quick paste always gets it"}
 {"t":"2026-10-31T12:13:07.504Z","ev":"task_resequenced","id":"copy-is-on-the-clipboard-the-instant-you-press-i","from":3980,"to":2e-7}
 {"t":"2026-10-31T12:16:20.600Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-10-31T12:19:29.195Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
