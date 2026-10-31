@@ -90,7 +90,22 @@ enum AgentWork {
             return try await AgentDesignWork.answer(request)
         case .listBrushes, .setBrush, .paintStroke:
             return try AgentPaintWork.answer(request)
+        case .changePart(let id, let change):
+            return try changePart(AgentDocuments.editor(id).get(), change)
         }
+    }
+
+    /// change_part: one named part of a painting or a drawing changed in
+    /// place (`AgentPartChange`), as one undo step.
+    private static func changePart(_ editor: EditorState, _ change: AgentPartChange) throws -> Answer {
+        var changed = try document(of: editor)
+        let answer: AgentPartChanged
+        switch changed.agentChangePart(change) {
+        case .success(let made): answer = made
+        case .failure(let refused): throw Failure(refused.message)
+        }
+        editor.asOneUndoStep { editor.perform { $0 = changed } }
+        return .json(answer)
     }
 
     // MARK: Documents

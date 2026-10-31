@@ -1,0 +1,13 @@
+{
+  "make": "paint a beach at sunset",
+  "then": "make the sun bigger",
+  "part": "the sun",
+  "group": "painting",
+  "start": {
+    "blank": [
+      960,
+      640
+    ]
+  },
+  "from": "ask-changes-what-it-just-made-make-the-water-blu (two-turn conversations: make X, then change one part of it; an example of the bar, not a thing to code)"
+}

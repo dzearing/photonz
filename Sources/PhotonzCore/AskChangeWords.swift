@@ -31,6 +31,7 @@ public enum AskChangeWords {
         case "place_component": Kind(verb: "Placed", one: "a component", many: "components")
         case "add_component": Kind(verb: "Made", one: "a component", many: "components")
         case "set_layer": Kind(verb: editVerb(step.arguments), one: "a layer", many: "layers")
+        case "change_part": Kind(verb: partVerb(step.arguments), one: partName(step.arguments), many: "parts")
         case "add_style": Kind(verb: "Saved", one: "a style", many: "styles")
         case "apply_style": Kind(verb: "Restyled", one: "a layer", many: "layers")
         case "set_layout": Kind(verb: "Laid out", one: "a group", many: "groups")
@@ -49,6 +50,21 @@ public enum AskChangeWords {
     private static let saysWhatItMade: Set<String> = [
         "add_drawing", "add_photo", "add_text", "add_title", "add_measurement", "mark_measurements", "mark_misalignments",
     ]
+
+    /// What one change_part did: recoloured, resized, moved or removed.
+    private static func partVerb(_ arguments: AgentJSON) -> String {
+        if arguments["remove"]?.boolValue == true { return "Removed" }
+        let keys = Set((arguments.objectValue ?? [:]).keys).subtracting(["document", "layer", "part"])
+        if keys.isSubset(of: ["color", "hue", "saturation", "lightness"]) { return "Recoloured" }
+        if keys == ["scale"] { return "Resized" }
+        if keys.isSubset(of: ["dx", "dy"]) { return "Moved" }
+        return "Changed"
+    }
+
+    private static func partName(_ arguments: AgentJSON) -> String {
+        let part = (arguments["part"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces).lowercased()
+        return part.isEmpty ? "a part" : "the \(part)"
+    }
 
     /// What one set_layer did, by which of its values it set.
     private static func editVerb(_ arguments: AgentJSON) -> String {

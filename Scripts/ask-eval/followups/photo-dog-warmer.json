@@ -1,0 +1,13 @@
+{
+  "make": "a photo of a dog on a beach",
+  "then": "make the photo warmer",
+  "part": "the whole photo",
+  "group": "photo",
+  "start": {
+    "blank": [
+      960,
+      640
+    ]
+  },
+  "from": "ask-changes-what-it-just-made-make-the-water-blu (two-turn conversations: make X, then change one part of it; an example of the bar, not a thing to code)"
+}

@@ -729,6 +729,40 @@ Mac can hold (`AskModels.recommended`, its size stated before you press it) thro
 links its download. Ask itself says "Ask needs Ollama. See Settings." in the
 Agent group.
 
+## Changing what it just made (2026-10-31)
+
+"Paint a beach at sunset", then "make the water bluer": the second request
+changes the first one's water in place, the way a conversation would. Three
+things make that work, none of them knowing any subject:
+
+* **Parts carry the model's own names.** A painting's sketch gives every shape
+  an id ("sky", "water", "sun-shadow"); each stroke that fills the shape keeps
+  it (`BrushStroke.part`), and `read_document` lists a paint layer's `parts`.
+  A drawing's SVG ids already name its layers.
+* **Ask remembers the window's requests** (`AskMemory`): the latest six rows
+  that are still on, each with what it did and the layers it made (id, name,
+  kind, parts), handed to the model after the document. Deleting or turning
+  off a row forgets it; closing the window forgets all of it.
+* **Ask sees the canvas** when its model can see and there is something to see
+  (an earlier request, or more than one layer): a 768 point picture rides on
+  the request.
+
+The tool is `change_part` (`AgentPartChange.swift`, also on MCP): recolour a
+named part toward a colour (one shift for the whole part, so its shades keep
+their differences) or by hue, saturation and lightness; scale it about its
+middle; move it; or remove it. On a painting it changes that part's strokes,
+which are data, so nothing is painted over; shrinking or removing a part shows
+the shape the sketch painted under it. The row says it as done ("Made the water
+bluer"), and one undo takes it back.
+
+Measured by the two-turn eval, `node Scripts/ask-eval/followup.mjs run`: twelve
+make-then-change conversations, a judge comparing the two pictures on the right
+part, the words, and nothing else moving (`queue/evals/ask-followup-history.jsonl`).
+
+A photo is one picture with no parts, and a drawing the picture model paints
+is traced into layers named by colour: changing one named part of either needs
+the parts found first (left rough in the task's log).
+
 ## Try paths (walks)
 
 * `Scripts/playtest/ask-annotates-a-screenshot-walk.json`: settings screenshot,

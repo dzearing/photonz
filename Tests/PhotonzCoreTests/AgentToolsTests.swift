@@ -27,6 +27,7 @@ struct AgentToolsTests {
             "list_styles", "add_style", "apply_style", "set_layout",
             "add_component",
             "list_brushes", "set_brush", "paint_stroke",
+            "change_part",
         ])
     }
 

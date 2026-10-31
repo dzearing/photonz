@@ -25,6 +25,7 @@ public enum AskTools {
         "place_component", "add_component",
         "add_style", "apply_style", "set_layout", "run_command",
         "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
+        "change_part",
     ]
 
     /// Offered only for a painting, with the Brush there to paint it: what
@@ -341,14 +342,18 @@ public struct AskConversation: Sendable {
     /// This request is a painting and the Brush is there to paint it.
     private let painting: Bool
 
+    /// `memory` is what Ask did earlier in this window (`AskMemory.prompt`),
+    /// and `canvas` a picture of the canvas as it is now, for a model that
+    /// sees, so "bluer" and "bigger" are judged against what is really there.
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
-                titles: String = "", paints: Bool = false, brushes: Bool = false) {
+                titles: String = "", paints: Bool = false, brushes: Bool = false,
+                memory: String = "", canvas: Data? = nil) {
         self.request = request
         self.paints = paints
         self.brushes = brushes
-        let canvas = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]
-        canvasWidth = canvas?["width"]?.doubleValue ?? 0
-        canvasHeight = canvas?["height"]?.doubleValue ?? 0
+        let size = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]
+        canvasWidth = size?["width"]?.doubleValue ?? 0
+        canvasHeight = size?["height"]?.doubleValue ?? 0
         let painting = brushes && AgentPictureKind.asked(in: request) == .paint
         self.painting = painting
         var instructions = Self.instructions(documentRead: documentRead, paints: paints, painting: painting)
@@ -357,9 +362,15 @@ public struct AskConversation: Sendable {
         if !titles.isEmpty {
             instructions += "\nThe title styles add_title takes, by name (list_titles):\n\(titles)"
         }
+        if !memory.isEmpty { instructions += "\n\(memory)" }
+        var asking: AgentJSON = ["role": "user", "content": .string(request)]
+        if let canvas {
+            instructions += "\nThe picture with the request is the canvas as it is now."
+            asking = ["role": "user", "content": .string(request), "images": [.string(canvas.base64EncodedString())]]
+        }
         messages = [
             ["role": "system", "content": .string(instructions)],
-            ["role": "user", "content": .string(request)],
+            asking,
         ]
         learnNames(components)
     }
@@ -1043,7 +1054,8 @@ public struct AskConversation: Sendable {
         subject and svg: your sketch of the whole picture as one complete SVG whose viewBox is the canvas \
         ("0 0 width height" from the document below), made of filled shapes only. Photonz paints every shape \
         of it with brush strokes in the medium asked for, back to front, so the sketch is the painting's plan: \
-        never add_photo, add_shape or add_path.
+        never add_photo, add_shape or add_path. Give every shape an id naming the part of the picture it is, \
+        in a word or two (id="sky", id="water", id="sun-shadow"): a later request finds that part by its name.
         - Sketch it the way a painter plans a picture. First shapes that cover the whole canvas to every edge \
         with no gap between them: the sky or the wall at the back, then the ground or the water, each its own \
         shape (a gradient for a sky is good). Then what is far away, then the middle, then what is near, last \
@@ -1066,7 +1078,8 @@ public struct AskConversation: Sendable {
         mountains), call add_drawing once with its subject, icon true when an icon was asked for, style set to \
         the look asked for when one was named, and svg, your own drawing as one complete SVG: a viewBox, \
         a few flat colours, curves where the thing is round, a lit side and a shadow side on each big form, every \
-        part touching the part it belongs to. Never build a drawing from add_shape or add_path, and put no words, \
+        part touching the part it belongs to, every shape with an id naming the part it is (id="sun", \
+        id="left-ear"). Never build a drawing from add_shape or add_path, and put no words, \
         components or backdrop on it unless they were asked for.
         """
 

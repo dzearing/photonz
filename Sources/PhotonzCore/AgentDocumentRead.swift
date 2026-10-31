@@ -88,10 +88,14 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
     public struct Painted: Codable, Hashable, Sendable {
         public var strokes: Int
         public var media: [String]
+        /// What its strokes paint, by the names they were planned with, in
+        /// the order each was first painted: what change_part takes.
+        public var parts: [String]?
 
-        public init(strokes: Int, media: [String]) {
+        public init(strokes: Int, media: [String], parts: [String]? = nil) {
             self.strokes = strokes
             self.media = media
+            self.parts = parts
         }
     }
 
@@ -368,7 +372,11 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             for stroke in paint.strokes where !media.contains(stroke.settings.medium.rawValue) {
                 media.append(stroke.settings.medium.rawValue)
             }
-            node.paint = Painted(strokes: paint.strokes.count, media: media)
+            var parts: [String] = []
+            for stroke in paint.strokes {
+                if let part = stroke.part, !parts.contains(part) { parts.append(part) }
+            }
+            node.paint = Painted(strokes: paint.strokes.count, media: media, parts: parts.isEmpty ? nil : parts)
         case .zoomCallout, .lens, .measure, .collage, .sound:
             break
         }

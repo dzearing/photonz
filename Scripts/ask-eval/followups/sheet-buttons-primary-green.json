@@ -1,0 +1,13 @@
+{
+  "make": "make a sheet of three button styles for macOS",
+  "then": "make the primary button green",
+  "part": "the primary button",
+  "group": "components",
+  "start": {
+    "blank": [
+      1280,
+      800
+    ]
+  },
+  "from": "ask-changes-what-it-just-made-make-the-water-blu (two-turn conversations: make X, then change one part of it; an example of the bar, not a thing to code)"
+}

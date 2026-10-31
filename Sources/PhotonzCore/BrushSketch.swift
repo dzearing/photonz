@@ -36,6 +36,9 @@ public enum BrushSketch {
         /// The medium's own settings this stroke is painted with, by id.
         public var settings: [String: Double]
         public var seed: UInt32
+        /// The sketch shape's own name (its id), carried onto the stroke so
+        /// a later request can find that part of the painting.
+        public var part: String?
     }
 
     // MARK: The medium asked for
@@ -73,6 +76,11 @@ public enum BrushSketch {
             painted = regions.indices.flatMap { index in
                 paint(regions[index], under: Array(regions[..<index]), over: Array(regions[(index + 1)...]),
                       canvas: canvas, medium: medium, sizeScale: scale, random: &random)
+                    .map { stroke in
+                        var named = stroke
+                        named.part = regions[index].name
+                        return named
+                    }
             }
             guard painted.count > mostStrokes else { break }
             scale *= (Double(painted.count) / Double(mostStrokes)).squareRoot() * 1.08
@@ -95,6 +103,7 @@ public enum BrushSketch {
                 "seed": .number(Double(stroke.seed)),
             ]
             if index == 0 { call["newLayer"] = true }
+            if let part = stroke.part { call["part"] = .string(part) }
             return .object(call)
         }
     }
@@ -117,6 +126,8 @@ public enum BrushSketch {
         var lineWidth: CGFloat
         var opacity: Double
         var box: CGRect
+        /// The shape's name in the sketch, from its id or its group's.
+        var name: String? = nil
 
         /// Whether `p` is inside the shape, its box asked first.
         func covers(_ p: CGPoint) -> Bool {
@@ -145,7 +156,7 @@ public enum BrushSketch {
             guard fill != nil || line != nil else { return nil }
             let box = rings.flatMap { $0 }.reduce(CGRect.null) { $0.union(CGRect(origin: $1, size: .zero)) }
             return Region(rings: rings, fill: fill, line: line, lineWidth: part.strokeWidth * scale,
-                          opacity: part.opacity, box: box)
+                          opacity: part.opacity, box: box, name: part.name)
         }
     }
 

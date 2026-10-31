@@ -1,0 +1,13 @@
+{
+  "make": "draw a fox as vector art",
+  "then": "make the fox darker",
+  "part": "the fox",
+  "group": "drawing",
+  "start": {
+    "blank": [
+      960,
+      640
+    ]
+  },
+  "from": "ask-changes-what-it-just-made-make-the-water-blu (two-turn conversations: make X, then change one part of it; an example of the bar, not a thing to code)"
+}

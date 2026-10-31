@@ -1,0 +1,13 @@
+{
+  "make": "draw an icon of a house with a door",
+  "then": "make the door red",
+  "part": "the door",
+  "group": "drawing",
+  "start": {
+    "blank": [
+      512,
+      512
+    ]
+  },
+  "from": "ask-changes-what-it-just-made-make-the-water-blu (two-turn conversations: make X, then change one part of it; an example of the bar, not a thing to code)"
+}

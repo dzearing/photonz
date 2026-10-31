@@ -321,14 +321,20 @@ public struct BrushStroke: Hashable, Codable, Sendable {
     /// stored, a replay blooms exactly where the first render did. Nil for a
     /// stroke painted before strokes had a time: it reads as long dry.
     public var startedAt: Double?
+    /// What the stroke paints, in the words of whoever planned it ("sky",
+    /// "water", "sun"): Ask's sketch names each shape, and every stroke that
+    /// fills it carries the name, so a later "make the water bluer" finds the
+    /// water's strokes (`AgentPartChange`). Nil for a stroke painted by hand.
+    public var part: String?
 
     public init(samples: [StrokeSample], settings: BrushSettings, colorHex: String, seed: UInt32,
-                startedAt: Double? = nil) {
+                startedAt: Double? = nil, part: String? = nil) {
         self.samples = samples
         self.settings = settings
         self.colorHex = colorHex
         self.seed = seed
         self.startedAt = startedAt
+        self.part = part
     }
 
     /// When the pointer came up, in the same seconds as `startedAt`.

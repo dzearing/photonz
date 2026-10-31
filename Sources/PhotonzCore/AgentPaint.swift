@@ -58,14 +58,17 @@ public struct AgentStroke: Hashable, Sendable {
     /// picked one.
     public var newLayer: Bool
     public var seed: UInt32?
+    /// What the stroke paints ("water"), so change_part can find it later.
+    public var part: String?
 
     public init(samples: [StrokeSample], brush: AgentBrushChange = AgentBrushChange(), layer: String? = nil,
-                newLayer: Bool = false, seed: UInt32? = nil) {
+                newLayer: Bool = false, seed: UInt32? = nil, part: String? = nil) {
         self.samples = samples
         self.brush = brush
         self.layer = layer
         self.newLayer = newLayer
         self.seed = seed
+        self.part = part
     }
 }
 
@@ -191,7 +194,7 @@ public enum AgentPaint {
                                    startedAt: Double, seed: UInt32) -> Result<BrushStroke, AgentToolError> {
         brush(call.brush, armed: armed, remembered: remembered).map { settings in
             BrushStroke(samples: call.samples, settings: settings, colorHex: call.brush.colorHex ?? armedColorHex,
-                        seed: call.seed ?? seed, startedAt: startedAt)
+                        seed: call.seed ?? seed, startedAt: startedAt, part: call.part)
         }
     }
 
@@ -355,6 +358,8 @@ extension AgentTools {
                 "newLayer": ["type": "boolean", "description": "Start a new Paint layer with this stroke."],
                 "seed": ["type": "integer", "minimum": 1, "maximum": .number(Double(UInt32.max)),
                          "description": "The same seed paints the same grain and bristles every time. Random when left out."],
+                "part": ["type": "string",
+                         "description": "What this stroke paints, in a word or two (sky, water, sun). change_part finds a painting's parts by it."],
             ]) { $1 })),
     ]
 
@@ -404,8 +409,10 @@ extension AgentTools {
             let newLayer = args["newLayer"]?.boolValue ?? false
             if layer != nil, newLayer { return fail("give layer or newLayer, not both.") }
             let seed = args["seed"]?.intValue.flatMap { UInt32(exactly: $0) }
+            let part = args["part"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
             return .success(.paintStroke(document: document, stroke: AgentStroke(
-                samples: AgentPaint.samples(points), brush: change, layer: layer, newLayer: newLayer, seed: seed)))
+                samples: AgentPaint.samples(points), brush: change, layer: layer, newLayer: newLayer, seed: seed,
+                part: part?.isEmpty == false ? part : nil)))
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }
