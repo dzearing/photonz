@@ -240,11 +240,32 @@ struct AgentPaintTests {
         var talk = Self.ask("paint a small landscape in oil", brushes: true)
         _ = talk.take(Self.reply("add_drawing", ["subject": "landscape", "scene": true]))
         #expect(talk.steps.isEmpty)
-        #expect(talk.messages.last?["content"]?.stringValue?.contains("paint_stroke") == true)
+        #expect(talk.messages.last?["content"]?.stringValue == AskConversation.sketchFirst)
         _ = talk.take(Self.reply("paint_stroke", ["medium": "oil", "color": "#6A8FC0", "settings": ["size": 60],
                                                   "points": [["x": 0, "y": 40], ["x": 400, "y": 30], ["x": 800, "y": 50]]]))
         #expect(talk.steps.map(\.tool) == ["paint_stroke"])
         #expect(talk.note == nil, "nothing to apologise for")
+    }
+
+    @Test("A painting's sketch is painted with brush strokes in the medium asked for, one paint_stroke step each")
+    func askPaintsItsSketch() throws {
+        var talk = Self.ask("paint a harbour at dusk in watercolour", brushes: true)
+        let svg = ##"<svg viewBox="0 0 800 560"><rect width="800" height="300" fill="#E7A16B"/><rect y="300" width="800" height="260" fill="#2E4A6B"/><path d="M300 330 L520 330 L490 370 L330 370 Z" fill="#5A3B22"/></svg>"##
+        _ = talk.take(Self.reply("add_drawing", ["subject": "a harbour at dusk", "svg": .string(svg)]))
+        #expect(talk.steps.count >= 10)
+        #expect(talk.steps.allSatisfy { $0.tool == "paint_stroke" })
+        #expect(talk.steps.first?.arguments["newLayer"]?.boolValue == true)
+        #expect(talk.steps.allSatisfy { $0.arguments["medium"]?.stringValue == "watercolour" })
+        #expect(talk.messages.last?["content"]?.stringValue?.hasPrefix("Planned as steps 1 to") == true)
+        let painted = talk.steps.count
+        // A second sketch would paint over the first: turned back.
+        _ = talk.take(Self.reply("add_drawing", ["subject": "a harbour at dusk", "svg": .string(svg)]))
+        #expect(talk.steps.count == painted)
+        #expect(talk.messages.last?["content"]?.stringValue == AskConversation.sketchedAlready)
+        // A detail stroke after it still lands.
+        _ = talk.take(Self.reply("paint_stroke", ["medium": "watercolour", "color": "#FFE9B0", "settings": ["size": 6],
+                                                  "path": "400,200 420,198"]))
+        #expect(talk.steps.count == painted + 1)
     }
 
     @Test("Before the brushes, a painting still falls back to one picture and says so")

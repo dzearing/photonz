@@ -325,6 +325,7 @@ public struct AskConversation: Sendable {
     /// than the canvas has grows it as it lands, from the table as laid out
     /// (`AgentDesignWork.addComponent`), so the plan needs no height.
     private let canvasWidth: Double
+    private let canvasHeight: Double
 
     /// `components` and `styles` are list_components' and list_styles'
     /// answers, handed over up front so "on brand" never starts from nothing.
@@ -347,6 +348,7 @@ public struct AskConversation: Sendable {
         self.brushes = brushes
         let canvas = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]
         canvasWidth = canvas?["width"]?.doubleValue ?? 0
+        canvasHeight = canvas?["height"]?.doubleValue ?? 0
         let painting = brushes && AgentPictureKind.asked(in: request) == .paint
         self.painting = painting
         var instructions = Self.instructions(documentRead: documentRead, paints: paints, painting: painting)
@@ -434,6 +436,11 @@ public struct AskConversation: Sendable {
                 if name == "add_text", steps.contains(where: { $0.tool == "add_text" }),
                    steps.contains(where: { $0.tool == "add_component" && $0.arguments["labels"]?.boolValue == true }) {
                     refuse(name, arguments, "Not planned: the table names its own rows and states, and words of your own would land on it. Plan the next component, or finish.")
+                    continue
+                }
+                // A painting is sketched, and the sketch painted stroke by stroke.
+                if painting, name == "add_drawing" {
+                    paintSketch(arguments)
                     continue
                 }
                 // A photo, a drawing or a painting, as the person's words say.
@@ -875,6 +882,46 @@ public struct AskConversation: Sendable {
         tell(tool, text)
     }
 
+    /// A painting's sketch, painted (`BrushSketch`): every stroke one
+    /// paint_stroke step, in the medium the person named.
+    private mutating func paintSketch(_ arguments: AgentJSON) {
+        if steps.contains(where: { $0.tool == "paint_stroke" }), steps.count > 1 {
+            tell("add_drawing", Self.sketchedAlready)
+            return
+        }
+        let svg = arguments["svg"]?.stringValue ?? ""
+        guard !svg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            brokenCalls += 1
+            tell("add_drawing", Self.sketchFirst)
+            return
+        }
+        let art: SVGArtwork
+        switch SVGArtwork.parse(svg) {
+        case .success(let read): art = read
+        case .failure(let failure):
+            brokenCalls += 1
+            tell("add_drawing", "Not planned. \(failure.message) Send the sketch again as one complete SVG.")
+            return
+        }
+        let canvas = CGSize(width: canvasWidth > 0 ? canvasWidth : 960, height: canvasHeight > 0 ? canvasHeight : 640)
+        let medium = BrushSketch.medium(in: request)
+        let calls = BrushSketch.calls(BrushSketch.strokes(art, canvas: canvas, medium: medium), medium: medium)
+        guard !calls.isEmpty else {
+            brokenCalls += 1
+            tell("add_drawing", "Not planned: that sketch has no filled shapes to paint. Send it again with a fill on every shape.")
+            return
+        }
+        let first = steps.count + 1
+        steps += calls.map { AskStep(tool: "paint_stroke", arguments: $0) }
+        sameRefusals = 0
+        lastRefused = ""
+        tell("add_drawing", "Planned as steps \(first) to \(steps.count): your sketch painted in \(calls.count) strokes of \(medium.title.lowercased()). \(Self.afterSketch)")
+    }
+
+    public static let sketchFirst = "Not planned: a painting starts from your sketch. Call add_drawing once with svg, the whole picture as one SVG of filled shapes over the whole canvas, and Photonz paints it with the Brush."
+    public static let sketchedAlready = "Not planned: the sketch is already painted. Add a few small paint_stroke details, or finish."
+    static let afterSketch = "Add at most a few small paint_stroke strokes of detail or light where the picture needs them, or finish."
+
     private mutating func tell(_ tool: String, _ text: String) {
         messages.append(["role": "tool", "tool_name": .string(tool), "content": .string(text)])
     }
@@ -987,26 +1034,25 @@ public struct AskConversation: Sendable {
     /// model decides what the strokes are; the engine makes them look like
     /// paint. Nothing here names a subject.
     static let brushRules = """
-        - This request is a painting: paint it with the Brush. Call paint_stroke once for every stroke, \
-        and never add_drawing, add_photo, add_shape or add_path. Give every stroke medium (the one named, \
-        oil when none is), color and settings.size. The first stroke makes a Paint layer and every later one \
-        lands on it.
-        - Work the way a painter does. Block in first: cover the whole canvas to every edge with the big \
-        areas (what is far away, the large masses), with a wide brush about a tenth of the canvas's width, \
-        each block-in stroke starting and ending a little past the canvas's edges so its thin ends fall outside. \
-        Lay the strokes of an area closer together than the brush is wide, so no bare canvas shows, each \
-        running the way that surface runs: long and nearly level for sky and water, along the slope for \
-        land, short and upright for growing things. Never repeat one stroke shape as a pattern. Then the \
-        middle shapes with a brush half that size, over the block-in. Last, a few small strokes of detail \
-        and light on top with a small brush. Back to front, big to small, dark to light.
-        - Build each thing out of several short strokes that fill its shape, its shadow side and its lit \
-        side; never draw a thing as one outline.
-        - Paint each area in three or four close shades, not one flat colour, with real darks and strong \
-        colour where the light falls: darker and cooler where it turns from the light, lighter and warmer \
-        where the light is, greyer and paler in the distance.
-        - Write each stroke's points as path, three to five x,y pairs along it in canvas points with spaces \
-        between them (40,60 300,52 620,66), never as points. A small painting is thirty to fifty strokes. \
-        Leave out pressure.
+        - This request is a painting: paint it with the Brush, from a sketch. First call add_drawing once with \
+        subject and svg: your sketch of the whole picture as one complete SVG whose viewBox is the canvas \
+        ("0 0 width height" from the document below), made of filled shapes only. Photonz paints every shape \
+        of it with brush strokes in the medium asked for, back to front, so the sketch is the painting's plan: \
+        never add_photo, add_shape or add_path.
+        - Sketch it the way a painter plans a picture. First shapes that cover the whole canvas to every edge \
+        with no gap between them: the sky or the wall at the back, then the ground or the water, each its own \
+        shape (a gradient for a sky is good). Then what is far away, then the middle, then what is near, last \
+        the small things; later shapes sit on top of earlier ones. Make the subject asked for big and plain to \
+        see, every thing in it the shape it really has (a peak is a point, a hull is long and curved, a tree is \
+        a trunk under a crown), and give each big thing a lit side and a shadow side as two shapes of close colours. \
+        Draw every edge the way it really runs, with many points and curves (a ridge rises and falls unevenly, a \
+        shore wanders, a crown is lumpy), never a plain triangle, rectangle or circle unless the thing is one. \
+        Put in the things that make the place read at a glance, each a few shapes, and vary their sizes. \
+        Strong, true colours with real darks: darker and cooler away from the light, lighter and warmer toward \
+        it, greyer and paler in the distance. A line (stroke, no fill) only for thin things such as a mast, a \
+        branch or a rope. No words, no outlines around shapes.
+        - After the sketch is painted you may add a few small paint_stroke strokes of detail or light (medium, \
+        color, settings.size, and path: x,y pairs with spaces, such as 40,60 300,52), then finish.
         """
 
     /// How to draw when there is no picture model: the model's own svg.

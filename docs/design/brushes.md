@@ -207,6 +207,41 @@ sampling the curve into stroke samples (pressure from a taper, or later from a
 per-anchor width) and feeding the same engine. The path stays editable: move
 an anchor and the line re-paints.
 
+### 10. Ask paints from its own sketch (2026-10-31)
+
+Asked to paint, Ask's model laid down fifty paint_stroke paths itself and the
+result read as level bands with no subject (judged 4 to 5 of 10 as a
+landscape). The same model lays a scene out well as a flat SVG. So a painting
+is planned in two steps: the model calls add_drawing once with its sketch of
+the whole picture (filled shapes, back to front, covering the canvas), and
+`BrushSketch` (PhotonzCore) paints that sketch with the Brush, every stroke a
+paint_stroke step in the plan, so the painting is the same editable strokes the
+agent tools paint and undoes as one change. The model may add a few detail
+strokes after.
+
+How a sketch is painted, all general, nothing about any subject:
+
+* each shape's edge is loosened by a slow uneven wave (held still on the
+  canvas border), so a plain triangle or circle is painted as a hand would;
+* it is filled with rows of strokes closer together than the brush is wide,
+  running the way the shape runs (level over a wide band, along the long axis
+  of anything long, on a rising slant over anything round), cut where a slope
+  would let a corner poke out, then a half-size pass for the tips and corners;
+* its silhouette is cut in with a smaller brush just inside the edge, except
+  along the canvas border, under a later opaque shape, and at a seam with a
+  neighbour of nearly its own colour, which is painted in the two colours
+  mixed (an edge of its own colour there read as a drawn line);
+* a sizeable shape gets a pass of short dabs of nearby shades (broken colour);
+* every stroke is a close shade of the sketch's colour there (its gradient
+  read at the stroke), lighter toward an upper-left light on a shape small
+  enough to have a lit and a shadow side; oil gets a full load and a light,
+  per-stroke varied smear so a shape keeps its colour over what is under it,
+  watercolour drier washes over the first and no edge pass.
+
+At most `BrushSketch.mostStrokes` (640) strokes: a busier sketch is painted
+with bigger brushes. `PHOTONZ_SKETCH_DIR=<dir> Scripts/test.sh --filter
+BrushSketchSheet` paints every SVG in a folder without the app.
+
 ## What slice 1 settled (2026-10-24)
 
 - The Brush keeps the layer pick when you pick it up (`Tool.preservesLayerSelection`),
