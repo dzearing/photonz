@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T15:50:01.099Z",
-  "updated": "2026-10-25T13:26:47.735Z",
+  "updated": "2026-10-31T01:46:23.859Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while doing insert-a-title-before-a-clip-on-its-track-and-ch (2026-10-17). Today an insert ghost (TimelineLaneDrop.swift ~L344, TimelineFileHover) draws the held clip with a 2px insert bar at its start and the label Insert · V1 · 0:00, but the clips it will push stay drawn where they are, under the ghost: see queue/audits/2026-10-17-title-before-clip-6-held-over-v1.png, where the ghost covers the recording it is about to push. Reproduced: Scripts/playtest.sh Scripts/playtest/insert-a-title-before-a-clip-walk.json, picture 6-held-over-v1-sc.png. The insert itself is PhotonzDocument.land(.insert) -> pushAlong (ClipLanding.swift), which moves everything starting at or after the moment on unlocked tracks and splits a clip on the landing track.",
@@ -67,6 +67,10 @@
     {
       "t": "2026-10-25T13:26:47.734Z",
       "note": "seq 290 -> 300"
+    },
+    {
+      "t": "2026-10-31T01:46:23.858Z",
+      "note": "rotating check 2026-10-31T01:46:23Z, 40 walks run from 449 onward in the rotation: insert-a-title-before-a-clip-walk failing. This task was picked because its words name the walk; if it is not yours, say so with node queue/bin/queue.mjs walks a-clip-or-title-held-as-an-insert-shows-what-mov --none and the next check writes it onto the standing walk task instead."
     }
   ]
 }

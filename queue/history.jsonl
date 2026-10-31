@@ -14659,3 +14659,15 @@
 {"t":"2026-10-31T01:38:16.368Z","ev":"task_note","id":"photonz-only-offers-an-update-once-that-version"}
 {"t":"2026-10-31T01:38:16.433Z","ev":"task_walks","id":"photonz-only-offers-an-update-once-that-version","walks":[]}
 {"t":"2026-10-31T01:38:24.092Z","ev":"task_done","id":"photonz-only-offers-an-update-once-that-version","from":"in_progress","note":"Check for Updates offers a version only once its DMG answers a HEAD request (PhotonzCore UpdateOffer, tests first); a refused download says \"This update isn't ready to download yet. Try again in a few minutes.\" Measured on the probe against the real servers with --update-check-diag: 0.21.0 up to date, 0.20.0 offered 0.21.0, stub naming unreleased 0.99.0 up to date, stub naming 0.21.0 offered. Scripts/test.sh green. Audit: queue/audits/2026-10-30-update-offered-only-when-downloadable.json"}
+{"t":"2026-10-31T01:46:23.829Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-10-31T01:46:23.860Z","ev":"task_note","id":"a-clip-or-title-held-as-an-insert-shows-what-mov"}
+{"t":"2026-10-31T01:46:23.891Z","ev":"task_note","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b"}
+{"t":"2026-10-31T01:46:23.923Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-31T01:48:13.809Z","ev":"slice_pass","walks":40,"passed":16,"failed":24,"seconds":436,"of":1057,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-31T01:48:13.965Z","ev":"task_started","id":"ask-walks-share-one-model-instead-of-loading-a-f","title":"Ask walks share one model instead of loading a fresh 23 GB copy for every walk","priority":"p1-high"}
+{"t":"2026-10-31T02:27:42.081Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-31T02:51:26.769Z","ev":"task_note","id":"ask-walks-share-one-model-instead-of-loading-a-f"}
+{"t":"2026-10-31T02:51:26.838Z","ev":"task_note","id":"ask-walks-share-one-model-instead-of-loading-a-f"}
+{"t":"2026-10-31T02:51:26.908Z","ev":"task_note","id":"ask-walks-share-one-model-instead-of-loading-a-f"}
+{"t":"2026-10-31T02:51:26.977Z","ev":"task_walks","id":"ask-walks-share-one-model-instead-of-loading-a-f","walks":["ask-is-command-k-on-a-video-walk","ask-makes-a-photo-walk","ask-paints-before-brushes-walk"]}
+{"t":"2026-10-31T02:51:39.867Z","ev":"task_done","id":"ask-walks-share-one-model-instead-of-loading-a-f","from":"in_progress","note":"Ask walks share one llama-server per walk run: started detached and gently by the first probe that needs it (PhotonzCore AskWalkServer, unit tested; app AskWalkServerProcess), adopted by later walks, stopped by playtest-all/playtest.sh/go-loop or its own watch (run gone, 180 s idle). Measured: 36 Ask walks via playtest-all, llama-server sampled every 2 s, max 1, one load; gentle 212/39.7 t/s vs 232/42.8, GPU p99 4.2 vs 2.8 ms. Audit queue/audits/2026-10-30-ask-walks-share-one-model.json. Only 4 Ask walks reach the model today (Ask button regression logged on walks-that-fail-in-the-full-sweep-26)."}

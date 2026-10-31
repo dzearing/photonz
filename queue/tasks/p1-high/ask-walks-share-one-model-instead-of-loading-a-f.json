@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:13:39.994Z",
-  "updated": "2026-10-30T14:25:42.478Z",
+  "updated": "2026-10-31T02:51:39.866Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured in the intake window on 2026-10-25: one ask-annotates-a-screenshot-walk = one fresh llama-server, 22.8 GB RSS, GPU 99-100% for about 80 s, free memory 93% to 58%, no swap. The GPU-latency probe (a tiny Metal blit every 50 ms) stayed under 7 ms even under load, so this is waste and heat rather than proven keyboard theft; the focus theft the user hit was the focus drill's canary, fixed in eeaf8747. Server launch: Sources/Photonz/Agent/AskModelServer.swift (AskHelperProcess ties the server to the app pid), args: AskBuiltInServerPlan.arguments in Sources/PhotonzCore/AskBuiltInModel.swift (--parallel is already 1). Bench scripts used: the gpulat.swift and bench.sh approach (start llama-server on a spare port, one ~3000-token request, time a 1 MB Metal blit every 50 ms).",
@@ -49,6 +49,41 @@
     {
       "t": "2026-10-30T14:25:42.477Z",
       "note": "seq 90 -> 80"
+    },
+    {
+      "t": "2026-10-31T01:48:13.960Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T01:51:27.000Z",
+      "note": "Plan: during a walk (no askModelMissing/askModelsOnly) the probe adopts a shared llama-server recorded in ~/Library/Caches/Photonz/ask-walk-server, or starts one detached (not under the probe's pid watch) with gentle settings under taskpolicy -b. A small sh watch stops it when the run owner (playtest-all.sh, or a standalone playtest.sh) is gone or after 180 s idle (/slots is_processing refreshes the clock). playtest-all/playtest.sh/go-loop stop it on the way out via Scripts/ask-walk-server.sh. Lazy start (from the probe) over harness pre-start, because a walk that never asks the model must not load 23 GB. The picture model server (AskPictureServer) is out of scope: the task names the default Ask model."
+    },
+    {
+      "t": "2026-10-31T02:51:26.767Z",
+      "note": "Bench 2026-10-30 (Qwen3.8 27B with its draft, one 2412-token request, bench script and GPU probe in queue/audits/2026-10-30-ask-walks-share-one-model-*): app settings 232 t/s read, 42.8 t/s write, GPU 1 MB blit p50 0.70 p99 2.8 ms; gentle (taskpolicy -b, ubatch 128, batch 512, prio -1, poll 0, threads 4) 212 and 39.7, p50 0.42 p99 4.2 ms. About 9% slower; latency either way far inside a frame."
+    },
+    {
+      "t": "2026-10-31T02:51:26.836Z",
+      "note": "Measured: Scripts/playtest-all.sh --no-build ask- (36 walks, 16m 25s) with llama-server sampled every 2 s: 444 samples at 1, 41 at 0, never 2; one start (shared server log), let go on its own idle clock, nothing running after. Only 4 walks reached the model (Command-K on a video, both photo walks, paints-before-brushes): 27 Ask walks fail before asking because pressing Ask opens no composer, a regression from between the 10-23 and 10-26 sweeps, logged with reproduction on walks-that-fail-in-the-full-sweep-26. Before this change, those 4 would have been 4 loads. Standalone playtest.sh run of the Command-K walk twice in one owned run: one start, the second walk adopted it, stopped 'told' at the end."
+    },
+    {
+      "t": "2026-10-31T02:51:26.906Z",
+      "note": "focus-drill: ask-sheen-every-hover-walk, ask-adds-a-title-page-walk, ask-annotates-a-screenshot-walk clean; ask-is-command-k-on-a-video-walk 'as declared' (its setup holds the front, every tick lost names only the probe) while it started the shared server. askModelsOnly walks (deletes-an-older-model, offers-the-new-default-model) pass on their own servers. The people-facing app: sharing is only switched on by a walk's setup (AskModelServer.walkShares), so dev and release Ask are unchanged by construction; not exercised in the dev app (runners never touch it). Chose lazy start from the probe over the scripts pre-loading it, because a run with no walk that asks the model must not load 23 GB. Left rough (no task: covered or under the bar): the picture model still loads per walk that paints a photo."
+    },
+    {
+      "t": "2026-10-31T02:51:26.975Z",
+      "note": "owns these walks: ask-is-command-k-on-a-video-walk, ask-makes-a-photo-walk, ask-paints-before-brushes-walk"
+    },
+    {
+      "t": "2026-10-31T02:51:39.864Z",
+      "note": "Ask walks share one llama-server per walk run: started detached and gently by the first probe that needs it (PhotonzCore AskWalkServer, unit tested; app AskWalkServerProcess), adopted by later walks, stopped by playtest-all/playtest.sh/go-loop or its own watch (run gone, 180 s idle). Measured: 36 Ask walks via playtest-all, llama-server sampled every 2 s, max 1, one load; gentle 212/39.7 t/s vs 232/42.8, GPU p99 4.2 vs 2.8 ms. Audit queue/audits/2026-10-30-ask-walks-share-one-model.json. Only 4 Ask walks reach the model today (Ask button regression logged on walks-that-fail-in-the-full-sweep-26)."
     }
-  ]
+  ],
+  "started": "2026-10-31T01:48:13.959Z",
+  "walks": [
+    "ask-is-command-k-on-a-video-walk",
+    "ask-makes-a-photo-walk",
+    "ask-paints-before-brushes-walk"
+  ],
+  "completed": "2026-10-31T02:51:39.865Z"
 }
