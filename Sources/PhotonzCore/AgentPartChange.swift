@@ -35,10 +35,14 @@ public struct AgentPartChange: Hashable, Sendable {
     /// named by colour rather than by part: the piece drawn there is split
     /// out of its layer, named `part`, and changed alone.
     public var at: CGPoint?
+    /// On a component drawn in several looks (Default, Hover, Pressed), the
+    /// one look to change. Nil changes the part in every look, each keeping
+    /// its difference from the first.
+    public var look: String?
 
     public init(part: String, layer: String? = nil, colorHex: String? = nil, hue: Double? = nil,
                 saturation: Double? = nil, lightness: Double? = nil, warmth: Double? = nil, scale: Double? = nil,
-                dx: Double? = nil, dy: Double? = nil, remove: Bool = false, at: CGPoint? = nil) {
+                dx: Double? = nil, dy: Double? = nil, remove: Bool = false, at: CGPoint? = nil, look: String? = nil) {
         self.part = part
         self.layer = layer
         self.colorHex = colorHex
@@ -51,6 +55,7 @@ public struct AgentPartChange: Hashable, Sendable {
         self.dy = dy
         self.remove = remove
         self.at = at
+        self.look = look
     }
 
     var recolours: Bool { colorHex != nil || hue != nil || saturation != nil || lightness != nil || warmth != nil }
@@ -112,6 +117,7 @@ extension AgentTools {
                 "remove": ["type": "boolean", "description": "Take the part away."],
                 "at": ["type": "object", "description": "A point on the canvas inside the part, in canvas points from the top left. Give it when no layer or painted part has the part's name (a drawing whose layers are named by colour): the piece drawn there is split out, given the part's name, and changed alone.",
                        "properties": ["x": ["type": "number"], "y": ["type": "number"]], "required": ["x", "y"], "additionalProperties": false],
+                "look": ["type": "string", "description": "On a component drawn in several looks (read_document gives each drawing's look: Default, Hover, Pressed), the one look to change. Left out, the part changes in every look: the first look takes the colour given and the others keep their difference from it, so a Pressed look stays darker and a Disabled one faded."],
             ], "required": ["part"], "additionalProperties": false]),
     ]
 
@@ -135,6 +141,9 @@ extension AgentTools {
         change.dx = args["dx"]?.doubleValue
         change.dy = args["dy"]?.doubleValue
         change.remove = args["remove"]?.boolValue ?? false
+        if let look = args["look"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines), !look.isEmpty {
+            change.look = look
+        }
         if let at = args["at"] {
             guard let x = at["x"]?.doubleValue, let y = at["y"]?.doubleValue else { return fail("at takes x and y.") }
             change.at = CGPoint(x: x, y: y)
@@ -225,6 +234,17 @@ extension PhotonzDocument {
             if !redirected.contains(target) { redirected.append(target) }
         }
         named = redirected
+        // A part of one look of a component is that part in every look (a
+        // primary button made green is green when hovered and pressed too),
+        // unless the call names the look. The first look takes the colour
+        // asked for; the rest keep their difference from it.
+        let anchor: [UUID]
+        switch lookPieces(of: named, look: change.look) {
+        case .success(let found):
+            named = found.pieces
+            anchor = found.anchor
+        case .failure(let refused): return .failure(refused)
+        }
         if change.colorHex != nil || change.hue != nil,
            let photo = named.compactMap({ layer(id: $0) }).first(where: Self.isPicture) {
             return .failure(AgentToolError("change_part: \(photo.name) is a photo, one picture with no parts to recolour toward a colour. Use warmth, saturation or lightness on it."))
@@ -236,11 +256,80 @@ extension PhotonzDocument {
             removeLayers(ids: Set(named))
             return .success(AgentPartChanged(part: change.part, strokes: nil, layers: named.count))
         }
+        // One shift for the whole part, worked out from the anchor's
+        // colours: two clouds, or four looks of a button, keep their shades.
+        var colours: [String] = []
+        for id in anchor { if let layer = layer(id: id) { Self.collectColours(layer, into: &colours) } }
+        let shift = AgentPartColour.shift(from: colours, change)
         let canvas = canvasSize
         for id in named {
-            updateLayer(id: id) { layer in layer = Self.changing(layer, change, canvas: canvas) }
+            updateLayer(id: id) { layer in layer = Self.changing(layer, change, canvas: canvas, shift: shift) }
         }
         return .success(AgentPartChanged(part: change.part, strokes: nil, layers: named.count))
+    }
+
+    // MARK: A component's looks
+
+    /// The same piece in every look of the component each of `ids` sits in
+    /// (or in the one look named), with the pieces of the first look (or the
+    /// named one) as the anchor the colour is worked out from. A layer in no
+    /// component of several looks is its own anchor.
+    func lookPieces(of ids: [UUID], look: String?) -> Result<(pieces: [UUID], anchor: [UUID]), AgentToolError> {
+        var pieces: [UUID] = [], anchor: [UUID] = []
+        var looksSeen: [String] = []
+        var inLooks = false
+        func add(_ id: UUID, anchoring: Bool) {
+            if !pieces.contains(id) { pieces.append(id) }
+            if anchoring, !anchor.contains(id) { anchor.append(id) }
+        }
+        for id in ids {
+            guard let (main, route) = owningMain(of: id), let componentID = main.componentID,
+                  case let versions = componentVersions(of: componentID), versions.count > 1,
+                  let name = layer(id: id)?.name else {
+                add(id, anchoring: true)
+                continue
+            }
+            inLooks = true
+            for version in versions where !looksSeen.contains(version.option) { looksSeen.append(version.option) }
+            for (index, version) in versions.enumerated() {
+                let picked = look.map { AgentPartChange.words($0) == AgentPartChange.words(version.option) } ?? true
+                guard picked, let drawing = layer(id: version.layerID),
+                      let piece = Self.piece(in: drawing, at: route, named: name) else { continue }
+                add(piece, anchoring: look != nil || index == 0)
+            }
+        }
+        if let look, inLooks, pieces.isEmpty {
+            return .failure(AgentToolError("change_part: there is no \(look) look. The looks are: \(looksSeen.joined(separator: ", ")). Leave look out to change every look."))
+        }
+        return .success((pieces, anchor.isEmpty ? pieces : anchor))
+    }
+
+    /// The component drawing (a main of one look) holding `id`, or being it,
+    /// innermost first, and the route of child indices from it down to `id`.
+    private func owningMain(of id: UUID) -> (Layer, [Int])? {
+        guard let path = path(of: id) else { return nil }
+        var list = layers
+        var found: (Layer, [Int])?
+        for (depth, index) in path.enumerated() {
+            guard list.indices.contains(index) else { return found }
+            let layer = list[index]
+            if layer.isMainComponent { found = (layer, Array(path.dropFirst(depth + 1))) }
+            list = layer.children
+        }
+        return found
+    }
+
+    /// The layer at `route` inside `drawing`, when it carries `name`; else
+    /// the first layer of that name inside it.
+    private static func piece(in drawing: Layer, at route: [Int], named name: String) -> UUID? {
+        var layer = drawing
+        for index in route {
+            let children = layer.children
+            guard children.indices.contains(index) else { layer = drawing; break }
+            layer = children[index]
+        }
+        if layer.name == name, route.isEmpty || layer.id != drawing.id { return layer.id }
+        return drawing.selfAndDescendants.dropFirst().first { $0.name == name }?.id
     }
 
     // MARK: A piece by where it is
@@ -371,7 +460,8 @@ extension PhotonzDocument {
         return false
     }
 
-    static func changing(_ layer: Layer, _ change: AgentPartChange, canvas: CGSize) -> Layer {
+    static func changing(_ layer: Layer, _ change: AgentPartChange, canvas: CGSize,
+                         shift: ((String) -> String)? = nil) -> Layer {
         var layer = layer
         if change.recolours, isPicture(layer) {
             // A photo's colours change through its colour grade, the Effects
@@ -386,8 +476,7 @@ extension PhotonzDocument {
         } else if change.recolours {
             var colours: [String] = []
             collectColours(layer, into: &colours)
-            let shift = AgentPartColour.shift(from: colours, change)
-            layer = recoloured(layer, shift)
+            layer = recoloured(layer, shift ?? AgentPartColour.shift(from: colours, change))
         }
         if let scale = change.scale, scale != 1 {
             let box = AgentDrawing.box(of: layer)
@@ -402,7 +491,7 @@ extension PhotonzDocument {
         return layer
     }
 
-    private static func collectColours(_ layer: Layer, into colours: inout [String]) {
+    static func collectColours(_ layer: Layer, into colours: inout [String]) {
         for child in layer.group?.children ?? [] { collectColours(child, into: &colours) }
         if let fill = layer.path?.fill { colours.append(fill.hex) }
         if let fill = layer.annotation?.fill { colours.append(fill.hex) }
@@ -463,21 +552,28 @@ enum AgentPartColour {
             }
             hue = hue.truncatingRemainder(dividingBy: 1)
             if hue < 0 { hue += 1 }
-            return AgentGroupRecolour.hexString(fromHSL: (hue, min(1, max(0, was.s + s)), min(0.98, max(0.02, was.l + l))))
+            // Kept off pure white and black, except a colour already there:
+            // a white label stays white.
+            let lightness = min(max(0.98, was.l), max(min(0.02, was.l), was.l + l))
+            return AgentGroupRecolour.hexString(fromHSL: (hue, min(1, max(0, was.s + s)), lightness))
         }
     }
 
-    /// The colours' middle: hue as an angle, weighted by how coloured each is.
+    /// The colours' middle, each weighted by how coloured it is: a white
+    /// label on a blue button is not part of the blue the button is, so it
+    /// neither pulls the middle lighter nor gets darkened toward the colour.
     static func mean(_ colours: [(h: Double, s: Double, l: Double)]) -> (h: Double, s: Double, l: Double) {
-        let n = Double(colours.count)
-        var x = 0.0, y = 0.0
+        var x = 0.0, y = 0.0, s = 0.0, l = 0.0, total = 0.0
         for colour in colours {
             let weight = max(colour.s, 0.001)
             x += cos(colour.h * 2 * .pi) * weight
             y += sin(colour.h * 2 * .pi) * weight
+            s += colour.s * weight
+            l += colour.l * weight
+            total += weight
         }
         var h = atan2(y, x) / (2 * .pi)
         if h < 0 { h += 1 }
-        return (h, colours.reduce(0) { $0 + $1.s } / n, colours.reduce(0) { $0 + $1.l } / n)
+        return (h, s / total, l / total)
     }
 }

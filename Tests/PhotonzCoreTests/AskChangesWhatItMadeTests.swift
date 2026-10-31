@@ -303,6 +303,89 @@ struct AskChangesWhatItMadeTests {
         _ = sun
     }
 
+    // MARK: change_part on a component's looks
+
+    /// A Default Button drawn in four looks, the way Ask lays out a sheet:
+    /// each look its own drawing, its Background a different shade of blue.
+    static func buttonLooks() throws -> (PhotonzDocument, AgentMadeComponent) {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 1280, height: 800), layers: [])
+        let json = ##"""
+            {"name": "Default Button", "x": 64, "y": 240, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 28, "fill": "#007AFF", "cornerRadius": 6},
+                       {"name": "Label", "shape": "text", "text": "Button", "x": 0, "y": 0, "width": 120, "height": 28, "color": "#FFFFFF", "fontSize": 13, "centerIn": "Background"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Background", "fill": "#4DA3FF"}]},
+                       {"name": "Pressed", "changes": [{"part": "Background", "fill": "#0062CC"}]},
+                       {"name": "Disabled", "changes": [{"part": "Background", "fill": "#B3D7FF"}]}]}
+            """##
+        let made = try document.agentAddComponent(try AgentComponentTests.spec(json), measure: AgentComponentTests.measure).get()
+        return (document, made)
+    }
+
+    static func background(_ document: PhotonzDocument, _ look: AgentMadeComponent.Look) -> String {
+        let piece = document.layer(id: look.layer)?.group?.children.first { $0.name == "Background" }
+        return piece?.annotation?.fill?.hex.uppercased() ?? "none"
+    }
+
+    @Test("A part of one look of a component changes in every look: the first look becomes the colour, the others keep their difference")
+    func everyLookOfAComponent() throws {
+        var (document, made) = try Self.buttonLooks()
+        let hover = made.looks[1].layer.uuidString
+        _ = try document.agentChangePart(Self.change(##"{"part": "Background", "layer": "\##(hover)", "color": "#34C759"}"##)).get()
+        let shades = made.looks.map { Self.hsl(Self.background(document, $0)) }
+        #expect(Self.background(document, made.looks[0]) == "#34C759", "the Default look is the colour asked for")
+        for shade in shades { #expect(abs(shade.h - Self.hsl("#34C759").h) < 0.02, "every look is green: \(shades)") }
+        #expect(shades[2].l < shades[0].l - 0.05, "Pressed stays darker than Default")
+        #expect(shades[3].l > shades[0].l + 0.15, "Disabled stays faded")
+        #expect(shades[1].l > shades[0].l + 0.05, "Hover stays lighter")
+        for look in made.looks {
+            let label = document.layer(id: look.layer)?.group?.children.first { $0.name == "Label" }
+            #expect(label?.text?.colorHex.uppercased() == "#FFFFFF", "the white label stays white")
+        }
+    }
+
+    @Test("A look named changes that look alone, and a look the component lacks is refused naming its looks")
+    func oneLookOfAComponent() throws {
+        var (document, made) = try Self.buttonLooks()
+        let before = made.looks.map { Self.background(document, $0) }
+        let first = made.looks[0].layer.uuidString
+        _ = try document.agentChangePart(Self.change(##"{"part": "Background", "layer": "\##(first)", "look": "pressed", "lightness": -15}"##)).get()
+        let after = made.looks.map { Self.background(document, $0) }
+        #expect(after[0] == before[0] && after[1] == before[1] && after[3] == before[3])
+        #expect(Self.hsl(after[2]).l < Self.hsl(before[2]).l - 0.1)
+        guard case .failure(let refused) = document.agentChangePart(try Self.change(##"{"part": "Background", "look": "Focused", "lightness": -15}"##)) else {
+            Issue.record("a look nobody made should be refused"); return
+        }
+        #expect(refused.message.contains("Hover") && refused.message.contains("Disabled"), "\(refused.message)")
+    }
+
+    @Test("read_document names the look each drawing of a component is")
+    func readNamesLooks() throws {
+        let (document, made) = try Self.buttonLooks()
+        let read = AgentDocumentRead.make(document, context: .init(id: "d1", title: "t", file: nil, playheadMS: 0, canUndo: false, canRedo: false))
+        let looks = Dictionary(read.layers.map { ($0.id, $0.look) }, uniquingKeysWith: { first, _ in first })
+        #expect(made.looks.map { looks[$0.layer.uuidString] ?? nil } == ["Default", "Hover", "Pressed", "Disabled"])
+    }
+
+    @Test("Several layers of one part move by one shift, so their shades keep apart; a white label in a coloured drawing stays white")
+    func onePartOneShift() throws {
+        let square = [CGPoint(x: 0, y: 0), CGPoint(x: 40, y: 0), CGPoint(x: 40, y: 40), CGPoint(x: 0, y: 40)]
+        func cloud(_ hex: String) -> Layer {
+            Layer(name: "Cloud", content: .path(PathContent(anchors: square.map { PathAnchor(point: $0) }, isClosed: true,
+                                                           paint: Paint(hex: hex), strokeWidth: 0, fill: Paint(hex: hex))),
+                  frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        }
+        let light = cloud("#A0C0E0"), dark = cloud("#406080")
+        let word = Layer(name: "Word", content: .text(TextContent(string: "Hi", colorHex: "#FFFFFF")), frame: CGRect(x: 0, y: 0, width: 20, height: 20))
+        var fill = cloud("#2060C0"); fill.name = "Fill"
+        let badge = Layer(name: "Badge", content: .group(GroupContent(children: [fill, word])), frame: .zero)
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 100), layers: [light, dark, badge])
+        _ = try document.agentChangePart(Self.change(##"{"part": "cloud", "color": "#C04040"}"##)).get()
+        let lit = Self.hsl(document.layer(id: light.id)?.path?.fill?.hex ?? ""), shaded = Self.hsl(document.layer(id: dark.id)?.path?.fill?.hex ?? "")
+        #expect(lit.l - shaded.l > 0.2, "the two clouds keep their difference: \(lit) \(shaded)")
+        _ = try document.agentChangePart(Self.change(##"{"part": "badge", "color": "#34C759"}"##)).get()
+        #expect(document.layer(id: word.id)?.text?.colorHex.uppercased() == "#FFFFFF")
+    }
+
     // MARK: The memory
 
     @Test("The memory names each recent request, what it did and the parts of what it made, oldest first")

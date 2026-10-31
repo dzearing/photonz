@@ -134,6 +134,9 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var time: Time?
         /// How a group arranges its contents, when it does.
         public var layout: Layout?
+        /// Which look of its component this drawing is (Default, Hover,
+        /// Pressed), when the component is drawn in more than one.
+        public var look: String?
         public var children: [Layer]?
     }
 
@@ -365,6 +368,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
                              brush: path.brush?.medium.rawValue)
         case .group(let group):
             node.layout = group.layout.map(Layout.make)
+            if group.componentID != nil { node.look = group.versionName }
             let children = summarize(group.children, budget: &budget)
             node.children = children.isEmpty ? nil : children
         case .paint(let paint):
