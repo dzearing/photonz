@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-31T06:43:41.108Z",
+  "updated": "2026-10-31T10:19:38.184Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -142,9 +142,45 @@
     {
       "t": "2026-10-31T06:43:41.107Z",
       "note": "Everything but Ask painting well is verified and audited (2026-10-31-a-brush-tool-paints-with-realistic-charcoal-chal.json, commit 64e7e53c): try path walk passes at Next defaults, blind test met (round tip fails, 7 of 8 media named), reel and settings sheets shipped. Open: item 9, Ask's oil landscape judged looks painted 6/10 and reads as a landscape 4-5/10 against the new bar of 8 and 7."
+    },
+    {
+      "t": "2026-10-31T06:57:56.160Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T10:18:58.652Z",
+      "note": "Adversarial look before building (this pass): the model's own fifty stroke paths can't compose a scene (bands of colour, no subject), and three prompt revisions didn't move that (27.5, 48.1, 31.5). A person asking Ask to paint expects a recognisable picture made of real strokes. Chose to have the model sketch the picture as one flat SVG (it lays scenes out well that way) and paint the sketch with a general filler (BrushSketch) over more prompt work on raw strokes, because composition is the model's strength in SVG and the painterly look is a technique that works on any subject; nothing about any subject is coded. The strokes are still paint_stroke steps, editable, one change."
+    },
+    {
+      "t": "2026-10-31T10:18:58.718Z",
+      "note": "Shipped (d4dc659e, d43e5d6a): BrushSketch (PhotonzCore) paints a sketch: loosened edges, rows along the shape's run cut to slopes and following wavy edges, half-size pass for tips, silhouette cut-in with seams blended, broken-colour dabs, per-stroke shade/load/smear variation. Ask routes a painting's add_drawing svg into it (own new Paint layer, medium from the request's words). docs/design/brushes.md decision 10. PaintRasterCache.isPainting + the walk settle rule waits for paint still being simulated (the try path walk photographed a blank canvas: the painting first shows 1.5 to 2.3 s after Ask is done). Try path walk passes at Next defaults with the new picture."
+    },
+    {
+      "t": "2026-10-31T10:18:58.787Z",
+      "note": "Measured (Scripts/ask-eval/paint-judge.mjs; its prompt is stricter than the first pass's: the old try path picture scores 3 painted / 4 reads under it). Try path now: looks painted 4 and 4, reads as a landscape 8 and 8. Reads bar 7 MET; looks painted bar 8 NOT MET. Eval climb case paint-a-small-landscape-in-oil 48.1 -> 82 to 84 over five runs, named a landscape 3/3 blind every time."
+    },
+    {
+      "t": "2026-10-31T10:18:58.855Z",
+      "note": "Held-out set: started (20261031-095937-ask-held-out) but runs about two cases per seven minutes, over two hours for 45, too long for a runner; stopped at 5 of 45 (resume with Scripts/ask-eval.sh run --engine ask --resume 20261031-095937-ask-held-out). Last complete held-out total 57.2 (20261030-122139, before this change). The change reaches only requests that say paint: AgentPaintTests othersUnchanged proves every other request sees identical instructions and tools."
+    },
+    {
+      "t": "2026-10-31T10:18:58.921Z",
+      "note": "NOT DONE, item 9's looks-painted half: what the judges still name is the oil engine's even combed ridges on every stroke and the square ends of short strokes, plus slivers of bare canvas. The sketch painter already varies size, angle, load and smear per stroke. Next lever is the oil stroke's own look (end shape, ridge variety), which is also what a person paints with, so it wants a deliberate change, not a side effect of this task."
+    },
+    {
+      "t": "2026-10-31T10:18:58.986Z",
+      "note": "left rough: watercolour paintings from a sketch are muddier than oil (washes layer dark, peaks go soft), tuned by eye on one sketch only, never judged. Not filed: this task has no watercolour bar yet."
+    },
+    {
+      "t": "2026-10-31T10:18:59.051Z",
+      "note": "left rough: a painting of several hundred strokes appears 1.5 to 2.3 s after Ask says done. Walks now wait for it; a person sees the canvas unchanged for that moment. Below the follow-up bar for now (short, and the painting does land)."
+    },
+    {
+      "t": "2026-10-31T10:19:38.183Z",
+      "note": "Ask now paints from its own sketch (d4dc659e, d43e5d6a): try path landscape reads as a landscape 8/10 from both judges (bar 7, met) but looks painted 4/10 (bar 8, not met); eval case 48.1 -> 82-84. Left open on looks painted: the judges name the oil stroke's own even ridges and square ends. Audit and measures updated."
     }
   ],
-  "started": "2026-10-31T06:15:21.428Z",
+  "started": "2026-10-31T06:57:56.159Z",
   "walks": [
     "brush-epic-try-path-walk"
   ]
