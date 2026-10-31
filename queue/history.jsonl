@@ -14728,3 +14728,5 @@
 {"t":"2026-10-31T11:56:49.239Z","ev":"sweep_pass","walks":371,"seconds":5797,"passed":218,"failed":153,"complete":false,"total":1060,"interrupted":true}
 {"t":"2026-10-31T11:56:49.424Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high"}
 {"t":"2026-10-31T12:08:00.123Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-10-31T12:13:07.390Z","ev":"task_created","id":"copy-is-on-the-clipboard-the-instant-you-press-i","priority":"p1-high","title":"Copy is on the clipboard the instant you press it, so a quick paste always gets it"}
+{"t":"2026-10-31T12:13:07.504Z","ev":"task_resequenced","id":"copy-is-on-the-clipboard-the-instant-you-press-i","from":3980,"to":2e-7}

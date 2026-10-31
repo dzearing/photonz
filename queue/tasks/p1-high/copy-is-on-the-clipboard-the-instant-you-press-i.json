@@ -1,0 +1,35 @@
+{
+  "id": "copy-is-on-the-clipboard-the-instant-you-press-i",
+  "title": "Copy is on the clipboard the instant you press it, so a quick paste always gets it",
+  "goal": "Copying a picture and pasting it straight away into another app sometimes pastes whatever was on the clipboard before, as if the copy had not happened yet. Copy and paste is the core of the user's screenshot and redline workflow, so the copied picture must be on the clipboard by the time a person can possibly paste, however fast they are and however big the picture is.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 2e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T12:13:07.386Z",
+  "updated": "2026-10-31T12:13:07.503Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-31 (intake): 'sometimes copying an image and pasting doesn't work immediately, like im doing it too fast and clipboard fails to update. not sure if this was a new bug introduced or not'. Not yet reproduced. Code read: EditorState.copyCompositeToClipboard (EditorState.swift ~4246) runs on the main thread and does all of it before the clipboard changes: renders the whole composite (previewRenderer.render), builds the SVG (clipboardSVG -> SVGExporter.export, plus flatColorsRemembered reading pixels), then clearContents and setData PNG (ImageCodec.encode) and TIFF. For a large screenshot that is plausibly hundreds of milliseconds, during which a paste in another app reads the old clipboard. The SVG step was added 2026-10-15 (87f07af6, Copy SVG) and could be the regression the user suspects. Other writers: EditorState+Clipboard.swift (copyMerged, copyMergedRegion, layer regions), Capture/ClipboardWriter.swift and CaptureStore.swift (History and capture toast).",
+  "acceptance": [
+    "Reproduce first and say how: measure, for a typical screenshot (a 3456x2234 Retina capture with a few arrows and measurements), for a 12 megapixel photo, and for a drawing, the time from the Copy key going down to the moment NSPasteboard.general's changeCount moves, and the time until a reader in another process gets the PNG. Record each path: Copy (⌘C), Copy Merged (⇧⌘C), File > Copy Image, the History tile and the capture toast's copy. Note which ones regressed and since when (bisect if a recent change made it slower, for example the SVG copy added 2026-10-15 or the hand-off spec list).",
+    "Fix so the pasteboard changes within one frame of the key press (16 ms), with the picture available to a paste immediately. Allowed approaches: write the item at once with every flavor provided lazily (an NSPasteboardItem data provider that renders PNG, TIFF and SVG when a paste asks), keep a ready render of the current composite, or both. The clipboard must never be cleared and then left empty while work runs.",
+    "A paste that arrives while the render is still being made waits for it and gets the new picture, never the old clipboard and never an empty one: test it with a second process that pastes 10 ms, 50 ms and 200 ms after the copy key, 20 times each, every one getting the new picture.",
+    "Nothing a copy carried before is lost: PNG, TIFF, the SVG where it applies, the spec list, and what Teams, Slack, Mail, Messages, Figma and Preview each paste today (check each by pasting).",
+    "The main thread never stalls on a copy: a ⌘C on a 12 megapixel picture keeps the window responsive (no frame over 50 ms), measured.",
+    "Numbers before and after in the audit under queue/audits/.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T12:13:07.388Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-31T12:13:07.502Z",
+      "note": "seq 3980 -> 2e-7"
+    }
+  ]
+}
