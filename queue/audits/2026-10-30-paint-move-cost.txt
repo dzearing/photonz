@@ -91,3 +91,30 @@ swapped to the picture's own on release. So the before column cannot be met on a
 picture while the stroke under the hand is the stroke that lands (items 2 and 12), and on
 a screenshot it is met only by not thinning a mouse stroke's end as it goes. Put to the
 user on a card with pictures: 2026-10-30-paint-ends-thinned.png, 2026-10-30-paint-ends-full.png.
+
+2026-10-30 close (main at ed154b11, which carries 8bc940fb "Brushes keep up with the hand"),
+after the user chose on the card to keep the live thinned end and accept the cost, which
+judges item 3 against one 120 Hz frame (8.3 ms) at 20 and 150 pt. Same two walks, run again.
+before the WYSIWYG change / now, p95 ms per move
+
+12 megapixel (4000 x 3000), zoomed to fit (0.3)
+medium        20 pt        150 pt       500 pt
+watercolour   0.9 / 0.7    3.8 / 1.5   16.3 / 4.3
+oil           0.7 / 0.8    1.4 / 2.2    9.2 / 4.7
+pencil        0.4 / 0.6    1.0 / 1.3    9.4 / 4.4
+charcoal      0.4 / 0.8    1.3 / 1.8   10.5 / 5.3
+marker        0.4 / 0.4    0.6 / 1.0    3.6 / 1.9
+
+Screenshot size (1600 x 1000), zoomed to fit (0.74)
+medium        20 pt        150 pt       500 pt
+watercolour   1.8 / 0.9   18.3 / 2.4   39.2 / 6.0
+oil           1.7 / 1.0    4.5 / 2.9   26.5 / 7.5
+pencil        0.7 / 0.7    3.1 / 1.9   24.1 / 6.7
+charcoal      0.9 / 1.3    4.8 / 2.7   28.3 / 8.3
+marker        0.5 / 0.5    1.6 / 1.1   12.1 / 3.1
+
+Every brush at 20 and 150 pt is under 3 ms, well inside one 120 Hz frame, on both canvases.
+On the screenshot every brush is now quicker than before the change at 150 and 500 pt; on
+the 12 MP picture zoomed out, 150 pt oil, pencil, charcoal and marker are still 0.3 to 0.8 ms
+over the before column (the live stroke paints the picture's own pixels), which is the cost
+the user accepted. 500 pt is quicker than before everywhere.

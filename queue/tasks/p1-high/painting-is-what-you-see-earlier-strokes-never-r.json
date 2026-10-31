@@ -5,18 +5,18 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "blocked",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-30T23:47:26.083Z",
+  "updated": "2026-10-31T00:01:54.607Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
   "acceptance": [
     "Reproduce first in the probe at Next defaults: paint 5 strokes (watercolour, oil and one dry medium), then a 6th, zoomed out, at 100% and zoomed in. Record a video or frame sequence of the canvas from pointer down to a second after letting go, and MEASURE: how many earlier strokes are simulated again per new stroke, how many frames the earlier strokes differ from their settled pixels (the visible change and the swap to a sharper copy), and the time from letting go until the canvas is settled. All in the audit before any change.",
     "After the fix, MEASURED the same way: adding a stroke simulates no earlier stroke again (a finished stroke is painted once onto a kept layer bitmap, and later strokes paint on top of it, except where watercolour genuinely needs the wet washes under it); across the whole recording, the pixels of earlier strokes outside the new stroke's reach differ from their settled values in 0 frames; the live stroke and the settled stroke match pixel for pixel or within a stated tolerance at the moment of letting go; there is no low-resolution stage at any zoom.",
-    "Immediate response is not made worse by this work: drag events at 20 to 500 pt on a layer with 50 strokes already on it are measured before and after and are no slower. The one 120 Hz frame (8 ms at p95) bar at 150 and 500 pt belongs to every-brush-follows-the-pointer-with-no-lag-even (folded there by the 2026-10-28 triage), so this task can close without it. The before numbers were measured on 2026-10-30 (queue/audits/2026-10-30-paint-move-cost.txt, with the two .walk files beside it to run the same walk again): no medium at 20, 150 or 500 pt may be slower per move than that table's before column, on the 12 megapixel and the screenshot-size canvas",
+    "Immediate response holds up: drag events at 20 and 150 pt on a layer with 50 strokes already on it stay within one 120 Hz frame (8.3 ms at p95) for every medium, on the 12 megapixel and the screenshot-size canvas. (The user chose on 2026-10-30 to keep the live thinned end and accept its cost over the old rough preview's numbers; the before column is kept in queue/audits/2026-10-30-paint-move-cost.txt for comparison. The 500 pt frame belongs to every-brush-follows-the-pointer-with-no-lag-even.)",
     "Undo, redo, opening a saved file and changing a stroke's settings still give exactly the same picture as today (pixel compare in tests); the document still keeps strokes, not baked pixels, and any kept bitmap is a cache that can always be rebuilt from them.",
     "Memory stays bounded: the kept bitmaps have a limit and let go under memory pressure; the audit states the cost for a 12 megapixel canvas.",
     "Logic in PhotonzRender is test-first; rendering changes carry the perf note.",
@@ -211,9 +211,21 @@
     {
       "t": "2026-10-30T23:47:26.082Z",
       "note": "From every-brush-follows-the-pointer (8bc940fb, 2026-10-30): with a core kept running while painting and cheaper dabs, 20 and 150 pt moves are now 0.7-3.4 ms p95 on both the 12 MP and screenshot canvases (screenshot 150 pt oil 4.5 before the WYSIWYG change -> 3.1 now, pencil 3.1 -> 2.2; 12 MP 150 pt oil 1.4 -> 2.3), so option a on the card costs far less than its text says. Only 500 pt on a screenshot still misses a frame (chalk 12.6, charcoal 10.2, oil 9.0); with the live end off they bench at 4-6 ms. Tables: queue/audits/2026-10-30-brush-lag-measures.txt"
+    },
+    {
+      "t": "2026-10-30T23:53:00.135Z",
+      "note": "decision \"Brushes now draw exactly what lands. That costs more per move than the old rough preview. Keep the cost, drop the thinned end on mouse strokes, or go back to the preview?\" resolved: Keep the thinned end, accept the cost"
+    },
+    {
+      "t": "2026-10-30T23:56:15.900Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T00:01:54.606Z",
+      "note": "Card answered: keep the thinned end, accept the cost (option a). Item 3 rewritten to that answer: one 120 Hz frame at 20 and 150 pt. Re-measured at close on main ed154b11 (8bc940fb code), same two walks: 12 MP every medium 0.4-2.2 ms p95 at 20/150 pt, 1.9-5.3 at 500; screenshot 0.5-2.9 at 20/150, 3.1-8.3 at 500. Screenshot now beats the before column at 150 and 500 pt; 12 MP 150 pt still 0.3-0.8 ms over it (the accepted cost). painting-holds-still-walk green (0 frames change outside the stroke at 50/100/200%, release 18.1% / 0.15% / 3.99% of reach, the stated tolerance); Paint keeps its pixels, big brush pixels, raster cache, landing perf tests pass. Looked at the after strip and today's 200% capture: earlier strokes unchanged, new wash lands as held."
     }
   ],
-  "started": "2026-10-30T21:16:55.811Z",
+  "started": "2026-10-30T23:56:15.899Z",
   "walks": [
     "painting-holds-still-walk"
   ]

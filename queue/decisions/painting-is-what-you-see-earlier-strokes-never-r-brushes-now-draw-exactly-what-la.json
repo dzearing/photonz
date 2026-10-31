@@ -49,7 +49,12 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-10-30T21:34:01.979Z",
-  "shot": "2026-10-30-paint-ends-thinned.png"
+  "shot": "2026-10-30-paint-ends-thinned.png",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-10-30T23:53:00.074Z"
+  }
 }

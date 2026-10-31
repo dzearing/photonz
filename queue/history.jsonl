@@ -14640,3 +14640,8 @@
 {"t":"2026-10-30T23:47:26.008Z","ev":"task_note","id":"every-brush-follows-the-pointer-with-no-lag-even"}
 {"t":"2026-10-30T23:47:26.084Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
 {"t":"2026-10-30T23:47:26.170Z","ev":"task_pending","id":"every-brush-follows-the-pointer-with-no-lag-even","from":"in_progress","note":"Most of the bar reached (8bc940fb): every size on 12 MP and up to 300 pt on a screenshot under 8 ms; 500 pt chalk, charcoal and oil on a screenshot still 9 to 12.6 ms, waiting on the thinned-end card"}
+{"t":"2026-10-30T23:53:00.075Z","ev":"decision_resolved","id":"painting-is-what-you-see-earlier-strokes-never-r-brushes-now-draw-exactly-what-la","taskId":"painting-is-what-you-see-earlier-strokes-never-r","choice":"a"}
+{"t":"2026-10-30T23:53:00.137Z","ev":"task_unblocked","id":"painting-is-what-you-see-earlier-strokes-never-r","decision":"painting-is-what-you-see-earlier-strokes-never-r-brushes-now-draw-exactly-what-la"}
+{"t":"2026-10-30T23:56:15.734Z","ev":"slice_pass","walks":31,"passed":23,"failed":0,"seconds":496,"of":1057,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-30T23:56:15.906Z","ev":"task_started","id":"painting-is-what-you-see-earlier-strokes-never-r","title":"Painting is what you see: earlier strokes never redraw, flicker or swap to a sharper copy","priority":"p1-high"}
+{"t":"2026-10-31T00:01:54.608Z","ev":"task_note","id":"painting-is-what-you-see-earlier-strokes-never-r"}
