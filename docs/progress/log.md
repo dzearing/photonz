@@ -22263,3 +22263,10 @@ the ghost, and pinching in seemed to stop short.
   (`a-path-s-line-picks-its-brush-by-its-stroke-with`); SVG export of a brushed line.
 - Open: `outline-width-walk` and `path-line-style-walk` fail on main without
   this change (folded into `walks-that-fail-in-the-full-sweep-26`).
+
+## 2026-10-31 — Brush epic final audit (a-brush-tool-paints-with-realistic-charcoal-chal)
+
+- All eleven brush children done. Added the blind sheet generator (`BrushBlindSheetTests`, `PHOTONZ_BLIND_SHEET`) and the try path walk (`brush-epic-try-path-walk`); audit `queue/audits/2026-10-31-a-brush-tool-paints-with-realistic-charcoal-chal.json`.
+- Blind test: 7 of 8 media named reliably by two model judges; the round tip fails as it should; charcoal vs chalk at chance (filed p2).
+- Open: Ask paints with the brushes but its landscape reads as bands (judges 6 and 4-5 of 10). The umbrella stays pending on that bar.
+- Found: the brush chooser popover never opens under a walk since 2026-10-26 (folded into the standing walk task). Filed: Brush on the tool bar right after Crop, per the mock.
