@@ -53,7 +53,8 @@ public final class PaintLayerStroke {
     /// `stroke` in the layer's own points, landing on `base` (the layer as it
     /// stands at `scale`), or on fresh paper the size of `size` points when
     /// it starts a layer. Nil for a box with no pixels in it.
-    public init?(stroke: BrushStroke, base: PaintLayerBase?, size: CGSize, scale: CGFloat) {
+    public init?(stroke: BrushStroke, base: PaintLayerBase?, size: CGSize, scale: CGFloat,
+                 laysAhead: Bool = true) {
         guard scale > 0, scale.isFinite else { return nil }
         let width = base?.width ?? Int((size.width * scale).rounded())
         let height = base?.height ?? Int((size.height * scale).rounded())
@@ -89,7 +90,7 @@ public final class PaintLayerStroke {
         guard let marker = PaintRasterizer.LiveMarker(
             stroke: stroke, bitmap: overlay, pointsToPixels: CGAffineTransform(scaleX: scale, y: scale),
             clip: CGRect(x: 0, y: 0, width: width, height: height), working: paper, earlier: [],
-            wet: washes) else { return nil }
+            wet: washes, laysAhead: laysAhead) else { return nil }
         self.width = width
         self.height = height
         self.scale = scale
@@ -102,11 +103,24 @@ public final class PaintLayerStroke {
         self.marker = marker
     }
 
+    /// The marker may still be laying a dab ahead from `base`'s bytes.
+    deinit { marker.steady() }
+
+    /// How many dabs were laid in the gaps between moves, and how many of
+    /// those were taken back (`LiveMarker.layAhead`).
+    public var dabsLaidAhead: Int { marker.steady(); return marker.dabsLaidAhead }
+    public var dabsTakenBackAhead: Int { marker.steady(); return marker.dabsTakenBackAhead }
+
     /// Marks `dabs`, the next ones the walker settled (in the layer's
     /// points), and says which pixels of the overlay changed, top-left, or
     /// null for none.
     @discardableResult
     public func mark(_ dabs: [BrushDab]) -> CGRect { marker.mark(dabs) }
+
+    /// The move is on screen: lays the dabs the next move will settle in the
+    /// gap before it, so that move lays only the stroke's new end. Anything
+    /// that reads or changes the stroke waits for it first.
+    public func layAhead() { marker.layAhead() }
 
     /// The pointer has come up: anything the medium held back goes down.
     @discardableResult

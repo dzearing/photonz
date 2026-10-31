@@ -1,0 +1,75 @@
+import CoreGraphics
+import Foundation
+import PhotonzCore
+import PhotonzRender
+
+// Temporary: times PaintLayerStroke.mark per move, the way CanvasBrush calls it.
+let args = CommandLine.arguments
+let media = (args.count > 1 ? args[1] : "chalk,charcoal,oil,watercolour").split(separator: ",").map(String.init)
+let sizes = (args.count > 2 ? args[2] : "500").split(separator: ",").compactMap { Double($0) }
+let gapMs = args.count > 3 ? Double(args[3]) ?? 8 : 8
+let reps = args.count > 4 ? Int(args[4]) ?? 3 : 3
+let ahead = ProcessInfo.processInfo.environment["NOAHEAD"] == nil
+let canvas = CGSize(width: 1600, height: 1000)
+let scale: CGFloat = 1.48
+
+func p(_ xs: [Double], _ q: Double) -> Double {
+    let s = xs.sorted(); return s[min(s.count - 1, Int(Double(s.count - 1) * q))]
+}
+for m in media {
+    guard let medium = BrushMedium(rawValue: m) else { print("no medium", m); continue }
+    for size in sizes {
+        var all: [Double] = []
+        var dabMoves: [Double] = []
+        for rep in 0..<reps {
+            let settings = BrushSettings(medium: medium, values: ["size": size])
+            let first = StrokeSample(point: CGPoint(x: 200, y: 300), ms: 0)
+            let stroke = BrushStroke(samples: [first], settings: settings, colorHex: "#3366CC", seed: UInt32(7 + rep))
+            guard let paint = PaintLayerStroke(stroke: stroke, base: nil, size: canvas, scale: scale, laysAhead: ahead) else { print("nil"); continue }
+            var walker = BrushPlacement.Walker(settings: settings, seed: stroke.seed, jitter: PaintRasterizer.jitter(for: medium))
+            for i in 0..<120 {
+                let x = 200 + Double(i) * 9.7, y = 300 + Double(i) * 2.4 + sin(Double(i)) * 1.5
+                CoresReady.shared.keep()
+                let t0 = DispatchTime.now().uptimeNanoseconds
+                let dabs = walker.add(StrokeSample(point: CGPoint(x: x, y: y), ms: Double(i) * gapMs))
+                if !dabs.isEmpty { paint.mark(dabs); if ahead { paint.layAhead() } }
+                let ms = Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6
+                all.append(ms)
+                if !dabs.isEmpty { dabMoves.append(ms) }
+                if gapMs > 0 { Thread.sleep(forTimeInterval: max(0, gapMs / 1000 - ms / 1000)) }
+            }
+            _ = paint.mark(walker.finish()); paint.finish()
+        }
+        print(String(format: "%-12@ %4.0f pt  p95 %5.1f  p50 %5.1f  dab-move p50 %5.1f max %5.1f  (%d dab moves)",
+                     m as NSString, size, p(all, 0.95), p(all, 0.5), p(dabMoves, 0.5), dabMoves.max() ?? 0, dabMoves.count / reps))
+    }
+}
+CoresReady.shared.letGo()
+
+if ProcessInfo.processInfo.environment["COMPARE"] != nil {
+    func pic(_ p: PaintLayerStroke) -> Data {
+        let img = p.picture(of: CGRect(x: 0, y: 0, width: p.width, height: p.height))!
+        return img.dataProvider!.data! as Data
+    }
+    let settings = BrushSettings(medium: .pencil, values: ["size": 160])
+    let st = BrushStroke(samples: [], settings: settings, colorHex: "#D03030", seed: 21, startedAt: 300)
+    func mkbase() -> PaintLayerBase {
+        let s2 = BrushSettings(medium: .oil, values: ["size": 50])
+        let smp = (0...20).map { i in StrokeSample(point: CGPoint(x: 30 + CGFloat(i) * 18, y: 120 - CGFloat(i) * 2), ms: Double(i) * 8) }
+        let under = BrushStroke(samples: smp, settings: s2, colorHex: "#2060E0", seed: 3, startedAt: 200)
+        return PaintRasterCache(budgetBytes: 64 << 20).base(PaintContent(strokes: [under]), size: CGSize(width: 420, height: 240), scale: 1.5)!
+    }
+    let useBase = ProcessInfo.processInfo.environment["BASE"] != nil
+    let a = PaintLayerStroke(stroke: st, base: useBase ? mkbase() : nil, size: CGSize(width: 420, height: 240), scale: 1.5, laysAhead: false)!
+    let b = PaintLayerStroke(stroke: st, base: useBase ? mkbase() : nil, size: CGSize(width: 420, height: 240), scale: 1.5, laysAhead: ProcessInfo.processInfo.environment["BOTHOFF"] == nil)!
+    var w = BrushPlacement.Walker(settings: settings, seed: 21)
+    for i in 0...30 {
+        let f = CGFloat(i)
+        let dabs = w.add(StrokeSample(point: CGPoint(x: 40 + f * 11.3, y: 90 + f * 1.7 + sin(f) * 2), ms: Double(i) * 8))
+        a.mark(dabs); b.mark(dabs); b.layAhead()
+        let same = pic(a) == pic(b)
+        print(i, dabs.map { String(format: "%.0f", $0.along) }, same ? "same" : "DIFFER")
+        if !same { break }
+        if i == 30 { print("laid", b.dabsLaidAhead) }
+    }
+}

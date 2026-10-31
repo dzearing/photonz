@@ -223,6 +223,24 @@ public enum PaintRasterizer {
         private var pending: [BrushDab] = []
         /// The stroke before its tail was drawn, and the pixels the tail drew.
         private var tail: (checkpoint: Kind, drawn: PixelBox)?
+        /// The walker's spacing, in points: the least a new dab moves the end.
+        private let gap: Double
+
+        /// Whether the dabs the next move will settle are laid in the gap
+        /// before it (`layAhead`).
+        let laysAhead: Bool
+        /// What was laid ahead: the stroke as it stood before (its tail
+        /// already taken back), how many of `pending` went down, the pixels
+        /// they changed and the pixels the tail had drawn. Only the main
+        /// thread reads it, once `ahead` is idle.
+        private var laid: (checkpoint: Kind, settled: Int, box: PixelBox, drawn: PixelBox)?
+        /// Runs the laying ahead, one at a time. Everything that reads or
+        /// changes the stroke waits for it first (`steady`).
+        private let ahead = DispatchQueue(label: "photonz.paint.ahead", qos: .userInteractive)
+        /// How many dabs have been laid ahead, and how many of those were
+        /// taken back because the move after did not settle them.
+        private(set) var dabsLaidAhead = 0
+        private(set) var dabsTakenBackAhead = 0
 
         /// `pointsToPixels` takes the stroke's points to the bitmap's pixels
         /// (top-left), and `clip` is the pixels the stroke may mark: the box
@@ -237,7 +255,10 @@ public enum PaintRasterizer {
         /// The same, handed the washes still wet under the stroke rather than
         /// replaying the `earlier` strokes for them (`PaintLayerStroke`).
         init?(stroke: BrushStroke, bitmap: CGContext, pointsToPixels: CGAffineTransform,
-              clip: CGRect, working: CGContext?, earlier: [BrushStroke], wet: [WetWash]?) {
+              clip: CGRect, working: CGContext?, earlier: [BrushStroke], wet: [WetWash]?,
+              laysAhead: Bool = false) {
+            self.laysAhead = laysAhead
+            gap = Double(BrushPlacement.spacing(forDiameter: CGFloat(stroke.settings.size)))
             self.bitmap = bitmap
             self.pointsToPixels = pointsToPixels
             self.clip = clip
@@ -295,6 +316,15 @@ public enum PaintRasterizer {
         /// it here).
         @discardableResult
         public func finish() -> CGRect {
+            steady()
+            // Laid ahead for a move that never came: back to the stroke as the
+            // tail was drawn on, and the tail drawn again below, the same
+            // dabs on the same stroke, so the end on screen is the end that
+            // lands.
+            if let laid {
+                self.laid = nil
+                takeBack(laid)
+            }
             // The tail on screen was drawn for exactly this end: it stays.
             if tail != nil || (keepsPreviews && tapersItsEnd) {
                 keepTail()
@@ -316,6 +346,9 @@ public enum PaintRasterizer {
         /// the bitmap's pixels changed (top-left), or null for none.
         @discardableResult
         public func mark(_ dabs: [BrushDab]) -> CGRect {
+            // Even a move with no dab reads the stroke, which a dab laid
+            // ahead may still be changing.
+            steady()
             guard tapersItsEnd, canTakeBack else {
                 guard !dabs.isEmpty else { return .null }
                 let touched = markRaw(dabs)
@@ -330,7 +363,22 @@ public enum PaintRasterizer {
             // full, and taking it back would only cost a copy of the stroke's
             // fields (a wet wash's are 4.5 radii round, 2026-10-27).
             var touched = PixelBox.empty
-            if !keepsPreviews, let drawn = takeBackTail() { touched = drawn }
+            if let laid {
+                // Taken back and settled already, in the gap: kept when this
+                // move settles those dabs too, as it does unless it moved the
+                // end less than a whole spacing (the release's last dab).
+                self.laid = nil
+                touched = laid.drawn.union(laid.box)
+                let end = dabs.last?.along ?? 0
+                if pending[..<laid.settled].allSatisfy({ CGFloat(end - $0.along) >= taperLength }) {
+                    keepTail()
+                    pending.removeFirst(laid.settled)
+                } else {
+                    takeBack(laid)
+                }
+            } else if !keepsPreviews, let drawn = takeBackTail() {
+                touched = drawn
+            }
             pending += dabs
             if let end = pending.last?.along {
                 // Far enough from the end, a dab is never thinned however the
@@ -349,6 +397,55 @@ public enum PaintRasterizer {
             }
             redraw(touched)
             return clipped(touched).rect
+        }
+
+        /// Called once a move is on screen, so its own pictures are drawn
+        /// with every core to hand. In the gap before the next move: takes the tail back off the
+        /// stroke's fields and lays the dabs any next dab will settle, so the
+        /// move that comes lays only its new end. A dab settles once the end
+        /// is `taperLength` past it, and a new dab moves the end on by at
+        /// least a spacing (`gap`), except the release's last, which the move
+        /// checks for. The bitmap is not touched: the screen keeps showing
+        /// the tail until that move redraws over it. Only for the media whose
+        /// tail is taken back (dry sticks and oil); same pixels every way,
+        /// `LaidAheadTests`.
+        func layAhead() {
+            steady()
+            guard laysAhead, tail != nil, let end = pending.last?.along else { return }
+            let next = end + gap
+            let settled = pending.prefix { CGFloat(next - $0.along) >= taperLength }.count
+            guard settled > 0 else { return }
+            let work = Ahead(marker: self)
+            ahead.async { work.marker.settleAhead(settled) }
+        }
+
+        /// On `ahead`, while the main thread is between moves.
+        private func settleAhead(_ settled: Int) {
+            guard let drawn = takeBackTail() else { return }
+            let checkpoint = beginTail()
+            let box = markRaw(Array(pending[..<settled]))
+            laid = (checkpoint, settled, box, drawn)
+            dabsLaidAhead += settled
+        }
+
+        /// Puts back the stroke as it was before `laid` was laid ahead.
+        private func takeBack(_ laid: (checkpoint: Kind, settled: Int, box: PixelBox, drawn: PixelBox)) {
+            tail = (laid.checkpoint, laid.box)
+            _ = takeBackTail()
+            dabsTakenBackAhead += laid.settled
+        }
+
+        /// Waits for anything being laid ahead to finish.
+        func steady() {
+            guard laysAhead else { return }
+            ahead.sync {}
+        }
+
+        /// The marker handed to `ahead`. @unchecked Sendable: the main thread
+        /// touches the marker only after `steady`, which waits for `ahead` to
+        /// be idle, so the two never use it at once.
+        private struct Ahead: @unchecked Sendable {
+            let marker: LiveMarker
         }
 
         private func clipped(_ box: PixelBox) -> PixelBox {

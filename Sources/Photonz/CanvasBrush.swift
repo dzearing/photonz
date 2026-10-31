@@ -479,6 +479,9 @@ extension CanvasNSView {
         CATransaction.setDisableActions(true)
         live.overlay.refresh(touched, from: paint, in: viewport, space: canvasColorSpace)
         CATransaction.commit()
+        // The dabs the next move will settle go down in the gap before it, so
+        // that move lays only the stroke's new end.
+        paint.layAhead()
     }
 
     /// The picked paint layer a stroke will be added to, when there is one:
