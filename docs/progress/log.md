@@ -22277,3 +22277,9 @@ the ghost, and pinching in seemed to stop short.
 - The try path's oil landscape reads as a landscape 8/10 from both judges (was 4 to 5); looks painted 4/10 against a bar of 8, so the umbrella task stays open on that. Judge: `Scripts/ask-eval/paint-judge.mjs`.
 - Walks wait for paint still being simulated off the main thread (`PaintRasterCache.isPainting`): the try path had photographed a blank canvas.
 - Next: the oil stroke's own look (even combed ridges, square ends of short strokes) is what holds looks painted down. Held-out Ask eval stopped at 5 of 45 (two cases per seven minutes); resume line in the task log.
+
+## 2026-10-31 (brush epic, item 9 third pass: the oil stroke itself)
+
+- Changed: oil strokes now fray at both ends (bristles land and lift one by one), their sides wander, and their ridges clump and vary along the stroke instead of an even comb (`OilPaint.swift`); Ask's sketch painter works big areas with a smaller brush at livelier angles (`BrushSketch`). New bars `endFray` and `edgeWobble` in `OilRenderingTests`; pixel fingerprints taken again. Commit 232dde11.
+- Measured: two-judge looks painted 4/4 -> 4/5 on three of Ask's sketches and on the try path; reads as a landscape 8/8. The bar of 8 on looks painted is still not met; the task stays pending.
+- Next: the painting's surface as a whole (stroke vocabulary per region, thick and thin passages, canvas weave in thin paint), and unpick the layer before the walk photographs it.

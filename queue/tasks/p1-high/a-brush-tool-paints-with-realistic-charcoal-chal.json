@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 90,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-31T11:56:49.423Z",
+  "updated": "2026-10-31T13:07:04.901Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -182,6 +182,38 @@
     {
       "t": "2026-10-31T11:56:49.419Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T13:07:04.464Z",
+      "note": "Adversarial look (this pass): the previous pass's judges named the oil stroke itself (square ends, even combed ridges), which is also what a person paints with. Changed the stroke deliberately rather than as a side effect: bristles land and lift one by one so both ends fray, sides wander, ridges clump a twelfth of the brush wide and vary along the stroke. A Photoshop or Procreate oil brush's ends taper and break up the same way, so a person gains too. Risk: a person who wants a clean square end has no setting for it now; not filed (no one has asked)."
+    },
+    {
+      "t": "2026-10-31T13:07:04.526Z",
+      "note": "Shipped 232dde11: OilPaint.swift (fray, wobble, clumps, lighting read across 2 px, live overlay rewrites 2 px round a move); BrushSketch: big areas get a brush at most 0.09 of the canvas, strokes 2.5-5 widths, inner rows slanted to 0.2 rad, smear 16, run-off 1.3 widths, mostStrokes 900. New bars endFray >= 0.8 pt / edgeWobble >= 0.4 pt (before 0.07 / 0.09), BrushSketch test that a sky is worked with a hand-sized brush at lively angles (fails on the old code: widest 151, 1 of 17 slanted). Pixel fingerprints in BigBrush/PaintKeepsItsPixels taken again (every case lies over oil). Full Scripts/test.sh green."
+    },
+    {
+      "t": "2026-10-31T13:07:04.588Z",
+      "note": "Chose to change oil for every stroke, saved ones included (they repaint frayed on open), over keeping two oil engines, because the brush has been in Next a week and the epic is open."
+    },
+    {
+      "t": "2026-10-31T13:07:04.650Z",
+      "note": "Measured: three of Ask's eval sketches painted offline before/after, two judges: looks painted 4/4 -> 4/5 on all three, reads 7-8 unchanged. Try path walk (passes at Next defaults, 3 min) after: looks painted 4 and 5, reads 8 and 8. Pictures looked at: the before/after pair (square blocks gone, ends broken up), the oil sheet (frayed ends, uneven sides, carry and mixing intact), the try path painting (reads as a landscape, still plainly digital; two tree canopies are hollow outlines)."
+    },
+    {
+      "t": "2026-10-31T13:07:04.713Z",
+      "note": "NOT DONE, item 9's looks-painted half: 4 and 5 against a bar of 8. Judges now name a uniform digital stroke texture, wavy rows, stiff trees, the walk's selection handles in the crop, slivers of bare canvas at the left edge. Tried and measured: slower ridge noise along the stroke, deeper clumps, softer gloss; none moved a judge past 5. What is left is not one stroke property but the whole surface: every stroke in a painting shares one texture scale and one lighting, with no thick and thin passages, no canvas showing through. Next lever worth trying: per-region stroke vocabulary in BrushSketch (dabs vs sweeps vs scumbles), thick-thin variation across a painting, and a canvas weave in thin paint."
+    },
+    {
+      "t": "2026-10-31T13:07:04.775Z",
+      "note": "left rough: the try path walk photographs Ask's painting with the layer still picked, so the judges see its handles and score it down; the earlier measures had the same, so the numbers compare, but a fair final judgement wants the layer unpicked first. Below the bar as a task (it is this task's own measuring)."
+    },
+    {
+      "t": "2026-10-31T13:07:04.838Z",
+      "note": "left rough: hollow tree canopies (an outline of a triangle cut in with no fill strokes inside) in the try path painting; a BrushSketch fill/contour interaction on small shapes, seen once. Not filed: one sighting, belongs to this task's open item."
+    },
+    {
+      "t": "2026-10-31T13:07:04.900Z",
+      "note": "Oil strokes now fray and wander (232dde11); Ask's painting reads 8/8 as a landscape, looks painted 4/5 against a bar of 8: still open on item 9."
     }
   ],
   "started": "2026-10-31T11:56:49.418Z",

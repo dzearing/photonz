@@ -1,7 +1,7 @@
 {
   "feature": "The Brush: eight real media, their settings, and the agent painting with them",
   "epic": "image-paint",
-  "summary": "The whole Brush epic, walked end to end at Next defaults: press B, paint with pencil, charcoal, chalk, crayon, marker, airbrush, oil or watercolour, smudge, and ask the agent to paint. A blind test names seven of the eight media from their marks alone. Ask now sketches the picture first and paints the sketch stroke by stroke, so its landscape reads as a place (8 of 10 from both judges), though it still looks computer made (4 of 10).",
+  "summary": "The whole Brush epic, walked end to end at Next defaults: press B, paint with pencil, charcoal, chalk, crayon, marker, airbrush, oil or watercolour, smudge, and ask the agent to paint. A blind test names seven of the eight media from their marks alone. Ask sketches the picture and paints the sketch stroke by stroke; its landscape reads as a place (8 of 10 from both judges). Oil strokes now fray at their ends and wander at their sides, but the painting still looks computer made (4 and 5 of 10, against a bar of 8).",
   "setup": "Photonz Dev, release Next, no flag changed from its default, a laptop-sized window (1280 by 840). Walk: Scripts/playtest/brush-epic-try-path-walk.json. Numbers: 2026-10-31-brush-epic-measures.txt.",
   "switched": {},
   "try": [
@@ -18,20 +18,20 @@
       "shot": "2026-10-31-brush-epic-3-charcoal-smudged-sc.png"
     },
     {
-      "do": "Watch the reel of those four strokes being painted, each one growing under the pointer.",
-      "shot": "2026-10-31-brush-epic-reel-contact.png"
-    },
-    {
       "do": "Press V, then Command K, type: paint a small landscape with oil paint, and press Return.",
-      "shot": "2026-10-31-brush-epic-ask-sketch-try-path-sc.png"
+      "shot": "2026-10-31-brush-epic-ask-oil-fray-try-path-sc.png"
     },
     {
-      "do": "Compare Ask's painting before this pass with the one above.",
-      "shot": "2026-10-31-brush-epic-ask-before-canvas.png"
+      "do": "Compare one of Ask's sketches painted in oil before and after this pass's change to the oil stroke.",
+      "shot": "2026-10-31-brush-epic-oil-fray-before-after.png"
     },
     {
       "do": "Look at the blind sheet and name each row before opening its key.",
       "shot": "2026-10-31-brush-epic-blind-1.png"
+    },
+    {
+      "do": "Look at the oil sheet: every stroke's ends break up into bristles and its sides are uneven, where they were cut square and ruled.",
+      "shot": "2026-10-31-brush-epic-oil-fray-sheet.png"
     },
     {
       "do": "Look at a medium's settings sheet: each setting painted at its low end, its default and its high end.",
@@ -42,13 +42,15 @@
     "On the blind sheet, could you name all nine rows, and which pair did you hesitate over?",
     "Do the two watercolour washes look like watercolour on paper, darker where they cross?",
     "Do the charcoal smudges look like a finger dragged through charcoal?",
+    "Do the oil strokes on the sheet look like a real flat brush landing and lifting, and does the frayed end ever get in your way when you want a clean stroke?",
     "Does Ask's oil landscape now read as a painting of a place, with a tree, a path, a sun and hills, and is its own Paint layer the right place for it?",
     "With the Smudge setting on its own second line over the tool bar in this window size, is that acceptable or should a setting give way?"
   ],
   "rough": [
     "Blind test, three shuffled sheets, two model judges beside reference photos of each real medium: pencil, crayon, airbrush, oil and watercolour named 6 of 6 times, marker 5 of 6, and the plain round tip picked out as the plain one 5 of 6 (the weak version fails the bar). Charcoal and chalk were told apart only 3 of 6 times, so they read as one grainy stick at two strengths (charcoal-and-chalk-can-be-told-apart-at-a-glance).",
-    "Ask's painting, measured with Scripts/ask-eval/paint-judge.mjs (two judges, three looks each, prompt in 2026-10-31-brush-epic-measures.txt): on the try path it reads as a landscape 8 of 10 from both judges (it was 4 of 10 under the same prompt), which meets the bar of 7; it looks painted 4 of 10 from both (it was 3), against a bar of 8. This task stays open on looks painted (a-brush-tool-paints-with-realistic-charcoal-chal).",
-    "What the judges still name: the oil brush's even combed ridges on every stroke, the square ends of short strokes, and a few slivers of bare canvas. The first two are the oil engine's own look, the same for a person's strokes; the sketch painter varies load, smear, size and angle per stroke but cannot change them.",
+    "Ask's painting, measured with Scripts/ask-eval/paint-judge.mjs (two judges, three looks each, prompt in 2026-10-31-brush-epic-measures.txt): on the try path it reads as a landscape 8 of 10 from both judges, which meets the bar of 7; it looks painted 4 and 5 of 10 (4 and 4 before the oil change), against a bar of 8. This task stays open on looks painted (a-brush-tool-paints-with-realistic-charcoal-chal).",
+    "What the judges still name after the oil change: a uniform, repeated digital stroke texture, wavy rows, stiff or stamped-looking trees, the selection handles left on the canvas in the walk's picture, and a few slivers of bare canvas at the left edge. Square ends and stamped blocks are no longer named.",
+    "Oil's look changed for everyone, not only Ask: strokes a person already painted in oil repaint with frayed ends and wandering sides the next time the picture opens, since a painting is kept as its strokes. Chose that over keeping two oil engines side by side, because the brush has been in Next for a week and the epic is still open.",
     "The eval case paint-a-small-landscape-in-oil went from 48.1 (best before) to 82 to 84 across five runs, named a landscape 3 of 3 times blind every run.",
     "Ask's painting now lands on a Paint layer of its own above the person's strokes, so it can be hidden or deleted as one; it covers the person's watercolour and charcoal while shown.",
     "The Brush sits near the right end of the tool bar beside the bucket; the image mock draws it right after Crop (the-brush-sits-right-after-crop-on-a-picture-s-t).",
@@ -57,6 +59,7 @@
     "The pictures are real window captures. The reel is the canvas the app filmed during each stroke, not a screen recording, so it shows no pointer.",
     "Speed was measured by the slices, not again here: every brush keeps each move inside one 120 Hz frame (worst 7.4 ms) on a 12 megapixel picture (2026-10-31-brush-lag-measures.txt).",
     "No mock covers Ask's painting or the blind test; the settings and the tool options match the slices' audits.",
-    "A painting of several hundred strokes first shows on the canvas a second or two after Ask says it is done, while the paint is simulated off the main thread. Walks now wait for it; a person sees the canvas unchanged for that moment."
+    "A painting of several hundred strokes first shows on the canvas a second or two after Ask says it is done, while the paint is simulated off the main thread. Walks now wait for it; a person sees the canvas unchanged for that moment.",
+    "The reel was not filmed again: the strokes in it are watercolour and charcoal, which this pass did not change."
   ]
 }

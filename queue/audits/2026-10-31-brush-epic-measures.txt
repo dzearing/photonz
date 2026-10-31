@@ -36,3 +36,11 @@ Judge: node Scripts/ask-eval/paint-judge.mjs <picture> "a landscape". Judge A cl
 Try path (2026-10-31-brush-epic-ask-sketch-try-path-sc.png, canvas cropped): judge A looks painted 4, reads 8; judge B looks painted 4, reads 8. Reads bar (7) met; looks painted bar (8) not met.
 Eval climb case paint-a-small-landscape-in-oil: 48.1 best before; 70.3, 82, 84, 84, 83.2 across this pass's revisions, named a landscape 3 of 3 blind on every run. Two-judge on those: looks painted 3 to 4, reads 7 to 8.
 Judges' words on the last picture: "repeated stamped stroke textures, hard-edged daubs, white gaps", "uniform rippled brush texture and blocky stamped strokes".
+
+
+OIL STROKE CHANGE (third pass, 2026-10-31). The judges named the oil stroke itself (square ends, combed ridges), the same for a person's strokes, so the stroke changed: bristles land and lift one by one (both ends fray), the sides wander, the ridges come in clumps a twelfth of the brush wide and vary along the stroke, and big areas of a sketch get a smaller brush at livelier angles (docs/design/brushes.md, oil, "Never one block"). New bars in OilRenderingTests: endFray at least 0.8 pt (before 0.07, a short stroke 0.0; now passes), edgeWobble at least 0.4 pt (before 0.09; now passes); the round tip reads under both. Ridge contrast on the oil sheet 0.026 (bar 0.025), carried past a crossing 0.306.
+Same judge, same prompt, three of Ask's own sketches from the eval (runs 20261031-082519, -083836, -084956) painted offline before and after (PHOTONZ_SKETCH_DIR, BrushSketchSheet):
+  before: looks painted 4 and 4 on all three; reads 7 to 8.
+  after:  looks painted 4 and 5 on all three; reads 7 to 8.
+Try path after (2026-10-31-brush-epic-ask-oil-fray-try-path-sc.png, canvas cropped, selection handles in the crop as before): judge A looks painted 4, reads 8; judge B looks painted 5, reads 8. Reads bar met; looks painted bar (8) NOT met.
+Judges' words after: "repeated, evenly embossed digital strokes", "uniform digital stroke pattern", "stiff trees", "a stray cursor and arrow icon"; square ends and stamped blocks are no longer named.
