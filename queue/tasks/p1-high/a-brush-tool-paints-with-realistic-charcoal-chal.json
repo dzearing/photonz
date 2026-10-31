@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-31T10:19:38.184Z",
+  "updated": "2026-10-31T11:56:49.423Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -178,9 +178,13 @@
     {
       "t": "2026-10-31T10:19:38.183Z",
       "note": "Ask now paints from its own sketch (d4dc659e, d43e5d6a): try path landscape reads as a landscape 8/10 from both judges (bar 7, met) but looks painted 4/10 (bar 8, not met); eval case 48.1 -> 82-84. Left open on looks painted: the judges name the oil stroke's own even ridges and square ends. Audit and measures updated."
+    },
+    {
+      "t": "2026-10-31T11:56:49.419Z",
+      "note": "claimed by go loop"
     }
   ],
-  "started": "2026-10-31T06:57:56.159Z",
+  "started": "2026-10-31T11:56:49.418Z",
   "walks": [
     "brush-epic-try-path-walk"
   ]

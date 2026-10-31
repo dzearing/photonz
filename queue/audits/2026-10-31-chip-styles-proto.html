@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chip Styles</title>
+<style>
+  :root {
+    --ink: #ff375f;
+    --page: #f5f5f7;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --card: #ffffff;
+    --line: rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #161618; --text: #f5f5f7; --muted: #98989d; --card: #1f1f22; --line: rgba(255,255,255,.08);
+    }
+  }
+  :root[data-theme="dark"] { --page: #161618; --text: #f5f5f7; --muted: #98989d; --card: #1f1f22; --line: rgba(255,255,255,.08); }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--text);
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center;
+    padding: 14px 20px; background: color-mix(in srgb, var(--page) 85%, transparent);
+    backdrop-filter: blur(20px); border-bottom: 1px solid var(--line);
+  }
+  h1 { font-size: 15px; font-weight: 600; margin: 0 8px 0 0; }
+  .ctl { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--line); border-radius: 7px; padding: 2px; }
+  .seg button {
+    border: 0; background: transparent; color: var(--text); font: inherit; font-size: 12px;
+    padding: 4px 10px; border-radius: 5px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--card); box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .swatch[aria-pressed="true"] { border-color: var(--text); }
+
+  main {
+    display: grid; gap: 18px; padding: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .card figcaption { padding: 10px 14px 12px; }
+  .card b { font-size: 13px; font-weight: 600; }
+  .card p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+  .tag { font-size: 10px; font-weight: 600; letter-spacing: .02em; color: var(--ink); margin-left: 6px; }
+
+  /* ---------- The scene: a slice of a screenshot ---------- */
+  .scene { position: relative; height: 210px; overflow: hidden; }
+  .bg-light { background: #fbfbfd; }
+  .bg-dark  { background: #1e1e20; }
+  .bg-photo { background:
+      radial-gradient(120% 90% at 15% 20%, #f6c177 0%, transparent 55%),
+      radial-gradient(90% 90% at 85% 30%, #3a7bd5 0%, transparent 60%),
+      radial-gradient(80% 80% at 60% 95%, #1f8a70 0%, transparent 60%),
+      linear-gradient(135deg, #e86a5f, #2b2d42); }
+  .ui { position: absolute; left: 22px; top: 22px; width: 190px; }
+  .ui .bar { height: 10px; width: 120px; border-radius: 3px; margin-bottom: 10px; }
+  .ui .row { height: 8px; border-radius: 3px; margin-bottom: 7px; }
+  .ui .btn { width: 96px; height: 28px; border-radius: 7px; margin-top: 12px; }
+  .bg-light .bar { background: #d2d2d7; } .bg-light .row { background: #e8e8ed; } .bg-light .btn { background: #0071e3; }
+  .bg-dark .bar { background: #3a3a3c; }  .bg-dark .row { background: #2c2c2e; }  .bg-dark .btn { background: #0a84ff; }
+  .bg-photo .ui { display: none; }
+
+  svg.ink { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  svg.ink * { stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; }
+  svg.ink .head { fill: var(--ink); stroke: none; }
+  svg.ink .tick { stroke-width: 2; }
+
+  .chip {
+    position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+    font: 600 12px/1 -apple-system, "SF Pro Text", system-ui, sans-serif;
+    padding: 6px 9px; letter-spacing: -.005em;
+  }
+  .chip.num { font-variant-numeric: tabular-nums; }
+
+  /* 1. Today: dark plate in the ink, bright ink outline */
+  .s-today .chip { background: color-mix(in srgb, var(--ink) 35%, #111); color: #fff;
+    border: 2px solid var(--ink); border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+
+  /* 2. Solid ink pill (the classic redline) */
+  .s-solid .chip { background: var(--ink); color: #fff; border-radius: 999px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.08); }
+
+  /* 3. Flat squircle: continuous corners, no outline */
+  .s-squircle .chip { background: var(--ink); color: #fff; border-radius: 7px; padding: 6px 8px; }
+
+  /* 4. Hairline plate: white plate, ink hairline, ink text */
+  .s-hairline .chip { background: #fff; color: color-mix(in srgb, var(--ink) 80%, #000);
+    border: 1px solid var(--ink); border-radius: 5px; padding: 5px 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+  /* 5. Glass: translucent material, light inner border, soft shadow */
+  .s-glass .chip { color: #fff; border-radius: 9px; padding: 6px 10px;
+    background: color-mix(in srgb, var(--ink) 55%, rgba(20,20,22,.55));
+    backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.28), inset 0 1px 0 rgba(255,255,255,.35), 0 4px 14px rgba(0,0,0,.28);
+    text-shadow: 0 1px 1px rgba(0,0,0,.25); }
+
+  /* 6. Paper: light plate, dark text, ink accent stripe */
+  .s-paper .chip { background: #fffffd; color: #1d1d1f; border-radius: 6px; padding: 6px 9px 6px 12px;
+    box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.18);
+    background-image: linear-gradient(var(--ink), var(--ink)); background-repeat: no-repeat;
+    background-size: 3px calc(100% - 8px); background-position: 4px 50%; }
+
+  /* 7. Spec badge: graphite plate, ink dot, mono numerals (Figma Dev Mode / Xcode feel) */
+  .s-spec .chip { background: rgba(28,28,30,.92); color: #f5f5f7; border-radius: 5px; padding: 5px 8px 5px 18px;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-weight: 500; font-size: 11.5px;
+    box-shadow: 0 0 0 .5px rgba(255,255,255,.12) inset, 0 2px 6px rgba(0,0,0,.3); }
+  .s-spec .chip::before { content: ""; position: absolute; left: 7px; top: 50%; width: 6px; height: 6px;
+    margin-top: -3px; border-radius: 50%; background: var(--ink); }
+
+  /* 8. Callout tab: ink plate with a small pointer to what it labels */
+  .s-callout .chip { background: var(--ink); color: #fff; border-radius: 6px; padding: 6px 9px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .s-callout .chip::after { content: ""; position: absolute; left: 50%; bottom: -5px; margin-left: -5px;
+    border: 5px solid transparent; border-bottom: 0; border-top-color: var(--ink); }
+  .s-callout .chip.measure::after { display: none; }
+
+  /* ---------- Inspector prototype ---------- */
+  .proto { display: grid; grid-template-columns: 260px 1fr; gap: 18px; padding: 20px 20px 0; align-items: start; }
+  .insp { background: #2a2a2d; color: #f5f5f7; border-radius: 12px; padding: 12px 12px 6px;
+    border: 1px solid rgba(255,255,255,.08); font-size: 12px; }
+  .insp h3 { margin: 2px 2px 10px; font-size: 11px; letter-spacing: .06em; color: #98989d; font-weight: 600; }
+  .insp .r { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 12px; }
+  .insp .lab { color: #c7c7cc; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 2px 12px; }
+  .tiles button { height: 34px; border-radius: 7px; border: 1px solid rgba(255,255,255,.1); background: #1c1c1e;
+    display: grid; place-items: center; cursor: pointer; padding: 0; position: relative; }
+  .tiles button[aria-pressed="true"] { outline: 2px solid #0a84ff; outline-offset: 1px; }
+  .tiles .chip { position: static; transform: none; font-size: 9px; padding: 3px 5px; }
+  .tiles .s-spec .chip { padding-left: 11px; } .tiles .s-spec .chip::before { left: 4px; width: 4px; height: 4px; margin-top: -2px; }
+  .tiles .s-paper .chip { padding-left: 8px; background-position: 3px 50%; background-size: 2px calc(100% - 6px); }
+  .tiles .s-callout .chip::after { bottom: -3px; border-width: 3px; margin-left: -3px; }
+  .dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .dots button { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; padding: 0; cursor: pointer; }
+  .dots button[aria-pressed="true"] { border-color: #f5f5f7; }
+  .segm { display: inline-flex; background: #1c1c1e; border-radius: 6px; padding: 2px; }
+  .segm button { border: 0; background: transparent; color: #f5f5f7; font: inherit; font-size: 11px; padding: 3px 9px; border-radius: 4px; cursor: pointer; }
+  .segm button[aria-pressed="true"] { background: #48484a; }
+  details { border-top: 1px solid rgba(255,255,255,.08); margin: 4px -12px 0; padding: 8px 14px 4px; }
+  summary { cursor: pointer; color: #c7c7cc; margin-bottom: 10px; list-style: none; display: flex; justify-content: space-between; }
+  summary::after { content: "Show"; color: #0a84ff; }
+  details[open] summary::after { content: "Hide"; }
+  .well { width: 34px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,.2); }
+  .auto { color: #98989d; font-size: 11px; margin-right: 6px; }
+  .slider { width: 110px; accent-color: #0a84ff; }
+  .stage { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .stage .scene { width: 340px; height: 210px; zoom: 1.45; margin: 0 auto; }
+  .stage { background: #fbfbfd; }
+  .stage figcaption { background: var(--card); }
+  .stage figcaption { padding: 10px 14px 12px; color: var(--muted); font-size: 12px; }
+  .sectionhead { padding: 22px 20px 0; font-size: 13px; font-weight: 600; }
+  @media (max-width: 700px) { .proto { grid-template-columns: 1fr; padding: 16px 16px 0; } }
+
+  footer { padding: 4px 20px 28px; color: var(--muted); font-size: 12px; max-width: 900px; }
+  @media (max-width: 420px) { main { padding: 16px; grid-template-columns: 1fr; } header { padding: 12px 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Chip styles</h1>
+  <div class="ctl">Background
+    <div class="seg" id="bg">
+      <button data-v="bg-light" aria-pressed="true">Light UI</button>
+      <button data-v="bg-dark" aria-pressed="false">Dark UI</button>
+      <button data-v="bg-photo" aria-pressed="false">Photo</button>
+    </div>
+  </div>
+  <div class="ctl">Ink
+    <button class="swatch" style="background:#ff375f" data-ink="#ff375f" aria-pressed="true" aria-label="Red"></button>
+    <button class="swatch" style="background:#0a84ff" data-ink="#0a84ff" aria-pressed="false" aria-label="Blue"></button>
+    <button class="swatch" style="background:#bf5af2" data-ink="#bf5af2" aria-pressed="false" aria-label="Purple"></button>
+    <button class="swatch" style="background:#ff9f0a" data-ink="#ff9f0a" aria-pressed="false" aria-label="Orange"></button>
+    <button class="swatch" style="background:#30d158" data-ink="#30d158" aria-pressed="false" aria-label="Green"></button>
+  </div>
+</header>
+
+<div class="sectionhead">A simpler Appearance: one colour, a style, a size. The rest under Advanced.</div>
+<section class="proto">
+  <div class="insp" aria-label="Appearance inspector prototype">
+    <h3>APPEARANCE</h3>
+    <div class="tiles" id="ptiles"></div>
+    <div class="r"><span class="lab">Color</span>
+      <div class="dots" id="pdots"></div>
+    </div>
+    <div class="r"><span class="lab">Size</span>
+      <div class="segm" id="psize"><button data-s="10.5">S</button><button data-s="12" aria-pressed="true">M</button><button data-s="14">L</button></div>
+    </div>
+    <details>
+      <summary>Advanced</summary>
+      <div class="r"><span class="lab">Line</span><span><span class="auto">from Color</span><span class="well" data-part="line"></span></span></div>
+      <div class="r"><span class="lab">Head</span><span><span class="auto">from Color</span><span class="well" data-part="line"></span></span></div>
+      <div class="r"><span class="lab">Chip Fill</span><span><span class="auto">from style</span><span class="well" data-part="fill"></span></span></div>
+      <div class="r"><span class="lab">Chip Edge</span><span><span class="auto">from style</span><span class="well" data-part="edge"></span></span></div>
+      <div class="r"><span class="lab">Chip Text</span><span><span class="auto">from style</span><span class="well" data-part="text"></span></span></div>
+      <div class="r"><span class="lab">Thickness</span><input class="slider" type="range" min="1" max="4" value="2" id="pthick"></div>
+      <div class="r"><span class="lab">Head Size</span><input class="slider" type="range" min="1" max="3" value="2"></div>
+      <div class="r"><span class="lab">Ending</span><div class="segm"><button aria-pressed="true">Arrow</button><button>Dot</button><button>None</button></div></div>
+    </details>
+  </div>
+  <figure class="stage s-paper" id="pstage" style="margin:0"></figure>
+</section>
+
+<div class="sectionhead">Every style, side by side</div>
+<main id="grid"></main>
+
+<footer>Each card shows the same slice of a screenshot: a measurement across the top and an arrow with a caption pointing at a button. Switch the background and the ink colour to see how each style holds up. Pick by number, or mix (for example, the shape of 3 with the plate of 6).</footer>
+
+<template id="scene">
+  <div class="scene bg-light">
+    <div class="ui"><div class="bar"></div><div class="row" style="width:180px"></div><div class="row" style="width:150px"></div><div class="row" style="width:165px"></div><div class="btn"></div></div>
+    <svg class="ink" viewBox="0 0 340 210" preserveAspectRatio="none">
+      <line x1="22" y1="14" x2="212" y2="14"/>
+      <line class="tick" x1="22" y1="8" x2="22" y2="20"/>
+      <line class="tick" x1="212" y1="8" x2="212" y2="20"/>
+      <path d="M 196 166 C 176 152, 156 140, 130 129"/>
+      <path class="head" d="M 120 125 L 133 122 L 129 134 Z"/>
+    </svg>
+    <span class="chip num measure" style="left:117px; top:14px">190 px</span>
+    <span class="chip caption" style="left:262px; top:172px">Not aligned with text</span>
+  </div>
+</template>
+
+<script>
+  const styles = [
+    ["s-today", "1. Today", "Dark plate in the ink, bright ink outline. What ships now.", "current"],
+    ["s-solid", "2. Solid pill", "Ink fill, white text, no outline. The classic redline look."],
+    ["s-squircle", "3. Flat squircle", "Ink fill with continuous corners, tighter. Reads as a tag, not a bubble."],
+    ["s-hairline", "4. Hairline plate", "White plate, ink hairline and ink text. Quiet; best on dark pictures."],
+    ["s-glass", "5. Glass", "Translucent ink over the picture, light inner edge, soft shadow. Liquid Glass feel."],
+    ["s-paper", "6. Paper", "Light plate, dark text, a thin ink stripe. Reads on anything."],
+    ["s-spec", "7. Spec badge", "Graphite plate, ink dot, monospaced numbers. Developer handoff feel."],
+    ["s-callout", "8. Callout tab", "Ink plate whose caption points at what it labels."],
+  ];
+  const grid = document.getElementById("grid");
+  const tpl = document.getElementById("scene");
+  for (const [cls, name, blurb, tag] of styles) {
+    const fig = document.createElement("figure");
+    fig.className = "card " + cls;
+    fig.style.margin = "0";
+    fig.appendChild(tpl.content.cloneNode(true));
+    const cap = document.createElement("figcaption");
+    cap.innerHTML = `<b>${name}</b>${tag ? `<span class="tag">${tag.toUpperCase()}</span>` : ""}<p>${blurb}</p>`;
+    fig.appendChild(cap);
+    grid.appendChild(fig);
+  }
+  // ---------- Inspector prototype ----------
+  const stage = document.getElementById("pstage");
+  stage.appendChild(tpl.content.cloneNode(true));
+  const scap = document.createElement("figcaption");
+  stage.appendChild(scap);
+  const ptiles = document.getElementById("ptiles");
+  const setStageStyle = (cls, name) => {
+    stage.className = "stage " + cls;
+    scap.textContent = name + ". Pick a colour: the line, head and chip all follow it, each the way this style uses it.";
+    ptiles.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.cls === cls));
+    paintWells();
+  };
+  for (const [cls, name] of styles) {
+    const b = document.createElement("button");
+    b.dataset.cls = cls; b.title = name; b.className = cls;
+    b.innerHTML = `<span class="chip">48</span>`;
+    b.addEventListener("click", () => setStageStyle(cls, name));
+    ptiles.appendChild(b);
+  }
+  const inks = ["#ff375f", "#ff9f0a", "#ffd60a", "#30d158", "#0a84ff", "#bf5af2", "#1d1d1f", "#ffffff"];
+  const pdots = document.getElementById("pdots");
+  for (const c of inks) {
+    const b = document.createElement("button");
+    b.style.background = c; b.dataset.ink = c; b.setAttribute("aria-label", c);
+    b.setAttribute("aria-pressed", c === "#ff375f");
+    b.addEventListener("click", () => {
+      pdots.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+      stage.style.setProperty("--ink", c);
+      paintWells();
+    });
+    pdots.appendChild(b);
+  }
+  function paintWells() {
+    const chip = stage.querySelector(".chip.caption");
+    const cs = getComputedStyle(chip);
+    const ink = getComputedStyle(stage).getPropertyValue("--ink").trim() || getComputedStyle(document.documentElement).getPropertyValue("--ink");
+    const parts = { line: ink, fill: cs.backgroundColor, edge: cs.borderTopColor && cs.borderTopWidth !== "0px" ? cs.borderTopColor : "transparent", text: cs.color };
+    document.querySelectorAll(".well").forEach(w => { w.style.background = parts[w.dataset.part]; });
+  }
+  document.querySelectorAll("#psize button").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("#psize button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    stage.querySelectorAll(".chip").forEach(c => c.style.fontSize = b.dataset.s + "px");
+  }));
+  document.getElementById("pthick").addEventListener("input", e => {
+    stage.querySelectorAll("svg.ink *").forEach(n => n.style.strokeWidth = e.target.value);
+  });
+  setStageStyle("s-paper", "6. Paper");
+
+  document.querySelectorAll("#bg button").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("#bg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    document.querySelectorAll(".scene").forEach(s => { s.className = "scene " + b.dataset.v; });
+  }));
+  document.querySelectorAll(".swatch").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed", x === b));
+    document.documentElement.style.setProperty("--ink", b.dataset.ink);
+  }));
+</script>
+</body>
+</html>
