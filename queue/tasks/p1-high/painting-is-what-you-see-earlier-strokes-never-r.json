@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T16:37:16.370Z",
-  "updated": "2026-10-31T00:01:54.607Z",
+  "updated": "2026-10-31T00:02:01.351Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'when I draw, it seems like all of the previous strokes are recomputed because they change and then swap into this higher resolution. Seems quite awkward and inefficient at the same time. Ideally wysiwyg, and there is not flickering or repainting. but also it needs to be extremely efficient and fast, drawing can't work without immediate responsiveness'. Not reproduced in the intake window; read from code only: DocumentRenderer.raster(for:size:variant:rasterize:) (Sources/PhotonzRender/DocumentRenderer.swift:339) caches a paint layer's bitmap keyed by its WHOLE content, so one new stroke misses the cache and PaintRasterizer re-paints every stroke (the 2026-10-25 smudge sample, queue/audits/2026-10-25-smudge-freeze-sample.txt, caught exactly that). At zoom above 1, EditorState.refreshCrispTile (Sources/Photonz/EditorState.swift:5592) drops the crisp tile on a change and builds a new one later, which would be the swap to a sharper copy. This is likely the shared root of every-brush-follows-the-pointer-with-no-lag-even and smudging-after-a-few-paint-strokes-never-freezes: whichever runs first writes what it changed into the others' logs, and none of them undoes another.",
@@ -223,10 +223,15 @@
     {
       "t": "2026-10-31T00:01:54.606Z",
       "note": "Card answered: keep the thinned end, accept the cost (option a). Item 3 rewritten to that answer: one 120 Hz frame at 20 and 150 pt. Re-measured at close on main ed154b11 (8bc940fb code), same two walks: 12 MP every medium 0.4-2.2 ms p95 at 20/150 pt, 1.9-5.3 at 500; screenshot 0.5-2.9 at 20/150, 3.1-8.3 at 500. Screenshot now beats the before column at 150 and 500 pt; 12 MP 150 pt still 0.3-0.8 ms over it (the accepted cost). painting-holds-still-walk green (0 frames change outside the stroke at 50/100/200%, release 18.1% / 0.15% / 3.99% of reach, the stated tolerance); Paint keeps its pixels, big brush pixels, raster cache, landing perf tests pass. Looked at the after strip and today's 200% capture: earlier strokes unchanged, new wash lands as held."
+    },
+    {
+      "t": "2026-10-31T00:02:01.349Z",
+      "note": "WYSIWYG painting (b44c1d8b, 98e7767a, 6eed4155, d233562c, with 8bc940fb): the stroke under the hand lands unchanged, no earlier stroke redraws at any zoom, live thinned end, landing/undo on 300 strokes held by a perf test. Item 3 judged per the user's 2026-10-30 answer (keep the thinned end): every medium at 20 and 150 pt is under 3 ms p95 on 12 MP and screenshot canvases, re-measured at close; painting-holds-still-walk and the paint pixel/perf tests green. Audit queue/audits/2026-10-27-painting-is-what-you-see.json, tables in 2026-10-30-paint-move-cost.txt"
     }
   ],
   "started": "2026-10-30T23:56:15.899Z",
   "walks": [
     "painting-holds-still-walk"
-  ]
+  ],
+  "completed": "2026-10-31T00:02:01.350Z"
 }
