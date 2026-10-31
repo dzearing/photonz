@@ -61,7 +61,10 @@ struct PaintKeepsItsPixelsTests {
 
     @Test func aLayerOfEveryMediumPaintsTheSamePixelsAsBefore() throws {
         // At 2x the same layer was the same too (0xb692_1fd8_cc45_808b);
-        // only 1x is held here, to keep the suite quick.
-        #expect(try fingerprint(scale: 1) == 0xb789_2ba3_6735_a574)
+        // only 1x is held here, to keep the suite quick. Taken again on
+        // 2026-10-31, when oil's look was changed on purpose (its ends fray,
+        // its sides wander, its ridges clump).
+        let print = try fingerprint(scale: 1)
+        #expect(print == 0x6279_2497_4301_4321, "0x\(String(print, radix: 16))")
     }
 }

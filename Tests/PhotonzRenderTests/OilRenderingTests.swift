@@ -77,6 +77,26 @@ struct OilRenderingTests {
         #expect(flat < PaintMeasures.oilRidgeBar, "round tip \(flat)")
     }
 
+    @Test("Measured bar: a stroke's ends fray and its sides wander, as bristles do; a square-cut stamp fails")
+    func endsFrayAndSidesWander() throws {
+        let stroke = oil(a, b)
+        let image = try render([stroke])
+        // A short dab of a stroke too, which never runs dry before it lifts.
+        let near = CGPoint(x: 90, y: 40)
+        let short = PaintMeasures.endFray(try render([oil(CGPoint(x: 30, y: 40), near)]),
+                                          from: CGPoint(x: 30, y: 40), to: near, diameter: 24, scale: scale)
+        #expect(short >= PaintMeasures.oilEndFrayBar, "short stroke end fray \(short)")
+        let fray = PaintMeasures.endFray(image, from: a, to: b, diameter: 24, scale: scale)
+        let wobble = PaintMeasures.edgeWobble(image, from: a, to: b, diameter: 24, scale: scale)
+        #expect(fray >= PaintMeasures.oilEndFrayBar, "end fray \(fray)")
+        #expect(wobble >= PaintMeasures.oilEdgeWobbleBar, "edge wobble \(wobble)")
+        let flat = try round([stroke])
+        let flatFray = PaintMeasures.endFray(flat, from: a, to: b, diameter: 24, scale: scale)
+        let flatWobble = PaintMeasures.edgeWobble(flat, from: a, to: b, diameter: 24, scale: scale)
+        #expect(flatFray < PaintMeasures.oilEndFrayBar, "round tip end fray \(flatFray)")
+        #expect(flatWobble < PaintMeasures.oilEdgeWobbleBar, "round tip edge wobble \(flatWobble)")
+    }
+
     @Test("The streaks run along the stroke: averaged over four widths they are still there")
     func streaksRunAlong() throws {
         let image = try render([oil(a, b)])

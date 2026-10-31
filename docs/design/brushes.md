@@ -238,8 +238,16 @@ How a sketch is painted, all general, nothing about any subject:
   per-stroke varied smear so a shape keeps its colour over what is under it,
   watercolour drier washes over the first and no edge pass.
 
-At most `BrushSketch.mostStrokes` (640) strokes: a busier sketch is painted
-with bigger brushes. `PHOTONZ_SKETCH_DIR=<dir> Scripts/test.sh --filter
+A big area (a fifth of the canvas or more) is worked with a brush at most
+0.09 of the canvas's long side, in strokes 2.5 to 5 brush widths long, its
+inner rows slanted up to 0.2 rad either way (the rows along its top and bottom
+stay level so no corner is bare), and a little more smear (16) so its shades
+blend; a stroke that runs off the canvas runs 1.3 brush widths past, so its
+frayed end lifts off outside (2026-10-31: a seventh of the canvas wide, laid
+level, combed a sky like brushed metal).
+
+At most `BrushSketch.mostStrokes` (900, from 640 when big areas took smaller
+brushes) strokes: a busier sketch is painted with bigger brushes. `PHOTONZ_SKETCH_DIR=<dir> Scripts/test.sh --filter
 BrushSketchSheet` paints every SVG in a folder without the app.
 
 ## What slice 1 settled (2026-10-24)
@@ -509,6 +517,26 @@ BrushSketchSheet` paints every SVG in a folder without the app.
   of a red stroke's colour in a blue one over the two brush widths after it
   leaves the red, at least 0.1: oil 0.33 at the default, 0.015 at Smear 0,
   0.65 at 100; the plain round 0.001.
+- **Never one block (2026-10-31).** Two model judges called Ask's oil
+  paintings "stamped", "square cut" and "repeating ridged texture", and the
+  same strokes a person paints had the same look. Now: each bristle has its
+  own `leave` (0.7 to 1.1, the outer two lower), and a dab's lift off the
+  canvas, read from a mouse taper's lighter ends (`1 - weight` over half the
+  taper depth) or a pen's press falling under 0.2, drops each bristle out past
+  its own, so both ends fray (a click counts as pressed down). The sides
+  wander up to a fifth of the radius on value noise along the stroke. Bristles
+  gather in clumps of a twelfth of the brush, so a wide brush leaves a dozen
+  broad ridges, not a comb of a hundred; each clump's height changes slowly
+  along the stroke and thins as the brush empties; the per-bristle groove
+  and side rim are lower; the colour on a bristle is a few per cent warmer or
+  cooler in clumps. The slope the light reads spans two pixels either side
+  (one beaded every ridge with bright dots), so the live overlay rewrites two
+  pixels round what a move touched. Bars: `endFray` (roughness of where lines
+  across the middle 55 per cent start and end, against a local straight
+  line, the lesser end) at least 0.8 pt, `edgeWobble` at least 0.4 pt; before
+  0.07 and 0.09, the round tip under both. Two-judge "looks painted" on three
+  of Ask's sketches went from 4 and 4 to 4 and 5
+  (`queue/audits/2026-10-31-brush-epic-measures.txt`).
 - **Known limit, not oil's own:** the renderer bakes a paint layer at most 16
   MP, and a paint layer is the whole canvas, so on a 12 MP canvas a landed
   stroke is about 1.15 pixels a point. Zoomed in past about 140% the bristles

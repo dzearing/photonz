@@ -13,6 +13,9 @@ import PhotonzCore
 /// way it lands and the way the hand sees it while drawing (its thinned end
 /// laid again on every move), were painted by the code before that change and
 /// after it, byte for byte the same. The numbers are their fingerprints.
+/// On 2026-10-31 oil's look was changed on purpose (its ends fray, its sides
+/// wander, its ridges clump; `docs/design/brushes.md`), and every layer here
+/// lies over an oil stroke, so every print was taken again then.
 @Suite("A big brush keeps its pixels")
 struct BigBrushKeepsItsPixelsTests {
     private let size = CGSize(width: 420, height: 240)
@@ -85,14 +88,14 @@ struct BigBrushKeepsItsPixelsTests {
     static let media: [BrushMedium] = [.pencil, .charcoal, .chalk, .crayon, .marker, .airbrush, .oil, .watercolour]
 
     static let landedPrints: [BrushMedium: UInt64] = [
-        .pencil: 0x87b1_7584_cdab_9d0b, .charcoal: 0x27c7_fd08_f4e5_6f79, .chalk: 0xf627_938e_02e7_8d2f,
-        .crayon: 0x1c18_85fc_8bfb_f044, .marker: 0xed9f_3b18_a81a_88a6, .airbrush: 0x1019_3239_7544_29f4,
-        .oil: 0x7f9f_6dc9_31d3_66b5, .watercolour: 0x9e62_ebdb_a69c_a312,
+        .pencil: 0x13d3_9ad4_0853_a09e, .charcoal: 0x8ebf_373c_ca58_d0ff, .chalk: 0x4704_1ff7_22b5_d807,
+        .crayon: 0xf64f_10e3_269f_4888, .marker: 0x6012_1546_e5ac_ada1, .airbrush: 0xc2ae_3aed_2362_69df,
+        .oil: 0xfcd2_49cd_f118_a94e, .watercolour: 0x37bb_1b58_68f2_fcad,
     ]
     static let livePrints: [BrushMedium: UInt64] = [
         .pencil: 0x4e5a_c511_0cb9_af7c, .charcoal: 0x77b8_af8d_f60e_b155, .chalk: 0xda57_317d_0843_d73c,
-        .crayon: 0x806b_af2a_fee6_1b3e, .marker: 0xfa21_2d56_a9ef_5a7e, .airbrush: 0x6657_a342_c448_8c58,
-        .oil: 0xf116_ca85_9e65_65e0, .watercolour: 0x2681_c5a8_fd9a_1c3d,
+        .crayon: 0x806b_af2a_fee6_1b3e, .marker: 0x8edd_9f95_6b04_f921, .airbrush: 0x6657_a342_c448_8c58,
+        .oil: 0x69b4_3e5d_9a52_9bd6, .watercolour: 0xb9cb_f962_7c65_2d1e,
     ]
 
     @Test(arguments: media)

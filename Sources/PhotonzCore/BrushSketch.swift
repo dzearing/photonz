@@ -21,7 +21,7 @@ public enum BrushSketch {
 
     /// The most strokes one sketch is painted in: enough for a scene with a
     /// few dozen things in it, few enough that the painting lands quickly.
-    public static let mostStrokes = 640
+    public static let mostStrokes = 900
 
     public struct Stroke: Hashable, Sendable {
         /// Where the brush goes, in canvas points.
@@ -320,7 +320,10 @@ public enum BrushSketch {
         let across = vHigh - vLow
         let longest = max(canvas.width, canvas.height)
         let widest = longest / 10, narrowest = max(3, longest / 160)
-        var size = min(max(across / 2.6, narrowest) * sizeScale, widest * 1.4)
+        // A big area is worked with a brush a painter would hold, not a broom:
+        // a brush a seventh of the canvas wide combed it like brushed metal
+        // (2026-10-31).
+        var size = min(max(across / 2.6, narrowest) * sizeScale, widest * (large ? 0.9 : 1.4))
         // A wash bleeds well past where the brush went (`BrushMedium.reach`).
         if medium == .watercolour { size *= 0.75 }
         size = min(size, BrushSize.range.upperBound)
@@ -362,13 +365,14 @@ public enum BrushSketch {
                     // its thin end falls outside. Anywhere else it runs to
                     // the shape's edge, its end tapering there.
                     let start = fromUV(CGPoint(x: u0, y: v)), end = fromUV(CGPoint(x: u1, y: v))
-                    if atEdge(start, canvas, slack: size * 0.3) { from -= size * 0.8 }
-                    if atEdge(end, canvas, slack: size * 0.3) { to += size * 0.8 }
+                    // Far enough that its frayed end lifts off past the edge too.
+                    if atEdge(start, canvas, slack: size * 0.3) { from -= size * 1.3 }
+                    if atEdge(end, canvas, slack: size * 0.3) { to += size * 1.3 }
                     let length = to - from
                     // A span shorter than the brush is wide would be a blob
                     // (over a peak, say): the edge pass paints it.
                     guard length >= size * 0.5 || rows.count == 1 else { continue }
-                    let target = size * CGFloat(random.between(3.5, 6.5))
+                    let target = size * CGFloat(large ? random.between(2.5, 5) : random.between(3.5, 6.5))
                     let pieces = max(1, Int((length / target).rounded()))
                     var cuts = (0...pieces).map { from + length * CGFloat($0) / CGFloat(pieces) }
                     for index in cuts.indices.dropFirst().dropLast() {
@@ -383,7 +387,13 @@ public enum BrushSketch {
                         let own = spine ? size : size * CGFloat(random.between(0.85, 1.15))
                         let middle = (pa + pb) / 2
                         // A slant, its ends never more than a quarter brush off the row.
-                        let tilt = CGFloat(random.between(-1, 1)) * min(0.09, size * 0.25 / max((pb - pa) / 2, 1))
+                        // Over a big area the strokes cross at livelier angles, as a hand
+                        // working a sky does.
+                        // The rows along its top and bottom stay level, so
+                        // no corner of canvas is left bare.
+                        let lively = large && v - vLow > size * 1.2 && vHigh - v > size * 1.2
+                        let tilt = CGFloat(random.between(-1, 1))
+                            * min(lively ? 0.2 : 0.09, size * (lively ? 0.6 : 0.25) / max((pb - pa) / 2, 1))
                         let rowV = v + size * CGFloat(random.between(-0.06, 0.06))
                         let points = (0..<count).map { step -> CGPoint in
                             let t = CGFloat(step) / CGFloat(count - 1)
@@ -571,7 +581,7 @@ public enum BrushSketch {
     static func mediumSettings(_ medium: BrushMedium, large: Bool, small: Bool) -> [String: Double] {
         switch medium {
         case .oil:
-            if large { return ["load": 95, "smear": 8] }
+            if large { return ["load": 95, "smear": 16] }
             return small ? ["load": 100, "smear": 3] : ["load": 100, "smear": 5]
         case .watercolour:
             if large { return ["wetness": 50, "bleed": 25] }

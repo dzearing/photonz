@@ -54,6 +54,16 @@ struct BrushSketchTests {
         #expect(strokes.count >= 12)
     }
 
+    @Test("A big area is worked with a hand-held brush at lively angles, not a broom laid level")
+    func bigAreasAreWorkedByHand() throws {
+        let sky = try Self.paint(##"<rect x="0" y="0" width="960" height="640" fill="#7FA6D6"/>"##)
+        // A seventh of the canvas wide combed a sky like brushed metal (2026-10-31).
+        #expect(sky.allSatisfy { $0.size <= 960 / 9 }, "widest \(sky.map(\.size).max() ?? 0)")
+        let rows = sky.filter { $0.size > 40 }
+        let slanted = rows.filter { min(Self.direction($0), .pi - Self.direction($0)) > 0.1 }
+        #expect(Double(slanted.count) >= Double(rows.count) * 0.25, "\(slanted.count) of \(rows.count) slanted")
+    }
+
     @Test("A wide band is painted with long level strokes, a tall trunk with upright ones")
     func strokesRunTheWayTheShapeRuns() throws {
         let band = try Self.paint(##"<rect x="0" y="400" width="960" height="120" fill="#5C8A4A"/>"##)

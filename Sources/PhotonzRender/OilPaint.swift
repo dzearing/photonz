@@ -19,6 +19,13 @@ import PhotonzCore
 //   thinner between them, piled into a rim at the stroke's sides where the
 //   brush pushed it. The height is lit from the upper left when the stroke is
 //   laid down, so ridges catch the light and grooves fall into shade.
+// - A real brush is never one block (2026-10-31): its bristles touch down and
+//   lift off one by one, so both ends of a stroke fray; its sides wander as
+//   the outer bristles splay and gather; and the paint stands thicker in some
+//   clumps of bristles than others, varying along the stroke and thinning as
+//   the brush empties, rather than a comb of even grooves. Before that, a
+//   short stroke read as a stamped rectangle of corduroy (the brush epic's
+//   two-judge bar, `queue/audits/2026-10-31-brush-epic-measures.txt`).
 //
 // Paint is only ever laid over what is there, never scraped off, so the live
 // overlay (which lies over the canvas) shows exactly what lands. Shared by the
@@ -43,6 +50,15 @@ struct OilStroke {
     let carry: CGFloat
     /// How thick the paint stands, in points: a fuller brush lays it thicker.
     let thickness: Float
+    /// The brush's Size in points: how far the sides wander and the ridges
+    /// change along the stroke is read against it.
+    let size: CGFloat
+    /// How far a mouse stroke's weight drops at its very ends (half its taper
+    /// depth): what a dab's lift off the canvas is read from.
+    let liftWeight: Float
+    /// What the sides' wander and the ridges' change along the stroke are
+    /// drawn from.
+    let salt: UInt32
     private var bristles: [Bristle]
     /// Where each bristle's band ends across the brush, 0...1, left to right:
     /// bristles are not all as thick, so the streaks are uneven.
@@ -74,9 +90,16 @@ struct OilStroke {
         let endurance: Float
         /// How proud its ridge stands.
         let lift: Float
-        /// A touch lighter or darker than the rest: the paint on a brush is
-        /// never quite one even colour.
-        let tint: Float
+        /// A touch lighter or darker than the rest, and a touch warmer or
+        /// cooler: the paint on a brush is never quite one even colour.
+        let tint: (Float, Float, Float)
+        /// How far the brush can lift, 0...1 and a little past, before this
+        /// bristle leaves the canvas: they lift and land one by one, so the
+        /// ends of a stroke fray rather than cut square.
+        let leave: Float
+        /// Which stretch of the ridge noise along the stroke it follows,
+        /// shared by a clump of neighbours.
+        let lane: Float
     }
 
     /// How a flat brush's footprint is shaped: it reaches along the stroke,
@@ -104,22 +127,40 @@ struct OilStroke {
         reach = size * CGFloat(Self.reach(load: settings.value("load")))
         carry = size * (0.6 + 3.4 * CGFloat(smear))
         thickness = 0.35 + 0.65 * load
+        self.size = size
+        liftWeight = Float(max(0.02, BrushDynamics.response(for: .oil).taperDepth / 2))
+        salt = seed ^ 0x0A1C_5EED
         // A bristle about every point across, never fewer than five.
         let count = min(160, max(5, Int((size / 1.1).rounded())))
         var scatter = Scatter(seed: seed ^ 0x0115)
         // Bristles clump: neighbours share part of their lift and press, so
         // the ridges come in bands of a few bristles, not a regular comb.
         var clump: Float = scatter.unit()
+        var lane: Float = scatter.unit() * 50
+        var hue = (scatter.unit(), scatter.unit())
+        // A wide brush's bristles gather in wider clumps: a dozen or so
+        // ridges across it, never a comb of a hundred even ones.
+        let gathered = max(3, count / 12), lanes = max(4, count / 9)
         bristles = (0..<count).map { k in
-            if k % 3 == 0 { clump = 0.5 * clump + 0.5 * scatter.unit() }
+            if k % gathered == 0 { clump = 0.2 * clump + 0.8 * scatter.unit() }
+            if k % lanes == 0 {
+                lane = scatter.unit() * 50
+                hue = (0.5 * hue.0 + 0.5 * scatter.unit(), 0.5 * hue.1 + 0.5 * scatter.unit())
+            }
             let edge = Float(min(k, count - 1 - k))
             // The outermost bristles splay and carry less.
             let outer: Float = edge < 1 ? 0.7 : edge < 2 ? 0.88 : 1
+            let light = 0.93 + 0.14 * (0.5 * clump + 0.5 * scatter.unit())
+            // Warmer or cooler by a few per cent, in clumps: red against blue.
+            let warm = 0.025 * (hue.0 - 0.5), green = 0.02 * (hue.1 - 0.5)
             return Bristle(r: Float(colour.r), g: Float(colour.g), b: Float(colour.b), paint: 1,
                            press: (0.7 + 0.15 * clump + 0.15 * scatter.unit()) * outer,
                            endurance: 0.55 + 0.9 * scatter.unit(),
-                           lift: 0.2 + 0.8 * (0.6 * clump + 0.4 * scatter.unit()),
-                           tint: 0.95 + 0.1 * scatter.unit())
+                           lift: 0.02 + 0.98 * (0.8 * clump + 0.2 * scatter.unit()),
+                           tint: (light * (1 + warm), light * (1 + green), light * (1 - warm)),
+                           // The outer bristles leave first, a few inner ones last.
+                           leave: (0.7 + 0.42 * scatter.unit()) - (edge < 2 ? 0.12 : 0),
+                           lane: lane)
         }
         let widths = (0..<count).map { _ in 0.35 + 1.3 * scatter.unit() }
         let total = widths.reduce(0, +)
@@ -170,9 +211,12 @@ struct OilStroke {
     /// The first dab, if the brush never moved from it (a click): laid
     /// heading along, as a dab would be.
     mutating func finish(under: PixelPlane?) -> PixelBox {
-        guard let held = first else { return .empty }
+        guard var held = first else { return .empty }
         first = nil
-        // Pressed down, a brush leaves its whole print, not one pass of it.
+        // Pressed down, a brush leaves its whole print, not one pass of it,
+        // with every bristle on the canvas: no taper lifts a click.
+        held.weight = max(held.weight, 1)
+        held.pressure = max(held.pressure, 0.2)
         var touched = PixelBox.empty
         for _ in 0..<4 { touched = touched.union(lay(held, under: under)) }
         return touched
@@ -190,7 +234,7 @@ struct OilStroke {
         for field in [\OilStroke.red, \.green, \.blue, \.cover, \.height] { self[keyPath: field].ensure(box) }
         let count = bristles.count
         let press = Float(min(1, 0.55 + dab.pressure))
-        let rim = Float(0.25)
+        let rim = Float(0.15)
         // Every pixel's paint depends only on that pixel and the bristles as
         // they were when the dab began, so the rows are laid side by side
         // (`PixelBands`). What each bristle passed over is added up after, a
@@ -206,8 +250,25 @@ struct OilStroke {
         let fieldBox = red.box
         // What each bristle lays at this dab, the same at every pixel it
         // runs over: worked out once here rather than at each of them.
-        let flows = bristles.map { smoothstep(0.02, 0.5, $0.paint) * (0.6 + 0.4 * $0.press) * press }
-        let tints = bristles.map { ($0.r * $0.tint, $0.g * $0.tint, $0.b * $0.tint) }
+        // How far off the canvas the brush is lifting here, 0...1: a mouse's
+        // ends weigh less as they taper, a pen's press falls away.
+        let lifted = max(min(1, max(0, (1 - Float(dab.weight)) / liftWeight)),
+                         1 - smoothstep(0.04, 0.2, Float(dab.pressure)))
+        let flows = bristles.map {
+            smoothstep(0.02, 0.5, $0.paint) * (0.6 + 0.4 * $0.press) * press
+                * (1 - smoothstep($0.leave - 0.08, $0.leave + 0.08, lifted))
+        }
+        let tints = bristles.map { ($0.r * $0.tint.0, $0.g * $0.tint.1, $0.b * $0.tint.2) }
+        // Each clump's paint stands higher here and lower there along the
+        // stroke, and lower as the brush empties.
+        let travelled = Double(dab.along) / Double(max(size, 1))
+        let lifts = bristles.map {
+            $0.lift * (0.65 + 0.7 * valueNoise(travelled * 0.45, Double($0.lane), salt)) * (0.5 + 0.5 * $0.paint)
+        }
+        // The sides wander, each its own way, as the outer bristles splay.
+        let wander = travelled * 1.6
+        let leftEdge = 1 - 0.2 * CGFloat(valueNoise(wander, 0.5, salt ^ 0x51DE))
+        let rightEdge = 1 - 0.2 * CGFloat(valueNoise(wander, 9.5, salt ^ 0x51DE))
         red.values.withUnsafeMutableBufferPointer { r in
         green.values.withUnsafeMutableBufferPointer { g in
         blue.values.withUnsafeMutableBufferPointer { b in
@@ -232,7 +293,8 @@ struct OilStroke {
                         let v = (dx * along.dx + dy * along.dy) / length
                         // A pixel's soft edge: how far inside the footprint, in pixels.
                         guard abs(v) < 1 else { continue }
-                        let w = Float(min(1, max(0, (1 - abs(u)) * radius + 0.5))) * (0.5 + 0.5 * Float(cos(.pi * v)))
+                        let edge = u < 0 ? leftEdge : rightEdge
+                        let w = Float(min(1, max(0, (edge - abs(u)) * radius + 0.5))) * (0.5 + 0.5 * Float(cos(.pi * v)))
                         guard w > 0 else { continue }
                         let (k, f) = reader.band(Float(min(0.9999, max(0, (u + 1) / 2))), near: &near)
                         // Paint under the bristle, unpremultiplied, and how much.
@@ -255,11 +317,10 @@ struct OilStroke {
                         // The paint stands as high as the bristles it lies between,
                         // eased from one to the next, with a shallow groove where
                         // each bristle ran.
-                        let next = reader.bristles[min(count - 1, k + (f < 0.5 ? 0 : 1))]
-                        let prev = reader.bristles[max(0, k - (f < 0.5 ? 1 : 0))]
                         let t = f < 0.5 ? f + 0.5 : f - 0.5
                         let ease = 0.5 - 0.5 * cos(Float.pi * t)
-                        let lift = prev.lift + (next.lift - prev.lift) * ease
+                        let low = max(0, k - (f < 0.5 ? 1 : 0)), high = min(count - 1, k + (f < 0.5 ? 0 : 1))
+                        let lift = lifts[low] + (lifts[high] - lifts[low]) * ease
                         let ridge = 0.5 - 0.5 * cos(2 * Float.pi * f)
                         let flow = flows[k]
                         // A loaded brush covers solid; a dry one only along its bristles.
@@ -281,7 +342,7 @@ struct OilStroke {
                         c[i] = laid + c[i] * keep
                         // The paint pushed aside piles up at the stroke's sides.
                         let side = rim * smoothstep(0.8, 0.97, Float(abs(u))) * (1 - smoothstep(0.97, 1, Float(abs(u))))
-                        let target = reader.thickness * ((0.65 + 0.35 * ridge) * lift * (0.45 + 0.55 * flow) + side)
+                        let target = reader.thickness * ((0.8 + 0.2 * ridge) * lift * (0.45 + 0.55 * flow) + side)
                         h[i] += laid * (target - h[i])
                     }
                 }
@@ -362,9 +423,14 @@ struct OilStroke {
         guard a > 0.002 else { return (0, 0, 0, 0) }
         // The slope in points per point, from the neighbours' heights.
         let ppp = Float(pixelsPerPoint)
-        let hx = (height.value(x + 1, y) - height.value(x - 1, y)) * 0.5 * ppp
-        let hy = (height.value(x, y + 1) - height.value(x, y - 1)) * 0.5 * ppp
-        let bump: Float = 1.2
+        // Read across two pixels either side, not one: the dab-by-dab steps
+        // in the height lit one pixel apart beaded every ridge with a row of
+        // bright dots (2026-10-31).
+        let hx = ((height.value(x + 1, y) - height.value(x - 1, y)) * 0.6
+                  + (height.value(x + 2, y) - height.value(x - 2, y)) * 0.2) * 0.5 * ppp
+        let hy = ((height.value(x, y + 1) - height.value(x, y - 1)) * 0.6
+                  + (height.value(x, y + 2) - height.value(x, y - 2)) * 0.2) * 0.5 * ppp
+        let bump: Float = 1.6
         let nx = -hx * bump, ny = -hy * bump
         let norm = (nx * nx + ny * ny + 1).squareRoot()
         let l = Self.light, h = Self.halfway
@@ -372,7 +438,7 @@ struct OilStroke {
         // One on flat paint; brighter toward the light, darker away.
         let shade = max(0.4, 1 + 0.9 * (facing - l.2))
         let gloss = max(0, (nx * h.0 + ny * h.1 + h.2) / norm)
-        let shine = 0.22 * pow(gloss, 28) * a
+        let shine = 0.14 * pow(gloss, 20) * a
         let s = strength
         return (min(a, red.value(x, y) * shade + shine) * s, min(a, green.value(x, y) * shade + shine) * s,
                 min(a, blue.value(x, y) * shade + shine) * s, a * s)
@@ -398,11 +464,11 @@ struct OilStroke {
         }
     }
 
-    /// Writes the stroke as it now stands into `box` of `overlay` (and a
-    /// pixel round it, whose light the box's heights change), in place of
+    /// Writes the stroke as it now stands into `box` of `overlay` (and two
+    /// pixels round it, whose light the box's heights change), in place of
     /// what was there. Shown over the canvas at full strength.
     func replace(_ box: PixelBox, in overlay: PixelPlane) {
-        let grown = PixelBox(minX: box.minX - 1, minY: box.minY - 1, maxX: box.maxX + 1, maxY: box.maxY + 1)
+        let grown = PixelBox(minX: box.minX - 2, minY: box.minY - 2, maxX: box.maxX + 2, maxY: box.maxY + 2)
             .intersection(overlay.box).intersection(cover.limit)
         guard !grown.isEmpty else { return }
         PixelBands.run(grown, bands: PixelBands.count(for: grown)) { _, minRow, maxRow in

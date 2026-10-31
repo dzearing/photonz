@@ -16,6 +16,13 @@ extension PaintMeasures {
     /// it leaves the earlier stroke (`carriedShare`); the plain round lays only
     /// its own colour there, 0.
     public static let oilCarryBar = 0.1
+    /// ...and its bristles touch down and lift off one by one, so its ends
+    /// fray by at least this many points (`endFray`) and its sides wander by
+    /// at least this many (`edgeWobble`), as a real flat brush's do; a
+    /// stroke cut square and ruled straight, as the round tip and oil before
+    /// 2026-10-31 were, reads under both.
+    public static let oilEndFrayBar = 0.8
+    public static let oilEdgeWobbleBar = 0.4
 
     /// How much the lightness varies across a stroke's core: across short
     /// stretches of its middle length (`stretch` points long, averaged along,
@@ -128,6 +135,101 @@ extension PaintMeasures {
             d += window
         }
         return Double(length)
+    }
+
+    /// How raggedly a stroke from `a` to `b` touches down and lifts off, in
+    /// points: along lines across its middle 55 per cent (inside where a
+    /// mouse's taper narrows it), where each line's
+    /// paint first and last covers at least a half, and how far those places
+    /// stray from a straight line through their neighbours a tenth of the
+    /// width either side (root mean square; the lesser of the two ends, so both must fray), so a clean outline,
+    /// square or round, reads near 0 and only a broken one reads high. Real
+    /// bristles land and leave one by one, so the ends fray.
+    public static func endFray(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                               scale: CGFloat) -> Double {
+        guard let plane = ColourPlane(image) else { return 0 }
+        let length = hypot(b.x - a.x, b.y - a.y)
+        guard length > 0, diameter > 0, scale > 0 else { return 0 }
+        let along = CGVector(dx: (b.x - a.x) / length, dy: (b.y - a.y) / length)
+        let across = CGVector(dx: -along.dy, dy: along.dx)
+        let step = 1 / scale
+        let core = Int((diameter / 2 * 0.55 * scale).rounded(.down))
+        var starts: [Double] = [], ends: [Double] = []
+        for j in -core...core {
+            let s = CGFloat(j) * step
+            var first: CGFloat?, last: CGFloat?
+            var d = -diameter
+            while d <= length + diameter {
+                let p = CGPoint(x: a.x + along.dx * d + across.dx * s, y: a.y + along.dy * d + across.dy * s)
+                if (plane.colour(at: p, scale: scale)?.a ?? 0) >= 0.5 {
+                    if first == nil { first = d }
+                    last = d
+                }
+                d += step
+            }
+            if let first, let last { starts.append(Double(first)); ends.append(Double(last)) }
+        }
+        let reach = max(1, Int((diameter * 0.1 * scale).rounded()))
+        return min(roughness(starts, reach: reach), roughness(ends, reach: reach))
+    }
+
+    /// How much a stroke's sides wander, in points: over its middle 70 per
+    /// cent, at each step along, how far out each side still covers at least a
+    /// half, and the standard deviation of that, both sides averaged. A side
+    /// drawn with a ruler reads near 0.
+    public static func edgeWobble(_ image: CGImage, from a: CGPoint, to b: CGPoint, diameter: CGFloat,
+                                  scale: CGFloat) -> Double {
+        guard let plane = ColourPlane(image) else { return 0 }
+        let length = hypot(b.x - a.x, b.y - a.y)
+        guard length > 0, diameter > 0, scale > 0 else { return 0 }
+        let along = CGVector(dx: (b.x - a.x) / length, dy: (b.y - a.y) / length)
+        let across = CGVector(dx: -along.dy, dy: along.dx)
+        let step = 1 / scale
+        var left: [Double] = [], right: [Double] = []
+        var d = length * 0.15
+        while d <= length * 0.85 {
+            for sign in [CGFloat(-1), 1] {
+                var s: CGFloat = 0
+                var out: CGFloat = 0
+                while s <= diameter {
+                    let p = CGPoint(x: a.x + along.dx * d + across.dx * s * sign,
+                                    y: a.y + along.dy * d + across.dy * s * sign)
+                    if (plane.colour(at: p, scale: scale)?.a ?? 0) >= 0.5 { out = s }
+                    s += step
+                }
+                if sign < 0 { left.append(Double(out)) } else { right.append(Double(out)) }
+            }
+            d += step
+        }
+        return (spread(left) + spread(right)) / 2
+    }
+
+    /// Root mean square of how far each value strays from the straight line
+    /// fitted through the values within `reach` of it, so a smooth curve
+    /// (a round tip's cap) reads near 0 and only a broken edge reads high.
+    private static func roughness(_ values: [Double], reach: Int) -> Double {
+        guard values.count > 2 * reach else { return 0 }
+        var sum = 0.0
+        for i in values.indices {
+            let lo = max(0, i - reach), hi = min(values.count - 1, i + reach)
+            let n = Double(hi - lo + 1)
+            var sx = 0.0, sy = 0.0, sxx = 0.0, sxy = 0.0
+            for k in lo...hi {
+                let x = Double(k - i), y = values[k]
+                sx += x; sy += y; sxx += x * x; sxy += x * y
+            }
+            let denominator = n * sxx - sx * sx
+            let slope = denominator == 0 ? 0 : (n * sxy - sx * sy) / denominator
+            let fitted = (sy - slope * sx) / n
+            sum += (values[i] - fitted) * (values[i] - fitted)
+        }
+        return (sum / Double(values.count)).squareRoot()
+    }
+
+    private static func spread(_ values: [Double]) -> Double {
+        guard values.count > 1 else { return 0 }
+        let mean = values.reduce(0, +) / Double(values.count)
+        return (values.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(values.count)).squareRoot()
     }
 
     /// An image's pixels, unpremultiplied, read at points.
