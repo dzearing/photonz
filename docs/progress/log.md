@@ -22270,3 +22270,10 @@ the ghost, and pinching in seemed to stop short.
 - Blind test: 7 of 8 media named reliably by two model judges; the round tip fails as it should; charcoal vs chalk at chance (filed p2).
 - Open: Ask paints with the brushes but its landscape reads as bands (judges 6 and 4-5 of 10). The umbrella stays pending on that bar.
 - Found: the brush chooser popover never opens under a walk since 2026-10-26 (folded into the standing walk task). Filed: Brush on the tool bar right after Crop, per the mock.
+
+## 2026-10-31 (brush epic: Ask paints from its own sketch)
+
+- Ask paints a painting in two steps now: its model sketches the whole picture as one SVG of filled shapes, and `BrushSketch` (PhotonzCore) paints the sketch with the Brush, every stroke a paint_stroke step on a new Paint layer (docs/design/brushes.md decision 10).
+- The try path's oil landscape reads as a landscape 8/10 from both judges (was 4 to 5); looks painted 4/10 against a bar of 8, so the umbrella task stays open on that. Judge: `Scripts/ask-eval/paint-judge.mjs`.
+- Walks wait for paint still being simulated off the main thread (`PaintRasterCache.isPainting`): the try path had photographed a blank canvas.
+- Next: the oil stroke's own look (even combed ridges, square ends of short strokes) is what holds looks painted down. Held-out Ask eval stopped at 5 of 45 (two cases per seven minutes); resume line in the task log.
