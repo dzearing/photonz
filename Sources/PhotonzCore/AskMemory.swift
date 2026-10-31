@@ -90,7 +90,10 @@ public enum AskMemory {
         name ("bluer", "more purple", "red") give color, that colour. For bigger or smaller give scale \
         (it keeps the shape), never a width or height alone. A component drawn in several looks \
         (Default, Hover, Pressed) is changed by ONE change_part on any of its drawings: every look \
-        follows and keeps its own shade; give look only when the words name one look. Never make it again \
+        follows and keeps its own shade; give look only when the words name one look. A drawing whose \
+        layers are named by colour (Yellow, Green 2) has no part names yet: for a part the words name, \
+        give change_part that part's name and at, a point inside it that you can see on the canvas \
+        picture, never the drawing's own name, which changes all of it. Never make it again \
         or paint over it, and leave every other part as it is.
         """)
         return lines.joined(separator: "\n")
