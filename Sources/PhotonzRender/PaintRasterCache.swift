@@ -36,6 +36,7 @@ public final class PaintRasterCache: @unchecked Sendable {
     private var entries: [Entry] = []
     private var clock: UInt64 = 0
     private var simulated = 0
+    private var painting = 0
     /// One gate per layer, held while strokes are simulated for it, so a
     /// second request for the same layer waits for the first and takes its
     /// result instead of doing the same work alongside it. A layer is told
@@ -48,6 +49,10 @@ public final class PaintRasterCache: @unchecked Sendable {
     public init(budgetBytes: Int) {
         self.budgetBytes = budgetBytes
     }
+
+    /// Whether strokes are being simulated right now, off the main thread or
+    /// on it: a walk waits this out before it photographs the canvas.
+    public var isPainting: Bool { lock.withLock { painting > 0 } }
 
     /// Strokes this cache has simulated in full.
     public var strokesSimulated: Int { lock.withLock { simulated } }
@@ -107,6 +112,8 @@ public final class PaintRasterCache: @unchecked Sendable {
             return best
         }
         if let base, base.strokes.count == strokes.count { return base }
+        lock.withLock { painting += 1 }
+        defer { lock.withLock { painting -= 1 } }
 
         let byteCount = width * height * 4
         let storage = NSMutableData(length: byteCount)

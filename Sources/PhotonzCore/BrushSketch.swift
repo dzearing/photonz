@@ -377,7 +377,8 @@ public enum BrushSketch {
                     for (a, b) in zip(cuts, cuts.dropFirst()) {
                         let overlap = size * 0.4
                         let pa = max(from, a - overlap), pb = min(to, b + overlap)
-                        let count = pb - pa > size * 4 ? 4 : 3
+                        // Enough points that a row along a wavy edge can follow it.
+                        let count = min(10, max(3, Int(((pb - pa) / (size * 0.9)).rounded(.up)) + 1))
                         let bow = size * CGFloat(random.between(-0.12, 0.12))
                         let own = spine ? size : size * CGFloat(random.between(0.85, 1.15))
                         let middle = (pa + pb) / 2
@@ -387,7 +388,10 @@ public enum BrushSketch {
                         let points = (0..<count).map { step -> CGPoint in
                             let t = CGFloat(step) / CGFloat(count - 1)
                             let u = pa + (pb - pa) * t
-                            return fromUV(CGPoint(x: u, y: rowV + bow * sin(.pi * t) + tilt * (u - middle)))
+                            let wanted = rowV + bow * sin(.pi * t) + tilt * (u - middle)
+                            return fromUV(CGPoint(x: u, y: spine ? wanted
+                                : keptInside(wanted, at: u, rings: rings, room: own * 0.45,
+                                             border: { atEdge(fromUV($0), canvas, slack: 2) })))
                         }
                         let mid = fromUV(CGPoint(x: middle, y: rowV))
                         let hex = shade(paint, region: region, at: mid, centre: centre, radius: radius,
@@ -430,7 +434,13 @@ public enum BrushSketch {
                 let reach = dab * CGFloat(random.between(0.6, 2.4))
                 let d = CGPoint(x: cos(turn) * reach, y: sin(turn) * reach)
                 let ends = [CGPoint(x: p.x - d.x, y: p.y - d.y), CGPoint(x: p.x + d.x, y: p.y + d.y)]
-                guard ([p] + ends).allSatisfy({ inside($0, region.rings) }) else { continue }
+                // Its sides inside too, so a dab near the edge never pokes past it.
+                let width = dab * 0.65
+                let side = CGPoint(x: -sin(turn) * width, y: cos(turn) * width)
+                let corners = ([p] + ends).flatMap { [CGPoint(x: $0.x + side.x, y: $0.y + side.y),
+                                                      CGPoint(x: $0.x - side.x, y: $0.y - side.y)] }
+                guard ([p] + ends + corners).allSatisfy({ inside($0, region.rings) || atEdge($0, canvas, slack: 0) })
+                else { continue }
                 let bend = dab * CGFloat(random.between(-0.25, 0.25))
                 let middle = CGPoint(x: p.x - sin(turn) * bend, y: p.y + cos(turn) * bend)
                 let near = shade(paint, region: region, at: p, centre: centre, radius: radius, lit: !large, random: &random)
@@ -580,6 +590,28 @@ public enum BrushSketch {
         return out
     }
 
+    /// `v` moved, where it has to be, to sit at least `room` inside the
+    /// shape's edge straight above and below it at `u` (in the rows' own
+    /// frame), so a row along a wavy top or bottom follows the edge instead
+    /// of poking out where it dips. An edge on the canvas's border holds
+    /// nothing back: rows hang over it on purpose. Where the shape is
+    /// thinner than that there, the row goes down its middle.
+    static func keptInside(_ v: CGFloat, at u: CGFloat, rings: [[CGPoint]], room: CGFloat,
+                           border: (CGPoint) -> Bool) -> CGFloat {
+        var crossings: [CGFloat] = []
+        for ring in rings {
+            for (a, b) in zip(ring, ring.dropFirst() + ring.prefix(1)) where (a.x > u) != (b.x > u) {
+                crossings.append(a.y + (u - a.x) / (b.x - a.x) * (b.y - a.y))
+            }
+        }
+        guard let top = crossings.filter({ $0 <= v + room }).max(),
+              let bottom = crossings.filter({ $0 >= v - room }).min(), bottom > top else { return v }
+        let low = border(CGPoint(x: u, y: top)) ? -CGFloat.infinity : top + room
+        let high = border(CGPoint(x: u, y: bottom)) ? CGFloat.infinity : bottom - room
+        if low > high { return (top + bottom) / 2 }
+        return min(max(v, low), high)
+    }
+
     /// Where a level line at `v` crosses into and out of the rings, as spans.
     static func chords(_ rings: [[CGPoint]], at v: CGFloat) -> [(CGFloat, CGFloat)] {
         var crossings: [CGFloat] = []
@@ -605,10 +637,14 @@ public enum BrushSketch {
         return chords(rings, at: v).compactMap { span in
             var from = span.0, to = span.1
             for (level, other) in bands {
-                guard let hit = other.filter({ $0.1 > from && $0.0 < to })
-                    .max(by: { min($0.1, to) - max($0.0, from) < min($1.1, to) - max($1.0, from) }) else { continue }
-                if !border(hit.0, level) { from = max(from, hit.0) }
-                if !border(hit.1, level) { to = min(to, hit.1) }
+                // Only the row's two ends are trimmed, to the outermost spans
+                // it overlaps there: a wavy edge crossing the level breaks it
+                // into pieces, and keeping just one dropped the rest of the
+                // row and left the canvas bare (the try path, 2026-10-31).
+                let hits = other.filter { $0.1 > from && $0.0 < to }
+                guard let first = hits.map(\.0).min(), let last = hits.map(\.1).max() else { continue }
+                if !border(first, level) { from = max(from, first) }
+                if !border(last, level) { to = min(to, last) }
             }
             return to > from ? (from, to) : nil
         }

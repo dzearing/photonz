@@ -18488,6 +18488,11 @@ private final class Run {
             let count = editor.separationsInFlight.count
             return "the editor is still reading \(count) picture\(count == 1 ? "" : "s") apart"
         }
+        // A paint layer still being simulated off the main thread: a painting
+        // of several hundred strokes Ask laid showed a second or two after it
+        // said it was done, and a wait that went quiet first photographed a
+        // blank canvas (the brush epic's try path, 2026-10-31).
+        if PaintRasterCache.shared.isPainting { return "a paint layer is still being painted" }
         guard let window else { return nil }
         for w in [window] + (window.childWindows ?? []) {
             if w.viewsNeedDisplay { return "viewsNeedDisplay" }

@@ -80,6 +80,33 @@ struct PaintRasterCacheTests {
         }
     }
 
+    /// A walk waits for paint still being simulated off the main thread (a
+    /// painting of hundreds of strokes Ask laid showed a second or two after
+    /// it said it was done, 2026-10-31), so the cache says while it paints.
+    @Test func itSaysWhileItIsPaintingAndStopsSayingWhenItIsDone() async throws {
+        let cache = PaintRasterCache(budgetBytes: 64 << 20)
+        #expect(!cache.isPainting)
+        var many: [BrushStroke] = []
+        for i in 0..<60 {
+            let y = CGFloat(i * 2)
+            let from = CGPoint(x: 0, y: y), to = CGPoint(x: 240, y: y + 10)
+            many.append(stroke(.oil, from, to, seed: UInt32(i + 1), at: Double(i)))
+        }
+        let content = PaintContent(strokes: many)
+        let size = box, scale = scale
+        let work = Task.detached { cache.raster(content, size: size, scale: scale) != nil }
+        var seen = false
+        for _ in 0..<2000 where !seen {
+            seen = cache.isPainting
+            if !seen { try await Task.sleep(for: .milliseconds(1)) }
+        }
+        #expect(await work.value)
+        #expect(seen, "never said it was painting")
+        #expect(!cache.isPainting)
+        _ = cache.raster(content, size: box, scale: scale)
+        #expect(!cache.isPainting, "a raster it already has is not painting")
+    }
+
     @Test func theSameStrokesAskedAgainSimulateNothing() throws {
         let cache = PaintRasterCache(budgetBytes: 64 << 20)
         let content = PaintContent(strokes: strokes)

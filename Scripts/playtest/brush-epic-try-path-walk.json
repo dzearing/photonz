@@ -268,7 +268,8 @@
     },
     {
       "do": "wait",
-      "seconds": 1.0
+      "seconds": 4.0,
+      "note": "a painting of several hundred strokes first shows a second or three after Ask is done"
     },
     {
       "do": "snapshot",
