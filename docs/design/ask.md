@@ -494,6 +494,33 @@ memory is estimated, not measured). Files go in `~/Library/Application
 Support/Photonz/Models`, shared by every build on the Mac, each downloaded from
 a pinned revision and kept only once its size is exact.
 
+### Walks share one model (2026-10-30)
+
+Every walk starts a new probe, and every probe used to load the whole model
+for itself: about 23 GB and the GPU flat out for a minute, once per Ask walk.
+Now a walk run shares one server (`AskWalkServer` in PhotonzCore, the files and
+the launch in `AskWalkServerProcess`, the run's side in
+`Scripts/ask-walk-server.sh`):
+
+- The first probe in a run that needs the model starts it OUTSIDE itself,
+  detached, under a small watch, and writes what it runs to
+  `~/Library/Caches/Photonz/ask-walk-server/record.json`. Later probes in the
+  run adopt it when it runs the model they would pick from the same folder;
+  one that sets up its own models (`askModelMissing`, `askModelsOnly`) or
+  wants another model runs its own, tied to itself, as before. A person's Ask
+  never shares: only a walk's setup turns sharing on.
+- It runs gently: `taskpolicy -b`, `--ubatch-size 128 --batch-size 512
+  --prio -1 --poll 0 --threads 4`. Measured on 2026-10-30 (M4 Max, Qwen3.8 27B
+  with its draft, one 2412-token request): 212 t/s reading and 39.7 t/s
+  writing against 232 and 42.8 at the app's own settings, about 9% slower. A
+  1 MB GPU blit every 50 ms beside it read p50 0.42 ms, p99 4.2 ms (0.70 and
+  2.8 at the app's settings); both stay far inside a frame.
+- Its life is bounded three ways: `playtest-all.sh` (every rotating check and
+  whole-set run) or a lone `playtest.sh` owns it and stops it on the way out;
+  the watch stops it when that owner is gone (a SIGKILL'd run) or after three
+  minutes with nothing asked (`/slots` saying it is processing keeps it); and
+  the go loop stops it when it stops.
+
 ### Qwen3.8 27B, 2026-10-24
 
 M4 Max, 64 GB, the same code for both (commit 2abd8391 plus the switch), every

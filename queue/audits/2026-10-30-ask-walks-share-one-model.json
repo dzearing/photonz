@@ -1,0 +1,35 @@
+{
+  "feature": "Ask walks share one model",
+  "epic": "unmanned-loop",
+  "summary": "A walk run now loads Ask's model once and every Ask walk in it uses that copy, gently, instead of every walk loading its own 23 GB. It is let go when the run ends, when the loop stops, or after three idle minutes.",
+  "setup": "Loop infrastructure, no app switch changed. Measured with the probe: Scripts/playtest-all.sh --no-build ask- (36 walks), sampling llama-server processes every 2 s.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Run Scripts/playtest-all.sh --no-build ask- and, beside it, count llama-server processes every 2 s (pgrep -x llama-server)."
+    },
+    {
+      "do": "Read the sample log (2026-10-30-ask-walks-share-one-model-samples.txt): 444 samples at 1 server, 41 at 0, never 2, and one start for 36 walks."
+    },
+    {
+      "do": "Run Scripts/ask-walk-server.sh status while a run is going: one server, its model and port, and the run that owns it."
+    },
+    {
+      "do": "After the run ends, run pgrep -x llama-server: nothing is running."
+    },
+    {
+      "do": "Open Ask in Photonz Dev and send a request: it starts and lets go of its own server exactly as before."
+    }
+  ],
+  "evaluate": [
+    "Is a run that loads the model once and holds it between walks the trade you want, against loading it per walk?",
+    "Is about 9% slower answers in walks (212 vs 232 t/s reading, 39.7 vs 42.8 t/s writing) a fair price for running it gently?",
+    "Are three idle minutes the right time for a walk run's copy to stay loaded?"
+  ],
+  "rough": [
+    "Only 4 of the 36 Ask walks reach the model today: 27 fail before they ask anything, because pressing Ask in a walk opens no composer (since between the 2026-10-23 and 2026-10-26 sweeps). Logged with its reproduction on walks-that-fail-in-the-full-sweep-26. So the one-load result was measured on the 4 that do (Command-K on a video, both photo walks, paints before brushes), not on a dozen.",
+    "The GPU latency probe beside the gentle server read p99 4.2 ms against 2.8 ms at the app's own settings (p50 0.42 against 0.70). Both are far inside a frame, and one 14 s sample each is too short to call either better.",
+    "The picture model (the one that paints photos) still loads once per walk that uses it; this task covers Ask's chat model only.",
+    "No mock covers this: it is loop infrastructure with nothing on screen."
+  ]
+}

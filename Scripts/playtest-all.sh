@@ -169,7 +169,15 @@ release_awake() {
   AWAKE=""
   return 0
 }
-trap release_awake EXIT INT TERM
+# Every Ask walk in the run shares one model server, started by the first that
+# needs it (Scripts/ask-walk-server.sh): this run owns it, and it is let go
+# with the run, its memory with it.
+Scripts/ask-walk-server.sh begin $$
+end_run() {
+  release_awake
+  Scripts/ask-walk-server.sh end $$
+}
+trap end_run EXIT INT TERM
 hold_awake
 
 PASSED=0

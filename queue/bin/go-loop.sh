@@ -629,6 +629,9 @@ fi
 
 cleanup() {
   release_awake
+  # The shared Ask walk server, if a run left one loaded (its own watch would
+  # let it go within minutes anyway).
+  Scripts/ask-walk-server.sh stop >/dev/null 2>&1 || true
   Q stopped
   banner "**Go loop stopped**"
   state idle

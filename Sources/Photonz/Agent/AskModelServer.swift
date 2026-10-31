@@ -18,6 +18,9 @@ final class AskModelServer {
 
     /// Set by a walk's setup only (`PlaytestSetup.askModelMissing`).
     static var walkFolder: URL?
+    /// Set by a walk's setup only: this walk shares the run's one model
+    /// server (`AskWalkServer`) instead of loading its own.
+    static var walkShares = false
 
     /// Loading a model into memory: Ask says so while it waits.
     private(set) var loading = false
@@ -30,6 +33,9 @@ final class AskModelServer {
     /// still loading; it waits for the load instead.
     @ObservationIgnored private var answering = false
     @ObservationIgnored private var running: String?
+    /// Running on the walk run's shared server, which this app neither
+    /// started for itself nor stops (`AskWalkServer`).
+    @ObservationIgnored private var shared = false
     @ObservationIgnored private var lastUsed = Date()
     @ObservationIgnored private var busy = 0
     @ObservationIgnored private var watch: Task<Void, Never>?
@@ -94,6 +100,7 @@ final class AskModelServer {
         defer {
             busy -= 1
             lastUsed = Date()
+            if shared { AskWalkServerProcess.touch() }
         }
         let port = try await ready(choice)
         guard let url = AskBuiltInServerPlan.chatURL(port: port) else { throw Failure.wouldNotStart }
@@ -108,7 +115,9 @@ final class AskModelServer {
         } catch is CancellationError {
             throw CancellationError()
         } catch {
-            // The server went away part way (it was stopped, or it died).
+            // The server went away part way (it was stopped, or it died). A
+            // shared one that stopped answering is no use to the next walk either.
+            if shared { AskWalkServerProcess.stop() }
             stop()
             throw Failure.wouldNotStart
         }
@@ -128,7 +137,7 @@ final class AskModelServer {
 
     /// The port of a server running `choice`, starting one if need be.
     private func ready(_ choice: AskBuiltInModels.Choice) async throws -> Int {
-        if answering, running == choice.id, server.isRunning { return port }
+        if answering, running == choice.id, shared ? AskWalkServerProcess.alive : server.isRunning { return port }
         if let starting { return try await starting.value }
         let task = Task {
             do {
@@ -150,8 +159,21 @@ final class AskModelServer {
         guard let helper = Self.helper else { throw Failure.notShipped }
         loading = true
         defer { loading = false }
-        let port = AskBuiltInServerPlan.pickPort()
         let draftOnDisk = choice.draft.map(Self.isWhole) ?? false
+        switch AskWalkServer.use(walkShares: Self.walkShares, model: choice.id, folder: Self.folder.path,
+                                 record: AskWalkServerProcess.record, serverAlive: AskWalkServerProcess.alive) {
+        case .own:
+            break
+        case .adopt(let port):
+            return try await share(choice, port: port)
+        case .start:
+            let port = AskBuiltInServerPlan.pickPort()
+            try AskWalkServerProcess.start(helper, arguments: AskBuiltInServerPlan.arguments(
+                for: choice, in: Self.folder, port: port, draftOnDisk: draftOnDisk),
+                record: .init(model: choice.id, port: port, folder: Self.folder.path, draft: draftOnDisk))
+            return try await share(choice, port: port)
+        }
+        let port = AskBuiltInServerPlan.pickPort()
         try server.launch(helper, arguments: AskBuiltInServerPlan.arguments(for: choice, in: Self.folder, port: port,
                                                                             draftOnDisk: draftOnDisk),
                           environment: nil, pidFolder: Self.folder, note: "starts \(choice.id) on port \(port)")
@@ -165,6 +187,24 @@ final class AskModelServer {
             keepWatch()
             return port
         }
+        stop()
+        throw Failure.wouldNotStart
+    }
+
+    /// Uses the walk run's shared server on `port`, waiting for it to finish
+    /// loading when the walk before started it.
+    private func share(_ choice: AskBuiltInModels.Choice, port: Int) async throws -> Int {
+        shared = true
+        self.port = port
+        running = choice.id
+        lastUsed = Date()
+        AskWalkServerProcess.touch()
+        if try await AskWalkServerProcess.waitUntilAnswering(port: port, seconds: 240) {
+            answering = true
+            keepWatch()
+            return port
+        }
+        AskWalkServerProcess.stop()
         stop()
         throw Failure.wouldNotStart
     }
@@ -186,12 +226,15 @@ final class AskModelServer {
 
     /// Stops the server and frees its memory. Waits a moment for it to go, so
     /// a quit leaves nothing running.
+    /// A shared walk server is only let go of here, never stopped: the next
+    /// walk is about to use it, and its own watch stops it.
     func stop() {
         watch?.cancel()
         watch = nil
         running = nil
         answering = false
         port = 0
+        shared = false
         server.stop(pidFolder: Self.folder)
     }
 

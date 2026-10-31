@@ -39,6 +39,12 @@ for arg in "$@"; do
 done
 
 SCRIPT_ABS="$(cd "$(dirname "$SCRIPT")" && pwd)/$(basename "$SCRIPT")"
+# An Ask walk shares the run's one model server (Scripts/ask-walk-server.sh).
+# Inside playtest-all.sh that run owns it; a walk run on its own is its own run,
+# and lets the server go when it ends. The rerun below execs this same pid, so
+# it keeps the server it began with.
+Scripts/ask-walk-server.sh begin $$
+trap 'Scripts/ask-walk-server.sh end $$' EXIT
 # The harness resolves `out` the same way (PlaytestScript.outputDirectory).
 OUT="$(node -e '
   const path = require("path");

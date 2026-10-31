@@ -222,6 +222,8 @@ struct PlaytestSetupRunner {
         // Every walk says afresh too: Ask on a Mac with no model downloaded.
         AskModelServer.walkFolder = setup.askModelMissing ? PlaytestSetupRunner.emptyAskModels() : nil
         if setup.askModelMissing { said.append("Ask has no model downloaded") }
+        AskModelServer.walkShares = AskWalkServer.walkShares(modelMissing: setup.askModelMissing,
+                                                             modelsOnly: setup.askModelsOnly)
         if let only = setup.askModelsOnly {
             AskModelServer.walkFolder = PlaytestSetupRunner.askModels(only)
             said.append("Ask has only \(only.isEmpty ? "no model" : only.joined(separator: ", ")) downloaded")
