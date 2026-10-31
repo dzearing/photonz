@@ -121,8 +121,10 @@
   /* 8. Callout tab: ink plate with a small pointer to what it labels */
   .s-callout .chip { background: var(--ink); color: #fff; border-radius: 6px; padding: 6px 9px;
     box-shadow: 0 2px 6px rgba(0,0,0,.25); }
-  .s-callout .chip::after { content: ""; position: absolute; left: 50%; bottom: -5px; margin-left: -5px;
-    border: 5px solid transparent; border-bottom: 0; border-top-color: var(--ink); }
+  /* The beak is part of the plate (overlaps it by a pixel) and sits where the
+     arrow leaves the caption, pointing along it. */
+  .s-callout .chip::after { content: ""; position: absolute; left: -5px; top: 50%; margin-top: -6px;
+    border: 6px solid transparent; border-left: 0; border-right-color: var(--ink); }
   .s-callout .chip.measure::after { display: none; }
 
   /* ---------- Inspector prototype ---------- */
@@ -139,7 +141,7 @@
   .tiles .chip { position: static; transform: none; font-size: 9px; padding: 3px 5px; }
   .tiles .s-spec .chip { padding-left: 11px; } .tiles .s-spec .chip::before { left: 4px; width: 4px; height: 4px; margin-top: -2px; }
   .tiles .s-paper .chip { padding-left: 8px; background-position: 3px 50%; background-size: 2px calc(100% - 6px); }
-  .tiles .s-callout .chip::after { bottom: -3px; border-width: 3px; margin-left: -3px; }
+  .tiles .s-callout .chip::after { left: -3px; border-width: 3px; border-left: 0; margin-top: -3px; }
   .dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .dots button { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; padding: 0; cursor: pointer; }
   .dots button[aria-pressed="true"] { border-color: #f5f5f7; }
