@@ -5,11 +5,11 @@
   "epic": "interaction-foundations",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-26T04:01:25.610Z",
-  "updated": "2026-10-30T14:25:42.392Z",
+  "updated": "2026-10-31T01:38:24.091Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'i just tried to update photonz and it said server error' and 'why is photonz detecting 0.19 if we haven't published it yet'. Cause, verified in the intake window: Sources/Photonz/UpdateChecker.swift reads https://dzearing.github.io/photonz/version.json and trusts it; the release skill committed site/version.json with the tag, so the site deployed 0.19.0 in 2.5 minutes while the Release workflow needed about 20 to publish the DMG; Sources/Photonz/SelfUpdater.swift then got a 404 from releases/download/v0.19.0/Photonz.dmg and threw downloadFailed('the server returned an unexpected response'). The skill is fixed (e493d70c: the site is announced only after the DMG answers); this task makes the app safe on its own too.",
@@ -43,6 +43,37 @@
     {
       "t": "2026-10-30T14:25:42.391Z",
       "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-10-31T01:18:52.383Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T01:38:16.169Z",
+      "note": "Reproduced on the real servers: version.json says 0.21.0 and its DMG answers 200; v0.99.0 (a version with no release) answers 404, which the old check never asked about (it compared version numbers only)."
+    },
+    {
+      "t": "2026-10-31T01:38:16.234Z",
+      "note": "Built: PhotonzCore UpdateOffer.decide (HEAD on the DMG only when newer; answers=offer, missing=up to date, unreachable=failure message) and UpdateDownloadFailure.message, tests first (Tests/PhotonzCoreTests/UpdateOfferTests.swift). UpdateChecker.probeDownload does the HEAD; SelfUpdater.download throws downloadRefused(httpStatus:) with the plain sentence. Probe-only --update-check-diag (Sources/Photonz/Playtest/UpdateCheckerDiag.swift) measures the real servers."
+    },
+    {
+      "t": "2026-10-31T01:38:16.301Z",
+      "note": "Measured with the probe against dzearing.github.io + GitHub releases: as 0.21.0 -> up to date; as 0.20.0 -> offers 0.21.0; stub version.json naming 0.99.0 -> up to date (as 0.21.0 and as 0.20.0); stub naming 0.21.0 as 0.20.0 -> offers 0.21.0; download of v0.99.0 -> \"This update isn't ready to download yet. Try again in a few minutes.\" Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-10-31T01:38:16.366Z",
+      "note": "Chose \"up to date\" over a separate \"update coming\" state while a release is half out because the checklist asks for it and a person can do nothing with the in-between state; left rough in the audit, not filed."
+    },
+    {
+      "t": "2026-10-31T01:38:16.431Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-31T01:38:24.089Z",
+      "note": "Check for Updates offers a version only once its DMG answers a HEAD request (PhotonzCore UpdateOffer, tests first); a refused download says \"This update isn't ready to download yet. Try again in a few minutes.\" Measured on the probe against the real servers with --update-check-diag: 0.21.0 up to date, 0.20.0 offered 0.21.0, stub naming unreleased 0.99.0 up to date, stub naming 0.21.0 offered. Scripts/test.sh green. Audit: queue/audits/2026-10-30-update-offered-only-when-downloadable.json"
     }
-  ]
+  ],
+  "started": "2026-10-31T01:18:52.382Z",
+  "walks": [],
+  "completed": "2026-10-31T01:38:24.090Z"
 }
