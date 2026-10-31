@@ -21,16 +21,33 @@
     for (let k = 0; k <= 1.0001; k += .01) { const d = c.map(v => v * (1 - k)); if (ratio(d, against) >= target) return [d, k]; }
     return [[0, 0, 0], 1];
   }
+  // Glass lets the picture through, so its plate is judged over the worst
+  // picture behind it: at GLASS_ALPHA opacity the words must reach 4.8:1 over
+  // pure white AND pure black. White words take a darkened tint, dark words a
+  // lightened one, whichever moves the colour less.
+  const GLASS_ALPHA = .82, BLACK = [0, 0, 0];
+  const over = (c, bg, a) => c.map((v, i) => v * a + bg[i] * (1 - a));
+  function glassFor(ink) {
+    const okWhite = g => ratio(over(g, WHITE, GLASS_ALPHA), WHITE) >= 4.8 && ratio(over(g, BLACK, GLASS_ALPHA), WHITE) >= 4.8;
+    const okDark = g => ratio(over(g, WHITE, GLASS_ALPHA), DARK) >= 4.8 && ratio(over(g, BLACK, GLASS_ALPHA), DARK) >= 4.8;
+    let a = null, b = null;
+    for (let k = 0; k <= 1.0001 && !a; k += .01) { const g = ink.map(v => v * (1 - k)); if (okWhite(g)) a = [g, k]; }
+    for (let m = 0; m <= 1.0001 && !b; m += .01) { const g = ink.map(v => v + (1 - v) * m); if (okDark(g)) b = [g, m]; }
+    const darkWords = b && (!a || b[1] < a[1]);
+    const [g] = darkWords ? b : a;
+    const worst = Math.min(...[WHITE, BLACK].map(bg => ratio(over(g, bg, GLASS_ALPHA), darkWords ? DARK : WHITE)));
+    return { glass: rgb2hex(g), onGlass: darkWords ? "#1d1d1f" : "#ffffff", glassContrast: worst };
+  }
   function plateFor(hex) {
     const ink = hex2rgb(hex);
     const [dark, k] = darkenUntil(ink, WHITE, 4.8);
     const darkWords = k > .22 && ratio(ink, DARK) >= 4.5;
     const plate = darkWords ? ink : dark;
-    return {
+    return Object.assign({
       ink: hex, plate: rgb2hex(plate), onPlate: darkWords ? "#1d1d1f" : "#ffffff",
       inkText: rgb2hex(darkenUntil(ink, WHITE, 4.5)[0]),
       contrast: ratio(plate, darkWords ? DARK : WHITE),
-    };
+    }, glassFor(ink));
   }
   function setInk(el, hex) {
     const p = plateFor(hex);
@@ -38,6 +55,9 @@
     el.style.setProperty("--mu-plate", p.plate);
     el.style.setProperty("--mu-on-plate", p.onPlate);
     el.style.setProperty("--mu-ink-text", p.inkText);
+    el.style.setProperty("--mu-glass", p.glass);
+    el.style.setProperty("--mu-on-glass", p.onGlass);
+    el.style.setProperty("--mu-glass-shadow", p.onGlass === "#ffffff" ? "0 1px 2px rgba(0,0,0,.45)" : "0 1px 1px rgba(255,255,255,.35)");
     return p;
   }
 
@@ -167,6 +187,8 @@
 
   const nums = s => (s || "").split(",").map(Number);
   function paint(root = document) {
+    // The root itself may carry the ink (a page or a scene), not only its children.
+    if (root.dataset && root.dataset.ink) setInk(root, root.dataset.ink);
     root.querySelectorAll("[data-ink]").forEach(el => setInk(el, el.dataset.ink));
     root.querySelectorAll(".mu-chip[data-marker]").forEach(chip => {
       let mk = chip.querySelector(":scope > .mu-mk");
@@ -182,7 +204,7 @@
     });
   }
 
-  PZ.markup = { plateFor, setInk, icon, markerIcon, arrow, paint, contrast: (a, b) => ratio(hex2rgb(a), hex2rgb(b)), CHIPS, ARROWS, MARKERS, PALETTE };
+  PZ.markup = { plateFor, glassFor: hex => glassFor(hex2rgb(hex)), GLASS_ALPHA, setInk, icon, markerIcon, arrow, paint, contrast: (a, b) => ratio(hex2rgb(a), hex2rgb(b)), CHIPS, ARROWS, MARKERS, PALETTE };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => paint());
   else paint();
 })();

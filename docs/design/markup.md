@@ -53,8 +53,26 @@ Measured with the palette (WCAG contrast, `PZ.markup.plateFor`):
 | `#ffffff` white | ink | dark | 16.8:1 |
 | `#1d1d1f` black | ink | white | 16.8:1 |
 
-The app computes the same thing in PhotonzCore (pure, tested) and must agree
-with this table to the hex digit.
+**Any colour, not just the palette.** The Color row has the palette swatches
+plus a custom colour well, and a custom colour gets exactly the same treatment.
+Checked over 5,472 colours (every 5 degrees of hue, four saturations, nineteen
+lightnesses): the worst words-on-plate contrast is **4.80:1**, and no colour is
+darkened past 35 percent. Nobody has to open Advanced to keep a chip legible;
+only a part overridden by hand under Advanced can break the rule, and the
+inspector warns when it does.
+
+**Glass is judged over the worst picture.** Its plate lets the picture through,
+so its tint is derived separately: at 82 percent opacity its words must reach
+4.8:1 over a pure white AND a pure black picture. White words take a darkened
+tint, dark words a lightened one, whichever moves the colour less (worst over
+the same 5,472 colours: 4.80:1). Before this, a light ink on glass over a white
+screenshot fell to 1.4:1.
+
+The other mixed styles hold for every colour without their own rule: Today's
+dark plate (worst 5.95:1) and the Highlighter swipe (worst 5.6:1).
+
+The app computes all of this in PhotonzCore (pure, tested) and must agree with
+this table, and with the sweep, to the hex digit.
 
 ## 4. Chip styles (ten)
 
