@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-31T04:42:53.772Z",
+  "updated": "2026-10-31T06:43:41.108Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -34,7 +34,7 @@
     "Painting stays smooth: strokes keep up with the pointer on a 12 megapixel picture, MEASURED (input to pixel latency and frame time while painting) and written in the audit",
     "MCP: tools to list the brushes and their settings, pick and set a brush, and paint a stroke from a list of points with optional pressure; the agent's strokes look identical to a person's at the same settings and undo one step at a time; Ask can use them to paint an illustration",
     "A visual bar the weak version fails: a blind test sheet of one unlabelled stroke per medium, and the audit records whether each can be told apart (by the runner and by a model judge), alongside reference photos of each real medium; a round stamped brush with only colour changes must fail it",
-    "Ask paints: \"paint a picture of a harbour at dusk\" (or naming a medium, \"in watercolour\") makes Ask plan and lay down real brush strokes through the same MCP calls, as editable stroke data, not a generated photo or traced vector; the route itself is read by the Ask routing task (ask-can-make-a-photo-as-well-as-an-illustration), this task makes it paint well. Judged by the model judge as looking painted, with a contact sheet in the audit",
+    "Ask paints: \"paint a picture of a harbour at dusk\" (or naming a medium, \"in watercolour\") makes Ask plan and lay down real brush strokes through the same MCP calls, as editable stroke data, not a generated photo or traced vector; the route itself is read by the Ask routing task (ask-can-make-a-photo-as-well-as-an-illustration), this task makes it paint well. Judged by two model judges as looking painted AND as the subject asked: at least 8 of 10 on looks painted and 7 of 10 on reads as a landscape from both, on the try path (2026-10-31: 6, and 4 to 5), with the picture in the audit",
     "Try path: open a blank picture at Next defaults, press B, pick watercolour, paint two overlapping strokes; switch to charcoal and smudge; then ask the agent to paint a small landscape with oil paint",
     "Audit under queue/audits/ with the stroke sheet per medium and per setting, a reel of painting live, and the agent's painting; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
   ],
@@ -106,7 +106,46 @@
     {
       "t": "2026-10-31T04:42:53.771Z",
       "note": "From the agent slice (2026-10-31): Ask now paints a painting request stroke by stroke with paint_stroke, but its small details read as marks rather than things. Climb case paint-a-small-landscape-in-oil scored 27.5, 48.1 and 31.5 across prompt revisions (judge didWhatWasAsked 3 to 4); the block-in covers the canvas in close shades. Worth a look when the epic's final audit judges the painting."
+    },
+    {
+      "t": "2026-10-31T06:15:21.429Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T06:36:28.713Z",
+      "note": "owns these walks: brush-epic-try-path-walk"
+    },
+    {
+      "t": "2026-10-31T06:36:46.232Z",
+      "note": "Final audit pass 2026-10-31: all eleven children done. New: blind sheet generator (Tests/PhotonzRenderTests/BrushBlindSheetTests.swift, PHOTONZ_BLIND_SHEET), try path walk (Scripts/playtest/brush-epic-try-path-walk.json, no flags, front true for Ask's composer; passes, 324 s), reel from the walk's filmed canvas, audit queue/audits/2026-10-31-a-brush-tool-paints-with-realistic-charcoal-chal.json with measures in 2026-10-31-brush-epic-measures.txt, settings sheets per medium regenerated."
+    },
+    {
+      "t": "2026-10-31T06:36:46.296Z",
+      "note": "Blind test (item 8): three shuffles x two model judges beside Wikimedia reference photos. Pencil, crayon, airbrush, oil, watercolour 6/6; marker 5/6; round tip picked out as the plain one 5/6 (the weak version fails: met). Charcoal vs chalk 3/6, chance: filed charcoal-and-chalk-can-be-told-apart-at-a-glance (p2). Runner named all nine on sheet 1."
+    },
+    {
+      "t": "2026-10-31T06:36:46.361Z",
+      "note": "NOT DONE, item 9 (and the illustration half of item 7): Ask's oil landscape on the try path scored looks painted 6/10 from both judges and reads as a landscape 4/10 and 5/10: level full-width bands and a pale stacked column. Wrote a measured bar into item 9 (8 and 7 from both judges). Left for the next pass: Ask painting a recognisable subject with the brushes. The prompt is AskPlanning.brushRules (Sources/PhotonzCore/AskPlanning.swift ~989); general techniques only (a look-and-revise loop with render_picture, a broken-up block-in, things built from several strokes), never a coded subject. Climb case paint-a-small-landscape-in-oil; the two-question judge prompt is in the measures file."
+    },
+    {
+      "t": "2026-10-31T06:36:46.426Z",
+      "note": "Chose to leave the tool options wrapping to a second line in a 1280 pt window over shedding a setting (digest 2026-10-25 question), because each setting there is one the medium needs and the panel carries them too; pictures in the audit. Brush slot (mock: right after Crop) filed as the-brush-sits-right-after-crop-on-a-picture-s-t per the mock-difference rule."
+    },
+    {
+      "t": "2026-10-31T06:36:46.490Z",
+      "note": "left rough: watercolour Wetness 60 and 100 paint nearly the same stroke on the settings sheet (2026-10-31-brush-epic-settings-watercolour.png); only 0 is visibly different (dry brush). Did not earn its own task yet."
+    },
+    {
+      "t": "2026-10-31T06:36:46.555Z",
+      "note": "The brush chooser's tile popover never opens under a walk since 2026-10-26, even with front true and a real window click; folded into walks-that-fail-in-the-full-sweep-26 with the evidence. The try path walk uses pickBrush meanwhile."
+    },
+    {
+      "t": "2026-10-31T06:43:41.107Z",
+      "note": "Everything but Ask painting well is verified and audited (2026-10-31-a-brush-tool-paints-with-realistic-charcoal-chal.json, commit 64e7e53c): try path walk passes at Next defaults, blind test met (round tip fails, 7 of 8 media named), reel and settings sheets shipped. Open: item 9, Ask's oil landscape judged looks painted 6/10 and reads as a landscape 4-5/10 against the new bar of 8 and 7."
     }
   ],
-  "started": "2026-10-24T23:36:28.499Z"
+  "started": "2026-10-31T06:15:21.428Z",
+  "walks": [
+    "brush-epic-try-path-walk"
+  ]
 }
