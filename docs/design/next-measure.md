@@ -1,5 +1,7 @@
 # Next Measure — measurement overlays, readouts, alignment & export (Next release)
 
+> **Look of every measurement's chip and line:** see `docs/design/markup.md` (one system with the arrow tool: ten chip styles, one colour with a derived legible plate, markers, size, Appearance). The design system component is `mocks/shared/components/markup.*`, specimen `mocks/pages/markup.html`.
+
 Status: SPEC, 2026-08-22. Implements the redline concepts from the design-study
 mocks for the **Next** release only. Sources of truth:
 

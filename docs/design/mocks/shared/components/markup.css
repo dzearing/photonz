@@ -1,0 +1,119 @@
+/* ============================================================
+   MARKUP — the marks a person draws ON a picture: arrows, their chips, and
+   every measurement's readout chip
+   ============================================================
+   Not to be confused with `redline.css`, which annotates the design pages
+   themselves. This component is the in-app markup a redliner draws on a
+   screenshot, as one system so the arrow tool and every Measure mode (size,
+   distance, gap, alignment) look and behave the same. Full rules:
+   `docs/design/markup.md`; specimen page: `pages/markup.html`.
+
+   The model, in one breath: a mark has ONE colour (`data-ink`). The line and
+   head are painted in that ink as picked. The chip's PLATE is derived from it
+   so its words always reach 4.5:1 (markup.js `plateFor`): a mid or dark ink is
+   darkened just enough for white words; a light ink keeps its colour and takes
+   dark words. A chip has a STYLE (`data-chip`, ten), an optional MARKER
+   (`data-marker`), and a SIZE (`data-size`). An arrow also has an ARROW style
+   (`data-arrow`, ten), drawn by markup.js.
+
+     <span class="mu-chip" data-chip="paper" data-marker="warning">Not aligned</span>
+     <svg class="mu-arrow" data-arrow="brush" data-from="178,166" data-via="160,146"
+          data-to="130,129" viewBox="0 0 340 210"></svg>
+
+   Ink is inherited: set `data-ink="#30d158"` on any ancestor (markup.js turns
+   it into the four custom properties below). */
+
+:root, .mu-scope {
+  --mu-ink: #ff375f;        /* the colour picked: line, head, accents */
+  --mu-plate: #d62e50;      /* the chip's plate, derived for legibility */
+  --mu-on-plate: #ffffff;   /* the words on that plate */
+  --mu-ink-text: #d70f3e;   /* ink-coloured words on a white plate */
+  --mu-chip-font: 600 12px/1 -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --mu-chip-mono: 500 11.5px/1 "SF Mono", ui-monospace, Menlo, monospace;
+}
+
+/* ---------- The chip ---------- */
+.mu-chip {
+  display: inline-flex; align-items: center; white-space: nowrap; position: relative;
+  font: var(--mu-chip-font); letter-spacing: -.005em; font-variant-numeric: tabular-nums;
+  padding: 6px 9px;
+}
+.mu-chip[data-size="s"] { font-size: 10.5px; padding: 5px 7px; }
+.mu-chip[data-size="l"] { font-size: 14px; padding: 7px 11px; }
+
+/* 1. Today: dark plate in the ink, bright ink outline (what ships before this system) */
+.mu-chip[data-chip="today"] { background: color-mix(in srgb, var(--mu-plate) 35%, #111); color: #fff;
+  border: 2px solid var(--mu-ink); border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+
+/* 2. Solid pill: no edge; a lit fill, lighter at the top */
+.mu-chip[data-chip="solid"] { color: var(--mu-on-plate); border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mu-plate) 90%, #fff), var(--mu-plate) 55%, color-mix(in srgb, var(--mu-plate) 92%, #000));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 1px 3px rgba(0,0,0,.22); }
+
+/* 3. Flat squircle: truly flat, no edge, no shadow */
+.mu-chip[data-chip="squircle"] { background: var(--mu-plate); color: var(--mu-on-plate); border-radius: 7px; padding-inline: 8px; }
+
+/* 4. Hairline plate: the one style defined by its outline */
+.mu-chip[data-chip="hairline"] { background: #fff; color: var(--mu-ink-text);
+  border: 1px solid var(--mu-ink); border-radius: 5px; padding: 5px 8px; }
+
+/* 5. Glass: frosted plate, gradient rim that catches the light */
+.mu-chip[data-chip="glass"] { color: #fff; border-radius: 10px; padding: 6px 10px; border: 1px solid transparent;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mu-plate) 52%, rgba(16,16,18,.30)), color-mix(in srgb, var(--mu-plate) 62%, rgba(10,10,12,.42))) padding-box,
+    linear-gradient(135deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.14) 35%, rgba(255,255,255,0) 55%, rgba(255,255,255,.2) 80%, rgba(255,255,255,.6) 100%) border-box;
+  -webkit-backdrop-filter: blur(5px) saturate(180%) brightness(.82); backdrop-filter: blur(5px) saturate(180%) brightness(.82);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.3), 0 6px 18px rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.16);
+  text-shadow: 0 1px 2px rgba(0,0,0,.45); }
+
+/* 6. Paper: a light card on a soft layered shadow, an ink stripe as its accent */
+.mu-chip[data-chip="paper"] { background: #fffffd; color: #1d1d1f; border-radius: 6px; padding-left: 12px;
+  box-shadow: 0 1px 1px rgba(0,0,0,.10), 0 3px 6px rgba(0,0,0,.10), 0 10px 22px rgba(0,0,0,.14); }
+.mu-chip[data-chip="paper"]::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 3px;
+  border-radius: 2px; background: var(--mu-ink); }
+
+/* 7. Spec badge: graphite plate with its own rim, an ink dot, monospaced */
+.mu-chip[data-chip="spec"] { color: #f5f5f7; font: var(--mu-chip-mono); border-radius: 6px; padding: 5px 8px 5px 18px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(180deg, #343437, #29292c) padding-box,
+    linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.10) 60%, rgba(255,255,255,.06)) border-box;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.65), 0 3px 10px rgba(0,0,0,.35); }
+.mu-chip[data-chip="spec"]::before { content: ""; position: absolute; left: 7px; top: 50%; width: 6px; height: 6px;
+  margin-top: -3px; border-radius: 50%; background: var(--mu-ink); }
+
+/* 8. Lit tag: lit fill like 2, small square corners */
+.mu-chip[data-chip="tag"] { color: var(--mu-on-plate); border-radius: 4px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mu-plate) 90%, #fff), var(--mu-plate));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 2px 6px rgba(0,0,0,.22); }
+
+/* 9. Two-tone badge: an ink tab holds the accent or marker, dark words on white */
+.mu-chip[data-chip="twotone"] { color: #1d1d1f; border-radius: 6px; padding-left: 30px;
+  background: linear-gradient(90deg, var(--mu-plate) 0 22px, #fff 22px);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.16); }
+.mu-chip[data-chip="twotone"]::before { content: ""; position: absolute; left: 8px; top: 50%; width: 6px; height: 6px;
+  margin-top: -3px; border-radius: 50%; background: var(--mu-on-plate); opacity: .9; }
+
+/* 10. Highlighter: a swipe of ink behind dark words on a white plate */
+.mu-chip[data-chip="highlight"] { color: #1d1d1f; border-radius: 4px;
+  background:
+    linear-gradient(176deg, transparent 0 30%, color-mix(in srgb, var(--mu-ink) 42%, #fff) 30% 84%, transparent 84%) 4px 0 / calc(100% - 8px) 100% no-repeat,
+    #fff;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 2px 7px rgba(0,0,0,.15); }
+
+/* ---------- Markers ----------
+   accent (default): the style's own stripe or dot. none: nothing.
+   error | warning | success | info: a status icon, drawn by markup.js. Any
+   marker but accent takes the stripe and dot away. */
+.mu-chip > .mu-mk { flex: none; width: 1.15em; height: 1.15em; margin: 0 .4em 0 -.1em; }
+.mu-chip > .mu-mk svg { width: 100%; height: 100%; display: block; }
+.mu-chip[data-marker]:not([data-marker="accent"])::before { display: none; }
+.mu-chip[data-chip="paper"][data-marker]:not([data-marker="accent"]) { padding-left: 9px; }
+.mu-chip[data-chip="spec"][data-marker]:not([data-marker="accent"]) { padding-left: 8px; }
+.mu-chip[data-chip="twotone"][data-marker]:not([data-marker="accent"]):not([data-marker="none"]) > .mu-mk { position: absolute; left: 4px; margin: 0; }
+.mu-chip[data-chip="twotone"][data-marker="none"] { padding-left: 9px; background: #fff; }
+
+/* ---------- Lines: arrows and measurement calipers ---------- */
+svg.mu-arrow, svg.mu-line { overflow: visible; }
+svg.mu-arrow *, svg.mu-line * { stroke: var(--mu-ink); fill: none; stroke-linecap: round; }
+svg.mu-arrow .mu-fill, svg.mu-line .mu-fill { fill: var(--mu-ink); stroke: none; }

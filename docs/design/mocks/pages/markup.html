@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · markup</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Page-local scaffolding only, prefixed `mp-`. Every block is a KIND 2
+     SPECIMEN (PRODUCT-MODEL §4c). The marks themselves are the DS component
+     `markup` (shared/components/markup.css + .js); rules in docs/design/markup.md. */
+  #markup .mp-lede{font-size:13px;line-height:1.55;color:var(--dim);max-width:84ch;margin:0 0 var(--gap)}
+  #markup .mp-lede b{color:var(--ink);font-weight:600}
+  #markup .mp-ctl{display:flex;flex-wrap:wrap;gap:var(--gap) calc(var(--gap) * 2);align-items:center;margin:0 0 var(--gap);font-size:12px;color:var(--dim)}
+  #markup .mp-ctl .mp-sw{width:18px;height:18px;border-radius:50%;border:2px solid transparent;padding:0;cursor:pointer;margin-left:4px}
+  #markup .mp-ctl .mp-sw[aria-pressed="true"]{border-color:var(--ink)}
+  #markup .mp-blk{border:1px solid var(--edge-lo);border-radius:var(--r4);background:var(--panel);overflow:hidden;margin:0 0 var(--gap)}
+  #markup .mp-blk-h{display:flex;align-items:baseline;gap:var(--gap-sm);padding:var(--pad-sm) var(--pad);border-bottom:1px solid var(--line-soft);background:var(--panel-2);flex-wrap:wrap}
+  #markup .mp-blk-h h3{margin:0;font-size:13.5px;font-weight:640}
+  #markup .mp-blk-h .mp-sub{font-size:11px;color:var(--dim);margin-left:auto}
+  #markup .mp-body{padding:var(--pad)}
+  #markup .mp-note{font-size:12px;color:var(--dim);line-height:1.5;margin:0 0 var(--gap-sm);max-width:90ch}
+  #markup .mp-note b{color:var(--ink)}
+  /* backgrounds a mark must hold up on */
+  #markup .mp-bg-light{background:#fbfbfd;color:#3a3a3c}
+  #markup .mp-bg-dark{background:#1e1e20;color:#d1d1d6}
+  #markup .mp-bg-photo{background:radial-gradient(120% 90% at 15% 20%,#f6c177,transparent 55%),radial-gradient(90% 90% at 85% 30%,#3a7bd5,transparent 60%),radial-gradient(80% 80% at 60% 95%,#1f8a70,transparent 60%),linear-gradient(135deg,#e86a5f,#2b2d42);color:#fff}
+  #markup .mp-row{display:grid;grid-template-columns:150px repeat(3,1fr);border-top:1px solid var(--line-soft)}
+  #markup .mp-row:first-child{border-top:0}
+  #markup .mp-row > .mp-name{padding:10px 12px;font-size:12px}
+  #markup .mp-row > .mp-name b{display:block;font-weight:600;color:var(--ink)}
+  #markup .mp-row > .mp-name span{color:var(--dim);font-size:11px;line-height:1.35;display:block;margin-top:2px}
+  #markup .mp-cell{display:flex;align-items:center;justify-content:center;gap:10px;min-height:58px;padding:8px;position:relative;overflow:hidden}
+  #markup .mp-cell .mp-tx{position:absolute;inset:6px 10px auto;font-size:9.5px;opacity:.75;white-space:nowrap;overflow:hidden}
+  #markup .mp-arrows{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gap-sm)}
+  #markup .mp-arrows figure{margin:0;border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden;background:#fbfbfd}
+  #markup .mp-arrows svg{display:block;width:100%;height:96px}
+  #markup .mp-arrows figcaption{font-size:11.5px;padding:6px 8px;background:var(--panel-2);color:var(--ink)}
+  #markup .mp-arrows figcaption span{display:block;color:var(--dim);font-size:10.5px;margin-top:1px}
+  #markup table.mp-t{border-collapse:collapse;font-size:12px;width:100%}
+  #markup table.mp-t th,#markup table.mp-t td{padding:7px 10px;border-top:1px solid var(--line-soft);text-align:left;vertical-align:middle}
+  #markup table.mp-t th{color:var(--dim);font-weight:600;font-size:11px}
+  #markup table.mp-t code{font-family:var(--mono);font-size:11px}
+  #markup .mp-dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-2px;margin-right:6px;border:1px solid var(--line)}
+  #markup .mp-meas{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap-sm)}
+  #markup .mp-meas figure{margin:0;border:1px solid var(--line-soft);border-radius:var(--r3);overflow:hidden}
+  #markup .mp-meas .mp-scene{position:relative;height:120px;background:#fbfbfd}
+  #markup .mp-meas figcaption{font-size:11.5px;padding:6px 8px;background:var(--panel-2)}
+  #markup .mp-scene .mu-chip{position:absolute;transform:translate(-50%,-50%)}
+  #markup .mp-scene > svg{position:absolute;inset:0;width:100%;height:100%}
+  #markup .mp-box{position:absolute;border-radius:6px;background:#e8e8ed}
+  #markup .mp-panel{display:grid;grid-template-columns:260px 1fr;gap:var(--gap);align-items:start}
+  #markup .mp-insp{background:#2a2a2d;color:#f5f5f7;border-radius:12px;padding:12px;font-size:12px;border:1px solid rgba(255,255,255,.08)}
+  #markup .mp-insp .mp-h{font-size:11px;letter-spacing:.06em;color:#98989d;font-weight:600;margin:0 0 8px}
+  #markup .mp-insp .mp-r{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}
+  #markup .mp-insp .mp-r span:last-child{color:#98989d}
+  #markup .mp-insp .mp-adv{color:#c7c7cc;padding-top:8px}
+  #markup .mp-insp .mp-adv ul{margin:6px 0 0 16px;padding:0;color:#98989d;line-height:1.6}
+  @media(max-width:760px){
+    #markup .mp-row{grid-template-columns:1fr 1fr 1fr}
+    #markup .mp-row > .mp-name{grid-column:1/-1}
+    #markup .mp-arrows{grid-template-columns:repeat(2,1fr)}
+    #markup .mp-meas{grid-template-columns:1fr 1fr}
+    #markup .mp-panel{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="markup">
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Markup</h2><span class="k">· arrows, chips and measurements on a picture</span></div>
+
+  <p class="mp-lede">The marks a redliner draws on a screenshot are <b>one system</b>. An arrow and every measurement (size, distance, gap, alignment) carry the same <b>chip</b>, take <b>one colour</b>, and are set from the same <b>Appearance</b>. A chip has a style, a marker and a size; an arrow also has a line style. The plate behind the words is derived from the colour so the words always read. Rules: <code>docs/design/markup.md</code>. Component: <code>shared/components/markup.css</code> + <code>markup.js</code>.</p>
+
+  <div class="mp-ctl" id="mp-ink">Colour</div>
+
+  <div class="mp-blk">
+    <div class="mp-blk-h"><h3>Chip styles</h3><span class="mp-sub">ten · each on a light screenshot, a dark one and a photo</span></div>
+    <div id="mp-chips"></div>
+  </div>
+
+  <div class="mp-blk">
+    <div class="mp-blk-h"><h3>Arrow styles</h3><span class="mp-sub">ten · how the line is painted; ends, colour, thickness and head size are kept</span></div>
+    <div class="mp-body"><div class="mp-arrows" id="mp-arrows"></div></div>
+  </div>
+
+  <div class="mp-blk">
+    <div class="mp-blk-h"><h3>One colour, a legible plate</h3><span class="mp-sub">the line keeps the ink; the plate is derived</span></div>
+    <div class="mp-body">
+      <p class="mp-note">A mid or dark ink is <b>darkened just enough</b> for white words to reach 4.8:1. A light ink, whose darkening would pass 22 percent, <b>keeps its colour and takes dark words</b>. Hairline's ink-coloured words are the ink darkened to 4.5:1 against white. Every row below is computed by <code>PZ.markup.plateFor</code>, the same rule the app must follow.</p>
+      <table class="mp-t" id="mp-plates"><tr><th>Ink</th><th>Plate</th><th>Words</th><th>Contrast</th><th>Solid pill</th><th>Hairline</th></tr></table>
+    </div>
+  </div>
+
+  <div class="mp-blk">
+    <div class="mp-blk-h"><h3>Markers</h3><span class="mp-sub">accent (the style's own stripe or dot), none, or a status icon</span></div>
+    <div class="mp-body">
+      <p class="mp-note">Status colours keep their meaning on any ink. On an <b>ink-filled</b> plate the icon sits on a white disc with its colour in the glyph; on a <b>light or graphite</b> plate it is the coloured disc with a white glyph (dark on yellow). Any marker but Accent takes the stripe or dot away.</p>
+      <table class="mp-t" id="mp-markers"><tr><th>Marker</th><th>Solid pill</th><th>Paper</th><th>Spec badge</th><th>Two-tone</th></tr></table>
+    </div>
+  </div>
+
+  <div class="mp-blk">
+    <div class="mp-blk-h"><h3>Every measurement wears the chip</h3><span class="mp-sub">same style, colour, marker and size as an arrow's label</span></div>
+    <div class="mp-body"><div class="mp-meas" id="mp-meas"></div></div>
+  </div>
+
+  <div class="mp-blk">
+    <div class="mp-blk-h"><h3>Sizes</h3><span class="mp-sub">S · M · L</span></div>
+    <div class="mp-body" id="mp-sizes" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"></div>
+  </div>
+
+  <div class="mp-blk">
+    <div class="mp-blk-h"><h3>Appearance</h3><span class="mp-sub">the order the inspector shows it in</span></div>
+    <div class="mp-body mp-panel">
+      <div class="mp-insp">
+        <div class="mp-h">APPEARANCE</div>
+        <div class="mp-r"><span>Arrow</span><span>10 tiles · arrows only</span></div>
+        <div class="mp-r"><span>Chip</span><span>10 tiles</span></div>
+        <div class="mp-r"><span>Color</span><span>one row of swatches</span></div>
+        <div class="mp-r"><span>Marker</span><span>None · Accent · ✕ · ! · ✓ · i</span></div>
+        <div class="mp-r"><span>Size</span><span>S · M · L</span></div>
+        <div class="mp-adv">Advanced <span style="color:#0a84ff;float:right">Show</span>
+          <ul><li>Line, Head (from Color)</li><li>Chip Fill, Edge, Text (from style)</li><li>Thickness, Head Size (override Size)</li><li>Ending (Clean arrows only)</li></ul>
+        </div>
+      </div>
+      <p class="mp-note">The same controls sit on a <b>picked</b> mark (what this one is) and in the tool's options (what the <b>next</b> one is), for the Arrow tool and every Measure mode. A measurement has no Arrow row. Under Advanced each part reads "from Color" or "from style" until set by hand, and a part set by hand stays overridden until reset. Ending is offered only for Clean, since the hand-made styles draw their own heads.</p>
+    </div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function () {
+  const M = window.PZ && PZ.markup; if (!M) return;
+  const root = document.getElementById("markup");
+  const BLURB = {
+    today: "Dark plate in the ink, bright ink outline. The look before this system.",
+    solid: "Lit ink fill, lighter at the top, no edge.", squircle: "Truly flat: ink fill, smooth corners, no edge, no shadow.",
+    hairline: "White plate defined by a thin ink outline.", glass: "Frosted plate with a gradient rim that catches the light.",
+    paper: "Light card on a soft shadow; an ink stripe.", spec: "Graphite plate with its own rim, an ink dot, monospaced.",
+    tag: "Lit fill with small square corners.", twotone: "An ink tab holds the marker; dark words on white.",
+    highlight: "A swipe of ink behind dark words on white.",
+  };
+  const ARROW_BLURB = { clean: "The geometric arrow.", handDrawn: "Thin pen line, hooked open head.", marker: "Bold rounded stroke, loose head.",
+    brush: "Tapers, swells, swept head.", sketch: "Rough outline, drawn twice, dry breaks.", dashed: "Dashed line, solid head.",
+    block: "Bold filled arrow, widening shaft.", neon: "Glowing line, bright core.", dotted: "Round dots, dot tail, chevron head.", elbow: "Right-angle connector." };
+
+  // Chip styles on three backgrounds
+  const chips = document.getElementById("mp-chips");
+  chips.innerHTML = M.CHIPS.map(([id, name]) => `<div class="mp-row"><div class="mp-name"><b>${name}</b><span>${BLURB[id]}</span></div>`
+    + ["light", "dark", "photo"].map(bg => `<div class="mp-cell mp-bg-${bg}"><span class="mp-tx">Ship to 1 Infinite Loop · Arrives Tuesday</span><span class="mu-chip" data-chip="${id}" data-marker="accent">Not aligned</span><span class="mu-chip" data-chip="${id}" data-marker="accent">48 px</span></div>`).join("")
+    + `</div>`).join("");
+
+  // Arrow styles
+  document.getElementById("mp-arrows").innerHTML = M.ARROWS.map(([id, name]) =>
+    `<figure><svg class="mu-arrow" data-arrow="${id}" data-from="34,74" data-via="80,66" data-to="150,24" viewBox="0 0 190 96"></svg><figcaption>${name}<span>${ARROW_BLURB[id]}</span></figcaption></figure>`).join("");
+
+  // Markers
+  document.getElementById("mp-markers").innerHTML += M.MARKERS.map(([id, name]) => `<tr><td>${name}</td>`
+    + ["solid", "paper", "spec", "twotone"].map(c => `<td><span class="mu-chip" data-chip="${c}" data-marker="${id}">Padding 16</span></td>`).join("") + `</tr>`).join("");
+
+  // Measurements
+  const meas = [
+    ["Size", `<div class="mp-box" style="left:30%;top:28%;width:40%;height:44%"></div><svg class="mu-line" viewBox="0 0 200 120" preserveAspectRatio="none"><path d="M60 22H140M60 17V27M140 17V27" style="stroke-width:1.5"/></svg>`, "50%", "18%", "80 × 52"],
+    ["Distance", `<div class="mp-box" style="left:12%;top:35%;width:22%;height:30%"></div><div class="mp-box" style="left:66%;top:35%;width:22%;height:30%"></div><svg class="mu-line" viewBox="0 0 200 120" preserveAspectRatio="none"><path d="M68 60H132M68 55V65M132 55V65" style="stroke-width:1.5"/></svg>`, "50%", "50%", "64 px"],
+    ["Gap", `<div class="mp-box" style="left:20%;top:16%;width:60%;height:26%"></div><div class="mp-box" style="left:20%;top:62%;width:60%;height:26%"></div><svg class="mu-line" viewBox="0 0 200 120" preserveAspectRatio="none"><path d="M100 50V74M95 50H105M95 74H105" style="stroke-width:1.5"/></svg>`, "50%", "52%", "24"],
+    ["Alignment", `<div class="mp-box" style="left:30%;top:14%;width:50%;height:18%"></div><div class="mp-box" style="left:31%;top:42%;width:40%;height:18%"></div><div class="mp-box" style="left:30%;top:70%;width:30%;height:18%"></div><svg class="mu-line" viewBox="0 0 200 120" preserveAspectRatio="none"><path d="M60 8V112" style="stroke-width:1.5;stroke-dasharray:4 3"/></svg>`, "16%", "50%", "Off by 2"],
+  ];
+  document.getElementById("mp-meas").innerHTML = meas.map(([name, art, x, y, label]) =>
+    `<figure><div class="mp-scene">${art}<span class="mu-chip" data-chip="paper" data-marker="${name === "Alignment" ? "warning" : "accent"}" style="left:${x};top:${y}">${label}</span></div><figcaption>${name}</figcaption></figure>`).join("");
+
+  // Sizes
+  document.getElementById("mp-sizes").innerHTML = ["s", "m", "l"].map(z =>
+    `<span class="mu-chip" data-chip="solid" data-size="${z}" data-marker="success">Size ${z.toUpperCase()}</span><span class="mu-chip" data-chip="paper" data-size="${z}" data-marker="accent">48 px</span>`).join("");
+
+  // Plate table
+  function plates() {
+    const t = document.getElementById("mp-plates");
+    t.querySelectorAll("tr.mp-p").forEach(r => r.remove());
+    for (const ink of M.PALETTE) {
+      const p = M.plateFor(ink);
+      t.insertAdjacentHTML("beforeend", `<tr class="mp-p" data-ink="${ink}"><td><span class="mp-dot" style="background:${ink}"></span><code>${ink}</code></td>`
+        + `<td><span class="mp-dot" style="background:${p.plate}"></span><code>${p.plate}</code></td><td>${p.onPlate === "#ffffff" ? "white" : "dark"}</td>`
+        + `<td><code>${p.contrast.toFixed(1)}:1</code></td><td><span class="mu-chip" data-chip="solid">Not aligned</span></td><td><span class="mu-chip" data-chip="hairline">Not aligned</span></td></tr>`);
+    }
+  }
+  plates();
+
+  // Colour control
+  const ctl = document.getElementById("mp-ink");
+  M.PALETTE.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.className = "mp-sw"; b.style.background = c; b.setAttribute("aria-label", c); b.setAttribute("aria-pressed", i === 0);
+    b.addEventListener("click", () => {
+      ctl.querySelectorAll(".mp-sw").forEach(x => x.setAttribute("aria-pressed", x === b));
+      root.dataset.ink = c; M.paint(root); plates(); M.paint(document.getElementById("mp-plates"));
+    });
+    ctl.appendChild(b);
+  });
+  root.dataset.ink = M.PALETTE[0];
+  M.paint(root);
+})();
+</script>
+</body>
+</html>
