@@ -750,13 +750,10 @@ extension AnnotationContent {
     /// Silent when there is no fill: the words then sit on whatever is under
     /// the arrow, which nothing here can see, so a warning would be a guess.
     public var captionLegibilityNote: String? {
-        guard hasCaption, let fill = captionFill,
-              let back = RGBA(hex: fill.hex), let ink = RGBA(hex: captionTextHex),
-              back.a > 0.5 else { return nil }
-        // WCAG contrast, under the 4.5:1 every chip style keeps by itself
-        // (markup.md section 3).
-        guard InkPlate.contrast(ink, back) < 4.5 else { return nil }
-        return "These words will be hard to read on this fill."
+        // WCAG contrast as drawn, under the 4.5:1 every chip style keeps by
+        // itself (markup.md section 3). A panel label, not a sentence.
+        guard let ratio = captionWordContrast, ratio < 4.5 else { return nil }
+        return "Words are hard to read on this chip"
     }
 
     /// The pill around a laid-out line of caption text: padding on every side,

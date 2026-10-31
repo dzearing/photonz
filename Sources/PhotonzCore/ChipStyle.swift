@@ -764,6 +764,49 @@ extension AnnotationContent {
         if chipStyle != nil { captionPartsByHand.insert(part) }
     }
 
+    /// The one Color (markup.md section 2): the line takes `hex` exactly as
+    /// picked, the head takes it too unless it was painted apart from the
+    /// line, and the chip re-derives its plate, edge and words from it so they
+    /// read whatever the colour (section 3). Chip parts painted by hand keep
+    /// their colour.
+    public mutating func setInk(_ hex: String) {
+        let headFollows = headPaint == paint
+        colorHex = hex
+        if headFollows { headPaint = paint }
+    }
+
+    /// The worst contrast the label's words have on their chip as it is
+    /// drawn, a see-through plate judged over a white and a black picture
+    /// alike. Nil with nothing to judge: no words, or no plate, when the words
+    /// sit straight on a picture the model cannot see.
+    public var captionWordContrast: Double? {
+        guard hasCaption else { return nil }
+        if let look = chipLook {
+            guard look.fillTop != nil else { return nil }
+            return [RGBA(r: 1, g: 1, b: 1), RGBA(r: 0, g: 0, b: 0)]
+                .map { look.wordContrast(over: $0) }.min()
+        }
+        guard let fill = captionFill, let back = RGBA(hex: fill.hex),
+              let ink = RGBA(hex: captionTextHex), back.a > 0.5 else { return nil }
+        return InkPlate.contrast(ink, back)
+    }
+
+    /// Whether one step can hand the chip back to its automatic colours: some
+    /// part was painted by hand, or it is a pill from before chip styles.
+    public var canRestoreAutomaticChip: Bool {
+        guard hasCaption else { return false }
+        return chipStyle == nil || !captionPartsByHand.isEmpty
+    }
+
+    /// Puts the chip back on the colours its style derives from the line, so
+    /// the words read again. A pill from before chip styles takes Today, the
+    /// look it already wears, painted the automatic way.
+    public mutating func restoreAutomaticChip() {
+        guard hasCaption else { return }
+        if chipStyle == nil { applyChipStyle(.today) }
+        resetCaptionPartsByHand()
+    }
+
     /// Hands every chip part back to the style.
     public mutating func resetCaptionPartsByHand(_ parts: Set<CaptionPart> = Set(CaptionPart.allCases)) {
         captionPartsByHand.subtract(parts)

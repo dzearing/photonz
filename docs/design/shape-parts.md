@@ -1006,7 +1006,7 @@ only mean a pill nobody has painted.
 The one guarantee that is gone is legibility: the old derivation kept darkening
 the tone until white read on it, and colours you choose can be any pair. Nothing
 is refused and nothing is corrected behind anybody's back; the panel says
-"These words will be hard to read on this fill." under the Label Text row when
+"Words are hard to read on this chip" (with chip styles it sits under the Color row with Reset Colors, markup.md section 3) under the Label Text row when
 the contrast falls under 3:1, and stays quiet when there is no fill, because the
 words are then sitting on the picture and nothing in the model can see that.
 

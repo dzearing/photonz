@@ -399,7 +399,14 @@ extension EditorState {
         // paint-bucket foreground — picking here never touches the FG swatch.
         if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
             discardDragPreview() // a click-select's held sprite shows the old style
-            perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, paint: paint) } }
+            // An arrow's flat colour is its one Color (markup.md section 2):
+            // line, head and chip together, the same as the Color row. A
+            // gradient is the line's alone.
+            let oneColor = shape == .arrow && paint.kind == .solid && Experiments.shared.chipStylesEnabled
+            perform { $0.updateLayer(id: layer.id) {
+                $0 = oneColor ? AnnotationBuilder.reinked($0, paint.hex)
+                    : AnnotationBuilder.restyled($0, paint: paint)
+            } }
             annotationStyles.setPaint(paint, forShape: shape)
         } else {
             // A plain colour is a plain colour: this is where a tool holding a
@@ -648,6 +655,51 @@ extension EditorState {
     /// Hands the label's Fill, Edge and Text back to the chip style.
     func resetChipParts(ids: [UUID]) {
         rechip(ids: ids) { AnnotationBuilder.rechipped($0, resettingPartsByHand: true) }
+    }
+
+    /// The warning's way back: the chip's automatic colours, so the words read
+    /// again. A pill from before chip styles takes Today painted that way.
+    func restoreAutomaticChip(ids: [UUID]) {
+        rechip(ids: ids) { layer in
+            guard var a = layer.annotation else { return layer }
+            a.restoreAutomaticChip()
+            var changed = layer
+            changed.content = .annotation(a)
+            return changed
+        }
+    }
+
+    /// The arrows' one Color (markup.md section 2): line, head and chip
+    /// retinted together in one undo step, the chip's plate and words derived
+    /// so they read whatever the colour. The next arrow is drawn in it too.
+    func setArrowInk(ids: [UUID], _ hex: String) {
+        guard let doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+            .filter { doc.layer(id: $0)?.annotation?.shape == .arrow }
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            for id in targets {
+                document.updateLayer(id: id) { $0 = AnnotationBuilder.reinked($0, hex) }
+            }
+        }
+        annotationStyles.setColorHex(hex, forShape: .arrow)
+        saveAnnotationStyles()
+        recordRecentColor(hex: hex)
+    }
+
+    /// The same, live while a picker's square is being dragged: nothing is
+    /// recorded until `setArrowInk` lands on release.
+    func previewArrowInk(ids: [UUID], _ hex: String) {
+        guard var doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+            .filter { doc.layer(id: $0)?.annotation?.shape == .arrow }
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        for id in targets {
+            doc.updateLayer(id: id) { $0 = AnnotationBuilder.reinked($0, hex) }
+        }
+        submit(doc)
     }
 
     private func rechip(ids: [UUID], _ change: @escaping (Layer) -> Layer) {

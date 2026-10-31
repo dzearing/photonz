@@ -276,6 +276,32 @@ struct ChipStyleRenderingTests {
             }
         }
         try parity.write(toFile: folder + "/chip-export-parity.tsv", atomically: true, encoding: .utf8)
+
+        // Any colour: a custom light green and a custom indigo in every
+        // style on a pure white, a pure black and a busy photo, read off the
+        // pixels by the probe's own reader (`ChipContrastReader`).
+        let custom = ["#7FD18B", "#3A2E8F"]
+        let grounds: [Backdrop] = [.white, .black, .photo]
+        try sheet(folder + "/chip-custom-inks.png", rows: ChipStyle.allCases.flatMap { style in
+            custom.map { ink in
+                ("\(style.title), \(ink)", grounds.map { ($0, Self.arrow(style: style, ink: ink)) })
+            }
+        }, store: store)
+        var read = "style\tink\twhite\tblack\tphoto\tworst\n"
+        for style in ChipStyle.allCases {
+            for ink in custom {
+                var cells: [Double] = []
+                for ground in grounds {
+                    let layer = Self.arrow(style: style, ink: ink)
+                    let image = try #require(DocumentRenderer().render(Self.document(ground, [layer], store: store),
+                                                                       store: store))
+                    cells.append(ChipContrastReader.read(layer, in: image)?.contrast ?? 0)
+                }
+                read += "\(style.rawValue)\t\(ink)\t" + cells.map { String(format: "%.2f", $0) }.joined(separator: "\t")
+                    + "\t" + String(format: "%.2f", cells.min() ?? 0) + "\n"
+            }
+        }
+        try read.write(toFile: folder + "/chip-custom-inks.tsv", atomically: true, encoding: .utf8)
     }
 
     /// A grid of rendered cells, each a captioned arrow on a backdrop, with a

@@ -81,3 +81,41 @@ struct PlaytestInkTests {
         }
     }
 }
+
+/// A chip's words read off the rendered picture (`expectChipContrast`).
+@Suite("A walk reads a chip's contrast off the picture")
+struct PlaytestChipContrastStepTests {
+
+    @Test func aStepAsksForTheBarItWasGiven() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectChipContrast", "min": 7 } ] }
+        """.utf8))
+        guard case .expectChipContrast(let min) = script.steps[0] else {
+            Issue.record("expectChipContrast"); return
+        }
+        #expect(min == 7)
+        #expect(script.steps[0].name == "expectChipContrast")
+    }
+
+    @Test func theBarIsFourAndAHalfUnlessSaid() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectChipContrast" } ] }
+        """.utf8))
+        guard case .expectChipContrast(let min) = script.steps[0] else {
+            Issue.record("expectChipContrast"); return
+        }
+        #expect(min == 4.5)
+    }
+
+    @Test func aBarUnderOneIsRefused() {
+        #expect(throws: (any Error).self) {
+            try PlaytestScript.decode(Data("""
+            { "steps": [ { "do": "expectChipContrast", "min": 0.5 } ] }
+            """.utf8))
+        }
+    }
+
+    @Test func itSurvivesALock() {
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectChipContrast"))
+    }
+}

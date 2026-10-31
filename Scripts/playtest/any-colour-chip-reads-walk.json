@@ -1,0 +1,1587 @@
+{
+ "out": "/tmp/photonz-playtest/any-colour-chip-reads",
+ "seed": "At Next defaults, no switch changed: an arrow's Color row takes a custom light green (#7FD18B) and a custom indigo (#3A2E8F) from the app's own picker, and in every one of the ten chip styles the words read at 4.5:1 or better, measured off the rendered pixels, on a pure white, a pure black and a busy photo picture. Then a palette swatch clicked by the pointer retints line, head and chip; label words painted by hand into the plate's colour raise the warning, and Reset Colors puts them back.",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "fixtures/Plain white 1200x800.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    700,
+    620
+   ],
+   "to": [
+    900,
+    420
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button 48 pt"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Custom"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#7FD18B"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Chip style Today",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "1-white-light-green-solid-pill",
+   "note": "Solid pill chip in a custom light green on the white picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-white-light-green-solid-pill"
+  },
+  {
+   "do": "render",
+   "name": "1-white-light-green-solid-pill"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "1-white-light-green-hairline-plate",
+   "note": "Hairline plate chip in a custom light green on the white picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-white-light-green-hairline-plate"
+  },
+  {
+   "do": "render",
+   "name": "1-white-light-green-hairline-plate"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Glass",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "1-white-light-green-glass",
+   "note": "Glass chip in a custom light green on the white picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-white-light-green-glass"
+  },
+  {
+   "do": "render",
+   "name": "1-white-light-green-glass"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Custom"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#3A2E8F"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Chip style Today",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "1-white-indigo-solid-pill",
+   "note": "Solid pill chip in a custom indigo on the white picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-white-indigo-solid-pill"
+  },
+  {
+   "do": "render",
+   "name": "1-white-indigo-solid-pill"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "1-white-indigo-hairline-plate",
+   "note": "Hairline plate chip in a custom indigo on the white picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-white-indigo-hairline-plate"
+  },
+  {
+   "do": "render",
+   "name": "1-white-indigo-hairline-plate"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Glass",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "1-white-indigo-glass",
+   "note": "Glass chip in a custom indigo on the white picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-white-indigo-glass"
+  },
+  {
+   "do": "render",
+   "name": "1-white-indigo-glass"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "open",
+   "file": "fixtures/Plain black 1200x800.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    700,
+    620
+   ],
+   "to": [
+    900,
+    420
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button 48 pt"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Custom"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#7FD18B"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Chip style Today",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Glass",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "2-black-light-green-glass",
+   "note": "Glass chip in a custom light green on the black picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-black-light-green-glass"
+  },
+  {
+   "do": "render",
+   "name": "2-black-light-green-glass"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "2-black-light-green-paper",
+   "note": "Paper chip in a custom light green on the black picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-black-light-green-paper"
+  },
+  {
+   "do": "render",
+   "name": "2-black-light-green-paper"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Custom"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#3A2E8F"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Chip style Today",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Glass",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "2-black-indigo-glass",
+   "note": "Glass chip in a custom indigo on the black picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-black-indigo-glass"
+  },
+  {
+   "do": "render",
+   "name": "2-black-indigo-glass"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "2-black-indigo-paper",
+   "note": "Paper chip in a custom indigo on the black picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-black-indigo-paper"
+  },
+  {
+   "do": "render",
+   "name": "2-black-indigo-paper"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "open",
+   "file": "fixtures/Busy photo 1200x800.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    700,
+    620
+   ],
+   "to": [
+    900,
+    420
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button 48 pt"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Custom"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#7FD18B"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Chip style Today",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Glass",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-photo-light-green-glass",
+   "note": "Glass chip in a custom light green on the photo picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-photo-light-green-glass"
+  },
+  {
+   "do": "render",
+   "name": "3-photo-light-green-glass"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-photo-light-green-two-tone-badge",
+   "note": "Two-tone badge chip in a custom light green on the photo picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-photo-light-green-two-tone-badge"
+  },
+  {
+   "do": "render",
+   "name": "3-photo-light-green-two-tone-badge"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Custom"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#3A2E8F"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Chip style Today",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Glass",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-photo-indigo-glass",
+   "note": "Glass chip in a custom indigo on the photo picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-photo-indigo-glass"
+  },
+  {
+   "do": "render",
+   "name": "3-photo-indigo-glass"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-photo-indigo-two-tone-badge",
+   "note": "Two-tone badge chip in a custom indigo on the photo picture: words read at 4.5:1 or better, measured off the pixels"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-photo-indigo-two-tone-badge"
+  },
+  {
+   "do": "render",
+   "name": "3-photo-indigo-two-tone-badge"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "press",
+   "control": "Color Blue",
+   "in": "Arrow Color"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Color Blue",
+   "in": "Arrow Color",
+   "reads": "Arrow Color, on"
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "4-palette-blue",
+   "note": "the palette's Blue, clicked with the pointer: line, head and chip all blue, the chip derived so the words read"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-palette-blue"
+  },
+  {
+   "do": "render",
+   "name": "4-palette-blue"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Label Text"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#4A90E2"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Reset Colors",
+   "in": "Chip Legibility",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "5-warning",
+   "note": "label words painted by hand in a blue close to the plate: the Color row says they are hard to read and offers Reset Colors"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-warning"
+  },
+  {
+   "do": "press",
+   "control": "Reset Colors",
+   "in": "Chip Legibility"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Reset Colors",
+   "in": "Chip Legibility",
+   "present": false
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "6-automatic",
+   "note": "one click: the chip is back on its automatic colours and the words read"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-automatic"
+  },
+  {
+   "do": "render",
+   "name": "6-automatic"
+  }
+ ]
+}

@@ -56,6 +56,13 @@ Measured with the palette (WCAG contrast, `PZ.markup.plateFor`):
 
 **Any colour, not just the palette.** The Color row has the palette swatches
 plus a custom colour well, and a custom colour gets exactly the same treatment.
+In the app it sits between Chip and Marker (`MarkupInkRow`); a pick retints
+the line, the head (unless the head was painted apart from the line) and the
+chip in one undo step (`AnnotationContent.setInk`). A chip part painted by
+hand that takes the words under 4.5:1 shows "Words are hard to read on this
+chip" under the row with Reset Colors, one click back to the derived
+colours (`restoreAutomaticChip`). A walk reads the result off the pixels with
+`expectChipContrast`.
 Checked over 5,472 colours (every 5 degrees of hue, four saturations, nineteen
 lightnesses): the worst words-on-plate contrast is **4.80:1**, and no colour is
 darkened past 35 percent. Nobody has to open Advanced to keep a chip legible;

@@ -422,6 +422,18 @@ extension AnnotationBuilder {
         return updating(layer, start: remap(a.start), end: remap(a.end))
     }
 
+    /// An arrow's one Color (markup.md section 2): line, head and chip retinted
+    /// together (`AnnotationContent.setInk`), its ends where they were.
+    public static func reinked(_ layer: Layer, _ hex: String) -> Layer {
+        guard var a = layer.annotation,
+              let start = layer.annotationEndpoint(.start),
+              let end = layer.annotationEndpoint(.end) else { return layer }
+        a.setInk(hex)
+        var updated = layer
+        updated.content = .annotation(a)
+        return updating(updated, start: start, end: end)
+    }
+
     /// Style edit on an existing annotation: endpoints stay anchored in
     /// document space while the frame re-pads for the new stroke width.
     /// `fillColorHex` is doubly-optional: outer nil keeps the current fill,

@@ -3638,6 +3638,9 @@ private final class Run {
             note(number, step.name, try checkInk(at: at, thickness: thickness, within: within),
                  state: describe())
 
+        case .expectChipContrast(let min):
+            note(number, step.name, try checkChipContrast(min: min), state: describe())
+
         case .expectWaveform(let clip, let within, let cleanedAt, let rawAt):
             note(number, step.name, try await checkWaveform(clip: clip, within: within,
                                                             cleanedAt: cleanedAt, rawAt: rawAt),
@@ -9949,6 +9952,37 @@ private final class Run {
                           + (within > 0 ? " give or take \(Int(within))" : ""))
         }
         return said
+    }
+
+    /// How well the words on every captioned arrow's chip stand off the plate
+    /// behind them, read off the document as it renders at 1x
+    /// (`expectChipContrast`, `ChipContrastReader`). The export path, which
+    /// the canvas matches pixel for pixel (`ChipStyleRenderingTests`).
+    private func checkChipContrast(min: Double) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document,
+              let image = DocumentRenderer().render(document, store: editor.store, scale: 1) else {
+            throw Failure(description: "the document did not render")
+        }
+        let chips = document.layers.filter { $0.isVisible && $0.annotation?.hasCaption == true }
+        guard !chips.isEmpty else { throw Failure(description: "no arrow on the picture has words") }
+        var said: [String] = []
+        var short: [String] = []
+        for layer in chips {
+            guard let a = layer.annotation,
+                  let reading = ChipContrastReader.read(layer, in: image) else {
+                throw Failure(description: "the chip of \"\(layer.name)\" could not be read")
+            }
+            let line = "\(a.shownChipStyle.title) in \(a.colorHex.uppercased()): words "
+                + "\(reading.words.hexString) on \(reading.plate.hexString), "
+                + String(format: "%.2f:1", reading.contrast)
+            said.append(line)
+            if reading.contrast < min { short.append(line) }
+        }
+        guard short.isEmpty else {
+            throw Failure(description: "under \(min):1: " + short.joined(separator: "; "))
+        }
+        return "every chip reads at \(min):1 or better: " + said.joined(separator: "; ")
     }
 
     /// Whether the canvas is showing the picture drawn at the size it is being

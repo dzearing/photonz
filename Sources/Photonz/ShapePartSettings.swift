@@ -83,7 +83,10 @@ struct ShapePartSettings: View {
                 // colours is worth more than that guarantee, so the guarantee
                 // becomes a sentence: nothing is refused and nothing is
                 // corrected behind anyone's back.
-                if let note = legibilityNote(selection) {
+                // With chip styles the warning sits under the Color row, with
+                // its one click back to the automatic colours, where it is seen
+                // without opening the parts (`ChipLegibilityWarning`).
+                if !Experiments.shared.chipStylesEnabled, let note = legibilityNote(selection) {
                     Text(note)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
@@ -191,25 +194,46 @@ struct ArrowChipRow: View {
 
     @ViewBuilder private var lookBody: some View {
         let arrows = editorState.shapeSelection.members.filter { $0.content.shape == .arrow }
-        if Experiments.shared.chipStylesEnabled, Experiments.shared.arrowCaptionsEnabled, !arrows.isEmpty {
+        if Experiments.shared.chipStylesEnabled, !arrows.isEmpty {
+            let captions = Experiments.shared.arrowCaptionsEnabled
             let styles = Set(arrows.map(\.content.shownChipStyle))
             let markers = Set(arrows.map(\.content.chipMarker))
             let inks = Set(arrows.map { $0.content.colorHex.uppercased() })
+            let ink = inks.count == 1 ? inks.first : nil
+            let unreadable = arrows.first { $0.content.captionLegibilityNote != nil }
             let state = editorState
+            // Looked up at the press, so it reaches what is picked then.
+            let pickedArrows: () -> [UUID] = {
+                state.shapeSelection.members.filter { $0.content.shape == .arrow }.map(\.id)
+            }
+            // Chip, Color, Marker: the order markup.md section 8 gives them.
             VStack(alignment: .leading, spacing: 10) {
-                ChipStyleTiles(selection: styles.count == 1 ? styles.first : nil,
-                               ink: inks.count == 1 ? (inks.first ?? "#FF3B30") : "#FF3B30") { style in
-                    let ids = state.shapeSelection.members
-                        .filter { $0.content.shape == .arrow }.map(\.id)
-                    state.setChipStyle(ids: ids, style)
+                if captions {
+                    ChipStyleTiles(selection: styles.count == 1 ? styles.first : nil,
+                                   ink: ink ?? "#FF3B30") { style in
+                        state.setChipStyle(ids: pickedArrows(), style)
+                    }
+                    .equatable()
                 }
-                .equatable()
-                ChipMarkerPicker(selection: markers.count == 1 ? markers.first : nil) { marker in
-                    let ids = state.shapeSelection.members
-                        .filter { $0.content.shape == .arrow }.map(\.id)
-                    state.setChipMarker(ids: ids, marker)
+                VStack(alignment: .leading, spacing: 6) {
+                    MarkupInkRow(ink: ink,
+                                 pick: { state.setArrowInk(ids: pickedArrows(), $0) },
+                                 preview: { state.previewArrowInk(ids: pickedArrows(), $0) })
+                        .equatable()
+                    if let note = unreadable?.content.captionLegibilityNote {
+                        ChipLegibilityWarning(note: note) {
+                            let ids = state.shapeSelection.members
+                                .filter { $0.content.captionLegibilityNote != nil }.map(\.id)
+                            state.restoreAutomaticChip(ids: ids)
+                        }
+                    }
                 }
-                .equatable()
+                if captions {
+                    ChipMarkerPicker(selection: markers.count == 1 ? markers.first : nil) { marker in
+                        state.setChipMarker(ids: pickedArrows(), marker)
+                    }
+                    .equatable()
+                }
             }
             .panelStartProbe(.row, owner: "Chip Style")
         }

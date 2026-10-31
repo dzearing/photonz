@@ -170,3 +170,116 @@ struct ChipMarkerPicker: View, Equatable {
             .font(.system(size: 13))
     }
 }
+
+/// The arrow's one Color (`docs/design/markup.md` sections 2 and 8): the
+/// design system's eight swatches and a Custom well that opens the app's own
+/// picker on any colour at all. A pick retints the line, the head and the chip
+/// together, and the chip derives its plate and words from it so they read.
+struct MarkupInkRow: View, Equatable {
+    /// The ink every picked arrow wears, or nil over a mixture.
+    let ink: String?
+    var labelFont: Font = .caption
+    let pick: (String) -> Void
+    /// Live while the Custom picker's square is dragged; nothing recorded.
+    var preview: ((String) -> Void)?
+
+    nonisolated static func == (a: MarkupInkRow, b: MarkupInkRow) -> Bool {
+        a.ink == b.ink && a.labelFont == b.labelFont
+    }
+
+    /// The swatches' names, for the tip and for a walk.
+    static let names = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Black", "White"]
+
+    /// The palette swatch `ink` is, if it is one.
+    static func swatch(for ink: String?) -> Int? {
+        guard let ink else { return nil }
+        return InkPlate.palette.firstIndex { $0.uppercased() == ink.uppercased() }
+    }
+
+    private var isCustom: Bool { ink != nil && Self.swatch(for: ink) == nil }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Text("Color").font(labelFont).foregroundStyle(.secondary)
+                if let ink {
+                    Text(Self.swatch(for: ink).map { Self.names[$0] } ?? ink.uppercased())
+                        .font(labelFont).foregroundStyle(.secondary)
+                } else {
+                    MixedWord()
+                }
+                Spacer(minLength: 0)
+            }
+            HStack(spacing: 5) {
+                ForEach(Array(InkPlate.palette.enumerated()), id: \.offset) { index, hex in
+                    swatchButton(index, hex)
+                }
+                custom
+                Spacer(minLength: 0)
+            }
+        }
+        .playtestField("Arrow Color")
+    }
+
+    private func swatchButton(_ index: Int, _ hex: String) -> some View {
+        let isOn = Self.swatch(for: ink) == index
+        return Button { pick(hex.uppercased()) } label: {
+            Circle()
+                .fill(Color(hex: hex))
+                .overlay(Circle().strokeBorder(.primary.opacity(0.25), lineWidth: 1))
+                .padding(2)
+                .overlay(Circle().strokeBorder(isOn ? Color.accentColor : .clear, lineWidth: 2))
+                .frame(width: 22, height: 22)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .playtestControl("Color \(Self.names[index])", detail: isOn ? "on" : "off")
+        .accessibilityLabel(Self.names[index])
+        .panelHelp(Self.names[index])
+    }
+
+    /// Any colour: the well shows the ink when it is not one of the eight, and
+    /// a spectrum when it is, so it reads as "more colours" either way.
+    private var custom: some View {
+        let shown = ink ?? InkPlate.palette[0]
+        return ColorWellButton(hex: shown, name: "Custom", size: 18, wellKey: "markup-custom-ink",
+                               onPreview: preview, onCommit: { pick($0.uppercased()) })
+            .overlay {
+                if !isCustom {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(AngularGradient(colors: [.red, .yellow, .green, .cyan, .blue, .purple, .red],
+                                              center: .center))
+                        .frame(width: 18, height: 18)
+                        .allowsHitTesting(false)
+                }
+            }
+            .padding(2)
+            .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(isCustom ? Color.accentColor : .clear, lineWidth: 2))
+            .frame(width: 22, height: 22)
+    }
+}
+
+/// Said under the Color row when a chip part painted by hand has made the
+/// words hard to read, with the one click that hands the chip back to its
+/// automatic colours (markup.md section 3).
+struct ChipLegibilityWarning: View {
+    let note: String
+    let restore: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label {
+                Text(note).foregroundStyle(.secondary)
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .symbolRenderingMode(.multicolor)
+            }
+            .font(.caption)
+            Button("Reset Colors", action: restore)
+                .controlSize(.small)
+                .playtestControl("Reset Colors", detail: "chip legibility")
+                .panelHelp("Back to the colors the chip style picks, so the words read")
+        }
+        .playtestField("Chip Legibility")
+    }
+}
