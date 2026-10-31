@@ -14792,3 +14792,5 @@
 {"t":"2026-10-31T13:25:38.022Z","ev":"digest","file":"2026-10-31.md"}
 {"t":"2026-10-31T13:25:53.657Z","ev":"task_started","id":"caption-and-measurement-chips-come-in-a-set-of-p","title":"Caption and measurement chips come in a set of professional styles you pick from, like arrow styles","priority":"p1-high"}
 {"t":"2026-10-31T14:18:40.903Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-10-31T14:19:06.789Z","ev":"task_created","id":"any-colour-you-pick-for-an-arrow-or-measurement","priority":"p1-high","title":"Any colour you pick for an arrow or measurement keeps its chip's words readable, Glass included"}
+{"t":"2026-10-31T14:19:06.900Z","ev":"task_resequenced","id":"any-colour-you-pick-for-an-arrow-or-measurement","from":3970,"to":1e-7}

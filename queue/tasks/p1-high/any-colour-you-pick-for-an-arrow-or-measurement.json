@@ -1,0 +1,34 @@
+{
+  "id": "any-colour-you-pick-for-an-arrow-or-measurement",
+  "title": "Any colour you pick for an arrow or measurement keeps its chip's words readable, Glass included",
+  "goal": "A person can pick any colour at all for an arrow or a measurement, not only the palette, and every chip style keeps its words readable automatically, with no trip into Advanced. Glass, which lets the picture through, stays readable over a white screenshot and a black one alike.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 1e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T14:19:06.785Z",
+  "updated": "2026-10-31T14:19:06.899Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-31 (intake): 'I want to make sure arrows/chips can be custom colored and it retains accessibility on the text, without going into advanced to tweak details'. Split out because the runner on caption-and-measurement-chips-come-in-a-set-of-p started at 13:25 and this direction was logged at 14:18; if that runner already did it, verify and close this as done. Reference implementation: docs/design/mocks/shared/components/markup.js (plateFor, glassFor), rules docs/design/markup.md section 3, live check on the design site: Design system > Markup, Custom colour well with a contrast readout.",
+  "acceptance": [
+    "The Color row offers the palette plus a custom colour (the app's colour picker); picking any colour retints line, head and chip at once.",
+    "The plate rule in PhotonzCore matches docs/design/markup.md section 3 and window.PZ.markup.plateFor to the hex digit: a unit test sweeps every 5 degrees of hue x 4 saturations x 19 lightnesses (5,472 colours) over EVERY chip style and asserts words-to-plate contrast >= 4.5:1 (the design system measures 4.80 worst).",
+    "Glass derives its own tint (glassFor): at 82 percent opacity its words reach 4.8:1 over a pure white AND a pure black picture; white words on a darkened tint or dark words on a lightened one, whichever moves the colour less. Measured on a real white and a real black screenshot in the audit (before: a light ink on glass over white fell to 1.4:1).",
+    "A part overridden by hand under Advanced that drops a chip below 4.5:1 shows a short warning in the inspector, with a one-click way back to the automatic colour.",
+    "Walk: pick a custom light green and a custom indigo, check each chip style's words with the probe's pixel reader at 4.5:1 or better on light, dark and photo pictures.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T14:19:06.787Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-31T14:19:06.898Z",
+      "note": "seq 3970 -> 1e-7"
+    }
+  ]
+}
