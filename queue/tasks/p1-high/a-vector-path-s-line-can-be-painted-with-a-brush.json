@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.125Z",
-  "updated": "2026-10-30T14:25:42.738Z",
+  "updated": "2026-10-31T05:56:09.025Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -49,6 +49,44 @@
     {
       "t": "2026-10-30T14:25:42.737Z",
       "note": "seq 120 -> 110"
+    },
+    {
+      "t": "2026-10-31T04:55:00.559Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T05:55:36.855Z",
+      "note": "owns these walks: a-path-s-line-painted-with-a-brush-walk, path-brush-dropdowns-open-on-a-click-walk"
+    },
+    {
+      "t": "2026-10-31T05:55:36.920Z",
+      "note": "Adversarial review before building: a Photoshop/Illustrator user expects a brush on a stroke to scale with stroke weight and keep the path editable (Illustrator's art brushes); the mock (draw.html Stroke group) assumes a brush picker and a Library Brushes scope the app does not have for lines yet. Chose a word dropdown over tiles for this slice because the tile chooser is tied to the armed brush and a second popover needs a focus drill with nobody at the Mac; filed the tile picker as a-path-s-line-picks-its-brush-by-its-stroke-with."
+    },
+    {
+      "t": "2026-10-31T05:55:36.985Z",
+      "note": "Chose the path's Thickness as the brushed line's Size over a second width kept with the brush, because one line should have one width and the Thickness slider already exists. Chose to hide Ends, Corners and Align for brushed lines because the brush tapers its own ends and sits centred."
+    },
+    {
+      "t": "2026-10-31T05:55:37.049Z",
+      "note": "Built: PathBrush.swift (core: PathContent.brush, brushStrokes walk, setPathBrush/setPathBrushSetting with groups), PathRasterizer brushEdge through PaintRasterizer.paint, PathBrushSettings.swift (panel), add_path/set_layer brush + read_document. Tests: PathBrushTests, PathBrushRenderingTests (pixel for pixel the paint engine's stroke, every medium, taper, follows an anchor), AgentPathBrushTests. Walks a-path-s-line-painted-with-a-brush-walk and path-brush-dropdowns-open-on-a-click-walk green with no flags; Scripts/agent-path-brush-drill.mjs all checks pass on the probe. Full Scripts/test.sh green (one run first missed IconPreviewRenderTests' strip budget under load, 22.5 vs 20.5 ms; alone it read 10.6 ms and the rerun of the whole suite passed)."
+    },
+    {
+      "t": "2026-10-31T05:55:37.115Z",
+      "note": "Pictures looked at: 1-plain (plain red line, Brush reads Plain), 2-charcoal (grainy charcoal tapering at both ends), 4-moved (charcoal line follows the moved end), 5-both-marker (both lines flat translucent marker after one choice), menu (Plain and eight media open under the pointer), pencil-6b, agent watercolour (granulated wash, tapered). All show the brushed look, none the plain stroke."
+    },
+    {
+      "t": "2026-10-31T05:55:37.192Z",
+      "note": "Not mine: outline-width-walk (step 57 expectInk) and path-line-style-walk (step 36 Ends) fail the same way with my Sources changes stashed, so they predate this; walks-that-fail-in-the-full-sweep-26 lists both. Left rough: the MCP bridge prefixes refusals twice ('set_layer: set_layer: ...') for every tool, core says it once (AgentPathBrushTests pins it); a 300 ms main-thread pass after an anchor drag ends happens with a plain line too."
+    },
+    {
+      "t": "2026-10-31T05:56:09.023Z",
+      "note": "A Pen path's line can be painted with any of the eight brushes from Appearance > Line > Brush (and the agent's brush on add_path/set_layer, groups included); it tapers at open ends and repaints when an anchor moves; several lines swap in one step. Verified by PathBrushTests, PathBrushRenderingTests, AgentPathBrushTests, two no-flag walks with real window pictures, the MCP drill, and a green Scripts/test.sh. Audit: queue/audits/2026-10-31-a-vector-path-s-line-can-be-painted-with-a-brush.json. Commit 02ff0d3a."
     }
-  ]
+  ],
+  "started": "2026-10-31T04:55:00.558Z",
+  "walks": [
+    "a-path-s-line-painted-with-a-brush-walk",
+    "path-brush-dropdowns-open-on-a-click-walk"
+  ],
+  "completed": "2026-10-31T05:56:09.024Z"
 }
