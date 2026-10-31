@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/path-brush-dropdowns-open-on-a-click-walk",
+  "seed": "The two dropdowns a path's brushed line adds to Appearance (Brush, and a pencil line's Hardness) open on a pointer click on their faces, not only when pressed by name (EveryDropdownIsClickedByAWalkTests). Draws a line with the Pen at Next defaults, clicks Brush and picks Pencil, then clicks Hardness and picks 6B.",
+  "setup": {
+    "forget": ["shapes", "tools", "color", "panel"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 600, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [150, 400] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [450, 180] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [750, 400] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPath", "anchors": 3, "closed": false },
+
+    { "do": "panelMenu", "menu": "Brush", "at": ["centre"], "shot": "1-brush-menu", "choose": "Pencil" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "menu": "Brush", "reads": "Pencil" },
+    { "do": "panelMenu", "menu": "Line Hardness", "at": ["centre"], "shot": "2-hardness-menu", "choose": "6B" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "menu": "Line Hardness", "reads": "6B" },
+    { "do": "describe", "stage": "3-pencil-6b", "note": "THE TEST: both dropdowns opened under the pointer; the line is a soft dark pencil" },
+    { "do": "snapshot", "name": "3-pencil-6b" }
+  ]
+}

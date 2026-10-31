@@ -51,7 +51,11 @@ public enum PathRasterizer {
         if content.paintsAnInside, let fill = content.fill {
             paint(fill, inside: shape, rule: rule, in: context)
         }
-        strokeEdge(content, shape: shape, rule: rule, size: size, in: context)
+        if content.brush != nil {
+            brushEdge(content, pad: pad, scale: scale, in: context)
+        } else {
+            strokeEdge(content, shape: shape, rule: rule, size: size, in: context)
+        }
         return context.makeImage()
     }
 
@@ -80,6 +84,26 @@ public enum PathRasterizer {
         context.clip(using: rule)
         GradientPainter.fill(path: CGPath(rect: shape.boundingBoxOfPath, transform: nil),
                              with: fill, in: context)
+        context.restoreGState()
+    }
+
+    /// The line painted with the path's brush (`PathBrush.swift`): the curve
+    /// walked into brush strokes and handed to the paint engine, the same
+    /// code a person's strokes are painted by, over the fill.
+    ///
+    /// The media write the bitmap's pixels straight from points at `scale`
+    /// (`PixelPlane`), so they are handed the strokes shifted by the pad and a
+    /// drawing space that is only the flip and the scale, the space a paint
+    /// layer's bitmap has. The line is always centred on the outline: a
+    /// brush's edge is its own, so there is no inside or outside half to cut.
+    private static func brushEdge(_ content: PathContent, pad: CGFloat, scale: CGFloat, in context: CGContext) {
+        let strokes = content.brushStrokes
+        guard !strokes.isEmpty else { return }
+        context.saveGState()
+        if pad != 0 { context.translateBy(x: -pad, y: -pad) }
+        for stroke in strokes {
+            PaintRasterizer.paint(stroke.offsetBy(dx: pad, dy: pad), in: context, scale: scale)
+        }
         context.restoreGState()
     }
 

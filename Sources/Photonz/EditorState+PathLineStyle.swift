@@ -50,6 +50,35 @@ extension EditorState {
         rememberLines(of: ids)
     }
 
+    /// Paints the line of every picked path with a brush, or gives it back its
+    /// plain line with nil (`PathBrush.swift`). A brush picked here starts as
+    /// that medium was last left in the Brush tool, so a charcoal tuned there
+    /// is the charcoal a line gets. One choice, one undo step.
+    func setPathBrush(ids: [UUID], _ medium: BrushMedium?) {
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        let brush = medium.map { annotationStyles.brush(for: $0) }
+        perform { _ = $0.setPathBrush(layerIDs: ids, to: brush) }
+    }
+
+    /// One of the line's brush settings while its slider is held: shown on
+    /// the canvas, filed nowhere yet.
+    func previewPathBrushSetting(ids: [UUID], _ settingID: String, _ value: Double) {
+        guard var doc = document, !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        guard doc.setPathBrushSetting(layerIDs: ids, id: settingID, to: value) > 0 else { return }
+        submit(doc)
+    }
+
+    /// ...and let go: ONE undo step however many lines it reached.
+    func commitPathBrushSetting(ids: [UUID], _ settingID: String, _ value: Double) {
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.setPathBrushSetting(layerIDs: ids, id: settingID, to: value) }
+    }
+
     /// What the ends of a LINE or an ARROW look like. The same three answers
     /// and the same one step, on a shape the Pen did not draw.
     func setShapeLineEnd(ids: [UUID], _ end: PathLineEnd) {

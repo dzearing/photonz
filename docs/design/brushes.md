@@ -604,6 +604,39 @@ an anchor and the line re-paints.
   canvas covered, sky and land in close shades, but its small details read as
   marks, not things.
 
+## What brushed vector strokes settled (2026-10-31)
+
+- **The path keeps its line's width and colour; the brush says what it is
+  made of.** `PathContent.brush` is a `PathBrush` (settings and a seed,
+  `PathBrush.swift`, PhotonzCore). The line is as wide as the path's
+  Thickness and painted in the Line colour, so a brushed line has one width,
+  not a Thickness and a Size. A line is always painted, never smudged.
+- **Walked, then painted by the same engine.** `PathContent.brushStrokes`
+  walks the outline as drawn (corner rounding, trim and dashes included) into
+  points no more than `min(4, width / 4)` apart, one `BrushStroke` per figure
+  (each ring, each dash). An open figure is walked like a steady mouse (no
+  pressure, the agent's 0.3 pt/ms), so the engine tapers both ends; a closed
+  one is walked at the steady press and ends on its first point, so no seam
+  shows. `PathRasterizer` hands them to `PaintRasterizer.paint` over the fill,
+  shifted by the bitmap's pad; `PathBrushRenderingTests` holds the line to the
+  paint engine's own stroke pixel for pixel. The bitmap reaches
+  `width / 2 × medium.reach` past the outline (`strokeOutset`).
+- **Panel**: Appearance, under Line, a Brush dropdown (Plain, then the eight
+  media) above Thickness, and the medium's first two own settings under it
+  (`PathBrushSettings.swift`). Ends, Corners and Align hide while every
+  picked line is brushed. Several lines picked take one choice in one undo
+  step. A medium picked here starts as it was last left in the Brush tool.
+- **Agent**: add_path and set_layer take `brush` (a medium, `{medium,
+  settings}`, or `plain`); a size there is the line's thickness; on a group
+  it reaches every path inside. read_document says a path's `brush`.
+  `Scripts/agent-path-brush-drill.mjs` drives it on the probe.
+- **Cost**: the line is drawn again whenever the path changes, an anchor drag
+  included. Release build, two long lines on 1200 × 800 at 1x: render_picture
+  20 to 29 ms plain, 21 to 43 ms brushed (charcoal the slowest).
+- **Left for later**: picking a line's brush by its stroke with Browse brushes
+  and Edit brush (`a-path-s-line-picks-its-brush-by-its-stroke-with`), and SVG
+  export of a brushed line, which still writes the plain stroke.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,

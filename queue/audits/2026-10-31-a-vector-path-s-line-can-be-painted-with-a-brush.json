@@ -1,0 +1,60 @@
+{
+  "feature": "A path's line painted with a brush",
+  "epic": "image-paint",
+  "summary": "Any line drawn with the Pen can be painted with one of the eight brushes instead of a plain stroke. The path stays editable: drag a point and the brushed line repaints along the new curve. Picking several lines and choosing a brush restyles all of them at once, and the agent can do the same with add_path and set_layer.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press P and click three points on a picture, dragging on the middle one to curve it; press Return.",
+      "shot": "2026-10-31-path-brush-1-plain.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In Appearance, under Line, open Brush and pick Charcoal.",
+      "shot": "2026-10-31-path-brush-menu.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 18 into Thickness and press Return.",
+      "shot": "2026-10-31-path-brush-2-charcoal.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the right end point up.",
+      "shot": "2026-10-31-path-brush-4-moved.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a second line, Shift-click the first one's row in Layers, and pick Marker in Brush.",
+      "shot": "2026-10-31-path-brush-5-both-marker.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick Pencil, then set Hardness to 6B.",
+      "shot": "2026-10-31-path-brush-pencil-6b.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Ask the agent to draw a curve with brush watercolour (add_path), or run Scripts/agent-path-brush-drill.mjs.",
+      "shot": "2026-10-31-path-brush-agent-watercolour.png"
+    },
+    {
+      "do": "Press Command-Z once: the last brush choice comes off every line it reached."
+    }
+  ],
+  "evaluate": [
+    "Does a charcoal or watercolour line read as that medium, rather than as a plain line with a texture on it?",
+    "Is the taper at the two open ends the right length, or should it be shorter on a long line?",
+    "Is Brush the right first row under Line, above Thickness?",
+    "When a fresh path is 4 points thick, is a brushed line that thin what you expect, or should picking a brush thicken it to the brush's own size?"
+  ],
+  "rough": [
+    "The Brush row is a dropdown of words where draw.html draws a brush picker with Browse brushes and Edit brush beside it, and you asked on 2026-10-24 for brushes to be picked by their stroke; the tile picker for a line is a-path-s-line-picks-its-brush-by-its-stroke-with.",
+    "The Stroke group's rows match the mock's Brush, Size, Flow and Color: Size is the line's existing Thickness row, so a line has one width, a marker's Flow sits under Brush, and Color is the Line row's well.",
+    "A brushed line hides Ends, Corners and Align: the brush tapers its own ends and always sits centred on the outline, so those rows would do nothing.",
+    "A brushed line is drawn again on every move of an anchor drag. In the shipping build two long lines take about 10 to 20 ms more to render than plain ones (Scripts/agent-path-brush-drill.mjs); a 300 ms pause after the drag lets go is there with a plain line too, so it is not from the brush.",
+    "An SVG export still writes a brushed line as a plain stroke.",
+    "Smudge is not offered for a line: there is nothing under a path's own line for a finger to drag."
+  ]
+}

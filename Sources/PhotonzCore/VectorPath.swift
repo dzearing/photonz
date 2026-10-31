@@ -374,6 +374,9 @@ public struct PathContent: Hashable, Codable, Sendable {
     /// How much of the outline is drawn, start to end along it
     /// (`StrokeTrim.swift`). Nil is the whole of it.
     public var trim: StrokeTrim?
+    /// The brush the line is painted with instead of a plain stroke
+    /// (`PathBrush.swift`). Nil is the plain line every path starts with.
+    public var brush: PathBrush?
 
     public init(anchors: [PathAnchor],
                 isClosed: Bool = false,
@@ -385,7 +388,8 @@ public struct PathContent: Hashable, Codable, Sendable {
                 fillRule: PathFillRule = .nonZero,
                 lineEnd: PathLineEnd = .round,
                 lineCorner: PathLineCorner = .sharp,
-                linePattern: PathLinePattern = .solid) {
+                linePattern: PathLinePattern = .solid,
+                brush: PathBrush? = nil) {
         self.anchors = anchors
         self.isClosed = isClosed
         self.ringStarts = PathContent.tidyRingStarts(ringStarts, count: anchors.count)
@@ -397,6 +401,7 @@ public struct PathContent: Hashable, Codable, Sendable {
         self.lineEnd = lineEnd
         self.lineCorner = lineCorner
         self.linePattern = linePattern
+        self.brush = brush
     }
 
     /// What a freshly drawn path wears, which is what a freshly drawn box
@@ -556,6 +561,9 @@ public struct PathContent: Hashable, Codable, Sendable {
         // chevron drawn with a 12 point line lost 1.7 points off its point to
         // the edge of its own bitmap (`PathLineStyle.sharpCornerOutset`).
         reach = max(reach, sharpCornerOutset)
+        // A brushed line marks past its width: a hard press, a lean, a wash
+        // bleeding out (`PathBrush.swift`).
+        reach = max(reach, brushOutset)
         return reach.rounded(.up)
     }
 
@@ -620,7 +628,7 @@ public struct PathContent: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case anchors, closed, ringStarts, paint, strokeWidth, strokePosition, fill, fillRule
-        case lineEnd, lineCorner, linePattern, trim
+        case lineEnd, lineCorner, linePattern, trim, brush
     }
 
     public init(from decoder: any Decoder) throws {
@@ -645,6 +653,8 @@ public struct PathContent: Hashable, Codable, Sendable {
         lineCorner = try c.decodeIfPresent(PathLineCorner.self, forKey: .lineCorner) ?? .sharp
         linePattern = try c.decodeIfPresent(PathLinePattern.self, forKey: .linePattern) ?? .solid
         trim = try c.decodeIfPresent(StrokeTrim.self, forKey: .trim)
+        // A file written before a line could be brushed has a plain one.
+        brush = try c.decodeIfPresent(PathBrush.self, forKey: .brush)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -663,6 +673,7 @@ public struct PathContent: Hashable, Codable, Sendable {
         try c.encode(lineCorner, forKey: .lineCorner)
         try c.encode(linePattern, forKey: .linePattern)
         try c.encodeIfPresent(trim, forKey: .trim)
+        try c.encodeIfPresent(brush, forKey: .brush)
     }
 }
 

@@ -79,6 +79,8 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var stroke: String
         public var strokeWidth: Double
         public var fill: String?
+        /// The medium the line is painted with, when it is brushed.
+        public var brush: String?
     }
 
     /// A paint layer: how many strokes it holds and the media they were
@@ -355,7 +357,8 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
                                caption: shape.caption.map(cut))
         case .path(let path):
             node.path = Path(anchors: path.anchors.count, closed: path.isClosed, stroke: path.colorHex,
-                             strokeWidth: tidy(path.strokeWidth), fill: path.fillColorHex)
+                             strokeWidth: tidy(path.strokeWidth), fill: path.fillColorHex,
+                             brush: path.brush?.medium.rawValue)
         case .group(let group):
             node.layout = group.layout.map(Layout.make)
             let children = summarize(group.children, budget: &budget)

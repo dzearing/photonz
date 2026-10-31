@@ -371,6 +371,12 @@ public struct PathLineStyleSelection: Hashable, Sendable {
     /// shows no line style, exactly as it shows no colour and no thickness.
     public var hasALine: Bool { members.contains { $0.content.strokeWidth > 0 } }
 
+    /// Whether every line here is painted with a brush, which shapes its own
+    /// ends and corners and always sits centred on the outline: then the
+    /// Ends, Corners and Align rows would be controls that cannot act
+    /// (`PathBrush.swift`).
+    public var isAllBrushed: Bool { !members.isEmpty && members.allSatisfy { $0.content.brush != nil } }
+
     /// Whether Inside and Outside mean anything here: as soon as ONE of them
     /// is closed. Only open paths and the outline can only be centred.
     public var hasAnInside: Bool { members.contains { $0.content.isClosed } }

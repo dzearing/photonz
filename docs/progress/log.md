@@ -22248,3 +22248,18 @@ the ghost, and pinching in seemed to stop short.
   except 500 pt chalk 12.6, charcoal 10.2, oil 9.0 (was 23.3, 20.8, 22.3). Tables:
   queue/audits/2026-10-30-brush-lag-measures.txt. The rest is the live thinned end, which
   the user's open card on painting-is-what-you-see decides.
+
+## 2026-10-31: a path's line painted with a brush
+
+- What changed: a Pen path's line can be painted with any of the eight
+  brushes (`PathContent.brush`, `PathBrush.swift`). The outline is walked into
+  brush strokes and painted by the paint engine, so it tapers at open ends and
+  repaints when an anchor moves. Appearance > Line has a Brush dropdown and the
+  medium's first two settings; several picked lines change together. The agent
+  sets it with `brush` on add_path and set_layer (a group reaches every path in
+  it); read_document reports it. Walks: `a-path-s-line-painted-with-a-brush-walk`,
+  `path-brush-dropdowns-open-on-a-click-walk`; drill: `Scripts/agent-path-brush-drill.mjs`.
+- Next: picking a line's brush by its stroke with Browse brushes and Edit brush
+  (`a-path-s-line-picks-its-brush-by-its-stroke-with`); SVG export of a brushed line.
+- Open: `outline-width-walk` and `path-line-style-walk` fail on main without
+  this change (folded into `walks-that-fail-in-the-full-sweep-26`).

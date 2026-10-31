@@ -40,18 +40,30 @@ public struct AgentLook: Hashable, Sendable {
     public var cornerRadius: CGFloat?
     public var opacity: Double?
     public var shadow: AgentShadow?
+    /// What a path's line is painted with (`PathBrush.swift`): a brush, or
+    /// `.plain` for the plain line back. Nil leaves it as it is.
+    public var brush: AgentLineBrush?
 
     public init(fill: AgentInk? = nil, stroke: AgentInk? = nil, strokeWidth: CGFloat? = nil,
-                cornerRadius: CGFloat? = nil, opacity: Double? = nil, shadow: AgentShadow? = nil) {
+                cornerRadius: CGFloat? = nil, opacity: Double? = nil, shadow: AgentShadow? = nil,
+                brush: AgentLineBrush? = nil) {
         self.fill = fill
         self.stroke = stroke
         self.strokeWidth = strokeWidth
         self.cornerRadius = cornerRadius
         self.opacity = opacity
         self.shadow = shadow
+        self.brush = brush
     }
 
     var isEmpty: Bool { self == AgentLook() }
+}
+
+/// A path's line as an agent says it: painted with a brush, already checked
+/// against the medium's own settings, or plain again.
+public enum AgentLineBrush: Hashable, Sendable {
+    case plain
+    case brush(BrushSettings)
 }
 
 /// One of the shape tool's shapes. A box, an oval and a highlight are given
@@ -375,7 +387,40 @@ public enum AgentDrawing {
         if look.stroke != nil || look.strokeWidth != nil, layer.text != nil {
             return "a text layer has no line round it; use fill for the colour of the words."
         }
+        if look.brush != nil, layer.path == nil, !containsAPath(layer) {
+            return "a brush paints a path's line, and \(layer.name) is not a path or a group holding one."
+        }
         return nil
+    }
+
+    static func containsAPath(_ layer: Layer) -> Bool {
+        layer.group?.children.contains { $0.path != nil || containsAPath($0) } ?? false
+    }
+
+    /// Paints the line of `layer`, and of every path inside it when it is a
+    /// group, with `brush`, the way the panel's Brush row does
+    /// (`PhotonzDocument.setPathBrush`). A brush given a size sets the line's
+    /// thickness, since a brushed line's width is its Thickness.
+    static func applyBrush(_ brush: AgentLineBrush, width: CGFloat? = nil, to layer: inout Layer) {
+        if let children = layer.group?.children, var group = layer.group {
+            group.children = children.map { child in
+                var child = child
+                applyBrush(brush, width: width, to: &child)
+                return child
+            }
+            layer.content = .group(group)
+            return
+        }
+        guard var path = layer.path else { return }
+        switch brush {
+        case .plain:
+            path.brush = nil
+        case .brush(let settings):
+            path.brush = PathBrush(settings: settings, seed: path.brush?.seed ?? PathBrush.defaultSeed)
+            if path.strokeWidth <= 0 { path.gainingALineThatReads(width: width ?? CGFloat(settings.size)) }
+            if let width { path.strokeWidth = max(0, width) }
+        }
+        layer.content = .path(path)
     }
 
     static func takesFill(_ layer: Layer) -> Bool {
@@ -388,6 +433,7 @@ public enum AgentDrawing {
     /// the paint already went into the content when it was built.
     static func apply(_ look: AgentLook, keepingPaint: Bool, to layer: inout Layer) {
         if let opacity = look.opacity { layer.style.opacity = min(1, max(0, opacity)) }
+        if let brush = look.brush { applyBrush(brush, width: look.strokeWidth, to: &layer) }
         switch look.shadow {
         case .none?: layer.style.shadows = []
         case .drop(let shadow)?: layer.style.shadow = shadow

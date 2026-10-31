@@ -170,7 +170,10 @@ struct PathLineStyleSettings: View {
             // Only where there are ends to see: an open path has two, and a
             // dashed one has two on every dash. A closed solid shape has none,
             // so it is not asked (`PathContent.showsLineEnds`).
-            if selection.showsLineEnds {
+            // A brush shapes its own ends, corners and side of the outline,
+            // so over brushed lines alone those rows would do nothing.
+            let brushed = selection.isAllBrushed
+            if selection.showsLineEnds, !brushed {
                 PathLineStyleRow(label: "Ends",
                                  reading: selection.reading(\.lineEnd),
                                  title: \.title,
@@ -179,15 +182,17 @@ struct PathLineStyleSettings: View {
                                  pick: { state.setPathLineEnd(ids: state.layerIDs(reaching: reach), $0) })
                     .equatable()
             }
-            PathLineStyleRow(label: "Corners",
-                             reading: selection.reading(\.lineCorner),
-                             title: \.title,
-                             glyph: { PathLineStyleGlyph.corner($0, named: $0.title) },
-                             help: { Self.cornerHelp($0) },
-                             pick: { state.setPathLineCorner(ids: state.layerIDs(reaching: reach), $0) })
-                .equatable()
-            PathStrokeAlignRow(selection: selection,
-                               pick: { state.setPathStrokePosition(ids: state.layerIDs(reaching: reach), $0) })
+            if !brushed {
+                PathLineStyleRow(label: "Corners",
+                                 reading: selection.reading(\.lineCorner),
+                                 title: \.title,
+                                 glyph: { PathLineStyleGlyph.corner($0, named: $0.title) },
+                                 help: { Self.cornerHelp($0) },
+                                 pick: { state.setPathLineCorner(ids: state.layerIDs(reaching: reach), $0) })
+                    .equatable()
+                PathStrokeAlignRow(selection: selection,
+                                   pick: { state.setPathStrokePosition(ids: state.layerIDs(reaching: reach), $0) })
+            }
         }
     }
 

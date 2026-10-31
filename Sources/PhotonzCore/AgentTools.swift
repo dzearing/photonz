@@ -176,6 +176,18 @@ public enum AgentTools {
         "removeShadow": ["type": "boolean", "description": "Take every shadow off."],
     ]
 
+    /// What a path's line is painted with, on add_path and set_layer.
+    static let lineBrushProperty: AgentJSON = [
+        "description": "Paint the path's line with a brush instead of a plain stroke; the path stays editable. A medium's name (pencil, charcoal, chalk, crayon, marker, airbrush, oil, watercolour), an object with medium and settings (ids from list_brushes; a size sets the line's thickness), or plain for the plain line back. On a group, every path in it.",
+        "anyOf": [
+            ["type": "string", "enum": .array((["plain"] + BrushMedium.allCases.map(\.rawValue)).map { .string($0) })],
+            ["type": "object", "properties": [
+                "medium": ["type": "string", "enum": .array(BrushMedium.allCases.map { .string($0.rawValue) })],
+                "settings": ["type": "object", "description": "Setting ids from list_brushes and their values."],
+            ], "required": ["medium"], "additionalProperties": false],
+        ],
+    ]
+
     private static func stepsProperty(_ verb: String) -> AgentJSON {
         ["type": "integer", "minimum": 1, "maximum": 50,
          "description": .string("How many steps to \(verb). 1 when left out.")]
@@ -311,6 +323,7 @@ public enum AgentTools {
                            ], "required": ["x", "y"], "additionalProperties": false]],
                 "closed": ["type": "boolean", "description": "Join the last point back to the first. Open when left out."],
                 "name": ["type": "string", "description": "The layer's name in the Layers list."],
+                "brush": lineBrushProperty,
             ]) { $1 }, required: ["points"])),
         AgentTool(
             name: "add_drawing",
@@ -371,6 +384,7 @@ public enum AgentTools {
                 "visible": ["type": "boolean", "description": "Show or hide it."],
                 "text": ["type": "string", "description": "A text layer's new words."],
                 "fontSize": ["type": "number", "minimum": 4, "maximum": 1000, "description": "A text layer's new size."],
+                "brush": lineBrushProperty,
                 "flip": ["type": "string", "enum": ["horizontal", "vertical", "both"],
                          "description": "Mirror it about its own middle, as Edit > Transform > Flip does: horizontal left to right, vertical top to bottom. Each call flips again, so twice puts it back. Mirror Across Center makes a mirrored copy instead."],
             ]) { $1 }, required: ["layer"])),
@@ -579,6 +593,11 @@ public enum AgentTools {
             look.strokeWidth = cg(args["strokeWidth"])
             look.cornerRadius = cg(args["cornerRadius"])
             look.opacity = args["opacity"]?.doubleValue
+            if let brush = args["brush"] {
+                let read = try lineBrush(brush, tool).get()
+                look.brush = read.brush
+                if let size = read.size, look.strokeWidth == nil { look.strokeWidth = CGFloat(size) }
+            }
             if args["removeShadow"]?.boolValue == true {
                 look.shadow = AgentShadow.none
             } else if let shadow = args["shadow"] {
@@ -592,6 +611,34 @@ public enum AgentTools {
             }
             return look
         }.mapError { $0 as? AgentToolError ?? AgentToolError("\(tool): \($0.localizedDescription)") }
+    }
+
+    /// A path's brush as an agent gives it, checked against the medium's own
+    /// settings, and the size it named, which is the line's thickness.
+    static func lineBrush(_ json: AgentJSON, _ tool: String) -> Result<(brush: AgentLineBrush, size: Double?), AgentToolError> {
+        let media = BrushMedium.allCases.map(\.rawValue).joined(separator: ", ")
+        func fail(_ words: String) -> Result<(brush: AgentLineBrush, size: Double?), AgentToolError> {
+            .failure(AgentToolError("\(tool): \(words)"))
+        }
+        let word = json.stringValue ?? json["medium"]?.stringValue
+        guard let word else { return fail("brush is a medium's name, an object with a medium, or plain.") }
+        if json.stringValue != nil, ["plain", "none"].contains(word.lowercased()) { return .success((.plain, nil)) }
+        guard let medium = BrushMedium(rawValue: word.lowercased()) else {
+            return fail("brush is \(word); it is plain or one of \(media).")
+        }
+        var change = AgentBrushChange(medium: medium)
+        for (id, value) in json["settings"]?.objectValue ?? [:] {
+            guard let read = AgentBrushValue(value) else { return fail("brush.settings.\(id) should be a number or a word.") }
+            change.settings[id] = read
+        }
+        let fresh = BrushSettings(medium: medium)
+        switch AgentPaint.brush(change, armed: fresh, remembered: { BrushSettings(medium: $0) }) {
+        case .success(let settings):
+            let named = change.settings.keys.contains { medium.settingID($0.lowercased()) == "size" }
+            return .success((.brush(settings), named ? settings.size : nil))
+        case .failure(let refused):
+            return fail(refused.message)
+        }
     }
 
     private static func drawingRequest(_ name: String, _ args: [String: AgentJSON],

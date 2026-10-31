@@ -69,6 +69,9 @@ struct ShapePartSettings: View {
                 // a switched-off Fill does (`LayerPartRow.showsSettings`).
                 if row.showsSettings, !thickness.isEmpty {
                     OwnedSettings(owner: row.title) {
+                        // What the line is painted with first, as the mock's
+                        // Stroke group lists it (`PathBrushSettings.swift`).
+                        PathBrushSettings(rowID: row.id, selection: lineStyle)
                         self.thickness(thickness)
                         PathLineStyleSettings(rowID: row.id, selection: lineStyle)
                         ShapeLineEndSettings(rowID: row.id, selection: selection)
