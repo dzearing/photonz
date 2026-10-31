@@ -1,0 +1,27 @@
+{
+  "feature": "Any colour for an arrow, with chip words that stay readable",
+  "epic": "image-editing",
+  "summary": "A picked arrow has a Color row with eight swatches and a Custom well. Any colour retints the line, the head and the label chip at once, and the chip picks its own plate and words so the label reads, with no trip into the part rows.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open any screenshot, press A, drag an arrow and type a label, then press Command Return.", "shot": "2026-10-31-any-colour-color-row-sc.png", "shotNote": "The window was photographed behind another app, so it shows the window's background look (picked controls read grey)." },
+    { "do": "In Appearance, click the Custom well at the end of the Color row and type a light green, 7FD18B, in HEX." },
+    { "do": "Click through the ten Chip tiles and read the label on each." },
+    { "do": "Pick a dark indigo, 3A2E8F, in the same well and click through the tiles again.", "shot": "2026-10-31-any-colour-custom-inks-sheet.png" },
+    { "do": "Paint Label Text by hand in a blue close to the chip (4A90E2) and read the line under the Color row." },
+    { "do": "Click Reset Colors under that line." }
+  ],
+  "evaluate": [
+    "Does every chip stay readable for any colour you pick, on a white, a black and a busy picture?",
+    "Is it clear that the last well in the Color row is where any other colour comes from?",
+    "Does the head change with the line the way you expect, and stay put when you had painted it apart?",
+    "Is Reset Colors the words you would look for to undo a hand-painted label that went unreadable?"
+  ],
+  "rough": [
+    "A new arrow is drawn in the tool's red (#FF3B30), which is not one of the design system's eight (its red is #FF375F), so on a fresh arrow the Custom well is the one lit and the row reads Color #FF3B30. Logged on this task; the arrow tool's default ink is the Appearance task's call (arrow-and-measurement-appearance-shows-only-styl).",
+    "Measurements do not have the Color row yet: their chip is not styled. It comes with every-measurement-wears-the-same-chip-styles-col, where this row and its warning are added to that task's checklist.",
+    "The walk that picks both custom colours by hand (any-colour-chip-reads-walk) cannot run yet: a walk's click on a plain button in the dock does nothing since 2026-10-26, the Chip tiles included (walks-that-fail-in-the-full-sweep-26 owns it). Until then the contrast numbers come from the same pixel reader run on the export renderer, which the canvas matches pixel for pixel: worst 4.68:1 (Hairline in light green), Glass 7.44 to 10.89 over pure white, pure black and a busy photo (2026-10-31-any-colour-custom-inks.tsv).",
+    "Glass is checked over pure white and pure black pictures rendered by the app's own export, not over a screenshot photographed in the probe, for the same reason."
+  ]
+}
