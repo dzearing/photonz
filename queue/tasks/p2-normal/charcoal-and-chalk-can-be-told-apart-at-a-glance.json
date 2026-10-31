@@ -1,0 +1,27 @@
+{
+  "id": "charcoal-and-chalk-can-be-told-apart-at-a-glance",
+  "title": "Charcoal and chalk can be told apart at a glance",
+  "goal": "In a blind test of every brush, the judges confused charcoal and chalk half the time: both read as one grainy dry stick at two strengths. Make each unmistakable, so someone who has used real charcoal and real chalk names them right.",
+  "epic": "image-paint",
+  "priority": "p2-normal",
+  "seq": 4090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T06:35:44.560Z",
+  "updated": "2026-10-31T06:35:44.563Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the brush epic final audit, 2026-10-31: queue/audits/2026-10-31-brush-epic-measures.txt and -blind-1/2/3.png with keys. The runner could tell them apart (charcoal a dense dark core with a soft dusty halo; chalk a lighter broken streaky film), but the judges read charcoal's halo as chalk dust and chalk's streaks as charcoal streaks. Judges' cues: chalk powdery and opaque, charcoal velvety black. The dry media slice (charcoal-chalk-and-crayon-catch-on-a-paper-grain) spent 19 versions on this; PaintKeepsItsPixelsTests fingerprints will need re-taking on purpose. Wikimedia references used: see the measures file.",
+  "acceptance": [
+    "On the brush epic blind sheets (PHOTONZ_BLIND_SHEET=<dir> Scripts/test.sh --filter BrushBlindSheet, three shuffles), two model judges beside reference photos tell charcoal from chalk in at least 5 of 6 readings (2026-10-31: 3 of 6)",
+    "Every other row is still named at least as often as on 2026-10-31 (pencil, crayon, airbrush, oil, watercolour 6 of 6; marker and round tip 5 of 6)",
+    "A before and after close-up of the two strokes is in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T06:35:44.562Z",
+      "note": "created (manual)"
+    }
+  ]
+}

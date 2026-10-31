@@ -1,0 +1,34 @@
+{
+  "feature": "The Brush: eight real media, their settings, and the agent painting with them",
+  "epic": "image-paint",
+  "summary": "The whole Brush epic, walked end to end at Next defaults: press B, paint with pencil, charcoal, chalk, crayon, marker, airbrush, oil or watercolour, smudge, and ask the agent to paint. A blind test shows seven of the eight media named correctly from their marks alone; charcoal and chalk still get mixed up, and Ask's paintings still read as stripes of paint more than as pictures.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, a laptop-sized window (1280 by 840). Walk: Scripts/playtest/brush-epic-try-path-walk.json. Numbers: 2026-10-31-brush-epic-measures.txt.",
+  "switched": {},
+  "try": [
+    { "do": "Make a new blank picture and press B. Pick Watercolour in the Brush button over the tool bar.", "shot": "2026-10-31-brush-epic-1-watercolour-in-hand-sc.png" },
+    { "do": "Paint one long stroke across the picture, then a second one crossing it.", "shot": "2026-10-31-brush-epic-2-two-washes-sc.png" },
+    { "do": "Pick Charcoal, paint a line under the washes, click Smudge over the tool bar and drag down out of the line twice.", "shot": "2026-10-31-brush-epic-3-charcoal-smudged-sc.png" },
+    { "do": "Watch the reel of those four strokes being painted, each one growing under the pointer.", "shot": "2026-10-31-brush-epic-reel-contact.png" },
+    { "do": "Press V, then Command K, type: paint a small landscape with oil paint, and press Return.", "shot": "2026-10-31-brush-epic-4-agent-landscape-sc.png" },
+    { "do": "Look at the blind sheet and name each row before opening its key.", "shot": "2026-10-31-brush-epic-blind-1.png" },
+    { "do": "Look at a medium's settings sheet: each setting painted at its low end, its default and its high end.", "shot": "2026-10-31-brush-epic-settings-watercolour.png" }
+  ],
+  "evaluate": [
+    "On the blind sheet, could you name all nine rows, and which pair did you hesitate over?",
+    "Do the two watercolour washes look like watercolour on paper, darker where they cross?",
+    "Do the charcoal smudges look like a finger dragged through charcoal?",
+    "Does Ask's oil landscape look like a painting of a place to you, or like bands of colour?",
+    "With the Smudge setting on its own second line over the tool bar in this window size, is that acceptable or should a setting give way?"
+  ],
+  "rough": [
+    "Blind test, three shuffled sheets, two model judges beside reference photos of each real medium: pencil, crayon, airbrush, oil and watercolour named 6 of 6 times, marker 5 of 6, and the plain round tip picked out as the plain one 5 of 6 (the weak version fails the bar). Charcoal and chalk were told apart only 3 of 6 times, so they read as one grainy stick at two strengths (charcoal-and-chalk-can-be-told-apart-at-a-glance).",
+    "Ask's oil landscape looks painted (6 of 10 from both judges) but reads as a landscape only 4 to 5 of 10: level full-width bands of sky, sand and grass and a pale stacked column. This task stays open on it (a-brush-tool-paints-with-realistic-charcoal-chal).",
+    "Ask painted over the person's own strokes on the same Paint layer, so the watercolour and charcoal show through as dark smears. Expected for a try path that paints first, but a person asking for a picture on a sketch may not want that.",
+    "The Brush sits near the right end of the tool bar beside the bucket; the image mock draws it right after Crop (the-brush-sits-right-after-crop-on-a-picture-s-t).",
+    "In a 1280 point window the options over the tool bar wrap: the brush's second own setting drops to a line of its own. Chose to leave the wrap over dropping a setting, because every setting there is one the medium needs; the panel's Brush section carries the full list too.",
+    "The walk picks Watercolour and Charcoal with its pickBrush step, not by clicking the Brush button's tiles: under a walk the tiles' popover never opens, even with the window in front and a real window click (walks-that-fail-in-the-full-sweep-26). Whether a person's click opens it was not checked: this machine gives the loop no way to move the real pointer.",
+    "The pictures are real window captures. The reel is the canvas the app filmed during each stroke, not a screen recording, so it shows no pointer.",
+    "Speed was measured by the slices, not again here: every brush keeps each move inside one 120 Hz frame (worst 7.4 ms) on a 12 megapixel picture (2026-10-31-brush-lag-measures.txt).",
+    "No mock covers Ask's painting or the blind test; the settings and the tool options match the slices' audits."
+  ]
+}

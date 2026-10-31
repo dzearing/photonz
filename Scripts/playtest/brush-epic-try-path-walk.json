@@ -1,0 +1,283 @@
+{
+  "out": "/tmp/photonz-playtest/brush-epic-try-path-walk",
+  "seed": "The brush epic's try path (a-brush-tool-paints-with-realistic-charcoal-chal), at Next defaults with no flag, in a laptop-sized 1280 by 840 window: a blank picture, B for the Brush, Watercolour put in hand with pickBrush (the chooser's popover does not open under a walk since 2026-10-26: walks-that-fail-in-the-full-sweep-26), two overlapping washes; Charcoal picked, a stroke, Smudge, two smudges dragged out of it; then Ask asked to paint a small landscape with oil paint. Every brush drag is filmed (filmCanvas) for the audit's reel. Canvas coordinates are document units.",
+  "clock": 600,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1000,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "brush"
+    },
+    {
+      "do": "pickBrush",
+      "medium": "watercolour"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Watercolour"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-watercolour-in-hand"
+    },
+    {
+      "do": "filmCanvas",
+      "name": "2-wash",
+      "scale": 1
+    },
+    {
+      "do": "drag",
+      "from": [
+        420,
+        430
+      ],
+      "to": [
+        1020,
+        470
+      ],
+      "steps": 40,
+      "wobble": 2
+    },
+    {
+      "do": "expectPaintStill",
+      "name": "2-wash",
+      "settleSeconds": 1.2
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Paint"
+      ]
+    },
+    {
+      "do": "filmCanvas",
+      "name": "3-crossing-wash",
+      "scale": 1
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        300
+      ],
+      "to": [
+        760,
+        640
+      ],
+      "steps": 34,
+      "wobble": 2
+    },
+    {
+      "do": "expectPaintStill",
+      "name": "3-crossing-wash",
+      "settleSeconds": 1.2
+    },
+    {
+      "do": "snapshot",
+      "name": "3-two-washes"
+    },
+    {
+      "do": "describe",
+      "stage": "3-two-washes",
+      "note": "two overlapping watercolour strokes on one Paint layer, darker where they cross"
+    },
+    {
+      "do": "pickBrush",
+      "medium": "charcoal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Choose brush",
+      "reads": "Tool Brush, Charcoal"
+    },
+    {
+      "do": "filmCanvas",
+      "name": "4-charcoal",
+      "scale": 1
+    },
+    {
+      "do": "drag",
+      "from": [
+        380,
+        700
+      ],
+      "to": [
+        1100,
+        720
+      ],
+      "steps": 40,
+      "wobble": 2
+    },
+    {
+      "do": "expectPaintStill",
+      "name": "4-charcoal",
+      "settleSeconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Smudge",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "5-smudge-armed"
+    },
+    {
+      "do": "filmCanvas",
+      "name": "6-smudge",
+      "scale": 1
+    },
+    {
+      "do": "drag",
+      "from": [
+        600,
+        712
+      ],
+      "to": [
+        680,
+        820
+      ],
+      "steps": 28,
+      "wobble": 2
+    },
+    {
+      "do": "expectPaintStill",
+      "name": "6-smudge",
+      "settleSeconds": 1.0
+    },
+    {
+      "do": "drag",
+      "from": [
+        860,
+        716
+      ],
+      "to": [
+        940,
+        830
+      ],
+      "steps": 28,
+      "wobble": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 2
+    },
+    {
+      "do": "snapshot",
+      "name": "6-charcoal-smudged"
+    },
+    {
+      "do": "describe",
+      "stage": "6-charcoal-smudged",
+      "note": "a charcoal stroke with two smudges dragged down out of it, on the same Paint layer"
+    },
+    {
+      "do": "press",
+      "control": "Paint",
+      "in": "Tool Mode"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "paint a small landscape with oil paint"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 420
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "7-agent-landscape"
+    },
+    {
+      "do": "describe",
+      "stage": "7-agent-landscape",
+      "note": "Ask's oil landscape painted stroke by stroke, beside or over the person's strokes"
+    }
+  ]
+}

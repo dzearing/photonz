@@ -1,0 +1,32 @@
+Brush epic final measures, 2026-10-31.
+
+BLIND TEST. Sheets: 2026-10-31-brush-epic-blind-1/2/3.png, the same nine rows (eight media and a plain round tip stamped along the line, colour only) in three shuffled orders; keys beside them. Every row paints the same wave, zigzag and crossing pair in one dark blue at its own default settings, with a mouse's simulated taper. Generator: PHOTONZ_BLIND_SHEET=<dir> Scripts/test.sh --filter BrushBlindSheet.
+
+Runner, before reading any judge: named all nine rows of sheet 1 correctly; charcoal against chalk was the only pair that took a second look (charcoal: dense dark core, soft dusty halo; chalk: lighter, broken streaky film).
+
+Model judges: two vision models that did not make the pictures (judge A the larger, judge B the mid-size), each sheet each judge, told the eight media and that one row is a plain round tip, beside a reference photo of each real medium (Wikimedia Commons, kept out of the repo: 'Charcoal sketched drawing of a woman', 'Soft pastel chandrayan 3', 'Closeup of hand drawing with blue-violet wax crayon', 'Marker paint', 'Airbrush-cwiczenia-efekt-chromu', 'Seascape, Le Croisic RMG BHC0049', 'Nawab Akbar Khan Bugti Graphite Pencil Sketch', 'Fishing boats moored - Impressionist Watercolour, Henri Duhem c1910').
+blind-1.png judge A: 9/9 right; none wrong; closest pair named: [3,5]
+blind-1.png judge B: 9/9 right; none wrong; closest pair named: [3,5]
+blind-2.png judge A: 7/9 right; chalk called charcoal, charcoal called chalk; closest pair named: [2,8]
+blind-2.png judge B: 5/9 right; chalk called charcoal, round tip called marker, charcoal called chalk, marker called round tip; closest pair named: [2,8]
+blind-3.png judge A: 7/9 right; charcoal called chalk, chalk called charcoal; closest pair named: [1,9]
+blind-3.png judge B: 9/9 right; none wrong; closest pair named: [1,9]
+
+Per row, named right of 6 readings:
+  marker: 5/6
+  round tip: 5/6
+  charcoal: 3/6
+  oil: 6/6
+  chalk: 3/6
+  pencil: 6/6
+  watercolour: 6/6
+  crayon: 6/6
+  airbrush: 6/6
+
+Reading: pencil, crayon, airbrush, oil and watercolour were named every time. The round tip was named as the plain one 5 of 6 times (once swapped with the marker), so the weak version fails the bar. Charcoal and chalk were told apart 3 of 6 times, chance for a pair: every judge named them its closest pair.
+
+ASK'S PAINTING (try path, 'paint a small landscape with oil paint', built-in model, after the person's watercolour and charcoal strokes on the same picture): 2026-10-31-brush-epic-4-agent-landscape-sc.png, painted in about 4.5 minutes.
+judge A: looks painted 6/10, reads as a landscape 4/10: 'streaky bristle-like ridges look like brushed paint, but the strokes are uniform, mechanical full-width bands, and the odd pale stacked column plus stray dark smears make it read only loosely as a landscape.'
+judge B: looks painted 6/10, reads as a landscape 5/10: 'streaky horizontal bristle texture and layered color bands suggest oil strokes and a sky, field and grass layout, but the blurry smeared column and dark smudges make it look like a digital effect.'
+
+SPEED (measured by the slices, not re-measured here): every brush 20 to 500 pt, per move p95 at most 7.4 ms against the 8.3 ms 120 Hz frame on a 12 MP picture and on a screenshot (2026-10-31-brush-lag-measures.txt); a landing with 300 strokes under it held the app at most 24 ms, undo 9.6 ms (docs/design/brushes.md, decision 5).
