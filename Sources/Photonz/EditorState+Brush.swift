@@ -15,8 +15,11 @@ extension EditorState {
     /// picked) and picks it, so the next stroke goes to the same layer
     /// (`PhotonzDocument.paintStroke`). The Brush stays in hand: it is the one
     /// making tool that does not hand back Select
-    /// (`ArrowCaptionEntry.toolAfterLanding`).
-    func addBrushStroke(_ stroke: BrushStroke) {
+    /// (`ArrowCaptionEntry.toolAfterLanding`). An agent's stroke lands
+    /// through this same call with `picksUpBrush` false: the document and the
+    /// pick change exactly as for the pointer, and the tool in the person's
+    /// hand stays what it was.
+    func addBrushStroke(_ stroke: BrushStroke, picksUpBrush: Bool = true) {
         guard !stroke.samples.isEmpty, document != nil else { return }
         // A smudge drags paint that is already there: it lands on that paint
         // layer and never makes one (decision 7). With no paint under it,
@@ -38,7 +41,12 @@ extension EditorState {
         defer { crispTileForLandingStroke = false }
         perform { landed = $0.paintStroke(stroke, onto: picked) }
         guard let landed, landed != picked else { return }
-        finishCreating(landed, tool: ArrowCaptionEntry.toolAfterLanding(.brush, offersCaption: false))
+        if picksUpBrush {
+            finishCreating(landed, tool: ArrowCaptionEntry.toolAfterLanding(.brush, offersCaption: false))
+        } else {
+            groupContextID = document?.parentID(of: landed)
+            selectedLayerID = landed
+        }
     }
 
     /// What the next stroke is painted with: the armed brush, and the colour

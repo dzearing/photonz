@@ -88,6 +88,8 @@ enum AgentWork {
             return try await AgentVideoWork.answer(request)
         case .listStyles, .addStyle, .applyStyle, .setLayout, .addComponent:
             return try await AgentDesignWork.answer(request)
+        case .listBrushes, .setBrush, .paintStroke:
+            return try AgentPaintWork.answer(request)
         }
     }
 

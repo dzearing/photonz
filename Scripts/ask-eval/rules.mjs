@@ -224,6 +224,16 @@ function asked(nodes, read, expect) {
       check(touches, `${p.layer.name} ${touches ? "touches" : "does NOT touch"} the ${whole.split("|")[0]}`);
     }
   }
+  if (expect.painted) {
+    // Painted with the Brush, stroke by stroke: paint layers hold the strokes,
+    // and nothing else made the picture (no drawing traced into layers, no
+    // one-piece picture in a painted look).
+    const paints = nodes.filter((n) => n.layer.kind === "paint");
+    const strokes = paints.reduce((sum, n) => sum + (n.layer.paint?.strokes ?? 0), 0);
+    const other = nodes.filter((n) => n.depth === 0 && n.layer.kind !== "paint" && !n.layer.locked);
+    check(strokes >= (expect.painted.strokes ?? 10), `${strokes} brush strokes on ${paints.length} paint layer${paints.length === 1 ? "" : "s"}`);
+    check(other.length === 0, other.length ? `made otherwise: ${other.map((n) => n.layer.kind).join(", ").slice(0, 60)}` : "nothing but paint");
+  }
   if (expect.icon) {
     const top = nodes.filter((n) => n.depth === 0);
     if (top.length) {

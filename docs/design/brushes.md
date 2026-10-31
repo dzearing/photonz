@@ -569,6 +569,41 @@ an anchor and the line re-paints.
   of a slow one; a mouse stroke within 5 points of either end under 0.7 of its
   middle width. Before this slice every medium but the pencil failed them all.
 
+## What the agent slice settled (2026-10-31)
+
+- **Three tools** (`AgentPaint.swift`, PhotonzCore; `AgentPaintWork.swift`,
+  the app): `list_brushes` (the brush in hand, then every medium with every
+  setting: range and default, a choice by its words, what it is set to now),
+  `set_brush` (medium, mode, colour, settings, as the tool options set them;
+  what is left out stays, another medium starts as it was last left) and
+  `paint_stroke` (points with optional pressure, tilt and times, or a short
+  `path` "x,y x,y"; a brush of its own for this stroke only; `layer` or
+  `newLayer`; `seed`). A setting the medium does not have, or a value outside
+  its range, is refused naming what it does take.
+- **The same call as the pointer.** A stroke lands through
+  `EditorState.addBrushStroke`, inside one undo step with the pick it needs,
+  so it lands where a person's would (decision 2) and one Command Z takes it
+  off. Only the tool in the person's hand is left alone (`picksUpBrush:
+  false`). `AgentStrokeLikeThePointerTests` holds the call to the pointer's
+  stroke value and composite, byte for byte, in every medium with a mouse and
+  a pen, and a smudge; `Scripts/agent-paint-drill.mjs` paints, undoes and
+  redoes each stroke on the probe over MCP.
+- **Time, for a hand the agent does not have.** Points with no times are
+  walked at 0.3 pt/ms, under the 0.4 where a mouse's press starts to lighten,
+  so a stroke lays the weight its Size says; points held in one place are a
+  pointer tick (16 ms) apart, so a held airbrush builds. An agent's stroke
+  starts no sooner than a lift (0.25 s) after the layer's last stroke ended,
+  so a wash dries between strokes as it would under a hand instead of every
+  stroke blooming into the last.
+- **read_document** says how many strokes a paint layer holds and in which
+  media.
+- **Ask paints**: see `docs/design/ask.md`, "A photo, a drawing or a
+  painting". Asked for "a small landscape in oil" it paints 26 to 45 oil
+  strokes in two to four minutes on the built-in model (eval case
+  `paint-a-small-landscape-in-oil`, 31.5 to 48.1 across runs): the whole
+  canvas covered, sky and land in close shades, but its small details read as
+  marks, not things.
+
 ## Slices (queue tasks, in order)
 
 1. Foundation: the tool on B, paint layers, strokes as data, placement engine,

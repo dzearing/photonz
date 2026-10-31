@@ -25,6 +25,7 @@ public enum AskChangeWords {
         case "add_photo" where step.arguments["look"]?.stringValue == AgentPhotoCall.Look.painting.rawValue:
             Kind(verb: "Painted", one: "a picture", many: "pictures")
         case "add_photo": Kind(verb: "Made", one: "a photo", many: "photos")
+        case "paint_stroke": Kind(verb: "Painted", one: "a stroke", many: "strokes")
         case "add_text": Kind(verb: "Added", one: "text", many: "texts")
         case "add_title": Kind(verb: "Added", one: "a title", many: "titles")
         case "place_component": Kind(verb: "Placed", one: "a component", many: "components")

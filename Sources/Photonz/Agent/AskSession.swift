@@ -618,7 +618,8 @@ final class AskSession {
                                components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
                                styles: styles.isError ? "" : Self.text(of: styles),
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
-                               paints: paints)
+                               paints: paints,
+                               brushes: Experiments.shared.brushEnabled && !editor.documentHasTime)
     }
 
     /// The model's turns, until it stops calling tools.

@@ -402,11 +402,18 @@ tool (`AgentPictureKind`, `Sources/PhotonzCore/AgentPhoto.swift`):
 * **Vector layers** ("vector art", "draw", "illustration", "icon", "logo",
   "line art"): `add_drawing`, painted and traced as before. An icon or vector
   word wins over a photo word ("a photo icon" is an icon).
-* **A painting** ("paint", "painting", "brush"): the brushes are not ready, so
-  until the Brush tool task lands it is painted as ONE picture layer in a
-  painted look, and Ask says so in a line above the rows: "No brushes yet,
-  so I made one image." With no picture model it is drawn as vector art and
-  the line says "No brushes yet, so I drew vector art."
+* **A painting** ("paint", "painting", "brush"): painted with the Brush,
+  stroke by stroke (since 2026-10-31, `docs/design/brushes.md` decision 8).
+  Only for a painting is the model shown `list_brushes` and `paint_stroke` and
+  a painter's way of working (`AskConversation.brushRules`: block in edge to
+  edge with a wide brush, middle shapes, then a little detail; three or four
+  shades an area; each stroke's points as a short `path`); every other
+  request sees exactly the tools and instructions it saw before. A drawing or
+  photo planned for a painting is turned back with what to do. Where the
+  Brush is not there (a video, a release without it) it is painted as ONE
+  picture layer in a painted look, and Ask says so: "No brushes yet, so I
+  made one image." With no picture model it is drawn as vector art and the
+  line says "No brushes yet, so I drew vector art."
 * **Neither**: the planning model picks (the instructions: a real place,
   animal, person or moment is a photo; a thing to design with is a drawing),
   and the row says which it made ("Made a photo of a dog on a beach", "Drew a
@@ -740,9 +747,9 @@ Agent group.
   then "an illustration of a dog" (vector layers, "Drew a dog").
 * `Scripts/playtest/ask-makes-it-again-as-a-photo-walk.json`: "make vector art
   of a fox", then "as a photo".
-* `Scripts/playtest/ask-paints-before-brushes-walk.json`: "paint a picture of a
-  sunset over the sea" makes one painted picture and says brushes are not
-  ready.
+* `Scripts/playtest/ask-paints-with-brushes-walk.json`: "paint a small landscape
+  in oil" paints it with the Brush, stroke by stroke, onto one Paint layer, with
+  no line about brushes.
 
 Each presses the Ask button, types, sends, waits for `ran`, then undoes and
 redoes the request, turns its row off and on with the switch, deletes it, and

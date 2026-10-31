@@ -81,6 +81,18 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var fill: String?
     }
 
+    /// A paint layer: how many strokes it holds and the media they were
+    /// painted in, in the order each was first used.
+    public struct Painted: Codable, Hashable, Sendable {
+        public var strokes: Int
+        public var media: [String]
+
+        public init(strokes: Int, media: [String]) {
+            self.strokes = strokes
+            self.media = media
+        }
+    }
+
     public struct Time: Codable, Hashable, Sendable {
         public var inSeconds: Double
         public var outSeconds: Double
@@ -112,6 +124,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         public var text: Text?
         public var shape: Shape?
         public var path: Path?
+        public var paint: Painted?
         public var time: Time?
         /// How a group arranges its contents, when it does.
         public var layout: Layout?
@@ -347,7 +360,13 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             node.layout = group.layout.map(Layout.make)
             let children = summarize(group.children, budget: &budget)
             node.children = children.isEmpty ? nil : children
-        case .zoomCallout, .lens, .measure, .collage, .sound, .paint:
+        case .paint(let paint):
+            var media: [String] = []
+            for stroke in paint.strokes where !media.contains(stroke.settings.medium.rawValue) {
+                media.append(stroke.settings.medium.rawValue)
+            }
+            node.paint = Painted(strokes: paint.strokes.count, media: media)
+        case .zoomCallout, .lens, .measure, .collage, .sound:
             break
         }
         return node

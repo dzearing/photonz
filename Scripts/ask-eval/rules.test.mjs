@@ -238,3 +238,15 @@ test("a photo filling the canvas over the Background is made, not taken for the 
   const shot = { id: "s", name: "Screenshot", kind: "image", frame: { x: 0, y: 0, width: 1440, height: 1024 } };
   assert.equal(score({ canvas, layers: [shot] }, { expect: {} }).rules.made?.note, "nothing was made");
 });
+
+test("a painting asked for is painted with brush strokes, not drawn or made in one piece", () => {
+  const painting = { group: "drawing", expect: { words: false, painted: { strokes: 10 } } };
+  const paint = (strokes) => ({ id: "p", name: "Paint", kind: "paint", frame: { x: 0, y: 0, width: 1440, height: 1024 }, paint: { strokes, media: ["oil"] } });
+  assert.equal(score(read([paint(34)]), painting).rules.asked.score, 10);
+  const few = score(read([paint(3)]), painting).rules.asked;
+  assert.ok(few.score < 10, few.note);
+  assert.match(few.note, /3 brush strokes/);
+  const drawn = score(read([shape("Hill", 100, 500, 900, 300)]), painting).rules.asked;
+  assert.match(drawn.note, /0 brush strokes/);
+  assert.match(drawn.note, /made otherwise: shape/);
+});

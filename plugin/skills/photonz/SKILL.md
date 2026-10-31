@@ -36,6 +36,7 @@ checked.
 | Documents | `list_documents`, `list_history` (screenshots and recordings, newest first), `open_document` (a path or a History index), `new_picture`, `new_video` |
 | Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
 | Drawing | `add_photo` (a real photograph of anything, painted by Photonz's picture model and kept as one picture layer filling the canvas or `frame`; `look: painting` for a painted picture), `add_drawing` (anything, a thing or a scene, as editable layers: painted for the request by Photonz's picture model and traced when it is running, else your own SVG; nothing is looked up; `icon` for an icon frame, `style` for a look the person named, `scene` for a place with its own sky), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words, `flip` to mirror it in place; `run_command mirror_across_center` makes the mirrored second half of a symmetrical drawing) |
+| Painting | `list_brushes` (pencil, charcoal, chalk, crayon, marker, airbrush, oil, watercolour and every setting each has), `set_brush` (the brush in hand), `paint_stroke` (one stroke through `points` or a short `path`, optional pen pressure; its own `medium`, `color` and `settings` for this stroke only; one undo step) |
 | Measuring a screenshot | `find_measurements` (the redline code chooses: one size of each kind of control, then the spacing), `mark_measurements` (lays the ids you pick, readouts kept clear); `find_elements` and `add_measurement` for one particular thing |
 | Checking a screenshot's consistency | `find_misalignments` (edges that miss by 1 to 8 points, uneven gaps, padding or borders that differ, every number measured), `mark_misalignments` (redlines for the ids you pick) |
 | Design system | `add_style` / `list_styles` / `apply_style` (named colours and text styles on the Library's Styles shelf), `set_layout` (a group as a stack or grid with gap and padding) |
@@ -154,6 +155,17 @@ lands as one ordinary picture layer: effects, crop and masks work on it. It is n
 so it is pixels, not paths: when the person wants editable shapes, an icon or vector art,
 use `add_drawing` instead. With no picture model set up it answers that it cannot, and
 Settings, Ask is where it is set up.
+
+### A painting
+
+"Paint a landscape in oil", "a watercolour of a harbour": paint it with the Brush, one
+`paint_stroke` a stroke, never `add_drawing`. Give each stroke its `medium`, `color` and
+`settings.size`; the first makes a Paint layer and the rest land on it. Work as a painter
+does: block in the big areas edge to edge with a wide brush (strokes close enough that no
+canvas shows, running the way each surface runs, starting and ending past the edges), then
+the middle shapes with a brush half that size, then a few small strokes of detail and
+light. Each area in three or four close shades. `path: "40,60 300,52 620,66"` is the
+short way to write a stroke's points. `render_picture` after the block-in and at the end.
 
 ### An icon or a drawing as SVG
 

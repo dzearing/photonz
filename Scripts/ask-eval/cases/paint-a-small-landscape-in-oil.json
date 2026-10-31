@@ -1,0 +1,20 @@
+{
+  "request": "paint a small landscape in oil",
+  "group": "drawing",
+  "from": "the-agent-can-list-set-and-paint-with-the-brushe (its acceptance: asked for a small painted landscape in oil, Ask paints one with brush strokes; an example of the bar, not a thing to code)",
+  "start": {
+    "blank": [
+      960,
+      640
+    ]
+  },
+  "names": [
+    "landscape"
+  ],
+  "expect": {
+    "words": false,
+    "painted": {
+      "strokes": 10
+    }
+  }
+}

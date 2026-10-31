@@ -1,6 +1,6 @@
 {
-  "out": "/tmp/photonz-playtest/ask-paints-before-brushes-walk",
-  "seed": "ask-can-make-a-photo-as-well-as-an-illustration: until the Brush tool lands, 'paint a picture of a sunset over the sea' paints one picture layer in a painted look, and Ask says in one line that painting with brushes is not ready yet and what it made instead",
+  "out": "/tmp/photonz-playtest/ask-paints-with-brushes-walk",
+  "seed": "the-agent-can-list-set-and-paint-with-the-brushe: asked 'paint a small landscape in oil', Ask paints it with the Brush, stroke by stroke, onto one Paint layer, and the row says it painted",
   "clock": 400,
   "setup": {
     "forget": [
@@ -33,7 +33,7 @@
     },
     {
       "do": "type",
-      "text": "paint a picture of a sunset over the sea"
+      "text": "paint a small landscape in oil"
     },
     {
       "do": "wait",
@@ -62,12 +62,12 @@
     {
       "do": "expect",
       "control": "Ask Says",
-      "reads": "No brushes yet, so I made one image."
+      "present": false
     },
     {
       "do": "describe",
       "stage": "1-painted",
-      "note": "one picture layer, painted, and the line about brushes under the row"
+      "note": "one Paint layer of oil strokes covering the canvas, no picture layer and no line about brushes"
     },
     {
       "do": "snapshot",

@@ -27,12 +27,27 @@ public enum AskTools {
         "add_title", "cut", "trim", "move_clip", "set_transition", "apply_zooms",
     ]
 
+    /// Offered only for a painting, with the Brush there to paint it: what
+    /// every other request is shown stays exactly as it was.
+    public static let paintingLooking = ["list_brushes"]
+    public static let paintingDoing = ["paint_stroke"]
+
+    public static func looking(painting: Bool) -> [String] { painting ? looking + paintingLooking : looking }
+    public static func doing(painting: Bool) -> [String] { painting ? doing + paintingDoing : doing }
+
+    /// The tools shown to the model for a request, a painting's with the brush's.
+    public static func modelTools(painting: Bool) -> [AgentJSON] {
+        painting ? modelTools + (paintingLooking + paintingDoing).compactMap(modelTool) : modelTools
+    }
+
     /// The tools in the shape Ollama's chat API takes them. `document` is left
     /// out (Ask always works on the document it was opened over), and a
     /// property given as a choice of types shows its first, since some model
     /// templates cannot read a property with no type. The real schema still
     /// checks every call.
-    public static let modelTools: [AgentJSON] = (looking + doing).compactMap { name in
+    public static let modelTools: [AgentJSON] = (looking + doing).compactMap(modelTool)
+
+    static func modelTool(_ name: String) -> AgentJSON? {
         guard let tool = AgentTools.tool(named: name) else { return nil }
         return ["type": "function",
                 "function": ["name": .string(tool.name), "description": .string(tool.description),
@@ -319,14 +334,22 @@ public struct AskConversation: Sendable {
     /// into layers ("Ask paints its drawings"), so any subject plans as it
     /// is and no svg is asked for.
     private let paints: Bool
+    /// The Brush paints here (a picture, in a release that has it), so a
+    /// painting asked for is painted stroke by stroke with paint_stroke.
+    private let brushes: Bool
+    /// This request is a painting and the Brush is there to paint it.
+    private let painting: Bool
 
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
-                titles: String = "", paints: Bool = false) {
+                titles: String = "", paints: Bool = false, brushes: Bool = false) {
         self.request = request
         self.paints = paints
+        self.brushes = brushes
         let canvas = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]
         canvasWidth = canvas?["width"]?.doubleValue ?? 0
-        var instructions = Self.instructions(documentRead: documentRead, paints: paints)
+        let painting = brushes && AgentPictureKind.asked(in: request) == .paint
+        self.painting = painting
+        var instructions = Self.instructions(documentRead: documentRead, paints: paints, painting: painting)
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
         if !titles.isEmpty {
@@ -348,7 +371,7 @@ public struct AskConversation: Sendable {
 
     /// The body of one `POST /api/chat`.
     public func chatBody(model: String) -> AgentJSON {
-        ["model": .string(model), "messages": .array(messages), "tools": .array(AskTools.modelTools),
+        ["model": .string(model), "messages": .array(messages), "tools": .array(AskTools.modelTools(painting: painting)),
          "stream": false, "think": false, "keep_alive": "30m",
          "options": ["num_ctx": .number(Double(Self.contextWindow)), "temperature": 0]]
     }
@@ -387,9 +410,9 @@ public struct AskConversation: Sendable {
         var looks: [AskLook] = []
         for (name, said) in calls {
             let arguments = name == "add_text" || name == "add_component" ? Self.withoutEntities(said) : said
-            if AskTools.looking.contains(name) {
+            if AskTools.looking(painting: painting).contains(name) {
                 looks.append(AskLook(tool: name, arguments: arguments))
-            } else if AskTools.doing.contains(name) {
+            } else if AskTools.doing(painting: painting).contains(name) {
                 var step = AskStep(tool: name, arguments: arguments)
                 if name == "add_measurement",
                    steps.filter({ $0.tool == "add_measurement" }).count >= Self.mostMeasurements {
@@ -416,7 +439,7 @@ public struct AskConversation: Sendable {
                 // A photo, a drawing or a painting, as the person's words say.
                 var name = name, arguments = arguments
                 if name == "add_drawing" || name == "add_photo" {
-                    let routed = Self.routed(name, arguments, request: request, paints: paints)
+                    let routed = Self.routed(name, arguments, request: request, paints: paints, brushes: brushes)
                     if let refusal = routed.refusal {
                         tell(name, refusal)
                         continue
@@ -613,6 +636,8 @@ public struct AskConversation: Sendable {
 
     /// What Ask says when it was asked to paint before the brushes can.
     public static let brushesNotReady = "No brushes yet, so I made one image."
+    /// Told to the model when it plans a painting as one picture.
+    static let paintWithStrokes = "Not planned: a painting is painted with the Brush. Call paint_stroke once for every stroke, as the instructions say, and no add_drawing or add_photo."
     public static let brushesNotReadyDrawn = "No brushes yet, so I drew vector art."
     /// Told to the model when a photo is asked for and nothing on this Mac can paint one.
     static let noPhotos = "Not planned: Photonz cannot paint a photo on this Mac until its picture model is set up in Settings, Ask. Call no more tools and answer: I can't make photos until the picture model is set up in Settings, Ask."
@@ -622,10 +647,15 @@ public struct AskConversation: Sendable {
     /// they say vector art, a drawing or an icon, and the model's own choice
     /// when they say neither. A painting is made the nearest way until the
     /// brushes can paint one, with a line saying so.
-    static func routed(_ tool: String, _ arguments: AgentJSON, request: String, paints: Bool)
+    static func routed(_ tool: String, _ arguments: AgentJSON, request: String, paints: Bool, brushes: Bool = false)
         -> (tool: String, arguments: AgentJSON, note: String?, refusal: String?) {
         guard var object = arguments.objectValue else { return (tool, arguments, nil, nil) }
         let kind = AgentPictureKind.asked(in: request)
+        // A painting is painted with the brushes, stroke by stroke: one
+        // picture made in a painted look is what Ask made before they were.
+        if brushes, kind == .paint, object["icon"]?.boolValue != true {
+            return (tool, arguments, nil, Self.paintWithStrokes)
+        }
         func asPhoto(_ look: AgentPhotoCall.Look) -> AgentJSON {
             var photo: [String: AgentJSON] = ["subject": object["subject"] ?? "", "asked": .string(request)]
             for key in ["frame", "name"] { photo[key] = object[key] }
@@ -894,12 +924,12 @@ public struct AskConversation: Sendable {
     }
 
     /// What the model is told before the person's request.
-    static func instructions(documentRead: String, paints: Bool = false) -> String {
-        let drawingRules = paints ? Self.paintingRules : Self.drawingRules
+    static func instructions(documentRead: String, paints: Bool = false, painting: Bool = false) -> String {
+        let drawingRules = painting ? Self.brushRules : paints ? Self.paintingRules : Self.drawingRules
         return """
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
         a request about the document in front of them. Turn it into a plan of tool calls on that document.
-        - Looking tools (\(AskTools.looking.joined(separator: ", "))) answer right away. Use them when you need facts.
+        - Looking tools (\(AskTools.looking(painting: painting).joined(separator: ", "))) answer right away. Use them when you need facts.
         - Editing tools are NOT run now. Each call is written into a plan that runs when you finish, and is \
         answered "Planned as step N". Call them in the order they should run, with every argument filled \
         in. To name the layer, clip or title a planned step makes, write "$N" where its id goes.
@@ -950,6 +980,33 @@ public struct AskConversation: Sendable {
         (the names down the left, each state named once over its column, every look in its cell, the canvas \
         grown when it needs more room), so set no labels or headers yourself. Only kinds with the same states \
         share a header row: give every kind that has them the same state names. Place no starters on it.
+        """
+
+    /// How to paint with the Brush (`docs/design/brushes.md`, decision 8):
+    /// a painter's general way of working, which holds for any subject. The
+    /// model decides what the strokes are; the engine makes them look like
+    /// paint. Nothing here names a subject.
+    static let brushRules = """
+        - This request is a painting: paint it with the Brush. Call paint_stroke once for every stroke, \
+        and never add_drawing, add_photo, add_shape or add_path. Give every stroke medium (the one named, \
+        oil when none is), color and settings.size. The first stroke makes a Paint layer and every later one \
+        lands on it.
+        - Work the way a painter does. Block in first: cover the whole canvas to every edge with the big \
+        areas (what is far away, the large masses), with a wide brush about a tenth of the canvas's width, \
+        each block-in stroke starting and ending a little past the canvas's edges so its thin ends fall outside. \
+        Lay the strokes of an area closer together than the brush is wide, so no bare canvas shows, each \
+        running the way that surface runs: long and nearly level for sky and water, along the slope for \
+        land, short and upright for growing things. Never repeat one stroke shape as a pattern. Then the \
+        middle shapes with a brush half that size, over the block-in. Last, a few small strokes of detail \
+        and light on top with a small brush. Back to front, big to small, dark to light.
+        - Build each thing out of several short strokes that fill its shape, its shadow side and its lit \
+        side; never draw a thing as one outline.
+        - Paint each area in three or four close shades, not one flat colour, with real darks and strong \
+        colour where the light falls: darker and cooler where it turns from the light, lighter and warmer \
+        where the light is, greyer and paler in the distance.
+        - Write each stroke's points as path, three to five x,y pairs along it in canvas points with spaces \
+        between them (40,60 300,52 620,66), never as points. A small painting is thirty to fifty strokes. \
+        Leave out pressure.
         """
 
     /// How to draw when there is no picture model: the model's own svg.
