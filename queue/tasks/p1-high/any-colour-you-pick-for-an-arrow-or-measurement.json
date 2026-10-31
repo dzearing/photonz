@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:19:06.785Z",
-  "updated": "2026-10-31T16:17:45.040Z",
+  "updated": "2026-10-31T16:26:57.472Z",
   "deps": [
     "walks-that-fail-in-the-full-sweep-26"
   ],
@@ -63,6 +63,10 @@
     {
       "t": "2026-10-31T16:17:45.039Z",
       "note": "Color row, one-colour retint, legibility warning with Reset Colors and the pixel reader shipped in 91a9d770; waiting on walk presses (walks-that-fail-in-the-full-sweep-26) to run any-colour-chip-reads-walk, the last acceptance item."
+    },
+    {
+      "t": "2026-10-31T16:26:57.471Z",
+      "note": "rotating check 2026-10-31T16:26:57Z, 39 walks run from 695 onward in the rotation: any-colour-chip-reads-walk (its script changed since the last check) failing."
     }
   ],
   "started": "2026-10-31T15:22:52.840Z",

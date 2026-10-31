@@ -2,14 +2,14 @@
   "id": "ask-changes-what-it-just-made-make-the-water-blu",
   "title": "Ask changes what it just made: \"make the water bluer\" after a beach painting works",
   "goal": "After Ask makes something (a painting of a beach, a drawing, a photo, a sheet of components), a follow-up like \"make the water bluer\", \"make the sun bigger\" or \"less clouds\" changes that thing in place, the way a person would expect from a conversation. Today every request starts from nothing: Ask does not know what it made a moment ago, and a painting reads to it as one paint layer with no idea which strokes are the water.",
-  "epic": "local-edit",
+  "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 2e-7,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:37:49.238Z",
-  "updated": "2026-10-31T14:37:49.374Z",
+  "updated": "2026-10-31T21:46:14.307Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake): 'i ask it to make something like a painting of a beach. It does it (great!) but then i say: make the water bluer and it has no idea how to tweak what it already made. Is there any way for it to understand its previous steps or at least the current state of things to make changes'. Cause, from code: AskConversation (PhotonzCore/AskPlanning.swift) starts every request with a fresh message list: system prompt + the document as read_document reads it + the request. No earlier requests or plans are included. A painting is planned as paint_stroke steps on a Paint layer (brushRules), and read_document reports that layer, not which strokes are what. The looking tools offered do not include a picture of the canvas, though a vision path exists (visionBody, used by AskDrawingCheck to check drawings). AgentPictureKind.remade already re-runs the LAST request as another kind ('as a photo'), so a notion of 'the last request' exists to build on. Paint strokes are kept as data on the layer (PaintLayerStroke), so recolouring a part's strokes is possible without touching pixels.",
@@ -30,6 +30,58 @@
     {
       "t": "2026-10-31T14:37:49.373Z",
       "note": "seq 3970 -> 2e-7"
+    },
+    {
+      "t": "2026-10-31T16:28:45.474Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T16:29:19.464Z",
+      "note": "Chose epic agent-ask (now, in focus) over local-edit (later) because this is Ask in-app, a user p1 ask; local-edit is about local models, which this is not."
+    },
+    {
+      "t": "2026-10-31T16:32:15.582Z",
+      "note": "Adversarial review before building: a person who says 'make the water bluer' expects only the water to shift, its shading kept (Photoshop: Hue/Saturation on a selection), the rest untouched, and Command Z to take it back in one step. Today the model sees one Paint layer of 400+ strokes with no names, no earlier turns and no picture, so it repaints or adds strokes on top. A painting's strokes come from the sketch's SVG shapes, whose ids are the model's own part names: carrying them on each stroke costs nothing and needs no coded words. Shrinking or removing a painted part reveals the shape painted under it (sketch shapes cover the canvas back to front), so 'smaller sun' and 'less clouds' read right. A photo is one bitmap with no parts: recolouring a named part of it needs segmentation the app does not have, so photo parts are out of this slice (whole-layer change still works)."
+    },
+    {
+      "t": "2026-10-31T16:32:15.648Z",
+      "note": "Plan for this run: (1) strokes carry a part name: paint_stroke part, BrushSketch from SVG ids, read_document lists a paint layer's parts; (2) new tool change_part: recolour toward a colour or shift hue/saturation/lightness, scale, move or remove one named part, on a paint layer's strokes or on named layers, one undo step; (3) AskMemory: the last requests on this window's rows that are still on, with what each made, handed to the model every request; (4) the canvas as a picture on the request when the planning model sees; (5) two-turn eval cases and a before/after; (6) reel + audit."
+    },
+    {
+      "t": "2026-10-31T17:11:58.792Z",
+      "note": "Feature committed as d32c0cfc. Baseline: Sources temporarily checked out from 365db6e1 (before this task) to run the two-turn eval on the old app; restore with: git checkout HEAD -- Sources"
+    },
+    {
+      "t": "2026-10-31T17:12:50.500Z",
+      "note": "owns these walks: ask-changes-what-it-made-walk"
+    },
+    {
+      "t": "2026-10-31T18:30:34.996Z",
+      "note": "Baseline (two-turn eval, code before this task, run baseline-before): 3 of 12. Paintings: 'I can't, the water is part of a finished oil-paint layer' (the user's report reproduced), a sun added in a corner instead of the sun grown, a whole meadow wiped to white for 'remove the clouds'. Passing already: an icon's door recoloured by set_layer on its named layer, and a photo warmed or shrunk."
+    },
+    {
+      "t": "2026-10-31T19:52:30.165Z",
+      "note": "After the first slice (run after-1): 7 of 12, up from 3. All five paintings but the purple sky pass. Misses: the fox (model named the drawing's own group as the part), the house door (a traced drawing's 'White' layer holds the door and the chimney), the purple sky (model turned the hue wheel the wrong way), the primary button green (change landed on a component copy's piece, which is rebuilt from its original), and the sun icon (its FIRST request was refused by the existing drawing check, 'seen as sunset', before any change was asked). Fixed in 35d07d21; re-running all 12 as after-2."
+    },
+    {
+      "t": "2026-10-31T21:46:14.087Z",
+      "note": "Built and landed (d32c0cfc, 35d07d21, cee26b92, audit 18fd929b): strokes carry the sketch's part names and read_document lists them; change_part (recolour toward a colour keeping shading, hue/saturation/lightness/warmth, scale, move, remove; a photo through its colour grade; a component copy's piece through its original; a point to split a piece out of a traced colour layer); AskMemory (latest 6 rows still on, with what each made); a canvas picture a pixel a point up to 1024 when there is something to see; the two-turn eval Scripts/ask-eval/followup.mjs with 12 cases; the try walk ask-changes-what-it-made-walk (passed, 4 real window captures; reel and sheet in queue/audits). Looked at every audit picture: the contact sheet shows the painted beach, only the water turned blue, only the sun grown, and the undo taking back only the sun."
+    },
+    {
+      "t": "2026-10-31T21:46:14.159Z",
+      "note": "Bar NOT reached: two-turn eval 3 of 12 before, 7 after-1, 9 of 12 after-2 (bar 10). Left: (1) re-run the whole set on cee26b92, which fixes two after-2 misses (a point inside the sun lost to the drawing's own name so the whole icon shrank; the lighthouse photo resized by width alone and squashed); (2) the primary button sheet: change_part turned Hover, Pressed and Disabled green in one shade and left the Default state blue, so the Default look is not reached through its piece and the looks' shades are not kept; (3) the walk-only Ask checks were run with the person away (setup front), so a re-run waits for that. Command: node Scripts/ask-eval/followup.mjs run --tag '...'"
+    },
+    {
+      "t": "2026-10-31T21:46:14.232Z",
+      "note": "Left rough, not filed: growing a painted part covers its neighbours (the bigger sun's glow covers a small cloud) and shrinking shows the sketch under it, which is how paint behaves; a traced drawing's part only gets a name once a follow-up points into it; a photo's single part ('the dog's collar') needs an edit model, folded into measure-whether-qwen-image-2-1-can-paint-and-edi; the slow follow-up folded into ask-s-first-answer-after-its-model-loads-comes-i."
+    },
+    {
+      "t": "2026-10-31T21:46:14.306Z",
+      "note": "Shipped parts, memory, canvas picture and change_part (two-turn eval 3 -> 9 of 12, audit 2026-10-31-ask-changes-what-it-made); one case short of the 10 of 12 bar, so it stays open: re-measure on cee26b92 and fix the primary button sheet."
     }
+  ],
+  "started": "2026-10-31T16:28:45.473Z",
+  "walks": [
+    "ask-changes-what-it-made-walk"
   ]
 }
