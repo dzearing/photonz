@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:49:22.794Z",
-  "updated": "2026-10-31T14:49:22.797Z",
+  "updated": "2026-10-31T16:17:30.746Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p. Already built there: AnnotationContent.captionPartsByHand (Fill/Edge/Text set by hand, kept through style and colour changes), resetCaptionPartsByHand, EditorState.resetChipParts(ids:) (no UI yet), the chip re-deriving from the line ink on every colour change. Still needed: head following the line, the Size control, the Advanced fold and its from-labels, moving Line/Head/Label rows (PartsInspector rows) under it, and the same for measurements once every-measurement-wears-the-same-chip-styles-col lands.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-10-31T14:49:22.796Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-10-31T16:17:30.745Z",
+      "note": "From any-colour-you-pick-for-an-arrow-or-measurement (91a9d770): the Color row exists now (MarkupInkRow, between Chip and Marker; head follows the line unless painted apart). Open question for this task: a new arrow is drawn in #FF3B30, which is not in the design system's eight (#FF375F is its red), so a fresh arrow lights the Custom well; decide the arrow tool's default ink when the Appearance is simplified."
     }
   ]
 }

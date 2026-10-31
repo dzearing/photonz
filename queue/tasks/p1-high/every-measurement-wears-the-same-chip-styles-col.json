@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:49:05.091Z",
-  "updated": "2026-10-31T14:49:05.094Z",
+  "updated": "2026-10-31T16:17:30.642Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p (user approved the prototype 2026-10-31 and asked to split into p1 user tasks rather than ship a partial look). Model: Sources/PhotonzCore/ChipStyle.swift (ChipStyle, ChipMarker, InkPlate, ChipLook with layout()), drawn by Sources/PhotonzRender/ChipRasterizer.swift. Measurements draw through MeasureRasterizer -> PillRasterizer.draw with MeasureColors / measure.chipColorHex; the caliper meets the pill outline via PillRasterizer.cornerRadius, so a squircle or square style needs the meet point read from the style corner. MeasureContent needs chipStyle/chipMarker like AnnotationContent (nil = old pill). Tiles: Sources/Photonz/ChipStyleTiles.swift. Rules: docs/design/markup.md.",
@@ -18,12 +18,17 @@
     "The readout chip draws in the picked style through the same chip drawing the arrow label uses, and its line still meets the chip edge cleanly for every style (no gap, no overlap)",
     "Older documents open with their measurements looking exactly as before; a style change is one undo step and survives save and export",
     "Measured contrast of every style over white, black and a busy photo is in the audit, at 4.5:1 or better",
-    "Walk at Next defaults: measure a gap on a screenshot, pick Paper and a Warning marker, and photograph it"
+    "Walk at Next defaults: measure a gap on a screenshot, pick Paper and a Warning marker, and photograph it",
+    "A measurement has the same Color row as an arrow (eight swatches and a Custom well), any colour keeps its chip at 4.5:1 read off the pixels (expectChipContrast), and a part painted by hand under 4.5:1 shows the warning with Reset Colors"
   ],
   "log": [
     {
       "t": "2026-10-31T14:49:05.093Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-10-31T16:17:30.641Z",
+      "note": "From any-colour-you-pick-for-an-arrow-or-measurement (91a9d770): an arrow now has a Color row (MarkupInkRow: the eight InkPlate.palette swatches + a Custom well) between Chip and Marker, AnnotationContent.setInk for one-colour retints, captionWordContrast + ChipLegibilityWarning (Reset Colors) for hand-painted parts under 4.5:1, and expectChipContrast to read a chip off the pixels. A measurement needs the same row and warning when it wears the chip."
     }
   ]
 }

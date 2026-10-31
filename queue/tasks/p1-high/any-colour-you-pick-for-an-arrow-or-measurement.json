@@ -9,8 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:19:06.785Z",
-  "updated": "2026-10-31T14:49:05.019Z",
-  "deps": [],
+  "updated": "2026-10-31T16:17:45.040Z",
+  "deps": [
+    "walks-that-fail-in-the-full-sweep-26"
+  ],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake): 'I want to make sure arrows/chips can be custom colored and it retains accessibility on the text, without going into advanced to tweak details'. Split out because the runner on caption-and-measurement-chips-come-in-a-set-of-p started at 13:25 and this direction was logged at 14:18; if that runner already did it, verify and close this as done. Reference implementation: docs/design/mocks/shared/components/markup.js (plateFor, glassFor), rules docs/design/markup.md section 3, live check on the design site: Design system > Markup, Custom colour well with a contrast readout.",
   "acceptance": [
@@ -33,6 +35,38 @@
     {
       "t": "2026-10-31T14:49:05.018Z",
       "note": "Done in caption-and-measurement-chips-come-in-a-set-of-p (2026-10-31): PhotonzCore InkPlate ports plateFor AND glassFor to the hex digit, held by ChipStyleTests against docs/design/markup-plate-sweep.tsv (5,472 colours written by Scripts/markup-plate-fixture.cjs from markup.js); the same sweep asserts every chip style >= 4.5:1 over white and black. The app DRAWS Glass at 95-97 percent (not 82) because its compositor blends in linear light (82 percent measured 3.2:1 over white); written into markup.md section 3. Hairline ink text now aims at 4.6 (byte rounding took 3 colours to 4.48), changed in markup.js too. captionLegibilityNote now warns under 4.5 (was 3). Still open here: the custom colour well in the Color row, one Color retinting the head as well as the chip (the chip already follows the line's ink), the one-click way back, and the walk."
+    },
+    {
+      "t": "2026-10-31T15:22:52.841Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T16:17:44.669Z",
+      "note": "owns these walks: any-colour-chip-reads-walk"
+    },
+    {
+      "t": "2026-10-31T16:17:44.770Z",
+      "note": "Before building: a first-time user finds the colour on the arrow's Appearance (Chip, Color, Marker, per markup.md section 8) with no need to open the part rows; a Photoshop user expects swatches plus a well that opens a full picker, which is what the row is. The mock assumes a measurement chip with styles, which the app does not have yet: that is every-measurement-wears-the-same-chip-styles-col, so this task builds the arrow and that task got the row in its checklist."
+    },
+    {
+      "t": "2026-10-31T16:17:44.839Z",
+      "note": "Shipped in 91a9d770: Color row (MarkupInkRow, ChipStyleTiles.swift) with the design system's eight swatches and a Custom well (the app's picker); a pick goes through AnnotationContent.setInk (line, head unless painted apart, chip re-derived) in one undo step, and the tool bar colour on a picked arrow does the same. Warning 'Words are hard to read on this chip' + Reset Colors under the row (captionWordContrast judges the chip as drawn, see-through plates over white and black). Verified: ChipInkTests (5,472 colours x 10 styles, none under 4.5:1, no warning), ChipContrastReaderTests (light green and indigo, every style, white/black/photo, read off pixels), full Scripts/test.sh green, chip-styles-walk ok with the new row, audit queue/audits/2026-10-31-any-colour-chip-reads.json."
+    },
+    {
+      "t": "2026-10-31T16:17:44.906Z",
+      "note": "Chose the design system's eight swatches (markup.js PALETTE) over the tool bar's system swatches because the mock prints them; cost: a new arrow's #FF3B30 lights Custom. Chose 'Reset Colors' over 'Use Automatic Colors' because the chrome copy rule refuses a three-word instruction. Chose to put the warning under the Color row (seen without opening the part rows) instead of under Label Text when chip styles are on."
+    },
+    {
+      "t": "2026-10-31T16:17:44.973Z",
+      "note": "NOT DONE, the walk item: any-colour-chip-reads-walk (custom light green and indigo by hand, every chip style, expectChipContrast on white, black and photo, then the warning and Reset Colors) stops at step 15, because a walk's click on a plain dock button does nothing since 2026-10-26 (logged with the reproduction on walks-that-fail-in-the-full-sweep-26, now a dep of this task). Left pending until that is fixed and this walk passes; nothing else is left here."
+    },
+    {
+      "t": "2026-10-31T16:17:45.039Z",
+      "note": "Color row, one-colour retint, legibility warning with Reset Colors and the pixel reader shipped in 91a9d770; waiting on walk presses (walks-that-fail-in-the-full-sweep-26) to run any-colour-chip-reads-walk, the last acceptance item."
     }
+  ],
+  "started": "2026-10-31T15:22:52.840Z",
+  "walks": [
+    "any-colour-chip-reads-walk"
   ]
 }

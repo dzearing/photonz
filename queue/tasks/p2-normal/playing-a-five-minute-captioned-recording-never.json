@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-19T16:22:21.058Z",
-  "updated": "2026-10-31T13:18:30.789Z",
+  "updated": "2026-10-31T15:21:03.708Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Third success item of video-beats-premiere in queue/objectives.json. Open thread in the manager reports of 2026-10-15 and 2026-10-16. Checked 2026-10-19: a-long-captioned-recording-walk.json measures the longest pass after key presses (longestUnderMS 80, lines 22-42) and after captions land (150, line 14) but never plays; a-captioned-recording-sits-quiet-walk measures idle busy time (busyUnderMS 400). The step is PlaytestStep.wait(seconds:onTheClock:longestUnderMS:busyUnderMS:) (PhotonzCore/PlaytestScript.swift:2713-2723). Frame lateness while playing is already guarded by playing-a-recording-never-blinks-walk (done tasks a-full-screen-retina-recording-keeps-up-while-it, a-full-screen-recording-keeps-up-as-it-plays-acr); this task is about the main thread, not frame supply.",
@@ -124,6 +124,10 @@
     {
       "t": "2026-10-31T13:18:30.788Z",
       "note": "rotating check 2026-10-31T13:18:30Z, 39 walks run from 626 onward in the rotation: an-editing-session-walk failing. This task was picked because its words name the walk; if it is not yours, say so with node queue/bin/queue.mjs walks playing-a-five-minute-captioned-recording-never --none and the next check writes it onto the standing walk task instead."
+    },
+    {
+      "t": "2026-10-31T15:21:03.707Z",
+      "note": "rotating check 2026-10-31T15:21:03Z, 39 walks run from 661 onward in the rotation: an-editing-session-walk failing. This task was picked because its words name the walk; if it is not yours, say so with node queue/bin/queue.mjs walks playing-a-five-minute-captioned-recording-never --none and the next check writes it onto the standing walk task instead."
     }
   ]
 }

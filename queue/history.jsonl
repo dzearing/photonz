@@ -14808,3 +14808,18 @@
 {"t":"2026-10-31T15:04:40.455Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
 {"t":"2026-10-31T15:04:40.528Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
 {"t":"2026-10-31T15:04:40.600Z","ev":"task_pending","id":"caption-and-measurement-chips-come-in-a-set-of-p","from":"in_progress","note":"Arrow-label chip styles shipped (c7b35c37) and measured legible everywhere; left open because 4 of the 10 styles (Glass, Spec badge, Lit tag, Highlighter) score under the professional bar with the judge. Measurements, new arrow styles and the simplified Appearance are split into p1 tasks."}
+{"t":"2026-10-31T15:21:03.709Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-10-31T15:21:03.746Z","ev":"task_note","id":"icon-snapping-reaches-what-the-icon-mock-draws"}
+{"t":"2026-10-31T15:21:03.782Z","ev":"task_note","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b"}
+{"t":"2026-10-31T15:21:03.817Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-31T15:22:52.679Z","ev":"slice_pass","walks":39,"passed":24,"failed":15,"seconds":463,"of":1062,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-31T15:22:52.846Z","ev":"task_started","id":"any-colour-you-pick-for-an-arrow-or-measurement","title":"Any colour you pick for an arrow or measurement keeps its chip's words readable, Glass included","priority":"p1-high"}
+{"t":"2026-10-31T16:17:30.570Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-31T16:17:30.643Z","ev":"task_note","id":"every-measurement-wears-the-same-chip-styles-col"}
+{"t":"2026-10-31T16:17:30.747Z","ev":"task_note","id":"arrow-and-measurement-appearance-shows-only-styl"}
+{"t":"2026-10-31T16:17:44.671Z","ev":"task_walks","id":"any-colour-you-pick-for-an-arrow-or-measurement","walks":["any-colour-chip-reads-walk"]}
+{"t":"2026-10-31T16:17:44.772Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-10-31T16:17:44.841Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-10-31T16:17:44.908Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-10-31T16:17:44.975Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-10-31T16:17:45.041Z","ev":"task_pending","id":"any-colour-you-pick-for-an-arrow-or-measurement","from":"in_progress","note":"Color row, one-colour retint, legibility warning with Reset Colors and the pixel reader shipped in 91a9d770; waiting on walk presses (walks-that-fail-in-the-full-sweep-26) to run any-colour-chip-reads-walk, the last acceptance item."}
