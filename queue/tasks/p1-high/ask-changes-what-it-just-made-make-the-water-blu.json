@@ -1,0 +1,35 @@
+{
+  "id": "ask-changes-what-it-just-made-make-the-water-blu",
+  "title": "Ask changes what it just made: \"make the water bluer\" after a beach painting works",
+  "goal": "After Ask makes something (a painting of a beach, a drawing, a photo, a sheet of components), a follow-up like \"make the water bluer\", \"make the sun bigger\" or \"less clouds\" changes that thing in place, the way a person would expect from a conversation. Today every request starts from nothing: Ask does not know what it made a moment ago, and a painting reads to it as one paint layer with no idea which strokes are the water.",
+  "epic": "local-edit",
+  "priority": "p1-high",
+  "seq": 2e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T14:37:49.238Z",
+  "updated": "2026-10-31T14:37:49.374Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-31 (intake): 'i ask it to make something like a painting of a beach. It does it (great!) but then i say: make the water bluer and it has no idea how to tweak what it already made. Is there any way for it to understand its previous steps or at least the current state of things to make changes'. Cause, from code: AskConversation (PhotonzCore/AskPlanning.swift) starts every request with a fresh message list: system prompt + the document as read_document reads it + the request. No earlier requests or plans are included. A painting is planned as paint_stroke steps on a Paint layer (brushRules), and read_document reports that layer, not which strokes are what. The looking tools offered do not include a picture of the canvas, though a vision path exists (visionBody, used by AskDrawingCheck to check drawings). AgentPictureKind.remade already re-runs the LAST request as another kind ('as a photo'), so a notion of 'the last request' exists to build on. Paint strokes are kept as data on the layer (PaintLayerStroke), so recolouring a part's strokes is possible without touching pixels.",
+  "acceptance": [
+    "Ask keeps a short memory of the conversation in the window: the recent requests, what each one planned and made (its steps and which layers or strokes they produced), handed to the model with every new request, so \"it\", \"the water\", \"bluer\", \"again but smaller\" resolve to what was just made. The memory lasts the window's session, alongside the Ask rows, and is cleared by a new conversation.",
+    "What Ask makes is labelled by its parts so it can find them later: a painting's strokes carry which area they paint (water, sand, sky, sun, as the model named them when planning), a drawing's layers are named for their parts, a photo layer knows its subject. Labels come from the model's own plan, never from words coded into the app (the user, 2026-10-20: no hardcoded subjects).",
+    "Ask can SEE the current state: the request gets a picture of the canvas (the planning model already has a vision path, visionBody) as well as read_document, so it can judge \"bluer\" or \"bigger\" against what is really there.",
+    "Ask has the tools to change a part, not only add: recolour the strokes or pixels of a named part (shift hue, saturation, lightness), repaint a part, scale or move a part, remove a part. Each change is one undo step, and the row says it in the person's words (\"Made the water bluer\").",
+    "Measured with the Ask eval (Scripts/ask-eval.sh): a new case set of at least 12 two-turn conversations (make X, then change one part of it) across a painting, a vector drawing, a photo and a component sheet, judged by the model judge on: the right part changed, the change matches the words, nothing else moved. Before and after totals in the audit; the after must pass at least 10 of 12.",
+    "Try path at Next defaults: Ask 'paint a beach at sunset', then 'make the water bluer', then 'make the sun bigger', then undo once. A reel of it in the audit under queue/audits/.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T14:37:49.240Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-31T14:37:49.373Z",
+      "note": "seq 3970 -> 2e-7"
+    }
+  ]
+}
