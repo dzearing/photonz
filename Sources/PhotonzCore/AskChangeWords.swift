@@ -55,7 +55,7 @@ public enum AskChangeWords {
     private static func partVerb(_ arguments: AgentJSON) -> String {
         if arguments["remove"]?.boolValue == true { return "Removed" }
         let keys = Set((arguments.objectValue ?? [:]).keys).subtracting(["document", "layer", "part"])
-        if keys.isSubset(of: ["color", "hue", "saturation", "lightness"]) { return "Recoloured" }
+        if keys.isSubset(of: ["color", "hue", "saturation", "lightness", "warmth"]) { return "Recoloured" }
         if keys == ["scale"] { return "Resized" }
         if keys.isSubset(of: ["dx", "dy"]) { return "Moved" }
         return "Changed"

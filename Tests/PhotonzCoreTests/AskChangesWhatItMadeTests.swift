@@ -169,6 +169,34 @@ struct AskChangesWhatItMadeTests {
         #expect(refused.message.contains("sky") && refused.message.contains("water") && refused.message.contains("sun"))
     }
 
+    @Test("Warmth turns a part's colours toward orange or toward blue")
+    func warmthOnPaint() throws {
+        var (document, id) = Self.beach()
+        _ = try document.agentChangePart(Self.change(#"{"part": "water", "warmth": 80}"#)).get()
+        let after = document.layer(id: id)?.paint?.strokes ?? []
+        // Teal water moved round toward orange: its hue fell.
+        #expect(Self.hsl(after[2].colorHex).h < Self.hsl("#3C7A8C").h - 0.1)
+        #expect(after[0].colorHex == "#E8A070", "the sky is untouched")
+    }
+
+    @Test("A photo's colours change through its colour grade, and a colour to recolour toward is refused")
+    func photoThroughItsGrade() throws {
+        let photo = Layer(name: "Dog on a beach", content: .image(ImageRef(pixelSize: CGSize(width: 400, height: 300))),
+                          frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300), layers: [photo])
+        _ = try document.agentChangePart(Self.change(#"{"part": "dog on a beach", "warmth": 30, "saturation": 10}"#)).get()
+        guard case .colorGrade(let grade)? = document.layer(id: photo.id)?.style.effects.last else {
+            Issue.record("no colour grade on the photo"); return
+        }
+        #expect(grade.temperature == 30 && grade.saturation == 110)
+        _ = try document.agentChangePart(Self.change(#"{"part": "dog on a beach", "warmth": 10}"#)).get()
+        let grades = document.layer(id: photo.id)?.style.effects.filter { if case .colorGrade = $0 { return true }; return false }
+        #expect(grades?.count == 1, "a second change tunes the same grade")
+        guard case .failure = document.agentChangePart(try Self.change(##"{"part": "dog on a beach", "color": "#0000FF"}"##)) else {
+            Issue.record("a photo recoloured toward one colour should be refused"); return
+        }
+    }
+
     // MARK: change_part on a drawing's named layers
 
     static func drawing() -> (PhotonzDocument, UUID, UUID) {
@@ -196,6 +224,66 @@ struct AskChangesWhatItMadeTests {
         let answer = try document.agentChangePart(Self.change(#"{"part": "sun", "remove": true}"#)).get()
         #expect(answer.layers == 1)
         #expect(document.layer(id: sun) == nil)
+    }
+
+    @Test("The layer given can be the part itself, named with or without an article")
+    func theWholeDrawingIsThePart() throws {
+        var (document, group, sun) = Self.drawing()
+        let id = group.uuidString
+        _ = try document.agentChangePart(Self.change(#"{"part": "the landscape", "layer": "\#(id)", "lightness": -20}"#)).get()
+        #expect(Self.hsl(document.layer(id: sun)?.path?.fill?.hex ?? "#FFD040").l < Self.hsl("#FFD040").l - 0.1)
+    }
+
+    @Test("On a drawing traced into colour layers, a point picks the piece drawn there, split out under the part's name")
+    func pieceByPoint() throws {
+        func ring(_ x: CGFloat, _ y: CGFloat, _ side: CGFloat) -> [PathAnchor] {
+            [CGPoint(x: x, y: y), CGPoint(x: x + side, y: y), CGPoint(x: x + side, y: y + side), CGPoint(x: x, y: y + side)]
+                .map { PathAnchor(point: $0) }
+        }
+        // One white layer holding a door (10...30) and a chimney (60...70), inside a group at 100,100.
+        let white = Layer(name: "White", content: .path(PathContent(anchors: ring(10, 10, 20) + ring(60, 0, 10), isClosed: true,
+                                                                    ringStarts: [4], paint: Paint(hex: "#FFFFFF"), strokeWidth: 0,
+                                                                    fill: Paint(hex: "#FFFFFF"))),
+                          frame: CGRect(x: 0, y: 0, width: 70, height: 30))
+        let house = Layer(name: "A house", content: .group(GroupContent(children: [white])),
+                          frame: CGRect(x: 100, y: 100, width: 70, height: 30))
+        var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300), layers: [house])
+        let answer = try document.agentChangePart(Self.change(##"{"part": "door", "color": "#D02020", "at": {"x": 120, "y": 120}}"##)).get()
+        #expect(answer.layers == 1)
+        let children = document.layer(id: house.id)?.group?.children ?? []
+        #expect(children.map(\.name) == ["White", "Door"])
+        #expect(children.last?.path?.fill?.hex.uppercased() == "#D02020")
+        #expect(children.last?.frame == CGRect(x: 10, y: 10, width: 20, height: 20))
+        #expect(children.first?.path?.anchors.count == 4 && children.first?.path?.fill?.hex.uppercased() == "#FFFFFF")
+        // Named now: the next request finds it by name.
+        _ = try document.agentChangePart(Self.change(#"{"part": "door", "scale": 2}"#)).get()
+        #expect(document.layer(id: house.id)?.group?.children.last?.frame == CGRect(x: 0, y: 0, width: 40, height: 40))
+        // A point on nothing is refused.
+        guard case .failure = document.agentChangePart(try Self.change(#"{"part": "window", "remove": true, "at": {"x": 5, "y": 5}}"#)) else {
+            Issue.record("a point on nothing should be refused"); return
+        }
+    }
+
+    @Test("A part inside a component's copy changes the original's, so the copy and every other copy follow")
+    func componentPiecesChangeTheOriginal() throws {
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: [
+            Layer(name: "Background", content: .annotation(AnnotationContent(shape: .rectangle, strokeWidth: 0, colorHex: "#0A84FF",
+                                                                             end: CGPoint(x: 120, y: 40), fillColorHex: "#0A84FF")),
+                  frame: CGRect(x: 10, y: 10, width: 120, height: 40)),
+            Layer(name: "Label", content: .text(TextContent(string: "OK")), frame: CGRect(x: 30, y: 20, width: 60, height: 20)),
+        ])
+        let fill = doc.layers[0].id, label = doc.layers[1].id
+        let grouped = doc.groupLayers(ids: [fill, label], name: "Primary button")
+        let main = try #require(grouped)
+        let made = doc.makeComponent(id: main.id)
+        let component = try #require(made)
+        let placed = doc.insertComponentInstance(of: component, at: CGPoint(x: 400, y: 300))
+        let copy = try #require(placed)
+        let piece = ComponentIdentity.derived(instance: copy, source: fill)
+        _ = try doc.agentChangePart(Self.change(##"{"part": "background", "layer": "\##(copy.uuidString)", "color": "#34C759"}"##)).get()
+        doc.syncComponentInstances()
+        #expect(doc.layer(id: fill)?.annotation?.fill?.hex.uppercased() == "#34C759")
+        #expect(doc.layer(id: piece)?.annotation?.fill?.hex.uppercased() == "#34C759")
     }
 
     // MARK: The memory

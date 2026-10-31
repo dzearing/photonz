@@ -759,9 +759,15 @@ Measured by the two-turn eval, `node Scripts/ask-eval/followup.mjs run`: twelve
 make-then-change conversations, a judge comparing the two pictures on the right
 part, the words, and nothing else moving (`queue/evals/ask-followup-history.jsonl`).
 
-A photo is one picture with no parts, and a drawing the picture model paints
-is traced into layers named by colour: changing one named part of either needs
-the parts found first (left rough in the task's log).
+A drawing the picture model paints is traced into layers named by colour, so
+"the door" may share a white layer with the chimney. Ask, which sees the canvas
+a pixel a point (up to 1024), gives `at`, a point inside the part: the smallest
+ring of the topmost filled path there, with the rings inside it, is split out
+into its own layer under the part's name, and changed alone; the next request
+finds it by name. A photo has no parts: `warmth`, `saturation` and `lightness`
+change it through its colour grade (the Effects list's own), and a colour to
+recolour toward is refused. One part of a photo needs an edit model (the
+Qwen-Image measuring task).
 
 ## Try paths (walks)
 

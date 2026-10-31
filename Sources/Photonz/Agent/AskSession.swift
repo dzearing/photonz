@@ -622,31 +622,36 @@ final class AskSession {
         // a blank canvas or a lone screenshot plans as it always did.
         let canvas = !memory.isEmpty || (editor.document?.layers.count ?? 0) > 1
             ? await Self.canvasPicture(of: document, in: editor, model: model) : nil
-        if let canvas { note("canvas picture, \(canvas.count / 1024) KB") }
+        if let canvas { note("canvas picture, \(canvas.png.count / 1024) KB at \(Int(canvas.scale * 100))%") }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
                                styles: styles.isError ? "" : Self.text(of: styles),
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
                                paints: paints,
                                brushes: Experiments.shared.brushEnabled && !editor.documentHasTime,
-                               memory: memory, canvas: canvas)
+                               memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1)
     }
 
-    /// The longest side of the canvas picture the planning model is shown.
-    static let canvasPictureSide = 768
+    /// The longest side of the canvas picture the planning model is shown:
+    /// a canvas up to this size is shown a pixel a point, so a point the
+    /// model reads off it is a canvas point.
+    static let canvasPictureSide = 1024
 
     /// The canvas as it is now, for a planning model that sees, so "bluer"
     /// and "bigger" are judged against what is really there. Nil for a model
     /// that cannot see or a video.
-    private static func canvasPicture(of document: String, in editor: EditorState, model: String) async -> Data? {
-        guard !editor.documentHasTime, await AskLocalModel.sees(model) else { return nil }
-        let picture = await AgentWork.run(.renderPicture(document: document, layer: nil, region: nil,
-                                                         maxSize: canvasPictureSide))
+    private static func canvasPicture(of document: String, in editor: EditorState,
+                                      model: String) async -> (png: Data, scale: Double)? {
+        guard !editor.documentHasTime, let size = editor.document?.canvasSize,
+              await AskLocalModel.sees(model) else { return nil }
+        let longest = max(size.width, size.height)
+        let side = Int(min(CGFloat(canvasPictureSide), longest.rounded()))
+        let picture = await AgentWork.run(.renderPicture(document: document, layer: nil, region: nil, maxSize: side))
         guard let png = picture.content.compactMap({ part -> Data? in
             if case .png(let data) = part { return data }
             return nil
         }).first else { return nil }
-        return onWhite(png)
+        return (onWhite(png), longest > 0 ? Double(side) / Double(longest) : 1)
     }
 
     /// The model's turns, until it stops calling tools.

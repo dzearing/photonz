@@ -23,28 +23,37 @@ public struct AgentPartChange: Hashable, Sendable {
     public var saturation: Double?
     /// -100 to 100: darker to lighter.
     public var lightness: Double?
+    /// -100 to 100: cooler (toward blue) to warmer (toward orange). On a
+    /// photo it is the colour grade's temperature.
+    public var warmth: Double?
     /// How many times its size, about its own middle.
     public var scale: Double?
     public var dx: Double?
     public var dy: Double?
     public var remove: Bool
+    /// A point on the canvas inside the part, for a drawing whose layers are
+    /// named by colour rather than by part: the piece drawn there is split
+    /// out of its layer, named `part`, and changed alone.
+    public var at: CGPoint?
 
     public init(part: String, layer: String? = nil, colorHex: String? = nil, hue: Double? = nil,
-                saturation: Double? = nil, lightness: Double? = nil, scale: Double? = nil,
-                dx: Double? = nil, dy: Double? = nil, remove: Bool = false) {
+                saturation: Double? = nil, lightness: Double? = nil, warmth: Double? = nil, scale: Double? = nil,
+                dx: Double? = nil, dy: Double? = nil, remove: Bool = false, at: CGPoint? = nil) {
         self.part = part
         self.layer = layer
         self.colorHex = colorHex
         self.hue = hue
         self.saturation = saturation
         self.lightness = lightness
+        self.warmth = warmth
         self.scale = scale
         self.dx = dx
         self.dy = dy
         self.remove = remove
+        self.at = at
     }
 
-    var recolours: Bool { colorHex != nil || hue != nil || saturation != nil || lightness != nil }
+    var recolours: Bool { colorHex != nil || hue != nil || saturation != nil || lightness != nil || warmth != nil }
     var moves: Bool { (dx ?? 0) != 0 || (dy ?? 0) != 0 }
     var changesAnything: Bool { remove || recolours || moves || (scale.map { $0 != 1 } ?? false) }
 
@@ -57,6 +66,7 @@ public struct AgentPartChange: Hashable, Sendable {
             .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
             .map(String.init)
         while let last = words.last, last.allSatisfy(\.isNumber), words.count > 1 { words.removeLast() }
+        while let first = words.first, ["a", "an", "the"].contains(first), words.count > 1 { words.removeFirst() }
         return words.map { word in
             word.count > 3 && word.hasSuffix("s") && !word.hasSuffix("ss") ? String(word.dropLast()) : word
         }
@@ -91,14 +101,17 @@ extension AgentTools {
                              "description": "The document's id from list_documents, such as d1. Leave it out to use the document in front."],
                 "part": ["type": "string", "description": "The part by its name in read_document: a painting's part (water, sun) or a layer's name."],
                 "layer": ["type": "string", "description": "A layer's id to look in: the painting's paint layer, or the drawing's group. Left out, the whole document."],
-                "color": ["type": "string", "description": "#RRGGBB: the part's main colour becomes this; its lighter and darker shades keep their difference."],
-                "hue": ["type": "number", "minimum": -180, "maximum": 180, "description": "Turn its colours round the colour wheel by this many degrees."],
+                "color": ["type": "string", "description": "#RRGGBB: the part's main colour becomes this; its lighter and darker shades keep their difference. The way to make a part bluer, redder, more purple or any colour: give that colour."],
+                "hue": ["type": "number", "minimum": -180, "maximum": 180, "description": "Turn its colours round the colour wheel by this many degrees. Rarely wanted: for a colour named in the request, give color."],
                 "saturation": ["type": "number", "minimum": -100, "maximum": 100, "description": "Greyer (below 0) or stronger (above 0)."],
                 "lightness": ["type": "number", "minimum": -100, "maximum": 100, "description": "Darker (below 0) or lighter (above 0)."],
+                "warmth": ["type": "number", "minimum": -100, "maximum": 100, "description": "Cooler, toward blue (below 0), or warmer, toward orange (above 0). The way to make a photo warmer or cooler."],
                 "scale": ["type": "number", "minimum": .number(0.1), "maximum": 10, "description": "Times its size, about its own middle: 1.5 is half as big again, 0.5 half the size."],
                 "dx": ["type": "number", "description": "Move it right by this many points (left below 0)."],
                 "dy": ["type": "number", "description": "Move it down by this many points (up below 0)."],
                 "remove": ["type": "boolean", "description": "Take the part away."],
+                "at": ["type": "object", "description": "A point on the canvas inside the part, in canvas points from the top left. Give it when no layer or painted part has the part's name (a drawing whose layers are named by colour): the piece drawn there is split out, given the part's name, and changed alone.",
+                       "properties": ["x": ["type": "number"], "y": ["type": "number"]], "required": ["x", "y"], "additionalProperties": false],
             ], "required": ["part"], "additionalProperties": false]),
     ]
 
@@ -117,13 +130,18 @@ extension AgentTools {
         change.hue = args["hue"]?.doubleValue
         change.saturation = args["saturation"]?.doubleValue
         change.lightness = args["lightness"]?.doubleValue
+        change.warmth = args["warmth"]?.doubleValue
         change.scale = args["scale"]?.doubleValue
         change.dx = args["dx"]?.doubleValue
         change.dy = args["dy"]?.doubleValue
         change.remove = args["remove"]?.boolValue ?? false
+        if let at = args["at"] {
+            guard let x = at["x"]?.doubleValue, let y = at["y"]?.doubleValue else { return fail("at takes x and y.") }
+            change.at = CGPoint(x: x, y: y)
+        }
         if let scale = change.scale, !(0.1...10).contains(scale) { return fail("scale runs 0.1 to 10.") }
         guard change.changesAnything else {
-            return fail("say what to change: color, hue, saturation, lightness, scale, dx and dy, or remove.")
+            return fail("say what to change: color, hue, saturation, lightness, warmth, scale, dx and dy, or remove.")
         }
         if change.remove, change.recolours || change.moves || change.scale != nil {
             return fail("remove takes the part away; give it alone.")
@@ -182,10 +200,33 @@ extension PhotonzDocument {
             for child in layer.group?.children ?? [] { find(child, inside: true) }
         }
         for layer in candidates { find(layer, inside: scope == nil || layer.id != scope?.id || layer.group == nil) }
+        // The layer given is itself the part asked for ("the fox", on the
+        // drawing's own group): the whole of it changes.
+        if named.isEmpty, let scope, change.names(scope.name) { named = [scope.id] }
+        // Nothing of that name, and a point given: the piece drawn there.
+        if named.isEmpty, let point = change.at {
+            switch splitPiece(at: point, named: change.part, within: candidates) {
+            case .success(let id): named = [id]
+            case .failure(let refused): return .failure(refused)
+            }
+        }
         guard !named.isEmpty else {
             let known = (painted + names).prefix(24)
             let listed = known.isEmpty ? "" : " The parts there are: \(known.joined(separator: ", "))."
-            return .failure(AgentToolError("change_part: nothing is called \(change.part).\(listed)"))
+            return .failure(AgentToolError("change_part: nothing is called \(change.part).\(listed) Give at, a point inside it on the canvas, when its layers are named by colour."))
+        }
+        // A piece of a component's copy is rebuilt from its original after
+        // every edit: the change goes to the original's layer it shows, so
+        // the copy, and every other copy, follows.
+        var redirected: [UUID] = []
+        for id in named {
+            let target = componentPiece(of: id).flatMap { $0.isNested ? nil : $0.source } ?? id
+            if !redirected.contains(target) { redirected.append(target) }
+        }
+        named = redirected
+        if change.colorHex != nil || change.hue != nil,
+           let photo = named.compactMap({ layer(id: $0) }).first(where: Self.isPicture) {
+            return .failure(AgentToolError("change_part: \(photo.name) is a photo, one picture with no parts to recolour toward a colour. Use warmth, saturation or lightness on it."))
         }
         if let locked = named.compactMap({ layer(id: $0) }).first(where: \.isLocked) {
             return .failure(AgentToolError("change_part: \(locked.name) is locked."))
@@ -199,6 +240,87 @@ extension PhotonzDocument {
             updateLayer(id: id) { layer in layer = Self.changing(layer, change, canvas: canvas) }
         }
         return .success(AgentPartChanged(part: change.part, strokes: nil, layers: named.count))
+    }
+
+    // MARK: A piece by where it is
+
+    /// The piece drawn at `point` (canvas points) among `layers`: the topmost
+    /// filled path holding it, and of that path only the smallest ring that
+    /// holds it with every ring inside that ring (its holes and details).
+    /// When the path has other rings too, the piece is split out into a
+    /// layer of its own just above it, named `part`, so a later request finds
+    /// it by name. Its id, or why there is none.
+    mutating func splitPiece(at point: CGPoint, named part: String, within layers: [Layer]) -> Result<UUID, AgentToolError> {
+        var hits: [(id: UUID, local: CGPoint)] = []
+        func walk(_ layer: Layer, offset: CGPoint) {
+            guard layer.isVisible else { return }
+            let origin = CGPoint(x: offset.x + layer.frame.minX, y: offset.y + layer.frame.minY)
+            if let children = layer.group?.children {
+                for child in children { walk(child, offset: origin) }
+                return
+            }
+            let local = CGPoint(x: point.x - origin.x, y: point.y - origin.y)
+            if let path = layer.path, path.paintsAnInside, path.containsInside(local) { hits.append((layer.id, local)) }
+        }
+        for layer in layers { walk(layer, offset: .zero) }
+        // Children and layers run bottom first: the last hit is on top.
+        guard let hit = hits.last, let layer = layer(id: hit.id), let path = layer.path else {
+            return .failure(AgentToolError("change_part: nothing filled is drawn at \(Int(point.x)),\(Int(point.y)). Give a point inside the part, in canvas points from the top left."))
+        }
+        let rings = path.ringRanges.map { range -> PathContent in
+            var one = path
+            one.anchors = Array(path.anchors[range])
+            one.ringStarts = []
+            return one
+        }
+        let holding = rings.indices.filter { rings[$0].containsInside(hit.local) }
+        guard let chosen = holding.min(by: { area(rings[$0].bounds) < area(rings[$1].bounds) }) else {
+            return .success(hit.id)
+        }
+        let box = rings[chosen].bounds
+        let inPiece = rings.indices.filter { $0 == chosen || ($0 != chosen && box.contains(rings[$0].bounds)) }
+        guard inPiece.count < rings.count else {
+            updateLayer(id: hit.id) { $0.name = Self.title(part) }
+            return .success(hit.id)
+        }
+        func joined(_ indices: [Int]) -> PathContent {
+            var out = path
+            out.anchors = indices.flatMap { rings[$0].anchors }
+            var starts: [Int] = []
+            var count = 0
+            for index in indices.dropLast() {
+                count += rings[index].anchors.count
+                starts.append(count)
+            }
+            out.ringStarts = starts
+            return out
+        }
+        let rest = rings.indices.filter { !inPiece.contains($0) }
+        let pieceContent = joined(inPiece)
+        let pieceBox = pieceContent.bounds
+        var piece = PathBuilder.layer(pieceContent, at: CGPoint(x: layer.frame.minX + pieceBox.minX, y: layer.frame.minY + pieceBox.minY),
+                                      name: Self.title(part))
+        piece.style = layer.style
+        updateLayer(id: hit.id) { $0.content = .path(joined(rest)) }
+        if let parent = parentID(of: hit.id) {
+            updateLayer(id: parent) { group in
+                guard var content = group.group, let at = content.children.firstIndex(where: { $0.id == hit.id }) else { return }
+                content.children.insert(piece, at: at + 1)
+                group.content = .group(content)
+            }
+        } else if let at = self.layers.firstIndex(where: { $0.id == hit.id }) {
+            addLayer(piece, at: at + 1)
+        }
+        return .success(piece.id)
+    }
+
+    private func area(_ box: CGRect) -> CGFloat { box.width * box.height }
+
+    /// "door" reads as "Door", the way a layer is named.
+    static func title(_ part: String) -> String {
+        let trimmed = part.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let first = trimmed.first else { return part }
+        return first.uppercased() + trimmed.dropFirst()
     }
 
     // MARK: Painted parts
@@ -243,9 +365,24 @@ extension PhotonzDocument {
 
     // MARK: Drawn parts
 
+    static func isPicture(_ layer: Layer) -> Bool {
+        if case .image = layer.content { return true }
+        return false
+    }
+
     static func changing(_ layer: Layer, _ change: AgentPartChange, canvas: CGSize) -> Layer {
         var layer = layer
-        if change.recolours {
+        if change.recolours, isPicture(layer) {
+            // A photo's colours change through its colour grade, the Effects
+            // list's own, so the panel shows what was done and can undo it.
+            var grade = ColorGradeEffect.neutral
+            let at = layer.style.effects.firstIndex { if case .colorGrade = $0 { return true }; return false }
+            if let at, case .colorGrade(let had) = layer.style.effects[at] { grade = had }
+            grade = ColorGradeEffect(temperature: grade.temperature + (change.warmth ?? 0), tint: grade.tint,
+                                     exposure: grade.exposure + (change.lightness ?? 0) / 50, contrast: grade.contrast,
+                                     saturation: grade.saturation + (change.saturation ?? 0), isOn: true)
+            if let at { layer.style.effects[at] = .colorGrade(grade) } else { layer.style.effects.append(.colorGrade(grade)) }
+        } else if change.recolours {
             var colours: [String] = []
             collectColours(layer, into: &colours)
             let shift = AgentPartColour.shift(from: colours, change)
@@ -310,9 +447,20 @@ enum AgentPartColour {
         ds += (change.saturation ?? 0) / 100
         dl += (change.lightness ?? 0) / 100
         let (h, s, l) = (dh, ds, dl)
+        let warmth = (change.warmth ?? 0) / 100
         return { hex in
             let was = AgentGroupRecolour.hsl(AgentGroupRecolour.rgb(hex))
             var hue = (was.h + h).truncatingRemainder(dividingBy: 1)
+            if hue < 0 { hue += 1 }
+            if warmth != 0 {
+                // Toward orange or toward blue, at most half way round.
+                let toward = warmth > 0 ? 0.08 : 0.6
+                var gap = toward - hue
+                if gap > 0.5 { gap -= 1 }
+                if gap < -0.5 { gap += 1 }
+                hue += gap * min(1, abs(warmth)) * 0.5
+            }
+            hue = hue.truncatingRemainder(dividingBy: 1)
             if hue < 0 { hue += 1 }
             return AgentGroupRecolour.hexString(fromHSL: (hue, min(1, max(0, was.s + s)), min(0.98, max(0.02, was.l + l))))
         }

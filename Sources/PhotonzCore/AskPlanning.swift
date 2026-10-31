@@ -347,7 +347,7 @@ public struct AskConversation: Sendable {
     /// sees, so "bluer" and "bigger" are judged against what is really there.
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
-                memory: String = "", canvas: Data? = nil) {
+                memory: String = "", canvas: Data? = nil, canvasScale: Double = 1) {
         self.request = request
         self.paints = paints
         self.brushes = brushes
@@ -365,7 +365,9 @@ public struct AskConversation: Sendable {
         if !memory.isEmpty { instructions += "\n\(memory)" }
         var asking: AgentJSON = ["role": "user", "content": .string(request)]
         if let canvas {
-            instructions += "\nThe picture with the request is the canvas as it is now."
+            instructions += canvasScale < 0.995
+                ? "\nThe picture with the request is the canvas as it is now, at \(Int((canvasScale * 100).rounded())) percent of its size: a canvas point is a pixel of it divided by \(String(format: "%.2f", canvasScale))."
+                : "\nThe picture with the request is the canvas as it is now, one pixel a canvas point."
             asking = ["role": "user", "content": .string(request), "images": [.string(canvas.base64EncodedString())]]
         }
         messages = [
