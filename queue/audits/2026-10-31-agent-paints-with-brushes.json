@@ -1,0 +1,28 @@
+{
+  "feature": "The agent paints with the brushes, and Ask paints a painting",
+  "epic": "image-paint",
+  "summary": "An agent can list the brushes and their settings, arm one, and paint strokes from points with optional pressure, each one undo step, painted exactly as your own stroke would be. Ask, asked for a painting, now paints it stroke by stroke with the Brush instead of making one picture.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Make a new picture, press Command K and type: paint a small landscape in oil. Send it.", "shot": "2026-10-31-agent-paints-ask-landscape-sc.png" },
+    { "do": "When it finishes, look at the Layers list: one Paint layer, and the Agent row reads Painted a small landscape in oil." },
+    { "do": "Press Command Z once: the whole painting goes. Press Shift Command Z to bring it back." },
+    { "do": "Pick the Brush (B) and paint over Ask's strokes yourself; they land on the same Paint layer." },
+    { "do": "From an agent session with the Photonz tools, call list_brushes, then set_brush with medium watercolour, then paint_stroke with three points.", "shot": "2026-10-31-agent-paints-drill-render.png" },
+    { "do": "Call undo once: exactly the last stroke comes off." }
+  ],
+  "evaluate": [
+    "Does Ask's painting read as an oil painting of a landscape, or as stripes of paint?",
+    "Is two to four minutes an acceptable wait for Ask to paint a small picture?",
+    "Should Ask leave the Brush in your hand after it paints, or leave your tool as it was (it leaves it as it was now)?",
+    "Do the agent's strokes look like strokes a person made with the same brush?"
+  ],
+  "rough": [
+    "Ask's small details (trees, the sun) read as marks rather than things: the one climb case scored 31.5 to 48.1 across four runs, against 80 to 90 for its drawings. The block-in covers the canvas in close shades; the details are where it falls short.",
+    "Ask on the built-in model takes two to four minutes to paint 26 to 45 strokes; a plan of more strokes ran past the walk's five minute limit once.",
+    "The held-out Ask total was not run again (about 144 minutes on this model). Every request that is not a painting sees byte for byte the instructions and tools it saw before (tested), so only painting requests can move it; its last total is 57.2.",
+    "The second picture is the drill's render_picture output (the document drawn offscreen), not a window capture: it shows what the MCP strokes look like, with a pencil stroke at a pen's pressure along the bottom.",
+    "No mock covers the agent tools or Ask's painting; the Ask row and panel are the existing ones."
+  ]
+}
