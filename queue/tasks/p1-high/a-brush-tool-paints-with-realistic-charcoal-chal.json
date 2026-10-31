@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-30T14:25:42.561Z",
+  "updated": "2026-10-31T04:42:53.772Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -102,6 +102,10 @@
     {
       "t": "2026-10-30T14:25:42.560Z",
       "note": "seq 100 -> 90"
+    },
+    {
+      "t": "2026-10-31T04:42:53.771Z",
+      "note": "From the agent slice (2026-10-31): Ask now paints a painting request stroke by stroke with paint_stroke, but its small details read as marks rather than things. Climb case paint-a-small-landscape-in-oil scored 27.5, 48.1 and 31.5 across prompt revisions (judge didWhatWasAsked 3 to 4); the block-in covers the canvas in close shades. Worth a look when the epic's final audit judges the painting."
     }
   ],
   "started": "2026-10-24T23:36:28.499Z"

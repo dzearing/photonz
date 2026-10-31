@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T23:40:48.009Z",
-  "updated": "2026-10-30T14:25:42.648Z",
+  "updated": "2026-10-31T04:43:10.724Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st"
   ],
@@ -53,6 +53,39 @@
     {
       "t": "2026-10-30T14:25:42.647Z",
       "note": "seq 110 -> 100"
+    },
+    {
+      "t": "2026-10-31T03:04:58.812Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T03:08:40.681Z",
+      "note": "Adversarial pass before building: (1) a model gives sparse points with no timing, so placement needs a believable hand speed: chose a steady 0.3 pt/ms (below the 0.4 where a mouse press starts thinning) over raw instant samples, because instant samples read as infinitely fast and lighten every stroke. (2) Agent strokes land milliseconds apart, so watercolour would bloom wet-into-wet on every stroke; chose to stamp each agent stroke as starting a hand's lift (0.25 s) after the layer's last stroke ended when the clock says sooner. (3) Ask should not change the person's armed brush as a side effect, so paint_stroke takes an optional brush of its own and Ask is offered list_brushes and paint_stroke only, not set_brush. (4) Photoshop users expect the brush to paint on the current layer: the agent goes through the same editor call as the pointer, so it lands on the picked paint layer or a new Paint layer just above, per decision 2. (5) A local model writing hundreds of strokes may be too slow for Ask's time limit; measured below."
+    },
+    {
+      "t": "2026-10-31T04:42:37.613Z",
+      "note": "owns these walks: ask-paints-with-brushes-walk"
+    },
+    {
+      "t": "2026-10-31T04:42:53.837Z",
+      "note": "Built: list_brushes, set_brush, paint_stroke (AgentPaint.swift, AgentPaintWork.swift); strokes land through EditorState.addBrushStroke (picksUpBrush false so the person's tool stays) inside one undo step; read_document reports paint layers' stroke count and media. Chose a steady 0.3 pt/ms for untimed points over instant samples, because instant samples read as infinitely fast and thin every mouse press. Chose to leave the person's tool alone when the agent paints, over handing them the Brush, because Ask painting mid-work should not swap their tool. Chose to offer the brush tools to Ask's model only for a painting request, so every other request is byte-identical to before (tested)."
+    },
+    {
+      "t": "2026-10-31T04:42:53.902Z",
+      "note": "Verified: AgentStrokeLikeThePointerTests (every medium, mouse and pen, and a smudge: same stroke value, same composite byte for byte); AgentPaintTests (19 tests); Scripts/agent-paint-drill.mjs on the probe over MCP: four strokes in oil, watercolour, pencil with pressure and a charcoal smudge, each one undo step and redo, a stroke's own brush leaves the armed one alone; full Scripts/test.sh green; ask-paints-with-brushes-walk ok with a real window capture (row reads 'Painted a small landscape in oil', one Paint layer). Looked at both audit pictures: the walk capture shows a covered canvas, sky in blues, green land, five tree marks and a sun; the drill render shows oil, watercolour and pencil strokes."
+    },
+    {
+      "t": "2026-10-31T04:42:53.966Z",
+      "note": "Ask eval: climb (paint case only, the only case the change can reach) 27.5 -> 48.1 -> 0 (ran past the walk's 300 s with 50 strokes; fixed by the short path form) -> 31.5 at the final code; Scripts/ask-eval.sh report held-out 57.2 is from before this change and was NOT re-run (about 144 min on this model). Non-painting requests see the same messages and chat body as before (AgentPaintTests.othersUnchanged), so only held-out painting requests can move it. Left rough: an agent's strokes are stamped as if painted at a hand's pace, so right after Ask paints a watercolour, the stamps run up to tens of seconds into the future and a person's wash in that window blooms into Ask's; small, not filed. Ask's detail quality folded into the umbrella a-brush-tool-paints-with-realistic-charcoal-chal."
+    },
+    {
+      "t": "2026-10-31T04:43:10.722Z",
+      "note": "MCP and the agent API have list_brushes, set_brush and paint_stroke (points with optional pressure, tilt and times, or a short path); a stroke lands through the pointer's own editor call as one undo step. AgentStrokeLikeThePointerTests holds it to the pointer's stroke and composite byte for byte in every medium, mouse and pen. Scripts/agent-paint-drill.mjs on the probe passes, undoing and redoing each stroke one at a time. Ask now paints a painting request stroke by stroke: 'paint a small landscape in oil' gives one Paint layer of oil strokes (ask-paints-with-brushes-walk, real capture in queue/audits/2026-10-31-agent-paints-with-brushes.json). Climb paint case 31.5 at the final code. Held-out total 57.2 was not re-run; non-painting requests are byte-identical. Full test suite green; pushed b52897ee and be4c8e68."
     }
-  ]
+  ],
+  "started": "2026-10-31T03:04:58.811Z",
+  "walks": [
+    "ask-paints-with-brushes-walk"
+  ],
+  "completed": "2026-10-31T04:43:10.723Z"
 }

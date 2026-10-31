@@ -14671,3 +14671,17 @@
 {"t":"2026-10-31T02:51:26.908Z","ev":"task_note","id":"ask-walks-share-one-model-instead-of-loading-a-f"}
 {"t":"2026-10-31T02:51:26.977Z","ev":"task_walks","id":"ask-walks-share-one-model-instead-of-loading-a-f","walks":["ask-is-command-k-on-a-video-walk","ask-makes-a-photo-walk","ask-paints-before-brushes-walk"]}
 {"t":"2026-10-31T02:51:39.867Z","ev":"task_done","id":"ask-walks-share-one-model-instead-of-loading-a-f","from":"in_progress","note":"Ask walks share one llama-server per walk run: started detached and gently by the first probe that needs it (PhotonzCore AskWalkServer, unit tested; app AskWalkServerProcess), adopted by later walks, stopped by playtest-all/playtest.sh/go-loop or its own watch (run gone, 180 s idle). Measured: 36 Ask walks via playtest-all, llama-server sampled every 2 s, max 1, one load; gentle 212/39.7 t/s vs 232/42.8, GPU p99 4.2 vs 2.8 ms. Audit queue/audits/2026-10-30-ask-walks-share-one-model.json. Only 4 Ask walks reach the model today (Ask button regression logged on walks-that-fail-in-the-full-sweep-26)."}
+{"t":"2026-10-31T02:52:08.533Z","ev":"loop_reloaded","from":"91cf82c99d96","to":"a461f30be8be"}
+{"t":"2026-10-31T02:52:08.643Z","ev":"loop_started","pid":90399}
+{"t":"2026-10-31T02:52:08.689Z","ev":"loop_awake","held":true,"pid":90420,"screenLocked":false}
+{"t":"2026-10-31T03:03:08.951Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-10-31T03:03:08.986Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-31T03:04:58.652Z","ev":"slice_pass","walks":40,"passed":21,"failed":19,"seconds":659,"of":1057,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-31T03:04:58.818Z","ev":"task_started","id":"the-agent-can-list-set-and-paint-with-the-brushe","title":"The agent can list, set and paint with the brushes through MCP, one undo step per stroke","priority":"p1-high"}
+{"t":"2026-10-31T03:08:40.683Z","ev":"task_note","id":"the-agent-can-list-set-and-paint-with-the-brushe"}
+{"t":"2026-10-31T04:42:37.615Z","ev":"task_walks","id":"the-agent-can-list-set-and-paint-with-the-brushe","walks":["ask-paints-with-brushes-walk"]}
+{"t":"2026-10-31T04:42:53.773Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
+{"t":"2026-10-31T04:42:53.839Z","ev":"task_note","id":"the-agent-can-list-set-and-paint-with-the-brushe"}
+{"t":"2026-10-31T04:42:53.904Z","ev":"task_note","id":"the-agent-can-list-set-and-paint-with-the-brushe"}
+{"t":"2026-10-31T04:42:53.968Z","ev":"task_note","id":"the-agent-can-list-set-and-paint-with-the-brushe"}
+{"t":"2026-10-31T04:43:10.725Z","ev":"task_done","id":"the-agent-can-list-set-and-paint-with-the-brushe","from":"in_progress","note":"MCP and the agent API have list_brushes, set_brush and paint_stroke (points with optional pressure, tilt and times, or a short path); a stroke lands through the pointer's own editor call as one undo step. AgentStrokeLikeThePointerTests holds it to the pointer's stroke and composite byte for byte in every medium, mouse and pen. Scripts/agent-paint-drill.mjs on the probe passes, undoing and redoing each stroke one at a time. Ask now paints a painting request stroke by stroke: 'paint a small landscape in oil' gives one Paint layer of oil strokes (ask-paints-with-brushes-walk, real capture in queue/audits/2026-10-31-agent-paints-with-brushes.json). Climb paint case 31.5 at the final code. Held-out total 57.2 was not re-run; non-painting requests are byte-identical. Full test suite green; pushed b52897ee and be4c8e68."}
