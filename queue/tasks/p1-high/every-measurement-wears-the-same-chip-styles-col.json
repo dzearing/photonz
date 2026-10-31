@@ -1,0 +1,29 @@
+{
+  "id": "every-measurement-wears-the-same-chip-styles-col",
+  "title": "Every measurement wears the same chip styles, colour and marker as an arrow label",
+  "goal": "A size, distance, gap, padding, alignment or angle measurement gets the same Chip tiles, Color and Marker controls as an arrow label, both on a picked measurement and in the Measure tool options for the next one, so a redline is one consistent system.",
+  "epic": "epic-uehjr1",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T14:49:05.091Z",
+  "updated": "2026-10-31T14:49:05.094Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p (user approved the prototype 2026-10-31 and asked to split into p1 user tasks rather than ship a partial look). Model: Sources/PhotonzCore/ChipStyle.swift (ChipStyle, ChipMarker, InkPlate, ChipLook with layout()), drawn by Sources/PhotonzRender/ChipRasterizer.swift. Measurements draw through MeasureRasterizer -> PillRasterizer.draw with MeasureColors / measure.chipColorHex; the caliper meets the pill outline via PillRasterizer.cornerRadius, so a squircle or square style needs the meet point read from the style corner. MeasureContent needs chipStyle/chipMarker like AnnotationContent (nil = old pill). Tiles: Sources/Photonz/ChipStyleTiles.swift. Rules: docs/design/markup.md.",
+  "acceptance": [
+    "A picked measurement of every kind shows the ten Chip tiles and the Marker row in Appearance, and the Measure tool options show them for the next measurement",
+    "The readout chip draws in the picked style through the same chip drawing the arrow label uses, and its line still meets the chip edge cleanly for every style (no gap, no overlap)",
+    "Older documents open with their measurements looking exactly as before; a style change is one undo step and survives save and export",
+    "Measured contrast of every style over white, black and a busy photo is in the audit, at 4.5:1 or better",
+    "Walk at Next defaults: measure a gap on a screenshot, pick Paper and a Warning marker, and photograph it"
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T14:49:05.093Z",
+      "note": "created (user)"
+    }
+  ]
+}

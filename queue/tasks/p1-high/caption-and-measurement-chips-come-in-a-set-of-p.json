@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:36:38.642Z",
-  "updated": "2026-10-31T14:18:40.902Z",
+  "updated": "2026-10-31T15:04:40.599Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24 (picture: queue/audits/2026-10-24-user-caption-chip.png, a dark red pill with a brighter red outline reading 'hi' at the tail of a brush arrow): 'I don't love the style of the chip for arrows and measurements. I would love to have some style options for the chip, just like we have for the arrow, where you can choose different premade professional looking chips for typing text. Some might not be pills, maybe we do squirqle shaped, or the border might be more glass like with a suble inner border. Maybe some are flat and others are glass like. Each option should look professional and not like a kid made it for his myspace.'\n\nWhere: the plate rule is Sources/PhotonzCore/LabelPlate.swift (tone darkened to luminance 0.24, white ink, shadow 4 blur / 2 offset); drawn by Sources/PhotonzRender/PillRasterizer.swift; also used by canvas name chips (Sources/Photonz/CanvasComponents.swift), which must NOT change unless the runner decides on purpose and logs why. Arrow style pattern to copy: Sources/PhotonzCore/ArrowStyle.swift (enum, Codable, standard default) + Sources/Photonz/ArrowStyleTiles.swift. Grep captionChipColor for the caption's colour path. Measurement readouts sit on their caliper with no shadow (LabelPlate comment): a style must fit both.\n\nTraps: glass over a picture renders differently on canvas (live material) than in export (no backdrop); the export must look the same, so glass is probably drawn as a rendered blur of the picture under it in PhotonzRender, not a SwiftUI material. The coloured outline in today's chip is part of what the user dislikes; do not keep it as the default without a reason. Related done tasks: arrow-tool-captions-legible-pill-labels-like-the, captions-are-one-layer-positioned-and-styled-lik.",
@@ -95,7 +95,34 @@
     {
       "t": "2026-10-31T14:18:40.901Z",
       "note": "User, 2026-10-31: arrows and chips must take ANY custom colour and keep their words accessible with no trip into Advanced. So: the Color row is the palette plus a custom colour well (and the app's colour picker). The plate rule applies to any colour (5,472-colour sweep, worst 4.80:1). GLASS gets its own derived tint judged over the worst picture: 82 percent opacity, words at 4.8:1 over pure white AND pure black (it fell to 1.4:1 before); see glassFor in markup.js and docs/design/markup.md section 3. Unit test the sweep in PhotonzCore (every 5 degrees of hue x 4 saturations x 19 lightnesses, every chip style, min contrast >= 4.5) so a future change cannot break it. A part overridden by hand under Advanced that drops below 4.5:1 shows a warning in the inspector."
+    },
+    {
+      "t": "2026-10-31T14:49:30.084Z",
+      "note": "owns these walks: chip-styles-walk"
+    },
+    {
+      "t": "2026-10-31T15:04:40.299Z",
+      "note": "Adversarial pass before building: the user's prototype assumes a frosted blur of the picture for Glass, which a layer rasterised on its own cannot see; and measurements meet their pill outline at the capsule curve, so a squircle chip on a caliper needs its own meet point. Chose to build arrow labels first and split measurements, the five new arrow styles and the simplified Appearance into p1 user tasks (every-measurement-wears-the-same-chip-styles-col, five-more-arrow-styles-dashed-block-neon-dotted, arrow-and-measurement-appearance-shows-only-styl), as the user asked."
+    },
+    {
+      "t": "2026-10-31T15:04:40.379Z",
+      "note": "Shipped in c7b35c37: ten chip styles + markers for arrow labels at Next defaults (next-chip-styles), Chip and Marker rows in Appearance and the arrow popover, Chip Style on the right-click menu, agent add_shape/set_layer caption/arrowStyle/chip/marker, Ask prompt. Chose Solid pill as the new default over Paper because it keeps the arrow's colour on the chip and drops only the outline the user disliked. Verified: ChipStyleTests (hex agreement with markup.js over 5,472 colours, every style >= 4.5:1 in the sweep), ChipStyleRenderingTests (pixel contrast over white/black/photo/saturated for every palette ink, export vs canvas 0 difference), chip-styles-walk ok at defaults, full Scripts/test.sh green. Audit: queue/audits/2026-10-31-chip-styles.json. Pictures I opened: chip-styles-sheet.png (all ten rows on light, dark, photo), the crop of Glass to Two-tone, 1-default-sc and 2-second-sc (label on Solid pill, tiles and Marker row in the dock)."
+    },
+    {
+      "t": "2026-10-31T15:04:40.453Z",
+      "note": "NOT DONE, the visual bar: an independent model judge (blind, against Apple apps, Figma/Sketch redline plugins, CleanShot X) scored Solid 7, Squircle 7, Hairline 8, Paper 8, Two-tone 7 professional; Glass 4, Spec badge 6, Lit tag 6, Highlighter 4 not; baseline red pill 5. Its notes: Glass muddy over light pictures and the photo shows through behind the words; Spec monospace reads like a terminal and nearly vanishes on dark UI; Lit tag reads as Squircle with a gradient; Highlighter band reads as misaligned. Those four are the user's approved prototype looks, so the next pass reworks them in markup.css and the app together (or asks the user to drop them). Also unproven by pointer: dock tile presses do nothing for a walk since 2026-10-26 (folded into walks-that-fail-in-the-full-sweep-26; chip-styles-picking-walk is ready for when that is fixed)."
+    },
+    {
+      "t": "2026-10-31T15:04:40.526Z",
+      "note": "Left rough, under the bar: SVG export draws plate, edge and words in style colours but not the finish (gradient, rim, shadow, marker, monospace); the typing bubble shows plate and shadow but not accent or marker until commit; Hairline in yellow ink reads olive (legible, 4.6:1, but dull); the warning glyph on ink plates is orange on white per the DS (judge called it a third colour). AgentArrowLabel gives a captioned agent arrow Solid pill even in Current; agent tools are Next-facing."
+    },
+    {
+      "t": "2026-10-31T15:04:40.598Z",
+      "note": "Arrow-label chip styles shipped (c7b35c37) and measured legible everywhere; left open because 4 of the 10 styles (Glass, Spec badge, Lit tag, Highlighter) score under the professional bar with the judge. Measurements, new arrow styles and the simplified Appearance are split into p1 tasks."
     }
   ],
-  "started": "2026-10-31T13:25:53.651Z"
+  "started": "2026-10-31T13:25:53.651Z",
+  "walks": [
+    "chip-styles-walk"
+  ]
 }

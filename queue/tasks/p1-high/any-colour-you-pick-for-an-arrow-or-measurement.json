@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:19:06.785Z",
-  "updated": "2026-10-31T14:19:06.899Z",
+  "updated": "2026-10-31T14:49:05.019Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake): 'I want to make sure arrows/chips can be custom colored and it retains accessibility on the text, without going into advanced to tweak details'. Split out because the runner on caption-and-measurement-chips-come-in-a-set-of-p started at 13:25 and this direction was logged at 14:18; if that runner already did it, verify and close this as done. Reference implementation: docs/design/mocks/shared/components/markup.js (plateFor, glassFor), rules docs/design/markup.md section 3, live check on the design site: Design system > Markup, Custom colour well with a contrast readout.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-31T14:19:06.898Z",
       "note": "seq 3970 -> 1e-7"
+    },
+    {
+      "t": "2026-10-31T14:49:05.018Z",
+      "note": "Done in caption-and-measurement-chips-come-in-a-set-of-p (2026-10-31): PhotonzCore InkPlate ports plateFor AND glassFor to the hex digit, held by ChipStyleTests against docs/design/markup-plate-sweep.tsv (5,472 colours written by Scripts/markup-plate-fixture.cjs from markup.js); the same sweep asserts every chip style >= 4.5:1 over white and black. The app DRAWS Glass at 95-97 percent (not 82) because its compositor blends in linear light (82 percent measured 3.2:1 over white); written into markup.md section 3. Hairline ink text now aims at 4.6 (byte rounding took 3 colours to 4.48), changed in markup.js too. captionLegibilityNote now warns under 4.5 (was 3). Still open here: the custom colour well in the Color row, one Color retinting the head as well as the chip (the chip already follows the line's ink), the one-click way back, and the walk."
     }
   ]
 }

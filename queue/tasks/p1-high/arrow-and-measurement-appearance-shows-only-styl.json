@@ -1,0 +1,29 @@
+{
+  "id": "arrow-and-measurement-appearance-shows-only-styl",
+  "title": "Arrow and measurement Appearance shows only Style, Chip, Color, Marker and Size, with the rest under Advanced",
+  "goal": "Appearance for an arrow becomes Arrow style tiles, Chip tiles, one Color row that tints line, head and chip together, Marker and an S M L Size, with Line, Head, Chip Fill, Edge and Text, Thickness, Head Size and Ending folded under a collapsed Advanced that reads from Color or from style until a part is set by hand.",
+  "epic": "epic-uehjr1",
+  "priority": "p1-high",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T14:49:22.794Z",
+  "updated": "2026-10-31T14:49:22.797Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p. Already built there: AnnotationContent.captionPartsByHand (Fill/Edge/Text set by hand, kept through style and colour changes), resetCaptionPartsByHand, EditorState.resetChipParts(ids:) (no UI yet), the chip re-deriving from the line ink on every colour change. Still needed: head following the line, the Size control, the Advanced fold and its from-labels, moving Line/Head/Label rows (PartsInspector rows) under it, and the same for measurements once every-measurement-wears-the-same-chip-styles-col lands.",
+  "acceptance": [
+    "Appearance for an arrow reads top to bottom: Arrow, Chip, Color, Marker, Size, then a collapsed Advanced; a measurement has no Arrow row (markup.md section 8)",
+    "One Color pick retints the line, the head and the chip at once; the head follows the line unless it was set by hand",
+    "Size S, M and L set the chip type size (10.5, 12, 14 at the specimen scale) and padding, and may scale line weight; Thickness and Head Size set by hand override it",
+    "Under Advanced each part reads from Color or from style until set by hand, a part set by hand stays overridden, and a reset puts it back",
+    "Walk at Next defaults reaches every row with no switch changed, and a side by side with the prototype (queue/audits/2026-10-31-chip-styles-proto.html) is in the audit"
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T14:49:22.796Z",
+      "note": "created (user)"
+    }
+  ]
+}

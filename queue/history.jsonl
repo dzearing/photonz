@@ -14796,3 +14796,15 @@
 {"t":"2026-10-31T14:19:06.900Z","ev":"task_resequenced","id":"any-colour-you-pick-for-an-arrow-or-measurement","from":3970,"to":1e-7}
 {"t":"2026-10-31T14:37:49.242Z","ev":"task_created","id":"ask-changes-what-it-just-made-make-the-water-blu","priority":"p1-high","title":"Ask changes what it just made: \"make the water bluer\" after a beach painting works"}
 {"t":"2026-10-31T14:37:49.375Z","ev":"task_resequenced","id":"ask-changes-what-it-just-made-make-the-water-blu","from":3970,"to":2e-7}
+{"t":"2026-10-31T14:49:05.020Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-10-31T14:49:05.095Z","ev":"task_created","id":"every-measurement-wears-the-same-chip-styles-col","priority":"p1-high","title":"Every measurement wears the same chip styles, colour and marker as an arrow label"}
+{"t":"2026-10-31T14:49:22.684Z","ev":"task_created","id":"five-more-arrow-styles-dashed-block-neon-dotted","priority":"p1-high","title":"Five more arrow styles: Dashed, Block, Neon, Dotted and Elbow"}
+{"t":"2026-10-31T14:49:22.798Z","ev":"task_created","id":"arrow-and-measurement-appearance-shows-only-styl","priority":"p1-high","title":"Arrow and measurement Appearance shows only Style, Chip, Color, Marker and Size, with the rest under Advanced"}
+{"t":"2026-10-31T14:49:29.938Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-10-31T14:49:30.012Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-26","walks":["chip-styles-picking-walk"]}
+{"t":"2026-10-31T14:49:30.086Z","ev":"task_walks","id":"caption-and-measurement-chips-come-in-a-set-of-p","walks":["chip-styles-walk"]}
+{"t":"2026-10-31T15:04:40.301Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-10-31T15:04:40.381Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-10-31T15:04:40.455Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-10-31T15:04:40.528Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-10-31T15:04:40.600Z","ev":"task_pending","id":"caption-and-measurement-chips-come-in-a-set-of-p","from":"in_progress","note":"Arrow-label chip styles shipped (c7b35c37) and measured legible everywhere; left open because 4 of the 10 styles (Glass, Spec badge, Lit tag, Highlighter) score under the professional bar with the judge. Measurements, new arrow styles and the simplified Appearance are split into p1 tasks."}

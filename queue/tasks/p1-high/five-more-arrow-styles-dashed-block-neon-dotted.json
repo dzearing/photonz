@@ -1,0 +1,29 @@
+{
+  "id": "five-more-arrow-styles-dashed-block-neon-dotted",
+  "title": "Five more arrow styles: Dashed, Block, Neon, Dotted and Elbow",
+  "goal": "The arrow Style tiles grow from five to ten with the looks the user picked from the prototype: a dashed line, a bold block arrow whose shaft widens into its head, a glowing neon line, a line of dots, and a right-angle elbow connector for diagrams. Each keeps the arrow ends, colour, thickness and head size like the others.",
+  "epic": "epic-uehjr1",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T14:49:22.680Z",
+  "updated": "2026-10-31T14:49:22.683Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p. ArrowStyle (Sources/PhotonzCore/ArrowStyle.swift) gains dashed, block, neon, dotted, elbow; HandMadeArrow / AnnotationRasterizer draw them; ArrowStyleTiles needs 5 columns. Stand-in geometry for all ten is PZ.markup.arrow in docs/design/mocks/shared/components/markup.js. Ending applies only to Clean (isHandMade covers the rest). Note: dock tile buttons ignore a walk press since 2026-10-26 (see walks-that-fail-in-the-full-sweep-26), so prove tiles by pointer once that is fixed.",
+  "acceptance": [
+    "The Style row shows ten picture tiles in rows of five, each drawn by the real renderer",
+    "Dashed, Block, Neon, Dotted and Elbow draw as markup.md section 5 describes, matched side by side against the specimen page (Design system > Markup) in the audit",
+    "Switching styles never moves the arrow ends or loses its colour, thickness or head size; one undo step; survives save and export",
+    "The agent can set each one through add_shape and set_layer arrowStyle, which already lists the ArrowStyle cases",
+    "Walk at Next defaults: draw an arrow and photograph each new style"
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T14:49:22.682Z",
+      "note": "created (user)"
+    }
+  ]
+}
