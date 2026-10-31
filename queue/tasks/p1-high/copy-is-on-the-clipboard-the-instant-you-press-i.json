@@ -4,12 +4,12 @@
   "goal": "Copying a picture and pasting it straight away into another app sometimes pastes whatever was on the clipboard before, as if the copy had not happened yet. Copy and paste is the core of the user's screenshot and redline workflow, so the copied picture must be on the clipboard by the time a person can possibly paste, however fast they are and however big the picture is.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 2e-7,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T12:13:07.386Z",
-  "updated": "2026-10-31T12:13:07.503Z",
+  "updated": "2026-10-31T13:23:31.069Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake): 'sometimes copying an image and pasting doesn't work immediately, like im doing it too fast and clipboard fails to update. not sure if this was a new bug introduced or not'. Not yet reproduced. Code read: EditorState.copyCompositeToClipboard (EditorState.swift ~4246) runs on the main thread and does all of it before the clipboard changes: renders the whole composite (previewRenderer.render), builds the SVG (clipboardSVG -> SVGExporter.export, plus flatColorsRemembered reading pixels), then clearContents and setData PNG (ImageCodec.encode) and TIFF. For a large screenshot that is plausibly hundreds of milliseconds, during which a paste in another app reads the old clipboard. The SVG step was added 2026-10-15 (87f07af6, Copy SVG) and could be the regression the user suspects. Other writers: EditorState+Clipboard.swift (copyMerged, copyMergedRegion, layer regions), Capture/ClipboardWriter.swift and CaptureStore.swift (History and capture toast).",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-31T12:13:07.502Z",
       "note": "seq 3980 -> 2e-7"
+    },
+    {
+      "t": "2026-10-31T13:23:31.068Z",
+      "note": "seq 2e-7 -> 20"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "On a picture the Brush button sits near the right end of the tool bar beside the paint bucket, while the image mock (and Photoshop) put it with the first tools, right after Crop. Move it to the mock's place so a Photoshop user finds it where they look.",
   "epic": "image-paint",
   "priority": "p1-high",
-  "seq": 3970,
+  "seq": 270,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T06:35:31.316Z",
-  "updated": "2026-10-31T06:35:31.319Z",
+  "updated": "2026-10-31T13:23:33.403Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the brush epic final audit (a-brush-tool-paints-with-realistic-charcoal-chal), 2026-10-31. Mock order: Select, Lasso, Magic wand, Crop, Brush (B), Eraser, Heal, Clone stamp, Patch, Dodge/Burn, Pen, Text, Shape, Measure, Hand, Zoom. Shipped (Next defaults, 1280 pt window, 2026-10-31-brush-epic-1-watercolour-in-hand-sc.png): Select, Marquee, Crop, Measure | Arrow, Line, Highlighter, Text, Combine, Rectangle, Pen, Component | Brush | Bucket | Hand | Color. The bar adds flag tools at the end of the drawing family (slice 1 note on the umbrella, 2026-10-25). Brush is absent on a document with time (B is the Blade there), so only the picture bar changes. grep Scripts/playtest for tool bar points before moving it.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-10-31T06:35:31.318Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-31T13:23:15.664Z",
+      "note": "triage 2026-10-31: checked queue/audits/2026-10-31-brush-epic-1-watercolour-in-hand-sc.png at Next defaults: the bar reads Select, Marquee, Crop, Measure | Arrow, Line, Highlighter, Text, Combine, Rectangle, Pen, Component | Brush | Bucket | Hand | colour, so Brush is 13th where the mock puts it 5th. Confirmed. It is a gap below the mock, not a bug a command reproduces; kept p1 because a Photoshop user pressing for the Brush looks beside Crop first, placed after the focus work since it serves image-paint."
+    },
+    {
+      "t": "2026-10-31T13:23:33.402Z",
+      "note": "seq 3970 -> 270"
     }
   ]
 }

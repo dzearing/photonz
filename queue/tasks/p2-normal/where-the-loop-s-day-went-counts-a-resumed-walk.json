@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:08:35.106Z",
-  "updated": "2026-10-30T02:11:07.686Z",
+  "updated": "2026-10-31T13:23:15.818Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the a-full-walk-check-that-gets-stopped-picks-up-whe runner on 2026-10-22 (left rough: count reads one high) and again by the 2026-10-23 digest, which had to read queue/loop.log to find that the three runs were the 2026-10-22T11:15Z run stopped at 989 of 1011, its 7 minute pick-up (queue/sweep/2026-10-22-095234.log, 25 walks), and the 2026-10-23T11:41Z run stopped at 453 of 1015 when the person came back. Code: queue/bin/loop-day.mjs.",
@@ -44,6 +44,10 @@
     {
       "t": "2026-10-30T02:11:07.685Z",
       "note": "triage 2026-10-29, reproduced again: 'node queue/bin/loop-day.mjs --hours 24' at 2026-10-30T02:08Z printed 'tasks 1440m 100.0% 1 task(s) ... The loop spent the majority of this window building'. The loop was stopped by hand on 2026-10-28 at 08:41 Mac time (the photo task's log says so) and not started again until 2026-10-29 18:55, so no task ran for any of that window. Second digest in a row whose day report is wrong for this reason."
+    },
+    {
+      "t": "2026-10-31T13:23:15.817Z",
+      "note": "triage 2026-10-31: today's report was right, because the loop ran the whole window: it said tasks 1194m, and summing task_started to task_pending/done spans in queue/history.jsonl over the same window gives 1185m. The stopped-loop case is still unfixed and will show again the next time the loop is stopped."
     }
   ]
 }

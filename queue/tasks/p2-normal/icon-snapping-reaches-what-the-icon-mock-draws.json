@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-10T07:41:10.756Z",
-  "updated": "2026-10-25T13:26:48.024Z",
+  "updated": "2026-10-31T13:18:30.831Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html (Grid & snap group, steps 3 to 6 and 10). Built so far: Sources/PhotonzCore/IconSnap.swift (whole units from the frame corner, keylines while shown, other paths' anchors; reach 6 view points capped at 1 unit) handed to PenSession.iconSnap by CanvasPen.refreshPenSnapping. Only the Pen uses it; rectangle/ellipse drags in icon frames still use their own magnets. Also seen: right after a shape closes it stays picked, so a Pen press on its corner grabs that corner (path edit owns the press) instead of starting a new shape there, which is exactly how the mock starts its second circle (step 6); the walk works round it with Escape. 2026-10-15: IconSnapChoices + shape edges/centres + readout in Sources/PhotonzCore/IconSnap.swift; IconSnapStore (Sources/Photonz/IconSnapStore.swift); View > Snap in Icons in EditorCommands; shape drags in icons via CanvasNSView.snappedAnnotationPoint; pill in CanvasDrawLanding.swift. Walk shapes-snap-in-an-icon-walk. Only Command vs Control (the card) is left.",
@@ -139,6 +139,10 @@
     {
       "t": "2026-10-25T13:26:48.023Z",
       "note": "seq 380 -> 390"
+    },
+    {
+      "t": "2026-10-31T13:18:30.830Z",
+      "note": "rotating check 2026-10-31T13:18:30Z, 39 walks run from 626 onward in the rotation: pen-lands-on-whole-units-in-an-icon-walk failing."
     }
   ],
   "walks": [

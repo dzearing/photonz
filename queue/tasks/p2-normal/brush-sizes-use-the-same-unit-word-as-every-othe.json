@@ -1,0 +1,36 @@
+{
+  "id": "brush-sizes-use-the-same-unit-word-as-every-othe",
+  "title": "Brush sizes use the same unit word as every other length in the app",
+  "goal": "Since September every length in the panel reads px, so a person never has to wonder whether two numbers are in different units. The new Brush says its size in pt, in the tool options and in the panel, while a drawn line's Thickness right beside it says px. A person reading 30 pt and 18 px takes them for two different units. Brush sizes should say the same word every other length does.",
+  "epic": "image-paint",
+  "priority": "p2-normal",
+  "seq": 570,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-31T13:22:54.904Z",
+  "updated": "2026-10-31T13:24:31.561Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the 2026-10-31 digest. Evidence: queue/audits/2026-10-31-brush-epic-1-watercolour-in-hand-sc.png shows the tool options reading 'Size 30 pt' and the panel's Brush section 'Size 30 pt'; queue/audits/2026-10-31-path-brush-2-charcoal.png shows a brushed path's Thickness reading '18 px' in the same Appearance panel. Command: grep -rn '\"pt\"' Sources/Photonz | grep -v Playtest prints Sources/Photonz/BrushSettingControls.swift:72 (SliderNumber(suffix: spec.id == \"size\" ? \"pt\" : \"%\")) and Sources/Photonz/KeyLanesView.swift:502 (a position key reads 'N pt'). The rule was settled by the done task the-panel-says-one-word-for-the-unit-it-measures (2026-09-09): every length goes through DocumentUnit in PhotonzCore. The open user-driven task a-redline-of-a-2x-screenshot-reads-in-points-wit may move redlines on 2x pictures to pt; whatever word it settles on for a document, the brush must follow the same source (DocumentUnit), not its own literal.",
+  "acceptance": [
+    "The Brush's Size in the tool options and in the panel's Brush section, and a key lane's position value, take their unit word from the same place as every other length (DocumentUnit), so on a picture at Next defaults they read the same word as a path's Thickness",
+    "A unit test or walk fails if any panel or tool options row in Next writes a length unit as a literal instead of through that one place",
+    "Before and after crops of the Brush tool options and a brushed path's Appearance section are in the audit",
+    "The rule is written where runners read it: docs/design/mocks/shared/UX-PATTERNS.md says every length in a document reads one unit word, taken from the one place the app writes it, so the next new panel does not invent its own (today the rule lives only in a closed task and in code, which is how the Brush came to say pt)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-31T13:22:54.906Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-10-31T13:23:36.898Z",
+      "note": "seq 4100 -> 570"
+    },
+    {
+      "t": "2026-10-31T13:24:31.560Z",
+      "note": "digest 2026-10-31: added a rule-scrub item. grep -n -i 'unit' docs/design/mocks/shared/UX-PATTERNS.md finds no rule that lengths share one unit word; it was settled only in the-panel-says-one-word-for-the-unit-it-measures (2026-09-09) and DocumentUnit."
+    }
+  ]
+}
