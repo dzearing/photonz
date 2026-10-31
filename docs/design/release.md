@@ -14,6 +14,16 @@
 Single source of truth: the `VERSION` file (semver). `Scripts/build-app.sh` stamps it into
 Info.plist; the release skill copies it into `site/version.json` and the git tag (`v<version>`).
 
+The app's update check reads `version.json` but does not trust it alone: a newer version is
+offered only once a HEAD request on `releases/download/v<version>/Photonz.dmg` answers 2xx
+after redirects (`UpdateOffer` in PhotonzCore). Until then the build reports up to date, so a
+site deployed ahead of the Release workflow (0.19.0, 2026-10-25) never offers a 404. A DMG
+the server still refuses during Update & Restart reads "This update isn't ready to download
+yet. Try again in a few minutes." (`UpdateDownloadFailure`). The probe measures all of this
+against the real servers: `open -W -g -a "dist/Photonz Probe.app" --args --update-check-diag
+[--as-version X] [--version-url URL] [--download-version X]`, result in
+`/tmp/photonz-update-check-diag.txt`.
+
 ## Pipelines
 
 | Workflow | Trigger | Does |

@@ -13,6 +13,9 @@ enum SelfUpdater {
     enum UpdateError: LocalizedError {
         case notInstalledAsBundle
         case downloadFailed(String)
+        /// The server refused the DMG (most often a 404 while the Release
+        /// workflow is still publishing it).
+        case downloadRefused(httpStatus: Int)
         case mountFailed(String)
         case appMissingFromDMG
         case verificationFailed(String)
@@ -24,6 +27,8 @@ enum SelfUpdater {
                 return "This build isn't running from an app bundle, so it can't update itself."
             case .downloadFailed(let detail):
                 return "Couldn't download the update: \(detail)"
+            case .downloadRefused(let status):
+                return UpdateDownloadFailure.message(httpStatus: status)
             case .mountFailed(let detail):
                 return "Couldn't open the downloaded disk image: \(detail)"
             case .appMissingFromDMG:
@@ -49,21 +54,7 @@ enum SelfUpdater {
         guard bundleURL.pathExtension == "app" else { throw UpdateError.notInstalledAsBundle }
 
         await progress("Downloading v\(version)…")
-        let dmg: URL
-        do {
-            let (temp, response) = try await URLSession.shared.download(from: dmgURL(for: version))
-            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                throw UpdateError.downloadFailed("the server returned an unexpected response")
-            }
-            // Give it a stable name + extension in our own scratch dir.
-            dmg = scratchDirectory().appendingPathComponent("Photonz-v\(version).dmg")
-            try? FileManager.default.removeItem(at: dmg)
-            try FileManager.default.moveItem(at: temp, to: dmg)
-        } catch let error as UpdateError {
-            throw error
-        } catch {
-            throw UpdateError.downloadFailed(error.localizedDescription)
-        }
+        let dmg = try await download(version: version)
 
         await progress("Verifying…")
         let mountPoint = scratchDirectory().appendingPathComponent("mount", isDirectory: true)
@@ -96,6 +87,29 @@ enum SelfUpdater {
         } catch {
             _ = try? await run("/usr/bin/hdiutil", ["detach", mountPoint.path, "-force"])
             throw error
+        }
+    }
+
+    /// Fetch the DMG into our scratch directory. Touches nothing installed.
+    static func download(version: SemanticVersion) async throws -> URL {
+        do {
+            let (temp, response) = try await URLSession.shared.download(from: dmgURL(for: version))
+            guard let http = response as? HTTPURLResponse else {
+                throw UpdateError.downloadFailed("no answer from the download server")
+            }
+            guard (200..<300).contains(http.statusCode) else {
+                try? FileManager.default.removeItem(at: temp)
+                throw UpdateError.downloadRefused(httpStatus: http.statusCode)
+            }
+            // Give it a stable name + extension in our own scratch dir.
+            let dmg = scratchDirectory().appendingPathComponent("Photonz-v\(version).dmg")
+            try? FileManager.default.removeItem(at: dmg)
+            try FileManager.default.moveItem(at: temp, to: dmg)
+            return dmg
+        } catch let error as UpdateError {
+            throw error
+        } catch {
+            throw UpdateError.downloadFailed(error.localizedDescription)
         }
     }
 

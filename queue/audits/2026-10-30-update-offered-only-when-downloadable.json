@@ -1,0 +1,22 @@
+{
+  "feature": "Updates are offered only once they can be downloaded",
+  "epic": "interaction-foundations",
+  "summary": "Check for Updates no longer offers a version the website names before its download exists; it says you are up to date until the download answers. If a download is still refused, the message says the update isn't ready yet instead of a server error.",
+  "setup": "Installed Photonz (release build), no flag changed. The answers below were measured on the probe against the real website and GitHub downloads with --update-check-diag (docs/design/release.md).",
+  "switched": {},
+  "try": [
+    { "do": "On Photonz 0.21.0, choose Check for Updates. Measured: up to date." },
+    { "do": "On an older build (measured as 0.20.0), choose Check for Updates. Measured: offers 0.21.0." },
+    { "do": "Next release: while the website already names it but the release page has no DMG yet, choose Check for Updates. Measured with a stub naming 0.99.0: up to date." },
+    { "do": "Once the DMG is published, choose Check for Updates again. Measured: offers it." },
+    { "do": "If Update & Restart is refused by the download server, read the alert. Measured on v0.99.0: \"This update isn't ready to download yet. Try again in a few minutes.\"" }
+  ],
+  "evaluate": [
+    "Is \"up to date\" the right thing to say while a release is half out, rather than \"an update is coming\"?",
+    "Does the not-ready message read plainly enough under the \"Couldn't install the update\" title?"
+  ],
+  "rough": [
+    "No picture: the outcome is a system alert driven by the live servers, which no walk opens, so this was measured with the probe's --update-check-diag and its text output instead.",
+    "While a release is half out, someone two versions behind is told they are up to date for those minutes even though the previous release is downloadable; the next check (every six hours, or by hand) offers the new one."
+  ]
+}

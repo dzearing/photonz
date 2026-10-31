@@ -3,7 +3,7 @@ import Foundation
 import PhotonzCore
 
 /// The thin network/Info.plist shell around the testable version-compare logic
-/// in `SemanticVersion` (phase 11.6). Fetches the published `version.json` the
+/// in `SemanticVersion` and `UpdateOffer` (phase 11.6). Fetches the published `version.json` the
 /// release pipeline keeps in lockstep (see docs/design/release.md) and reports
 /// whether the running build is behind. No Sparkle — a lightweight custom check.
 enum UpdateChecker {
@@ -30,8 +30,10 @@ enum UpdateChecker {
         return raw.flatMap(SemanticVersion.init) ?? SemanticVersion(major: 0, minor: 0, patch: 0)
     }
 
-    static func check() async -> Result {
-        let current = currentVersion
+    /// `current` and `versionURL` are parameters only so the probe's
+    /// `--update-check-diag` can measure the real servers as another version.
+    static func check(current: SemanticVersion = currentVersion,
+                      versionURL: URL = versionURL) async -> Result {
         do {
             var request = URLRequest(url: versionURL)
             request.cachePolicy = .reloadIgnoringLocalCacheData  // never compare against a stale cache
@@ -44,12 +46,31 @@ enum UpdateChecker {
             guard let latest = SemanticVersion(manifest.version) else {
                 return .failed("Couldn't read the latest version number.")
             }
-            switch UpdateAvailability(current: current, latest: latest) {
+            // The site can name a release before its DMG is published, so a
+            // newer version is offered only once its download answers.
+            switch await UpdateOffer.decide(current: current, latest: latest, probeDownload: probeDownload) {
             case .upToDate: return .upToDate(current: current)
             case .updateAvailable(let v): return .updateAvailable(current: current, latest: v)
+            case .failed(let message): return .failed(message)
             }
         } catch {
             return .failed(error.localizedDescription)
+        }
+    }
+
+    /// A HEAD request on the release's DMG, redirects followed (GitHub sends
+    /// the asset on to its storage host, which answers 200 once it exists).
+    static func probeDownload(_ version: SemanticVersion) async -> UpdateDownloadProbe {
+        var request = URLRequest(url: SelfUpdater.dmgURL(for: version))
+        request.httpMethod = "HEAD"
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 15
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return .missing }
+            return UpdateDownloadProbe(httpStatus: http.statusCode)
+        } catch {
+            return .unreachable(error.localizedDescription)
         }
     }
 }

@@ -114,6 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             RecordingLatencyDiag.runIfRequested()
             RecordingStartLatencyDiag.runIfRequested()
             ShortcutDiag.runIfRequested()
+            UpdateCheckerDiag.runIfRequested()
             if let coordinator = AppDelegate.coordinator {
                 PlaytestHarness.startIfRequested(coordinator: coordinator)
             }
