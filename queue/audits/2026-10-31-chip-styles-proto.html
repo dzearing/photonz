@@ -82,7 +82,7 @@
     background: repeating-linear-gradient(115deg, rgba(255,255,255,.16) 0 3px, transparent 3px 11px); }
   svg.ink { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   svg.ink * { stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; }
-  svg.ink .head { fill: var(--ink); stroke: none; }
+  svg.ink .head, svg.ink .fillink { fill: var(--ink); stroke: none; }
   svg.ink .tick { stroke-width: 2; }
 
   .chip {
@@ -164,7 +164,7 @@
   .tiles button { height: 34px; border-radius: 7px; border: 1px solid rgba(255,255,255,.1); background: #1c1c1e;
     display: grid; place-items: center; cursor: pointer; padding: 0; position: relative; }
   .tiles button[aria-pressed="true"] { outline: 2px solid #0a84ff; outline-offset: 1px; }
-  .tiles .chip { position: static; transform: none; font-size: 9px; padding: 3px 5px; }
+  .tiles .chip { position: relative; transform: none; font-size: 9px; padding: 3px 5px; }
   .tiles .s-spec .chip { padding-left: 11px; } .tiles .s-spec .chip::before { left: 4px; width: 4px; height: 4px; margin-top: -2px; }
   .tiles .s-paper .chip { padding-left: 8px; background-position: 3px 50%; background-size: 2px calc(100% - 6px); }
   .dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
@@ -187,6 +187,11 @@
   .stage figcaption { padding: 10px 14px 12px; color: var(--muted); font-size: 12px; }
   .r.stack { flex-direction: column; align-items: stretch; gap: 6px; }
   .mks { display: grid; grid-template-columns: 1.25fr 1.4fr repeat(4, 1fr); } .mks button { padding: 4px 0; display: inline-flex; align-items: center; justify-content: center; } .mks button svg { width: 13px; height: 13px; display: block; }
+  .rowlab { color: #c7c7cc; margin: 0 2px 6px; }
+  .atiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 0 2px 12px; }
+  .atiles button { height: 40px; border-radius: 7px; border: 1px solid rgba(255,255,255,.1); background: #1c1c1e; padding: 0; cursor: pointer; }
+  .atiles button[aria-pressed="true"] { outline: 2px solid #0a84ff; outline-offset: 1px; }
+  .atiles svg { width: 100%; height: 100%; display: block; }
   .sectionhead { padding: 22px 20px 0; font-size: 13px; font-weight: 600; }
   @media (max-width: 700px) { .proto { grid-template-columns: 1fr; padding: 16px 16px 0; } }
 
@@ -217,6 +222,9 @@
 <section class="proto">
   <div class="insp" aria-label="Appearance inspector prototype">
     <h3>APPEARANCE</h3>
+    <div class="rowlab">Arrow</div>
+    <div class="atiles" id="patiles"></div>
+    <div class="rowlab">Chip</div>
     <div class="tiles" id="ptiles"></div>
     <div class="r"><span class="lab">Color</span>
       <div class="dots" id="pdots"></div>
@@ -252,7 +260,7 @@
 <div class="sectionhead">Every style, side by side</div>
 <main id="grid"></main>
 
-<footer>Marker applies to every card: the style's own accent (Paper's stripe, Spec's dot), none, or a status icon. Each card shows the same slice of a screenshot: a measurement across the top and an arrow with a caption pointing at a button. Switch the background and the ink colour to see how each style holds up. Pick by number, or mix (for example, the shape of 3 with the plate of 6).</footer>
+<footer>Arrow and Marker apply to every card. Arrow: how the line is painted (simplified stand-ins for the app's five). Marker to every card: the style's own accent (Paper's stripe, Spec's dot), none, or a status icon. Each card shows the same slice of a screenshot: a measurement across the top and an arrow with a caption pointing at a button. Switch the background and the ink colour to see how each style holds up. Pick by number, or mix (for example, the shape of 3 with the plate of 6).</footer>
 
 <template id="scene">
   <div class="scene bg-light">
@@ -266,8 +274,7 @@
       <line x1="22" y1="14" x2="212" y2="14"/>
       <line class="tick" x1="22" y1="8" x2="22" y2="20"/>
       <line class="tick" x1="212" y1="8" x2="212" y2="20"/>
-      <path d="M 178 166 C 166 154, 150 142, 130 129"/>
-      <path class="head" d="M 120 125 L 133 122 L 129 134 Z"/>
+      <g class="arrow"></g>
     </svg>
     <span class="chip num measure" style="left:117px; top:14px"><span class="mk"></span>190 px</span>
     <span class="chip caption" style="left:248px; top:172px"><span class="mk"></span>Not aligned with text</span>
@@ -329,6 +336,79 @@
     el.style.setProperty("--ink-text", p.inkText);
     return p;
   }
+
+  // ---------- Arrow styles: how the line is painted ----------
+  // Simplified stand-ins for the app's five (ArrowStyle.swift): the same arrow,
+  // the same two ends and colour, painted five ways.
+  const ARROWS = [["clean", "Clean"], ["handDrawn", "Hand-drawn"], ["marker", "Marker"], ["brush", "Brush"], ["sketch", "Sketch"]];
+  function arrowSVG(style, P0, P1, P2, k = 1) {
+    const B = t => [0, 1].map(i => (1 - t) ** 2 * P0[i] + 2 * (1 - t) * t * P1[i] + t * t * P2[i]);
+    const D = t => [0, 1].map(i => 2 * (1 - t) * (P1[i] - P0[i]) + 2 * t * (P2[i] - P1[i]));
+    const unit = v => { const l = Math.hypot(v[0], v[1]) || 1; return [v[0] / l, v[1] / l]; };
+    const u = unit(D(1)), n = [-u[1], u[0]];
+    const at = (p, a, b) => [p[0] + a * u[0] + b * n[0], p[1] + a * u[1] + b * n[1]];
+    const pt = p => p[0].toFixed(1) + " " + p[1].toFixed(1);
+    const tip = P2, L = 11 * k, W = 6 * k;
+    const sty = (w, extra = "") => `style="stroke-width:${w};${extra}"`;
+    const sample = (t0, t1, steps, wob) => {
+      const out = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = t0 + (t1 - t0) * i / steps, p = B(t), nn = unit(D(t)), w = wob ? (Math.sin(t * 9.5) * .7 + Math.sin(t * 23) * .3) * wob : 0;
+        out.push([p[0] - nn[1] * w, p[1] + nn[0] * w]);
+      }
+      return out;
+    };
+    const poly = pts => "M " + pts.map(pt).join(" L ");
+    switch (style) {
+      case "clean": {
+        const base = at(tip, -L, 0);
+        return `<path d="M ${pt(P0)} Q ${pt(P1)} ${pt(at(tip, -L * .6, 0))}" ${sty(2 * k)}/>`
+          + `<path class="fillink" d="M ${pt(tip)} L ${pt(at(tip, -L, W))} L ${pt(at(tip, -L, -W))} Z"/>`;
+      }
+      case "handDrawn":
+        return `<path d="${poly(sample(0, 1, 28, .8 * k))}" ${sty(1.6 * k, "stroke-linejoin:round")}/>`
+          + `<path d="M ${pt(at(tip, -L * 1.05, W * 1.05))} Q ${pt(at(tip, -L * .45, W * .25))} ${pt(tip)} Q ${pt(at(tip, -L * .5, -W * .2))} ${pt(at(tip, -L * .95, -W * .95))}" ${sty(1.6 * k, "stroke-linejoin:round")}/>`;
+      case "marker":
+        return `<path d="${poly(sample(0, .985, 24, .6 * k))}" ${sty(4.6 * k, "stroke-linejoin:round;opacity:.96")}/>`
+          + `<path d="M ${pt(at(tip, -L * 1.1, W * 1.15))} L ${pt(at(tip, .5 * k, .6 * k))}" ${sty(4.2 * k, "opacity:.96")}/>`
+          + `<path d="M ${pt(at(tip, -1 * k, -.4 * k))} L ${pt(at(tip, -L * 1.0, -W * 1.2))}" ${sty(4.2 * k, "opacity:.96")}/>`;
+      case "brush": {
+        const left = [], right = [], steps = 24;
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps * .93, p = B(t), nn = unit(D(t));
+          const w = (0.3 + 2.6 * Math.sin(Math.PI * Math.min(1, t * 1.15)) ** .8) * k;
+          left.push([p[0] - nn[1] * w, p[1] + nn[0] * w]); right.push([p[0] + nn[1] * w, p[1] - nn[0] * w]);
+        }
+        const body = "M " + left.map(pt).join(" L ") + " L " + right.reverse().map(pt).join(" L ") + " Z";
+        const wing = side => `M ${pt(at(tip, .8 * k, 0))} Q ${pt(at(tip, -L * .35, W * .45 * side))} ${pt(at(tip, -L * 1.3, W * 1.3 * side))} Q ${pt(at(tip, -L * .9, W * .45 * side))} ${pt(at(tip, -L * .35, -W * .12 * side))} Z`;
+        return `<path class="fillink" d="${body}"/><path class="fillink" d="${wing(1)}"/><path class="fillink" d="${wing(-1)}"/>`;
+      }
+      case "sketch": {
+        const hw = 2.6 * k, HL = 13 * k, HW = 8 * k, steps = 12, a = [], b = [];
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps * .82, p = B(t), nn = unit(D(t));
+          a.push([p[0] - nn[1] * hw, p[1] + nn[0] * hw]); b.push([p[0] + nn[1] * hw, p[1] - nn[0] * hw]);
+        }
+        const hb = B(.82), out = "M " + a.map(pt).join(" L ") + ` L ${pt(at(tip, -HL, hw))} L ${pt(at(tip, -HL, HW))} L ${pt(tip)} L ${pt(at(tip, -HL, -HW))} L ${pt(at(tip, -HL, -hw))} L ` + b.reverse().map(pt).join(" L ") + " Z";
+        return `<path d="${out}" ${sty(1.3 * k, "stroke-linejoin:round;stroke-dasharray:" + (26 * k) + " " + (2.5 * k) + " " + (12 * k) + " " + (1.8 * k))}/>`
+          + `<path d="${out}" transform="translate(${.7 * k} ${.5 * k}) rotate(.6 ${pt(P0).replace(" ", " ")})" ${sty(1 * k, "stroke-linejoin:round;opacity:.75;stroke-dasharray:" + (18 * k) + " " + (3 * k) + " " + (30 * k) + " " + (2 * k))}/>`;
+      }
+    }
+  }
+  let arrowStyle = "clean";
+  function paintArrows() {
+    document.querySelectorAll(".scene g.arrow").forEach(g => { g.innerHTML = arrowSVG(arrowStyle, [178, 166], [160, 146], [130, 129]); });
+    document.querySelectorAll("#patiles button").forEach(b => b.setAttribute("aria-pressed", b.dataset.a === arrowStyle));
+  }
+  const patiles = document.getElementById("patiles");
+  for (const [id, name] of ARROWS) {
+    const b = document.createElement("button");
+    b.dataset.a = id; b.title = name;
+    b.innerHTML = `<svg class="ink" viewBox="0 0 48 36" style="position:static">${arrowSVG(id, [9, 28], [20, 24], [39, 9], .7)}</svg>`;
+    b.addEventListener("click", () => { arrowStyle = id; paintArrows(); });
+    patiles.appendChild(b);
+  }
+  paintArrows();
 
   // ---------- Inspector prototype ----------
   const stage = document.getElementById("pstage");
@@ -424,6 +504,7 @@
   setStageStyle = (cls, name) => { _setStageStyle(cls, name); paintMarkers(); };
   ptiles.querySelectorAll("button").forEach(b => b.onclick = null);
   setStageStyle("s-paper", "6. Paper");
+  paintArrows();
 
   document.querySelectorAll("#bg button").forEach(b => b.addEventListener("click", () => {
     document.querySelectorAll("#bg button").forEach(x => x.setAttribute("aria-pressed", x === b));
