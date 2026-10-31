@@ -343,6 +343,22 @@ struct AskChangesWhatItMadeTests {
         }
     }
 
+    @Test("With the looks' drawings parked in the library and copies on the canvas, a part of one copy changes in every look")
+    func everyLookFromACopy() throws {
+        var (document, made) = try Self.buttonLooks()
+        let moved = document.parkOriginals()
+        let hoverCopy = try #require(moved[made.looks[1].layer])
+        let piece = try #require(document.layer(id: hoverCopy)?.children.first { $0.name == "Background" })
+        _ = try document.agentChangePart(Self.change(##"{"part": "Background", "layer": "\##(hoverCopy.uuidString)", "color": "#34C759"}"##)).get()
+        document.syncComponentInstances()
+        let originals = made.looks.map { Self.hsl(Self.background(document, $0)) }
+        #expect(Self.background(document, made.looks[0]) == "#34C759", "the Default look is the colour asked for")
+        for shade in originals { #expect(abs(shade.h - Self.hsl("#34C759").h) < 0.02, "every look's drawing is green: \(originals)") }
+        let shown = document.layer(id: piece.id)?.annotation?.fill?.hex ?? "none"
+        #expect(abs(Self.hsl(shown).h - Self.hsl("#34C759").h) < 0.02, "the Hover copy on the canvas shows it: \(shown)")
+        #expect(Self.hsl(shown).l > Self.hsl("#34C759").l + 0.05, "and keeps Hover lighter")
+    }
+
     @Test("A look named changes that look alone, and a look the component lacks is refused naming its looks")
     func oneLookOfAComponent() throws {
         var (document, made) = try Self.buttonLooks()
@@ -364,6 +380,12 @@ struct AskChangesWhatItMadeTests {
         let read = AgentDocumentRead.make(document, context: .init(id: "d1", title: "t", file: nil, playheadMS: 0, canUndo: false, canRedo: false))
         let looks = Dictionary(read.layers.map { ($0.id, $0.look) }, uniquingKeysWith: { first, _ in first })
         #expect(made.looks.map { looks[$0.layer.uuidString] ?? nil } == ["Default", "Hover", "Pressed", "Disabled"])
+        // And each copy standing on the canvas, once the drawings are parked.
+        var parked = document
+        let moved = parked.parkOriginals()
+        let copies = AgentDocumentRead.make(parked, context: .init(id: "d1", title: "t", file: nil, playheadMS: 0, canUndo: false, canRedo: false))
+        let shown = Dictionary(copies.layers.map { ($0.id, $0.look) }, uniquingKeysWith: { first, _ in first })
+        #expect(made.looks.map { moved[$0.layer].flatMap { shown[$0.uuidString] } ?? nil } == ["Default", "Hover", "Pressed", "Disabled"])
     }
 
     @Test("Several layers of one part move by one shift, so their shades keep apart; a white label in a coloured drawing stays white")

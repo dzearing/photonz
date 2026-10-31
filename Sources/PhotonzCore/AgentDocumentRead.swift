@@ -272,8 +272,9 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
     public static func make(_ document: PhotonzDocument, context: Context, only: UUID? = nil) -> AgentDocumentRead {
         let hasTime = document.hasTime
         var budget = mostLayersListed
-        let layers = only.flatMap(document.layer(id:)).map { [summarize($0, budget: &budget)] }
-            ?? summarize(document.layers, budget: &budget)
+        let looks = LookNames(document)
+        let layers = only.flatMap(document.layer(id:)).map { [summarize($0, looks: looks, budget: &budget)] }
+            ?? summarize(document.layers, looks: looks, budget: &budget)
         let count = document.allLayers.count
         var read = AgentDocumentRead(
             id: context.id, title: context.title, file: context.file,
@@ -325,17 +326,38 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
     }
 
     /// The layers top first, spending `budget` as they are listed.
-    private static func summarize(_ layers: [PhotonzCore.Layer], budget: inout Int) -> [Layer] {
+    /// What each look of each component is called, so a drawing or a copy
+    /// on the canvas can say which look it shows.
+    struct LookNames {
+        var byVersion: [UUID: String] = [:]
+        var first: [UUID: String] = [:]
+
+        init(_ document: PhotonzDocument) {
+            for main in document.mainComponents {
+                guard let componentID = main.componentID, let name = main.componentVersionName else { continue }
+                if let version = main.componentVersionID { byVersion[version] = name }
+                if first[componentID] == nil { first[componentID] = name }
+            }
+        }
+
+        func look(of group: GroupContent) -> String? {
+            if group.componentID != nil { return group.versionName }
+            guard let componentID = group.instanceOf else { return nil }
+            return group.instanceVersion.flatMap { byVersion[$0] } ?? first[componentID]
+        }
+    }
+
+    private static func summarize(_ layers: [PhotonzCore.Layer], looks: LookNames, budget: inout Int) -> [Layer] {
         var out: [Layer] = []
         for layer in layers.reversed() {
             guard budget > 0 else { break }
             budget -= 1
-            out.append(summarize(layer, budget: &budget))
+            out.append(summarize(layer, looks: looks, budget: &budget))
         }
         return out
     }
 
-    private static func summarize(_ layer: PhotonzCore.Layer, budget: inout Int) -> Layer {
+    private static func summarize(_ layer: PhotonzCore.Layer, looks: LookNames, budget: inout Int) -> Layer {
         let style = layer.style
         let degrees = Double(layer.transform.rotation) * 180 / .pi
         // A group's stored size is unused: its frame here is the box it covers.
@@ -368,8 +390,8 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
                              brush: path.brush?.medium.rawValue)
         case .group(let group):
             node.layout = group.layout.map(Layout.make)
-            if group.componentID != nil { node.look = group.versionName }
-            let children = summarize(group.children, budget: &budget)
+            node.look = looks.look(of: group)
+            let children = summarize(group.children, looks: looks, budget: &budget)
             node.children = children.isEmpty ? nil : children
         case .paint(let paint):
             var media: [String] = []

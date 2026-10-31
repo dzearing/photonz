@@ -306,17 +306,19 @@ extension PhotonzDocument {
 
     /// The component drawing (a main of one look) holding `id`, or being it,
     /// innermost first, and the route of child indices from it down to `id`.
+    /// Searched in the picture and in the library, where the app keeps a
+    /// component's drawings while copies of them stand on the canvas.
     private func owningMain(of id: UUID) -> (Layer, [Int])? {
-        guard let path = path(of: id) else { return nil }
-        var list = layers
-        var found: (Layer, [Int])?
-        for (depth, index) in path.enumerated() {
-            guard list.indices.contains(index) else { return found }
-            let layer = list[index]
-            if layer.isMainComponent { found = (layer, Array(path.dropFirst(depth + 1))) }
-            list = layer.children
+        // .some(nil): found, in no component drawing.
+        func search(_ list: [Layer], owner: (Layer, [Int])?) -> (Layer, [Int])?? {
+            for (index, layer) in list.enumerated() {
+                let here: (Layer, [Int])? = layer.isMainComponent ? (layer, []) : owner.map { ($0.0, $0.1 + [index]) }
+                if layer.id == id { return .some(here) }
+                if layer.isGroup, let found = search(layer.children, owner: here) { return found }
+            }
+            return nil
         }
-        return found
+        return (search(layers, owner: nil) ?? search(componentOriginals, owner: nil)) ?? nil
     }
 
     /// The layer at `route` inside `drawing`, when it carries `name`; else
