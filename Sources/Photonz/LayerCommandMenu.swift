@@ -75,7 +75,14 @@ enum LayerCommandList {
         // An arrow: how it is drawn, and a new hand for a hand-made one. On
         // the whole selection when the arrow you right clicked is part of it,
         // like every other row here (`ArrowStyle.swift`).
-        rows.append(contentsOf: editorState.arrowStyleMenuRows(id: id))
+        // Its label's chip style sits beside it, in the same group.
+        var arrowRows = editorState.arrowStyleMenuRows(id: id)
+        let chipRows = editorState.chipStyleMenuRows(id: id)
+        if !chipRows.isEmpty {
+            if arrowRows.isEmpty { arrowRows = chipRows + [.separator] }
+            else { arrowRows.insert(contentsOf: chipRows, at: arrowRows.count - 1) }
+        }
+        rows.append(contentsOf: arrowRows)
         // A bent arrow straightens from here too (`ArrowBend.swift`).
         rows.append(contentsOf: editorState.arrowBendMenuRows(id: id))
 

@@ -176,6 +176,17 @@ public enum AgentTools {
         "removeShadow": ["type": "boolean", "description": "Take every shadow off."],
     ]
 
+    /// An arrow's label and how it looks, on add_shape and set_layer.
+    static let arrowLabelProperties: [String: AgentJSON] = [
+        "caption": ["type": "string", "description": "An arrow's label: the words on the chip at its tail. An empty string takes it away."],
+        "arrowStyle": ["type": "string", "enum": .array(ArrowStyle.allCases.map { .string($0.rawValue) }),
+                       "description": "How an arrow's line is painted. clean when left out on a new arrow."],
+        "chip": ["type": "string", "enum": .array(ChipStyle.allCases.map { .string($0.rawValue) }),
+                 "description": "The chip an arrow's label sits on: solid (a lit pill in the arrow's colour, the default), squircle (flat, soft corners), hairline (white plate, fine outline), glass (frosted), paper (light card with a colour stripe), spec (graphite badge, monospaced, for measurements), tag (small corners), twotone (colour tab beside white), highlight (highlighter swipe), today (dark pill with an outline). The plate follows the arrow's colour so the words always read."],
+        "marker": ["type": "string", "enum": .array(ChipMarker.allCases.map { .string($0.rawValue) }),
+                   "description": "What sits at the front of the label chip: accent (the style's own stripe or dot, the default), none, or a status icon: error, warning, success, info."],
+    ]
+
     /// What a path's line is painted with, on add_path and set_layer.
     static let lineBrushProperty: AgentJSON = [
         "description": "Paint the path's line with a brush instead of a plain stroke; the path stays editable. A medium's name (pencil, charcoal, chalk, crayon, marker, airbrush, oil, watercolour), an object with medium and settings (ids from list_brushes; a size sets the line's thickness), or plain for the plain line back. On a group, every path in it.",
@@ -306,7 +317,7 @@ public enum AgentTools {
                 "from": pointProperty("Where a line or arrow starts (an arrow's tail)."),
                 "to": pointProperty("Where a line or arrow ends (an arrow's head)."),
                 "name": ["type": "string", "description": "The layer's name in the Layers list."],
-            ]) { $1 }, required: ["shape"])),
+            ]) { $1 }.merging(arrowLabelProperties) { $1 }, required: ["shape"])),
         AgentTool(
             name: "add_path",
             description: "Draw a path with the Pen: points in order in canvas points, each a corner or smooth, open or closed. A closed path with nothing said is filled. One undo step.",
@@ -387,7 +398,7 @@ public enum AgentTools {
                 "brush": lineBrushProperty,
                 "flip": ["type": "string", "enum": ["horizontal", "vertical", "both"],
                          "description": "Mirror it about its own middle, as Edit > Transform > Flip does: horizontal left to right, vertical top to bottom. Each call flips again, so twice puts it back. Mirror Across Center makes a mirrored copy instead."],
-            ]) { $1 }, required: ["layer"])),
+            ]) { $1 }.merging(arrowLabelProperties) { $1 }, required: ["layer"])),
         AgentTool(
             name: "find_elements",
             description: "The boxes the Measure tool sees in the picture (buttons, fields, cards, rows, icons, lines of text) and every drawn layer, largest first, in canvas points. Use them to place measurements.",
@@ -641,6 +652,30 @@ public enum AgentTools {
         }
     }
 
+    /// The arrow label words in a call, read and checked.
+    static func arrowLabel(_ args: [String: AgentJSON], _ name: String) -> Result<AgentArrowLabel, AgentToolError> {
+        var label = AgentArrowLabel(caption: args["caption"]?.stringValue)
+        if let said = args["arrowStyle"]?.stringValue {
+            guard let style = ArrowStyle(rawValue: said) else {
+                return .failure(AgentToolError("\(name): arrowStyle is \(said); give one of \(ArrowStyle.allCases.map(\.rawValue).joined(separator: ", "))."))
+            }
+            label.arrowStyle = style
+        }
+        if let said = args["chip"]?.stringValue {
+            guard let style = ChipStyle(rawValue: said) else {
+                return .failure(AgentToolError("\(name): chip is \(said); give one of \(ChipStyle.allCases.map(\.rawValue).joined(separator: ", "))."))
+            }
+            label.chipStyle = style
+        }
+        if let said = args["marker"]?.stringValue {
+            guard let marker = ChipMarker(rawValue: said) else {
+                return .failure(AgentToolError("\(name): marker is \(said); give one of \(ChipMarker.allCases.map(\.rawValue).joined(separator: ", "))."))
+            }
+            label.chipMarker = marker
+        }
+        return .success(label)
+    }
+
     private static func drawingRequest(_ name: String, _ args: [String: AgentJSON],
                                        document: String?) -> Result<AgentRequest, AgentToolError> {
         func fail(_ words: String) -> Result<AgentRequest, AgentToolError> { .failure(AgentToolError("\(name): \(words)")) }
@@ -651,6 +686,12 @@ public enum AgentTools {
             guard let kind = args["shape"]?.stringValue.flatMap(AnnotationShape.init(rawValue:)) else { return fail("shape is required.") }
             return look(args, name).flatMap { look in
                 var shape = AgentShape(kind: kind, look: look, name: args["name"]?.stringValue)
+                switch arrowLabel(args, name) {
+                case .failure(let error): return .failure(error)
+                case .success(let label):
+                    if !label.isEmpty, kind != .arrow { return fail("caption, arrowStyle, chip and marker only apply to an arrow.") }
+                    shape.arrowLabel = label
+                }
                 switch kind {
                 case .rectangle, .ellipse, .highlight:
                     guard let frame = region(args["frame"]) else { return fail("a \(kind.rawValue) needs a frame.") }
@@ -735,11 +776,15 @@ public enum AgentTools {
                 flip = [axis]
             }
             return look(args, name).flatMap { look in
-                let change = AgentLayerChange(x: cg(args["x"]), y: cg(args["y"]), width: cg(args["width"]),
+                var change = AgentLayerChange(x: cg(args["x"]), y: cg(args["y"]), width: cg(args["width"]),
                                               height: cg(args["height"]), name: args["name"]?.stringValue,
                                               visible: args["visible"]?.boolValue, look: look,
                                               text: args["text"]?.stringValue, fontSize: cg(args["fontSize"]),
                                               flip: flip)
+                switch arrowLabel(args, name) {
+                case .failure(let error): return .failure(error)
+                case .success(let label): change.arrowLabel = label
+                }
                 guard change != AgentLayerChange() else { return fail("say what to change.") }
                 return .success(.setLayer(document: document, layer: layer, change: change))
             }

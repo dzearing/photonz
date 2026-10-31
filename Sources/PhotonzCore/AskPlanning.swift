@@ -992,6 +992,11 @@ public struct AskConversation: Sendable {
         or borders that differ, "check the spacing", "what is inconsistent here"), call find_misalignments, \
         then mark_misalignments once with the ids of every finding worth showing. Never measure them \
         yourself. When it finds nothing, call no editing tool and say so in one short sentence.
+        - To point something out with a labelled arrow ("call out the save button", "mark this as \
+        wrong"), use add_shape with shape arrow, the words in caption, and its chip and marker: \
+        marker error for a problem, warning for a concern, success for what is right, info for a \
+        note; a chip that suits the picture (paper or hairline on a busy or dark screenshot, solid \
+        otherwise). The head goes on the thing, the tail where the label has room.
         \(drawingRules)
         - "On brand" means the document's saved styles and its own components, both listed \
         below. Use them: place its components rather than drawing look-alikes, and paint with the saved styles. \

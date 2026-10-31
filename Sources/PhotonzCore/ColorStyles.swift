@@ -485,8 +485,11 @@ extension Layer {
         // colour makes, which is where it started: a black square nobody asked
         // for would be the panel answering a different question.
         case (.captionFill, .annotation(let annotation)):
-            return annotation.captionChipColor.hexString
-        case (.captionBorder, .annotation(let annotation)): return annotation.colorHex
+            return annotation.chipStyle.flatMap { $0.parts(forInk: annotation.colorHex).fill }
+                ?? annotation.captionChipColor.hexString
+        case (.captionBorder, .annotation(let annotation)):
+            return annotation.chipStyle.flatMap { $0.parts(forInk: annotation.colorHex).edge }
+                ?? annotation.colorHex
         // A chip part switched back on returns to what it was drawn as rather
         // than to a colour nobody chose: its fill comes back at the hue it kept
         // while it was off, and its ring in the colour it is already stored in.
@@ -529,9 +532,11 @@ extension Layer {
             // Nil is a real answer here, the way it is for a box's inside: the
             // Label Fill switch writes exactly this.
             annotation.captionFill = hex.map { Paint(hex: $0) }
+            annotation.noteCaptionPartByHand(.fill)
             content = .annotation(annotation)
         case (.captionBorder, .annotation(var annotation)):
             annotation.captionBorder = hex.map { Paint(hex: $0) }
+            annotation.noteCaptionPartByHand(.edge)
             content = .annotation(annotation)
         case (.captionText, .annotation(var annotation)):
             // The words are always written in something; there is no label with
@@ -539,6 +544,7 @@ extension Layer {
             // the panel says out loud instead of refusing.
             guard let hex else { return }
             annotation.captionTextColorHex = hex
+            annotation.noteCaptionPartByHand(.text)
             content = .annotation(annotation)
         case (.caliper, .measure(var measure)):
             guard let hex else { return }

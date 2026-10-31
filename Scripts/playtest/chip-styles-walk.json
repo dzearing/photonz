@@ -1,0 +1,180 @@
+{
+ "out": "/tmp/photonz-playtest/chip-styles",
+ "seed": "A screenshot at Next defaults, no switch changed. Draw an arrow and type its label: the label sits on the Solid pill in the arrow's own red, no outline, and Appearance shows the ten Chip tiles (Solid pill lit) and the Marker row (Accent lit). A second arrow wears the same chip.",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    760,
+    640
+   ],
+   "to": [
+    960,
+    470
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button 48 pt"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "1-default",
+   "note": "a new arrow's label at Next defaults: the Solid pill in the arrow's red, no outline"
+  },
+  {
+   "do": "panel",
+   "stage": "1-default"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-default"
+  },
+  {
+   "do": "render",
+   "name": "1-default"
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Paper",
+   "in": "Chip Style",
+   "reads": "Chip Style, off"
+  },
+  {
+   "do": "expect",
+   "control": "Marker Accent",
+   "in": "Marker",
+   "reads": "Marker, on"
+  },
+  {
+   "do": "expect",
+   "control": "Marker Warning",
+   "in": "Marker",
+   "reads": "Marker, off"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    780
+   ],
+   "to": [
+    480,
+    620
+   ],
+   "steps": 10
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Reset is 8 pt short"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "2-second",
+   "note": "a second arrow takes the same chip the tool is holding"
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-second"
+  },
+  {
+   "do": "render",
+   "name": "2-second"
+  }
+ ]
+}

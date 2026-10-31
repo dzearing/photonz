@@ -539,6 +539,8 @@ extension Experiments {
     /// `next-arrow-styles`: an arrow can be drawn clean or by hand (Hand-drawn,
     /// Marker, Brush, Sketch), picked from picture tiles (`ArrowStyleTiles`).
     var arrowStylesEnabled: Bool { isEnabled(FeatureCatalog.arrowStylesFlag) }
+    /// Ten chip styles and a marker for an arrow's label (`ChipStyleTiles`).
+    var chipStylesEnabled: Bool { isEnabled(FeatureCatalog.chipStylesFlag) }
 
     /// `next-arrow-bend`: a picked arrow shows a handle in the middle of its
     /// line that bends it (`ArrowBend.swift`). The model and the renderer are

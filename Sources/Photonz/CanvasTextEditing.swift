@@ -93,8 +93,11 @@ extension CanvasNSView {
         draft.captionGrowth = placement.growth
         let anchor = draft.captionAnchor()
         let center = CGPoint(x: layer.frame.minX + anchor.x, y: layer.frame.minY + anchor.y)
-        let style = TextContent(string: "", fontName: "SF Pro", fontSize: a.captionFontSize,
-                                colorHex: a.captionTextHex)
+        // The chip style's own face, so the words you type are the words that land.
+        let seeded = a.withSeededCaptionColors
+        var style = TextContent(string: "", fontName: seeded.captionFontName, fontSize: seeded.captionTypeSize,
+                                colorHex: seeded.captionTextHex)
+        style.weight = seeded.captionFontWeight
         textSession = TextEditSession(layerID: layer.id, origin: center, captionStyle: style,
                                       captionLayer: layer, captionPlacement: placement)
 
@@ -417,8 +420,7 @@ extension CanvasNSView {
         // the first character of the new line into the middle.
         let lines = CaptionMetrics.draftIsMultiLine(editor.string)
         if lines {
-            let text = CaptionMetrics.textSize(for: editor.string,
-                                               fontSize: caption.captionFontSize)
+            let text = CaptionMetrics.textSize(for: editor.string, in: caption)
             editor.alignment = .center
             editor.textContainer?.containerSize = NSSize(
                 width: max(1, (text.width - 2 * TextRasterizer.frameInset) * zoom),
@@ -733,6 +735,25 @@ final class CaptionPillView: NSView {
         layer.shadowOpacity = 0.35
         layer.shadowRadius = 2 * zoom
         layer.shadowOffset = CGSize(width: 0, height: 2 * zoom)
+        // A chip style: its plate, its own edge width and its main shadow.
+        // The finish (rim, swipe, accent) lands with the committed chip.
+        if let look = shown.chipLook {
+            let u = ChipLook.unit(fontSize: shown.captionFontSize) * zoom
+            if let top = look.fillTop { layer.backgroundColor = pillColor(Paint(hex: top.hexString)) }
+            if let top = look.fillTop, top.a < 1 {
+                layer.backgroundColor = CGColor(srgbRed: top.r, green: top.g, blue: top.b, alpha: top.a)
+            }
+            if shown.chipStyle != .today {
+                layer.borderWidth = shown.captionBorder == nil ? 0 : max(1, look.edgeWidth * u)
+            }
+            if let shadow = look.shadows.last {
+                layer.shadowOpacity = Float(shadow.alpha)
+                layer.shadowRadius = shadow.blur * u / 2
+                layer.shadowOffset = CGSize(width: 0, height: shadow.y * u)
+            } else {
+                layer.shadowOpacity = 0
+            }
+        }
     }
 }
 

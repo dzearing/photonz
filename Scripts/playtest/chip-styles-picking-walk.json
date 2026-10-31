@@ -1,0 +1,377 @@
+{
+ "out": "/tmp/photonz-playtest/chip-styles-picking",
+ "seed": "Pick every one of the ten chip styles from the Appearance tiles by pointer, then a Warning and a Done marker, and undo once. Fails today at the first tile press, like arrow-styles-walk (tile buttons in the dock ignore a walk's press since 2026-10-26; owned by the standing walk task).",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    760,
+    640
+   ],
+   "to": [
+    960,
+    470
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button 48 pt"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "1-default",
+   "note": "a new arrow's label at Next defaults: the Solid pill in the arrow's red, no outline"
+  },
+  {
+   "do": "panel",
+   "stage": "1-default"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-default"
+  },
+  {
+   "do": "render",
+   "name": "1-default"
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Today",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Today",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Flat squircle",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Hairline plate",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-hairline-plate"
+  },
+  {
+   "do": "render",
+   "name": "2-hairline-plate"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Glass",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Glass",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-glass"
+  },
+  {
+   "do": "render",
+   "name": "2-glass"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Paper",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-paper"
+  },
+  {
+   "do": "render",
+   "name": "2-paper"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Spec badge",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-spec-badge"
+  },
+  {
+   "do": "render",
+   "name": "2-spec-badge"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Lit tag",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Two-tone badge",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-two-tone-badge"
+  },
+  {
+   "do": "render",
+   "name": "2-two-tone-badge"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Highlighter",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-highlighter"
+  },
+  {
+   "do": "render",
+   "name": "2-highlighter"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Solid pill",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "press",
+   "control": "Marker Warning",
+   "in": "Marker"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Marker Warning",
+   "in": "Marker",
+   "reads": "Marker, on"
+  },
+  {
+   "do": "describe",
+   "stage": "3-warning",
+   "note": "the Solid pill with a warning marker at its front"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-warning"
+  },
+  {
+   "do": "render",
+   "name": "3-warning"
+  },
+  {
+   "do": "press",
+   "control": "Chip style Paper",
+   "in": "Chip Style"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Marker Done",
+   "in": "Marker"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "3-paper-done"
+  },
+  {
+   "do": "render",
+   "name": "3-paper-done"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Marker Warning",
+   "in": "Marker",
+   "reads": "Marker, on"
+  },
+  {
+   "do": "describe",
+   "stage": "4-undo",
+   "note": "one undo takes the marker change back in one step"
+  },
+  {
+   "do": "panel",
+   "stage": "4-undo"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-undo"
+  }
+ ]
+}

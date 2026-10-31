@@ -878,3 +878,24 @@ public enum AnnotationEndpoints {
         return best?.endpoint
     }
 }
+
+extension AnnotationBuilder {
+    /// An arrow with its caption's chip restyled: a new chip style (its
+    /// colours re-derived from the line, parts set by hand kept), a new marker,
+    /// or both. The frame is rebuilt, because a marker or a monospaced style
+    /// changes how wide the chip is. Anything that is not an arrow passes
+    /// through.
+    public static func rechipped(_ layer: Layer, style: ChipStyle? = nil,
+                                 marker: ChipMarker? = nil,
+                                 resettingPartsByHand: Bool = false) -> Layer {
+        guard var a = layer.annotation, a.shape == .arrow,
+              let start = layer.annotationEndpoint(.start),
+              let end = layer.annotationEndpoint(.end) else { return layer }
+        if let style { a.applyChipStyle(style) }
+        if let marker { a.chipMarker = marker }
+        if resettingPartsByHand { a.resetCaptionPartsByHand() }
+        var updated = layer
+        updated.content = .annotation(a)
+        return updating(updated, start: start, end: end)
+    }
+}

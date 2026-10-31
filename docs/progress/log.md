@@ -22283,3 +22283,9 @@ the ghost, and pinching in seemed to stop short.
 - Changed: oil strokes now fray at both ends (bristles land and lift one by one), their sides wander, and their ridges clump and vary along the stroke instead of an even comb (`OilPaint.swift`); Ask's sketch painter works big areas with a smaller brush at livelier angles (`BrushSketch`). New bars `endFray` and `edgeWobble` in `OilRenderingTests`; pixel fingerprints taken again. Commit 232dde11.
 - Measured: two-judge looks painted 4/4 -> 4/5 on three of Ask's sketches and on the try path; reads as a landscape 8/8. The bar of 8 on looks painted is still not met; the task stays pending.
 - Next: the painting's surface as a whole (stroke vocabulary per region, thick and thin passages, canvas weave in thin paint), and unpick the layer before the walk photographs it.
+
+## 2026-10-31 (chip styles for arrow labels)
+
+- Changed: an arrow's label sits on one of ten chip styles (`Sources/PhotonzCore/ChipStyle.swift`, drawn by `Sources/PhotonzRender/ChipRasterizer.swift`), picked from tiles in Appearance and the arrow tool's popover (`Sources/Photonz/ChipStyleTiles.swift`), with a Marker row and a Chip Style submenu on the right-click menu. The chip follows the line's ink; parts painted by hand stay put. Older documents keep their pill (nil style). Agent: `add_shape`/`set_layer` take caption, arrowStyle, chip, marker; Ask's prompt says when to use them. Switch `next-chip-styles`, on in Next.
+- Measured: plate and Glass rule agree with markup.js to the hex digit over 5,472 colours (`docs/design/markup-plate-sweep.tsv`); every style at 4.5:1 or better over white, black, a busy photo and a saturated colour, off rendered pixels; canvas and export identical (0 difference). Judge: 5 of 10 styles professional.
+- Next: Glass, Spec badge, Lit tag and Highlighter to the professional bar (task stays pending); measurements, five new arrow styles and the simplified Appearance are their own p1 tasks.

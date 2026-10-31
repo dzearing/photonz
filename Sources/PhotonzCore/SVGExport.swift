@@ -1422,9 +1422,12 @@ private struct Writer {
                            cornerRadius: annotation.captionCornerRadius(pillHeight: chip.height),
                            fill: plateColour(annotation.captionFill),
                            border: plateColour(annotation.captionBorder),
-                           borderWidth: annotation.drawnCaptionBorderWidth,
+                           borderWidth: annotation.chipStyle == nil || annotation.chipStyle == .today
+                               ? annotation.drawnCaptionBorderWidth
+                               : ChipLook.unit(fontSize: annotation.captionFontSize),
                            text: words, fontSize: annotation.captionFontSize,
-                           textHex: annotation.captionTextHex),
+                           textHex: annotation.captionTextHex,
+                           textShift: annotation.captionLeadWidth / 2),
                      level: level)
     }
 
@@ -1486,6 +1489,9 @@ private struct Writer {
         var text: String
         var fontSize: CGFloat
         var textHex: String
+        /// How far right of the plate's middle the words are centred: a chip
+        /// style's marker room at its front (`ChipStyle.swift`).
+        var textShift: CGFloat = 0
     }
 
     mutating func plate(_ plate: Plate, level: Int) -> [String] {
@@ -1524,7 +1530,7 @@ private struct Writer {
         // a whole point, which is what the canvas rounds it to at document
         // scale (`PillRasterizer.draw`).
         let ink = type.inkOffset(plate.text, plate.fontSize).rounded()
-        let corner = CGPoint(x: plate.center.x - box.width / 2 - ink,
+        let corner = CGPoint(x: plate.center.x + plate.textShift - box.width / 2 - ink,
                              y: plate.center.y - box.height / 2)
         return [indent(level) + "<path d=\"\(data)\""
             + " transform=\"translate(\(n(corner.x)) \(n(corner.y)))\""

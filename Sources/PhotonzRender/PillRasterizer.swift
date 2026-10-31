@@ -43,9 +43,11 @@ enum PillRasterizer {
     /// left alone — it is centred by its ink instead (see `draw`), which is a
     /// finer measurement than any alignment.
     static func content(_ string: String, fontSize: CGFloat,
-                        colorHex: String = "#FFFFFF") -> TextContent {
-        var text = TextContent(string: string, fontName: "SF Pro", fontSize: fontSize,
+                        colorHex: String = "#FFFFFF", fontName: String = "SF Pro",
+                        weight: TextWeight = .regular) -> TextContent {
+        var text = TextContent(string: string, fontName: fontName, fontSize: fontSize,
                                colorHex: colorHex)
+        text.weight = weight
         if string.contains(where: \.isNewline) { text.alignment = .center }
         return text
     }
@@ -66,7 +68,7 @@ enum PillRasterizer {
     /// follow the transform: a bitmap of glyphs, which has to be made with the
     /// pixels it will be drawn with, and the shadow, whose offset and blur
     /// Core Graphics measures in device pixels.
-    private static func pixelsPerPoint(of context: CGContext) -> CGFloat {
+    static func pixelsPerPoint(of context: CGContext) -> CGFloat {
         let ctm = context.ctm
         let scale = (ctm.a * ctm.d - ctm.b * ctm.c).magnitude.squareRoot()
         return scale > 0 && scale.isFinite ? scale : 1

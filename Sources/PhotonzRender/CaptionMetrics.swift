@@ -42,16 +42,25 @@ public enum CaptionMetrics {
     /// The laid-out text block inside the pill, in document points. A caption
     /// never wraps: it is measured unconstrained, so it is as wide as its
     /// longest line and as tall as the lines the person typed.
-    public static func textSize(for draft: String, fontSize: CGFloat) -> CGSize {
+    public static func textSize(for draft: String, fontSize: CGFloat,
+                                fontName: String = fontName, weight: TextWeight = .regular) -> CGSize {
         TextRasterizer.naturalSize(PillRasterizer.content(committedText(draft),
-                                                          fontSize: fontSize))
+                                                          fontSize: fontSize, fontName: fontName,
+                                                          weight: weight))
+    }
+
+    /// The words of `annotation`'s chip as they are measured and drawn: its
+    /// style's family, weight and size.
+    public static func textSize(for draft: String, in annotation: AnnotationContent) -> CGSize {
+        textSize(for: draft, fontSize: annotation.captionTypeSize,
+                 fontName: annotation.captionFontName, weight: annotation.captionFontWeight)
     }
 
     /// The pill `draft` renders in, in document points: the measured text plus
     /// the caption's padding on every side.
     public static func pillSize(for draft: String, in annotation: AnnotationContent) -> CGSize {
         annotation.captionPillSize(
-            forTextSize: textSize(for: draft, fontSize: annotation.captionFontSize))
+            forTextSize: textSize(for: draft, in: annotation))
     }
 
     /// How far in from the pill's left edge the words start, in document
@@ -65,9 +74,14 @@ public enum CaptionMetrics {
     /// (`TextRasterizer.inkOffset`).
     public static func textInset(for draft: String, in annotation: AnnotationContent) -> CGFloat {
         let words = committedText(draft)
-        let text = textSize(for: words, fontSize: annotation.captionFontSize)
+        let text = textSize(for: words, in: annotation)
         let pill = annotation.captionPillSize(forTextSize: text)
-        let content = PillRasterizer.content(words, fontSize: annotation.captionFontSize)
-        return (pill.width - text.width) / 2 - TextRasterizer.inkOffset(content)
+        let content = PillRasterizer.content(words, fontSize: annotation.captionTypeSize,
+                                             fontName: annotation.captionFontName,
+                                             weight: annotation.captionFontWeight)
+        // A marker or accent at the chip's front moves the words over by half
+        // the room it takes: they are centred in what is left.
+        return (pill.width - text.width) / 2 + annotation.captionLeadWidth / 2
+            - TextRasterizer.inkOffset(content)
     }
 }

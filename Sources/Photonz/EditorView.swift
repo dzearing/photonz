@@ -2976,6 +2976,9 @@ struct EditorView: View {
                     // How the arrow is drawn comes first: a hand-made one draws
                     // its own head, so it is not asked what it ends in.
                     if Experiments.shared.arrowStylesEnabled { arrowStyleRow }
+                    if Experiments.shared.chipStylesEnabled, Experiments.shared.arrowCaptionsEnabled {
+                        chipStyleRows
+                    }
                     if !editedArrowStyle.isHandMade { arrowheadStyleRow }
                     // An arrow that ends in nothing has no head to size.
                     if editedArrowStyle.isHandMade || editedArrowheadStyle != .plain {
@@ -3110,6 +3113,26 @@ struct EditorView: View {
             editorState.setAnnotationArrowStyle($0)
         }
             .frame(width: DesignedColorPicker.width)
+    }
+
+    /// The label chip the picked arrow wears, or the next one will, and its
+    /// marker (`ChipStyleTiles`).
+    private var chipStyleRows: some View {
+        let style = selectedAnnotation?.shownChipStyle
+            ?? editorState.annotationStyles.chipStyle(forShape: .arrow) ?? .standard
+        let marker = selectedAnnotation?.chipMarker
+            ?? editorState.annotationStyles.chipMarker(forShape: .arrow)
+        let ink = selectedAnnotation?.colorHex
+            ?? editorState.annotationStyles.content(for: .arrow)?.colorHex ?? "#FF3B30"
+        return VStack(alignment: .leading, spacing: 10) {
+            ChipStyleTiles(selection: style, ink: ink, labelFont: .callout) {
+                editorState.setAnnotationChipStyle($0)
+            }
+            ChipMarkerPicker(selection: marker, labelFont: .callout) {
+                editorState.setAnnotationChipMarker($0)
+            }
+        }
+        .frame(width: DesignedColorPicker.width)
     }
 
     /// The five endings an arrow can wear, as pictures. Sits above the size

@@ -45,7 +45,7 @@
     const plate = darkWords ? ink : dark;
     return Object.assign({
       ink: hex, plate: rgb2hex(plate), onPlate: darkWords ? "#1d1d1f" : "#ffffff",
-      inkText: rgb2hex(darkenUntil(ink, WHITE, 4.5)[0]),
+      inkText: rgb2hex(darkenUntil(ink, WHITE, 4.6)[0]),  // 4.6 so rounding to a byte keeps 4.5
       contrast: ratio(plate, darkWords ? DARK : WHITE),
     }, glassFor(ink));
   }

@@ -355,6 +355,16 @@ extension EditorState {
             // A release without the styles draws the clean arrow it always
             // has, whatever another release left the tool armed with.
             if !Experiments.shared.arrowStylesEnabled { content?.arrowStyle = .clean }
+            // Chip styles: the next label's chip, or the old pill where the
+            // release has none.
+            if Experiments.shared.chipStylesEnabled {
+                if content?.chipStyle == nil { content?.applyChipStyle(.standard) }
+            } else {
+                content?.chipStyle = nil
+                content?.chipMarker = .standard
+                content?.captionPartsByHand = []
+                content?.captionRoundness = annotationStyles.captionRoundness(forShape: .arrow)
+            }
         }
         return content
     }
@@ -562,6 +572,27 @@ extension EditorState {
     /// step) and arms the tool, so the next arrow is drawn the same way: the
     /// tool's popover with nothing picked, and the picked arrow's own when
     /// there is one.
+    /// The arrow tool popover's Chip tiles: the picked arrow's label, or the
+    /// next arrow's.
+    func setAnnotationChipStyle(_ style: ChipStyle) {
+        if let layer = selectedAnnotationLayer, layer.annotation?.shape == .arrow {
+            setChipStyle(ids: [layer.id], style)
+            return
+        }
+        annotationStyles.setChipStyle(style, forShape: .arrow)
+        saveAnnotationStyles()
+    }
+
+    /// The popover's Marker row, the same way.
+    func setAnnotationChipMarker(_ marker: ChipMarker) {
+        if let layer = selectedAnnotationLayer, layer.annotation?.shape == .arrow {
+            setChipMarker(ids: [layer.id], marker)
+            return
+        }
+        annotationStyles.setChipMarker(marker, forShape: .arrow)
+        saveAnnotationStyles()
+    }
+
     func setAnnotationArrowStyle(_ style: ArrowStyle) {
         if let layer = selectedAnnotationLayer, layer.annotation?.shape == .arrow {
             setArrowStyle(ids: [layer.id], style)
@@ -596,6 +627,69 @@ extension EditorState {
         nextArrowSeed = HandMadeArrow.seed(after: seed)
         annotationStyles.setArrowStyle(style, forShape: .arrow)
         saveAnnotationStyles()
+    }
+
+    /// Puts the arrows' label chips in `style` (one undo step), and makes it
+    /// the chip the next arrow's label starts with.
+    func setChipStyle(ids: [UUID], _ style: ChipStyle) {
+        rechip(ids: ids) { AnnotationBuilder.rechipped($0, style: style) }
+        annotationStyles.setChipStyle(style, forShape: .arrow)
+        saveAnnotationStyles()
+    }
+
+    /// Gives the arrows' label chips `marker` at their front (one undo step),
+    /// and makes it the next arrow's.
+    func setChipMarker(ids: [UUID], _ marker: ChipMarker) {
+        rechip(ids: ids) { AnnotationBuilder.rechipped($0, marker: marker) }
+        annotationStyles.setChipMarker(marker, forShape: .arrow)
+        saveAnnotationStyles()
+    }
+
+    /// Hands the label's Fill, Edge and Text back to the chip style.
+    func resetChipParts(ids: [UUID]) {
+        rechip(ids: ids) { AnnotationBuilder.rechipped($0, resettingPartsByHand: true) }
+    }
+
+    private func rechip(ids: [UUID], _ change: @escaping (Layer) -> Layer) {
+        guard let doc = document else { return }
+        let targets = annotationRestyleTargets(ids, in: doc)
+            .filter { doc.layer(id: $0)?.annotation?.shape == .arrow }
+        guard !targets.isEmpty else { return }
+        discardDragPreview()
+        perform { document in
+            let canvas = document.canvasSize
+            for id in targets {
+                document.updateLayer(id: id) {
+                    let changed = change($0)
+                    $0 = changed.annotation?.hasCaption == true
+                        ? AnnotationBuilder.planningCaption(changed, canvas: canvas,
+                                                            captionPillSize: changed.measuredCaptionPillSize)
+                        : changed
+                }
+            }
+        }
+    }
+
+    /// The chip style every picked arrow wears, or nil when they differ.
+    var pickedChipStyle: ChipStyle? {
+        let worn = Set(pickedArrowIDs.compactMap { document?.layer(id: $0)?.annotation?.shownChipStyle })
+        return worn.count == 1 ? worn.first : nil
+    }
+
+    /// The arrows' Chip Style submenu, for the right-click menu.
+    func chipStyleMenuRows(id: UUID) -> [MenuRow] {
+        guard Experiments.shared.chipStylesEnabled,
+              document?.layer(id: id)?.annotation?.shape == .arrow else { return [] }
+        let arrows = arrowsReached(fromRow: id)
+        let worn = Set(arrows.compactMap { document?.layer(id: $0)?.annotation?.shownChipStyle })
+        return [
+            .submenu(ChipStyle.menuTitle, ChipStyle.allCases.map { style in
+                .toggle(style.title, isOn: worn == [style]) { [weak self] in
+                    guard let self else { return }
+                    self.setChipStyle(ids: self.arrowsReached(fromRow: id), style)
+                }
+            }),
+        ]
     }
 
     /// The picked arrows a menu reaches from the layer it was opened on: the

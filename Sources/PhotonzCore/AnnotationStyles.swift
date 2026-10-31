@@ -214,6 +214,17 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         defaults(forShape: shape).arrowStyle
     }
 
+    /// The chip the next arrow's caption sits on; nil when none was ever
+    /// picked, which the app reads as its release's standard.
+    public func chipStyle(forShape shape: AnnotationShape) -> ChipStyle? {
+        defaults(forShape: shape).chipStyle
+    }
+
+    /// What the next arrow's chip carries at its front.
+    public func chipMarker(forShape shape: AnnotationShape) -> ChipMarker {
+        defaults(forShape: shape).chipMarker ?? .standard
+    }
+
     /// How round the next caption pill's corners are, 0 square to 1 fully round.
     public func captionRoundness(forShape shape: AnnotationShape) -> CGFloat {
         defaults(forShape: shape).captionRoundness
@@ -423,6 +434,14 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
 
     public mutating func setArrowStyle(_ style: ArrowStyle, forShape shape: AnnotationShape) {
         shapes[shape.rawValue, default: .standard(for: shape)].arrowStyle = style
+    }
+
+    public mutating func setChipStyle(_ style: ChipStyle, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].chipStyle = style
+    }
+
+    public mutating func setChipMarker(_ marker: ChipMarker, forShape shape: AnnotationShape) {
+        shapes[shape.rawValue, default: .standard(for: shape)].chipMarker = marker
     }
 
     public mutating func setCaptionRoundness(_ roundness: CGFloat, forShape shape: AnnotationShape) {
@@ -668,6 +687,8 @@ public struct AnnotationStyles: Equatable, Codable, Sendable {
         content.arrowheadStyle = d.arrowheadStyle
         content.arrowStyle = d.arrowStyle
         content.captionRoundness = d.captionRoundness
+        if let style = d.chipStyle { content.applyChipStyle(style) }
+        if let marker = d.chipMarker { content.chipMarker = marker }
         // Where the last box of this kind put its line is where the next one
         // puts it, exactly as with its width and its corner.
         content.strokePosition = d.strokePosition
@@ -729,6 +750,10 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
     public var arrowStyle: ArrowStyle = .standard
     /// How round the next caption pill is, 0 square to 1 fully round.
     public var captionRoundness: CGFloat = AnnotationContent.captionRoundnessDefault
+    /// The chip the next caption sits on. Nil until one is picked.
+    public var chipStyle: ChipStyle?
+    /// What the next chip carries at its front. Nil until one is picked.
+    public var chipMarker: ChipMarker?
     /// Interior fill for box shapes; nil = outline only. A paint for the same
     /// reason the outline is one.
     public var fill: Paint?
@@ -801,6 +826,7 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
         case layerStyle, captionFontSize, colorStyles
         case arrowheadStyle, captionRoundness
         case arrowStyle
+        case chipStyle, chipMarker
     }
 
     public init(from decoder: Decoder) throws {
@@ -828,6 +854,9 @@ public struct ShapeDefaults: Equatable, Codable, Sendable {
             ?? AnnotationContent.captionRoundnessDefault
         // The style postdates both: a pref from before it draws clean arrows.
         arrowStyle = try c.decodeIfPresent(ArrowStyle.self, forKey: .arrowStyle) ?? .standard
+        // Chip styles postdate everything; absent is the release's standard.
+        chipStyle = try c.decodeIfPresent(ChipStyle.self, forKey: .chipStyle)
+        chipMarker = try c.decodeIfPresent(ChipMarker.self, forKey: .chipMarker)
         // `colorStyles` postdates a tool being able to hold a saved colour at
         // all; absent = holding none, which is what every older pref means.
         colorStyles = try c.decodeIfPresent([ColorStyleBinding].self, forKey: .colorStyles)

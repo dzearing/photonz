@@ -260,7 +260,7 @@ public enum AnnotationRasterizer {
         let text = CaptionMetrics.committedText(annotation.caption ?? "")
         guard !text.isEmpty else { return nil }
         let chip = CaptionMetrics.pillSize(for: text, in: annotation)
-        let slack = AnnotationContent.captionShadowPadding
+        let slack = annotation.captionShadowSlack
         let size = CGSize(width: chip.width + 2 * slack, height: chip.height + 2 * slack)
         let width = Int((size.width * scale).rounded())
         let height = Int((size.height * scale).rounded())
@@ -273,15 +273,8 @@ public enum AnnotationRasterizer {
         }
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
-        PillRasterizer.draw(text, at: CGPoint(x: size.width / 2, y: size.height / 2),
-                            chipSize: chip, fontSize: annotation.captionFontSize,
-                            borderWidth: annotation.drawnCaptionBorderWidth,
-                            fill: pillColor(annotation.captionFill),
-                            border: pillColor(annotation.captionBorder),
-                            textColorHex: annotation.captionTextHex,
-                            shadow: PillRasterizer.Shadow(),
-                            cornerRadius: annotation.captionCornerRadius(pillHeight: chip.height),
-                            in: context)
+        drawChip(text, of: annotation, at: CGPoint(x: size.width / 2, y: size.height / 2),
+                 chipSize: chip, in: context)
         return context.makeImage().map { ($0, size) }
     }
 
@@ -301,6 +294,28 @@ public enum AnnotationRasterizer {
         // a longer caption reaches further away from the arrow instead of
         // sliding the whole bubble off it.
         let center = annotation.captionPillCenter(forPillSize: chipSize)
+        drawChip(text, of: annotation, at: center, chipSize: chipSize, in: context)
+    }
+
+    /// One caption chip: in its chip style when it has one
+    /// (`ChipRasterizer`), otherwise the pill every caption wore before
+    /// there were styles, in its three stored colours.
+    static func drawChip(_ text: String, of annotation: AnnotationContent, at center: CGPoint,
+                         chipSize: CGSize, in context: CGContext) {
+        let radius = annotation.captionCornerRadius(pillHeight: chipSize.height)
+        if let look = annotation.chipLook {
+            ChipRasterizer.draw(text, look: look, at: center, chipSize: chipSize,
+                                fontSize: annotation.captionFontSize,
+                                padding: annotation.captionPadding,
+                                fontName: annotation.captionFontName,
+                                typeSize: annotation.captionTypeSize,
+                                weight: annotation.captionFontWeight,
+                                cornerRadius: radius,
+                                edgeWidth: annotation.chipStyle == .today
+                                    ? annotation.drawnCaptionBorderWidth : nil,
+                                in: context)
+            return
+        }
         PillRasterizer.draw(text, at: center, chipSize: chipSize,
                             fontSize: annotation.captionFontSize,
                             borderWidth: annotation.drawnCaptionBorderWidth,
@@ -308,7 +323,35 @@ public enum AnnotationRasterizer {
                             border: pillColor(annotation.captionBorder),
                             textColorHex: annotation.captionTextHex,
                             shadow: PillRasterizer.Shadow(),
-                            cornerRadius: annotation.captionCornerRadius(pillHeight: chipSize.height),
+                            cornerRadius: radius,
                             in: context)
+    }
+}
+
+extension AnnotationRasterizer {
+    /// A chip on its own, centred in a transparent picture of `size` points:
+    /// what a style tile shows. Drawn by the same code as a caption's chip.
+    public static func chipSample(_ text: String, style: ChipStyle, ink: String,
+                                  marker: ChipMarker = .accent, fontSize: CGFloat,
+                                  size: CGSize, scale: CGFloat) -> CGImage? {
+        var content = AnnotationContent(shape: .arrow, colorHex: ink, captionFontSize: fontSize)
+        content.caption = text
+        content.applyChipStyle(style)
+        content.chipMarker = marker
+        let chip = CaptionMetrics.pillSize(for: text, in: content)
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
+        guard width >= 1, height >= 1, scale > 0,
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        drawChip(text, of: content, at: CGPoint(x: size.width / 2, y: size.height / 2),
+                 chipSize: chip, in: context)
+        return context.makeImage()
     }
 }

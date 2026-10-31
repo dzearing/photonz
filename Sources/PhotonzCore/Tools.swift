@@ -444,7 +444,7 @@ public enum AnnotationBuilder {
             probe.end = end
             let size = probe.estimatedCaptionSize
             let anchor = probe.captionAnchor()
-            let slack = AnnotationContent.captionShadowPadding
+            let slack = probe.captionShadowSlack
             box = box.union(CGRect(x: anchor.x - size.width / 2, y: anchor.y - size.height / 2,
                                    width: size.width, height: size.height)
                 .insetBy(dx: -slack, dy: -slack))

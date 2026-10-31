@@ -205,6 +205,11 @@ extension Layer {
             to.captionFill = from.captionFill
             to.captionBorder = from.captionBorder
             to.captionTextColorHex = from.captionTextColorHex
+            // The chip's look is the look as well.
+            to.chipStyle = from.chipStyle
+            to.chipMarker = from.chipMarker
+            to.captionPartsByHand = from.captionPartsByHand
+            to.captionRoundness = from.captionRoundness
             out.content = .annotation(to)
         case (.group(let from), .group(var to)):
             // A group's own surface colour. Its children, its knobs, its

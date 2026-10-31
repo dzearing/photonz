@@ -1,0 +1,32 @@
+{
+  "feature": "Chip styles for arrow labels",
+  "epic": "epic-uehjr1",
+  "summary": "An arrow's label now sits on one of ten chip styles picked from picture tiles, with a marker (none, accent, error, warning, done, info) at its front. The chip follows the arrow's colour and its words always read.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/chip-styles-walk.json. Sheets drawn by the real renderer: PHOTONZ_CHIP_SHEET=<dir> Scripts/test.sh --filter ChipStyleRendering.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, press A and drag an arrow, type a label and press Command Return.", "shot": "2026-10-31-chip-styles-1-default-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In Appearance, click each of the ten Chip tiles under the arrow Style tiles and watch the label change.", "shot": "2026-10-31-chip-styles-sheet.png" },
+    { "do": "Pick a different colour for the line: the chip's plate follows it, light colours taking dark words.", "shot": "2026-10-31-chip-styles-inks.png" },
+    { "do": "Click Error, Warning, Done or Info in the Marker row; Accent brings the style's own stripe or dot back.", "shot": "2026-10-31-chip-markers.png" },
+    { "do": "Draw a second arrow: it starts in the chip you picked last.", "shot": "2026-10-31-chip-styles-2-second-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right click the arrow: Chip Style sits beside Arrow Style." },
+    { "do": "Export the picture as a PNG and compare the chip with the canvas." }
+  ],
+  "evaluate": [
+    "Is Solid pill the right look for a new label, or should Paper or Hairline be the default?",
+    "Do Glass, Spec badge, Lit tag and Highlighter earn their tiles, or should the set drop to the ones that read as professional?",
+    "Does the Marker row read as a choice of icon at a glance?",
+    "Is it clear that the chip follows the line colour without opening anything?"
+  ],
+  "rough": [
+    "An independent model judge scored the sheet against Apple's apps, Figma and Sketch redline plugins and CleanShot X: Solid pill 7, Flat squircle 7, Hairline 8, Paper 8, Two-tone 7 pass; Glass 4, Spec badge 6, Lit tag 6, Highlighter 4 and Today 5 do not (the baseline red pill scored 5). The task stays open on that bar.",
+    "Glass is drawn at 95 to 97 percent opacity, not the design system's 82, because the app blends in linear light and 82 percent fell to 3.2:1 over white; it reads as a tinted plate with a lit rim rather than frosted glass. A true blur of the picture under it is not built (written into docs/design/markup.md section 3).",
+    "Measurements do not wear chip styles yet: filed as every-measurement-wears-the-same-chip-styles-col.",
+    "The five new arrow styles (Dashed, Block, Neon, Dotted, Elbow) are not built: filed as five-more-arrow-styles-dashed-block-neon-dotted.",
+    "Appearance is not yet the simplified Arrow, Chip, Color, Marker, Size with a collapsed Advanced (markup.md section 8), and there is no Size S M L yet: filed as arrow-and-measurement-appearance-shows-only-styl. The Label size and Label corners sliders are still there.",
+    "A walk's press on a dock tile button does nothing (Arrow Style tiles too, since 2026-10-26), so no walk can yet prove the tiles by pointer: chip-styles-picking-walk is written and owned by walks-that-fail-in-the-full-sweep-26.",
+    "An SVG export draws the chip's plate, edge and words in the style's colours but not its finish (gradient, rim, shadow, marker, monospace).",
+    "While typing, the bubble shows the style's plate and shadow but not its accent or marker; they land on commit."
+  ]
+}

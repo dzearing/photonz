@@ -75,15 +75,20 @@ public struct AgentShape: Hashable, Sendable {
     public var to: CGPoint?
     public var look: AgentLook
     public var name: String?
+    /// An arrow's label, how the arrow is painted, the chip its label sits on
+    /// and the marker at the chip's front.
+    public var arrowLabel: AgentArrowLabel
 
     public init(kind: AnnotationShape, frame: CGRect? = nil, from: CGPoint? = nil, to: CGPoint? = nil,
-                look: AgentLook = AgentLook(), name: String? = nil) {
+                look: AgentLook = AgentLook(), name: String? = nil,
+                arrowLabel: AgentArrowLabel = AgentArrowLabel()) {
         self.kind = kind
         self.frame = frame
         self.from = from
         self.to = to
         self.look = look
         self.name = name
+        self.arrowLabel = arrowLabel
     }
 }
 
@@ -166,6 +171,40 @@ public struct AgentText: Hashable, Sendable {
 }
 
 /// What set_layer changes. Nil is "leave it".
+/// What an agent says about an arrow's label and look, on add_shape and
+/// set_layer. Nil leaves a thing as it is.
+public struct AgentArrowLabel: Hashable, Sendable {
+    public var caption: String?
+    public var arrowStyle: ArrowStyle?
+    public var chipStyle: ChipStyle?
+    public var chipMarker: ChipMarker?
+
+    public init(caption: String? = nil, arrowStyle: ArrowStyle? = nil,
+                chipStyle: ChipStyle? = nil, chipMarker: ChipMarker? = nil) {
+        self.caption = caption
+        self.arrowStyle = arrowStyle
+        self.chipStyle = chipStyle
+        self.chipMarker = chipMarker
+    }
+
+    public var isEmpty: Bool { self == AgentArrowLabel() }
+
+    /// Writes itself onto an arrow. A caption with no chip named wears the
+    /// standard chip, as one typed by hand in Next does.
+    func apply(to content: inout AnnotationContent) {
+        if let arrowStyle { content.arrowStyle = arrowStyle }
+        if let chipStyle { content.applyChipStyle(chipStyle) }
+        else if caption != nil, content.chipStyle == nil, content.captionTextColorHex == nil {
+            content.applyChipStyle(.standard)
+        }
+        if let chipMarker { content.chipMarker = chipMarker }
+        if let caption {
+            let words = caption.trimmingCharacters(in: .whitespacesAndNewlines)
+            content.caption = words.isEmpty ? nil : words
+        }
+    }
+}
+
 public struct AgentLayerChange: Hashable, Sendable {
     public var x: CGFloat?
     public var y: CGFloat?
@@ -179,6 +218,8 @@ public struct AgentLayerChange: Hashable, Sendable {
     /// Mirror it about its own middle, as Edit ▸ Transform ▸ Flip does: once
     /// per axis named.
     public var flip: Set<FlipAxis>
+    /// An arrow's label, style, chip and marker.
+    public var arrowLabel = AgentArrowLabel()
 
     public init(x: CGFloat? = nil, y: CGFloat? = nil, width: CGFloat? = nil, height: CGFloat? = nil,
                 name: String? = nil, visible: Bool? = nil, look: AgentLook = AgentLook(),
@@ -267,6 +308,7 @@ public enum AgentDrawing {
                                         strokeWidth: look.strokeWidth ?? (shape.kind == .highlight ? 16 : 4),
                                         colorHex: ink)
         }
+        if shape.kind == .arrow { shape.arrowLabel.apply(to: &content) }
         var layer = AnnotationBuilder.layer(content: content, from: start, to: end)
         if let name = shape.name { layer.name = name }
         apply(look, keepingPaint: true, to: &layer)
@@ -351,6 +393,18 @@ public enum AgentDrawing {
             layer.name = trimmed
         }
         if let visible = change.visible { layer.isVisible = visible }
+        if !change.arrowLabel.isEmpty {
+            guard var arrow = layer.annotation, arrow.shape == .arrow,
+                  let start = layer.annotationEndpoint(.start), let end = layer.annotationEndpoint(.end) else {
+                return .failure(AgentToolError("set_layer: caption, arrowStyle, chip and marker only apply to an arrow, and \(layer.name) is not one."))
+            }
+            change.arrowLabel.apply(to: &arrow)
+            layer.content = .annotation(arrow)
+            layer = AnnotationBuilder.updating(layer, start: start, end: end)
+            if let canvas, arrow.hasCaption {
+                layer = AnnotationBuilder.planningCaption(layer, canvas: canvas, captionPillSize: nil)
+            }
+        }
         if change.text != nil || change.fontSize != nil {
             guard var text = layer.text else {
                 return .failure(AgentToolError("set_layer: text and fontSize only apply to a text layer, and \(layer.name) is not one."))

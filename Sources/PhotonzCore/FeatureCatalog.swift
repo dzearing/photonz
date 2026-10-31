@@ -315,6 +315,8 @@ public enum FeatureCatalog {
 
     public static let arrowStylesFlag = "next-arrow-styles"
 
+    public static let chipStylesFlag = "next-chip-styles"
+
     public static let arrowBendFlag = "next-arrow-bend"
 
     public static let rowSaysItsWordsFlag = "next-a-row-says-its-words"
@@ -1338,6 +1340,16 @@ public enum FeatureCatalog {
                     name: arrowStylesFlag,
                     title: "Draw arrows by hand",
                     description: "An arrow gets a Style row of picture tiles: Clean, Hand-drawn, Marker, Brush and Sketch, with Reshuffle on its right-click menu for a new hand. Off means every arrow is the clean geometric one.",
+                    area: .drawing,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: chipStylesFlag,
+                    title: "Chip styles for labels",
+                    description: "An arrow's label gets a Chip row of ten styles and a Marker row, and its chip follows the arrow's colour so the words always read. Off means every label is the dark pill with a coloured outline.",
                     area: .drawing,
                     isEnabled: false,
                     parameters: []),

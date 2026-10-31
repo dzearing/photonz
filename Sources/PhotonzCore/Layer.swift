@@ -257,7 +257,12 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     public var strokeWidth: CGFloat
     /// What the outline is drawn in — and the whole of a line, arrow or
     /// highlight. Flat by default; it holds a gradient once one is chosen.
-    public var paint: Paint
+    public var paint: Paint {
+        // One colour tints the chip: a caption wearing a chip style takes its
+        // plate, edge and words from the line's ink (`ChipStyle.swift`). A
+        // pill from before styles keeps the colours it was given.
+        didSet { if paint.hex != oldValue.hex { rederiveChipParts() } }
+    }
     /// The flat color of the outline. Everything that can only draw one color
     /// reads this: the caption pill's tone, a swatch, a contrast reading.
     /// Setting it makes the outline flat, which is what painting a shape a
@@ -415,6 +420,28 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
     /// leaves it alone, only pulling it back onto the picture; false means
     /// the planner owns the offset and re-picks it whenever the arrow changes.
     public var captionPinned: Bool
+    /// Arrow-only: the chip the caption sits on, one of ten premade looks
+    /// (`ChipStyle.swift`). Nil is the pill every caption wore before there
+    /// was a choice, painted in exactly the three colours it was given and
+    /// left alone when the line is repainted; that is what an older document
+    /// opens as.
+    public var chipStyle: ChipStyle?
+    /// Arrow-only: what sits at the front of the chip.
+    public var chipMarker: ChipMarker {
+        get { storedChipMarker ?? .standard }
+        set { storedChipMarker = newValue == .standard ? nil : newValue }
+    }
+    /// The chip parts painted by hand under Advanced. A styled chip derives
+    /// the rest from the line's ink; these keep what they were given until
+    /// they are reset.
+    public var captionPartsByHand: Set<CaptionPart> {
+        get { storedCaptionPartsByHand ?? [] }
+        set { storedCaptionPartsByHand = newValue.isEmpty ? nil : newValue }
+    }
+    /// Stored as nil when they say nothing, so a document with no chip styles
+    /// in it is written exactly as it always was.
+    private var storedChipMarker: ChipMarker?
+    private var storedCaptionPartsByHand: Set<CaptionPart>?
 
     public init(shape: AnnotationShape, strokeWidth: CGFloat = 4, colorHex: String = "#FF3B30",
                 start: CGPoint = .zero, end: CGPoint = .zero, arrowheadScale: CGFloat = 1,
@@ -473,6 +500,9 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         case captionFontSize, captionRoundness
         case captionOffset, captionGrowth, captionPinned
         case trim
+        case chipStyle
+        case storedChipMarker = "chipMarker"
+        case storedCaptionPartsByHand = "captionPartsByHand"
     }
 
     public init(from decoder: Decoder) throws {
@@ -532,6 +562,11 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         captionPinned = try c.decodeIfPresent(Bool.self, forKey: .captionPinned) ?? false
         // A trim postdates every shape; absent is the whole line.
         trim = try c.decodeIfPresent(StrokeTrim.self, forKey: .trim)
+        // Chip styles postdate every caption above: absent is the pill it was.
+        chipStyle = try c.decodeIfPresent(ChipStyle.self, forKey: .chipStyle)
+        storedChipMarker = try c.decodeIfPresent(ChipMarker.self, forKey: .storedChipMarker)
+        storedCaptionPartsByHand = try c.decodeIfPresent(Set<CaptionPart>.self,
+                                                         forKey: .storedCaptionPartsByHand)
         // A label written before it had colours of its own keeps the three it
         // was drawn in: the darkened tone of the arrow's colour, that colour
         // for its edge, white for its words. `captionTextColorHex` is the mark,
@@ -582,6 +617,10 @@ extension AnnotationContent {
     /// nothing derives them again, so repainting the line leaves the pill
     /// exactly as it was.
     mutating func seedCaptionColors() {
+        if chipStyle != nil {
+            rederiveChipParts()
+            return
+        }
         captionTextColorHex = Self.captionTextDefaultHex
         captionFill = Paint(hex: captionChipColor.hexString)
         captionBorder = Paint(hex: paint.hex)
@@ -714,9 +753,9 @@ extension AnnotationContent {
         guard hasCaption, let fill = captionFill,
               let back = RGBA(hex: fill.hex), let ink = RGBA(hex: captionTextHex),
               back.a > 0.5 else { return nil }
-        let lighter = max(back.relativeLuminance, ink.relativeLuminance) + 0.05
-        let darker = min(back.relativeLuminance, ink.relativeLuminance) + 0.05
-        guard lighter / darker < 3 else { return nil }
+        // WCAG contrast, under the 4.5:1 every chip style keeps by itself
+        // (markup.md section 3).
+        guard InkPlate.contrast(ink, back) < 4.5 else { return nil }
         return "These words will be hard to read on this fill."
     }
 
@@ -725,7 +764,7 @@ extension AnnotationContent {
     /// on-canvas field both size themselves with this, so the bubble you type
     /// in is the bubble that lands.
     public func captionPillSize(forTextSize text: CGSize) -> CGSize {
-        CGSize(width: max(text.width + 2 * captionPadding, captionMinPillWidth),
+        CGSize(width: max(text.width + 2 * captionPadding, captionMinPillWidth) + captionLeadWidth,
                height: text.height + 2 * captionPadding)
     }
 
@@ -756,6 +795,7 @@ extension AnnotationContent {
         let text = caption ?? ""
         let chars = CGFloat(max(ArrowCaptionEntry.longestLine(of: text).count, 1) + 1)
         let w = max(chars * captionFontSize * 0.75 + 2 * captionPadding, captionMinPillWidth)
+            + captionLeadWidth
         let h = captionPillHeight(forLines: ArrowCaptionEntry.lineCount(of: text))
         return CGSize(width: w.rounded(.up), height: h.rounded(.up))
     }

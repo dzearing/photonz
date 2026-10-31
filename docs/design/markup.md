@@ -10,7 +10,7 @@ on 2026-10-31 from the prototype in
 | --- | --- |
 | Design system component | `mocks/shared/components/markup.css` + `markup.js` (`window.PZ.markup`) |
 | Specimen page | `mocks/pages/markup.html` (Design system ▸ Markup) |
-| App | `ArrowStyle`, `HandMadeArrow`, `LabelPlate`, `PillRasterizer`, `MeasureRasterizer`, `ColorStyles` roles, `ArrowStyleTiles`; chip style, marker and plate rule to be added (task `caption-and-measurement-chips-come-in-a-set-of-p`) |
+| App | `ChipStyle.swift` (`ChipStyle`, `ChipMarker`, `InkPlate` = `plateFor` and `glassFor`, `ChipLook`), `ChipRasterizer`, `ChipStyleTiles` (Chip and Marker rows); `ArrowStyle`, `HandMadeArrow`, `PillRasterizer` (the pill from before styles), `MeasureRasterizer` (measurements: not styled yet) |
 
 The design system component and the app follow the same rules below. When one
 changes, the other changes in the same piece of work, and this page with them.
@@ -37,8 +37,9 @@ from it:
   **4.8:1** (4.5 plus margin for the lit gradients).
 - A light ink, whose darkening would pass **22 percent**, **keeps its colour and
   takes dark words** (`#1d1d1f`).
-- Words in the ink on a white plate (Hairline) use the ink darkened to 4.5:1
-  against white.
+- Words in the ink on a white plate (Hairline) use the ink darkened to 4.6:1
+  against white, so rounding the colour to a whole byte never takes them
+  under 4.5:1 (at 4.5 exactly, 3 of the 5,472 sweep colours rounded to 4.48).
 
 Measured with the palette (WCAG contrast, `PZ.markup.plateFor`):
 
@@ -72,7 +73,18 @@ The other mixed styles hold for every colour without their own rule: Today's
 dark plate (worst 5.95:1) and the Highlighter swipe (worst 5.6:1).
 
 The app computes all of this in PhotonzCore (pure, tested) and must agree with
-this table, and with the sweep, to the hex digit.
+this table, and with the sweep, to the hex digit. The sweep's answers are
+written by the design system itself (`Scripts/markup-plate-fixture.cjs` into
+`docs/design/markup-plate-sweep.tsv`) and `ChipStyleTests` holds the app to
+every line of it; regenerate the file in the same commit as any rule change.
+
+**Glass in the app is drawn at 95 to 97 percent, not 82.** The tint and its
+words are the rule's above, to the hex digit. But the app blends a layer over
+the picture in linear light, where 82 percent lets far more of a white
+screenshot through than a browser's blend does (red Glass measured 3.2:1 over
+white at 80 percent). 95 percent is the least that keeps all 5,472 colours at
+4.5:1 that way, so Glass in the app reads as frosted through its lit rim and
+inner highlight more than through what shows behind it.
 
 ## 4. Chip styles (ten)
 

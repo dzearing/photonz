@@ -79,6 +79,9 @@ struct PartsInspector: View {
             // How an arrow is drawn, before the parts it paints: the style is
             // the whole arrow's look, and changes which parts there are to set.
             if Experiments.shared.shapePartsEnabled { ArrowStyleRow() }
+            // ...then the label's chip: its style and its marker, one look for
+            // the whole label (`ChipStyleTiles`).
+            if Experiments.shared.shapePartsEnabled { ArrowChipRow() }
             let column = rows.contains(where: \.hasSwitch)
             ForEach(rows) { row in
                 // The tick column is held open across the whole list, or not at

@@ -180,6 +180,42 @@ struct ArrowStyleRow: View {
     }
 }
 
+/// The picked arrows' label chip: the ten style tiles in the arrow's colour,
+/// and the marker at the chip's front (`ChipStyleTiles`).
+struct ArrowChipRow: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    @ViewBuilder private var lookBody: some View {
+        let arrows = editorState.shapeSelection.members.filter { $0.content.shape == .arrow }
+        if Experiments.shared.chipStylesEnabled, Experiments.shared.arrowCaptionsEnabled, !arrows.isEmpty {
+            let styles = Set(arrows.map(\.content.shownChipStyle))
+            let markers = Set(arrows.map(\.content.chipMarker))
+            let inks = Set(arrows.map { $0.content.colorHex.uppercased() })
+            let state = editorState
+            VStack(alignment: .leading, spacing: 10) {
+                ChipStyleTiles(selection: styles.count == 1 ? styles.first : nil,
+                               ink: inks.count == 1 ? (inks.first ?? "#FF3B30") : "#FF3B30") { style in
+                    let ids = state.shapeSelection.members
+                        .filter { $0.content.shape == .arrow }.map(\.id)
+                    state.setChipStyle(ids: ids, style)
+                }
+                .equatable()
+                ChipMarkerPicker(selection: markers.count == 1 ? markers.first : nil) { marker in
+                    let ids = state.shapeSelection.members
+                        .filter { $0.content.shape == .arrow }.map(\.id)
+                    state.setChipMarker(ids: ids, marker)
+                }
+                .equatable()
+            }
+            .panelStartProbe(.row, owner: "Chip Style")
+        }
+    }
+}
+
 /// What the arrow ENDS IN. A picture rather than a number, so it carries its
 /// own caption instead of a slider's readout.
 ///
