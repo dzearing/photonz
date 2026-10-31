@@ -1,0 +1,49 @@
+{
+  "feature": "Ask changes what it just made",
+  "epic": "agent-ask",
+  "task": "ask-changes-what-it-just-made-make-the-water-blu",
+  "summary": "After Ask paints or draws something, a follow-up like \"make the water bluer\" or \"make the sun bigger\" changes just that part, in place, as its own row and one undo step. Ask now remembers what it made in this window, sees the canvas, and can recolour, resize, move or remove a named part.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Ask's built-in model set up in Settings > Ask.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Make a new 960 by 640 picture, press Command K, type \"paint a beach at sunset\" and press Return.",
+      "shot": "2026-10-31-ask-changes-what-it-made-1-painted-sc.png"
+    },
+    {
+      "do": "Press Command K, type \"make the water bluer\" and press Return.",
+      "shot": "2026-10-31-ask-changes-what-it-made-2-bluer-sc.png"
+    },
+    {
+      "do": "Press Command K, type \"make the sun bigger\" and press Return.",
+      "shot": "2026-10-31-ask-changes-what-it-made-3-bigger-sc.png"
+    },
+    {
+      "do": "Press Command Z once.",
+      "shot": "2026-10-31-ask-changes-what-it-made-4-undone-sc.png"
+    },
+    {
+      "do": "Ask \"make it less saturated\" or \"remove the palm tree\" and see whether it picks the part you meant."
+    },
+    {
+      "do": "Turn the \"Made the water bluer\" row off and ask \"make the water greener\": the water it forgot is no longer remembered."
+    }
+  ],
+  "evaluate": [
+    "After \"make the water bluer\", is only the water bluer, with its brushwork and shading still there?",
+    "Does each follow-up read as its own row in your words (\"Made the water bluer\", \"Made the sun bigger\")?",
+    "Does one Command Z take back only the last follow-up?",
+    "Is the wait for a follow-up (about two minutes on this Mac) acceptable, or does it need to be faster before this feels like a conversation?",
+    "On a drawing, does \"make the door red\" find the door, not everything else of the same colour?"
+  ],
+  "rough": [
+    "Reel and contact sheet: 2026-10-31-ask-changes-what-it-made-reel.mp4 and 2026-10-31-ask-changes-what-it-made-sheet.png (the four window pictures above, in order).",
+    "Two-turn eval (12 conversations, judged on the right part, the words, and nothing else moving): before this task 3 of 12 (run baseline-before: paintings answered \"I can't\", added a second sun, or wiped the meadow white); first build 7 of 12 (after-1); second build 9 of 12 (after-2), one short of the 10 of 12 bar, so the task stays open. Two of the three misses there (a sun icon shrunk whole, a photo squashed by width) are fixed in cee26b92 and not yet re-measured; the third (the primary button turned green in three of its four states, the default state left blue) is not fixed.",
+    "A follow-up takes about two minutes on this Mac, nearly all of it the model reading the request with its picture of the canvas.",
+    "A photo is one picture: \"warmer\", \"darker\", \"smaller\" work on the whole photo through its colour grade, but \"make the dog's collar red\" cannot pick a part of it. That needs an edit model, noted on measure-whether-qwen-image-2-1-can-paint-and-edi.",
+    "A drawing traced into colour layers has no part names until a follow-up points inside a piece; Ask then splits that piece out under the name (\"Door\"). It depends on the model reading a point off the picture correctly.",
+    "Growing a painted part covers what is next to it (the bigger sun's glow now covers a small cloud), and shrinking one shows what the sketch painted under it. That is how paint behaves, but a person may expect the neighbours to stay.",
+    "No mock covers this: it adds no control, and the rows are the Agent group's existing rows.",
+    "The Paint layer stays picked after Ask paints, so its box and rotate handle sit over the painting in every picture. That is how a painting lands today, not something this task changed."
+  ]
+}
