@@ -87,7 +87,8 @@ public enum AskMemory {
         When the request is about something made earlier ("it", "the water", "bluer", "bigger", "less", \
         "again but smaller"), change that thing where it is: change_part with the part's name and its \
         layer for a part of a painting or a drawing, set_layer for a whole layer. For a colour the words \
-        name ("bluer", "more purple", "red") give color, that colour. Never make it again \
+        name ("bluer", "more purple", "red") give color, that colour. For bigger or smaller give scale \
+        (it keeps the shape), never a width or height alone. Never make it again \
         or paint over it, and leave every other part as it is.
         """)
         return lines.joined(separator: "\n")

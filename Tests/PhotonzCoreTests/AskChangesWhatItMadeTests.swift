@@ -205,8 +205,10 @@ struct AskChangesWhatItMadeTests {
                                                                paint: Paint(hex: "#FFD040"), strokeWidth: 0,
                                                                fill: Paint(hex: "#FFD040"))),
                         frame: CGRect(x: 40, y: 20, width: 40, height: 40))
-        let hill = Layer(name: "Hill", content: .annotation(AnnotationContent(shape: .rectangle, strokeWidth: 0, colorHex: "#3A8040",
-                                                                              fillColorHex: "#3A8040")),
+        let field = [CGPoint(x: 0, y: 0), CGPoint(x: 200, y: 0), CGPoint(x: 200, y: 40), CGPoint(x: 0, y: 40)]
+        let hill = Layer(name: "Hill", content: .path(PathContent(anchors: field.map { PathAnchor(point: $0) }, isClosed: true,
+                                                                 paint: Paint(hex: "#3A8040"), strokeWidth: 0,
+                                                                 fill: Paint(hex: "#3A8040"))),
                          frame: CGRect(x: 0, y: 60, width: 200, height: 40))
         let group = Layer(name: "Landscape", content: .group(GroupContent(children: [hill, sun])),
                           frame: CGRect(x: 0, y: 0, width: 200, height: 100))
@@ -286,6 +288,21 @@ struct AskChangesWhatItMadeTests {
         #expect(doc.layer(id: piece)?.annotation?.fill?.hex.uppercased() == "#34C759")
     }
 
+    @Test("A whole drawing scaled stays centred on its middle, and a point inside it picks a piece over the whole")
+    func groupScaleAndPointWins() throws {
+        var (document, group, sun) = Self.drawing()
+        let before = AgentDrawing.box(of: try #require(document.layer(id: group)))
+        _ = try document.agentChangePart(Self.change(#"{"part": "landscape", "scale": 0.5}"#)).get()
+        let after = AgentDrawing.box(of: try #require(document.layer(id: group)))
+        #expect(abs(after.midX - before.midX) < 0.5 && abs(after.midY - before.midY) < 0.5, "\(before) -> \(after)")
+        #expect(abs(after.width - before.width / 2) < 0.5)
+        var (fresh, freshGroup, freshSun) = Self.drawing()
+        let id = freshGroup.uuidString
+        _ = try fresh.agentChangePart(Self.change(#"{"part": "the landscape", "layer": "\#(id)", "scale": 0.5, "at": {"x": 60, "y": 40}}"#)).get()
+        #expect(fresh.layer(id: freshSun)?.frame.width == 20, "the piece under the point shrank, not the whole")
+        _ = sun
+    }
+
     // MARK: The memory
 
     @Test("The memory names each recent request, what it did and the parts of what it made, oldest first")
@@ -302,6 +319,7 @@ struct AskChangesWhatItMadeTests {
         #expect(prompt.range(of: "paint a beach")?.lowerBound ?? prompt.endIndex
                 < prompt.range(of: "make the water bluer")?.lowerBound ?? prompt.startIndex)
         #expect(prompt.contains("change_part"))
+        #expect(prompt.contains("scale"), "bigger and smaller go to scale, which keeps the shape")
         #expect(AskMemory.prompt([]).isEmpty)
         _ = document
     }

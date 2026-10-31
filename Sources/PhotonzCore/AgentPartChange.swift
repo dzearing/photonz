@@ -201,8 +201,9 @@ extension PhotonzDocument {
         }
         for layer in candidates { find(layer, inside: scope == nil || layer.id != scope?.id || layer.group == nil) }
         // The layer given is itself the part asked for ("the fox", on the
-        // drawing's own group): the whole of it changes.
-        if named.isEmpty, let scope, change.names(scope.name) { named = [scope.id] }
+        // drawing's own group): the whole of it changes, unless a point
+        // says which piece of it.
+        if named.isEmpty, change.at == nil, let scope, change.names(scope.name) { named = [scope.id] }
         // Nothing of that name, and a point given: the piece drawn there.
         if named.isEmpty, let point = change.at {
             switch splitPiece(at: point, named: change.part, within: candidates) {
