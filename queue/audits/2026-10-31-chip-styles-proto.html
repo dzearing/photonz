@@ -86,41 +86,46 @@
   .s-today .chip { background: color-mix(in srgb, var(--ink) 35%, #111); color: #fff;
     border: 2px solid var(--ink); border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
 
-  /* 2. Solid ink pill (the classic redline) */
-  .s-solid .chip { background: var(--ink); color: #fff; border-radius: 999px;
-    box-shadow: 0 1px 2px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.08); }
+  /* 2. Solid pill: no edge; a lit fill, lighter at the top, light along the top inside */
+  .s-solid .chip { color: #fff; border-radius: 999px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 82%, #fff), var(--ink) 55%, color-mix(in srgb, var(--ink) 88%, #000));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 1px 3px rgba(0,0,0,.22);
+    text-shadow: 0 .5px 0 rgba(0,0,0,.18); }
 
-  /* 3. Flat squircle: continuous corners, no outline */
+  /* 3. Flat squircle: truly flat. No edge, no shadow */
   .s-squircle .chip { background: var(--ink); color: #fff; border-radius: 7px; padding: 6px 8px; }
 
-  /* 4. Hairline plate: white plate, ink hairline, ink text */
+  /* 4. Hairline plate: the one style defined by its outline; flat, no shadow */
   .s-hairline .chip { background: #fff; color: color-mix(in srgb, var(--ink) 80%, #000);
-    border: 1px solid var(--ink); border-radius: 5px; padding: 5px 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    border: 1px solid var(--ink); border-radius: 5px; padding: 5px 8px; }
 
-  /* 5. Glass: translucent material, light inner border, soft shadow */
-  .s-glass .chip { color: #fff; border-radius: 9px; padding: 6px 10px;
-    background: color-mix(in srgb, var(--ink) 55%, rgba(20,20,22,.55));
-    backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.28), inset 0 1px 0 rgba(255,255,255,.35), 0 4px 14px rgba(0,0,0,.28);
-    text-shadow: 0 1px 1px rgba(0,0,0,.25); }
+  /* 5. Glass: frosted, lit fill; a gradient rim that catches light top-left and
+     bottom-right and fades away along the sides */
+  .s-glass .chip { color: #fff; border-radius: 10px; padding: 6px 10px; border: 1px solid transparent;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--ink) 52%, rgba(255,255,255,.22)), color-mix(in srgb, var(--ink) 62%, rgba(10,10,12,.35))) padding-box,
+      linear-gradient(135deg, rgba(255,255,255,.85) 0%, rgba(255,255,255,.12) 35%, rgba(255,255,255,0) 55%, rgba(255,255,255,.18) 80%, rgba(255,255,255,.55) 100%) border-box;
+    backdrop-filter: blur(16px) saturate(170%); -webkit-backdrop-filter: blur(16px) saturate(170%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,.25), 0 6px 18px rgba(0,0,0,.22), 0 1px 2px rgba(0,0,0,.18);
+    text-shadow: 0 1px 1px rgba(0,0,0,.22); }
 
-  /* 6. Paper: light plate, dark text, ink accent stripe */
+  /* 6. Paper: no outline; it lifts off the picture on a soft, layered shadow */
   .s-paper .chip { background: #fffffd; color: #1d1d1f; border-radius: 6px; padding: 6px 9px 6px 12px;
-    box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.18);
+    box-shadow: 0 1px 1px rgba(0,0,0,.10), 0 3px 6px rgba(0,0,0,.10), 0 10px 22px rgba(0,0,0,.14);
     background-image: linear-gradient(var(--ink), var(--ink)); background-repeat: no-repeat;
     background-size: 3px calc(100% - 8px); background-position: 4px 50%; }
 
   /* 7. Spec badge: graphite plate, ink dot, mono numerals (Figma Dev Mode / Xcode feel) */
   .s-spec .chip { background: rgba(28,28,30,.92); color: #f5f5f7; border-radius: 5px; padding: 5px 8px 5px 18px;
     font-family: "SF Mono", ui-monospace, Menlo, monospace; font-weight: 500; font-size: 11.5px;
-    box-shadow: 0 0 0 .5px rgba(255,255,255,.12) inset, 0 2px 6px rgba(0,0,0,.3); }
+    box-shadow: 0 2px 6px rgba(0,0,0,.28); }
   .s-spec .chip::before { content: ""; position: absolute; left: 7px; top: 50%; width: 6px; height: 6px;
     margin-top: -3px; border-radius: 50%; background: var(--ink); }
 
   /* 8. Callout tab: ink plate with a small pointer to what it labels */
-  .s-callout .chip { background: var(--ink); color: #fff; border-radius: 6px; padding: 6px 9px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .s-callout .chip { color: #fff; border-radius: 6px; padding: 6px 9px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 84%, #fff), var(--ink));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 2px 6px rgba(0,0,0,.22); }
   /* The beak is part of the plate (overlaps it by a pixel) and sits where the
      arrow leaves the caption, pointing along it. */
   .s-callout .chip::after { content: ""; position: absolute; left: -5px; top: 50%; margin-top: -6px;
@@ -157,7 +162,7 @@
   .slider { width: 110px; accent-color: #0a84ff; }
   .stage { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
   .stage .scene { width: 340px; height: 210px; zoom: 1.45; margin: 0 auto; }
-  .stage { background: #fbfbfd; }
+  .stage { background: var(--card); }
   .stage figcaption { background: var(--card); }
   .stage figcaption { padding: 10px 14px 12px; color: var(--muted); font-size: 12px; }
   .sectionhead { padding: 22px 20px 0; font-size: 13px; font-weight: 600; }
@@ -235,11 +240,11 @@
 <script>
   const styles = [
     ["s-today", "1. Today", "Dark plate in the ink, bright ink outline. What ships now.", "current"],
-    ["s-solid", "2. Solid pill", "Ink fill, white text, no outline. The classic redline look."],
-    ["s-squircle", "3. Flat squircle", "Ink fill with continuous corners, tighter. Reads as a tag, not a bubble."],
-    ["s-hairline", "4. Hairline plate", "White plate, ink hairline and ink text. Quiet; best on dark pictures."],
-    ["s-glass", "5. Glass", "Translucent ink over the picture, light inner edge, soft shadow. Liquid Glass feel."],
-    ["s-paper", "6. Paper", "Light plate, dark text, a thin ink stripe. Reads on anything."],
+    ["s-solid", "2. Solid pill", "Lit ink fill, lighter at the top, no edge at all. The classic redline, polished."],
+    ["s-squircle", "3. Flat squircle", "Truly flat: ink fill, smooth corners, no edge, no shadow. Reads as a tag."],
+    ["s-hairline", "4. Hairline plate", "White plate defined by a thin ink outline, flat. Quiet; best on dark pictures."],
+    ["s-glass", "5. Glass", "Frosted ink over the picture with a gradient rim that catches the light. Liquid Glass feel."],
+    ["s-paper", "6. Paper", "Light card lifted on a soft shadow, dark text, a thin ink stripe. Reads on anything."],
     ["s-spec", "7. Spec badge", "Graphite plate, ink dot, monospaced numbers. Developer handoff feel."],
     ["s-callout", "8. Callout tab", "Ink plate whose caption points at what it labels."],
   ];
