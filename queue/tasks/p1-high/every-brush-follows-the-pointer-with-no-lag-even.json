@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T15:32:07.793Z",
-  "updated": "2026-10-30T23:47:26.169Z",
+  "updated": "2026-10-31T01:08:46.967Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-25: 'the watercolor looks good but it's slow if i increase the size to 150pt or more, feels quite laggy', then 'actually so does oil... still trying everything but the brushes feel very laggy to use'. A cause shared by every medium (the live overlay, CanvasBrush.swift) is as likely as per-medium cost. Not reproduced in the intake window. Theories only: Sources/PhotonzRender/Watercolour.swift mark(_:) walks every pixel of a box radius*(1+farthest) around each dab on the CPU, so the work grows with the square of the size and with how close dabs are spaced; reach() loops over every earlier wet wash per pixel; WetField.ensure copies the whole field when it grows; and the live stroke (Sources/Photonz/CanvasBrush.swift) may be building a full CGImage of the overlay per drag. Measure which of these it actually is before fixing.",
@@ -95,11 +95,24 @@
     {
       "t": "2026-10-30T23:47:26.168Z",
       "note": "Most of the bar reached (8bc940fb): every size on 12 MP and up to 300 pt on a screenshot under 8 ms; 500 pt chalk, charcoal and oil on a screenshot still 9 to 12.6 ms, waiting on the thinned-end card"
+    },
+    {
+      "t": "2026-10-31T00:02:27.424Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T01:08:36.612Z",
+      "note": "2026-10-31: user kept the thinned end (card on painting-is-what-you-see, option a), so the cost had to come out of the end's redraw. A move with a new dab used to take the old end back, lay the dab just settled, and lay the new end. Now the dabs the next move will settle are laid in the idle gap after a move is on screen (LiveMarker.layAhead, on its own serial queue; every entry point waits for it), and a wrong guess (a release less than a spacing on) is taken back. Same bytes: BigBrushKeepsItsPixels fingerprints, new LaidAheadTests. Probe p95, 500 pt on a screenshot: chalk 12.6->7.4, charcoal 10.2->6.7, oil 9.0->5.9, watercolour 8.2->7.4; every medium at 20-500 pt on 12 MP (50 strokes and empty) and on a screenshot now under 8 ms. Table: queue/audits/2026-10-31-brush-lag-measures.txt. Bug found on the way: a move with no dab read the stroke while the gap's work was changing it, and froze the stroke; fixed by waiting at the top of every entry point. Seven brush walks still fail at the brush chooser (pressing tiles by name), the same ones the last sweep found, owned by walks-that-fail-in-the-full-sweep-26. Looked at the walk's capture: every medium painted as before."
+    },
+    {
+      "t": "2026-10-31T01:08:46.965Z",
+      "note": "Every medium at 20, 50, 150, 300 and 500 pt is inside one 120 Hz frame at p95 in the probe at Next defaults, on 12 MP with 50 strokes, an empty 12 MP layer and a screenshot (worst 7.4 ms; 500 pt screenshot chalk 23.3 -> 7.4, charcoal 20.8 -> 6.7, oil 22.3 -> 5.9, watercolour 16.2 -> 7.4). 35a68f9e lays the settling dab in the gap between moves; 8bc940fb kept a core ready and made dabs cheaper. Pixels byte for byte the same (BigBrushKeepsItsPixels, LaidAheadTests). Full suite green. Tables: queue/audits/2026-10-31-brush-lag-measures.txt; audit 2026-10-30-every-brush-follows-the-pointer-with-no-lag-even.json"
     }
   ],
-  "started": "2026-10-30T21:34:59.313Z",
+  "started": "2026-10-31T00:02:27.423Z",
   "walks": [
     "brushes-keep-up-with-the-hand-walk",
     "painting-holds-still-walk"
-  ]
+  ],
+  "completed": "2026-10-31T01:08:46.966Z"
 }
