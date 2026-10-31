@@ -143,6 +143,25 @@
     background: linear-gradient(180deg, color-mix(in srgb, var(--plate) 90%, #fff), var(--plate));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 2px 6px rgba(0,0,0,.22); }
 
+  /* 9. Two-tone badge: an ink tab holds the marker, dark words on white */
+  .s-twotone .chip { color: #1d1d1f; border-radius: 6px; padding: 6px 9px 6px 30px;
+    background: linear-gradient(90deg, var(--plate) 0 22px, #fff 22px);
+    box-shadow: 0 0 0 .5px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.16); }
+  .s-twotone .chip::before { content: ""; position: absolute; left: 8px; top: 50%; width: 6px; height: 6px; margin-top: -3px;
+    border-radius: 50%; background: var(--on-plate); opacity: .9; }
+  .s-twotone .mk { position: absolute; left: 4px; margin: 0; }
+  [data-mk]:not([data-mk="accent"]) .s-twotone .chip::before { display: none; }
+  [data-mk="none"] .s-twotone .chip { padding-left: 9px; background: #fff; }
+
+  /* 10. Highlighter: a swipe of ink behind dark words, on a white plate */
+  .s-highlight .chip { color: #1d1d1f; border-radius: 4px; padding: 6px 9px;
+    background:
+      linear-gradient(176deg, transparent 0 30%, color-mix(in srgb, var(--ink) 42%, #fff) 30% 84%, transparent 84%) 4px 0 / calc(100% - 8px) 100% no-repeat,
+      #fff;
+    box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 2px 7px rgba(0,0,0,.15); }
+  .tiles .s-twotone .chip { padding-left: 16px; background: linear-gradient(90deg, var(--plate) 0 11px, #fff 11px); }
+  .tiles .s-twotone .chip::before { left: 3.5px; width: 4px; height: 4px; margin-top: -2px; }
+
   /* ---------- Markers: the style's own accent, none, or a status icon ---------- */
   .chip { display: inline-flex; align-items: center; }
   .mk { display: none; flex: none; width: 1.15em; height: 1.15em; margin-right: .4em; margin-left: -.1em; }
@@ -160,7 +179,7 @@
   .insp h3 { margin: 2px 2px 10px; font-size: 11px; letter-spacing: .06em; color: #98989d; font-weight: 600; }
   .insp .r { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 12px; }
   .insp .lab { color: #c7c7cc; }
-  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 2px 12px; }
+  .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 0 2px 12px; }
   .tiles button { height: 34px; border-radius: 7px; border: 1px solid rgba(255,255,255,.1); background: #1c1c1e;
     display: grid; place-items: center; cursor: pointer; padding: 0; position: relative; }
   .tiles button[aria-pressed="true"] { outline: 2px solid #0a84ff; outline-offset: 1px; }
@@ -291,6 +310,8 @@
     ["s-paper", "6. Paper", "Light card lifted on a soft shadow, dark text, a thin ink stripe. Reads on anything."],
     ["s-spec", "7. Spec badge", "Graphite plate, ink dot, monospaced numbers. Developer handoff feel."],
     ["s-callout", "8. Lit tag", "Lit ink fill like 2, with small square corners. Reads as a label."],
+    ["s-twotone", "9. Two-tone badge", "An ink tab holds the marker; dark words on white. Like a label on GitHub."],
+    ["s-highlight", "10. Highlighter", "A swipe of ink behind dark words on a white plate. Pairs with the hand-made arrows."],
   ];
   const grid = document.getElementById("grid");
   const tpl = document.getElementById("scene");
@@ -340,7 +361,8 @@
   // ---------- Arrow styles: how the line is painted ----------
   // Simplified stand-ins for the app's five (ArrowStyle.swift): the same arrow,
   // the same two ends and colour, painted five ways.
-  const ARROWS = [["clean", "Clean"], ["handDrawn", "Hand-drawn"], ["marker", "Marker"], ["brush", "Brush"], ["sketch", "Sketch"]];
+  const ARROWS = [["clean", "Clean"], ["handDrawn", "Hand-drawn"], ["marker", "Marker"], ["brush", "Brush"], ["sketch", "Sketch"],
+                  ["dashed", "Dashed"], ["block", "Block"], ["neon", "Neon"], ["dotted", "Dotted"], ["elbow", "Elbow"]];
   function arrowSVG(style, P0, P1, P2, k = 1) {
     const B = t => [0, 1].map(i => (1 - t) ** 2 * P0[i] + 2 * (1 - t) * t * P1[i] + t * t * P2[i]);
     const D = t => [0, 1].map(i => 2 * (1 - t) * (P1[i] - P0[i]) + 2 * t * (P2[i] - P1[i]));
@@ -359,7 +381,41 @@
       return out;
     };
     const poly = pts => "M " + pts.map(pt).join(" L ");
+    const chevron = (w, extra = "") => `<path d="M ${pt(at(tip, -L, W))} L ${pt(tip)} L ${pt(at(tip, -L, -W))}" ${sty(w, "stroke-linejoin:round;" + extra)}/>`;
     switch (style) {
+      case "dashed":
+        return `<path d="M ${pt(P0)} Q ${pt(P1)} ${pt(at(tip, -L * .6, 0))}" ${sty(2 * k, "stroke-dasharray:" + 6 * k + " " + 4 * k + ";stroke-linecap:butt")}/>`
+          + `<path class="fillink" d="M ${pt(tip)} L ${pt(at(tip, -L, W))} L ${pt(at(tip, -L, -W))} Z"/>`;
+      case "block": {
+        const left = [], right = [], steps = 16, HL = 14 * k, HW = 10 * k;
+        let endT = .999;
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps * .78, p = B(t), nn = unit(D(t)), w = (1.4 + 3.2 * t / .78) * k;
+          left.push([p[0] - nn[1] * w, p[1] + nn[0] * w]); right.push([p[0] + nn[1] * w, p[1] - nn[0] * w]);
+        }
+        const last = left[left.length - 1], lastR = right[right.length - 1];
+        const d = "M " + left.map(pt).join(" L ") + ` L ${pt(at(tip, -HL, HW))} L ${pt(tip)} L ${pt(at(tip, -HL, -HW))} L ` + right.reverse().map(pt).join(" L ") + " Z";
+        return `<path class="fillink" d="${d}" style="stroke:var(--ink);stroke-width:${1 * k};stroke-linejoin:round"/>`;
+      }
+      case "neon": {
+        const line = `M ${pt(P0)} Q ${pt(P1)} ${pt(at(tip, -1 * k, 0))}`;
+        const glow = `filter:drop-shadow(0 0 ${2.5 * k}px var(--ink)) drop-shadow(0 0 ${6 * k}px var(--ink))`;
+        return `<g style="${glow}"><path d="${line}" ${sty(3.2 * k)}/>${chevron(3.2 * k)}</g>`
+          + `<path d="${line}" ${sty(1.1 * k, "stroke:color-mix(in srgb, var(--ink) 35%, #fff)")}/>`
+          + chevron(1.1 * k, "stroke:color-mix(in srgb, var(--ink) 35%, #fff)");
+      }
+      case "dotted":
+        return `<path d="M ${pt(P0)} Q ${pt(P1)} ${pt(at(tip, -2.5 * k, 0))}" ${sty(2.8 * k, "stroke-dasharray:0 " + 6.5 * k + ";stroke-linecap:round")}/>`
+          + `<circle class="fillink" cx="${P0[0]}" cy="${P0[1]}" r="${3.2 * k}"/>` + chevron(2.3 * k);
+      case "elbow": {
+        const c = [P2[0], P0[1]], r = 7 * k, sx = Math.sign(c[0] - P0[0]) || 1, sy = Math.sign(P2[1] - c[1]) || 1;
+        const uu = [0, sy], nn2 = [-uu[1], uu[0]];
+        const at2 = (p, a, b) => [p[0] + a * uu[0] + b * nn2[0], p[1] + a * uu[1] + b * nn2[1]];
+        const base = at2(tip, -L * .6, 0);
+        return `<path d="M ${pt(P0)} L ${pt([c[0] - sx * r, c[1]])} Q ${pt(c)} ${pt([c[0], c[1] + sy * r])} L ${pt(base)}" ${sty(2 * k, "stroke-linejoin:round")}/>`
+          + `<path class="fillink" d="M ${pt(tip)} L ${pt(at2(tip, -L, W))} L ${pt(at2(tip, -L, -W))} Z"/>`
+          + `<circle class="fillink" cx="${P0[0]}" cy="${P0[1]}" r="${2.4 * k}"/>`;
+      }
       case "clean": {
         const base = at(tip, -L, 0);
         return `<path d="M ${pt(P0)} Q ${pt(P1)} ${pt(at(tip, -L * .6, 0))}" ${sty(2 * k)}/>`
@@ -470,7 +526,7 @@
   // shows on any ink; on a light or graphite plate it uses its own colour.
   const SEM = { error: "#ff3b30", warning: "#ffcc00", success: "#34c759", info: "#0a84ff" };
   const SEM_ON_WHITE = { error: "#ff3b30", warning: "#ff9500", success: "#28a745", info: "#0a84ff" };
-  const FILLED = new Set(["s-today", "s-solid", "s-squircle", "s-glass", "s-callout"]);
+  const FILLED = new Set(["s-today", "s-solid", "s-squircle", "s-glass", "s-callout", "s-twotone"]);
   function icon(kind, disc, glyph) {
     const g = { error: `<path d="M6.6 6.6 13.4 13.4M13.4 6.6 6.6 13.4" stroke="${glyph}" stroke-width="2.2" stroke-linecap="round"/>`,
       success: `<path d="M5.7 10.4 8.7 13.3 14.4 7.3" fill="none" stroke="${glyph}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,

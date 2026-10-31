@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:36:38.642Z",
-  "updated": "2026-10-31T12:23:30.462Z",
+  "updated": "2026-10-31T12:29:53.272Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24 (picture: queue/audits/2026-10-24-user-caption-chip.png, a dark red pill with a brighter red outline reading 'hi' at the tail of a brush arrow): 'I don't love the style of the chip for arrows and measurements. I would love to have some style options for the chip, just like we have for the arrow, where you can choose different premade professional looking chips for typing text. Some might not be pills, maybe we do squirqle shaped, or the border might be more glass like with a suble inner border. Maybe some are flat and others are glass like. Each option should look professional and not like a kid made it for his myspace.'\n\nWhere: the plate rule is Sources/PhotonzCore/LabelPlate.swift (tone darkened to luminance 0.24, white ink, shadow 4 blur / 2 offset); drawn by Sources/PhotonzRender/PillRasterizer.swift; also used by canvas name chips (Sources/Photonz/CanvasComponents.swift), which must NOT change unless the runner decides on purpose and logs why. Arrow style pattern to copy: Sources/PhotonzCore/ArrowStyle.swift (enum, Codable, standard default) + Sources/Photonz/ArrowStyleTiles.swift. Grep captionChipColor for the caption's colour path. Measurement readouts sit on their caliper with no shadow (LabelPlate comment): a style must fit both.\n\nTraps: glass over a picture renders differently on canvas (live material) than in export (no backdrop); the export must look the same, so glass is probably drawn as a rendered blur of the picture under it in PhotonzRender, not a SwiftUI material. The coloured outline in today's chip is part of what the user dislikes; do not keep it as the default without a reason. Related done tasks: arrow-tool-captions-legible-pill-labels-like-the, captions-are-one-layer-positioned-and-styled-lik.",
@@ -67,6 +67,10 @@
     {
       "t": "2026-10-31T12:23:30.461Z",
       "note": "User, 2026-10-31, reviewed the arrow styles in the prototype: Appearance for an ARROW is, top to bottom: Arrow (the five ArrowStyleTiles: Clean, Hand-drawn, Marker, Brush, Sketch: how the line is painted), Chip (the chip style tiles), Color (one colour: tints line, head and chip in every arrow style), Marker, Size. A MEASUREMENT has no Arrow row. Under Advanced: Line, Head, Chip Fill/Edge/Text, Thickness, Head Size, Ending; Ending shows only for Clean, since the hand-made styles draw their own heads. Size may scale line weight with the chip; Thickness and Head Size override it when set by hand. Prototype updated (simplified stand-ins for the five arrow styles): queue/audits/2026-10-31-chip-styles-proto.html."
+    },
+    {
+      "t": "2026-10-31T12:29:53.271Z",
+      "note": "User, 2026-10-31: ten of each. ARROW styles to offer (five new beside the existing Clean, Hand-drawn, Marker, Brush, Sketch): Dashed (clean dashed line, solid head), Block (bold filled arrow whose shaft widens into a big head, CleanShot/Keynote look), Neon (glowing line with a light core and an open head), Dotted (round dots, a dot at the tail, open chevron head), Elbow (right-angle connector with a rounded corner, dot at the tail, solid head; for diagrams). New arrow styles join ArrowStyle (PhotonzCore) and the same rasterizer/tiles; each keeps the arrow's ends, colour, thickness and head size like the others. CHIP styles: ten, adding Two-tone badge (an ink tab on the left holding the marker or accent dot, dark words on white, like a GitHub label) and Highlighter (a swipe of ink behind dark words on a white plate). The Callout tab is gone (no beak); 8 is Lit tag. Tiles in rows of five. Prototype: queue/audits/2026-10-31-chip-styles-proto.html. Which to ship: all ten of each unless the user narrows it."
     }
   ]
 }
