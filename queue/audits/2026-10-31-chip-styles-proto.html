@@ -129,15 +129,20 @@
   .s-spec .chip::before { content: ""; position: absolute; left: 7px; top: 50%; width: 6px; height: 6px;
     margin-top: -3px; border-radius: 50%; background: var(--ink); }
 
-  /* 8. Callout tab: ink plate with a small pointer to what it labels */
-  .s-callout .chip { color: #fff; border-radius: 6px; padding: 6px 9px;
+  /* 8. Lit tag: lit ink fill like 2, but squarer, smaller corners */
+  .s-callout .chip { color: #fff; border-radius: 4px; padding: 6px 9px;
     background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 84%, #fff), var(--ink));
     box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 2px 6px rgba(0,0,0,.22); }
-  /* The beak is part of the plate (overlaps it by a pixel) and sits where the
-     arrow leaves the caption, pointing along it. */
-  .s-callout .chip::after { content: ""; position: absolute; left: -5px; top: 50%; margin-top: -6px;
-    border: 6px solid transparent; border-left: 0; border-right-color: var(--ink); }
-  .s-callout .chip.measure::after { display: none; }
+
+  /* ---------- Markers: the style's own accent, none, or a status icon ---------- */
+  .chip { display: inline-flex; align-items: center; }
+  .mk { display: none; flex: none; width: 1.15em; height: 1.15em; margin-right: .4em; margin-left: -.1em; }
+  .mk svg { width: 100%; height: 100%; display: block; }
+  [data-mk="error"] .mk, [data-mk="warning"] .mk, [data-mk="success"] .mk, [data-mk="info"] .mk { display: block; }
+  /* Any choice but the style's own accent takes the stripe and dot away. */
+  [data-mk]:not([data-mk="accent"]) .s-paper .chip { background-image: none; padding-left: 9px; }
+  [data-mk]:not([data-mk="accent"]) .s-spec .chip { padding-left: 8px; }
+  [data-mk]:not([data-mk="accent"]) .s-spec .chip::before { display: none; }
 
   /* ---------- Inspector prototype ---------- */
   .proto { display: grid; grid-template-columns: 260px 1fr; gap: 18px; padding: 20px 20px 0; align-items: start; }
@@ -153,7 +158,6 @@
   .tiles .chip { position: static; transform: none; font-size: 9px; padding: 3px 5px; }
   .tiles .s-spec .chip { padding-left: 11px; } .tiles .s-spec .chip::before { left: 4px; width: 4px; height: 4px; margin-top: -2px; }
   .tiles .s-paper .chip { padding-left: 8px; background-position: 3px 50%; background-size: 2px calc(100% - 6px); }
-  .tiles .s-callout .chip::after { left: -3px; border-width: 3px; border-left: 0; margin-top: -3px; }
   .dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .dots button { width: 18px; height: 18px; border-radius: 50%; border: 2px solid transparent; padding: 0; cursor: pointer; }
   .dots button[aria-pressed="true"] { border-color: #f5f5f7; }
@@ -172,6 +176,8 @@
   .stage { background: var(--card); }
   .stage figcaption { background: var(--card); }
   .stage figcaption { padding: 10px 14px 12px; color: var(--muted); font-size: 12px; }
+  .r.stack { flex-direction: column; align-items: stretch; gap: 6px; }
+  .mks { display: grid; grid-template-columns: 1.25fr 1.4fr repeat(4, 1fr); } .mks button { padding: 4px 0; display: inline-flex; align-items: center; justify-content: center; } .mks button svg { width: 13px; height: 13px; display: block; }
   .sectionhead { padding: 22px 20px 0; font-size: 13px; font-weight: 600; }
   @media (max-width: 700px) { .proto { grid-template-columns: 1fr; padding: 16px 16px 0; } }
 
@@ -206,6 +212,16 @@
     <div class="r"><span class="lab">Color</span>
       <div class="dots" id="pdots"></div>
     </div>
+    <div class="r stack"><span class="lab">Marker</span>
+      <div class="segm mks" id="pmk">
+        <button data-mk="none" title="None">None</button>
+        <button data-mk="accent" title="The style's own stripe or dot" aria-pressed="true">Accent</button>
+        <button data-mk="error" title="Error"></button>
+        <button data-mk="warning" title="Warning"></button>
+        <button data-mk="success" title="Done"></button>
+        <button data-mk="info" title="Info"></button>
+      </div>
+    </div>
     <div class="r"><span class="lab">Size</span>
       <div class="segm" id="psize"><button data-s="10.5">S</button><button data-s="12" aria-pressed="true">M</button><button data-s="14">L</button></div>
     </div>
@@ -227,7 +243,7 @@
 <div class="sectionhead">Every style, side by side</div>
 <main id="grid"></main>
 
-<footer>Each card shows the same slice of a screenshot: a measurement across the top and an arrow with a caption pointing at a button. Switch the background and the ink colour to see how each style holds up. Pick by number, or mix (for example, the shape of 3 with the plate of 6).</footer>
+<footer>Marker applies to every card: the style's own accent (Paper's stripe, Spec's dot), none, or a status icon. Each card shows the same slice of a screenshot: a measurement across the top and an arrow with a caption pointing at a button. Switch the background and the ink colour to see how each style holds up. Pick by number, or mix (for example, the shape of 3 with the plate of 6).</footer>
 
 <template id="scene">
   <div class="scene bg-light">
@@ -244,8 +260,8 @@
       <path d="M 196 166 C 176 152, 156 140, 130 129"/>
       <path class="head" d="M 120 125 L 133 122 L 129 134 Z"/>
     </svg>
-    <span class="chip num measure" style="left:117px; top:14px">190 px</span>
-    <span class="chip caption" style="left:262px; top:172px">Not aligned with text</span>
+    <span class="chip num measure" style="left:117px; top:14px"><span class="mk"></span>190 px</span>
+    <span class="chip caption" style="left:262px; top:172px"><span class="mk"></span>Not aligned with text</span>
   </div>
 </template>
 
@@ -258,7 +274,7 @@
     ["s-glass", "5. Glass", "Frosted ink over the picture with a gradient rim that catches the light. Liquid Glass feel."],
     ["s-paper", "6. Paper", "Light card lifted on a soft shadow, dark text, a thin ink stripe. Reads on anything."],
     ["s-spec", "7. Spec badge", "Graphite plate, ink dot, monospaced numbers. Developer handoff feel."],
-    ["s-callout", "8. Callout tab", "Ink plate whose caption points at what it labels."],
+    ["s-callout", "8. Lit tag", "Lit ink fill like 2, with small square corners. Reads as a label."],
   ];
   const grid = document.getElementById("grid");
   const tpl = document.getElementById("scene");
@@ -278,7 +294,7 @@
   const scap = document.createElement("figcaption");
   stage.appendChild(scap);
   const ptiles = document.getElementById("ptiles");
-  const setStageStyle = (cls, name) => {
+  let setStageStyle = (cls, name) => {
     stage.className = "stage " + cls;
     scap.textContent = name + ". Pick a colour: the line, head and chip all follow it, each the way this style uses it.";
     ptiles.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.cls === cls));
@@ -288,7 +304,7 @@
     const b = document.createElement("button");
     b.dataset.cls = cls; b.title = name; b.className = cls;
     b.innerHTML = `<span class="chip">48</span>`;
-    b.addEventListener("click", () => setStageStyle(cls, name));
+    b.addEventListener("click", () => setStageStyle(cls, name));  // resolved at click time
     ptiles.appendChild(b);
   }
   const inks = ["#ff375f", "#ff9f0a", "#ffd60a", "#30d158", "#0a84ff", "#bf5af2", "#1d1d1f", "#ffffff"];
@@ -318,6 +334,43 @@
   document.getElementById("pthick").addEventListener("input", e => {
     stage.querySelectorAll("svg.ink *").forEach(n => n.style.strokeWidth = e.target.value);
   });
+  // Status icons. On an ink-filled plate the icon sits on a white disc so it
+  // shows on any ink; on a light or graphite plate it uses its own colour.
+  const SEM = { error: "#ff3b30", warning: "#ffcc00", success: "#34c759", info: "#0a84ff" };
+  const SEM_ON_WHITE = { error: "#ff3b30", warning: "#ff9500", success: "#28a745", info: "#0a84ff" };
+  const FILLED = new Set(["s-today", "s-solid", "s-squircle", "s-glass", "s-callout"]);
+  function icon(kind, disc, glyph) {
+    const g = { error: `<path d="M6.6 6.6 13.4 13.4M13.4 6.6 6.6 13.4" stroke="${glyph}" stroke-width="2.2" stroke-linecap="round"/>`,
+      success: `<path d="M5.7 10.4 8.7 13.3 14.4 7.3" fill="none" stroke="${glyph}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`,
+      info: `<path d="M10 9.2V14.3" stroke="${glyph}" stroke-width="2.2" stroke-linecap="round"/><circle cx="10" cy="6.2" r="1.35" fill="${glyph}"/>`,
+      warning: `<path d="M10 7.6V11.6" stroke="${glyph}" stroke-width="2.1" stroke-linecap="round"/><circle cx="10" cy="14.4" r="1.25" fill="${glyph}"/>` }[kind];
+    const shape = kind === "warning"
+      ? `<path d="M10 2.2 18.4 17.2H1.6Z" fill="${disc}" stroke="${disc}" stroke-width="1.6" stroke-linejoin="round"/>`
+      : `<circle cx="10" cy="10" r="9" fill="${disc}"/>`;
+    return `<svg viewBox="0 0 20 20" aria-hidden="true">${shape}${g}</svg>`;
+  }
+  function styleOf(chip) { const f = chip.closest(".card, .stage"); return f ? [...f.classList].find(c => c.startsWith("s-")) : ""; }
+  function paintMarkers() {
+    const kind = document.documentElement.dataset.mk;
+    document.querySelectorAll(".mk").forEach(m => {
+      if (!SEM[kind]) { m.innerHTML = ""; return; }
+      const filled = FILLED.has(styleOf(m));
+      m.innerHTML = filled ? icon(kind, "#fff", SEM_ON_WHITE[kind])
+                           : icon(kind, SEM[kind], kind === "warning" ? "#1d1d1f" : "#fff");
+    });
+  }
+  document.querySelectorAll("#pmk button").forEach(b => {
+    if (SEM[b.dataset.mk]) b.innerHTML = icon(b.dataset.mk, SEM[b.dataset.mk], b.dataset.mk === "warning" ? "#1d1d1f" : "#fff");
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#pmk button").forEach(x => x.setAttribute("aria-pressed", x === b));
+      document.documentElement.dataset.mk = b.dataset.mk;
+      paintMarkers();
+    });
+  });
+  document.documentElement.dataset.mk = "accent";
+  const _setStageStyle = setStageStyle;
+  setStageStyle = (cls, name) => { _setStageStyle(cls, name); paintMarkers(); };
+  ptiles.querySelectorAll("button").forEach(b => b.onclick = null);
   setStageStyle("s-paper", "6. Paper");
 
   document.querySelectorAll("#bg button").forEach(b => b.addEventListener("click", () => {
