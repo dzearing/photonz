@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-01T12:45:05.877Z",
-  "updated": "2026-11-01T14:13:11.813Z",
+  "updated": "2026-11-01T14:14:14.328Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-01 (intake): 'what happened to the rework on selection ux especially with 3d transforms?' Answer: the mock was reworked with the user on 2026-10-24 (eight lang-selection commits, 07:31 to 15:07) and no build task was filed, so the loop never knew. Folds in on-a-small-picked-object-the-3d-turn-handles-are (filed by the user 2026-10-20, never built, resequenced 13 times). Related, done earlier: the-3d-rotation-handles-are-on-a-picked-layer-ag, tilt-flip-and-push-layers-in-depth-from-the-canv, resize-squares-on-a-layer-turned-in-3d-take-the, every-transform-handle-answers-the-pointer-befor (2026-10-11 to 14). Keep the mock as is; a departure is a decision card with a marked screenshot.",
@@ -56,6 +56,10 @@
     {
       "t": "2026-11-01T14:13:11.812Z",
       "note": "User, 2026-11-01, correction: Shift ALWAYS keeps proportions (Mac), it never frees a picture. A picture's corners keep proportions anyway; a picture is stretched one way by its edge pills. A shape's corners are free unless Shift. This replaces the earlier Photoshop-style Shift toggle for pictures. Today's app (CanvasPointerDrags.swift: aspect = resizeKeepsShapeByDefault ? !shift : shift) must change to: aspect = resizeKeepsShapeByDefault || shift."
+    },
+    {
+      "t": "2026-11-01T14:14:14.327Z",
+      "note": "User, 2026-11-01, FINAL on resize (supersedes the two earlier notes today): 'I consistently want the aspect ratio preserved, and almost never want to stretch something.' A corner drag keeps proportions for EVERY layer, picture or shape, in every mode but Distort; Shift + corner stretches freely; an edge pill stretches one way; Option resizes from the centre. In the app: CanvasPointerDrags.swift today has aspect = resizeKeepsShapeByDefault ? !shift : shift; it becomes aspect = !shift for corner handles (edge handles unchanged). Hover label on a corner: 'Resize · Shift stretch · Cmd distort'. This deliberately departs from Keynote's free-by-default shapes; the user's preference wins."
     }
   ]
 }
