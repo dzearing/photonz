@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:19:06.785Z",
-  "updated": "2026-11-01T21:33:45.636Z",
+  "updated": "2026-11-01T21:40:25.352Z",
   "deps": [
     "a-walk-s-press-on-a-picture-tile-swatch-or-colou"
   ],
@@ -91,10 +91,23 @@
     {
       "t": "2026-11-01T21:33:45.635Z",
       "note": "Run once by a-walk-s-press-on-a-picture-tile-swatch-or-colou on 2026-11-01 after its fix to how walks click (probe built from that change): Scripts/playtest.sh Scripts/playtest/any-colour-chip-reads-walk.json --no-build -> status ok in 70s, 17 real window pictures (1-white-* through 6-automatic). The custom colour well, HEX, every Chip tile, Color Blue and Reset Colors all took effect by pointer press. Its dependency is done once that task closes; this task's walk item can now be ticked by its own runner."
+    },
+    {
+      "t": "2026-11-01T21:37:11.825Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T21:40:25.244Z",
+      "note": "2026-11-01: ran Scripts/playtest.sh Scripts/playtest/any-colour-chip-reads-walk.json twice (build, then --no-build): status ok both times, no flags in setup, 17 real window pictures, screen unlocked. expectChipContrast passed for all ten chip styles in light green and indigo over white, black and photo; worst 4.68:1 (Hairline, light green), Glass worst 4.83:1 (indigo over black). Looked at 1-white-indigo-glass, 2-black-indigo-glass, 3-photo-light-green-glass, 5-warning, 6-automatic: chips read, the warning and Reset Colors show under the Color row and Reset brings the white automatic words back. Audit updated with those five pictures. Nothing left rough beyond the audit's rough list (default red ink is on arrow-and-measurement-appearance-shows-only-styl)."
+    },
+    {
+      "t": "2026-11-01T21:40:25.350Z",
+      "note": "Last item ticked: any-colour-chip-reads-walk passes by pointer press at Next defaults (custom light green and indigo, every chip style, 4.5:1 or better on white, black and photo; worst 4.68). Color row, retint, warning and Reset Colors shipped earlier in 91a9d770. Audit queue/audits/2026-10-31-any-colour-chip-reads.json now carries five real window pictures."
     }
   ],
-  "started": "2026-10-31T15:22:52.840Z",
+  "started": "2026-11-01T21:37:11.824Z",
   "walks": [
     "any-colour-chip-reads-walk"
-  ]
+  ],
+  "completed": "2026-11-01T21:40:25.351Z"
 }
