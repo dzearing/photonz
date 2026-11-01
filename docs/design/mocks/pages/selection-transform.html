@@ -110,7 +110,7 @@
   <div class="st-pan" style="margin-top:var(--gap)">
     <h5>KEYS</h5>
     <table class="st-keys">
-      <tr><td>drag corner</td><td>Resize, in every mode but Distort. ⌥ from the centre, ⇧ keeps proportions</td></tr>
+      <tr><td>drag corner</td><td>Resize, in every mode but Distort. A picture keeps its proportions and ⇧ frees them; a shape is free and ⇧ keeps them. ⌥ from the centre</td></tr>
       <tr><td>drag knob</td><td>Turn it flat, in every mode. ⇧ 15° steps</td></tr>
       <tr><td>⌘ drag edge pill</td><td>Skew along that edge</td></tr>
       <tr><td>⌘ drag corner</td><td>Distort: that corner moves freely (switches to Distort)</td></tr>
@@ -145,7 +145,7 @@
   const shot = `<div class="st-shot"><div class="st-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
     <h4>Checkout</h4><div class="st-row" style="width:90%"></div><div class="st-row" style="width:70%"></div><div class="st-row" style="width:82%"></div><span class="st-btn">Pay now</span></div>`;
   const layers = [
-    makeLayer({ name: "Screenshot", x: 150, y: 150, w: 300, h: 210, html: shot }),
+    makeLayer({ name: "Screenshot", picture: true, x: 150, y: 150, w: 300, h: 210, html: shot }),
     makeLayer({ name: "Badge", x: 520, y: 330, w: 120, h: 120, cls: "st-b", html: `<div class="st-shot" style="color:#fff;font-weight:700;font-size:20px;display:grid;place-items:center">NEW</div>`, rx: 0, ry: -35 }),
   ];
   let pick = layers[0];
@@ -249,7 +249,7 @@
   const ROTATE_CURSOR = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9a8 8 0 0 1 14 0" stroke="#fff" stroke-width="4"/><path d="M5 9a8 8 0 0 1 14 0" stroke="#000" stroke-width="1.6"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#fff" stroke-width="4"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#000" stroke-width="1.6"/></g></svg>')}") 12 8, grab`;
   let hot = null;                         // the grip under the pointer
   const DOES = {
-    size: { c: "Resize · ⌘ distort", e: "Resize · ⌘ skew", knob: "Turn" },
+    size: { c: "Resize · ⇧ free · ⌘ distort", e: "Resize · ⌘ skew", knob: "Turn" },
     "3d": { c: "Resize", e: "Tip and swing · ⌥ perspective", knob: "Turn", depth: "Push back or pull forward" },
     distort: { c: "Move this corner", e: "Move this edge", knob: "Turn the shape" },
   };
@@ -410,7 +410,10 @@
       } else {
         const sx = [-1, 1, 1, -1][i], sy = [-1, -1, 1, 1][i];
         let w = s0.w + sx * dx * (e.altKey ? 2 : 1), h = s0.h + sy * dy * (e.altKey ? 2 : 1);
-        if (e.shiftKey) { const k = Math.max(w / s0.w, h / s0.h); w = s0.w * k; h = s0.h * k; }
+        // A picture keeps its proportions unless Shift frees them; a shape is the
+        // other way round (the app's resizeKeepsShapeByDefault, Photoshop since 2019).
+        const keep = L.picture ? !e.shiftKey : e.shiftKey;
+        if (keep) { const k = Math.max(w / s0.w, h / s0.h); w = s0.w * k; h = s0.h * k; }
         w = Math.max(30, w); h = Math.max(30, h);
         if (e.altKey) { L.x = s0.x + (s0.w - w) / 2; L.y = s0.y + (s0.h - h) / 2; }
         else { L.x = sx < 0 ? s0.x + s0.w - w : s0.x; L.y = sy < 0 ? s0.y + s0.h - h : s0.y; }
