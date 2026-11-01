@@ -45,7 +45,7 @@
     { "comment": "The drawn corner BEFORE the pull, against the same number the step after the pull claims. The stage below says the bottom right must not move, and two claims of one number is the only way to say that in one place.", "do": "expectBox", "layer": "Rectangle 2", "corner": "bottomRight", "onScreen": [462.41, 386.32], "within": 1.5 },
     { "comment": "...and the bar beside it, which nothing in this walk ever touches after the group is made.", "do": "expectBox", "layer": "Rectangle", "corner": "bottomRight", "onScreen": [653.74, 562.37], "within": 1.5 },
 
-    { "do": "drag", "from": [370, 289], "to": [320, 250], "steps": 10, "modifiers": ["command"] },
+    { "do": "drag", "from": [370, 289], "to": [320, 250], "steps": 10, "modifiers": ["command", "shift"] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "5-label-resized", "note": "the top left handle pulled out and up the screen; the bottom right corner should not have moved at all" },
     { "comment": "Same again: (279.55, 320.61) in the card's own space, read on the upright canvas once the card's anchor has taken the swing.", "do": "expectBox", "layer": "Rectangle 2", "at": [280.17, 317.11], "size": [180.45, 79.39], "within": 1.5 },

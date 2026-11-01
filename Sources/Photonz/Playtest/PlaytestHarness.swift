@@ -3369,46 +3369,57 @@ private final class Run {
             note(number, step.name, try checkDragReadout(says: says, absent: absent),
                  state: describe())
 
-        case .spaceHandle(let handle, let by, let steps, let modifiers, let readout, let watch):
-            // As a hand does it: rest on the knob so the arcs come out, then
-            // take the arc (or the arrow) a little way along and drag it.
+        case .spaceHandle(let handle, let wanted, let steps, let modifiers, let readout, let watch):
             let canvas = try requireCanvas()
             let flags = eventFlags(modifiers)
-            guard let before = canvas.drawnSpaceHandles else {
-                throw Failure(description: "no picked layer is wearing a turn knob, so there is no "
-                    + "3D handle to take hold of")
-            }
-            let knob = before.handles.knob
-            if let window = canvas.window {
-                _ = PlaytestPointer.rest(at: canvas.convert(knob, to: nil), in: window)
-            }
-            if let event = mouseEvent(.mouseMoved, at: knob, on: canvas, flags: []) {
-                canvas.mouseMoved(with: event)
-            }
-            await sleep(0.1)
-            guard let shown = canvas.drawnSpaceHandles else {
-                throw Failure(description: "resting on the turn knob took the 3D handles away")
-            }
+            var by = wanted
             let grip: CGPoint
-            switch handle {
-            case nil:
-                grip = shown.handles.knob
-            case .swing?:
-                // A hand's width along the flat arc from the knob, toward
-                // the end the drag travels to.
-                let points = shown.handles.swingArc.points(16)
-                grip = by.x >= 0 ? points[13] : points[3]
-            case .tip?:
-                grip = shown.handles.tipArc.points(8)[by.y <= 0 ? 2 : 6]
-            case .depth?:
-                let arrow = shown.handles.depthArrow
-                grip = CGPoint(x: (arrow.tail.x + arrow.head.x) / 2, y: (arrow.tail.y + arrow.head.y) / 2)
-            }
             let name = handle?.rawValue ?? "knob"
-            guard canvas.spaceHandleHit(atView: grip) == handle else {
-                throw Failure(description: "the \(name) handle did not answer a press at view "
-                    + "\(short(grip)): the arcs are \(shown.arcs ? "out" : "away"), the depth arrow is "
-                    + "\(shown.depth ? "showing" : "hidden")")
+            if Experiments.shared.transformModesEnabled {
+                // The reworked selection (`next-transform-modes`) has no arcs:
+                // the same turn is taken on its grips, as a hand would. A
+                // swing on the right edge pill and a tip on the top one, in
+                // 3D, at the arcs' own rate; a push on the grip below, whose
+                // up is forward, so the walk's push lands where it always
+                // has; the flat turn on the new knob.
+                (grip, by) = try await reworkedSpaceGrip(handle, by: wanted, canvas: canvas)
+            } else {
+                // As a hand does it: rest on the knob so the arcs come out, then
+                // take the arc (or the arrow) a little way along and drag it.
+                guard let before = canvas.drawnSpaceHandles else {
+                    throw Failure(description: "no picked layer is wearing a turn knob, so there is no "
+                        + "3D handle to take hold of")
+                }
+                let knob = before.handles.knob
+                if let window = canvas.window {
+                    _ = PlaytestPointer.rest(at: canvas.convert(knob, to: nil), in: window)
+                }
+                if let event = mouseEvent(.mouseMoved, at: knob, on: canvas, flags: []) {
+                    canvas.mouseMoved(with: event)
+                }
+                await sleep(0.1)
+                guard let shown = canvas.drawnSpaceHandles else {
+                    throw Failure(description: "resting on the turn knob took the 3D handles away")
+                }
+                switch handle {
+                case nil:
+                    grip = shown.handles.knob
+                case .swing?:
+                    // A hand's width along the flat arc from the knob, toward
+                    // the end the drag travels to.
+                    let points = shown.handles.swingArc.points(16)
+                    grip = by.x >= 0 ? points[13] : points[3]
+                case .tip?:
+                    grip = shown.handles.tipArc.points(8)[by.y <= 0 ? 2 : 6]
+                case .depth?:
+                    let arrow = shown.handles.depthArrow
+                    grip = CGPoint(x: (arrow.tail.x + arrow.head.x) / 2, y: (arrow.tail.y + arrow.head.y) / 2)
+                }
+                guard canvas.spaceHandleHit(atView: grip) == handle else {
+                    throw Failure(description: "the \(name) handle did not answer a press at view "
+                        + "\(short(grip)): the arcs are \(shown.arcs ? "out" : "away"), the depth arrow is "
+                        + "\(shown.depth ? "showing" : "hidden")")
+                }
             }
             if let event = mouseEvent(.leftMouseDown, at: grip, on: canvas, flags: flags) { canvas.mouseDown(with: event) }
             // The PICTURE, read after every move: whether what the canvas shows
@@ -3478,6 +3489,128 @@ private final class Run {
             note(number, step.name, "\(name) taken at view \(short(grip)) and dragged "
                 + "\(short(by))\(said)", state: describe())
 
+        case .grip(let grip, let by, let steps, let modifiers, let clicks, let readout):
+            let canvas = try requireCanvas()
+            let window = try requireWindow()
+            let flags = eventFlags(modifiers)
+            guard let shown = canvas.drawnSelectionGrips else {
+                throw Failure(description: "no picked layer is wearing the reworked selection's grips "
+                    + "(next-transform-modes is \(Experiments.shared.transformModesEnabled ? "on" : "off"))")
+            }
+            guard let at = Self.gripPoint(grip, in: shown.grips) else {
+                throw Failure(description: "the picked layer wears no \(grip.name) grip in \(shown.grips.mode.title)")
+            }
+            // As a hand does it: rest on the grip first, so it lights.
+            _ = PlaytestPointer.rest(at: canvas.convert(at, to: nil), in: window)
+            if let event = mouseEvent(.mouseMoved, at: at, on: canvas, flags: flags) { canvas.mouseMoved(with: event) }
+            await sleep(0.05)
+            guard canvas.selectionGripHit(atView: at) == grip else {
+                throw Failure(description: "the \(grip.name) grip at view \(short(at)) did not answer a press there: "
+                    + "it would take \(canvas.selectionGripHit(atView: at)?.name ?? "nothing")")
+            }
+            let lit = canvas.hoveredGrip
+            for click in 1...clicks {
+                if let event = mouseEvent(.leftMouseDown, at: at, on: canvas, flags: flags, clicks: click) {
+                    canvas.mouseDown(with: event)
+                }
+                if click < clicks || by == nil {
+                    if let event = mouseEvent(.leftMouseUp, at: at, on: canvas, flags: flags, clicks: click) {
+                        canvas.mouseUp(with: event)
+                    }
+                }
+            }
+            var said = ""
+            if let by {
+                for i in 1...steps {
+                    let t = CGFloat(i) / CGFloat(steps)
+                    let p = CGPoint(x: at.x + by.x * t, y: at.y + by.y * t)
+                    if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: flags) {
+                        canvas.mouseDragged(with: event)
+                    }
+                    await sleep(0.02)
+                }
+                if let readout { said = ", " + (try checkDragReadout(says: readout, absent: false)) }
+                let end = CGPoint(x: at.x + by.x, y: at.y + by.y)
+                if let event = mouseEvent(.leftMouseUp, at: end, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
+            }
+            await sleep(0.15)
+            note(number, step.name, "\(grip.name) (lit: \(lit?.name ?? "nothing")) taken at view \(short(at))"
+                + (by.map { " and dragged \(short($0))" } ?? (clicks == 2 ? " with a double press" : " with a click"))
+                + said + "; the chip is on \(canvas.transformMode.title), the tag says "
+                + "\"\(canvas.gripTagShown ?? "nothing")\"", state: describe())
+
+        case .hoverGrips(let name, let minArea):
+            let canvas = try requireCanvas()
+            let window = try requireWindow()
+            guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+            guard let shown = canvas.drawnSelectionGrips else {
+                throw Failure(description: "no picked layer is wearing the reworked selection's grips")
+            }
+            let grips = shown.grips
+            var every: [SelectionGrip] = grips.corners.map { .corner($0.handle) } + grips.edges.map { .edge($0.handle) }
+            if grips.knob != nil { every.append(.knob) }
+            if grips.depth != nil { every.append(.depth) }
+            every += grips.chip.map { .chip($0.mode) }
+            var lines: [String] = []
+            var shot = 0
+            for grip in every {
+                guard let at = Self.gripPoint(grip, in: grips) else { continue }
+                _ = PlaytestPointer.rest(at: canvas.convert(at, to: nil), in: window)
+                if let event = mouseEvent(.mouseMoved, at: at, on: canvas, flags: []) { canvas.mouseMoved(with: event) }
+                await sleep(0.05)
+                guard canvas.hoveredGrip == grip else {
+                    throw Failure(description: "the pointer rested on the \(grip.name) grip at view \(short(at)) "
+                        + "and \(canvas.hoveredGrip?.name ?? "nothing") lit")
+                }
+                guard canvas.selectionGripHit(atView: at) == grip else {
+                    throw Failure(description: "the \(grip.name) grip lit but a press there would not take it")
+                }
+                let words = SelectionTag.does(grip, mode: grips.mode)
+                guard canvas.gripTagShown == words else {
+                    throw Failure(description: "resting on the \(grip.name) grip, the tag says "
+                        + "\"\(canvas.gripTagShown ?? "nothing")\", not \"\(words)\"")
+                }
+                let area = grips.hitArea(of: grip)
+                if let minArea, Double(area) < minArea {
+                    throw Failure(description: String(format: "the %@ grip's own target is %.0f square points, "
+                        + "under the %.0f the walk asked for", grip.name, Double(area), minArea))
+                }
+                shot += 1
+                let picture = "\(name)-\(shot)-\(grip.name)"
+                content.layoutSubtreeIfNeeded()
+                try harnessWork { try snapshot(content, name: picture) }
+                await screenCapture(window, name: picture)
+                lines.append(String(format: "%@ lit alone, tag \"%@\", target %.0f sq pt", grip.name, words, Double(area)))
+            }
+            let away = CGPoint(x: canvas.bounds.minX + 6, y: canvas.bounds.minY + 6)
+            _ = PlaytestPointer.rest(at: canvas.convert(away, to: nil), in: window)
+            if let event = mouseEvent(.mouseMoved, at: away, on: canvas, flags: []) { canvas.mouseMoved(with: event) }
+            await sleep(0.05)
+            if let still = canvas.hoveredGrip {
+                throw Failure(description: "the pointer left every grip and \(still.name) stayed lit")
+            }
+            note(number, step.name, "\(shot) grip(s) in \(grips.mode.title): " + lines.joined(separator: "; "),
+                 state: describe())
+
+        case .expectGrips(let mode, let tag, let count):
+            let canvas = try requireCanvas()
+            let window = try requireWindow()
+            let away = CGPoint(x: canvas.bounds.minX + 6, y: canvas.bounds.minY + 6)
+            _ = PlaytestPointer.rest(at: canvas.convert(away, to: nil), in: window)
+            if let event = mouseEvent(.mouseMoved, at: away, on: canvas, flags: []) { canvas.mouseMoved(with: event) }
+            await sleep(0.1)
+            guard let shown = canvas.drawnSelectionGrips else {
+                throw Failure(description: "no picked layer is wearing the reworked selection's grips")
+            }
+            let g = shown.grips
+            let drawn = g.corners.count + g.edges.count + (g.knob == nil ? 0 : 1) + (g.depth == nil ? 0 : 1)
+            let reads = "the chip is on \(g.mode.title), \(drawn) grips are drawn and the tag says "
+                + "\"\(canvas.gripTagShown ?? "nothing")\""
+            if let mode, mode != g.mode { throw Failure(description: reads + ", not \(mode.title) as claimed") }
+            if let tag, tag != canvas.gripTagShown { throw Failure(description: reads + ", not \"\(tag)\" as claimed") }
+            if let count, count != drawn { throw Failure(description: reads + ", not \(count) grips as claimed") }
+            note(number, step.name, reads + ", as claimed", state: describe())
+
         case .hoverHandles(let name, let atLeast, let space, let only):
             let canvas = try requireCanvas()
             let window = try requireWindow()
@@ -3538,7 +3671,43 @@ private final class Run {
                 for _ in 0..<500 { canvas.litHandle = nil; canvas.renderHandleHover() }
                 ownShare = Date().timeIntervalSince(began) * 1000 / 500
             }
-            if space {
+            if space, Experiments.shared.transformModesEnabled {
+                // The reworked selection has no arcs: its 3D grips are the
+                // edge pills and the grip below, once the chip is on 3D.
+                guard let first = canvas.drawnSelectionGrips else {
+                    throw Failure(description: "no picked layer is wearing the reworked selection's grips")
+                }
+                if first.grips.mode != .space, let chip = Self.gripPoint(.chip(.space), in: first.grips) {
+                    rest(at: chip)
+                    if let event = mouseEvent(.leftMouseDown, at: chip, on: canvas) { canvas.mouseDown(with: event) }
+                    if let event = mouseEvent(.leftMouseUp, at: chip, on: canvas) { canvas.mouseUp(with: event) }
+                    await sleep(0.1)
+                }
+                guard let shown = canvas.drawnSelectionGrips, shown.grips.mode == .space else {
+                    throw Failure(description: "the chip did not switch the grips to 3D")
+                }
+                let grips: [SelectionGrip] = shown.grips.edges.map { .edge($0.handle) } + [.depth]
+                for grip in grips {
+                    guard let at = Self.gripPoint(grip, in: shown.grips) else { continue }
+                    rest(at: at)
+                    await sleep(0.05)
+                    guard canvas.hoveredGrip == grip, canvas.selectionGripHit(atView: at) == grip else {
+                        throw Failure(description: "the pointer rested on the \(grip.name) 3D grip at view "
+                            + "\(short(at)) and \(canvas.hoveredGrip?.name ?? "nothing") lit")
+                    }
+                    let words = SelectionTag.does(grip, mode: .space)
+                    guard canvas.gripTagShown == words else {
+                        throw Failure(description: "resting on the \(grip.name) 3D grip the tag says "
+                            + "\"\(canvas.gripTagShown ?? "nothing")\", not \"\(words)\"")
+                    }
+                    shot += 1
+                    let picture = "\(name)-\(shot)-\(grip.name)"
+                    content.layoutSubtreeIfNeeded()
+                    try harnessWork { try snapshot(content, name: picture) }
+                    await screenCapture(window, name: picture)
+                    lines.append("\(grip.name) lit in 3D, the tag says \"\(words)\", press takes it")
+                }
+            } else if space {
                 guard let before = canvas.drawnSpaceHandles else {
                     throw Failure(description: "no picked layer is wearing a turn knob, so there are no "
                         + "3D handles to rest on")
@@ -12583,6 +12752,67 @@ private final class Run {
 
     /// Which 3D handles the picked layer wears with the pointer off on a bare
     /// corner of the canvas, read from the shapes actually on screen.
+    /// The grip of the reworked selection that does what a `spaceHandle` step
+    /// asks of the old arcs, and the drag that does the same to the layer.
+    /// Switches the chip to 3D with a click on it, as a hand would, when the
+    /// step tips, swings or pushes.
+    private func reworkedSpaceGrip(_ handle: SpaceHandle?, by: CGPoint,
+                                   canvas: CanvasNSView) async throws -> (CGPoint, CGPoint) {
+        guard let window = canvas.window else { throw Failure(description: "the canvas has no window") }
+        func rest(_ p: CGPoint) {
+            _ = PlaytestPointer.rest(at: canvas.convert(p, to: nil), in: window)
+            if let event = mouseEvent(.mouseMoved, at: p, on: canvas, flags: []) { canvas.mouseMoved(with: event) }
+        }
+        guard let first = canvas.drawnSelectionGrips else {
+            throw Failure(description: "no picked layer is wearing the reworked selection's grips")
+        }
+        if handle != nil, first.grips.mode != .space {
+            guard let chip = Self.gripPoint(.chip(.space), in: first.grips) else {
+                throw Failure(description: "the picked layer's chip offers no 3D")
+            }
+            rest(chip)
+            if let event = mouseEvent(.leftMouseDown, at: chip, on: canvas) { canvas.mouseDown(with: event) }
+            if let event = mouseEvent(.leftMouseUp, at: chip, on: canvas) { canvas.mouseUp(with: event) }
+            await sleep(0.1)
+        }
+        guard let shown = canvas.drawnSelectionGrips else {
+            throw Failure(description: "the grips went away when the chip was switched to 3D")
+        }
+        let grips = shown.grips
+        func edge(_ preferred: ResizeHandle) -> SelectionGrip? {
+            (grips.edges.first { $0.handle == preferred } ?? grips.edges.first).map { .edge($0.handle) }
+        }
+        let target: SelectionGrip?
+        var drag = by
+        switch handle {
+        case nil: target = .knob
+        case .swing?: target = edge(.right); drag = CGPoint(x: by.x, y: 0)
+        case .tip?: target = edge(.top); drag = CGPoint(x: 0, y: by.y)
+        case .depth?: target = .depth; drag = CGPoint(x: 0, y: -(by.y - by.x))
+        }
+        guard let target, let at = Self.gripPoint(target, in: grips) else {
+            throw Failure(description: "the picked layer wears no grip for the \(handle?.rawValue ?? "knob") in "
+                + grips.mode.title)
+        }
+        rest(at)
+        await sleep(0.05)
+        guard canvas.selectionGripHit(atView: at) == target else {
+            throw Failure(description: "the \(target.name) grip at view \(short(at)) did not answer a press there")
+        }
+        return (at, drag)
+    }
+
+    /// Where a hand would take `grip`: its middle as drawn.
+    static func gripPoint(_ grip: SelectionGrip, in grips: SelectionGrips) -> CGPoint? {
+        switch grip {
+        case .corner(let h): grips.corners.first { $0.handle == h }?.center
+        case .edge(let h): grips.edges.first { $0.handle == h }?.center
+        case .knob: grips.knob
+        case .depth: grips.depth
+        case .chip(let mode): grips.chip.first { $0.mode == mode }.map { CGPoint(x: $0.frame.midX, y: $0.frame.midY) }
+        }
+    }
+
     private func checkSpaceHandles(arcs: Bool?, depth: Bool?) async throws -> String {
         let canvas = try requireCanvas()
         let window = try requireWindow()
@@ -12590,6 +12820,22 @@ private final class Run {
         _ = PlaytestPointer.rest(at: canvas.convert(away, to: nil), in: window)
         if let event = mouseEvent(.mouseMoved, at: away, on: canvas, flags: []) { canvas.mouseMoved(with: event) }
         await sleep(0.15)
+        if Experiments.shared.transformModesEnabled {
+            // The reworked selection has no arcs and no arrow: tipping,
+            // swinging and pushing are the chip's 3D, one press away, on the
+            // edge pills and the grip below. A claim the handles are there is
+            // a claim 3D is offered on the picked layer's chip.
+            guard let shown = canvas.drawnSelectionGrips, shown.layerID == canvas.selectedLayerID else {
+                throw Failure(description: "no picked layer is wearing the reworked selection's grips")
+            }
+            let offered = shown.grips.chip.contains { $0.mode == .space } && !shown.grips.edges.isEmpty
+            let reads = "the reworked selection: the chip " + (offered ? "offers" : "does not offer")
+                + " 3D, whose edge pills tip and swing and whose grip below pushes in depth"
+            for claim in [arcs, depth].compactMap({ $0 }) where claim != offered {
+                throw Failure(description: reads + ", not as claimed")
+            }
+            return reads + ", as claimed"
+        }
         guard let shown = canvas.drawnSpaceHandles, shown.layerID == canvas.selectedLayerID else {
             throw Failure(description: "no picked layer is wearing a turn knob, so it wears no 3D handles")
         }

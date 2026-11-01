@@ -14,6 +14,43 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 - `PhotonzDocument.resize(to:)` scales all layer frames via `Geometry.resizeScale`.
 - UI: dialog with pixel/percent units, aspect lock, common presets (50%, @1x from @2x screenshot).
 
+## The picked layer's grips and keys (Next, `next-transform-modes`, 2026-11-01)
+
+The selection on a picked layer: white square corners, a white pill just
+outside each edge, and a turn knob with a clockwise arrow on a dotted stem off
+the top edge. A chip beside the knob picks the mode, in the order the
+operations apply: **Size**, **Skew & distort** (not built yet), **3D**. The grips
+look the same in every mode; a mode only adds controls (3D adds a depth grip
+below the card). A tag under the frame says the size (in 3D the tip, swing and
+depth) and, while the pointer rests on a grip, what it does. Design floor: the
+user's approved prototype `docs/design/mocks/pages/selection-transform.html`;
+geometry and hit order: `SelectionGrips` (PhotonzCore).
+
+| Where | Gesture | Does |
+| --- | --- | --- |
+| Any mode | drag a corner | Resize keeping proportions, for every layer (pictures and shapes alike). |
+| Any mode | ⇧ drag a corner | Stretch freely. |
+| Size | drag an edge pill | Stretch one way. ⇧ keeps proportions about the middle of that edge. |
+| Size | ⌥ drag a corner or pill | Resize from the middle: the opposite side moves by as much. |
+| Any mode | drag the knob | Turn flat. ⇧ steps by 15°. |
+| Any mode | double-click the knob | Turn back to 0°. |
+| 3D | drag any edge pill | Tip (up and down) and swing (sideways) at once, whichever edge. ⇧ steps by 15°. |
+| 3D | drag the grip below the card | Up pulls it forward, down pushes it back. |
+| Any mode | ⎋ | Back to Size; the layer keeps its turn and depth. |
+
+Why these keys. The user, 2026-11-01: "I consistently want the aspect ratio
+preserved, and almost never want to stretch something." So a corner keeps the
+proportions of anything, and Shift is the stretch, which departs on purpose
+from Keynote and Pages (shapes free by default) and from Photoshop (Shift as a
+toggle). Option from the middle is what Keynote, Pages, Freeform and Preview
+all do. Keynote's Command-drag to rotate is not adopted: the knob turns.
+Skew, distort and keystone have no Mac convention, so they are not modifiers
+at all: they live in the Skew & distort mode (edge pill skews, corner
+distorts, ⇧ corner keystones). The old ⌥-corner skew is gone. Two layer kinds
+keep free corners because their size is set to something outside them: a
+measurement, fitted to the element it measures, and a screen, set to a device
+size.
+
 ## Skew / transform
 
 - `Geometry.skewTransform(xAngle:yAngle:around:)` — affine skew about the layer center.

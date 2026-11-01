@@ -24,15 +24,15 @@
     { "do": "describe", "stage": "1-moved", "note": "a move says WHERE: the pill read 343, 287 with the button still down, and the panel reads the same two numbers after the release, so nothing jumped" },
     { "do": "snapshot", "name": "2-after-move" },
 
-    { "do": "drag", "from": [503, 347], "to": [611, 429], "steps": 12, "readout": "268 × 142", "hold": "3-mid-resize" },
+    { "do": "drag", "from": [503, 347], "to": [611, 429], "steps": 12, "readout": "379 × 142", "hold": "3-mid-resize" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectReadout", "absent": true },
     { "do": "action", "action": "positionAndSize" },
-    { "do": "expect", "field": "W", "reads": "268" },
+    { "do": "expect", "field": "W", "reads": "379" },
     { "do": "expect", "field": "H", "reads": "142" },
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "describe", "stage": "2-resized", "note": "a resize says HOW BIG: the pill read 268 x 142 mid-drag and the panel reads the same size after the release" },
+    { "do": "describe", "stage": "2-resized", "note": "a resize says HOW BIG: the pill read 379 x 142 mid-drag (a corner keeps the proportions, the user 2026-11-01) and the panel reads the same size after the release" },
     { "do": "snapshot", "name": "4-after-resize" },
 
     { "do": "tool", "tool": "rectSelect" },

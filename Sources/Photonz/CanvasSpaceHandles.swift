@@ -35,6 +35,10 @@ struct SpaceHandleDrag {
     /// Latched once the pointer has really travelled, so a click that wobbles
     /// leaves no undo step behind.
     var moved: Bool
+    /// The reworked selection's grip this drag came from, when it did: an
+    /// edge pill tips and swings at once, the depth grip pushes up as forward
+    /// (`SelectionDrag`). Nil for the arcs and the arrow.
+    var grip: SelectionGrip? = nil
 }
 
 /// Where the 3D handles were last drawn, so the press and the pointer cue
@@ -65,7 +69,12 @@ extension CanvasNSView {
         static let rim = CGColor(gray: 0, alpha: 0.45)
     }
 
-    var spaceHandlesOffered: Bool { Experiments.shared.turnInDepthEnabled && tool == .select }
+    /// The arcs and the arrow. The reworked selection (`next-transform-modes`)
+    /// puts tipping, swinging and depth on its own grips instead, in 3D mode
+    /// (`CanvasSelectionGrips`), so with it on these are never drawn.
+    var spaceHandlesOffered: Bool {
+        Experiments.shared.turnInDepthEnabled && tool == .select && !Experiments.shared.transformModesEnabled
+    }
 
     func setUpSpaceHandleChrome() {
         for shape in [spaceHandleRimLayer, spaceSwingLayer, spaceTipLayer, spaceDepthLayer,
@@ -273,9 +282,16 @@ extension CanvasNSView {
         let delta = CGPoint(x: viewPoint.x - drag.press.x, y: viewPoint.y - drag.press.y)
         if hypot(delta.x, delta.y) > 2 { drag.moved = true }
         guard drag.moved else { return true }
-        drag.turn = SpaceDrag.turned(drag.start, by: drag.handle, delta: delta, zoom: viewport.zoom,
-                                     snapped: event.modifierFlags.contains(.shift),
-                                     nearest: nearestDepth)
+        switch drag.grip {
+        case .edge?:
+            drag.turn = SelectionDrag.tilted(drag.start, by: delta, snapped: event.modifierFlags.contains(.shift))
+        case .depth?:
+            drag.turn = SelectionDrag.pushed(drag.start, by: delta, zoom: viewport.zoom, nearest: nearestDepth)
+        default:
+            drag.turn = SpaceDrag.turned(drag.start, by: drag.handle, delta: delta, zoom: viewport.zoom,
+                                         snapped: event.modifierFlags.contains(.shift),
+                                         nearest: nearestDepth)
+        }
         spaceHandleDrag = drag
         onSpaceTurnPreview(drag.layerID, drag.turn)
         refreshOverlays()
@@ -295,7 +311,7 @@ extension CanvasNSView {
     }
 
     /// The nearest a layer may come to the camera before it would pass it.
-    private var nearestDepth: Double? {
+    var nearestDepth: Double? {
         guard let document else { return nil }
         let projection = document.projection
         guard projection.hasPerspective else { return nil }

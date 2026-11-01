@@ -64,6 +64,13 @@ public enum FeatureCatalog {
     /// and View menu rows for them (`SpaceEditing.swift`, `video-depth.html`).
     public static let turnInDepthFlag = "next-turn-in-depth"
 
+    /// The reworked selection (`selection-transform.html`, approved
+    /// 2026-11-01): white corner squares and edge pills, a knob with a
+    /// clockwise arrow on a dotted stem, a chip beside it for Size and 3D, a
+    /// tag under the frame, and in 3D the edge pills tip and swing and a grip
+    /// below pushes back (`SelectionGrips.swift`, `CanvasSelectionGrips`).
+    public static let transformModesFlag = "next-transform-modes"
+
     /// The picked layer's transform values in a popover the tool bar's Info
     /// button opens, with a Reset; the panel's 3D section gives its rows to it
     /// (`TransformBar.swift`, `TransformValuesPopover`).
@@ -497,6 +504,16 @@ public enum FeatureCatalog {
                     name: turnInDepthFlag,
                     title: "Turn layers in 3D",
                     description: "Rest on a picked layer's turn knob for two arcs that tip or swing it in 3D, with an arrow to push it away and 3D and Camera panel sections. Off means layers turn flat only.",
+                    area: .selecting,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: transformModesFlag,
+                    title: "Size and 3D grips on a picked layer",
+                    description: "A picked layer wears white corner squares, edge pills, a turn knob and a size tag; a chip by the knob switches to 3D, where the pills tip and swing it. Off means small squares and arcs.",
                     area: .selecting,
                     isEnabled: false,
                     parameters: []),

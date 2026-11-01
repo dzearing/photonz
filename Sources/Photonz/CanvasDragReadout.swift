@@ -149,7 +149,17 @@ extension CanvasNSView {
             hideDragReadout()
             return
         }
-        let words = DragReadout.text(subject.reading)
+        var words = DragReadout.text(subject.reading)
+        // The reworked selection's tag carries on as the readout through a
+        // drag: the same accent pill in the same place, so the one label under
+        // the layer never changes voice (`CanvasSelectionGrips`). A drag on
+        // one of its 3D grips reads tip and swing together, or the depth as
+        // back or forward.
+        let reworked = Experiments.shared.transformModesEnabled
+        dragReadoutLayer.fillColor = reworked ? NSColor.controlAccentColor.cgColor : CGColor(gray: 0, alpha: 0.82)
+        if reworked, let drag = spaceHandleDrag, let grip = drag.grip {
+            words = SelectionTag.dragging(grip, turn: drag.turn)
+        }
         let font = Self.dragReadoutFont
         let inset = DragReadoutPill.inset
         let text = CGSize(width: (words as NSString)
@@ -160,9 +170,9 @@ extension CanvasNSView {
                                                    height: text.height + inset.height * 2),
                                       in: bounds, gap: DragReadoutPill.gap)
         dragReadoutLayer.frame = bounds
-        dragReadoutLayer.path = CGPath(roundedRect: plate,
-                                       cornerWidth: plate.height / 2,
-                                       cornerHeight: plate.height / 2, transform: nil)
+        let radius = reworked ? GripLook.tagRadius : plate.height / 2
+        dragReadoutLayer.path = CGPath(roundedRect: plate, cornerWidth: radius, cornerHeight: radius,
+                                       transform: nil)
         dragReadoutTextLayer.string = words
         dragReadoutTextLayer.font = font
         dragReadoutTextLayer.fontSize = font.pointSize

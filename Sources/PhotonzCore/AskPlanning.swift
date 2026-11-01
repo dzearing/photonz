@@ -70,11 +70,24 @@ public enum AskTools {
     /// checks every call.
     public static let modelTools: [AgentJSON] = (looking + doing).compactMap(modelTool)
 
+    /// Fields an agent outside the app gets and Ask is not shown: set_layer's
+    /// flat turn and 3D turn (the reworked selection, 2026-11-01). Ask's
+    /// window is tight (`AskDocumentFitTests`), and turning a layer in 3D is
+    /// not what a person asks Ask for; the schema still takes them.
+    static let outsideOnly: [String: Set<String>] = ["set_layer": ["rotation", "tip", "swing", "depth"]]
+
     static func modelTool(_ name: String) -> AgentJSON? {
         guard let tool = AgentTools.tool(named: name) else { return nil }
+        var schema = tool.inputSchema
+        if let hidden = outsideOnly[name], case .object(var top) = schema,
+           case .object(var properties)? = top["properties"] {
+            for key in hidden { properties[key] = nil }
+            top["properties"] = .object(properties)
+            schema = .object(top)
+        }
         return ["type": "function",
                 "function": ["name": .string(tool.name), "description": .string(tool.description),
-                             "parameters": modelSchema(tool.inputSchema, top: true)]]
+                             "parameters": modelSchema(schema, top: true)]]
     }
 
     /// add_component's keys in the order a person writes them: what a part

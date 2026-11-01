@@ -177,8 +177,11 @@ extension CanvasNSView {
         // reproduced with the Pen on 2026-09-13 — 1280x900 to 1728x1028 on the
         // second click, and the anchor never landed — and a short edge on an
         // icon is exactly that pair of clicks.
+        // A grip of the picked layer sits off it, on bare canvas, and keeps
+        // its own double press: the knob's turns it back upright.
         if event.clickCount == 2, tool.doubleClickOnEmptyCanvasZoomsWindow,
-           clickable(at: p)?.canvasHitTest(p, zoom: viewport.zoom) == nil {
+           clickable(at: p)?.canvasHitTest(p, zoom: viewport.zoom) == nil,
+           selectionGripHit(atView: convert(event.locationInWindow, from: nil)) == nil {
             performWindowTitleBarAction()
             return
         }
@@ -522,6 +525,13 @@ extension CanvasNSView {
         // The arcs on the knob and the depth arrow, which tip, swing and push
         // the picked layer in 3D (`CanvasSpaceHandles.swift`). Read before the
         // knob's own press, which keeps the knob's middle.
+        // The reworked selection's grips (`next-transform-modes`): corners,
+        // edge pills, the knob, the chip and in 3D the depth grip, read where
+        // the arcs were, which they replace (`CanvasSelectionGrips`).
+        if tool == .select, selectionGripMouseDown(atView: convert(event.locationInWindow, from: nil),
+                                                   event: event) {
+            return
+        }
         if tool == .select, spaceHandleMouseDown(atView: convert(event.locationInWindow, from: nil)) {
             return
         }
@@ -1067,6 +1077,7 @@ extension CanvasNSView {
             refreshOverlays()
         } else if var drag = resizeDrag {
             let layer = document?.canvasLayer(id: drag.layerID)
+            let p = CGPoint(x: p.x + drag.grabOffset.x, y: p.y + drag.grabOffset.y)
             // ⇧ keeps the proportions and ⌘ drags free of every magnet: one key
             // that means "ignore the magnets" everywhere on the canvas, and a
             // ratio nobody may quietly break. Either one hands back exactly the
@@ -1075,9 +1086,20 @@ extension CanvasNSView {
             // shape with no key held, because any other shape is the picture
             // stretched, and ⇧ lets it go (the source then reshapes with it).
             let shift = event.modifierFlags.contains(.shift)
-            let aspect = layer?.resizeKeepsShapeByDefault == true ? !shift : shift
+            // The reworked selection (`next-transform-modes`): a corner keeps
+            // the proportions of anything, Shift stretches; an edge stretches
+            // one way; Option grows it from the middle (`SelectionDrag`).
+            // A measurement is fitted to the element it measures, so its
+            // corners stay free (`size-steps-and-resizes-walk`), and so is a
+            // screen, which is set to a device size (`frame-resize-live-walk`).
+            let reworked = Experiments.shared.transformModesEnabled && layer?.resizeKeepsShapeByDefault != true
+                && layer?.isMeasurement != true && layer?.isFrame != true
+            let aspect = reworked ? SelectionDrag.keepsProportions(drag.handle, shift: shift)
+                : layer?.resizeKeepsShapeByDefault == true ? !shift : shift
+            let centred = reworked && event.modifierFlags.contains(.option)
+                && document?.isSeenInSpace != true
             let held = snapHold(freeing: event.modifierFlags.contains(.command))
-            let snapping = !aspect && !held.isFree
+            let snapping = !aspect && !held.isFree && !centred
             // Same rule as a move: a piece on a slant has nothing to say to the
             // grid or the rulers, which are drawn upright.
             let slant = isOnASlant(drag.layerID)
@@ -1100,6 +1122,10 @@ extension CanvasNSView {
             snapHold.caught(x: drag.snapped.guideX ?? drag.snapped.gridX,
                             y: drag.snapped.guideY ?? drag.snapped.gridY)
             drag.frame = drag.snapped.frame
+            if centred, drag.flips.isEmpty {
+                drag.frame = SelectionDrag.fromCentre(start: drag.startFrame, proposed: drag.frame,
+                                                      handle: drag.handle)
+            }
             resizeDrag = drag
             if drag.flips.isEmpty {
                 onFramePreview(drag.layerID, drag.frame)
@@ -1286,6 +1312,8 @@ extension CanvasNSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport, !isWatching else { return }
+        // Whatever grip was in the hand is let go of (`CanvasSelectionGrips`).
+        heldGrip = nil
         // The hand lets go of whatever transform it was making: the bar stays
         // up and stops outlining the value it was changing.
         if transformGestureLive {

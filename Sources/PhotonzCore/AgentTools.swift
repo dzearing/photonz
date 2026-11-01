@@ -398,6 +398,10 @@ public enum AgentTools {
                 "text": ["type": "string", "description": "A text layer's new words."],
                 "fontSize": ["type": "number", "minimum": 4, "maximum": 1000, "description": "A text layer's new size."],
                 "brush": lineBrushProperty,
+                "rotation": ["type": "number", "description": "Turn, degrees clockwise."],
+                "tip": ["type": "number", "description": "3D tip, degrees; + top away."],
+                "swing": ["type": "number", "description": "3D swing, degrees; + right away."],
+                "depth": ["type": "number", "description": "3D depth, points; - is back."],
                 "flip": ["type": "string", "enum": ["horizontal", "vertical", "both"],
                          "description": "Mirror it about its own middle, as Edit > Transform > Flip does: horizontal left to right, vertical top to bottom. Each call flips again, so twice puts it back. Mirror Across Center makes a mirrored copy instead."],
             ]) { $1 }.merging(arrowLabelProperties) { $1 }, required: ["layer"])),
@@ -785,6 +789,10 @@ public enum AgentTools {
                                               visible: args["visible"]?.boolValue, look: look,
                                               text: args["text"]?.stringValue, fontSize: cg(args["fontSize"]),
                                               flip: flip)
+                change.rotation = args["rotation"]?.doubleValue
+                change.tip = args["tip"]?.doubleValue
+                change.swing = args["swing"]?.doubleValue
+                change.depth = args["depth"]?.doubleValue
                 switch arrowLabel(args, name) {
                 case .failure(let error): return .failure(error)
                 case .success(let label): change.arrowLabel = label

@@ -30,8 +30,8 @@
     { "do": "hoverHandles", "name": "2-turned", "atLeast": 13, "space": true },
     { "do": "drag", "from": [595, 460], "to": [655, 500], "steps": 8 },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "2-turned-resized", "note": "a drag from the bottom right square of the turned card, as drawn, makes the card bigger along its own plane, and the top left corner stays where it was drawn" },
-    { "do": "expectBox", "layer": "Rectangle", "size": [420.6, 263.5], "within": 2 },
+    { "do": "describe", "stage": "2-turned-resized", "note": "a drag from the bottom right square of the turned card, as drawn, makes the card bigger along its own plane, keeping its proportions, and the top left corner stays where it was drawn" },
+    { "do": "expectBox", "layer": "Rectangle", "size": [420.6, 272.1], "within": 2 },
     { "do": "snapshot", "name": "2-turned-resized" },
 
     { "do": "tool", "tool": "arrow" },

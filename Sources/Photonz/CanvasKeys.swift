@@ -389,6 +389,12 @@ extension CanvasNSView {
             // The transform bar goes first, and only it: the layer stays
             // picked, and the next Escape lets go of it as it always has.
             if onTransformBarEscape() { return }
+            // 3D grips step back to Size before anything is let go of, the
+            // way the prototype's Escape does (`CanvasSelectionGrips`).
+            if transformModesOffered, transformMode != .size, drawnSelectionGrips != nil {
+                setTransformMode(.size)
+                return
+            }
             if marquee != nil || selection != nil {
                 marquee = nil
                 marqueeClickTarget = nil // the band was abandoned, so it picks nothing

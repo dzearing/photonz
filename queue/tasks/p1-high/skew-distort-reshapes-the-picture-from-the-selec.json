@@ -1,0 +1,34 @@
+{
+  "id": "skew-distort-reshapes-the-picture-from-the-selec",
+  "title": "Skew & distort reshapes the picture from the selection chip",
+  "goal": "The chip by a picked layer's turn knob gains its middle choice, Skew & distort, as the user approved in the transform modes prototype on 2026-11-01: an edge pill slides that edge along itself to skew, a corner moves freely to distort, and Shift on a corner keystones. The reshape belongs to the picture itself, so turning, resizing and 3D act on the reshaped picture.",
+  "epic": "found-selection",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T16:34:41.499Z",
+  "updated": "2026-11-01T16:35:05.515Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Slice (2) of the-reworked-selection-ships-cleaner-grips-a-tag (user, 2026-11-01: split in this order). Built so far: SelectionGrips/TransformMode in PhotonzCore (TransformMode.reshape exists but TransformMode.offered leaves it out), CanvasSelectionGrips.swift draws and hits the grips, the chip icon for reshape is already drawn by chipIcon(.reshape). Prototype: docs/design/mocks/pages/selection-transform.html (corners(L, box) for the box vs reshaped corners, the distort/keystone math in the pointermove handler). Renderer: CIPerspectiveTransform, the same path 3D uses; perf note needed (composite path). The old Option-corner skew is already gone at Next defaults (next-transform-modes).",
+  "acceptance": [
+    "The chip reads Size, Skew & distort, 3D in that order, at Next defaults, and the grips look the same in every mode",
+    "In Skew & distort an edge pill skews (the edge slides along its own line) and a corner distorts; Shift on a corner keystones (the corner across mirrors it); each drag is one undo step",
+    "The reshape is stored as each corner's offset in the layer's own unturned plane as a share of width and height, rendered non-destructively, and survives resize, turn and 3D",
+    "In Size and 3D the grips sit on a flat rectangle round the reshaped picture with a faint dotted outline of the reshape inside; only Skew & distort grips the reshaped corners",
+    "Layer > Transform > Skew, Distort and Keystone enter Skew & distort; a walk drives each by the pointer and the audit compares with selection-transform.html"
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T16:34:41.501Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-01T16:35:05.514Z",
+      "note": "seq 3970 -> 11"
+    }
+  ],
+  "source": "user"
+}

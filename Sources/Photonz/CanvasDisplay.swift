@@ -983,6 +983,9 @@ extension CanvasNSView {
         cornerRadiusHandlesLayer.isHidden = true
         // Likewise the 3D handles: only the knob branch below draws them.
         hideSpaceHandles()
+        // And the reworked selection's grips (`next-transform-modes`): only
+        // the frame branch below draws them.
+        hideSelectionGrips()
         refreshGroupContextOutline()
         refreshColumnChrome()
         refreshIconKeylineChrome()
@@ -1292,7 +1295,8 @@ extension CanvasNSView {
             // shape BY is what its selection offers. The box itself still
             // draws, and the Position and Size fields still resize it
             // (`CanvasPathEdit`).
-            if !dragInFlight, offersOwnHandles(selectedLayer), selectedLayer.allowsFrameResize,
+            let reworked = Experiments.shared.transformModesEnabled
+            if !reworked, !dragInFlight, offersOwnHandles(selectedLayer), selectedLayer.allowsFrameResize,
                editablePath == nil {
                 let handles = CGMutablePath()
                 // Handles fit the thing they are round: on a selection too
@@ -1341,7 +1345,7 @@ extension CanvasNSView {
             }
 
             // Rotate knob with its stem, off the (transformed) top edge.
-            if !dragInFlight, offersRotation(selectedLayer),
+            if !reworked, !dragInFlight, offersRotation(selectedLayer),
                let knob = selectedLayer.rotateKnobPoint(zoom: viewport.zoom) {
                 // The knob is floated off the layer's own turned top edge, and
                 // then rides whatever the cards above it have been turned by,
@@ -1373,6 +1377,19 @@ extension CanvasNSView {
                 rotateKnobLayer.isHidden = false
             } else {
                 rotateKnobLayer.isHidden = true
+            }
+
+            // The reworked selection (`next-transform-modes`): one set of
+            // grips drawn flat at the frame's corners as seen, the knob, the
+            // chip and the tag (`CanvasSelectionGrips`). Drawn through a drag
+            // too, so the grip in the hand stays lit under it.
+            if reworked, offersOwnHandles(selectedLayer) {
+                let quad = [CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY),
+                            CGPoint(x: frame.maxX, y: frame.maxY), CGPoint(x: frame.minX, y: frame.maxY)]
+                    .map(chromePoint)
+                drawSelectionGrips(for: selectedLayer, quad: quad,
+                                   resizes: selectedLayer.allowsFrameResize && editablePath == nil,
+                                   rotates: offersRotation(selectedLayer))
             }
         }
 

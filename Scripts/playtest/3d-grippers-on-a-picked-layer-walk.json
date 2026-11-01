@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/3d-grippers-on-a-picked-layer-walk",
-  "seed": "The 3D grippers are on a picked layer the moment it is picked, at Next defaults with no flag changed. A title is typed over a recording and picked with the Select tool: with the pointer off on a bare corner of the canvas it already wears the green swing arc and the red tip arc on its turn knob and the blue depth arrow off its middle. The flat arc dragged sideways swings it 40 degrees and the title is drawn turned. Then a small rectangle is drawn and picked: it wears the same grippers, and its top right corner, which the depth arrow passes over on a layer that small, still resizes it.",
+  "seed": "The 3D grips are one press away on a picked layer, at Next defaults with no flag changed (reworked 2026-11-01: the arcs on the knob became the 3D mode on the chip beside it). A title is typed over a recording and picked with the Select tool: the chip by its turn knob offers 3D. Switched to 3D, its right edge pill dragged sideways swings it 40 degrees and the title is drawn turned. Then a small rectangle is drawn and picked: its chip offers 3D too, and its top right corner, dragged with Shift to stretch, still resizes it to 90 wide.",
   "setup": {
     "forget": [
       "all"
@@ -24,7 +24,7 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectSpaceHandles", "arcs": true, "depth": true },
-    { "do": "describe", "stage": "1-title-picked", "note": "the title just picked, the pointer off in a corner: the turn knob wears the green flat arc across it and the red tall arc beside it, and the blue depth arrow leaves the crosshair on its middle, with no hover at all" },
+    { "do": "describe", "stage": "1-title-picked", "note": "the title just picked, the pointer off in a corner: white corner squares and edge pills, the turn knob with its arrow, and the Size and 3D chip beside it, with no hover at all" },
     { "do": "snapshot", "name": "1-title-picked" },
     { "do": "expectTilt", "flat": true },
     { "do": "spaceHandle", "handle": "swing", "by": [67, 0] },
@@ -34,7 +34,7 @@
     { "do": "expect", "field": "Transform Tilt Y", "reads": "40" },
     { "do": "expectTilt", "atLeast": 1.05 },
     { "do": "expectSpaceHandles", "arcs": true, "depth": true },
-    { "do": "describe", "stage": "2-title-swung", "note": "the flat arc dragged sideways: the title swung 40 degrees, its far edge shorter, and the grippers are still on it with the pointer gone" },
+    { "do": "describe", "stage": "2-title-swung", "note": "the chip on 3D and the right edge pill dragged sideways: the title swung 40 degrees, its far edge shorter, with the 3D grips still on it" },
     { "do": "snapshot", "name": "2-title-swung" },
     { "do": "tool", "tool": "rectangle" },
     { "do": "drag", "from": [760, 520], "to": [810, 544], "steps": 8 },
@@ -42,15 +42,15 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectSpaceHandles", "arcs": true, "depth": true },
-    { "do": "describe", "stage": "3-small-rectangle-picked", "note": "a small rectangle, 50 by 24, just picked: the same arcs on its knob and the depth arrow off its middle, the arrow reaching past its top right corner" },
+    { "do": "describe", "stage": "3-small-rectangle-picked", "note": "a small rectangle, 50 by 24, just picked: the same chip by its knob, corners clear of each other" },
     { "do": "snapshot", "name": "3-small-rectangle-picked" },
-    { "do": "drag", "from": [810, 520], "to": [850, 500], "steps": 8 },
+    { "do": "drag", "from": [810, 520], "to": [850, 500], "steps": 8, "modifiers": ["shift"] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "press", "control": "Info" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expect", "field": "Transform W", "reads": "90" },
     { "do": "expectTilt", "flat": true },
-    { "do": "describe", "stage": "4-corner-resized", "note": "the small rectangle's top right corner dragged out: it grew to 90 wide and stayed flat, so the depth arrow over the corner did not take the press" },
+    { "do": "describe", "stage": "4-corner-resized", "note": "the small rectangle's top right corner dragged out with Shift: it stretched to 90 wide and stayed flat" },
     { "do": "snapshot", "name": "4-corner-resized" }
   ]
 }

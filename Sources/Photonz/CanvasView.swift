@@ -1898,6 +1898,11 @@ final class CanvasNSView: NSView {
         /// layer is drawn mirrored on those axes, inside its own box, and
         /// mouse-up keeps it so (`Handles.resizeFlipping`).
         var flips: Set<FlipAxis> = []
+        /// From where the press landed to the edge or corner it took, in
+        /// document points: an edge pill of the reworked selection sits just
+        /// outside its edge, so the edge follows the hand from where it IS
+        /// rather than jumping out to the pointer (`CanvasSelectionGrips`).
+        var grabOffset: CGPoint = .zero
     }
     var resizeDrag: ResizeDrag?
 
@@ -1951,6 +1956,28 @@ final class CanvasNSView: NSView {
     var spaceHandleDrag: SpaceHandleDrag?
     /// Where the 3D handles were last drawn, read by the press and the cue.
     var drawnSpaceHandles: DrawnSpaceHandles?
+    // The reworked selection (`next-transform-modes`, `CanvasSelectionGrips`):
+    // the mode the chip is on, the grips as last drawn, the one under the
+    // resting pointer, and the layers they are drawn on.
+    var transformMode: TransformMode = .size
+    var transformModeLayerID: UUID?
+    var drawnSelectionGrips: (layerID: UUID, grips: SelectionGrips)?
+    var hoveredGrip: SelectionGrip?
+    /// The grip a drag in flight took hold of, so it stays lit.
+    var heldGrip: SelectionGrip?
+    let selectionGripsLayer = CALayer()
+    let gripsShapeLayer = CAShapeLayer()
+    let gripStemsLayer = CAShapeLayer()
+    let gripGlyphsLayer = CAShapeLayer()
+    let litGripLayer = CAShapeLayer()
+    let litGripGlyphLayer = CAShapeLayer()
+    let chipPlateLayer = CAShapeLayer()
+    let chipPickedLayer = CAShapeLayer()
+    let chipIconsLayer = CAShapeLayer()
+    let chipPickedIconLayer = CAShapeLayer()
+    let gripTagLayer = CAShapeLayer()
+    let gripTagTextLayer = CATextLayer()
+    var gripTagShown: String?
     /// The 3D handle the pointer cue last found under the pointer, set while
     /// the cue is read so the arc that lights is the one a press takes.
     var cueSpaceHandle: SpaceHandle?
@@ -2550,6 +2577,7 @@ final class CanvasNSView: NSView {
         setUpMotionPathChrome()
         setUpPathEditChrome()
         setUpHandleHoverChrome()
+        setUpSelectionGripChrome()
 
         // Selection handles and the snap dot sit above every other overlay.
         // (A caliper's head dot is not drawn while its readout pill covers

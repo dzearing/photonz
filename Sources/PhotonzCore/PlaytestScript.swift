@@ -3812,6 +3812,25 @@ public enum PlaytestStep: Sendable, Equatable {
     /// The user took the arcs for gone on 2026-10-13, when they came out only
     /// while the pointer rested on the knob.
     case expectSpaceHandles(arcs: Bool?, depth: Bool?)
+    /// Takes one of the reworked selection's grips (`SelectionGrips`) where
+    /// it is drawn, as a hand does: rests the pointer on it, claims a press
+    /// there takes it, then presses (twice for `clicks: 2`) and, with `by`,
+    /// drags it that far in view points and lets go. A chip button only
+    /// clicks. `readout` is what the pill under the drag must say with the
+    /// button still down. Grips are named `topLeft` ... `bottomLeft`, `top`
+    /// ... `left`, `knob`, `depth`, `chip-size`, `chip-space`.
+    case grip(SelectionGrip, by: CGPoint?, steps: Int, modifiers: [PlaytestModifier], clicks: Int,
+              readout: String?)
+    /// Rests the pointer on every grip of the picked layer's selection in
+    /// turn and claims that it alone lights, that a press there would take it,
+    /// and that the tag says what it does; measures each grip's own target in
+    /// square points (`minArea`, when given, is the least any may have) and
+    /// photographs each as `<name>-<n>-<grip>`.
+    case hoverGrips(name: String, minArea: Double?)
+    /// CLAIMS the reworked selection's state: the chip's `mode`, what the tag
+    /// under the frame says at rest (`tag`), and how many grips are drawn
+    /// (`count`). One has to be said.
+    case expectGrips(mode: TransformMode?, tag: String?, count: Int?)
     /// CLAIMS the transform values popover the tool bar's Info button opens
     /// (`TransformBar`): `present` whether it is on screen, and that it came
     /// or went within `withinFrames` screen refreshes of being asked (one
@@ -4628,7 +4647,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4737,6 +4756,9 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectCallout: "expectCallout"
         case .expectSizeMeasure: "expectSizeMeasure"
         case .expectSpaceHandles: "expectSpaceHandles"
+        case .grip: "grip"
+        case .hoverGrips: "hoverGrips"
+        case .expectGrips: "expectGrips"
         case .expectTransformBar: "expectTransformBar"
         case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
@@ -5034,6 +5056,39 @@ public enum PlaytestStep: Sendable, Equatable {
                                  atLeast: Int(try f.optionalNumber("atLeast") ?? 1),
                                  space: try f.optionalFlag("space") ?? false,
                                  only: try f.optionalStrings("only"))
+        case "grip":
+            let name = try f.string("grip")
+            guard let grip = SelectionGrip(name: name) else {
+                throw f.invalid("grip", "names a grip of the picked layer: topLeft, topRight, bottomRight, "
+                    + "bottomLeft, top, right, bottom, left, knob, depth, chip-size or chip-space")
+            }
+            var by: CGPoint?
+            if let raw = fields["by"] {
+                guard let pair = raw as? [NSNumber], pair.count == 2 else {
+                    throw f.invalid("by", "must be a pair of numbers, [x, y]: how far the grip is dragged, in view points")
+                }
+                by = CGPoint(x: pair[0].doubleValue, y: pair[1].doubleValue)
+            }
+            let clicks = Int(try f.optionalNumber("clicks") ?? 1)
+            guard (1...2).contains(clicks) else { throw f.invalid("clicks", "is 1 or 2") }
+            self = .grip(grip, by: by,
+                         steps: max(1, try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps),
+                         modifiers: try f.modifiers(), clicks: clicks, readout: try f.optionalString("readout"))
+        case "hoverGrips":
+            self = .hoverGrips(name: try f.string("name"), minArea: try f.optionalNumber("minArea"))
+        case "expectGrips":
+            let mode = try f.optionalString("mode").map { word -> TransformMode in
+                guard let mode = TransformMode(rawValue: word) else {
+                    throw f.invalid("mode", "is size or space")
+                }
+                return mode
+            }
+            let tag = try f.optionalString("tag")
+            let count = try f.optionalNumber("count").map { Int($0) }
+            guard mode != nil || tag != nil || count != nil else {
+                throw f.invalid("mode", "expectGrips has to claim something: \"mode\", \"tag\" or \"count\"")
+            }
+            self = .expectGrips(mode: mode, tag: tag, count: count)
         case "spaceHandle":
             let handle: SpaceHandle? = try f.optionalString("handle") == "knob"
                 ? nil : f.enumValue("handle", SpaceHandle.self)

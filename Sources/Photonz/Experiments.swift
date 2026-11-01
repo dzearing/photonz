@@ -242,6 +242,7 @@ extension Experiments {
     /// pushed in depth from the canvas, and the panel and menus offer the 3D
     /// and camera values (`SpaceEditing.swift`).
     var turnInDepthEnabled: Bool { isEnabled(FeatureCatalog.turnInDepthFlag) }
+    var transformModesEnabled: Bool { isEnabled(FeatureCatalog.transformModesFlag) }
     /// The transform bar beside a layer in hand (`TransformBar`).
     var transformBarEnabled: Bool { isEnabled(FeatureCatalog.transformBarFlag) }
     var keyValuesEnabled: Bool { isEnabled(FeatureCatalog.keyValuesFlag) }

@@ -147,6 +147,10 @@ public enum PlaytestLockSafety {
         // Added 2026-10-13 by reading: it asks the canvas which 3D handles it
         // drew for the picked layer, its own state, and no name.
         "expectSpaceHandles",
+        // Added 2026-11-01 by reading: they find the reworked selection's
+        // grips where the canvas drew them and press there, its own state,
+        // and no name.
+        "grip", "hoverGrips", "expectGrips",
         // Added 2026-10-13 by reading: it asks the editor whether its
         // transform bar is up and the probe where it was laid out, its own
         // state, and no name.

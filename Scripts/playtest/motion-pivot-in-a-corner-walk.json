@@ -46,8 +46,8 @@
 
     { "do": "drag", "from": [660, 380], "to": [700, 420], "steps": 12 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "5-resized", "note": "and it really resizes: the bottom right corner pulled out forty points each way, with the top left corner staying put." },
-    { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [280, 190], "within": 1.5 },
+    { "do": "describe", "stage": "5-resized", "note": "and it really resizes: the bottom right corner pulled out forty points each way, with the top left corner staying put; a corner keeps the box's proportions (the user, 2026-11-01), so it grows to 304 by 190." },
+    { "do": "expectBox", "layer": "Rectangle", "at": [420, 230], "size": [304, 190], "within": 1.5 },
     { "do": "snapshot", "name": "5-the-other-corners-still-resize" },
 
     { "do": "action", "action": "undo" },

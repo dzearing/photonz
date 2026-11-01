@@ -368,6 +368,7 @@ extension AgentNewComponent {
             let asked = change.change
             if let visible = asked.visible, visible == part.hidden { return nil }
             if asked.fontSize != nil || !asked.flip.isEmpty { return nil }
+            if asked.rotation != nil || asked.tip != nil || asked.swing != nil || asked.depth != nil { return nil }
             if let words = asked.text, words != part.text { return nil }
             let moved = [(asked.x, part.frame.minX), (asked.y, part.frame.minY),
                          (asked.width, part.frame.width), (asked.height, part.frame.height)]

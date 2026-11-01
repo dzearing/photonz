@@ -1,0 +1,36 @@
+{
+  "feature": "The reworked selection: grips, knob, Size and 3D chip, tag",
+  "epic": "found-selection",
+  "summary": "A picked layer now wears the selection from your approved prototype: white corner squares, a pill just outside each edge, a knob with a clockwise arrow on a dotted stem, a Size and 3D chip beside it, and a size tag underneath. Corners keep proportions (Shift stretches), and in 3D any edge pill tips and swings the layer while a grip below pushes it back or pulls it forward.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/selection-grips-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Draw a rectangle and pick it with the Select tool (V). Rest the pointer on each grip: it fills blue and the tag under the frame says what it does.", "shot": "2026-11-01-selection-grips-2-hover-9-knob-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag a corner out: it keeps its proportions. Hold Shift and drag again to stretch it.", "shot": "2026-11-01-selection-grips-1-picked-sc.png" },
+    { "do": "Drag the right edge pill to stretch one way; hold Option to grow it from the middle." },
+    { "do": "Drag the knob to turn it, then double-click the knob to turn it back to 0°." },
+    { "do": "Click the cube on the chip beside the knob, then drag any edge pill: up and down tip it, sideways swings it. Hold Shift for 15° steps.", "shot": "2026-11-01-selection-grips-side-by-side-3d.png" },
+    { "do": "Drag the grip below the card down to push it back, up to pull it forward. Command-Z undoes one drag.", "shot": "2026-11-01-selection-grips-8-pushed-back-sc.png" },
+    { "do": "Press Escape: back to Size, the turn kept. Click the cube again: the tag reads the same tip, swing and depth." },
+    { "do": "Draw a small 140 by 45 button and rest on each grip in Size and in 3D: each lights alone.", "shot": "2026-11-01-selection-grips-13-small-3d-sc.png" }
+  ],
+  "evaluate": [
+    "Does the knob with its arrow read as turn at a glance, and is the chip beside it where your eye expects the mode switch?",
+    "Do corners keeping proportions with Shift to stretch feel right for shapes as well as pictures?",
+    "In 3D, does dragging any edge pill to tip and swing at once feel natural, or would you rather each edge did one axis?",
+    "On the small button, can you hit every grip you aim at without catching its neighbour?",
+    "Is the size tag under the frame useful at rest, or would you rather it only appeared while hovering or dragging?"
+  ],
+  "rough": [
+    "The chip offers Size and 3D only; Skew & distort, its middle choice, comes in skew-distort-reshapes-the-picture-from-the-selec.",
+    "The prototype's perspective pill beside the chip in 3D, Option-drag perspective with vanishing lines, and a shadow that grows as the layer comes forward are not built yet: perspective-pill-and-a-shadow-that-grows-as-a-3d.",
+    "No reset menu on the chip, no dot on a changed mode and no Layer > Transform submenu yet: reset-each-transform-mode-on-its-own-with-a-dot. The knob's double-click to 0° is built.",
+    "The tag says the size (in 3D the tip, swing and depth), not the layer's name: the prototype's tag, which your log of 2026-11-01 says wins where it differs from lang-selection.html (your call on 2026-11-01).",
+    "No mock covers measurements and screens: their corners still stretch freely, since a measurement is fitted to the element it measures and a screen is set to a device size.",
+    "A corner drag that keeps proportions no longer snaps to guides or neighbours, because snapping only ran on free resizes: a-corner-resize-that-keeps-proportions-still-sna.",
+    "The app goes further than the prototype: a shape's existing corner-rounding dots still sit inside its corners, and the edge outline away from the pills still resizes.",
+    "The tool bar Info popover could not be opened by any walk today (it fails the same way before this change), so the live transform values were not checked on screen: walks-that-fail-in-the-full-sweep-26. The document values the walk claims (size, tilt, tag) did update.",
+    "Every capture shows the window behind another app, so the chip's picked button and the lit grips may look a touch greyer than with the window in front.",
+    "Side by side: 2026-11-01-selection-grips-side-by-side-size.png and -3d.png (prototype left, app right); contact sheet 2026-11-01-selection-grips-contact-sheet.png; reel 2026-11-01-selection-grips-reel.gif."
+  ]
+}

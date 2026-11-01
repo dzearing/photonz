@@ -1,0 +1,33 @@
+{
+  "id": "reset-each-transform-mode-on-its-own-with-a-dot",
+  "title": "Reset each transform mode on its own, with a dot on a changed mode",
+  "goal": "Let a person undo one kind of change without losing the others, as the user approved on 2026-11-01: right-clicking a mode on the selection chip offers Reset Size, Reset Skew & distort, Reset 3D and Reset All (a mode with nothing to reset greyed), the same rows sit under Layer > Transform, and a mode that has been changed shows a small blue dot on its chip button.",
+  "epic": "found-selection",
+  "priority": "p1-high",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T16:34:54.488Z",
+  "updated": "2026-11-01T16:35:05.651Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Slice (4) of the-reworked-selection-ships-cleaner-grips-a-tag. The double-click on the knob already turns back to 0 degrees (CanvasSelectionGrips.selectionGripMouseDown). A menu command needs to reach the canvas's transformMode (it lives on CanvasNSView, reset to Size when the pick changes). Existing Layer > Reset 3D Rotation (EditorCommands, next-turn-in-depth) should fold into Reset 3D. Prototype: openReset / resetStage / changed() in selection-transform.html.",
+  "acceptance": [
+    "Right-click on a chip button opens Reset Size, Reset Skew & distort, Reset 3D and Reset All, unchanged modes greyed; each is one undo step",
+    "Layer > Transform holds Turn in 3D (enters 3D mode), Skew, Distort, Keystone and the four resets, each with its shortcut where one exists",
+    "A changed mode shows a small blue dot on its chip button (white on the picked one); Reset Size returns the picture's own size and no turn about the same middle",
+    "A walk at Next defaults right-clicks the chip by the pointer and resets each mode"
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T16:34:54.490Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-01T16:35:05.650Z",
+      "note": "seq 3990 -> 13"
+    }
+  ],
+  "source": "user"
+}

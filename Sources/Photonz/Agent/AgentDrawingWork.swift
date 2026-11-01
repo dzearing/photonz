@@ -267,6 +267,7 @@ enum AgentDrawingWork {
         if let piece = document.componentPiece(of: id) {
             let onlyWords = change.text != nil && !change.movesOrSizes && change.name == nil && change.visible == nil && change.flip.isEmpty
                 && change.fontSize == nil && change.look == AgentLook()
+                && change.rotation == nil && change.tip == nil && change.swing == nil && change.depth == nil
             let original = document.mainComponent(componentID: piece.componentID)?.name ?? "its original"
             guard onlyWords, let words = change.text else {
                 throw Failure("\(was.name) is part of a copy of \(original), and everything but its words follows the original. Change the original with run_command edit_original (every copy follows), or run_command make_unique on the copy to stop it following.")

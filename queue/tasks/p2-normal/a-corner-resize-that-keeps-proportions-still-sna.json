@@ -1,0 +1,28 @@
+{
+  "id": "a-corner-resize-that-keeps-proportions-still-sna",
+  "title": "A corner resize that keeps proportions still snaps to guides and neighbours",
+  "goal": "Since corners keep a layer's proportions by default (the user, 2026-11-01), a corner drag no longer lines its edge up with guides, the grid or nearby layers, because snapping only ever ran on free resizes. A redline user resizing a box to meet a neighbour loses the yellow guide. The dragged corner should still catch, with the other side following the proportions.",
+  "epic": "found-selection",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T16:35:27.500Z",
+  "updated": "2026-11-01T16:35:27.503Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by reading and by the walk numbers: CanvasPointerDrags.swift resize branch, snapping = !aspect && !held.isFree && !centred, and aspect is now SelectionDrag.keepsProportions(handle, shift:) which is true for every corner without Shift. selection-grips-walk step 12 corner drag reports no guide. Before next-transform-modes only Shift-corner drags (rare) skipped snapping. Found by the-reworked-selection-ships-cleaner-grips-a-tag.",
+  "acceptance": [
+    "A corner drag at Next defaults on an upright layer catches a guide, a grid line or a neighbour's edge on the axis that leads, and the yellow guide shows",
+    "The proportions are kept exactly while caught",
+    "Command still frees the drag of every magnet",
+    "A walk drags a corner to a neighbour's edge and claims the guide caught"
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T16:35:27.502Z",
+      "note": "created (manual)"
+    }
+  ]
+}

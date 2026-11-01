@@ -15050,3 +15050,20 @@
 {"t":"2026-11-01T14:53:29.328Z","ev":"task_note","id":"the-rotating-walk-check-moves-on-through-the-set"}
 {"t":"2026-11-01T14:53:53.086Z","ev":"triage","summary":"merged 0, dropped 0, priority moves 0, reset 0 (guard found nothing stuck), filed 2 (a-walk-s-press-on-a-picture-tile-swatch-or-colou p1: walk presses on panel tiles, swatches and the colour well do nothing since about 2026-10-26, reproduced with arrow-styles-walk; a-picked-arrow-s-appearance-starts-with-its-arro p1: shipped Appearance puts Opacity, Blending, Masked by above the Arrow row the approved prototype starts with), repointed 1 dep (any-colour now waits on the press task, not the standing walk task), groomed 2 (Brush item 9 bar set to 5 and 6 per the user card answer; press task gained the unwalked presses), folded 4 notes, renumbered 62"}
 {"t":"2026-11-01T14:54:49.010Z","ev":"digest","file":"2026-11-01.md"}
+{"t":"2026-11-01T14:55:09.562Z","ev":"task_started","id":"the-reworked-selection-ships-cleaner-grips-a-tag","title":"The reworked selection ships: cleaner grips, a tag that never covers the knob, and a 3D mode you switch into by the rotate knob","priority":"p1-high"}
+{"t":"2026-11-01T15:00:42.141Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T15:37:39.346Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-01T16:34:41.503Z","ev":"task_created","id":"skew-distort-reshapes-the-picture-from-the-selec","priority":"p1-high","title":"Skew & distort reshapes the picture from the selection chip"}
+{"t":"2026-11-01T16:34:54.383Z","ev":"task_created","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d","priority":"p1-high","title":"Perspective pill and a shadow that grows as a 3D layer comes forward"}
+{"t":"2026-11-01T16:34:54.492Z","ev":"task_created","id":"reset-each-transform-mode-on-its-own-with-a-dot","priority":"p1-high","title":"Reset each transform mode on its own, with a dot on a changed mode"}
+{"t":"2026-11-01T16:35:05.516Z","ev":"task_resequenced","id":"skew-distort-reshapes-the-picture-from-the-selec","from":3970,"to":11}
+{"t":"2026-11-01T16:35:05.583Z","ev":"task_resequenced","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d","from":3980,"to":12}
+{"t":"2026-11-01T16:35:05.652Z","ev":"task_resequenced","id":"reset-each-transform-mode-on-its-own-with-a-dot","from":3990,"to":13}
+{"t":"2026-11-01T16:35:11.842Z","ev":"task_walks","id":"the-reworked-selection-ships-cleaner-grips-a-tag","walks":["selection-grips-walk"]}
+{"t":"2026-11-01T16:35:27.504Z","ev":"task_created","id":"a-corner-resize-that-keeps-proportions-still-sna","priority":"p2-normal","title":"A corner resize that keeps proportions still snaps to guides and neighbours"}
+{"t":"2026-11-01T16:39:24.411Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T16:39:24.477Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T16:39:24.550Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T16:39:24.619Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T16:39:24.688Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T16:39:24.754Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}

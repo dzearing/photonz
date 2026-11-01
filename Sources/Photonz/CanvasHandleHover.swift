@@ -121,6 +121,8 @@ extension CanvasNSView {
             styleSpaceHandles()
             waitToNameSpaceHandle()
         }
+        // The reworked selection lights its own grips (`CanvasSelectionGrips`).
+        noteGripHover(at: point == nil || handleDragInFlight ? nil : point)
         renderHandleHover()
     }
 
@@ -131,6 +133,23 @@ extension CanvasNSView {
             guard !handleDragInFlight, hoveredSpaceHandle == nil, let point = handleHoverPoint else { return nil }
             return HandleHover.lit(cue: handleHoverCue, at: point, among: visibleHandleMarks)
         }()
+        // A grip of the reworked selection lights in its own way, the same
+        // size, filled (`styleLitGrip`): the shared lit square stays away. A
+        // resize the outline itself takes, along an edge, lights that edge's
+        // pill, so the pill says which side the press moves.
+        if Experiments.shared.transformModesEnabled, !handleDragInFlight, drawnSelectionGrips != nil {
+            let mine = handleMarks[ObjectIdentifier(selectionGripsLayer)]?.marks ?? []
+            if hoveredGrip == nil, let lit, mine.contains(lit), let grip = grip(for: lit) {
+                hoveredGrip = grip
+                styleLitGrip()
+            }
+            if let gripMark = litGripMark {
+                litHandle = gripMark
+                handleHoverLayer.isHidden = true
+                handleHoverLayer.path = nil
+                return
+            }
+        }
         guard lit != litHandle else { return }
         litHandle = lit
         // A zoom box corner is drawn by the box over the canvas, which would
@@ -157,6 +176,16 @@ extension CanvasNSView {
             handleHoverLayer.path = nil
         }
         CATransaction.commit()
+    }
+
+    /// The grip a mark of the reworked selection was drawn for.
+    private func grip(for mark: HandleMark) -> SelectionGrip? {
+        guard let grips = drawnSelectionGrips?.grips else { return nil }
+        if let corner = grips.corners.first(where: { $0.center == mark.center }) { return .corner(corner.handle) }
+        if let edge = grips.edges.first(where: { $0.center == mark.center }) { return .edge(edge.handle) }
+        if grips.knob == mark.center { return .knob }
+        if grips.depth == mark.center { return .depth }
+        return nil
     }
 
     // MARK: The 3D handles

@@ -220,6 +220,12 @@ public struct AgentLayerChange: Hashable, Sendable {
     public var flip: Set<FlipAxis>
     /// An arrow's label, style, chip and marker.
     public var arrowLabel = AgentArrowLabel()
+    /// The flat turn, in degrees, as the knob sets it.
+    public var rotation: Double?
+    /// The 3D turn and depth, as the reworked selection's 3D grips set them.
+    public var tip: Double?
+    public var swing: Double?
+    public var depth: Double?
 
     public init(x: CGFloat? = nil, y: CGFloat? = nil, width: CGFloat? = nil, height: CGFloat? = nil,
                 name: String? = nil, visible: Bool? = nil, look: AgentLook = AgentLook(),
@@ -422,6 +428,17 @@ public enum AgentDrawing {
         }
         if let problem = refusal(look, for: layer) { return .failure(AgentToolError("set_layer: \(problem)")) }
         apply(look, keepingPaint: false, to: &layer)
+        if let rotation = change.rotation, rotation.isFinite {
+            layer.transform.rotation = CGFloat(rotation)
+        }
+        if change.tip != nil || change.swing != nil || change.depth != nil {
+            var turn = layer.turn3D ?? LayerTurn3D()
+            if let tip = change.tip, tip.isFinite { turn.rotationX = min(max(tip, -180), 180) }
+            if let swing = change.swing, swing.isFinite { turn.rotationY = min(max(swing, -180), 180) }
+            if let depth = change.depth, depth.isFinite { turn.depth = depth }
+            layer.turn3D = turn
+            layer.settleTurn3D()
+        }
         if !change.flip.isEmpty {
             guard layer.canBeMirrored else {
                 return .failure(AgentToolError("set_layer: \(layer.name) is a reading of the picture, which a flip would point at something else."))

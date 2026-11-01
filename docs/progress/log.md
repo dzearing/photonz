@@ -22326,3 +22326,9 @@ the ghost, and pinching in seemed to stop short.
 - Fix: `ClipboardHandOff` (app) writes one item at once with the picture types promised; `ClipboardPicture` / `PromisedData` (PhotonzRender, tested) make the PNG off the main thread and hand each type to the system clipboard when made. Covers Copy, Copy Merged, Copy Image, layer copies, the History tile, the capture toast and a new screenshot (on the clipboard before its file is written).
 - After: clipboard moves within 0-18 ms, 120/120 early pastes get the new picture, main thread under 11 ms on a 12 MP copy. Tools: `Scripts/clipboard-timing/run.sh timing|race|stall`.
 - Open: hand pasting into Teams/Slack/Mail/Messages/Figma/Preview is for the user (audit 2026-11-01-copy-is-on-the-clipboard-the-instant-you-press-i).
+
+## 2026-11-01 — the reworked selection, slice 1 (grips, knob, chip, Size, 3D grips)
+
+- Next (`next-transform-modes`, on by default): white corner squares, edge pills, a knob with a clockwise arrow on a dotted stem, a Size/3D chip, a size tag under the frame. Corners keep proportions (Shift stretches), edge pills stretch one way, Option from the middle, double-click knob to 0°. 3D: any edge pill tips and swings, a grip below pushes back/pulls forward. Core in `SelectionGrips.swift`, canvas in `CanvasSelectionGrips.swift`, walk `selection-grips-walk`.
+- Next: Skew & distort, perspective pill, per-mode resets (queued p1 in that order).
+- Open: walks cannot open the tool bar Info popover (pre-existing, on the standing walk task).

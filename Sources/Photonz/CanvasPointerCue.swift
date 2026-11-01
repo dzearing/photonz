@@ -166,6 +166,8 @@ extension CanvasNSView {
         // after the pivot and ahead of the knob. A knob that has moved with a
         // layer seen in space is caught where it is drawn.
         let view = viewport.viewPoint(fromDocument: p)
+        // The reworked selection's grips, read where `mouseDown` reads them.
+        if let grip = selectionGripCue(atView: view, layer: layer) { return grip }
         if let space = spaceHandleHit(atView: view) {
             cueSpaceHandle = space
             return (.grab, .identity)
@@ -348,6 +350,14 @@ extension CanvasNSView {
             recordPlaytestCue("name-grab")
             #endif
             return applyGrabCursor(.openHand)
+        }
+        // The chip by the knob is a button: the plain arrow, and nothing
+        // under it is offered.
+        if case .chip? = selectionGripHit(atView: point) {
+            #if PHOTONZ_PLAYTEST
+            recordPlaytestCue("chip")
+            #endif
+            return applyGrabCursor(.arrow)
         }
         let hit = pointerCue(at: doc)
         #if PHOTONZ_PLAYTEST
