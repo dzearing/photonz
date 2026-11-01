@@ -1,0 +1,28 @@
+{
+  "id": "making-a-part-of-a-traced-drawing-smaller-shrink",
+  "title": "Making a part of a traced drawing smaller shrinks all of it cleanly, rays and all, with nothing showing through",
+  "goal": "When Ask has drawn an icon (a sun over a hill) and you ask it to make the sun smaller, today only the sun disc shrinks: its rays stay full size and the green hill layer that the tracing put under the sun shows through as a thick ring. The whole sun should shrink and the space it leaves should look like the background around it.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 95,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T01:26:13.360Z",
+  "updated": "2026-11-01T01:26:13.363Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced: node Scripts/ask-eval/followup.mjs run --run after-5 --cases icon-sun-smaller (code bb3ea1fb). Model called change_part with part Sun and at, a point in the disc. Judge: \"The yellow sun disc did get smaller, but the space it left was filled with a thick green ring instead of the background, the rays stayed at their original size and position, and the top of the hill bulges upward\" (part 5 words 6 rest 4). Pictures: .ask-eval/followups/after-5/icon-sun-smaller/first.png and second.png. Layer tree of that icon: Green [path] covers 43,138 426x294 (under the sun), Yellow (disc) plus Yellow 2..13 and Pale yellow 1..6 (rays and highlights) as separate colour layers. splitPiece (Sources/PhotonzCore/AgentPartChange.swift) takes only the smallest ring at the point. Ideas: gather pieces of the same and near colours within a radius of the picked piece; or cut the hole out of the layer beneath. Found while running ask-changes-what-it-just-made-make-the-water-blu.",
+  "acceptance": [
+    "On a drawing traced into colour layers, a change_part with a point inside one piece also takes the other pieces of the same part (a sun disc and its rays), found by a general rule, never by coded subject words",
+    "Shrinking or removing a traced piece leaves what was around it showing, not a lower colour layer that the trace filled in underneath",
+    "The two-turn eval case icon-sun-smaller passes when its first request makes a drawing"
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T01:26:13.362Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}
