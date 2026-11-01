@@ -2,6 +2,20 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.22.0 — 2026-11-01
+
+**A new way to move, size and turn things.** Pick a layer and a small chip by the rotate knob offers three steps, in the order they apply: Size, Skew & distort, and 3D. The grips look the same in every step, sit just off your picture so they never cover it, and light up when you point at one. Corners keep a picture's proportions, and Shift stretches it. The rotate knob shows a turning arrow; double-click it to go back to straight. Skew & distort reshapes the picture itself, so you can still size and turn it afterwards. In 3D you tip and swing the layer, push it back or pull it forward, and set the perspective from a small control right beside it. Right-click any step on the chip to undo just that step; a step you have changed shows a dot.
+
+**Arrows and measurements, styled your way.** Ten chip styles for the labels on arrows and measurements, from a solid pill to glass to a highlighter swipe, and ten arrow styles, now including Dashed, Block, Neon, Dotted and Elbow. Pick one colour and the line, head and label all follow it, and the words on the label always stay readable, whatever colour you choose. A label can carry a marker: an error, a warning, a check or an info icon. Every measurement wears the same chips. The detailed controls are tucked under Advanced.
+
+**Ask changes what it just made.** After Ask paints a beach, "make the water bluer" now changes the water. Ask remembers what it made in the window, looks at the picture, and can recolour, resize, move or remove one part as a single step you can undo. It can make a photo when you ask for one, and it works on big drawings that used to be too large for it. While it works, the Agent panel says what it is doing right now.
+
+**Paint with brushes on paths.** A path's line can be painted with charcoal, pencil, watercolour and the other brushes, and stays editable. Big brushes keep up with your hand.
+
+**Transitions that just work.** Every transition goes on two clips that touch, holding the first or last frame where a clip runs out of footage. You pick a transition at the cut, from tiles made from your own two clips. The Transitions panel stays folded until there is a cut, and its tiles only move while you point at them.
+
+**Fixes worth naming.** A copied picture is on the clipboard the moment you press Copy, so a quick paste always gets it. An alignment guide re-measures as you drag it. Photonz offers an update only once its download is ready.
+
 ## 0.21.0 — 2026-10-29
 
 **Saved videos play everywhere again.** Since 0.17.0, a video you cut and saved could play in QuickTime but stop partway through in Chrome, Teams, Slack and other players. Saved videos now play the whole way through in all of them. Exporting a video over the recording it came from no longer deletes the recording, and a save that fails leaves your old file untouched.
