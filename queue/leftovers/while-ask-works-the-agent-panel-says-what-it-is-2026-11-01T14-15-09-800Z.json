@@ -1,0 +1,19 @@
+{
+  "id": "while-ask-works-the-agent-panel-says-what-it-is-2026-11-01T14-15-09-800Z",
+  "task": "while-ask-works-the-agent-panel-says-what-it-is",
+  "kind": "task",
+  "label": "While Ask works, the Agent panel says what it is doing right now",
+  "title": "While Ask works, the Agent panel says what it is doing right now",
+  "outcome": "ok",
+  "at": "2026-11-01T14:15:09.800Z",
+  "files": [
+    "docs/design/mocks/pages/selection-transform.html"
+  ],
+  "count": 1,
+  "state": "stashed",
+  "stash": "f24037c1607ccdf442b52aeaa69f923f8f980b9d",
+  "restore": "git stash apply f24037c1607ccdf442b52aeaa69f923f8f980b9d",
+  "why": "",
+  "handed": "2026-11-01T14:15:44.568Z",
+  "clearedWhy": "the intake window's own uncommitted design file, restored and committed"
+}
