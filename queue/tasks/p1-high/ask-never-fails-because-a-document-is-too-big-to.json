@@ -5,11 +5,11 @@
   "epic": "local-edit",
   "priority": "p1-high",
   "seq": 1.5e-7,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T01:43:14.643Z",
-  "updated": "2026-11-01T03:55:12.503Z",
+  "updated": "2026-11-01T03:55:27.060Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake), screenshot: Image, a 'Statue of Liberty' drawing group with 216 layers on a 1440x1024 canvas; Agent panel shows 'request (41070 tokens) exceeds the available context size (32768 tokens), try increasing it' above the row 'Drew the Statue of Liberty'. Cause, from code: AskConversation.instructions(documentRead:) in Sources/PhotonzCore/AskPlanning.swift pastes the whole read_document text into the system prompt ('The document now (read_document):'), so every one of the drawing's 216 traced paths is described; contextWindow = 32768 there and --ctx-size in AskBuiltInModel.swift. The server's own error text is shown to the person as is.",
@@ -50,10 +50,15 @@
     {
       "t": "2026-11-01T03:55:12.502Z",
       "note": "Chose leaving the video-only tools out on a picture (they all refuse a picture) over keeping them because they cost about 1,500 tokens and ten seconds on every picture request, and they took the Statue request from 16,540 to 15,012 tokens, under half of 32K. Chose 65,536 tokens on Macs of 48 GB or more over a flat 32,768 because it costs 2.2 GB here and keeps long plans from losing old tool answers."
+    },
+    {
+      "t": "2026-11-01T03:55:27.058Z",
+      "note": "Shipped 3d8efd5d: Ask says a big drawing in short (AskDocumentDigest), fits every request to its window, leaves video tools out on a picture, sends back a part with no point, and turns server errors into one plain sentence; window 65,536 on Macs of 48 GB+ (+2.2 GB measured). Reproduced first (39,719 tokens refused); the Statue request is now 15,012 tokens measured on the model's tokenizer, under half of 32K. Walk ask-changes-a-big-traced-drawing-walk passes at Next defaults ('Made her robe a darker green', one step). Full suite green. Robe targeting on colour-traced drawings folded into making-a-part-of-a-traced-drawing-smaller-shrink. Audit 2026-10-31-ask-never-fails-because-a-document-is-too-big-to."
     }
   ],
   "started": "2026-11-01T02:45:30.388Z",
   "walks": [
     "ask-changes-a-big-traced-drawing-walk"
-  ]
+  ],
+  "completed": "2026-11-01T03:55:27.059Z"
 }
