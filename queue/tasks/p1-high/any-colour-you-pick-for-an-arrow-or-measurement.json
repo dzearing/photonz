@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:19:06.785Z",
-  "updated": "2026-11-01T14:53:13.695Z",
+  "updated": "2026-11-01T21:33:45.636Z",
   "deps": [
     "a-walk-s-press-on-a-picture-tile-swatch-or-colou"
   ],
@@ -83,6 +83,14 @@
     {
       "t": "2026-11-01T14:53:13.694Z",
       "note": "seq 1e-7 -> 20"
+    },
+    {
+      "t": "2026-11-01T20:34:09.132Z",
+      "note": "rotating check 2026-11-01T20:34:08Z, 37 walks run from 78 onward in the rotation: any-colour-chip-reads-walk failing."
+    },
+    {
+      "t": "2026-11-01T21:33:45.635Z",
+      "note": "Run once by a-walk-s-press-on-a-picture-tile-swatch-or-colou on 2026-11-01 after its fix to how walks click (probe built from that change): Scripts/playtest.sh Scripts/playtest/any-colour-chip-reads-walk.json --no-build -> status ok in 70s, 17 real window pictures (1-white-* through 6-automatic). The custom colour well, HEX, every Chip tile, Color Blue and Reset Colors all took effect by pointer press. Its dependency is done once that task closes; this task's walk item can now be ticked by its own runner."
     }
   ],
   "started": "2026-10-31T15:22:52.840Z",

@@ -1,0 +1,31 @@
+{
+  "id": "picking-a-perspective-preset-or-sliding-it-keeps",
+  "title": "Picking a perspective preset or sliding it keeps the perspective popover open",
+  "goal": "In 3D, the popover under the perspective pill (None, Subtle, Normal, Strong and a slider) disappears the moment the perspective changes, so a person who clicks Strong to try it has to click the pill again to try another value. It should stay open while you try values, the way the same controls in the tool bar Info popover already do, and close on Escape or a click elsewhere.",
+  "epic": "found-selection",
+  "priority": "p2-normal",
+  "seq": 4090,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T21:33:45.710Z",
+  "updated": "2026-11-01T21:33:45.713Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-01 on the probe at Next defaults (task a-walk-s-press-on-a-picture-tile-swatch-or-colou). perspective-pill-walk with press Strong in Perspective then expect field Perspective Value: expectCamera 90 passed, then: step 35 (expect): no field called \"Perspective Value\" is in the panel to read. Same with Subtle (20). Not a click artefact: with the popover open, an action undo (75 -> 45, no click at all) also closed it: step 34 (expect): no field called \"Perspective Value\". The tool bar Info popover stays open after its own Subtle press (Transform Perspective Value read 20 deg). Suspect: a perspective change redraws the selection grips and something on that path (CanvasSelectionGrips hideSelectionGrips / drawPerspectivePill with grips.perspective nil for a pass, or askPerspectivePopover) sets perspectivePopoverAnchor nil. Today the walk reopens it with a grip perspective step after Strong and has no Escape after the slider (the popover is already closed); fix those when this lands. Also seen at Strong (90 deg, tip 24 swing 36): the selection outline runs from the card corner to a handle far off the card at the lower left (queue/audits picture not saved; /tmp/photonz-playtest/perspective-pill-walk/5-strong-sc.png on the run), worth a look while here.",
+  "acceptance": [
+    "With the pill popover open, clicking Strong, then Subtle, then dragging the slider all change the perspective and the popover stays open throughout",
+    "An undo while the popover is open changes the value and leaves the popover open",
+    "Escape or a click on the canvas away from the pill still closes it",
+    "perspective-pill-walk presses Strong then the slider with no grip step in between to reopen the popover, and still closes it with Escape before pressing Info"
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T21:33:45.712Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "perspective-pill-walk"
+  ]
+}

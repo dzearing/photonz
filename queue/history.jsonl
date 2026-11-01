@@ -15099,3 +15099,20 @@
 {"t":"2026-11-01T20:24:55.399Z","ev":"task_note","id":"reset-each-transform-mode-on-its-own-with-a-dot"}
 {"t":"2026-11-01T20:24:55.464Z","ev":"task_note","id":"reset-each-transform-mode-on-its-own-with-a-dot"}
 {"t":"2026-11-01T20:25:13.442Z","ev":"task_done","id":"reset-each-transform-mode-on-its-own-with-a-dot","from":"in_progress","note":"Shipped in bf2b5663 (Next, at defaults). Right-click a chip button: Reset Size, Reset Skew & Distort, Reset 3D, Reset All, greyed when unchanged, one undo step each, the tag says the reset. A changed mode wears a dot (white on the picked button). Reset Size returns a picture's own pixel size, upright, same middle. Edit > Transform gains Turn in 3D and the four resets (Edit, not Layer: the app's one Transform submenu, see log); Layer > Reset 3D Rotation folds into Reset 3D. Verified: 14 new core tests first, full Scripts/test.sh green; reset-each-transform-mode-walk (pointer right-clicks the chip, resets each mode) and transform-resets-from-the-menu-walk green at Next defaults with real captures; neighbouring walks (flip, keystone, skew, selection-grips, perspective-pill) green; audit 2026-11-01-transform-resets.json with a side-by-side against the prototype."}
+{"t":"2026-11-01T20:34:09.063Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-11-01T20:34:09.099Z","ev":"task_note","id":"animate-a-property-fits-on-screen-on-a-title-wit"}
+{"t":"2026-11-01T20:34:09.134Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-11-01T20:34:09.170Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-01T20:35:59.204Z","ev":"slice_pass","walks":37,"passed":26,"failed":11,"seconds":487,"of":1078,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-01T20:35:59.376Z","ev":"task_started","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou","title":"A walk's press on a picture tile, swatch or colour well in the panel takes effect again","priority":"p1-high"}
+{"t":"2026-11-01T21:33:45.637Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-11-01T21:33:45.714Z","ev":"task_created","id":"picking-a-perspective-preset-or-sliding-it-keeps","priority":"p2-normal","title":"Picking a perspective preset or sliding it keeps the perspective popover open"}
+{"t":"2026-11-01T21:34:14.608Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
+{"t":"2026-11-01T21:34:14.682Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
+{"t":"2026-11-01T21:34:14.755Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
+{"t":"2026-11-01T21:34:14.828Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
+{"t":"2026-11-01T21:34:14.901Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
+{"t":"2026-11-01T21:34:14.975Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
+{"t":"2026-11-01T21:34:31.830Z","ev":"task_walks","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou","walks":["arrow-styles-walk","chip-styles-picking-walk","picker-controls-walk","a-press-fires-a-plain-button-walk"]}
+{"t":"2026-11-01T21:34:31.903Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-01T21:34:39.252Z","ev":"task_done","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou","from":"in_progress","note":"Walk presses on plain SwiftUI buttons work again (f0ca90e3). Cause: macOS 27.0.1 (2026-10-25) stopped firing a SwiftUI Button when the walk dequeued the press itself and left the release to the run loop; MainThreadMeter.deliverWalkClick now hands the release over too. arrow-styles, chip-styles-picking, picker-controls ok 3 runs each at Next defaults, no front:true; any-colour-chip-reads, brush chooser walks, perspective-pill (Strong, slider, Info, Subtle), measure-chip-styles (Orange, Reset Colors), arrow-appearance-simple (S/M/L, Advanced) and 10 walks red in the last sweep pass; new a-press-fires-a-plain-button-walk runs first in every rotating check; Scripts/test.sh green; full sweep requested --now."}

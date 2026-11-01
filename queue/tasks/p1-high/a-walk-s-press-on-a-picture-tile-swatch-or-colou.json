@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T14:52:18.542Z",
-  "updated": "2026-11-01T19:12:22.354Z",
+  "updated": "2026-11-01T21:34:39.251Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the digest on 2026-11-01 on the probe build in dist: `Scripts/playtest.sh Scripts/playtest/arrow-styles-walk.json --no-build` -> status failed, step 18 '\"Arrow style Hand-drawn\" in Arrow Style, off at window (1219, 531), one click; settled after 6 looks; ... no view bodies counted', step 19 'FAILED: the control called \"Arrow style Hand-drawn\" in \"Arrow Style\" reads \"Arrow Style, off\", not \"Arrow Style, on\"'. Four runners hit the same dead press in two days, each logged on walks-that-fail-in-the-full-sweep-26: arrow-styles-walk and chip-styles-picking-walk (2026-10-31 14:49, also with setup front:true, while segmented arrow-endings-walk passed in the same build), any-colour-chip-reads-walk step 15 (Custom well opens no picker, a press on 'Color Green' leaves the arrow #FF3B30), picker-controls-walk at its first press inside the picker, measure-chip-styles taps (2026-11-01 05:08), and chip-styles-picking-walk step 18 on clean HEAD d08583a7 (2026-11-01 07:10). arrow-styles-walk last passed in the 2026-10-23 sweep, so the change sits between then and 2026-10-26. Related and possibly the same cause: the brush chooser popover over the tool bar does not open under a walk, by press or windowClick, even with the window key and in front (2026-10-31 06:35 on the walk task). The press path is the posted-mouse-event press in Sources/Photonz/Playtest. Blocks any-colour-you-pick-for-an-arrow-or-measurement (user ask), whose only open item is its walk.",
@@ -39,11 +39,50 @@
     {
       "t": "2026-11-01T19:12:22.353Z",
       "note": "Also dead on the canvas overlays (2026-11-01, perspective-pill task): with the perspective popover open under the 3D pill, press 'Strong' in 'Perspective' (and 'None', and 'Slider' across 0.75) at the right window point did nothing; the hit view was the editor's AppKitWindowHostingView and the window was not key. A windowClick at the same point, taking the front, did nothing either. press 'Info' in the tool bar did nothing in the same run (F8 through the new toggleTransformValues stand-in opens it). Once presses work, add to perspective-pill-walk: press Strong in Perspective then expectCamera 90, press Slider in Perspective across 0.75, press Subtle in Transform Perspective then expectCamera 20."
+    },
+    {
+      "t": "2026-11-01T20:35:59.370Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T21:34:14.606Z",
+      "note": "Why (reproduced, then measured): macOS went from 26.4 to 27.0.1 on this Mac on 2026-10-25 23:24, inside the 10-23..10-26 window; no app change explains it. A walk click posted the release, posted the press, took the press out of the queue itself (nextEvent, nested inside the run loop's own wait) and handed it over, leaving the release for the run loop. On macOS 27 a SwiftUI Button never fires that way: a monitor showed the release arriving about 10ms later, and no action ran. Segmented pickers and sliders kept working because they are AppKit controls whose own tracking loop pulls the release from the queue during the press. Measured on arrow-styles-walk with a temporary switch, one probe build: current way failed 3/3; same event numbers, makeKey first, CGEvent-made events, CGEvent postToPid all failed; both events left to the run loop, both sent straight to the window, the press sent without ever being dequeued, or the release handed over right after the press all passed."
+    },
+    {
+      "t": "2026-11-01T21:34:14.680Z",
+      "note": "Fix: MainThreadMeter.deliverWalkClick (PlaytestHarness.swift) keeps the old order (release queued first, so a tracking view like the colour picker's swatch grid still finds it and never hangs; press dequeued and handed over, so NSApp.currentEvent stays right for ZoomReadoutClickLid and the meter still leaves the menu bar out) and then hands the release over too when nothing took it. Used by press (single and each earlier click of a double click), windowClick and the Library tile click clock. Still real NSEvents through NSApp.sendEvent to the control under the point: no shortcut to any action."
+    },
+    {
+      "t": "2026-11-01T21:34:14.753Z",
+      "note": "Verified on a fresh probe build at Next defaults, no front:true: arrow-styles, chip-styles-picking, picker-controls ok three runs each (twice in a row after the first). Also ok: any-colour-chip-reads (70s, 17 pictures), measure-chip-styles (now presses Color Orange, paints Chip Text near-white, presses Reset Colors; pictures 5-orange/6-warning/7-reset looked at: orange caliper, washed-out words, words dark again), arrow-appearance-simple (now presses S and M as well as L and Advanced), perspective-pill (now presses Strong, the Slider at 25% (27 deg), the tool bar Info button and Subtle in the Info popover), and ten walks red in the last sweep (appearance-and-effects-dropdowns-open-on-a-click, appearance-list, blend-mode, border-effect, colour-off-the-shelf, effect-colour, copy-own-color, corner-radius-rounds, animate-a-property-list, 3d-grippers-on-a-picked-layer). Scripts/test.sh exit 0."
+    },
+    {
+      "t": "2026-11-01T21:34:14.826Z",
+      "note": "Brush chooser: same cause. brushes-picked-from-tiles-walk presses Choose brush and picks tiles and passes now, as do brush-settings-on-a-click, each-brush-shows-its-own-settings, airbrush-sprays-and-builds and brush-dry-media-and-smudge."
+    },
+    {
+      "t": "2026-11-01T21:34:14.899Z",
+      "note": "Guard: new a-press-fires-a-plain-button-walk (picture tile, swatch, double click on a tile, custom colour well, HEX inside the picker) is now first in sweep-schedule everyCheck, so every rotating check after landed code fails it by name if walk presses stop reaching SwiftUI again; drill line added in sweep-schedule-drill.mjs. No app unit test target exists, and the fault only shows nested inside the running app's run loop, so a walk is the test. Not re-run against the old delivery after the guard was written (another 6 min build); the same first Hand-drawn press after an arrow drag failed 3/3 the old way."
+    },
+    {
+      "t": "2026-11-01T21:34:14.973Z",
+      "note": "Found while walking: the perspective pill's popover closes on ANY perspective change (a preset, the slider, even an undo with no click), so a person cannot try a second value without reopening it. Filed picking-a-perspective-preset-or-sliding-it-keeps (p2, reproduced). perspective-pill-walk reopens it with a grip step for now. Left rough, not filed: at Strong (90 deg) with the card tipped 24 and swung 36 the selection outline ran to a handle far off the card at lower left; noted in that task's notes rather than filed on its own."
+    },
+    {
+      "t": "2026-11-01T21:34:31.828Z",
+      "note": "walks arrow-styles-walk, chip-styles-picking-walk, picker-controls-walk -> arrow-styles-walk, chip-styles-picking-walk, picker-controls-walk, a-press-fires-a-plain-button-walk"
+    },
+    {
+      "t": "2026-11-01T21:34:39.249Z",
+      "note": "Walk presses on plain SwiftUI buttons work again (f0ca90e3). Cause: macOS 27.0.1 (2026-10-25) stopped firing a SwiftUI Button when the walk dequeued the press itself and left the release to the run loop; MainThreadMeter.deliverWalkClick now hands the release over too. arrow-styles, chip-styles-picking, picker-controls ok 3 runs each at Next defaults, no front:true; any-colour-chip-reads, brush chooser walks, perspective-pill (Strong, slider, Info, Subtle), measure-chip-styles (Orange, Reset Colors), arrow-appearance-simple (S/M/L, Advanced) and 10 walks red in the last sweep pass; new a-press-fires-a-plain-button-walk runs first in every rotating check; Scripts/test.sh green; full sweep requested --now."
     }
   ],
   "walks": [
     "arrow-styles-walk",
     "chip-styles-picking-walk",
-    "picker-controls-walk"
-  ]
+    "picker-controls-walk",
+    "a-press-fires-a-plain-button-walk"
+  ],
+  "started": "2026-11-01T20:35:59.369Z",
+  "completed": "2026-11-01T21:34:39.250Z"
 }
