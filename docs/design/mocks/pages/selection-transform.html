@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · selection-transform</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Prototype for review (2026-11-01): perspective, skew and distort on the
+     reworked selection (lang-selection.html, Proposal 03b). Page-local, `st-`.
+     One engine draws every mode: the card's four corners are worked out
+     (size, skew, a 3D turn seen by the document camera, or pinned corners)
+     and the content is mapped onto them with a homography. Grips, knob, chip
+     and tag sit in a flat layer at the projected corners, so they stay one
+     size on screen however the card is turned. */
+  #selection-transform .st-lede{font-size:13px;line-height:1.55;color:var(--dim);max-width:86ch;margin:0}
+  #selection-transform .st-lede b{color:var(--ink)}
+  #selection-transform .st-wrap{display:grid;grid-template-columns:1fr 280px;gap:var(--gap)}
+  @media(max-width:900px){#selection-transform .st-wrap{grid-template-columns:1fr}}
+  #selection-transform .st-stage{position:relative;height:560px;border-radius:var(--r4);overflow:hidden;user-select:none;
+    background:#e9e9ee radial-gradient(circle at 1px 1px,rgba(0,0,0,.08) 1px,transparent 1.5px) 0 0/22px 22px;border:1px solid var(--line)}
+  #selection-transform .st-card{position:absolute;left:0;top:0;transform-origin:0 0;border-radius:10px;overflow:hidden;
+    background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.18);cursor:move}
+  #selection-transform .st-card .st-shot{position:absolute;inset:0;padding:14px 16px;font:12px/1.4 -apple-system,system-ui,sans-serif;color:#1d1d1f}
+  #selection-transform .st-card .st-bar{height:22px;margin:-14px -16px 12px;background:#f2f2f5;border-bottom:1px solid #e3e3e8;display:flex;gap:6px;align-items:center;padding:0 10px}
+  #selection-transform .st-card .st-bar i{width:9px;height:9px;border-radius:50%;display:block}
+  #selection-transform .st-card h4{margin:0 0 6px;font-size:15px}
+  #selection-transform .st-card .st-row{height:8px;border-radius:4px;background:#e6e6eb;margin:7px 0}
+  #selection-transform .st-card .st-btn{display:inline-block;margin-top:10px;padding:6px 12px;border-radius:7px;background:#0a84ff;color:#fff;font-weight:600}
+  #selection-transform .st-card.st-b{background:linear-gradient(135deg,#ffd27a,#ff7a59)}
+  #selection-transform svg.st-ov{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+  #selection-transform svg.st-ov .hit{pointer-events:all}
+  #selection-transform .st-tag{position:absolute;transform:translate(-50%,0);font:600 11px/1 -apple-system,system-ui,sans-serif;color:#fff;
+    background:#0a84ff;border-radius:6px;padding:4px 7px;white-space:nowrap;pointer-events:none}
+  #selection-transform .st-chip{position:absolute;display:flex;gap:1px;background:#fff;border-radius:7px;padding:2px;transform:translate(10px,-50%);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 2px 6px rgba(0,0,0,.18)}
+  #selection-transform .st-chip button{width:22px;height:20px;border:0;border-radius:5px;background:none;padding:0;display:grid;place-items:center;cursor:pointer;color:#3a3a3c}
+  #selection-transform .st-chip button[aria-pressed="true"]{background:#0a84ff;color:#fff}
+  #selection-transform .st-chip svg{width:14px;height:14px}
+  #selection-transform .st-side{display:flex;flex-direction:column;gap:var(--gap-sm)}
+  #selection-transform .st-pan{background:var(--panel);border:1px solid var(--edge-lo);border-radius:var(--r4);padding:10px 12px;font-size:12px}
+  #selection-transform .st-pan h5{margin:0 0 8px;font-size:11px;letter-spacing:.06em;color:var(--dim);font-weight:600}
+  #selection-transform .st-kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-variant-numeric:tabular-nums}
+  #selection-transform .st-kv span:nth-child(odd){color:var(--dim)}
+  #selection-transform .st-presets{display:flex;gap:4px;margin:8px 0 6px;flex-wrap:wrap}
+  #selection-transform .st-presets button{font:inherit;font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer}
+  #selection-transform .st-presets button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  #selection-transform input[type=range]{width:100%}
+  #selection-transform .st-cone{display:block;margin:4px auto 2px}
+  #selection-transform .st-note{color:var(--dim);font-size:11px;line-height:1.4;margin:4px 0 0}
+  #selection-transform .st-menu button{display:block;width:100%;text-align:left;font:inherit;font-size:12px;padding:5px 8px;border:0;border-radius:5px;background:none;color:var(--ink);cursor:pointer}
+  #selection-transform .st-menu button:hover{background:var(--accent);color:#fff}
+  #selection-transform .st-menu kbd{float:right;font:11px var(--mono);opacity:.7}
+  #selection-transform table.st-keys{border-collapse:collapse;font-size:12px;width:100%}
+  #selection-transform table.st-keys td{padding:5px 8px;border-top:1px solid var(--line-soft)}
+  #selection-transform table.st-keys td:first-child{white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--dim)}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="selection-transform">
+  <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Transform modes</h2><span class="k">· prototype: size, skew, 3D with perspective, distort</span></div>
+  <p class="st-lede">For review, building on <b>Selection · Proposal 03b</b>. The chip by the rotate knob now has three choices: <b>Size</b>, <b>3D</b> and <b>Distort</b>. Perspective belongs to the document's one camera, so changing it moves <b>every</b> 3D layer (two cards here to show it). Keys follow Photoshop. Try them on the card.</p>
+
+  <div class="st-wrap">
+    <div class="st-stage" id="st-stage"></div>
+    <div class="st-side">
+      <div class="st-pan">
+        <h5>INFO</h5>
+        <div class="st-kv" id="st-kv"></div>
+      </div>
+      <div class="st-pan">
+        <h5>PERSPECTIVE · THE CAMERA</h5>
+        <svg class="st-cone" id="st-cone" width="200" height="54" viewBox="0 0 200 54"></svg>
+        <div class="st-presets" id="st-presets"></div>
+        <input type="range" id="st-fov" min="0" max="120" step="1" aria-label="Perspective">
+        <p class="st-note">Affects all 3D layers. Option-drag an edge pill in 3D to change it by hand.</p>
+      </div>
+      <div class="st-pan st-menu">
+        <h5>LAYER ▸ TRANSFORM</h5>
+        <button data-cmd="skew">Skew<kbd>⌘ edge</kbd></button>
+        <button data-cmd="distort">Distort<kbd>⌘ corner</kbd></button>
+        <button data-cmd="keystone">Keystone<kbd>⌘⌥⇧ corner</kbd></button>
+        <button data-cmd="3d">Turn in 3D</button>
+        <button data-cmd="reset">Reset Transform</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="st-pan" style="margin-top:var(--gap)">
+    <h5>KEYS</h5>
+    <table class="st-keys">
+      <tr><td>drag corner</td><td>Resize. ⌥ from the centre, ⇧ keeps proportions</td></tr>
+      <tr><td>⌘ drag edge pill</td><td>Skew along that edge</td></tr>
+      <tr><td>⌘ drag corner</td><td>Distort: that corner moves freely (switches to Distort)</td></tr>
+      <tr><td>⌘⌥⇧ drag corner</td><td>Keystone: the corner across the edge mirrors it</td></tr>
+      <tr><td>3D · drag edge pill</td><td>Turn: up and down tip it, left and right swing it. ⇧ 15° steps</td></tr>
+      <tr><td>3D · drag corner</td><td>Push back or pull forward (depth)</td></tr>
+      <tr><td>3D · ⌥ drag edge pill</td><td>Perspective of the camera (all 3D layers), with lines to the vanishing point</td></tr>
+      <tr><td>Distort · drag pin</td><td>Move that corner. Drag an edge pill to move the whole edge</td></tr>
+      <tr><td>esc</td><td>Back to Size</td></tr>
+    </table>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function () {
+  const stage = document.getElementById("st-stage");
+  const NS = "http://www.w3.org/2000/svg";
+  const cam = { fov: 45 };                       // the document's one camera
+  const R = d => d * Math.PI / 180;
+
+  // ---------- Layers ----------
+  function makeLayer(o) {
+    const el = document.createElement("div");
+    el.className = "st-card" + (o.cls ? " " + o.cls : "");
+    el.style.width = o.w + "px"; el.style.height = o.h + "px";
+    el.innerHTML = o.html;
+    stage.appendChild(el);
+    return Object.assign({ el, mode: "size", rx: 0, ry: 0, z: 0, skx: 0, sky: 0, pins: null }, o);
+  }
+  const shot = `<div class="st-shot"><div class="st-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+    <h4>Checkout</h4><div class="st-row" style="width:90%"></div><div class="st-row" style="width:70%"></div><div class="st-row" style="width:82%"></div><span class="st-btn">Pay now</span></div>`;
+  const layers = [
+    makeLayer({ name: "Screenshot", x: 150, y: 150, w: 300, h: 210, html: shot }),
+    makeLayer({ name: "Badge", x: 520, y: 330, w: 120, h: 120, cls: "st-b", html: `<div class="st-shot" style="color:#fff;font-weight:700;font-size:20px;display:grid;place-items:center">NEW</div>`, rx: 0, ry: -35 }),
+  ];
+  let pick = layers[0];
+
+  // ---------- Corners in every mode ----------
+  function rectCorners(L) { return [[L.x, L.y], [L.x + L.w, L.y], [L.x + L.w, L.y + L.h], [L.x, L.y + L.h]]; }
+  function corners(L) {
+    if (L.pins) return L.pins;
+    const cx = L.x + L.w / 2, cy = L.y + L.h / 2;
+    const local = [[-L.w / 2, -L.h / 2], [L.w / 2, -L.h / 2], [L.w / 2, L.h / 2], [-L.w / 2, L.h / 2]];
+    const tx = Math.tan(R(L.skx)), ty = Math.tan(R(L.sky));
+    const f = cam.fov > 0 ? (stage.clientHeight / 2) / Math.tan(R(cam.fov) / 2) : Infinity;
+    return local.map(([x, y]) => {
+      x = x + y * tx; y = y + x * ty;                       // skew in its own plane
+      let X = x, Y = y, Z = 0;
+      const ca = Math.cos(R(L.rx)), sa = Math.sin(R(L.rx));  // tip about the horizontal axis
+      [Y, Z] = [Y * ca - Z * sa, Y * sa + Z * ca];
+      const cb = Math.cos(R(L.ry)), sb = Math.sin(R(L.ry));  // swing about the vertical axis
+      [X, Z] = [X * cb + Z * sb, -X * sb + Z * cb];
+      Z += L.z;                                             // toward the viewer is +
+      const k = f === Infinity ? 1 : f / (f - Z);
+      return [cx + X * k, cy + Y * k];
+    });
+  }
+
+  // ---------- Homography: map the w×h box onto four corners ----------
+  function solve(A, b) {
+    const n = b.length;
+    for (let i = 0; i < n; i++) {
+      let m = i; for (let r = i + 1; r < n; r++) if (Math.abs(A[r][i]) > Math.abs(A[m][i])) m = r;
+      [A[i], A[m]] = [A[m], A[i]]; [b[i], b[m]] = [b[m], b[i]];
+      for (let r = i + 1; r < n; r++) { const c = A[r][i] / A[i][i]; for (let k = i; k < n; k++) A[r][k] -= c * A[i][k]; b[r] -= c * b[i]; }
+    }
+    const x = Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) { let s = b[i]; for (let k = i + 1; k < n; k++) s -= A[i][k] * x[k]; x[i] = s / A[i][i]; }
+    return x;
+  }
+  function matrixFor(w, h, q) {
+    const src = [[0, 0], [w, 0], [w, h], [0, h]], A = [], b = [];
+    for (let i = 0; i < 4; i++) {
+      const [x, y] = src[i], [u, v] = q[i];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+      A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+    }
+    const [a, bb, c, d, e, f, g, hh] = solve(A, b);
+    return `matrix3d(${a},${d},0,${g},${bb},${e},0,${hh},0,0,1,0,${c},${f},0,1)`;
+  }
+
+  // ---------- Overlay ----------
+  const ov = document.createElementNS(NS, "svg"); ov.setAttribute("class", "st-ov"); stage.appendChild(ov);
+  const tag = document.createElement("div"); tag.className = "st-tag"; stage.appendChild(tag);
+  const chip = document.createElement("div"); chip.className = "st-chip"; stage.appendChild(chip);
+  const ICON = {
+    size: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="M1.5 1.5h2v2M14.5 14.5h-2v-2"/></svg>`,
+    "3d": `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 1.8 13.6 5v6.2L8 14.4 2.4 11.2V5z"/><path d="M2.4 5 8 8.2 13.6 5M8 8.2v6.2"/></svg>`,
+    distort: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 4 13 2.5 14 13.5 3.5 12z"/><circle cx="2.5" cy="4" r="1.3" fill="currentColor"/><circle cx="13" cy="2.5" r="1.3" fill="currentColor"/><circle cx="14" cy="13.5" r="1.3" fill="currentColor"/><circle cx="3.5" cy="12" r="1.3" fill="currentColor"/></svg>`,
+  };
+  [["size", "Size grips"], ["3d", "3D grips"], ["distort", "Distort pins"]].forEach(([m, t]) => {
+    const b = document.createElement("button"); b.dataset.m = m; b.title = t; b.innerHTML = ICON[m];
+    b.addEventListener("pointerdown", e => e.stopPropagation());
+    b.addEventListener("click", () => setMode(pick, m));
+    chip.appendChild(b);
+  });
+  function setMode(L, m) {
+    if (m === "distort" && !L.pins) L.pins = corners(L).map(p => p.slice());
+    if (m !== "distort" && L.pins && m === "size") { /* keep pins: distort stays until Reset */ }
+    L.mode = m; draw();
+  }
+
+  let hint = "", vanishing = null;
+  function el(name, attrs, parent = ov) { const n = document.createElementNS(NS, name); for (const k in attrs) n.setAttribute(k, attrs[k]); parent.appendChild(n); return n; }
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  function draw() {
+    for (const L of layers) { L.el.style.transform = matrixFor(L.w, L.h, corners(L)); L.el.style.zIndex = Math.round(L.z) + 100; }
+    ov.innerHTML = "";
+    const q = corners(pick), blue = "#0a84ff";
+    if (vanishing) for (const p of q) el("line", { x1: p[0], y1: p[1], x2: vanishing[0], y2: vanishing[1], stroke: blue, "stroke-width": 1, "stroke-dasharray": "3 4", opacity: .55 });
+    el("polygon", { points: q.map(p => p.join(",")).join(" "), fill: "none", stroke: blue, "stroke-width": 1.5 });
+    const top = mid(q[0], q[1]), edgeN = (() => { const dx = q[1][0] - q[0][0], dy = q[1][1] - q[0][1], l = Math.hypot(dx, dy) || 1; return [dy / l, -dx / l]; })();
+    const knob = [top[0] + edgeN[0] * 26, top[1] + edgeN[1] * 26];
+    el("line", { x1: top[0], y1: top[1], x2: knob[0] - edgeN[0] * 6, y2: knob[1] - edgeN[1] * 6, stroke: blue, "stroke-width": 1.5 });
+    el("circle", { cx: knob[0], cy: knob[1], r: 6, fill: "#fff", stroke: blue, "stroke-width": 1.5 });
+    chip.style.left = knob[0] + 6 + "px"; chip.style.top = knob[1] + "px";
+    chip.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === pick.mode));
+    // grips: corners and edges, flat and one size
+    q.forEach((p, i) => {
+      if (pick.mode === "distort") el("circle", { cx: p[0], cy: p[1], r: 6, fill: blue, stroke: "#fff", "stroke-width": 2, class: "hit", "data-g": "c" + i, style: "cursor:grab" });
+      else if (pick.mode === "3d") {
+        el("rect", { x: p[0] - 8, y: p[1] - 8, width: 16, height: 16, rx: 4, fill: "#fff", stroke: blue, "stroke-width": 1.5, class: "hit", "data-g": "c" + i, style: "cursor:ns-resize" });
+        el("path", { d: `M${p[0] - 4} ${p[1] + 2} L${p[0]} ${p[1] - 3} L${p[0] + 4} ${p[1] + 2}`, fill: "none", stroke: blue, "stroke-width": 1.4 });
+      } else el("rect", { x: p[0] - 4, y: p[1] - 4, width: 8, height: 8, rx: 1, fill: "#fff", stroke: blue, "stroke-width": 1.5, class: "hit", "data-g": "c" + i, style: "cursor:nwse-resize" });
+    });
+    [[0, 1], [1, 2], [2, 3], [3, 0]].forEach(([a, b], i) => {
+      const m = mid(q[a], q[b]), horiz = i % 2 === 0;
+      const w = pick.mode === "3d" ? 18 : 14, h = pick.mode === "3d" ? 8 : 5;
+      const ang = Math.atan2(q[b][1] - q[a][1], q[b][0] - q[a][0]) * 180 / Math.PI;
+      el("rect", { x: m[0] - w / 2, y: m[1] - h / 2, width: w, height: h, rx: h / 2, fill: pick.mode === "3d" ? blue : "#fff", stroke: blue, "stroke-width": 1.5,
+        transform: `rotate(${ang} ${m[0]} ${m[1]})`, class: "hit", "data-g": "e" + i, style: `cursor:${horiz ? "ns" : "ew"}-resize` });
+    });
+    const bottom = mid(q[2], q[3]), below = Math.max(...q.map(p => p[1]));
+    tag.style.left = bottom[0] + "px"; tag.style.top = below + 12 + "px";
+    tag.textContent = hint || label();
+    info();
+  }
+  function label() {
+    const L = pick;
+    if (L.mode === "distort") return "Distort · " + L.name;
+    if (L.mode === "3d") return `Tip ${Math.round(L.rx)}° · Swing ${Math.round(L.ry)}°` + (L.z ? ` · ${L.z > 0 ? "forward" : "back"} ${Math.abs(Math.round(L.z))}` : "");
+    return `${Math.round(L.w)} × ${Math.round(L.h)}` + (L.skx || L.sky ? ` · skew ${Math.round(L.skx)}°, ${Math.round(L.sky)}°` : "");
+  }
+  function info() {
+    const L = pick, rows = [["Layer", L.name], ["Mode", { size: "Size", "3d": "3D", distort: "Distort" }[L.mode]], ["Size", `${Math.round(L.w)} × ${Math.round(L.h)}`],
+      ["Skew", `${Math.round(L.skx)}°, ${Math.round(L.sky)}°`], ["Tip / Swing", `${Math.round(L.rx)}° / ${Math.round(L.ry)}°`], ["Depth", Math.round(L.z)],
+      ["Corners", L.pins ? "pinned" : "from the transform"], ["Perspective", cam.fov ? cam.fov + "° (camera)" : "none"]];
+    document.getElementById("st-kv").innerHTML = rows.map(([k, v]) => `<span>${k}</span><span>${v}</span>`).join("");
+    document.getElementById("st-fov").value = cam.fov;
+    document.querySelectorAll("#st-presets button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.f === cam.fov));
+    const cone = document.getElementById("st-cone"), half = Math.min(60, cam.fov / 2);
+    const len = 150, spread = Math.tan(R(half)) * len;
+    cone.innerHTML = `<circle cx="18" cy="27" r="5" fill="currentColor" opacity=".7"/>`
+      + `<path d="M18 27 L${18 + len} ${27 - Math.min(26, spread)} M18 27 L${18 + len} ${27 + Math.min(26, spread)}" stroke="#0a84ff" stroke-width="1.5" fill="none"/>`
+      + `<line x1="${18 + len}" y1="2" x2="${18 + len}" y2="52" stroke="currentColor" opacity=".35"/>`;
+  }
+
+  // ---------- Perspective controls ----------
+  const pre = document.getElementById("st-presets");
+  [["None", 0], ["Subtle", 20], ["Normal", 45], ["Strong", 90]].forEach(([n, f]) => {
+    const b = document.createElement("button"); b.textContent = n; b.dataset.f = f;
+    b.addEventListener("click", () => { cam.fov = f; draw(); }); pre.appendChild(b);
+  });
+  document.getElementById("st-fov").addEventListener("input", e => { cam.fov = +e.target.value; draw(); });
+
+  // ---------- Menu ----------
+  document.querySelectorAll(".st-menu button").forEach(b => b.addEventListener("click", () => {
+    const L = pick, c = b.dataset.cmd;
+    if (c === "reset") { Object.assign(L, { rx: 0, ry: 0, z: 0, skx: 0, sky: 0, pins: null, mode: "size" }); }
+    else if (c === "3d") setMode(L, "3d");
+    else if (c === "distort" || c === "keystone") { setMode(L, "distort"); L.keystone = c === "keystone"; }
+    else if (c === "skew") { L.mode = "size"; hint = "⌘ drag an edge pill to skew"; setTimeout(() => { hint = ""; draw(); }, 1800); }
+    draw();
+  }));
+
+  // ---------- Pointer ----------
+  let drag = null;
+  stage.addEventListener("pointerdown", e => {
+    const r = stage.getBoundingClientRect(), P = [e.clientX - r.left, e.clientY - r.top];
+    const g = e.target.getAttribute && e.target.getAttribute("data-g");
+    if (!g) {
+      const hitL = layers.slice().reverse().find(L => L.el.contains(e.target));
+      if (hitL) { pick = hitL; drag = { kind: "move", P, x: hitL.x, y: hitL.y, pins: hitL.pins && hitL.pins.map(p => p.slice()) }; }
+      else return;
+    } else drag = { kind: g, P, L: Object.assign({}, pick, { pins: pick.pins && pick.pins.map(p => p.slice()) }), q: corners(pick).map(p => p.slice()) };
+    stage.setPointerCapture(e.pointerId); draw();
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const r = stage.getBoundingClientRect(), P = [e.clientX - r.left, e.clientY - r.top];
+    const dx = P[0] - drag.P[0], dy = P[1] - drag.P[1], L = pick, s0 = drag.L;
+    const snap = v => (e.shiftKey ? Math.round(v / 15) * 15 : v);
+    if (drag.kind === "move") {
+      L.x = drag.x + dx; L.y = drag.y + dy;
+      if (drag.pins) L.pins = drag.pins.map(p => [p[0] + dx, p[1] + dy]);
+    } else if (drag.kind[0] === "c") {
+      const i = +drag.kind[1];
+      const keystone = (e.metaKey && e.altKey && e.shiftKey) || (L.mode === "distort" && L.keystone);
+      if (L.mode === "distort" || e.metaKey) {
+        if (!L.pins) { L.pins = drag.q.map(p => p.slice()); L.mode = "distort"; }
+        L.pins = drag.q.map(p => p.slice());
+        L.pins[i] = [drag.q[i][0] + dx, drag.q[i][1] + dy];
+        if (keystone) { const j = [1, 0, 3, 2][i]; L.pins[j] = [drag.q[j][0] - dx, drag.q[j][1] + dy]; hint = "Keystone"; }
+        else hint = "Distort";
+      } else if (L.mode === "3d") {
+        L.z = Math.max(-600, Math.min(300, s0.z - dy * 1.5)); hint = L.z < 0 ? `Back ${Math.round(-L.z)}` : `Forward ${Math.round(L.z)}`;
+      } else {
+        const sx = [-1, 1, 1, -1][i], sy = [-1, -1, 1, 1][i];
+        let w = s0.w + sx * dx * (e.altKey ? 2 : 1), h = s0.h + sy * dy * (e.altKey ? 2 : 1);
+        if (e.shiftKey) { const k = Math.max(w / s0.w, h / s0.h); w = s0.w * k; h = s0.h * k; }
+        w = Math.max(30, w); h = Math.max(30, h);
+        if (e.altKey) { L.x = s0.x + (s0.w - w) / 2; L.y = s0.y + (s0.h - h) / 2; }
+        else { L.x = sx < 0 ? s0.x + s0.w - w : s0.x; L.y = sy < 0 ? s0.y + s0.h - h : s0.y; }
+        L.w = w; L.h = h; L.el.style.width = w + "px"; L.el.style.height = h + "px"; hint = "";
+      }
+    } else if (drag.kind[0] === "e") {
+      const i = +drag.kind[1], horiz = i % 2 === 0;
+      if (L.mode === "distort") {
+        const [a, b] = [[0, 1], [1, 2], [2, 3], [3, 0]][i];
+        L.pins = drag.q.map(p => p.slice()); [a, b].forEach(k => { L.pins[k] = [drag.q[k][0] + dx, drag.q[k][1] + dy]; }); hint = "Distort · edge";
+      } else if (L.mode === "3d" && e.altKey) {
+        cam.fov = Math.max(0, Math.min(120, Math.round(cam.fovStart === undefined ? (cam.fovStart = cam.fov) : cam.fovStart) + Math.round(dx / 3)));
+        const q = corners(L), c = q.reduce((s, p) => [s[0] + p[0] / 4, s[1] + p[1] / 4], [0, 0]);
+        vanishing = [c[0], c[1] - 260 + cam.fov]; hint = `Perspective ${cam.fov}° · all 3D layers`;
+      } else if (L.mode === "3d") {
+        L.ry = snap(s0.ry + dx * .5); L.rx = snap(s0.rx - dy * .5); hint = "";
+      } else if (e.metaKey) {
+        if (horiz) L.skx = Math.max(-60, Math.min(60, s0.skx + (i === 0 ? -dx : dx) * .4));
+        else L.sky = Math.max(-60, Math.min(60, s0.sky + (i === 3 ? -dy : dy) * .4));
+        hint = `Skew ${Math.round(L.skx)}°, ${Math.round(L.sky)}°`;
+      } else {
+        if (horiz) { const h = Math.max(30, s0.h + (i === 0 ? -dy : dy)); if (i === 0) L.y = s0.y + s0.h - h; L.h = h; L.el.style.height = h + "px"; }
+        else { const w = Math.max(30, s0.w + (i === 3 ? -dx : dx)); if (i === 3) L.x = s0.x + s0.w - w; L.w = w; L.el.style.width = w + "px"; }
+      }
+    }
+    draw();
+  });
+  stage.addEventListener("pointerup", () => { drag = null; hint = ""; vanishing = null; delete cam.fovStart; draw(); });
+  window.addEventListener("keydown", e => { if (e.key === "Escape") { pick.mode = "size"; draw(); } });
+  new ResizeObserver(draw).observe(stage);
+  draw();
+})();
+</script>
+</body>
+</html>

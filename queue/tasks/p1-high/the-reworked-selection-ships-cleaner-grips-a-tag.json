@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-01T12:45:05.877Z",
-  "updated": "2026-11-01T12:45:06.049Z",
+  "updated": "2026-11-01T13:08:22.301Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-01 (intake): 'what happened to the rework on selection ux especially with 3d transforms?' Answer: the mock was reworked with the user on 2026-10-24 (eight lang-selection commits, 07:31 to 15:07) and no build task was filed, so the loop never knew. Folds in on-a-small-picked-object-the-3d-turn-handles-are (filed by the user 2026-10-20, never built, resequenced 13 times). Related, done earlier: the-3d-rotation-handles-are-on-a-picked-layer-ag, tilt-flip-and-push-layers-in-depth-from-the-canv, resize-squares-on-a-layer-turned-in-3d-take-the, every-transform-handle-answers-the-pointer-befor (2026-10-11 to 14). Keep the mock as is; a departure is a decision card with a marked screenshot.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-11-01T12:45:06.048Z",
       "note": "seq 3970 -> 1.2e-7"
+    },
+    {
+      "t": "2026-11-01T13:08:22.300Z",
+      "note": "2026-11-01: a PROTOTYPE for the user's review extends this task: docs/design/mocks/pages/selection-transform.html (design site: Surfaces > Transform modes). The chip by the rotate knob becomes three choices: Size, 3D, Distort. Perspective is the document camera's (SceneCamera.perspective, one camera for all 3D layers), reached from the tool bar Info popover (presets None 20/45/90 and a slider with a small camera-cone picture, 'affects all 3D layers') and by Option-dragging an edge pill in 3D (dashed lines to the vanishing point while dragging). Keys move to Photoshop's: Option = from the centre, Cmd-drag edge = skew, Cmd-drag corner = distort (corner pins, non-destructive four-corner data rendered by the same CIPerspectiveTransform path 3D uses), Cmd-Opt-Shift-drag corner = keystone; Layer > Transform > Skew / Distort / Keystone / Turn in 3D / Reset Transform. Today Option-drag on a corner skews: that moves to Cmd. NOT yet approved: wait for the user's word in this log before building the perspective, distort and key changes; the rest of this task stands."
     }
   ]
 }
