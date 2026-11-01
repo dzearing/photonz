@@ -292,9 +292,15 @@
     const r = stage.getBoundingClientRect(); rmenu.style.left = x - r.left + "px"; rmenu.style.top = y - r.top + "px"; rmenu.classList.add("on");
   }
   document.addEventListener("pointerdown", () => rmenu.classList.remove("on"));
-  stage.addEventListener("dblclick", e => {
-    if (e.target.getAttribute && e.target.getAttribute("data-g") === "knob") { pick.rot = 0; hint = "Turn 0°"; draw(); setTimeout(() => { hint = ""; draw(); }, 1000); }
-  });
+  // A double press on the knob turns it back to 0°. Counted by hand: the press
+  // is cancelled (so no words get selected), and WebKit then sends no dblclick.
+  let lastKnob = 0;
+  function knobPressed() {
+    const now = performance.now(), twice = now - lastKnob < 350; lastKnob = twice ? 0 : now;
+    if (!twice) return false;
+    pick.rot = 0; hint = "Turn 0°"; draw(); setTimeout(() => { hint = ""; draw(); }, 1000);
+    return true;
+  }
 
   function setMode(L, m) {
     if (m === "distort" && !L.warp) L.warp = [[0, 0], [0, 0], [0, 0], [0, 0]];
@@ -430,6 +436,7 @@
     const sel = window.getSelection && window.getSelection(); if (sel) sel.removeAllRanges();
     const r = stage.getBoundingClientRect(), P = [e.clientX - r.left, e.clientY - r.top];
     const g = e.target.getAttribute && e.target.getAttribute("data-g");
+    if (g === "knob" && knobPressed()) return;
     if (!g) {
       const hitL = layers.slice().reverse().find(L => L.el.contains(e.target));
       if (hitL) { pick = hitL; drag = { kind: "move", P, x: hitL.x, y: hitL.y }; }
