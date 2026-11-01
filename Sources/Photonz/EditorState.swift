@@ -1081,6 +1081,9 @@ final class EditorState {
     /// switch mode (`EditorState+Reshape.swift`).
     var transformModeRequest: TransformModeRequest?
     var transformModeRequestCount = 0
+    /// The words the tag under the selection shows for a moment after a reset
+    /// (`EditorState+TransformReset`).
+    var transformResetSaid: TransformResetSaid?
     /// The camera's perspective while a scrub or the perspective slider is in
     /// the hand (nil otherwise), so the pill and the grips follow it; and
     /// where the perspective popover hangs (the pill's frame, nil closed).

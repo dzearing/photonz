@@ -364,12 +364,22 @@ struct SelectionGripStepTests {
         let script = try decode("""
         { "steps": [
           { "do": "hoverGrips", "name": "small", "minArea": 150 },
-          { "do": "expectGrips", "mode": "space", "tag": "Tip 0° · Swing 0°", "count": 9 }
+          { "do": "expectGrips", "mode": "space", "tag": "Tip 0° · Swing 0°", "count": 9 },
+          { "do": "expectGrips", "dots": ["size", "space"] },
+          { "do": "expectGrips", "dots": [] }
         ] }
         """)
         guard case .hoverGrips(let name, let minArea) = script.steps[0],
-              case .expectGrips(let mode, let tag, let count) = script.steps[1] else {
+              case .expectGrips(let mode, let tag, let count, let none) = script.steps[1],
+              case .expectGrips(_, _, _, let dots) = script.steps[2],
+              case .expectGrips(_, _, _, let noDots) = script.steps[3] else {
             Issue.record("steps"); return
+        }
+        #expect(none == nil)
+        #expect(dots == [.size, .space])
+        #expect(noDots == [])
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectGrips", "dots": ["tilt"] } ] }"#)
         }
         #expect(name == "small")
         #expect(minArea == 150)

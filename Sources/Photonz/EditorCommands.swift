@@ -150,8 +150,8 @@ struct EditorCommands: Commands {
     /// wears it as a tooltip. X itself lives on an invisible stand-in in the
     /// tool bar, the same idiom the tool letters use, so it answers under
     /// every tool rather than only the one with the swatches.
-    /// Edit ▸ Transform: Skew, Distort and Keystone, then Flip Horizontal and
-    /// Flip Vertical, on what is picked
+    /// Edit ▸ Transform: Skew, Distort, Keystone and Turn in 3D, the four
+    /// resets, then Flip Horizontal and Flip Vertical, on what is picked
     /// (`EditorState+Flip.swift`).
     private var transformMenu: some View {
         Menu("Transform") {
@@ -164,6 +164,23 @@ struct EditorCommands: Commands {
                     .disabled(!(editor?.canRun(.distort) ?? false))
                 Button("Keystone") { editor?.run(.keystone) }
                     .disabled(!(editor?.canRun(.keystone) ?? false))
+                if Experiments.shared.turnInDepthEnabled {
+                    Button("Turn in 3D") { editor?.run(.turnIn3D) }
+                        .disabled(!(editor?.canRun(.turnIn3D) ?? false))
+                }
+                Divider()
+                // Each mode of the selection chip resets on its own, the same
+                // rows a right click on the chip offers (`TransformReset.swift`).
+                Button("Reset Size") { editor?.run(.resetSize) }
+                    .disabled(!(editor?.canRun(.resetSize) ?? false))
+                Button("Reset Skew & Distort") { editor?.run(.resetSkewAndDistort) }
+                    .disabled(!(editor?.canRun(.resetSkewAndDistort) ?? false))
+                if Experiments.shared.turnInDepthEnabled {
+                    Button("Reset 3D") { editor?.run(.reset3D) }
+                        .disabled(!(editor?.canRun(.reset3D) ?? false))
+                }
+                Button("Reset All") { editor?.run(.resetAllTransforms) }
+                    .disabled(!(editor?.canRun(.resetAllTransforms) ?? false))
                 Divider()
             }
             Button(FlipAxis.horizontal.title) { editor?.run(.flipHorizontal) }
@@ -2384,8 +2401,12 @@ struct EditorCommands: Commands {
             // nearer and further rather than up and down the stack.
             if Experiments.shared.turnInDepthEnabled {
                 Divider()
-                Button("Reset 3D Rotation") { editor?.run(.reset3DRotation) }
-                    .disabled(!(editor?.canResetSpaceRotation ?? false))
+                // With the selection chip, Reset 3D lives with the other
+                // resets under Edit ▸ Transform and takes the depth too.
+                if !Experiments.shared.transformModesEnabled {
+                    Button("Reset 3D Rotation") { editor?.run(.reset3DRotation) }
+                        .disabled(!(editor?.canResetSpaceRotation ?? false))
+                }
                 Button("Bring Nearer") { editor?.run(.bringNearer) }
                     .keyboardShortcut("]", modifiers: [.command, .option])
                     .disabled(!(editor?.canPushDepth ?? false))

@@ -176,6 +176,11 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case skew = "skew"
     case distort = "distort"
     case keystone = "keystone"
+    case turnIn3D = "turn_in_3d"
+    case resetSize = "reset_size"
+    case resetSkewAndDistort = "reset_skew_and_distort"
+    case reset3D = "reset_3d"
+    case resetAllTransforms = "reset_all_transforms"
     // Layer
     case newLayer = "new_layer"
     case newLayerViaCopy = "new_layer_via_copy"
@@ -894,6 +899,18 @@ public enum AppCommandTable {
             make(.skew, "Skew", "Edit > Transform", .edit, needs: "one layer picked that can be reshaped"),
             make(.distort, "Distort", "Edit > Transform", .edit, needs: "one layer picked that can be reshaped"),
             make(.keystone, "Keystone", "Edit > Transform", .edit, needs: "one layer picked that can be reshaped"),
+            // The grips go to 3D, and each mode of the selection chip resets on
+            // its own (`TransformReset.swift`): the same rows the chip's right
+            // click offers.
+            make(.turnIn3D, "Turn in 3D", "Edit > Transform", .edit, needs: "one layer picked that can turn in 3D"),
+            make(.resetSize, "Reset Size", "Edit > Transform", .edit,
+                 needs: "layers picked that are turned, or a picture not at its own size", picks: .layers),
+            make(.resetSkewAndDistort, "Reset Skew & Distort", "Edit > Transform", .edit,
+                 needs: "layers picked that are skewed or distorted", picks: .layers),
+            make(.reset3D, "Reset 3D", "Edit > Transform", .edit,
+                 needs: "layers picked that are tipped, swung or moved in depth", picks: .layers),
+            make(.resetAllTransforms, "Reset All", "Edit > Transform", .edit,
+                 needs: "layers picked with a size, shape or 3D change", picks: .layers),
         ]
     }()
 

@@ -71,6 +71,12 @@ struct CanvasView: NSViewRepresentable {
     /// See `EditorState.transformModeRequest`: each new token switches the
     /// picked layer's grips to that mode (Edit ▸ Transform ▸ Skew and friends).
     var transformModeRequest: EditorState.TransformModeRequest? = nil
+    /// See `EditorState.transformResetSaid`: each new token puts its words on
+    /// the tag under the selection for a moment.
+    var transformResetSaid: EditorState.TransformResetSaid? = nil
+    /// A reset row of the chip's right-click menu, on the layer it was opened
+    /// over (`EditorState+TransformReset`).
+    var onTransformReset: (TransformReset, UUID) -> Void = { _, _ in }
     /// Styled content the active tool draws (color/width from the style
     /// popover), so the drag preview matches what commit will rasterize.
     let annotationContent: AnnotationContent?
@@ -471,6 +477,7 @@ struct CanvasView: NSViewRepresentable {
                    motionPivot: motionPivot, motionPath: motionPath)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
         view.applyTransformModeRequest(transformModeRequest)
+        view.applyTransformResetSaid(transformResetSaid)
         view.applyPerspective(preview: perspectivePreview, popover: perspectivePopoverAnchor)
     }
 
@@ -505,6 +512,7 @@ struct CanvasView: NSViewRepresentable {
         view.onExitGroup = onExitGroup
         view.onLeaveOriginalSpace = onLeaveOriginalSpace
         view.canvasMenu = canvasMenu
+        view.onTransformResetRow = onTransformReset
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
         view.onFrameCommit = onFrameCommit
@@ -2042,6 +2050,17 @@ final class CanvasNSView: NSView {
     let chipPickedLayer = CAShapeLayer()
     let chipIconsLayer = CAShapeLayer()
     let chipPickedIconLayer = CAShapeLayer()
+    /// The dot on a chip button whose mode has something to reset: accent
+    /// ringed in white, and white ringed in the accent on the picked button.
+    let chipDotsLayer = CAShapeLayer()
+    let chipPickedDotLayer = CAShapeLayer()
+    /// The modes wearing a dot as last drawn, read by walks.
+    var chipDots: [TransformMode] = []
+    /// A reset says what it did on the tag for a moment
+    /// (`EditorState.transformResetSaid`).
+    var transformResetSaidToken = 0
+    var gripTagSaid: (words: String, until: Date)?
+    var onTransformResetRow: (TransformReset, UUID) -> Void = { _, _ in }
     let gripTagLayer = CAShapeLayer()
     let gripTagTextLayer = CATextLayer()
     /// The perspective pill beside the chip in 3D, and the dashed lines to

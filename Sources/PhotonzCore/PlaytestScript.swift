@@ -3842,9 +3842,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// photographs each as `<name>-<n>-<grip>`.
     case hoverGrips(name: String, minArea: Double?)
     /// CLAIMS the reworked selection's state: the chip's `mode`, what the tag
-    /// under the frame says at rest (`tag`), and how many grips are drawn
-    /// (`count`). One has to be said.
-    case expectGrips(mode: TransformMode?, tag: String?, count: Int?)
+    /// under the frame says at rest (`tag`), how many grips are drawn
+    /// (`count`), and which chip buttons wear the dot of a mode with something
+    /// to reset (`dots`, exactly those, `[]` for none). One has to be said.
+    case expectGrips(mode: TransformMode?, tag: String?, count: Int?, dots: [TransformMode]? = nil)
     /// CLAIMS the transform values popover the tool bar's Info button opens
     /// (`TransformBar`): `present` whether it is on screen, and that it came
     /// or went within `withinFrames` screen refreshes of being asked (one
@@ -5102,10 +5103,16 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             let tag = try f.optionalString("tag")
             let count = try f.optionalNumber("count").map { Int($0) }
-            guard mode != nil || tag != nil || count != nil else {
-                throw f.invalid("mode", "expectGrips has to claim something: \"mode\", \"tag\" or \"count\"")
+            let dots = fields["dots"] == nil ? nil : try f.optionalStrings("dots").map { word -> TransformMode in
+                guard let mode = TransformMode(rawValue: word) else {
+                    throw f.invalid("dots", "names chip modes: size, reshape or space")
+                }
+                return mode
             }
-            self = .expectGrips(mode: mode, tag: tag, count: count)
+            guard mode != nil || tag != nil || count != nil || dots != nil else {
+                throw f.invalid("mode", "expectGrips has to claim something: \"mode\", \"tag\", \"count\" or \"dots\"")
+            }
+            self = .expectGrips(mode: mode, tag: tag, count: count, dots: dots)
         case "spaceHandle":
             let handle: SpaceHandle? = try f.optionalString("handle") == "knob"
                 ? nil : f.enumValue("handle", SpaceHandle.self)

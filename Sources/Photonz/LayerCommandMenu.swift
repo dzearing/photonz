@@ -235,10 +235,18 @@ enum LayerCommandList {
         let turnable = editorState.spaceRowTargets(id)
         if !turnable.isEmpty {
             rows.append(.separator)
-            rows.append(.command("Reset 3D Rotation",
-                                 enabled: editorState.document?.hasSpaceRotation(layerIDs: turnable) ?? false) {
-                editorState.resetSpaceRotation(ids: turnable)
-            })
+            if Experiments.shared.transformModesEnabled {
+                // The selection chip's Reset 3D: tip, swing and depth.
+                rows.append(.command("Reset 3D",
+                                     enabled: editorState.canResetTransform(.space, ids: turnable)) {
+                    editorState.resetTransform(.space, ids: turnable)
+                })
+            } else {
+                rows.append(.command("Reset 3D Rotation",
+                                     enabled: editorState.document?.hasSpaceRotation(layerIDs: turnable) ?? false) {
+                    editorState.resetSpaceRotation(ids: turnable)
+                })
+            }
             rows.append(.command("Bring Nearer", .commandOption("]")) {
                 editorState.pushDepth(nearer: true, ids: turnable)
             })

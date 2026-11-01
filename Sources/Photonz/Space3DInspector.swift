@@ -87,8 +87,13 @@ private struct SpaceValueRow: View {
                     .disabled(editorState.keyDiamond(keyed) != .onKey)
                 Divider()
             }
-            Button("Reset 3D Rotation") { editorState.resetSpaceRotation() }
-                .disabled(!editorState.canResetSpaceRotation)
+            if Experiments.shared.transformModesEnabled {
+                Button("Reset 3D") { editorState.resetTransform(.space) }
+                    .disabled(!editorState.canResetTransform(.space))
+            } else {
+                Button("Reset 3D Rotation") { editorState.resetSpaceRotation() }
+                    .disabled(!editorState.canResetSpaceRotation)
+            }
         }
     }
 }

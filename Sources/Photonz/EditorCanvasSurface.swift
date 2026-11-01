@@ -50,6 +50,8 @@ struct EditorCanvasSurface: View {
                    captionCloseRequest: editorState.captionCloseRequest,
                    typeInLayer: editorState.typeInLayer,
                    transformModeRequest: editorState.transformModeRequest,
+                   transformResetSaid: editorState.transformResetSaid,
+                   onTransformReset: { editorState.resetTransform($0, ids: [$1]) },
                    annotationContent: editorState.activeAnnotationContent,
                    calloutShape: editorState.calloutToolShape,
                    calloutMagnification: editorState.calloutToolMagnification,

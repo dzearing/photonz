@@ -19,6 +19,8 @@ import PhotonzCore
 extension CanvasNSView {
 
     override func menu(for event: NSEvent) -> NSMenu? {
+        // The selection chip's own menu: reset a mode (`CanvasSelectionGrips`).
+        if let chip = chipResetMenu(atView: convert(event.locationInWindow, from: nil)) { return chip }
         guard let aimed = contextMenuAim(at: event) else { return super.menu(for: event) }
         let rows = canvasMenu(aimed.id, aimed.context, aimed.point)
         guard !rows.isEmpty else { return super.menu(for: event) }

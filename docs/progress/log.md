@@ -22350,3 +22350,12 @@ the ghost, and pinching in seemed to stop short.
 - Walk harness: `grip` takes `hold` (a picture with the button down) and the `perspective` grip; new `expectCamera`; F8 has a menu stand-in (`toggleTransformValues`). Walk `perspective-pill-walk`, audit `queue/audits/2026-11-01-perspective-pill.json`.
 - Perf: the composite path only gains a scale of the shadow list for a layer already in space. The 12 MP / 10 layer interactive edit read 7.0 ms against its 26 ms budget.
 - Open: walk presses on SwiftUI buttons over the canvas do nothing (presets, sliders, Info), folded into a-walk-s-press-on-a-picture-tile-swatch-or-colou.
+
+## 2026-11-01 — Reset each transform mode on its own, with a dot on a changed mode (slice 4 of the reworked selection)
+
+- Core `TransformReset` (`Sources/PhotonzCore/TransformReset.swift`, tests first in `TransformResetTests`): what each chip mode has to put back and the reset itself. Size = the flat turn plus, for a picture, its size against its own pixels (`Layer.ownSize`); a shape or text has no own size, so only its turn counts. Skew & distort = the reshape plus the old flat slant. 3D = tip, swing, depth (the camera stays). Flips belong to none. Keys on a mode's values go with its reset.
+- The chip: a 5 pt dot on each changed mode's button (accent ringed white; white ringed accent on the picked one). A right click on the chip opens Reset Size, Reset Skew & Distort, Reset 3D, Reset All (greyed when nothing to put back), each one undo step; the tag says the reset's name for 1.2 s (`CanvasSelectionGrips`, `CanvasContextMenuHook`, `EditorState+TransformReset`).
+- Edit ▸ Transform gains Turn in 3D (grips to 3D) and the four resets; with the chip on, Layer ▸ Reset 3D Rotation folds into Reset 3D (row menu and 3D panel rows say Reset 3D too). Agent commands `turn_in_3d`, `reset_size`, `reset_skew_and_distort`, `reset_3d`, `reset_all_transforms`.
+- Walk harness: `rightClick` takes `"on": "grip:<grip name>"`; `expectGrips` takes `dots`. Walks `reset-each-transform-mode-walk`, `transform-resets-from-the-menu-walk`; audit `queue/audits/2026-11-01-transform-resets.json`.
+- Perf: no change to the composite path.
+- Next: the selection rework's four slices are in; whatever the queue holds next.

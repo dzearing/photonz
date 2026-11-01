@@ -26,9 +26,22 @@ extension EditorState {
         return layer.canBeReshaped
     }
 
-    /// Edit ▸ Transform ▸ Skew, Distort or Keystone.
+    /// Whether Turn in 3D has a layer to put in 3D.
+    var canTurnPickedIn3D: Bool {
+        guard Experiments.shared.transformModesEnabled, Experiments.shared.turnInDepthEnabled,
+              activeTool == .select, let id = pickedLayerID,
+              let layer = document?.layer(id: id) else { return false }
+        return !layer.isLocked && !layer.isSoundOnly
+    }
+
+    /// Edit ▸ Transform ▸ Skew, Distort, Keystone or Turn in 3D.
     func askForTransformMode(_ mode: TransformMode, keystone: Bool) {
-        guard canReshapePicked, let id = pickedLayerID else { return }
+        let allowed = switch mode {
+        case .size: pickedLayerID != nil
+        case .reshape: canReshapePicked
+        case .space: canTurnPickedIn3D
+        }
+        guard allowed, let id = pickedLayerID else { return }
         transformModeRequestCount += 1
         transformModeRequest = TransformModeRequest(layerID: id, mode: mode, keystone: keystone,
                                                     token: transformModeRequestCount)

@@ -73,6 +73,23 @@ magnifiers, lines, arrows and measurements are not offered the mode
 grips in the mode (Keystone makes a plain corner drag keystone until the mode
 changes). Walks: `skew-and-distort-walk`, `keystone-from-the-menu-walk`.
 
+### Reset each mode on its own
+
+Right-click a button on the chip, or Edit ▸ Transform, for Reset Size, Reset
+Skew & distort, Reset 3D and Reset All, each one undo step and greyed when it
+has nothing to put back (`TransformReset.swift`, `EditorState+TransformReset`).
+Size is the flat turn plus, for a picture, its size against its own pixels
+(`Layer.ownSize`); a shape or text has no size of its own, so only its turn
+counts. Reset Size puts a picture back at its own size, upright, about the same
+middle. Skew & distort is the reshape and the old flat slant. 3D is tip, swing
+and depth; the camera's perspective is every layer's and stays. A flip belongs
+to none of them. Keys on a mode's values go with its reset. A mode with
+something to reset wears a 5 point dot on its chip button (accent ringed white,
+white ringed accent on the picked button), and a reset says its name on the tag
+for 1.2 seconds. Edit ▸ Transform also gains Turn in 3D, which puts the grips in
+3D; with the chip on, the Layer menu's Reset 3D Rotation folds into Reset 3D.
+Walks: `reset-each-transform-mode-walk`, `transform-resets-from-the-menu-walk`.
+
 ## Skew / transform
 
 - `Geometry.skewTransform(xAngle:yAngle:around:)` — affine skew about the layer center.

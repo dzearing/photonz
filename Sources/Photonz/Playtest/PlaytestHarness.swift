@@ -3616,7 +3616,7 @@ private final class Run {
             note(number, step.name, "\(shot) grip(s) in \(grips.mode.title): " + lines.joined(separator: "; "),
                  state: describe())
 
-        case .expectGrips(let mode, let tag, let count):
+        case .expectGrips(let mode, let tag, let count, let dots):
             let canvas = try requireCanvas()
             let window = try requireWindow()
             let away = CGPoint(x: canvas.bounds.minX + 6, y: canvas.bounds.minY + 6)
@@ -3633,7 +3633,13 @@ private final class Run {
             if let mode, mode != g.mode { throw Failure(description: reads + ", not \(mode.title) as claimed") }
             if let tag, tag != canvas.gripTagShown { throw Failure(description: reads + ", not \"\(tag)\" as claimed") }
             if let count, count != drawn { throw Failure(description: reads + ", not \(count) grips as claimed") }
-            note(number, step.name, reads + ", as claimed", state: describe())
+            let dotted = canvas.chipDots.map(\.title)
+            let dotWords = dotted.isEmpty ? "no chip button wears a dot" : "a dot on " + dotted.joined(separator: ", ")
+            if let dots, Set(dots) != Set(canvas.chipDots) {
+                let wanted = dots.isEmpty ? "none" : dots.map(\.title).joined(separator: ", ")
+                throw Failure(description: reads + "; " + dotWords + ", not " + wanted + " as claimed")
+            }
+            note(number, step.name, reads + "; " + dotWords + ", as claimed", state: describe())
 
         case .hoverHandles(let name, let atLeast, let space, let only):
             let canvas = try requireCanvas()
@@ -14556,7 +14562,18 @@ private final class Run {
                              dimmed: [String] = [], rows wantedRows: [String]? = nil,
                              more wantedMore: [String]? = nil, number: Int) async throws {
         let aimed: (name: String, detail: String, point: CGPoint, window: NSWindow)
-        if let name {
+        if let name, name.hasPrefix("grip:") {
+            // A grip of the picked layer's selection, by the grip step's name
+            // (`grip:chip-size`), where it is drawn right now.
+            let canvas = try requireCanvas()
+            guard let grip = SelectionGrip(name: String(name.dropFirst(5))) else {
+                throw Failure(description: "\"\(name)\" names no grip: after grip: comes a name the grip step takes")
+            }
+            guard let shown = canvas.drawnSelectionGrips, let at = Self.gripPoint(grip, in: shown.grips) else {
+                throw Failure(description: "the picked layer is wearing no \(grip.name) grip to right click")
+            }
+            aimed = ("the \(grip.name) grip", "", canvas.convert(at, to: nil), try requireWindow())
+        } else if let name {
             var target = try rightClickTarget(name)
             if let across { target = target.pressed(across: across) }
             guard let window = target.window else {

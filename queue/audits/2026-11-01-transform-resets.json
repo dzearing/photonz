@@ -1,0 +1,31 @@
+{
+  "feature": "Reset each transform mode on its own",
+  "epic": "found-selection",
+  "summary": "Right-click a button on the selection chip to reset just that kind of change (size, skew and distort, or 3D) or all of them, and see at a glance which modes you have changed by the small dot on their chip buttons. The same rows and Turn in 3D sit under Edit > Transform.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Walks: reset-each-transform-mode-walk (pointer, right click on the chip) and transform-resets-from-the-menu-walk (Edit > Transform, takes the front).",
+  "switched": {},
+  "try": [
+    { "do": "Drop a screenshot on a picture and click it: no chip button wears a dot. Right-click the chip: all four Reset rows are grey." },
+    { "do": "Stretch it with the right pill and turn it with the knob: the Size button gets a blue dot.", "shot": "2026-11-01-transform-resets-1-size-dot-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Skew & distort and drag the top pill, then click 3D and drag the right pill: every button has a dot, white on the picked one.", "shot": "2026-11-01-transform-resets-2-three-dots-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the chip: Reset Size, Reset Skew & Distort, Reset 3D, then Reset All.", "shot": "2026-11-01-transform-resets-chip-menu-sc.png" },
+    { "do": "Choose Reset Size: the picture is its own size and upright about the same middle, still skewed and tipped, and the tag says Reset Size.", "shot": "2026-11-01-transform-resets-3-size-reset-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command-Z, then choose Reset Skew & Distort and then Reset 3D from the chip's right click: each takes only its own dot." },
+    { "do": "Open Edit > Transform: Turn in 3D under Keystone, then the four resets above the flips. Choose Reset All.", "shot": "2026-11-01-transform-resets-menu-3d-reset-sc.png" },
+    { "do": "Compare with the prototype.", "shot": "2026-11-01-transform-resets-side-by-side.png" }
+  ],
+  "evaluate": [
+    "Is the dot enough to tell you, without reading anything, which kinds of change a picture carries?",
+    "Does Reset Size putting a pasted screenshot back at its full pixel size feel right, even when it was scaled down to fit when it landed?",
+    "Is it right that a shape or text has no size to go back to, so Reset Size only takes away its turn?",
+    "Does the tag saying Reset Size for a second tell you enough that it worked?"
+  ],
+  "rough": [
+    "The menu row reads Reset Skew & Distort, where the prototype prints Reset Skew & distort: every menu row is Title Case (UX-PATTERNS §7). The chip's own tooltip still says Skew & distort.",
+    "The rows live in Edit > Transform, where the prototype's panel heads them Layer > Transform: the app's one Transform submenu is in Edit, where Photoshop keeps it, as chosen when Skew and Distort landed (skew-distort-reshapes-the-picture-from-the-selec). The Layer menu's Reset 3D Rotation folds into Edit > Transform > Reset 3D while the chip is on.",
+    "The chip's right click opens the Mac's own menu, as every right click in the app does; the prototype's dark menu is the web page's stand-in for it, with the same rows and divider. Matches otherwise.",
+    "A picture's own size is its pixels, so a screenshot that was scaled down to fit when it landed shows a Size dot from the start, and Reset Size puts it at full size. Asked in evaluate.",
+    "Reset Size and Reset 3D take any keys on their values with them (a key left behind would put the change back), the way Reset 3D Rotation always did. On a video that removes the animation of that kind; one undo puts it back.",
+    "None of these rows has a key: Photoshop gives Skew, Distort, Perspective and the like none, so there was nothing to copy."
+  ]
+}

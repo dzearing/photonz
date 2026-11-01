@@ -68,6 +68,7 @@ extension CanvasNSView {
         selectionGripsLayer.addSublayer(vanishingLinesLayer)
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
                       chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer,
+                      chipDotsLayer, chipPickedDotLayer,
                       perspectivePlateLayer, perspectiveIconLayer, gripTagLayer] {
             shape.lineWidth = SelectionGrips.lineWidth
             shape.lineCap = .round
@@ -95,6 +96,13 @@ extension CanvasNSView {
         chipPickedIconLayer.fillColor = nil
         chipPickedIconLayer.strokeColor = CGColor(gray: 1, alpha: 1)
         chipPickedIconLayer.lineWidth = 1.3
+        // A changed mode's dot: 5 points across with a 1.5 point ring, the
+        // prototype's `.chg::after`. The ring is the stroke, half of it over
+        // the fill, so the fill shows 5 points and the ring 1.5 outside it.
+        chipDotsLayer.strokeColor = CGColor(gray: 1, alpha: 1)
+        chipDotsLayer.lineWidth = 1.5
+        chipPickedDotLayer.fillColor = CGColor(gray: 1, alpha: 1)
+        chipPickedDotLayer.lineWidth = 1.5
         // The perspective pill: the chip's white plate, a camera's cone in the
         // accent and its value in the chip's ink.
         perspectivePlateLayer.fillColor = CGColor(gray: 1, alpha: 1)
@@ -121,7 +129,7 @@ extension CanvasNSView {
         perspectiveTextLayer.actions = still
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
                       chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer, gripTagLayer,
-                      reshapeGhostLayer, vanishingLinesLayer, perspectivePlateLayer, perspectiveIconLayer] {
+                      chipDotsLayer, chipPickedDotLayer, reshapeGhostLayer, vanishingLinesLayer, perspectivePlateLayer, perspectiveIconLayer] {
             shape.actions = still
         }
     }
@@ -188,6 +196,8 @@ extension CanvasNSView {
         litGripLayer.fillColor = accent
         litGripLayer.strokeColor = accent
         chipPickedLayer.fillColor = accent
+        chipDotsLayer.fillColor = accent
+        chipPickedDotLayer.strokeColor = accent
         gripTagLayer.fillColor = accent
 
         let stems = CGMutablePath()
@@ -245,12 +255,27 @@ extension CanvasNSView {
                 CGPath(roundedRect: $0, cornerWidth: GripLook.chipButtonRadius,
                        cornerHeight: GripLook.chipButtonRadius, transform: nil)
             }
-            for shape in [chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer] { shape.isHidden = false }
+            // A dot on each mode that has something to reset.
+            let changed = grips.chip.map(\.mode).filter {
+                document?.hasTransformChange(TransformReset($0), layerID: layer.id) ?? false
+            }
+            let dots = CGMutablePath(), pickedDot = CGMutablePath()
+            for button in grips.chip where changed.contains(button.mode) {
+                let dot = Self.chipDot(in: button.frame)
+                if button.mode == grips.mode { pickedDot.addPath(dot) } else { dots.addPath(dot) }
+            }
+            chipDotsLayer.path = dots
+            chipPickedDotLayer.path = pickedDot
+            chipDots = changed
+            for shape in [chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer,
+                          chipDotsLayer, chipPickedDotLayer] { shape.isHidden = false }
         } else {
-            for shape in [chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer] {
+            for shape in [chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer,
+                          chipDotsLayer, chipPickedDotLayer] {
                 shape.isHidden = true
                 shape.path = nil
             }
+            chipDots = []
         }
         drawPerspectivePill(grips)
         drawVanishingLines(grips)
@@ -386,6 +411,7 @@ extension CanvasNSView {
             if let drag = reshapeDrag, drag.layerID == layer.id { return drag.words }
             if let scrub = perspectiveScrub, scrub.moved { return SelectionTag.perspective(scrub.value) }
             if let grip = hoveredGrip { return SelectionTag.does(grip, mode: shown.grips.mode) }
+            if let said = gripTagSaid, said.until > Date() { return said.words }
             let size = selectedLayerFrame.flatMap { frame in
                 document?.parentSpaceFrame(layer.withSlack(frame), of: layer.id)?.size
             } ?? layer.frame.size
@@ -481,6 +507,16 @@ extension CanvasNSView {
         path.move(to: p(-4, 3)); path.addLine(to: p(0, 7)); path.addLine(to: p(4, 3))
         path.move(to: p(-4, -3)); path.addLine(to: p(0, -7)); path.addLine(to: p(4, -3))
         return path
+    }
+
+    /// A changed mode's dot: in the button's top right corner, 1 point in,
+    /// as the prototype's `.chg::after` sits (`right:1px; top:1px`, 5 across).
+    /// The circle runs through the middle of the ring's stroke.
+    static func chipDot(in frame: CGRect) -> CGPath {
+        let centre = CGPoint(x: frame.maxX - 1 - 2.5, y: frame.minY + 1 + 2.5)
+        let r: CGFloat = 2.5 + 0.75
+        return CGPath(ellipseIn: CGRect(x: centre.x - r, y: centre.y - r, width: r * 2, height: r * 2),
+                      transform: nil)
     }
 
     /// The chip's icons, the prototype's 16 point drawings at 14 points.
@@ -679,6 +715,49 @@ extension CanvasNSView {
         hoveredGrip = nil
         refreshOverlays()
         refreshGrabCursor()
+    }
+}
+
+// MARK: - Reset each mode on its own
+
+extension CanvasNSView {
+
+    /// The menu a right click on the chip opens: a reset for each mode the
+    /// chip offers, then Reset All, a row with nothing to put back greyed.
+    /// The prototype's `openReset`.
+    func chipResetMenuRows(for layerID: UUID) -> [MenuRow] {
+        guard let document, let layer = document.layer(id: layerID) else { return [] }
+        let open = !layer.isLocked
+        func row(_ reset: TransformReset) -> MenuRow {
+            .command(reset.title, enabled: open && document.hasTransformChange(reset, layerID: layerID)) { [weak self] in
+                self?.onTransformResetRow(reset, layerID)
+            }
+        }
+        return offeredTransformModes(for: layer).map { row(TransformReset($0)) } + [.separator, row(.all)]
+    }
+
+    /// The menu for a right click at `viewPoint` when it lands on the chip,
+    /// else nil.
+    func chipResetMenu(atView viewPoint: CGPoint) -> NSMenu? {
+        guard transformModesOffered, let id = selectedLayerID,
+              case .chip? = selectionGripHit(atView: viewPoint) else { return nil }
+        let rows = chipResetMenuRows(for: id)
+        return rows.isEmpty ? nil : NSMenu.rows(rows)
+    }
+
+    /// A reset just happened: its words sit on the tag for a moment, the
+    /// prototype's hint.
+    func applyTransformResetSaid(_ said: EditorState.TransformResetSaid?) {
+        guard let said, said.token != transformResetSaidToken else { return }
+        transformResetSaidToken = said.token
+        gripTagSaid = (said.words, Date().addingTimeInterval(1.2))
+        refreshOverlays()
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(1250))
+            guard let self, self.transformResetSaidToken == said.token else { return }
+            self.gripTagSaid = nil
+            self.refreshOverlays()
+        }
     }
 }
 

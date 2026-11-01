@@ -316,6 +316,11 @@ extension EditorState {
         case .skew: askForTransformMode(.reshape, keystone: false)
         case .distort: askForTransformMode(.reshape, keystone: false)
         case .keystone: askForTransformMode(.reshape, keystone: true)
+        case .turnIn3D: askForTransformMode(.space, keystone: false)
+        case .resetSize: resetTransform(.size)
+        case .resetSkewAndDistort: resetTransform(.reshape)
+        case .reset3D: resetTransform(.space)
+        case .resetAllTransforms: resetTransform(.all)
         // Layer
         case .newLayer: newEmptyLayer()
         case .newLayerViaCopy: newLayerViaCopy()
@@ -560,6 +565,11 @@ extension EditorState {
         case .swapFillColors: return true
         case .flipHorizontal, .flipVertical: return canFlipSelection
         case .skew, .distort, .keystone: return canReshapePicked
+        case .turnIn3D: return canTurnPickedIn3D
+        case .resetSize: return canResetTransform(.size)
+        case .resetSkewAndDistort: return canResetTransform(.reshape)
+        case .reset3D: return canResetTransform(.space)
+        case .resetAllTransforms: return canResetTransform(.all)
         case .deselect, .invertSelection, .blurBehindSelection: return selection != nil
         case .fillWithForeground, .fillWithBackground: return canFillWithFillColors
         case .newLayerViaCopy: return selection != nil || hasLayerSelection
