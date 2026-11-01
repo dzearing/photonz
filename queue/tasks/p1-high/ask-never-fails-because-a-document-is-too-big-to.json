@@ -1,0 +1,35 @@
+{
+  "id": "ask-never-fails-because-a-document-is-too-big-to",
+  "title": "Ask never fails because a document is too big to describe: a change to a 216-part drawing works",
+  "goal": "Asking for one change to a drawing Ask made (the Statue of Liberty, a traced drawing of 216 parts) failed with the raw server error 'request (41070 tokens) exceeds the available context size (32768 tokens), try increasing it'. Ask must work on any document a person can make, describe big drawings to the model compactly, and never show a person a raw model or server error.",
+  "epic": "local-edit",
+  "priority": "p1-high",
+  "seq": 1.5e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T01:43:14.643Z",
+  "updated": "2026-11-01T01:43:14.828Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-10-31 (intake), screenshot: Image, a 'Statue of Liberty' drawing group with 216 layers on a 1440x1024 canvas; Agent panel shows 'request (41070 tokens) exceeds the available context size (32768 tokens), try increasing it' above the row 'Drew the Statue of Liberty'. Cause, from code: AskConversation.instructions(documentRead:) in Sources/PhotonzCore/AskPlanning.swift pastes the whole read_document text into the system prompt ('The document now (read_document):'), so every one of the drawing's 216 traced paths is described; contextWindow = 32768 there and --ctx-size in AskBuiltInModel.swift. The server's own error text is shown to the person as is.",
+  "acceptance": [
+    "Reproduce first: have Ask draw the Statue of Liberty (or any traced drawing of 200+ parts) on a 1440x1024 picture, then ask for one change. Record the request's token count and where the tokens go (system prompt, tools, the document read, earlier rounds) in the audit.",
+    "The document Ask is given is sized to fit: a group or traced drawing is summarised as one entry (its name, box, part count, its parts' names grouped and the colours it uses) rather than every path, and the model can open a part when it needs detail (read_document of one layer or group, a looking tool it already has or one added). The whole first request stays under half the context window with the 216-part drawing, MEASURED.",
+    "Every Ask request is budgeted before it is sent: if the planning conversation would pass the window (long plans, many rounds, large tool answers), the oldest tool answers are shortened first, never the person's words or the instructions. A unit test in PhotonzCore builds the 216-part document and asserts the request fits.",
+    "Revisit contextWindow (32768 in AskPlanning.swift, also passed as --ctx-size to the built-in model in AskBuiltInModel.swift): raise it where the Mac's memory allows it and the model supports it, measured for speed and memory on this 64 GB Mac, and recorded in docs/design/ask.md. A larger window is a help, not the fix: the summary above is required either way.",
+    "No raw error reaches the person: any model or server failure becomes one short plain sentence in the Ask row saying what happened and what to try, with no token counts or server words (user-facing copy rules: no em dashes).",
+    "The change then works: 'make her robe a darker green' (or similar one-part change) on the 216-part drawing lands as one undo step. Builds on ask-changes-what-it-just-made-make-the-water-blu (part labels and a picture of the canvas) where that has landed; this task must not wait for it.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T01:43:14.645Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-01T01:43:14.827Z",
+      "note": "seq 3970 -> 1.5e-7"
+    }
+  ]
+}
