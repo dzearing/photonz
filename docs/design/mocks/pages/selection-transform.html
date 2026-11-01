@@ -290,8 +290,7 @@
     // grips: corners and edges, flat and one size
     q.forEach((p, i) => {
       const h = on("c" + i), k = 1;
-      if (pick.mode === "distort") el("circle", { cx: p[0], cy: p[1], r: 6, fill: h ? "#0060df" : blue, stroke: h ? blue : "#fff", "stroke-width": 2 });
-      else el("rect", { x: p[0] - 5 * k, y: p[1] - 5 * k, width: 10 * k, height: 10 * k, rx: 2, fill: h ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
+      el("rect", { x: p[0] - 5 * k, y: p[1] - 5 * k, width: 10 * k, height: 10 * k, rx: 2, fill: h ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
       el("circle", { cx: p[0], cy: p[1], r: 14, fill: "transparent", class: "hit", "data-g": "c" + i, style: `cursor:${pick.mode === "distort" ? "grab" : "nwse-resize"}` });
     });
     const cen = q.reduce((s, p) => [s[0] + p[0] / 4, s[1] + p[1] / 4], [0, 0]);
@@ -301,12 +300,12 @@
       let nx = -(q[b][1] - q[a][1]), ny = q[b][0] - q[a][0]; const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
       if (nx * (m0[0] - cen[0]) + ny * (m0[1] - cen[1]) < 0) { nx = -nx; ny = -ny; }
       // Just clear of the edge: half the pill's thickness and a hair, no more.
-      const off = (pick.mode === "3d" ? 10 : 6) / 2 + 1.5;
+      const off = 7 / 2 + 1.5;
       const m = [m0[0] + nx * off, m0[1] + ny * off];
       const hv = on("e" + i), k = 1;
-      const w = (pick.mode === "3d" ? 26 : 18) * k, h = (pick.mode === "3d" ? 10 : 6) * k;
+      const w = 20, h = 7;          // the same pill in every mode; the chip says what it does
       const ang = Math.atan2(q[b][1] - q[a][1], q[b][0] - q[a][0]) * 180 / Math.PI;
-      el("rect", { x: m[0] - w / 2, y: m[1] - h / 2, width: w, height: h, rx: h / 2, fill: hv ? (pick.mode === "3d" ? "#0060df" : blue) : (pick.mode === "3d" ? blue : "#fff"), stroke: hv && pick.mode === "3d" ? "#0060df" : blue, "stroke-width": 1.5,
+      el("rect", { x: m[0] - w / 2, y: m[1] - h / 2, width: w, height: h, rx: h / 2, fill: hv ? blue : "#fff", stroke: blue, "stroke-width": 1.5,
         transform: `rotate(${ang} ${m[0]} ${m[1]})` });
       el("rect", { x: m[0] - 24, y: m[1] - 12, width: 48, height: 24, fill: "transparent", transform: `rotate(${ang} ${m[0]} ${m[1]})`,
         class: "hit", "data-g": "e" + i, style: `cursor:${pick.mode === "3d" ? "grab" : (horiz ? "ns" : "ew") + "-resize"}` });
