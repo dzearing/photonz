@@ -43,6 +43,16 @@
     box-shadow:0 0 0 .5px rgba(0,0,0,.2),0 2px 6px rgba(0,0,0,.18)}
   #selection-transform .st-chip button{width:22px;height:20px;border:0;border-radius:5px;background:none;padding:0;display:grid;place-items:center;cursor:pointer;color:#3a3a3c}
   #selection-transform .st-chip button[aria-pressed="true"]{background:#0a84ff;color:#fff}
+  #selection-transform .st-chip button{position:relative}
+  #selection-transform .st-chip button.chg::after{content:"";position:absolute;right:1px;top:1px;width:5px;height:5px;border-radius:50%;background:#0a84ff;box-shadow:0 0 0 1.5px #fff}
+  #selection-transform .st-chip button.chg[aria-pressed="true"]::after{background:#fff;box-shadow:0 0 0 1.5px #0a84ff}
+  #selection-transform .st-rm{position:absolute;display:none;min-width:190px;padding:4px;border-radius:8px;background:rgba(40,40,44,.97);z-index:6000;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);font:13px -apple-system,system-ui,sans-serif}
+  #selection-transform .st-rm.on{display:block}
+  #selection-transform .st-rm button{display:block;width:100%;text-align:left;border:0;background:none;color:#f5f5f7;font:inherit;padding:5px 10px;border-radius:5px;cursor:pointer}
+  #selection-transform .st-rm button:hover:not(:disabled){background:#0a84ff}
+  #selection-transform .st-rm button:disabled{color:#6e6e73;cursor:default}
+  #selection-transform .st-rm hr{border:0;border-top:1px solid rgba(255,255,255,.12);margin:4px 2px}
   #selection-transform .st-chip svg{width:14px;height:14px}
   #selection-transform .st-persp{position:absolute;transform:translate(0,-50%);display:none;align-items:center;gap:5px;height:24px;padding:0 9px 0 7px;
     border-radius:7px;background:#fff;color:#1d1d1f;font:600 11px/1 -apple-system,system-ui,sans-serif;cursor:ew-resize;white-space:nowrap;
@@ -102,7 +112,11 @@
         <button data-cmd="distort">Distort<kbd>corner</kbd></button>
         <button data-cmd="keystone">Keystone<kbd>⇧ corner</kbd></button>
         <button data-cmd="3d">Turn in 3D</button>
-        <button data-cmd="reset">Reset Transform</button>
+        <hr style="border:0;border-top:1px solid var(--line-soft);margin:4px 0">
+        <button data-cmd="reset-size">Reset Size</button>
+        <button data-cmd="reset-distort">Reset Skew &amp; distort</button>
+        <button data-cmd="reset-3d">Reset 3D</button>
+        <button data-cmd="reset-all">Reset All</button>
       </div>
     </div>
   </div>
@@ -118,6 +132,8 @@
       <tr><td>3D · perspective pill</td><td>Click for presets and a slider, or drag sideways. Every 3D layer changes</td></tr>
       <tr><td>Skew &amp; distort · drag edge pill</td><td>Skew: the edge slides along itself</td></tr>
       <tr><td>Skew &amp; distort · drag corner</td><td>Distort: that corner moves freely. ⇧ keystone, the corner across mirrors it</td></tr>
+      <tr><td>right-click a mode on the chip</td><td>Reset that mode (Size, Skew &amp; distort, 3D) or all of them. A changed mode shows a dot</td></tr>
+      <tr><td>double-click the knob</td><td>Turn back to 0°</td></tr>
       <tr><td>esc</td><td>Back to Size</td></tr>
     </table>
   </div>
@@ -138,7 +154,7 @@
     el.style.width = o.w + "px"; el.style.height = o.h + "px";
     el.innerHTML = o.html;
     stage.appendChild(el);
-    return Object.assign({ el, mode: "size", rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, warp: null }, o);
+    return Object.assign({ el, mode: "size", rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, warp: null, w0: o.w, h0: o.h }, o);
   }
   const shot = `<div class="st-shot"><div class="st-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
     <h4>Checkout</h4><div class="st-row" style="width:90%"></div><div class="st-row" style="width:70%"></div><div class="st-row" style="width:82%"></div><span class="st-btn">Pay now</span></div>`;
@@ -246,8 +262,40 @@
     const b = document.createElement("button"); b.dataset.m = m; b.title = t; b.innerHTML = ICON[m];
     b.addEventListener("pointerdown", e => e.stopPropagation());
     b.addEventListener("click", () => setMode(pick, m));
+    b.addEventListener("contextmenu", e => { e.preventDefault(); e.stopPropagation(); openReset(m, e.clientX, e.clientY); });
     chip.appendChild(b);
   });
+  // ---------- Reset, one mode at a time ----------
+  const NAMES = { size: "Size", distort: "Skew & distort", "3d": "3D" };
+  function changed(L, m) {
+    if (m === "size") return Math.round(L.w) !== L.w0 || Math.round(L.h) !== L.h0 || Math.round(L.rot) !== 0;
+    if (m === "distort") return !!(L.warp && L.warp.some(p => Math.abs(p[0]) > 1e-4 || Math.abs(p[1]) > 1e-4));
+    return Math.round(L.rx) !== 0 || Math.round(L.ry) !== 0 || Math.round(L.z) !== 0;
+  }
+  function resetStage(L, m) {
+    if (m === "size" || m === "all") {            // its own size, no turn, about the same middle
+      const cx = L.x + L.w / 2, cy = L.y + L.h / 2;
+      L.w = L.w0; L.h = L.h0; L.x = cx - L.w / 2; L.y = cy - L.h / 2; L.rot = 0;
+      L.el.style.width = L.w + "px"; L.el.style.height = L.h + "px";
+    }
+    if (m === "distort" || m === "all") { L.warp = null; L.skx = 0; L.sky = 0; }
+    if (m === "3d" || m === "all") { L.rx = 0; L.ry = 0; L.z = 0; }
+    hint = m === "all" ? "Reset all" : `Reset ${NAMES[m]}`; setTimeout(() => { hint = ""; draw(); }, 1200);
+    rmenu.classList.remove("on"); draw();
+  }
+  const rmenu = document.createElement("div"); rmenu.className = "st-rm"; stage.appendChild(rmenu);
+  ["pointerdown", "pointerup", "click"].forEach(t => rmenu.addEventListener(t, e => e.stopPropagation()));
+  function openReset(m, x, y) {
+    rmenu.innerHTML = ["size", "distort", "3d"].map(k => `<button data-r="${k}" ${changed(pick, k) ? "" : "disabled"}>Reset ${NAMES[k]}</button>`).join("")
+      + `<hr><button data-r="all" ${["size", "distort", "3d"].some(k => changed(pick, k)) ? "" : "disabled"}>Reset All</button>`;
+    rmenu.querySelectorAll("button").forEach(b => b.addEventListener("click", () => resetStage(pick, b.dataset.r)));
+    const r = stage.getBoundingClientRect(); rmenu.style.left = x - r.left + "px"; rmenu.style.top = y - r.top + "px"; rmenu.classList.add("on");
+  }
+  document.addEventListener("pointerdown", () => rmenu.classList.remove("on"));
+  stage.addEventListener("dblclick", e => {
+    if (e.target.getAttribute && e.target.getAttribute("data-g") === "knob") { pick.rot = 0; hint = "Turn 0°"; draw(); setTimeout(() => { hint = ""; draw(); }, 1000); }
+  });
+
   function setMode(L, m) {
     if (m === "distort" && !L.warp) L.warp = [[0, 0], [0, 0], [0, 0], [0, 0]];
     L.mode = m; draw();
@@ -259,9 +307,9 @@
   const ROTATE_CURSOR = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9a8 8 0 0 1 14 0" stroke="#fff" stroke-width="4"/><path d="M5 9a8 8 0 0 1 14 0" stroke="#000" stroke-width="1.6"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#fff" stroke-width="4"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#000" stroke-width="1.6"/></g></svg>')}") 12 8, grab`;
   let hot = null;                         // the grip under the pointer
   const DOES = {
-    size: { c: "Resize · ⇧ stretch", e: "Stretch", knob: "Turn" },
+    size: { c: "Resize · ⇧ stretch", e: "Stretch", knob: "Turn · double-click for 0°" },
     "3d": { c: "Resize · ⇧ stretch", e: "Tip and swing · ⌥ perspective", knob: "Turn", depth: "Push back or pull forward" },
-    distort: { c: "Distort · ⇧ keystone", e: "Skew along this edge", knob: "Turn the shape" },
+    distort: { c: "Distort · ⇧ keystone", e: "Skew along this edge", knob: "Turn · double-click for 0°" },
   };
   const what = g => g && (DOES[pick.mode][g[0] === "c" ? "c" : g[0] === "e" ? "e" : g] || "");
   ov.addEventListener("pointerover", e => { const g = e.target.getAttribute && e.target.getAttribute("data-g"); if (g && !drag && g !== hot) { hot = g; draw(); } });
@@ -299,7 +347,7 @@
     // The chip row never sits on the card: above its highest point when it would.
     const topY = Math.min(...q.map(p => p[1])), rowY = Math.min(knob[1], topY - 22);
     chip.style.left = knob[0] + 6 + "px"; chip.style.top = rowY + "px";
-    chip.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === pick.mode));
+    chip.querySelectorAll("button").forEach(b => { b.setAttribute("aria-pressed", b.dataset.m === pick.mode); b.classList.toggle("chg", changed(pick, b.dataset.m)); });
     persp.classList.toggle("on", pick.mode === "3d");
     if (pick.mode !== "3d") pp.classList.remove("on");
     persp.style.left = knob[0] + 6 + 10 + chip.offsetWidth + 6 + "px"; persp.style.top = rowY + "px";
@@ -366,7 +414,7 @@
   // ---------- Menu ----------
   document.querySelectorAll(".st-menu button").forEach(b => b.addEventListener("click", () => {
     const L = pick, c = b.dataset.cmd;
-    if (c === "reset") { Object.assign(L, { rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, warp: null, mode: "size" }); }
+    if (c.startsWith("reset-")) { resetStage(L, c.slice(6)); return; }
     else if (c === "3d") setMode(L, "3d");
     else if (c === "distort" || c === "keystone") { setMode(L, "distort"); L.keystone = c === "keystone"; }
     else if (c === "skew") { setMode(L, "distort"); L.keystone = false; hint = "Drag an edge pill to skew"; setTimeout(() => { hint = ""; draw(); }, 1800); }
