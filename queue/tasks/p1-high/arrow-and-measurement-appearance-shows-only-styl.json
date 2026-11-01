@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:49:22.794Z",
-  "updated": "2026-11-01T06:12:10.659Z",
+  "updated": "2026-11-01T08:00:25.053Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p. Already built there: AnnotationContent.captionPartsByHand (Fill/Edge/Text set by hand, kept through style and colour changes), resetCaptionPartsByHand, EditorState.resetChipParts(ids:) (no UI yet), the chip re-deriving from the line ink on every colour change. Still needed: head following the line, the Size control, the Advanced fold and its from-labels, moving Line/Head/Label rows (PartsInspector rows) under it, and the same for measurements once every-measurement-wears-the-same-chip-styles-col lands.",
@@ -32,6 +32,40 @@
     {
       "t": "2026-11-01T06:12:10.658Z",
       "note": "From five-more-arrow-styles (2026-11-01): the arrow's tile row is still headed 'Style' where markup.md section 8 calls it 'Arrow' (beside 'Chip'). Left for this task since it rewrites the Appearance rows; the ten tiles are now picture-only, five across, the same tile as the Chip row."
+    },
+    {
+      "t": "2026-11-01T06:28:56.714Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T07:56:14.166Z",
+      "note": "owns these walks: arrow-appearance-simple-walk, measure-appearance-simple-walk"
+    },
+    {
+      "t": "2026-11-01T07:56:14.240Z",
+      "note": "Adversarial review before building: a Photoshop/redline user expects colour first and parts tucked away; risks were hiding the caption words (kept under Advanced as Caption, with corners and a typed Label size that overrides Size), Role reading 'Size' beside the S M L Size (moved Role under Advanced for measurements), and a mixed arrow+box selection (keeps the full list)."
+    },
+    {
+      "t": "2026-11-01T07:56:14.313Z",
+      "note": "Chose: Size derived from the chip's type size (no new stored field), arrow line 3/4/5 px, measurement caliper unchanged; Chose keeping the pre-styles measurement pill (the user's 2026-10-13 navy default) over starting measurements on Today, which changed the default fill to #1E4075; Chose adding Chip Size to the right-click menus (actions live where you click); Chose tinting Arrow tiles with the arrow's ink as the prototype does."
+    },
+    {
+      "t": "2026-11-01T07:56:14.386Z",
+      "note": "Verified: MarkSizeTests (12) and full Scripts/test.sh green; layout, right-click S/M/L, from-labels, painting a chip part by hand (Reset shows) on arrow and measurement, all in the probe at Next defaults (pictures looked at: vs-proto composite, 2-large, 3-small, 4-by-hand, 5-measurement). Not proven by walk: pointer clicks on Size and Advanced, Reset clicked, because panel presses under walks are dead on this Mac (reproduced on HEAD with my work stashed; logged on walks-that-fail-in-the-full-sweep-26)."
+    },
+    {
+      "t": "2026-11-01T07:56:14.459Z",
+      "note": "left rough: a new arrow is drawn in #FF3B30, not one of the eight swatches, so Custom is lit on a fresh arrow; a default-ink change touches Current's AnnotationStyles too, so not done here."
+    },
+    {
+      "t": "2026-11-01T08:00:25.051Z",
+      "note": "Appearance for a picked arrow is Arrow, Chip, Color, Marker, Size (S M L) and a closed Advanced holding Line, Head, Chip Fill/Edge/Text (each from Color, from style, or Reset once set by hand), Thickness and Head Size (Overrides Size + Reset), Ending, Ends and the caption; a measurement gets the same without the Arrow row. Commit eac717d7. Verified: MarkSizeTests and full Scripts/test.sh green; in the probe at Next defaults the layout, right-click Chip Size S/M/L, from-labels and painting a part by hand on arrows and measurements; side by side with the prototype in queue/audits/2026-11-01-markup-appearance.json. Pointer clicks on Size/Advanced not walk-proven: panel presses under walks are dead on this Mac (logged on walks-that-fail-in-the-full-sweep-26)."
     }
-  ]
+  ],
+  "started": "2026-11-01T06:28:56.713Z",
+  "walks": [
+    "arrow-appearance-simple-walk",
+    "measure-appearance-simple-walk"
+  ],
+  "completed": "2026-11-01T08:00:25.052Z"
 }
