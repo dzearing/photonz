@@ -246,6 +246,7 @@
   let hint = "", vanishing = null;
   function el(name, attrs, parent = ov) { const n = document.createElementNS(NS, name); for (const k in attrs) n.setAttribute(k, attrs[k]); parent.appendChild(n); return n; }
   const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const ROTATE_CURSOR = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9a8 8 0 0 1 14 0" stroke="#fff" stroke-width="4"/><path d="M5 9a8 8 0 0 1 14 0" stroke="#000" stroke-width="1.6"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#fff" stroke-width="4"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#000" stroke-width="1.6"/></g></svg>')}") 12 8, grab`;
   let hot = null;                         // the grip under the pointer
   const DOES = {
     size: { c: "Resize · ⌘ distort", e: "Resize · ⌘ skew", knob: "Turn" },
@@ -262,11 +263,16 @@
     if (vanishing) for (const p of q) el("line", { x1: p[0], y1: p[1], x2: vanishing[0], y2: vanishing[1], stroke: blue, "stroke-width": 1, "stroke-dasharray": "3 4", opacity: .55 });
     el("polygon", { points: q.map(p => p.join(",")).join(" "), fill: "none", stroke: blue, "stroke-width": 1.5 });
     const top = mid(q[0], q[1]), edgeN = (() => { const dx = q[1][0] - q[0][0], dy = q[1][1] - q[0][1], l = Math.hypot(dx, dy) || 1; return [dy / l, -dx / l]; })();
-    const knob = [top[0] + edgeN[0] * 26, top[1] + edgeN[1] * 26];
-    el("line", { x1: top[0], y1: top[1], x2: knob[0] - edgeN[0] * 6, y2: knob[1] - edgeN[1] * 6, stroke: blue, "stroke-width": 1.5 });
+    const knob = [top[0] + edgeN[0] * 30, top[1] + edgeN[1] * 30];
+    el("line", { x1: top[0], y1: top[1], x2: knob[0] - edgeN[0] * 9.5, y2: knob[1] - edgeN[1] * 9.5, stroke: blue, "stroke-width": 1.5 });
     const on = g => hot === g || (drag && drag.kind === g);
-    el("circle", { cx: knob[0], cy: knob[1], r: 7, fill: on("knob") ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
-    el("circle", { cx: knob[0], cy: knob[1], r: 15, fill: "transparent", class: "hit", "data-g": "knob", style: "cursor:grab" });
+    // The knob says what it does: a clockwise arrow (SF Symbols' arrow.clockwise),
+    // white on blue when lit. It never grows.
+    const kOn = on("knob"), kInk = kOn ? "#fff" : blue;
+    el("circle", { cx: knob[0], cy: knob[1], r: 9.5, fill: kOn ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
+    el("path", { d: `M${knob[0] + 4.2} ${knob[1] - 1.2} A4.6 4.6 0 1 1 ${knob[0] + 1.6} ${knob[1] - 4.3}`, fill: "none", stroke: kInk, "stroke-width": 1.5, "stroke-linecap": "round" });
+    el("path", { d: `M${knob[0] + 0.6} ${knob[1] - 6.6} L${knob[0] + 3.4} ${knob[1] - 4.4} L${knob[0] + 0.4} ${knob[1] - 2.2}`, fill: "none", stroke: kInk, "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round" });
+    el("circle", { cx: knob[0], cy: knob[1], r: 15, fill: "transparent", class: "hit", "data-g": "knob", style: `cursor:${ROTATE_CURSOR}` });
     const bot = mid(q[2], q[3]);
     if (pick.mode === "3d") {            // depth: its own grip below the card, never on a corner
       const d = [bot[0] - edgeN[0] * 30, bot[1] - edgeN[1] * 30];
