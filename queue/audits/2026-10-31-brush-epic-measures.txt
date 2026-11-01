@@ -74,3 +74,22 @@ The one untried lever, prototyped offline on sketch 20261031-082519 (the layer's
   same, comb at a fifth, colours 2.5x, a canvas weave where paint is thin:   5, 6; reads 8, 8
 Best is the person's Krita score, on one sketch, within the judges' noise. Not shipped: a change to the composite path and the raster cache for a point that may be noise. All code reverted. Judges' words on every variant: "uniform, repeated wavy strokes", "simple blob trees", "no canvas texture".
 Picture for the user: 2026-11-01-brush-epic-painted-bar-calibration.png.
+
+
+SIXTH PASS, 2026-11-01 (the user's card answer, option b: light each paint layer as one surface; ship only if the try path painting reaches looks painted 5 and 6 and painting stays as fast).
+Built for real, not a prototype: a Paint layer keeps how high its oil stands (a coarse height surface, one value per two points, carried between strokes with the washes still wet, kept in the raster cache, handed to the live stroke so what the hand sees is still what lands); each new oil stroke is lit against the paint under it, so it builds up where strokes overlap and steps up at an earlier stroke's edge. Patch: 2026-11-01-brush-epic-one-surface.patch.txt (made against 49a9164c; includes two tests: heights pile up at a crossing and only so far).
+Offline, sketch 20261031-082519, two judges, three looks each (A, B), reads in brackets:
+  one surface, stroke relief as today:                                   4, 5 (7, 7)
+  + stroke's own relief 0.4x, body 1.5x, bristle colours 2.5x:           4, 5 (7, 7)
+  + own relief 0.25x, body 2x (thick impasto mounds), colours 2.5x:     4, 5 (7, 6)
+  + own relief 0.5x, colours 2x, bristle comb at a fifth:                4, 5 (7, 7)
+  + own relief 0.2x, colours 2.5x, a canvas weave where paint is thin:   4, 5 (7, 7)
+  + own relief 0.2x, body 1.5x, colours 2.5x:                            4, 5 (7, 7)
+  + own relief 0.35x, colours 2.5x, weave:                               4, 5 (7, 7)
+  the fifth pass's best picture (it scored 5, 6 on 1 Nov), judged again: 5, 5 (8, 7)  -> the judges move about a point between runs.
+TRY PATH (the gate), Scripts/playtest/brush-epic-try-path-walk.json at Next defaults with the one-surface build (own relief 0.5x, colours 2x, comb at a fifth), passed, 14.5 min with the release build:
+  looks painted 4 and 5, reads as a landscape 8 and 8. Canvas cropped, no selection handles in the crop this time.
+  the 2026-10-31 try path picture, judged again today the same way: looks painted 4 and 5, reads 7 and 8.
+Judges' words: "even, repeated streaks", "embossed fake-impasto shading", "uniform digital stroke texture", "crude keyhole-shaped trees", "the odd tan path shape".
+Reading: the gate (5 and 6) is NOT met, so nothing shipped and the code is reverted, as the card said. Lighting, relief, colour variety, build-up and a weave have now all been measured across six passes and none moves looks painted past the judges' noise; what they name is the same stroke texture at the same scale everywhere and crude shapes, i.e. how Ask paints, not how paint is lit.
+Picture: 2026-11-01-brush-epic-one-surface-try-path.png.

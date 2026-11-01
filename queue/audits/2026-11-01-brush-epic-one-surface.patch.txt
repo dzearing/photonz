@@ -1,0 +1,390 @@
+diff --git a/Sources/PhotonzRender/OilPaint.swift b/Sources/PhotonzRender/OilPaint.swift
+index eb62bad4..b05337d8 100644
+--- a/Sources/PhotonzRender/OilPaint.swift
++++ b/Sources/PhotonzRender/OilPaint.swift
+@@ -27,12 +27,30 @@ import PhotonzCore
+ //   short stroke read as a stamped rectangle of corduroy (the brush epic's
+ //   two-judge bar, `queue/audits/2026-10-31-brush-epic-measures.txt`).
+ //
++// - The paint on a layer is ONE SURFACE (2026-11-01): the layer keeps how
++//   high its oil stands (`OilHeights`, carried with the washes still wet), a
++//   new stroke stands on the paint already there, filling most of its grooves
++//   and adding its own body, and it is lit against that surface rather than
++//   on its own. So a stroke over earlier paint builds up thicker and its edge
++//   steps up from the paint beside it, and where it lies alone it lies flat
++//   on the canvas. Lit stroke by stroke, every stroke read as the same
++//   embossed corduroy laid side by side; that was what two judges named in
++//   every painting Ask made (`queue/audits/2026-10-31-brush-epic-measures.txt`).
++//
+ // Paint is only ever laid over what is there, never scraped off, so the live
+ // overlay (which lies over the canvas) shows exactly what lands. Shared by the
+ // stroke that lands (`PaintRasterizer`) and the stroke under the pointer
+ // (`PaintRasterizer.LiveMarker`), which hand over the same dabs in the same
+ // order and read the same paint under them.
+ 
++enum OilKnob {
++    static func v(_ name: String, _ d: Float) -> Float {
++        ProcessInfo.processInfo.environment["OIL_" + name].flatMap { Float($0) } ?? d
++    }
++    static let own = v("OWN", 0.5), body = v("BODY", 1), tint = v("TINT", 2), comb = v("COMB", 0.2)
++    static let weave = v("WEAVE", 0), period = v("PERIOD", 4), thin = v("THIN", 0.5)
++}
++
+ struct OilStroke {
+     let toPixels: CGAffineTransform
+     let pixelsPerPoint: CGFloat
+@@ -59,6 +77,9 @@ struct OilStroke {
+     /// What the sides' wander and the ridges' change along the stroke are
+     /// drawn from.
+     let salt: UInt32
++    /// How high the layer's oil already stands under the stroke, in points,
++    /// in the same pixels: what it is lit against.
++    let below: OilHeights
+     private var bristles: [Bristle]
+     /// Where each bristle's band ends across the brush, 0...1, left to right:
+     /// bristles are not all as thick, so the streaks are uneven.
+@@ -116,8 +137,10 @@ struct OilStroke {
+         3 + 0.25 * min(100, max(0, load))
+     }
+ 
+-    init(settings: BrushSettings, colour: RGBA, seed: UInt32, toPixels: CGAffineTransform, limit: PixelBox) {
++    init(settings: BrushSettings, colour: RGBA, seed: UInt32, toPixels: CGAffineTransform, limit: PixelBox,
++         below: OilHeights = OilHeights()) {
+         self.toPixels = toPixels
++        self.below = below
+         pixelsPerPoint = hypot(toPixels.a, toPixels.b)
+         own = (Float(colour.r), Float(colour.g), Float(colour.b))
+         strength = Float(settings.opacity / 100) * Float(colour.a)
+@@ -150,9 +173,9 @@ struct OilStroke {
+             let edge = Float(min(k, count - 1 - k))
+             // The outermost bristles splay and carry less.
+             let outer: Float = edge < 1 ? 0.7 : edge < 2 ? 0.88 : 1
+-            let light = 0.93 + 0.14 * (0.5 * clump + 0.5 * scatter.unit())
++            let light = 1 + OilKnob.tint * (-0.07 + 0.14 * (0.5 * clump + 0.5 * scatter.unit()))
+             // Warmer or cooler by a few per cent, in clumps: red against blue.
+-            let warm = 0.025 * (hue.0 - 0.5), green = 0.02 * (hue.1 - 0.5)
++            let warm = OilKnob.tint * 0.025 * (hue.0 - 0.5), green = OilKnob.tint * 0.02 * (hue.1 - 0.5)
+             return Bristle(r: Float(colour.r), g: Float(colour.g), b: Float(colour.b), paint: 1,
+                            press: (0.7 + 0.15 * clump + 0.15 * scatter.unit()) * outer,
+                            endurance: 0.55 + 0.9 * scatter.unit(),
+@@ -342,7 +365,7 @@ struct OilStroke {
+                         c[i] = laid + c[i] * keep
+                         // The paint pushed aside piles up at the stroke's sides.
+                         let side = rim * smoothstep(0.8, 0.97, Float(abs(u))) * (1 - smoothstep(0.97, 1, Float(abs(u))))
+-                        let target = reader.thickness * ((0.8 + 0.2 * ridge) * lift * (0.45 + 0.55 * flow) + side)
++                        let target = reader.thickness * ((1 - 0.2 * OilKnob.comb + 0.2 * OilKnob.comb * ridge) * lift * (0.45 + 0.55 * flow) + side)
+                         h[i] += laid * (target - h[i])
+                     }
+                 }
+@@ -426,12 +449,29 @@ struct OilStroke {
+         // Read across two pixels either side, not one: the dab-by-dab steps
+         // in the height lit one pixel apart beaded every ridge with a row of
+         // bright dots (2026-10-31).
+-        let hx = ((height.value(x + 1, y) - height.value(x - 1, y)) * 0.6
+-                  + (height.value(x + 2, y) - height.value(x - 2, y)) * 0.2) * 0.5 * ppp
+-        let hy = ((height.value(x, y + 1) - height.value(x, y - 1)) * 0.6
+-                  + (height.value(x, y + 2) - height.value(x, y - 2)) * 0.2) * 0.5 * ppp
++        // The paint already on the layer is the ground this stroke stands
++        // on: its body tilts the stroke where it lies over thick paint and
++        // steps it up where it crosses an earlier stroke's edge.
++        let (bx, by) = below.slope(x, y)
++        let hx = (((height.value(x + 1, y) - height.value(x - 1, y)) * 0.6
++                  + (height.value(x + 2, y) - height.value(x - 2, y)) * 0.2) * OilKnob.own + bx * OilKnob.body) * 0.5 * ppp
++        let hy = (((height.value(x, y + 1) - height.value(x, y - 1)) * 0.6
++                  + (height.value(x, y + 2) - height.value(x, y - 2)) * 0.2) * OilKnob.own + by * OilKnob.body) * 0.5 * ppp
++        var wx: Float = 0, wy: Float = 0
++        if OilKnob.weave > 0 {
++            let total = below.value(x, y) + height.value(x, y)
++            let shows = OilKnob.weave * max(0, 1 - total / OilKnob.thin)
++            if shows > 0 {
++                let k = 2 * Float.pi / (OilKnob.period * ppp)
++                let px = (Float(x) + 0.5) * k, py = (Float(y) + 0.5) * k
++                // A plain weave: threads over and under, alternating.
++                wx = shows * k * cos(px) * sin(py) / ppp
++                wy = shows * k * sin(px) * cos(py) / ppp
++                _ = (wx, wy)
++            }
++        }
+         let bump: Float = 1.6
+-        let nx = -hx * bump, ny = -hy * bump
++        let nx = -(hx + wx * ppp) * bump, ny = -(hy + wy * ppp) * bump
+         let norm = (nx * nx + ny * ny + 1).squareRoot()
+         let l = Self.light, h = Self.halfway
+         let facing = (nx * l.0 + ny * l.1 + l.2) / norm
+@@ -464,6 +504,11 @@ struct OilStroke {
+         }
+     }
+ 
++    /// Adds the stroke's body to the layer's surface, once it has landed.
++    func settle(into surface: inout OilHeights, width: Int, height layerHeight: Int) {
++        surface.add(height, scale: pixelsPerPoint, width: width, height: layerHeight)
++    }
++
+     /// Writes the stroke as it now stands into `box` of `overlay` (and two
+     /// pixels round it, whose light the box's heights change), in place of
+     /// what was there. Shown over the canvas at full strength.
+@@ -486,6 +531,109 @@ struct OilStroke {
+     }
+ }
+ 
++/// How high a layer's oil paint stands, in points, kept between its strokes
++/// (with the washes still wet, `WetWashes.oil`) so each new stroke is lit
++/// against the paint it lands on (`OilStroke.lit`).
++///
++/// Kept coarse, one value for each cell of about two points, and read back
++/// smoothly between them: what a later stroke stands on is the BODY of the
++/// paint under it, how thick it has built up, not the fine ridges of each
++/// bristle, which the new paint fills. So it costs a sixteenth of the layer's
++/// bitmap at 2x and a 12 megapixel layer's is under 3 MB.
++struct OilHeights {
++    /// Pixels a cell is across.
++    private(set) var cell = 0
++    private(set) var columns = 0
++    private(set) var rows = 0
++    private(set) var values: [Float] = []
++
++    /// How high paint can pile: each stroke over another adds less as the
++    /// paint under it thickens, the way a brush through wet paint pushes
++    /// some of it aside.
++    static let most: Float = 1.6
++
++    var isEmpty: Bool { values.isEmpty }
++    var byteCount: Int { values.count * MemoryLayout<Float>.size }
++
++    /// The paint's height at the middle of pixel (x, y), read smoothly
++    /// between the cells.
++    @inline(__always)
++    func value(_ x: Int, _ y: Int) -> Float {
++        guard !values.isEmpty else { return 0 }
++        let size = Float(cell)
++        let gx = (Float(x) + 0.5) / size - 0.5, gy = (Float(y) + 0.5) / size - 0.5
++        let x0 = Int(gx.rounded(.down)), y0 = Int(gy.rounded(.down))
++        let fx = gx - Float(x0), fy = gy - Float(y0)
++        let a = at(x0, y0), b = at(x0 + 1, y0), c = at(x0, y0 + 1), d = at(x0 + 1, y0 + 1)
++        return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy
++    }
++
++    /// How the height changes across (x, y), in the same measure as a
++    /// stroke's own (`OilStroke.lit`): twice its change a pixel, left to
++    /// right and top to bottom.
++    @inline(__always)
++    func slope(_ x: Int, _ y: Int) -> (Float, Float) {
++        guard !values.isEmpty else { return (0, 0) }
++        return ((value(x + 2, y) - value(x - 2, y)) * 0.5, (value(x, y + 2) - value(x, y - 2)) * 0.5)
++    }
++
++    @inline(__always)
++    private func at(_ column: Int, _ row: Int) -> Float {
++        let i = min(max(column, 0), columns - 1), j = min(max(row, 0), rows - 1)
++        return values[j * columns + i]
++    }
++
++    /// Adds a stroke's own heights (`field`, in the layer's pixels) to the
++    /// surface, a cell at a time: each cell takes the stroke's mean height
++    /// over it, less as the paint there nears `most`.
++    mutating func add(_ field: CoverageField, scale: CGFloat, width: Int, height: Int) {
++        let box = field.box
++        guard !box.isEmpty, width > 0, height > 0 else { return }
++        if values.isEmpty {
++            cell = max(2, Int((2 * scale).rounded()))
++            columns = (width + cell - 1) / cell
++            rows = (height + cell - 1) / cell
++            values = [Float](repeating: 0, count: columns * rows)
++        }
++        let size = cell, area = Float(cell * cell)
++        let firstColumn = max(0, box.minX / size), lastColumn = min(columns - 1, (box.maxX - 1) / size)
++        let firstRow = max(0, box.minY / size), lastRow = min(rows - 1, (box.maxY - 1) / size)
++        guard firstColumn <= lastColumn, firstRow <= lastRow else { return }
++        let most = Self.most
++        values.withUnsafeMutableBufferPointer { out in
++            guard let out = out.baseAddress else { return }
++            for row in firstRow...lastRow {
++                for column in firstColumn...lastColumn {
++                    var sum: Float = 0
++                    for y in row * size..<(row + 1) * size {
++                        for x in column * size..<(column + 1) * size { sum += field.value(x, y) }
++                    }
++                    guard sum > 0 else { continue }
++                    let i = row * columns + column
++                    out[i] += sum / area * max(0, 1 - out[i] / most)
++                }
++            }
++        }
++    }
++
++    /// The heights the `earlier` strokes of a layer leave, worked out by
++    /// painting them (`PaintRasterizer.paint`) onto scratch paper `limit`
++    /// pixels big at `scale`: for a live stroke handed only those strokes.
++    static func after(_ earlier: [BrushStroke], scale: CGFloat, limit: PixelBox) -> OilHeights {
++        guard earlier.contains(where: { $0.settings.medium == .oil && $0.settings.mode == .paint }),
++              limit.width > 0, limit.height > 0,
++              let context = CGContext(
++                data: nil, width: limit.maxX, height: limit.maxY, bitsPerComponent: 8, bytesPerRow: limit.maxX * 4,
++                space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
++                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return OilHeights() }
++        context.translateBy(x: 0, y: CGFloat(limit.maxY))
++        context.scaleBy(x: scale, y: -scale)
++        var wet = WetWashes()
++        for stroke in earlier { PaintRasterizer.paint(stroke, in: context, scale: scale, wet: &wet) }
++        return wet.oil
++    }
++}
++
+ /// What one oil dab's pixels passed to its bristles: for each pixel of the
+ /// dab's box, the bristle that ran over it (or -1 for none), and how hard it
+ /// pressed there with the paint it found (`passed`, five values a pixel).
+diff --git a/Sources/PhotonzRender/PaintLayerStroke.swift b/Sources/PhotonzRender/PaintLayerStroke.swift
+index f4d8f9b4..4712b1d8 100644
+--- a/Sources/PhotonzRender/PaintLayerStroke.swift
++++ b/Sources/PhotonzRender/PaintLayerStroke.swift
+@@ -90,7 +90,7 @@ public final class PaintLayerStroke {
+         guard let marker = PaintRasterizer.LiveMarker(
+             stroke: stroke, bitmap: overlay, pointsToPixels: CGAffineTransform(scaleX: scale, y: scale),
+             clip: CGRect(x: 0, y: 0, width: width, height: height), working: paper, earlier: [],
+-            wet: washes, laysAhead: laysAhead) else { return nil }
++            wet: washes, oil: wet.oil, laysAhead: laysAhead) else { return nil }
+         self.width = width
+         self.height = height
+         self.scale = scale
+diff --git a/Sources/PhotonzRender/PaintRasterCache.swift b/Sources/PhotonzRender/PaintRasterCache.swift
+index 92dd9c68..7aad320c 100644
+--- a/Sources/PhotonzRender/PaintRasterCache.swift
++++ b/Sources/PhotonzRender/PaintRasterCache.swift
+@@ -144,7 +144,7 @@ public final class PaintRasterCache: @unchecked Sendable {
+         else { return nil }
+ 
+         let made = Entry(slot: slot, strokes: strokes, storage: storage, image: image, wet: wet,
+-                         byteCount: byteCount, used: 0)
++                         byteCount: byteCount + wet.oil.byteCount, used: 0)
+         lock.withLock {
+             simulated += strokes.count - from
+             guard byteCount * 2 <= budgetBytes else { return }
+diff --git a/Sources/PhotonzRender/PaintRasterizer.swift b/Sources/PhotonzRender/PaintRasterizer.swift
+index 0fdae14e..fa587eac 100644
+--- a/Sources/PhotonzRender/PaintRasterizer.swift
++++ b/Sources/PhotonzRender/PaintRasterizer.swift
+@@ -137,12 +137,13 @@ public enum PaintRasterizer {
+         case .oil:
+             guard let plane = PixelPlane(context), let colour = RGBA(hex: stroke.colorHex) else { return }
+             var oil = OilStroke(settings: stroke.settings, colour: colour, seed: stroke.seed, toPixels: toPixels,
+-                                limit: plane.box)
++                                limit: plane.box, below: wet.oil)
+             // The plane is not written until the stroke is done, so every dab
+             // picks up the layer's paint as it stood before this stroke.
+             for dab in dabs { _ = oil.mark(dab, under: plane) }
+             _ = oil.finish(under: plane)
+             oil.composite(into: plane)
++            oil.settle(into: &wet.oil, width: plane.width, height: plane.height)
+             return
+         default:
+             stamp(stroke, dabs: dabs, in: context, scale: scale)
+@@ -256,7 +257,7 @@ public enum PaintRasterizer {
+         /// replaying the `earlier` strokes for them (`PaintLayerStroke`).
+         init?(stroke: BrushStroke, bitmap: CGContext, pointsToPixels: CGAffineTransform,
+               clip: CGRect, working: CGContext?, earlier: [BrushStroke], wet: [WetWash]?,
+-              laysAhead: Bool = false) {
++              oil below: OilHeights? = nil, laysAhead: Bool = false) {
+             self.laysAhead = laysAhead
+             gap = Double(BrushPlacement.spacing(forDiameter: CGFloat(stroke.settings.size)))
+             self.bitmap = bitmap
+@@ -292,8 +293,12 @@ public enum PaintRasterizer {
+                                     colour, under: working.flatMap { PixelPlane($0) })
+             } else if stroke.settings.medium == .oil {
+                 guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
++                // Handed the layer's oil as the kept raster left it, or
++                // worked out by painting the earlier strokes.
++                let below = below ?? OilHeights.after(earlier, scale: hypot(pointsToPixels.a, pointsToPixels.b),
++                                                      limit: limit)
+                 kind = .oil(OilStroke(settings: stroke.settings, colour: colour, seed: stroke.seed,
+-                                      toPixels: pointsToPixels, limit: limit),
++                                      toPixels: pointsToPixels, limit: limit, below: below),
+                             under: working.flatMap { PixelPlane($0) })
+             } else if stroke.settings.medium == .airbrush {
+                 guard plane != nil, let colour = RGBA(hex: stroke.colorHex) else { return nil }
+diff --git a/Sources/PhotonzRender/Watercolour.swift b/Sources/PhotonzRender/Watercolour.swift
+index 8ad0ed99..52c84540 100644
+--- a/Sources/PhotonzRender/Watercolour.swift
++++ b/Sources/PhotonzRender/Watercolour.swift
+@@ -414,6 +414,10 @@ struct WetField {
+ /// are replayed in order, so each new stroke knows what it is painting into.
+ struct WetWashes {
+     private var washes: [(stroke: BrushStroke, wash: WatercolourStroke)] = []
++    /// How high the layer's oil paint stands so far (`OilHeights`): the other
++    /// thing a stroke needs from the ones before it besides their pixels,
++    /// carried the same way.
++    var oil = OilHeights()
+ 
+     /// The washes still wet when `stroke` begins. Ones that have dried are
+     /// let go: strokes are painted in time order, so they stay dry.
+diff --git a/Tests/PhotonzRenderTests/OilRenderingTests.swift b/Tests/PhotonzRenderTests/OilRenderingTests.swift
+index 69ec90b6..f7a22ca2 100644
+--- a/Tests/PhotonzRenderTests/OilRenderingTests.swift
++++ b/Tests/PhotonzRenderTests/OilRenderingTests.swift
+@@ -180,6 +180,67 @@ struct OilRenderingTests {
+         #expect(one.dataProvider?.data as Data? == two.dataProvider?.data as Data?)
+     }
+ 
++    // MARK: - One surface
++
++    /// The two strokes of `crossing`, painted in order onto one bitmap, the
++    /// second lit against the paint the first left, or (`flat`) as if the
++    /// first had left none.
++    private func crossingPixels(flat: Bool) throws -> (pixels: [UInt8], surface: OilHeights) {
++        let width = Int(box.width * scale), height = Int(box.height * scale)
++        let context = try #require(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
++                                             bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
++                                             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
++        context.translateBy(x: 0, y: CGFloat(height))
++        context.scaleBy(x: scale, y: -scale)
++        var wet = WetWashes()
++        let strokes = crossing()
++        PaintRasterizer.paint(strokes[0], in: context, scale: scale, wet: &wet)
++        if flat { wet.oil = OilHeights() }
++        PaintRasterizer.paint(strokes[1], in: context, scale: scale, wet: &wet)
++        return (rgba(try #require(context.makeImage())), wet.oil)
++    }
++
++    @Test("A layer's oil is one surface: a stroke over earlier paint stands on it and is lit against it")
++    func oneSurface() throws {
++        let (lit, surface) = try crossingPixels(flat: false)
++        let (flat, _) = try crossingPixels(flat: true)
++        // The paint piles up where the two cross, higher than either alone.
++        let crossing = surface.value(110 * 2, 100 * 2)
++        let blueAlone = surface.value(250 * 2, 100 * 2), redAlone = surface.value(110 * 2, 40 * 2)
++        #expect(crossing > blueAlone * 1.3 && crossing > redAlone * 1.3,
++                "crossing \(crossing), blue \(blueAlone), red \(redAlone)")
++        // Lit against the red stroke under it, the blue one changes where it
++        // crosses the red, and nowhere it lies on bare canvas.
++        let width = Int(box.width * scale)
++        func changed(_ xs: ClosedRange<Int>) -> Int {
++            var n = 0
++            for y in 176...224 {
++                for x in xs {
++                    let o = (y * width + x) * 4
++                    for c in 0..<3 where abs(Int(lit[o + c]) - Int(flat[o + c])) > 3 { n += 1 }
++                }
++            }
++            return n
++        }
++        #expect(changed(190...250) > 200, "over the red: \(changed(190...250))")
++        #expect(changed(420...560) == 0, "on bare canvas: \(changed(420...560))")
++    }
++
++    @Test("Paint piles up only so far, however many strokes go over one place")
++    func pilesOnlySoFar() throws {
++        let strokes = (0..<30).map { oil(a, b, seed: UInt32(10 + $0)) }
++        let width = Int(box.width * scale), height = Int(box.height * scale)
++        let context = try #require(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
++                                             bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
++                                             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
++        context.translateBy(x: 0, y: CGFloat(height))
++        context.scaleBy(x: scale, y: -scale)
++        var wet = WetWashes()
++        for stroke in strokes { PaintRasterizer.paint(stroke, in: context, scale: scale, wet: &wet) }
++        let most = wet.oil.values.max() ?? 0
++        #expect(most > 0.5 && most <= OilHeights.most, "\(most)")
++    }
++
+     // MARK: - Live and landed
+ 
+     @Test("The live stroke over the paint it lands on shows what lands")

@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-11-01T21:41:40.597Z",
+  "updated": "2026-11-01T22:29:03.511Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -278,9 +278,29 @@
     {
       "t": "2026-11-01T21:41:40.596Z",
       "note": "back to pending: the loop was paused for a release seconds after this task started; nothing of it was written yet"
+    },
+    {
+      "t": "2026-11-01T21:56:20.492Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T22:29:03.303Z",
+      "note": "Sixth pass (the user's option b): built one-surface lighting for real (a Paint layer keeps a coarse height surface of its oil, carried with the wet washes and the raster cache, handed to the live stroke; each oil stroke lit against it). Offline on sketch 20261031-082519, seven variants (softer ridges, colours 2-2.5x, comb at a fifth, impasto build-up 2x, canvas weave): looks painted 4/5 every time. Try path walk at Next defaults with the build (passed, 14.5 min incl. release build): looks painted 4 and 5, reads 8 and 8. Old try path picture judged again today: 4 and 5. The fifth pass's 5/6 picture judged again: 5/5, so the judges move about a point."
+    },
+    {
+      "t": "2026-11-01T22:29:03.369Z",
+      "note": "Gate (5 and 6) NOT met, so per the card nothing shipped: code reverted, kept as queue/audits/2026-11-01-brush-epic-one-surface.patch.txt (made against 49a9164c, with two tests). Measures under SIXTH PASS in 2026-10-31-brush-epic-measures.txt; picture 2026-11-01-brush-epic-one-surface-try-path.png (before / after / a person's Krita painting). Speed not measured: nothing shipped."
+    },
+    {
+      "t": "2026-11-01T22:29:03.434Z",
+      "note": "Opened a card, because the user's condition for this pass failed and the bar is theirs: close as is, close and file 'paintings look less digital' (varied strokes across a painting, better shapes) as its own lower-priority task (recommended), or keep trying here. Judges across six passes name stroke sameness and crude shapes, never lighting."
+    },
+    {
+      "t": "2026-11-01T22:29:03.507Z",
+      "note": "One-surface lighting built and measured: try path still looks painted 4 and 5 against the 5 and 6 gate, so it did not ship (patch kept). Card asks whether to close the epic, close it and carry the look as its own task, or keep trying."
     }
   ],
-  "started": "2026-11-01T21:40:57.021Z",
+  "started": "2026-11-01T21:56:20.491Z",
   "walks": [
     "brush-epic-try-path-walk"
   ]

@@ -1,0 +1,50 @@
+{
+  "id": "a-brush-tool-paints-with-realistic-charcoal-chal-lighting-the-paint-as-one-surfac",
+  "taskId": "a-brush-tool-paints-with-realistic-charcoal-chal",
+  "question": "Lighting the paint as one surface did not lift Ask's painting: still 4 and 5 on looks painted against the 5 and 6 you chose. Close the brush epic, close it and carry the look as its own task, or keep trying here?",
+  "context": "You chose on 1 November to try one more pass, lighting each paint layer as one surface, and to ship it only if Ask's painting on the try path reached 5 and 6. It was built for real and measured in seven versions and on the try path: every one scored 4 and 5, the same as before it, so it did not ship. Reads as a landscape stays at 8 and 8. The judges name the same stroke texture everywhere and crude shapes, not the lighting.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Close the brush epic as it stands",
+      "summary": "The brush epic closes. Ask paints what you ask for (8 of 10 from both judges) with real, editable oil strokes, a point under a person's digital painting on looks painted. Nothing more is worked on for that score.",
+      "pros": [
+        "Frees the loop after six passes on one number",
+        "Everything else in the epic is built and checked"
+      ],
+      "cons": [
+        "Ask's paintings still look plainly digital (4 and 5 against a person's 5 and 6)"
+      ],
+      "mitigation": "Anything you dislike in a painting you react to on the audit, and it becomes its own task."
+    },
+    {
+      "id": "b",
+      "label": "Close it, and file painting that looks less digital as its own task",
+      "summary": "The brush epic closes now. A separate, lower priority task picks up what the judges keep naming: every stroke in Ask's painting has the same texture at the same size, and its trees and shapes are crude. It would vary the strokes across a painting (dabs, long sweeps, thin scrubbed passages, thick highlights) rather than change how paint is lit.",
+      "pros": [
+        "Frees the queue's top slot for the next feature",
+        "Keeps the goal alive, aimed at what the judges actually name"
+      ],
+      "cons": [
+        "Another pass may move the score as little as the last six did"
+      ],
+      "mitigation": "The new task carries the same 5 and 6 bar and stops after one pass that moves nothing."
+    },
+    {
+      "id": "c",
+      "label": "Keep this task open and try the stroke variety here",
+      "summary": "The epic stays open at the top of the queue, and the next pass tries varied strokes in it, closing when the try path painting reaches 5 and 6.",
+      "pros": [
+        "The epic closes only when Ask's painting matches a person's"
+      ],
+      "cons": [
+        "Holds the top of the queue for a score six passes have not moved past noise"
+      ],
+      "mitigation": "A pass that moves nothing stops and says so, as this one did."
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-11-01T22:28:41.370Z",
+  "shot": "2026-11-01-brush-epic-one-surface-try-path.png"
+}
