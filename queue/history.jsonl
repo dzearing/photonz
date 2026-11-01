@@ -14866,3 +14866,13 @@
 {"t":"2026-11-01T02:34:19.345Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
 {"t":"2026-11-01T02:34:19.418Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
 {"t":"2026-11-01T02:34:25.047Z","ev":"task_blocked","id":"caption-and-measurement-chips-come-in-a-set-of-p","from":"in_progress","note":"Glass, Spec badge, Lit tag and Highlighter reworked in 1739ef6d (Glass now frosts the real picture; Spec passes at 7). Glass and Highlighter still score 4 with three judges and Lit tag 6; the user approved all ten, so a card asks whether to keep all ten, drop the three, or rework again."}
+{"t":"2026-11-01T02:43:40.875Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-11-01T02:43:40.911Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-01T02:45:30.213Z","ev":"slice_pass","walks":42,"passed":28,"failed":14,"seconds":518,"of":1065,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-01T02:45:30.394Z","ev":"task_started","id":"ask-never-fails-because-a-document-is-too-big-to","title":"Ask never fails because a document is too big to describe: a change to a 216-part drawing works","priority":"p1-high"}
+{"t":"2026-11-01T03:42:25.550Z","ev":"task_note","id":"making-a-part-of-a-traced-drawing-smaller-shrink"}
+{"t":"2026-11-01T03:42:42.472Z","ev":"task_walks","id":"ask-never-fails-because-a-document-is-too-big-to","walks":["ask-changes-a-big-traced-drawing-walk"]}
+{"t":"2026-11-01T03:55:12.360Z","ev":"task_note","id":"ask-never-fails-because-a-document-is-too-big-to"}
+{"t":"2026-11-01T03:55:12.432Z","ev":"task_note","id":"ask-never-fails-because-a-document-is-too-big-to"}
+{"t":"2026-11-01T03:55:12.504Z","ev":"task_note","id":"ask-never-fails-because-a-document-is-too-big-to"}
+{"t":"2026-11-01T03:55:27.061Z","ev":"task_done","id":"ask-never-fails-because-a-document-is-too-big-to","from":"in_progress","note":"Shipped 3d8efd5d: Ask says a big drawing in short (AskDocumentDigest), fits every request to its window, leaves video tools out on a picture, sends back a part with no point, and turns server errors into one plain sentence; window 65,536 on Macs of 48 GB+ (+2.2 GB measured). Reproduced first (39,719 tokens refused); the Statue request is now 15,012 tokens measured on the model's tokenizer, under half of 32K. Walk ask-changes-a-big-traced-drawing-walk passes at Next defaults ('Made her robe a darker green', one step). Full suite green. Robe targeting on colour-traced drawings folded into making-a-part-of-a-traced-drawing-smaller-shrink. Audit 2026-10-31-ask-never-fails-because-a-document-is-too-big-to."}
