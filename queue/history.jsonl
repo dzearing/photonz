@@ -14973,3 +14973,5 @@
 {"t":"2026-11-01T14:15:44.569Z","ev":"leftovers_cleared","id":"while-ask-works-the-agent-panel-says-what-it-is","task":"while-ask-works-the-agent-panel-says-what-it-is","why":"the intake window's own uncommitted design file, restored and committed"}
 {"t":"2026-11-01T14:17:22.731Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
 {"t":"2026-11-01T14:20:01.546Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T14:20:53.122Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T14:20:53.195Z","ev":"task_resequenced","id":"the-reworked-selection-ships-cleaner-grips-a-tag","from":1.2e-7,"to":5e-8}

@@ -4,12 +4,12 @@
   "goal": "The selection mock was reworked with the user on 2026-10-24 (Selection, the primitive: docs/design/mocks/pages/lang-selection.html, section 03b and the section 01 card) but it was never built. Build it in the app at Next defaults: thinner, cleaner sizing grips, a name and size tag that never covers the rotate knob, and a 3D mode entered from a small cube chip beside the rotate knob, where edge pills tip and turn the layer and corner grips push it back or pull it forward, all staying the same size on screen however the layer is turned. It also has to work on small objects, where today the 3D handles crowd each other and all react at once.",
   "epic": "found-selection",
   "priority": "p1-high",
-  "seq": 1.2e-7,
+  "seq": 5e-8,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T12:45:05.877Z",
-  "updated": "2026-11-01T14:20:01.545Z",
+  "updated": "2026-11-01T14:20:53.194Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-01 (intake): 'what happened to the rework on selection ux especially with 3d transforms?' Answer: the mock was reworked with the user on 2026-10-24 (eight lang-selection commits, 07:31 to 15:07) and no build task was filed, so the loop never knew. Folds in on-a-small-picked-object-the-3d-turn-handles-are (filed by the user 2026-10-20, never built, resequenced 13 times). Related, done earlier: the-3d-rotation-handles-are-on-a-picked-layer-ag, tilt-flip-and-push-layers-in-depth-from-the-canv, resize-squares-on-a-layer-turned-in-3d-take-the, every-transform-handle-answers-the-pointer-befor (2026-10-11 to 14). Keep the mock as is; a departure is a decision card with a marked screenshot.",
@@ -72,6 +72,14 @@
     {
       "t": "2026-11-01T14:20:01.544Z",
       "note": "User, 2026-11-01: each mode resets on its own. Reset Size (back to the picture's own size and no turn, about the same middle), Reset Skew & distort (the reshape removed), Reset 3D (no tip, swing or depth), Reset All. Reached by: right-clicking that mode on the chip (a menu of the three plus Reset All, a mode with nothing to reset greyed); Layer > Transform > Reset Size / Reset Skew & distort / Reset 3D / Reset All; a double press on the rotate knob turns back to 0 degrees. A mode that has been changed shows a small blue dot on its chip button. Each reset is one undo step. Prototype verified in WebKit."
+    },
+    {
+      "t": "2026-11-01T14:20:53.120Z",
+      "note": "APPROVED by the user, 2026-11-01: 'this is amazing and i'm not sure i can spot any more improvements.' The whole transform modes prototype is approved, perspective and Skew & distort included: build ALL of it, no decision cards for anything in this log. docs/design/mocks/pages/selection-transform.html is now the design floor alongside lang-selection.html; where they differ, the prototype and this log win (same grips in every mode; modes only add; the order Size, Skew & distort, 3D; the reshape belongs to the picture; flat frame in Size and 3D; corners keep proportions, Shift stretches; knob with a clockwise arrow on a dotted stem; perspective pill; per-mode resets with dots). Compare side by side with the prototype in the audit, driven by real walks. If it is too much for one runner, split it into p1 source-user follow-ups in this order: (1) grips, knob, chip and Size; (2) Skew & distort as a reshape of the picture; (3) 3D with depth grip and perspective; (4) resets."
+    },
+    {
+      "t": "2026-11-01T14:20:53.193Z",
+      "note": "seq 1.2e-7 -> 5e-8"
     }
   ]
 }
