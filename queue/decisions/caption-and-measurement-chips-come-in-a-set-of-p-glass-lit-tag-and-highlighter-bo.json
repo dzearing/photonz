@@ -1,0 +1,53 @@
+{
+  "id": "caption-and-measurement-chips-come-in-a-set-of-p-glass-lit-tag-and-highlighter-bo",
+  "taskId": "caption-and-measurement-chips-come-in-a-set-of-p",
+  "question": "Glass, Lit tag and Highlighter (boxed) still score under the professional bar after three reworks. Keep all ten chip styles, or drop those three?",
+  "context": "On 2026-10-31 you approved all ten chip styles; the task's own checklist also says every style must score as professional with a judge. Three judges now pass Squircle and Spec badge, put Solid, Hairline, Paper and Lit tag at 6, and Glass and Highlighter at 4.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep all ten as reworked",
+      "summary": "The Chip row keeps its ten tiles with today's new Glass, Spec badge and Highlighter. The judge bar is set aside for these three and the task closes.",
+      "pros": [
+        "Keeps every style you approved on 2026-10-31",
+        "Glass now really frosts the picture behind it in the app"
+      ],
+      "cons": [
+        "Three judges still rate Glass and Highlighter 4 of 10"
+      ],
+      "mitigation": "You can drop any tile later by saying so; nothing else depends on them.",
+      "shot": "2026-11-01-chip-styles-sheet.png"
+    },
+    {
+      "id": "b",
+      "label": "Drop the three boxed styles",
+      "summary": "The Chip row shows seven tiles: Glass, Lit tag and Highlighter leave it. An arrow that already wears one keeps drawing it.",
+      "pros": [
+        "Every tile left scores 5 or more, most 6 or 7",
+        "A shorter row is quicker to pick from"
+      ],
+      "cons": [
+        "Loses three looks you approved, Glass included"
+      ],
+      "mitigation": "The three stay in the code so old documents draw unchanged.",
+      "shot": "2026-11-01-chip-styles-three-under-bar.png"
+    },
+    {
+      "id": "c",
+      "label": "Rework the three again",
+      "summary": "Another pass designs new looks for Glass, Lit tag and Highlighter and asks the judges again. The row stays at ten.",
+      "pros": [
+        "Might reach the bar"
+      ],
+      "cons": [
+        "Three passes have not; judges disagree with each other by two points"
+      ],
+      "mitigation": "A pass would start from the judges' notes in this task's log.",
+      "shot": "2026-11-01-chip-styles-three-under-bar.png"
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-01T02:33:42.835Z",
+  "shot": "2026-11-01-chip-styles-three-under-bar.png"
+}

@@ -1,0 +1,29 @@
+{
+  "feature": "Chip styles: the four that scored under the bar, reworked",
+  "epic": "epic-uehjr1",
+  "summary": "Glass is now real frosted glass: the picture behind the label shows through, softened and lightened, on the canvas and in an export. Spec badge reads as a dark Mac badge, and Highlighter marks the whole line of words instead of a tilted stripe.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walks: Scripts/playtest/glass-chip-frost-walk.json and chip-styles-walk.json. Sheets drawn by the real renderer: PHOTONZ_CHIP_SHEET=<dir> Scripts/test.sh --filter ChipStyleRendering.",
+  "switched": {},
+  "try": [
+    { "do": "Open a busy screenshot, press A, drag an arrow, type a label and press Command Return." },
+    { "do": "Right click the arrow and choose Chip Style > Glass: the label sits on frosted glass, the picture softened behind it.", "shot": "2026-11-01-glass-chip-frost-1-glass-on-photo-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the arrow over a white area, then a dark one: Glass stays light frosted glass with dark words on both." },
+    { "do": "Pick Spec badge, then Highlighter, from the Chip tiles in Appearance.", "shot": "2026-11-01-chip-styles-sheet.png" },
+    { "do": "Compare the reworked styles in two colours on a light window, a dark window and a photo.", "shot": "2026-11-01-chip-styles-reworked.png" },
+    { "do": "Export the picture as a PNG and compare the Glass chip with the canvas." }
+  ],
+  "evaluate": [
+    "Does Glass read as glass to you now, or as a pale pink pill?",
+    "Does Spec badge stand off a dark screenshot well enough?",
+    "Does the Highlighter band look like a highlighted label, or like a box inside a box?",
+    "Should the set stay at ten, or drop the styles that keep scoring under the bar (see the card on this task)?"
+  ],
+  "rough": [
+    "The visual bar is not met. Three blind judges scored the sheet (median of three): Squircle 7, Spec badge 7, Paper 6, Solid pill 6, Hairline 6, Lit tag 6, Two-tone 5, Today 5, Glass 4, Highlighter 4, baseline 5. The first single judge on 2026-10-31 passed Solid, Hairline, Paper and Two-tone; this stricter panel does not. Whether to keep all ten is the open decision card on this task.",
+    "Lit tag: a bevel (judged dated, 4) and a glow in its own colour (judged a smudge, 4) were both tried and dropped; it is back to the approved lit fill with small corners (6).",
+    "Glass judges still call it a pale pink pill rather than Liquid Glass: on a flat sheet its see-through quality barely shows. The real app does frost what is behind it (the photo walk's picture).",
+    "Glass stands in as one opaque colour where there is no picture to frost: the style tile, the bubble while you type, and a chip being dragged.",
+    "Lifting Glass to light frosted glass changed its words to dark for every ink; markup.md section 3 and markup.js say so, and the sweep fixture was regenerated.",
+    "Contrast measured off the pixels, every palette ink over white, black, a busy photo and a saturated colour: Glass worst 8.2:1, Spec 9.4:1, Lit tag 4.7:1, Highlighter 7.1:1 (2026-11-01-chip-contrast.tsv). Export against canvas: 0 difference in every style (2026-11-01-chip-export-parity.tsv)."
+  ]
+}
