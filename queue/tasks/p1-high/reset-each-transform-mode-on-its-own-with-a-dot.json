@@ -5,11 +5,11 @@
   "epic": "found-selection",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T16:34:54.488Z",
-  "updated": "2026-11-01T16:35:05.651Z",
+  "updated": "2026-11-01T20:25:13.441Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Slice (4) of the-reworked-selection-ships-cleaner-grips-a-tag. The double-click on the knob already turns back to 0 degrees (CanvasSelectionGrips.selectionGripMouseDown). A menu command needs to reach the canvas's transformMode (it lives on CanvasNSView, reset to Size when the pick changes). Existing Layer > Reset 3D Rotation (EditorCommands, next-turn-in-depth) should fold into Reset 3D. Prototype: openReset / resetStage / changed() in selection-transform.html.",
@@ -27,7 +27,37 @@
     {
       "t": "2026-11-01T16:35:05.650Z",
       "note": "seq 3990 -> 13"
+    },
+    {
+      "t": "2026-11-01T19:25:49.143Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T19:40:34.339Z",
+      "note": "owns these walks: reset-each-transform-mode-walk, transform-resets-from-the-menu-walk"
+    },
+    {
+      "t": "2026-11-01T20:24:55.331Z",
+      "note": "Adversarial pass: a Photoshop user resets with Edit > Transform or Esc; here the reset is on the chip's right click and in Edit > Transform. Risks: a picture's own size (pixels) vs the size it landed at (a scaled-down paste reads changed from the start; asked in the audit); shapes and text have no own size (only the turn counts); keys would put a reset straight back, so a reset takes its mode's keys, as Reset 3D Rotation always did."
+    },
+    {
+      "t": "2026-11-01T20:24:55.397Z",
+      "note": "Chose Edit > Transform over the acceptance's Layer > Transform for Turn in 3D and the resets because the app's one Transform submenu already lives in Edit (Photoshop's place), decided when Skew/Distort landed; two Transform submenus would split one job. Chose 'Reset Skew & Distort' over the mock's 'Reset Skew & distort' because every menu row is Title Case (UX-PATTERNS §7, enforced by MenuRowsAreTitleCaseTests). Chose to leave flips out of every reset: a flip is not a size, shape or depth change."
+    },
+    {
+      "t": "2026-11-01T20:24:55.462Z",
+      "note": "Pictures looked at: 2-three-dots (blue dots on Size and Skew & distort, white dot on the picked 3D button, matching the prototype close-up), chip-menu (the Mac's own menu at the chip, Reset 3D live, Size and Skew & Distort grey, divider, Reset All), 3-size-reset (picture upright at its own size, skew and tip kept, only the Size dot gone, tag 'Reset Size'), side-by-side with selection-transform.html. Left rough, no task: the chip's Skew & distort icon lacks the prototype's corner dots (from slice 2, a looks nit); walk 'wait' returns early on an idle app, so a clock needs onTheClock: true (documented already)."
+    },
+    {
+      "t": "2026-11-01T20:25:13.439Z",
+      "note": "Shipped in bf2b5663 (Next, at defaults). Right-click a chip button: Reset Size, Reset Skew & Distort, Reset 3D, Reset All, greyed when unchanged, one undo step each, the tag says the reset. A changed mode wears a dot (white on the picked button). Reset Size returns a picture's own pixel size, upright, same middle. Edit > Transform gains Turn in 3D and the four resets (Edit, not Layer: the app's one Transform submenu, see log); Layer > Reset 3D Rotation folds into Reset 3D. Verified: 14 new core tests first, full Scripts/test.sh green; reset-each-transform-mode-walk (pointer right-clicks the chip, resets each mode) and transform-resets-from-the-menu-walk green at Next defaults with real captures; neighbouring walks (flip, keystone, skew, selection-grips, perspective-pill) green; audit 2026-11-01-transform-resets.json with a side-by-side against the prototype."
     }
   ],
-  "source": "user"
+  "source": "user",
+  "started": "2026-11-01T19:25:49.142Z",
+  "walks": [
+    "reset-each-transform-mode-walk",
+    "transform-resets-from-the-menu-walk"
+  ],
+  "completed": "2026-11-01T20:25:13.440Z"
 }
