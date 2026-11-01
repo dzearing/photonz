@@ -1,0 +1,29 @@
+{
+  "id": "a-moving-aurora-title-background-draws-the-same",
+  "title": "A moving Aurora title background draws the same frame in playback, scrubbing and export, even with the Mac busy",
+  "goal": "During the full test run on 2026-11-01, playback of the Aurora title background drew a different frame at 3.64 s from scrubbing to it and from exporting it. Alone, the same test passes every time. If the GPU-drawn backdrop can come out differently when the Mac is busy, an export made while the Mac is working could differ from what played. Find out why and make every path draw the same pixels.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 3970,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T21:50:41.174Z",
+  "updated": "2026-11-01T21:50:41.177Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in the v0.22.0 release preflight, 2026-11-01: '↳ Aurora: scrub differs at 3640' and '↳ Aurora: export differs at 3640' (TitleBackgroundsRenderTests.swift:307-308); passed alone three times, and the full suite passed on the rerun. Filed by the intake window during the release, not a user report, but release-blocking flakes are the user's standing ask.",
+  "acceptance": [
+    "Reproduce under load: run TitleBackgroundsRenderTests 'Playback, scrubbing and export draw the same Aurora and Behind Glass frames' while the rest of the suite (or a CPU and GPU load generator) runs, enough times to fail it, and record the rate and which bytes differ (how many pixels, by how much) in the audit.",
+    "Find the cause: Aurora is .live, drawn by LiveBackdropPainter.image through the live_aurora Core Image kernel inside DocumentRenderer.driftingFill. Check whether Core Image falls back to a different device or precision under pressure, whether a cache (the meshmask raster, a renderer-level cache, an image store budget) is evicted mid-playback and rebuilt differently, and whether any clock or frame count leaks into the kernel's inputs.",
+    "Fix it so playback, scrubbing and export agree byte for byte however busy the Mac is: the test passes 20 runs in a row inside the full Scripts/test.sh run.",
+    "If the difference is unavoidable GPU rounding, say so with numbers and bound it (no pixel more than 1 level apart), and change the test to that bound rather than letting it flake.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T21:50:41.176Z",
+      "note": "created (user)"
+    }
+  ]
+}
