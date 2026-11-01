@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:36:38.642Z",
-  "updated": "2026-11-01T02:34:19.417Z",
+  "updated": "2026-11-01T02:34:25.046Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24 (picture: queue/audits/2026-10-24-user-caption-chip.png, a dark red pill with a brighter red outline reading 'hi' at the tail of a brush arrow): 'I don't love the style of the chip for arrows and measurements. I would love to have some style options for the chip, just like we have for the arrow, where you can choose different premade professional looking chips for typing text. Some might not be pills, maybe we do squirqle shaped, or the border might be more glass like with a suble inner border. Maybe some are flat and others are glass like. Each option should look professional and not like a kid made it for his myspace.'\n\nWhere: the plate rule is Sources/PhotonzCore/LabelPlate.swift (tone darkened to luminance 0.24, white ink, shadow 4 blur / 2 offset); drawn by Sources/PhotonzRender/PillRasterizer.swift; also used by canvas name chips (Sources/Photonz/CanvasComponents.swift), which must NOT change unless the runner decides on purpose and logs why. Arrow style pattern to copy: Sources/PhotonzCore/ArrowStyle.swift (enum, Codable, standard default) + Sources/Photonz/ArrowStyleTiles.swift. Grep captionChipColor for the caption's colour path. Measurement readouts sit on their caliper with no shadow (LabelPlate comment): a style must fit both.\n\nTraps: glass over a picture renders differently on canvas (live material) than in export (no backdrop); the export must look the same, so glass is probably drawn as a rendered blur of the picture under it in PhotonzRender, not a SwiftUI material. The coloured outline in today's chip is part of what the user dislikes; do not keep it as the default without a reason. Related done tasks: arrow-tool-captions-legible-pill-labels-like-the, captions-are-one-layer-positioned-and-styled-lik.",
@@ -151,6 +151,10 @@
     {
       "t": "2026-11-01T02:34:19.416Z",
       "note": "Left rough, under the bar: Glass stands in as one opaque colour in its tile, the typing bubble and a dragged chip (nothing to frost there); a Glass chip on a layer turned in 3D space is not frosted; SVG export still draws plate colours only. A walk's press on a dock tile still does nothing (owned by walks-that-fail-in-the-full-sweep-26), so glass-chip-frost-walk picks Glass from the right-click menu."
+    },
+    {
+      "t": "2026-11-01T02:34:25.040Z",
+      "note": "Glass, Spec badge, Lit tag and Highlighter reworked in 1739ef6d (Glass now frosts the real picture; Spec passes at 7). Glass and Highlighter still score 4 with three judges and Lit tag 6; the user approved all ten, so a card asks whether to keep all ten, drop the three, or rework again."
     }
   ],
   "started": "2026-11-01T01:37:45.717Z",

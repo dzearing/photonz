@@ -14865,3 +14865,4 @@
 {"t":"2026-11-01T02:34:19.273Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
 {"t":"2026-11-01T02:34:19.345Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
 {"t":"2026-11-01T02:34:19.418Z","ev":"task_note","id":"caption-and-measurement-chips-come-in-a-set-of-p"}
+{"t":"2026-11-01T02:34:25.047Z","ev":"task_blocked","id":"caption-and-measurement-chips-come-in-a-set-of-p","from":"in_progress","note":"Glass, Spec badge, Lit tag and Highlighter reworked in 1739ef6d (Glass now frosts the real picture; Spec passes at 7). Glass and Highlighter still score 4 with three judges and Lit tag 6; the user approved all ten, so a card asks whether to keep all ten, drop the three, or rework again."}
