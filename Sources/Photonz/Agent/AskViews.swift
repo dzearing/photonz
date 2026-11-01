@@ -188,20 +188,7 @@ struct AgentPanel: View {
             }
             switch ask.phase {
             case .planning, .running:
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
-                    Text(AskModelServer.shared.loading || AskPictureServer.shared.loading ? AskCopy.gettingReady
-                         : ask.asked.isEmpty ? AskCopy.workingLine : ask.asked)
-                        .font(.system(size: 11.5))
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(AskCopy.stop) { ask.stop() }.controlSize(.small)
-                        .toolTip(AskCopy.stopTooltip)
-                        .playtestControl("Agent Stop", detail: AskCopy.stop)
-                }
-                .help(ask.asked)
-                .playtestControl("Agent Working", detail: ask.asked)
+                workingRow(ask)
             case .stopped(let sentence):
                 Text(sentence)
                     .font(.system(size: 11.5))
@@ -243,6 +230,54 @@ struct AgentPanel: View {
         .animation(.spring(duration: 0.24, bounce: 0.1), value: rows.map(\.id))
         .animation(.spring(duration: 0.24, bounce: 0.1), value: waiting.map(\.id))
     }
+
+    /// The request at work: its words and Stop, and under them one live
+    /// line saying what Ask is doing now, with the time it has taken once
+    /// that passes five seconds. The line is one line high whatever it says
+    /// and cross-fades as it changes, so nothing around it moves; it goes
+    /// when the request is done (finished rows never list their steps, the
+    /// user, 2026-10-20).
+    private func workingRow(_ ask: AskSession) -> some View {
+        let stage = ask.liveStage
+        return VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                    .frame(width: Self.spinnerWidth)
+                Text(ask.asked.isEmpty ? AskCopy.workingLine : ask.asked)
+                    .font(.system(size: 11.5))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Button(AskCopy.stop) { ask.stop() }.controlSize(.small)
+                    .toolTip(AskCopy.stopTooltip)
+                    .playtestControl("Agent Stop", detail: AskCopy.stop)
+            }
+            HStack(spacing: 4) {
+                Text(stage.line)
+                    .lineLimit(1)
+                    .id(stage.line)
+                    .transition(.opacity)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .playtestControl("Agent Stage", detail: stage.line)
+                TimelineView(.periodic(from: ask.stageSince, by: 1)) { context in
+                    Text(AskStage.elapsed(context.date.timeIntervalSince(ask.stageSince)) ?? "")
+                        .monospacedDigit()
+                }
+            }
+            .font(.system(size: 10.5))
+            .foregroundStyle(.secondary)
+            .frame(height: Self.stageLineHeight)
+            .clipped()
+            .padding(.leading, Self.spinnerWidth + 6)
+            .animation(.easeInOut(duration: 0.2), value: stage.line)
+            .help(stage.fullLine)
+        }
+        .help(ask.asked)
+        .playtestControl("Agent Working", detail: ask.asked)
+    }
+
+    private static let spinnerWidth: CGFloat = 16
+    private static let stageLineHeight: CGFloat = 14
 
     /// A request waiting its turn: its words, quiet, and a cancel.
     private func waitingRow(_ request: AskRequestLine.Request, number: Int, ask: AskSession) -> some View {

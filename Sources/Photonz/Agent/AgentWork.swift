@@ -121,6 +121,28 @@ enum AgentWork {
         let front: Bool
         let canUndo: Bool
         let canRedo: Bool
+        /// Ask at work in this window, absent when it is not.
+        let ask: AskWorking?
+    }
+
+    /// What Ask is doing in a window, the same line its Agent panel shows.
+    struct AskWorking: Encodable {
+        /// The request's words.
+        let request: String
+        /// The stage it is at, in a few plain words: "Painting a fox, 2 of 3".
+        let doing: String
+        /// How long it has been at that stage.
+        let seconds: Double
+        /// Requests waiting behind it.
+        let waiting: Int
+    }
+
+    @MainActor
+    static func askWorking(_ ask: AskSession) -> AskWorking? {
+        guard let request = ask.current else { return nil }
+        return AskWorking(request: request, doing: ask.liveStage.fullLine,
+                          seconds: (Date().timeIntervalSince(ask.stageSince) * 10).rounded() / 10,
+                          waiting: ask.line.waiting.count)
     }
 
     static func title(of editor: EditorState) -> String {
@@ -138,7 +160,8 @@ enum AgentWork {
                        kind: hasTime ? "video" : "picture",
                        width: Double(document?.canvasSize.width ?? 0), height: Double(document?.canvasSize.height ?? 0),
                        durationSeconds: hasTime ? Double(document?.documentDurationMS ?? 0) / 1000 : nil,
-                       front: front, canUndo: editor.canUndo, canRedo: editor.canRedo)
+                       front: front, canUndo: editor.canUndo, canRedo: editor.canRedo,
+                       ask: askWorking(editor.ask))
     }
 
     static func document(of editor: EditorState) throws -> PhotonzDocument {

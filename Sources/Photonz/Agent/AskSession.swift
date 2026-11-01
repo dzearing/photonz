@@ -82,6 +82,36 @@ final class AskSession {
     /// kind of picture than the one asked for, and why.
     private(set) var said: String?
 
+    /// What the request at work is doing now, set by the pipeline as each
+    /// stage starts (`AskStage`): the one live line under it in the panel.
+    private(set) var stage: AskStage = .starting
+    /// When the line last changed, so a long stage can say how long.
+    private(set) var stageSince = Date()
+    /// Every line the last request showed and when, from its send.
+    @ObservationIgnored private(set) var stageLog = AskStageLog()
+    @ObservationIgnored private var requestStarted = Date()
+
+    /// The line as shown: a model loading into memory says so over whatever
+    /// stage is waiting on it.
+    var liveStage: AskStage {
+        if AskModelServer.shared.loading { return .gettingModelReady }
+        if AskPictureServer.shared.loading { return .gettingPainterReady }
+        return stage
+    }
+
+    /// A stage starts. The same line again changes nothing, so its clock
+    /// keeps running.
+    private func enter(_ next: AskStage) {
+        let now = Date()
+        stageLog.enter(next, at: now.timeIntervalSince(requestStarted))
+        guard next.line != stage.line else {
+            stage = next
+            return
+        }
+        stage = next
+        stageSince = now
+    }
+
     @ObservationIgnored private var work: Task<Void, Never>?
     /// What the last plan did, a line a turn and a line a look, for a walk
     /// and for anybody finding out why a plan went the way it did.
@@ -203,6 +233,19 @@ final class AskSession {
         stepsRun = 0
         phase = .planning
         let started = Date()
+        requestStarted = started
+        stageLog = AskStageLog()
+        stage = .starting
+        stageSince = started
+        stageLog.enter(.starting, at: 0)
+        // A model loading into memory is shown over the stage waiting on it
+        // (`liveStage`); the log hears of it here, a few times a second.
+        Task { [weak self] in
+            while let session = self, session.isBusy, session.requestStarted == started {
+                session.stageLog.enter(session.liveStage, at: Date().timeIntervalSince(started))
+                try? await Task.sleep(for: .milliseconds(250))
+            }
+        }
         trace = []
         lastSources = []
         work = Task { [weak self, weak editor] in
@@ -216,6 +259,10 @@ final class AskSession {
     /// A request's work has ended, however it ended: the next in line starts,
     /// on the document as this one left it.
     private func finished(in editor: EditorState?) {
+        stageLog.end(at: Date().timeIntervalSince(requestStarted))
+        if !stageLog.entries.isEmpty {
+            trace.append(String(format: "stages: longest without news %.1fs", stageLog.longestGap))
+        }
         current = nil
         work = nil
         guard let editor, let next = line.next() else { return }
@@ -241,6 +288,7 @@ final class AskSession {
         let note: (String) -> Void = { [weak self] line in
             self?.trace.append(String(format: "%.1fs ", Date().timeIntervalSince(began)) + line)
         }
+        let say: @MainActor (AskStage) -> Void = { [weak self] stage in self?.enter(stage) }
         let model: String
         let found = await AskLocalModel.model()
         guard !Task.isCancelled else { return }
@@ -256,7 +304,7 @@ final class AskSession {
         let remembered = editor.document.map { AskMemory.turns(from: changes, in: $0) } ?? []
         if !remembered.isEmpty { note("remembering \(remembered.count) earlier requests") }
         let memory = AskMemory.prompt(remembered)
-        let opened = await Self.conversation(words, in: editor, model: model, memory: memory, note: note)
+        let opened = await Self.conversation(words, in: editor, model: model, memory: memory, note: note, say: say)
         guard !Task.isCancelled else { return }
         guard var talk = opened else {
             phase = .stopped(AskCopy.noDocumentSentence)
@@ -268,8 +316,10 @@ final class AskSession {
         // later one comes out worse.
         var carried: [[String]]?
         var closest: (attempt: AskDrawingCheck.Attempt, after: PhotonzDocument, ran: Ran, plan: AskPlan)?
+        // A try again says why for as long as it plans the next try.
+        var retrying: AskStage?
         while true {
-            let outcome = await Self.plan(&talk, model: model, in: editor, note: note)
+            let outcome = await Self.plan(&talk, model: model, in: editor, note: note, say: say, first: retrying)
             guard !Task.isCancelled else { return }
             lastPlanSeconds = Date().timeIntervalSince(started)
             var plan: AskPlan
@@ -282,13 +332,17 @@ final class AskSession {
             if let carrying = carried.flatMap({ AskDrawingCheck.carryingPlans($0, into: plan) }) {
                 plan = carrying
             } else {
-                plan = await Self.withDrawingPlans(plan, asked: words, model: model, note: note)
+                plan = await Self.withDrawingPlans(plan, asked: words, model: model, note: note, say: say)
             }
             guard !Task.isCancelled else { return }
             carried = carried ?? AskDrawingCheck.drawings(in: plan).map(\.plan)
             self.plan = plan
             guard let ran = await run(plan, in: editor) else { return }
-            let miss = await look(at: plan, made: ran.made, in: editor, model: model, note: note)
+            // What landed is picked and the panel fills with its sections:
+            // the Agent group comes back into view, so its line can still be
+            // read while the drawing is checked or drawn again.
+            revealRows()
+            let miss = await look(at: plan, made: ran.made, in: editor, model: model, note: note, say: say)
             if Task.isCancelled {
                 // Stopped while it looked at what it drew: what ran comes
                 // back off, so a stop leaves the document as it was.
@@ -303,6 +357,7 @@ final class AskSession {
                !AskDrawingCheck.isCloser(attempt, than: held.attempt) {
                 // The last try came out worse than an earlier one: that one
                 // lands in its place, the closest Ask came.
+                enter(.keepingClosest)
                 editor.undo()
                 editor.perform { $0 = held.after }
                 landed = held.ran
@@ -332,6 +387,8 @@ final class AskSession {
                      ? "drawing again (\(revisions)): \(miss.subject) was seen as \(miss.seen)"
                      : "drawing again (\(revisions)): \(miss.subject) does not show \(miss.unmet.joined(separator: "; "))")
                 talk.revise(subject: miss.subject, seen: miss.seen, unmet: miss.unmet)
+                retrying = .tryingAgain(miss.unmet.first.map { .missed($0) } ?? .seenAs(miss.seen))
+                enter(retrying ?? .thinking(turn: 2))
                 phase = .planning
                 continue
             }
@@ -382,16 +439,33 @@ final class AskSession {
         var landed: [AskStep] = []
         var made: [Int: String] = [:]
         var sources: [AskDrawingSource] = []
+        let drawings = plan.steps.filter { $0.tool == "add_drawing" || $0.tool == "add_photo" }.count
+        var drawn = 0
         await editor.asOneUndoStepAwaiting {
             for (index, step) in plan.steps.enumerated() {
                 let number = index + 1
                 if Task.isCancelled { failure = AskCopy.stoppedSentence; return }
+                let stages = Self.stages(of: step, number: number, of: plan.steps.count,
+                                         part: &drawn, drawings: drawings)
+                enter(stages.working)
                 var refusal: String?
                 switch step.request(document: document, made: made) {
                 case .failure(let refused):
                     refusal = refused.message
                 case .success(let request):
-                    let answer = await AgentWork.run(request)
+                    let heard: @MainActor @Sendable (AskPictureModel.Stage) -> Void = { [weak self] said in
+                        switch said {
+                        case .loading: self?.enter(.gettingPainterReady)
+                        case .said(.tracing): self?.enter(stages.tracing ?? stages.working)
+                        case .said(let painter):
+                            if case .painting(true, _, _) = painter {
+                                self?.enter(.tryingAgain(.offTheEdge))
+                            } else {
+                                self?.enter(stages.working.at(painter.percent))
+                            }
+                        }
+                    }
+                    let answer = await AskPictureModel.$report.withValue(heard) { await AgentWork.run(request) }
                     let text = Self.text(of: answer)
                     if answer.isError {
                         refusal = text
@@ -428,12 +502,32 @@ final class AskSession {
         return Ran(before: before, landed: landed, made: made, sources: sources)
     }
 
+    /// What a step's line says while it runs, and once its painting is
+    /// being traced. `part` counts the drawings so far.
+    private static func stages(of step: AskStep, number: Int, of steps: Int, part: inout Int,
+                               drawings: Int) -> (working: AskStage, tracing: AskStage?) {
+        let subject = step.arguments["subject"]?.stringValue ?? ""
+        switch step.tool {
+        case "add_drawing" where !subject.isEmpty:
+            part += 1
+            let painted = AskPictureModel.isReady() && step.arguments["svg"] == nil
+            return (painted ? .painting(subject: subject, part: part, of: drawings)
+                            : .drawing(subject: subject, part: part, of: drawings),
+                    .tracing(subject: subject, part: part, of: drawings))
+        case "add_photo" where !subject.isEmpty:
+            part += 1
+            return (.photo(subject: subject, part: part, of: drawings), nil)
+        default:
+            return (.making(step: number, of: steps), nil)
+        }
+    }
+
     /// The first drawing the plan made that a model that can see does not
     /// take for what was asked, or that does not show a statement of its
     /// plan (`unmet`), or nil when each reads (or nothing on this Mac can
     /// see, or nothing was drawn).
     private func look(at plan: AskPlan, made: [Int: String], in editor: EditorState, model: String,
-                      note: (String) -> Void) async -> (subject: String, seen: String, unmet: [String])? {
+                      note: (String) -> Void, say: (AskStage) -> Void) async -> (subject: String, seen: String, unmet: [String])? {
         let drawings = AskDrawingCheck.drawings(in: plan)
         guard !drawings.isEmpty, let document = editor.agentID else { return nil }
         let installed = await AskLocalModel.installed() ?? []
@@ -443,8 +537,9 @@ final class AskSession {
             note("look skipped: no model on this Mac can see")
             return nil
         }
-        for drawing in drawings {
+        for (index, drawing) in drawings.enumerated() {
             guard let layer = made[drawing.step] else { continue }
+            say(.checking(subject: drawing.subject, part: index + 1, of: drawings.count))
             let picture = await AgentWork.run(.renderPicture(document: document, layer: layer, region: nil, maxSize: 512))
             guard let drawn = picture.content.compactMap({ part -> Data? in
                 if case .png(let data) = part { return data }
@@ -484,9 +579,13 @@ final class AskSession {
     /// (`AskDrawingCheck.groundingBody`), so nothing is painted again for a
     /// detail nobody named.
     private static func withDrawingPlans(_ plan: AskPlan, asked words: String, model: String,
-                                         note: (String) -> Void) async -> AskPlan {
+                                         note: (String) -> Void, say: (AskStage) -> Void) async -> AskPlan {
         var plan = plan
+        let all = AskDrawingCheck.drawings(in: plan)
+        func part(_ step: Int) -> (Int, Int) { ((all.firstIndex { $0.step == step } ?? 0) + 1, all.count) }
         for drawing in AskDrawingCheck.unplanned(in: plan) {
+            let (n, of) = part(drawing.step)
+            say(.planningDrawing(subject: drawing.subject, part: n, of: of))
             guard !Task.isCancelled,
                   let answer = try? await AskLocalModel.chat(AskDrawingCheck.planningBody(model: model, subject: drawing.subject))["message"]?["content"]?
                       .stringValue else { continue }
@@ -495,6 +594,8 @@ final class AskSession {
             plan = plan.settingDrawingPlan(step: drawing.step, to: statements)
         }
         for drawing in AskDrawingCheck.drawings(in: plan) where !drawing.plan.isEmpty {
+            let (n, of) = part(drawing.step)
+            say(.planningDrawing(subject: drawing.subject, part: n, of: of))
             guard !Task.isCancelled,
                   let answer = try? await AskLocalModel.chat(AskDrawingCheck.groundingBody(model: model, request: words, plan: drawing.plan))["message"]?["content"]?
                       .stringValue else { continue }
@@ -607,8 +708,9 @@ final class AskSession {
     /// The talk with the model, opened with the document read and the
     /// Library handed over up front: "on brand" is its components and styles.
     private static func conversation(_ words: String, in editor: EditorState, model: String, memory: String = "",
-                                     note: (String) -> Void) async -> AskConversation? {
+                                     note: (String) -> Void, say: (AskStage) -> Void) async -> AskConversation? {
         guard let document = editor.agentID else { return nil }
+        say(.reading(video: editor.documentHasTime))
         note("model \(model), reading \(document)")
         let read = await AgentWork.run(.readDocument(document: document, layer: nil))
         note("read \(Self.text(of: read).count) characters")
@@ -620,8 +722,9 @@ final class AskSession {
         if paints { note("drawings painted by the picture model") }
         // Only when there is something of Ask's or the person's to look at:
         // a blank canvas or a lone screenshot plans as it always did.
-        let canvas = !memory.isEmpty || (editor.document?.layers.count ?? 0) > 1
-            ? await Self.canvasPicture(of: document, in: editor, model: model) : nil
+        let looks = !memory.isEmpty || (editor.document?.layers.count ?? 0) > 1
+        if looks, !editor.documentHasTime { say(.lookingAtCanvas) }
+        let canvas = looks ? await Self.canvasPicture(of: document, in: editor, model: model) : nil
         if let canvas { note("canvas picture, \(canvas.png.count / 1024) KB at \(Int(canvas.scale * 100))%") }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
@@ -656,8 +759,11 @@ final class AskSession {
     }
 
     /// The model's turns, until it stops calling tools.
+    /// `first` is the line while the first turn is asked for, when it says
+    /// more than thinking (a try again and why).
     private static func plan(_ talk: inout AskConversation, model: String, in editor: EditorState,
-                             note: (String) -> Void) async -> Result<AskPlan, AskLocalModel.Trouble> {
+                             note: (String) -> Void, say: @escaping @MainActor (AskStage) -> Void,
+                             first: AskStage? = nil) async -> Result<AskPlan, AskLocalModel.Trouble> {
         guard let document = editor.agentID else { return .failure(.said(AskCopy.noDocumentSentence)) }
         while talk.rounds < AskConversation.mostRounds {
             let reply: AgentJSON
@@ -667,9 +773,31 @@ final class AskSession {
                 note("too big to send: about \(talk.estimatedTokens) tokens against \(talk.budget)")
                 return .failure(.said(AskTrouble.tooMuchSentence))
             }
+            let turn = talk.rounds + 1
+            // A try again says why through every turn of its planning.
+            let saying = first
+            say(saying ?? .thinking(turn: turn))
+            let expected = talk.estimatedTokens(of: talk.chatBody(model: model)["messages"]?.arrayValue ?? [])
+            // While the model works, its server says how far it has read and
+            // whether it is writing yet (a try again keeps saying why).
+            let watch = saying == nil && AskLocalModel.runtime == .builtIn ? Task { @MainActor in
+                // Not read for its first moment: while the server matches the
+                // request against what it still holds from the last one, its
+                // count is that one's (83% then 3%, seen on 2026-11-01).
+                try? await Task.sleep(for: .milliseconds(2000))
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .milliseconds(700))
+                    guard !Task.isCancelled else { return }
+                    if let progress = await AskModelServer.shared.progress(), !Task.isCancelled {
+                        say(AskStage.thinking(turn: turn, at: progress, expected: expected))
+                    }
+                }
+            } : nil
+            defer { watch?.cancel() }
             do {
-                note("asking the model (about \(talk.estimatedTokens(of: talk.chatBody(model: model)["messages"]?.arrayValue ?? [])) tokens of \(talk.window))")
+                note("asking the model (about \(expected) tokens of \(talk.window))")
                 reply = try await AskLocalModel.chat(talk.chatBody(model: model))
+                watch?.cancel()
                 // Long enough to hold a whole component call, so a look the
                 // planner let through can be rebuilt from the trace (a blue
                 // Off toggle could not be, cut at 300, 2026-10-24).
@@ -703,6 +831,7 @@ final class AskSession {
                 return .failure(.said(sentence))
             case .again(let looks):
                 for look in looks {
+                    say(.lookingUp(tool: look.tool))
                     note("look \(look.tool) \(look.arguments.encodedString().prefix(120))")
                     var arguments = look.arguments.objectValue ?? [:]
                     arguments["document"] = .string(document)
@@ -747,8 +876,6 @@ enum AskCopy {
     static let workingChip = "working"
     static let nothingRan = "None of it could run. Nothing was changed."
     static let workingLine = "Working…"
-    /// The built-in model is loading into memory, the first request after a while.
-    static let gettingReady = "Getting the model ready…"
     static let setUp = "Open Settings"
     static let turnOff = "Turn Off"
     static let turnOn = "Turn On"

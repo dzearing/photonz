@@ -216,7 +216,7 @@ public enum AgentTools {
     public static let all: [AgentTool] = [
         AgentTool(
             name: "list_documents",
-            description: "The documents open in Photonz: id, title, file, picture or video, size, length, whether it is in front, and whether it can undo or redo.",
+            description: "The documents open in Photonz: id, title, file, picture or video, size, length, whether it is in front, whether it can undo or redo, and while Ask works on a request in it, what it is doing right now (ask.doing, with ask.seconds on that stage). Call it again to follow along.",
             inputSchema: schema([:])),
         AgentTool(
             name: "list_history",

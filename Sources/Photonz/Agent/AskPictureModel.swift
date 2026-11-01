@@ -14,6 +14,42 @@ enum AskPictureModel {
     /// A picture takes about 25 seconds; a first one also loads the model.
     static let patienceSeconds: TimeInterval = 180
 
+    /// Where a picture is: loading, or what the server says while it works.
+    enum Stage: Equatable, Sendable {
+        /// The picture model is loading into memory.
+        case loading
+        case said(AskPainterSaid)
+    }
+
+    /// Who hears each stage of a picture this task asks for: Ask's request at
+    /// work, so its line in the Agent panel can say painting, then tracing.
+    @TaskLocal static var report: (@MainActor @Sendable (Stage) -> Void)?
+
+    /// The file the server writes its stage to (`server.py`, `say`).
+    nonisolated static let progressFile = FileManager.default.temporaryDirectory
+        .appending(path: "photonz-picture-progress-\(ProcessInfo.processInfo.processIdentifier).txt")
+
+    /// Passes the server's stages to `report` until `body` is done, read
+    /// from its progress file a few times a second.
+    private static func reporting<T>(_ body: () async -> T) async -> T {
+        guard let report else { return await body() }
+        try? Data().write(to: progressFile)
+        let watch = Task { @MainActor in
+            var last = ""
+            while !Task.isCancelled {
+                let said = (try? String(contentsOf: progressFile, encoding: .utf8))?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                if said != last {
+                    last = said
+                    if let heard = AskPainterSaid(said) { report(.said(heard)) }
+                }
+                try? await Task.sleep(for: .milliseconds(300))
+            }
+        }
+        defer { watch.cancel() }
+        return await body()
+    }
+
     struct Painted {
         let svg: String
         let model: String
@@ -37,6 +73,7 @@ enum AskPictureModel {
             server.busy -= 1
             server.lastUsed = Date()
         }
+        if !server.isAnswering { report?(.loading) }
         guard let port = try? await server.ready(),
               let url = AskPictureModelPlan.base(port: port)?.appending(path: "draw") else {
             return .failure(AgentWork.Failure("add_drawing: the picture model did not start."))
@@ -50,7 +87,9 @@ enum AskPictureModel {
         // A drawing Ask looks at and draws again gets a new picture, not the same one.
         body["seed"] = Int.random(in: 1...999_999)
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        report?(.said(.painting(again: false, step: nil, of: nil)))
+        let asked = request
+        guard let (data, response) = await reporting({ try? await URLSession.shared.data(for: asked) }),
               let json = try? AgentJSON.parse(data) else {
             return .failure(AgentWork.Failure("add_drawing: the picture model did not answer."))
         }
@@ -82,6 +121,7 @@ enum AskPictureModel {
             server.busy -= 1
             server.lastUsed = Date()
         }
+        if !server.isAnswering { report?(.loading) }
         guard let port = try? await server.ready(),
               let url = AskPictureModelPlan.base(port: port)?.appending(path: "photo") else {
             return .failure(AgentWork.Failure("add_photo: the picture model did not start."))
@@ -96,7 +136,9 @@ enum AskPictureModel {
         // Asked again, a new photo, not the same one.
         body["seed"] = Int.random(in: 1...999_999)
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        report?(.said(.painting(again: false, step: nil, of: nil)))
+        let sent = request
+        guard let (data, response) = await reporting({ try? await URLSession.shared.data(for: sent) }),
               let json = try? AgentJSON.parse(data) else {
             return .failure(AgentWork.Failure("add_photo: the picture model did not answer."))
         }
@@ -241,6 +283,9 @@ final class AskPictureServer {
         try? FileManager.default.removeItem(at: AskPictureModelPlan.modelFolder(in: folder))
     }
 
+    /// Started and loaded: a picture asked for now starts painting at once.
+    var isAnswering: Bool { answering && server.isRunning }
+
     /// The port of the running server, starting it if need be.
     func ready() async throws -> Int {
         if answering, server.isRunning { return port }
@@ -261,6 +306,7 @@ final class AskPictureServer {
         environment["HOME"] = NSHomeDirectory()
         environment["PATH"] = "/usr/bin:/bin"
         environment["TMPDIR"] = FileManager.default.temporaryDirectory.path
+        environment["PHOTONZ_PICTURE_PROGRESS"] = AskPictureModel.progressFile.path
         try server.launch(AskPictureModelPlan.python(in: Self.folder), arguments: AskPictureModelPlan.serverArguments(script: script),
                           environment: environment, pidFolder: Self.folder, note: "starts the picture model on port \(port)")
         self.port = port

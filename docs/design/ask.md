@@ -152,6 +152,48 @@ counted); Ask keeps it per run (`AskDrawingSource`),
 the walk state shows it as `ask.sources`, and the eval counts it, so a score
 climbed by looking things up shows as a share of lookups.
 
+## Saying what it is doing (2026-11-01)
+
+The user, 2026-10-24: "when the agent is in progress, I would like more
+frequent updates in the agents panel about what is happening." The request at
+work keeps its words and Stop, and under them carries ONE live line saying what
+Ask is doing now. It is one line high whatever it says, cross-fades as it
+changes, and goes when the request is done: a finished row still says what it
+made and never lists its steps (the rule of 2026-10-20 stands).
+
+Every line comes from the pipeline as the stage starts (`AskStage`, PhotonzCore,
+with its words and the 40 character budget; `AskSession.enter`), never from a
+timer:
+
+| Stage | Line | Where it comes from |
+| --- | --- | --- |
+| model loading | Getting the model ready | `AskModelServer.loading`, shown over whatever waits on it (`liveStage`) |
+| reading the document | Reading the picture / video | `conversation` |
+| a canvas picture for a model that sees | Looking at the canvas | `conversation` |
+| the model reading the prompt | Reading your request, 41% | llama-server `/slots`, polled while a turn is out (from two seconds in: before that the count is the last request's): `n_prompt_tokens` against Ask's own estimate of the request, held under 100 |
+| the model writing | Writing the steps | `/slots` `n_decoded` above 0 |
+| a look the planner asked for | Looking through the components, … | the look's tool |
+| a drawing's plan | Planning a fox, 1 of 2 | `withDrawingPlans` |
+| the picture model loading | Getting ready to paint | `AskPictureModel.report` |
+| painting | Painting a fox, 2 of 3, 44% | `server.py` writes `painting 4/9` per mflux step to `PHOTONZ_PICTURE_PROGRESS` |
+| tracing | Turning a fox into layers | `server.py` writes `tracing` |
+| other steps | Making the changes, 3 of 7 | `run` |
+| looking at what it drew | Checking a fox | `look` |
+| a try again | Trying again: it looked like two foxes / missed … | the check's verdict, held through the whole re-plan |
+
+Once a stage has run five seconds its line carries the time on it ("12s",
+then "1:05"). The picture server's stages reach the session through a task
+local (`AskPictureModel.$report`), so two windows asking at once each hear their
+own. An agent reads the same line through MCP: `list_documents` carries `ask`
+(`request`, `doing`, `seconds` on that stage, `waiting`) for a window where Ask
+is working. A walk reads `ask.stage`, and `ask.stages` with the time each line
+came (`AskStageLog`, its `longestWithoutNews`).
+
+Measured on 2026-11-01 (`ask-says-what-it-is-doing-walk`, "a fox in a forest at
+sunset", 144 s): the longest the line went without changing was 10.9 s, the
+model loading into memory, which says its time. Reading the prompt moves every
+2.5 s, painting every 4.7 s.
+
 ## Requests sent while Ask works
 
 A request sent while one is at work waits its turn (the user, 2026-10-20).
@@ -858,6 +900,12 @@ pieces, which neither a name nor one point reaches yet: folded into the task
 * `Scripts/playtest/ask-paints-with-brushes-walk.json`: "paint a small landscape
   in oil" paints it with the Brush, stroke by stroke, onto one Paint layer, with
   no line about brushes.
+* `Scripts/playtest/ask-says-what-it-is-doing-walk.json`: Command K, "a fox in
+  a forest at sunset", a picture of the window every 2.5 s while it works (the
+  reel), the live line gone once it lands.
+* `Scripts/playtest/ask-says-what-it-is-doing-across-requests-walk.json`: a
+  scene, an edit to the picked layer, a photo and a component sheet, each
+  recording the lines it showed and when.
 
 Each presses the Ask button, types, sends, waits for `ran`, then undoes and
 redoes the request, turns its row off and on with the switch, deletes it, and

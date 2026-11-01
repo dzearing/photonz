@@ -1,0 +1,268 @@
+{
+  "out": "/tmp/photonz-playtest/ask-says-what-it-is-doing-across-requests-walk",
+  "seed": "while-ask-works-the-agent-panel-says-what-it-is: at Next defaults, a scene, an edit to the picked layer, a photo and a component sheet each show a live line while they work, and the stages each showed are recorded with their times",
+  "clock": 1900,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "draw a cat playing a guitar"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running",
+      "timeout": 15
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 420
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-scene",
+      "note": "the stages 'draw a cat playing a guitar' showed, with when each came"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-scene"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make the cat black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running",
+      "timeout": 15
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 420
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-edit",
+      "note": "the stages 'make the cat black' showed, with when each came"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-edit"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "a photo of a dog on a beach"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running",
+      "timeout": 15
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 420
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "3-photo",
+      "note": "the stages 'a photo of a dog on a beach' showed, with when each came"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-photo"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "create a table of apple like quality base components that show different states and text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running",
+      "timeout": 15
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 420
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-sheet",
+      "note": "the stages 'create a table of apple like quality base components that show different states and text' showed, with when each came"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-sheet"
+    }
+  ]
+}

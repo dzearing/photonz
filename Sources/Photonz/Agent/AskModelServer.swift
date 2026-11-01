@@ -128,6 +128,17 @@ final class AskModelServer {
         return AskServerChat.reply(fromServer: try AgentJSON.parse(data))
     }
 
+    /// How far the server has got with the request it is answering, from
+    /// its `/slots`; nil when it is not answering one, or cannot say.
+    func progress() async -> AskModelProgress? {
+        guard answering, port != 0, let url = AskBuiltInServerPlan.base(port: port)?.appending(path: "slots") else { return nil }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 1
+        guard let (data, _) = try? await URLSession.shared.data(for: request),
+              let json = try? AgentJSON.parse(data) else { return nil }
+        return AskModelProgress(slots: json)
+    }
+
     /// Starts loading the model Ask would use, without asking it anything:
     /// a person opening Ask or typing is about to need it, and loading takes
     /// seconds. Let go again by the idle rule if nothing is asked.

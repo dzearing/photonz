@@ -1,0 +1,932 @@
+{
+  "out": "/tmp/photonz-playtest/ask-says-what-it-is-doing-walk",
+  "seed": "while-ask-works-the-agent-panel-says-what-it-is: at Next defaults, a request's row in the Agent panel carries one live line under its words saying what Ask is doing right now, changing as the work moves on, with the time once a stage passes five seconds; the line goes when the request is done",
+  "clock": 900,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "a fox in a forest at sunset"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running",
+      "timeout": 15
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Working",
+      "reads": "a fox in a forest at sunset"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-01"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-01",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-02"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-02",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-03"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-03",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-04"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-04",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-05"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-05",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-06"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-06",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-07"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-07",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-08"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-08",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-09"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-09",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-10"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-10",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-11"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-11",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-12"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-12",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-13"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-13",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-14"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-14",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-15"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-15",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-16"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-16",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-17"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-17",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-18"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-18",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-19"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-19",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-20"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-20",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-21"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-21",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-22"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-22",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-23"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-23",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-24"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-24",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-25"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-25",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-26"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-26",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-27"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-27",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-28"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-28",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-29"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-29",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-30"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-30",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-31"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-31",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-32"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-32",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-33"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-33",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-34"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-34",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-35"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-35",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-36"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-36",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-37"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-37",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-38"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-38",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-39"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-39",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-40"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-40",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-41"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-41",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-42"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-42",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-43"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-43",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-44"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-44",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-45"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-45",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-46"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-46",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-47"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-47",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-48"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-48",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-49"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-49",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-50"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-50",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-51"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-51",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-52"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-52",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-53"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-53",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-54"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-54",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-55"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-55",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-56"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-56",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-57"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-57",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-58"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-58",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-59"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-59",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "snapshot",
+      "name": "stage-60"
+    },
+    {
+      "do": "describe",
+      "stage": "stage-60",
+      "note": "the live line under the request while it works"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 500
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": false,
+      "comment": "the live line goes with the request; a finished row never lists its steps"
+    },
+    {
+      "do": "describe",
+      "stage": "done",
+      "note": "the finished row, and the stages the request showed with when each came"
+    },
+    {
+      "do": "snapshot",
+      "name": "done"
+    }
+  ]
+}

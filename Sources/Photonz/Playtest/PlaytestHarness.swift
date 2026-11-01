@@ -20672,6 +20672,11 @@ private final class Run {
                 "stepsRun": editor.ask.stepsRun,
                 "planSeconds": editor.ask.lastPlanSeconds ?? -1,
                 "says": editor.ask.phase.sentence ?? "",
+                // The live line under the request at work, and every line
+                // the last request showed with when it came, from its send.
+                "stage": editor.ask.isBusy ? editor.ask.liveStage.line : "",
+                "stages": editor.ask.stageLog.lines,
+                "longestWithoutNews": editor.ask.stageLog.longestGap,
                 "trace": editor.ask.trace,
                 "skipped": editor.ask.skipped.map { "\($0.key): \($0.value)" }.sorted(),
                 // Where each drawing of the last run came from: stored (a

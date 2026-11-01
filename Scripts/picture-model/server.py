@@ -31,6 +31,20 @@ from layers import trace  # noqa: E402
 
 MODEL = os.environ.get("PHOTONZ_PICTURE_MODEL", "mflux-community/z-image-turbo-mflux-q8")
 PORT = int(os.environ.get("PHOTONZ_PICTURE_PORT", "8793"))
+# Where the server says which stage a picture is at ("painting", "tracing",
+# "painting again"), one word a line, overwritten: the app reads it while it
+# waits, so the Agent panel can say so (`AskPictureModel.paint`).
+PROGRESS = os.environ.get("PHOTONZ_PICTURE_PROGRESS")
+
+
+def say(stage: str):
+    if not PROGRESS:
+        return
+    try:
+        with open(PROGRESS, "w") as out:
+            out.write(stage)
+    except OSError:
+        pass
 
 LOOK = ("flat vector illustration, simple bold shapes, a few flat colours, clean edges, "
         "no gradients, no texture, no shading, no text, no letters, no border, "
@@ -43,6 +57,22 @@ STYLES = {
 }
 
 model = None
+# Whether the picture being painted is a second try (it ran off the edge).
+again = False
+
+
+class StepSaid:
+    """Says each step of a picture as it is painted ("painting 3/9"), so the
+    Agent panel can say how far through it is."""
+
+    def call_in_loop(self, t, seed, prompt, latents, config, time_steps=None, **_):
+        try:
+            total = int(getattr(time_steps, "total", 0) or getattr(config, "num_inference_steps", 0) or 0)
+            if total > 0:
+                word = "painting again" if again else "painting"
+                say(f"{word} {min(total, int(t) + 1)}/{total}")
+        except Exception:  # never let a progress line stop a picture
+            pass
 
 
 def load():
@@ -53,7 +83,11 @@ def load():
         args = build_parser().parse_args()
     finally:
         sys.argv = saved
-    model = (ZImageTurboCommand, args, ZImageTurboCommand.load(args))
+    loaded = ZImageTurboCommand.load(args)
+    registry = getattr(loaded, "callbacks", None)
+    if registry is not None and hasattr(registry, "register"):
+        registry.register(StepSaid())
+    model = (ZImageTurboCommand, args, loaded)
 
 
 ICON = ("simple bold flat icon, minimal detail, a few flat colours, no gradients, no text, no letters, "
@@ -87,6 +121,9 @@ def draw(subject: str, style: str | None, seed: int, size: int, colors: int, ico
     args.width, args.height = (size * 4 // 3 // 16 * 16, size) if scene else (size, size)
     prompt = prompt_for(subject, style, icon, scene)
     started = time.time()
+    global again
+    again = retried
+    say("painting again" if retried else "painting")
     made = command.generate(loaded, args, seed, prompt)
     # MLX keeps every buffer it made for the next picture; between pictures
     # that is gigabytes the planning model beside it needs.
@@ -96,6 +133,7 @@ def draw(subject: str, style: str | None, seed: int, size: int, colors: int, ico
     picture = made.image
     path = tempfile.NamedTemporaryFile(prefix="photonz-picture-", suffix=".png", delete=False).name
     picture.save(path)
+    say("tracing")
     traced = trace(picture, colors=colors + 4 if scene else colors, mode_size=7 if scene else 5, keep_backdrop=scene)
     if traced["clipped"] and not retried:
         # Part of the drawing ran off the picture and would land cut off
@@ -119,6 +157,9 @@ def photo(prompt: str, width: int, height: int, seed: int) -> dict:
     command, args, loaded = model
     args.width, args.height = width, height
     started = time.time()
+    global again
+    again = False
+    say("painting")
     made = command.generate(loaded, args, seed, prompt)
     import mlx.core as mx
     mx.clear_cache()
