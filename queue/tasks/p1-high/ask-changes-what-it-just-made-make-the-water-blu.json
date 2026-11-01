@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 2e-7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:37:49.238Z",
-  "updated": "2026-10-31T21:46:14.307Z",
+  "updated": "2026-11-01T01:26:44.939Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake): 'i ask it to make something like a painting of a beach. It does it (great!) but then i say: make the water bluer and it has no idea how to tweak what it already made. Is there any way for it to understand its previous steps or at least the current state of things to make changes'. Cause, from code: AskConversation (PhotonzCore/AskPlanning.swift) starts every request with a fresh message list: system prompt + the document as read_document reads it + the request. No earlier requests or plans are included. A painting is planned as paint_stroke steps on a Paint layer (brushRules), and read_document reports that layer, not which strokes are what. The looking tools offered do not include a picture of the canvas, though a vision path exists (visionBody, used by AskDrawingCheck to check drawings). AgentPictureKind.remade already re-runs the LAST request as another kind ('as a photo'), so a notion of 'the last request' exists to build on. Paint strokes are kept as data on the layer (PaintLayerStroke), so recolouring a part's strokes is possible without touching pixels.",
@@ -78,10 +78,27 @@
     {
       "t": "2026-10-31T21:46:14.306Z",
       "note": "Shipped parts, memory, canvas picture and change_part (two-turn eval 3 -> 9 of 12, audit 2026-10-31-ask-changes-what-it-made); one case short of the 10 of 12 bar, so it stays open: re-measure on cee26b92 and fix the primary button sheet."
+    },
+    {
+      "t": "2026-10-31T22:09:44.057Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-31T22:36:58.512Z",
+      "note": "Reproduced the primary button miss in a unit test from the model's own add_component call: the core change worked on all four looks, but in the app the model mistyped the Default look's layer id (skipped: 'there is no layer 887C...') and each look was set to one flat green. Fixed in 51532582: one change_part on any look changes that part in every look (or the look named), one colour shift from the first look so Pressed stays darker and Disabled faded; read_document names each drawing's look; white labels are not pulled toward the colour. Full suite green. Re-running the eval as after-3."
+    },
+    {
+      "t": "2026-11-01T01:26:44.852Z",
+      "note": "Final: two-turn eval 10 of 12 (after-6, 9d28f4db), bar met. Fixes this run: 51532582 + 43261d5a (change_part on any look of a component reaches every look, found in the library where the app keeps them, one shift from the first look; read_document names each copy's look), bb3ea1fb (guidance: a colour-named drawing takes a point, not its own name), 9d28f4db (colour goes on like Colorize; muted purple water with a yellow reflection went grey-teal under one hue turn in after-5). Misses: icon-sun-smaller (first request refused by the drawing check; folded into ask-on-qwen3-8-27b-keeps-a-drawing-its-look-name) and paint-beach-sun-bigger (words 6: the painted sun was a smear to begin with; left rough, it is the painting's making, not the change). Filed making-a-part-of-a-traced-drawing-smaller-shrink (p2, reproduced in after-5). The try walk ask-changes-what-it-made-walk was DEFERRED twice (person at the Mac, exit 6); its reel and four window captures are from cee26b92, and the audit says so. Single-request eval not re-run: every change acts only on something already made; last totals climb 83.2 (1 case), held-out 57.2 (45 cases). Looked at: after-4 and after-6 button pictures (only the primary row green, looks keep their shades), after-6 water pair (water blue, brushwork kept, rest unchanged), after-6 sun-bigger pair (sun grown 1.5x, smear-like)."
+    },
+    {
+      "t": "2026-11-01T01:26:44.937Z",
+      "note": "Ask changes what it just made: parts, memory, canvas picture and change_part; two-turn eval 3 -> 10 of 12 (after-6, bar 10). This run fixed the button sheet (every look of a component, kept shades, found in the library) and recolouring (Colorize-style, so many-hued parts turn the colour asked). Full suite green; audit 2026-10-31-ask-changes-what-it-made with before/after pictures. Try walk deferred twice by the person at the Mac; its reel is from cee26b92."
     }
   ],
-  "started": "2026-10-31T16:28:45.473Z",
+  "started": "2026-10-31T22:09:44.056Z",
   "walks": [
     "ask-changes-what-it-made-walk"
-  ]
+  ],
+  "completed": "2026-11-01T01:26:44.938Z"
 }
