@@ -5,11 +5,11 @@
   "epic": "found-selection",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T12:45:05.877Z",
-  "updated": "2026-11-01T16:39:24.753Z",
+  "updated": "2026-11-01T16:39:49.560Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-01 (intake): 'what happened to the rework on selection ux especially with 3d transforms?' Answer: the mock was reworked with the user on 2026-10-24 (eight lang-selection commits, 07:31 to 15:07) and no build task was filed, so the loop never knew. Folds in on-a-small-picked-object-the-3d-turn-handles-are (filed by the user 2026-10-20, never built, resequenced 13 times). Related, done earlier: the-3d-rotation-handles-are-on-a-picked-layer-ag, tilt-flip-and-push-layers-in-depth-from-the-canv, resize-squares-on-a-layer-turned-in-3d-take-the, every-transform-handle-answers-the-pointer-befor (2026-10-11 to 14). Keep the mock as is; a departure is a decision card with a marked screenshot.",
@@ -120,10 +120,15 @@
     {
       "t": "2026-11-01T16:39:24.752Z",
       "note": "Pictures looked at: side-by-side Size and 3D with the prototype (match apart from the follow-up slices), contact sheet of 10 frames (each shows what its step claims), hover captures. Follow-ups filed p1 source user in the user's order: skew-distort-reshapes-the-picture-from-the-selec, perspective-pill-and-a-shadow-that-grows-as-a-3d, reset-each-transform-mode-on-its-own-with-a-dot; and p2 a-corner-resize-that-keeps-proportions-still-sna. Left rough (not filed): the depth grip turns with the card where the prototype keeps it upright; on a small layer in 3D the tag can drop off the window bottom and goes above-left."
+    },
+    {
+      "t": "2026-11-01T16:39:49.558Z",
+      "note": "Slice 1 of the approved transform modes shipped at Next defaults (next-transform-modes): white corner squares, edge pills, knob with a clockwise arrow on a dotted stem, Size/3D chip, size tag under the frame; corners keep proportions (Shift stretches), edges stretch, Option from the middle, double-click knob to 0; in 3D any edge pill tips and swings and a grip below pushes back or pulls forward; set_layer takes rotation/tip/swing/depth. Verified: SelectionGrips tests and full suite green, selection-grips-walk ok (incl. 140x45 button, smallest target 548 sq pt), side by side with the prototype in queue/audits/2026-11-01-selection-grips.json. Skew & distort, the perspective pill and per-mode resets are queued p1 next in the user's order."
     }
   ],
   "started": "2026-11-01T14:55:09.555Z",
   "walks": [
     "selection-grips-walk"
-  ]
+  ],
+  "completed": "2026-11-01T16:39:49.559Z"
 }
