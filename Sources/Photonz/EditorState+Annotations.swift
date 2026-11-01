@@ -734,7 +734,8 @@ extension EditorState {
               document?.layer(id: id)?.annotation?.shape == .arrow else { return [] }
         let arrows = arrowsReached(fromRow: id)
         let worn = Set(arrows.compactMap { document?.layer(id: $0)?.annotation?.shownChipStyle })
-        return [
+        let markers = Set(arrows.compactMap { document?.layer(id: $0)?.annotation?.chipMarker })
+        var rows: [MenuRow] = [
             .submenu(ChipStyle.menuTitle, ChipStyle.allCases.map { style in
                 .toggle(style.title, isOn: worn == [style]) { [weak self] in
                     guard let self else { return }
@@ -742,6 +743,17 @@ extension EditorState {
                 }
             }),
         ]
+        // The marker at the label's front, beside its style, as a measurement
+        // offers it: only once there are words to put it in front of.
+        if arrows.contains(where: { document?.layer(id: $0)?.annotation?.hasCaption == true }) {
+            rows.append(.submenu(ChipMarker.menuTitle, ChipMarker.allCases.map { marker in
+                .toggle(marker.title, isOn: markers == [marker]) { [weak self] in
+                    guard let self else { return }
+                    self.setChipMarker(ids: self.arrowsReached(fromRow: id), marker)
+                }
+            }))
+        }
+        return rows
     }
 
     /// The picked arrows a menu reaches from the layer it was opened on: the

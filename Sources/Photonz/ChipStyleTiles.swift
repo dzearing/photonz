@@ -182,6 +182,8 @@ struct MarkupInkRow: View, Equatable {
     let pick: (String) -> Void
     /// Live while the Custom picker's square is dragged; nothing recorded.
     var preview: ((String) -> Void)?
+    /// The row's name in the panel's register, where a walk finds it.
+    var field = "Arrow Color"
 
     nonisolated static func == (a: MarkupInkRow, b: MarkupInkRow) -> Bool {
         a.ink == b.ink && a.labelFont == b.labelFont
@@ -218,7 +220,7 @@ struct MarkupInkRow: View, Equatable {
                 Spacer(minLength: 0)
             }
         }
-        .playtestField("Arrow Color")
+        .playtestField(field)
     }
 
     private func swatchButton(_ index: Int, _ hex: String) -> some View {

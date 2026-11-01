@@ -159,6 +159,9 @@ public enum ChipMarker: String, CaseIterable, Codable, Hashable, Sendable {
 
     public static let standard: ChipMarker = .accent
 
+    /// The submenu the markers are listed under on a right-click menu.
+    public static let menuTitle = "Chip Marker"
+
     public var title: String {
         switch self {
         case .none: "None"

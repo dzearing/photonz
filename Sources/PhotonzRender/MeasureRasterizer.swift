@@ -93,11 +93,8 @@ public enum MeasureRasterizer {
         if let leader = plan.leader { drawLeader(leader, in: context) }
 
         if measure.showLabel {
-            drawPill(labelText, at: plan.center, chipSize: plan.size,
-                     fontSize: measure.labelPointSize,
-                     borderWidth: measure.chipBorderWidth,
-                     fill: chipColor, border: chipBorder,
-                     textColorHex: measure.textColorHex, in: context)
+            drawChip(labelText, of: measure, at: plan.center, chipSize: plan.size,
+                     fill: chipColor, border: chipBorder, in: context)
         }
 
         return context.makeImage()
@@ -184,11 +181,8 @@ public enum MeasureRasterizer {
         if let leader = plan.leader { drawLeader(leader, in: context) }
 
         if measure.showLabel {
-            drawPill(labelText, at: plan.center, chipSize: plan.size,
-                     fontSize: measure.labelPointSize,
-                     borderWidth: measure.chipBorderWidth,
-                     fill: chipColor, border: chipBorder,
-                     textColorHex: measure.textColorHex, in: context)
+            drawChip(labelText, of: measure, at: plan.center, chipSize: plan.size,
+                     fill: chipColor, border: chipBorder, in: context)
         }
     }
 
@@ -202,11 +196,7 @@ public enum MeasureRasterizer {
         guard measure.showLabel else {
             return MeasurePlan(center: g.labelAnchor, size: .zero)
         }
-        return MeasurePlan.make(measure, geometry: g,
-                                chipSize: chipFootprint(for: text,
-                                                        fontSize: measure.labelPointSize,
-                                                        padding: measure.labelPadding,
-                                                        minWidth: measure.labelMinPillWidth))
+        return MeasurePlan.make(measure, geometry: g, chipSize: chipFootprint(for: text, of: measure))
     }
 
     /// One side of the caliper, drawn as far as the readout and no further.
@@ -252,10 +242,15 @@ public enum MeasureRasterizer {
     /// The chip's footprint = measured text (at `fontSize`) + padding on all
     /// sides, floored at `minWidth` so a one or two digit readout still reads
     /// as the badge a longer one is (`MeasureContent.labelBadgeAspect`).
-    private static func chipFootprint(for text: String, fontSize: CGFloat, padding: CGFloat,
-                                      minWidth: CGFloat) -> CGSize {
-        PillRasterizer.footprint(for: text, fontSize: fontSize, padding: padding,
-                                 minWidth: minWidth)
+    /// A styled chip sets its words semibold and makes room at its front for
+    /// a marker, the same way an arrow label's chip does.
+    private static func chipFootprint(for text: String, of measure: MeasureContent) -> CGSize {
+        var size = PillRasterizer.footprint(for: text, fontSize: measure.labelPointSize,
+                                            padding: measure.labelPadding,
+                                            minWidth: measure.labelMinPillWidth,
+                                            weight: measure.chipFontWeight)
+        size.width += measure.chipLeadWidth
+        return size
     }
 
     /// The exact size this measurement's readout draws at, glyphs measured.
@@ -266,10 +261,46 @@ public enum MeasureRasterizer {
     /// readout to draw.
     public static func chipFootprint(for measure: MeasureContent, pixelScale: CGFloat) -> CGSize {
         guard measure.showLabel else { return .zero }
-        return chipFootprint(for: measure.chipText(pixelScale: pixelScale),
-                             fontSize: measure.labelPointSize,
-                             padding: measure.labelPadding,
-                             minWidth: measure.labelMinPillWidth)
+        return chipFootprint(for: measure.chipText(pixelScale: pixelScale), of: measure)
+    }
+
+    /// Where the readout's chip is drawn, in the layer's own top-left space,
+    /// or nil when there is no readout.
+    public static func chipRect(for measure: MeasureContent, pixelScale: CGFloat) -> CGRect? {
+        guard measure.showLabel else { return nil }
+        let text = measure.chipText(pixelScale: pixelScale)
+        guard !text.isEmpty else { return nil }
+        let plan = labelPlan(measure, geometry: measure.caliperGeometry(), text: text)
+        return CGRect(x: plan.center.x - plan.size.width / 2, y: plan.center.y - plan.size.height / 2,
+                      width: plan.size.width, height: plan.size.height)
+    }
+
+    /// Where a Glass readout frosts the picture behind it: its plate in opaque
+    /// white on clear, in exactly the bitmap `rasterize` draws the measurement
+    /// in, so the renderer can carry the two through the same placement. Nil
+    /// when the chip is not on Glass.
+    public static func frostMask(_ measure: MeasureContent, size: CGSize, pixelScale: CGFloat,
+                                 scale: CGFloat = 1) -> CGImage? {
+        guard measure.drawsFrostedChip, let look = measure.chipLook,
+              let rect = chipRect(for: measure, pixelScale: pixelScale),
+              scale > 0, scale.isFinite else { return nil }
+        let width = Int((size.width * scale).rounded())
+        let height = Int((size.height * scale).rounded())
+        guard width >= 1, height >= 1,
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        let plate = ChipRasterizer.plate(look, at: CGPoint(x: rect.midX, y: rect.midY), chipSize: rect.size,
+                                         cornerRadius: measure.chipCornerRadius(for: rect.size))
+        context.setFillColor(CGColor(gray: 1, alpha: 1))
+        context.addPath(plate.path)
+        context.fillPath()
+        return context.makeImage()
     }
 
     /// JUST the readout pill, on its own transparent bitmap, for chrome that
@@ -302,12 +333,12 @@ public enum MeasureRasterizer {
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
         let tone = RGBA(hex: measure.chipColorHex) ?? RGBA(r: 1, g: 1, b: 1)
-        drawPill(text, at: CGPoint(x: size.width / 2, y: size.height / 2), chipSize: chip,
-                 fontSize: measure.labelPointSize, borderWidth: measure.chipBorderWidth,
+        // No picture behind it here, so a Glass chip stands in as one opaque
+        // colour, the way a style tile does.
+        drawChip(text, of: measure, at: CGPoint(x: size.width / 2, y: size.height / 2), chipSize: chip,
                  fill: CGColor(srgbRed: tone.r, green: tone.g, blue: tone.b,
                                alpha: min(max(measure.chipOpacity, 0), 1)),
-                 border: chipEdgeColor(measure),
-                 textColorHex: measure.textColorHex, in: context)
+                 border: chipEdgeColor(measure), standInFrost: true, in: context)
         return context.makeImage().map { ($0, size) }
     }
 
@@ -345,11 +376,26 @@ public enum MeasureRasterizer {
         return CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
     }
 
-    private static func drawPill(_ string: String, at anchor: CGPoint, chipSize: CGSize,
-                                 fontSize: CGFloat, borderWidth: CGFloat, fill: CGColor,
-                                 border: CGColor, textColorHex: String, in context: CGContext) {
-        PillRasterizer.draw(string, at: anchor, chipSize: chipSize, fontSize: fontSize,
-                            borderWidth: borderWidth, fill: fill, border: border,
-                            textColorHex: textColorHex, in: context)
+    /// The readout's chip: in its chip style when it has one, through the same
+    /// drawing an arrow label's chip uses (`ChipRasterizer`), otherwise the
+    /// pill every measurement wore before there were styles, exactly as it
+    /// always drew.
+    private static func drawChip(_ string: String, of measure: MeasureContent, at anchor: CGPoint,
+                                 chipSize: CGSize, fill: CGColor, border: CGColor,
+                                 standInFrost: Bool = false, in context: CGContext) {
+        if let look = measure.chipLook {
+            context.saveGState()
+            ChipRasterizer.draw(string, look: look, at: anchor, chipSize: chipSize,
+                                fontSize: measure.labelPointSize, padding: measure.labelPadding,
+                                fontName: "SF Pro", weight: measure.chipFontWeight,
+                                cornerRadius: measure.chipCornerRadius(for: chipSize),
+                                edgeWidth: measure.hasChipBorder ? measure.chipBorderWidth : nil,
+                                standInFrost: standInFrost, in: context)
+            context.restoreGState()
+            return
+        }
+        PillRasterizer.draw(string, at: anchor, chipSize: chipSize, fontSize: measure.labelPointSize,
+                            borderWidth: measure.chipBorderWidth, fill: fill, border: border,
+                            textColorHex: measure.textColorHex, in: context)
     }
 }

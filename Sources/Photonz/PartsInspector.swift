@@ -76,6 +76,9 @@ struct PartsInspector: View {
             // colour below it, so it reads as "what this calls out, then what
             // that is painted" (`MeasurePartSettings`).
             if Experiments.shared.shapePartsEnabled { MeasureRoleRow() }
+            // ...then its readout's chip: style, one Color and marker, the
+            // same rows an arrow's label has (`MeasureChipStyleRow`).
+            if Experiments.shared.shapePartsEnabled { MeasureChipStyleRow() }
             // How an arrow is drawn, before the parts it paints: the style is
             // the whole arrow's look, and changes which parts there are to set.
             if Experiments.shared.shapePartsEnabled { ArrowStyleRow() }

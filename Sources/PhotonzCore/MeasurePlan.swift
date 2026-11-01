@@ -13,10 +13,14 @@ import Foundation
 public struct LabelCapsule: Equatable, Sendable {
     public var rect: CGRect
     public var radius: CGFloat
+    /// Corners that ease into the sides the way the Mac's own squircles do
+    /// (a chip style's `continuousCorners`), rather than a circle's quarter.
+    public var continuous: Bool
 
-    public init(rect: CGRect, radius: CGFloat) {
+    public init(rect: CGRect, radius: CGFloat, continuous: Bool = false) {
         self.rect = rect
         self.radius = radius
+        self.continuous = continuous
     }
 
     /// A capsule centred on `center`, `size` across, rounded the way every
@@ -46,6 +50,7 @@ public struct LabelCapsule: Equatable, Sendable {
     /// by `radius`, which is one test for the flat sides and the round caps
     /// alike.
     public func contains(_ p: CGPoint) -> Bool {
+        if continuous { return Self.continuousPath(rect, radius: clampedRadius).contains(p) }
         let r = clampedRadius
         let core = rect.insetBy(dx: r, dy: r)
         let dx = max(core.minX - p.x, 0, p.x - core.maxX)
@@ -60,16 +65,50 @@ public struct LabelCapsule: Equatable, Sendable {
     /// The shape is convex and `toward` is inside it, so there is exactly one
     /// crossing and halving the run converges straight onto it.
     public func entry(from: CGPoint, toward: CGPoint) -> CGPoint? {
-        guard !contains(from), contains(toward) else { return nil }
+        let path = continuous ? Self.continuousPath(rect, radius: clampedRadius) : nil
+        func within(_ p: CGPoint) -> Bool { path?.contains(p) ?? contains(p) }
+        guard !within(from), within(toward) else { return nil }
         func point(_ t: CGFloat) -> CGPoint {
             CGPoint(x: from.x + (toward.x - from.x) * t, y: from.y + (toward.y - from.y) * t)
         }
         var outside: CGFloat = 0, inside: CGFloat = 1
         for _ in 0..<32 {
             let mid = (outside + inside) / 2
-            if contains(point(mid)) { inside = mid } else { outside = mid }
+            if within(point(mid)) { inside = mid } else { outside = mid }
         }
         return point(inside)
+    }
+
+    /// A rounded rectangle whose corners ease into the sides instead of
+    /// meeting them at a circle's end, the way the Mac's own squircles do. The
+    /// one drawing of it: the chip rasterizer paints this path, and a line
+    /// meeting a squircle chip stops on it.
+    public static func continuousPath(_ rect: CGRect, radius: CGFloat) -> CGPath {
+        let path = CGMutablePath()
+        guard radius > 0 else {
+            path.addRect(rect)
+            return path
+        }
+        // The curve starts further along each side than a circle's would and
+        // pulls in tighter at the corner itself.
+        let reach = min(radius * 1.28, min(rect.width, rect.height) / 2)
+        let pull = reach * 0.36
+        let (x0, y0, x1, y1) = (rect.minX, rect.minY, rect.maxX, rect.maxY)
+        path.move(to: CGPoint(x: x0 + reach, y: y0))
+        path.addLine(to: CGPoint(x: x1 - reach, y: y0))
+        path.addCurve(to: CGPoint(x: x1, y: y0 + reach), control1: CGPoint(x: x1 - pull, y: y0),
+                      control2: CGPoint(x: x1, y: y0 + pull))
+        path.addLine(to: CGPoint(x: x1, y: y1 - reach))
+        path.addCurve(to: CGPoint(x: x1 - reach, y: y1), control1: CGPoint(x: x1, y: y1 - pull),
+                      control2: CGPoint(x: x1 - pull, y: y1))
+        path.addLine(to: CGPoint(x: x0 + reach, y: y1))
+        path.addCurve(to: CGPoint(x: x0, y: y1 - reach), control1: CGPoint(x: x0 + pull, y: y1),
+                      control2: CGPoint(x: x0, y: y1 - pull))
+        path.addLine(to: CGPoint(x: x0, y: y0 + reach))
+        path.addCurve(to: CGPoint(x: x0 + reach, y: y0), control1: CGPoint(x: x0, y: y0 + pull),
+                      control2: CGPoint(x: x0 + pull, y: y0))
+        path.closeSubpath()
+        return path
     }
 }
 
@@ -126,7 +165,14 @@ public struct MeasurePlan: Equatable, Sendable {
             return MeasurePlan(center: g.labelAnchor, size: .zero)
         }
         let center = measure.labelPosition(chipSize: chipSize)
-        let outline = LabelCapsule(center: center, size: chipSize)
+        // The chip's own outline: a capsule for the pill from before styles,
+        // the style's own corners otherwise, so the line stops on the curve
+        // the chip is drawn with.
+        let outline = LabelCapsule(rect: CGRect(x: center.x - chipSize.width / 2,
+                                                y: center.y - chipSize.height / 2,
+                                                width: chipSize.width, height: chipSize.height),
+                                   radius: measure.chipCornerRadius(for: chipSize),
+                                   continuous: measure.chipLook?.continuousCorners ?? false)
 
         // The measurement's own line stops on the outline only while the plate
         // is still riding it; once the readout has moved, the line is whole.

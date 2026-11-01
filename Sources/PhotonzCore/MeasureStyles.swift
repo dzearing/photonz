@@ -143,6 +143,13 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     public var sizeBoxOpacity: CGFloat {
         didSet { sizeBoxOpacity = min(max(sizeBoxOpacity, 0), 1) }
     }
+    /// The chip style the next measurement's readout wears, the same ten an
+    /// arrow's label does. Nil keeps the pill measurements wore before there
+    /// were styles, which is what a memory from before them reads as, so
+    /// nobody's next measurement changes look until a style is picked.
+    public var chipStyle: ChipStyle?
+    /// The marker at the front of the next measurement's chip.
+    public var chipMarker: ChipMarker = .standard
 
     /// The colour the next Size measurement's box is tinted. Setting it is a
     /// pick of its own, which stops it following Size's ink.
@@ -214,6 +221,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         case strokeWidth, chipBorderWidth
         case labelSizePx, unit, decimals, layerStyle, snapsToCenters
         case sizeBoxColor, sizeBoxOpacity
+        case chipStyle, chipMarker
         // Pre-roles flat color keys: decoded to seed the Size memory (the only
         // set that existed), and mirrored on encode so an older build reading
         // this blob still sees the active colors.
@@ -249,6 +257,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             sizeBoxColorPick: boxPick,
             sizeBoxOpacity: try c.decodeIfPresent(CGFloat.self, forKey: .sizeBoxOpacity)
                 ?? d.sizeBoxOpacity)
+        chipStyle = try c.decodeIfPresent(ChipStyle.self, forKey: .chipStyle)
+        chipMarker = try c.decodeIfPresent(ChipMarker.self, forKey: .chipMarker) ?? .standard
     }
 
     /// The shared set a memory from an older build moves to: the last-used
@@ -289,6 +299,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         try c.encode(snapsToCenters, forKey: .snapsToCenters)
         try c.encodeIfPresent(sizeBoxColorPick, forKey: .sizeBoxColor)
         try c.encode(sizeBoxOpacity, forKey: .sizeBoxOpacity)
+        try c.encodeIfPresent(chipStyle, forKey: .chipStyle)
+        try c.encode(chipMarker, forKey: .chipMarker)
         // Write-only mirror of the shared colours under the flat pre-roles
         // keys, so a build from before the split still reads a sensible set.
         try c.encode(strokeColorHex, forKey: .strokeColorHex)
@@ -310,7 +322,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// role tags it; the colours are the same shared set whatever the role.
     public func content(for role: MeasureRole) -> MeasureContent {
         let ink = colors
-        return MeasureContent(mode: .horizontal, strokeWidth: strokeWidth,
+        var content = MeasureContent(mode: .horizontal, strokeWidth: strokeWidth,
                               strokeColorHex: ink.strokeColorHex, chipColorHex: ink.chipColorHex,
                               chipOpacity: ink.chipOpacity, textColorHex: ink.textColorHex,
                               chipBorderColorHex: ink.chipBorderColorHex ?? ink.strokeColorHex,
@@ -320,6 +332,11 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
                               chipBorderWidth: ink.chipBorderColorHex == nil ? 0 : chipBorderWidth,
                               showLabel: true, unit: unit, decimals: decimals,
                               labelScale: labelScale, role: role)
+        // The remembered chip style paints the chip from the remembered ink,
+        // the way picking it on a measurement did.
+        if let chipStyle { content.applyChipStyle(chipStyle) }
+        content.chipMarker = chipMarker
+        return content
     }
 
     /// Remember an edited caliper's styling as the new default — how a tweak in
@@ -337,5 +354,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         labelSizePx = content.labelPointSize
         unit = content.unit
         decimals = content.decimals
+        chipStyle = content.chipStyle
+        chipMarker = content.chipMarker
     }
 }

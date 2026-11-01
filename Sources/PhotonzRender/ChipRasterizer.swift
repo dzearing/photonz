@@ -199,34 +199,11 @@ enum ChipRasterizer {
         CGColor(srgbRed: c.r, green: c.g, blue: c.b, alpha: alpha ?? c.a)
     }
 
-    /// A rounded rectangle whose corners ease into the sides instead of
-    /// meeting them at a circle's end, the way the Mac's own squircles do.
+    /// A rounded rectangle whose corners ease into the sides, the one drawing
+    /// of it (`LabelCapsule.continuousPath`), so a line meeting a squircle chip
+    /// stops on the very curve the chip is painted with.
     static func continuousRoundedRect(_ rect: CGRect, radius: CGFloat) -> CGPath {
-        let path = CGMutablePath()
-        guard radius > 0 else {
-            path.addRect(rect)
-            return path
-        }
-        // The curve starts further along each side than a circle's would and
-        // pulls in tighter at the corner itself.
-        let reach = min(radius * 1.28, min(rect.width, rect.height) / 2)
-        let pull = reach * 0.36
-        let (x0, y0, x1, y1) = (rect.minX, rect.minY, rect.maxX, rect.maxY)
-        path.move(to: CGPoint(x: x0 + reach, y: y0))
-        path.addLine(to: CGPoint(x: x1 - reach, y: y0))
-        path.addCurve(to: CGPoint(x: x1, y: y0 + reach), control1: CGPoint(x: x1 - pull, y: y0),
-                      control2: CGPoint(x: x1, y: y0 + pull))
-        path.addLine(to: CGPoint(x: x1, y: y1 - reach))
-        path.addCurve(to: CGPoint(x: x1 - reach, y: y1), control1: CGPoint(x: x1, y: y1 - pull),
-                      control2: CGPoint(x: x1 - pull, y: y1))
-        path.addLine(to: CGPoint(x: x0 + reach, y: y1))
-        path.addCurve(to: CGPoint(x: x0, y: y1 - reach), control1: CGPoint(x: x0 + pull, y: y1),
-                      control2: CGPoint(x: x0, y: y1 - pull))
-        path.addLine(to: CGPoint(x: x0, y: y0 + reach))
-        path.addCurve(to: CGPoint(x: x0 + reach, y: y0), control1: CGPoint(x: x0, y: y0 + pull),
-                      control2: CGPoint(x: x0 + pull, y: y0))
-        path.closeSubpath()
-        return path
+        LabelCapsule.continuousPath(rect, radius: radius)
     }
 
     /// A status icon drawn into `box`, from the design system's 20 by 20

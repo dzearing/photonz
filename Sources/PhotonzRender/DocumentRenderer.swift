@@ -1387,6 +1387,17 @@ public final class DocumentRenderer: @unchecked Sendable {
             var variant = "scale:\(document.pixelScale)"
             if contentScale != 1 { variant += "|crisp" }
             let bake = crispScale(contentScale, box: boxInPoints)
+            // A readout on Glass: the plate's own shape, for the frost below,
+            // the same way an arrow label's Glass chip frosts the picture.
+            if space == nil, measure.drawsFrostedChip, let look = measure.chipLook?.frost,
+               let mask = raster(for: layer.content, size: layer.frame.size, variant: variant + "|frost",
+                                 rasterize: {
+                   MeasureRasterizer.frostMask(measure, size: boxInPoints,
+                                               pixelScale: document.pixelScale, scale: bake)
+               }) {
+                frostMask = magnified(mask, nearest: magnifyNearest, scale: contentScale / bake)
+                frost = (look, look.blur * ChipLook.unit(fontSize: measure.labelPointSize) * contentScale)
+            }
             guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
                 MeasureRasterizer.rasterize(measure, size: boxInPoints,
                                             pixelScale: document.pixelScale, scale: bake)

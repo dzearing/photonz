@@ -306,6 +306,14 @@ extension Layer {
                 : localBounds.standardized.applying(transform.affineTransform(around: turnPivot))
             let reach = (blur * 3 + annotation.captionShadowSlack).rounded(.up)
             return box.insetBy(dx: -reach, dy: -reach)
+        case .measure(let measure) where measure.drawsFrostedChip:
+            // The same for a measurement's readout on Glass.
+            let blur = InkPlate.glassBlur * ChipLook.unit(fontSize: measure.labelPointSize)
+            let box = transform.isIdentity
+                ? localBounds.standardized
+                : localBounds.standardized.applying(transform.affineTransform(around: turnPivot))
+            let reach = (blur * 3 + measure.chipRenderPadding).rounded(.up)
+            return box.insetBy(dx: -reach, dy: -reach)
         default:
             // Glass reads the canvas under the box it is drawn in, and a
             // blur's reach past that: three sigma, the same tail every other
@@ -331,7 +339,9 @@ extension LayerContent {
         case .zoomCallout, .lens: true
         // A caption on frosted Glass frosts the picture behind its chip.
         case .annotation(let annotation): annotation.drawsFrostedChip
-        case .image, .text, .measure, .collage, .group, .path, .paint: false
+        // ...and so does a measurement's readout on Glass.
+        case .measure(let measure): measure.drawsFrostedChip
+        case .image, .text, .collage, .group, .path, .paint: false
         }
     }
 }

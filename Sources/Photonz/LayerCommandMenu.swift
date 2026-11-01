@@ -77,7 +77,9 @@ enum LayerCommandList {
         // like every other row here (`ArrowStyle.swift`).
         // Its label's chip style sits beside it, in the same group.
         var arrowRows = editorState.arrowStyleMenuRows(id: id)
-        let chipRows = editorState.chipStyleMenuRows(id: id)
+        // A measurement's readout wears the same chip, so it offers the same
+        // submenu.
+        let chipRows = editorState.chipStyleMenuRows(id: id) + editorState.measureChipStyleMenuRows(id: id)
         if !chipRows.isEmpty {
             if arrowRows.isEmpty { arrowRows = chipRows + [.separator] }
             else { arrowRows.insert(contentsOf: chipRows, at: arrowRows.count - 1) }

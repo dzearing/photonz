@@ -22,7 +22,12 @@ public enum ChipContrastReader {
 
     /// The chip's rectangle in document points, or nil for an arrow with no
     /// words.
-    public static func chipRect(_ layer: Layer) -> CGRect? {
+    public static func chipRect(_ layer: Layer, pixelScale: CGFloat = 1) -> CGRect? {
+        if let m = layer.measure {
+            // A measurement's readout, wherever its plan put it.
+            return MeasureRasterizer.chipRect(for: m, pixelScale: pixelScale)?
+                .offsetBy(dx: layer.frame.minX, dy: layer.frame.minY)
+        }
         guard let a = layer.annotation, a.hasCaption, let caption = a.caption else { return nil }
         let size = CaptionMetrics.pillSize(for: caption, in: a)
         let center = a.captionPillCenter(forPillSize: size)
@@ -33,19 +38,32 @@ public enum ChipContrastReader {
 
     /// The chip of `layer` as drawn in `image`, a picture of the whole
     /// document at `scale` pixels to the point, top row first.
-    public static func read(_ layer: Layer, in image: CGImage, scale: CGFloat = 1) -> Reading? {
-        guard let a = layer.annotation, let rect = chipRect(layer) else { return nil }
+    public static func read(_ layer: Layer, in image: CGImage, scale: CGFloat = 1,
+                            pixelScale: CGFloat = 1) -> Reading? {
+        guard let rect = chipRect(layer, pixelScale: pixelScale) else { return nil }
+        // An arrow's label and a measurement's readout are the same chip, with
+        // their own padding and room at the front.
+        let pad: CGFloat
+        let lead: CGFloat
+        if let m = layer.measure {
+            pad = m.labelPadding
+            lead = m.chipLeadWidth
+        } else if let a = layer.annotation {
+            pad = a.captionPadding
+            lead = a.captionLeadWidth
+        } else {
+            return nil
+        }
         let pixels = Pixels(image)
         func at(_ point: CGPoint) -> RGBA? {
             pixels.at(Int((point.x * scale).rounded(.down)), Int((point.y * scale).rounded(.down)))
         }
-        let pad = a.captionPadding
         let plates = [CGPoint(x: rect.maxX - pad * 0.6, y: rect.midY - rect.height * 0.25),
                       CGPoint(x: rect.maxX - pad * 0.8, y: rect.midY + rect.height * 0.2)].compactMap(at)
         guard let firstPlate = plates.first else { return nil }
         // The words' band: past the marker, inside the padding, the middle of
         // the line's height where every letter has ink.
-        let left = rect.minX + pad + a.captionLeadWidth
+        let left = rect.minX + pad + lead
         let right = rect.maxX - pad
         let top = rect.midY - rect.height * 0.3
         let bottom = rect.midY + rect.height * 0.3

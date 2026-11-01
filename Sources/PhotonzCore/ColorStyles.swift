@@ -554,6 +554,9 @@ extension Layer {
             // Nil is a real answer here, the way it is for a box's inside: the
             // Chip Fill switch writes exactly this, and it is said as an alpha
             // of nothing because that is what "no chip" has always meant.
+            // A chip wearing a style keeps a part painted here through any
+            // later style or colour change, as an arrow label's does.
+            measure.noteChipPartByHand(.fill)
             guard let hex else {
                 measure.chipOpacity = 0
                 content = .measure(measure)
@@ -562,6 +565,7 @@ extension Layer {
             measure.setChipFillHex(hex)
             content = .measure(measure)
         case (.chipBorder, .measure(var measure)):
+            measure.noteChipPartByHand(.edge)
             guard let hex else {
                 measure.chipBorderWidth = 0
                 content = .measure(measure)
@@ -577,6 +581,7 @@ extension Layer {
             // with invisible digits.
             guard let hex else { return }
             measure.textColorHex = hex
+            measure.noteChipPartByHand(.text)
             content = .measure(measure)
         case (.text, .text):
             // Through the text builder, so repainting text keeps the contrast

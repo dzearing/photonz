@@ -22296,3 +22296,10 @@ the ghost, and pinching in seemed to stop short.
 - `AskDocumentDigest` (PhotonzCore/AskDocumentFit.swift) says the biggest groups in short (name, box, part count, names grouped, colours) when the document passes 2,500 tokens; read_document looks are fitted to 4,000. `AskConversation` fits every request to its window (oldest tool answers first), refuses to send one that cannot fit, and leaves video-only tools out on a picture. `AskTrouble` turns any server error into one plain sentence.
 - Window per Mac: 65,536 at 48 GB or more (+2.2 GB measured), 32,768 otherwise; walk server records its window.
 - The Statue request is now 15,012 tokens and lands ("Made her robe a darker green"). Walk: ask-changes-a-big-traced-drawing-walk. Open: reaching "the robe" of a colour-traced drawing, folded into making-a-part-of-a-traced-drawing-smaller-shrink.
+
+## 2026-11-01 — Measurements wear the arrow label's chip styles
+
+- A measurement's readout takes the same ten chip styles, one Color and marker as an arrow label: `MeasureContent.chipStyle/chipMarker/chipPartsByHand` (saved only when set), `MeasureChipStyle.swift`, drawn through `ChipRasterizer`; the line stops on the style's own outline (`LabelCapsule.continuous`); Glass frosts the picture; SVG keeps corners and marker room.
+- Rows: `MeasureChipStyleRow` (Appearance), `MeasureToolChipRows` (Measure tool settings, only while nothing is picked), Chip Style and Chip Marker on the right-click of measurements (Chip Marker on arrows too). The tool memory starts with no style, so nobody's next measurement changes look until a style is picked.
+- Verified: 150 pixel contrast readings, lowest 4.58:1; join tests per style; `measure-chip-styles-walk` green at Next defaults (picks via right-click because panel button presses are dead under walks, owned by `walks-that-fail-in-the-full-sweep-26`).
+- Open: pointer proof of the tiles, swatches and Reset Colors waits on that harness fix.

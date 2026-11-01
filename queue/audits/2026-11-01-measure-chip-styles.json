@@ -1,0 +1,53 @@
+{
+  "feature": "Measurements wear the same chip styles, colour and marker as an arrow label",
+  "epic": "epic-uehjr1",
+  "summary": "A size, gap, distance or alignment readout can now wear any of the ten chip styles, one Color for caliper and chip, and a marker, picked the same way as on an arrow's label: on the picked measurement, in the Measure tool's settings for the next one, or from its right-click menu.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/measure-chip-styles-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screenshot, press I, set Mode to Gap and click between two lines of text.",
+      "shot": "2026-11-01-measure-chip-styles-1-tool-settings.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick the Gap in the Measurements list and look at Appearance: Chip, Color and Marker rows, Today lit.",
+      "shot": "2026-11-01-measure-chip-styles-2-picked.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Paper tile, then the warning triangle in the Marker row (or right-click the measurement: Chip Style > Paper, Chip Marker > Warning).",
+      "shot": "2026-11-01-measure-chip-styles-3-paper-warning.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Zoom in on the readout: the caliper stops on the card's edge.",
+      "shot": "2026-11-01-measure-chip-styles-join.png"
+    },
+    {
+      "do": "Click a swatch in the Color row: caliper and chip change together."
+    },
+    {
+      "do": "Press Command-Z once: only the last change goes back."
+    },
+    {
+      "do": "Click empty canvas and measure another gap: it comes out on Paper with the warning.",
+      "shot": "2026-11-01-measure-chip-styles-4-next-measurement.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does a measurement on Paper or Spec badge read as part of the same redline as an arrow label on the same style?",
+    "Should a new measurement keep its old navy pill until you pick a style, or start on Solid like a new arrow does?",
+    "Is the warning icon at the readout's front useful on a measurement, or only on arrows?",
+    "Do Chip Style and Chip Marker belong on the measurement's right-click menu?"
+  ],
+  "rough": [
+    "Measured contrast, read off the rendered pixels: every style in five colours (the measurement blue, red, yellow, near-black and a custom light green) over white, black and a busy photo, 150 readings, lowest 4.58:1 (Hairline in yellow over black). All lines: 2026-11-01-measure-chip-styles-contrast.tsv.",
+    "Under a walk, a press on the Chip tiles, Marker buttons and Color swatches does nothing, the same dead press the arrow's rows have had since 2026-10-26 (walks-that-fail-in-the-full-sweep-26). So the walk picks Paper and Warning from the right-click menu, and the Color row and the Reset Colors warning are proven by tests, not yet by a walk's click.",
+    "A new measurement keeps the pill it always had, which the Chip row calls Today, until a style is picked; a new arrow starts on Solid. I chose this because the measurement look was sampled from your own screenshot on 2026-10-13.",
+    "No Size (S, M, L) row and no Advanced fold yet: the chip's Fill, Edge and Text rows still sit open below Marker, as they do on an arrow (arrow-and-measurement-appearance-shows-only-styl).",
+    "With the Measure tool in hand and a measurement picked, the Measure Tool section stays open above Appearance, so Appearance gets less of the dock and its Color swatches, Marker row and part rows start below its fold; scroll the section to reach them.",
+    "Every picture is the window behind another app, so picked tiles show their background look; the canvas is what was drawn."
+  ]
+}

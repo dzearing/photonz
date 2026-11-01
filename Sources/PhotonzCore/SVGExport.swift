@@ -1565,11 +1565,13 @@ private struct Writer {
         guard let type else { return [] }
         let g = measure.caliperGeometry()
         let words = measure.chipText(pixelScale: pixelScale)
-        let chip = measure.showLabel
+        var chip = measure.showLabel
             ? type.plateSize(for: words, fontSize: measure.labelPointSize,
                              padding: measure.labelPadding,
                              minWidth: measure.labelMinPillWidth)
             : .zero
+        // A styled chip keeps room at its front for its marker, as drawn.
+        if measure.showLabel { chip.width += measure.chipLeadWidth }
         let plan = MeasurePlan.make(measure, geometry: g, chipSize: chip)
         let ink = RGBA(hex: measure.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
         // Round caps and joins, so the corners read refined rather than sharp.
@@ -1595,12 +1597,13 @@ private struct Writer {
         }
         guard measure.showLabel, !words.isEmpty else { return lines }
         lines.append(contentsOf: plate(Plate(center: plan.center, size: plan.size,
-                                             cornerRadius: LabelCapsule.capsuleRadius(for: plan.size),
+                                             cornerRadius: measure.chipCornerRadius(for: plan.size),
                                              fill: chipFill(measure),
                                              border: chipEdge(measure),
                                              borderWidth: measure.chipBorderWidth,
                                              text: words, fontSize: measure.labelPointSize,
-                                             textHex: measure.textColorHex),
+                                             textHex: measure.textColorHex,
+                                             textShift: measure.chipLeadWidth / 2),
                                        level: level))
         return lines
     }

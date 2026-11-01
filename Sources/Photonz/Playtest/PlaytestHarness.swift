@@ -9964,16 +9964,24 @@ private final class Run {
               let image = DocumentRenderer().render(document, store: editor.store, scale: 1) else {
             throw Failure(description: "the document did not render")
         }
-        let chips = document.layers.filter { $0.isVisible && $0.annotation?.hasCaption == true }
-        guard !chips.isEmpty else { throw Failure(description: "no arrow on the picture has words") }
+        // Every captioned arrow and every measurement's readout, wherever in
+        // the stack it is, read where it is drawn on the canvas.
+        let chips = document.allLayers.filter { layer in
+            layer.isVisible && (layer.annotation?.hasCaption == true || layer.measure?.showLabel == true)
+        }.compactMap { document.canvasLayer(id: $0.id) }
+        guard !chips.isEmpty else {
+            throw Failure(description: "no arrow on the picture has words and no measurement has a readout")
+        }
         var said: [String] = []
         var short: [String] = []
         for layer in chips {
-            guard let a = layer.annotation,
-                  let reading = ChipContrastReader.read(layer, in: image) else {
+            guard let reading = ChipContrastReader.read(layer, in: image, pixelScale: document.pixelScale) else {
                 throw Failure(description: "the chip of \"\(layer.name)\" could not be read")
             }
-            let line = "\(a.shownChipStyle.title) in \(a.colorHex.uppercased()): words "
+            let worn = layer.annotation.map { "\($0.shownChipStyle.title) in \($0.colorHex.uppercased())" }
+                ?? layer.measure.map { "\($0.shownChipStyle.title) readout in \($0.strokeColorHex.uppercased())" }
+                ?? layer.name
+            let line = "\(worn): words "
                 + "\(reading.words.hexString) on \(reading.plate.hexString), "
                 + String(format: "%.2f:1", reading.contrast)
             said.append(line)

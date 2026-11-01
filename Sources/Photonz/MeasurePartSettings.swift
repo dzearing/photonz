@@ -72,7 +72,11 @@ struct MeasurePartSettings: View {
     /// Over several measurements it is said once, because it is a warning
     /// rather than a reading.
     private func legibilityNote(_ ids: [UUID]) -> String? {
-        ids.compactMap { editorState.document?.layer(id: $0)?.measure?.chipLegibilityNote }.first
+        // A styled chip says it under the Color row, with Reset Colors
+        // (`MeasureChipStyleRow`), so it is not said twice.
+        ids.compactMap { editorState.document?.layer(id: $0)?.measure }
+            .filter { $0.chipStyle == nil || !Experiments.shared.chipStylesEnabled }
+            .compactMap(\.chipLegibilityNote).first
     }
 
     /// How thick the caliper is drawn. Three whole pixels rather than a slider,

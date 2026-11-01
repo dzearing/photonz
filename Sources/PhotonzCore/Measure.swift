@@ -84,8 +84,13 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// The caliper's ink: its legs and its head line.
     ///
     /// It used to ring the label chip too. The chip has its own edge now
-    /// (`chipBorderColorHex`), so repainting the caliper leaves the chip alone.
-    public var strokeColorHex: String
+    /// (`chipBorderColorHex`), so repainting the caliper leaves the chip alone,
+    /// unless the chip wears a chip style: then the caliper's ink is the mark's
+    /// one colour and the chip's plate, edge and words are derived from it
+    /// (`MeasureChipStyle.swift`, markup.md section 2).
+    public var strokeColorHex: String {
+        didSet { if strokeColorHex != oldValue { rederiveChipParts() } }
+    }
     /// The label chip's fill. Its alpha lives in `chipOpacity`, NOT in this hex —
     /// `RGBA.hexString` emits six digits and drops alpha, so a `#RRGGBBAA` stored
     /// here would lose its transparency on the first round-trip through a picker.
@@ -170,6 +175,17 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// numbers in it were measured off the picture when the mark was made.
     /// Nil for every other measurement.
     public var finding: String?
+    /// The readout's chip style, the same ten an arrow's label wears
+    /// (`ChipStyle`). Nil is the pill every measurement wore before there were
+    /// styles, drawn from its stored colours exactly as it always was, which is
+    /// what every document saved before this field opens as.
+    public var chipStyle: ChipStyle?
+    /// What sits at the chip's front: the style's accent, nothing, or a status
+    /// icon. Only drawn on a styled chip.
+    public var chipMarker: ChipMarker
+    /// The chip parts painted by hand, which keep their colour through any
+    /// style or colour change until they are reset.
+    public var chipPartsByHand: Set<CaptionPart>
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
@@ -212,6 +228,9 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         self.labelNudge = labelNudge
         self.labelCrossReach = labelCrossReach
         self.labelPinned = labelPinned
+        self.chipStyle = nil
+        self.chipMarker = .standard
+        self.chipPartsByHand = []
     }
 
     /// Default caliper ink — the original single measure color.
@@ -278,6 +297,12 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// back either way.
     public var chipLegibilityNote: String? {
         guard showLabel else { return nil }
+        // A styled chip is held to the 4.5:1 every chip style keeps by itself
+        // (markup.md section 3), as drawn, the same words an arrow's label
+        // says.
+        if chipStyle != nil, let ratio = chipWordContrast {
+            return ratio < 4.5 ? "Words are hard to read on this chip" : nil
+        }
         guard hasChipFill else {
             return "With no fill the number sits straight on the picture, "
                 + "so its own colour is the only thing making it readable."
@@ -304,6 +329,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         case finding
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         case chipBorderColorHex, chipBorderWidth
+        case chipStyle, chipMarker, chipPartsByHand
         // Legacy keys from the pre-caliper measure model (decode-only) and the
         // pre-split single color (decode + a write-only mirror, see `encode`).
         case form, capStyle, colorHex
@@ -345,6 +371,13 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         // Only when known, so a document with no mode names saves unchanged.
         try c.encodeIfPresent(madeBy, forKey: .madeBy)
         try c.encodeIfPresent(finding, forKey: .finding)
+        // Only once a chip has a style, so a measurement from before styles
+        // saves exactly as it always did.
+        try c.encodeIfPresent(chipStyle, forKey: .chipStyle)
+        if chipStyle != nil || chipMarker != .standard { try c.encode(chipMarker, forKey: .chipMarker) }
+        if !chipPartsByHand.isEmpty {
+            try c.encode(chipPartsByHand.map(\.rawValue).sorted(), forKey: .chipPartsByHand)
+        }
     }
 
     /// Decodes new caliper payloads directly and **migrates** legacy measures
@@ -392,6 +425,10 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         labelCrossReach = try c.decodeIfPresent(CGFloat.self, forKey: .labelCrossReach) ?? 0
         madeBy = try c.decodeIfPresent(MeasureToolMode.self, forKey: .madeBy)
         finding = try c.decodeIfPresent(String.self, forKey: .finding)
+        chipStyle = try c.decodeIfPresent(ChipStyle.self, forKey: .chipStyle)
+        chipMarker = try c.decodeIfPresent(ChipMarker.self, forKey: .chipMarker) ?? .standard
+        chipPartsByHand = Set((try c.decodeIfPresent([String].self, forKey: .chipPartsByHand) ?? [])
+            .compactMap(CaptionPart.init(rawValue:)))
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
         let modeString = try c.decodeIfPresent(String.self, forKey: .mode)
@@ -662,14 +699,16 @@ extension MeasureContent {
             // line box is 1.2 em plus 5. Sized to hold the real pill at every
             // label size, and no wider, so a guide near the edge of a narrow
             // picture is not pushed sideways for room it does not need.
-            let w = max(chars * (labelPointSize * 0.44 + 1.2) + 2 * labelPadding, labelMinPillWidth)
+            let w = max(chars * (labelPointSize * 0.44 + 1.2) * chipWeightWidening + 2 * labelPadding,
+                        labelMinPillWidth) + chipLeadWidth
             return CGSize(width: w.rounded(.up), height: labelPillHeight.rounded(.up))
         }
         let digits = max(1, String(Int(rawDistance.rounded())).count)
         let chars = CGFloat(digits + 4) // space + up-to-2-char unit + slack
         // Floored at `labelMinPillWidth`, the same floor the rasterizer draws
         // with, so a one or two digit readout reserves the badge it becomes.
-        let w = max(chars * labelPointSize * 0.62 + 2 * labelPadding, labelMinPillWidth)
+        let w = max(chars * labelPointSize * 0.62 * chipWeightWidening + 2 * labelPadding, labelMinPillWidth)
+            + chipLeadWidth
         return CGSize(width: w.rounded(.up), height: labelPillHeight.rounded(.up))
     }
 
@@ -678,7 +717,7 @@ extension MeasureContent {
     /// pixel for antialiasing. The builder pads the chip reservation by this,
     /// as `renderPadding` does for the legs.
     public var chipRenderPadding: CGFloat {
-        (max(strokeWidth, chipBorderWidth) / 2 + 1).rounded(.up)
+        max((max(strokeWidth, chipBorderWidth) / 2 + 1).rounded(.up), chipShadowSlack)
     }
 
     /// How far drawing can extend past the caliper's point bounding box: half the

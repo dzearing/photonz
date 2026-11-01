@@ -25,7 +25,7 @@ struct MeasureToolInspector: View {
     /// can leave the section out entirely rather than show an empty box.
     static var hasAnySetting: Bool {
         Experiments.shared.measureModesEnabled || Experiments.shared.measureCenterSnapEnabled
-            || Experiments.shared.measureRolesEnabled
+            || Experiments.shared.measureRolesEnabled || Experiments.shared.chipStylesEnabled
     }
 
     var body: some View {
@@ -82,6 +82,9 @@ struct MeasureToolInspector: View {
                         .playtestControl("Show", detail: editorState.measureShowFilter.title)
                 }
             }
+            // What the next measurement's chip looks like: the same Chip,
+            // Color and Marker an arrow's label is set from.
+            MeasureToolChipRows()
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)

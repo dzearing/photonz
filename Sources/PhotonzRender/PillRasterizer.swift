@@ -31,8 +31,8 @@ enum PillRasterizer {
     /// its floor in `AnnotationContent.captionPillSize` instead, which is why
     /// this argument defaults to none.
     static func footprint(for text: String, fontSize: CGFloat, padding: CGFloat,
-                          minWidth: CGFloat = 0) -> CGSize {
-        let size = TextRasterizer.naturalSize(content(text, fontSize: fontSize))
+                          minWidth: CGFloat = 0, weight: TextWeight = .regular) -> CGSize {
+        let size = TextRasterizer.naturalSize(content(text, fontSize: fontSize, weight: weight))
         return CGSize(width: max(size.width + 2 * padding, minWidth),
                       height: size.height + 2 * padding)
     }

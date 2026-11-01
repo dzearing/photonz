@@ -10,7 +10,7 @@ on 2026-10-31 from the prototype in
 | --- | --- |
 | Design system component | `mocks/shared/components/markup.css` + `markup.js` (`window.PZ.markup`) |
 | Specimen page | `mocks/pages/markup.html` (Design system ▸ Markup) |
-| App | `ChipStyle.swift` (`ChipStyle`, `ChipMarker`, `InkPlate` = `plateFor` and `glassFor`, `ChipLook`), `ChipRasterizer`, `ChipStyleTiles` (Chip and Marker rows); `ArrowStyle`, `HandMadeArrow`, `PillRasterizer` (the pill from before styles), `MeasureRasterizer` (measurements: not styled yet) |
+| App | `ChipStyle.swift` (`ChipStyle`, `ChipMarker`, `InkPlate` = `plateFor` and `glassFor`, `ChipLook`), `ChipRasterizer`, `ChipStyleTiles` (Chip and Marker rows); `ArrowStyle`, `HandMadeArrow`, `PillRasterizer` (the pill from before styles), `MeasureRasterizer` + `MeasureChipStyle.swift` (a measurement's readout wears the same chip: `MeasureChipStyleRow` in Appearance, `MeasureToolChipRows` in the Measure tool's settings) |
 
 The design system component and the app follow the same rules below. When one
 changes, the other changes in the same piece of work, and this page with them.
@@ -100,6 +100,18 @@ the canvas and an export agree. Where there is no picture to frost (a style
 tile, the bubble while typing, a chip being dragged) the plate stands in as
 one opaque colour: the tint over the lift of a mid grey
 (`ChipLook.frostStandIn`).
+
+**Measurements wear the same chip** (2026-11-01). The caliper's ink is the
+mark's one colour; a styled readout writes its derived plate, edge and words
+onto the chip's Fill, Edge and Text parts, and a part painted on its row keeps
+its colour until Reset Colors. The line stops on the style's own outline
+(`LabelCapsule`, continuous corners included), Glass frosts the picture behind
+the readout the way it does behind a label, and a measurement saved before
+styles (no `chipStyle`) draws its old pill exactly as before. The Measure
+tool's memory starts with no style, so nobody's next measurement changes look
+until a style is picked; a Color pick on an old pill puts it on Today, the look
+it already wears. Chip Style and Chip Marker are on the right-click menu of an
+arrow and a measurement alike.
 
 ## 4. Chip styles (ten)
 

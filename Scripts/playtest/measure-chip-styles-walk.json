@@ -1,0 +1,269 @@
+{
+ "out": "/tmp/photonz-playtest/measure-chip-styles",
+ "seed": "At Next defaults, no switch changed: a Gap measured on a screenshot shows the same Chip tiles, Color row and Marker row as an arrow's label, in the Measure tool's settings (for the next measurement) and in Appearance once it is picked. Paper and a Warning marker are picked from the measurement's own right-click menu (Chip Style, Chip Marker), and the readout redraws as a light card with a warning icon at its front, its words reading at 4.5:1 or better off the pixels. One undo takes one change back, and the next Gap comes out on Paper. The tiles, swatches and marker buttons are not pressed here: every panel button press under a walk has done nothing since 2026-10-26 (walks-that-fail-in-the-full-sweep-26).",
+ "setup": {
+  "forget": [
+   "measure",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/gap-heading-lines-2x.png",
+   "width": 1400,
+   "height": 1000
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "key",
+   "key": "i"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "measure"
+  },
+  {
+   "do": "waitFor",
+   "condition": "edgeMap",
+   "timeout": 30
+  },
+  {
+   "do": "measureMode",
+   "mode": "gap"
+  },
+  {
+   "do": "move",
+   "at": [
+    400,
+    160
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "click",
+   "at": [
+    400,
+    160
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectMeasures",
+   "count": 1
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Today",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Marker Accent",
+   "in": "Marker",
+   "reads": "Marker, on"
+  },
+  {
+   "do": "describe",
+   "stage": "1-tool-settings",
+   "note": "a Gap measured between two lines of a heading; the Measure tool's settings show Chip, Color and Marker for the next measurement, the tiles drawn in the caliper's blue"
+  },
+  {
+   "do": "panel",
+   "stage": "1-tool-settings"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-tool-settings"
+  },
+  {
+   "do": "selectRow",
+   "row": "Gap 37"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Today",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "describe",
+   "stage": "2-picked",
+   "note": "the Gap picked: Appearance shows the same Chip, Color and Marker rows an arrow's label has, Today lit for the pill it has always worn"
+  },
+  {
+   "do": "panel",
+   "stage": "2-picked"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-picked"
+  },
+  {
+   "do": "rightClick",
+   "choose": "Chip Style > Paper",
+   "on": "Gap 37"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Paper",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "rightClick",
+   "choose": "Chip Marker > Warning",
+   "on": "Gap 37"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Marker Warning",
+   "in": "Marker",
+   "reads": "Marker, on"
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-paper-warning",
+   "note": "THE CLAIM: the readout is a Paper card with a warning icon at its front, its words reading at 4.5:1 or better off the pixels, and the caliper meeting the card's edge"
+  },
+  {
+   "do": "panel",
+   "stage": "3-paper-warning"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-paper-warning"
+  },
+  {
+   "do": "render",
+   "name": "3-paper-warning"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Paper",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Marker Accent",
+   "in": "Marker",
+   "reads": "Marker, on"
+  },
+  {
+   "do": "rightClick",
+   "choose": "Chip Marker > Warning",
+   "on": "Gap 37"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Paper",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Marker Warning",
+   "in": "Marker",
+   "reads": "Marker, on"
+  },
+  {
+   "do": "measureMode",
+   "mode": "gap"
+  },
+  {
+   "do": "move",
+   "at": [
+    300,
+    205
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "click",
+   "at": [
+    300,
+    205
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectMeasures",
+   "count": 2
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "4-next-measurement",
+   "note": "the next Gap comes out on Paper with the Warning marker without touching a control"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-next-measurement"
+  },
+  {
+   "do": "render",
+   "name": "4-next-measurement"
+  }
+ ]
+}
