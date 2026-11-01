@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-11-01T14:53:13.914Z",
+  "updated": "2026-11-01T21:41:40.597Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -270,9 +270,17 @@
     {
       "t": "2026-11-01T14:53:13.913Z",
       "note": "seq 40 -> 50"
+    },
+    {
+      "t": "2026-11-01T21:40:57.022Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T21:41:40.596Z",
+      "note": "back to pending: the loop was paused for a release seconds after this task started; nothing of it was written yet"
     }
   ],
-  "started": "2026-11-01T10:11:31.196Z",
+  "started": "2026-11-01T21:40:57.021Z",
   "walks": [
     "brush-epic-try-path-walk"
   ]
