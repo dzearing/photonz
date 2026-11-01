@@ -22359,3 +22359,10 @@ the ghost, and pinching in seemed to stop short.
 - Walk harness: `rightClick` takes `"on": "grip:<grip name>"`; `expectGrips` takes `dots`. Walks `reset-each-transform-mode-walk`, `transform-resets-from-the-menu-walk`; audit `queue/audits/2026-11-01-transform-resets.json`.
 - Perf: no change to the composite path.
 - Next: the selection rework's four slices are in; whatever the queue holds next.
+
+## 2026-11-01 — Release v0.22.0
+
+- Shipped v0.22.0 (tag on `6a4a3120`): the reworked selection (Size, Skew & distort and 3D on one chip, the same grips in every mode, proportions kept by default, the rotate knob with an arrow, perspective beside the 3D grips, a reset per mode); ten chip styles and ten arrow styles with one colour and a plate that always reads, markers, and the same chips on every measurement; Ask changes what it just made and fits big documents; brushes on paths; transitions on any two touching clips, picked at the cut; copy lands on the clipboard at once; alignment guides re-measure while dragged; updates offered only once downloadable.
+- The first Release run failed on `CoresReadyTests.eachMoveHoldsItLonger` (a 0.15 s hold lapsed when a 20 ms sleep ran long on a slow runner). The tag was deleted before anything published, the test's hold widened to 1 s (`6a4a3120`), the suite run green in a clean worktree at that commit (the go loop's runner had uncommitted oil edits in the main tree, which broke a fingerprint test there), and the tag re-pushed.
+- Also seen in preflight, passing alone and on rerun: the Aurora title background differed between playback and export once under full-suite load; filed as `a-moving-aurora-title-background-draws-the-same`.
+- Release workflow green with `Photonz.dmg`; latest download answers 200; Deploy site announced 0.22.0 and the live `version.json` reports it. The loop was paused for the preflight and restarted after tagging.
