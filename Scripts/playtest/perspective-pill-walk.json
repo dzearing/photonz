@@ -1,0 +1,253 @@
+{
+ "out": "/tmp/photonz-playtest/perspective-pill-walk",
+ "seed": "The rest of 3D on the selection at Next defaults with no flag changed (the user's approved prototype selection-transform.html, 2026-11-01). A busy screenshot with a drop shadow is picked and switched to 3D on the chip: a pill beside the chip shows the camera's perspective, 45° at first. Dragged sideways it scrubs it with dashed lines from the card's corners to where its receding edges meet; Option on an edge pill does the same at a slower rate. A click on the pill opens None, Subtle, Normal, Strong and a slider; the tool bar's Info popover offers the same, saying they change every 3D layer. (Their buttons are not pressed here: a walk's press on a SwiftUI button over the canvas does nothing today, task a-walk-s-press-on-a-picture-tile-swatch-or-colou.) The depth grip pulled up brings the card forward and its shadow falls further off and softer; pushed down, back, the shadow tightens.",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1400,
+   "height": 1000
+  },
+  {
+   "do": "dropImage",
+   "file": "fixtures/Busy screenshot 800x500.png",
+   "at": [
+    800,
+    600
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "click",
+   "at": [
+    800,
+    600
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Effect",
+   "choose": "Shadow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "grip",
+   "grip": "chip-space"
+  },
+  {
+   "do": "expectGrips",
+   "mode": "space"
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 45
+  },
+  {
+   "do": "grip",
+   "grip": "right",
+   "by": [
+    60,
+    -40
+   ]
+  },
+  {
+   "do": "expectTilt",
+   "atLeast": 1.02
+  },
+  {
+   "do": "describe",
+   "stage": "1-3d",
+   "note": "in 3D the chip has a pill beside it reading 45°, the camera's perspective; the card is tipped and swung"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-pill"
+  },
+  {
+   "do": "grip",
+   "grip": "perspective",
+   "by": [
+    60,
+    0
+   ],
+   "hold": "2-scrubbing"
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 75
+  },
+  {
+   "do": "describe",
+   "stage": "2-scrubbed",
+   "note": "the pill dragged 60 points right scrubbed the perspective from 45° to 75°, dashed lines running from the card's corners to its vanishing point while the button was down"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-scrubbed"
+  },
+  {
+   "do": "grip",
+   "grip": "right",
+   "by": [
+    90,
+    0
+   ],
+   "modifiers": [
+    "option"
+   ],
+   "hold": "3-option-scrubbing"
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 105
+  },
+  {
+   "do": "expectTilt",
+   "atLeast": 1.02
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 75
+  },
+  {
+   "do": "describe",
+   "stage": "3-option",
+   "note": "Option on the right edge pill changed the camera's perspective to 105° rather than tipping the card, and one undo took it back to 75°"
+  },
+  {
+   "do": "grip",
+   "grip": "perspective"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expect",
+   "field": "Perspective Value",
+   "reads": "75°"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-popover"
+  },
+  {
+   "do": "describe",
+   "stage": "4-popover",
+   "note": "a click on the pill opened None, Subtle, Normal, Strong and a slider under it, the header saying Perspective and All 3D layers; nothing is lit, since 75° is no preset"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "shortcut",
+   "key": "f8",
+   "menuItem": "Show Transform Values"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Transform Perspective Value",
+   "reads": "75°"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-info-popover"
+  },
+  {
+   "do": "describe",
+   "stage": "6-info",
+   "note": "the tool bar's Info popover carries the same presets and slider under Perspective, All 3D layers, below the space values"
+  },
+  {
+   "do": "shortcut",
+   "key": "f8",
+   "menuItem": "Show Transform Values"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "grip",
+   "grip": "depth",
+   "by": [
+    0,
+    -30
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "7-forward"
+  },
+  {
+   "do": "render",
+   "name": "7-forward-canvas"
+  },
+  {
+   "do": "grip",
+   "grip": "depth",
+   "by": [
+    0,
+    60
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "8-back"
+  },
+  {
+   "do": "render",
+   "name": "8-back-canvas"
+  },
+  {
+   "do": "describe",
+   "stage": "8-depth",
+   "note": "pulled forward the card's shadow falls further off and softer; pushed back it tightens"
+  }
+ ]
+}

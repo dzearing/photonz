@@ -54,6 +54,9 @@ public enum SelectionGrip: Hashable, Sendable {
     case knob
     case depth
     case chip(TransformMode)
+    /// The perspective pill beside the chip, in 3D: the camera's, so it
+    /// changes every 3D layer.
+    case perspective
 
     /// How a walk names it.
     public var name: String {
@@ -62,6 +65,7 @@ public enum SelectionGrip: Hashable, Sendable {
         case .knob: "knob"
         case .depth: "depth"
         case .chip(let mode): "chip-" + mode.rawValue
+        case .perspective: "perspective"
         }
     }
 
@@ -69,6 +73,7 @@ public enum SelectionGrip: Hashable, Sendable {
     public init?(name: String) {
         if name == "knob" { self = .knob; return }
         if name == "depth" { self = .depth; return }
+        if name == "perspective" { self = .perspective; return }
         if name.hasPrefix("chip-"), let mode = TransformMode(rawValue: String(name.dropFirst(5))) {
             self = .chip(mode); return
         }
@@ -114,6 +119,10 @@ public struct SelectionGrips: Hashable, Sendable {
     public static let chipOffset: CGFloat = 16
     /// How far above the card's highest point the chip row stays.
     public static let chipRise: CGFloat = 22
+    /// The perspective pill, in 3D: wide enough for its cone and "120°",
+    /// as tall as the chip's plate, six points right of it.
+    public static let perspectiveSize = CGSize(width: 62, height: 24)
+    public static let perspectiveGap: CGFloat = 6
     /// From the frame's lowest point to the tag, and in 3D past the depth grip.
     public static let tagGap: CGFloat = 12
     public static let tagGapInSpace: CGFloat = 50
@@ -153,6 +162,8 @@ public struct SelectionGrips: Hashable, Sendable {
     public let depth: CGPoint?
     public let depthStem: Segment?
     public let chip: [ChipButton]
+    /// The perspective pill beside the chip, in 3D only.
+    public let perspective: CGRect?
     /// Out from the card's middle through its top edge, unit length.
     public let up: CGPoint
 
@@ -241,6 +252,14 @@ public struct SelectionGrips: Hashable, Sendable {
             stem = nil
             chip = []
         }
+        // In 3D the camera's perspective rides beside the chip, on its row.
+        if mode == .space, let first = chip.first, let last = chip.last {
+            let plate = first.frame.union(last.frame).insetBy(dx: -Self.chipPadding, dy: -Self.chipPadding)
+            perspective = CGRect(x: plate.maxX + Self.perspectiveGap, y: plate.midY - Self.perspectiveSize.height / 2,
+                                 width: Self.perspectiveSize.width, height: Self.perspectiveSize.height)
+        } else {
+            perspective = nil
+        }
 
         if mode == .space {
             let d = CGPoint(x: bottom.x - up.x * Self.depthDistance, y: bottom.y - up.y * Self.depthDistance)
@@ -273,6 +292,7 @@ public struct SelectionGrips: Hashable, Sendable {
         if let plate = chipPlate, plate.contains(p) {
             return chip.min { distance(p, toRect: $0.frame) < distance(p, toRect: $1.frame) }.map { .chip($0.mode) }
         }
+        if let perspective, perspective.contains(p) { return .perspective }
         var best: (grip: SelectionGrip, drawn: CGFloat, middle: CGFloat)?
         func consider(_ grip: SelectionGrip, _ centre: CGPoint, inside: Bool, drawn: CGFloat) {
             guard inside else { return }
@@ -322,6 +342,8 @@ public struct SelectionGrips: Hashable, Sendable {
             centre = depth
         case .chip(let mode): guard let b = chip.first(where: { $0.mode == mode }) else { return 0 }
             centre = CGPoint(x: b.frame.midX, y: b.frame.midY)
+        case .perspective: guard let perspective else { return 0 }
+            centre = CGPoint(x: perspective.midX, y: perspective.midY)
         }
         let reach: CGFloat = 30
         var count = 0
@@ -356,9 +378,10 @@ public struct SelectionGrips: Hashable, Sendable {
         }
         let left = xs.min() ?? 0
         var y = highest - Self.tagAboveGap - size.height
-        // Above the chip row too, if the chip has risen over the card.
-        if let plate = chipPlate, plate.minX < left + size.width, plate.maxY > y {
-            y = min(y, plate.minY - Self.tagAboveGap - size.height)
+        // Above the chip row too, if the chip has risen over the card, and
+        // the perspective pill beside it.
+        for row in [chipPlate, perspective].compactMap({ $0 }) where row.minX < left + size.width && row.maxY > y {
+            y = min(y, row.minY - Self.tagAboveGap - size.height)
         }
         return CGRect(x: clampedX(left), y: max(bounds.minY, y), width: size.width, height: size.height)
     }
@@ -419,11 +442,19 @@ public enum SelectionTag {
     public static func does(_ grip: SelectionGrip, mode: TransformMode) -> String {
         switch grip {
         case .corner: mode == .reshape ? "Distort · ⇧ keystone" : "Resize · ⇧ stretch"
-        case .edge: mode == .space ? "Tip and swing" : mode == .reshape ? "Skew along this edge" : "Stretch"
+        case .edge: mode == .space ? "Tip and swing · ⌥ perspective" : mode == .reshape ? "Skew along this edge" : "Stretch"
         case .knob: mode == .space ? "Turn" : "Turn · double-click for 0°"
         case .depth: "Push back or pull forward"
         case .chip(let picked): picked.title
+        case .perspective: "Perspective · all 3D layers"
         }
+    }
+
+    /// While the camera's perspective is being scrubbed, by the pill or by
+    /// Option on an edge pill.
+    public static func perspective(_ degrees: Double) -> String {
+        let label = PerspectiveControl.label(degrees)
+        return label == "None" ? "No perspective · 3D layers" : "Perspective \(label) · 3D layers"
     }
 
     /// While a drag in Skew & distort is under way: the slant an edge has

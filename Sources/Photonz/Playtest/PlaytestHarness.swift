@@ -3186,6 +3186,17 @@ private final class Run {
             note(number, step.name, try checkTilt(layerName, atLeast: atLeast, flat: flat),
                  state: describe())
 
+        case .expectCamera(let perspective, let within):
+            let editor = try requireEditor()
+            guard let document = editor.document else { throw Failure(description: "no document open") }
+            let have = document.cameraValue(.cameraPerspective, atDocumentTimeMS: editor.documentTimeMS)
+                ?? SceneCamera.defaultPerspective
+            let reads = "the camera's perspective is \(Self.round1(CGFloat(have)))°"
+            guard abs(have - perspective) <= within else {
+                throw Failure(description: reads + ", not \(Self.round1(CGFloat(perspective)))° as claimed")
+            }
+            note(number, step.name, reads + ", as claimed", state: describe())
+
         case .expectFlip(let layerName, let horizontal, let vertical):
             note(number, step.name, try checkFlip(layerName, horizontal: horizontal, vertical: vertical),
                  state: describe())
@@ -3493,7 +3504,7 @@ private final class Run {
             note(number, step.name, "\(name) taken at view \(short(grip)) and dragged "
                 + "\(short(by))\(said)", state: describe())
 
-        case .grip(let grip, let by, let steps, let modifiers, let clicks, let readout):
+        case .grip(let grip, let by, let steps, let modifiers, let clicks, let readout, let hold):
             let canvas = try requireCanvas()
             let window = try requireWindow()
             let flags = eventFlags(modifiers)
@@ -3534,6 +3545,14 @@ private final class Run {
                     await sleep(0.02)
                 }
                 if let readout { said = ", " + (try checkDragReadout(says: readout, absent: false)) }
+                // A picture with the button still down: the only moment the
+                // dashed lines to the vanishing point are on screen.
+                if let hold, let content = window.contentView {
+                    content.layoutSubtreeIfNeeded()
+                    try harnessWork { try snapshot(content, name: hold) }
+                    await screenCapture(window, name: hold)
+                    said += ", held \(hold).png with the tag saying \"\(canvas.gripTagShown ?? "nothing")\""
+                }
                 let end = CGPoint(x: at.x + by.x, y: at.y + by.y)
                 if let event = mouseEvent(.leftMouseUp, at: end, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
             }
@@ -3555,6 +3574,7 @@ private final class Run {
             if grips.knob != nil { every.append(.knob) }
             if grips.depth != nil { every.append(.depth) }
             every += grips.chip.map { .chip($0.mode) }
+            if grips.perspective != nil { every.append(.perspective) }
             var lines: [String] = []
             var shot = 0
             for grip in every {
@@ -7646,6 +7666,9 @@ private final class Run {
                     actionDetail = "deleted \(before - after) of \(picked.count) picked"
                         + (kept.isEmpty ? "" : ", kept locked \(kept.map(\.name).sorted().joined(separator: ", "))")
                 }
+            case .toggleTransformValues:
+                editor.toggleTransformValues()
+                actionDetail = "the transform values are " + (editor.showsTransformBar ? "open" : "closed")
             case .mergeDown:
                 // Merge Down quietly does nothing when its row is dimmed, so
                 // the log says which it was.
@@ -12814,6 +12837,7 @@ private final class Run {
         case .knob: grips.knob
         case .depth: grips.depth
         case .chip(let mode): grips.chip.first { $0.mode == mode }.map { CGPoint(x: $0.frame.midX, y: $0.frame.midY) }
+        case .perspective: grips.perspective.map { CGPoint(x: $0.midX, y: $0.midY) }
         }
     }
 

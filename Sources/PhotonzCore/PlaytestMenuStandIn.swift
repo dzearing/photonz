@@ -85,6 +85,8 @@ public enum PlaytestMenuStandIn {
         Chord(key: "backspace", modifiers: [.option]): .fillWithForeground,
         // Layer ▸ Merge Down, window-scoped like undo.
         Chord(key: "e", modifiers: [.command]): .mergeDown,
+        // Layer ▸ Show Transform Values, the Info popover. Window-scoped like undo.
+        Chord(key: "f8", modifiers: []): .toggleTransformValues,
         // Layer ▸ New Layer, Photoshop's ⇧⌘N since ⌘N became File ▸ New.
         // Window-scoped like undo.
         Chord(key: "n", modifiers: [.command, .shift]): .newLayer,

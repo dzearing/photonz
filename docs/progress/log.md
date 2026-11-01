@@ -22342,3 +22342,11 @@ the ghost, and pinching in seemed to stop short.
 - New walk step `expectReshape`; walks `skew-and-distort-walk`, `keystone-from-the-menu-walk`. Audit `queue/audits/2026-11-01-skew-and-distort.json`.
 - Perf: the composite path is unchanged for layers with no reshape; a reshaped layer costs one CIPerspectiveTransform. The 12 MP / 10 layer interactive edit read 6.2 ms against its 26 ms budget in this run.
 - Next: reset each mode with a dot on a changed mode; the perspective pill.
+
+## 2026-11-01 — Perspective pill and a shadow that grows with depth (slice 3 of the reworked selection)
+
+- In 3D a pill beside the mode chip shows the camera's perspective (`SelectionGrips.perspective`, drawn in `CanvasSelectionGrips`). Sideways drag scrubs it (2 pt a degree), Option on an edge pill scrubs it (3 pt a degree), each one undo step, Escape cancels; dashed lines run from the card's corners to where its receding edges meet (`Space3D.vanishingPoint(ofQuad:)`). A click opens `PerspectivePopover` (None, Subtle, Normal, Strong, slider); the Info popover has the same `PerspectiveControls` under Perspective, All 3D layers. Values and rates: `PerspectiveControl` in PhotonzCore.
+- A layer's drop shadows scale with its depth (`DepthShadow`: doubles every 200 points forward, halves every 200 back, a little lighter forward; inner shadows untouched; no shadow is added). Applied in `DocumentRenderer.castShadows` on both the leaf and group paths. Measured: 6 / 14 / 26 rows of shadow below a card at depth -200 / 0 / +200.
+- Walk harness: `grip` takes `hold` (a picture with the button down) and the `perspective` grip; new `expectCamera`; F8 has a menu stand-in (`toggleTransformValues`). Walk `perspective-pill-walk`, audit `queue/audits/2026-11-01-perspective-pill.json`.
+- Perf: the composite path only gains a scale of the shadow list for a layer already in space. The 12 MP / 10 layer interactive edit read 7.0 ms against its 26 ms budget.
+- Open: walk presses on SwiftUI buttons over the canvas do nothing (presets, sliders, Info), folded into a-walk-s-press-on-a-picture-tile-swatch-or-colou.

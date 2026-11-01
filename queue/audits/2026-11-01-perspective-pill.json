@@ -1,0 +1,31 @@
+{
+  "feature": "Perspective pill and a shadow that grows with depth",
+  "epic": "found-selection",
+  "summary": "In 3D a pill beside the mode chip shows the camera's perspective. Drag it sideways (or Option-drag an edge pill) to change it for every 3D layer, with dashed lines to the vanishing point, or click it for None, Subtle, Normal, Strong and a slider. A layer pulled forward now casts a larger, softer shadow, and one pushed back a tighter one.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A picture with a drop shadow (Effects, +, Shadow), picked with the Select tool. The walk is Scripts/playtest/perspective-pill-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Click the cube on the chip by the turn knob to go to 3D, then drag the right edge pill to tip the card. A pill reading 45° sits beside the chip.", "shot": "2026-11-01-perspective-pill-1-pill-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the 45° pill sideways. Watch the card and the dashed lines from its corners to its vanishing point.", "shot": "2026-11-01-perspective-pill-2-scrubbing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hold Option and drag an edge pill sideways: the perspective changes instead of the tip. Press Command Z once.", "shot": "2026-11-01-perspective-pill-3-option-scrubbing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the pill: pick Strong, then drag the slider. Press Escape to close it.", "shot": "2026-11-01-perspective-pill-4-popover-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press F8 (or the Info button at the end of the tool bar): the same presets and slider sit under Perspective, All 3D layers.", "shot": "2026-11-01-perspective-pill-6-info-popover-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the grip below the card up to pull it forward, then down past where it started to push it back. Compare the shadow.", "shot": "2026-11-01-perspective-pill-shadow-forward-and-back.png" }
+  ],
+  "evaluate": [
+    "Does a sideways drag on the pill feel like the right speed (a degree for every two points), and Option on an edge pill (a degree for every three)?",
+    "Do the dashed lines to the vanishing point help you see what the perspective is doing, or are they noise?",
+    "Is the forward shadow growth strong enough to read as depth (it doubles every 200 points forward), or should it grow faster?",
+    "Should a 3D layer with no shadow of its own gain one when pulled forward? Today only a shadow it already has grows.",
+    "Is the Perspective section in the Info popover in the right place, below Reset, given it changes the camera and not the picked layer?"
+  ],
+  "rough": [
+    "The mock's popover is a dark plate; this one wears the tool bar's glass so it matches the Info popover beside it, following your call on 2026-10-12 that the Info popover wear the tool bar's own material (that call was about the Info popover; say if this one should be dark).",
+    "The mock's popover line 'The camera's, so it changes every 3D layer. Drag the pill sideways to scrub.' is over the chrome budget; its meaning is in the header's 'All 3D layers' and the pill's hover tag 'Perspective · all 3D layers' (UX-PATTERNS §4).",
+    "The app goes further than the mock on the vanishing point: the prototype draws its lines to a made-up spot above the card, and these go to where the card's receding edges really meet, which also comes nearer as the perspective strengthens.",
+    "The app goes further than the mock on the shadow: the prototype's cards keep one fixed shadow at every depth. Measured with a 4 point blur, 8 point drop shadow on a 100 by 60 card: it reaches 6 rows below the card pushed back 200, 14 flat and 26 pulled forward 200 (before this change, 14 at every depth).",
+    "The walk does not press the preset buttons or the sliders in either popover: a walk's press on a SwiftUI button over the canvas does nothing today, a real posted click included (the open task a-walk-s-press-on-a-picture-tile-swatch-or-colou, which now lists this walk). The pill, its scrub, Option on an edge pill, the click that opens the popover and both popovers' values are walked by pointer.",
+    "At strong perspective a card near the camera runs well past the canvas and its outline crosses the tool bar; that is the camera doing what it is told, and not changed here.",
+    "All pictures except the shadow pair were taken with the window behind another app; the shadow pair is the walk's own render of the canvas, cropped at the card's lower right corner."
+  ]
+}

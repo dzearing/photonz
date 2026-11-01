@@ -38,6 +38,8 @@ geometry and hit order: `SelectionGrips` (PhotonzCore).
 | Any mode | double-click the knob | Turn back to 0°. |
 | 3D | drag any edge pill | Tip (up and down) and swing (sideways) at once, whichever edge. ⇧ steps by 15°. |
 | 3D | drag the grip below the card | Up pulls it forward, down pushes it back. |
+| 3D | ⌥ drag any edge pill | Changes the camera's perspective (every 3D layer), a degree for every three points, with dashed lines to the vanishing point. |
+| 3D | drag the perspective pill beside the chip sideways | The same, a degree for every two points. A click opens None, Subtle, Normal, Strong and a slider (`PerspectivePopover.swift`); the Info popover carries the same under Perspective, All 3D layers. |
 | Any mode | ⎋ | Back to Size; the layer keeps its turn and depth. |
 
 Why these keys. The user, 2026-11-01: "I consistently want the aspect ratio

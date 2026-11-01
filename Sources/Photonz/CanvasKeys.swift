@@ -328,6 +328,7 @@ extension CanvasNSView {
                 return
             }
             if cancelReshapeDrag() { return }
+            if cancelPerspectiveScrub() { return }
             if let session = transformDrag {
                 transformDrag = nil
                 // Committing the start transform is a History no-op but resets
@@ -390,6 +391,11 @@ extension CanvasNSView {
             // The transform bar goes first, and only it: the layer stays
             // picked, and the next Escape lets go of it as it always has.
             if onTransformBarEscape() { return }
+            // ...then the perspective popover, the same way.
+            if perspectivePopoverAnchor != nil {
+                onPerspectivePopover(nil)
+                return
+            }
             // 3D grips step back to Size before anything is let go of, the
             // way the prototype's Escape does (`CanvasSelectionGrips`).
             if transformModesOffered, transformMode != .size, drawnSelectionGrips != nil {

@@ -1938,6 +1938,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// dimmed for the whole of a walk. A walk that draws on a layer and merges
     /// it into the Background, then works on the pixels, asks for it here.
     case mergeDown
+    /// Layer ▸ Show Transform Values (F8): the tool bar's Info popover opened
+    /// or closed, called directly, because its row hangs off the window and is
+    /// dimmed for the whole of a walk.
+    case toggleTransformValues
     /// The four arrange rows in the Layer menu: Bring to Front, Bring Forward,
     /// Send Backward, Send to Back. All four are menu chords hanging off the
     /// focused window, so all four are dimmed and empty for the whole of a
@@ -3782,6 +3786,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// a picture, words or a copy; `expectFeet` reads a line's ends. `layer`
     /// names it; left off it is the picked layer.
     case expectFlip(layer: String?, horizontal: Bool, vertical: Bool)
+    /// CLAIMS the camera's perspective (its angle of view, in degrees) at the
+    /// playhead, asked of the document, within `within` degrees: what the
+    /// perspective pill, its popover and the Info popover change.
+    case expectCamera(perspective: Double, within: Double)
     /// CLAIMS how a layer's picture is skewed or distorted, asked of the
     /// document: its four reshaped corners in canvas points before any turn,
     /// top left first, each within `within` points; or, with `corners` nil,
@@ -3826,7 +3834,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// button still down. Grips are named `topLeft` ... `bottomLeft`, `top`
     /// ... `left`, `knob`, `depth`, `chip-size`, `chip-space`.
     case grip(SelectionGrip, by: CGPoint?, steps: Int, modifiers: [PlaytestModifier], clicks: Int,
-              readout: String?)
+              readout: String?, hold: String? = nil)
     /// Rests the pointer on every grip of the picked layer's selection in
     /// turn and claims that it alone lights, that a press there would take it,
     /// and that the tag says what it does; measures each grip's own target in
@@ -4653,7 +4661,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectCamera", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4760,6 +4768,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectTilt: "expectTilt"
         case .expectReshape: "expectReshape"
         case .expectFlip: "expectFlip"
+        case .expectCamera: "expectCamera"
         case .expectCallout: "expectCallout"
         case .expectSizeMeasure: "expectSizeMeasure"
         case .expectSpaceHandles: "expectSpaceHandles"
@@ -5067,7 +5076,7 @@ public enum PlaytestStep: Sendable, Equatable {
             let name = try f.string("grip")
             guard let grip = SelectionGrip(name: name) else {
                 throw f.invalid("grip", "names a grip of the picked layer: topLeft, topRight, bottomRight, "
-                    + "bottomLeft, top, right, bottom, left, knob, depth, chip-size or chip-space")
+                    + "bottomLeft, top, right, bottom, left, knob, depth, chip-size, chip-reshape, chip-space or perspective")
             }
             var by: CGPoint?
             if let raw = fields["by"] {
@@ -5080,7 +5089,8 @@ public enum PlaytestStep: Sendable, Equatable {
             guard (1...2).contains(clicks) else { throw f.invalid("clicks", "is 1 or 2") }
             self = .grip(grip, by: by,
                          steps: max(1, try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps),
-                         modifiers: try f.modifiers(), clicks: clicks, readout: try f.optionalString("readout"))
+                         modifiers: try f.modifiers(), clicks: clicks, readout: try f.optionalString("readout"),
+                         hold: try f.optionalString("hold"))
         case "hoverGrips":
             self = .hoverGrips(name: try f.string("name"), minArea: try f.optionalNumber("minArea"))
         case "expectGrips":
@@ -5990,6 +6000,11 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("atLeast", "a tilt is near edge over far edge, 1 or more, not \(atLeast)")
             }
             self = .expectTilt(layer: try f.optionalString("layer"), atLeast: atLeast, flat: flat)
+        case "expectCamera":
+            guard let perspective = try f.optionalNumber("perspective") else {
+                throw f.invalid("perspective", "is the camera's perspective in degrees the walk claims")
+            }
+            self = .expectCamera(perspective: perspective, within: try f.optionalNumber("within") ?? 0.5)
         case "expectFlip":
             self = .expectFlip(layer: try f.optionalString("layer"),
                                horizontal: try f.optionalFlag("horizontal") ?? false,

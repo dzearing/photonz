@@ -164,6 +164,11 @@ struct EditorCanvasSurface: View {
                    onSpaceTurnCommit: { editorState.commitSpaceTurn(id: $0, $1) },
                    onReshapePreview: { editorState.previewLayerReshape(id: $0, $1) },
                    onReshapeCommit: { editorState.commitLayerReshape(id: $0, $1) },
+                   onPerspectivePreview: { editorState.previewCameraPerspective($0) },
+                   onPerspectiveCommit: { editorState.commitCameraPerspective(from: $0, to: $1) },
+                   onPerspectivePopover: { editorState.placePerspectivePopover($0) },
+                   perspectivePopoverAnchor: editorState.perspectivePopoverAnchor,
+                   perspectivePreview: editorState.cameraPerspectivePreview,
                    onTransformGesture: { gesture in
                        if let gesture {
                            editorState.noteTransformGesture(gesture)
@@ -291,6 +296,9 @@ struct EditorCanvasSurface: View {
             // The transform values, rising out of the tool bar's Info button
             // (`TransformValuesPopover`).
             .overlay(alignment: .topLeading) { TransformValuesPopover() }
+            // The camera's perspective, hung under the pill beside the chip in
+            // 3D (`PerspectivePopover`).
+            .overlay(alignment: .topLeading) { PerspectivePopover() }
             // The exact position and size numbers, hung off the selection
             // itself (`ExactPlacement`). Here rather than on the panel because
             // the anchor is worked out in the canvas view's own coordinates,

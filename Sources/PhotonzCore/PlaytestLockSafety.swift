@@ -135,6 +135,8 @@ public enum PlaytestLockSafety {
         // Added 2026-10-12 by reading: it asks the document how the picked
         // layer is drawn at the playhead, the same kind of read, and no name.
         "expectTilt", "expectReshape",
+        // Added 2026-11-01 by reading: it asks the document for its camera.
+        "expectCamera",
         // Added 2026-10-21 by reading: it asks the document whether a layer
         // wears a flip, and no name.
         "expectFlip",

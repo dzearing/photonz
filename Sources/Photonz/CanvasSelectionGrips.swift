@@ -60,8 +60,15 @@ extension CanvasNSView {
         reshapeGhostLayer.lineDashPattern = [3, 3]
         reshapeGhostLayer.opacity = 0.5
         selectionGripsLayer.addSublayer(reshapeGhostLayer)
+        // The dashed lines to the vanishing point, under every grip.
+        vanishingLinesLayer.fillColor = nil
+        vanishingLinesLayer.lineWidth = 1
+        vanishingLinesLayer.lineDashPattern = [3, 4]
+        vanishingLinesLayer.opacity = 0.55
+        selectionGripsLayer.addSublayer(vanishingLinesLayer)
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
-                      chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer, gripTagLayer] {
+                      chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer,
+                      perspectivePlateLayer, perspectiveIconLayer, gripTagLayer] {
             shape.lineWidth = SelectionGrips.lineWidth
             shape.lineCap = .round
             shape.lineJoin = .round
@@ -88,6 +95,19 @@ extension CanvasNSView {
         chipPickedIconLayer.fillColor = nil
         chipPickedIconLayer.strokeColor = CGColor(gray: 1, alpha: 1)
         chipPickedIconLayer.lineWidth = 1.3
+        // The perspective pill: the chip's white plate, a camera's cone in the
+        // accent and its value in the chip's ink.
+        perspectivePlateLayer.fillColor = CGColor(gray: 1, alpha: 1)
+        perspectivePlateLayer.strokeColor = CGColor(gray: 0, alpha: 0.2)
+        perspectivePlateLayer.lineWidth = 0.5
+        perspectivePlateLayer.shadowColor = CGColor(gray: 0, alpha: 1)
+        perspectivePlateLayer.shadowOpacity = 0.18
+        perspectivePlateLayer.shadowRadius = 3
+        perspectivePlateLayer.shadowOffset = CGSize(width: 0, height: 2)
+        perspectiveIconLayer.lineWidth = 1.4
+        perspectiveTextLayer.alignmentMode = .left
+        perspectiveTextLayer.foregroundColor = GripLook.iconInk
+        perspectivePlateLayer.addSublayer(perspectiveTextLayer)
         gripTagLayer.strokeColor = nil
         gripTagTextLayer.alignmentMode = .center
         gripTagTextLayer.foregroundColor = CGColor(gray: 1, alpha: 1)
@@ -98,9 +118,10 @@ extension CanvasNSView {
                                              "position": NSNull(), "frame": NSNull(), "path": NSNull(),
                                              "hidden": NSNull()]
         gripTagTextLayer.actions = still
+        perspectiveTextLayer.actions = still
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
                       chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer, gripTagLayer,
-                      reshapeGhostLayer] {
+                      reshapeGhostLayer, vanishingLinesLayer, perspectivePlateLayer, perspectiveIconLayer] {
             shape.actions = still
         }
     }
@@ -111,6 +132,15 @@ extension CanvasNSView {
         drawnSelectionGrips = nil
         markHandles([], on: selectionGripsLayer)
         gripTagShown = nil
+        // With nothing picked there is no pill for the popover to hang from.
+        if perspectivePopoverAnchor != nil { askPerspectivePopover(nil) }
+    }
+
+    /// Opens, moves or closes the perspective popover, after the view update
+    /// that asked: the editor's state is never written in the middle of one.
+    func askPerspectivePopover(_ anchor: CGRect?) {
+        let ask = onPerspectivePopover
+        DispatchQueue.main.async { ask(anchor) }
     }
 
     // MARK: Drawing
@@ -222,9 +252,100 @@ extension CanvasNSView {
                 shape.path = nil
             }
         }
+        drawPerspectivePill(grips)
+        drawVanishingLines(grips)
         selectionGripsLayer.isHidden = false
         styleLitGrip()
         refreshGripTag(for: layer)
+    }
+
+    /// The camera's perspective at the playhead, following a scrub or a
+    /// slider in flight.
+    var shownPerspective: Double {
+        if let live = livePerspective { return live }
+        return document?.cameraValue(.cameraPerspective, atDocumentTimeMS: documentTimeMS)
+            ?? SceneCamera.defaultPerspective
+    }
+
+    /// The perspective in the hand, by a scrub here or the slider in a popover.
+    var livePerspective: Double? {
+        if let scrub = perspectiveScrub, scrub.moved { return scrub.value }
+        return perspectivePreviewFromPopover
+    }
+
+    /// What the editor says about the perspective: the slider's value in
+    /// flight, and whether (and where) the popover is open.
+    func applyPerspective(preview: Double?, popover: CGRect?) {
+        let moved = preview != perspectivePreviewFromPopover
+        perspectivePreviewFromPopover = preview
+        perspectivePopoverAnchor = popover
+        if moved { refreshOverlays() }
+    }
+
+    /// The pill beside the chip in 3D: a cone and the camera's value.
+    private func drawPerspectivePill(_ grips: SelectionGrips) {
+        guard let pill = grips.perspective else {
+            perspectivePlateLayer.isHidden = true
+            perspectiveIconLayer.isHidden = true
+            perspectivePlateLayer.path = nil
+            perspectiveIconLayer.path = nil
+            if perspectivePopoverAnchor != nil { askPerspectivePopover(nil) }
+            return
+        }
+        let accent = NSColor.controlAccentColor.cgColor
+        let radius = pill.height / 2
+        perspectivePlateLayer.path = CGPath(roundedRect: pill, cornerWidth: radius, cornerHeight: radius, transform: nil)
+        perspectivePlateLayer.shadowPath = perspectivePlateLayer.path
+        // The prototype's cone, at 15 points: the eye, and the view opening
+        // out from it.
+        let icon = CGMutablePath()
+        let o = CGPoint(x: pill.minX + 7, y: pill.midY - 7.5)
+        let s: CGFloat = 15 / 16
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: o.x + x * s, y: o.y + y * s) }
+        icon.addEllipse(in: CGRect(x: p(2.6, 8).x - 1.6 * s, y: p(2.6, 8).y - 1.6 * s, width: 3.2 * s, height: 3.2 * s))
+        icon.move(to: p(4, 8)); icon.addLine(to: p(14, 2.5)); icon.addLine(to: p(14, 13.5)); icon.closeSubpath()
+        perspectiveIconLayer.path = icon
+        perspectiveIconLayer.strokeColor = accent
+        perspectiveIconLayer.fillColor = nil
+        let font = NSFont.systemFont(ofSize: 11.5, weight: .medium)
+        let words = PerspectiveControl.label(shownPerspective)
+        let height = (font.ascender - font.descender).rounded(.up)
+        perspectiveTextLayer.string = words
+        perspectiveTextLayer.font = font
+        perspectiveTextLayer.fontSize = font.pointSize
+        perspectiveTextLayer.contentsScale = window?.backingScaleFactor ?? 2
+        perspectiveTextLayer.frame = CGRect(x: pill.minX + 7 + 15 + 5, y: pill.midY - height / 2,
+                                            width: pill.maxX - (pill.minX + 27) - 4, height: height)
+        perspectivePlateLayer.isHidden = false
+        perspectiveIconLayer.isHidden = false
+        // The popover follows its pill: changing the perspective moves the
+        // card the camera sees, and the chip row with it.
+        if let anchor = perspectivePopoverAnchor, anchor != pill { askPerspectivePopover(pill) }
+    }
+
+    /// While the perspective is scrubbed: a dashed line from each corner of
+    /// the card toward where its receding edges meet.
+    private func drawVanishingLines(_ grips: SelectionGrips) {
+        guard let scrub = perspectiveScrub, scrub.moved, scrub.value > 0, let viewport, let document else {
+            vanishingLinesLayer.path = nil
+            return
+        }
+        let middle = viewport.viewPoint(fromDocument: CGPoint(x: document.canvasSize.width / 2,
+                                                             y: document.canvasSize.height / 2))
+        let vp = Space3D.vanishingPoint(ofQuad: grips.quad, fallback: middle)
+        // No further than the window's own size past the card, so a nearly
+        // square-on card does not draw toward a point a mile off.
+        let reach = max(bounds.width, bounds.height) * 1.5
+        let lines = CGMutablePath()
+        for corner in grips.quad {
+            let dx = vp.x - corner.x, dy = vp.y - corner.y, length = hypot(dx, dy)
+            guard length > 1 else { continue }
+            let k = min(1, reach / length)
+            lines.move(to: corner)
+            lines.addLine(to: CGPoint(x: corner.x + dx * k, y: corner.y + dy * k))
+        }
+        vanishingLinesLayer.strokeColor = NSColor.controlAccentColor.cgColor
+        vanishingLinesLayer.path = lines
     }
 
     /// Lights the grip under the resting pointer, or the one in the hand: the
@@ -236,7 +357,7 @@ extension CanvasNSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         switch grip {
-        case nil, .chip?:
+        case nil, .chip?, .perspective?:
             litGripLayer.path = nil
             litGripGlyphLayer.path = nil
         case let grip?:
@@ -263,6 +384,7 @@ extension CanvasNSView {
             // A skew or a distort in the hand: the tag says what it is doing,
             // in the same place, the way the prototype's does.
             if let drag = reshapeDrag, drag.layerID == layer.id { return drag.words }
+            if let scrub = perspectiveScrub, scrub.moved { return SelectionTag.perspective(scrub.value) }
             if let grip = hoveredGrip { return SelectionTag.does(grip, mode: shown.grips.mode) }
             let size = selectedLayerFrame.flatMap { frame in
                 document?.parentSpaceFrame(layer.withSlack(frame), of: layer.id)?.size
@@ -324,6 +446,9 @@ extension CanvasNSView {
             guard let b = grips.chip.first(where: { $0.mode == mode })?.frame else { return CGMutablePath() }
             return CGPath(roundedRect: b, cornerWidth: GripLook.chipButtonRadius,
                           cornerHeight: GripLook.chipButtonRadius, transform: nil)
+        case .perspective:
+            guard let pill = grips.perspective else { return CGMutablePath() }
+            return CGPath(roundedRect: pill, cornerWidth: pill.height / 2, cornerHeight: pill.height / 2, transform: nil)
         }
     }
 
@@ -412,6 +537,8 @@ extension CanvasNSView {
         case .knob: return (.rotate, apparentTransform(of: layer))
         case .depth: return (.grab, .identity)
         case .chip: return nil
+        // Sideways scrubs it; a click opens its popover.
+        case .perspective: return (.resize(.right), .identity)
         }
     }
 
@@ -441,7 +568,7 @@ extension CanvasNSView {
             case .edge(let h): shown.grips.edges.first { $0.handle == h }?.center
             case .knob: shown.grips.knob
             case .depth: shown.grips.depth
-            case .chip: nil
+            case .chip, .perspective: nil
             }
         }()
         guard let centre else { return nil }
@@ -458,6 +585,13 @@ extension CanvasNSView {
         switch grip {
         case .chip(let mode):
             setTransformMode(mode)
+            return true
+        case .perspective:
+            beginPerspectiveScrub(at: viewPoint, fromEdge: false)
+            return true
+        case .edge where shown.grips.mode == .space && event.modifierFlags.contains(.option):
+            // Option on an edge pill: the camera's perspective, not the tip.
+            beginPerspectiveScrub(at: viewPoint, fromEdge: true)
             return true
         case .knob:
             // A double press turns it back upright, one undo step.
@@ -637,6 +771,74 @@ extension CanvasNSView {
         reshapeDrag = nil
         heldGrip = nil
         if drag.moved { onReshapeCommit(drag.layerID, drag.start) }
+        refreshGrabCursor()
+        refreshOverlays()
+        return true
+    }
+}
+
+// MARK: - The camera's perspective in the hand
+
+extension CanvasNSView {
+
+    /// A press on the perspective pill, or Option on an edge pill in 3D.
+    func beginPerspectiveScrub(at viewPoint: CGPoint, fromEdge: Bool) {
+        let start = shownPerspective
+        perspectiveScrub = PerspectiveScrub(start: start, press: viewPoint, value: start, moved: false,
+                                            fromEdge: fromEdge)
+        heldGrip = fromEdge ? selectionGripHit(atView: viewPoint) : .perspective
+        if fromEdge { applyGrabCursor(.closedHand) }
+        refreshOverlays()
+    }
+
+    /// The hand moving with the perspective held: sideways scrubs it, every
+    /// 3D layer following, with dashed lines to the vanishing point.
+    func perspectiveMouseDragged(atView viewPoint: CGPoint) -> Bool {
+        guard var scrub = perspectiveScrub else { return false }
+        let delta = CGPoint(x: viewPoint.x - scrub.press.x, y: viewPoint.y - scrub.press.y)
+        if !scrub.moved, PerspectiveControl.isScrub(delta) || (scrub.fromEdge && hypot(delta.x, delta.y) > 2) {
+            scrub.moved = true
+            // The popover makes way for the hand.
+            if perspectivePopoverAnchor != nil { onPerspectivePopover(nil) }
+        }
+        guard scrub.moved else { return true }
+        let value = PerspectiveControl.scrubbed(
+            from: scrub.start, by: delta.x,
+            pointsPerDegree: scrub.fromEdge ? PerspectiveControl.edgeRate : PerspectiveControl.pillRate)
+        perspectiveScrub = scrub
+        if value != scrub.value {
+            scrub.value = value
+            perspectiveScrub = scrub
+            onPerspectivePreview(value)
+        }
+        refreshOverlays()
+        return true
+    }
+
+    /// Letting go: one undo step for a scrub; a click that never moved on the
+    /// pill opens its popover, or closes it.
+    func perspectiveMouseUp(event: NSEvent) -> Bool {
+        guard let scrub = perspectiveScrub else { return false }
+        perspectiveScrub = nil
+        heldGrip = nil
+        if scrub.moved {
+            if scrub.value != scrub.start { onPerspectiveCommit(scrub.start, scrub.value) }
+        } else if !scrub.fromEdge {
+            let pill = drawnSelectionGrips?.grips.perspective
+            onPerspectivePopover(perspectivePopoverAnchor == nil ? pill : nil)
+        }
+        refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
+        refreshOverlays()
+        return true
+    }
+
+    /// Escape with the perspective in the hand: it goes back to where the
+    /// scrub started, and nothing is added to the history.
+    func cancelPerspectiveScrub() -> Bool {
+        guard let scrub = perspectiveScrub else { return false }
+        perspectiveScrub = nil
+        heldGrip = nil
+        if scrub.moved { onPerspectiveCommit(scrub.start, scrub.start) }
         refreshGrabCursor()
         refreshOverlays()
         return true

@@ -302,6 +302,15 @@ struct CanvasView: NSViewRepresentable {
     /// Skew & distort in the hand: live while it moves, one undo step on release.
     var onReshapePreview: (UUID, LayerReshape?) -> Void = { _, _ in }
     var onReshapeCommit: (UUID, LayerReshape?) -> Void = { _, _ in }
+    /// The camera's perspective scrubbed from the selection in 3D: live while
+    /// it moves, one undo step on release (from, to). And the perspective
+    /// pill's popover: asked open under the pill (its frame in view points)
+    /// or closed (nil), and whether it is open (`PerspectivePopover`).
+    var onPerspectivePreview: (Double) -> Void = { _ in }
+    var onPerspectiveCommit: (Double, Double) -> Void = { _, _ in }
+    var onPerspectivePopover: (CGRect?) -> Void = { _ in }
+    var perspectivePopoverAnchor: CGRect? = nil
+    var perspectivePreview: Double? = nil
     /// A transform starting on the canvas, or nil when the hand lets go;
     /// Escape asking the transform values to close; and whether they are open
     /// (`EditorState+TransformBar`).
@@ -462,6 +471,7 @@ struct CanvasView: NSViewRepresentable {
                    motionPivot: motionPivot, motionPath: motionPath)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
         view.applyTransformModeRequest(transformModeRequest)
+        view.applyPerspective(preview: perspectivePreview, popover: perspectivePopoverAnchor)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -553,6 +563,9 @@ struct CanvasView: NSViewRepresentable {
         view.onSpaceTurnCommit = onSpaceTurnCommit
         view.onReshapePreview = onReshapePreview
         view.onReshapeCommit = onReshapeCommit
+        view.onPerspectivePreview = onPerspectivePreview
+        view.onPerspectiveCommit = onPerspectiveCommit
+        view.onPerspectivePopover = onPerspectivePopover
         view.onTransformGesture = onTransformGesture
         view.onTransformBarEscape = onTransformBarEscape
         view.isTransformValuesOpen = isTransformValuesOpen
@@ -728,6 +741,24 @@ final class CanvasNSView: NSView {
     var onSpaceTurnCommit: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
     var onReshapePreview: ((UUID, LayerReshape?) -> Void) = { _, _ in }
     var onReshapeCommit: ((UUID, LayerReshape?) -> Void) = { _, _ in }
+    var onPerspectivePreview: ((Double) -> Void) = { _ in }
+    var onPerspectiveCommit: ((Double, Double) -> Void) = { _, _ in }
+    var onPerspectivePopover: ((CGRect?) -> Void) = { _ in }
+    /// Where the perspective popover hangs from while it is open: the pill's
+    /// frame as last reported (nil closed).
+    var perspectivePopoverAnchor: CGRect?
+    /// The perspective the slider in a popover is showing while it is held.
+    var perspectivePreviewFromPopover: Double?
+    /// The camera's perspective in the hand: from the pill (a click that never
+    /// moves opens its popover instead) or from Option on an edge pill.
+    struct PerspectiveScrub {
+        let start: Double
+        let press: CGPoint
+        var value: Double
+        var moved: Bool
+        let fromEdge: Bool
+    }
+    var perspectiveScrub: PerspectiveScrub?
     /// The transform values: a transform starting (nil when the hand lets
     /// go), Escape asking them to close, and whether they are open.
     var onTransformGesture: ((TransformBar.Gesture?) -> Void) = { _ in }
@@ -2013,6 +2044,12 @@ final class CanvasNSView: NSView {
     let chipPickedIconLayer = CAShapeLayer()
     let gripTagLayer = CAShapeLayer()
     let gripTagTextLayer = CATextLayer()
+    /// The perspective pill beside the chip in 3D, and the dashed lines to
+    /// the vanishing point while the perspective is scrubbed.
+    let perspectivePlateLayer = CAShapeLayer()
+    let perspectiveIconLayer = CAShapeLayer()
+    let perspectiveTextLayer = CATextLayer()
+    let vanishingLinesLayer = CAShapeLayer()
     var gripTagShown: String?
     /// The 3D handle the pointer cue last found under the pointer, set while
     /// the cue is read so the arc that lights is the one a press takes.

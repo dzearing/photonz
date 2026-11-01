@@ -1023,7 +1023,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         }
         let silhouette = image
         image = shadowed(image, glows: layer.style.paintedGlows,
-                         shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
+                         shadows: Self.castShadows(of: layer, onDesignedSurface: onDesignedSurface, space: space))
         return glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
                       backdrop: backdrop, radius: layer.style.backgroundBlurRadius,
                       zoom: layer.style.backgroundBlurZoom)
@@ -1704,7 +1704,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         // undrawn: a label on a control is not a caption over a screenshot.
         let silhouette = image
         image = shadowed(image, glows: layer.style.paintedGlows,
-                         shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
+                         shadows: Self.castShadows(of: layer, onDesignedSurface: onDesignedSurface, space: space))
         let finished = glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
                               backdrop: backdrop, radius: layer.style.backgroundBlurRadius,
                               zoom: layer.style.backgroundBlurZoom)
@@ -2993,6 +2993,16 @@ public final class DocumentRenderer: @unchecked Sendable {
         var drawsBackFace: Bool
         /// Blur by distance from the camera's focus, in output pixels.
         var focusBlur: CGFloat
+    }
+
+    /// The shadows a layer casts, from where it sits in depth: one pulled
+    /// toward the viewer is further from the canvas, so its drop shadows fall
+    /// further off and softer; one pushed back casts tighter ones
+    /// (`DepthShadow`). Flat, they are exactly the layer's own.
+    static func castShadows(of layer: Layer, onDesignedSurface: Bool, space: SpacePlacement?) -> [ShadowStyle] {
+        let shadows = layer.drawnShadows(onDesignedSurface: onDesignedSurface)
+        guard let space, !shadows.isEmpty else { return shadows }
+        return DepthShadow.lifted(shadows, depth: Space3D.depth(of: space.box, through: space.turn))
     }
 
     /// Where `layer` is carried into space, or nil where it is drawn flat:

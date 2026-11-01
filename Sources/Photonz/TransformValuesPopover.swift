@@ -114,6 +114,13 @@ struct TransformValuesPopover: View {
                 .disabled(!editorState.canResetTransformBar)
                 .help("Reset size, turn and tilt. Position stays.")
                 .playtestControl("Reset", detail: "Transform values")
+            // The camera's perspective, beside the space values: the same
+            // presets and slider as the pill's popover, saying it changes
+            // every 3D layer (`PerspectivePopover`).
+            if fields.contains(.tiltX) {
+                separator
+                PerspectiveControls(detail: "Transform Perspective")
+            }
         }
         .padding(10)
         .frame(width: Self.width)

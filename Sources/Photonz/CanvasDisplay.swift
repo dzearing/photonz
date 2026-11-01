@@ -1200,6 +1200,11 @@ extension CanvasNSView {
             if let drag = transformDrag, drag.layerID == selectedLayer.id {
                 shown.updateLayer(id: drag.layerID) { $0.transform = drag.transform }
             }
+            // ...and so does the camera's perspective in the hand, which moves
+            // the card the camera sees (`CanvasSelectionGrips`).
+            if let live = livePerspective {
+                shown.setCameraValue(.cameraPerspective, live, atDocumentTimeMS: documentTimeMS)
+            }
             guard shown.isSeenInSpace else { return nil }
             let delta = CGPoint(x: frame.minX - seen.minX, y: frame.minY - seen.minY)
             if delta != .zero {

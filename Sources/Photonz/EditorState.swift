@@ -1081,6 +1081,12 @@ final class EditorState {
     /// switch mode (`EditorState+Reshape.swift`).
     var transformModeRequest: TransformModeRequest?
     var transformModeRequestCount = 0
+    /// The camera's perspective while a scrub or the perspective slider is in
+    /// the hand (nil otherwise), so the pill and the grips follow it; and
+    /// where the perspective popover hangs (the pill's frame, nil closed).
+    /// `PerspectivePopover.swift`.
+    var cameraPerspectivePreview: Double?
+    var perspectivePopoverAnchor: CGRect?
     private var typeInLayerCount = 0
 
     /// Asks the canvas to put the caret in this layer's words.

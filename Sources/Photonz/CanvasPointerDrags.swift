@@ -54,6 +54,12 @@ extension CanvasNSView {
             return
         }
         onCanvasPressed()
+        // A press anywhere but the perspective pill closes its popover: the
+        // pill's own press opens and closes it (`CanvasSelectionGrips`).
+        if perspectivePopoverAnchor != nil,
+           selectionGripHit(atView: convert(event.locationInWindow, from: nil)) != .perspective {
+            onPerspectivePopover(nil)
+        }
         // A fresh press, so whatever Escape called off belongs to the last
         // gesture. Cleared here rather than where the pivot is grabbed, so a
         // release that never arrived cannot leave the canvas swallowing every
@@ -848,6 +854,11 @@ extension CanvasNSView {
         if spaceHandleMouseDragged(atView: convert(event.locationInWindow, from: nil), event: event) {
             return
         }
+        // ...and so does the camera's perspective, from the pill or Option on
+        // an edge pill (`CanvasSelectionGrips`).
+        if perspectiveMouseDragged(atView: convert(event.locationInWindow, from: nil)) {
+            return
+        }
         // ...and so does a skew or a distort (`CanvasSelectionGrips`).
         if reshapeMouseDragged(atView: convert(event.locationInWindow, from: nil), event: event) {
             return
@@ -1355,6 +1366,7 @@ extension CanvasNSView {
             return
         }
         if spaceHandleMouseUp(event: event) { return }
+        if perspectiveMouseUp(event: event) { return }
         if reshapeMouseUp(event: event) { return }
         // The release of a path-point drag, before the Pen, for the same reason
         // its `mouseDragged` is: with the Pen in hand this drag belongs to the

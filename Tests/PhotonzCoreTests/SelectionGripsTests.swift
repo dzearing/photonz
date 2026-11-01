@@ -259,7 +259,7 @@ struct SelectionGripsTests {
         #expect(SelectionTag.does(.corner(.topLeft), mode: .size) == "Resize · ⇧ stretch")
         #expect(SelectionTag.does(.edge(.top), mode: .size) == "Stretch")
         #expect(SelectionTag.does(.knob, mode: .size) == "Turn · double-click for 0°")
-        #expect(SelectionTag.does(.edge(.left), mode: .space) == "Tip and swing")
+        #expect(SelectionTag.does(.edge(.left), mode: .space) == "Tip and swing · ⌥ perspective")
         #expect(SelectionTag.does(.depth, mode: .space) == "Push back or pull forward")
         #expect(SelectionTag.does(.corner(.bottomRight), mode: .space) == "Resize · ⇧ stretch")
         #expect(SelectionTag.does(.chip(.space), mode: .size) == "3D")
@@ -336,9 +336,9 @@ struct SelectionGripStepTests {
           { "do": "grip", "grip": "knob", "clicks": 2 }
         ] }
         """)
-        guard case .grip(let grip, let by, let steps, let modifiers, let clicks, let readout) = script.steps[0],
-              case .grip(let chip, let none, _, _, let one, _) = script.steps[1],
-              case .grip(let knob, _, _, _, let two, _) = script.steps[2] else {
+        guard case .grip(let grip, let by, let steps, let modifiers, let clicks, let readout, _) = script.steps[0],
+              case .grip(let chip, let none, _, _, let one, _, _) = script.steps[1],
+              case .grip(let knob, _, _, _, let two, _, _) = script.steps[2] else {
             Issue.record("grip"); return
         }
         #expect(grip == .corner(.topRight))
