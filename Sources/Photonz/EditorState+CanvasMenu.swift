@@ -56,7 +56,9 @@ extension EditorState {
     /// rather than offering one that does nothing.
     var clipboardHasALayer: Bool {
         let pasteboard = NSPasteboard.general
-        if pasteboard.data(forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)) != nil {
+        // Asked by type, not by reading it: a copy still being made would
+        // otherwise be made here, with the menu waiting (`ClipboardHandOff`).
+        if pasteboard.availableType(from: [NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)]) != nil {
             return true
         }
         return pasteboard.canReadObject(forClasses: [NSImage.self], options: nil)

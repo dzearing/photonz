@@ -1,0 +1,266 @@
+{
+ "out": "/tmp/photonz-playtest/copy-stall-walk",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "/tmp/copy-timing/screenshot-3456x2234.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    300
+   ],
+   "to": [
+    600,
+    500
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0,
+   "onTheClock": true
+  },
+  {
+   "do": "action",
+   "action": "copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyMerged"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyMerged"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyMerged"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "open",
+   "file": "/tmp/copy-timing/photo-12mp.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    300
+   ],
+   "to": [
+    600,
+    500
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0,
+   "onTheClock": true
+  },
+  {
+   "do": "action",
+   "action": "copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyMerged"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyMerged"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyMerged"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "onTheClock": true,
+   "longestUnderMS": 50
+  }
+ ]
+}

@@ -4865,6 +4865,36 @@ private final class Run {
             await sleep(0.4)
             note(number, step.name, "put up the toast for \(newest.url.lastPathComponent)")
 
+        case .action(.copyNewestCapture):
+            guard let newest = coordinator.capture.store.entries.first(where: { $0.kind == .image }) else {
+                throw Failure(description: "history holds no picture to copy; "
+                    + "lend one with \"captures\" in the walk's setup")
+            }
+            let before = NSPasteboard.general.changeCount
+            coordinator.capture.store.copyToPasteboard(newest)
+            note(number, step.name, "copied \(newest.url.lastPathComponent) the way its tile's Copy does; "
+                 + "the clipboard \(NSPasteboard.general.changeCount == before ? "did not move" : "moved")")
+
+        case .action(.captureLands):
+            guard let newest = coordinator.capture.store.entries.first(where: { $0.kind == .image }),
+                  let source = CGImageSourceCreateWithURL(newest.url as CFURL, nil),
+                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+                throw Failure(description: "history holds no picture to land again; "
+                    + "lend one with \"captures\" in the walk's setup")
+            }
+            let store = coordinator.capture.store
+            guard let landed = store.add(image, scale: 2) else {
+                throw Failure(description: "the screenshot did not land in history")
+            }
+            // Written down at once, so a killed walk still takes it back.
+            PlaytestLentCaptures.remember(landed.url)
+            coordinator.capture.onCaptureComplete?(landed)
+            await sleep(1.5)
+            try? FileManager.default.removeItem(at: landed.url)
+            store.reload()
+            note(number, step.name, "landed \(landed.url.lastPathComponent) as a capture does, "
+                 + "then took it away again")
+
         case .action(.beginHeldSave):
             guard let newest = coordinator.lastCapture else {
                 throw Failure(description: "history is empty, so there is nothing to save; "
@@ -8024,7 +8054,7 @@ private final class Run {
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture,
                  .hotkeyCaptureFullScreen, .hotkeyCaptureRegion, .hotkeyRecord,
-                 .hotkeyEditLastCapture, .showCaptureToast, .beginHeldSave, .finishHeldSave,
+                 .hotkeyEditLastCapture, .showCaptureToast, .copyNewestCapture, .captureLands, .beginHeldSave, .finishHeldSave,
                  .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace,
                  .recordingControlDrill, .stopThenOpenDrill:
                 break  // handled above, in the branch that asks for a recording

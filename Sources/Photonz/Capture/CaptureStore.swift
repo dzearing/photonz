@@ -256,6 +256,9 @@ final class CaptureStore {
              layers: WindowCaptureShadow.Built? = nil) -> CaptureEntry? {
         ensureDirectory()
         let url = uniqueURL(prefix: "Screenshot", date: date, ext: "png")
+        // On the clipboard first, so the paste that follows a capture is never
+        // the clipboard from before while the file is written.
+        if copiesNewScreenshots { handOffNewScreenshot(image, at: url) }
         writePNG(image, to: url, scale: scale)
         if let layers {
             do {
@@ -678,31 +681,48 @@ final class CaptureStore {
             return
         }
 
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
+        // Already what the clipboard holds: a new screenshot goes on the
+        // clipboard before its file is written (`add`), and the capture's own
+        // copy afterwards would only put the same picture up a second time.
+        if let handedOff, handedOff.url == entry.url,
+           handedOff.changeCount == NSPasteboard.general.changeCount { return }
 
         // One item carrying every flavor a paste target might want:
         // - the file URL (apps like Claude / Mail / Finder attach the file),
         // - PNG (web/Electron read public.png),
         // - TIFF (native image apps).
         // This is why image-data-only copy failed to paste into Claude.
-        let item = NSPasteboardItem()
-        item.setString(entry.url.absoluteString, forType: .fileURL)
-        if let image = image(for: entry) {
-            if let png = Self.pngData(image) { item.setData(png, forType: .png) }
-            let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-            if let tiff = nsImage.tiffRepresentation { item.setData(tiff, forType: .tiff) }
-        }
-        pasteboard.writeObjects([item])
+        // On the clipboard now; the file is read back and its PNG made in the
+        // background, and a paste that comes first waits (`ClipboardHandOff`).
+        let url = entry.url
+        let picture = ClipboardPicture(making: {
+            guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+            return CGImageSourceCreateImageAtIndex(source, 0, nil)
+        })
+        ClipboardHandOff.write([.string(.fileURL, url.absoluteString), .png(picture), .tiff(picture)])
     }
 
-    private static func pngData(_ image: CGImage) -> Data? {
-        let data = NSMutableData()
-        guard let dest = CGImageDestinationCreateWithData(
-            data as CFMutableData, UTType.png.identifier as CFString, 1, nil) else { return nil }
-        CGImageDestinationAddImage(dest, image, nil)
-        guard CGImageDestinationFinalize(dest) else { return nil }
-        return data as Data
+    /// Whether a new screenshot goes on the clipboard the moment it is taken,
+    /// before its file is written (`add`). The app turns it on; a walk that
+    /// adds captures of its own leaves it off.
+    @ObservationIgnored var copiesNewScreenshots = false
+
+    /// The screenshot `add` put on the clipboard, and the clipboard's count
+    /// when it did, so the capture's own copy right after it is not a second.
+    @ObservationIgnored private var handedOff: (url: URL, changeCount: Int)?
+
+    /// `image` on the clipboard as the screenshot about to be written at
+    /// `url`, before it is. Its file is promised rather than named now: AppKit
+    /// asks for it on this thread, which is busy writing that file until it
+    /// is there, so nobody is handed a path with nothing at it yet.
+    private func handOffNewScreenshot(_ image: CGImage, at url: URL) {
+        let picture = ClipboardPicture(image)
+        ClipboardHandOff.write([
+            .later(.fileURL) { Data(url.absoluteString.utf8) },
+            .png(picture),
+            .tiff(picture),
+        ])
+        handedOff = (url, NSPasteboard.general.changeCount)
     }
 
     /// On-disk media location — used by the overlay's drag-to-export.

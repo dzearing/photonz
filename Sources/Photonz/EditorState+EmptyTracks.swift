@@ -98,7 +98,8 @@ extension EditorState {
     /// Whether the clipboard holds a layer or a picture to paste.
     var canPasteLayerOrPicture: Bool {
         let pasteboard = NSPasteboard.general
-        return pasteboard.data(forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)) != nil
+        // By type, so a copy still being made is not waited for here.
+        return pasteboard.availableType(from: [NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)]) != nil
             || NSImage.canInit(with: pasteboard)
     }
 

@@ -143,31 +143,36 @@ extension EditorState {
     /// The whole picked layer, as a layer.
     private func copyWholeLayer(_ id: UUID) -> Bool {
         guard let layer = document?.layer(id: id) else { return false }
-        var imageData: Data?
-        if case .image(let ref) = layer.content, let cg = store.image(for: ref) {
-            imageData = ImageCodec.encode(cg, format: .png)
+        // A picture layer carries its bitmap as a PNG, made in the background
+        // and waited for by the paste that asks (`ClipboardHandOff`).
+        let picture: ClipboardPicture? = if case .image(let ref) = layer.content,
+                                            let cg = store.image(for: ref) {
+            ClipboardPicture(cg)
+        } else {
+            nil
         }
         // The payload travels in CANVAS coordinates: a button copied out of
         // a screen remembers where it was on the canvas, not where it was
         // inside that screen, so pasting it lands it back over the screen.
         let travelling = document?.detachedLayer(id: id) ?? layer
-        guard let payload = try? JSONEncoder().encode(LayerTransfer(layer: travelling, imageData: imageData)) else { return false }
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
+        var flavors: [ClipboardHandOff.Flavor] = [
+            .later(NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)) {
+                try? JSONEncoder().encode(LayerTransfer(layer: travelling, imageData: picture?.png))
+            },
+        ]
         // A copied measurement also travels as its spec line, so ⌘C then
         // ⌘V in a chat or a doc pastes "- Width: 128 px (size)" instead of
         // nothing. Photonz's own paste still prefers the layer payload.
         if let document, let line = MeasureSpecList.specLine(for: layer, in: document) {
-            pasteboard.setString(line, forType: .string)
+            flavors.append(.string(.string, line))
         }
         // A picked frame is what Export narrows to, so it also travels as the
         // SVG Export writes for it: pick the icon, ⌘C, paste the shapes.
         if layer.isFrame, let frame = document?.frameDocument(id: id),
            let svg = clipboardSVG(of: frame, background: copyBackground) {
-            pasteboard.setString(svg, forType: Self.svgPasteboardType)
+            flavors.append(.string(Self.svgPasteboardType, svg))
         }
-        return true
+        return ClipboardHandOff.write(flavors)
     }
 
     /// What a copy does with the canvas a drawing was made on, as Copy Merged
@@ -197,7 +202,7 @@ extension EditorState {
         // copy" rather than an anonymous scrap.
         return put(Layer(name: layer.name, content: .image(ImageRef(pixelSize: piece.frame.size)),
                          frame: piece.frame),
-                   picture: piece.image)
+                   picture: ClipboardPicture(piece.image))
     }
 
     /// Every layer flattened together inside the marquee — or the whole canvas
@@ -211,8 +216,16 @@ extension EditorState {
         let path = selection?.path ?? CGPath(rect: canvas, transform: nil)
         let frame = path.boundingBoxOfPath.integral.intersection(canvas)
         guard !frame.isNull, frame.width >= 1, frame.height >= 1,
-              let composite = previewRenderer.rasterize(region: canvas, of: document, store: store),
-              let clipped = RegionOps.extracted(composite, path: path) else { return false }
+              let composite = previewRenderer.rasterize(region: canvas, of: document, store: store)
+        else { return false }
+        // Clipped to the marquee off the main thread, with the PNG: on a 12
+        // megapixel picture the clip alone is most of a frame.
+        // The marquee travels as its own Sendable value; with none, the
+        // whole canvas is the path.
+        let marquee = selection
+        let clipped = ClipboardPicture(making: {
+            RegionOps.extracted(composite, path: marquee?.path ?? CGPath(rect: canvas, transform: nil))
+        })
         // The whole canvas, with nothing marqueed, is the whole drawing: it
         // carries its SVG, canvas and all, the same picture the PNG is.
         let svg = selection == nil ? clipboardSVG(of: document, background: .keep) : nil
@@ -224,19 +237,20 @@ extension EditorState {
     /// A copied piece of picture on the pasteboard: the Photonz payload first,
     /// so ⌘V lands it back as a layer over the spot it came from, then PNG and
     /// TIFF so it pastes into other apps as the picture it is.
-    private func put(_ layer: Layer, picture image: CGImage, svg: String? = nil) -> Bool {
-        guard let png = ImageCodec.encode(image, format: .png),
-              let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png))
-        else { return false }
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setData(payload, forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType))
-        pasteboard.setData(png, forType: .png)
-        // TIFF for the long tail of AppKit apps that ask for nothing else.
-        let tiffSource = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-        if let tiff = tiffSource.tiffRepresentation { pasteboard.setData(tiff, forType: .tiff) }
-        if let svg { pasteboard.setString(svg, forType: Self.svgPasteboardType) }
-        return true
+    private func put(_ layer: Layer, picture: ClipboardPicture, svg: String? = nil) -> Bool {
+        // On the clipboard now: the PNG is made in the background, and the
+        // layer, which carries that PNG inside it, is written from it when a
+        // paste asks (`ClipboardHandOff`), Photonz's own ⌘V included.
+        var flavors: [ClipboardHandOff.Flavor] = [
+            .later(NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)) {
+                guard let png = picture.png else { return nil }
+                return try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png))
+            },
+            .png(picture),
+            .tiff(picture),
+        ]
+        if let svg { flavors.append(.string(Self.svgPasteboardType, svg)) }
+        return ClipboardHandOff.write(flavors)
     }
 
     /// Copy from a clip's right-click: the clip, whole, whatever else is

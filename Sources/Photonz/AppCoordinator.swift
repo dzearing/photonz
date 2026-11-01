@@ -132,6 +132,9 @@ final class AppCoordinator {
         capture.onRequestHistory = { [weak self] in self?.showHistory() }
         capture.onEditLastCapture = { [weak self] in self?.editLastCapture() }
         capture.onClearToasts = { [weak self] in self?.toasts.clearAll() }
+        // A screenshot is on the clipboard before its file is written, so a
+        // paste straight after the capture gets it (`ClipboardHandOff`).
+        capture.store.copiesNewScreenshots = true
         capture.onCaptureComplete = { [weak self] entry in
             // Auto-copy so the user can paste immediately (image data for
             // screenshots, the file for recordings).

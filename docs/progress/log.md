@@ -22319,3 +22319,10 @@ the ghost, and pinching in seemed to stop short.
 - Under Advanced each colour row says from Color / from style, or Reset once painted by hand (`PartRowView.origin`). Arrow label parts are named Chip Fill / Edge / Text there. Thickness and Head Size say Overrides Size with a Reset. The pre-styles measurement pill now records parts painted by hand and resets them to the measurement look (`MeasureContent.resetChipPart`); new measurements keep the user's navy pill (not moved to Today, 2026-10-13 ask).
 - Arrow tiles are drawn in the arrow's colour, like the Chip tiles.
 - Walks: `arrow-appearance-simple-walk`, `measure-appearance-simple-walk`; ten older walks open Advanced with one press. Panel presses under a walk do nothing on this Mac since 2026-10-31 ~21:50 (logged on walks-that-fail-in-the-full-sweep-26), so those walks stop at that press until it is fixed.
+
+## 2026-11-01 — Copy is on the clipboard the instant you press it
+
+- Reproduced the user's "paste too fast gets the old clipboard": every copy cleared the clipboard and then made the PNG on the main thread (80 ms screenshot, 350 ms 12 MP photo), so a quick paste got nothing. 100 of 120 early pastes failed.
+- Fix: `ClipboardHandOff` (app) writes one item at once with the picture types promised; `ClipboardPicture` / `PromisedData` (PhotonzRender, tested) make the PNG off the main thread and hand each type to the system clipboard when made. Covers Copy, Copy Merged, Copy Image, layer copies, the History tile, the capture toast and a new screenshot (on the clipboard before its file is written).
+- After: clipboard moves within 0-18 ms, 120/120 early pastes get the new picture, main thread under 11 ms on a 12 MP copy. Tools: `Scripts/clipboard-timing/run.sh timing|race|stall`.
+- Open: hand pasting into Teams/Slack/Mail/Messages/Figma/Preview is for the user (audit 2026-11-01-copy-is-on-the-clipboard-the-instant-you-press-i).

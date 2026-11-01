@@ -1,0 +1,449 @@
+{
+ "out": "/tmp/photonz-playtest/copy-timing-walk",
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "captures": [
+   "/tmp/copy-timing/screenshot-3456x2234.png"
+  ]
+ },
+ "steps": [
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "history-copy0",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyNewestCapture"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "history-copy1",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyNewestCapture"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "capture-lands0",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "captureLands"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "capture-lands1",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "captureLands"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "open",
+   "file": "/tmp/copy-timing/screenshot-3456x2234.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    300
+   ],
+   "to": [
+    600,
+    500
+   ]
+  },
+  {
+   "do": "drag",
+   "from": [
+    700,
+    300
+   ],
+   "to": [
+    900,
+    600
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-cmdC",
+   "note": "mark"
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-shiftCmdC",
+   "note": "mark"
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Copy Merged"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-copyImage",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "open",
+   "file": "/tmp/copy-timing/photo-12mp.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    300
+   ],
+   "to": [
+    600,
+    500
+   ]
+  },
+  {
+   "do": "drag",
+   "from": [
+    700,
+    300
+   ],
+   "to": [
+    900,
+    600
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "photo-cmdC",
+   "note": "mark"
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "photo-shiftCmdC",
+   "note": "mark"
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Copy Merged"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "photo-copyImage",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1240,
+   "height": 900
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    400,
+    300
+   ],
+   "to": [
+    600,
+    500
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    650,
+    300
+   ],
+   "to": [
+    900,
+    550
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "drawing-cmdC",
+   "note": "mark"
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "drawing-shiftCmdC",
+   "note": "mark"
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Copy Merged"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "drawing-copyImage",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 3
+  },
+  {
+   "do": "snapshot",
+   "name": "end"
+  }
+ ]
+}

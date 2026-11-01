@@ -1,0 +1,2364 @@
+{
+ "out": "/tmp/photonz-playtest/copy-paste-race-walk",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "/tmp/copy-timing/screenshot-3456x2234.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    300
+   ],
+   "to": [
+    600,
+    500
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-0",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-1",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-2",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-3",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-4",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-5",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-6",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-7",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-8",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-9",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-10",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-11",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-12",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-13",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-14",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-15",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-16",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-17",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-18",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-19",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-20",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-21",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-22",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-23",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-24",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-25",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-26",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-27",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-28",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-29",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-30",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-31",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-32",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-33",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-34",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-35",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-36",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-37",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-38",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-39",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-40",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-41",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-42",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-43",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-44",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-45",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-46",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-47",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-48",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-49",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-50",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-51",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-52",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-53",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-54",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-55",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-56",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-57",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-58",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "screenshot-59",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "open",
+   "file": "/tmp/copy-timing/photo-12mp.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    300,
+    300
+   ],
+   "to": [
+    600,
+    500
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-0",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-1",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-2",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-3",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-4",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-5",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-6",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-7",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-8",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-9",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-10",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-11",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-12",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-13",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-14",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-15",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-16",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-17",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-18",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-19",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-20",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-21",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-22",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-23",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-24",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-25",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-26",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-27",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-28",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-29",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-30",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-31",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-32",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-33",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-34",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-35",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-36",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-37",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-38",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-39",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-40",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-41",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-42",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-43",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-44",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-45",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-46",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-47",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-48",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-49",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-50",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-51",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-52",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-53",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-54",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-55",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-56",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-57",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-58",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  },
+  {
+   "do": "wait",
+   "seconds": 0.25,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "photo-59",
+   "note": "mark"
+  },
+  {
+   "do": "action",
+   "action": "copyImage"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5,
+   "onTheClock": true
+  }
+ ]
+}

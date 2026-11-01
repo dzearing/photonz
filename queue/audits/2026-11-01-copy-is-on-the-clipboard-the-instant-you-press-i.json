@@ -1,0 +1,30 @@
+{
+  "feature": "Copy is on the clipboard the instant you press it",
+  "epic": "image-editing",
+  "summary": "Copy used to clear the clipboard, then spend 80 ms (a Retina screenshot) to 350 ms (a 12 megapixel photo) making the PNG before filling it again, so a quick paste got an empty clipboard. Now the clipboard changes within a frame of the press, and a paste that comes before the picture is ready waits for it and gets the new picture.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Measured on the probe with a second process watching the clipboard (Scripts/clipboard-timing/run.sh timing, race, stall).",
+  "switched": {},
+  "try": [
+    { "do": "Open a big Retina screenshot, draw an arrow on it, press Esc, then Shift Command C and straight away Command Tab and Command V into Slack or Teams.", "shot": "2026-11-01-copy-on-the-clipboard-at-once-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Do the same with nothing picked and Command C, which copies the whole picture." },
+    { "do": "Take a screenshot with Shift Command 4 and paste it the moment you let go of the drag." },
+    { "do": "Open History, press Copy on a tile, and paste at once into Mail or Messages." },
+    { "do": "Open a large photo, press Command C, and paste into Preview with File, New from Clipboard." },
+    { "do": "Copy a drawing made on a blank canvas and paste it into Figma: it should still arrive as shapes." }
+  ],
+  "evaluate": [
+    "Does a paste straight after a copy ever give you the old clipboard, or nothing?",
+    "Does a paste straight after a screenshot capture land the screenshot every time?",
+    "Do Teams, Slack, Mail, Messages, Figma and Preview each paste what they pasted before?",
+    "Does the window stay smooth while you copy a big photo?"
+  ],
+  "rough": [
+    "Before, from the press to a PNG another app could read (3 runs each): screenshot 3456x2234 with arrows 77 to 106 ms, 12 megapixel photo 260 to 350 ms, drawing 16 to 33 ms, History tile Copy 115 to 118 ms, a screenshot landing 232 to 249 ms. For most of that time the clipboard was EMPTY, because it was cleared before the PNG was made.",
+    "After, from the start of the copy to the clipboard moving: 0 to 18 ms on every path, the same PNG bytes and the same list of types as before on every path.",
+    "Paste race, a second process pasting 10, 50 and 200 ms after the clipboard moved, 20 times each: before, the screenshot got an empty clipboard 40 of 60 times and the photo 60 of 60; after, 120 of 120 got the new picture. A paste that early waits for the PNG (up to 242 ms on the photo) instead of getting nothing.",
+    "Main thread on a 12 megapixel copy: before, one pass of 274 to 353 ms; after, the longest pass is under 11 ms, including handing the finished picture to the system clipboard (18 copies, every one under the 50 ms guard). The one case that still blocks is an app asking for the picture before it is made: Photonz then waits on the main thread until it is (the system asks for it there), which is at most the PNG time.",
+    "Not checked by hand: pasting into Teams, Slack, Mail, Messages, Figma and Preview. The loop has no Accessibility grant to drive other apps, so it checked at the clipboard instead: identical types and identical PNG bytes before and after, an AppKit image read gets the picture, and the TIFF reads at full size.",
+    "The SVG copy added on 2026-10-15 was not the slow part: drawings copied in 16 to 33 ms before. The delay grew with the size of the picture and has been there since Copy Image first landed (phase 6.7), because the PNG was always made on the main thread with the clipboard already cleared.",
+    "A copy is no longer lost if Photonz crashes or is force quit a second later: once the picture is made it is handed to the system clipboard (checked by force killing the probe 1.5 s after a copy, then pasting the 4000x3000 PNG and TIFF)."
+  ]
+}

@@ -4253,25 +4253,18 @@ final class EditorState {
         let specList = carriesSpecList
             ? CompositeCopy.specListText(document: document, name: specListName) : nil
         let svg = clipboardSVG(of: document, background: background)
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        for representation in CompositeCopy.representations(specList: specList, svg: svg) {
-            switch representation {
-            case .png:
-                if let png = ImageCodec.encode(image, format: .png) {
-                    pasteboard.setData(png, forType: .png)
-                }
-            case .tiff:
-                let nsImage = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
-                if let tiff = nsImage.tiffRepresentation {
-                    pasteboard.setData(tiff, forType: .tiff)
-                }
-            case .svg(let svg):
-                pasteboard.setString(svg, forType: Self.svgPasteboardType)
-            case .text(let text):
-                pasteboard.setString(text, forType: .string)
+        // On the clipboard now; the PNG and TIFF are promised and made in the
+        // background, and a paste that comes first waits for them
+        // (`ClipboardHandOff`).
+        let picture = ClipboardPicture(image)
+        ClipboardHandOff.write(CompositeCopy.representations(specList: specList, svg: svg).map {
+            switch $0 {
+            case .png: .png(picture)
+            case .tiff: .tiff(picture)
+            case .svg(let svg): .string(Self.svgPasteboardType, svg)
+            case .text(let text): .string(.string, text)
             }
-        }
+        })
         // The picture is on the clipboard: a guide waiting for the handoff has
         // had it. Before the notice, which only exists with the measurements
         // panel on, so the guide moves on either way.

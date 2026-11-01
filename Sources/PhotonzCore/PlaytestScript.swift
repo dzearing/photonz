@@ -1093,6 +1093,14 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     case hotkeyCaptureFullScreen, hotkeyCaptureRegion, hotkeyRecord, hotkeyEditLastCapture
     /// Put up the toast a capture lands with, for the newest thing in history.
     case showCaptureToast
+    /// The Copy on a History tile and on the capture toast, for the newest
+    /// picture in history: the clipboard it leaves, and how soon.
+    case copyNewestCapture
+    /// The newest picture in history landing again as a brand new screenshot,
+    /// the way a capture lands (written into history, put on the clipboard,
+    /// toasted), then taken away again after a second and a half so the
+    /// person's Screenshots folder keeps nothing of the walk.
+    case captureLands
     /// Start saving the newest recording the way the window's Save does, as
     /// far as the corner can tell: after its quiet window a progress bar is
     /// due. `finishHeldSave` says it saved. Together they are a toast asked for
