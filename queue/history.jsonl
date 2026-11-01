@@ -14876,3 +14876,19 @@
 {"t":"2026-11-01T03:55:12.432Z","ev":"task_note","id":"ask-never-fails-because-a-document-is-too-big-to"}
 {"t":"2026-11-01T03:55:12.504Z","ev":"task_note","id":"ask-never-fails-because-a-document-is-too-big-to"}
 {"t":"2026-11-01T03:55:27.061Z","ev":"task_done","id":"ask-never-fails-because-a-document-is-too-big-to","from":"in_progress","note":"Shipped 3d8efd5d: Ask says a big drawing in short (AskDocumentDigest), fits every request to its window, leaves video tools out on a picture, sends back a part with no point, and turns server errors into one plain sentence; window 65,536 on Macs of 48 GB+ (+2.2 GB measured). Reproduced first (39,719 tokens refused); the Statue request is now 15,012 tokens measured on the model's tokenizer, under half of 32K. Walk ask-changes-a-big-traced-drawing-walk passes at Next defaults ('Made her robe a darker green', one step). Full suite green. Robe targeting on colour-traced drawings folded into making-a-part-of-a-traced-drawing-smaller-shrink. Audit 2026-10-31-ask-never-fails-because-a-document-is-too-big-to."}
+{"t":"2026-11-01T04:10:36.402Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-11-01T04:10:36.437Z","ev":"task_note","id":"a-ramped-clip-s-bar-is-tinted-by-its-speed-bands"}
+{"t":"2026-11-01T04:10:36.473Z","ev":"task_note","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b"}
+{"t":"2026-11-01T04:10:36.508Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-01T04:12:24.259Z","ev":"slice_pass","walks":42,"passed":24,"failed":18,"seconds":876,"of":1066,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-01T04:12:24.435Z","ev":"task_started","id":"every-measurement-wears-the-same-chip-styles-col","title":"Every measurement wears the same chip styles, colour and marker as an arrow label","priority":"p1-high"}
+{"t":"2026-11-01T05:08:33.236Z","ev":"task_walks","id":"every-measurement-wears-the-same-chip-styles-col","walks":["measure-chip-styles-walk"]}
+{"t":"2026-11-01T05:08:33.308Z","ev":"task_note","id":"every-measurement-wears-the-same-chip-styles-col"}
+{"t":"2026-11-01T05:08:33.379Z","ev":"task_note","id":"every-measurement-wears-the-same-chip-styles-col"}
+{"t":"2026-11-01T05:08:33.453Z","ev":"task_note","id":"every-measurement-wears-the-same-chip-styles-col"}
+{"t":"2026-11-01T05:08:33.524Z","ev":"task_note","id":"every-measurement-wears-the-same-chip-styles-col"}
+{"t":"2026-11-01T05:08:33.595Z","ev":"task_note","id":"every-measurement-wears-the-same-chip-styles-col"}
+{"t":"2026-11-01T05:08:33.666Z","ev":"task_note","id":"every-measurement-wears-the-same-chip-styles-col"}
+{"t":"2026-11-01T05:08:33.739Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-01T05:08:33.811Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
+{"t":"2026-11-01T05:09:15.315Z","ev":"task_done","id":"every-measurement-wears-the-same-chip-styles-col","from":"in_progress","note":"A size, gap, distance or alignment readout now wears the ten chip styles, one Color and a marker like an arrow label: Appearance rows on a picked measurement, the Measure tool's settings for the next one, and Chip Style / Chip Marker on its right-click (db5a6031). Older documents draw and save unchanged. Verified: MeasureChipStyleTests + MeasureChipStyleRenderingTests (150 pixel contrast readings, lowest 4.58:1; the line meets the chip edge for every style), Scripts/test.sh green, measure-chip-styles-walk green at Next defaults with 4 real pictures. Audit: queue/audits/2026-11-01-measure-chip-styles.json. Open: pointer presses on the tiles, swatches and Reset Colors can't be walked until the dead panel press is fixed (walks-that-fail-in-the-full-sweep-26), so those are held by unit tests."}

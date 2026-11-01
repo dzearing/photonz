@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:49:05.091Z",
-  "updated": "2026-10-31T16:17:30.642Z",
+  "updated": "2026-11-01T05:09:15.314Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p (user approved the prototype 2026-10-31 and asked to split into p1 user tasks rather than ship a partial look). Model: Sources/PhotonzCore/ChipStyle.swift (ChipStyle, ChipMarker, InkPlate, ChipLook with layout()), drawn by Sources/PhotonzRender/ChipRasterizer.swift. Measurements draw through MeasureRasterizer -> PillRasterizer.draw with MeasureColors / measure.chipColorHex; the caliper meets the pill outline via PillRasterizer.cornerRadius, so a squircle or square style needs the meet point read from the style corner. MeasureContent needs chipStyle/chipMarker like AnnotationContent (nil = old pill). Tiles: Sources/Photonz/ChipStyleTiles.swift. Rules: docs/design/markup.md.",
@@ -29,6 +29,47 @@
     {
       "t": "2026-10-31T16:17:30.641Z",
       "note": "From any-colour-you-pick-for-an-arrow-or-measurement (91a9d770): an arrow now has a Color row (MarkupInkRow: the eight InkPlate.palette swatches + a Custom well) between Chip and Marker, AnnotationContent.setInk for one-colour retints, captionWordContrast + ChipLegibilityWarning (Reset Colors) for hand-painted parts under 4.5:1, and expectChipContrast to read a chip off the pixels. A measurement needs the same row and warning when it wears the chip."
+    },
+    {
+      "t": "2026-11-01T04:12:24.429Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T05:08:33.234Z",
+      "note": "owns these walks: measure-chip-styles-walk"
+    },
+    {
+      "t": "2026-11-01T05:08:33.306Z",
+      "note": "Adversarial review before building: a Premiere/Photoshop redliner expects one look per mark set from one place; the mock (markup.md section 8) puts Chip, Color and Marker on the picked mark AND in the tool's options, which the Measure tool's settings section can hold. Gap measurements land unpicked, so the next one's look must live in the tool settings; with one picked the tool rows hide so only one set of rows is on screen. Nothing the mock assumes is missing."
+    },
+    {
+      "t": "2026-11-01T05:08:33.377Z",
+      "note": "Chose: a new measurement keeps the old pill (shown as Today) until a style is picked, over starting on Solid like arrows, because the measurement look was sampled from the user's own screenshot on 2026-10-13 and changing every next measurement unasked is the bigger surprise. Chose: a Color or Marker pick on an old pill puts it on Today, the look it already wears. Chose: going from the old pill to a style re-derives every part (no part counted as by hand), since the old pill's colours came from the shared memory rather than a pick; undo is one step."
+    },
+    {
+      "t": "2026-11-01T05:08:33.451Z",
+      "note": "Built: MeasureContent.chipStyle/chipMarker/chipPartsByHand (saved only when set, so older documents save and draw unchanged), MeasureChipStyle.swift (applyChipStyle, setInk, by-hand parts, chipWordContrast, legibility note, corner radius, marker room, shadow room), MeasurePlan stops the line on the style's own outline (LabelCapsule.continuous for squircle/glass), MeasureRasterizer draws a styled readout through ChipRasterizer, Glass frosts the picture (DocumentRenderer + frostMask + readsBackdrop), SVG export carries corners and marker room, MeasureStyles remembers style+marker, ChipContrastReader + expectChipContrast read measurements. UI: MeasureChipStyleRow in Appearance, MeasureToolChipRows in the Measure tool settings, Chip Style and Chip Marker submenus on a measurement's right-click (Chip Marker added to arrows too)."
+    },
+    {
+      "t": "2026-11-01T05:08:33.522Z",
+      "note": "Verified: MeasureChipStyleTests (17) and MeasureChipStyleRenderingTests: 150 contrast readings off the pixels (10 styles x 5 inks x white/black/photo), lowest 4.58; the caliper reaches the chip edge and shows nowhere inside it for every style at 3 geometries; Glass frosts. Scripts/test.sh green (exit 0). Walk measure-chip-styles-walk ok at Next defaults with 4 real pictures; caliper-chip-join, measure-chip-snap, gap-reads-line-to-line, glass-chip-frost walks ok. any-colour-chip-reads-walk still fails at step 15, the known dead press. Pictures looked at: 1-tool-settings, 2-picked, 3-paper-warning (Paper card, warning icon, caliper stopping on its edges), join crop, 4-next-measurement (second Gap on Paper with the icon)."
+    },
+    {
+      "t": "2026-11-01T05:08:33.593Z",
+      "note": "Not walk-verified: pressing a Chip tile, Marker button or Color swatch by pointer, and the Reset Colors warning after a hand-painted part. Every panel button press under a walk does nothing since 2026-10-26 (owned by walks-that-fail-in-the-full-sweep-26); the walk picks from the right-click menu instead, and the Color row and warning are held by unit tests. Perf: the composite path only changes for a Glass readout (one extra mask + frost); interactive 12MP/10-layer edit 5.8 ms against 26."
+    },
+    {
+      "t": "2026-11-01T05:08:33.664Z",
+      "note": "left rough: with the Measure tool in hand and a measurement picked, the Measure Tool section stays open above Appearance, pushing the Color/Marker rows below Appearance's fold. Dock height-sharing, not new here; not filed, the Advanced-fold task (arrow-and-measurement-appearance-shows-only-styl) shortens Appearance."
+    },
+    {
+      "t": "2026-11-01T05:09:15.312Z",
+      "note": "A size, gap, distance or alignment readout now wears the ten chip styles, one Color and a marker like an arrow label: Appearance rows on a picked measurement, the Measure tool's settings for the next one, and Chip Style / Chip Marker on its right-click (db5a6031). Older documents draw and save unchanged. Verified: MeasureChipStyleTests + MeasureChipStyleRenderingTests (150 pixel contrast readings, lowest 4.58:1; the line meets the chip edge for every style), Scripts/test.sh green, measure-chip-styles-walk green at Next defaults with 4 real pictures. Audit: queue/audits/2026-11-01-measure-chip-styles.json. Open: pointer presses on the tiles, swatches and Reset Colors can't be walked until the dead panel press is fixed (walks-that-fail-in-the-full-sweep-26), so those are held by unit tests."
     }
-  ]
+  ],
+  "started": "2026-11-01T04:12:24.428Z",
+  "walks": [
+    "measure-chip-styles-walk"
+  ],
+  "completed": "2026-11-01T05:09:15.313Z"
 }
