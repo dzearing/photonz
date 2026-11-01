@@ -15131,3 +15131,14 @@
 {"t":"2026-11-01T22:29:03.371Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T22:29:03.436Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T22:29:03.512Z","ev":"task_blocked","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"One-surface lighting built and measured: try path still looks painted 4 and 5 against the 5 and 6 gate, so it did not ship (patch kept). Card asks whether to close the epic, close it and carry the look as its own task, or keep trying."}
+{"t":"2026-11-01T22:57:36.112Z","ev":"sweep_pass","walks":84,"seconds":1679,"resumed":true,"answered":93,"parts":2,"passed":89,"failed":4,"complete":false,"total":1079,"interrupted":true}
+{"t":"2026-11-01T22:57:36.278Z","ev":"task_started","id":"while-ask-works-the-agent-panel-says-what-it-is","title":"While Ask works, the Agent panel says what it is doing right now","priority":"p1-high"}
+{"t":"2026-11-01T23:12:58.332Z","ev":"task_created","id":"while-ask-writes-a-long-plan-its-line-names-each","priority":"p2-normal","title":"While Ask writes a long plan, its line names each step as it is written"}
+{"t":"2026-11-01T23:13:08.502Z","ev":"task_walks","id":"while-ask-writes-a-long-plan-its-line-names-each","walks":[]}
+{"t":"2026-11-01T23:13:08.581Z","ev":"task_created","id":"find-out-whether-landing-a-component-sheet-holds","priority":"p2-normal","title":"Find out whether landing a component sheet holds the app for half a second"}
+{"t":"2026-11-01T23:20:48.428Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
+{"t":"2026-11-01T23:20:48.498Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
+{"t":"2026-11-01T23:20:48.565Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
+{"t":"2026-11-01T23:20:48.632Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
+{"t":"2026-11-01T23:20:48.700Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
+{"t":"2026-11-01T23:20:56.634Z","ev":"task_done","id":"while-ask-works-the-agent-panel-says-what-it-is","from":"in_progress","note":"Live stage line in the Agent panel (565dd00e) now measured on all five request kinds: fox 192 s / longest 15.0 s, scene 245 s / 12.5 s, edit 109 s / 9.5 s, photo 166 s / 7.8 s, sheet 242-269 s / 18.2-97.2 s; every gap over 8 s is on a stage that shows its time. Fox walk re-filmed (passed): the Agent group stays in view through checking and trying again, and the finished frame shows the made row with no live line (reel-2, sheet-2 in the audit). Across-requests walk given a 10 s settle ceiling after each landing (the rotating check read the panel mid-redraw). Follow-ups: while-ask-writes-a-long-plan-its-line-names-each, find-out-whether-landing-a-component-sheet-holds. test.sh green."}

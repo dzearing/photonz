@@ -1,0 +1,32 @@
+{
+  "id": "while-ask-writes-a-long-plan-its-line-names-each",
+  "title": "While Ask writes a long plan, its line names each step as it is written",
+  "goal": "When Ask writes a big plan in one go (a sheet of components took 97 seconds on one answer), the Agent panel's live line names each part as the model writes it ('Writing the steps: Toggle, 4 so far') instead of sitting on 'Writing the steps' with only a clock, so a person can tell how far along it is.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 105,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T23:12:58.328Z",
+  "updated": "2026-11-01T23:13:08.501Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-11-01 by while-ask-works-the-agent-panel-says-what-it-is. Command: a one-off walk running only 'create a table of apple like quality base components that show different states and text' at Next defaults (copy of the sheet block of Scripts/playtest/ask-says-what-it-is-doing-across-requests-walk.json). Its ask.stages: '88.3s Writing the steps', '185.5s Working out the steps' -> 97.2 s on one line (the line shows its time, 1:37, so the checklist's elapsed-time clause holds, but there is no sense of how far). The rotating check's run of the same request: 18.2 s on 'Writing the steps'.\n\nWhy it cannot say more today: the turn is one non-streamed POST (AskModelServer.chat -> AskLocalModel.send), and llama-server b11826's /slots gives only n_decoded (tokens written), never the text, so the steps are not known until the answer lands. The way in is streaming the chat (stream:true, SSE tool_call deltas from llama-server's OpenAI endpoint) and counting tool calls / reading each call's name or component name as it arrives, feeding AskStage (Sources/PhotonzCore/AskProgress.swift) a new .writing(step:name:) case. Keep the unreadable-reply path in AskSession.plan working.",
+  "acceptance": [
+    "During a component sheet request, the line changes at least every 8 seconds while the model writes its answer, naming the step or part it has reached",
+    "Nothing about the finished result changes: the same requests make the same layers, and a reply the model breaks off part way is still handled as today",
+    "Measured on a component sheet and a fox drawing at Next defaults, with the longest gap recorded in an audit"
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T23:12:58.330Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-01T23:13:08.500Z",
+      "note": "walks ask-says-what-it-is-doing-across-requests-walk -> none"
+    }
+  ],
+  "walks": []
+}

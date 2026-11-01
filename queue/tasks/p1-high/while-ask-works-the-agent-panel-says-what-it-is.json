@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T01:13:10.449Z",
-  "updated": "2026-11-01T14:53:13.987Z",
+  "updated": "2026-11-01T23:20:56.633Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-24: 'when the agent is in progress, I would like more frequent updates in the agents panel about what is happening. For example, if we're researching, or building out instructions, or thinking, etc, I'd like some indication of what's happening for the request.'\n\nToday: Sources/Photonz/Agent/AskViews.swift:193-208, phase .planning/.running shows a ProgressView plus AskCopy.gettingReady while a model loads, otherwise ask.asked (the request words) or AskCopy.workingLine 'Working…'. The pipeline already knows its stages and writes them to its debug log via note(...) in Sources/Photonz/Agent/AskSession.swift (reading the document ~601, asking the model ~624, turn N planned ~646, drawing plans ~483/492, look/check ~432-462, keeping an earlier drawing on retry ~301-305, done ~334) and the picture model path (AskPictureModel.swift: painting, tracing). A user-facing stage value beside note() is the natural seam; keep the words in AskCopy.\n\nNot a contradiction: AgentPanel's comment (AskViews.swift:178) records the user's 2026-10-20 rule that a request's steps are never shown. That is about FINISHED rows listing their steps; this is one live line while it works, gone when done. Keep both.\n\nRelated pending: when-ask-stops-part-way-it-says-so-and-one-refus (what the row says when it stops), and ask-can-make-a-photo-as-well-as-an-illustration (adds a photo stage).",
@@ -99,11 +99,40 @@
     {
       "t": "2026-11-01T14:53:13.986Z",
       "note": "seq 50 -> 60"
+    },
+    {
+      "t": "2026-11-01T22:57:36.272Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T23:20:48.426Z",
+      "note": "Photo and component sheet measured, from the rotating check's run (14:29) and a one-off sheet-only walk: photo 166 s, longest without a new line 7.8 s; sheet 269 s / 18.2 s and 242 s / 97.2 s, both on 'Writing the steps', which shows its time. All five request kinds now measured; every gap over 8 s is on a stage that shows its elapsed time (model loading, reading the request, writing the steps)."
+    },
+    {
+      "t": "2026-11-01T23:20:48.496Z",
+      "note": "Re-filmed the fox walk (ask-says-what-it-is-doing-walk, passed, 192 s, 60 real captures): the Agent group stays in view through Checking, Trying again (it looked like foxes) and the finish; the finished frame shows 'Drew a single fox in a forest at sunset' and no live line. Reading now starts at 3% (the 2 s delay fix filmed). New reel and sheet: queue/audits/2026-11-01-ask-says-what-it-is-doing-reel-2.mp4, -sheet-2.png; I opened the sheet and the shots -6 (finished) and -7 (trying again) and they show the line at every stage and the Agent row at the finish."
+    },
+    {
+      "t": "2026-11-01T23:20:48.563Z",
+      "note": "Rotating check failure of ask-says-what-it-is-doing-across-requests-walk (step 52, Agent Stage still present after the sheet): reproduced the sheet alone; at 0.8 s after settling the panel had not redrawn yet (Layers list and Agent rows blank, longest main-thread hold 466 ms), by 5.8 s the line was gone. So the walk read a panel mid-redraw, not a kept line. Chose a 10 s settle ceiling after each landing (wait ends as soon as the app is quiet, so it costs nothing when it is) over a new harness condition, because the existing wait already measures quiet. The hold itself filed as find-out-whether-landing-a-component-sheet-holds (p2, unconfirmed outside the probe because of walk markers)."
+    },
+    {
+      "t": "2026-11-01T23:20:48.630Z",
+      "note": "Filed while-ask-writes-a-long-plan-its-line-names-each (p2): the 97 s 'Writing the steps' needs a streamed answer to name steps as they come; llama-server's /slots gives only a token count. Left rough, not filed: one frame during a 120-layer landing caught the live line blank for a moment (row kept its height). Not restored: stash f24037c (an edit to docs/design/mocks/pages/selection-transform.html), which is not this task's work; a runner never edits a mock page."
+    },
+    {
+      "t": "2026-11-01T23:20:48.698Z",
+      "note": "Scripts/test.sh green (exit 0: 1331 + 13517 + 111 + 179 + 18 tests). The across-requests walk was not re-run whole (about 14 minutes, over the 10 minute ceiling); its sheet block was run alone and passed, and the rotating check will run the changed script."
+    },
+    {
+      "t": "2026-11-01T23:20:56.631Z",
+      "note": "Live stage line in the Agent panel (565dd00e) now measured on all five request kinds: fox 192 s / longest 15.0 s, scene 245 s / 12.5 s, edit 109 s / 9.5 s, photo 166 s / 7.8 s, sheet 242-269 s / 18.2-97.2 s; every gap over 8 s is on a stage that shows its time. Fox walk re-filmed (passed): the Agent group stays in view through checking and trying again, and the finished frame shows the made row with no live line (reel-2, sheet-2 in the audit). Across-requests walk given a 10 s settle ceiling after each landing (the rotating check read the panel mid-redraw). Follow-ups: while-ask-writes-a-long-plan-its-line-names-each, find-out-whether-landing-a-component-sheet-holds. test.sh green."
     }
   ],
-  "started": "2026-11-01T12:41:45.591Z",
+  "started": "2026-11-01T22:57:36.271Z",
   "walks": [
     "ask-says-what-it-is-doing-walk",
     "ask-says-what-it-is-doing-across-requests-walk"
-  ]
+  ],
+  "completed": "2026-11-01T23:20:56.632Z"
 }

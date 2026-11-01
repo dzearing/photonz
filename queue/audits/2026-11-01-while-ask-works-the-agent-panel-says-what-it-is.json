@@ -21,18 +21,18 @@
       "shot": "2026-11-01-ask-says-what-it-is-doing-3.png"
     },
     {
-      "do": "Watch it say Turning it into layers, then Checking it.",
-      "shot": "2026-11-01-ask-says-what-it-is-doing-4.png"
+      "do": "Watch it say Turning it into layers, then Checking it, and, when the check sees something else, Trying again with why (here: it looked like foxes).",
+      "shot": "2026-11-01-ask-says-what-it-is-doing-7.png"
     },
     {
       "do": "Hover the line to read the whole of a line cut short."
     },
     {
-      "do": "When it lands, check the row says what it made and the live line is gone.",
-      "shot": "2026-11-01-ask-says-what-it-is-doing-5.png"
+      "do": "When it lands, check the Agent group is still in view, the row says what it made and the live line is gone.",
+      "shot": "2026-11-01-ask-says-what-it-is-doing-6.png"
     },
     {
-      "do": "Play the reel 2026-11-01-ask-says-what-it-is-doing-reel.mp4 (the panel through a whole request, a frame every 2.5 s) or open the contact sheet 2026-11-01-ask-says-what-it-is-doing-sheet.png."
+      "do": "Play the reel 2026-11-01-ask-says-what-it-is-doing-reel-2.mp4 (the Agent group through a whole request, a frame every 2.5 s, ending on the finished row) or open the contact sheet 2026-11-01-ask-says-what-it-is-doing-sheet-2.png."
     }
   ],
   "evaluate": [
@@ -43,11 +43,12 @@
   ],
   "rough": [
     "No mock covers a request at work: the Agent group mock (agent-generate-wt.html) shows only finished rows, so this goes further than the mock and removes nothing from it.",
-    "Stages and timings measured on real requests at Next defaults (walks ask-says-what-it-is-doing-walk and ask-says-what-it-is-doing-across-requests-walk): the fox, 144 s, longest without a new line 10.9 s (Getting the model ready, which shows its time); the cat playing a guitar scene, 122 s, longest 7.8 s; make the cat black (an edit to the picked drawing), 136 s, longest 10.2 s (the last stretch of reading the request, which shows its time). Reading moves about every 2.5 s and painting every 3 to 4.7 s.",
-    "The photo and the component sheet were not measured: the walk that runs them stopped itself when you came back to the Mac (it needs the probe in front). Both go through the same reading and writing lines; the photo also gets the painter's percent.",
-    "'Reading your request' is the model taking in everything sent with the request (about 15,000 tokens of instructions, tools and the document). Its percent is against Ask's own estimate of that size, because the model's server never says the whole; it is held under 100% and has finished between 87% and 92% so far.",
-    "An edit to a picked layer reads its whole request twice (once more after it looks at the layers), so its percent climbs to about 90%, starts again at about 76% and climbs again. That is honest but can look like going backwards. The 136 s it took for 'make the cat black' is the model reading a long request with a picture of the canvas in it, not this line.",
-    "When a drawing lands, its layer is picked and its sections pushed the Agent group out of view during the check and any try again (seen in frame 57 of the first reel). The group is now brought back into view once the drawing lands, the same way a finished request already does; that fix is built and tested but has not been filmed yet, because the re-run waits for the Mac to be free.",
-    "Long subjects are cut to fit the panel's 40 character line, keeping the part and percent ('Painting a fox in a forest at\u2026, 44%'); the whole line is on the tooltip and in list_documents."
+    "Five kinds of request measured at Next defaults (time, then the longest the line went without changing): the fox, 192 s, 15.0 s on Getting the model ready, which shows its time; the cat playing a guitar scene, 245 s, 12.5 s on Getting the model ready, shows its time; make the cat black (an edit to the picked drawing), 109 s, 9.5 s on Reading your request, 87%, shows its time; a photo of a dog on a beach, 166 s, 7.8 s; the component sheet, 242 to 269 s, 18.2 s and once 97.2 s on Writing the steps, which shows its time.",
+    "The sheet's 97 seconds on Writing the steps with only a clock is the weak spot: the model writes the whole plan in one answer and the app only learns the steps when it ends. Naming each step as it is written is task while-ask-writes-a-long-plan-its-line-names-each.",
+    "'Reading your request' is the model taking in everything sent with the request (about 15,000 tokens of instructions, tools and the document). Its percent is against Ask's own estimate of that size, because the model's server never says the whole; it is held under 100% and has finished between 87% and 97% so far. It now starts at 3%, no longer at the previous request's count first.",
+    "An edit to a picked layer reads its whole request twice (once more after it looks at the layers), so its percent climbs to about 90%, starts again at about 76% and climbs again. Honest, but can look like going backwards.",
+    "The Agent group now stays in view while a drawing is checked and when it lands (frames 136 s to finished in the new sheet). In one frame, as a 120 layer drawing landed, the line was blank for a moment while the canvas had not drawn yet either; the row kept its height.",
+    "Right after a component sheet lands the probe held for up to 466 ms and the Layers list and Agent rows drew a second late, which is what failed the rotating check's run of the sheet. Whether a person sees it outside the probe is task find-out-whether-landing-a-component-sheet-holds.",
+    "Long subjects are cut to fit the panel's 40 character line, keeping the part and percent ('Painting a fox in a forest at…, 33%'); the whole line is on the tooltip and in list_documents."
   ]
 }

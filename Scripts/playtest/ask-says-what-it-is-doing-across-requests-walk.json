@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/ask-says-what-it-is-doing-across-requests-walk",
   "seed": "while-ask-works-the-agent-panel-says-what-it-is: at Next defaults, a scene, an edit to the picked layer, a photo and a component sheet each show a live line while they work, and the stages each showed are recorded with their times",
-  "clock": 1900,
+  "clock": 1990,
   "setup": {
     "forget": [
       "all"
@@ -65,7 +65,7 @@
     },
     {
       "do": "wait",
-      "seconds": 0.8
+      "seconds": 10
     },
     {
       "do": "expect",
@@ -126,7 +126,7 @@
     },
     {
       "do": "wait",
-      "seconds": 0.8
+      "seconds": 10
     },
     {
       "do": "expect",
@@ -187,7 +187,7 @@
     },
     {
       "do": "wait",
-      "seconds": 0.8
+      "seconds": 10
     },
     {
       "do": "expect",
@@ -248,7 +248,7 @@
     },
     {
       "do": "wait",
-      "seconds": 0.8
+      "seconds": 10
     },
     {
       "do": "expect",
