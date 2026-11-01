@@ -80,7 +80,7 @@
 <main class="stage">
 <section class="screen on" id="selection-transform">
   <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Transform modes</h2><span class="k">· prototype: size, skew, 3D with perspective, distort</span></div>
-  <p class="st-lede">For review, building on <b>Selection · Proposal 03b</b>. The chip by the rotate knob has three choices: <b>Size</b>, <b>3D</b> and <b>Skew &amp; distort</b>. Size only resizes and turns; slanting lives in its own mode. Perspective belongs to the document's one camera, so changing it moves <b>every</b> 3D layer (two cards here to show it). Try them on the card.</p>
+  <p class="st-lede">For review, building on <b>Selection · Proposal 03b</b>. The chip by the rotate knob has three choices, in the order they apply: <b>Size</b>, <b>Skew &amp; distort</b>, then <b>3D</b>. Size only resizes and turns; slanting lives in its own mode. Perspective belongs to the document's one camera, so changing it moves <b>every</b> 3D layer (two cards here to show it). Try them on the card.</p>
 
   <div class="st-wrap">
     <div class="st-stage" id="st-stage"></div>
@@ -241,7 +241,7 @@
     "3d": `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 1.8 13.6 5v6.2L8 14.4 2.4 11.2V5z"/><path d="M2.4 5 8 8.2 13.6 5M8 8.2v6.2"/></svg>`,
     distort: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 4 13 2.5 14 13.5 3.5 12z"/><circle cx="2.5" cy="4" r="1.3" fill="currentColor"/><circle cx="13" cy="2.5" r="1.3" fill="currentColor"/><circle cx="14" cy="13.5" r="1.3" fill="currentColor"/><circle cx="3.5" cy="12" r="1.3" fill="currentColor"/></svg>`,
   };
-  [["size", "Size"], ["3d", "3D"], ["distort", "Skew & distort"]].forEach(([m, t]) => {
+  [["size", "Size"], ["distort", "Skew & distort"], ["3d", "3D"]]   // the order they apply: size, then reshape, then 3D.forEach(([m, t]) => {
     const b = document.createElement("button"); b.dataset.m = m; b.title = t; b.innerHTML = ICON[m];
     b.addEventListener("pointerdown", e => e.stopPropagation());
     b.addEventListener("click", () => setMode(pick, m));
