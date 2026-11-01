@@ -138,7 +138,7 @@
     el.style.width = o.w + "px"; el.style.height = o.h + "px";
     el.innerHTML = o.html;
     stage.appendChild(el);
-    return Object.assign({ el, mode: "size", rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, pins: null }, o);
+    return Object.assign({ el, mode: "size", rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, warp: null }, o);
   }
   const shot = `<div class="st-shot"><div class="st-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
     <h4>Checkout</h4><div class="st-row" style="width:90%"></div><div class="st-row" style="width:70%"></div><div class="st-row" style="width:82%"></div><span class="st-btn">Pay now</span></div>`;
@@ -151,9 +151,13 @@
   // ---------- Corners in every mode ----------
   function rectCorners(L) { return [[L.x, L.y], [L.x + L.w, L.y], [L.x + L.w, L.y + L.h], [L.x, L.y + L.h]]; }
   function corners(L) {
-    if (L.pins) return L.pins;
     const cx = L.x + L.w / 2, cy = L.y + L.h / 2;
-    const local = [[-L.w / 2, -L.h / 2], [L.w / 2, -L.h / 2], [L.w / 2, L.h / 2], [-L.w / 2, L.h / 2]];
+    // Skew and distort reshape the picture itself: a corner's offset, as a
+    // share of width and height, in the layer's own unturned plane. Turn, 3D,
+    // move and resize all act on top of the reshaped picture.
+    const wp = L.warp || [[0, 0], [0, 0], [0, 0], [0, 0]];
+    const local = [[-L.w / 2, -L.h / 2], [L.w / 2, -L.h / 2], [L.w / 2, L.h / 2], [-L.w / 2, L.h / 2]]
+      .map(([x, y], i) => [x + wp[i][0] * L.w, y + wp[i][1] * L.h]);
     const tx = Math.tan(R(L.skx)), ty = Math.tan(R(L.sky));
     const f = cam.fov > 0 ? (stage.clientHeight / 2) / Math.tan(R(cam.fov) / 2) : Infinity;
     return local.map(([x, y]) => {
@@ -236,8 +240,7 @@
     chip.appendChild(b);
   });
   function setMode(L, m) {
-    if (m === "distort" && !L.pins) L.pins = corners(L).map(p => p.slice());
-    if (m !== "distort" && L.pins && m === "size") { /* keep pins: distort stays until Reset */ }
+    if (m === "distort" && !L.warp) L.warp = [[0, 0], [0, 0], [0, 0], [0, 0]];
     L.mode = m; draw();
   }
 
@@ -329,7 +332,7 @@
   function info() {
     const L = pick, rows = [["Layer", L.name], ["Mode", { size: "Size", "3d": "3D", distort: "Skew & distort" }[L.mode]], ["Size", `${Math.round(L.w)} × ${Math.round(L.h)}`], ["Turn", `${Math.round(L.rot)}°`],
       ["Skew", `${Math.round(L.skx)}°, ${Math.round(L.sky)}°`], ["Tip / Swing", `${Math.round(L.rx)}° / ${Math.round(L.ry)}°`], ["Depth", Math.round(L.z)],
-      ["Corners", L.pins ? "pinned" : "from the transform"], ["Perspective", cam.fov ? cam.fov + "° (camera)" : "none"]];
+      ["Reshape", L.warp && L.warp.some(p => p[0] || p[1]) ? "skewed or distorted" : "none"], ["Perspective", cam.fov ? cam.fov + "° (camera)" : "none"]];
     document.getElementById("st-kv").innerHTML = rows.map(([k, v]) => `<span>${k}</span><span>${v}</span>`).join("");
     document.getElementById("st-fov").value = cam.fov;
     document.querySelectorAll("#st-presets button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.f === cam.fov));
@@ -351,7 +354,7 @@
   // ---------- Menu ----------
   document.querySelectorAll(".st-menu button").forEach(b => b.addEventListener("click", () => {
     const L = pick, c = b.dataset.cmd;
-    if (c === "reset") { Object.assign(L, { rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, pins: null, mode: "size" }); }
+    if (c === "reset") { Object.assign(L, { rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, warp: null, mode: "size" }); }
     else if (c === "3d") setMode(L, "3d");
     else if (c === "distort" || c === "keystone") { setMode(L, "distort"); L.keystone = c === "keystone"; }
     else if (c === "skew") { setMode(L, "distort"); L.keystone = false; hint = "Drag an edge pill to skew"; setTimeout(() => { hint = ""; draw(); }, 1800); }
@@ -369,9 +372,9 @@
     const g = e.target.getAttribute && e.target.getAttribute("data-g");
     if (!g) {
       const hitL = layers.slice().reverse().find(L => L.el.contains(e.target));
-      if (hitL) { pick = hitL; drag = { kind: "move", P, x: hitL.x, y: hitL.y, pins: hitL.pins && hitL.pins.map(p => p.slice()) }; }
+      if (hitL) { pick = hitL; drag = { kind: "move", P, x: hitL.x, y: hitL.y }; }
       else return;
-    } else drag = { kind: g, P, L: Object.assign({}, pick, { pins: pick.pins && pick.pins.map(p => p.slice()) }), q: corners(pick).map(p => p.slice()) };
+    } else drag = { kind: g, P, L: Object.assign({}, pick, { warp: pick.warp && pick.warp.map(p => p.slice()) }), q: corners(pick).map(p => p.slice()) };
     try { stage.setPointerCapture(e.pointerId); } catch (_) {}
     document.body.classList.add("st-dragging");
     draw();
@@ -384,26 +387,23 @@
     const snap = v => (e.shiftKey ? Math.round(v / 15) * 15 : v);
     if (drag.kind === "move") {
       L.x = drag.x + dx; L.y = drag.y + dy;
-      if (drag.pins) L.pins = drag.pins.map(p => [p[0] + dx, p[1] + dy]);
     } else if (drag.kind === "knob") {
       const q = drag.q, c = q.reduce((s, p) => [s[0] + p[0] / 4, s[1] + p[1] / 4], [0, 0]);
       const a0 = Math.atan2(drag.P[1] - c[1], drag.P[0] - c[0]), a1 = Math.atan2(P[1] - c[1], P[0] - c[0]);
       const da = (a1 - a0) * 180 / Math.PI;
-      if (L.pins) {                       // a pinned shape turns about its middle
-        const t = R(e.shiftKey ? Math.round(da / 15) * 15 : da), ct = Math.cos(t), st = Math.sin(t);
-        L.pins = drag.L.pins.map(([x, y]) => [c[0] + (x - c[0]) * ct - (y - c[1]) * st, c[1] + (x - c[0]) * st + (y - c[1]) * ct]);
-        hint = `Turn ${Math.round(da)}°`;
-      } else { L.rot = snap(s0.rot + da); hint = `Turn ${Math.round(L.rot)}°`; }
+      L.rot = snap(s0.rot + da); hint = `Turn ${Math.round(L.rot)}°`;   // a reshaped picture turns too
     } else if (drag.kind === "depth") {
       L.z = Math.max(-600, Math.min(300, s0.z - dy * 1.5)); hint = L.z < 0 ? `Back ${Math.round(-L.z)}` : `Forward ${Math.round(L.z)}`;
     } else if (drag.kind[0] === "c") {
       const i = +drag.kind[1];
+      const cr = Math.cos(R(-s0.rot)), sr = Math.sin(R(-s0.rot));
+      const lx = (dx * cr - dy * sr) / s0.w, ly = (dx * sr + dy * cr) / s0.h;
       const keystone = L.mode === "distort" && (e.shiftKey || L.keystone);
       if (L.mode === "distort") {
-        if (!L.pins) L.pins = drag.q.map(p => p.slice());
-        L.pins = drag.q.map(p => p.slice());
-        L.pins[i] = [drag.q[i][0] + dx, drag.q[i][1] + dy];
-        if (keystone) { const j = [1, 0, 3, 2][i]; L.pins[j] = [drag.q[j][0] - dx, drag.q[j][1] + dy]; hint = "Keystone"; }
+        const w0 = s0.warp || [[0, 0], [0, 0], [0, 0], [0, 0]];
+        L.warp = w0.map(p => p.slice());
+        L.warp[i] = [w0[i][0] + lx, w0[i][1] + ly];
+        if (keystone) { const j = [1, 0, 3, 2][i]; L.warp[j] = [w0[j][0] - lx, w0[j][1] + ly]; hint = "Keystone"; }
         else hint = "Distort";
       } else {
         const sx = [-1, 1, 1, -1][i], sy = [-1, -1, 1, 1][i];
@@ -422,12 +422,16 @@
     } else if (drag.kind[0] === "e") {
       const i = +drag.kind[1], horiz = i % 2 === 0;
       if (L.mode === "distort") {
-        // Skew: the edge slides along its own line, so the layer slants.
+        // Skew: the edge slides along its own line in the picture's plane, so
+        // the picture slants; a turn on top keeps working.
         const [a, b] = [[0, 1], [1, 2], [2, 3], [3, 0]][i];
-        const ex = drag.q[b][0] - drag.q[a][0], ey = drag.q[b][1] - drag.q[a][1], el2 = Math.hypot(ex, ey) || 1;
-        const along = (dx * ex + dy * ey) / el2, mx = along * ex / el2, my = along * ey / el2;
-        L.pins = drag.q.map(p => p.slice()); [a, b].forEach(k => { L.pins[k] = [drag.q[k][0] + mx, drag.q[k][1] + my]; });
-        hint = `Skew ${Math.round(Math.atan2(along, (i % 2 ? Math.abs(drag.q[2][0] - drag.q[3][0]) : Math.abs(drag.q[3][1] - drag.q[0][1])) || 1) * 180 / Math.PI)}°`;
+        const cr = Math.cos(R(-s0.rot)), sr = Math.sin(R(-s0.rot));
+        const lx = (dx * cr - dy * sr) / s0.w, ly = (dx * sr + dy * cr) / s0.h;
+        const w0 = s0.warp || [[0, 0], [0, 0], [0, 0], [0, 0]];
+        L.warp = w0.map(p => p.slice());
+        [a, b].forEach(k => { L.warp[k] = horiz ? [w0[k][0] + lx, w0[k][1]] : [w0[k][0], w0[k][1] + ly]; });
+        const deg = horiz ? Math.atan2(lx * s0.w, s0.h) : Math.atan2(ly * s0.h, s0.w);
+        hint = `Skew ${Math.round(deg * 180 / Math.PI)}°`;
       } else if (L.mode === "3d" && e.altKey) {
         cam.fov = Math.max(0, Math.min(120, Math.round(cam.fovStart === undefined ? (cam.fovStart = cam.fov) : cam.fovStart) + Math.round(dx / 3)));
         const q = corners(L), c = q.reduce((s, p) => [s[0] + p[0] / 4, s[1] + p[1] / 4], [0, 0]);
