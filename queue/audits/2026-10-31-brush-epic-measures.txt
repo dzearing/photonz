@@ -44,3 +44,16 @@ Same judge, same prompt, three of Ask's own sketches from the eval (runs 2026103
   after:  looks painted 4 and 5 on all three; reads 7 to 8.
 Try path after (2026-10-31-brush-epic-ask-oil-fray-try-path-sc.png, canvas cropped, selection handles in the crop as before): judge A looks painted 4, reads 8; judge B looks painted 5, reads 8. Reads bar met; looks painted bar (8) NOT met.
 Judges' words after: "repeated, evenly embossed digital strokes", "uniform digital stroke pattern", "stiff trees", "a stray cursor and arrow icon"; square ends and stamped blocks are no longer named.
+
+
+FOURTH PASS, 2026-11-01: WHAT DOES NOT MOVE "LOOKS PAINTED". Same judge, same prompt, Ask's sketch 20261031-082519 painted offline in oil (BrushSketchSheet), median of three looks per judge (A, B):
+  as shipped (232dde11):                              looks painted 4, 5; reads 7, 8 (the other two sketches: 4, 5 and 4, 5)
+  oil relief at 0.4x, side rims at a third:           4, 5; reads 8, 8
+  a canvas weave over the whole picture:              4, 5; reads 7, 8
+  contrast 1.3x and saturation 1.4x:                  4, 5; reads 8, 8
+  weave, contrast and saturation together:            4, 6; reads 8, 8
+  coarse-to-fine painting along the forms (after Hertzmann 1998: four brush sizes, each stroke following the edges' direction until it would paint the wrong colour), in place of rows:
+                                                      4, 5; reads 7, 7 (and 4, 5; 7, 7 on 20261031-084956). Picture: 2026-11-01-brush-epic-tried-coarse-to-fine.png
+  that, with smooth paint bodies (bristle shading and comb at a fifth to a third):
+                                                      5, 5; reads 6, 7
+None of it shipped. Judge A names the same thing in every variant: "uniform embossed stroke texture", "even highlights", "a digital brush engine". Reading: the score is held by how a stroke is lit and textured as a whole, not by how strokes are placed, how strong the relief is, or the colour. One lever is still untried: light the layer's paint as one surface (heights adding up where strokes overlap, lit once), where today each stroke is lit on its own as it lands. That changes the composite path and the raster cache, so it is a renderer change with its own speed budget, not a tweak.

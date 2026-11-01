@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-10-31T13:23:31.168Z",
+  "updated": "2026-11-01T10:11:06.949Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -222,9 +222,25 @@
     {
       "t": "2026-10-31T13:23:31.167Z",
       "note": "seq 90 -> 40"
+    },
+    {
+      "t": "2026-11-01T09:51:40.253Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T10:10:59.902Z",
+      "note": "Fourth pass on item 9 (looks painted 8 from both judges). Measured offline on Ask's own sketch, two judges, three looks each: weaker oil relief 4/5, canvas weave 4/5, contrast+saturation 4/5, all three 4/6, a coarse-to-fine painter along the forms (Hertzmann 1998) in place of rows 4/5 with reads dropping 8 to 7, the same with smooth paint bodies 5/5 with reads 6/7. Nothing moved past noise, so nothing shipped; all code reverted. Numbers and the one picture in 2026-10-31-brush-epic-measures.txt and 2026-11-01-brush-epic-tried-coarse-to-fine.png."
+    },
+    {
+      "t": "2026-11-01T10:10:59.976Z",
+      "note": "NOT DONE, item 9 looks-painted half: still 4 and 5 against 8. Four passes have now measured placement, stroke ends, relief strength, colour, canvas weave and a different painter, and judge A stays at 4 to 5 naming the same 'uniform embossed digital stroke texture'. The one lever not yet tried: light a Paint layer's paint as one surface (heights adding where strokes overlap, lit once per layer) instead of lighting each stroke alone as it lands. That touches the composite path and the raster cache (speed budget: 7.4 ms per move p95, 24 ms landing), so the next pass should plan it as a renderer change with its own perf measures. If the user thinks 8 (the judge prompt's 'could be a photo of a real painted canvas') is the wrong bar for this epic, that is theirs to say; reads as a landscape (8, bar 7) is met."
+    },
+    {
+      "t": "2026-11-01T10:11:06.948Z",
+      "note": "Item 9 still open: five more measured experiments, none moved looks painted past 5 (bar 8); nothing shipped. Next lever named in the log: light a Paint layer as one surface."
     }
   ],
-  "started": "2026-10-31T11:56:49.418Z",
+  "started": "2026-11-01T09:51:40.252Z",
   "walks": [
     "brush-epic-try-path-walk"
   ]
