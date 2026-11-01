@@ -14970,3 +14970,5 @@
 {"t":"2026-11-01T14:14:54.398Z","ev":"task_pending","id":"while-ask-works-the-agent-panel-says-what-it-is","from":"in_progress","note":"Built and pushed (565dd00e); 3 of 5 requests measured. Photo and component sheet measurements, and a re-film of the reveal fix, wait for the Mac to be free; see log."}
 {"t":"2026-11-01T14:15:09.801Z","ev":"leftovers","id":"while-ask-works-the-agent-panel-says-what-it-is","task":"while-ask-works-the-agent-panel-says-what-it-is","state":"stashed","count":1,"stash":"f24037c1607ccdf442b52aeaa69f923f8f980b9d"}
 {"t":"2026-11-01T14:15:11.290Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}
+{"t":"2026-11-01T14:15:44.569Z","ev":"leftovers_cleared","id":"while-ask-works-the-agent-panel-says-what-it-is","task":"while-ask-works-the-agent-panel-says-what-it-is","why":"the intake window's own uncommitted design file, restored and committed"}
+{"t":"2026-11-01T14:17:22.731Z","ev":"task_note","id":"the-reworked-selection-ships-cleaner-grips-a-tag"}

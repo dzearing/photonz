@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-01T12:45:05.877Z",
-  "updated": "2026-11-01T14:15:11.289Z",
+  "updated": "2026-11-01T14:17:22.730Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-01 (intake): 'what happened to the rework on selection ux especially with 3d transforms?' Answer: the mock was reworked with the user on 2026-10-24 (eight lang-selection commits, 07:31 to 15:07) and no build task was filed, so the loop never knew. Folds in on-a-small-picked-object-the-3d-turn-handles-are (filed by the user 2026-10-20, never built, resequenced 13 times). Related, done earlier: the-3d-rotation-handles-are-on-a-picked-layer-ag, tilt-flip-and-push-layers-in-depth-from-the-canv, resize-squares-on-a-layer-turned-in-3d-take-the, every-transform-handle-answers-the-pointer-befor (2026-10-11 to 14). Keep the mock as is; a departure is a decision card with a marked screenshot.",
@@ -64,6 +64,10 @@
     {
       "t": "2026-11-01T14:15:11.288Z",
       "note": "User, 2026-11-01: skew is reserved for its own mode. FINAL modes on the chip by the rotate knob: Size (corners resize keeping proportions, Shift stretches; edge pills stretch one way; knob turns; NO Cmd modifiers), 3D (adds tip and swing on the edge pills, the depth grip, the perspective pill; corners still resize, knob still turns), Skew & distort (edge pill = skew, the edge slides along its own line; corner = distort, moves freely; Shift + corner = keystone, the corner across mirrors it). Layer > Transform > Skew / Distort / Keystone each enter Skew & distort. The Cmd edge / Cmd corner / Cmd-Opt-Shift keys proposed earlier today are dropped. Today's Option-corner skew in the app goes away (Option = from the centre)."
+    },
+    {
+      "t": "2026-11-01T14:17:22.729Z",
+      "note": "User, 2026-11-01, the transform model (FINAL, supersedes earlier notes where they differ): the chip reads in the order the operations apply: Size, Skew & distort, 3D. Skew & distort RESHAPE THE PICTURE ITSELF: stored as each corner's offset in the layer's own unturned plane (as a share of width and height, so a resize carries it). Turn, resize, move and 3D act on top of the reshaped picture. In Size and 3D the grips sit on a flat rectangle round the reshaped picture (its bounding box in its own plane), with a faint dotted outline of the reshape inside, so a skewed picture is handled like a new original; only Skew & distort puts its grips on the reshaped corners. The knob turns in every mode. Prototype: docs/design/mocks/pages/selection-transform.html (Surfaces > Transform modes); verified in WebKit with real drags."
     }
   ]
 }
