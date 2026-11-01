@@ -5,11 +5,11 @@
   "epic": "found-selection",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T16:34:41.499Z",
-  "updated": "2026-11-01T16:35:05.515Z",
+  "updated": "2026-11-01T17:35:59.857Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Slice (2) of the-reworked-selection-ships-cleaner-grips-a-tag (user, 2026-11-01: split in this order). Built so far: SelectionGrips/TransformMode in PhotonzCore (TransformMode.reshape exists but TransformMode.offered leaves it out), CanvasSelectionGrips.swift draws and hits the grips, the chip icon for reshape is already drawn by chipIcon(.reshape). Prototype: docs/design/mocks/pages/selection-transform.html (corners(L, box) for the box vs reshaped corners, the distort/keystone math in the pointermove handler). Renderer: CIPerspectiveTransform, the same path 3D uses; perf note needed (composite path). The old Option-corner skew is already gone at Next defaults (next-transform-modes).",
@@ -28,7 +28,49 @@
     {
       "t": "2026-11-01T16:35:05.514Z",
       "note": "seq 3970 -> 11"
+    },
+    {
+      "t": "2026-11-01T16:57:43.316Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T17:22:52.755Z",
+      "note": "owns these walks: skew-and-distort-walk"
+    },
+    {
+      "t": "2026-11-01T17:23:45.495Z",
+      "note": "walks skew-and-distort-walk -> skew-and-distort-walk, keystone-from-the-menu-walk"
+    },
+    {
+      "t": "2026-11-01T17:35:46.545Z",
+      "note": "Adversarial pass before building: a Photoshop user finds Skew/Distort/Perspective under Edit > Transform and drags handles; here the chip mode and the menu both get there. Risks found: resize in Size on a reshaped picture would jump if it read the layer's own box (fixed: resize the box round the reshape and read the frame back); a pulled-out corner would be unclickable (fixed: clicks read the reshaped picture); flips and 3D must act on top (warp sits before the flat turn in the renderer)."
+    },
+    {
+      "t": "2026-11-01T17:35:46.618Z",
+      "note": "Chose Edit > Transform over a new Layer > Transform for Skew, Distort and Keystone because the app's one Transform submenu already lives in Edit, where Photoshop keeps them; two Transform submenus would split one job."
+    },
+    {
+      "t": "2026-11-01T17:35:46.690Z",
+      "note": "Chose to keep the Size tag on the picture's own size (800 x 500) while the grips sit on the larger box round the reshape, because the prototype's label does the same; asked in the audit's evaluate list."
+    },
+    {
+      "t": "2026-11-01T17:35:46.764Z",
+      "note": "Left rough, no task: SVG export draws a reshaped picture unreshaped (SVG has no four-corner warp); groups, magnifiers, lines, arrows and measurements are not offered the mode. Both in the audit's rough list. 3d-grippers-on-a-picked-layer-walk and every-handle-lights-on-hover-walk fail on a missing 'Transform Tilt Y' panel field, already on walks-that-fail-in-the-full-sweep-26; nothing here touches that panel."
+    },
+    {
+      "t": "2026-11-01T17:35:46.837Z",
+      "note": "Looked at every audit picture: 1-chip (three-button chip, Skew & distort lit), 2-skewed (top edge slid right, sides slanted), 3-distorted (only bottom right moved), 4-keystoned (bottom pair mirrored), 5-size (flat box round the reshape, dotted reshape inside), 8-3d (reshaped, turned picture tipped and swung), menu-keystone (clean trapezoid from a plain corner drag after Edit > Transform > Keystone). All show the goal, not the weak version."
+    },
+    {
+      "t": "2026-11-01T17:35:59.855Z",
+      "note": "Shipped in c2dc5891. The chip reads Size, Skew & distort, 3D. An edge pill skews, a corner distorts, Shift keystones, one undo per drag. The reshape is stored on the layer as corner shares and drawn without touching pixels, and it survives resize, turn and 3D. In Size and 3D the grips sit on the box round the reshape with a dotted outline. Edit > Transform > Skew/Distort/Keystone enter the mode. Verified: 25 new core and render tests plus the full suite green; skew-and-distort-walk and keystone-from-the-menu-walk green at Next defaults with real captures; audit 2026-11-01-skew-and-distort.json."
     }
   ],
-  "source": "user"
+  "source": "user",
+  "started": "2026-11-01T16:57:43.315Z",
+  "walks": [
+    "skew-and-distort-walk",
+    "keystone-from-the-menu-walk"
+  ],
+  "completed": "2026-11-01T17:35:59.856Z"
 }
