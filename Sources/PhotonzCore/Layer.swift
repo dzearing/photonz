@@ -2502,7 +2502,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
             // A hand-made arrow is hit where its ink is: a bowed line, a
             // brush's swell or a sketch's outline body can sit well off the
             // straight line between the ends.
-            if a.shape == .arrow, a.arrowStyle.isHandMade,
+            if a.shape == .arrow, a.arrowStyle.drawsOwnInk,
                HandMadeArrow.ink(of: a, reaches: CGPoint(x: p.x - frame.minX, y: p.y - frame.minY),
                                  within: tolerance - a.strokeWidth / 2) {
                 return true

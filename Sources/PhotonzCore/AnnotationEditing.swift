@@ -188,7 +188,7 @@ extension Layer {
         }
         // A hand-made arrow's ink is its own: a bow, a brush's swell, a
         // sketch's outline body. It is read off the drawing itself.
-        if a.shape == .arrow, a.arrowStyle.isHandMade {
+        if a.shape == .arrow, a.arrowStyle.drawsOwnInk {
             let ink = HandMadeArrow.inkBounds(for: a)
             if !ink.isNull {
                 include(CGPoint(x: frame.minX + ink.minX, y: frame.minY + ink.minY))

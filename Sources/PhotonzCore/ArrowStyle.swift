@@ -11,6 +11,12 @@ import Foundation
 /// point and swells before a swept calligraphic head, and a rough outline
 /// arrow sketched twice over in dry ink.
 ///
+/// Five more came from the prototype the user picked from on 2026-10-31
+/// (`docs/design/markup.md` section 5): a dashed line, a bold block arrow, a
+/// glowing neon line, a line of dots and a right-angle elbow connector. Those
+/// are drawn exactly, with no hand, so the same two ends always give the same
+/// drawing and Reshuffle has nothing to do on them.
+///
 /// A style is how the arrow is PAINTED, never part of the drawing: the arrow
 /// keeps its two ends, its colour, its thickness and its head size whichever
 /// style it wears, so switching back and forth loses nothing
@@ -28,6 +34,17 @@ public enum ArrowStyle: String, CaseIterable, Codable, Hashable, Sendable {
     /// A rough outline arrow, stroked twice over and broken where the ink ran
     /// dry (ref 26).
     case sketch
+    /// A dashed line with a solid head.
+    case dashed
+    /// A bold filled arrow whose shaft widens into a big head.
+    case block
+    /// A glowing line with a bright core and an open head.
+    case neon
+    /// A line of round dots, a bigger dot at the tail, and a chevron head.
+    case dotted
+    /// A right-angle connector with a rounded corner, a dot at the tail and a
+    /// solid head, for diagrams.
+    case elbow
 
     /// What a new arrow is drawn in, and what an arrow saved before styles
     /// existed opens as.
@@ -41,6 +58,11 @@ public enum ArrowStyle: String, CaseIterable, Codable, Hashable, Sendable {
         case .marker: "Marker"
         case .brush: "Brush"
         case .sketch: "Sketch"
+        case .dashed: "Dashed"
+        case .block: "Block"
+        case .neon: "Neon"
+        case .dotted: "Dotted"
+        case .elbow: "Elbow"
         }
     }
 
@@ -50,16 +72,31 @@ public enum ArrowStyle: String, CaseIterable, Codable, Hashable, Sendable {
     /// The command that draws a hand-made arrow again with a new hand.
     public static let reshuffleTitle = "Reshuffle"
 
-    /// Whether the arrow is drawn by hand rather than with a ruler. A hand-made
-    /// arrow draws its OWN head and its own tail, so the clean arrow's choice
-    /// of ending and of line end do not reach it.
-    public var isHandMade: Bool { self != .clean }
+    /// Whether the arrow draws its OWN head and its own tail, from the pieces
+    /// `HandMadeArrow` lays out, rather than the clean line and ending every
+    /// arrow had before styles. True of every style but Clean, so the clean
+    /// arrow's choice of ending and of line end do not reach any of them.
+    public var drawsOwnInk: Bool { self != .clean }
+
+    /// Whether the arrow is drawn by a HAND: a seeded wobble, a loose head, a
+    /// broken line. These are the styles Reshuffle redraws; the exact ones
+    /// (Dashed, Block, Neon, Dotted, Elbow) look the same whatever the seed.
+    public var hasHand: Bool {
+        switch self {
+        case .handDrawn, .marker, .brush, .sketch: true
+        case .clean, .dashed, .block, .neon, .dotted, .elbow: false
+        }
+    }
+
+    /// Whether the line glows (Neon): a soft halo in its own colour round the
+    /// line and head, drawn under them, with a bright core on top.
+    public var glows: Bool { self == .neon }
 }
 
 extension AnnotationContent {
     /// Whether this arrow draws a head at all: every hand-made style does, and
     /// a clean arrow does unless it was told to end in nothing.
     public var drawsArrowhead: Bool {
-        shape == .arrow && (arrowStyle.isHandMade || arrowheadStyle != .plain)
+        shape == .arrow && (arrowStyle.drawsOwnInk || arrowheadStyle != .plain)
     }
 }

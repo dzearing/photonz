@@ -22,16 +22,24 @@ struct ArrowStyleTests {
 
     // MARK: - The set of styles
 
-    @Test func fiveStylesInPickerOrder() {
-        #expect(ArrowStyle.allCases == [.clean, .handDrawn, .marker, .brush, .sketch])
+    @Test func tenStylesInPickerOrder() {
+        #expect(ArrowStyle.allCases == [.clean, .handDrawn, .marker, .brush, .sketch,
+                                        .dashed, .block, .neon, .dotted, .elbow])
+    }
+
+    /// The four drawn from the user's own references have a hand that
+    /// Reshuffle redraws; the five from the prototype are exact.
+    @Test func onlyTheFourHandStylesHaveAHand() {
+        #expect(ArrowStyle.allCases.filter(\.hasHand) == [.handDrawn, .marker, .brush, .sketch])
+        #expect(ArrowStyle.allCases.filter(\.glows) == [.neon])
     }
 
     @Test func cleanIsTheDefaultAndTheOnlyOneNotHandMade() {
         #expect(ArrowStyle.standard == .clean)
         #expect(AnnotationContent(shape: .arrow).arrowStyle == .clean)
-        #expect(!ArrowStyle.clean.isHandMade)
+        #expect(!ArrowStyle.clean.drawsOwnInk)
         for style in ArrowStyle.allCases where style != .clean {
-            #expect(style.isHandMade)
+            #expect(style.drawsOwnInk)
         }
     }
 
@@ -68,6 +76,17 @@ struct ArrowStyleTests {
         #expect(decoded == drawn)
     }
 
+    /// Every style, the five new ones included, is saved and opened as itself.
+    @Test func everyStyleSurvivesARoundTrip() throws {
+        for style in ArrowStyle.allCases {
+            let drawn = arrow(style, seed: 9)
+            let decoded = try JSONDecoder().decode(AnnotationContent.self,
+                                                   from: JSONEncoder().encode(drawn))
+            #expect(decoded.arrowStyle == style)
+            #expect(HandMadeArrow.inks(for: decoded) == HandMadeArrow.inks(for: drawn), "\(style)")
+        }
+    }
+
     // MARK: - What the panel asks about
 
     /// A hand-made style draws its own head and its own tail, so the Ending
@@ -77,7 +96,7 @@ struct ArrowStyleTests {
         let clean = arrow(.clean)
         #expect(clean.settingRows.contains(.headStyle))
         #expect(clean.settingRows.contains(.lineEnds))
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk {
             let rows = arrow(style).settingRows
             #expect(!rows.contains(.headStyle))
             #expect(!rows.contains(.lineEnds))
@@ -105,7 +124,7 @@ struct ArrowStyleTests {
     }
 
     @Test func everyHandMadeStyleDrawsAShaftAndAHead() {
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk {
             let inks = HandMadeArrow.inks(for: arrow(style))
             #expect(inks.contains { $0.part == .shaft }, "\(style) has no shaft")
             #expect(inks.contains { $0.part == .head }, "\(style) has no head")
@@ -115,23 +134,31 @@ struct ArrowStyleTests {
     /// The same arrow is drawn the same way every time: on the canvas, after
     /// reopening, and in an export. Nothing about it wobbles between renders.
     @Test func theSameArrowAlwaysLooksTheSame() {
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk {
             #expect(HandMadeArrow.inks(for: arrow(style)) == HandMadeArrow.inks(for: arrow(style)))
         }
     }
 
     /// ...and a new seed is a new hand: Reshuffle changes the drawing.
     @Test func aNewSeedDrawsItDifferently() {
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.hasHand {
             #expect(HandMadeArrow.inks(for: arrow(style, seed: 1))
                     != HandMadeArrow.inks(for: arrow(style, seed: 2)), "\(style)")
+        }
+    }
+
+    /// ...and an exact style is the same drawing whatever its seed.
+    @Test func anExactStyleIgnoresTheSeed() {
+        for style in ArrowStyle.allCases where style.drawsOwnInk && !style.hasHand {
+            #expect(HandMadeArrow.inks(for: arrow(style, seed: 1))
+                    == HandMadeArrow.inks(for: arrow(style, seed: 2)), "\(style)")
         }
     }
 
     /// The tip of a hand-made arrow still lands on the point it marks: it is a
     /// pointer, however loose the hand that drew it.
     @Test func theHeadStillPointsAtTheEnd() {
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk {
             let a = arrow(style)
             let head = HandMadeArrow.inks(for: a).filter { $0.part == .head }
             let nearest = head.flatMap(\.points)
@@ -142,7 +169,7 @@ struct ArrowStyleTests {
 
     /// The shaft starts where the arrow starts.
     @Test func theShaftStartsAtTheTail() {
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk {
             let a = arrow(style)
             let shaft = HandMadeArrow.inks(for: a).filter { $0.part == .shaft }
             let nearest = shaft.flatMap(\.points)
@@ -160,7 +187,7 @@ struct ArrowStyleTests {
             (CGPoint(x: 0, y: 300), CGPoint(x: 10, y: 0)),
             (CGPoint(x: 0, y: 0), CGPoint(x: 40, y: 30)),
         ]
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk {
             for (start, end) in directions {
                 for width in [CGFloat(1), 4, 12, 30] {
                     for scale in [CGFloat(0.5), 1, 2.2] {
@@ -185,7 +212,7 @@ struct ArrowStyleTests {
     /// as thick and with a head twice the size is the same drawing, twice the
     /// size. So a thick arrow is not a thin one's wobble on a fat line.
     @Test func detailScalesWithTheWidth() {
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk {
             let small = arrow(style, width: 4, start: CGPoint(x: 10, y: 10),
                               end: CGPoint(x: 210, y: 90), scale: 1)
             let big = arrow(style, width: 8, start: CGPoint(x: 20, y: 20),
@@ -247,7 +274,9 @@ struct ArrowStyleTests {
         let end = CGPoint(x: 400, y: 200)
         let spine = ArrowSpine(start: start, control: CGPoint(x: 200, y: 0), end: end)
         let middle = spine.point(at: 0.5)
-        for style in ArrowStyle.allCases where style.isHandMade {
+        // Elbow is a right-angle connector: a bend picks its corner instead
+        // (`anElbowsBendPicksItsCorner`).
+        for style in ArrowStyle.allCases where style.drawsOwnInk && style != .elbow {
             let inks = HandMadeArrow.inks(for: arrow(style, start: start, end: end), along: spine)
             let shaft = inks.filter { $0.part == .shaft }.flatMap(\.points)
             let nearest = shaft.map { hypot($0.x - middle.x, $0.y - middle.y) }.min() ?? .infinity
@@ -349,5 +378,223 @@ struct ArrowStyleTests {
         let svg = SVGExport.write(doc).text
         #expect(!svg.contains("<line"))
         #expect(svg.contains("<path"))
+    }
+
+    // MARK: - The five exact styles (markup.md section 5)
+
+    private func points(_ inks: [ArrowInk], _ part: ArrowInk.Part) -> [CGPoint] {
+        inks.filter { $0.part == part }.flatMap(\.points)
+    }
+
+    private func distance(_ p: CGPoint, toLineFrom a: CGPoint, to b: CGPoint) -> CGFloat {
+        let dx = b.x - a.x, dy = b.y - a.y
+        let length = hypot(dx, dy)
+        return abs((p.x - a.x) * dy - (p.y - a.y) * dx) / length
+    }
+
+    /// Dashed: the line is broken into many even dashes with square ends, and
+    /// the head is one solid triangle whose point is the tip.
+    @Test func dashedIsEvenDashesAndASolidHead() throws {
+        let a = arrow(.dashed, start: CGPoint(x: 0, y: 100), end: CGPoint(x: 400, y: 100))
+        let inks = HandMadeArrow.inks(for: a)
+        let dashes = inks.filter { $0.part == .shaft }
+        #expect(dashes.count >= 12, "\(dashes.count) dashes")
+        #expect(dashes.allSatisfy { $0.kind == .polygon })
+        // Even: every dash is the same length along the line.
+        let lengths = dashes.map { d in (d.points.map(\.x).max() ?? 0) - (d.points.map(\.x).min() ?? 0) }
+        #expect((lengths.max() ?? 0) - (lengths.min() ?? 0) < 0.01)
+        // ...and as thick as the line.
+        let thick = (dashes[0].points.map(\.y).max() ?? 0) - (dashes[0].points.map(\.y).min() ?? 0)
+        #expect(abs(thick - a.strokeWidth) < 0.01)
+        let head = try #require(inks.first { $0.part == .head })
+        #expect(head.kind == .polygon)
+        #expect(head.points.count == 3)
+        #expect(head.points.contains { hypot($0.x - a.end.x, $0.y - a.end.y) < 0.01 })
+    }
+
+    /// Block: one bold filled shape that widens from tail to head, and a head
+    /// far wider than the shaft where they meet.
+    @Test func blockWidensIntoABigHead() throws {
+        let a = arrow(.block, start: CGPoint(x: 0, y: 100), end: CGPoint(x: 400, y: 100))
+        let inks = HandMadeArrow.inks(for: a)
+        let body = try #require(inks.first { $0.part == .shaft })
+        let head = try #require(inks.first { $0.part == .head })
+        #expect(body.kind == .polygon && head.kind == .polygon)
+        func halfWidth(atX x: CGFloat) -> CGFloat {
+            // The body's outline either side of the line, nearest to x.
+            let near = body.points.sorted { abs($0.x - x) < abs($1.x - x) }.prefix(2)
+            return near.map { abs($0.y - 100) }.max() ?? 0
+        }
+        let tail = halfWidth(atX: 0)
+        let late = halfWidth(atX: 300)
+        #expect(tail >= a.strokeWidth / 2)
+        #expect(late > tail * 2, "tail \(tail), near the head \(late)")
+        let headHalf = (head.points.map { abs($0.y - 100) }.max() ?? 0)
+        let bodyHalf = body.points.map { abs($0.y - 100) }.max() ?? 0
+        #expect(headHalf > bodyHalf * 1.8)
+        #expect(head.points.contains { hypot($0.x - a.end.x, $0.y - a.end.y) < 0.01 })
+    }
+
+    /// Neon: a line and an open chevron head, a bright core along both, and a
+    /// glow that only Neon has.
+    @Test func neonIsALineAnOpenHeadACoreAndAGlow() {
+        let a = arrow(.neon, start: CGPoint(x: 0, y: 100), end: CGPoint(x: 400, y: 100))
+        let inks = HandMadeArrow.inks(for: a)
+        #expect(inks.filter { $0.part != .core }.allSatisfy { $0.kind == .stroke })
+        let core = inks.filter { $0.part == .core }
+        #expect(!core.isEmpty)
+        let line = inks.filter { $0.part != .core }.map(\.width).max() ?? 0
+        #expect(core.allSatisfy { $0.width < line * 0.5 })
+        // Open: the head is two strokes from the tip back to its wings.
+        let head = inks.filter { $0.part == .head }
+        #expect(head.count == 2)
+        #expect(!HandMadeArrow.outlines(for: a).core.isEmpty)
+        #expect(HandMadeArrow.glowRadii(for: a).count == 2)
+        for style in ArrowStyle.allCases where style != .neon {
+            #expect(HandMadeArrow.glowRadii(for: arrow(style)).isEmpty, "\(style)")
+            #expect(HandMadeArrow.outlines(for: arrow(style)).core.isEmpty, "\(style)")
+        }
+    }
+
+    /// The glow is part of what an arrow draws, so its frame makes room.
+    @Test func theFrameMakesRoomForTheGlow() {
+        let neon = arrow(.neon, width: 6)
+        let glow = HandMadeArrow.glowRadii(for: neon).max() ?? 0
+        #expect(neon.renderPadding >= glow * 3)
+        #expect(neon.renderPadding > arrow(.clean, width: 6).renderPadding)
+    }
+
+    /// Dotted: evenly spaced round dots, a bigger one at the tail, and a
+    /// chevron through the tip.
+    @Test func dottedIsEvenDotsABigTailDotAndAChevron() throws {
+        let a = arrow(.dotted, start: CGPoint(x: 0, y: 100), end: CGPoint(x: 400, y: 100))
+        let inks = HandMadeArrow.inks(for: a)
+        let dots = inks.filter { $0.part == .shaft }
+        #expect(dots.count >= 20, "\(dots.count) dots")
+        #expect(dots.allSatisfy { $0.kind == .fill })
+        let centres = dots.map { d in
+            CGPoint(x: d.points.map(\.x).reduce(0, +) / CGFloat(d.points.count),
+                    y: d.points.map(\.y).reduce(0, +) / CGFloat(d.points.count))
+        }
+        let radii = zip(dots, centres).map { d, c in d.points.map { hypot($0.x - c.x, $0.y - c.y) }.max() ?? 0 }
+        let tailIndex = try #require(centres.indices.min { centres[$0].x < centres[$1].x })
+        #expect(hypot(centres[tailIndex].x - a.start.x, centres[tailIndex].y - a.start.y) < 0.01)
+        let others = radii.enumerated().filter { $0.offset != tailIndex }.map(\.element)
+        #expect(radii[tailIndex] > (others.max() ?? 0) * 1.5)
+        let xs = centres.enumerated().filter { $0.offset != tailIndex }.map(\.element.x).sorted()
+        let gaps = zip(xs, xs.dropFirst()).map { $1 - $0 }
+        #expect((gaps.max() ?? 0) - (gaps.min() ?? 0) < 0.01)
+        #expect((gaps.min() ?? 0) > (others.max() ?? 0) * 2.5, "dots must not touch")
+        let head = inks.filter { $0.part == .head }
+        #expect(head.count == 2 && head.allSatisfy { $0.kind == .stroke })
+    }
+
+    /// Elbow: two straight legs at a right angle, joined by a rounded corner,
+    /// a dot at the tail and a solid head pointing along the last leg.
+    @Test func anElbowTurnsOneRightAngle() throws {
+        let start = CGPoint(x: 0, y: 0), end = CGPoint(x: 300, y: 200)
+        let a = arrow(.elbow, start: start, end: end)
+        let inks = HandMadeArrow.inks(for: a)
+        let shaft = inks.filter { $0.part == .shaft }.flatMap(\.points)
+        let corner = CGPoint(x: end.x, y: start.y)   // across first, then down
+        let radius = a.strokeWidth * 4
+        for p in shaft where hypot(p.x - corner.x, p.y - corner.y) > radius {
+            let onAcross = abs(p.y - start.y) < a.strokeWidth * 1.6
+            let onDown = abs(p.x - end.x) < a.strokeWidth * 1.6
+            #expect(onAcross || onDown, "\(p) is on neither leg")
+        }
+        // It really does reach round the corner.
+        #expect(shaft.contains { abs($0.x - end.x) < 0.01 && $0.y > 100 })
+        let head = try #require(inks.first { $0.part == .head })
+        #expect(head.kind == .polygon)
+        // Pointing down the last leg: the wings sit level, above the tip.
+        let wings = head.points.filter { hypot($0.x - end.x, $0.y - end.y) > 0.01 }
+        #expect(wings.count == 2)
+        #expect(abs(wings[0].y - wings[1].y) < 0.01 && wings[0].y < end.y)
+        // The dot on the tail.
+        #expect(inks.contains { $0.kind == .fill && $0.points.allSatisfy { hypot($0.x - start.x, $0.y - start.y) < a.strokeWidth * 1.5 } })
+    }
+
+    /// Ends that line up need no corner: the elbow is a straight connector.
+    @Test func anElbowBetweenLevelEndsIsStraight() {
+        let a = arrow(.elbow, start: CGPoint(x: 0, y: 100), end: CGPoint(x: 400, y: 101))
+        let shaft = HandMadeArrow.inks(for: a).filter { $0.part == .shaft }.flatMap(\.points)
+        #expect(shaft.allSatisfy { distance($0, toLineFrom: a.start, to: a.end) < a.strokeWidth * 1.5 })
+    }
+
+    /// A short vertical leg cannot hold the head, so the elbow goes down first
+    /// and the head points across.
+    @Test func anElbowWithAShortDropTurnsTheOtherWay() throws {
+        let start = CGPoint(x: 0, y: 0), end = CGPoint(x: 300, y: 20)
+        let a = arrow(.elbow, start: start, end: end)
+        let head = try #require(HandMadeArrow.inks(for: a).first { $0.part == .head })
+        let wings = head.points.filter { hypot($0.x - end.x, $0.y - end.y) > 0.01 }
+        #expect(abs(wings[0].x - wings[1].x) < 0.01 && wings[0].x < end.x)
+    }
+
+    /// Dragging the bend handle towards a corner turns the elbow there.
+    @Test func anElbowsBendPicksItsCorner() {
+        let start = CGPoint(x: 0, y: 0), end = CGPoint(x: 300, y: 200)
+        let a = arrow(.elbow, start: start, end: end)
+        let downFirst = ArrowSpine(start: start, control: CGPoint(x: 20, y: 190), end: end)
+        let shaft = HandMadeArrow.inks(for: a, along: downFirst).filter { $0.part == .shaft }.flatMap(\.points)
+        #expect(shaft.contains { abs($0.x - start.x) < 0.01 && $0.y > 100 })
+        #expect(!shaft.contains { abs($0.y - start.y) < 0.01 && $0.x > 100 })
+    }
+
+    /// ...the same through the bend handle a person drags.
+    @Test func anElbowBentByItsHandleTurnsAtThatCorner() throws {
+        let start = CGPoint(x: 0, y: 0), end = CGPoint(x: 300, y: 200)
+        let layer = AnnotationBuilder.layer(content: arrow(.elbow, start: start, end: end), from: start, to: end)
+        let bent = AnnotationBuilder.bending(layer, through: CGPoint(x: 30, y: 180), straightWithin: 2)
+        let a = try #require(bent.annotation)
+        let shaft = HandMadeArrow.inks(for: a).filter { $0.part == .shaft }.flatMap(\.points)
+            .map { CGPoint(x: $0.x + bent.frame.minX, y: $0.y + bent.frame.minY) }
+        #expect(shaft.contains { abs($0.x - start.x) < 0.01 && $0.y > 100 })
+        #expect(!shaft.contains { abs($0.y - start.y) < 0.01 && $0.x > 100 })
+    }
+
+    /// Every exact style keeps the arrow's own colour on the shaft and the head
+    /// (no part is painted in some other colour), and lists its pieces in a
+    /// part the renderer knows.
+    @Test func switchingToAnExactStyleKeepsEverythingButTheLook() {
+        for style in [ArrowStyle.dashed, .block, .neon, .dotted, .elbow] {
+            var content = arrow(.clean)
+            content.colorHex = "#0A84FF"
+            content.arrowheadScale = 1.6
+            let layer = AnnotationBuilder.layer(content: content, from: CGPoint(x: 10, y: 50),
+                                                to: CGPoint(x: 300, y: 200))
+            let restyled = AnnotationBuilder.restyled(layer, arrowStyle: style)
+            #expect(restyled.annotationEndpoint(.start) == layer.annotationEndpoint(.start), "\(style)")
+            #expect(restyled.annotationEndpoint(.end) == layer.annotationEndpoint(.end), "\(style)")
+            #expect(restyled.annotation?.colorHex == "#0A84FF")
+            #expect(restyled.annotation?.strokeWidth == layer.annotation?.strokeWidth)
+            #expect(restyled.annotation?.arrowheadScale == 1.6)
+            let back = AnnotationBuilder.restyled(restyled, arrowStyle: .clean)
+            #expect(back.annotationEndpoint(.start) == layer.annotationEndpoint(.start), "\(style)")
+            #expect(back.annotationEndpoint(.end) == layer.annotationEndpoint(.end), "\(style)")
+        }
+    }
+
+    /// Head Size reaches every exact style's head.
+    @Test func headSizeSizesEveryExactHead() {
+        for style in [ArrowStyle.dashed, .block, .neon, .dotted, .elbow] {
+            func headReach(_ scale: CGFloat) -> CGFloat {
+                let a = arrow(style, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 400, y: 300), scale: scale)
+                return points(HandMadeArrow.inks(for: a), .head)
+                    .map { hypot($0.x - a.end.x, $0.y - a.end.y) }.max() ?? 0
+            }
+            #expect(headReach(2) > headReach(1) * 1.5, "\(style)")
+        }
+    }
+
+    /// An SVG of a neon arrow carries its glow.
+    @Test func svgCarriesTheNeonGlow() {
+        let layer = AnnotationBuilder.layer(content: arrow(.neon), from: CGPoint(x: 10, y: 50),
+                                            to: CGPoint(x: 300, y: 200))
+        let doc = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300), layers: [layer])
+        let svg = SVGExport.write(doc).text
+        #expect(svg.contains("feGaussianBlur"))
+        #expect(svg.contains("filter=\"url(#"))
     }
 }

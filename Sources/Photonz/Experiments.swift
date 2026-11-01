@@ -536,8 +536,9 @@ extension Experiments {
     /// document holding a square-ended line draws it either way.
     var lineEndsEnabled: Bool { isEnabled(FeatureCatalog.lineEndsFlag) }
 
-    /// `next-arrow-styles`: an arrow can be drawn clean or by hand (Hand-drawn,
-    /// Marker, Brush, Sketch), picked from picture tiles (`ArrowStyleTiles`).
+    /// `next-arrow-styles`: an arrow can be drawn clean, by hand (Hand-drawn,
+    /// Marker, Brush, Sketch) or in one of five exact looks (Dashed, Block,
+    /// Neon, Dotted, Elbow), picked from picture tiles (`ArrowStyleTiles`).
     var arrowStylesEnabled: Bool { isEnabled(FeatureCatalog.arrowStylesFlag) }
     /// Ten chip styles and a marker for an arrow's label (`ChipStyleTiles`).
     var chipStylesEnabled: Bool { isEnabled(FeatureCatalog.chipStylesFlag) }

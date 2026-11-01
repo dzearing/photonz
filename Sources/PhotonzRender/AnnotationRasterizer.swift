@@ -105,14 +105,52 @@ public enum AnnotationRasterizer {
             path.addLine(to: annotation.end)
             strokeInk(path)
 
-        case .arrow where annotation.arrowStyle.isHandMade:
+        case .arrow where annotation.arrowStyle.drawsOwnInk:
             // A hand-made arrow is two shapes, shaft and head, each the union
             // of the strokes and swells it is drawn in, so see-through ink is
             // one even wash rather than darker wherever two pieces cross
             // (`HandMadeArrow.swift`).
             let outlines = HandMadeArrow.outlines(for: annotation)
-            if !outlines.shaft.isEmpty { fillInk(outlines.shaft) }
-            if !outlines.head.isEmpty { fillHead(outlines.head) }
+            let glow = HandMadeArrow.glowRadii(for: annotation)
+            if glow.isEmpty {
+                if !outlines.shaft.isEmpty { fillInk(outlines.shaft) }
+                if !outlines.head.isEmpty { fillHead(outlines.head) }
+            } else {
+                // Neon: each part glows in its own colour, a tight halo inside
+                // a wide one, cast from the ink itself, then a bright core
+                // along the lot. A shadow's blur is stated in pixels, not
+                // points, so it is scaled to the bitmap like everything else.
+                let device = context.userSpaceToDeviceSpaceTransform
+                let pixelsPerPoint = hypot(device.a, device.b)
+                func glowing(_ path: CGPath, _ hex: String, _ paint: (CGPath) -> Void) {
+                    guard !path.isEmpty else { return }
+                    let rgba = RGBA(hex: hex) ?? RGBA(r: 1, g: 0, b: 0)
+                    let halo = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a)
+                    context.saveGState()
+                    // A Gaussian's spread (sigma) is half of Core Graphics' blur.
+                    context.setShadow(offset: .zero, blur: glow[glow.count - 1] * 2 * pixelsPerPoint, color: halo)
+                    context.beginTransparencyLayer(auxiliaryInfo: nil)
+                    context.setShadow(offset: .zero, blur: glow[0] * 2 * pixelsPerPoint, color: halo)
+                    context.beginTransparencyLayer(auxiliaryInfo: nil)
+                    paint(path)
+                    context.endTransparencyLayer()
+                    context.endTransparencyLayer()
+                    context.restoreGState()
+                }
+                glowing(outlines.shaft, annotation.colorHex, fillInk)
+                glowing(outlines.head, annotation.headPaint.hex, fillHead)
+                if !outlines.core.isEmpty {
+                    // White over the ink, leaving `neonCoreInk` of its colour:
+                    // the hot centre of a lit tube, in light and dark alike.
+                    let white = CGColor(srgbRed: 1, green: 1, blue: 1,
+                                        alpha: (1 - HandMadeArrow.neonCoreInk) * rgba.a)
+                    context.saveGState()
+                    context.setFillColor(white)
+                    context.addPath(outlines.core)
+                    context.fillPath(using: .winding)
+                    context.restoreGState()
+                }
+            }
             if annotation.hasCaption {
                 drawCaption(annotation, in: context)
             }

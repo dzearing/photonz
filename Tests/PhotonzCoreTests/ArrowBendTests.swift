@@ -197,7 +197,9 @@ struct ArrowBendTests {
     }
 
     @Test func clickingTheCurvedShaftSelectsTheArrow() {
-        for style in ArrowStyle.allCases {
+        // Elbow turns a right angle rather than bowing; a bend picks its corner
+        // (`ArrowStyleTests.anElbowsBendPicksItsCorner`).
+        for style in ArrowStyle.allCases where style != .elbow {
             let layer = AnnotationBuilder.layer(content: bent(style), from: start, to: end)
             let onCurve = bent(style).spine.point(at: 0.3)
             #expect(layer.contains(canvasPoint: onCurve), "\(style)")
@@ -239,11 +241,13 @@ struct ArrowBendTests {
     // MARK: - Every style follows
 
     @Test func everyHandMadeStyleFollowsTheBend() {
-        for style in ArrowStyle.allCases where style.isHandMade {
+        for style in ArrowStyle.allCases where style.drawsOwnInk && style != .elbow {
             let a = bent(style)
             let shaft = HandMadeArrow.inks(for: a).filter { $0.part == .shaft }.flatMap(\.points)
-            let nearest = shaft.map { hypot($0.x - 200, $0.y - 80) }.min() ?? .infinity
-            #expect(nearest < 12, "\(style) is \(nearest) from the bend")
+            // Reached by the ink itself, so a gap between dashes or dots at
+            // the bend still counts as following it.
+            #expect(HandMadeArrow.ink(of: a, reaches: CGPoint(x: 200, y: 80), within: 12),
+                    "\(style) does not reach the bend")
             let onChord = shaft.map { hypot($0.x - 200, $0.y - 200) }.min() ?? .infinity
             #expect(onChord > 60, "\(style) still runs along the straight line")
         }

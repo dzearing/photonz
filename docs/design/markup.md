@@ -151,9 +151,14 @@ ends, colour, thickness and head size whichever style it wears.
 | 9 | `dotted` | Dotted | Round dots, a dot at the tail, chevron head |
 | 10 | `elbow` | Elbow | Right-angle connector with a rounded corner, dot at the tail, solid head |
 
-1 to 5 exist in the app today (`ArrowStyle.swift`, from the user's hand-drawn
-references). 6 to 10 are new. Ending (arrow, dot, none) applies only to Clean,
-since the others draw their own heads.
+All ten are in the app (`ArrowStyle.swift`, drawn by `HandMadeArrow.swift`). 1
+to 5 come from the user's hand-drawn references; 2 to 5 have a seeded hand that
+Reshuffle redraws (`hasHand`). 6 to 10 are exact: no seed, the same drawing for
+the same two ends. Neon's glow is two blurs in the ink (`glowRadii`) under the
+line and a white core leaving 35 percent of the ink on top; the layer's frame
+makes room for it. Elbow turns across then down, down first when the last leg
+is too short for its head, and a bend picks the corner it turns at. Ending
+(arrow, dot, none) applies only to Clean, since the others draw their own heads.
 
 ## 6. Markers
 

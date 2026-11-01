@@ -623,7 +623,7 @@ extension EditorState {
         var seed = nextArrowSeed
         perform { document in
             for id in targets {
-                let needsAHand = style.isHandMade && document.layer(id: id)?.annotation?.styleSeed == 0
+                let needsAHand = style.hasHand && document.layer(id: id)?.annotation?.styleSeed == 0
                 if needsAHand { seed = HandMadeArrow.seed(after: seed) }
                 document.updateLayer(id: id) {
                     $0 = AnnotationBuilder.restyled($0, arrowStyle: style,
@@ -764,7 +764,7 @@ extension EditorState {
     }
 
     /// The arrow's own rows on its right-click menu: the Arrow Style submenu,
-    /// ticked on the style it wears, and Reshuffle while it is hand-made. None
+    /// ticked on the style it wears, and Reshuffle while it has a hand. None
     /// at all on anything that is not an arrow.
     func arrowStyleMenuRows(id: UUID) -> [MenuRow] {
         guard Experiments.shared.arrowStylesEnabled,
@@ -821,7 +821,7 @@ extension EditorState {
         guard let doc = document else { return [] }
         return annotationRestyleTargets(ids, in: doc).filter {
             guard let a = doc.layer(id: $0)?.annotation else { return false }
-            return a.shape == .arrow && a.arrowStyle.isHandMade
+            return a.shape == .arrow && a.arrowStyle.hasHand
         }
     }
 

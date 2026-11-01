@@ -1,4 +1,4 @@
-// The Style row of an arrow: five picture tiles, each the real renderer's drawing of that style.
+// The Style row of an arrow: ten picture tiles in rows of five, each the real renderer's drawing of that style.
 
 import AppKit
 import PhotonzCore
@@ -39,7 +39,7 @@ struct ArrowStyleTiles: View, Equatable {
                 }
                 Spacer(minLength: 0)
             }
-            VideoKit.TileGrid(minimumWidth: 60, columns: 3, spacing: 6) {
+            VideoKit.TileGrid(minimumWidth: 40, columns: 5, spacing: 4) {
                 ForEach(ArrowStyle.allCases, id: \.self) { style in
                     tile(style)
                 }
@@ -50,15 +50,23 @@ struct ArrowStyleTiles: View, Equatable {
 
     private func tile(_ style: ArrowStyle) -> some View {
         let isOn = selection == style
+        // A picture and nothing else, the same tile as the Chip row under it:
+        // ten names do not fit five across, the header names the one that is
+        // on, and the tip names each.
         return Button { pick(style) } label: {
-            VideoKit.Tile(name: style.title, isSelected: isOn, thumbnailHeight: 30) {
-                ArrowStyleThumbnail(style: style)
-            }
+            ArrowStyleThumbnail(style: style)
+                .frame(height: 30)
+                .frame(maxWidth: .infinity)
+                .background(RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color(nsColor: .quaternaryLabelColor).opacity(0.35)))
+                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .strokeBorder(isOn ? Color.accentColor : Color.clear, lineWidth: 2))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .playtestControl("Arrow style \(style.title)", detail: isOn ? "on" : "off")
         .accessibilityLabel(style.title)
-        .panelHelp(Self.help(style))
+        .panelHelp("\(style.title): \(Self.help(style))")
     }
 
     static func help(_ style: ArrowStyle) -> String {
@@ -68,6 +76,11 @@ struct ArrowStyleTiles: View, Equatable {
         case .marker: "A bold marker stroke with a loose head"
         case .brush: "A brush stroke that tapers and swells"
         case .sketch: "A rough outline arrow in dry ink"
+        case .dashed: "A dashed line with a solid head"
+        case .block: "A bold arrow that widens into its head"
+        case .neon: "A glowing line with an open head"
+        case .dotted: "A line of dots with a chevron head"
+        case .elbow: "A right-angle connector for diagrams"
         }
     }
 }
@@ -117,8 +130,11 @@ private struct ArrowStyleThumbnail: View {
                                         colorHex: "#000000", arrowheadScale: 0.32)
         content.arrowStyle = style
         content.styleSeed = thumbnailSeed
-        content.start = CGPoint(x: 9, y: size.height * 0.66)
-        content.end = CGPoint(x: size.width - 9, y: size.height * 0.34)
+        // An elbow needs a rise tall enough to hold its head, or it turns up
+        // first; with one it reads as the mock draws it, across then up.
+        let rise: CGFloat = style == .elbow ? 0.3 : 0.16
+        content.start = CGPoint(x: 9, y: size.height * (0.5 + rise))
+        content.end = CGPoint(x: size.width - 9, y: size.height * (0.5 - rise))
         guard let image = AnnotationRasterizer.rasterize(content, size: size, scale: scale) else {
             return nil
         }

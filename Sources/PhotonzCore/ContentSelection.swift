@@ -166,7 +166,7 @@ extension AnnotationContent {
             // Pick the ending first, then size it — and an arrow that ends in
             // nothing is not offered a size for the nothing. A hand-made arrow
             // draws its own head, so it is offered the size but not the ending.
-            if !arrowStyle.isHandMade { rows.append(.headStyle) }
+            if !arrowStyle.drawsOwnInk { rows.append(.headStyle) }
             if drawsArrowhead { rows.append(.headSize) }
         }
         return rows

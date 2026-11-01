@@ -2979,9 +2979,9 @@ struct EditorView: View {
                     if Experiments.shared.chipStylesEnabled, Experiments.shared.arrowCaptionsEnabled {
                         chipStyleRows
                     }
-                    if !editedArrowStyle.isHandMade { arrowheadStyleRow }
+                    if !editedArrowStyle.drawsOwnInk { arrowheadStyleRow }
                     // An arrow that ends in nothing has no head to size.
-                    if editedArrowStyle.isHandMade || editedArrowheadStyle != .plain {
+                    if editedArrowStyle.drawsOwnInk || editedArrowheadStyle != .plain {
                         arrowheadSizeSlider
                     }
                 }

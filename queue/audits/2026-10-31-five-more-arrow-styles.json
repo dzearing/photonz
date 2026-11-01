@@ -1,0 +1,31 @@
+{
+  "feature": "Five more arrow styles: Dashed, Block, Neon, Dotted and Elbow",
+  "epic": "epic-uehjr1",
+  "summary": "An arrow now comes in ten styles. The five new ones are a dashed line, a bold block arrow that widens into its head, a glowing neon line, a line of dots, and a right-angle elbow connector for diagrams. Each keeps the arrow's ends, colour, thickness and head size.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/five-more-arrow-styles-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Pick the Arrow tool and drag an arrow across a screenshot.", "shot": "2026-10-31-five-arrow-styles-8-tool-settings-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In Appearance, click the first tile on the second row of Style (Dashed), then Block, Neon and Dotted in turn.", "shot": "2026-10-31-five-arrow-styles-6-every-new-style-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the arrow and pick Arrow Style > Neon, with the arrow over a dark part of the picture.", "shot": "2026-10-31-five-arrow-styles-3-neon-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw an arrow diagonally between two boxes and pick Elbow: it runs across, turns a rounded corner and comes down onto the second box.", "shot": "2026-10-31-five-arrow-styles-5-elbow-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the Elbow's middle handle towards the other corner: it now goes down first, then across." },
+    { "do": "Press Command Z once: the arrow goes back to the style it had before." },
+    { "do": "Export as PNG at 2x and as SVG: the glow, dashes and dots come out as on the canvas.", "shot": "2026-10-31-five-arrow-styles-export-2x.png" },
+    { "do": "Compare with the specimen (Design system > Markup, Arrow styles).", "shot": "2026-10-31-five-arrow-styles-mock.png" }
+  ],
+  "evaluate": [
+    "Is Neon's glow strong enough to read as neon on a light screenshot, or does it need to be wider?",
+    "Is Block's head the right size against its shaft, or does it look top-heavy at the default thickness?",
+    "When Elbow's last leg is short it turns down first instead; is that the corner you would expect?",
+    "Can you tell the ten tiles apart at a glance without their names, with the name showing on hover and in the row's header?"
+  ],
+  "rough": [
+    "Matches the specimen (Design system > Markup, Arrow styles) for all five: dashed with a solid head, a block that widens into its head, a glowing line with a bright core and open head, dots with a bigger tail dot and chevron, an elbow with a rounded corner, tail dot and solid head.",
+    "No panel mock draws the Style row beyond 'Arrow, 10 tiles' (markup.md section 8). The tiles are pictures only, five across, the same tile as the Chip row below them, because ten names do not fit five across; the header names the picked style and each tile's tip names it. The row is still headed Style where markup.md calls it Arrow: arrow-and-measurement-appearance-shows-only-styl owns that.",
+    "The tiles were picked from the right-click menu in the walk, not pressed: every panel tile press under a walk does nothing since 2026-10-26, which walks-that-fail-in-the-full-sweep-26 owns (arrow-styles-walk fails there the same way, unchanged by this work).",
+    "In the Neon tile the bright core does not show: tiles are drawn as a tinted silhouette, so only the line and its glow read.",
+    "While you drag out a Neon arrow it glows but has no bright core yet; the core appears when you let go.",
+    "An Elbow whose two ends are level has no corner to turn, so it is a straight connector and bending it does nothing you can see."
+  ]
+}

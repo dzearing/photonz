@@ -201,7 +201,7 @@ extension AnnotationContent {
         guard strokeWidth > 0 else { return false }
         // A hand-made arrow draws its own tail: a brush's point, a marker's
         // round end, a sketch's open outline (`ArrowStyle.swift`).
-        if shape == .arrow, arrowStyle.isHandMade { return false }
+        if shape == .arrow, arrowStyle.drawsOwnInk { return false }
         return shape == .line || shape == .arrow
     }
 }

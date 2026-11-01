@@ -475,7 +475,7 @@ extension AnnotationContent {
     /// head and the second pass of a sketch. Measured off the drawing itself
     /// (`HandMadeArrow.inkBounds`), so the frame and the ink cannot drift.
     var handMadeOverhang: CGFloat {
-        guard shape == .arrow, arrowStyle.isHandMade else { return 0 }
+        guard shape == .arrow, arrowStyle.drawsOwnInk else { return 0 }
         let ink = HandMadeArrow.inkBounds(for: self)
         guard !ink.isNull else { return 0 }
         let box = spine.bounds
@@ -499,7 +499,9 @@ extension AnnotationContent {
             max(strokeWidth * lineEnd.reach,
                 Geometry.arrowheadReach(strokeWidth: strokeWidth, scale: arrowheadScale,
                                         style: arrowheadStyle),
-                handMadeOverhang).rounded(.up)
+                // A hair over, so an overhang that comes out a whole number does
+                // not round down to one that a re-framed point misses by 1e-15.
+                handMadeOverhang + HandMadeArrow.glowReach(for: self) + 1e-6).rounded(.up)
         case .rectangle, .ellipse, .highlight:
             0
         }

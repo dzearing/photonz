@@ -1339,7 +1339,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: arrowStylesFlag,
                     title: "Draw arrows by hand",
-                    description: "An arrow gets a Style row of picture tiles: Clean, Hand-drawn, Marker, Brush and Sketch, with Reshuffle on its right-click menu for a new hand. Off means every arrow is the clean geometric one.",
+                    description: "An arrow gets a Style row of picture tiles: Clean, Hand-drawn, Marker, Brush, Sketch, Dashed, Block, Neon, Dotted and Elbow, with Reshuffle on its right-click menu for a new hand. Off means every arrow is the clean geometric one.",
                     area: .drawing,
                     isEnabled: false,
                     parameters: []),

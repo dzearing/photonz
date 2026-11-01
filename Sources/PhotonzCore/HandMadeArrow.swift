@@ -16,7 +16,8 @@ import Foundation
 //   (`ArrowBend.swift`).
 //
 // What comes out is a list of `ArrowInk`: lines to stroke and shapes to fill,
-// each marked as shaft or head so the head keeps its own colour. The
+// each marked as shaft or head so the head keeps its own colour (and, for
+// Neon, as the bright core drawn over both). The
 // rasterizer, the canvas's live preview and the SVG export all draw from the
 // same list (`HandMadeArrow.outlines(for:)`), so they cannot disagree.
 
@@ -129,12 +130,16 @@ public struct ArrowSpine: Hashable, Sendable {
 /// One piece of a hand-made arrow: a line to stroke or a shape to fill.
 public struct ArrowInk: Hashable, Sendable {
     /// Which part of the arrow this is, so the head can wear its own colour.
-    public enum Part: Hashable, Sendable { case shaft, head }
+    /// `core` is Neon's bright centre line, painted over shaft and head alike.
+    public enum Part: Hashable, Sendable { case shaft, head, core }
     public enum Kind: Hashable, Sendable {
         /// `points` is a line, stroked `width` wide with round ends.
         case stroke
-        /// `points` is the outline of a shape, filled.
+        /// `points` is the outline of a shape, filled, smoothed into curves.
         case fill
+        /// `points` is the outline of a shape, filled with straight sides and
+        /// its corners kept sharp: a block head, a square-ended dash.
+        case polygon
     }
 
     public var part: Part
@@ -202,7 +207,7 @@ public enum HandMadeArrow {
 
     /// The same, along any spine.
     public static func inks(for content: AnnotationContent, along spine: ArrowSpine) -> [ArrowInk] {
-        guard content.shape == .arrow, content.arrowStyle.isHandMade,
+        guard content.shape == .arrow, content.arrowStyle.drawsOwnInk,
               let hand = Hand(content, spine: spine) else { return [] }
         switch content.arrowStyle {
         case .clean: return []
@@ -210,8 +215,30 @@ public enum HandMadeArrow {
         case .marker: return hand.marker()
         case .brush: return hand.brush()
         case .sketch: return hand.sketch()
+        case .dashed: return hand.dashed()
+        case .block: return hand.block()
+        case .neon: return hand.neon()
+        case .dotted: return hand.dotted()
+        case .elbow: return hand.elbow()
         }
     }
+
+    /// How soft the glow round a Neon arrow is: two blurs in the arrow's own
+    /// colour, a tight one and a wide one, as Gaussian spreads (sigma) in the
+    /// arrow's coordinates. Empty for every style that does not glow.
+    public static func glowRadii(for content: AnnotationContent) -> [CGFloat] {
+        guard content.shape == .arrow, content.arrowStyle.glows, content.strokeWidth > 0 else { return [] }
+        return [content.strokeWidth * 0.6, content.strokeWidth * 1.5]
+    }
+
+    /// How far the glow reaches past the ink: three spreads of the widest
+    /// blur, where it has faded to nothing.
+    public static func glowReach(for content: AnnotationContent) -> CGFloat {
+        (glowRadii(for: content).max() ?? 0) * 3
+    }
+
+    /// How much of the ink's colour Neon's core keeps; the rest is white.
+    public static let neonCoreInk: CGFloat = 0.35
 
     /// The box every piece of ink covers, with room for the smoothing between
     /// points, in the arrow's own coordinates. `.null` when nothing is drawn.
@@ -245,7 +272,7 @@ public enum HandMadeArrow {
                     where Geometry.distance(from: point, toSegmentFrom: a, to: b) <= reach {
                     return true
                 }
-            case .fill:
+            case .fill, .polygon:
                 if ink.outline.contains(point) { return true }
                 let reach = max(slop, 0)
                 for (a, b) in zip(ink.points, ink.points.dropFirst())
@@ -263,21 +290,27 @@ public enum HandMadeArrow {
         fractions.map { Hand.brushHalfWidth(at: $0, peak: Hand.brushPeak(width: content.strokeWidth)) }
     }
 
-    /// The arrow as two shapes to fill, shaft and head, each the union of its
+    /// The arrow as shapes to fill, shaft and head, each the union of its
     /// pieces (filled with the non-zero rule, which is what makes overlapping
-    /// pieces one patch of ink rather than a darker spot where they cross).
-    public static func outlines(for content: AnnotationContent) -> (shaft: CGPath, head: CGPath) {
+    /// pieces one patch of ink rather than a darker spot where they cross),
+    /// and Neon's bright core, empty for every other style.
+    public static func outlines(for content: AnnotationContent) -> (shaft: CGPath, head: CGPath, core: CGPath) {
         outlines(of: inks(for: content))
     }
 
-    public static func outlines(of inks: [ArrowInk]) -> (shaft: CGPath, head: CGPath) {
+    public static func outlines(of inks: [ArrowInk]) -> (shaft: CGPath, head: CGPath, core: CGPath) {
         let shaft = CGMutablePath()
         let head = CGMutablePath()
+        let core = CGMutablePath()
         for ink in inks {
             let outline = ink.outline
-            if ink.part == .shaft { shaft.addPath(outline) } else { head.addPath(outline) }
+            switch ink.part {
+            case .shaft: shaft.addPath(outline)
+            case .head: head.addPath(outline)
+            case .core: core.addPath(outline)
+            }
         }
-        return (shaft, head)
+        return (shaft, head, core)
     }
 }
 
@@ -291,10 +324,19 @@ extension ArrowInk {
             return Self.smoothPath(points, closed: false)
                 .copy(strokingWithWidth: width, lineCap: .round, lineJoin: .round, miterLimit: 10)
         case .fill:
-            let area = Self.signedArea(points)
-            let oriented = (area >= 0) == Self.strokeWindingIsPositive ? points : points.reversed()
             return Self.smoothPath(oriented, closed: true)
+        case .polygon:
+            let path = CGMutablePath()
+            path.addLines(between: oriented)
+            path.closeSubpath()
+            return path
         }
+    }
+
+    /// The outline's points turned to wind the way a stroke's outline does.
+    private var oriented: [CGPoint] {
+        let area = Self.signedArea(points)
+        return (area >= 0) == Self.strokeWindingIsPositive ? points : points.reversed()
     }
 
     /// The line or outline through the points, smoothed into curves
@@ -672,6 +714,190 @@ private struct Hand {
         }
         if current.count >= 2 { pieces.append(current) }
         return pieces
+    }
+
+    // MARK: The exact styles (markup.md section 5)
+    //
+    // Drawn with a ruler rather than a hand: no seed, no wobble. Each is laid
+    // along the spine itself, its sizes stated in the arrow's thickness and
+    // head size like the hand styles, so a thick arrow is the thin one bigger.
+
+    /// The way back from the tip, along the spine where it ends.
+    private var backAtTip: CGVector { spine.direction(at: 1) * -1 }
+
+    /// The spine's point and heading `distance` along it from the tail.
+    private func station(at distance: CGFloat) -> (point: CGPoint, tangent: CGVector) {
+        let t = spine.parameter(atDistance: distance)
+        return (spine.point(at: t), spine.direction(at: t))
+    }
+
+    /// The stretch of the spine from `from` to `to` (distances from the tail),
+    /// as `count` points.
+    private func stretch(from: CGFloat, to: CGFloat, count: Int) -> [CGPoint] {
+        let n = max(count, 2)
+        return (0..<n).map { i in station(at: from + (to - from) * CGFloat(i) / CGFloat(n - 1)).point }
+    }
+
+    /// A band of the spine from `from` to `to`, `half` either side of it at
+    /// each end (and in between, straight from one to the other), with square
+    /// ends: a dash, or the body of a block arrow.
+    private func band(from: CGFloat, to: CGFloat, halfFrom: CGFloat, halfTo: CGFloat,
+                      count: Int) -> [CGPoint] {
+        let n = max(count, 2)
+        var left: [CGPoint] = []
+        var right: [CGPoint] = []
+        for i in 0..<n {
+            let v = CGFloat(i) / CGFloat(n - 1)
+            let at = station(at: from + (to - from) * v)
+            let half = halfFrom + (halfTo - halfFrom) * v
+            left.append(at.point + at.tangent.perpendicular * half)
+            right.append(at.point - at.tangent.perpendicular * half)
+        }
+        return left + right.reversed()
+    }
+
+    /// A solid triangle head on the tip, `reach` long and `half` wide either
+    /// side, pointing along `back` reversed.
+    private func solidHead(reach: CGFloat, half: CGFloat, back: CGVector, tip: CGPoint) -> ArrowInk {
+        let base = tip + back * reach
+        let side = back.perpendicular * half
+        return ArrowInk(part: .head, kind: .polygon, points: [tip, base + side, base - side], width: 0)
+    }
+
+    /// An open chevron through the tip: two straight strokes back to its
+    /// wings, meeting in a round joint.
+    private func chevron(width: CGFloat, part: ArrowInk.Part = .head, back: CGVector,
+                         tip: CGPoint) -> [ArrowInk] {
+        let base = tip + back * headLength
+        let side = back.perpendicular * headHalfWidth
+        return [ArrowInk(part: part, kind: .stroke, points: [base + side, tip], width: width),
+                ArrowInk(part: part, kind: .stroke, points: [tip, base - side], width: width)]
+    }
+
+    /// A round dot, as a smooth outline.
+    private func dot(at centre: CGPoint, radius: CGFloat) -> ArrowInk {
+        let points = (0..<12).map { i -> CGPoint in
+            let angle = CGFloat(i) / 12 * 2 * .pi
+            return CGPoint(x: centre.x + cos(angle) * radius, y: centre.y + sin(angle) * radius)
+        }
+        return ArrowInk(part: .shaft, kind: .fill, points: points, width: 0)
+    }
+
+    /// Dashed: even dashes as thick as the line, three widths on and two off,
+    /// stretched a little so the last one runs into a solid head.
+    func dashed() -> [ArrowInk] {
+        let shaftEnd = max(length - headLength * 0.6, 0)
+        let on = width * 3
+        let off = width * 2
+        let count = max(1, Int(((shaftEnd + off) / (on + off)).rounded()))
+        let stretch = (shaftEnd + off) / (CGFloat(count) * (on + off))
+        var inks: [ArrowInk] = (0..<count).map { i in
+            let from = CGFloat(i) * (on + off) * stretch
+            return ArrowInk(part: .shaft, kind: .polygon,
+                            points: band(from: from, to: from + on * stretch,
+                                         halfFrom: width / 2, halfTo: width / 2, count: 5),
+                            width: 0)
+        }
+        inks.append(solidHead(reach: headLength, half: headHalfWidth, back: backAtTip, tip: spine.end))
+        return inks
+    }
+
+    /// Block: one bold filled arrow, its shaft widening steadily from the tail
+    /// to a big head.
+    func block() -> [ArrowInk] {
+        let reach = min(headLength * 1.1, length * 0.6)
+        let half = headHalfWidth * 1.35
+        let baseHalf = half * 0.45
+        let tailHalf = max(baseHalf * 0.3, width * 0.5)
+        // The body runs a little way under the head so the two meet without a
+        // seam, which the head's width there still covers.
+        let into = reach * 0.15
+        let bodyEnd = max(length - reach + into, 0)
+        let body = band(from: 0, to: bodyEnd, halfFrom: tailHalf,
+                        halfTo: tailHalf + (baseHalf - tailHalf) * (bodyEnd / max(length - reach, 1e-9)),
+                        count: 17)
+        return [ArrowInk(part: .shaft, kind: .polygon, points: body, width: 0),
+                solidHead(reach: reach, half: half, back: backAtTip, tip: spine.end)]
+    }
+
+    /// Neon: a line and an open head, glowing (`HandMadeArrow.glowRadii`), with
+    /// a bright core along both.
+    func neon() -> [ArrowInk] {
+        let line = width * 1.6
+        let core = width * 0.55
+        let path = stretch(from: 0, to: max(length - width * 0.5, 0), count: count)
+        let back = backAtTip
+        let tip = spine.end
+        return [ArrowInk(part: .shaft, kind: .stroke, points: path, width: line)]
+            + chevron(width: line, back: back, tip: tip)
+            + [ArrowInk(part: .core, kind: .stroke, points: path, width: core)]
+            + chevron(width: core, part: .core, back: back, tip: tip)
+    }
+
+    /// Dotted: round dots evenly along the line, a bigger dot on the tail and
+    /// a chevron through the tip.
+    func dotted() -> [ArrowInk] {
+        let radius = width * 0.7
+        let end = max(length - width * 1.25, 0)
+        let spacing = width * 3.25
+        let count = Int((end / spacing).rounded())
+        var inks = [dot(at: spine.start, radius: width * 1.6)]
+        if count > 0 {
+            let step = end / CGFloat(count)
+            for i in 1...count { inks.append(dot(at: station(at: step * CGFloat(i)).point, radius: radius)) }
+        }
+        return inks + chevron(width: width * 1.15, back: backAtTip, tip: spine.end)
+    }
+
+    /// Elbow: a right-angle connector, across then down (or down then across
+    /// when the second leg is too short for the head, or when the arrow has
+    /// been bent towards that corner), with a rounded corner, a dot on the
+    /// tail and a solid head along the last leg.
+    func elbow() -> [ArrowInk] {
+        let start = spine.start
+        let tip = spine.end
+        let dx = tip.x - start.x
+        let dy = tip.y - start.y
+        let tailDot = dot(at: start, radius: width * 1.2)
+        // Ends that line up need no corner.
+        guard abs(dx) >= width, abs(dy) >= width else {
+            let back = backAtTip
+            return [tailDot,
+                    ArrowInk(part: .shaft, kind: .stroke,
+                             points: [start, tip + back * (headLength * 0.6)], width: width),
+                    solidHead(reach: headLength, half: headHalfWidth, back: back, tip: tip)]
+        }
+        let across = CGPoint(x: tip.x, y: start.y)   // across first
+        let down = CGPoint(x: start.x, y: tip.y)     // down first
+        let radius = width * 3.5
+        let corner: CGPoint
+        let chord = CGPoint(x: (start.x + tip.x) / 2, y: (start.y + tip.y) / 2)
+        let bend = spine.control - chord
+        if hypot(bend.dx, bend.dy) > width {
+            // Bent: the corner the bend handle was dragged towards.
+            let toAcross = hypot(spine.control.x - across.x, spine.control.y - across.y)
+            let toDown = hypot(spine.control.x - down.x, spine.control.y - down.y)
+            corner = toDown < toAcross ? down : across
+        } else if abs(dy) < headLength + radius, abs(dx) >= headLength + radius {
+            corner = down
+        } else {
+            corner = across
+        }
+        let first = (corner - start).normalized
+        let second = (tip - corner).normalized
+        let firstLeg = hypot(corner.x - start.x, corner.y - start.y)
+        let secondLeg = hypot(tip.x - corner.x, tip.y - corner.y)
+        let r = min(radius, firstLeg * 0.5, secondLeg * 0.5)
+        let into = corner - first * r
+        let out = corner + second * r
+        let arc = quadratic(into, corner, out, count: 7)
+        let back = second * -1
+        let lineEnd = tip + back * min(headLength * 0.6, max(secondLeg - r, 0))
+        return [tailDot,
+                ArrowInk(part: .shaft, kind: .stroke, points: [start, into], width: width),
+                ArrowInk(part: .shaft, kind: .stroke, points: arc, width: width),
+                ArrowInk(part: .shaft, kind: .stroke, points: [out, lineEnd], width: width),
+                solidHead(reach: headLength, half: headHalfWidth, back: back, tip: tip)]
     }
 
     // MARK: Shapes

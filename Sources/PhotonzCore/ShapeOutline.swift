@@ -174,7 +174,7 @@ enum ShapeOutline {
             return swept(line)
         case .arrow:
             var pieces: [CGPath] = []
-            if annotation.arrowStyle.isHandMade {
+            if annotation.arrowStyle.drawsOwnInk {
                 let drawn = HandMadeArrow.outlines(for: annotation)
                 pieces = [drawn.shaft, drawn.head].filter { !$0.isEmpty }
                     .map { $0.normalized(using: .winding) }

@@ -1316,8 +1316,39 @@ private struct Writer {
         var lines: [String] = []
         // A hand-made arrow is the very outline the rasterizer fills, shaft
         // and head, so the export is the same hand as the canvas.
-        if annotation.arrowStyle.isHandMade {
+        if annotation.arrowStyle.drawsOwnInk {
             let outlines = HandMadeArrow.outlines(for: annotation)
+            let glow = HandMadeArrow.glowRadii(for: annotation)
+            if !glow.isEmpty {
+                // Neon's glow: the same shaft and head again, under them,
+                // through a blur that is a tight halo over a wide one, the
+                // way the canvas casts it. Said in plain blurs, which every
+                // SVG reader honours (`defineFilter` says why).
+                let ink = outlines.shaft.boundingBoxOfPath.union(outlines.head.boundingBoxOfPath)
+                let reach = HandMadeArrow.glowReach(for: annotation)
+                let region = ink.insetBy(dx: -reach, dy: -reach)
+                let name = "glow-\(nextFilterNumber)"
+                nextFilterNumber += 1
+                defs.append("    <filter id=\"\(name)\" filterUnits=\"userSpaceOnUse\""
+                    + " x=\"\(n(region.minX))\" y=\"\(n(region.minY))\""
+                    + " width=\"\(n(region.width))\" height=\"\(n(region.height))\""
+                    + " color-interpolation-filters=\"sRGB\">")
+                defs.append(blurStep(in: "SourceGraphic", sigma: glow[glow.count - 1], result: "wide"))
+                defs.append(blurStep(in: "SourceGraphic", sigma: glow[0], result: "tight"))
+                defs.append(overStep("tight", over: "wide", result: nil))
+                defs.append("    </filter>")
+                lines.append(indent(level) + "<g filter=\"url(#\(name))\">")
+                if !outlines.shaft.isEmpty {
+                    lines.append(indent(level + 1) + "<path d=\"\(SVGExport.pathData(outlines.shaft))\""
+                        + fill(annotation.paint, box: outlines.shaft.boundingBoxOfPath) + "/>")
+                }
+                if !outlines.head.isEmpty {
+                    lines.append(indent(level + 1) + "<path d=\"\(SVGExport.pathData(outlines.head))\""
+                        + ownPaint(annotation.headPaint, box: outlines.head.boundingBoxOfPath, as: "fill")
+                        + "/>")
+                }
+                lines.append(indent(level) + "</g>")
+            }
             if !outlines.shaft.isEmpty {
                 lines.append(indent(level) + "<path d=\"\(SVGExport.pathData(outlines.shaft))\""
                     + fill(annotation.paint, box: outlines.shaft.boundingBoxOfPath) + "/>")
@@ -1326,6 +1357,11 @@ private struct Writer {
                 lines.append(indent(level) + "<path d=\"\(SVGExport.pathData(outlines.head))\""
                     + ownPaint(annotation.headPaint, box: outlines.head.boundingBoxOfPath, as: "fill")
                     + "/>")
+            }
+            if !outlines.core.isEmpty {
+                let alpha = (1 - HandMadeArrow.neonCoreInk) * CGFloat((RGBA(hex: annotation.colorHex) ?? RGBA(r: 1, g: 0, b: 0)).a)
+                lines.append(indent(level) + "<path d=\"\(SVGExport.pathData(outlines.core))\""
+                    + " fill=\"#FFFFFF\" fill-opacity=\"\(n(alpha))\"/>")
             }
             lines.append(contentsOf: caption(annotation, level: level))
             return lines

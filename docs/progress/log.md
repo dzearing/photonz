@@ -22303,3 +22303,11 @@ the ghost, and pinching in seemed to stop short.
 - Rows: `MeasureChipStyleRow` (Appearance), `MeasureToolChipRows` (Measure tool settings, only while nothing is picked), Chip Style and Chip Marker on the right-click of measurements (Chip Marker on arrows too). The tool memory starts with no style, so nobody's next measurement changes look until a style is picked.
 - Verified: 150 pixel contrast readings, lowest 4.58:1; join tests per style; `measure-chip-styles-walk` green at Next defaults (picks via right-click because panel button presses are dead under walks, owned by `walks-that-fail-in-the-full-sweep-26`).
 - Open: pointer proof of the tiles, swatches and Reset Colors waits on that harness fix.
+
+## 2026-11-01: five more arrow styles
+
+- Arrows have ten styles: Dashed, Block, Neon, Dotted and Elbow join the five from before (`ArrowStyle`, `HandMadeArrow`). The new five are exact (no seed; Reshuffle only on `hasHand` styles). `ArrowStyle.isHandMade` is now `drawsOwnInk`.
+- `ArrowInk` gained a sharp-cornered `.polygon` piece and a `.core` part; Neon glows through `glowRadii` (shadow in the rasterizer, blur filter in SVG, layer shadow in the drag preview) and the frame pads for it.
+- Elbow turns across then down, down first when the last leg cannot hold its head, and a bend picks the corner.
+- Style tiles are picture-only, five across, like the Chip row. Walk: `five-more-arrow-styles-walk` (right-click picks, since panel tile presses under a walk are dead; walks-that-fail-in-the-full-sweep-26).
+- Open: the Style row's header should read Arrow (arrow-and-measurement-appearance-shows-only-styl).

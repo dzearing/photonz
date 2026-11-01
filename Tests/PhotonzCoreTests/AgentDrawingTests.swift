@@ -91,6 +91,20 @@ struct AgentDrawingTests {
         else { Issue.record("empty words were accepted"); return }
     }
 
+    @Test("The agent can draw and restyle an arrow in each of the five exact styles")
+    func exactArrowStylesByName() throws {
+        for style in [ArrowStyle.dashed, .block, .neon, .dotted, .elbow] {
+            let add = try Self.request("add_shape", """
+                {"shape": "arrow", "from": {"x": 10, "y": 10}, "to": {"x": 200, "y": 90}, "arrowStyle": "\(style.rawValue)"}
+                """).get()
+            guard case .addShape(nil, let shape) = add else { Issue.record("\(add)"); continue }
+            #expect(shape.arrowLabel.arrowStyle == style)
+            let set = try Self.request("set_layer", #"{"layer": "x", "arrowStyle": "\#(style.rawValue)"}"#).get()
+            guard case .setLayer(nil, "x", let change) = set else { Issue.record("\(set)"); continue }
+            #expect(change.arrowLabel.arrowStyle == style)
+        }
+    }
+
     @Test("set_layer needs something to change, and removeShadow means none")
     func setLayerCall() throws {
         guard case .failure(let nothing) = try Self.request("set_layer", #"{"layer": "x"}"#)

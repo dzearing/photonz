@@ -1,0 +1,427 @@
+{
+ "out": "/tmp/photonz-playtest/five-more-arrow-styles",
+ "seed": "At Next defaults, no switch changed: four arrows drawn and each turned Dashed, Block, Neon or Dotted from its own right-click menu (Arrow Style), an Elbow across a corner, and a Neon on a dark picture. One undo takes Block back to the Dashed it was drawn in (the tool remembers the last style) and redo puts it back. The Style row shows ten picture tiles in rows of five. The tiles are not pressed here: every panel tile press under a walk has done nothing since 2026-10-26 (walks-that-fail-in-the-full-sweep-26).",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1000,
+   "canvasHeight": 760,
+   "width": 1400,
+   "height": 1000
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    80,
+    140
+   ],
+   "to": [
+    420,
+    60
+   ],
+   "steps": 8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    250,
+    100
+   ],
+   "choose": "Arrow Style > Dashed"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Dashed",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Solid head",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "1-dashed"
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    80,
+    300
+   ],
+   "to": [
+    420,
+    210
+   ],
+   "steps": 8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    250,
+    255
+   ],
+   "choose": "Arrow Style > Block"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Block",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Solid head",
+   "present": false
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Dashed",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on",
+   "note": "the arrow tool remembered Dashed from the first arrow, so undo takes Block back to the Dashed it was drawn in"
+  },
+  {
+   "do": "action",
+   "action": "redo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Block",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-block"
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    80,
+    450
+   ],
+   "to": [
+    420,
+    370
+   ],
+   "steps": 8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    250,
+    410
+   ],
+   "choose": "Arrow Style > Neon"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Neon",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Solid head",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "3-neon"
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    80,
+    600
+   ],
+   "to": [
+    420,
+    520
+   ],
+   "steps": 8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    250,
+    560
+   ],
+   "choose": "Arrow Style > Dotted"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Dotted",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Solid head",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "4-dotted"
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    520,
+    90
+   ],
+   "to": [
+    900,
+    330
+   ],
+   "steps": 8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    710,
+    210
+   ],
+   "choose": "Arrow Style > Elbow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Elbow",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Solid head",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "5-elbow"
+  },
+  {
+   "do": "dropImage",
+   "file": "fixtures/arrow-references/dark-backdrop.png",
+   "at": [
+    760,
+    600
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    600,
+    660
+   ],
+   "to": [
+    900,
+    540
+   ],
+   "steps": 8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    750,
+    600
+   ],
+   "choose": "Arrow Style > Neon"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Neon",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "expect",
+   "control": "Solid head",
+   "present": false
+  },
+  {
+   "do": "describe",
+   "stage": "6-every-new-style",
+   "note": "Dashed, Block, Neon, Dotted on white, an Elbow across a corner, Neon on a dark picture, the last one picked so its ten Style tiles show"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-every-new-style"
+  },
+  {
+   "do": "panel",
+   "stage": "picked-neon"
+  },
+  {
+   "do": "render",
+   "name": "7-document"
+  },
+  {
+   "do": "writePicture",
+   "name": "export-1x",
+   "format": "png",
+   "scale": 1
+  },
+  {
+   "do": "writePicture",
+   "name": "export-2x",
+   "format": "png",
+   "scale": 2
+  },
+  {
+   "do": "writeSVG",
+   "name": "export"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "key",
+   "key": "s"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "snapshot",
+   "name": "8-tool-settings"
+  },
+  {
+   "do": "panel",
+   "stage": "tool-settings"
+  }
+ ]
+}

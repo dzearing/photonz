@@ -177,7 +177,7 @@ extension CanvasNSView {
         case .line:
             path.move(to: start)
             path.addLine(to: end)
-        case .arrow where content.arrowStyle.isHandMade:
+        case .arrow where content.arrowStyle.drawsOwnInk:
             // The very outline the rasterizer fills, drawn in document space
             // with this arrow's own hand and carried to the view, so letting go
             // changes nothing you can see (`HandMadeArrow.swift`).
@@ -291,6 +291,13 @@ extension CanvasNSView {
         annotationPreviewLayer.compositingFilter = compositing
         annotationPreviewHeadLayer.path = headPath
         annotationPreviewHeadLayer.fillColor = color
+        // Neon glows while it is drawn too, as it will once it lands: the
+        // widest of its blurs, carried into view points.
+        let glow = content.shape == .arrow ? HandMadeArrow.glowRadii(for: content).max() ?? 0 : 0
+        annotationPreviewHeadLayer.shadowColor = glow > 0 ? color : nil
+        annotationPreviewHeadLayer.shadowOffset = .zero
+        annotationPreviewHeadLayer.shadowRadius = glow * 2 * viewport.zoom
+        annotationPreviewHeadLayer.shadowOpacity = glow > 0 ? 1 : 0
         displayCaptionPreview(content: content, docStart: docStart, docEnd: docEnd,
                               viewport: viewport)
         annotationPreviewLayer.isHidden = false
