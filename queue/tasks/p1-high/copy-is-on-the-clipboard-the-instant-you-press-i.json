@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T12:13:07.386Z",
-  "updated": "2026-10-31T13:23:31.069Z",
+  "updated": "2026-11-01T09:33:32.587Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake): 'sometimes copying an image and pasting doesn't work immediately, like im doing it too fast and clipboard fails to update. not sure if this was a new bug introduced or not'. Not yet reproduced. Code read: EditorState.copyCompositeToClipboard (EditorState.swift ~4246) runs on the main thread and does all of it before the clipboard changes: renders the whole composite (previewRenderer.render), builds the SVG (clipboardSVG -> SVGExporter.export, plus flatColorsRemembered reading pixels), then clearContents and setData PNG (ImageCodec.encode) and TIFF. For a large screenshot that is plausibly hundreds of milliseconds, during which a paste in another app reads the old clipboard. The SVG step was added 2026-10-15 (87f07af6, Copy SVG) and could be the regression the user suspects. Other writers: EditorState+Clipboard.swift (copyMerged, copyMergedRegion, layer regions), Capture/ClipboardWriter.swift and CaptureStore.swift (History and capture toast).",
@@ -34,6 +34,57 @@
     {
       "t": "2026-10-31T13:23:31.068Z",
       "note": "seq 2e-7 -> 20"
+    },
+    {
+      "t": "2026-11-01T08:13:45.383Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T09:32:39.181Z",
+      "note": "owns these walks: redline-walk, copy-takes-your-layer-walk, capture-to-redline-steps-walk"
+    },
+    {
+      "t": "2026-11-01T09:32:54.552Z",
+      "note": "Reproduced with a second process watching the clipboard (Scripts/clipboard-timing): every copy cleared the clipboard and then made the PNG on the main thread, so a paste in that gap got NOTHING. Screenshot 3456x2234: 77-106 ms to a readable PNG; 12 MP photo 260-350 ms; drawing 16-33 ms; History tile Copy ~117 ms; a screenshot landing ~235 ms. Paste race before: 100 of 120 pastes at 10/50/200 ms got an empty clipboard."
+    },
+    {
+      "t": "2026-11-01T09:32:54.634Z",
+      "note": "Not a recent regression: the SVG step (2026-10-15) costs a few ms on drawings only; the delay scales with picture size and dates from phase 6.7 (0ec3ae4b), where clearContents ran before the PNG encode. PNG encode is nearly all of it (70 ms screenshot, 250 ms photo; TIFF 5-8 ms; a different PNG filter saves under 10%)."
+    },
+    {
+      "t": "2026-11-01T09:32:54.709Z",
+      "note": "Chose lazy promises plus an eager background hand-over over a kept ready render: one NSPasteboardItem goes up at once (ClipboardHandOff), PNG made off-main (PhotonzRender ClipboardPicture), each promised type made once (PromisedData) then read back on main so the system clipboard holds it and Photonz lets go; a paste that comes first waits inside the provider. A kept render would cost memory all the time for every open document."
+    },
+    {
+      "t": "2026-11-01T09:32:54.782Z",
+      "note": "Also: the marquee clip (RegionOps.extracted) moved off-main; ⌘C on a picked layer makes its PNG in the background; a new screenshot is on the clipboard before its file is written (CaptureStore.copiesNewScreenshots, file URL promised so it is served after the write); two 'is there a layer to paste' checks ask by type so they never wait on a copy. New walk actions copyNewestCapture and captureLands (probe only)."
+    },
+    {
+      "t": "2026-11-01T09:32:54.854Z",
+      "note": "After: clipboard moves 0-18 ms from the start of the copy on every path, identical PNG bytes and type lists; race 120/120 new picture; longest main pass on a 12 MP copy under 11 ms including the hand-over; force-kill 1.5 s after a copy still leaves the PNG and TIFF; a real quit is covered by AppKit asking for owed data (checked with a standalone app)."
+    },
+    {
+      "t": "2026-11-01T09:32:54.929Z",
+      "note": "Walks: 23 of 32 copy/paste walks pass; the 9 that fail (a-locked-track-keeps-its-clip, a-size-measurement-is-one-group, chart-from-pasted-data, copy-an-icon-as-svg, copy-and-paste-a-range, copy-svg-into-a-code-editor, keys-copy-between-layers, pen-lands-on-whole-units-in-an-icon, shapes-snap-in-an-icon) are all on walks-that-fail-in-the-full-sweep-26 and fail at steps before any copy (panel field names, frame creation, snapping)."
+    },
+    {
+      "t": "2026-11-01T09:32:55.003Z",
+      "note": "left rough: an app that reads the picture the instant the clipboard moves (a clipboard manager) makes Photonz wait on the main thread for the PNG, up to ~250 ms on a 12 MP photo (AppKit asks providers on the main thread). That is still better than the 350 ms every copy cost before and no person reported it, so no task; noted in the audit."
+    },
+    {
+      "t": "2026-11-01T09:32:55.076Z",
+      "note": "left rough: pasting into Teams, Slack, Mail, Messages, Figma and Preview by hand was not possible (no Accessibility grant to drive other apps); checked at the clipboard instead and asked in the audit's evaluate list."
+    },
+    {
+      "t": "2026-11-01T09:33:32.585Z",
+      "note": "A copy is on the clipboard within 0-18 ms of the press on every path (Copy, Copy Merged, Copy Image, layer and marquee copies, History tile, capture toast, a new screenshot), down from 77-350 ms with the clipboard empty in between. The picture's types are promised at once and made off the main thread (ClipboardHandOff, PhotonzRender ClipboardPicture/PromisedData, tested), then handed to the system clipboard. Verified from a second process: 120/120 pastes at 10/50/200 ms got the new picture (100/120 got nothing before), same PNG bytes and types as before, longest main pass on a 12 MP copy under 11 ms (was 274-353), picture survives a force kill. 23 copy/paste walks pass; 9 failing ones are pre-existing on walks-that-fail-in-the-full-sweep-26. Per-app hand pastes left to the user (no Accessibility grant). Audit queue/audits/2026-11-01-copy-is-on-the-clipboard-the-instant-you-press-i.json; commit e0648dd9."
     }
-  ]
+  ],
+  "started": "2026-11-01T08:13:45.382Z",
+  "walks": [
+    "redline-walk",
+    "copy-takes-your-layer-walk",
+    "capture-to-redline-steps-walk"
+  ],
+  "completed": "2026-11-01T09:33:32.586Z"
 }

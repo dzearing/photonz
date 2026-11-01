@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:19:06.785Z",
-  "updated": "2026-11-01T05:08:33.809Z",
+  "updated": "2026-11-01T08:11:54.608Z",
   "deps": [
     "walks-that-fail-in-the-full-sweep-26"
   ],
@@ -71,6 +71,10 @@
     {
       "t": "2026-11-01T05:08:33.808Z",
       "note": "2026-11-01: a measurement now has the same Color row (MarkupInkRow, field 'Measure Color'), MeasureContent.setInk and the ChipLegibilityWarning with Reset Colors (every-measurement-wears-the-same-chip-styles-col). expectChipContrast reads measurement readouts too. What is left for measurements here is only the walk press, blocked like the arrow's."
+    },
+    {
+      "t": "2026-11-01T08:11:54.607Z",
+      "note": "rotating check 2026-11-01T08:11:54Z, 39 walks run from 959 onward in the rotation: any-colour-chip-reads-walk (its script changed since the last check) failing."
     }
   ],
   "started": "2026-10-31T15:22:52.840Z",
