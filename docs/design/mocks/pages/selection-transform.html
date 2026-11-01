@@ -265,13 +265,13 @@
     const knob = [top[0] + edgeN[0] * 26, top[1] + edgeN[1] * 26];
     el("line", { x1: top[0], y1: top[1], x2: knob[0] - edgeN[0] * 6, y2: knob[1] - edgeN[1] * 6, stroke: blue, "stroke-width": 1.5 });
     const on = g => hot === g || (drag && drag.kind === g);
-    el("circle", { cx: knob[0], cy: knob[1], r: on("knob") ? 9 : 7, fill: on("knob") ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
+    el("circle", { cx: knob[0], cy: knob[1], r: 7, fill: on("knob") ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
     el("circle", { cx: knob[0], cy: knob[1], r: 15, fill: "transparent", class: "hit", "data-g": "knob", style: "cursor:grab" });
     const bot = mid(q[2], q[3]);
     if (pick.mode === "3d") {            // depth: its own grip below the card, never on a corner
       const d = [bot[0] - edgeN[0] * 30, bot[1] - edgeN[1] * 30];
       el("line", { x1: bot[0], y1: bot[1], x2: d[0], y2: d[1], stroke: blue, "stroke-width": 1.5, "stroke-dasharray": "2 3" });
-      const hd = on("depth"), sc = hd ? 1.2 : 1, ink = hd ? "#fff" : blue;
+      const hd = on("depth"), sc = 1, ink = hd ? "#fff" : blue;
       el("rect", { x: d[0] - 9 * sc, y: d[1] - 12 * sc, width: 18 * sc, height: 24 * sc, rx: 9 * sc, fill: hd ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
       el("path", { d: `M${d[0] - 4} ${d[1] - 3} L${d[0]} ${d[1] - 7} L${d[0] + 4} ${d[1] - 3} M${d[0] - 4} ${d[1] + 3} L${d[0]} ${d[1] + 7} L${d[0] + 4} ${d[1] + 3}`, fill: "none", stroke: ink, "stroke-width": 1.4 });
       el("rect", { x: d[0] - 18, y: d[1] - 20, width: 36, height: 40, fill: "transparent", class: "hit", "data-g": "depth", style: "cursor:ns-resize" });
@@ -289,8 +289,8 @@
     pp.querySelector("input").value = cam.fov;
     // grips: corners and edges, flat and one size
     q.forEach((p, i) => {
-      const h = on("c" + i), k = h ? 1.4 : 1;
-      if (pick.mode === "distort") el("circle", { cx: p[0], cy: p[1], r: 6 * k, fill: blue, stroke: "#fff", "stroke-width": 2 });
+      const h = on("c" + i), k = 1;
+      if (pick.mode === "distort") el("circle", { cx: p[0], cy: p[1], r: 6, fill: h ? "#0060df" : blue, stroke: h ? blue : "#fff", "stroke-width": 2 });
       else el("rect", { x: p[0] - 5 * k, y: p[1] - 5 * k, width: 10 * k, height: 10 * k, rx: 2, fill: h ? blue : "#fff", stroke: blue, "stroke-width": 1.5 });
       el("circle", { cx: p[0], cy: p[1], r: 14, fill: "transparent", class: "hit", "data-g": "c" + i, style: `cursor:${pick.mode === "distort" ? "grab" : "nwse-resize"}` });
     });
@@ -303,10 +303,10 @@
       // Just clear of the edge: half the pill's thickness and a hair, no more.
       const off = (pick.mode === "3d" ? 10 : 6) / 2 + 1.5;
       const m = [m0[0] + nx * off, m0[1] + ny * off];
-      const hv = on("e" + i), k = hv ? 1.3 : 1;
+      const hv = on("e" + i), k = 1;
       const w = (pick.mode === "3d" ? 26 : 18) * k, h = (pick.mode === "3d" ? 10 : 6) * k;
       const ang = Math.atan2(q[b][1] - q[a][1], q[b][0] - q[a][0]) * 180 / Math.PI;
-      el("rect", { x: m[0] - w / 2, y: m[1] - h / 2, width: w, height: h, rx: h / 2, fill: pick.mode === "3d" || hv ? blue : "#fff", stroke: hv && pick.mode === "3d" ? "#fff" : blue, "stroke-width": 1.5,
+      el("rect", { x: m[0] - w / 2, y: m[1] - h / 2, width: w, height: h, rx: h / 2, fill: hv ? (pick.mode === "3d" ? "#0060df" : blue) : (pick.mode === "3d" ? blue : "#fff"), stroke: hv && pick.mode === "3d" ? "#0060df" : blue, "stroke-width": 1.5,
         transform: `rotate(${ang} ${m[0]} ${m[1]})` });
       el("rect", { x: m[0] - 24, y: m[1] - 12, width: 48, height: 24, fill: "transparent", transform: `rotate(${ang} ${m[0]} ${m[1]})`,
         class: "hit", "data-g": "e" + i, style: `cursor:${pick.mode === "3d" ? "grab" : (horiz ? "ns" : "ew") + "-resize"}` });
