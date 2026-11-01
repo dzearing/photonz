@@ -165,17 +165,87 @@
    "note": "a click on the pill opened None, Subtle, Normal, Strong and a slider under it, the header saying Perspective and All 3D layers; nothing is lit, since 75° is no preset"
   },
   {
-   "do": "key",
-   "key": "escape"
+   "do": "press",
+   "control": "Strong",
+   "in": "Perspective"
   },
   {
    "do": "wait",
    "seconds": 0.3
   },
   {
-   "do": "shortcut",
-   "key": "f8",
-   "menuItem": "Show Transform Values"
+   "do": "expectCamera",
+   "perspective": 90
+  },
+  {
+   "do": "snapshot",
+   "name": "5-strong"
+  },
+  {
+   "do": "describe",
+   "stage": "5-strong",
+   "note": "Strong clicked with the pointer in the pill's popover: the camera goes to 90 degrees and the pill reads 90°"
+  },
+  {
+   "do": "grip",
+   "grip": "perspective"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expect",
+   "field": "Perspective Value",
+   "reads": "90°"
+  },
+  {
+   "do": "press",
+   "control": "Slider",
+   "in": "Perspective",
+   "across": 0.25
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 30,
+   "within": 8
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 75
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.1
+  },
+  {
+   "do": "expect",
+   "control": "Info",
+   "reads": "Tool bar, transform values open"
   },
   {
    "do": "wait",
@@ -185,6 +255,36 @@
    "do": "expect",
    "field": "Transform Perspective Value",
    "reads": "75°"
+  },
+  {
+   "do": "press",
+   "control": "Subtle",
+   "in": "Transform Perspective"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 20
+  },
+  {
+   "do": "expect",
+   "field": "Transform Perspective Value",
+   "reads": "20°"
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expectCamera",
+   "perspective": 75
   },
   {
    "do": "snapshot",

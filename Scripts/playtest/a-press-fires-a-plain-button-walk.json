@@ -1,0 +1,154 @@
+{
+ "out": "/tmp/photonz-playtest/a-press-fires-a-plain-button",
+ "seed": "At Next defaults, no switch changed. The guard on how every walk clicks: a walk's press on a plain SwiftUI button in the panel (a picture tile, a colour swatch, the custom colour well, a button inside the colour picker) must change what it says it changes. From macOS 27 these presses reached the right point and did nothing for six days (2026-10-26 to 2026-11-01) while segmented pickers and sliders kept working, and dozens of walks went red for a reason no app change explained. Every rotating check runs this walk first, so if the way a walk delivers a click stops reaching SwiftUI again, this fails by name the same day (MainThreadMeter.deliverWalkClick).",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1120,
+   "canvasHeight": 980,
+   "width": 1400,
+   "height": 1000
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "tool",
+   "tool": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    70,
+    140
+   ],
+   "to": [
+    340,
+    50
+   ],
+   "steps": 8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Hand-drawn",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, off"
+  },
+  {
+   "do": "press",
+   "control": "Arrow style Hand-drawn",
+   "in": "Arrow Style"
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Hand-drawn",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "press",
+   "control": "Color Green",
+   "in": "Arrow Color"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "expect",
+   "control": "Color Green",
+   "in": "Arrow Color",
+   "reads": "Arrow Color, on"
+  },
+  {
+   "do": "press",
+   "control": "Arrow style Marker",
+   "in": "Arrow Style",
+   "count": 2
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Marker",
+   "in": "Arrow Style",
+   "reads": "Arrow Style, on"
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Custom"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "control": "HEX",
+   "present": true
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#7FD18B"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Color Green",
+   "in": "Arrow Color",
+   "reads": "Arrow Color, off"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-pressed"
+  }
+ ]
+}

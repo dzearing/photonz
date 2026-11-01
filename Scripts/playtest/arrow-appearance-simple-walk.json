@@ -162,6 +162,36 @@
   },
   {
    "do": "press",
+   "control": "S",
+   "in": "Arrow Size"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "S",
+   "in": "Arrow Size",
+   "reads": "Arrow Size, already on S, tooltip \"Small\""
+  },
+  {
+   "do": "press",
+   "control": "M",
+   "in": "Arrow Size"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "M",
+   "in": "Arrow Size",
+   "reads": "Arrow Size, already on M, tooltip \"Medium\""
+  },
+  {
+   "do": "press",
    "control": "L",
    "in": "Arrow Size"
   },

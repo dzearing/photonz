@@ -67,8 +67,12 @@ export const DEFAULTS = {
   // closed-windows-give-their-memory-back-walk opens and closes pictures and
   // fails if Photonz keeps what it closed: a colleague saw it near 4 GB and
   // every closed window was found still in memory (2026-10-23).
-  everyCheck: ['an-editing-session-walk', '3d-grippers-on-a-picked-layer-walk',
-    'closed-windows-give-their-memory-back-walk'],
+  // a-press-fires-a-plain-button-walk presses a picture tile, a swatch and
+  // the colour well the way every walk presses a control: from macOS 27 those
+  // presses landed and did nothing for six days (2026-10-26 to 11-01) and
+  // dozens of walks went red with no app change behind them.
+  everyCheck: ['a-press-fires-a-plain-button-walk', 'an-editing-session-walk',
+    '3d-grippers-on-a-picked-layer-walk', 'closed-windows-give-their-memory-back-walk'],
 };
 
 const HOUR = 3600 * 1000;

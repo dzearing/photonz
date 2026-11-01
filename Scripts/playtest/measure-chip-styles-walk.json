@@ -264,6 +264,143 @@
   {
    "do": "render",
    "name": "4-next-measurement"
+  },
+  {
+   "do": "selectRow",
+   "row": "Gap 37"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Color Orange",
+   "in": "Measure Color"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Color Orange",
+   "in": "Measure Color",
+   "reads": "Measure Color, on"
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "5-orange",
+   "note": "Orange clicked with the pointer on the picked Gap: caliper and chip turn orange and the words still read"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-orange"
+  },
+  {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Chip Text"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "HEX"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "focus",
+   "field": "Hex value"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "#F4F1EA"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "control": "Reset Colors",
+   "in": "Chip Legibility",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "6-warning",
+   "note": "chip words painted by hand in a near-white on the Paper chip: the Color row says they are hard to read and offers Reset Colors"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-warning"
+  },
+  {
+   "do": "press",
+   "control": "Reset Colors",
+   "in": "Chip Legibility"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Reset Colors",
+   "in": "Chip Legibility",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Chip Text",
+   "reads": "Advanced, Chip Text, from style"
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "snapshot",
+   "name": "7-reset"
   }
  ]
 }

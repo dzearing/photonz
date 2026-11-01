@@ -8477,10 +8477,7 @@ private final class Run {
                     with: .leftMouseUp, location: target.point, modifierFlags: flags, timestamp: at + 0.04,
                     windowNumber: window.windowNumber, context: nil, eventNumber: 1,
                     clickCount: earlier, pressure: 0) else { break }
-            NSApp.postEvent(firstUp, atStart: false)
-            NSApp.postEvent(firstDown, atStart: true)
-            NSApp.sendEvent(NSApp.nextEvent(matching: .leftMouseDown, until: .distantPast,
-                                            inMode: .default, dequeue: true) ?? firstDown)
+            MainThreadMeter.shared.deliverWalkClick(down: firstDown, up: firstUp)
             await sleep(0.06)
         }
         // ...and a control that moved under those earlier clicks fails the
@@ -8532,15 +8529,16 @@ private final class Run {
         // that left the sweep unable to tell a break from one. Delivering the
         // press by hand fixes it (0 misses in 30, against 5 in 30 posted).
         //
-        // But the release cannot be delivered by hand as well. A view that
-        // tracks the mouse itself — the swatch grid inside the colour picker
-        // is one — runs its own event loop from inside the press and does not
-        // return until the release arrives, so a second `sendEvent` never gets
-        // to run and the walk hangs until its clock runs out. Four colour
-        // walks did exactly that. Queueing the release first is what both need:
-        // a tracking loop finds it waiting, and a button that does not track
-        // gets it on the next turn of the run loop, which is the gap a real
-        // click has anyway.
+        // The release is queued FIRST. A view that tracks the mouse itself
+        // (the swatch grid inside the colour picker is one) runs its own event
+        // loop from inside the press and does not return until the release
+        // arrives, so a release only ever handed over after the press would
+        // never get to run, and four colour walks hung that way. A tracking
+        // loop finds it waiting; for a button that does not track, it is
+        // still waiting once the press returns and is handed over then. It
+        // used to be left for the next turn of the run loop instead, and
+        // from macOS 27 a SwiftUI button never fires that way
+        // (`MainThreadMeter.deliverWalkClick` says what was measured).
         //
         // And the press is delivered by hand THROUGH THE QUEUE, not straight
         // to `sendEvent`. `NSApp.currentEvent` is set when an event is taken
@@ -8556,9 +8554,7 @@ private final class Run {
         // Taken out of the queue by the meter, which leaves out what the menu
         // bar spends on it when the person's pointer rests there
         // (`MainThreadMeter.takeWalkMouseDown`).
-        NSApp.postEvent(up, atStart: false)
-        NSApp.postEvent(down, atStart: true)
-        NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
+        MainThreadMeter.shared.deliverWalkClick(down: down, up: up)
         // The release lifts the window over every other app's, inside AppKit
         // where nothing the app calls is involved (a hook on every ordering
         // call caught none), so it goes straight back the moment the release
@@ -15606,10 +15602,8 @@ private final class Run {
                     return event
                 }
                 defer { monitor.map(NSEvent.removeMonitor) }
-                NSApp.postEvent(up, atStart: false)
-                NSApp.postEvent(down, atStart: true)
                 let pressed = CACurrentMediaTime()
-                NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
+                MainThreadMeter.shared.deliverWalkClick(down: down, up: up)
                 let t0 = CACurrentMediaTime()
                 while clock.committed == nil, CACurrentMediaTime() - t0 < 2 {
                     try? await Task.sleep(for: .milliseconds(1))
@@ -19211,9 +19205,7 @@ private final class Run {
             // there. Left to the run loop, five quick clicks paid it five
             // times over in the guarded wait after them, 16 to 19ms passes
             // no person's click makes (`takeWalkMouseDown`).
-            NSApp.postEvent(up, atStart: false)
-            NSApp.postEvent(down, atStart: true)
-            NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
+            MainThreadMeter.shared.deliverWalkClick(down: down, up: up)
             await sleep(0.13)
         }
         await sleep(0.3)
@@ -21193,6 +21185,42 @@ final class MainThreadMeter {
     /// What the menu bar spent on a walk's mouse-downs since the meter was
     /// zeroed, left out of the press it came with (`takeWalkMouseDown`).
     private var menuBarLeftOut: CFTimeInterval = 0
+
+    /// One walk click, delivered the way every walk press, double click,
+    /// tile click and `windowClick` delivers it: the release queued first,
+    /// the press taken out of the queue and handed over, and then the
+    /// release handed over too if nothing took it while the press was being
+    /// handled.
+    ///
+    /// That last part is new with macOS 27 (27.0.1, installed on the walk Mac
+    /// 2026-10-25). The press is handed over from inside a walk step, which
+    /// runs nested inside the run loop's own wait for the next event, and
+    /// from 27 a SwiftUI button whose press was dequeued there and whose
+    /// release was then left for the run loop to deliver never fires: the
+    /// release arrives (a monitor sees it about 10ms later) and the action
+    /// does not run. Every plain `Button` in the panel went dead to walks
+    /// that way (picture tiles, swatches, the custom colour well, Reset),
+    /// while segmented pickers and sliders kept working, because those are
+    /// AppKit controls that pull the release out of the queue themselves
+    /// from their own tracking loop during the press. Measured 2026-11-01 on
+    /// arrow-styles-walk: press dequeued + release by the run loop failed
+    /// every time; release handed over here, press never dequeued, or both
+    /// left to the run loop each passed.
+    ///
+    /// A view that tracks the mouse itself (the swatch grid in the colour
+    /// picker) still finds the release waiting in the queue during the
+    /// press, and then there is nothing left to hand over, so it never
+    /// hangs. Returns whether the release was handed over here.
+    @discardableResult
+    func deliverWalkClick(down: NSEvent, up: NSEvent) -> Bool {
+        NSApp.postEvent(up, atStart: false)
+        NSApp.postEvent(down, atStart: true)
+        NSApp.sendEvent(takeWalkMouseDown(down))
+        guard let waiting = NSApp.nextEvent(matching: .leftMouseUp, until: .distantPast,
+                                            inMode: .default, dequeue: true) else { return false }
+        NSApp.sendEvent(waiting)
+        return true
+    }
 
     /// Takes a walk's own mouse-down out of the queue, which a press has to do
     /// to deliver it (`pressControl` says why), and leaves out of the meter
