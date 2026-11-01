@@ -14948,3 +14948,11 @@
 {"t":"2026-11-01T10:26:28.152Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T10:26:28.226Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T10:26:31.485Z","ev":"task_blocked","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"Item 9's looks-painted bar of 8 is one no digital painting reached in a calibration (a skilled person's Krita painting scores 5 and 6, Ask's 4 and 5, real canvases 9 to 10); the one untried lever moved it within noise and was not shipped. Card asks the user whether to close, aim for the person's score, or keep 8."}
+{"t":"2026-11-01T12:41:45.408Z","ev":"sweep_pass","walks":463,"seconds":8086,"passed":273,"failed":190,"complete":false,"total":1070,"interrupted":true}
+{"t":"2026-11-01T12:41:45.597Z","ev":"task_started","id":"while-ask-works-the-agent-panel-says-what-it-is","title":"While Ask works, the Agent panel says what it is doing right now","priority":"p1-high"}
+{"t":"2026-11-01T12:43:48.626Z","ev":"decision_resolved","id":"a-brush-tool-paints-with-realistic-charcoal-chal-ask-s-paintings-show-what-you-as","taskId":"a-brush-tool-paints-with-realistic-charcoal-chal","choice":"b"}
+{"t":"2026-11-01T12:43:48.687Z","ev":"task_unblocked","id":"a-brush-tool-paints-with-realistic-charcoal-chal","decision":"a-brush-tool-paints-with-realistic-charcoal-chal-ask-s-paintings-show-what-you-as"}
+{"t":"2026-11-01T12:45:05.881Z","ev":"task_created","id":"the-reworked-selection-ships-cleaner-grips-a-tag","priority":"p1-high","title":"The reworked selection ships: cleaner grips, a tag that never covers the knob, and a 3D mode you switch into by the rotate knob"}
+{"t":"2026-11-01T12:45:06.050Z","ev":"task_resequenced","id":"the-reworked-selection-ships-cleaner-grips-a-tag","from":3970,"to":1.2e-7}
+{"t":"2026-11-01T12:45:06.174Z","ev":"task_note","id":"on-a-small-picked-object-the-3d-turn-handles-are"}
+{"t":"2026-11-01T12:45:06.299Z","ev":"task_dropped","id":"on-a-small-picked-object-the-3d-turn-handles-are","from":"pending","note":"folded into the-reworked-selection-ships-cleaner-grips-a-tag"}

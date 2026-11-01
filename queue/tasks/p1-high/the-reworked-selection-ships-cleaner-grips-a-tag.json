@@ -1,0 +1,37 @@
+{
+  "id": "the-reworked-selection-ships-cleaner-grips-a-tag",
+  "title": "The reworked selection ships: cleaner grips, a tag that never covers the knob, and a 3D mode you switch into by the rotate knob",
+  "goal": "The selection mock was reworked with the user on 2026-10-24 (Selection, the primitive: docs/design/mocks/pages/lang-selection.html, section 03b and the section 01 card) but it was never built. Build it in the app at Next defaults: thinner, cleaner sizing grips, a name and size tag that never covers the rotate knob, and a 3D mode entered from a small cube chip beside the rotate knob, where edge pills tip and turn the layer and corner grips push it back or pull it forward, all staying the same size on screen however the layer is turned. It also has to work on small objects, where today the 3D handles crowd each other and all react at once.",
+  "epic": "found-selection",
+  "priority": "p1-high",
+  "seq": 1.2e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-01T12:45:05.877Z",
+  "updated": "2026-11-01T12:45:06.049Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-01 (intake): 'what happened to the rework on selection ux especially with 3d transforms?' Answer: the mock was reworked with the user on 2026-10-24 (eight lang-selection commits, 07:31 to 15:07) and no build task was filed, so the loop never knew. Folds in on-a-small-picked-object-the-3d-turn-handles-are (filed by the user 2026-10-20, never built, resequenced 13 times). Related, done earlier: the-3d-rotation-handles-are-on-a-picked-layer-ag, tilt-flip-and-push-layers-in-depth-from-the-canv, resize-squares-on-a-layer-turned-in-3d-take-the, every-transform-handle-answers-the-pointer-befor (2026-10-11 to 14). Keep the mock as is; a departure is a decision card with a marked screenshot.",
+  "acceptance": [
+    "The mock is the floor (mocks-are-the-floor): build what lang-selection.html section 01 and section 03b show, at Next defaults, and compare side by side with the mock in the audit. Read the eight commits 234b2c61, fbfa5edf, 7dd43cd6, 4cbc6a8e, 81f44782, ab645be5, 188797b9, f91f0da4, 1737a360 (2026-10-24) for what was decided and why.",
+    "Flat selection: 2 px grip corners, the rotate knob on a stem to the knob's edge, nothing drawn on a grip, and the name and size tag below the frame (above-left when there is no room), never over the rotate knob.",
+    "A small cube chip beside the rotate knob swaps between the sizing grips and the 3D grips. It shows the grips you would switch to, never a lit 'on' state, and swapping back keeps the layer's turn and depth. Escape leaves 3D grips.",
+    "In 3D grips: any edge pill turns the layer both ways (up and down tip it, left and right turn it, whichever edge is grabbed), Shift snaps to 15 degrees; corner grips carry an in-out arrow and move the layer along depth; pushing back or pulling forward reads as depth (the shadow grows as it comes forward, the tag says forward or back). Nothing sits on the layer's content: no middle knob, no extra circle.",
+    "Grips, knob, chip, tag and outline stay one size on screen however the layer is turned or pushed back (the mock measured 16x16 corner and 18x8 edge grips at 600 back, the same as flat): they are drawn flat over the layer at its projected corners; only the content takes the 3D.",
+    "Small objects (folded in from on-a-small-picked-object-the-3d-turn-handles-are, the user's 2026-10-20 ask): on a picked 140x45 button, every grip, the knob and the chip have room and their own target; hovering one lights only that one; none sits on the component badge. MEASURED hit areas in the audit.",
+    "Every change is one undo step through History.perform; the transform values in the tool bar's Info popover update live; agents get the same through set_layer.",
+    "Walks: flat pick of a large and a small layer; swap to 3D grips; tip, turn and push back with each grip; Shift snapping; Escape; swap back keeps the turn; hover lights only one grip. A reel and side-by-side mock comparison in the audit under queue/audits/. focus-drill clean.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-01T12:45:05.879Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-01T12:45:06.048Z",
+      "note": "seq 3970 -> 1.2e-7"
+    }
+  ]
+}

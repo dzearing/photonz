@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 40,
-  "status": "blocked",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-11-01T10:26:31.484Z",
+  "updated": "2026-11-01T12:43:48.686Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -258,6 +258,10 @@
     {
       "t": "2026-11-01T10:26:31.479Z",
       "note": "Item 9's looks-painted bar of 8 is one no digital painting reached in a calibration (a skilled person's Krita painting scores 5 and 6, Ask's 4 and 5, real canvases 9 to 10); the one untried lever moved it within noise and was not shipped. Card asks the user whether to close, aim for the person's score, or keep 8."
+    },
+    {
+      "t": "2026-11-01T12:43:48.685Z",
+      "note": "decision \"Ask's paintings show what you asked for, but score 4 and 5 of 10 on looks painted against a bar of 8. A person's digital painting scores 5 and 6 on the same test. Close the epic, aim for the person's score, or keep 8?\" resolved: One more pass, to match a person's digital painting"
     }
   ],
   "started": "2026-11-01T10:11:31.196Z",
