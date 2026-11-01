@@ -150,7 +150,10 @@
 
   // ---------- Corners in every mode ----------
   function rectCorners(L) { return [[L.x, L.y], [L.x + L.w, L.y], [L.x + L.w, L.y + L.h], [L.x, L.y + L.h]]; }
-  function corners(L) {
+  // `box`: the flat rectangle round the reshaped picture, in its own plane.
+  // Size and 3D put their grips on it, so a skewed picture is handled like a
+  // new original; only Skew & distort grips its reshaped corners.
+  function corners(L, box = false) {
     const cx = L.x + L.w / 2, cy = L.y + L.h / 2;
     // Skew and distort reshape the picture itself: a corner's offset, as a
     // share of width and height, in the layer's own unturned plane. Turn, 3D,
@@ -158,6 +161,11 @@
     const wp = L.warp || [[0, 0], [0, 0], [0, 0], [0, 0]];
     const local = [[-L.w / 2, -L.h / 2], [L.w / 2, -L.h / 2], [L.w / 2, L.h / 2], [-L.w / 2, L.h / 2]]
       .map(([x, y], i) => [x + wp[i][0] * L.w, y + wp[i][1] * L.h]);
+    if (box) {
+      const xs = local.map(p => p[0]), ys = local.map(p => p[1]);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      local.splice(0, 4, [x0, y0], [x1, y0], [x1, y1], [x0, y1]);
+    }
     const tx = Math.tan(R(L.skx)), ty = Math.tan(R(L.sky));
     const f = cam.fov > 0 ? (stage.clientHeight / 2) / Math.tan(R(cam.fov) / 2) : Infinity;
     return local.map(([x, y]) => {
@@ -260,7 +268,10 @@
   function draw() {
     for (const L of layers) { L.el.style.transform = matrixFor(L.w, L.h, corners(L)); L.el.style.zIndex = Math.round(L.z) + 100; }
     ov.innerHTML = "";
-    const q = corners(pick), blue = "#0a84ff";
+    const q = corners(pick, pick.mode !== "distort"), blue = "#0a84ff";
+    // In Size and 3D, a faint line still shows the reshaped picture inside its frame.
+    if (pick.mode !== "distort" && pick.warp && pick.warp.some(p => p[0] || p[1]))
+      el("polygon", { points: corners(pick).map(p => p.join(",")).join(" "), fill: "none", stroke: "#0a84ff", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: .5 });
     if (vanishing) for (const p of q) el("line", { x1: p[0], y1: p[1], x2: vanishing[0], y2: vanishing[1], stroke: blue, "stroke-width": 1, "stroke-dasharray": "3 4", opacity: .55 });
     el("polygon", { points: q.map(p => p.join(",")).join(" "), fill: "none", stroke: blue, "stroke-width": 1.5 });
     const top = mid(q[0], q[1]), edgeN = (() => { const dx = q[1][0] - q[0][0], dy = q[1][1] - q[0][1], l = Math.hypot(dx, dy) || 1; return [dy / l, -dx / l]; })();
@@ -374,7 +385,7 @@
       const hitL = layers.slice().reverse().find(L => L.el.contains(e.target));
       if (hitL) { pick = hitL; drag = { kind: "move", P, x: hitL.x, y: hitL.y }; }
       else return;
-    } else drag = { kind: g, P, L: Object.assign({}, pick, { warp: pick.warp && pick.warp.map(p => p.slice()) }), q: corners(pick).map(p => p.slice()) };
+    } else drag = { kind: g, P, L: Object.assign({}, pick, { warp: pick.warp && pick.warp.map(p => p.slice()) }), q: corners(pick, pick.mode !== "distort").map(p => p.slice()) };
     try { stage.setPointerCapture(e.pointerId); } catch (_) {}
     document.body.classList.add("st-dragging");
     draw();
