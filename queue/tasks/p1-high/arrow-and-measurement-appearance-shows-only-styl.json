@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:49:22.794Z",
-  "updated": "2026-10-31T16:17:30.746Z",
+  "updated": "2026-11-01T06:12:10.659Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p. Already built there: AnnotationContent.captionPartsByHand (Fill/Edge/Text set by hand, kept through style and colour changes), resetCaptionPartsByHand, EditorState.resetChipParts(ids:) (no UI yet), the chip re-deriving from the line ink on every colour change. Still needed: head following the line, the Size control, the Advanced fold and its from-labels, moving Line/Head/Label rows (PartsInspector rows) under it, and the same for measurements once every-measurement-wears-the-same-chip-styles-col lands.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-31T16:17:30.745Z",
       "note": "From any-colour-you-pick-for-an-arrow-or-measurement (91a9d770): the Color row exists now (MarkupInkRow, between Chip and Marker; head follows the line unless painted apart). Open question for this task: a new arrow is drawn in #FF3B30, which is not in the design system's eight (#FF375F is its red), so a fresh arrow lights the Custom well; decide the arrow tool's default ink when the Appearance is simplified."
+    },
+    {
+      "t": "2026-11-01T06:12:10.658Z",
+      "note": "From five-more-arrow-styles (2026-11-01): the arrow's tile row is still headed 'Style' where markup.md section 8 calls it 'Arrow' (beside 'Chip'). Left for this task since it rewrites the Appearance rows; the ten tiles are now picture-only, five across, the same tile as the Chip row."
     }
   ]
 }

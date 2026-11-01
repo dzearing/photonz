@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-30T06:40:25.170Z",
-  "updated": "2026-11-01T00:00:01.654Z",
+  "updated": "2026-11-01T06:01:26.579Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen while measuring the-full-test-run-never-fails-on-a-speed-budget, 2026-10-30, in about 25 full Scripts/test.sh runs on this Mac (16 cores, go loop idle):\n- BusyVideoSizeTests.swift:251 (A long recording that is quiet and then busy is weighed from stretches of it): near(landed 2102302, weighed 1597442) failed, once.\n- BusyVideoSizeTests.swift:148 (Where the budget cannot hold, what the sheet weighs is what lands, speed 900): near(landed 1712276, weighed 1339509) failed, once.\n- VideoCutExportTests.swift:35 (Exporting a recording with the middle dropped writes only what is left): Caught error .readerGaveUp(\"no picture came out of the recording for 30 seconds\"), once.\nBoth BusyVideoSizeTests are in the .serialized run (Scripts/test.sh side run). Command: Scripts/test.sh with no arguments; output lines above are verbatim from those runs. Neither is a speed budget, so they were left out of the speed-budget task.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-01T00:00:01.653Z",
       "note": "Seen twice in a row on 2026-10-31 ~16:40 (Scripts/test.sh, no model loaded, nothing over 30% CPU): VideoCutExportTests.swift:92 'The frame reader tells a cut recording from an uncut one' (82s, readerGaveUp 'no picture came out of the recording for 30 seconds'), then VideoAssetCommitTests.swift:104 aSavedRecordingReadsAsCleanAndRecordsHowItWasDerived (35s, same error). VideoCutExportTests alone: 7 tests pass in 2.1s. The change under test only touched change_part's colour maths in PhotonzCore."
+    },
+    {
+      "t": "2026-11-01T06:01:26.578Z",
+      "note": "2026-11-01, seen again by five-more-arrow-styles: full Scripts/test.sh failed only on BusyVideoSizeTests (quiet-then-busy recording: landed 2148882 vs weighed 1597442; long still-then-busy document: landed 2358656 vs weighed 1778932); Scripts/test.sh --filter BusyVideoSize passed 8/8 alone right after."
     }
   ]
 }

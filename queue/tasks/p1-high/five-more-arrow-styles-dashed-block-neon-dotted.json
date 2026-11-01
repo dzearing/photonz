@@ -5,11 +5,11 @@
   "epic": "epic-uehjr1",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:49:22.680Z",
-  "updated": "2026-10-31T14:49:22.683Z",
+  "updated": "2026-11-01T06:14:03.225Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from caption-and-measurement-chips-come-in-a-set-of-p. ArrowStyle (Sources/PhotonzCore/ArrowStyle.swift) gains dashed, block, neon, dotted, elbow; HandMadeArrow / AnnotationRasterizer draw them; ArrowStyleTiles needs 5 columns. Stand-in geometry for all ten is PZ.markup.arrow in docs/design/mocks/shared/components/markup.js. Ending applies only to Clean (isHandMade covers the rest). Note: dock tile buttons ignore a walk press since 2026-10-26 (see walks-that-fail-in-the-full-sweep-26), so prove tiles by pointer once that is fixed.",
@@ -24,6 +24,31 @@
     {
       "t": "2026-10-31T14:49:22.682Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-11-01T05:22:04.458Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T05:24:37.420Z",
+      "note": "Pre-build review: every style already draws from one ink list (HandMadeArrow.inks) shared by rasterizer, canvas preview, SVG and outline, so the five new looks go there. Gaps: (1) the list only had smooth fills and round-capped strokes, so a block head or a dash with square ends would come out rounded: adding a sharp-cornered polygon piece. (2) Neon needs a glow and a bright core, which a flat fill cannot carry: adding a glow flag and a core path, the rasterizer draws the glow as a soft shadow in the ink and the SVG as a blur filter; the drag preview shows it without glow. (3) Elbow is a right-angle connector, so it cannot follow a bend: chose to let the bend pick which corner it turns at (drag the handle toward the corner you want) over ignoring the bend, because then the bend handle still does something you can see. (4) The four hand styles take a random hand and Reshuffle; the five new ones are exact, so Reshuffle stays for the hand styles only. (5) Photoshop/Keynote users know these looks from Keynote/Illustrator connectors: Elbow turns horizontally first, vertically first when the vertical leg is too short for the head."
+    },
+    {
+      "t": "2026-11-01T06:12:10.733Z",
+      "note": "owns these walks: five-more-arrow-styles-walk"
+    },
+    {
+      "t": "2026-11-01T06:14:03.139Z",
+      "note": "Built and checked. Pictures looked at: 6-every-new-style-sc (all five on white plus Neon on dark; glow and core visible, dashes even, dots even with a tail dot, elbow corner rounded), 8-tool-settings-sc (ten tiles, Elbow tile now turns across then up like the mock), export-2x (same as canvas), mock crop (specimen arrow row). Chose picture-only tiles over named VideoKit tiles because ten names do not fit five across and the Chip row beside it is picture-only. Chose to let a bend pick Elbow's corner over ignoring the bend, so the bend handle still does something visible. Left rough (in audit, no new task): Neon tile shows no core (tiles are a tinted silhouette); the drag preview has the glow but no core; an Elbow between level ends is straight and a bend does nothing. Row header 'Style' vs markup.md 'Arrow' folded into arrow-and-measurement-appearance-shows-only-styl. Ask's token budget test caught a longer arrowStyle description; kept the short one. Full suite: only BusyVideoSizeTests failed, passes alone; folded into the-full-test-run-never-fails-on-a-video-check-t."
+    },
+    {
+      "t": "2026-11-01T06:14:03.223Z",
+      "note": "Ten arrow styles: Dashed, Block, Neon, Dotted and Elbow added (ArrowStyle, HandMadeArrow, rasterizer glow, SVG blur filter, drag-preview glow), tiles five across. Verified by 59 arrow unit and render tests, an agent add_shape/set_layer test, a save round-trip test, five-more-arrow-styles-walk at Next defaults (green, 7 real captures, undo one step, PNG and SVG export), and a side-by-side with the Markup specimen in queue/audits/2026-10-31-five-more-arrow-styles.json. Commit 60f54a16."
     }
-  ]
+  ],
+  "started": "2026-11-01T05:22:04.457Z",
+  "walks": [
+    "five-more-arrow-styles-walk"
+  ],
+  "completed": "2026-11-01T06:14:03.224Z"
 }
