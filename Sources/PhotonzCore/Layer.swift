@@ -1859,6 +1859,10 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// layer in every document written before this existed, so those read and
     /// write byte for byte the same.
     public var turn3D: LayerTurn3D?
+    /// How the picture itself is skewed or distorted, in its own plane before
+    /// any turn (`LayerReshape.swift`). Nil is the box as it is, which is every
+    /// layer written before Skew & distort, so those read and write the same.
+    public var reshape: LayerReshape?
     public var style: LayerStyle
     public var isVisible: Bool
     public var isLocked: Bool
@@ -2167,6 +2171,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.motions = motions
         // ...and is turned in space the way the original is.
         copy.turn3D = turn3D
+        copy.reshape = reshape
         // ...and it occupies the same stretch of time, for the same reason.
         copy.time = time
         copy.partTime = partTime
@@ -2232,6 +2237,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.effectStyleBindings = effectStyleBindings
         copy.motions = motions
         copy.turn3D = turn3D
+        copy.reshape = reshape
         copy.time = time
         copy.isARunOfText = isARunOfText
         copy.labelledBy = labelledBy
@@ -2484,6 +2490,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         var p = point
         if !transform.isIdentity {
             p = point.applying(transform.affineTransform(around: turnPivot).inverted())
+        }
+        // A reshaped picture is clicked where it is drawn: the point is
+        // carried back onto the box it was reshaped from.
+        if shownReshape != nil {
+            guard let back = unreshaped(p) else { return false }
+            p = back
         }
         if let a = annotation, a.shape == .line || a.shape == .arrow {
             let start = CGPoint(x: frame.minX + a.start.x, y: frame.minY + a.start.y)

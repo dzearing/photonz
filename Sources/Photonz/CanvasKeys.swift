@@ -327,6 +327,7 @@ extension CanvasNSView {
                 refreshOverlays()
                 return
             }
+            if cancelReshapeDrag() { return }
             if let session = transformDrag {
                 transformDrag = nil
                 // Committing the start transform is a History no-op but resets

@@ -87,11 +87,12 @@ struct SelectionGripsTests {
         #expect(g.knob != nil)
     }
 
-    @Test("The chip sits beside the knob, its two modes in the order they apply")
+    @Test("The chip sits beside the knob, its three modes in the order they apply")
     func chipBesideTheKnob() {
         let g = Self.grips()
-        #expect(g.chip.map(\.mode) == [.size, .space])
+        #expect(g.chip.map(\.mode) == [.size, .reshape, .space])
         let first = g.chip[0].frame, second = g.chip[1].frame
+        #expect(g.chip[2].frame.minX > second.maxX)
         #expect(first.minX >= g.knob!.x + SelectionGrips.knobRadius)
         #expect(abs(first.midY - g.knob!.y) < 0.01)
         #expect(second.minX > first.maxX)
@@ -150,8 +151,10 @@ struct SelectionGripsTests {
     @Test("A press on the chip picks that mode")
     func chipHit() {
         let g = Self.grips()
-        let threeD = g.chip[1].frame
+        let threeD = g.chip[2].frame
         #expect(g.hit(CGPoint(x: threeD.midX, y: threeD.midY)) == .chip(.space))
+        let reshape = g.chip[1].frame
+        #expect(g.hit(CGPoint(x: reshape.midX, y: reshape.midY)) == .chip(.reshape))
         #expect(g.hit(CGPoint(x: g.chip[0].frame.midX, y: g.chip[0].frame.midY)) == .chip(.size))
     }
 

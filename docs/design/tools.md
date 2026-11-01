@@ -19,7 +19,7 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 The selection on a picked layer: white square corners, a white pill just
 outside each edge, and a turn knob with a clockwise arrow on a dotted stem off
 the top edge. A chip beside the knob picks the mode, in the order the
-operations apply: **Size**, **Skew & distort** (not built yet), **3D**. The grips
+operations apply: **Size**, **Skew & distort**, **3D**. The grips
 look the same in every mode; a mode only adds controls (3D adds a depth grip
 below the card). A tag under the frame says the size (in 3D the tip, swing and
 depth) and, while the pointer rests on a grip, what it does. Design floor: the
@@ -28,9 +28,11 @@ geometry and hit order: `SelectionGrips` (PhotonzCore).
 
 | Where | Gesture | Does |
 | --- | --- | --- |
-| Any mode | drag a corner | Resize keeping proportions, for every layer (pictures and shapes alike). |
-| Any mode | ⇧ drag a corner | Stretch freely. |
+| Size, 3D | drag a corner | Resize keeping proportions, for every layer (pictures and shapes alike). |
+| Size, 3D | ⇧ drag a corner | Stretch freely. |
 | Size | drag an edge pill | Stretch one way. ⇧ keeps proportions about the middle of that edge. |
+| Skew & distort | drag an edge pill | Skew: the edge slides along its own line in the picture's plane. |
+| Skew & distort | drag a corner | Distort: that corner moves freely. ⇧ keystones: the corner across the same edge mirrors it. |
 | Size | ⌥ drag a corner or pill | Resize from the middle: the opposite side moves by as much. |
 | Any mode | drag the knob | Turn flat. ⇧ steps by 15°. |
 | Any mode | double-click the knob | Turn back to 0°. |
@@ -50,6 +52,24 @@ distorts, ⇧ corner keystones). The old ⌥-corner skew is gone. Two layer kind
 keep free corners because their size is set to something outside them: a
 measurement, fitted to the element it measures, and a screen, set to a device
 size.
+
+### Skew & distort: the reshape belongs to the picture
+
+`Layer.reshape` (`LayerReshape.swift`) stores each corner's offset as a share
+of the width and height in the layer's own unturned plane, so a resize keeps
+the shape and the flat turn, the flip and 3D all act on the reshaped picture.
+The renderer warps the finished leaf picture onto its four reshaped corners
+with one `CIPerspectiveTransform` just before the flat turn, padding the
+extent so its middle stays the box's middle (`DocumentRenderer.reshaped`). In
+Size and 3D the grips sit on the flat box round the reshaped picture
+(`LayerReshape.outerBox`) with a faint dotted line of the reshape inside, and a
+resize there is read back to the layer's own box
+(`LayerReshape.frame(forOuterBox:)`); only Skew & distort grips the reshaped
+corners. A click is read on the reshaped picture (`Layer.unreshaped`). Groups,
+magnifiers, lines, arrows and measurements are not offered the mode
+(`Layer.canBeReshaped`). Edit ▸ Transform ▸ Skew, Distort and Keystone put the
+grips in the mode (Keystone makes a plain corner drag keystone until the mode
+changes). Walks: `skew-and-distort-walk`, `keystone-from-the-menu-walk`.
 
 ## Skew / transform
 

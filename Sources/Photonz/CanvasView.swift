@@ -68,6 +68,9 @@ struct CanvasView: NSViewRepresentable {
     /// See `EditorState.typeInLayer`: each new token opens the inline field
     /// over that layer, for a caret asked for from outside a canvas click.
     let typeInLayer: EditorState.TypeInLayerRequest?
+    /// See `EditorState.transformModeRequest`: each new token switches the
+    /// picked layer's grips to that mode (Edit ▸ Transform ▸ Skew and friends).
+    var transformModeRequest: EditorState.TransformModeRequest? = nil
     /// Styled content the active tool draws (color/width from the style
     /// popover), so the drag preview matches what commit will rasterize.
     let annotationContent: AnnotationContent?
@@ -296,6 +299,9 @@ struct CanvasView: NSViewRepresentable {
     let onCornerRadiiCommit: (UUID, CornerRadii) -> Void
     var onSpaceTurnPreview: (UUID, LayerTurn3D) -> Void = { _, _ in }
     var onSpaceTurnCommit: (UUID, LayerTurn3D) -> Void = { _, _ in }
+    /// Skew & distort in the hand: live while it moves, one undo step on release.
+    var onReshapePreview: (UUID, LayerReshape?) -> Void = { _, _ in }
+    var onReshapeCommit: (UUID, LayerReshape?) -> Void = { _, _ in }
     /// A transform starting on the canvas, or nil when the hand lets go;
     /// Escape asking the transform values to close; and whether they are open
     /// (`EditorState+TransformBar`).
@@ -455,6 +461,7 @@ struct CanvasView: NSViewRepresentable {
                    gridAdjust: gridAdjust,
                    motionPivot: motionPivot, motionPath: motionPath)
         view.applyCrispTile(crispTile, viewport: crispTileViewport)
+        view.applyTransformModeRequest(transformModeRequest)
     }
 
     private func update(_ view: CanvasNSView) {
@@ -544,6 +551,8 @@ struct CanvasView: NSViewRepresentable {
         view.onCornerRadiiCommit = onCornerRadiiCommit
         view.onSpaceTurnPreview = onSpaceTurnPreview
         view.onSpaceTurnCommit = onSpaceTurnCommit
+        view.onReshapePreview = onReshapePreview
+        view.onReshapeCommit = onReshapeCommit
         view.onTransformGesture = onTransformGesture
         view.onTransformBarEscape = onTransformBarEscape
         view.isTransformValuesOpen = isTransformValuesOpen
@@ -717,6 +726,8 @@ final class CanvasNSView: NSView {
     /// hand is down, then once when it lets go.
     var onSpaceTurnPreview: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
     var onSpaceTurnCommit: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
+    var onReshapePreview: ((UUID, LayerReshape?) -> Void) = { _, _ in }
+    var onReshapeCommit: ((UUID, LayerReshape?) -> Void) = { _, _ in }
     /// The transform values: a transform starting (nil when the hand lets
     /// go), Escape asking them to close, and whether they are open.
     var onTransformGesture: ((TransformBar.Gesture?) -> Void) = { _ in }
@@ -1965,6 +1976,31 @@ final class CanvasNSView: NSView {
     var hoveredGrip: SelectionGrip?
     /// The grip a drag in flight took hold of, so it stays lit.
     var heldGrip: SelectionGrip?
+    /// Skew & distort in the hand (`CanvasSelectionGrips`): the reshape the
+    /// drag started from and the one under the pointer, read in the layer's
+    /// own unturned plane through `toPlane`.
+    struct ReshapeDragSession {
+        let layerID: UUID
+        let grip: SelectionGrip
+        let start: LayerReshape
+        var reshape: LayerReshape
+        let press: CGPoint
+        let toPlane: Homography
+        let size: CGSize
+        var moved: Bool
+        var words: String
+    }
+    var reshapeDrag: ReshapeDragSession?
+    /// Keystone picked from the menu: a corner keystones without Shift until
+    /// the mode changes.
+    var reshapeKeystone = false
+    /// The picked layer's unreshaped box as last drawn, in canvas points, and
+    /// its four corners in view points: what a reshape drag reads the pointer
+    /// against.
+    var drawnGripPlane: (layerID: UUID, box: CGRect, quad: [CGPoint])?
+    /// The last ask from the menu for a mode (`EditorState.transformModeRequest`).
+    var transformModeRequestToken = 0
+    let reshapeGhostLayer = CAShapeLayer()
     let selectionGripsLayer = CALayer()
     let gripsShapeLayer = CAShapeLayer()
     let gripStemsLayer = CAShapeLayer()

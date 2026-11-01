@@ -1077,6 +1077,10 @@ final class EditorState {
 
     /// The most recent ask, or nil if there has never been one.
     private(set) var typeInLayer: TypeInLayerRequest?
+    /// The last ask from Edit ▸ Transform for the picked layer's grips to
+    /// switch mode (`EditorState+Reshape.swift`).
+    var transformModeRequest: TransformModeRequest?
+    var transformModeRequestCount = 0
     private var typeInLayerCount = 0
 
     /// Asks the canvas to put the caret in this layer's words.

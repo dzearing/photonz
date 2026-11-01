@@ -173,6 +173,9 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case swapFillColors = "swap_fill_colors"
     case flipHorizontal = "flip_horizontal"
     case flipVertical = "flip_vertical"
+    case skew = "skew"
+    case distort = "distort"
+    case keystone = "keystone"
     // Layer
     case newLayer = "new_layer"
     case newLayerViaCopy = "new_layer_via_copy"
@@ -885,6 +888,12 @@ public enum AppCommandTable {
                  needs: "a layer picked", picks: .layers),
             make(.flipVertical, FlipAxis.vertical.title, "Edit > Transform", .edit,
                  needs: "a layer picked", picks: .layers),
+            // The picked layer's grips go to Skew & distort: an edge pill
+            // skews, a corner distorts, and with Keystone a corner keystones
+            // without Shift (`LayerReshape.swift`).
+            make(.skew, "Skew", "Edit > Transform", .edit, needs: "one layer picked that can be reshaped"),
+            make(.distort, "Distort", "Edit > Transform", .edit, needs: "one layer picked that can be reshaped"),
+            make(.keystone, "Keystone", "Edit > Transform", .edit, needs: "one layer picked that can be reshaped"),
         ]
     }()
 

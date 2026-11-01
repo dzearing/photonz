@@ -1648,6 +1648,16 @@ public final class DocumentRenderer: @unchecked Sendable {
                                         cell: GrainFilter.cell(forFrame: document.canvasSize))
         }
 
+        // Skew & distort: the finished picture warped onto its four reshaped
+        // corners, in its own plane, BEFORE its flat turn and its turn in
+        // space, so both act on the reshaped picture (`LayerReshape.swift`).
+        // Its middle stays the box's middle, which the turn and the placement
+        // below are measured from.
+        if let reshape = layer.shownReshape {
+            image = reshaped(image, box: box, reshape: reshape)
+            frostMask = frostMask.map { reshaped($0, box: box, reshape: reshape) }
+        }
+
         // Geometric transform around the layer's center. LayerTransform angles are
         // defined in top-left model space; CI is y-up, so mirror the angular
         // components (conjugation by a vertical flip negates rotation and skew;
@@ -3041,6 +3051,38 @@ public final class DocumentRenderer: @unchecked Sendable {
         warp.bottomRight = bottomRight.cgPointValue
         warp.bottomLeft = bottomLeft.cgPointValue
         return warp.outputImage
+    }
+
+    /// A layer's picture warped so the corners of `box` (its own box inside
+    /// the picture, Core Image's y-up space) land on the reshaped corners, and
+    /// padded with clear so the extent's middle is still the box's middle.
+    /// One perspective warp: four corners decide every pixel of a plane map.
+    /// The picture as it was where the shape has folded flat.
+    private func reshaped(_ image: CIImage, box: CGRect, reshape: LayerReshape) -> CIImage {
+        guard !image.extent.isInfinite, !image.extent.isNull, box.width > 0, box.height > 0 else { return image }
+        // The reshape is y-down; Core Image is y-up, so it is worked out on the
+        // box flipped about its own middle and carried back.
+        func flip(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x, y: box.minY + box.maxY - p.y) }
+        guard let map = reshape.map(of: box) else { return image }
+        func landed(_ p: CGPoint) -> CGPoint? { map.apply(flip(p)).map(flip) }
+        let extent = image.extent.integral.insetBy(dx: -2, dy: -2)
+        let padded = image.composited(over: CIImage(color: .clear).cropped(to: extent))
+        guard let topLeft = landed(CGPoint(x: extent.minX, y: extent.maxY)),
+              let topRight = landed(CGPoint(x: extent.maxX, y: extent.maxY)),
+              let bottomRight = landed(CGPoint(x: extent.maxX, y: extent.minY)),
+              let bottomLeft = landed(CGPoint(x: extent.minX, y: extent.minY)) else { return image }
+        let warp = CIFilter.perspectiveTransform()
+        warp.inputImage = padded
+        warp.topLeft = topLeft
+        warp.topRight = topRight
+        warp.bottomRight = bottomRight
+        warp.bottomLeft = bottomLeft
+        guard let out = warp.outputImage, !out.extent.isInfinite, !out.extent.isNull else { return image }
+        let rx = max(box.midX - out.extent.minX, out.extent.maxX - box.midX)
+        let ry = max(box.midY - out.extent.minY, out.extent.maxY - box.midY)
+        guard rx.isFinite, ry.isFinite, rx < 1e6, ry < 1e6 else { return image }
+        let even = CGRect(x: box.midX - rx, y: box.midY - ry, width: rx * 2, height: ry * 2)
+        return out.composited(over: CIImage(color: .clear).cropped(to: even))
     }
 
     private func pivotOffset(of layer: Layer) -> CGPoint {

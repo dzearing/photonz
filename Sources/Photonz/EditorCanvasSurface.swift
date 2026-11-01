@@ -49,6 +49,7 @@ struct EditorCanvasSurface: View {
                    isWatching: editorState.isWatching,
                    captionCloseRequest: editorState.captionCloseRequest,
                    typeInLayer: editorState.typeInLayer,
+                   transformModeRequest: editorState.transformModeRequest,
                    annotationContent: editorState.activeAnnotationContent,
                    calloutShape: editorState.calloutToolShape,
                    calloutMagnification: editorState.calloutToolMagnification,
@@ -161,6 +162,8 @@ struct EditorCanvasSurface: View {
                    onCornerRadiiCommit: { editorState.commitCornerRadii(ids: [$0], $1) },
                    onSpaceTurnPreview: { editorState.previewSpaceTurn(id: $0, $1) },
                    onSpaceTurnCommit: { editorState.commitSpaceTurn(id: $0, $1) },
+                   onReshapePreview: { editorState.previewLayerReshape(id: $0, $1) },
+                   onReshapeCommit: { editorState.commitLayerReshape(id: $0, $1) },
                    onTransformGesture: { gesture in
                        if let gesture {
                            editorState.noteTransformGesture(gesture)

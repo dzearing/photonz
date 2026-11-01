@@ -848,6 +848,10 @@ extension CanvasNSView {
         if spaceHandleMouseDragged(atView: convert(event.locationInWindow, from: nil), event: event) {
             return
         }
+        // ...and so does a skew or a distort (`CanvasSelectionGrips`).
+        if reshapeMouseDragged(atView: convert(event.locationInWindow, from: nil), event: event) {
+            return
+        }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         // A point of a path taken hold of owns the rest of the gesture, even
         // with the Pen in hand: the Pen shows a picked path its points now, so
@@ -1106,8 +1110,14 @@ extension CanvasNSView {
             // Taken past the side opposite, the drag flips the layer and
             // keeps going (Photoshop's Free Transform, Figma). Never a layer
             // seen in space, whose drag is read off its card's own plane.
-            drag.flips = resizeFlips(for: layer, start: drag.startFrame, handle: drag.handle, pointer: p)
-            drag.snapped = resizedFrame(for: layer, start: drag.startFrame, handle: drag.handle,
+            // A reshaped picture is resized by the flat box round it, where
+            // its grips are, and the layer's own box is read back from that
+            // (`LayerReshape.frame(forOuterBox:)`), so the grip in the hand
+            // stays under the pointer and the opposite one stays put.
+            let reshape = reworked ? layer?.shownReshape : nil
+            let startBox = reshape.map { $0.outerBox(of: drag.startFrame) } ?? drag.startFrame
+            drag.flips = resizeFlips(for: layer, start: startBox, handle: drag.handle, pointer: p)
+            drag.snapped = resizedFrame(for: layer, start: startBox, handle: drag.handle,
                                         pointer: p, preserveAspect: aspect,
                                         peers: snapping ? drag.peers : [],
                                         columns: snapping ? drag.columns : [],
@@ -1123,9 +1133,10 @@ extension CanvasNSView {
                             y: drag.snapped.guideY ?? drag.snapped.gridY)
             drag.frame = drag.snapped.frame
             if centred, drag.flips.isEmpty {
-                drag.frame = SelectionDrag.fromCentre(start: drag.startFrame, proposed: drag.frame,
+                drag.frame = SelectionDrag.fromCentre(start: startBox, proposed: drag.frame,
                                                       handle: drag.handle)
             }
+            if let reshape { drag.frame = reshape.frame(forOuterBox: drag.frame) }
             resizeDrag = drag
             if drag.flips.isEmpty {
                 onFramePreview(drag.layerID, drag.frame)
@@ -1344,6 +1355,7 @@ extension CanvasNSView {
             return
         }
         if spaceHandleMouseUp(event: event) { return }
+        if reshapeMouseUp(event: event) { return }
         // The release of a path-point drag, before the Pen, for the same reason
         // its `mouseDragged` is: with the Pen in hand this drag belongs to the
         // points, and `pathEditMouseUp` answers nothing when no such drag is in

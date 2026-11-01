@@ -22332,3 +22332,13 @@ the ghost, and pinching in seemed to stop short.
 - Next (`next-transform-modes`, on by default): white corner squares, edge pills, a knob with a clockwise arrow on a dotted stem, a Size/3D chip, a size tag under the frame. Corners keep proportions (Shift stretches), edge pills stretch one way, Option from the middle, double-click knob to 0°. 3D: any edge pill tips and swings, a grip below pushes back/pulls forward. Core in `SelectionGrips.swift`, canvas in `CanvasSelectionGrips.swift`, walk `selection-grips-walk`.
 - Next: Skew & distort, perspective pill, per-mode resets (queued p1 in that order).
 - Open: walks cannot open the tool bar Info popover (pre-existing, on the standing walk task).
+
+## 2026-11-01 — Skew & distort from the selection chip (slice 2 of the reworked selection)
+
+- The chip now reads Size, Skew & distort, 3D (`TransformMode.offered`). In Skew & distort an edge pill skews (the edge slides along itself), a corner distorts, Shift on a corner keystones; each drag is one undo step, Escape cancels a drag in hand.
+- The reshape is `Layer.reshape` (`LayerReshape.swift`): each corner's offset as a share of width and height in the layer's own unturned plane. The renderer warps the finished leaf picture onto it with one CIPerspectiveTransform before the flat turn (`DocumentRenderer.reshaped`), so resize, turn, flip and 3D act on the reshaped picture. Clicks read the reshaped picture (`Layer.unreshaped`).
+- In Size and 3D the grips sit on the flat box round the reshape with a dotted line of it inside; a Size resize there is read back to the layer's own box (`frame(forOuterBox:)`).
+- Edit ▸ Transform ▸ Skew, Distort, Keystone (Photoshop's place, above the flips) put the grips in the mode; Keystone makes a plain corner drag keystone until the mode changes.
+- New walk step `expectReshape`; walks `skew-and-distort-walk`, `keystone-from-the-menu-walk`. Audit `queue/audits/2026-11-01-skew-and-distort.json`.
+- Perf: the composite path is unchanged for layers with no reshape; a reshaped layer costs one CIPerspectiveTransform. The 12 MP / 10 layer interactive edit read 6.2 ms against its 26 ms budget in this run.
+- Next: reset each mode with a dot on a changed mode; the perspective pill.

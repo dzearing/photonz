@@ -32,15 +32,34 @@ extension CanvasNSView {
 
     var transformModesOffered: Bool { Experiments.shared.transformModesEnabled && tool == .select }
 
-    /// The modes the chip offers: 3D only while turning in depth is on at all.
+    /// The modes the chip offers on `layer`: Skew & distort only on a layer
+    /// that can be reshaped, 3D only while turning in depth is on at all.
+    func offeredTransformModes(for layer: Layer?) -> [TransformMode] {
+        TransformMode.offered.filter { mode in
+            switch mode {
+            case .size: true
+            case .reshape: layer?.canBeReshaped ?? false
+            case .space: Experiments.shared.turnInDepthEnabled
+            }
+        }
+    }
+
+    /// The modes the chip offers on the picked layer.
     var offeredTransformModes: [TransformMode] {
-        Experiments.shared.turnInDepthEnabled ? TransformMode.offered : [.size]
+        offeredTransformModes(for: selectedLayerID.flatMap { document?.canvasLayer(id: $0) })
     }
 
     func setUpSelectionGripChrome() {
         selectionGripsLayer.zPosition = 100
         selectionGripsLayer.isHidden = true
         layer?.addSublayer(selectionGripsLayer)
+        // In Size and 3D a faint dotted line still shows the reshaped picture
+        // inside the flat box its grips sit on.
+        reshapeGhostLayer.fillColor = nil
+        reshapeGhostLayer.lineWidth = 1
+        reshapeGhostLayer.lineDashPattern = [3, 3]
+        reshapeGhostLayer.opacity = 0.5
+        selectionGripsLayer.addSublayer(reshapeGhostLayer)
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
                       chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer, gripTagLayer] {
             shape.lineWidth = SelectionGrips.lineWidth
@@ -80,7 +99,8 @@ extension CanvasNSView {
                                              "hidden": NSNull()]
         gripTagTextLayer.actions = still
         for shape in [gripStemsLayer, gripsShapeLayer, gripGlyphsLayer, litGripLayer, litGripGlyphLayer,
-                      chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer, gripTagLayer] {
+                      chipPlateLayer, chipPickedLayer, chipIconsLayer, chipPickedIconLayer, gripTagLayer,
+                      reshapeGhostLayer] {
             shape.actions = still
         }
     }
@@ -95,20 +115,43 @@ extension CanvasNSView {
 
     // MARK: Drawing
 
-    /// Draws the grips round `quad` (the frame's four corners as seen, in view
-    /// points: top left, top right, bottom right, bottom left).
-    func drawSelectionGrips(for layer: Layer, quad: [CGPoint], resizes: Bool, rotates: Bool) {
+    /// Draws the grips round the layer's `box` (canvas points, before any
+    /// turn), carried onto the view by `toView`. In Skew & distort they sit on
+    /// the reshaped picture's own corners; in Size and 3D on the flat box round
+    /// it, with a faint dotted line of the reshape inside.
+    func drawSelectionGrips(for layer: Layer, box: CGRect, toView: (CGPoint) -> CGPoint,
+                            resizes: Bool, rotates: Bool) {
         // A newly picked layer starts in Size, as the prototype does.
         if transformModeLayerID != layer.id {
             transformModeLayerID = layer.id
             transformMode = .size
+            reshapeKeystone = false
         }
-        let modes = offeredTransformModes
+        let modes = offeredTransformModes(for: layer)
         if !modes.contains(transformMode) { transformMode = .size }
+        let plain = LayerReshape().corners(of: box).map(toView)
+        drawnGripPlane = (layer.id, box, plain)
+        let live = reshapeDrag.flatMap { $0.layerID == layer.id ? $0.reshape : nil } ?? layer.shownReshape
+        var quad = plain
+        var ghost: [CGPoint]?
+        if let live, !live.isNone {
+            let reshaped = live.corners(of: box).map(toView)
+            if transformMode == .reshape {
+                quad = reshaped
+            } else {
+                quad = LayerReshape().corners(of: live.outerBox(of: box)).map(toView)
+                ghost = reshaped
+            }
+            // The blue line round the picked layer follows what the grips sit
+            // on, not the box the picture was reshaped from.
+            if !layerOutlineLayer.isHidden { layerOutlineLayer.path = Self.polygon(quad) }
+        }
         let grips = SelectionGrips(quad: quad, mode: transformMode, rotates: rotates, resizes: resizes,
                                    modes: modes)
         drawnSelectionGrips = (layer.id, grips)
         let accent = NSColor.controlAccentColor.cgColor
+        reshapeGhostLayer.strokeColor = accent
+        reshapeGhostLayer.path = ghost.map(Self.polygon)
         gripsShapeLayer.strokeColor = accent
         gripStemsLayer.strokeColor = accent
         gripGlyphsLayer.strokeColor = accent
@@ -129,12 +172,12 @@ extension CanvasNSView {
         for corner in grips.corners {
             shapes.addPath(Self.gripPath(.corner(corner.handle), in: grips))
             marks.append(HandleMark(center: corner.center, shape: .square(SelectionGrips.cornerSide),
-                                    role: .resize(corner.handle)))
+                                    role: grips.mode == .reshape ? .grab : .resize(corner.handle)))
         }
         for edge in grips.edges {
             shapes.addPath(Self.gripPath(.edge(edge.handle), in: grips))
             marks.append(HandleMark(center: edge.center, shape: .square(SelectionGrips.pillLength),
-                                    role: grips.mode == .space ? .grab : .resize(edge.handle)))
+                                    role: grips.mode == .size ? .resize(edge.handle) : .grab))
         }
         if let knob = grips.knob {
             shapes.addPath(Self.gripPath(.knob, in: grips))
@@ -217,6 +260,9 @@ extension CanvasNSView {
             return
         }
         let words: String = {
+            // A skew or a distort in the hand: the tag says what it is doing,
+            // in the same place, the way the prototype's does.
+            if let drag = reshapeDrag, drag.layerID == layer.id { return drag.words }
             if let grip = hoveredGrip { return SelectionTag.does(grip, mode: shown.grips.mode) }
             let size = selectedLayerFrame.flatMap { frame in
                 document?.parentSpaceFrame(layer.withSlack(frame), of: layer.id)?.size
@@ -224,7 +270,8 @@ extension CanvasNSView {
             return SelectionTag.resting(mode: shown.grips.mode, size: size,
                                         rotation: Double(layer.transform.rotation) * 180 / .pi,
                                         turn: document.map { $0.shownSpaceTurn(layerID: layer.id,
-                                                                               atDocumentTimeMS: documentTimeMS) })
+                                                                               atDocumentTimeMS: documentTimeMS) },
+                                        name: layer.name)
         }()
         let font = Self.dragReadoutFont
         let inset = GripLook.tagInset
@@ -358,6 +405,7 @@ extension CanvasNSView {
     func selectionGripCue(atView viewPoint: CGPoint, layer: Layer) -> (cue: CanvasPointerCue, transform: LayerTransform)? {
         guard let grip = selectionGripHit(atView: viewPoint), let shown = drawnSelectionGrips else { return nil }
         switch grip {
+        case .corner where shown.grips.mode == .reshape: return (.grab, .identity)
         case .corner(let handle): return (.resize(handle), apparentTransform(of: layer))
         case .edge(let handle):
             return shown.grips.mode == .space ? (.grab, .identity) : (.resize(handle), apparentTransform(of: layer))
@@ -370,6 +418,7 @@ extension CanvasNSView {
     /// Notes the grip under the resting pointer, and lights it.
     func noteGripHover(at viewPoint: CGPoint?) {
         let dragging = resizeDrag != nil || transformDrag != nil || spaceHandleDrag != nil || moveDrag != nil
+            || reshapeDrag != nil
         let grip = dragging ? nil : viewPoint.flatMap { selectionGripHit(atView: $0) }
         guard grip != hoveredGrip else { return }
         hoveredGrip = grip
@@ -438,6 +487,8 @@ extension CanvasNSView {
         case .depth:
             beginGripTurn(.depth, grip: .depth, layer: layer, at: viewPoint)
             return true
+        case .corner where shown.grips.mode == .reshape, .edge where shown.grips.mode == .reshape:
+            return beginReshape(grip, layer: layer, at: viewPoint)
         case .corner(let handle), .edge(let handle):
             guard let frame = selectedLayerFrame else { return false }
             let untransformed = layer.transform.isIdentity
@@ -489,9 +540,105 @@ extension CanvasNSView {
     func setTransformMode(_ mode: TransformMode) {
         guard mode != transformMode, offeredTransformModes.contains(mode) else { return }
         transformMode = mode
+        reshapeKeystone = false
         transformModeLayerID = selectedLayerID
         hoveredGrip = nil
         refreshOverlays()
         refreshGrabCursor()
+    }
+}
+
+// MARK: - Skew & distort in the hand
+
+extension CanvasNSView {
+
+    static func polygon(_ points: [CGPoint]) -> CGPath {
+        let path = CGMutablePath()
+        path.addLines(between: points)
+        path.closeSubpath()
+        return path
+    }
+
+    /// Edit ▸ Transform ▸ Skew, Distort or Keystone: the picked layer's grips
+    /// go to that mode, once per ask.
+    func applyTransformModeRequest(_ request: EditorState.TransformModeRequest?) {
+        guard let request, request.token != transformModeRequestToken else { return }
+        transformModeRequestToken = request.token
+        guard request.layerID == selectedLayerID,
+              offeredTransformModes.contains(request.mode) else { return }
+        if transformMode != request.mode {
+            transformModeLayerID = request.layerID
+            setTransformMode(request.mode)
+        }
+        reshapeKeystone = request.keystone
+        refreshOverlays()
+    }
+
+    /// A press on a corner or an edge pill in Skew & distort.
+    func beginReshape(_ grip: SelectionGrip, layer: Layer, at viewPoint: CGPoint) -> Bool {
+        guard let plane = drawnGripPlane, plane.layerID == layer.id,
+              let toView = Homography(box: plane.box, to: plane.quad), let toPlane = toView.inverted,
+              let press = toPlane.apply(viewPoint) else { return false }
+        let start = layer.reshape ?? LayerReshape()
+        reshapeDrag = ReshapeDragSession(layerID: layer.id, grip: grip, start: start, reshape: start,
+                                         press: press, toPlane: toPlane, size: plane.box.size,
+                                         moved: false, words: SelectionTag.does(grip, mode: .reshape))
+        heldGrip = grip
+        applyGrabCursor(.closedHand)
+        refreshOverlays()
+        return true
+    }
+
+    /// The hand moving with a corner or an edge held in Skew & distort.
+    func reshapeMouseDragged(atView viewPoint: CGPoint, event: NSEvent) -> Bool {
+        guard var drag = reshapeDrag else { return false }
+        guard let here = drag.toPlane.apply(viewPoint) else { return true }
+        let delta = CGPoint(x: here.x - drag.press.x, y: here.y - drag.press.y)
+        if !drag.moved, let viewport, hypot(delta.x, delta.y) * viewport.zoom > 2 { drag.moved = true }
+        guard drag.moved else { return true }
+        let keystone = reshapeKeystone || event.modifierFlags.contains(.shift)
+        switch drag.grip {
+        case .edge(let handle):
+            drag.reshape = ReshapeDrag.skewed(drag.start, edge: handle, by: delta, size: drag.size)
+            drag.words = SelectionTag.reshaping(drag.grip, skew: ReshapeDrag.skewDegrees(edge: handle, by: delta,
+                                                                                        size: drag.size),
+                                                keystone: false)
+        case .corner(let handle):
+            guard let corner = ReshapeDrag.cornerIndex(of: handle) else { return true }
+            drag.reshape = ReshapeDrag.distorted(drag.start, corner: corner, by: delta, size: drag.size,
+                                                 keystone: keystone)
+            drag.words = SelectionTag.reshaping(drag.grip, skew: 0, keystone: keystone)
+        default:
+            return true
+        }
+        reshapeDrag = drag
+        onReshapePreview(drag.layerID, drag.reshape)
+        refreshOverlays()
+        return true
+    }
+
+    /// Letting go: one undo step, or none for a press that never moved.
+    func reshapeMouseUp(event: NSEvent) -> Bool {
+        guard let drag = reshapeDrag else { return false }
+        reshapeDrag = nil
+        heldGrip = nil
+        if drag.moved, drag.reshape != drag.start {
+            onReshapeCommit(drag.layerID, drag.reshape)
+        }
+        refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
+        refreshOverlays()
+        return true
+    }
+
+    /// Escape with a reshape in the hand: the picture goes back to where the
+    /// drag started, and nothing is added to the history.
+    func cancelReshapeDrag() -> Bool {
+        guard let drag = reshapeDrag else { return false }
+        reshapeDrag = nil
+        heldGrip = nil
+        if drag.moved { onReshapeCommit(drag.layerID, drag.start) }
+        refreshGrabCursor()
+        refreshOverlays()
+        return true
     }
 }

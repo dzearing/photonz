@@ -27,15 +27,15 @@ import Foundation
 public enum TransformMode: String, Hashable, Sendable, CaseIterable, Codable {
     /// Corners resize keeping proportions, edges stretch one way, the knob turns.
     case size
-    /// Skew and distort reshape the picture itself (not built yet:
-    /// `TransformMode.offered` leaves it out until it is).
+    /// Edge pills skew and corners distort the picture itself (Shift on a
+    /// corner keystones); the knob still turns (`LayerReshape.swift`).
     case reshape
     /// Edge pills tip and swing, the depth grip pushes back or pulls forward;
     /// corners still resize and the knob still turns.
     case space
 
     /// The modes the chip offers today, in the order they apply.
-    public static let offered: [TransformMode] = [.size, .space]
+    public static let offered: [TransformMode] = [.size, .reshape, .space]
 
     /// The mode's name, as the chip's tip and the tag say it.
     public var title: String {
@@ -390,15 +390,24 @@ public enum SelectionTag {
     /// The tag at rest: the size and any turn in Size; the tip, swing and
     /// depth in 3D.
     public static func resting(mode: TransformMode, size: CGSize, rotation: Double,
-                               turn: LayerTurn3D?) -> String {
+                               turn: LayerTurn3D?, name: String = "") -> String {
         switch mode {
+        case .reshape:
+            // The mode and the layer it is reshaping, as the prototype says
+            // it, inside the chrome's thirty characters.
+            let lead = TransformMode.reshape.title
+            let room = 30 - lead.count - 3
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { return lead }
+            let shown = trimmed.count <= room ? trimmed : String(trimmed.prefix(room - 1)) + "…"
+            return lead + " · " + shown
         case .space:
             let t = turn ?? LayerTurn3D()
             var words = "Tip \(whole(t.rotationX))° · Swing \(whole(t.rotationY))°"
             let depth = t.depth.rounded()
             if depth != 0 { words += depth > 0 ? " · forward \(whole(depth))" : " · back \(whole(-depth))" }
             return words
-        case .size, .reshape:
+        case .size:
             var words = "\(whole(size.width)) × \(whole(size.height))"
             let turned = rotation.rounded()
             if turned != 0, turned.truncatingRemainder(dividingBy: 360) != 0 { words += " · \(whole(turned))°" }
@@ -409,11 +418,20 @@ public enum SelectionTag {
     /// What resting on `grip` says it does, in `mode`.
     public static func does(_ grip: SelectionGrip, mode: TransformMode) -> String {
         switch grip {
-        case .corner: "Resize · ⇧ stretch"
-        case .edge: mode == .space ? "Tip and swing" : "Stretch"
+        case .corner: mode == .reshape ? "Distort · ⇧ keystone" : "Resize · ⇧ stretch"
+        case .edge: mode == .space ? "Tip and swing" : mode == .reshape ? "Skew along this edge" : "Stretch"
         case .knob: mode == .space ? "Turn" : "Turn · double-click for 0°"
         case .depth: "Push back or pull forward"
         case .chip(let picked): picked.title
+        }
+    }
+
+    /// While a drag in Skew & distort is under way: the slant an edge has
+    /// put on the picture, or which reshape a corner is making.
+    public static func reshaping(_ grip: SelectionGrip, skew: Double, keystone: Bool) -> String {
+        switch grip {
+        case .edge: "Skew \(whole(skew))°"
+        default: keystone ? "Keystone" : "Distort"
         }
     }
 

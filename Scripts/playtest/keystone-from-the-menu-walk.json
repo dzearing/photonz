@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/keystone-from-the-menu-walk",
+  "seed": "Edit > Transform > Skew, Distort and Keystone at Next defaults with no flag changed. A busy screenshot is dropped and picked. Edit > Transform > Keystone puts its grips in Skew & distort, and a plain corner drag, no Shift, keystones: the corner across the top mirrors it. Escape steps back to Size, and Edit > Transform > Distort puts the grips back in Skew & distort, where a plain corner drag moves only that corner. The menu bar is only live with the app in front, so this walk takes the front.",
+  "setup": { "forget": ["all"], "front": true },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 860, "width": 1400, "height": 1000 },
+    { "do": "dropImage", "file": "fixtures/Busy screenshot 800x500.png", "at": [600, 430] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "click", "at": [600, 430] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectGrips", "mode": "size" },
+    { "do": "menus", "stage": "1-edit-transform", "menu": "Edit", "choose": "Edit > Transform > Keystone" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectGrips", "mode": "reshape" },
+    { "do": "grip", "grip": "topLeft", "by": [90.6, 0] },
+    { "do": "expectReshape", "corners": [[300, 180], [900, 180], [1000, 680], [200, 680]], "within": 3 },
+    { "do": "snapshot", "name": "2-keystoned-from-the-menu" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectGrips", "mode": "size" },
+    { "do": "menus", "stage": "3-distort", "menu": "Edit", "choose": "Edit > Transform > Distort" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectGrips", "mode": "reshape" },
+    { "do": "grip", "grip": "bottomRight", "by": [45.3, 0] },
+    { "do": "expectReshape", "corners": [[300, 180], [900, 180], [1050, 680], [200, 680]], "within": 3 },
+    { "do": "snapshot", "name": "4-distorted-from-the-menu" },
+    { "do": "describe", "stage": "4-menu", "note": "Keystone from the menu made a plain corner drag keystone; after Escape, Distort from the menu made a plain corner drag move only its own corner" }
+  ]
+}

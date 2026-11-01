@@ -1384,12 +1384,11 @@ extension CanvasNSView {
             // chip and the tag (`CanvasSelectionGrips`). Drawn through a drag
             // too, so the grip in the hand stays lit under it.
             if reworked, offersOwnHandles(selectedLayer) {
-                let quad = [CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY),
-                            CGPoint(x: frame.maxX, y: frame.maxY), CGPoint(x: frame.minX, y: frame.maxY)]
-                    .map(chromePoint)
-                drawSelectionGrips(for: selectedLayer, quad: quad,
+                drawSelectionGrips(for: selectedLayer, box: frame, toView: chromePoint,
                                    resizes: selectedLayer.allowsFrameResize && editablePath == nil,
                                    rotates: offersRotation(selectedLayer))
+            } else {
+                reshapeGhostLayer.path = nil
             }
         }
 

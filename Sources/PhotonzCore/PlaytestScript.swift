@@ -3782,6 +3782,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// a picture, words or a copy; `expectFeet` reads a line's ends. `layer`
     /// names it; left off it is the picked layer.
     case expectFlip(layer: String?, horizontal: Bool, vertical: Bool)
+    /// CLAIMS how a layer's picture is skewed or distorted, asked of the
+    /// document: its four reshaped corners in canvas points before any turn,
+    /// top left first, each within `within` points; or, with `corners` nil,
+    /// that it is not reshaped at all. `layer` names it; left off it is the
+    /// picked layer.
+    case expectReshape(layer: String?, corners: [CGPoint]?, within: Double)
     /// CLAIMS how a zoom callout's magnified box sits against its source,
     /// asked of the document. `keepsShape` claims the box is the source's
     /// shape, to `within` percent (0.5 by default); `magnification` claims
@@ -4647,7 +4653,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectExpandedCut", "expectSpeedCurve", "expectCorners", "expectCue", "expectSpaceHandles", "expectGrips", "grip", "hoverGrips", "expectTilt", "expectReshape", "expectFlip", "expectTransformBar", "expectEdited", "memory", "expectFeet", "expectField", "expectFrameSharp", "expectInk", "expectChipContrast", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectBrushResponsive", "filmCanvas", "expectPaintStill", "pickBrush", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectPaneGap", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmHover", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "statusMenu", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pen", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4752,6 +4758,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectMeasures: "expectMeasures"
         case .expectCorners: "expectCorners"
         case .expectTilt: "expectTilt"
+        case .expectReshape: "expectReshape"
         case .expectFlip: "expectFlip"
         case .expectCallout: "expectCallout"
         case .expectSizeMeasure: "expectSizeMeasure"
@@ -5079,7 +5086,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectGrips":
             let mode = try f.optionalString("mode").map { word -> TransformMode in
                 guard let mode = TransformMode(rawValue: word) else {
-                    throw f.invalid("mode", "is size or space")
+                    throw f.invalid("mode", "is size, reshape or space")
                 }
                 return mode
             }
@@ -5956,6 +5963,22 @@ public enum PlaytestStep: Sendable, Equatable {
                                   radius: radius.map { CGFloat($0) },
                                   rounded: rounded.map { Int($0) },
                                   within: CGFloat(try f.optionalNumber("within") ?? 0.5))
+        case "expectReshape":
+            let none = try f.optionalFlag("none") ?? false
+            let pairs = fields["corners"] as? [[NSNumber]]
+            guard none != (pairs != nil) else {
+                throw f.invalid("corners", "expectReshape claims one thing: \"corners\", four [x, y] points "
+                    + "top left first, or \"none\": true for a picture that is not reshaped")
+            }
+            var corners: [CGPoint]?
+            if let pairs {
+                guard pairs.count == 4, pairs.allSatisfy({ $0.count == 2 }) else {
+                    throw f.invalid("corners", "is four [x, y] points, top left, top right, bottom right, bottom left")
+                }
+                corners = pairs.map { CGPoint(x: $0[0].doubleValue, y: $0[1].doubleValue) }
+            }
+            self = .expectReshape(layer: try f.optionalString("layer"), corners: corners,
+                                  within: try f.optionalNumber("within") ?? 1)
         case "expectTilt":
             let atLeast = try f.optionalNumber("atLeast")
             let flat = try f.optionalFlag("flat") ?? false

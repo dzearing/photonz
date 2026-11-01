@@ -1,0 +1,34 @@
+{
+  "feature": "Skew & distort from the selection chip",
+  "epic": "found-selection",
+  "summary": "The chip by a picked layer's knob now reads Size, Skew & distort, 3D. In Skew & distort an edge pill skews the picture, a corner distorts it and Shift on a corner keystones it; the reshape belongs to the picture, so resizing, turning and 3D act on the reshaped picture.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Drop any screenshot on a picture and pick it with the select tool.",
+  "switched": {},
+  "try": [
+    { "do": "Click the middle icon of the chip beside the turn knob (Skew & distort).", "shot": "2026-11-01-skew-and-distort-1-chip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the top edge pill sideways: the top edge slides along itself and the picture slants.", "shot": "2026-11-01-skew-and-distort-2-skewed-sc.png" },
+    { "do": "Drag the bottom right corner anywhere: only that corner moves.", "shot": "2026-11-01-skew-and-distort-3-distorted-sc.png" },
+    { "do": "Hold Shift and drag the bottom left corner inward: the bottom right comes in to match (keystone).", "shot": "2026-11-01-skew-and-distort-4-keystoned-sc.png" },
+    { "do": "Press Escape: back in Size the grips sit on the flat box round the reshaped picture, with a faint dotted line of the reshape inside.", "shot": "2026-11-01-skew-and-distort-5-size-sc.png" },
+    { "do": "Drag the right pill, then the knob: the reshaped picture stretches and turns as one piece." },
+    { "do": "Pick 3D on the chip and drag an edge pill: the reshaped picture tips and swings.", "shot": "2026-11-01-skew-and-distort-8-3d-sc.png" },
+    { "do": "Choose Edit > Transform > Keystone, then drag a corner with no key held: it keystones.", "shot": "2026-11-01-skew-and-distort-menu-keystone-sc.png" }
+  ],
+  "evaluate": [
+    "Does dragging an edge pill to skew feel like the edge sliding along itself, the way you expected?",
+    "Is Shift on a corner the right key for keystone, or would you reach for something else?",
+    "In Size, does the flat box round a reshaped picture, with the dotted reshape inside, make it clear what a resize will do?",
+    "Should the tag in Size say the size of the box round the reshape (900 × 550 in the walk) rather than the picture's own size (800 × 500)?",
+    "Is Edit > Transform the right home for Skew, Distort and Keystone, as Photoshop has them?"
+  ],
+  "rough": [
+    "Matches selection-transform.html for the chip order, the three icons, the pill skew, corner distort, Shift keystone, the box round the reshape in Size and 3D with its dotted line, and the tag words (Skew along this edge, Distort · ⇧ keystone, Skew 11°, Keystone).",
+    "Right-click a mode on the chip to reset it, and the dot on a changed mode, are not in this slice; they are the next slice, reset-each-transform-mode-on-its-own-with-a-dot.",
+    "The perspective pill beside the chip in 3D is not in this slice; it is perspective-pill-and-a-shadow-that-grows-as-a-3d.",
+    "The menu rows are in Edit > Transform, where the app's only Transform submenu already lives and where Photoshop keeps them, rather than a second Transform submenu under Layer as the task worded it.",
+    "In Size the tag reads the picture's own size (800 × 500) while the grips sit on the larger box round the reshape; the prototype does the same, so it is kept.",
+    "Groups, magnifiers, lines, arrows and measurements are not offered Skew & distort; the chip shows only Size and 3D on them.",
+    "An SVG export draws a reshaped picture unreshaped: SVG has no four-corner warp, so it would need the picture baked or the reshape refused there.",
+    "Pictures were taken with the window behind another app, so the picked chip button and grips show their background look."
+  ]
+}

@@ -150,10 +150,22 @@ struct EditorCommands: Commands {
     /// wears it as a tooltip. X itself lives on an invisible stand-in in the
     /// tool bar, the same idiom the tool letters use, so it answers under
     /// every tool rather than only the one with the swatches.
-    /// Edit ▸ Transform: Flip Horizontal and Flip Vertical, on what is picked
+    /// Edit ▸ Transform: Skew, Distort and Keystone, then Flip Horizontal and
+    /// Flip Vertical, on what is picked
     /// (`EditorState+Flip.swift`).
     private var transformMenu: some View {
         Menu("Transform") {
+            // Photoshop's order: the reshapes first, then the flips. They put
+            // the picked layer's grips in Skew & distort (`LayerReshape.swift`).
+            if Experiments.shared.transformModesEnabled {
+                Button("Skew") { editor?.run(.skew) }
+                    .disabled(!(editor?.canRun(.skew) ?? false))
+                Button("Distort") { editor?.run(.distort) }
+                    .disabled(!(editor?.canRun(.distort) ?? false))
+                Button("Keystone") { editor?.run(.keystone) }
+                    .disabled(!(editor?.canRun(.keystone) ?? false))
+                Divider()
+            }
             Button(FlipAxis.horizontal.title) { editor?.run(.flipHorizontal) }
                 .disabled(!(editor?.canRun(.flipHorizontal) ?? false))
             Button(FlipAxis.vertical.title) { editor?.run(.flipVertical) }

@@ -313,6 +313,9 @@ extension EditorState {
         case .swapFillColors: swapFillColors()
         case .flipHorizontal: flipSelection(.horizontal)
         case .flipVertical: flipSelection(.vertical)
+        case .skew: askForTransformMode(.reshape, keystone: false)
+        case .distort: askForTransformMode(.reshape, keystone: false)
+        case .keystone: askForTransformMode(.reshape, keystone: true)
         // Layer
         case .newLayer: newEmptyLayer()
         case .newLayerViaCopy: newLayerViaCopy()
@@ -556,6 +559,7 @@ extension EditorState {
         case .selectAll, .newLayer, .newCollageLayer: return hasDocument
         case .swapFillColors: return true
         case .flipHorizontal, .flipVertical: return canFlipSelection
+        case .skew, .distort, .keystone: return canReshapePicked
         case .deselect, .invertSelection, .blurBehindSelection: return selection != nil
         case .fillWithForeground, .fillWithBackground: return canFillWithFillColors
         case .newLayerViaCopy: return selection != nil || hasLayerSelection

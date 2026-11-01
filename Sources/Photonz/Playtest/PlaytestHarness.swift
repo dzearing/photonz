@@ -3190,6 +3190,10 @@ private final class Run {
             note(number, step.name, try checkFlip(layerName, horizontal: horizontal, vertical: vertical),
                  state: describe())
 
+        case .expectReshape(let layerName, let corners, let within):
+            note(number, step.name, try checkReshape(layerName, corners: corners, within: within),
+                 state: describe())
+
         case .expectCallout(let layerName, let keepsShape, let magnification, let unstretched, let within,
                             let band):
             note(number, step.name,
@@ -12868,6 +12872,30 @@ private final class Run {
         guard layer.transform.flipHorizontal == horizontal, layer.transform.flipVertical == vertical else {
             throw Failure(description: "\(reads); the step claimed \(said(horizontal, .horizontal)), "
                 + said(vertical, .vertical))
+        }
+        return reads + ", as claimed"
+    }
+
+    private func checkReshape(_ layerName: String?, corners: [CGPoint]?, within: Double) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else { throw Failure(description: "no document open") }
+        let found = layerName.map { name in document.allLayers.last { $0.name == name } }
+            ?? editor.selectedLayerID.flatMap { document.layer(id: $0) }
+        guard let layer = found else {
+            throw Failure(description: layerName.map { "no layer called \"\($0)\"" } ?? "nothing is picked")
+        }
+        func point(_ p: CGPoint) -> String { "(\(Int(p.x.rounded())), \(Int(p.y.rounded())))" }
+        guard let reshape = layer.shownReshape else {
+            let reads = "\(layer.name) is not reshaped, box \(layer.turnBox)"
+            if corners != nil { throw Failure(description: reads + "; the step claimed a reshape") }
+            return reads + ", as claimed"
+        }
+        let drawn = reshape.corners(of: layer.turnBox)
+        let reads = "\(layer.name)'s picture has its corners at " + drawn.map(point).joined(separator: " ")
+        guard let corners else { throw Failure(description: reads + "; the step claimed no reshape") }
+        for (have, want) in zip(drawn, corners) where hypot(have.x - want.x, have.y - want.y) > within {
+            throw Failure(description: reads + "; the step claimed " + corners.map(point).joined(separator: " ")
+                + " within \(within)")
         }
         return reads + ", as claimed"
     }
