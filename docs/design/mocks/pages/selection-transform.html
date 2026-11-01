@@ -80,7 +80,7 @@
 <main class="stage">
 <section class="screen on" id="selection-transform">
   <div class="scen-head"><span class="pip" style="background:var(--accent)"></span><h2>Transform modes</h2><span class="k">· prototype: size, skew, 3D with perspective, distort</span></div>
-  <p class="st-lede">For review, building on <b>Selection · Proposal 03b</b>. The chip by the rotate knob now has three choices: <b>Size</b>, <b>3D</b> and <b>Distort</b>. Perspective belongs to the document's one camera, so changing it moves <b>every</b> 3D layer (two cards here to show it). Keys follow Photoshop. Try them on the card.</p>
+  <p class="st-lede">For review, building on <b>Selection · Proposal 03b</b>. The chip by the rotate knob has three choices: <b>Size</b>, <b>3D</b> and <b>Skew &amp; distort</b>. Size only resizes and turns; slanting lives in its own mode. Perspective belongs to the document's one camera, so changing it moves <b>every</b> 3D layer (two cards here to show it). Try them on the card.</p>
 
   <div class="st-wrap">
     <div class="st-stage" id="st-stage"></div>
@@ -98,9 +98,9 @@
       </div>
       <div class="st-pan st-menu">
         <h5>LAYER ▸ TRANSFORM</h5>
-        <button data-cmd="skew">Skew<kbd>⌘ edge</kbd></button>
-        <button data-cmd="distort">Distort<kbd>⌘ corner</kbd></button>
-        <button data-cmd="keystone">Keystone<kbd>⌘⌥⇧ corner</kbd></button>
+        <button data-cmd="skew">Skew<kbd>edge</kbd></button>
+        <button data-cmd="distort">Distort<kbd>corner</kbd></button>
+        <button data-cmd="keystone">Keystone<kbd>⇧ corner</kbd></button>
         <button data-cmd="3d">Turn in 3D</button>
         <button data-cmd="reset">Reset Transform</button>
       </div>
@@ -110,17 +110,14 @@
   <div class="st-pan" style="margin-top:var(--gap)">
     <h5>KEYS</h5>
     <table class="st-keys">
-      <tr><td>drag corner</td><td>Resize keeping proportions, for anything, in every mode but Distort. ⇧ stretches freely. ⌥ from the centre</td></tr>
-      <tr><td>drag edge pill</td><td>Stretch one way (how a picture is stretched)</td></tr>
-      <tr><td>drag knob</td><td>Turn it flat, in every mode. ⇧ 15° steps</td></tr>
-      <tr><td>⌘ drag edge pill</td><td>Skew along that edge</td></tr>
-      <tr><td>⌘ drag corner</td><td>Distort: that corner moves freely (switches to Distort)</td></tr>
-      <tr><td>⌘⌥⇧ drag corner</td><td>Keystone: the corner across the edge mirrors it</td></tr>
-      <tr><td>3D · drag edge pill</td><td>Turn: up and down tip it, left and right swing it. ⇧ 15° steps</td></tr>
-      <tr><td>3D · drag ↕ grip</td><td>Push back or pull forward (depth). Corners still resize in 3D</td></tr>
-      <tr><td>3D · perspective pill</td><td>Beside the mode chip: click for presets and a slider, or drag it sideways. It is the camera's, so every 3D layer changes</td></tr>
-      <tr><td>3D · ⌥ drag edge pill</td><td>Perspective of the camera (all 3D layers), with lines to the vanishing point</td></tr>
-      <tr><td>Distort · drag pin</td><td>Move that corner. Drag an edge pill to move the whole edge</td></tr>
+      <tr><td>Size · drag corner</td><td>Resize keeping proportions, for anything. ⇧ stretches freely, ⌥ from the centre</td></tr>
+      <tr><td>Size · drag edge pill</td><td>Stretch one way</td></tr>
+      <tr><td>any mode · drag knob</td><td>Turn it flat. ⇧ 15° steps</td></tr>
+      <tr><td>3D · drag edge pill</td><td>Tip and swing. ⇧ 15° steps, ⌥ changes the camera's perspective</td></tr>
+      <tr><td>3D · drag ↕ grip</td><td>Push back or pull forward. Corners still resize</td></tr>
+      <tr><td>3D · perspective pill</td><td>Click for presets and a slider, or drag sideways. Every 3D layer changes</td></tr>
+      <tr><td>Skew &amp; distort · drag edge pill</td><td>Skew: the edge slides along itself</td></tr>
+      <tr><td>Skew &amp; distort · drag corner</td><td>Distort: that corner moves freely. ⇧ keystone, the corner across mirrors it</td></tr>
       <tr><td>esc</td><td>Back to Size</td></tr>
     </table>
   </div>
@@ -232,7 +229,7 @@
     "3d": `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 1.8 13.6 5v6.2L8 14.4 2.4 11.2V5z"/><path d="M2.4 5 8 8.2 13.6 5M8 8.2v6.2"/></svg>`,
     distort: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 4 13 2.5 14 13.5 3.5 12z"/><circle cx="2.5" cy="4" r="1.3" fill="currentColor"/><circle cx="13" cy="2.5" r="1.3" fill="currentColor"/><circle cx="14" cy="13.5" r="1.3" fill="currentColor"/><circle cx="3.5" cy="12" r="1.3" fill="currentColor"/></svg>`,
   };
-  [["size", "Size grips"], ["3d", "3D grips"], ["distort", "Distort pins"]].forEach(([m, t]) => {
+  [["size", "Size"], ["3d", "3D"], ["distort", "Skew & distort"]].forEach(([m, t]) => {
     const b = document.createElement("button"); b.dataset.m = m; b.title = t; b.innerHTML = ICON[m];
     b.addEventListener("pointerdown", e => e.stopPropagation());
     b.addEventListener("click", () => setMode(pick, m));
@@ -250,9 +247,9 @@
   const ROTATE_CURSOR = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9a8 8 0 0 1 14 0" stroke="#fff" stroke-width="4"/><path d="M5 9a8 8 0 0 1 14 0" stroke="#000" stroke-width="1.6"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#fff" stroke-width="4"/><path d="M3 6.5 5 9.5 8 8M21 6.5 19 9.5 16 8" stroke="#000" stroke-width="1.6"/></g></svg>')}") 12 8, grab`;
   let hot = null;                         // the grip under the pointer
   const DOES = {
-    size: { c: "Resize · ⇧ stretch · ⌘ distort", e: "Stretch · ⌘ skew", knob: "Turn" },
+    size: { c: "Resize · ⇧ stretch", e: "Stretch", knob: "Turn" },
     "3d": { c: "Resize · ⇧ stretch", e: "Tip and swing · ⌥ perspective", knob: "Turn", depth: "Push back or pull forward" },
-    distort: { c: "Move this corner", e: "Move this edge", knob: "Turn the shape" },
+    distort: { c: "Distort · ⇧ keystone", e: "Skew along this edge", knob: "Turn the shape" },
   };
   const what = g => g && (DOES[pick.mode][g[0] === "c" ? "c" : g[0] === "e" ? "e" : g] || "");
   ov.addEventListener("pointerover", e => { const g = e.target.getAttribute && e.target.getAttribute("data-g"); if (g && !drag && g !== hot) { hot = g; draw(); } });
@@ -325,12 +322,12 @@
   }
   function label() {
     const L = pick;
-    if (L.mode === "distort") return "Distort · " + L.name;
+    if (L.mode === "distort") return "Skew & distort · " + L.name;
     if (L.mode === "3d") return `Tip ${Math.round(L.rx)}° · Swing ${Math.round(L.ry)}°` + (L.z ? ` · ${L.z > 0 ? "forward" : "back"} ${Math.abs(Math.round(L.z))}` : "");
     return `${Math.round(L.w)} × ${Math.round(L.h)}` + (L.rot ? ` · ${Math.round(L.rot)}°` : "") + (L.skx || L.sky ? ` · skew ${Math.round(L.skx)}°, ${Math.round(L.sky)}°` : "");
   }
   function info() {
-    const L = pick, rows = [["Layer", L.name], ["Mode", { size: "Size", "3d": "3D", distort: "Distort" }[L.mode]], ["Size", `${Math.round(L.w)} × ${Math.round(L.h)}`], ["Turn", `${Math.round(L.rot)}°`],
+    const L = pick, rows = [["Layer", L.name], ["Mode", { size: "Size", "3d": "3D", distort: "Skew & distort" }[L.mode]], ["Size", `${Math.round(L.w)} × ${Math.round(L.h)}`], ["Turn", `${Math.round(L.rot)}°`],
       ["Skew", `${Math.round(L.skx)}°, ${Math.round(L.sky)}°`], ["Tip / Swing", `${Math.round(L.rx)}° / ${Math.round(L.ry)}°`], ["Depth", Math.round(L.z)],
       ["Corners", L.pins ? "pinned" : "from the transform"], ["Perspective", cam.fov ? cam.fov + "° (camera)" : "none"]];
     document.getElementById("st-kv").innerHTML = rows.map(([k, v]) => `<span>${k}</span><span>${v}</span>`).join("");
@@ -357,7 +354,7 @@
     if (c === "reset") { Object.assign(L, { rot: 0, rx: 0, ry: 0, z: 0, skx: 0, sky: 0, pins: null, mode: "size" }); }
     else if (c === "3d") setMode(L, "3d");
     else if (c === "distort" || c === "keystone") { setMode(L, "distort"); L.keystone = c === "keystone"; }
-    else if (c === "skew") { L.mode = "size"; hint = "⌘ drag an edge pill to skew"; setTimeout(() => { hint = ""; draw(); }, 1800); }
+    else if (c === "skew") { setMode(L, "distort"); L.keystone = false; hint = "Drag an edge pill to skew"; setTimeout(() => { hint = ""; draw(); }, 1800); }
     draw();
   }));
 
@@ -401,9 +398,9 @@
       L.z = Math.max(-600, Math.min(300, s0.z - dy * 1.5)); hint = L.z < 0 ? `Back ${Math.round(-L.z)}` : `Forward ${Math.round(L.z)}`;
     } else if (drag.kind[0] === "c") {
       const i = +drag.kind[1];
-      const keystone = (e.metaKey && e.altKey && e.shiftKey) || (L.mode === "distort" && L.keystone);
-      if (L.mode === "distort" || e.metaKey) {
-        if (!L.pins) { L.pins = drag.q.map(p => p.slice()); L.mode = "distort"; }
+      const keystone = L.mode === "distort" && (e.shiftKey || L.keystone);
+      if (L.mode === "distort") {
+        if (!L.pins) L.pins = drag.q.map(p => p.slice());
         L.pins = drag.q.map(p => p.slice());
         L.pins[i] = [drag.q[i][0] + dx, drag.q[i][1] + dy];
         if (keystone) { const j = [1, 0, 3, 2][i]; L.pins[j] = [drag.q[j][0] - dx, drag.q[j][1] + dy]; hint = "Keystone"; }
@@ -425,18 +422,18 @@
     } else if (drag.kind[0] === "e") {
       const i = +drag.kind[1], horiz = i % 2 === 0;
       if (L.mode === "distort") {
+        // Skew: the edge slides along its own line, so the layer slants.
         const [a, b] = [[0, 1], [1, 2], [2, 3], [3, 0]][i];
-        L.pins = drag.q.map(p => p.slice()); [a, b].forEach(k => { L.pins[k] = [drag.q[k][0] + dx, drag.q[k][1] + dy]; }); hint = "Distort · edge";
+        const ex = drag.q[b][0] - drag.q[a][0], ey = drag.q[b][1] - drag.q[a][1], el2 = Math.hypot(ex, ey) || 1;
+        const along = (dx * ex + dy * ey) / el2, mx = along * ex / el2, my = along * ey / el2;
+        L.pins = drag.q.map(p => p.slice()); [a, b].forEach(k => { L.pins[k] = [drag.q[k][0] + mx, drag.q[k][1] + my]; });
+        hint = `Skew ${Math.round(Math.atan2(along, (i % 2 ? Math.abs(drag.q[2][0] - drag.q[3][0]) : Math.abs(drag.q[3][1] - drag.q[0][1])) || 1) * 180 / Math.PI)}°`;
       } else if (L.mode === "3d" && e.altKey) {
         cam.fov = Math.max(0, Math.min(120, Math.round(cam.fovStart === undefined ? (cam.fovStart = cam.fov) : cam.fovStart) + Math.round(dx / 3)));
         const q = corners(L), c = q.reduce((s, p) => [s[0] + p[0] / 4, s[1] + p[1] / 4], [0, 0]);
         vanishing = [c[0], c[1] - 260 + cam.fov]; hint = `Perspective ${cam.fov}° · all 3D layers`;
       } else if (L.mode === "3d") {
         L.ry = snap(s0.ry + dx * .5); L.rx = snap(s0.rx - dy * .5); hint = "";
-      } else if (e.metaKey) {
-        if (horiz) L.skx = Math.max(-60, Math.min(60, s0.skx + (i === 0 ? -dx : dx) * .4));
-        else L.sky = Math.max(-60, Math.min(60, s0.sky + (i === 3 ? -dy : dy) * .4));
-        hint = `Skew ${Math.round(L.skx)}°, ${Math.round(L.sky)}°`;
       } else {
         if (horiz) { const h = Math.max(30, s0.h + (i === 0 ? -dy : dy)); if (i === 0) L.y = s0.y + s0.h - h; L.h = h; L.el.style.height = h + "px"; }
         else { const w = Math.max(30, s0.w + (i === 3 ? -dx : dx)); if (i === 3) L.x = s0.x + s0.w - w; L.w = w; L.el.style.width = w + "px"; }
