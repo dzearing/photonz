@@ -4,12 +4,12 @@
   "goal": "When Ask has drawn an icon (a sun over a hill) and you ask it to make the sun smaller, today only the sun disc shrinks: its rays stay full size and the green hill layer that the tracing put under the sun shows through as a thick ring. The whole sun should shrink and the space it leaves should look like the background around it.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 95,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T01:26:13.360Z",
-  "updated": "2026-11-01T03:42:25.549Z",
+  "updated": "2026-11-01T14:53:14.599Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced: node Scripts/ask-eval/followup.mjs run --run after-5 --cases icon-sun-smaller (code bb3ea1fb). Model called change_part with part Sun and at, a point in the disc. Judge: \"The yellow sun disc did get smaller, but the space it left was filled with a thick green ring instead of the background, the rays stayed at their original size and position, and the top of the hill bulges upward\" (part 5 words 6 rest 4). Pictures: .ask-eval/followups/after-5/icon-sun-smaller/first.png and second.png. Layer tree of that icon: Green [path] covers 43,138 426x294 (under the sun), Yellow (disc) plus Yellow 2..13 and Pale yellow 1..6 (rays and highlights) as separate colour layers. splitPiece (Sources/PhotonzCore/AgentPartChange.swift) takes only the smallest ring at the point. Ideas: gather pieces of the same and near colours within a radius of the picked piece; or cut the hole out of the layer beneath. Found while running ask-changes-what-it-just-made-make-the-water-blu.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-11-01T03:42:25.548Z",
       "note": "also recolouring: on a traced Statue of Liberty (205 pieces named Teal, Pale teal, Dark teal...), 'make her robe a darker green' now plans and lands (task ask-never-fails-because-a-document-is-too-big-to), but the model picks the colour group 'Pale teal', so the pale highlights across robe, face and arm turn flat dark green while the robe's other shades stay. A point (at) would take one piece of a robe made of about a hundred. Reproduced 2026-10-31 with /tmp-style walk: blank 1440x1024, Ask 'draw the Statue of Liberty', then 'make her robe a darker green'; trace showed change_part {part: 'Pale teal', layer: <group>, color: #2E6B5E}. Before/after in queue/audits/2026-10-31-ask-big-drawing-before-after.png."
+    },
+    {
+      "t": "2026-11-01T14:53:14.598Z",
+      "note": "seq 95 -> 100"
     }
   ],
   "walks": []

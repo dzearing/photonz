@@ -4,12 +4,12 @@
   "goal": "The selection mock was reworked with the user on 2026-10-24 (Selection, the primitive: docs/design/mocks/pages/lang-selection.html, section 03b and the section 01 card) but it was never built. Build it in the app at Next defaults: thinner, cleaner sizing grips, a name and size tag that never covers the rotate knob, and a 3D mode entered from a small cube chip beside the rotate knob, where edge pills tip and turn the layer and corner grips push it back or pull it forward, all staying the same size on screen however the layer is turned. It also has to work on small objects, where today the 3D handles crowd each other and all react at once.",
   "epic": "found-selection",
   "priority": "p1-high",
-  "seq": 5e-8,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T12:45:05.877Z",
-  "updated": "2026-11-01T14:20:53.194Z",
+  "updated": "2026-11-01T14:53:13.622Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-01 (intake): 'what happened to the rework on selection ux especially with 3d transforms?' Answer: the mock was reworked with the user on 2026-10-24 (eight lang-selection commits, 07:31 to 15:07) and no build task was filed, so the loop never knew. Folds in on-a-small-picked-object-the-3d-turn-handles-are (filed by the user 2026-10-20, never built, resequenced 13 times). Related, done earlier: the-3d-rotation-handles-are-on-a-picked-layer-ag, tilt-flip-and-push-layers-in-depth-from-the-canv, resize-squares-on-a-layer-turned-in-3d-take-the, every-transform-handle-answers-the-pointer-befor (2026-10-11 to 14). Keep the mock as is; a departure is a decision card with a marked screenshot.",
@@ -80,6 +80,10 @@
     {
       "t": "2026-11-01T14:20:53.193Z",
       "note": "seq 1.2e-7 -> 5e-8"
+    },
+    {
+      "t": "2026-11-01T14:53:13.621Z",
+      "note": "seq 5e-8 -> 10"
     }
   ]
 }

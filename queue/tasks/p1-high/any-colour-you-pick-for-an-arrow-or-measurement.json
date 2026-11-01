@@ -4,14 +4,14 @@
   "goal": "A person can pick any colour at all for an arrow or a measurement, not only the palette, and every chip style keeps its words readable automatically, with no trip into Advanced. Glass, which lets the picture through, stays readable over a white screenshot and a black one alike.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 1e-7,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T14:19:06.785Z",
-  "updated": "2026-11-01T08:11:54.608Z",
+  "updated": "2026-11-01T14:53:13.695Z",
   "deps": [
-    "walks-that-fail-in-the-full-sweep-26"
+    "a-walk-s-press-on-a-picture-tile-swatch-or-colou"
   ],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake): 'I want to make sure arrows/chips can be custom colored and it retains accessibility on the text, without going into advanced to tweak details'. Split out because the runner on caption-and-measurement-chips-come-in-a-set-of-p started at 13:25 and this direction was logged at 14:18; if that runner already did it, verify and close this as done. Reference implementation: docs/design/mocks/shared/components/markup.js (plateFor, glassFor), rules docs/design/markup.md section 3, live check on the design site: Design system > Markup, Custom colour well with a contrast readout.",
@@ -75,6 +75,14 @@
     {
       "t": "2026-11-01T08:11:54.607Z",
       "note": "rotating check 2026-11-01T08:11:54Z, 39 walks run from 959 onward in the rotation: any-colour-chip-reads-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-11-01T14:52:33.511Z",
+      "note": "digest 2026-11-01: dependency moved from walks-that-fail-in-the-full-sweep-26 (a standing task of 190 failing walks that may never close) to a-walk-s-press-on-a-picture-tile-swatch-or-colou, the one fault that stops this task's walk. Reproduced today with arrow-styles-walk."
+    },
+    {
+      "t": "2026-11-01T14:53:13.694Z",
+      "note": "seq 1e-7 -> 20"
     }
   ],
   "started": "2026-10-31T15:22:52.840Z",

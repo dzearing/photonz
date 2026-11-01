@@ -4,12 +4,12 @@
   "goal": "On 2026-10-19 every waiting card was taken as recommended and cards became rare, but the design rules runners read and the report that measures Photonz against Premiere still say some questions are open cards. A runner reading them is told to wait for, or open, a card that no longer exists, and the gap report reads further behind than the app is.",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 120,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-10-20T13:58:02.156Z",
-  "updated": "2026-10-30T02:12:21.171Z",
+  "updated": "2026-11-01T14:53:14.817Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-10-20 digest's rule review. The cards were taken as recommended in 624a8e3a; runner-prompt.md and manager-prompt.md were updated then, the design documents were not. Docs only: no app code, so no walk check is started by it.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-30T02:12:21.170Z",
       "note": "triage 2026-10-29: also out of date now: UX-PATTERNS D18 item 4 says a clip dropped between two tracks makes a new track there. Since 2026-10-28 (commits f2f9ac1f, 087b8cb7) a file carried over the timeline also gets a dashed New track row at the top of the tracks and a clip-shaped ghost below them. Name both in D18 while scrubbing, so the next runner building a drop does not invent a fourth way."
+    },
+    {
+      "t": "2026-11-01T14:53:14.816Z",
+      "note": "seq 120 -> 130"
     }
   ]
 }
