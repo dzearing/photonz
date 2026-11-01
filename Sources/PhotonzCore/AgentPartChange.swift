@@ -521,28 +521,35 @@ extension PhotonzDocument {
     }
 }
 
-/// The colour maths of change_part: one shift worked out from all of a
+/// The colour maths of change_part: one change worked out from all of a
 /// part's colours, then put on each, so its shades keep their differences.
+///
+/// A colour asked for is put on the way Photoshop's Colorize does it: every
+/// shade takes that hue, its strength scales with the part's (a grey or a
+/// white stays one), and its lightness moves by the gap between the part's
+/// middle and the colour. Turning the colour wheel by one amount only reads
+/// right on a part of one hue: muted purple water with a bright yellow
+/// reflection in it went grey-teal that way (eval after-5, 2026-10-31).
 enum AgentPartColour {
 
     static func shift(from colours: [String], _ change: AgentPartChange) -> (String) -> String {
-        let hues = colours.map { AgentGroupRecolour.hsl(AgentGroupRecolour.rgb($0)) }
-        var dh = 0.0, ds = 0.0, dl = 0.0
-        if let target = change.colorHex, !hues.isEmpty {
+        let shades = colours.map { AgentGroupRecolour.hsl(AgentGroupRecolour.rgb($0)) }
+        var hueTo: Double?, strength = 1.0, ds = 0.0, dl = 0.0
+        if let target = change.colorHex, !shades.isEmpty {
             let to = AgentGroupRecolour.hsl(AgentGroupRecolour.rgb(target))
-            let mean = Self.mean(hues)
-            dh = to.h - mean.h
-            ds = to.s - mean.s
+            let mean = Self.mean(shades)
+            hueTo = to.h
+            if mean.s >= 0.05 { strength = to.s / mean.s } else { ds = to.s - mean.s }
             dl = to.l - mean.l
         }
-        dh += (change.hue ?? 0) / 360
+        let turn = (change.hue ?? 0) / 360
         ds += (change.saturation ?? 0) / 100
         dl += (change.lightness ?? 0) / 100
-        let (h, s, l) = (dh, ds, dl)
+        let (target, scale, s, l) = (hueTo, strength, ds, dl)
         let warmth = (change.warmth ?? 0) / 100
         return { hex in
             let was = AgentGroupRecolour.hsl(AgentGroupRecolour.rgb(hex))
-            var hue = (was.h + h).truncatingRemainder(dividingBy: 1)
+            var hue = ((target ?? was.h) + turn).truncatingRemainder(dividingBy: 1)
             if hue < 0 { hue += 1 }
             if warmth != 0 {
                 // Toward orange or toward blue, at most half way round.
@@ -557,22 +564,24 @@ enum AgentPartColour {
             // Kept off pure white and black, except a colour already there:
             // a white label stays white.
             let lightness = min(max(0.98, was.l), max(min(0.02, was.l), was.l + l))
-            return AgentGroupRecolour.hexString(fromHSL: (hue, min(1, max(0, was.s + s)), lightness))
+            return AgentGroupRecolour.hexString(fromHSL: (hue, min(1, max(0, was.s * scale + s)), lightness))
         }
     }
 
-    /// The colours' middle, each weighted by how coloured it is: a white
-    /// label on a blue button is not part of the blue the button is, so it
-    /// neither pulls the middle lighter nor gets darkened toward the colour.
+    /// The colours' middle. Hue is an angle, weighted by how coloured each
+    /// shade is; strength and lightness count every coloured shade alike and
+    /// a colourless one (a white label on a blue button) barely, so it
+    /// neither pulls the middle lighter nor is darkened toward the colour.
     static func mean(_ colours: [(h: Double, s: Double, l: Double)]) -> (h: Double, s: Double, l: Double) {
         var x = 0.0, y = 0.0, s = 0.0, l = 0.0, total = 0.0
         for colour in colours {
             let weight = max(colour.s, 0.001)
             x += cos(colour.h * 2 * .pi) * weight
             y += sin(colour.h * 2 * .pi) * weight
-            s += colour.s * weight
-            l += colour.l * weight
-            total += weight
+            let counts = colour.s > 0.08 ? 1.0 : 0.02
+            s += colour.s * counts
+            l += colour.l * counts
+            total += counts
         }
         var h = atan2(y, x) / (2 * .pi)
         if h < 0 { h += 1 }

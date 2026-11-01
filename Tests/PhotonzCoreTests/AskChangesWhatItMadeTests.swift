@@ -131,6 +131,26 @@ struct AskChangesWhatItMadeTests {
         for index in 2...4 { #expect(after[index].samples == before[index].samples) }
     }
 
+    @Test("A part of several hues (muted water, a bright reflection) all takes the colour asked for: none goes grey, the reflection stays the lightest")
+    func recolourAPartOfManyHues() throws {
+        let colours = ["#6E5A8C", "#7A6696", "#5E4C7E", "#F0C850", "#F8D870", "#806A9A"]
+        let strokes = colours.enumerated().map { index, hex in
+            Self.stroke([CGPoint(x: 0, y: 150 + index * 10), CGPoint(x: 400, y: 150 + index * 10)], hex: hex, part: "sea")
+        }
+        let layer = Layer(name: "Paint", content: .paint(PaintContent(strokes: strokes)), frame: CGRect(x: 0, y: 0, width: 400, height: 300))
+        var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 300), layers: [layer])
+        _ = try document.agentChangePart(Self.change(##"{"part": "sea", "color": "#2E5FA3"}"##)).get()
+        let after = (document.layer(id: layer.id)?.paint?.strokes ?? []).map { Self.hsl($0.colorHex) }
+        let blue = Self.hsl("#2E5FA3")
+        for shade in after {
+            #expect(abs(shade.h - blue.h) < 0.03, "every stroke is blue: \(after)")
+            #expect(shade.s > 0.2, "none goes grey: \(after)")
+        }
+        #expect(after[4].l > after[0].l + 0.15 && after[3].l > after[1].l, "the reflection stays the lightest")
+        let middle = after.reduce(0) { $0 + $1.l } / Double(after.count)
+        #expect(abs(middle - blue.l) < 0.08, "the part's middle lands on the colour's lightness: \(middle) vs \(blue.l)")
+    }
+
     @Test("A part can be named in any case, and hue, saturation and lightness shift it by amounts")
     func shiftByAmounts() throws {
         var (document, id) = Self.beach()
