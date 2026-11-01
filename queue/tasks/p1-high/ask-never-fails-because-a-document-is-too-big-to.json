@@ -5,11 +5,11 @@
   "epic": "local-edit",
   "priority": "p1-high",
   "seq": 1.5e-7,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T01:43:14.643Z",
-  "updated": "2026-11-01T01:43:14.828Z",
+  "updated": "2026-11-01T03:55:12.503Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-31 (intake), screenshot: Image, a 'Statue of Liberty' drawing group with 216 layers on a 1440x1024 canvas; Agent panel shows 'request (41070 tokens) exceeds the available context size (32768 tokens), try increasing it' above the row 'Drew the Statue of Liberty'. Cause, from code: AskConversation.instructions(documentRead:) in Sources/PhotonzCore/AskPlanning.swift pastes the whole read_document text into the system prompt ('The document now (read_document):'), so every one of the drawing's 216 traced paths is described; contextWindow = 32768 there and --ctx-size in AskBuiltInModel.swift. The server's own error text is shown to the person as is.",
@@ -30,6 +30,30 @@
     {
       "t": "2026-11-01T01:43:14.827Z",
       "note": "seq 3970 -> 1.5e-7"
+    },
+    {
+      "t": "2026-11-01T02:45:30.389Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T03:42:42.470Z",
+      "note": "owns these walks: ask-changes-a-big-traced-drawing-walk"
+    },
+    {
+      "t": "2026-11-01T03:55:12.358Z",
+      "note": "Reproduced on the probe (blank 1440x1024, 'draw the Statue of Liberty', 'make her robe a darker green'): 'request (39719 tokens) exceeds the available context size (32768 tokens)', read 45,937 characters. Measured on Qwen3.8 27B's tokenizer: document read 23,423 tokens, tools 10,837 raw (about 13,480 as templated), instructions 1,484, picture 738."
+    },
+    {
+      "t": "2026-11-01T03:55:12.430Z",
+      "note": "Adversarial review: a bigger window alone was tried and measured (64K: 325 s to read 38,424 tokens, model then recoloured all 'Teal'): not a fix. A named part of a traced drawing has no layer of its name, so the model needs a point or a colour group; a change_part with neither is now sent back while planning."
+    },
+    {
+      "t": "2026-11-01T03:55:12.502Z",
+      "note": "Chose leaving the video-only tools out on a picture (they all refuse a picture) over keeping them because they cost about 1,500 tokens and ten seconds on every picture request, and they took the Statue request from 16,540 to 15,012 tokens, under half of 32K. Chose 65,536 tokens on Macs of 48 GB or more over a flat 32,768 because it costs 2.2 GB here and keeps long plans from losing old tool answers."
     }
+  ],
+  "started": "2026-11-01T02:45:30.388Z",
+  "walks": [
+    "ask-changes-a-big-traced-drawing-walk"
   ]
 }

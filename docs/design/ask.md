@@ -769,6 +769,74 @@ change it through its colour grade (the Effects list's own), and a colour to
 recolour toward is refused. One part of a photo needs an edit model (the
 Qwen-Image measuring task).
 
+## Fitting the window (2026-10-31)
+
+A change to a traced Statue of Liberty failed with the server's own words,
+"request (39719 tokens) exceeds the available context size (32768 tokens)".
+Reproduced the same day on the probe (blank 1440 by 1024, "draw the Statue of
+Liberty", then "make her robe a darker green"), and measured on Qwen3.8 27B's
+own tokenizer (`/tokenize` and `/apply-template` on the bundled llama-server):
+
+| Piece of the first request | Before | After |
+| --- | --- | --- |
+| The document (read_document of 205 traced paths) | 23,423 | about 350 (estimated) |
+| Tools, as the chat template sets them out | about 13,480 | about 11,900 (no video tools on a picture) |
+| Instructions, the request, and after: the memory and the short-form rule | about 1,500 | about 2,300 |
+| Canvas picture, 1024 by 728 | 738 | 738 |
+| **Whole request** | **38,424 text + picture = 39,719** | **15,012** |
+
+Three things make it fit, none of them knowing any subject:
+
+* **The document is said in short** (`AskDocumentDigest`, `AskDocumentFit.swift`).
+  A read that fits 2,500 tokens goes over exactly as read_document wrote it.
+  A bigger one has its biggest groups said as one entry each, biggest first:
+  name, box, and `parts` (how many layers it holds, its children's names with
+  alike names once and how many share them, "Teal (157)", and its colours).
+  Still too big, the layers are listed from the top and the rest counted. A
+  read_document the model asks for while planning is fitted to 4,000 tokens,
+  and one of a single layer lists that layer's parts one by one, as many as
+  fit, with `parts.listed` saying how many. When anything is said in short the
+  instructions say how to reach a part (`change_part` with the layer's id and
+  the part's name, or `at` a point inside it), and a `change_part` whose part
+  is none of the names there and has no point is sent back for one while the
+  model can still give it.
+* **Every request is budgeted before it is sent** (`AskConversation.fittedMessages`).
+  The window less a reply's room (8,192 tokens) is the budget. Over it, the
+  oldest tool answers are left out first ("An earlier answer, left out to make
+  room"), the newest last; the instructions, the person's words and the
+  model's own turns never. A request that still cannot fit is not sent, and the
+  person reads "That was too much for Ask to read at once. Try asking about one
+  part." Tokens are estimated without the tokenizer (`AskTokens`): a run of
+  letters a token, a digit one, other marks two fifths of one, plus 15 per
+  cent; the tools a fifth more again for the template; a picture a token per
+  32 by 32 pixels. Against the real counts it reads 2 to 15 per cent over.
+* **No server's words reach the person** (`AskTrouble`). A failure of the
+  model's server is kept in the trace and shown as one plain sentence: too much
+  to read, the model not found, or "Ask's model couldn't answer that. Try
+  again."
+
+The window. Measured on this 64 GB Mac with Qwen3.8 27B and its draft:
+
+| Window | Held at load | Peak | Reading 38,424 tokens |
+| --- | --- | --- | --- |
+| 32,768 | 24.0 GB | | refused |
+| 65,536 | 26.2 GB | 27.1 GB | 325 s (118 a second) |
+
+So a Mac with 48 GB or more starts its server with 65,536 and plans to it
+(`AskConversation.contextWindow(memoryGigabytes:)`, also passed to Ollama as
+`num_ctx`); a smaller one keeps 32,768. The shared walk server records its
+window and is not adopted by a probe that plans to another. The bigger window
+is room for a long plan's rounds (a kit of a dozen components), not the fix:
+five minutes to read a big document is no answer, which is why the document
+is said in short. The fitted request (15,012 tokens) took 91 s to read, about
+165 tokens a second; the tools are most of it.
+
+Still rough: the model reaches "her robe" through a colour group ("Pale teal"),
+so the pale pieces across robe, face and arm turned dark and the robe's other
+shades stayed. A named part of a traced drawing is a region of many colour
+pieces, which neither a name nor one point reaches yet: folded into the task
+`making-a-part-of-a-traced-drawing-smaller-shrink`.
+
 ## Try paths (walks)
 
 * `Scripts/playtest/ask-annotates-a-screenshot-walk.json`: settings screenshot,

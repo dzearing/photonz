@@ -448,7 +448,12 @@ struct AskPlanningTests {
         #expect(body["stream"] == false)
         #expect(body["think"] == false)
         #expect((body["options"]?["num_ctx"]?.intValue ?? 0) >= 16384)
-        #expect(body["tools"]?.arrayValue?.count == AskTools.modelTools.count)
+        // A picture is offered every tool but the video ones, which refuse it.
+        let offered = (body["tools"]?.arrayValue ?? []).compactMap { $0["function"]?["name"]?.stringValue }
+        #expect(offered.count == AskTools.modelTools.count - AskTools.videoOnly.count)
+        #expect(offered.allSatisfy { !AskTools.videoOnly.contains($0) })
+        let video = AskConversation(request: "cut it", documentRead: #"{"kind":"video","canvas":{"width":1920,"height":1080}}"#)
+        #expect(video.chatBody(model: "m")["tools"]?.arrayValue?.count == AskTools.modelTools.count)
         let messages = body["messages"]?.arrayValue ?? []
         #expect(messages.first?["role"] == "system")
         #expect(messages.first?["content"]?.stringValue?.contains(#""width":800"#) == true)

@@ -256,7 +256,7 @@ extension AskLocalModel {
                     let (bytes, _) = try await URLSession.shared.bytes(for: request)
                     for try await line in bytes.lines {
                         guard let json = try? AgentJSON.parse(Data(line.utf8)) else { continue }
-                        if let said = json["error"]?.stringValue { throw Trouble.said(said) }
+                        if let said = json["error"]?.stringValue { throw Trouble.server(said) }
                         if let total = json["total"]?.doubleValue, total > 0,
                            let done = json["completed"]?.doubleValue {
                             continuation.yield(done / total)

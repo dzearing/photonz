@@ -1,0 +1,26 @@
+{
+  "feature": "Ask never fails because a document is too big to describe",
+  "epic": "local-edit",
+  "summary": "A change to a big traced drawing (a Statue of Liberty of about 200 pieces) now plans and lands instead of showing the server's 'request exceeds the available context size' error. Ask describes a big drawing to its model in short, fits every request to the window before sending it, and says any model failure in one plain sentence.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/ask-changes-a-big-traced-drawing-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Make a new 1440 by 1024 picture.", "shot": "2026-10-31-ask-big-drawing-1-before-error-sc.png", "shotNote": "Before this change, on the old build: the Agent group shows the server's raw error under the drawing." },
+    { "do": "Press Command K, type 'draw the Statue of Liberty' and press Return. Wait for its row." },
+    { "do": "Press Command K, type 'make her robe a darker green' and press Return." },
+    { "do": "Read the Agent group: a row 'Made her robe a darker green' with its switch on, no error.", "shot": "2026-10-31-ask-big-drawing-2-changed-sc.png" },
+    { "do": "Press Command Z once: the robe goes back, the drawing stays." },
+    { "do": "Compare the robe before and after in the second picture.", "shot": "2026-10-31-ask-big-drawing-before-after.png", "shotNote": "An earlier run of the same walk: the model took the pale pieces, so highlights on the face and arm darkened too." }
+  ],
+  "evaluate": [
+    "Does a change to a big drawing come back in a time you would wait for (about 100 seconds here)?",
+    "Is the darker robe what you meant, or did too much of the statue change with it?",
+    "If Ask ever cannot read something at once, is 'That was too much for Ask to read at once. Try asking about one part.' clear enough?"
+  ],
+  "rough": [
+    "No mock covers this: it changes what Ask tells its model, not anything on screen except the error sentence.",
+    "A traced drawing's pieces are named by colour, so 'her robe' is reached through a colour group (Teal or Pale teal) and the face and arm shift with it; one run turned the pale highlights into flat dark patches. Folded into making-a-part-of-a-traced-drawing-smaller-shrink, whose checklist now asks for the robe alone.",
+    "Measured: the request went from 39,719 tokens (refused) to 15,012, under half of the smallest window. It still takes about 90 seconds to read, most of it the tools; first-answer speed is ask-s-first-answer-after-its-model-loads-comes-i.",
+    "This Mac (64 GB) now runs Ask's model with a 65,536 token window, 2.2 GB more memory than before; Macs under 48 GB keep 32,768. The bigger window alone was not a fix: reading the old 38,000 token request took 325 seconds."
+  ]
+}

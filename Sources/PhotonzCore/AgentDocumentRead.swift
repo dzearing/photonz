@@ -138,10 +138,31 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
         /// Pressed), when the component is drawn in more than one.
         public var look: String?
         public var children: [Layer]?
+        /// Set only when Ask says this layer in short to fit its model's
+        /// window (`AskDocumentDigest`): what it holds, in place of `children`.
+        public var parts: Parts?
     }
 
     /// A group's Layout section: how it arranges what is inside and the room
     /// it keeps. Only what differs from a group that arranges nothing.
+    /// A layer said in short: how many layers it holds, nested ones
+    /// included; its parts' names, alike names once with how many share
+    /// them ("Teal (38)"); its colours, most used first; and, when the
+    /// layer was opened and its parts listed, how many of them are.
+    public struct Parts: Codable, Hashable, Sendable {
+        public var count: Int
+        public var names: [String]
+        public var colors: [String]?
+        public var listed: Int?
+
+        public init(count: Int, names: [String], colors: [String]?, listed: Int? = nil) {
+            self.count = count
+            self.names = names
+            self.colors = colors
+            self.listed = listed
+        }
+    }
+
     public struct Layout: Codable, Hashable, Sendable {
         /// stack, grid or free.
         public var arrange: String

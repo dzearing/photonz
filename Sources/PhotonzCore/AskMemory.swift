@@ -56,7 +56,9 @@ public enum AskMemory {
     }
 
     /// A painting's parts by the names its strokes carry; a group's by its
-    /// children's names, one level down.
+    /// children's names, one level down, top first, alike names ("Teal 3",
+    /// "Teal 4") said once with how many share them, so a traced drawing of
+    /// hundreds of pieces is a short line, not its first two dozen pieces.
     static func parts(of layer: Layer) -> [String] {
         var parts: [String] = []
         if let paint = layer.paint {
@@ -64,7 +66,13 @@ public enum AskMemory {
                 if let part = stroke.part, !parts.contains(part) { parts.append(part) }
             }
         } else if let children = layer.group?.children {
-            for child in children.reversed() where !parts.contains(child.name) { parts.append(child.name) }
+            var counts: [String: Int] = [:]
+            for child in children.reversed() {
+                let name = AskDocumentDigest.baseName(child.name)
+                if counts[name] == nil { parts.append(name) }
+                counts[name, default: 0] += 1
+            }
+            parts = parts.map { (counts[$0] ?? 0) > 1 ? "\($0) (\(counts[$0] ?? 0))" : $0 }
         }
         return Array(parts.prefix(mostParts))
     }

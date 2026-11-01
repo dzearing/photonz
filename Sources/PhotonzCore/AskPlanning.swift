@@ -41,6 +41,28 @@ public enum AskTools {
         painting ? modelTools + (paintingLooking + paintingDoing).compactMap(modelTool) : modelTools
     }
 
+    /// Tools that work only on a video: each refuses a picture ("is a
+    /// picture, not a video"), so a picture's request is not shown them. They
+    /// are about 1,500 of the 13,500 tokens the tools take, about ten seconds
+    /// of reading on every request (`docs/design/ask.md`, "Fitting the window").
+    public static let videoOnly: Set<String> = [
+        "add_title", "list_titles", "cut", "trim", "move_clip", "set_transition", "apply_zooms", "recommended_zooms",
+    ]
+
+    /// The tools for a request on a picture or on a video.
+    public static func modelTools(painting: Bool, video: Bool) -> [AgentJSON] {
+        let all = modelTools(painting: painting)
+        return video ? all : all.filter { !videoOnly.contains($0["function"]?["name"]?.stringValue ?? "") }
+    }
+
+    public static func looking(painting: Bool, video: Bool) -> [String] {
+        looking(painting: painting).filter { video || !videoOnly.contains($0) }
+    }
+
+    public static func doing(painting: Bool, video: Bool) -> [String] {
+        doing(painting: painting).filter { video || !videoOnly.contains($0) }
+    }
+
     /// The tools in the shape Ollama's chat API takes them. `document` is left
     /// out (Ask always works on the document it was opened over), and a
     /// property given as a choice of types shows its first, since some model
@@ -319,7 +341,32 @@ public struct AskConversation: Sendable {
     public static let mostMeasurements = 12
     /// A sheet of components fills a picture at about this many rows.
     public static let mostComponents = 12
+    /// The window every Mac gets, in tokens: what Ask's model reads at once.
     public static let contextWindow = 32768
+    /// The window a Mac with room for it gets. Measured on Qwen3.8 27B on a
+    /// 64 GB Mac, 2026-10-31 (`docs/design/ask.md`, "Fitting the window"):
+    /// 24.0 GB held at 32K, 26.2 GB at 64K, 27.1 GB at its peak reading a
+    /// 38,000 token request. A bigger window is room for a long plan's
+    /// rounds, not the fix for a big document: that is said in short
+    /// (`AskDocumentDigest`), since reading 38,000 tokens took 325 s.
+    public static let largeContextWindow = 65536
+    /// The least memory a Mac has to get the bigger window.
+    public static let largeWindowMemoryGigabytes = 48.0
+
+    public static func contextWindow(memoryGigabytes: Double) -> Int {
+        memoryGigabytes >= largeWindowMemoryGigabytes ? largeContextWindow : contextWindow
+    }
+
+    /// What one reply may take, kept free of the window: a turn writes up to
+    /// this much (`AskServerChat.mostTokensATurn`).
+    public static let replyRoom = AskServerChat.mostTokensATurn
+    /// What a tool answer becomes when the plan has outgrown the window.
+    public static let shortenedAnswer = "(An earlier answer, left out to make room. Ask again if you need it.)"
+
+    /// The window this talk is sent with.
+    public let window: Int
+    /// The most a request may take, in tokens, leaving room for the reply.
+    public var budget: Int { window - Self.replyRoom }
 
     /// The canvas's width, read from the document, for sorting what
     /// `find_elements` finds. A sheet of components that needs more room
@@ -341,22 +388,35 @@ public struct AskConversation: Sendable {
     private let brushes: Bool
     /// This request is a painting and the Brush is there to paint it.
     private let painting: Bool
+    /// The document has a timeline, or does not say: the video tools are
+    /// offered. A picture is not shown them (`AskTools.videoOnly`).
+    private let video: Bool
+    /// The parts' names of each layer the document says in short, by id.
+    private let namesInShort: [String: [String]]
 
     /// `memory` is what Ask did earlier in this window (`AskMemory.prompt`),
     /// and `canvas` a picture of the canvas as it is now, for a model that
     /// sees, so "bluer" and "bigger" are judged against what is really there.
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
-                memory: String = "", canvas: Data? = nil, canvasScale: Double = 1) {
+                memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
+                window: Int = AskConversation.contextWindow) {
         self.request = request
+        self.window = window
         self.paints = paints
         self.brushes = brushes
-        let size = (try? AgentJSON.parse(Data(documentRead.utf8)))?["canvas"]
+        let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
+        video = parsed?["kind"]?.stringValue != "picture"
+        let size = parsed?["canvas"]
         canvasWidth = size?["width"]?.doubleValue ?? 0
         canvasHeight = size?["height"]?.doubleValue ?? 0
         let painting = brushes && AgentPictureKind.asked(in: request) == .paint
         self.painting = painting
-        var instructions = Self.instructions(documentRead: documentRead, paints: paints, painting: painting)
+        // Sized to fit: a traced drawing of hundreds of paths is said in short.
+        let described = AskDocumentDigest.fitted(documentRead)
+        namesInShort = AskDocumentDigest.namesInShort(described)
+        var instructions = Self.instructions(documentRead: described, paints: paints, painting: painting, video: video)
+        if AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
         if !titles.isEmpty {
@@ -384,11 +444,65 @@ public struct AskConversation: Sendable {
         }
     }
 
-    /// The body of one `POST /api/chat`.
+    /// What the model is told about a layer said in short.
+    static let inShortRules = """
+        Layers listed with parts in place of children are said in short to fit: how many layers each \
+        holds, its parts' names (with how many share a name) and its colours. A name many pieces share \
+        is a colour they were traced in, not a part of the picture: it covers that colour everywhere. To \
+        change one part the words name, call change_part with that layer's id as layer, the part's name \
+        in the person's words, and at, a point inside that part you can see on the canvas picture; leave \
+        at out only when one of the names is that part itself. read_document with its id as layer lists \
+        its parts one by one.
+        """
+
+    /// The body of one `POST /api/chat`, fitted to the window.
     public func chatBody(model: String) -> AgentJSON {
-        ["model": .string(model), "messages": .array(messages), "tools": .array(AskTools.modelTools(painting: painting)),
+        ["model": .string(model), "messages": .array(fittedMessages()), "tools": .array(AskTools.modelTools(painting: painting, video: video)),
          "stream": false, "think": false, "keep_alive": "30m",
-         "options": ["num_ctx": .number(Double(Self.contextWindow)), "temperature": 0]]
+         "options": ["num_ctx": .number(Double(window)), "temperature": 0]]
+    }
+
+    /// About how many tokens `messages` and the tools take.
+    public func estimatedTokens(of messages: [AgentJSON]) -> Int {
+        Self.toolTokens(painting: painting, video: video) + messages.reduce(0) { $0 + AskTokens.estimate(message: $1) }
+    }
+
+    /// About how many tokens the talk so far takes, before any fitting.
+    public var estimatedTokens: Int { estimatedTokens(of: messages) }
+
+    /// Whether the next request fits the window, once fitted.
+    public var fits: Bool { estimatedTokens(of: fittedMessages()) <= budget }
+
+    /// The tools as the chat template sets them out cost more than their
+    /// words: measured on Qwen3.8 27B, 2026-10-31, about 13,480 tokens
+    /// against 12,451 estimated from their JSON. A fifth is added.
+    private static func templated(_ tools: [AgentJSON]) -> Int {
+        Int((Double(AskTokens.estimate(AgentJSON.array(tools).encodedString())) * 1.2).rounded(.up))
+    }
+    private static let toolTokensTable: [[Int]] = [false, true].map { painting in
+        [false, true].map { video in templated(AskTools.modelTools(painting: painting, video: video)) }
+    }
+    static func toolTokens(painting: Bool, video: Bool) -> Int { toolTokensTable[painting ? 1 : 0][video ? 1 : 0] }
+
+    /// The messages as sent: when the plan has outgrown the window, the
+    /// oldest tool answers are left out first, the newest last. The
+    /// instructions, the person's words and the model's own turns are never
+    /// touched.
+    func fittedMessages() -> [AgentJSON] {
+        var total = estimatedTokens(of: messages)
+        guard total > budget else { return messages }
+        var fitted = messages
+        let answers = fitted.indices.filter { fitted[$0]["role"]?.stringValue == "tool" }
+        // Oldest first: the newest goes only when nothing else is left.
+        for index in answers {
+            guard total > budget else { break }
+            guard var message = fitted[index].objectValue else { continue }
+            let before = AskTokens.estimate(message: fitted[index])
+            message["content"] = .string(Self.shortenedAnswer)
+            fitted[index] = .object(message)
+            total -= before - AskTokens.estimate(message: fitted[index])
+        }
+        return fitted
     }
 
     /// Reads one reply from the model.
@@ -425,9 +539,13 @@ public struct AskConversation: Sendable {
         var looks: [AskLook] = []
         for (name, said) in calls {
             let arguments = name == "add_text" || name == "add_component" ? Self.withoutEntities(said) : said
-            if AskTools.looking(painting: painting).contains(name) {
+            if AskTools.looking(painting: painting, video: video).contains(name) {
                 looks.append(AskLook(tool: name, arguments: arguments))
-            } else if AskTools.doing(painting: painting).contains(name) {
+            } else if AskTools.doing(painting: painting, video: video).contains(name) {
+                if name == "change_part", let refusal = partNotInShort(arguments) {
+                    refuse(name, arguments, refusal)
+                    continue
+                }
                 var step = AskStep(tool: name, arguments: arguments)
                 if name == "add_measurement",
                    steps.filter({ $0.tool == "add_measurement" }).count >= Self.mostMeasurements {
@@ -855,11 +973,28 @@ public struct AskConversation: Sendable {
         return union > 0 ? Double(common / union) : 0
     }
 
+    /// Why a change_part on a layer said in short would find nothing, or
+    /// nil: no name there is the part and no point inside it was given (the
+    /// traced Statue, 2026-10-31: "robe" on a drawing whose pieces are named
+    /// Teal and Pale teal). Sent back while the model can still give a point.
+    func partNotInShort(_ arguments: AgentJSON) -> String? {
+        guard arguments["at"] == nil, let layer = arguments["layer"]?.stringValue,
+              let names = namesInShort[layer] ?? namesInShort[layer.uppercased()],
+              let part = arguments["part"]?.stringValue else { return nil }
+        let asked = AgentPartChange(part: part)
+        guard !names.contains(where: asked.names) else { return nil }
+        return "Not planned: no part of that layer is called \(part). Its names are colours it was traced in (\(names.prefix(6).joined(separator: ", "))). Give at, a point inside the \(part) on the canvas picture, with the part's name."
+    }
+
     /// The answer to a look, handed back to the model.
     public mutating func answer(_ look: AskLook, with text: String) {
         if look.tool == "list_components" { learnNames(text) }
-        let readable = look.tool == "find_elements" && canvasWidth > 0
+        var readable = look.tool == "find_elements" && canvasWidth > 0
             ? AskElements.sorted(text, canvasWidth: canvasWidth) : text
+        if look.tool == "read_document" {
+            readable = AskDocumentDigest.fitted(readable, tokens: AskDocumentDigest.lookTokens,
+                                                opening: look.arguments["layer"]?.stringValue != nil)
+        }
         tell(look.tool, String(readable.prefix(Self.longestLookAnswer)))
     }
 
@@ -984,12 +1119,12 @@ public struct AskConversation: Sendable {
     }
 
     /// What the model is told before the person's request.
-    static func instructions(documentRead: String, paints: Bool = false, painting: Bool = false) -> String {
+    static func instructions(documentRead: String, paints: Bool = false, painting: Bool = false, video: Bool = true) -> String {
         let drawingRules = painting ? Self.brushRules : paints ? Self.paintingRules : Self.drawingRules
         return """
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
         a request about the document in front of them. Turn it into a plan of tool calls on that document.
-        - Looking tools (\(AskTools.looking(painting: painting).joined(separator: ", "))) answer right away. Use them when you need facts.
+        - Looking tools (\(AskTools.looking(painting: painting, video: video).joined(separator: ", "))) answer right away. Use them when you need facts.
         - Editing tools are NOT run now. Each call is written into a plan that runs when you finish, and is \
         answered "Planned as step N". Call them in the order they should run, with every argument filled \
         in. To name the layer, clip or title a planned step makes, write "$N" where its id goes.

@@ -210,7 +210,7 @@ public enum AskBuiltInServerPlan {
     /// The server's command line. The draft goes in when its file is on the
     /// Mac (`draftOnDisk`), so a model downloaded without it still runs.
     public static func arguments(for choice: AskBuiltInModels.Choice, in folder: URL, port: Int,
-                                 draftOnDisk: Bool = false) -> [String] {
+                                 draftOnDisk: Bool = false, window: Int = AskConversation.contextWindow) -> [String] {
         var args = ["--model", folder.appending(path: choice.model.name).path]
         if let eyes = choice.eyes { args += ["--mmproj", folder.appending(path: eyes.name).path] }
         if draftOnDisk, let draft = choice.draft {
@@ -218,7 +218,7 @@ public enum AskBuiltInServerPlan {
         }
         args += [
             "--host", "127.0.0.1", "--port", String(port),
-            "--ctx-size", String(AskConversation.contextWindow),
+            "--ctx-size", String(window),
             // Every layer on the GPU, the chat template's own tool calling,
             // one request at a time (Ask runs one at a time), no web page.
             "--n-gpu-layers", "999", "--jinja", "--parallel", "1", "--no-webui",

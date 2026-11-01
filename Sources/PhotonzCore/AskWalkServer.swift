@@ -26,12 +26,16 @@ public enum AskWalkServer {
         public var folder: String
         /// Whether it was started with the model's draft.
         public var draft: Bool
+        /// The window it was started with; absent in a record written before
+        /// windows differed by Mac, which means the smallest.
+        public var window: Int?
 
-        public init(model: String, port: Int, folder: String, draft: Bool) {
+        public init(model: String, port: Int, folder: String, draft: Bool, window: Int? = nil) {
             self.model = model
             self.port = port
             self.folder = folder
             self.draft = draft
+            self.window = window
         }
     }
 
@@ -52,11 +56,14 @@ public enum AskWalkServer {
 
     /// What a probe does for `model` from `folder`, given what is recorded and
     /// whether that recorded server is still there.
+    /// A server started with another window is not shared: Ask plans every
+    /// request to its own window, and a smaller one would refuse it.
     public static func use(walkShares: Bool, model: String, folder: String, record: Record?,
-                           serverAlive: Bool) -> Use {
+                           serverAlive: Bool, window: Int = AskConversation.contextWindow) -> Use {
         guard walkShares else { return .own }
         guard let record, serverAlive else { return .start }
-        guard record.model == model, record.folder == folder else { return .own }
+        guard record.model == model, record.folder == folder,
+              (record.window ?? AskConversation.contextWindow) == window else { return .own }
         return .adopt(port: record.port)
     }
 

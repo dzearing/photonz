@@ -51,6 +51,10 @@ final class AskModelServer {
     /// downloaded once. A walk that wants a Mac with nothing downloaded
     /// (`askModelMissing`) points it at an empty folder; `ask.modelsFolder`
     /// moves it by hand.
+    /// The window the server is started with and Ask plans to: the bigger
+    /// one on a Mac with room for it (`AskConversation.contextWindow(memoryGigabytes:)`).
+    static var window: Int { AskLocalModel.window }
+
     static var folder: URL {
         if let walkFolder { return walkFolder }
         if let moved = UserDefaults.standard.string(forKey: "ask.modelsFolder"), !moved.isEmpty {
@@ -160,8 +164,10 @@ final class AskModelServer {
         loading = true
         defer { loading = false }
         let draftOnDisk = choice.draft.map(Self.isWhole) ?? false
+        let window = Self.window
         switch AskWalkServer.use(walkShares: Self.walkShares, model: choice.id, folder: Self.folder.path,
-                                 record: AskWalkServerProcess.record, serverAlive: AskWalkServerProcess.alive) {
+                                 record: AskWalkServerProcess.record, serverAlive: AskWalkServerProcess.alive,
+                                 window: window) {
         case .own:
             break
         case .adopt(let port):
@@ -169,13 +175,13 @@ final class AskModelServer {
         case .start:
             let port = AskBuiltInServerPlan.pickPort()
             try AskWalkServerProcess.start(helper, arguments: AskBuiltInServerPlan.arguments(
-                for: choice, in: Self.folder, port: port, draftOnDisk: draftOnDisk),
-                record: .init(model: choice.id, port: port, folder: Self.folder.path, draft: draftOnDisk))
+                for: choice, in: Self.folder, port: port, draftOnDisk: draftOnDisk, window: window),
+                record: .init(model: choice.id, port: port, folder: Self.folder.path, draft: draftOnDisk, window: window))
             return try await share(choice, port: port)
         }
         let port = AskBuiltInServerPlan.pickPort()
         try server.launch(helper, arguments: AskBuiltInServerPlan.arguments(for: choice, in: Self.folder, port: port,
-                                                                            draftOnDisk: draftOnDisk),
+                                                                            draftOnDisk: draftOnDisk, window: window),
                           environment: nil, pidFolder: Self.folder, note: "starts \(choice.id) on port \(port)")
         self.port = port
         running = choice.id

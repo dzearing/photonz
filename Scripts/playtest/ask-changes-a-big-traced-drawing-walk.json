@@ -1,0 +1,129 @@
+{
+  "out": "/tmp/photonz-playtest/ask-changes-a-big-traced-drawing-walk",
+  "seed": "ask-never-fails-because-a-document-is-too-big-to: at Next defaults, Ask draws the Statue of Liberty on a 1440x1024 picture (a traced drawing of about 200 parts), then 'make her robe a darker green' plans and lands as one row and one undo step, never the server's 'exceeds the available context size' error, because the drawing is described to the model in short and every request is fitted to the window",
+  "clock": 1100,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "draw the Statue of Liberty"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 420
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-drawn",
+      "note": "a traced drawing of a couple of hundred colour pieces"
+    },
+    {
+      "do": "render",
+      "name": "1-drawn-canvas"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make her robe a darker green"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 420
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-changed",
+      "note": "planned and ran: no error about the request being too big"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Words",
+      "reads": "Made her robe a darker green"
+    },
+    {
+      "do": "render",
+      "name": "2-changed-canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-changed"
+    }
+  ]
+}

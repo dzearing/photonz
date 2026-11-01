@@ -629,7 +629,8 @@ final class AskSession {
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
                                paints: paints,
                                brushes: Experiments.shared.brushEnabled && !editor.documentHasTime,
-                               memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1)
+                               memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
+                               window: AskLocalModel.window)
     }
 
     /// The longest side of the canvas picture the planning model is shown:
@@ -660,15 +661,22 @@ final class AskSession {
         guard let document = editor.agentID else { return .failure(.said(AskCopy.noDocumentSentence)) }
         while talk.rounds < AskConversation.mostRounds {
             let reply: AgentJSON
+            // Every request fits the window before it goes (`AskConversation.fittedMessages`):
+            // one that still cannot is said plainly here, never sent for the server to refuse.
+            guard talk.fits else {
+                note("too big to send: about \(talk.estimatedTokens) tokens against \(talk.budget)")
+                return .failure(.said(AskTrouble.tooMuchSentence))
+            }
             do {
-                note("asking the model")
+                note("asking the model (about \(talk.estimatedTokens(of: talk.chatBody(model: model)["messages"]?.arrayValue ?? [])) tokens of \(talk.window))")
                 reply = try await AskLocalModel.chat(talk.chatBody(model: model))
                 // Long enough to hold a whole component call, so a look the
                 // planner let through can be rebuilt from the trace (a blue
                 // Off toggle could not be, cut at 300, 2026-10-24).
                 note("answered: \(reply["message"]?.encodedString().prefix(3000) ?? "")")
             } catch let trouble as AskLocalModel.Trouble {
-                if case .said(let words) = trouble, AskConversation.isUnreadableReply(words), !talk.steps.isEmpty {
+                if case .server(let words) = trouble { note("the model's server said: \(words.prefix(300))") }
+                if case .server(let words) = trouble, AskConversation.isUnreadableReply(words), !talk.steps.isEmpty {
                     if talk.askForTitle() {
                         note("unreadable reply after \(talk.steps.count) steps: asking for the sheet's title first")
                         continue

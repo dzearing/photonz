@@ -40,6 +40,10 @@ enum AskLocalModel {
     /// This Mac's memory, in GB, for which models it can hold.
     static var memoryGigabytes: Double { AskModels.gigabytes(ofMemory: ProcessInfo.processInfo.physicalMemory) }
 
+    /// How much the model reads at once on this Mac, in tokens: the server
+    /// is started with it and every request is fitted to it.
+    static var window: Int { AskConversation.contextWindow(memoryGigabytes: memoryGigabytes) }
+
     enum Trouble: Error, Equatable {
         /// Ollama, picked in Settings, does not answer.
         case noRunner
@@ -49,8 +53,11 @@ enum AskLocalModel {
         case downloading
         /// The built-in model would not start.
         case wouldNotStart
-        /// It answered with an error of its own.
+        /// One of Ask's own sentences, or the model's own "I can't".
         case said(String)
+        /// The model's server failed, in its own words: kept for the trace,
+        /// never shown (`AskTrouble`).
+        case server(String)
 
         /// One short plain sentence for the panel.
         var sentence: String {
@@ -60,6 +67,7 @@ enum AskLocalModel {
             case .downloading: "Ask is getting its model ready."
             case .wouldNotStart: "Ask's model didn't start. Try again."
             case .said(let words): words
+            case .server(let words): AskTrouble.sentence(forServerError: words)
             }
         }
 
@@ -141,7 +149,7 @@ enum AskLocalModel {
             } catch is AskModelServer.Failure {
                 throw Trouble.wouldNotStart
             }
-            if let said = json["error"]?.stringValue { throw Trouble.said(said) }
+            if let said = json["error"]?.stringValue { throw Trouble.server(said) }
             return json
         }
         guard let url = base?.appending(path: "api/chat") else { throw Trouble.noRunner }
@@ -152,7 +160,7 @@ enum AskLocalModel {
         request.timeoutInterval = 300
         let data = try await send(request)
         let json = try AgentJSON.parse(data)
-        if let said = json["error"]?.stringValue { throw Trouble.said(said) }
+        if let said = json["error"]?.stringValue { throw Trouble.server(said) }
         return json
     }
 
