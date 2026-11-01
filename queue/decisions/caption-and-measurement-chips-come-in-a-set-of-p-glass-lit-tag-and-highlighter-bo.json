@@ -47,7 +47,12 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-11-01T02:33:42.835Z",
-  "shot": "2026-11-01-chip-styles-three-under-bar.png"
+  "shot": "2026-11-01-chip-styles-three-under-bar.png",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-11-01T05:41:58.376Z"
+  }
 }
