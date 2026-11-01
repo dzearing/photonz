@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-19T12:19:57.912Z",
-  "updated": "2026-11-01T14:53:16.508Z",
+  "updated": "2026-11-01T17:47:19.839Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-19 running Scripts/playtest/a-dragged-part-bar-survives-a-restyle-walk.json --no-build: the dragTiming log says Title Opacity 3500-3920 ms became 3200-3620 ms, and 3-restyled-sc.png (queue/audits/2026-10-19-hand-dragged-part-bar-3-restyled-sc.png) still draws the Headline row to about 3.9 s. Cause: PhotonzDocument.titlePartTimings reads TitleRecipe.span(of: compiled part), never the keys; since a-title-part-move-dragged-by-hand-on-the-timelin, hand moves survive restyles (TitleHandMoves.swift), so the row and the keys can disagree. Dragging the row end itself still retimes the design and resets the hand move, which may be the right model; the row could widen to cover hand moves.",
@@ -58,6 +58,10 @@
     {
       "t": "2026-11-01T14:53:16.507Z",
       "note": "seq 350 -> 360"
+    },
+    {
+      "t": "2026-11-01T17:47:19.838Z",
+      "note": "rotating check 2026-11-01T17:47:19Z, 38 walks run from 11 onward in the rotation: a-dragged-part-bar-survives-a-restyle-walk failing."
     }
   ],
   "walks": [

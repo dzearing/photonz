@@ -15080,3 +15080,12 @@
 {"t":"2026-11-01T17:35:46.766Z","ev":"task_note","id":"skew-distort-reshapes-the-picture-from-the-selec"}
 {"t":"2026-11-01T17:35:46.839Z","ev":"task_note","id":"skew-distort-reshapes-the-picture-from-the-selec"}
 {"t":"2026-11-01T17:35:59.858Z","ev":"task_done","id":"skew-distort-reshapes-the-picture-from-the-selec","from":"in_progress","note":"Shipped in c2dc5891. The chip reads Size, Skew & distort, 3D. An edge pill skews, a corner distorts, Shift keystones, one undo per drag. The reshape is stored on the layer as corner shares and drawn without touching pixels, and it survives resize, turn and 3D. In Size and 3D the grips sit on the box round the reshape with a dotted outline. Edit > Transform > Skew/Distort/Keystone enter the mode. Verified: 25 new core and render tests plus the full suite green; skew-and-distort-walk and keystone-from-the-menu-walk green at Next defaults with real captures; audit 2026-11-01-skew-and-distort.json."}
+{"t":"2026-11-01T17:47:19.840Z","ev":"task_note","id":"a-title-part-row-shows-where-its-hand-dragged-mo"}
+{"t":"2026-11-01T17:47:19.878Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-11-01T17:47:19.918Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-01T17:49:09.257Z","ev":"slice_pass","walks":38,"passed":28,"failed":10,"seconds":632,"of":1075,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-01T17:49:09.429Z","ev":"task_started","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d","title":"Perspective pill and a shadow that grows as a 3D layer comes forward","priority":"p1-high"}
+{"t":"2026-11-01T18:05:46.703Z","ev":"task_note","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d"}
+{"t":"2026-11-01T19:12:08.765Z","ev":"task_walks","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d","walks":["perspective-pill-walk"]}
+{"t":"2026-11-01T19:12:22.355Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
+{"t":"2026-11-01T19:12:43.716Z","ev":"task_note","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d"}

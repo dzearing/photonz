@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-01T14:52:18.542Z",
-  "updated": "2026-11-01T14:53:43.062Z",
+  "updated": "2026-11-01T19:12:22.354Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the digest on 2026-11-01 on the probe build in dist: `Scripts/playtest.sh Scripts/playtest/arrow-styles-walk.json --no-build` -> status failed, step 18 '\"Arrow style Hand-drawn\" in Arrow Style, off at window (1219, 531), one click; settled after 6 looks; ... no view bodies counted', step 19 'FAILED: the control called \"Arrow style Hand-drawn\" in \"Arrow Style\" reads \"Arrow Style, off\", not \"Arrow Style, on\"'. Four runners hit the same dead press in two days, each logged on walks-that-fail-in-the-full-sweep-26: arrow-styles-walk and chip-styles-picking-walk (2026-10-31 14:49, also with setup front:true, while segmented arrow-endings-walk passed in the same build), any-colour-chip-reads-walk step 15 (Custom well opens no picker, a press on 'Color Green' leaves the arrow #FF3B30), picker-controls-walk at its first press inside the picker, measure-chip-styles taps (2026-11-01 05:08), and chip-styles-picking-walk step 18 on clean HEAD d08583a7 (2026-11-01 07:10). arrow-styles-walk last passed in the 2026-10-23 sweep, so the change sits between then and 2026-10-26. Related and possibly the same cause: the brush chooser popover over the tool bar does not open under a walk, by press or windowClick, even with the window key and in front (2026-10-31 06:35 on the walk task). The press path is the posted-mouse-event press in Sources/Photonz/Playtest. Blocks any-colour-you-pick-for-an-arrow-or-measurement (user ask), whose only open item is its walk.",
@@ -20,7 +20,8 @@
     "The brush chooser popover opens under a walk press, or the log says why it is a separate cause and where it went",
     "A unit or harness test fails if a walk press on a plain button stops taking effect again",
     "The presses three tasks closed on 2026-11-01 without walking are walked here: a press on Color Orange and Reset Colors in measure-chip-styles-walk, and a press on Size S/M/L and on Advanced Show in arrow-appearance-simple-walk, each passing at Next defaults",
-    "any-colour-you-pick-for-an-arrow-or-measurement is pointed at this task as its dependency, and its walk is run once here and the result written on it"
+    "any-colour-you-pick-for-an-arrow-or-measurement is pointed at this task as its dependency, and its walk is run once here and the result written on it",
+    "A walk's press on the perspective popover's presets and slider (over the canvas) and the tool bar's Info button takes effect, and perspective-pill-walk presses them"
   ],
   "log": [
     {
@@ -34,6 +35,10 @@
     {
       "t": "2026-11-01T14:53:13.767Z",
       "note": "seq 3970 -> 30"
+    },
+    {
+      "t": "2026-11-01T19:12:22.353Z",
+      "note": "Also dead on the canvas overlays (2026-11-01, perspective-pill task): with the perspective popover open under the 3D pill, press 'Strong' in 'Perspective' (and 'None', and 'Slider' across 0.75) at the right window point did nothing; the hit view was the editor's AppKitWindowHostingView and the window was not key. A windowClick at the same point, taking the front, did nothing either. press 'Info' in the tool bar did nothing in the same run (F8 through the new toggleTransformValues stand-in opens it). Once presses work, add to perspective-pill-walk: press Strong in Perspective then expectCamera 90, press Slider in Perspective across 0.75, press Subtle in Transform Perspective then expectCamera 20."
     }
   ],
   "walks": [

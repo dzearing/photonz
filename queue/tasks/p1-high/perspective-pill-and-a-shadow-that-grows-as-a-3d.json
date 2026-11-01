@@ -5,11 +5,11 @@
   "epic": "found-selection",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T16:34:54.379Z",
-  "updated": "2026-11-01T16:35:05.582Z",
+  "updated": "2026-11-01T19:12:43.715Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Slice (3), the rest of 3D, after the-reworked-selection-ships-cleaner-grips-a-tag shipped the 3D grips (edge pills tip and swing via SelectionDrag.tilted, the depth grip via SelectionDrag.pushed, up is forward). The camera is SceneCamera (document.camera / projection); the old arcs are hidden under next-transform-modes. A still picture currently draws tilt with little perspective (the walk's tipped card reads nearly affine), which is what the pill exists to change. Prototype: persp pill and pp popover in selection-transform.html.",
@@ -28,7 +28,27 @@
     {
       "t": "2026-11-01T16:35:05.581Z",
       "note": "seq 3980 -> 12"
+    },
+    {
+      "t": "2026-11-01T17:49:09.424Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T18:05:46.701Z",
+      "note": "Adversarial pass before building: (1) the mock's vanishing point is a made-up spot above the card that slides with the value; built the true one instead (where the card's receding edges meet, read off the four corners the camera sees), which also comes nearer as the perspective strengthens, so it reads the same. (2) A layer with no shadow: chose to scale only shadows a layer already casts over giving every 3D layer a shadow, because adding one restyles somebody's design. (3) The mock's popover is dark; chose the tool bar's glass, the Info popover's own material, so the two perspective controls match. (4) The mock's popover note 'The camera's, so it changes every 3D layer. Drag the pill sideways to scrub.' is over the chrome budget: its meaning is the header's 'All 3D layers' and the pill's hover tag 'Perspective · all 3D layers' (UX-PATTERNS §4). (5) Option on an edge pill is decided at the press (the mock reads it per move), so a tip never turns into a perspective change half way."
+    },
+    {
+      "t": "2026-11-01T19:12:08.763Z",
+      "note": "owns these walks: perspective-pill-walk"
+    },
+    {
+      "t": "2026-11-01T19:12:43.714Z",
+      "note": "Built and walked. Pictures looked at: 1-pill (pill reads 45° beside the chip), 2-scrubbing (75°, dashed lines from the card's right corners to the vanishing point off to the right), 3-option-scrubbing (105° from Option on the right pill, lines converge right), 4-popover (header Perspective / All 3D layers, four presets, slider), 6-info-popover (same section under Reset), shadow pair (forward shadow visibly wider and softer at the lower right; back tight). Render test: shadow reach 6/14/26 rows at depth -200/0/+200; before this change 14 at every depth, so the 1.6x bar fails the old version. Chose glass over the mock's dark popover to match the Info popover. Left rough (not filed): the preset plates are faint on glass even at 12% (raised from 8%); at 105° a near card's outline runs across the tool bar. Preset/slider presses unwalked: folded into a-walk-s-press-on-a-picture-tile-swatch-or-colou with its acceptance widened. Full Scripts/test.sh green (exit 0); 12MP/10-layer edit 7.0 ms vs 26 ms budget."
     }
   ],
-  "source": "user"
+  "source": "user",
+  "started": "2026-11-01T17:49:09.423Z",
+  "walks": [
+    "perspective-pill-walk"
+  ]
 }
