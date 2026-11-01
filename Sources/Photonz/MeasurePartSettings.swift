@@ -36,6 +36,9 @@ struct MeasurePartSettings: View {
     @Environment(EditorState.self) private var editorState
     /// The row these belong to, which is also what decides what they ARE.
     let row: LayerPartRow
+    /// Laid flat under a measurement's Advanced, after its colour rows,
+    /// rather than bracketed under each (markup.md section 8).
+    var flat = false
 
     var body: some View {
         let ids = row.colors.first?.layerIDs ?? []
@@ -47,9 +50,13 @@ struct MeasurePartSettings: View {
         if !ids.isEmpty, row.showsSettings, let slot = row.slot {
             switch slot {
             case .caliper:
-                OwnedSettings(owner: row.title) { thickness(ids) }
+                if flat { thickness(ids) } else { OwnedSettings(owner: row.title) { thickness(ids) } }
             case .chipBorder:
-                OwnedSettings(owner: row.title) { edgeWidth(ids) }
+                if flat {
+                    edgeWidth(ids).playtestField("Chip Edge Width")
+                } else {
+                    OwnedSettings(owner: row.title) { edgeWidth(ids) }
+                }
             case .chipText:
                 // The chip used to guarantee its own legibility: the number was
                 // white on a dark pill and nobody could change either. Both are
@@ -128,13 +135,23 @@ struct MeasureChipSettings: View {
     /// Whether any row in the list has a tick, so this block's name starts in
     /// the same column as the names beside the ticks.
     let leadsWithColumn: Bool
+    /// Under a measurement's Advanced, laid flat: a size typed here overrides
+    /// Size (which then lights none of S, M and L), and what the number
+    /// reads in.
+    var inFold = false
 
     var body: some View {
         // Every caliper the rows below speak for: one picked, several picked
         // across modes, or both of a picked Size measurement's. Where they
         // disagree the control says so and one move sets them all.
         let layers = editorState.measureLookLayers
-        if let layer = layers.first, let c = layer.measure {
+        if inFold, let layer = layers.first, let c = layer.measure {
+            VStack(alignment: .leading, spacing: 10) {
+                chipSize(c, layers: layers)
+                unit(layers)
+            }
+            .panelStartProbe(.row, owner: "Chip")
+        } else if let layer = layers.first, let c = layer.measure {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
                     PanelRowHead(title: "Chip", leadsWithColumn: leadsWithColumn) {

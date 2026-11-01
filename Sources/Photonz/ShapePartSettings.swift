@@ -29,6 +29,10 @@ struct ShapePartSettings: View {
     @Environment(EditorState.self) private var editorState
     /// The row these belong to, which is also what decides what they ARE.
     let row: LayerPartRow
+    /// Laid flat under an arrow's Advanced, in the mock's order (Thickness,
+    /// Head Size, Ending), rather than bracketed under the part's row, which
+    /// is listed above them with the other colours (markup.md section 8).
+    var flat = false
 
     var body: some View {
         readingForTheLookRows { lookBody }
@@ -39,7 +43,19 @@ struct ShapePartSettings: View {
     @ViewBuilder private var lookBody: some View {
         let ids = reach
         let selection = shapes(ids)
-        if row.part == .arrowHead, !selection.isEmpty {
+        if row.part == .arrowHead, !selection.isEmpty, flat {
+            if selection.rows.contains(.headSize) {
+                headSize(selection)
+                let byHand = selection.members.contains { $0.content.headSizeByHand }
+                if byHand {
+                    SizeOverrideNote {
+                        editorState.resetArrowPart(ids: ids, .headSize)
+                    }
+                    .playtestField("Head Size Override")
+                }
+            }
+            if selection.rows.contains(.headStyle) { ending(selection) }
+        } else if row.part == .arrowHead, !selection.isEmpty {
             OwnedSettings(owner: row.title) {
                 // A hand-made arrow draws its own head, so only the clean one
                 // is asked what it ends in (`ArrowStyle.swift`).
@@ -67,7 +83,17 @@ struct ShapePartSettings: View {
                 // colour well that painted nothing, which is the dead control
                 // the switch exists to replace: off has to LOOK off, exactly as
                 // a switched-off Fill does (`LayerPartRow.showsSettings`).
-                if row.showsSettings, !thickness.isEmpty {
+                if row.showsSettings, !thickness.isEmpty, flat {
+                    self.thickness(thickness)
+                    if selection.members.contains(where: { !$0.content.thicknessFollowsSize }) {
+                        SizeOverrideNote {
+                            editorState.resetArrowPart(ids: ids, .thickness)
+                        }
+                        .playtestField("Thickness Override")
+                    }
+                    PathLineStyleSettings(rowID: row.id, selection: lineStyle)
+                    ShapeLineEndSettings(rowID: row.id, selection: selection)
+                } else if row.showsSettings, !thickness.isEmpty {
                     OwnedSettings(owner: row.title) {
                         // What the line is painted with first, as the mock's
                         // Stroke group lists it (`PathBrushSettings.swift`).
@@ -171,7 +197,9 @@ struct ArrowStyleRow: View {
         if Experiments.shared.arrowStylesEnabled, !arrows.isEmpty {
             let styles = Set(arrows.map(\.content.arrowStyle))
             let state = editorState
-            ArrowStyleTiles(selection: styles.count == 1 ? styles.first : nil) { style in
+            let inks = Set(arrows.map { $0.content.colorHex.uppercased() })
+            ArrowStyleTiles(selection: styles.count == 1 ? styles.first : nil,
+                            ink: inks.count == 1 ? inks.first : nil) { style in
                 // Looked up at the press, so it reaches what is picked then.
                 let ids = state.shapeSelection.members
                     .filter { $0.content.shape == .arrow }.map(\.id)
@@ -295,6 +323,9 @@ struct ArrowLabelSettings: View {
     /// Whether any row in the list has a tick, so this block's name starts in
     /// the same column as the names beside the ticks.
     let leadsWithColumn: Bool
+    /// Under an arrow's Advanced. The size typed here overrides Size, which
+    /// then lights none of S, M and L.
+    var inFold = false
 
     var body: some View {
         readingForTheLookRows { lookBody }

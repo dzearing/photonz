@@ -243,6 +243,15 @@
    "stage": "2-size-group"
   },
   {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
    "do": "expect",
    "control": "Color",
    "in": "Caliper",

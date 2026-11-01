@@ -1490,8 +1490,17 @@
   },
   {
    "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
    "control": "Color",
-   "in": "Label Text"
+   "in": "Chip Text"
   },
   {
    "do": "wait",

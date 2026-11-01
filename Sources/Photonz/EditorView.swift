@@ -3109,7 +3109,9 @@ struct EditorView: View {
     private var arrowStyleRow: some View {
         // As wide as the colour picker above it rather than the 220 of a
         // slider row: three tiles across need it, or "Hand-drawn" is cut short.
-        ArrowStyleTiles(selection: editedArrowStyle, labelFont: .callout) {
+        ArrowStyleTiles(selection: editedArrowStyle, labelFont: .callout,
+                        ink: selectedAnnotation?.colorHex
+                            ?? editorState.annotationStyles.content(for: .arrow)?.colorHex) {
             editorState.setAnnotationArrowStyle($0)
         }
             .frame(width: DesignedColorPicker.width)
@@ -3130,6 +3132,10 @@ struct EditorView: View {
             }
             ChipMarkerPicker(selection: marker, labelFont: .callout) {
                 editorState.setAnnotationChipMarker($0)
+            }
+            MarkSizeRow(selection: selectedAnnotation.map(\.markSize) ?? editorState.annotationToolMarkSize,
+                        labelFont: .callout, field: "Arrow Tool Size") {
+                editorState.setAnnotationMarkSize($0)
             }
         }
         .frame(width: DesignedColorPicker.width)

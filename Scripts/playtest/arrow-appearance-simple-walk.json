@@ -1,0 +1,292 @@
+{
+ "out": "/tmp/photonz-playtest/arrow-appearance-simple",
+ "seed": "At Next defaults, no switch changed: a picked arrow's Appearance reads Arrow, Chip, Color, Marker, Size and a closed Advanced (markup.md section 8). Large, Small and Medium from the arrow's right-click menu move the chip's words and the line together; L clicked by the pointer does the same. Under Advanced each part says it comes from the Color or the style; a chip part painted by hand shows Reset and keeps its colour through a new Color, and Reset hands it back.",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel",
+   "measure"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    760,
+    640
+   ],
+   "to": [
+    960,
+    470
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button 48 pt"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "1-simple",
+   "note": "a new arrow's Appearance: Arrow, Chip, Color, Marker, Size, and Advanced closed"
+  },
+  {
+   "do": "panel",
+   "stage": "1-simple"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-simple"
+  },
+  {
+   "do": "expect",
+   "control": "Advanced",
+   "in": "Advanced",
+   "reads": "Advanced, closed"
+  },
+  {
+   "do": "expect",
+   "control": "Switch",
+   "in": "Chip Fill",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Clean",
+   "in": "Arrow Style",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Color Blue",
+   "in": "Arrow Color",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "M",
+   "in": "Arrow Size",
+   "present": true
+  },
+  {
+   "do": "rightClick",
+   "choose": "Chip Size > Large",
+   "on": "Arrow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "2-large",
+   "note": "Large from the arrow's right-click menu: the chip's words and padding grow and the line thickens with them, and L is lit"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-large"
+  },
+  {
+   "do": "rightClick",
+   "choose": "Chip Size > Small",
+   "on": "Arrow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "3-small"
+  },
+  {
+   "do": "rightClick",
+   "choose": "Chip Size > Medium",
+   "on": "Arrow"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "4-by-the-pointer",
+   "note": "the same rows clicked with the pointer: L on the Size row, then Advanced opened"
+  },
+  {
+   "do": "press",
+   "control": "L",
+   "in": "Arrow Size"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "L",
+   "in": "Arrow Size",
+   "reads": "Arrow Size, already on L, tooltip \"Large\""
+  },
+  {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Advanced",
+   "in": "Advanced",
+   "reads": "Advanced, open"
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Line",
+   "reads": "Advanced, Line, from Color"
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Head",
+   "reads": "Advanced, Head, from Color"
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Chip Fill",
+   "reads": "Advanced, Chip Fill, from style"
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Chip Text",
+   "reads": "Advanced, Chip Text, from style"
+  },
+  {
+   "do": "reveal",
+   "control": "Origin",
+   "in": "Chip Text"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "5-advanced"
+  },
+  {
+   "do": "dragColor",
+   "from": "Line",
+   "onto": "Chip Text",
+   "expect": "takes"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Reset",
+   "in": "Chip Text",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Chip Fill",
+   "reads": "Advanced, Chip Fill, from style"
+  },
+  {
+   "do": "press",
+   "control": "Color Blue",
+   "in": "Arrow Color"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Reset",
+   "in": "Chip Text",
+   "present": true
+  },
+  {
+   "do": "reveal",
+   "control": "Reset",
+   "in": "Chip Text"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-chip-text-by-hand"
+  },
+  {
+   "do": "press",
+   "control": "Reset",
+   "in": "Chip Text"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Chip Text",
+   "reads": "Advanced, Chip Text, from style"
+  }
+ ]
+}

@@ -91,6 +91,15 @@
    "seconds": 0.5
   },
   {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
    "do": "focus",
    "field": "Thickness"
   },

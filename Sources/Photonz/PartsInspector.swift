@@ -72,6 +72,67 @@ struct PartsInspector: View {
                 KeyRows()
                 MaskedByRow()
             }
+            // An arrow or a measurement, picked on its own kind, gets the
+            // simple Appearance markup.md section 8 draws: Arrow, Chip, Color,
+            // Marker and Size, with every part folded under Advanced.
+            if let markup = editorState.markupAppearanceKind {
+                let column = rows.contains(where: \.hasSwitch)
+                switch markup {
+                case .arrows:
+                    ArrowStyleRow()
+                    ArrowChipRow()
+                    ArrowSizeRow()
+                    MarkupAdvancedFold {
+                        ArrowAdvancedRows(rows: rows, leadsWithColumn: column)
+                    }
+                case .measurements:
+                    MeasureChipStyleRow()
+                    MeasureSizeRow()
+                    MarkupAdvancedFold {
+                        MeasureAdvancedRows(rows: rows, leadsWithColumn: column)
+                    }
+                }
+            } else {
+                fullPartsList(rows)
+            }
+            // ...and a corner radius only where there are corners. An ellipse
+            // has none, so it shows no row rather than a slider that does
+            // nothing to what you have picked.
+            if !corners.isEmpty {
+                // Another label over a track, and like Opacity it begins on the
+                // panel's margin rather than under the name column.
+                VStack(alignment: .leading, spacing: 2) {
+                    CornerRadiusRow(selection: corners)
+                    if let note = corners.note {
+                        Text(note)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .panelStartProbe(.row, owner: "Corner Radius")
+            }
+            // Where the row would have been, when a copy handed its roundness
+            // to a knob. A row that simply vanishes is a hole in the panel, so
+            // the section names the control that owns the number and where it
+            // is, the way the Layout section names Edit Original.
+            if let rounding = editorState.instanceRoundingNote {
+                Text(rounding)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .panelStartProbe(.row, owner: "Rounding note")
+            }
+            ArrowLabelPlacementReset()
+        }
+        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+        .padding(.vertical, 8)
+    }
+
+
+    /// Every part laid out in full, for a selection that is not all arrows or
+    /// all measurements (or with chip styles off).
+    @ViewBuilder private func fullPartsList(_ rows: [LayerPartRow]) -> some View {
             // A measurement's Role, right under it: it is a preset for every
             // colour below it, so it reads as "what this calls out, then what
             // that is painted" (`MeasurePartSettings`).
@@ -118,38 +179,6 @@ struct PartsInspector: View {
             if firstLabelRowID(rows) == nil {
                 ArrowLabelSettings(leadsWithColumn: column)
             }
-            // ...and a corner radius only where there are corners. An ellipse
-            // has none, so it shows no row rather than a slider that does
-            // nothing to what you have picked.
-            if !corners.isEmpty {
-                // Another label over a track, and like Opacity it begins on the
-                // panel's margin rather than under the name column.
-                VStack(alignment: .leading, spacing: 2) {
-                    CornerRadiusRow(selection: corners)
-                    if let note = corners.note {
-                        Text(note)
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-                .panelStartProbe(.row, owner: "Corner Radius")
-            }
-            // Where the row would have been, when a copy handed its roundness
-            // to a knob. A row that simply vanishes is a hole in the panel, so
-            // the section names the control that owns the number and where it
-            // is, the way the Layout section names Edit Original.
-            if let rounding = editorState.instanceRoundingNote {
-                Text(rounding)
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .panelStartProbe(.row, owner: "Rounding note")
-            }
-            ArrowLabelPlacementReset()
-        }
-        .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
-        .padding(.vertical, 8)
     }
 
     /// The first of the label's three colour rows, which is where the arrow's
@@ -212,12 +241,20 @@ struct PartsInspector: View {
 /// and nothing else, which left the switch as the only move on offer and the
 /// switch fills all five (found by the audit of 2026-09-06,
 /// `switch-says-mixed`).
-private struct PartRowView: View {
+struct PartRowView: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerPartRow
     /// Whether ANY row in this list has a tick, which is what decides whether
     /// the list has a leading column at all. See `PanelRowHead`.
     let leadsWithColumn: Bool
+    /// The name shown, where it differs from the part's own: under an arrow's
+    /// Advanced the label's parts are the chip's, as markup.md section 8 says.
+    var shownTitle: String? = nil
+    /// Under Advanced, where the colour comes from and the way back once it
+    /// was painted by hand (`MarkupOriginTag`).
+    var origin: (MarkupPartOrigin, () -> Void)? = nil
+
+    private var title: String { shownTitle ?? row.title }
 
     /// What is being held over this row right now, while it is switched off.
     /// Nil the rest of the time, and whenever what is in the air is not a
@@ -244,7 +281,7 @@ private struct PartRowView: View {
                 // the panel's columns live. A part with nothing to switch — a
                 // line's ink, a letter's ink — still holds the tick column open,
                 // so its name starts on the same line as everybody else's.
-                PanelRowHead(title: row.title, leadsWithColumn: leadsWithColumn) {
+                PanelRowHead(title: title, leadsWithColumn: leadsWithColumn) {
                     if row.hasSwitch { partSwitch }
                 }
                 if showsColor {
@@ -261,6 +298,9 @@ private struct PartRowView: View {
                     LandingSwatch(paint: paint)
                 }
                 Spacer(minLength: 0)
+                if let origin, showsColor {
+                    MarkupOriginTag(origin: origin.0, reset: origin.1)
+                }
             }
             // The whole row takes the drop only while NOBODY has the part,
             // because then there is no swatch to aim at and a person carrying a
@@ -293,8 +333,8 @@ private struct PartRowView: View {
         // might change, and on the ink row it is the ONLY one that always
         // works, since that row reads Line or Color depending on what is
         // picked (`PlaytestSteadyName`).
-        .playtestField(row.title, steady: row.steadyNames)
-        .panelStartProbe(.row, owner: row.title)
+        .playtestField(title, steady: row.steadyNames)
+        .panelStartProbe(.row, owner: title)
     }
 
     // MARK: The switch
@@ -306,7 +346,7 @@ private struct PartRowView: View {
         // first press resolves to ON for all of them. It never returns to
         // Mixed, which is a report about the selection rather than a state
         // anyone can set (`UX-PATTERNS.md` section 4).
-        Toggle(row.title, isOn: Binding(get: { row.isMixed ? false : row.isOn },
+        Toggle(title, isOn: Binding(get: { row.isMixed ? false : row.isOn },
                                         set: { setOn(row.isMixed ? true : $0) }))
             .labelsHidden()
             .controlSize(.small)
@@ -341,7 +381,7 @@ private struct PartRowView: View {
     }
 
     private var switchHelp: String {
-        let noun = row.title.lowercased()
+        let noun = title.lowercased()
         // While they disagree the switch has no state to turn off, so the tip
         // says what the press it CAN take would do.
         let crowd = CrowdWords.them(row.switchIDs.count)
@@ -363,7 +403,7 @@ private struct PartRowView: View {
             // looking exactly as it did leaves it alone: it holds the row's
             // NAME and looks the layers up again when somebody paints
             // (`ColorTarget.Source`, `PanelReach.swift`).
-            ColorStyleRow(target: target, part: row.title,
+            ColorStyleRow(target: target, part: title,
                           selection: editorState.colorStyleSelection(target),
                           isNaming: editorState.isNamingColorStyle(target),
                           previewPaint: editorState.previewedPaint(target))

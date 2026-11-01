@@ -106,9 +106,32 @@ extension MeasureContent {
         noteChipPartByHand(part)
     }
 
-    /// Marks a part as set by hand after its row painted it.
+    /// Marks a part as set by hand after its row painted it. The pill from
+    /// before styles keeps track too, so Advanced can say which of its parts
+    /// were painted and hand them back (markup.md section 8).
     mutating func noteChipPartByHand(_ part: CaptionPart) {
-        if chipStyle != nil { chipPartsByHand.insert(part) }
+        chipPartsByHand.insert(part)
+    }
+
+    /// Hands one chip part back: to what the style derives from the ink, or on
+    /// the pill from before styles to `look`, the look a new measurement
+    /// starts with.
+    public mutating func resetChipPart(_ part: CaptionPart, toLookOf look: MeasureContent) {
+        chipPartsByHand.remove(part)
+        guard chipStyle == nil else {
+            rederiveChipParts()
+            return
+        }
+        switch part {
+        case .fill:
+            chipColorHex = look.chipColorHex
+            chipOpacity = look.chipOpacity
+        case .edge:
+            chipBorderColorHex = look.chipBorderColorHex
+            chipBorderWidth = look.chipBorderWidth
+        case .text:
+            textColorHex = look.textColorHex
+        }
     }
 
     /// Hands chip parts back to the style.

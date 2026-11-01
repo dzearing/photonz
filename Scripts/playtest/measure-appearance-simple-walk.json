@@ -1,0 +1,155 @@
+{
+ "out": "/tmp/photonz-playtest/measure-appearance-simple",
+ "seed": "At Next defaults, no switch changed: a picked measurement's Appearance reads Chip, Color, Marker, Size and a closed Advanced, with no Arrow row (markup.md section 8). Large from its right-click menu lights L; under Advanced the Caliper comes from the Color and the chip's parts from the style.",
+ "setup": {
+  "forget": [
+   "measure",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/gap-heading-lines-2x.png",
+   "width": 1400,
+   "height": 1000
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "key",
+   "key": "i"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "measure"
+  },
+  {
+   "do": "waitFor",
+   "condition": "edgeMap",
+   "timeout": 30
+  },
+  {
+   "do": "measureMode",
+   "mode": "gap"
+  },
+  {
+   "do": "move",
+   "at": [
+    400,
+    160
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "click",
+   "at": [
+    400,
+    160
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectMeasures",
+   "count": 1
+  },
+  {
+   "do": "selectRow",
+   "row": "Gap 37"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Arrow style Clean",
+   "in": "Arrow Style",
+   "present": false
+  },
+  {
+   "do": "expect",
+   "control": "M",
+   "in": "Measure Size",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Advanced",
+   "in": "Advanced",
+   "reads": "Advanced, closed"
+  },
+  {
+   "do": "rightClick",
+   "choose": "Chip Size > Large",
+   "on": "Gap 37"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "L",
+   "in": "Measure Size",
+   "reads": "Measure Size, already on L, tooltip \"Large\""
+  },
+  {
+   "do": "snapshot",
+   "name": "m2-large"
+  },
+  {
+   "do": "press",
+   "control": "Advanced",
+   "in": "Advanced"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Caliper",
+   "reads": "Advanced, Caliper, from Color"
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Chip Fill",
+   "reads": "Advanced, Chip Fill, from style"
+  },
+  {
+   "do": "expect",
+   "control": "Origin",
+   "in": "Chip Text",
+   "reads": "Advanced, Chip Text, from style"
+  },
+  {
+   "do": "reveal",
+   "control": "Origin",
+   "in": "Caliper"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "m3-advanced"
+  }
+ ]
+}

@@ -205,6 +205,15 @@ APPEARANCE
 Under Advanced each part reads "from Color" or "from style" until it is set by
 hand, and a part set by hand stays overridden until it is reset.
 
+In the app (2026-11-01): the simple rows show when every picked layer is an
+arrow, or every one a measurement (`PartsInspector`, `MarkupAppearance.swift`);
+a mixture keeps the full parts list. Size is not stored: a chip at 10.5, 12 or
+14 points (against the app's M) is that size, so an older mark reads M
+(`PhotonzCore/MarkSize.swift`). An arrow's Thickness follows Size until it is
+set to something else; the head follows the line until painted apart. The
+Advanced fold remembers whether it was left open. Chip Size is also on the
+arrow's and the measurement's right-click menu.
+
 ## 9. Every mark must
 
 - Read over a light screenshot, a dark one and a busy photo (the specimen page

@@ -753,6 +753,14 @@ extension EditorState {
                 }
             }))
         }
+        // ...and the Size the panel's S, M and L set (markup.md section 7).
+        let sizes = Set(arrows.compactMap { document?.layer(id: $0)?.annotation?.markSize })
+        rows.append(.submenu(MarkSize.menuTitle, MarkSize.allCases.map { size in
+            .toggle(size.name, isOn: sizes == [size]) { [weak self] in
+                guard let self else { return }
+                self.setArrowMarkSize(ids: self.arrowsReached(fromRow: id), size)
+            }
+        }))
         return rows
     }
 

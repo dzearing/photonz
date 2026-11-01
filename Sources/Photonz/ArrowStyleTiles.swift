@@ -20,18 +20,21 @@ struct ArrowStyleTiles: View, Equatable {
     /// The label's size: the dock's caption, or the popover's callout, so the
     /// row reads like its neighbours wherever it is.
     var labelFont: Font = .caption
+    /// The arrow's colour, so the tiles show the arrows this one would be, as
+    /// the chip tiles beside them do; nil draws them in the panel's ink.
+    var ink: String? = nil
     let pick: (ArrowStyle) -> Void
 
     /// Which tile is lit, and nothing else; what a press does is looked up
     /// when it happens.
     nonisolated static func == (a: ArrowStyleTiles, b: ArrowStyleTiles) -> Bool {
-        a.selection == b.selection && a.labelFont == b.labelFont
+        a.selection == b.selection && a.labelFont == b.labelFont && a.ink == b.ink
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Text("Style").font(labelFont).foregroundStyle(.secondary)
+                Text("Arrow").font(labelFont).foregroundStyle(.secondary)
                 if let selection {
                     Text(selection.title).font(labelFont).foregroundStyle(.secondary)
                 } else {
@@ -54,7 +57,7 @@ struct ArrowStyleTiles: View, Equatable {
         // ten names do not fit five across, the header names the one that is
         // on, and the tip names each.
         return Button { pick(style) } label: {
-            ArrowStyleThumbnail(style: style)
+            ArrowStyleThumbnail(style: style, ink: ink)
                 .frame(height: 30)
                 .frame(maxWidth: .infinity)
                 .background(RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -89,14 +92,27 @@ struct ArrowStyleTiles: View, Equatable {
 /// tile's own ink, so it reads on the tile in light and dark alike.
 private struct ArrowStyleThumbnail: View {
     let style: ArrowStyle
+    let ink: String?
     @Environment(\.displayScale) private var displayScale
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// The arrow's colour, unless it would all but vanish on the tile (a
+    /// black arrow on the dark panel, a white one on the light), where the
+    /// panel's own ink draws it instead.
+    private var tint: AnyShapeStyle {
+        guard let ink, let rgba = RGBA(hex: ink) else { return AnyShapeStyle(VideoKit.Palette.ink) }
+        let lum = rgba.relativeLuminance
+        if colorScheme == .dark, lum < 0.06 { return AnyShapeStyle(VideoKit.Palette.ink) }
+        if colorScheme == .light, lum > 0.8 { return AnyShapeStyle(VideoKit.Palette.ink) }
+        return AnyShapeStyle(Color(hex: ink))
+    }
 
     var body: some View {
         GeometryReader { proxy in
             if let image = ArrowStyleThumbnail.image(style, size: proxy.size, scale: displayScale) {
                 Image(decorative: image, scale: displayScale)
                     .renderingMode(.template)
-                    .foregroundStyle(VideoKit.Palette.ink)
+                    .foregroundStyle(tint)
                     .frame(width: proxy.size.width, height: proxy.size.height)
             }
         }

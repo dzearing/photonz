@@ -1,0 +1,31 @@
+{
+  "feature": "Arrow and measurement Appearance: Arrow, Chip, Color, Marker, Size, and the rest under Advanced",
+  "epic": "epic-uehjr1",
+  "summary": "A picked arrow now shows just its Arrow style, Chip style, one Color, Marker and an S M L Size, with every part folded under a closed Advanced that says where each colour comes from. A measurement gets the same rows without the Arrow row.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: arrow-appearance-simple-walk and measure-appearance-simple-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Press A, drag an arrow on a screenshot, type a label and press Command-Return.", "shot": "2026-11-01-markup-appearance-vs-proto.png", "shotNote": "Left: the prototype. Middle and right: the app. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click L on the Size row (or right-click the arrow, Chip Size, Large): the label's words and padding grow and the line thickens.", "shot": "2026-11-01-markup-appearance-2-large-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click S: the label and line shrink.", "shot": "2026-11-01-markup-appearance-3-small-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Show beside Advanced: Line and Head say from Color, Chip Fill and Chip Text say from style." },
+    { "do": "Drag the Line swatch onto Chip Text: Chip Text now shows Reset, the others still say where they come from, and the warning under Color offers Reset Colors.", "shot": "2026-11-01-markup-appearance-4-by-hand-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick Blue in Color: the line, head and chip turn blue but Chip Text keeps the colour you gave it. Click its Reset to hand it back." },
+    { "do": "Measure a gap (I), pick it, open Advanced: Caliper from Color, Chip Fill, Edge and Text from style, and Size beside Marker.", "shot": "2026-11-01-markup-appearance-5-measurement-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "With Advanced closed, is anything you reach for every day now hidden?",
+    "Is the step from M to L big enough to be worth a control (it follows the design system's 12 to 14 points)?",
+    "Does from Color / from style / Reset tell you at a glance which parts you have changed?",
+    "Should Advanced stay open once you have opened it (it does now, across arrows and launches)?"
+  ],
+  "rough": [
+    "The walks' pointer clicks on panel controls do nothing on this Mac since about 21:50 on 2026-10-31, on the committed code too, so both new walks fail at their first pointer press after passing everything before it (layout, right-click sizes, from-labels, painting by hand). Logged with a reproduction on walks-that-fail-in-the-full-sweep-26; the pictures of the open fold were taken with the fold's saved setting turned on instead of a click.",
+    "Color is a label over its swatches with a ninth Custom well, where the prototype puts eight dots on the label's line; the Custom well and the row came from any-colour-you-pick-for-an-arrow-or-measurement.",
+    "Opacity, Blending and Masked by sit above the Arrow row as on every layer, which the prototype leaves out. Placement by UX-PATTERNS placement contract: Appearance leads with what every layer has.",
+    "Advanced goes further than the prototype: Ends (the tail's cap), Label size and corners, and for a measurement Chip size, Unit and Role live there too. A typed Label or Chip size overrides Size and lights none of S, M and L.",
+    "Chip Edge on a Solid pill is switched off, so its row shows its switch and no from-label until it is switched on.",
+    "Size changes an arrow's line to 3, 4 or 5 px with S, M and L; a measurement's caliper keeps its 1 to 3 px hairline. Head Size is a multiple of the line, so it follows.",
+    "A fresh arrow is still drawn in #FF3B30, which is not one of the eight swatches, so the Custom well is lit on a new arrow. Left as it is."
+  ]
+}

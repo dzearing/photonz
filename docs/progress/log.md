@@ -22311,3 +22311,11 @@ the ghost, and pinching in seemed to stop short.
 - Elbow turns across then down, down first when the last leg cannot hold its head, and a bend picks the corner.
 - Style tiles are picture-only, five across, like the Chip row. Walk: `five-more-arrow-styles-walk` (right-click picks, since panel tile presses under a walk are dead; walks-that-fail-in-the-full-sweep-26).
 - Open: the Style row's header should read Arrow (arrow-and-measurement-appearance-shows-only-styl).
+
+## 2026-11-01 — Arrow and measurement Appearance: Arrow, Chip, Color, Marker, Size, Advanced
+
+- A picked arrow (or measurement, without the Arrow row) shows Arrow, Chip, Color, Marker and an S M L Size, then a closed Advanced (`MarkupAppearance.swift`, `PartsInspector`). Mixed selections keep the full parts list.
+- Size is read off the chip's type size, never stored (`PhotonzCore/MarkSize.swift`, `MarkSizeTests`): 10.5/12/14 at the specimen scale against the app's M; arrows' line 3/4/5 px unless Thickness was set by hand; a measurement's caliper keeps its hairline. Also on the right-click menu as Chip Size.
+- Under Advanced each colour row says from Color / from style, or Reset once painted by hand (`PartRowView.origin`). Arrow label parts are named Chip Fill / Edge / Text there. Thickness and Head Size say Overrides Size with a Reset. The pre-styles measurement pill now records parts painted by hand and resets them to the measurement look (`MeasureContent.resetChipPart`); new measurements keep the user's navy pill (not moved to Today, 2026-10-13 ask).
+- Arrow tiles are drawn in the arrow's colour, like the Chip tiles.
+- Walks: `arrow-appearance-simple-walk`, `measure-appearance-simple-walk`; ten older walks open Advanced with one press. Panel presses under a walk do nothing on this Mac since 2026-10-31 ~21:50 (logged on walks-that-fail-in-the-full-sweep-26), so those walks stop at that press until it is fixed.

@@ -74,6 +74,9 @@ struct MeasureToolChipRows: View {
                 ChipStyleTiles(selection: style, ink: ink) { state.setMeasureToolChipStyle($0) }
                 MarkupInkRow(ink: ink, pick: { state.setMeasureToolInk($0) }, field: "Measure Color")
                 ChipMarkerPicker(selection: marker) { state.setMeasureToolChipMarker($0) }
+                MarkSizeRow(selection: next.content.markSize, field: "Measure Tool Size") {
+                    state.setMeasureToolMarkSize($0)
+                }
             }
             .panelStartProbe(.row, owner: "Measure Tool Chip")
         }

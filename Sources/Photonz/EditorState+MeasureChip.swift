@@ -13,7 +13,7 @@ extension EditorState {
     /// Restyles measurements' chips in one undo step, the frame re-padded for
     /// the chip's new room. A chip that grew gets to pick its spot again,
     /// unless somebody placed it by hand.
-    private func rechipMeasures(ids: [UUID], replan: Bool, _ change: @escaping (inout MeasureContent) -> Void) {
+    func rechipMeasures(ids: [UUID], replan: Bool, _ change: @escaping (inout MeasureContent) -> Void) {
         guard let doc = document else { return }
         let targets = ids.filter { doc.layer(id: $0)?.measure != nil && doc.layer(id: $0)?.isLocked == false }
         guard !targets.isEmpty else { return }
@@ -114,6 +114,7 @@ extension EditorState {
         let markers = Set(targets.compactMap { id in
             doc.layer(id: id)?.measure.map { $0.chipStyle == nil ? ChipMarker.standard : $0.chipMarker }
         })
+        let sizes = Set(targets.compactMap { doc.layer(id: $0)?.measure?.markSize })
         return [
             .submenu(ChipStyle.menuTitle, ChipStyle.allCases.map { style in
                 .toggle(style.title, isOn: worn == [style]) { [weak self] in
@@ -123,6 +124,11 @@ extension EditorState {
             .submenu(ChipMarker.menuTitle, ChipMarker.allCases.map { marker in
                 .toggle(marker.title, isOn: markers == [marker]) { [weak self] in
                     self?.setMeasureChipMarker(ids: Array(targets), marker)
+                }
+            }),
+            .submenu(MarkSize.menuTitle, MarkSize.allCases.map { size in
+                .toggle(size.name, isOn: sizes == [size]) { [weak self] in
+                    self?.setMeasureMarkSize(ids: Array(targets), size)
                 }
             }),
         ]
