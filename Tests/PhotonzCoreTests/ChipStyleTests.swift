@@ -282,9 +282,11 @@ struct ChipStyleTests {
 
     @Test("Glass's tint for the palette is the design system's")
     func glassPalette() {
-        #expect(InkPlate.reading(forInk: "#ff375f").glassHex == "#AD2541")
-        #expect(InkPlate.reading(forInk: "#0a84ff").glassHex == "#5BADFF")
-        #expect(InkPlate.reading(forInk: "#0a84ff").onGlassHex == "#1D1D1F")
-        #expect(InkPlate.reading(forInk: "#bf5af2").glassHex == "#D28CF6")
+        for ink in InkPlate.palette {
+            #expect(InkPlate.reading(forInk: ink).onGlassHex == "#1D1D1F", "\(ink)")
+        }
+        // A mid ink keeps its own colour on light glass; black is lifted.
+        #expect(InkPlate.reading(forInk: "#ff375f").glassHex == "#FF375F")
+        #expect(InkPlate.reading(forInk: "#1d1d1f").glassHex != "#1D1D1F")
     }
 }

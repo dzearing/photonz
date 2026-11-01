@@ -1227,6 +1227,11 @@ public final class DocumentRenderer: @unchecked Sendable {
             ? layer.frame.size
             : CGSize(width: layer.frame.width / contentScale, height: layer.frame.height / contentScale)
         var image: CIImage
+        // Where a caption on Glass frosts the picture behind its chip, in the
+        // same pixels as `image` and carried through the same placement, and
+        // the frost itself with its softness in those pixels.
+        var frostMask: CIImage?
+        var frost: (look: ChipLook.Frost, radius: CGFloat)?
         // Whether the stored bitmap this layer draws is about to be blown up
         // by a magnified render, which is the one case worth paying a better
         // resampler for (see the scale-into-frame step below).
@@ -1330,6 +1335,16 @@ public final class DocumentRenderer: @unchecked Sendable {
             // a stroke, an arrowhead and a caption pill all come from shapes and
             // type, so all three can be as sharp as the words beside them.
             let bake = crispScale(contentScale, box: boxInPoints)
+            // A caption on Glass: the plate's own shape, for the frost below.
+            // Not in space, where the card is warped after it is placed.
+            if space == nil, annotation.drawsFrostedChip, let look = annotation.chipLook?.frost,
+               let mask = raster(for: layer.content, size: layer.frame.size,
+                                 variant: contentScale == 1 ? "frost" : "crisp-frost", rasterize: {
+                   AnnotationRasterizer.frostMask(annotation, size: boxInPoints, scale: bake)
+               }) {
+                frostMask = magnified(mask, nearest: magnifyNearest, scale: contentScale / bake)
+                frost = (look, look.blur * ChipLook.unit(fontSize: annotation.captionFontSize) * contentScale)
+            }
             // A fill drifting on its own clock: the shape's rasters stay
             // cached and only the mesh is worked out for this moment
             // (`MovingBackdrops.swift`).
@@ -1637,7 +1652,9 @@ public final class DocumentRenderer: @unchecked Sendable {
             mirrored.skewX = -mirrored.skewX
             mirrored.skewY = -mirrored.skewY
             let center = CGPoint(x: image.extent.midX, y: image.extent.midY)
-            image = image.transformed(by: mirrored.affineTransform(around: center))
+            let turn = mirrored.affineTransform(around: center)
+            image = image.transformed(by: turn)
+            frostMask = frostMask?.transformed(by: turn)
             swing = swingOffPivot(layer, transform: mirrored)
         }
 
@@ -1646,9 +1663,10 @@ public final class DocumentRenderer: @unchecked Sendable {
         // rotated/skewed extents stay anchored where the frame is. Must happen
         // before the shadow, whose expanded extent would skew the centering.
         let frameCenterY = document.canvasSize.height - frame.midY
-        image = image.transformed(
-            by: CGAffineTransform(translationX: frame.midX - image.extent.midX + swing.x,
-                                  y: frameCenterY - image.extent.midY + swing.y))
+        let placing = CGAffineTransform(translationX: frame.midX - image.extent.midX + swing.x,
+                                        y: frameCenterY - image.extent.midY + swing.y)
+        image = image.transformed(by: placing)
+        frostMask = frostMask?.transformed(by: placing)
 
         // Into space: the finished, placed picture warped onto the corners the
         // camera sees, after its 2D turn and before its shadow, so a shadow
@@ -1666,10 +1684,52 @@ public final class DocumentRenderer: @unchecked Sendable {
         let silhouette = image
         image = shadowed(image, glows: layer.style.paintedGlows,
                          shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
-        return glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
-                      backdrop: backdrop, radius: layer.style.backgroundBlurRadius,
-                      zoom: layer.style.backgroundBlurZoom)
+        let finished = glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
+                              backdrop: backdrop, radius: layer.style.backgroundBlurRadius,
+                              zoom: layer.style.backgroundBlurZoom)
+        if let frostMask, let frost {
+            return frosted(finished, mask: frostMask, backdrop: backdrop, frost: frost.look, radius: frost.radius)
+        }
+        return finished
     }
+
+    /// A Glass chip's frost (`ChipLook.Frost`): the picture behind the chip,
+    /// softened, a little richer, and veiled (dimmed under light words,
+    /// lifted towards white under dark ones) so the see-through tint drawn
+    /// over it keeps its words readable over any picture. Laid under the
+    /// finished layer wherever `mask` (the plate) is.
+    ///
+    /// The veil acts on the working numbers, light or sRGB, which is what
+    /// `InkPlate.glassFor` judges the tint against in both.
+    private func frosted(_ drawn: CIImage, mask: CIImage, backdrop: CIImage,
+                         frost: ChipLook.Frost, radius: CGFloat) -> CIImage {
+        let pane = mask.extent
+        guard !pane.isInfinite, !pane.isEmpty, radius > 0 else { return drawn }
+        let reach = (radius * 3).rounded(.up)
+        let sampled = backdrop.cropped(to: pane.insetBy(dx: -reach, dy: -reach))
+        guard !sampled.extent.isEmpty else { return drawn }
+        let scale = CGFloat(frost.lifts ? 1 - frost.amount : frost.amount)
+        let bias = CGFloat(frost.lifts ? frost.amount : 0)
+        let veiled = sampled.clampedToExtent()
+            .applyingGaussianBlur(sigma: radius)
+            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: Self.frostSaturation])
+            .applyingFilter("CIColorClamp")
+            .applyingFilter("CIColorMatrix", parameters: [
+                "inputRVector": CIVector(x: scale, y: 0, z: 0, w: 0),
+                "inputGVector": CIVector(x: 0, y: scale, z: 0, w: 0),
+                "inputBVector": CIVector(x: 0, y: 0, z: scale, w: 0),
+                "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 1),
+                "inputBiasVector": CIVector(x: bias, y: bias, z: bias, w: 0),
+            ])
+            .cropped(to: pane)
+        let glass = veiled.applyingFilter("CISourceInCompositing",
+                                          parameters: [kCIInputBackgroundImageKey: mask])
+        return drawn.composited(over: glass)
+    }
+
+    /// How much richer a Glass chip's frost is than the picture it frosts:
+    /// a blur alone averages colours towards grey.
+    static let frostSaturation: CGFloat = 1.5
 
     /// A shape whose fill drifts, at one moment: the mesh for that moment cut
     /// to the inside of the shape, and the shape's own line over it. Both cut

@@ -69,15 +69,22 @@ darkened past 35 percent. Nobody has to open Advanced to keep a chip legible;
 only a part overridden by hand under Advanced can break the rule, and the
 inspector warns when it does.
 
-**Glass is judged over the worst picture.** Its plate lets the picture through,
-so its tint is derived separately: at 82 percent opacity its words must reach
-4.8:1 over a pure white AND a pure black picture. White words take a darkened
-tint, dark words a lightened one, whichever moves the colour less (worst over
-the same 5,472 colours: 4.80:1). Before this, a light ink on glass over a white
-screenshot fell to 1.4:1.
+**Glass is light frosted glass, judged over the worst picture.** It is really
+see-through: the picture behind the chip is frosted (a blur of 4 px at 12 px
+type, a little richer in colour) and lifted 75 percent of the way to white,
+and the ink lies over that at 40 percent, with dark words. The ink keeps its
+colour unless the words need it lighter: it is lightened just enough for them
+to reach 4.8:1 over a pure white AND a pure black picture, mixed in light and
+in sRGB numbers both, since the app can composite either way (`glassFor`;
+over the 5,472 colours the worst is 4.80:1, and every palette ink keeps its
+own colour except black, which lifts to `#38383a`). Before 2026-11-01 Glass
+was an 82 percent tint with white or dark words and, in the app, drawn at 95
+percent with no picture behind it at all; three judges read the opaque one as
+not glass, and a dimmed version with white words as muddy over a light
+screenshot.
 
 The other mixed styles hold for every colour without their own rule: Today's
-dark plate (worst 5.95:1) and the Highlighter swipe (worst 5.6:1).
+dark plate (worst 5.95:1) and the Highlighter band (worst 5.6:1).
 
 The app computes all of this in PhotonzCore (pure, tested) and must agree with
 this table, and with the sweep, to the hex digit. The sweep's answers are
@@ -85,13 +92,14 @@ written by the design system itself (`Scripts/markup-plate-fixture.cjs` into
 `docs/design/markup-plate-sweep.tsv`) and `ChipStyleTests` holds the app to
 every line of it; regenerate the file in the same commit as any rule change.
 
-**Glass in the app is drawn at 95 to 97 percent, not 82.** The tint and its
-words are the rule's above, to the hex digit. But the app blends a layer over
-the picture in linear light, where 82 percent lets far more of a white
-screenshot through than a browser's blend does (red Glass measured 3.2:1 over
-white at 80 percent). 95 percent is the least that keeps all 5,472 colours at
-4.5:1 that way, so Glass in the app reads as frosted through its lit rim and
-inner highlight more than through what shows behind it.
+**Glass in the app frosts the real picture.** A caption on Glass makes its
+arrow a layer that reads what is under it (the way a lens does): the renderer
+blurs and lifts the picture inside the chip's plate and lays the arrow over it
+(`DocumentRenderer.frosted`, mask from `AnnotationRasterizer.frostMask`), so
+the canvas and an export agree. Where there is no picture to frost (a style
+tile, the bubble while typing, a chip being dragged) the plate stands in as
+one opaque colour: the tint over the lift of a mid grey
+(`ChipLook.frostStandIn`).
 
 ## 4. Chip styles (ten)
 
@@ -103,12 +111,12 @@ Each style ends at its edge its own way, so they read as different even small.
 | 2 | `solid` | Solid pill | Lit fill (lighter top), top inner highlight, no edge | on-plate |
 | 3 | `squircle` | Flat squircle | Flat plate, continuous corners, no edge, no shadow | on-plate |
 | 4 | `hairline` | Hairline plate | White plate, 1 pt ink outline, flat | ink, darkened |
-| 5 | `glass` | Glass | Frosted, translucent plate; gradient rim bright top-left and bottom-right | white with a soft shadow |
+| 5 | `glass` | Glass | Light frosted glass: the picture behind blurred and lifted, the ink over it at 40%; a sheen along the top; a rim of light brightest at the top and catching at the bottom; a hairline ring | dark |
 | 6 | `paper` | Paper | Light card on a layered soft shadow; ink stripe accent | dark |
-| 7 | `spec` | Spec badge | Graphite plate with its own top-lit rim and a dark outer line; ink dot accent; monospaced | light |
+| 7 | `spec` | Spec badge | A dark HUD badge: graphite (`#3a3a3c`) a step lighter than a dark window's rows, a light inner edge all the way round, a dark outer line; ink dot accent; the system face (monospace read as a terminal) | light |
 | 8 | `tag` | Lit tag | Lit fill, small square corners | on-plate |
 | 9 | `twotone` | Two-tone badge | Ink tab on the left holding the accent or marker; white body | dark |
-| 10 | `highlight` | Highlighter | White plate with an ink highlighter swipe behind the words | dark |
+| 10 | `highlight` | Highlighter | White plate; a level band of ink (40 percent over white) over the whole line of words, above the capitals to below the descenders, a hair past each end | dark |
 
 No chip has a beak or pointer: the arrow or caliper already says what the chip
 is about.

@@ -743,6 +743,11 @@ final class CaptionPillView: NSView {
             if let top = look.fillTop, top.a < 1 {
                 layer.backgroundColor = CGColor(srgbRed: top.r, green: top.g, blue: top.b, alpha: top.a)
             }
+            // Glass frosts the picture once it lands; while typing it stands
+            // in as one opaque colour so the words read over anything.
+            if let opaque = look.frostStandIn {
+                layer.backgroundColor = CGColor(srgbRed: opaque.r, green: opaque.g, blue: opaque.b, alpha: 1)
+            }
             if shown.chipStyle != .today {
                 layer.borderWidth = shown.captionBorder == nil ? 0 : max(1, look.edgeWidth * u)
             }

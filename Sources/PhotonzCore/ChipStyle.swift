@@ -28,7 +28,7 @@ public enum ChipStyle: String, CaseIterable, Codable, Hashable, Sendable {
     case glass
     /// A light card on a soft layered shadow, with an ink stripe.
     case paper
-    /// A graphite plate with its own lit rim, an ink dot, monospaced words.
+    /// A graphite badge with a light inner edge all round and an ink dot.
     case spec
     /// A lit fill like Solid, with small square corners.
     case tag
@@ -68,10 +68,10 @@ public enum ChipStyle: String, CaseIterable, Codable, Hashable, Sendable {
         case .hairline: "A white plate with a fine outline"
         case .glass: "A frosted plate with a bright rim"
         case .paper: "A light card with a colour stripe"
-        case .spec: "A graphite badge with a colour dot"
+        case .spec: "A dark badge with a colour dot"
         case .tag: "A lit tag with small corners"
         case .twotone: "A colour tab beside white"
-        case .highlight: "A highlighter swipe behind the words"
+        case .highlight: "A highlighter band over the words"
         }
     }
 
@@ -100,6 +100,10 @@ public enum ChipStyle: String, CaseIterable, Codable, Hashable, Sendable {
         case .hairline, .paper, .spec, .highlight: false
         }
     }
+
+    /// Spec badge's graphite: a step lighter than a dark window's own rows
+    /// (`#2C2C2E`), so the badge stands off a dark screenshot.
+    static let specPlateHex = "#3A3A3C"
 
     /// The submenu the styles are listed under on an arrow's right-click menu.
     public static let menuTitle = "Chip Style"
@@ -131,7 +135,7 @@ public enum ChipStyle: String, CaseIterable, Codable, Hashable, Sendable {
         case .paper:
             return ("#FFFFFD", nil, InkPlate.darkWordsHex)
         case .spec:
-            return ("#2F2F32", nil, "#F5F5F7")
+            return (Self.specPlateHex, nil, "#F5F5F7")
         case .twotone, .highlight:
             return ("#FFFFFF", nil, InkPlate.darkWordsHex)
         }
@@ -256,55 +260,57 @@ public enum InkPlate {
                        glassContrast: glass.worst)
     }
 
-    /// `glassFor` in markup.js, step for step: white words take a darkened
-    /// tint, dark words a lightened one, whichever moves the colour less, so
-    /// that at `glassOpacity` the words reach 4.8:1 over white AND black.
+    /// `glassFor` in markup.js, step for step. Glass is light frosted
+    /// glass: the picture behind it is frosted and lifted `glassLift` of the
+    /// way to white, and the ink lies over that at `glassOpacity`, with dark
+    /// words. The ink is lightened only as far as the words need to reach
+    /// 4.8:1 over a pure white AND a pure black picture, mixed in light and
+    /// in sRGB numbers both, since the app can composite either way. (It took
+    /// light words on a dimmed picture too until 2026-11-01; three judges
+    /// read that as muddy over a light screenshot and a different chip on
+    /// every picture.)
     static func glassFor(_ ink: [Double]) -> (tint: [Double], darkWords: Bool, worst: Double) {
-        let white = [1.0, 1.0, 1.0], black = [0.0, 0.0, 0.0]
-        let dark = components(darkWordsHex)
-        func over(_ c: [Double], _ bg: [Double]) -> [Double] {
-            (0..<3).map { c[$0] * glassOpacity + bg[$0] * (1 - glassOpacity) }
-        }
-        func okWhite(_ g: [Double]) -> Bool {
-            ratio(over(g, white), white) >= 4.8 && ratio(over(g, black), white) >= 4.8
-        }
-        func okDark(_ g: [Double]) -> Bool {
-            ratio(over(g, white), dark) >= 4.8 && ratio(over(g, black), dark) >= 4.8
-        }
-        var a: ([Double], Double)?
-        var b: ([Double], Double)?
-        var k = 0.0
-        while k <= 1.0001, a == nil {
-            let g = ink.map { $0 * (1 - k) }
-            if okWhite(g) { a = (g, k) }
-            k += 0.01
+        let darkLum = luminance(components(darkWordsHex))
+        func worst(_ g: [Double]) -> Double {
+            glassLuminances(g).map { lumRatio($0, darkLum) }.min() ?? 1
         }
         var m = 0.0
-        while m <= 1.0001, b == nil {
+        while m <= 1.0001 {
             let g = ink.map { $0 + (1 - $0) * m }
-            if okDark(g) { b = (g, m) }
+            if worst(g) >= 4.8 { return (g, true, worst(g)) }
             m += 0.01
         }
-        let darkWords: Bool
-        if let b { darkWords = a.map { b.1 < $0.1 } ?? true } else { darkWords = false }
-        let tint = (darkWords ? b?.0 : a?.0) ?? black
-        let words = darkWords ? dark : white
-        let worst = min(ratio(over(tint, white), words), ratio(over(tint, black), words))
-        return (tint, darkWords, worst)
+        return ([1, 1, 1], true, worst([1, 1, 1]))
     }
 
-    /// How opaque the Glass plate is in the design system's rule: the tint is
-    /// chosen so its words read at this opacity over white and black.
-    public static let glassOpacity = 0.82
+    /// The luminance behind Glass's words with `tint` over a white and over a
+    /// black picture, lifted, mixed in light and in sRGB numbers: the four
+    /// worst cases a picture can make.
+    static func glassLuminances(_ tint: [Double]) -> [Double] {
+        var out: [Double] = []
+        for picture in [1.0, 0.0] {
+            let veiled = picture * (1 - glassLift) + glassLift
+            // In light: the lift and the mix act on light.
+            let light = tint.map { glassOpacity * decode($0) + (1 - glassOpacity) * veiled }
+            out.append(0.2126 * light[0] + 0.7152 * light[1] + 0.0722 * light[2])
+            // In sRGB numbers: the same arithmetic on the written values.
+            out.append(luminance(tint.map { glassOpacity * $0 + (1 - glassOpacity) * veiled }))
+        }
+        return out
+    }
 
-    /// How opaque the app DRAWS Glass. Higher than the rule's 82 percent
-    /// because the app composites in linear light, where 82 percent lets more
-    /// of a white picture through than the design system's sRGB blend does;
-    /// over the 5,472-colour sweep, 95 percent is the least that keeps every
-    /// colour at 4.5:1 over white and black that way, so it is drawn at 95 to
-    /// 97 top to bottom (`ChipStyleTests.sweepIsLegibleInEveryStyle`). The
-    /// tint and its words are the rule's to the hex digit.
-    public static let glassDrawnOpacity = 0.96
+    static func lumRatio(_ x: Double, _ y: Double) -> Double {
+        (max(x, y) + 0.05) / (min(x, y) + 0.05)
+    }
+
+    /// How opaque Glass's tint is: what is left shows the picture behind it,
+    /// frosted and lifted.
+    public static let glassOpacity = 0.4
+    /// How far the picture behind Glass is lifted towards white.
+    public static let glassLift = 0.75
+    /// How soft the picture behind Glass is, in the design system's pixels at
+    /// 12 px type.
+    public static let glassBlur: CGFloat = 4
 
     /// WCAG contrast between two colours, alpha ignored.
     public static func contrast(_ a: RGBA, _ b: RGBA) -> Double {
@@ -373,15 +379,29 @@ public struct ChipLook: Hashable, Sendable {
         public var y: CGFloat
         public var blur: CGFloat
         public var alpha: Double
+        /// The shadow's colour: black unless it is a glow in the plate's own
+        /// colour (Lit tag).
+        public var color: RGBA? = nil
     }
 
-    /// A light rim drawn just inside the plate's edge, brighter at one end.
+    /// A light rim drawn just inside the plate's edge, brighter where the
+    /// light catches it.
     public struct Rim: Hashable, Sendable {
-        /// White's alpha where the light hits and where it fades to.
-        public var start: Double
-        public var end: Double
-        /// Diagonal (top left to bottom right, Glass) or top to bottom (Spec).
+        public struct Stop: Hashable, Sendable {
+            /// How far along the rim's run, 0 to 1.
+            public var location: CGFloat
+            /// White's alpha there.
+            public var alpha: Double
+        }
+        /// White's alpha along the run, first to last.
+        public var stops: [Stop]
+        /// Diagonal (top left to bottom right) or top to bottom (Glass, Spec).
         public var diagonal: Bool
+
+        init(_ stops: [(CGFloat, Double)], diagonal: Bool = false) {
+            self.stops = stops.map { Stop(location: $0.0, alpha: $0.1) }
+            self.diagonal = diagonal
+        }
     }
 
     /// The style's own detail at the front of the chip.
@@ -390,6 +410,23 @@ public struct ChipLook: Hashable, Sendable {
         case stripe(RGBA)
         /// A small round dot (Spec, Two-tone).
         case dot(RGBA)
+    }
+
+    /// What Glass does to the picture behind it before its tint goes over:
+    /// frosts it, and veils it so the words read whatever it was.
+    public struct Frost: Hashable, Sendable {
+        /// Lifted towards white (dark words) rather than dimmed (light ones).
+        public var lifts: Bool
+        /// The share it is dimmed to, or how far it is lifted.
+        public var amount: Double
+        /// How soft, in the design system's pixels at 12 px type.
+        public var blur: CGFloat
+
+        /// One channel of the picture behind, veiled, in whatever numbers
+        /// the compositor mixes in.
+        public func veil(_ value: Double) -> Double {
+            lifts ? value * (1 - amount) + amount : value * amount
+        }
     }
 
     /// A status icon.
@@ -409,15 +446,20 @@ public struct ChipLook: Hashable, Sendable {
     public var rim: Rim?
     /// White's alpha along the plate's top inner edge, 0 for none.
     public var innerHighlight: Double
+    /// Black's alpha along the plate's bottom inner edge, 0 for none (Lit
+    /// tag's bevel).
+    public var innerShade: Double = 0
+    /// White's alpha at the plate's top, fading to nothing `sheenReach` of
+    /// the way down: the soft sheen that makes Glass read as glass, kept
+    /// above the words. 0 for none.
+    public var sheen: Double = 0
+    public static let sheenReach: Double = 0.3
+    /// Glass's frosted picture behind the plate; nil for every other style.
+    public var frost: Frost?
     public var shadows: [Shadow]
     /// A hairline ring just outside the plate, in black at this alpha.
     public var ringAlpha: Double
     public var text: RGBA
-    /// A soft shadow under the words (Glass): dark under white words, a light
-    /// lift under dark ones.
-    public var textShadow: Bool
-    public var textShadowIsLight = false
-    public var monospaced: Bool
     /// Corners drawn as a continuous curve rather than a circle's quarter.
     public var continuousCorners: Bool
     public var accent: Accent?
@@ -464,7 +506,7 @@ public struct ChipLook: Hashable, Sendable {
         var look = ChipLook(style: style, fillTop: base, fillBottom: base,
                             edge: edge.flatMap { RGBA(hex: $0) }, edgeWidth: 0, rim: nil,
                             innerHighlight: 0, shadows: [], ringAlpha: 0,
-                            text: RGBA(hex: text) ?? white, textShadow: false, monospaced: false,
+                            text: RGBA(hex: text) ?? white,
                             continuousCorners: false, accent: nil, tab: nil, swipe: nil,
                             marker: nil, textStart: nil)
         switch style {
@@ -483,15 +525,25 @@ public struct ChipLook: Hashable, Sendable {
         case .hairline:
             look.edgeWidth = 1
         case .glass:
-            // One tint, a touch more see-through at the top, as markup.css
-            // draws it (80 to 84 percent there).
-            look.fillTop = base.map { var c = $0; c.a = InkPlate.glassDrawnOpacity - 0.01; return c }
-            look.fillBottom = base.map { var c = $0; c.a = InkPlate.glassDrawnOpacity + 0.01; return c }
-            look.textShadowIsLight = look.text.hexString == InkPlate.darkWordsHex
-            look.rim = Rim(start: 0.7, end: 0.45, diagonal: true)
-            look.innerHighlight = 0.3
-            look.shadows = [Shadow(y: 4, blur: 12, alpha: 0.22), Shadow(y: 1, blur: 2, alpha: 0.16)]
-            look.textShadow = true
+            // Frosted glass: the picture behind shows through the tint,
+            // softened and veiled (`Frost`, drawn by the renderer, which is
+            // the one place that can see the picture). Over it a sheen on the
+            // upper half, a rim of light all round that is brightest along
+            // the top and catches again along the bottom, and a hairline ring
+            // that holds the edge on a white picture.
+            // Light words only if they were painted by hand: the frost then
+            // dims rather than lifts, so they keep a chance of reading.
+            let lightWords = look.text.luminance > 0.5
+            look.fillTop = base.map { var c = $0; c.a = InkPlate.glassOpacity; return c }
+            look.fillBottom = look.fillTop
+            look.frost = Frost(lifts: !lightWords, amount: lightWords ? 0.3 : InkPlate.glassLift,
+                               blur: InkPlate.glassBlur)
+            look.rim = Rim([(0, 0.62), (0.42, 0.14), (0.72, 0.14), (1, 0.36)])
+            // Soft enough to frost, clear enough that what is behind still
+            // reads as something there.
+            look.sheen = 0.16
+            look.ringAlpha = 0.14
+            look.shadows = [Shadow(y: 3, blur: 10, alpha: 0.18), Shadow(y: 1, blur: 2, alpha: 0.12)]
             look.continuousCorners = true
             look.edgeWidth = 1
         case .paper:
@@ -503,21 +555,28 @@ public struct ChipLook: Hashable, Sendable {
                 look.textStart = 13
             }
         case .spec:
-            look.fillTop = base.map { $0.mixed(with: white, 0.03) }
-            look.fillBottom = base.map { $0.mixed(with: black, 0.08) }
-            look.rim = Rim(start: 0.34, end: 0.06, diagonal: false)
-            look.ringAlpha = 0.65
-            look.shadows = [Shadow(y: 3, blur: 10, alpha: 0.35)]
-            look.monospaced = true
+            // A dark HUD badge, like the Mac's own dark popovers: graphite a
+            // step lighter than a dark window's rows, a light inner edge all
+            // the way round so it stands off a dark picture, a dark outer
+            // line so it stands off a light one. The words are the system
+            // face: a judge read the monospace as a terminal.
+            look.fillTop = base.map { $0.mixed(with: white, 0.05) }
+            look.fillBottom = base.map { $0.mixed(with: black, 0.04) }
+            look.rim = Rim([(0, 0.32), (0.5, 0.14), (1, 0.13)])
+            look.ringAlpha = 0.6
+            look.shadows = [Shadow(y: 3, blur: 10, alpha: 0.32)]
             look.edgeWidth = 1
             if marker == .accent {
                 // A dark ink would vanish on graphite: its dot is lifted.
-                let dot = InkPlate.contrast(inkRGBA, RGBA(hex: "#2F2F32") ?? black) < 2
+                let dot = InkPlate.contrast(inkRGBA, RGBA(hex: ChipStyle.specPlateHex) ?? black) < 2
                     ? inkRGBA.mixed(with: white, 0.55) : inkRGBA
                 look.accent = .dot(dot)
                 look.textStart = 18
             }
         case .tag:
+            // A lit fill like Solid's with small square corners, as approved.
+            // (A bevel and then a glow in its own colour were tried on
+            // 2026-11-01; judges read them as dated and as a smudge.)
             look.fillTop = base.map { $0.mixed(with: white, 0.05) }
             look.fillBottom = base.map { $0.mixed(with: black, 0.06) }
             look.innerHighlight = 0.5
@@ -539,7 +598,7 @@ public struct ChipLook: Hashable, Sendable {
         case .highlight:
             look.ringAlpha = 0.12
             look.shadows = [Shadow(y: 2, blur: 7, alpha: 0.15)]
-            look.swipe = inkRGBA.mixed(with: white, 0.58)
+            look.swipe = inkRGBA.mixed(with: white, 0.6)
             look.edgeWidth = 1
         }
         if marker.isStatus, let meaning = marker.meaningHex.flatMap({ RGBA(hex: $0) }),
@@ -610,15 +669,30 @@ public struct ChipLook: Hashable, Sendable {
             out.icon = CGRect(x: cx - size / 2, y: rect.midY - size / 2, width: size, height: size)
         }
         if swipe != nil {
-            let left = rect.minX + 3 * k + leadRoom
-            let right = rect.maxX - 3 * k
-            let tilt = min((right - left) * 0.02, 1.5 * u)
-            let top = rect.minY + rect.height * 0.34
-            let bottom = rect.minY + rect.height * 0.80
-            out.swipe = [CGPoint(x: left, y: top + tilt), CGPoint(x: right, y: top - tilt),
-                         CGPoint(x: right, y: bottom - tilt), CGPoint(x: left, y: bottom + tilt)]
+            // Level and whole, the way a highlighter pen marks a line of
+            // text: over every letter from above the capitals to below the
+            // descenders, a hair past the first and last, with the white
+            // plate a narrow margin round it. (A tilted band, then one across
+            // the lower half of the letters, both read to judges as a
+            // rendering bug, as if the words were struck through.)
+            let overhang = 2 * u
+            let left = rect.minX + padding + leadRoom - overhang
+            let right = rect.maxX - padding + overhang
+            let top = rect.midY - 0.56 * fontSize
+            let bottom = rect.midY + 0.56 * fontSize
+            out.swipe = [CGPoint(x: left, y: top), CGPoint(x: right, y: top),
+                         CGPoint(x: right, y: bottom), CGPoint(x: left, y: bottom)]
         }
         return out
+    }
+
+    /// Glass's plate as one opaque colour, for where there is no picture to
+    /// frost (a style tile, the bubble while typing): its tint over the veil
+    /// laid on a mid grey picture. Nil for every other style.
+    public var frostStandIn: RGBA? {
+        guard let frost, let tint = fillBottom else { return nil }
+        let veiled = frost.veil(0.5)
+        return tint.over(RGBA(r: veiled, g: veiled, b: veiled))
     }
 
     /// The worst contrast the words have against what is directly behind them,
@@ -629,9 +703,23 @@ public struct ChipLook: Hashable, Sendable {
         var behind: [RGBA] = []
         if let top = fillTop, let bottom = fillBottom {
             for share in [0.25, 0.75] {
-                let plate = top.mixed(with: bottom, share)
-                behind.append(plate.over(backdrop))
-                behind.append(plate.overInLinearLight(backdrop))
+                var plate = top.mixed(with: bottom, share)
+                // The sheen, where it still lies at this depth.
+                let shine = sheen * max(0, 1 - share / Self.sheenReach)
+                if shine > 0 { plate = plate.mixed(with: RGBA(r: 1, g: 1, b: 1, a: plate.a), shine) }
+                if let frost {
+                    // The picture veiled first, in the numbers each way of
+                    // mixing works in.
+                    let inNumbers = RGBA(r: frost.veil(backdrop.r), g: frost.veil(backdrop.g),
+                                         b: frost.veil(backdrop.b))
+                    func lit(_ v: Double) -> Double { InkPlate.encode(frost.veil(InkPlate.decode(v))) }
+                    let inLight = RGBA(r: lit(backdrop.r), g: lit(backdrop.g), b: lit(backdrop.b))
+                    behind.append(plate.over(inNumbers))
+                    behind.append(plate.overInLinearLight(inLight))
+                } else {
+                    behind.append(plate.over(backdrop))
+                    behind.append(plate.overInLinearLight(backdrop))
+                }
             }
         } else {
             behind.append(backdrop)
@@ -644,14 +732,18 @@ public struct ChipLook: Hashable, Sendable {
     /// apart in a test.
     var signature: String {
         [String(format: "%.2f", Double(style.roundness)), fillTop?.hexString ?? "-", fillBottom?.hexString ?? "-",
-         edge?.hexString ?? "-", rim.map { "\($0.diagonal)" } ?? "-", "\(shadows.count)",
-         "\(ringAlpha)", text.hexString, "\(monospaced)", "\(continuousCorners)",
+         edge?.hexString ?? "-", rim.map { "\($0.diagonal)\($0.stops.count)" } ?? "-", "\(shadows.count)",
+         "\(innerShade)", "\(sheen)", frost.map { "\($0.lifts)" } ?? "-",
+         "\(ringAlpha)", text.hexString, "\(continuousCorners)",
          accent.map { "\($0)" } ?? "-", tab?.hexString ?? "-", swipe?.hexString ?? "-"]
             .joined(separator: "|")
     }
 }
 
 extension RGBA {
+    /// WCAG relative luminance, alpha ignored.
+    var luminance: Double { InkPlate.luminance([r, g, b]) }
+
     /// This colour moved `amount` of the way to `other`, in sRGB, the way CSS's
     /// `color-mix(in srgb, ...)` mixes. Alpha follows too.
     func mixed(with other: RGBA, _ amount: Double) -> RGBA {
@@ -684,6 +776,12 @@ extension AnnotationContent {
                                 edge: captionBorder?.hex, text: captionTextHex, marker: chipMarker)
     }
 
+    /// Whether this caption's chip is frosted glass, which the renderer draws
+    /// from the picture behind the layer.
+    public var drawsFrostedChip: Bool {
+        chipStyle == .glass && hasCaption
+    }
+
     /// The style a tile row shows as on: the pill from before styles is Today.
     public var shownChipStyle: ChipStyle { chipStyle ?? .today }
 
@@ -692,27 +790,19 @@ extension AnnotationContent {
         chipLook?.leadWidth(padding: captionPadding, fontSize: captionFontSize) ?? 0
     }
 
-    /// The family the words are set in: Spec badge is monospaced.
-    public var captionFontName: String {
-        chipStyle == .spec ? "SF Mono" : "SF Pro"
-    }
+    /// The family the words are set in: the system face in every style.
+    /// (Spec badge was monospaced until a judge read it as a terminal.)
+    public var captionFontName: String { "SF Pro" }
 
     /// How heavy the words are: a styled chip sets them semibold, as the
-    /// design system does (600), Spec badge's monospace medium. The pill from
-    /// before styles keeps its regular words.
+    /// design system does (600). The pill from before styles keeps its
+    /// regular words.
     public var captionFontWeight: TextWeight {
-        switch chipStyle {
-        case nil: .regular
-        case .spec?: .medium
-        case _?: .semibold
-        }
+        chipStyle == nil ? .regular : .semibold
     }
 
-    /// The words' size: the caption's own, and Spec badge's monospace a little
-    /// smaller so it is not the widest chip on the picture.
-    public var captionTypeSize: CGFloat {
-        chipStyle == .spec ? captionFontSize * 0.88 : captionFontSize
-    }
+    /// The words' size: the caption's own, in every style.
+    public var captionTypeSize: CGFloat { captionFontSize }
 
     /// Room kept round the chip for its drop shadow, so the shadow never
     /// clips at the layer's edge: the pill's own 12 points, or more for a

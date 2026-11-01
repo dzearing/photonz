@@ -12,23 +12,42 @@ import PhotonzCore
 /// because the layer is rasterised on its own and an export has to match it.
 enum ChipRasterizer {
 
+    /// The chip's plate: its rectangle centred at `anchor`, with the style's
+    /// corners.
+    static func plate(_ look: ChipLook, at anchor: CGPoint, chipSize: CGSize,
+                      cornerRadius: CGFloat) -> (rect: CGRect, path: CGPath) {
+        let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
+                          width: chipSize.width, height: chipSize.height)
+        let radius = min(max(cornerRadius, 0), min(rect.width, rect.height) / 2)
+        let path = look.continuousCorners
+            ? continuousRoundedRect(rect, radius: radius)
+            : CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
+        return (rect, path)
+    }
+
     /// Draws the chip centred at `anchor`.
     ///
     /// `edgeWidth` overrides the style's own edge width; the Today style passes
     /// the caption's arrow-matched border width, exactly as the old pill drew.
+    ///
+    /// Glass's plate is see-through: the renderer lays the frosted picture
+    /// under it (`DocumentRenderer`, `AnnotationRasterizer.frostMask`). Where
+    /// there is no picture (a style tile), `standInFrost` draws its plate as
+    /// one opaque colour instead (`ChipLook.frostStandIn`).
     static func draw(_ string: String, look: ChipLook, at anchor: CGPoint, chipSize: CGSize,
                      fontSize: CGFloat, padding: CGFloat, fontName: String,
                      typeSize: CGFloat? = nil, weight: TextWeight = .semibold,
                      cornerRadius: CGFloat, edgeWidth: CGFloat? = nil,
+                     standInFrost: Bool = false,
                      in context: CGContext) {
+        var look = look
+        if standInFrost, let opaque = look.frostStandIn {
+            look.fillTop = opaque
+            look.fillBottom = opaque
+        }
         let ppp = PillRasterizer.pixelsPerPoint(of: context)
         let u = ChipLook.unit(fontSize: fontSize)
-        let rect = CGRect(x: anchor.x - chipSize.width / 2, y: anchor.y - chipSize.height / 2,
-                          width: chipSize.width, height: chipSize.height)
-        let radius = min(max(cornerRadius, 0), min(rect.width, rect.height) / 2)
-        let plate = look.continuousCorners
-            ? continuousRoundedRect(rect, radius: radius)
-            : CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
+        let (rect, plate) = Self.plate(look, at: anchor, chipSize: chipSize, cornerRadius: cornerRadius)
         let layout = look.layout(in: rect, fontSize: fontSize, padding: padding)
 
         // Shadows and ring sit outside the plate, under it.
@@ -37,7 +56,8 @@ enum ChipRasterizer {
                 context.saveGState()
                 context.setShadow(offset: CGSize(width: 0, height: -shadow.y * u * ppp),
                                   blur: shadow.blur * u * ppp,
-                                  color: CGColor(gray: 0, alpha: shadow.alpha))
+                                  color: shadow.color.map { cg($0, alpha: shadow.alpha) }
+                                      ?? CGColor(gray: 0, alpha: shadow.alpha))
                 context.setFillColor(cg(solidish, alpha: max(solidish.a, 0.01)))
                 context.addPath(plate)
                 context.fillPath()
@@ -74,12 +94,33 @@ enum ChipRasterizer {
             context.setFillColor(cg(colour))
             context.fill(tab)
         }
-        if let swipe = layout.swipe, let colour = look.swipe, let first = swipe.first {
+        if let swipe = layout.swipe, let colour = look.swipe, !swipe.isEmpty {
+            // A level band with softly rounded ends, as a broad pen leaves it.
+            let xs = swipe.map(\.x), ys = swipe.map(\.y)
+            let band = CGRect(x: xs.min() ?? 0, y: ys.min() ?? 0,
+                              width: (xs.max() ?? 0) - (xs.min() ?? 0), height: (ys.max() ?? 0) - (ys.min() ?? 0))
+            let round = min(band.height * 0.3, 2.5 * u)
             context.setFillColor(cg(colour))
-            context.move(to: first)
-            for point in swipe.dropFirst() { context.addLine(to: point) }
-            context.closePath()
+            context.addPath(CGPath(roundedRect: band, cornerWidth: round, cornerHeight: round, transform: nil))
             context.fillPath()
+        }
+        if look.sheen > 0,
+           let gradient = CGGradient(colorsSpace: sRGB,
+                                     colors: [CGColor(gray: 1, alpha: look.sheen), CGColor(gray: 1, alpha: 0)] as CFArray,
+                                     locations: [0, 1]) {
+            // Glass's sheen: light along the top, gone before the words.
+            context.drawLinearGradient(gradient, start: CGPoint(x: rect.midX, y: rect.minY),
+                                       end: CGPoint(x: rect.midX, y: rect.minY + rect.height * ChipLook.sheenReach),
+                                       options: [])
+        }
+        if look.innerShade > 0 {
+            // A pixel of shade along the bottom, following the corners: the
+            // plate less itself moved up a pixel (Lit tag's bevel).
+            context.setFillColor(CGColor(gray: 0, alpha: look.innerShade))
+            context.addPath(plate)
+            var up = CGAffineTransform(translationX: 0, y: -max(1 * u, 1 / ppp))
+            if let moved = plate.copy(using: &up) { context.addPath(moved) }
+            context.fillPath(using: .evenOdd)
         }
         if look.innerHighlight > 0 {
             // A one pixel band of light along the top, following the corners:
@@ -95,12 +136,9 @@ enum ChipRasterizer {
             context.setLineWidth(2 * u)
             context.replacePathWithStrokedPath()
             context.clip()
-            let stops: [(CGFloat, Double)] = rim.diagonal
-                ? [(0, rim.start), (0.35, 0.14), (0.55, 0), (0.8, 0.2), (1, rim.end)]
-                : [(0, rim.start), (0.6, 0.10), (1, rim.end)]
             if let gradient = CGGradient(colorsSpace: sRGB,
-                                         colors: stops.map { CGColor(gray: 1, alpha: $0.1) } as CFArray,
-                                         locations: stops.map(\.0)) {
+                                         colors: rim.stops.map { CGColor(gray: 1, alpha: $0.alpha) } as CFArray,
+                                         locations: rim.stops.map(\.location)) {
                 let end = rim.diagonal ? CGPoint(x: rect.maxX, y: rect.maxY) : CGPoint(x: rect.minX, y: rect.maxY)
                 context.drawLinearGradient(gradient, start: CGPoint(x: rect.minX, y: rect.minY), end: end,
                                            options: [])
@@ -147,12 +185,6 @@ enum ChipRasterizer {
         let textRect = CGRect(x: x, y: anchor.y - textSize.height / 2,
                               width: textSize.width, height: textSize.height)
         context.saveGState()
-        if look.textShadow {
-            context.setShadow(offset: CGSize(width: 0, height: -1 * u * ppp),
-                              blur: (look.textShadowIsLight ? 1 : 2) * u * ppp,
-                              color: look.textShadowIsLight ? CGColor(gray: 1, alpha: 0.35)
-                                  : CGColor(gray: 0, alpha: 0.45))
-        }
         context.translateBy(x: textRect.minX, y: textRect.maxY)
         context.scaleBy(x: 1, y: -1)
         context.draw(glyphs, in: CGRect(origin: .zero, size: textRect.size))

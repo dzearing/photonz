@@ -232,6 +232,14 @@ struct ChipStyleRenderingTests {
                 (column, Self.arrow(style: row.1, ink: "#ff375f"))
             })
         }, store: store)
+        // The four styles reworked after the judge's first pass, beside the
+        // two it scored highest, in two inks, close up.
+        let reworked: [ChipStyle] = [.hairline, .paper, .glass, .spec, .tag, .highlight]
+        try sheet(folder + "/chip-styles-reworked.png", rows: reworked.flatMap { style in
+            ["#ff375f", "#30d158"].map { ink in
+                ("\(style.title), \(ink)", columns.map { ($0, Self.arrow(style: style, ink: ink)) })
+            }
+        }, store: store)
         // Every style in four inks, on the photo.
         try sheet(folder + "/chip-styles-inks.png", rows: ChipStyle.allCases.map { style in
             (style.title, ["#0a84ff", "#30d158", "#ffd60a", "#1d1d1f"].map { ink in

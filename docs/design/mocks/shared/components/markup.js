@@ -21,22 +21,32 @@
     for (let k = 0; k <= 1.0001; k += .01) { const d = c.map(v => v * (1 - k)); if (ratio(d, against) >= target) return [d, k]; }
     return [[0, 0, 0], 1];
   }
-  // Glass lets the picture through, so its plate is judged over the worst
-  // picture behind it: at GLASS_ALPHA opacity the words must reach 4.8:1 over
-  // pure white AND pure black. White words take a darkened tint, dark words a
-  // lightened one, whichever moves the colour less.
-  const GLASS_ALPHA = .82, BLACK = [0, 0, 0];
-  const over = (c, bg, a) => c.map((v, i) => v * a + bg[i] * (1 - a));
+  // Glass is light frosted glass: the picture behind it is frosted and lifted
+  // GLASS_LIFT of the way to white, and the ink lies over that at GLASS_ALPHA,
+  // with dark words. The ink is lightened only as far as the words need to
+  // reach 4.8:1 over a pure white AND a pure black picture, mixed in light and
+  // in sRGB numbers both (the app composites either way).
+  const GLASS_ALPHA = .4, GLASS_LIFT = .75, GLASS_BLUR = 4;
+  const dec = v => (v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+  const lumRatio = (x, y) => (Math.max(x, y) + .05) / (Math.min(x, y) + .05);
+  function glassLums(g) {
+    const out = [];
+    for (const pic of [1, 0]) {
+      const veiled = pic * (1 - GLASS_LIFT) + GLASS_LIFT;
+      const light = g.map(v => GLASS_ALPHA * dec(v) + (1 - GLASS_ALPHA) * veiled);
+      out.push(.2126 * light[0] + .7152 * light[1] + .0722 * light[2]);
+      out.push(lum(g.map(v => GLASS_ALPHA * v + (1 - GLASS_ALPHA) * veiled)));
+    }
+    return out;
+  }
   function glassFor(ink) {
-    const okWhite = g => ratio(over(g, WHITE, GLASS_ALPHA), WHITE) >= 4.8 && ratio(over(g, BLACK, GLASS_ALPHA), WHITE) >= 4.8;
-    const okDark = g => ratio(over(g, WHITE, GLASS_ALPHA), DARK) >= 4.8 && ratio(over(g, BLACK, GLASS_ALPHA), DARK) >= 4.8;
-    let a = null, b = null;
-    for (let k = 0; k <= 1.0001 && !a; k += .01) { const g = ink.map(v => v * (1 - k)); if (okWhite(g)) a = [g, k]; }
-    for (let m = 0; m <= 1.0001 && !b; m += .01) { const g = ink.map(v => v + (1 - v) * m); if (okDark(g)) b = [g, m]; }
-    const darkWords = b && (!a || b[1] < a[1]);
-    const [g] = darkWords ? b : a;
-    const worst = Math.min(...[WHITE, BLACK].map(bg => ratio(over(g, bg, GLASS_ALPHA), darkWords ? DARK : WHITE)));
-    return { glass: rgb2hex(g), onGlass: darkWords ? "#1d1d1f" : "#ffffff", glassContrast: worst };
+    const darkLum = lum(DARK);
+    const worst = g => Math.min(...glassLums(g).map(L => lumRatio(L, darkLum)));
+    for (let m = 0; m <= 1.0001; m += .01) {
+      const g = ink.map(v => v + (1 - v) * m);
+      if (worst(g) >= 4.8) return { glass: rgb2hex(g), onGlass: "#1d1d1f", glassContrast: worst(g) };
+    }
+    return { glass: "#ffffff", onGlass: "#1d1d1f", glassContrast: worst([1, 1, 1]) };
   }
   function plateFor(hex) {
     const ink = hex2rgb(hex);
@@ -57,7 +67,6 @@
     el.style.setProperty("--mu-ink-text", p.inkText);
     el.style.setProperty("--mu-glass", p.glass);
     el.style.setProperty("--mu-on-glass", p.onGlass);
-    el.style.setProperty("--mu-glass-shadow", p.onGlass === "#ffffff" ? "0 1px 2px rgba(0,0,0,.45)" : "0 1px 1px rgba(255,255,255,.35)");
     return p;
   }
 
@@ -204,7 +213,7 @@
     });
   }
 
-  PZ.markup = { plateFor, glassFor: hex => glassFor(hex2rgb(hex)), GLASS_ALPHA, setInk, icon, markerIcon, arrow, paint, contrast: (a, b) => ratio(hex2rgb(a), hex2rgb(b)), CHIPS, ARROWS, MARKERS, PALETTE };
+  PZ.markup = { plateFor, glassFor: hex => glassFor(hex2rgb(hex)), GLASS_ALPHA, GLASS_LIFT, GLASS_BLUR, setInk, icon, markerIcon, arrow, paint, contrast: (a, b) => ratio(hex2rgb(a), hex2rgb(b)), CHIPS, ARROWS, MARKERS, PALETTE };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => paint());
   else paint();
 })();

@@ -273,8 +273,10 @@ public enum AnnotationRasterizer {
         }
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
+        // Moved about on its own, with no picture under it to frost: Glass
+        // stands in as one opaque colour until the drag lands.
         drawChip(text, of: annotation, at: CGPoint(x: size.width / 2, y: size.height / 2),
-                 chipSize: chip, in: context)
+                 chipSize: chip, standInFrost: true, in: context)
         return context.makeImage().map { ($0, size) }
     }
 
@@ -297,11 +299,44 @@ public enum AnnotationRasterizer {
         drawChip(text, of: annotation, at: center, chipSize: chipSize, in: context)
     }
 
+    /// Where a Glass chip frosts the picture behind it: its plate in opaque
+    /// white on clear, in exactly the bitmap `rasterize` draws the arrow in
+    /// (same size, padding and scale), so the renderer can carry the two
+    /// through the same placement. Nil when the caption is not on Glass.
+    public static func frostMask(_ annotation: AnnotationContent, size: CGSize,
+                                 scale: CGFloat = 1) -> CGImage? {
+        guard annotation.drawsFrostedChip, let look = annotation.chipLook,
+              scale > 0, scale.isFinite else { return nil }
+        let pad = annotation.strokeOutset
+        let width = Int(((size.width + 2 * pad) * scale).rounded())
+        let height = Int(((size.height + 2 * pad) * scale).rounded())
+        guard width >= 1, height >= 1,
+              let context = CGContext(data: nil, width: width, height: height,
+                                      bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            return nil
+        }
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        if pad != 0 { context.translateBy(x: pad, y: pad) }
+        let text = CaptionMetrics.committedText(annotation.caption ?? "")
+        guard !text.isEmpty else { return nil }
+        let chipSize = CaptionMetrics.pillSize(for: text, in: annotation)
+        let center = annotation.captionPillCenter(forPillSize: chipSize)
+        let plate = ChipRasterizer.plate(look, at: center, chipSize: chipSize,
+                                         cornerRadius: annotation.captionCornerRadius(pillHeight: chipSize.height))
+        context.setFillColor(CGColor(gray: 1, alpha: 1))
+        context.addPath(plate.path)
+        context.fillPath()
+        return context.makeImage()
+    }
+
     /// One caption chip: in its chip style when it has one
     /// (`ChipRasterizer`), otherwise the pill every caption wore before
     /// there were styles, in its three stored colours.
     static func drawChip(_ text: String, of annotation: AnnotationContent, at center: CGPoint,
-                         chipSize: CGSize, in context: CGContext) {
+                         chipSize: CGSize, standInFrost: Bool = false, in context: CGContext) {
         let radius = annotation.captionCornerRadius(pillHeight: chipSize.height)
         if let look = annotation.chipLook {
             ChipRasterizer.draw(text, look: look, at: center, chipSize: chipSize,
@@ -313,6 +348,7 @@ public enum AnnotationRasterizer {
                                 cornerRadius: radius,
                                 edgeWidth: annotation.chipStyle == .today
                                     ? annotation.drawnCaptionBorderWidth : nil,
+                                standInFrost: standInFrost,
                                 in: context)
             return
         }
@@ -351,7 +387,7 @@ extension AnnotationRasterizer {
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
         drawChip(text, of: content, at: CGPoint(x: size.width / 2, y: size.height / 2),
-                 chipSize: chip, in: context)
+                 chipSize: chip, standInFrost: true, in: context)
         return context.makeImage()
     }
 }

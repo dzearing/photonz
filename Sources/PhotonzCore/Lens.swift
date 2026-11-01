@@ -297,6 +297,15 @@ extension Layer {
                 ? frame.standardized
                 : frame.standardized.applying(transform.affineTransform(around: turnPivot))
             return box.insetBy(dx: -reach, dy: -reach)
+        case .annotation(let annotation) where annotation.drawsFrostedChip:
+            // A Glass chip reads the canvas under the arrow's box (the chip
+            // is inside it) and a blur's reach past that.
+            let blur = InkPlate.glassBlur * ChipLook.unit(fontSize: annotation.captionFontSize)
+            let box = transform.isIdentity
+                ? localBounds.standardized
+                : localBounds.standardized.applying(transform.affineTransform(around: turnPivot))
+            let reach = (blur * 3 + annotation.captionShadowSlack).rounded(.up)
+            return box.insetBy(dx: -reach, dy: -reach)
         default:
             // Glass reads the canvas under the box it is drawn in, and a
             // blur's reach past that: three sigma, the same tail every other
@@ -320,7 +329,9 @@ extension LayerContent {
         // Sound draws nothing, so it reads nothing either.
         case .sound: false
         case .zoomCallout, .lens: true
-        case .image, .text, .annotation, .measure, .collage, .group, .path, .paint: false
+        // A caption on frosted Glass frosts the picture behind its chip.
+        case .annotation(let annotation): annotation.drawsFrostedChip
+        case .image, .text, .measure, .collage, .group, .path, .paint: false
         }
     }
 }

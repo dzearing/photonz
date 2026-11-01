@@ -28,11 +28,9 @@
   --mu-plate: #d62e50;      /* the chip's plate, derived for legibility */
   --mu-on-plate: #ffffff;   /* the words on that plate */
   --mu-ink-text: #db2f52;   /* ink-coloured words on a white plate */
-  --mu-glass: #cc2c4c;      /* Glass's tint, judged over white AND black */
-  --mu-on-glass: #ffffff;
-  --mu-glass-shadow: 0 1px 2px rgba(0,0,0,.45);
+  --mu-glass: #ff375f;      /* Glass's tint, judged over white AND black */
+  --mu-on-glass: #1d1d1f;
   --mu-chip-font: 600 12px/1 -apple-system, "SF Pro Text", system-ui, sans-serif;
-  --mu-chip-mono: 500 11.5px/1 "SF Mono", ui-monospace, Menlo, monospace;
 }
 
 /* ---------- The chip ---------- */
@@ -60,14 +58,18 @@
 .mu-chip[data-chip="hairline"] { background: #fff; color: var(--mu-ink-text);
   border: 1px solid var(--mu-ink); border-radius: 5px; padding: 5px 8px; }
 
-/* 5. Glass: frosted plate, gradient rim that catches the light */
+/* 5. Glass: light frosted glass on every picture. The picture behind is
+   frosted and lifted 75% of the way to white, the ink lies over it at 40%,
+   dark words; a sheen along the top, a rim of light brightest at the top and
+   catching again at the bottom, a hairline ring (markup.md section 3). */
 .mu-chip[data-chip="glass"] { color: var(--mu-on-glass); border-radius: 10px; padding: 6px 10px; border: 1px solid transparent;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--mu-glass) 80%, transparent), color-mix(in srgb, var(--mu-glass) 84%, transparent)) padding-box,
-    linear-gradient(135deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,.14) 35%, rgba(255,255,255,0) 55%, rgba(255,255,255,.2) 80%, rgba(255,255,255,.6) 100%) border-box;
-  -webkit-backdrop-filter: blur(6px) saturate(180%); backdrop-filter: blur(6px) saturate(180%);
-  box-shadow: inset 0 1px 1px rgba(255,255,255,.3), 0 6px 18px rgba(0,0,0,.2), 0 1px 2px rgba(0,0,0,.16);
-  text-shadow: var(--mu-glass-shadow); }
+    linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0) 30%) padding-box,
+    linear-gradient(color-mix(in srgb, var(--mu-glass) 40%, transparent), color-mix(in srgb, var(--mu-glass) 40%, transparent)) padding-box,
+    linear-gradient(rgba(255,255,255,.75), rgba(255,255,255,.75)) padding-box,
+    linear-gradient(180deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.14) 42%, rgba(255,255,255,.14) 72%, rgba(255,255,255,.36) 100%) border-box;
+  -webkit-backdrop-filter: blur(4px) saturate(150%); backdrop-filter: blur(4px) saturate(150%);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.14), 0 3px 10px rgba(0,0,0,.18), 0 1px 2px rgba(0,0,0,.12); }
 
 /* 6. Paper: a light card on a soft layered shadow, an ink stripe as its accent */
 .mu-chip[data-chip="paper"] { background: #fffffd; color: #1d1d1f; border-radius: 6px; padding-left: 12px;
@@ -75,20 +77,23 @@
 .mu-chip[data-chip="paper"]::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 3px;
   border-radius: 2px; background: var(--mu-ink); }
 
-/* 7. Spec badge: graphite plate with its own rim, an ink dot, monospaced */
-.mu-chip[data-chip="spec"] { color: #f5f5f7; font: var(--mu-chip-mono); border-radius: 6px; padding: 5px 8px 5px 18px;
+/* 7. Spec badge: a dark HUD badge. Graphite a step lighter than a dark
+   window's rows (#2c2c2e), a light inner edge all the way round so it stands
+   off a dark picture, a dark outer line for a light one, an ink dot. The
+   system face, not monospace (a judge read monospace as a terminal). */
+.mu-chip[data-chip="spec"] { color: #f5f5f7; border-radius: 6px; padding: 5px 8px 5px 18px;
   border: 1px solid transparent;
   background:
-    linear-gradient(180deg, #343437, #29292c) padding-box,
-    linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.10) 60%, rgba(255,255,255,.06)) border-box;
-  box-shadow: 0 0 0 .5px rgba(0,0,0,.65), 0 3px 10px rgba(0,0,0,.35); }
+    linear-gradient(180deg, #444446, #38383a) padding-box,
+    linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,.14) 50%, rgba(255,255,255,.13)) border-box;
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.6), 0 3px 10px rgba(0,0,0,.32); }
 .mu-chip[data-chip="spec"]::before { content: ""; position: absolute; left: 7px; top: 50%; width: 6px; height: 6px;
   margin-top: -3px; border-radius: 50%; background: var(--mu-ink); }
 
 /* 8. Lit tag: lit fill like 2, small square corners */
-.mu-chip[data-chip="tag"] { color: var(--mu-on-plate); border-radius: 4px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--mu-plate) 90%, #fff), var(--mu-plate));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 2px 6px rgba(0,0,0,.22); }
+.mu-chip[data-chip="tag"] { color: var(--mu-on-plate); border-radius: 3px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mu-plate) 95%, #fff), color-mix(in srgb, var(--mu-plate) 94%, #000));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 6px rgba(0,0,0,.22); }
 
 /* 9. Two-tone badge: an ink tab holds the accent or marker, dark words on white */
 .mu-chip[data-chip="twotone"] { color: #1d1d1f; border-radius: 6px; padding-left: 30px;
@@ -97,10 +102,14 @@
 .mu-chip[data-chip="twotone"]::before { content: ""; position: absolute; left: 8px; top: 50%; width: 6px; height: 6px;
   margin-top: -3px; border-radius: 50%; background: var(--mu-on-plate); opacity: .9; }
 
-/* 10. Highlighter: a swipe of ink behind dark words on a white plate */
+/* 10. Highlighter: a level band of ink over the whole line of words, from
+   above the capitals to below the descenders and a hair past each end, on a
+   white plate with a narrow margin round it. (A tilted band, then one across
+   the lower half of the letters, read to judges as a rendering bug.) */
 .mu-chip[data-chip="highlight"] { color: #1d1d1f; border-radius: 4px;
   background:
-    linear-gradient(176deg, transparent 0 30%, color-mix(in srgb, var(--mu-ink) 42%, #fff) 30% 84%, transparent 84%) 4px 0 / calc(100% - 8px) 100% no-repeat,
+    linear-gradient(color-mix(in srgb, var(--mu-ink) 40%, #fff), color-mix(in srgb, var(--mu-ink) 40%, #fff))
+      center / calc(100% - 14px) 1.12em no-repeat,
     #fff;
   box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 2px 7px rgba(0,0,0,.15); }
 

@@ -101,13 +101,13 @@ struct ChipInkTests {
         #expect(a.captionTextHex.uppercased() == ChipStyle.solid.parts(forInk: "#0A84FF").text.uppercased())
     }
 
-    @Test("A fill painted by hand on Glass that loses the words is called out")
-    func glassFillByHand() {
-        // Blue takes dark words on a lightened tint; a dark fill painted
-        // under them loses them.
-        var a = captioned("#0A84FF", style: .glass)
+    @Test("Words painted by hand on Glass that lose the frosted plate are called out")
+    func glassWordsByHand() {
+        // Glass is light frosted glass with dark words; white words painted
+        // by hand over its light green cannot read.
+        var a = captioned("#30D158", style: .glass)
         #expect(a.captionLegibilityNote == nil)
-        a.setCaptionPartByHand(.fill, hex: "#2C2C2E")
+        a.setCaptionPartByHand(.text, hex: "#FFFFFF")
         #expect(a.captionLegibilityNote != nil)
     }
 

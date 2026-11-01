@@ -1,0 +1,110 @@
+{
+ "out": "/tmp/photonz-playtest/glass-chip-frost",
+ "seed": "A busy photo at Next defaults, no switch changed. Draw an arrow, type its label, pick the Glass chip: the label sits on light frosted glass, the photo behind it softened and lifted, dark words reading at 4.5:1 or better off the pixels.",
+ "setup": {
+  "forget": [
+   "shapes",
+   "panel"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "fixtures/Busy photo 1200x800.png",
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "showInspector"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "zoomToFit"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "a"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "arrow"
+  },
+  {
+   "do": "drag",
+   "from": [
+    700,
+    600
+   ],
+   "to": [
+    900,
+    430
+   ],
+   "steps": 12
+  },
+  {
+   "do": "waitFor",
+   "condition": "captionField",
+   "timeout": 3
+  },
+  {
+   "do": "type",
+   "text": "Save button 48 pt"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "rightClick",
+   "at": [
+    800,
+    515
+   ],
+   "choose": "Chip Style > Glass"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Chip style Glass",
+   "in": "Chip Style",
+   "reads": "Chip Style, on"
+  },
+  {
+   "do": "expectChipContrast",
+   "min": 4.5
+  },
+  {
+   "do": "describe",
+   "stage": "1-glass-on-photo",
+   "note": "the label on light frosted Glass over the busy photo"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-glass-on-photo"
+  },
+  {
+   "do": "render",
+   "name": "1-glass-on-photo"
+  }
+ ]
+}
