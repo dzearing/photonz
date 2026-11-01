@@ -36,8 +36,11 @@ struct CoresReadyTests {
     }
 
     @Test func eachMoveHoldsItLonger() {
-        let ready = CoresReady(hold: 0.15)
-        let end = Date().addingTimeInterval(0.4)
+        // A hold far longer than any stall between two moves on a busy runner
+        // (a 0.15 s hold failed on GitHub's v0.22.0 run when a 20 ms sleep ran
+        // long), and moves for more than two holds' worth.
+        let ready = CoresReady(hold: 1.0)
+        let end = Date().addingTimeInterval(2.2)
         while Date() < end {
             ready.keep()
             usleep(20_000)
