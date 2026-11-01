@@ -57,3 +57,20 @@ FOURTH PASS, 2026-11-01: WHAT DOES NOT MOVE "LOOKS PAINTED". Same judge, same pr
   that, with smooth paint bodies (bristle shading and comb at a fifth to a third):
                                                       5, 5; reads 6, 7
 None of it shipped. Judge A names the same thing in every variant: "uniform embossed stroke texture", "even highlights", "a digital brush engine". Reading: the score is held by how a stroke is lit and textured as a whole, not by how strokes are placed, how strong the relief is, or the colour. One lever is still untried: light the layer's paint as one surface (heights adding up where strokes overlap, lit once), where today each stroke is lit on its own as it lands. That changes the composite path and the raster cache, so it is a renderer change with its own speed budget, not a tweak.
+
+
+FIFTH PASS, 2026-11-01: IS 8 REACHABLE AT ALL? Same judge script, same prompt, three looks per judge, median (A, B).
+Calibration, pictures nobody here made (Wikimedia Commons, 960 wide):
+  'Seascape, Le Croisic' (RMG BHC0049, a real oil canvas photographed):     looks painted 10, 9; reads 8, 8
+  Van Gogh, 'Wheatfield with Crows' (Google Art Project):                    looks painted 10, 10; reads 10, 9
+  'Sunset - Landscape digital painting made in krita' (Raghukamath, CC BY-SA 4.0, a skilled person's digital oil-style painting):
+                                                                             looks painted 5, 6; reads 9, 9
+    judge A on it: "smooth, uniform digital brush strokes have no canvas texture, paint build-up or bristle marks, so it plainly looks made on a computer."
+Reading: under this prompt "looks painted" asks whether the picture is a photo of a physical canvas. A person painting digitally scores 5 and 6, Ask's oil painting today 4 and 5. The bar of 8 is one no digital painting reaches, a person's included.
+The one untried lever, prototyped offline on sketch 20261031-082519 (the layer's oil lit once as one surface, heights adding where strokes overlap, plus finer variants):
+  one surface, bristle comb as today:                                        not judged (reads as an emboss filter by eye)
+  one surface, comb at a quarter, a raised film at each stroke's edge:       looks painted 5, 5; reads 8, 8
+  same, comb off, bristle colours 2.5x more varied:                          4, 5; reads 7, 8
+  same, comb at a fifth, colours 2.5x, a canvas weave where paint is thin:   5, 6; reads 8, 8
+Best is the person's Krita score, on one sketch, within the judges' noise. Not shipped: a change to the composite path and the raster cache for a point that may be noise. All code reverted. Judges' words on every variant: "uniform, repeated wavy strokes", "simple blob trees", "no canvas texture".
+Picture for the user: 2026-11-01-brush-epic-painted-bar-calibration.png.

@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-11-01T10:11:06.949Z",
+  "updated": "2026-11-01T10:26:31.484Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -238,9 +238,29 @@
     {
       "t": "2026-11-01T10:11:06.948Z",
       "note": "Item 9 still open: five more measured experiments, none moved looks painted past 5 (bar 8); nothing shipped. Next lever named in the log: light a Paint layer as one surface."
+    },
+    {
+      "t": "2026-11-01T10:11:31.197Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-01T10:26:28.078Z",
+      "note": "Fifth pass: tried the lever the fourth pass named, lighting a Paint layer's oil as one surface (heights add where strokes overlap, lit once per layer), prototyped offline on Ask's sketch 20261031-082519 with three variants: looks painted 5/5, 4/5, 5/6, reads 8/8, 7/8, 8/8. Within noise of today's 4/5; a composite-path and raster-cache change is not worth a maybe-noise point, so nothing shipped and all code is reverted."
+    },
+    {
+      "t": "2026-11-01T10:26:28.150Z",
+      "note": "Calibrated the judge (Scripts/ask-eval/paint-judge.mjs, same prompt): a real oil canvas photo scores looks painted 10/9, Van Gogh 10/10, a skilled person's Krita digital painting 5/6. The bar of 8 is 'a photo of a physical canvas', which no digital painting reached, a person's included. Numbers in 2026-10-31-brush-epic-measures.txt (FIFTH PASS), picture 2026-11-01-brush-epic-painted-bar-calibration.png."
+    },
+    {
+      "t": "2026-11-01T10:26:28.224Z",
+      "note": "Opened a card (the chip-styles judge bar card answered on 2026-11-01 is the precedent): close as is (recommended), aim for the person's score with the one-surface lighting, or keep 8. Brief in queue/decisions/. Changing an acceptance bar is the user's call, not a runner's, so the task waits on it."
+    },
+    {
+      "t": "2026-11-01T10:26:31.479Z",
+      "note": "Item 9's looks-painted bar of 8 is one no digital painting reached in a calibration (a skilled person's Krita painting scores 5 and 6, Ask's 4 and 5, real canvases 9 to 10); the one untried lever moved it within noise and was not shipped. Card asks the user whether to close, aim for the person's score, or keep 8."
     }
   ],
-  "started": "2026-11-01T09:51:40.252Z",
+  "started": "2026-11-01T10:11:31.196Z",
   "walks": [
     "brush-epic-try-path-walk"
   ]

@@ -1,0 +1,52 @@
+{
+  "id": "a-brush-tool-paints-with-realistic-charcoal-chal-ask-s-paintings-show-what-you-as",
+  "taskId": "a-brush-tool-paints-with-realistic-charcoal-chal",
+  "question": "Ask's paintings show what you asked for, but score 4 and 5 of 10 on looks painted against a bar of 8. A person's digital painting scores 5 and 6 on the same test. Close the epic, aim for the person's score, or keep 8?",
+  "context": "The judges' question for looks painted is whether the picture could be a photo of a real painted canvas. Real canvases score 9 and 10. A skilled person's digital painting scores 5 and 6. Ask's oil painting scores 4 and 5 after five passes of work. Reads as a landscape is met (8 and 8 against 7).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Close it: reads as asked, judged as digital",
+      "summary": "The brush epic closes as it stands. Ask's paintings show what you asked for (8 of 10 from both judges) and look as painted as digital work does; the 8 of 10 painted bar is set aside.",
+      "pros": [
+        "Frees the loop for other work after five passes on one number",
+        "Ask already paints a recognisable picture with real, editable strokes"
+      ],
+      "cons": [
+        "Ask's painting scores a point under a person's digital painting (4 and 5 against 5 and 6)"
+      ],
+      "mitigation": "Anything you dislike in a painting you react to on the audit, and it becomes its own task."
+    },
+    {
+      "id": "b",
+      "label": "One more pass, to match a person's digital painting",
+      "summary": "The bar becomes as painted as a skilled person's digital painting (5 and 6 from the two judges). One more pass lights each paint layer as one surface, which reached 5 and 6 on one test picture, and closes when the try path painting gets there too.",
+      "pros": [
+        "A bar that is measured against real digital work and can be met",
+        "The change also gives a person's own oil strokes thicker, built-up paint where they overlap"
+      ],
+      "cons": [
+        "Touches how every paint layer is drawn, so it needs its own speed checks",
+        "The gain may be within the judges' noise"
+      ],
+      "mitigation": "It ships only if the try path painting reaches 5 and 6 and painting stays as fast as today."
+    },
+    {
+      "id": "c",
+      "label": "Keep 8 and keep trying",
+      "summary": "The bar stays at could be a photo of a real canvas, and the loop keeps working on it.",
+      "pros": [
+        "Holds out for paintings that pass as physical paint"
+      ],
+      "cons": [
+        "No digital painting reached it in this test, a person's included",
+        "Five passes so far moved it from 4 to 5"
+      ],
+      "mitigation": "A pass that moves nothing stops and says so, as the last two did."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-01T10:26:08.449Z",
+  "shot": "2026-11-01-brush-epic-painted-bar-calibration.png"
+}
