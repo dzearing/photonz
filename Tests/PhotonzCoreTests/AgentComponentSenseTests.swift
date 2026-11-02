@@ -419,4 +419,63 @@ struct AgentComponentSenseTests {
         guard case .failure(let refused) = try AgentComponentTests.request(json) else { Issue.record("let Back run into the title"); return }
         #expect(refused.message.contains("Back") && refused.message.contains("Title"), "\(refused.message)")
     }
+
+    @Test("A Pressed a shade off its Hover is set plainly apart from it, the way it already leaned; a Hover already plain is kept")
+    func laterLooksStepApart() throws {
+        // The eval, 2026-11-02: Default #007AFF, Hover #006CDF, Pressed
+        // #0065D1, and all three judges: "Hover and Pressed look almost the same".
+        let spec = try Self.plain(##"""
+            {"name":"Button","x":0,"y":0,"labels":false,"firstLook":"Default",
+             "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":120,"height":32,"fill":"#007AFF"},
+                      {"name":"Label","shape":"text","text":"Button","color":"#FFFFFF","x":34,"y":5,"width":0,"height":0}],
+             "looks":[{"name":"Hover","changes":[{"part":"Back","fill":"#006CDF"}]},
+                      {"name":"Pressed","changes":[{"part":"Back","fill":"#0065D1"}]},
+                      {"name":"Disabled","changes":[{"part":"Back","fill":"#E5E5EA"},{"part":"Label","color":"#8E8E93"}]}]}
+            """##)
+        #expect(spec.looks.map(\.name) == ["Default", "Hover", "Pressed", "Disabled"])
+        let hover = try #require(Self.part("Back", in: spec, look: "Hover")?.look.fill?.hexValue)
+        let pressed = try #require(Self.part("Back", in: spec, look: "Pressed")?.look.fill?.hexValue)
+        #expect(RGBA(hex: hover) == RGBA(hex: "#006CDF"), "a Hover already plain from Default is left as the model gave it")
+        #expect(AgentNewComponent.plainlyApart(pressed, hover) == true, "\(pressed) beside \(hover)")
+        #expect(AgentNewComponent.plainlyApart(pressed, "#007AFF") == true)
+        let one = try #require(RGBA(hex: pressed)), two = try #require(RGBA(hex: hover))
+        #expect(one.b < two.b && one.r <= two.r + 0.5 / 255, "Pressed goes on darker, the way it leaned: \(pressed)")
+        #expect(RGBA(hex: Self.part("Back", in: spec, look: "Disabled")?.look.fill?.hexValue ?? "") == RGBA(hex: "#E5E5EA"),
+                "a Disabled look is not stepped away from the others")
+        // The model's own call that day: a Hover too near Default is widened
+        // first, to beside the Pressed, and Pressed then steps on from it.
+        let widened = try Self.plain(##"""
+            {"name":"Button","x":0,"y":0,"labels":false,"firstLook":"Default",
+             "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":120,"height":32,"fill":"#007AFF"},
+                      {"name":"Label","shape":"text","text":"Button","color":"#FFFFFF","x":34,"y":5,"width":0,"height":0}],
+             "looks":[{"name":"Hover","changes":[{"part":"Back","fill":"#0071EB"}]},
+                      {"name":"Pressed","changes":[{"part":"Back","fill":"#0065D1"}]}]}
+            """##)
+        let fills = ["Default", "Hover", "Pressed"].compactMap { Self.part("Back", in: widened, look: $0)?.look.fill?.hexValue }
+        #expect(fills.count == 3)
+        #expect(AgentNewComponent.plainlyApart(fills[0], fills[1]) == true, "\(fills)")
+        #expect(AgentNewComponent.plainlyApart(fills[1], fills[2]) == true, "\(fills)")
+    }
+
+
+    @Test("Words a later look shows and restyles stay shown in the first look; words a look only shows start hidden")
+    func restyledWordsStayShown() throws {
+        // The eval, 2026-11-02: a segmented control whose Two look set
+        // "Label One" visible and plain lost its "One" in the first look.
+        let spec = try Self.plain(##"""
+            {"name":"Segmented Control","x":0,"y":0,"labels":false,"firstLook":"One",
+             "parts":[{"name":"Background","shape":"rectangle","x":0,"y":0,"width":240,"height":32,"fill":"#E9E9EA"},
+                      {"name":"Selected","shape":"rectangle","x":2,"y":2,"width":78,"height":28,"fill":"#FFFFFF"},
+                      {"name":"Label One","shape":"text","text":"One","color":"#1C1C1E","weight":"medium","x":2,"y":2,"width":78,"height":28,"alignment":"center"},
+                      {"name":"Label Two","shape":"text","text":"Two","color":"#1C1C1E","x":80,"y":2,"width":78,"height":28,"alignment":"center"},
+                      {"name":"Note","shape":"text","text":"Saved","color":"#1C1C1E","x":0,"y":40,"width":0,"height":0}],
+             "looks":[{"name":"Two","changes":[{"part":"Selected","x":80},
+                      {"part":"Label One","visible":true,"color":"#1C1C1E"},
+                      {"part":"Note","visible":true}]}]}
+            """##)
+        #expect(Self.part("Label One", in: spec, look: "One")?.hidden == false)
+        #expect(Self.part("Note", in: spec, look: "One")?.hidden == true, "words a look only shows start hidden")
+        #expect(Self.part("Note", in: spec, look: "Two")?.hidden == false)
+    }
+
 }

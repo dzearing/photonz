@@ -25,14 +25,29 @@ public struct AgentSheetLayout: Hashable, Sendable {
     /// How many columns the grid has: the most states any header row names.
     public var columns: Int
     public var frame: CGRect
+    /// Where the page starts: the top of the first words above the table
+    /// (its title), or the table's own top when nothing is above it.
+    public var pageTop: CGFloat
+
+    public init(headers: [[String]], columns: Int, frame: CGRect, pageTop: CGFloat? = nil) {
+        self.headers = headers
+        self.columns = columns
+        self.frame = frame
+        self.pageTop = pageTop ?? frame.minY
+    }
 
     /// The canvas the table needs: grown from its top left when the table
-    /// runs past it, keeping the table's left margin on the right and under
-    /// its last row; never smaller than `current`.
+    /// runs past it, keeping the table's left margin on the right, and under
+    /// its last row the room above the page (a title at 48 over a table at
+    /// 240 left 246 empty under it when this took the left margin, and
+    /// every judge read the page as lopsided: the eval, 2026-11-02), never
+    /// more than the left margin nor less than `leastFoot`; never smaller
+    /// than `current`.
     public func canvas(around current: CGSize) -> CGSize {
         let margin = max(frame.minX, 0)
+        let foot = max(min(margin, max(pageTop, 0)), Self.leastFoot)
         return CGSize(width: max(current.width, (frame.maxX + margin).rounded(.up)),
-                      height: max(current.height, (frame.maxY + max(margin, Self.leastFoot)).rounded(.up)))
+                      height: max(current.height, (frame.maxY + foot).rounded(.up)))
     }
 
     /// The least room under the last row, however near the left edge the
@@ -250,6 +265,12 @@ extension PhotonzDocument {
         // right side"). The title is the words nearest above the table, set
         // larger than its names, that are none of the table's own.
         let tables = Set(oldWords.map(\.id)).union(labels.map(\.id))
+        // The page starts at the first words above the table that are none
+        // of its own, wherever across they sit.
+        let pageTop = (layers.filter { layer in
+            layer.text != nil && !tables.contains(layer.id) && layer.componentID == nil
+                && layer.instanceOf == nil && layer.frame.maxY <= top
+        }.map(\.frame.minY) + [top]).min() ?? top
         if let title = layers.filter({ layer in
             guard let text = layer.text, !tables.contains(layer.id), layer.componentID == nil,
                   layer.instanceOf == nil else { return false }
@@ -445,7 +466,8 @@ extension PhotonzDocument {
             + made.map(\.frame.maxX)).max() ?? (x + nameColumn)
         return AgentSheetLayout(headers: sections.map(\.headers), columns: columns,
                                 frame: CGRect(x: x, y: top, width: (right - x).rounded(.up),
-                                              height: bottom - top))
+                                              height: bottom - top),
+                                pageTop: pageTop)
     }
 
     /// The words the table set for one component: its name.

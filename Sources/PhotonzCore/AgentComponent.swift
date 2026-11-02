@@ -485,6 +485,36 @@ extension AgentNewComponent {
             said["changes"] = .array(changes)
             looks[index - 1] = .object(said)
         }
+        // A look that recolours a part a shade off what an earlier look
+        // after the first set it to (Hover #006CDF, Pressed #0065D1) goes
+        // on the way it leaned until the two are plain (every judge of the
+        // eval, 2026-11-02: "Hover and Pressed look almost the same"). After
+        // the first look's widening, which can set a Hover a shade off its
+        // Default right beside the Pressed (#0071EB widened to #006CDF, by a
+        // Pressed at #0065D1).
+        // Disabled is faint by design and set by the passes below, which
+        // also leave out a look the same as another.
+        let names = found.looks.dropFirst().map(\.name)
+        func calm(_ index: Int) -> Bool { index >= names.count || stateWords(names[index]).contains("disabled") }
+        for index in looks.indices where !calm(index) {
+            guard var said = looks[index].objectValue, var changes = said["changes"]?.arrayValue else { continue }
+            for (at, entry) in changes.enumerated() {
+                guard var change = entry.objectValue else { continue }
+                for key in ["fill", "color", "stroke"] {
+                    guard var new = change[key]?.stringValue else { continue }
+                    for earlier in looks.indices where earlier < index && !calm(earlier) {
+                        guard let other = looks[earlier]["changes"]?.arrayValue?
+                                .first(where: { named($0) == named(entry) })?[key]?.stringValue,
+                              let step = apart(new, other), step >= 1, plainlyApart(new, other) == false else { continue }
+                        new = widened(new, from: other)
+                    }
+                    change[key] = .string(new)
+                }
+                changes[at] = .object(change)
+            }
+            said["changes"] = .array(changes)
+            looks[index] = .object(said)
+        }
         args["looks"] = .array(looks)
         // What was set to read may now stand out more in a Disabled look
         // than in the first (#C7C7CC on #E5E5EA set near black: every judge
@@ -1046,14 +1076,21 @@ extension AgentTools {
                 hidden: item["visible"]?.boolValue == false))
         }
         // A part a later look shows with visible true, and the call never
-        // said, starts hidden: that look is the one that shows it.
-        let shown = Set((args["looks"]?.arrayValue ?? []).flatMap { look in
-            (look["changes"]?.arrayValue ?? []).compactMap { change in
-                change["visible"]?.boolValue == true ? change["part"]?.stringValue : nil
-            }
+        // said, starts hidden: that look is the one that shows it. Words that
+        // look also restyles were there to restyle, so they stay shown (a
+        // segmented control's Two look set "One" visible and plain, and the
+        // first look's selected segment came out empty: the eval, 2026-11-02).
+        let changes = (args["looks"]?.arrayValue ?? []).flatMap { $0["changes"]?.arrayValue ?? [] }
+        let restyled = Set(changes.compactMap { change -> String? in
+            guard let keys = change.objectValue?.keys else { return nil }
+            return keys.contains { $0 != "part" && $0 != "visible" } ? change["part"]?.stringValue : nil
+        })
+        let shown = Set(changes.compactMap { change in
+            change["visible"]?.boolValue == true ? change["part"]?.stringValue : nil
         })
         for (index, item) in (args["parts"]?.arrayValue ?? []).enumerated()
-        where index < parts.count && item["visible"] == nil && shown.contains(parts[index].name) {
+        where index < parts.count && item["visible"] == nil && shown.contains(parts[index].name)
+            && !(parts[index].kind == .text && restyled.contains(parts[index].name)) {
             parts[index].hidden = true
         }
 

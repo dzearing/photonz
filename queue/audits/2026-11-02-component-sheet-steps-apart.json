@@ -1,0 +1,28 @@
+{
+  "feature": "Ask's component sheet: states you can tell apart, an even page, and no cut-off answer",
+  "epic": "agent-skills",
+  "summary": "Ask's sheet of components now shows Hover and Pressed as two clearly different looks, ends the page as far under the table as the title sits from the top, and no longer gives up after five minutes on a model that is still answering.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default, a blank picture 1440 by 1024, the built-in Qwen3.8 27B model.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Image, then press Ask (Command K)." },
+    { "do": "Type: create a table of apple like quality base components that show different states and text, and press Send." },
+    { "do": "Wait for it (about four to five minutes on this Mac); the Agent panel says what it is doing.", "shot": "2026-11-02-component-sheet-steps-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare the Button row's Default, Hover and Pressed: each a step darker than the last.", "shot": "2026-11-02-component-sheet-steps-after.png" },
+    { "do": "Compare with this morning's sheet, where Hover and Pressed were the same blue and a band of empty page sat under the table.", "shot": "2026-11-02-component-sheet-steps-before.png" },
+    { "do": "Press Command Z once: the whole sheet goes." }
+  ],
+  "evaluate": [
+    "Can you tell Hover from Pressed on the buttons at a glance now?",
+    "Does the page end at a sensible distance under the last row?",
+    "Is four to five minutes for this request a wait you would sit through, with the Agent panel's progress line?",
+    "Do the Off/On rows (Toggle, Checkbox, Radio) under one shared header read as a table to you, or do the Checkbox and Radio rows look headerless?"
+  ],
+  "rough": [
+    "Not at the bar: the judge still gives Ask 6 to 7 of 10 on each line (baseline 78.8, judge 6.6; after 77.6, judge 6.4; one run between at 64.5 when the model hid a segmented label). The task stays open (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "What judges still name is mostly in the model's own drawings: a segmented control whose later looks hide the first label (the model's call says so), a pressed slider whose track moves off its thumb. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Judges read Checkbox and Radio, which share Toggle's Off/On header, as rows with no headers, and call the section gaps uneven rhythm. Left as is, because the skill reaches 8 with these sections; covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The name chips over each copy cover the header row in the window (not in the export): the-name-chips-over-component-copies-stay-clear.",
+    "No mock covers this surface; the bar is the user's own words and the eval."
+  ]
+}

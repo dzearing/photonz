@@ -48,6 +48,8 @@ final class AskModelServer {
     enum Failure: Error {
         case notShipped
         case wouldNotStart
+        /// It was still answering when the turn's time ran out.
+        case tooSlow
     }
 
     /// Where the downloaded models live: one folder for every build of
@@ -123,12 +125,18 @@ final class AskModelServer {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = AskTools.wireEncoded(AskServerChat.body(fromOllama: body))
-        request.timeoutInterval = 300
+        request.timeoutInterval = AskLocalModel.chatSeconds
         let data: Data
         do {
             data = try await AskLocalModel.send(request)
         } catch is CancellationError {
             throw CancellationError()
+        } catch AskLocalModel.Trouble.tooSlow {
+            // Still answering when the turn ran out: stopped, so it gives its
+            // memory and the next request a clean start.
+            if shared { AskWalkServerProcess.stop() }
+            stop()
+            throw Failure.tooSlow
         } catch {
             // The server went away part way (it was stopped, or it died). A
             // shared one that stopped answering is no use to the next walk either.

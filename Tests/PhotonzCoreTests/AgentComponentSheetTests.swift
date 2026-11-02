@@ -277,6 +277,9 @@ struct AgentComponentSheetTests {
                                frame: CGRect(x: 580, y: 56, width: 280, height: 42)))
         let middle = try Self.add(Self.row("Button", x: 240, y: 144, looks: Self.states), to: &centred)
         #expect(middle.sheet?.frame.minX == 240)
+        // The page starts at its first words, title set left or centred.
+        #expect(sheet.pageTop == 56)
+        #expect(middle.sheet?.pageTop == 56)
     }
 
     @Test("A row taller than a control keeps its own height, the same gap between it and the next")
@@ -484,6 +487,14 @@ struct AgentComponentSheetTests {
         // margin is tight" at 50).
         let near = AgentSheetLayout(headers: [], columns: 4, frame: CGRect(x: 50, y: 120, width: 1400, height: 1300))
         #expect(near.canvas(around: CGSize(width: 1440, height: 1024)) == CGSize(width: 1500, height: 1484))
+        // Under the last row, the room above the page's first words, not a
+        // wide left margin (the eval, 2026-11-02: a title at 48 and a table
+        // at 240 left 246 empty under it, and every judge read "the right
+        // and bottom margins leave the layout lopsided").
+        let titled = AgentSheetLayout(headers: [], columns: 4, frame: CGRect(x: 240, y: 120, width: 1100, height: 1180), pageTop: 48)
+        #expect(titled.canvas(around: CGSize(width: 1440, height: 1024)) == CGSize(width: 1580, height: 1364))
+        let lowTitle = AgentSheetLayout(headers: [], columns: 4, frame: CGRect(x: 240, y: 260, width: 1100, height: 1180), pageTop: 160)
+        #expect(lowTitle.canvas(around: CGSize(width: 1440, height: 1024)).height == 1600)
     }
 
     @Test("A section only a little too wide for a column widens every column, so its Hover stays under Hover")

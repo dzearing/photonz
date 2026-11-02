@@ -59,6 +59,8 @@ enum AskLocalModel {
         case downloading
         /// The built-in model would not start.
         case wouldNotStart
+        /// The model was still answering when the turn's time ran out.
+        case tooSlow
         /// One of Ask's own sentences, or the model's own "I can't".
         case said(String)
         /// The model's server failed, in its own words: kept for the trace,
@@ -72,6 +74,7 @@ enum AskLocalModel {
             case .noModel: "Ask needs its model. Get it in Settings."
             case .downloading: "Ask is getting its model ready."
             case .wouldNotStart: "Ask's model didn't start. Try again."
+            case .tooSlow: "Ask's model took too long. Try again."
             case .said(let words): words
             case .server(let words): AskTrouble.sentence(forServerError: words)
             }
@@ -138,10 +141,17 @@ enum AskLocalModel {
     /// Ask's own session: nothing cached, nothing shared with the rest of the app.
     nonisolated private static let session: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 300
-        configuration.timeoutIntervalForResource = 600
+        configuration.timeoutIntervalForRequest = chatSeconds
+        configuration.timeoutIntervalForResource = chatSeconds + 300
         return URLSession(configuration: configuration)
     }()
+
+    /// How long one turn of the chat may take. Qwen3.8 27B reads the
+    /// component sheet request for 130 s and writes its steps for 176 more,
+    /// so at 300 the answer was cut off part way and the person was told the
+    /// model "didn't start" (ask-builds-base-components-walk, 2026-11-02;
+    /// the eval measured 217 to 282 s on the same request).
+    nonisolated static let chatSeconds: TimeInterval = 600
 
     /// One turn of the chat. A big model's first answer can take a while to
     /// load, so the wait is long; Stop cancels it.
@@ -152,6 +162,8 @@ enum AskLocalModel {
             let json: AgentJSON
             do {
                 json = try await AskModelServer.shared.chat(body, on: choice)
+            } catch AskModelServer.Failure.tooSlow {
+                throw Trouble.tooSlow
             } catch is AskModelServer.Failure {
                 throw Trouble.wouldNotStart
             }
@@ -163,7 +175,7 @@ enum AskLocalModel {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = AskTools.wireEncoded(body)
-        request.timeoutInterval = 300
+        request.timeoutInterval = chatSeconds
         let data = try await send(request)
         let json = try AgentJSON.parse(data)
         if let said = json["error"]?.stringValue { throw Trouble.server(said) }
@@ -179,6 +191,8 @@ enum AskLocalModel {
                         continuation.resume(returning: data)
                     } else if (error as? URLError)?.code == .cancelled {
                         continuation.resume(throwing: CancellationError())
+                    } else if (error as? URLError)?.code == .timedOut {
+                        continuation.resume(throwing: Trouble.tooSlow)
                     } else {
                         continuation.resume(throwing: Trouble.noRunner)
                     }
