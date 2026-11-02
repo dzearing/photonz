@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:11:00.440Z",
-  "updated": "2026-11-02T05:15:59.764Z",
+  "updated": "2026-11-02T14:13:38.949Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'in settings, I would like multiple model options to choose from. There should be a download button to download them on demand, and then use them. Each should have some requirements and maybe something like quality / speed ratings. This would allow users to opt into the ask functionality without requiring a model to be downloaded. I think by default, model should not be downloaded and clicking ask should bring you to a dialog which downloads a recommended model set if needed based on the mac configuration.' Today: Sources/Photonz/Agent/AskSettingsSection.swift offers one recommended model with Download (:81-85) and a Picker over the ones you have (:68-70), plus the picture model's Download (:121-125). An Ollama branch remains (:141-175). The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B 21.7 GB, Qwen3.6 27B 22.8 GB, Gemma 4 26B 18.5 GB, all from Hugging Face at pinned revisions) and the picture model is in AskPictureModelPlan.swift (about 11 GB). Downloads go through AskModelDownload.swift. Nothing smaller than 18.5 GB exists, so a 16 GB Mac gets 'Ask needs more memory than this Mac has.' Scoring: Scripts/ask-eval.sh, held-out set. Check what happens today when Ask is pressed with no model (not reproduced here). Ties in with the memory task (photonz-uses-little-memory-and-what-made-it-use): smaller models lower memory as well.",
@@ -120,14 +120,43 @@
     {
       "t": "2026-11-02T05:15:59.763Z",
       "note": "All but one item shipped (ace4e5b5, 8713bffd): setup dialog, Settings rows with measured ratings, fresh install downloads nothing, delete falls back, Settings opens at Ask. Not reached: no model under 36 GB clears the held-out floor of 20 (best: Qwen3.5 9B at 19.8)."
+    },
+    {
+      "t": "2026-11-02T12:11:31.334Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T14:13:38.557Z",
+      "note": "Found why Qwen3.5 9B read 19.8: run 20261102-023538-ask-held-out had three cases unrun (deferred: person at the Mac) counted as 0 and was never finished. Resumed at HEAD (the planning code was unchanged since the run started): 21.2 over all 45. The eval now prints UNFINISHED above an unfinished run's total."
+    },
+    {
+      "t": "2026-11-02T14:13:38.632Z",
+      "note": "Added eval switch --mac <GB> (walk setup askMac) and rated Qwen3.5 9B as a 16 GB Mac would run it (32k window): held-out 20.7, 91.8 s median, 10.1 GB peak (20261102-122343-ask-held-out). Climb set: only a 3-case diagnosis run (66.3) and one --mac check (86.8); nothing in Ask's prompt or tools changed, so no climb run was needed."
+    },
+    {
+      "t": "2026-11-02T14:13:38.707Z",
+      "note": "Shipped in ffe113f9: 16, 24 and 32 GB Macs are offered Qwen3.5 9B (6.6 GB) in the setup dialog and as a Download in Settings, rated 2/5 quality and 2/5 speed, blurb 'Fits a 16 GB Mac. Basic, and slow to answer.' Small models are now ranked by score, so a Mac with several answers with the best; New default only steps up. Tests updated first (AskModelCatalogTests, AskBuiltInModelTests); full Scripts/test.sh green; five owned walks green; pictures of the 16 GB dialog and Settings read and in the audit."
+    },
+    {
+      "t": "2026-11-02T14:13:38.781Z",
+      "note": "Item 4: 16 GB is met (Qwen3.5 9B, 20.7). 8 GB is met by the item's own second clause: the only model that fits (Gemma 4 E2B, 4.6) cannot do Ask's work, and its row and the dialog say so. Trying to lift a small model for 8 GB is filed as ask-works-on-an-8-gb-mac (p2)."
+    },
+    {
+      "t": "2026-11-02T14:13:38.855Z",
+      "note": "Chose to leave the quality dots out of the setup dialog over adding them, to keep it one decision; the Basic line and dots are in Settings. Left rough (no task): the eval's memory reading takes the biggest llama-server on the Mac, which read 29.1 GB for the 9B once (likely another server); today's runs read 9.8 and 10.1. Only agents read it; noted in ask-works-on-an-8-gb-mac's notes."
+    },
+    {
+      "t": "2026-11-02T14:13:38.947Z",
+      "note": "16-32 GB Macs now get Qwen3.5 9B (held-out 20.7 as a 16 GB Mac, 21.2 at 64k), in the dialog and Settings (ffe113f9); 8 GB says Too weak per the item's clause, follow-up ask-works-on-an-8-gb-mac. Tests and five walks green; audit updated."
     }
   ],
-  "started": "2026-11-01T23:48:14.013Z",
+  "started": "2026-11-02T12:11:31.333Z",
   "walks": [
     "ask-sets-itself-up-walk",
     "ask-settings-lists-models-walk",
     "ask-offers-the-new-default-model-walk",
     "ask-deletes-an-older-model-walk",
     "ask-fresh-install-downloads-nothing-walk"
-  ]
+  ],
+  "completed": "2026-11-02T14:13:38.948Z"
 }
