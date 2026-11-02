@@ -15285,3 +15285,13 @@
 {"t":"2026-11-02T17:54:28.262Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T17:54:28.335Z","ev":"task_note","id":"find-out-why-ask-sometimes-waits-five-minutes-fo"}
 {"t":"2026-11-02T17:54:28.408Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Pressed steps apart, page ends under its title, no cut-off answer shipped (fe41414b); walk passes. Ask is at 6 to 7 of 10 per judge line (77.6), short of the 8-of-10 bar, so it stays open."}
+{"t":"2026-11-02T18:25:06.642Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-02T18:25:06.732Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1803,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-02T18:25:06.906Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-11-02T19:19:52.235Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T19:19:52.309Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T19:19:52.383Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T19:19:52.456Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T19:19:52.533Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T19:19:52.610Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T19:20:14.593Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Labels kept and grown parts centred shipped (1f3ee881); the eval now waits 540 s for this request. Ask scores 79.2 and 65.8 on this build (judges 6 to 7 of 10), short of the 8-of-10 bar, so it stays open."}

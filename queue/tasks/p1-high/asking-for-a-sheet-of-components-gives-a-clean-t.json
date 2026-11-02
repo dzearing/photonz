@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-02T17:54:28.407Z",
+  "updated": "2026-11-02T19:20:14.592Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -331,9 +331,41 @@
     {
       "t": "2026-11-02T17:54:28.406Z",
       "note": "Pressed steps apart, page ends under its title, no cut-off answer shipped (fe41414b); walk passes. Ask is at 6 to 7 of 10 per judge line (77.6), short of the 8-of-10 bar, so it stays open."
+    },
+    {
+      "t": "2026-11-02T18:25:06.901Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T19:19:52.233Z",
+      "note": "Built (1f3ee881): Ask's planner keeps words a later look hides while rewriting them to what another part says (the model's segmented control set Label 1 to 'Second' and hid it, read off the trace: 'loses its First label' in every judge), and keeps a part grown both ways centred on what it was centred on (a Pressed knob grown 26 to 36 sat 5 under its track). Both are about states in general (the 2026-10-24 digest's test): any component whose words or parts change in a state."
+    },
+    {
+      "t": "2026-11-02T19:19:52.307Z",
+      "note": "Eval (rubric f5ae1562), Ask component-table: build before 77.6 (judge 6,7,6,6,7) and 78.8; this build 79.2 (7,7,6,6,7) and 65.8 (6,7,6,6,6). Same-build spread about 7 points, judge mean 6.2 to 6.6. After the change no judge names the missing label or the off-centre knob. NOT at the 8-of-10 bar, so left pending."
+    },
+    {
+      "t": "2026-11-02T19:19:52.381Z",
+      "note": "Tried and reverted: the header row again above each kind (last word of the name) inside a section. Run 20261102-184246-ask 60.3 (rules noOverlap 0 from the model's alert words; judge 6.4, aligned 7): no judge named headerless rows, one said 'state labels repeat on every row, doesn't read as a table'. Chose one header per set of states over one per kind, because the user's ask is a table with a header for each state and the evidence was one mixed run. Picture: queue/audits/2026-11-02-component-sheet-header-per-kind-tried.png."
+    },
+    {
+      "t": "2026-11-02T19:19:52.454Z",
+      "note": "Eval fix: the component-table case waits 540 s (was 300), as the walk does: run 20261102-190046-ask scored 0 with the model still planning at 300 s; the rerun took 388 s."
+    },
+    {
+      "t": "2026-11-02T19:19:52.531Z",
+      "note": "Left rough (this task covers it): judges of run 20261102-190923-ask all named a Disabled text field placeholder darker than Default's. Not reproduced: Ask's trace cuts the answer at 3000 characters and the Text Field call was past it; two reconstructions (#8E8E93 on #FAFAFA, #C7C7CC on #F2F2F7) both had the Disabled look left out as barely different, so neither is the real call. Also still named: Disabled column near the right edge with the right half empty, Hover near Default."
+    },
+    {
+      "t": "2026-11-02T19:19:52.608Z",
+      "note": "Pictures looked at: before (20261102-172025: First missing in Second/Third, pressed knob under track), after (20261102-183043: all segmented labels shown, knob on track), header-per-kind tried (every kind headed, even pitch), 20261102-190923 (labels fine, slider Disabled look, darker Disabled placeholder). Tests: Scripts/test.sh all green (15,190). Walk ask-builds-base-components-walk not rerun this pass; the three Ask eval runs drive the same request through the probe and finished. Audit: queue/audits/2026-11-02-component-sheet-labels-stay.json"
+    },
+    {
+      "t": "2026-11-02T19:20:14.591Z",
+      "note": "Labels kept and grown parts centred shipped (1f3ee881); the eval now waits 540 s for this request. Ask scores 79.2 and 65.8 on this build (judges 6 to 7 of 10), short of the 8-of-10 bar, so it stays open."
     }
   ],
-  "started": "2026-11-02T16:45:12.977Z",
+  "started": "2026-11-02T18:25:06.900Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
