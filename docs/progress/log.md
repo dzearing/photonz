@@ -22366,3 +22366,9 @@ the ghost, and pinching in seemed to stop short.
 - The first Release run failed on `CoresReadyTests.eachMoveHoldsItLonger` (a 0.15 s hold lapsed when a 20 ms sleep ran long on a slow runner). The tag was deleted before anything published, the test's hold widened to 1 s (`6a4a3120`), the suite run green in a clean worktree at that commit (the go loop's runner had uncommitted oil edits in the main tree, which broke a fingerprint test there), and the tag re-pushed.
 - Also seen in preflight, passing alone and on rerun: the Aurora title background differed between playback and export once under full-suite load; filed as `a-moving-aurora-title-background-draws-the-same`.
 - Release workflow green with `Photonz.dmg`; latest download answers 200; Deploy site announced 0.22.0 and the live `version.json` reports it. The loop was paused for the preflight and restarted after tagging.
+
+## 2026-11-02 — Release v0.23.0
+
+- Shipped v0.23.0 (`10bb349c`): choose the model Ask runs on. Nothing downloads until a person wants Ask; the first Ask opens one setup dialog; Settings > Ask lists every model with what it is good at, the smallest Mac that holds it, quality and speed dots, and Download, Use and Delete; 16 to 32 GB Macs are offered Qwen3.5 9B.
+- Preflight ran in a clean worktree at origin/main (the go loop kept running, its runner's uncommitted edits stayed out of the test run): `Scripts/test.sh` green first time (15,172 tests), DMG built. The release commit was rebased onto main and checked to add no code beyond the tested commit before tagging.
+- Release workflow green on the first run with `Photonz.dmg`; latest download answers 200; Deploy site announced 0.23.0 and the live `version.json` reports it.
