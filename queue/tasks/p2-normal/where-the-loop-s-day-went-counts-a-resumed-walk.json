@@ -4,12 +4,12 @@
   "goal": "The daily digest reads the loop's day from one report and is told to call out any day with more than one whole-set walk run, since each costs about five hours. That report counts the short pick-up of a stopped run as a run of its own, so a day with one run in two parts and one new run reads as three, and the digest raises an alarm that is not real. It also counts a stopped loop as building: on 2026-10-28 it said the loop spent all 24 hours on one task, when the loop had been stopped since 04:45 the day before and no task ran at all.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 480,
+  "seq": 500,
   "status": "pending",
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:08:35.106Z",
-  "updated": "2026-11-01T14:53:17.413Z",
+  "updated": "2026-11-02T14:50:11.298Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by the a-full-walk-check-that-gets-stopped-picks-up-whe runner on 2026-10-22 (left rough: count reads one high) and again by the 2026-10-23 digest, which had to read queue/loop.log to find that the three runs were the 2026-10-22T11:15Z run stopped at 989 of 1011, its 7 minute pick-up (queue/sweep/2026-10-22-095234.log, 25 walks), and the 2026-10-23T11:41Z run stopped at 453 of 1015 when the person came back. Code: queue/bin/loop-day.mjs.",
@@ -52,6 +52,14 @@
     {
       "t": "2026-11-01T14:53:17.412Z",
       "note": "seq 470 -> 480"
+    },
+    {
+      "t": "2026-11-02T14:49:58.671Z",
+      "note": "digest 2026-11-02: seen again. loop-day.mjs --hours 24 said 'sweeps 471m, 4 full-set run(s)'. The history shows one complete run (sweep_pass 12:11Z, 1081 walks, 415 min) and three starts put down when the person came back (21:37Z 9 walks, 22:57Z the pick-up of that one, 84 more, and 23:48Z 97 walks). Two of the four restarted from walk one because code had landed after a stop, under a --now request. A reader of the digest is told 'four whole-set runs' when the day had one."
+    },
+    {
+      "t": "2026-11-02T14:50:11.297Z",
+      "note": "seq 480 -> 500"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "When Ask or an agent lays components out as a table, the purple name chip Photonz draws above every component copy sits on the table's header words, so on the canvas Hover, Pressed and Disabled are half covered. The canvas should show the table readably at normal zoom.",
   "epic": "agent-skills",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-23T22:48:46.880Z",
-  "updated": "2026-10-31T13:23:32.228Z",
+  "updated": "2026-11-02T14:50:07.617Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-23 in queue/audits/2026-10-23-component-sheet-window-sc.png (Scripts/playtest.sh Scripts/playtest/ask-builds-base-components-walk.json --no-build, 1-sheet-sc.png): each copy's chip (CanvasNames.canvasNameChips, drawNameChip in CanvasComponents.swift) is a fixed screen size just above the copy, so at zoom 0.67 it covers about 30 document points, over the header row the table sets 16 points above its first row (AgentComponentSheet.swift, AgentNewComponent.headerGap). Chips of a lower row also sit in the 32 point gap and touch the row above. The earlier layout put state names UNDER looks for this reason. Headers are named <State> Header, row names <Row> Label.",
@@ -62,6 +62,14 @@
     {
       "t": "2026-10-31T13:23:32.227Z",
       "note": "seq 230 -> 150"
+    },
+    {
+      "t": "2026-11-02T14:44:33.224Z",
+      "note": "rotating check 2026-11-02T14:44:33Z, 16 walks run from 111 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-builds-base-components-walk failing."
+    },
+    {
+      "t": "2026-11-02T14:50:07.616Z",
+      "note": "seq 150 -> 100"
     }
   ],
   "walks": [

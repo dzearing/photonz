@@ -4,12 +4,12 @@
   "goal": "Right after Ask lands a sheet of components (66 layers in one go), the probe's window took frames of up to 466 ms and its Layers list and Agent rows were blank for about a second before they drew. Find out whether a person sees the same pause in the dev app, and if so make the landing draw without a visible hold.",
   "epic": "agent-ask",
   "priority": "p2-normal",
-  "seq": 107.5,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T23:13:08.577Z",
-  "updated": "2026-11-01T23:13:08.580Z",
+  "updated": "2026-11-02T14:50:08.715Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-11-01 by while-ask-works-the-agent-panel-says-what-it-is, not confirmed outside the probe. Command: one-off walk, blank 1440x1024, Command K, 'create a table of apple like quality base components that show different states and text', waitFor askSettled, snapshot at once and 5 s later (copy of the sheet block of Scripts/playtest/ask-says-what-it-is-doing-across-requests-walk.json). Log: 'mainBusy 6507.4ms over 35216 passes, longest 466.1ms from 242213ms in'; the snapshot 0.8 s after settling shows LAYERS 66 with an empty list and AGENT 1 with no row; 5 s later both are drawn. In the rotating check's longer run (scene, edit and photo already in the document) the wait after landing 'never went quiet (14 of 14 slices busy, busiest 330ms)' and the Agent group still held the finished request's live line 2.8 s after it ended. Caveat that keeps this a question: the probe hangs walk markers (about half the window's views, PanelTarget.swift), so the dev app may be lighter.",
@@ -21,6 +21,10 @@
     {
       "t": "2026-11-01T23:13:08.579Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-02T14:50:08.714Z",
+      "note": "seq 107.5 -> 110"
     }
   ]
 }

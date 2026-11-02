@@ -5,11 +5,11 @@
   "epic": "agent-mcp",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-27T03:40:32.660Z",
-  "updated": "2026-10-30T02:12:57.646Z",
+  "updated": "2026-11-02T14:49:52.872Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-26 on the probe (screen unlocked, Screen Recording granted, with and without setup front:true). Walk step: press \"Agents Claude Code Install\" -> log says in Install at window (460, 119), one click, the point is on the button in the -sc.png, but the button action never runs (a temporary NSLog at the top of AgentsSettingsSection.act never printed: /usr/bin/log show --last 2m --predicate eventMessage CONTAINS PZDEBUG was empty), and the next expect fails: no control called Agents Claude Code Uninstall. Two clicks (count 2) did nothing either; removing the row contextMenu and help did not change it. Scripts/playtest.sh Scripts/playtest/ask-deletes-an-older-model-walk.json --no-build passes, but its 2-delete-asks-sc.png shows no dialog after the press, so it never proved the press. The same buttons pressed through the accessibility tree (osascript, AXPress) worked at once. Press delivery: PlaytestHarness.swift around 8160-8215 (postEvent up, sendEvent down to the target window); panelWindows() includes the Settings window (around 7974). Suspect the synthetic mouse down into a non-key Settings window (SettingsWindowController hosts an NSHostingController in a plain NSWindow) is taken as a click to make it key.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-10-30T02:12:57.645Z",
       "note": "triage 2026-10-29: a fourth window with the same gap. The History pane's new resize grip (2026-10-28, history-pane-resizes-from-its-outer-edge) closed with no walk because dragGrip cannot post into the History panel, and the History drag picture is still unconfirmed under a real pointer because walks cannot start a drag session there (docs/progress/log.md, 2026-10-28 entries). Walks also missed the History drop bug for weeks because they wrote the tile as plain data, not the file promise a real drag carries. Whatever fix lands here should cover the History panel too."
+    },
+    {
+      "t": "2026-11-02T14:49:52.871Z",
+      "note": "fixed by f0ca90e3 (the walk press fix of 2026-11-01): reproduced 2026-11-02 with a scratch walk that pressed Install in Settings > Agents and saw Uninstall. The two walks that should now press are noted on walks-that-fail-in-the-full-sweep-26"
     }
   ],
   "walks": [

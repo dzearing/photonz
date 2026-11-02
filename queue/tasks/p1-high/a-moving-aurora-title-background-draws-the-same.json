@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 3970,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-11-01T21:50:41.174Z",
-  "updated": "2026-11-01T21:50:41.177Z",
+  "updated": "2026-11-02T14:49:52.716Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in the v0.22.0 release preflight, 2026-11-01: '↳ Aurora: scrub differs at 3640' and '↳ Aurora: export differs at 3640' (TitleBackgroundsRenderTests.swift:307-308); passed alone three times, and the full suite passed on the rerun. Filed by the intake window during the release, not a user report, but release-blocking flakes are the user's standing ask.",
@@ -24,6 +24,10 @@
     {
       "t": "2026-11-01T21:50:41.176Z",
       "note": "created (user)"
+    },
+    {
+      "t": "2026-11-02T14:49:52.715Z",
+      "note": "duplicate of the-full-test-run-never-fails-on-a-video-check-t: the same kind of fault (a render check that fails only inside a full run). Spot-check 2026-11-02: passed 3 of 3 alone, not reproduced, so it does not hold the top of p1"
     }
   ]
 }
