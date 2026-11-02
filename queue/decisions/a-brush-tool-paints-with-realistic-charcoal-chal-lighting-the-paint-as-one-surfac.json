@@ -44,7 +44,12 @@
     }
   ],
   "recommended": "b",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-11-01T22:28:41.370Z",
-  "shot": "2026-11-01-brush-epic-one-surface-try-path.png"
+  "shot": "2026-11-01-brush-epic-one-surface-try-path.png",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-11-02T15:21:04.844Z"
+  }
 }

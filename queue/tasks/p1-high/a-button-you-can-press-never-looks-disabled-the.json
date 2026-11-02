@@ -5,11 +5,11 @@
   "epic": "agent-drivable",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:28:55.368Z",
-  "updated": "2026-11-02T14:50:07.161Z",
+  "updated": "2026-11-02T15:39:29.473Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'the \"remove\" x button on effects seems disabled but it is not. buttons which are active should not look diminished. look at the eye visibility icon button next to it.' Screenshot: queue/audits/2026-10-24-user-effect-remove-looks-disabled.png (Shadow effect: grip, eye bright, x faint). Confirmed in code: Sources/Photonz/EffectsListRow.swift:220-232 removeButton sets .foregroundStyle(.tertiary) on an enabled button, and the grip at :200-204 is .tertiary at rest. The same pattern is likely elsewhere: there are 93 .foregroundStyle(.tertiary) uses in Sources/Photonz, most of them text, so sort buttons from labels. Candidates to check: MotionListInspector.swift:186, PropertyKeysInspector.swift:689, MotionStripView.swift:247 and TimelineTrackRows.swift:1627 (xmarks), plus the Motion header's play button in the same screenshot, which also looks dim. Keep the mock's quiet look: quiet means the same tone as the eye, not fainter.",
@@ -68,6 +68,44 @@
     {
       "t": "2026-11-02T14:50:07.160Z",
       "note": "seq 80 -> 30"
+    },
+    {
+      "t": "2026-11-02T14:51:38.798Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T15:38:48.691Z",
+      "note": "owns these walks: active-icon-buttons-look-live-walk, appearance-effects-walk"
+    },
+    {
+      "t": "2026-11-02T15:39:02.109Z",
+      "note": "Reproduced: EffectsListRow drew the cross at .tertiary and the grip at .tertiary at rest beside a .primary eye; a before run of active-icon-buttons-look-live-walk on the old code shows it (queue/audits/2026-11-02-icon-tone-1-at-rest-before-after.png), and the legibility sheet measured the old cross at 1.87:1 light / 2.24:1 dark against a disabled icon's 1.83 / 2.25."
+    },
+    {
+      "t": "2026-11-02T15:39:02.179Z",
+      "note": "Adversarial review: a Photoshop/Figma user expects row icons that work to read at label strength and only hidden or unavailable things to recede; the risk is a noisier Layers list once every open padlock comes up from tertiary. Chose a separate off tone (secondary label, 0.55) for switches that are off over keeping them tertiary because tertiary is the disabled tone and the user asked that only disabled reads faint; the audit asks whether the padlock column is still calm."
+    },
+    {
+      "t": "2026-11-02T15:39:02.252Z",
+      "note": "Chose a soft 4pt rounded wash on hover over brightening alone because 0.85 to 1.0 ink is too small a step to see on a 9pt cross; the transform link keeps its plain style and reads the rule directly so the wash does not cover its two-row bracket."
+    },
+    {
+      "t": "2026-11-02T15:39:02.322Z",
+      "note": "Built: IconButtonTone + FaintIconScan (PhotonzCore, tested), PanelIconButtonStyle/.panelIconTone (app), legibility sheet check louderThanDisabled with a negative control (the old faint cross must still fail). 14 buttons moved onto the rule, 4 kept faint with a quiet-on-purpose reason. Walks green: active-icon-buttons-look-live, appearance-effects, panel-edge-column, panel-edge-narrow, transform-values-link, properties-pane, motion-strip-way-back, layers-combine, colour-onto-a-layer-row, motion-one-play-rule, motion-swings-a-layer, timeline-zooms-out-past-the-end, lists-pane-holds-still, measure-lands-in-the-list, a-ring-or-arc-arrives-spinning, key-a-title-s-scale, effects-say-their-reach. Scripts/test.sh green (exit 0, legibility included)."
+    },
+    {
+      "t": "2026-11-02T15:39:02.391Z",
+      "note": "Rough items, none filed: the mock-vs-app grip/eye tone is settled by the user's report; the secondary-resting icon buttons outside the panel (history overlay, transport kit) are not faint by this task's measure and nobody has reported them, so they stay in this log rather than a task. Note for runners: during this task a mistyped 'git stash push' (zsh does not split $VAR) fell through to a 'git stash pop' that popped stash@{0} (qwen-image leftovers); it was put back with 'git stash store' on the same commit 3583be9 and its files removed from the tree, so the stash list is as it was."
+    },
+    {
+      "t": "2026-11-02T15:39:29.471Z",
+      "note": "Shipped 14770731: one tone rule for panel icon buttons (IconButtonTone in PhotonzCore, PanelIconButtonStyle in the app). The effect row's cross and grip now match the eye at rest and brighten with a soft wash on hover, light and dark; 14 buttons moved onto the rule, 4 kept faint with written reasons (search clear buttons, section help mark). Guarded by FaintIconScanTests (source scan of every app file) and a measured check in the legibility sheet (every pressable icon at least 1.5x a disabled one's contrast; the old cross read 1.87:1 vs disabled 1.83:1, now 14.7:1). Verified: Scripts/test.sh green, 17 walks green incl. new active-icon-buttons-look-live-walk at Next defaults; before/after pictures in queue/audits/2026-11-02-a-button-you-can-press-never-looks-disabled-the.json."
     }
-  ]
+  ],
+  "started": "2026-11-02T14:51:38.797Z",
+  "walks": [
+    "active-icon-buttons-look-live-walk",
+    "appearance-effects-walk"
+  ],
+  "completed": "2026-11-02T15:39:29.472Z"
 }
