@@ -652,7 +652,7 @@ public struct AskConversation: Sendable {
                         continue
                     }
                     steps.append(step)
-                    if name == "add_component" { alignSheet() }
+                    if name == "add_component" || name == "add_text" { alignSheet() }
                     sameRefusals = 0
                     lastRefused = ""
                     tell(name, "Planned as step \(steps.count). Refer to what it makes as $\(steps.count).")
@@ -741,20 +741,30 @@ public struct AskConversation: Sendable {
     /// came out staggered (2026-10-23).
     /// The least room a sheet leaves at the page's left edge, and so at its right.
     static let sheetMargin = 64.0
+    /// The most room a sheet leaves at the page's left edge.
+    static let widestSheetMargin = 96.0
 
     mutating func alignSheet() {
         let rows = steps.indices.filter { steps[$0].tool == "add_component" && steps[$0].arguments["labels"]?.boolValue == true }
         guard let first = rows.first, let asked = steps[first].arguments["x"]?.doubleValue else { return }
         // No nearer the page's edge than its margin, the title over it too:
         // at 40 every judge read the last column as nearly touching the
-        // right edge (the eval, 2026-10-24).
-        let x = max(asked, Self.sheetMargin)
+        // right edge (the eval, 2026-10-24). And no further in than
+        // `widestSheetMargin`: rows and title at 240 left that much either
+        // side, and every judge read "the right side is mostly empty" (the
+        // eval, 2026-11-02).
+        let x = min(max(asked, Self.sheetMargin), Self.widestSheetMargin)
         let top = steps[first].arguments["y"]?.doubleValue ?? 0
-        for index in steps.indices where steps[index].tool == "add_text" && index < first {
+        // A title above the rows set on the left starts where they do,
+        // planned before them or after: the table starts on a left-set
+        // title's edge when it lands, so a title left at 240 takes the table
+        // with it. One set right of that (centred) is left as asked.
+        for index in steps.indices where steps[index].tool == "add_text" {
             guard var arguments = steps[index].arguments.objectValue,
-                  let at = arguments["x"]?.doubleValue, at < Self.sheetMargin,
+                  let at = arguments["x"]?.doubleValue, at != x,
+                  at < Self.sheetMargin || (at < canvasWidth / 4 && at > x),
                   (arguments["y"]?.doubleValue ?? 0) < top else { continue }
-            arguments["x"] = .number(Self.sheetMargin)
+            arguments["x"] = .number(at < Self.sheetMargin ? Self.sheetMargin : x)
             steps[index] = AskStep(tool: "add_text", arguments: .object(arguments))
         }
         func width(_ arguments: AgentJSON) -> Double {

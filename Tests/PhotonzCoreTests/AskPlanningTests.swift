@@ -135,7 +135,7 @@ struct AskPlanningTests {
             """)
     }
 
-    @Test("Labelled components line up as one sheet: the first one's x, no nearer the edge than the page margin, one column step that fits the canvas")
+    @Test("Labelled components line up as one sheet: the first one's x, between the page margin and 96, a left-set title on it, one column step that fits the canvas")
     func sheetLinesUp() throws {
         var talk = Self.sheet()
         _ = talk.take(try Self.reply([Self.component("Button", x: 80, y: 100, width: 120)]))
@@ -150,6 +150,21 @@ struct AskPlanningTests {
         _ = tight.take(try Self.reply([("add_text", #"{"text":"Base Components","x":40,"y":40,"fontSize":32}"#)]))
         _ = tight.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
         #expect(tight.steps.map { $0.arguments["x"]?.doubleValue } == [64, 64])
+        // A sheet set far in starts no further in than 96, and a title the
+        // model sends after the rows, set left, starts where they do: rows
+        // and title at 240 grew the page to 1576 with 240 either side, and
+        // every judge read "the right side is mostly empty" (the eval,
+        // 2026-11-02, run 20261102-203358-ask).
+        var far = Self.sheet()
+        _ = far.take(try Self.reply([Self.component("Button", x: 240, y: 100, width: 120),
+                                     ("add_text", #"{"text":"Base Components","x":240,"y":48,"fontSize":32}"#)]))
+        #expect(far.steps.map(\.tool) == ["add_component", "add_text"])
+        #expect(far.steps.map { $0.arguments["x"]?.doubleValue } == [96, 96])
+        // A title set to the right (centred over the page) is the model's own.
+        var centred = Self.sheet()
+        _ = centred.take(try Self.reply([("add_text", #"{"text":"Base Components","x":600,"y":40,"fontSize":32}"#),
+                                         Self.component("Button", x: 80, y: 100, width: 120)]))
+        #expect(centred.steps.map { $0.arguments["x"]?.doubleValue } == [600, 80])
         // Rows stack straight under one another: 32 tall, 25 for the state names, 24 apart.
         #expect(args.map { $0["y"]?.doubleValue } == [100, 181, 300])
         #expect(args[0]["step"]?.doubleValue == 224 && args[1]["step"]?.doubleValue == 224,

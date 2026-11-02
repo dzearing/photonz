@@ -1,0 +1,33 @@
+{
+  "feature": "Ask's component sheet: states you can see at a glance, a selection that moves, even margins",
+  "epic": "agent-skills",
+  "summary": "On a sheet Ask makes, a coloured button's Hover is now a clearly darker shade than Default, and Pressed a clear step darker again. A segmented control or tab bar shows its selection on the segment each state names. A slider keeps its thumb in every look, and the page keeps a 64 to 96 point margin even when the model asks for 240.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default, a blank picture 1440 by 1024, the built-in Qwen3.8 27B model.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Image, then press Ask (Command K)." },
+    { "do": "Type: create a table of apple like quality base components that show different states and text, and press Send." },
+    { "do": "Wait for it (four to six minutes on this Mac)." },
+    { "do": "Look across the Button row: Default, Hover and Pressed each a plainly different blue.", "shot": "2026-11-02-component-sheet-states-after.png" },
+    { "do": "Compare with the build before: Hover nearly Default's blue, and the page 240 in from both edges.", "shot": "2026-11-02-component-sheet-states-before.png" },
+    { "do": "Look at the Segmented Control row: the white selection sits on One, Two, Three in turn.", "shot": "2026-11-02-component-sheet-states-after-2.png" },
+    { "do": "See it in the editor window.", "shot": "2026-11-02-component-sheet-states-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: the whole sheet goes." }
+  ],
+  "evaluate": [
+    "Does Hover now read as its own state, between Default and Pressed?",
+    "Is Pressed dark enough, or now too dark for a system blue?",
+    "Does each segmented state show its selection where you expect?",
+    "Do the margins feel even on both sides of the page?"
+  ],
+  "rough": [
+    "Not at the bar: Ask scored 84 and 74.8 on this build with the same request (judges 8, 8, 7, 7, 7 and 7, 7, 7, 7, 8), against 84 and 70.6 on the build before. Typography reached 8 once; aligned, designed and asked stay at 7. The task stays open (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Two judges of three still read Hover and Pressed as close, though each now steps a whole state (1.35 lightness contrast) past the one before. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Keeping each state in one column down the table, with gaps, was tried and taken out: all three judges called the gaps patchy (picture 2026-11-02-component-sheet-column-gaps-tried.png). Rows with fewer states still leave the right side empty under the four-state Button row, and judges name it. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Judges sometimes read 'states and text' as asking for a row of text styles, and call a segmented control's One, Two, Three selections rather than states. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "A badge's number sits a little off the centre of its circle, named in two runs. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The name chips over each look still cover the headers in the window. That is the-name-chips-over-component-copies-stay-clear.",
+    "The skill was not measured again this pass. The hover and selection changes only touch Ask's own planning; the thumb fix applies to both.",
+    "No mock covers this surface; the bar is the user's own words and the eval."
+  ]
+}

@@ -503,6 +503,61 @@ extension AgentNewComponent {
             said["changes"] = .array(changes)
             looks[index - 1] = .object(said)
         }
+        // A coloured surface a later look only shades (Hover #006CDF over a
+        // Default #007AFF, contrast 1.24) goes on the way it leaned until it
+        // reads as its own state: every judge of five runs of the eval,
+        // 2026-11-02, read "Hover looks almost the same as Default" of a
+        // shade a person can tell apart side by side. Each look that shades
+        // it the same way then stands as far again past the one the model
+        // put before it in that order (Pressed past Hover): a step only
+        // plain beside it read as "Hover and Pressed look almost the same"
+        // to two judges of three (run 20261102-213915-ask). Only the
+        // component's own surface, coloured: a grey's hover is a shade by
+        // nature, and an alert whose hover only deepens its small button is
+        // still the same alert (left out below). Disabled is left to its own
+        // passes. Before the pass below, so it finds them already plain.
+        let stateNames = found.looks.dropFirst().map(\.name)
+        let whole = found.parts.filter { $0.kind != .text && !$0.hidden }.reduce(CGRect.null) { $0.union($1.frame) }
+        for part in found.parts where part.kind != .text && !part.hidden && !whole.isNull
+            && part.frame.width * part.frame.height >= whole.width * whole.height / 2 {
+            guard let first = part.look.fill?.hexValue, let base = RGBA(hex: first), base.a >= 1,
+                  max(base.r, base.g, base.b) - min(base.r, base.g, base.b) >= saturatedSpread else { continue }
+            func contrast(_ hex: String) -> Double {
+                RGBA(hex: hex).map { RGBA.contrast($0.linearLuminance, base.linearLuminance) } ?? 1
+            }
+            // The looks shading this surface, by which way and how far the model shaded each.
+            var shaded: [(look: Int, change: Int, fill: String, darker: Bool)] = []
+            for index in looks.indices where index < stateNames.count && !stateWords(stateNames[index]).contains("disabled") {
+                guard let changes = looks[index]["changes"]?.arrayValue,
+                      let at = changes.firstIndex(where: { named($0) == part.name }),
+                      let fill = changes[at]["fill"]?.stringValue, let colour = RGBA(hex: fill), colour.a >= 1,
+                      let step = apart(fill, first), step >= 1, !readsAsAState(fill, from: first, byLightness: false) else { continue }
+                shaded.append((index, at, fill, colour.linearLuminance < base.linearLuminance))
+            }
+            for darker in [true, false] {
+                var needed = leastStateContrast
+                // A look the same as one before it is a twin, left out below:
+                // it keeps that look's shade rather than being stepped on.
+                var made: [String: String] = [:]
+                for item in shaded.filter({ $0.darker == darker }).sorted(by: { contrast($0.fill) < contrast($1.fill) }) {
+                    let asked = RGBA(hex: item.fill)?.hexString ?? item.fill
+                    var fill = item.fill
+                    if let twin = made[asked] {
+                        fill = twin
+                    } else {
+                        if contrast(fill) < needed - 0.005 { fill = shadedToAState(fill, from: first, contrast: needed) }
+                        needed = contrast(fill) * leastStateContrast
+                        made[asked] = fill
+                    }
+                    guard fill != item.fill, var said = looks[item.look].objectValue,
+                          var changes = said["changes"]?.arrayValue, var change = changes[item.change].objectValue else { continue }
+                    change["fill"] = .string(fill)
+                    changes[item.change] = .object(change)
+                    said["changes"] = .array(changes)
+                    looks[item.look] = .object(said)
+                }
+            }
+        }
         // A look that recolours a part a shade off what an earlier look
         // after the first set it to (Hover #006CDF, Pressed #0065D1) goes
         // on the way it leaned until the two are plain (every judge of the
@@ -593,6 +648,50 @@ extension AgentNewComponent {
             for sign in [1.0, -1.0] where plainlyApart(going(sign, step), was) == true { return going(sign, step) }
         }
         return going(1, 160)
+    }
+
+    /// How far in lightness a later look's coloured surface stands from its
+    /// first look's for a person to read two states at a glance, not just
+    /// tell them apart side by side (`leastLookContrast`): #007AFF to
+    /// #006CDF is 1.24 and every judge read it as the same; Apple's own
+    /// pressed blue #0062CC is about 1.4.
+    static let leastStateContrast = 1.35
+    /// Hues this far apart, in degrees, are two colours (blue to green).
+    static let stateHueStep = 20.0
+
+    /// Whether a person reads `new` as another state of `first`: lighter or
+    /// darker by `leastStateContrast`, another hue, or plainly more or less
+    /// colourful.
+    static func readsAsAState(_ new: String, from first: String, byLightness: Bool = true) -> Bool {
+        guard let a = RGBA(hex: new), let b = RGBA(hex: first) else { return true }
+        if byLightness, RGBA.contrast(a.linearLuminance, b.linearLuminance) >= leastStateContrast { return true }
+        let one = a.hsl, two = b.hsl
+        if abs(one.saturation - two.saturation) >= saturatedSpread { return true }
+        let turn = abs(one.hue - two.hue).truncatingRemainder(dividingBy: 360)
+        return one.saturation >= 0.25 && two.saturation >= 0.25 && min(turn, 360 - turn) >= stateHueStep
+    }
+
+    /// `new` moved on from `first` the way it already leans until the two
+    /// stand `contrast` apart in lightness, a step darker when it does not
+    /// lean, and the other way when that way runs out of room.
+    static func shadedToAState(_ new: String, from first: String, contrast: Double = leastStateContrast) -> String {
+        guard let base = RGBA(hex: first), let asked = RGBA(hex: new) else { return new }
+        var lean = [asked.r - base.r, asked.g - base.g, asked.b - base.b]
+        if lean.map(abs).max() ?? 0 < 0.5 / 255 { lean = [-1, -1, -1] }
+        let biggest = lean.map(abs).max() ?? 1
+        let from = (biggest * 255).rounded(.up)
+        func going(_ sign: Double, _ step: Double) -> String {
+            let scale = step / 255 / biggest
+            return RGBA(r: min(max(base.r + sign * lean[0] * scale, 0), 1), g: min(max(base.g + sign * lean[1] * scale, 0), 1),
+                        b: min(max(base.b + sign * lean[2] * scale, 0), 1)).hexString
+        }
+        func far(_ hex: String) -> Bool {
+            RGBA(hex: hex).map { RGBA.contrast($0.linearLuminance, base.linearLuminance) >= contrast } ?? false
+        }
+        for step in stride(from: from, through: 255, by: 2) {
+            for sign in [1.0, -1.0] where far(going(sign, step)) { return going(sign, step) }
+        }
+        return new
     }
 
     static func number(_ value: Double) -> String {
@@ -1098,7 +1197,15 @@ extension AgentTools {
         // look also restyles were there to restyle, so they stay shown (a
         // segmented control's Two look set "One" visible and plain, and the
         // first look's selected segment came out empty: the eval, 2026-11-02).
+        // So does any part that look also resizes: a part that only appears
+        // is not grown as it does (a Pressed knob set visible while growing
+        // 24 to 28 left the Default slider with no thumb, and every judge
+        // read "the default slider has no thumb": the eval, 2026-11-02).
         let changes = (args["looks"]?.arrayValue ?? []).flatMap { $0["changes"]?.arrayValue ?? [] }
+        let resized = Set(changes.compactMap { change -> String? in
+            guard let keys = change.objectValue?.keys else { return nil }
+            return keys.contains("width") || keys.contains("height") ? change["part"]?.stringValue : nil
+        })
         let restyled = Set(changes.compactMap { change -> String? in
             guard let keys = change.objectValue?.keys else { return nil }
             return keys.contains { $0 != "part" && $0 != "visible" } ? change["part"]?.stringValue : nil
@@ -1108,7 +1215,8 @@ extension AgentTools {
         })
         for (index, item) in (args["parts"]?.arrayValue ?? []).enumerated()
         where index < parts.count && item["visible"] == nil && shown.contains(parts[index].name)
-            && !(parts[index].kind == .text && restyled.contains(parts[index].name)) {
+            && !(parts[index].kind == .text && restyled.contains(parts[index].name))
+            && !resized.contains(parts[index].name) {
             parts[index].hidden = true
         }
 

@@ -466,6 +466,58 @@ extension AgentNewComponent {
         return out
     }
 
+    /// A look named by words the control itself says (a segmented control's
+    /// Second, a tab bar's Settings) has the selection around those words:
+    /// the box that sits round the first look's own named words, smaller
+    /// than the control, is shown and moved across to them when the look
+    /// hides it or leaves it where it was. A small model hid the white
+    /// segment in its Second and Third looks instead of moving it, and every
+    /// judge read "the Second state has no selected segment" (the eval,
+    /// 2026-11-02). A look named for no words of the control is left alone.
+    static func selectionFollowsItsName(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
+        guard var looks = args["looks"]?.arrayValue, let firstLook = found.looks.first else { return args }
+        func key(_ words: String?) -> String { (words ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        func slot(_ part: AgentComponentPart, in spec: AgentNewComponent) -> CGRect? {
+            part.frame.width > 0 ? part.frame : spec.wordsSpot(part)
+        }
+        let whole = found.parts.filter { $0.kind != .text && !$0.hidden }.reduce(CGRect.null) { $0.union($1.frame) }
+        guard !whole.isNull, let named = found.parts.first(where: { $0.kind == .text && !$0.hidden && key($0.text) == key(firstLook.name) }),
+              let spot = slot(named, in: found) else { return args }
+        let centre = CGPoint(x: spot.midX, y: spot.midY)
+        guard let selection = found.parts.filter({ part in
+            part.kind != .text && !part.hidden && part.frame.contains(centre)
+                && part.frame.width * part.frame.height < whole.width * whole.height / 2
+        }).min(by: { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }) else { return args }
+        var touched = false
+        for (index, look) in found.looks.enumerated().dropFirst() where index - 1 < looks.count {
+            let shown = found.inLook(look)
+            guard let words = shown.parts.first(where: { $0.kind == .text && !$0.hidden && key($0.text) == key(look.name) }),
+                  words.name != named.name, let target = slot(words, in: shown),
+                  let now = shown.parts.first(where: { $0.name == selection.name }) else { continue }
+            if !now.hidden && now.frame.contains(CGPoint(x: target.midX, y: target.midY)) { continue }
+            guard var object = looks[index - 1].objectValue else { continue }
+            var changes = object["changes"]?.arrayValue ?? []
+            if let at = changes.firstIndex(where: { key($0["part"]?.stringValue) == key(selection.name) }),
+               var change = changes[at].objectValue {
+                change["visible"] = nil
+                changes[at] = .object(change)
+            }
+            object["changes"] = .array(changes)
+            var moved = AgentJSON.object(object)
+            let x = (target.midX - now.frame.width / 2).rounded()
+            moved = setting("x", .number(Double(x)), on: selection.name, in: moved)
+            if !(now.frame.minY...now.frame.maxY).contains(target.midY) {
+                moved = setting("y", .number(Double((target.midY - now.frame.height / 2).rounded())), on: selection.name, in: moved)
+            }
+            looks[index - 1] = moved
+            touched = true
+        }
+        guard touched else { return args }
+        var out = args
+        out["looks"] = .array(looks)
+        return out
+    }
+
     /// Words centred in a part that would land on other words, in the first
     /// look or a later one, while the call also gave them a box of their own,
     /// are set in that box instead (centred in it). Centring and a box say
@@ -507,6 +559,7 @@ extension AgentNewComponent {
         }
         var out = args
         for step in [{ (args: [String: AgentJSON]) in numbersLeftOff(args) },
+                     { args in built(args).map { selectionFollowsItsName(args, $0) } ?? args },
                      { args in built(args).map { wordsInTheirOwnPlace(args, $0) } ?? args },
                      { args in onTypeScale(args) },
                      { args in built(args).map { wordsStayPut(args, $0) } ?? args },

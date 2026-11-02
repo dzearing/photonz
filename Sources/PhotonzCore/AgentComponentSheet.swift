@@ -211,31 +211,46 @@ extension PhotonzDocument {
     /// control: twice the least row height.
     static let tallRow = AgentNewComponent.rowHeight * 2
 
-    /// The sections with each state kept in the column an earlier header
-    /// row gave it, when that column is one of the section's own (a section
-    /// of three states keeps to the first three columns, with no gap), and
-    /// the states left over in the columns left free, in their order.
-    /// Judges, 2026-10-24: "the column states change between sections
-    /// (Focused moves from column 4 to column 3)".
+    /// The sections with each state kept in the column the widest header
+    /// row naming it gives it (the first such row, then the next widest),
+    /// when that column is one of the section's own (a section of three
+    /// states keeps to the first three columns, with no gap), and the states
+    /// left over in the columns left free, in their order. Judges,
+    /// 2026-10-24: "the column states change between sections (Focused moves
+    /// from column 4 to column 3)". Gaps were tried on 2026-11-02 to keep
+    /// Disabled in one column down the table, and all three judges read the
+    /// sheet as patchy ("Text Field and Slider skip columns"). Homes come
+    /// from the widest row so a three-state section first does not put a
+    /// four-state row's Pressed after its Disabled.
     static func keepingColumns(_ sections: [SheetSection]) -> [SheetSection] {
         func key(_ name: String) -> String { name.trimmingCharacters(in: .whitespaces).lowercased() }
+        // Each state's home: where the widest header row naming it puts it.
         var home: [String: Int] = [:]
-        return sections.map { section in
-            let count = section.headers.count
-            var column = Array(repeating: -1, count: count)
+        let widestFirst = sections.indices.sorted { (-sections[$0].headers.count, $0) < (-sections[$1].headers.count, $1) }
+        func placed(_ section: SheetSection) -> [Int] {
+            var column = Array(repeating: -1, count: section.headers.count)
             var taken = Set<Int>()
             for (at, header) in section.headers.enumerated() {
-                guard let wanted = home[key(header)], wanted < count, !taken.contains(wanted) else { continue }
+                guard let wanted = home[key(header)], wanted < section.headers.count, !taken.contains(wanted) else { continue }
                 column[at] = wanted
                 taken.insert(wanted)
             }
-            var free = (0..<count).filter { !taken.contains($0) }.makeIterator()
+            var free = (0..<section.headers.count).filter { !taken.contains($0) }.makeIterator()
             for at in column.indices where column[at] < 0 { column[at] = free.next() ?? at }
-            var moved = section
-            for (at, header) in section.headers.enumerated() {
-                moved.headers[column[at]] = header
-                if home[key(header)] == nil { home[key(header)] = column[at] }
+            return column
+        }
+        var columns: [[Int]] = Array(repeating: [], count: sections.count)
+        for index in widestFirst {
+            let column = placed(sections[index])
+            for (at, header) in sections[index].headers.enumerated() where home[key(header)] == nil {
+                home[key(header)] = column[at]
             }
+            columns[index] = column
+        }
+        return zip(sections, columns).map { section, column in
+            var moved = section
+            moved.headers = section.headers
+            for (at, header) in section.headers.enumerated() { moved.headers[column[at]] = header }
             moved.cells = section.cells.map { $0.map { column[$0] } }
             return moved
         }

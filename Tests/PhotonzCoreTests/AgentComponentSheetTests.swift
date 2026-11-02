@@ -463,10 +463,23 @@ struct AgentComponentSheetTests {
         #expect(abs(fields[3].minX - buttons[2].minX) <= 1, "Filled takes the column left free")
         let filled = try #require(Self.words(in: document).first { $0.text?.string == "Filled" })
         #expect(abs(filled.frame.minX - fields[3].minX) <= 1)
-        // A section with fewer states keeps to the first columns, with no gap.
+        // A section with fewer states keeps to the first columns, with no
+        // gap: with Disabled kept under Disabled across a gap, all three
+        // judges read the sheet as patchy (the eval, 2026-11-02, run
+        // 20261102-220847-ask: "Text Field and Slider skip columns").
         let toggle = try Self.add(Self.row("Toggle", y: 300, looks: ["Off", "On", "Disabled"]), to: &document)
         let toggles = Self.boxes(toggle, in: document)
         #expect(abs(toggles[2].minX - buttons[2].minX) <= 1, "\(toggles.map(\.minX))")
+    }
+
+    @Test("The widest header row sets the columns, wherever it comes, so a narrow section first does not push Pressed past Disabled")
+    func widestSectionSetsTheColumns() throws {
+        var document = Self.blank()
+        let toggle = try Self.add(Self.row("Toggle", y: 100, looks: ["Off", "On", "Disabled"]), to: &document)
+        let button = try Self.add(Self.row("Button", y: 200, looks: Self.states), to: &document)
+        let buttons = Self.boxes(button, in: document), toggles = Self.boxes(toggle, in: document)
+        #expect(buttons.map(\.minX) == buttons.map(\.minX).sorted(), "Default, Hover, Pressed, Disabled from the left: \(buttons.map(\.minX))")
+        #expect(abs(toggles[2].minX - buttons[2].minX) <= 1, "three states keep to the first three columns: \(toggles.map(\.minX)) \(buttons.map(\.minX))")
     }
 
     @Test("A tall row under shorter ones gets its section's header row again, right above it")

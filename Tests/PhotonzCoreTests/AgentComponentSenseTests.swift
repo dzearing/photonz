@@ -472,7 +472,7 @@ struct AgentComponentSenseTests {
         #expect(refused.message.contains("Back") && refused.message.contains("Title"), "\(refused.message)")
     }
 
-    @Test("A Pressed a shade off its Hover is set plainly apart from it, the way it already leaned; a Hover already plain is kept")
+    @Test("A Pressed a shade off its Hover is set plainly apart from it, the way it already leaned")
     func laterLooksStepApart() throws {
         // The eval, 2026-11-02: Default #007AFF, Hover #006CDF, Pressed
         // #0065D1, and all three judges: "Hover and Pressed look almost the same".
@@ -487,7 +487,7 @@ struct AgentComponentSenseTests {
         #expect(spec.looks.map(\.name) == ["Default", "Hover", "Pressed", "Disabled"])
         let hover = try #require(Self.part("Back", in: spec, look: "Hover")?.look.fill?.hexValue)
         let pressed = try #require(Self.part("Back", in: spec, look: "Pressed")?.look.fill?.hexValue)
-        #expect(RGBA(hex: hover) == RGBA(hex: "#006CDF"), "a Hover already plain from Default is left as the model gave it")
+        #expect(AgentNewComponent.readsAsAState(hover, from: "#007AFF"), "\(hover) reads as its own state beside #007AFF")
         #expect(AgentNewComponent.plainlyApart(pressed, hover) == true, "\(pressed) beside \(hover)")
         #expect(AgentNewComponent.plainlyApart(pressed, "#007AFF") == true)
         let one = try #require(RGBA(hex: pressed)), two = try #require(RGBA(hex: hover))
@@ -509,6 +509,118 @@ struct AgentComponentSenseTests {
         #expect(AgentNewComponent.plainlyApart(fills[1], fills[2]) == true, "\(fills)")
     }
 
+
+    @Test("A coloured control's Hover a shade off its Default goes on darker until it reads as a state; greys, hue changes and Disabled are left")
+    func colouredStatesReadAsStates() throws {
+        // The eval, 2026-11-02, every judge of five runs on Ask's sheets:
+        // "Hover looks almost the same as Default" of #007AFF to #006CDF,
+        // which a person can tell apart (contrast 1.24) but does not read as
+        // a second state at a glance.
+        func button(_ hover: String, first: String = "#007AFF", pressed: String? = "#0058C2", name: String = "Hover") throws -> AgentNewComponent {
+            let pressedLook = pressed.map { #",{"name":"Pressed","changes":[{"part":"Back","fill":"\#($0)"}]}"# } ?? ""
+            return try Self.plain(##"""
+                {"name":"Button","x":0,"y":0,"labels":false,"firstLook":"Default",
+                 "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":120,"height":32,"fill":"\##(first)"},
+                          {"name":"Label","shape":"text","text":"Button","color":"#FFFFFF","x":34,"y":5,"width":0,"height":0}],
+                 "looks":[{"name":"\##(name)","changes":[{"part":"Back","fill":"\##(hover)"}]}\##(pressedLook)]}
+                """##)
+        }
+        func fill(_ spec: AgentNewComponent, _ look: String) throws -> String {
+            try #require(Self.part("Back", in: spec, look: look)?.look.fill?.hexValue)
+        }
+        let blue = try button("#006CDF")
+        let hover = try fill(blue, "Hover"), pressed = try fill(blue, "Pressed")
+        #expect(AgentNewComponent.readsAsAState(hover, from: "#007AFF"), "\(hover)")
+        let was = try #require(RGBA(hex: "#006CDF")), now = try #require(RGBA(hex: hover))
+        #expect(now.b < was.b && now.g <= was.g && now.r <= was.r + 0.5 / 255, "on darker, the way it leaned: \(hover)")
+        #expect(now.b > 0.6, "still the control's blue, not navy: \(hover)")
+        #expect(AgentNewComponent.readsAsAState(pressed, from: hover), "Pressed reads as its own state beside the new Hover: \(pressed), \(hover)")
+        let deeper = try #require(RGBA(hex: pressed))
+        #expect(deeper.linearLuminance < now.linearLuminance, "Pressed stays the darker: \(pressed), \(hover)")
+        // A Hover that already reads is kept as the model gave it.
+        #expect(RGBA(hex: try fill(button("#0062CC", pressed: nil), "Hover")) == RGBA(hex: "#0062CC"))
+        // A grey surface's hover is a shade by nature: not pushed to this bar.
+        let grey = try fill(button("#D1D1D6", first: "#E9E9EA", pressed: nil), "Hover")
+        #expect(RGBA(hex: grey) == RGBA(hex: "#D1D1D6"), "\(grey)")
+        // A look that changes the colour itself already reads.
+        #expect(RGBA(hex: try fill(button("#34C759", pressed: nil), "Hover")) == RGBA(hex: "#34C759"))
+        // Disabled is faint by design.
+        let disabled = try fill(button("#1A88FF", pressed: nil, name: "Disabled"), "Disabled")
+        #expect(RGBA(hex: disabled) == RGBA(hex: "#1A88FF"), "\(disabled)")
+    }
+
+    @Test("A look named by words the control says has its selection around those words, not hidden or left behind")
+    func selectionFollowsItsName() throws {
+        // The eval, 2026-11-02 (run 20261102-213915-ask), the model's own
+        // call: its Second and Third looks hid the white segment instead of
+        // moving it, and every judge read "the Second state has no selected
+        // segment" (Third, the same as Second, was left out as a twin).
+        let spec = try Self.plain(##"""
+            {"firstLook": "First", "labels": true, "name": "Segmented Control", "x": 240, "y": 520,
+             "looks": [{"changes": [{"part": "Segment 1", "visible": false}, {"color": "#1C1C1E", "part": "Label 1"}, {"color": "#1C1C1E", "part": "Label 2"}], "name": "Second"},
+                       {"changes": [{"part": "Segment 1", "visible": false}, {"color": "#1C1C1E", "part": "Label 1"}, {"color": "#1C1C1E", "part": "Label 3"}], "name": "Third"}],
+             "parts": [{"cornerRadius": 8, "fill": "#E9E9EA", "height": 32, "name": "Background", "shape": "rectangle", "width": 240, "x": 0, "y": 0},
+                       {"cornerRadius": 6, "fill": "#FFFFFF", "height": 28, "name": "Segment 1", "shadow": {"color": "#000000", "opacity": 0.1, "radius": 2, "x": 0, "y": 1}, "shape": "rectangle", "width": 78, "x": 2, "y": 2},
+                       {"centerIn": "Segment 1", "color": "#1C1C1E", "fontSize": 13, "height": 28, "name": "Label 1", "shape": "text", "text": "First", "weight": "medium", "width": 78, "x": 2, "y": 2},
+                       {"centerIn": "Background", "color": "#1C1C1E", "fontSize": 13, "height": 28, "name": "Label 2", "shape": "text", "text": "Second", "weight": "regular", "width": 78, "x": 82, "y": 2},
+                       {"centerIn": "Background", "color": "#1C1C1E", "fontSize": 13, "height": 28, "name": "Label 3", "shape": "text", "text": "Third", "weight": "regular", "width": 78, "x": 162, "y": 2}]}
+            """##)
+        #expect(spec.looks.map(\.name) == ["First", "Second", "Third"])
+        #expect(spec.problem == nil, "\(spec.problem ?? "")")
+        for (look, words) in [("First", "Label 1"), ("Second", "Label 2"), ("Third", "Label 3")] {
+            let found = try #require(spec.looks.first { $0.name == look })
+            let shown = spec.inLook(found)
+            let segment = try #require(shown.parts.first { $0.name == "Segment 1" })
+            let label = try #require(shown.parts.first { $0.name == words })
+            let spot = try #require(shown.wordsSpot(label))
+            #expect(!segment.hidden, "\(look): the selection shows")
+            #expect(segment.frame.contains(CGPoint(x: spot.midX, y: spot.midY)), "\(look): \(segment.frame) round \(spot)")
+            // The other words stay where they were.
+            for other in ["Label 1", "Label 2", "Label 3"] where other != words {
+                let part = try #require(shown.parts.first { $0.name == other })
+                let at = try #require(shown.wordsSpot(part))
+                #expect(!segment.frame.contains(CGPoint(x: at.midX, y: at.midY)), "\(look): \(other) is not under the selection")
+            }
+        }
+        // A look named for no words of the control is left as it was.
+        let tabs = try Self.plain(##"""
+            {"firstLook": "Default", "labels": true, "name": "Tabs", "x": 0, "y": 0,
+             "looks": [{"changes": [{"part": "Pill", "visible": false}], "name": "Disabled"}],
+             "parts": [{"fill": "#E9E9EA", "height": 32, "name": "Background", "shape": "rectangle", "width": 160, "x": 0, "y": 0},
+                       {"fill": "#FFFFFF", "height": 28, "name": "Pill", "shape": "rectangle", "width": 78, "x": 2, "y": 2},
+                       {"color": "#1C1C1E", "fontSize": 13, "height": 28, "name": "A", "shape": "text", "text": "One", "width": 78, "x": 2, "y": 2, "alignment": "center"},
+                       {"color": "#1C1C1E", "fontSize": 13, "height": 28, "name": "B", "shape": "text", "text": "Two", "width": 78, "x": 82, "y": 2, "alignment": "center"}]}
+            """##)
+        #expect(Self.part("Pill", in: tabs, look: "Disabled")?.hidden == true)
+    }
+
+    @Test("A part a later look shows and resizes was there to resize: it stays shown in the first look; a part a look only shows starts hidden")
+    func resizedPartsStayShown() throws {
+        // The eval, 2026-11-02 (run 20261102-220847-ask), the model's own
+        // call: Pressed set the knob visible while growing it 24 to 28, the
+        // knob was hidden in Default, and every judge read "the default
+        // slider has no thumb".
+        let spec = try Self.plain(##"""
+            {"firstLook": "Default", "labels": true, "name": "Slider", "x": 240, "y": 600,
+             "looks": [{"changes": [{"height": 28, "part": "Knob", "visible": true, "width": 28}], "name": "Pressed"}],
+             "parts": [{"cornerRadius": 2, "fill": "#E9E9EA", "height": 4, "name": "Track", "shape": "rectangle", "width": 240, "x": 0, "y": 14},
+                       {"cornerRadius": 2, "fill": "#007AFF", "height": 4, "name": "Fill", "shape": "rectangle", "width": 144, "x": 0, "y": 14},
+                       {"fill": "#FFFFFF", "height": 24, "name": "Knob", "shadow": {"color": "#000000", "opacity": 0.2, "radius": 3, "x": 0, "y": 1}, "shape": "ellipse", "width": 24, "x": 132, "y": 4}]}
+            """##)
+        #expect(Self.part("Knob", in: spec, look: "Default")?.hidden == false)
+        // With the knob in both, a white knob 4 points bigger is too small to
+        // see, so Pressed is left out rather than shown as a twin.
+        #expect(spec.looks.map(\.name) == ["Default"])
+        // A tick a look only shows, or shows and recolours, starts hidden.
+        let box = try Self.plain(##"""
+            {"name": "Checkbox", "x": 0, "y": 0, "labels": true, "firstLook": "Unchecked",
+             "parts": [{"name": "Box", "shape": "rectangle", "x": 0, "y": 0, "width": 22, "height": 22, "cornerRadius": 6, "fill": "#FFFFFF", "stroke": "#C7C7CC", "strokeWidth": 1},
+                       {"name": "Check", "shape": "path", "x": 0, "y": 0, "width": 22, "height": 22, "points": [{"x": 6, "y": 11}, {"x": 10, "y": 15}, {"x": 16, "y": 7}], "stroke": "#FFFFFF", "strokeWidth": 2}],
+             "looks": [{"name": "Checked", "changes": [{"part": "Box", "fill": "#007AFF", "stroke": "#007AFF"}, {"part": "Check", "visible": true, "stroke": "#FFFFFF"}]}]}
+            """##)
+        #expect(Self.part("Check", in: box, look: "Unchecked")?.hidden == true)
+        #expect(Self.part("Check", in: box, look: "Checked")?.hidden == false)
+    }
 
     @Test("Words a later look shows and restyles stay shown in the first look; words a look only shows start hidden")
     func restyledWordsStayShown() throws {
