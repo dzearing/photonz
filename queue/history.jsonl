@@ -15295,3 +15295,17 @@
 {"t":"2026-11-02T19:19:52.533Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T19:19:52.610Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T19:20:14.593Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Labels kept and grown parts centred shipped (1f3ee881); the eval now waits 540 s for this request. Ask scores 79.2 and 65.8 on this build (judges 6 to 7 of 10), short of the 8-of-10 bar, so it stays open."}
+{"t":"2026-11-02T19:50:45.532Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-02T19:50:45.622Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1803,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-02T19:50:45.797Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-11-02T20:05:09.769Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:45:05.053Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:45:05.126Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:45:05.199Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:45:05.271Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:45:05.351Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:46:53.199Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:52:50.354Z","ev":"task_walks","id":"asking-for-a-sheet-of-components-gives-a-clean-t","walks":["ask-builds-base-components-walk"]}
+{"t":"2026-11-02T20:52:50.427Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:52:50.501Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-02T20:53:18.015Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Section rules, even margins, no dropped segmented control and a Disabled field never darker shipped (9012e022). Ask scores 84 and 70.6 on this build (judges 7.4 and 7.2, was 6.2 to 6.6); clean and aligned reach 8, typography and designed stay at 7, short of the 8-of-10 bar, so it stays open."}

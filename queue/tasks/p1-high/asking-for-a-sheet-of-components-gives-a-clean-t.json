@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-02T19:20:14.592Z",
+  "updated": "2026-11-02T20:53:18.014Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -363,9 +363,57 @@
     {
       "t": "2026-11-02T19:20:14.591Z",
       "note": "Labels kept and grown parts centred shipped (1f3ee881); the eval now waits 540 s for this request. Ask scores 79.2 and 65.8 on this build (judges 6 to 7 of 10), short of the 8-of-10 bar, so it stays open."
+    },
+    {
+      "t": "2026-11-02T19:50:45.791Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T20:05:09.767Z",
+      "note": "Read run 20261102-190923 (65.8; judge 6,7,6,6,6). Three causes found in the trace and the finished document: (1) the title Ask asks for after the rows skipped the 64 margin (inserted at step 1 without alignSheet), so the table ran 24 from both edges: every judge said 'Disabled crammed against the right edge'; (2) a segmented control centred two labels in its track while giving each its own slot, refused 3 times as words on words, left off the sheet; (3) checkbox and radio under Toggle's header read as headerless in every run. Building: margin for a late title, words keep their own boxes when centring would stack them, a hairline between sections."
+    },
+    {
+      "t": "2026-11-02T20:45:05.051Z",
+      "note": "Built (9012e022): a 1 pt hairline (#E5E5EA, 'Sheet Rule') across the table halfway between one section and the next header row (and before a header row set again over a tall row), rebuilt with every layout; the title Ask asks for after the rows keeps the 64 margin (alignSheet after the insert); words centred in a part that would land on other words, with their own box given, sit in that box (wordsInTheirOwnPlace, first look and every later one); a later look's unreadable words take their first look's colour when it reads, before the nearest stock shade; a Disabled surface over a white Default may stay as faint as #F2F2F7 (disabledFillsFaint) and that counts as visible for a Disabled look (leastDisabledContrast 1.1). Ask's trace keeps 20000 characters of an answer, which is how the real Text Field call was read."
+    },
+    {
+      "t": "2026-11-02T20:45:05.124Z",
+      "note": "Reproduced before fixing, each from the trace or the finished document: title x 24 inserted after rows (test sheetGetsATitle); segmented control Label Two/Three centerIn Background with own slots refused 3 times (test wordsKeepTheirOwnPlaces, the exact call); Disabled Text Field fill #F2F2F7 + words #E5E5EA ended #8E8E93 on #FFFFFF, the same colours as the finished document (test disabledFieldNeverDarker, the exact call): disabledFillsFaint set the fill white, then readable(near:) picked the nearest stock shade, #8E8E93."
+    },
+    {
+      "t": "2026-11-02T20:45:05.197Z",
+      "note": "Eval (rubric f5ae1562), Ask component-table: before 65.8 (judge 6,7,6,6,6) and 79.2 on 1f3ee881; after-1 (rules, margin, own boxes) 84, judge 8,7,8,7,7, no judge names headerless rows, segmented control back; after-2 (+ Disabled) 70.6, judge 8,7,8,7,6: no judge names the Disabled field, but all three read 'states and text' as wanting a row of text styles (didWhatWasAsked 6 scales the score by 6/7). Judge mean 7.4 and 7.2, was 6.2 to 6.6. NOT at the 8-of-10 bar (typography and designed 7, asked 6 to 7), so left pending. Skill not re-measured this pass."
+    },
+    {
+      "t": "2026-11-02T20:45:05.269Z",
+      "note": "Chose rules between sections only, not between every row, because the section is what a header names; one judge of three in after-2 still asked for dividers between toggle, checkbox and radio. Chose to keep a model's faint grey Disabled field over making it white, because white left its faint words unreadable and the fix for that made them darker than Default's."
+    },
+    {
+      "t": "2026-11-02T20:45:05.349Z",
+      "note": "Left rough (this task covers it): Hover a shade off Default is named by every judge in both runs (#007AFF to #0071EB is plain by the 1.2 contrast bar yet reads as the same to a judge); rows of three states leave the right quarter empty under a four-state Button; 'text' in the request read as a row of type styles by the judges of one run; segmented control states read as selections, not states."
+    },
+    {
+      "t": "2026-11-02T20:46:53.197Z",
+      "note": "Tried and reverted: the look contrast bar 1.2 to 1.3 so Ask's Hover (#006CDF over #007AFF, 1.24) steps further. It also refuses #2563EB to #1D4ED8, the skill's hover this task once chose to let through (its real contrast is near 1.25, not the 1.38 the comment says), so it reopens a settled call; not kept. Hover stays the most named flaw."
+    },
+    {
+      "t": "2026-11-02T20:52:50.352Z",
+      "note": "walks ask-builds-base-components-walk -> ask-builds-base-components-walk"
+    },
+    {
+      "t": "2026-11-02T20:52:50.425Z",
+      "note": "Pictures looked at: before (20261102-190923: no rules, table 24 from both edges, no segmented control, darker Disabled placeholder), after-1 (20261102-200517: rules between sections, 64 margins, segmented control back with every label, Disabled placeholder still darker since that fix came after), after-2 (20261102-203358: rules, Disabled field faint grey with a faint placeholder), walk window capture (rules thin under the chips, six Sheet Rule rows at the top of Layers). Tests: Scripts/test.sh green (15,193). Walk ask-builds-base-components-walk ok at Next defaults. Audit: queue/audits/2026-11-02-component-sheet-section-rules.json"
+    },
+    {
+      "t": "2026-11-02T20:52:50.498Z",
+      "note": "Left rough (this task covers it, not filed): six Sheet Rule layers at the top of the Layers list could sit in one group; Hover near Default; right quarter empty under a four-state row."
+    },
+    {
+      "t": "2026-11-02T20:53:18.013Z",
+      "note": "Section rules, even margins, no dropped segmented control and a Disabled field never darker shipped (9012e022). Ask scores 84 and 70.6 on this build (judges 7.4 and 7.2, was 6.2 to 6.6); clean and aligned reach 8, typography and designed stay at 7, short of the 8-of-10 bar, so it stays open."
     }
   ],
-  "started": "2026-11-02T18:25:06.900Z",
+  "started": "2026-11-02T19:50:45.790Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
