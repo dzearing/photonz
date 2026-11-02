@@ -135,6 +135,8 @@ extension PlaytestMemory {
             [TitlePresetStore.key]
         case .history:
             [HistoryOverlay.filterKey, HistoryOverlayController.heightKey]
+        case .ask:
+            [AskLocalModel.builtInChoiceKey, AskLocalModel.choiceKey, AskRuntime.settingKey]
         }
     }
 }
@@ -230,6 +232,10 @@ struct PlaytestSetupRunner {
             AskModelServer.walkFolder = PlaytestSetupRunner.askModels(only)
             said.append("Ask has only \(only.isEmpty ? "no model" : only.joined(separator: ", ")) downloaded")
         }
+        // A download in a walk with a folder of its own clones the Mac's copy.
+        AskModelServer.walkSource = AskModelServer.walkFolder == nil ? nil : PlaytestSetupRunner.macAskModels
+        AskLocalModel.walkMac = setup.askMac
+        if let mac = setup.askMac { said.append("Ask plans for a \(mac) GB Mac") }
         if setup.offline { said.append(PlaytestSetupRunner.goOffline()) }
         // Every walk says afresh: Settings > Agents installs into the real
         // home unless the walk gives it an empty one of its own.
@@ -328,13 +334,23 @@ struct PlaytestSetupRunner {
     /// A folder holding only `ids`' files, cloned from the Mac's own models
     /// folder (APFS clones: instant, no space, and a walk that deletes one
     /// takes nothing from the Mac). A model the Mac does not have stays missing.
+    /// The Mac's own models folder, whatever a walk has pointed Ask at.
+    static var macAskModels: URL {
+        let walk = AskModelServer.walkFolder
+        AskModelServer.walkFolder = nil
+        defer { AskModelServer.walkFolder = walk }
+        return AskModelServer.folder
+    }
+
     static func askModels(_ ids: [String]) -> URL {
         let folder = emptyAskModels()
         AskModelServer.walkFolder = nil
         let mac = AskModelServer.folder
         for choice in ids.compactMap(AskBuiltInModels.choice(id:)) {
             for file in choice.files {
-                try? FileManager.default.copyItem(at: mac.appending(path: file.name), to: folder.appending(path: file.name))
+                let to = folder.appending(path: file.name)
+                try? FileManager.default.createDirectory(at: to.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try? FileManager.default.copyItem(at: mac.appending(path: file.name), to: to)
             }
         }
         return folder

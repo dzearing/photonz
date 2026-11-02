@@ -345,6 +345,14 @@ final class AskPictureServer {
         }
     }
 
+    /// Takes the picture model off the Mac (Settings' Delete): its weights
+    /// and its tools, stopping the server first.
+    static func delete() {
+        shared.stop()
+        try? FileManager.default.removeItem(at: AskPictureModelPlan.modelFolder(in: folder))
+        try? FileManager.default.removeItem(at: AskPictureModelPlan.toolsFolder(in: folder))
+    }
+
     /// Stops the server and frees its memory.
     func stop() {
         watch?.cancel()

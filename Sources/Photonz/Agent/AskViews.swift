@@ -196,7 +196,7 @@ struct AgentPanel: View {
                     .playtestControl("Ask Says", detail: sentence)
                 // Ask's model is set up in Settings: one click there, one to download.
                 if AskLocalModel.Trouble.setupSentences.contains(sentence) {
-                    Button(AskCopy.setUp) { AppDelegate.coordinator?.showSettings() }
+                    Button(AskCopy.setUp) { AppDelegate.coordinator?.showSettings(section: .ask) }
                         .controlSize(.small)
                         .playtestControl("Ask Set Up", detail: AskCopy.setUp)
                 }

@@ -4970,7 +4970,7 @@ struct PlaytestScriptTests {
         #expect(PlaytestMemory.allCases.map(\.rawValue)
                 == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid",
                     "frames", "tutorials", "motion", "shelf", "questions", "recent", "titlePresets",
-                    "history"])
+                    "history", "ask"])
     }
 
     @Test func waitForReadsASectionByItsHeaderText() {

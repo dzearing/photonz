@@ -2,24 +2,139 @@
   "out": "/tmp/photonz-playtest/ask-deletes-an-older-model-walk",
   "clock": 120,
   "setup": {
-    "forget": ["all"],
-    "askModelsOnly": ["qwen3.8-27b", "qwen3.6-35b-a3b"]
+    "forget": [
+      "all"
+    ],
+    "askModelsOnly": [
+      "qwen3.8-27b",
+      "qwen3.6-35b-a3b"
+    ]
   },
   "steps": [
-    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
-    { "do": "wait", "seconds": 1.5 },
-    { "do": "reveal", "control": "Ask Model" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "expect", "control": "Ask Model", "present": true },
-    { "do": "expect", "control": "Ask Download Newer", "present": false },
-    { "do": "expect", "control": "Ask Delete Qwen3.6 35B", "present": true },
-    { "do": "describe", "stage": "1-both-models", "note": "Settings > Ask with both models down: Automatic is Qwen3.8 27B, and the older Qwen3.6 35B has a Delete" },
-    { "do": "snapshot", "name": "1-both-models", "window": "Settings" },
-    { "do": "press", "control": "Ask Delete Qwen3.6 35B" },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "2-delete-asks", "note": "Delete asks first, saying how much it frees" },
-    { "do": "snapshot", "name": "2-delete-asks", "window": "Settings" }
-  ]
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "shortcut",
+      "key": ",",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Settings…"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "reveal",
+      "control": "Ask Model Qwen3.8 27B"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Ask Use Qwen3.8 27B",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Ask Use Qwen3.6 35B",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-both-models",
+      "note": "Settings > Ask with both models down: Qwen3.8 27B is in use, Qwen3.6 35B has Use and Delete"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-both-models",
+      "window": "Settings"
+    },
+    {
+      "do": "press",
+      "control": "Ask Use Qwen3.6 35B"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Ask Use Qwen3.6 35B",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Ask Use Qwen3.8 27B",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-use",
+      "note": "Use moves the In Use mark to Qwen3.6 35B"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-use",
+      "window": "Settings"
+    },
+    {
+      "do": "press",
+      "control": "Ask Delete Qwen3.6 35B"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-delete-asks",
+      "note": "Delete asks first, saying how much it frees"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-delete-asks",
+      "window": "Settings"
+    },
+    {
+      "do": "press",
+      "control": "Ask Confirm Delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expect",
+      "control": "Ask Download Qwen3.6 35B",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Use Qwen3.8 27B",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-fell-back",
+      "note": "the deleted model is a Download again and Ask falls back to Qwen3.8 27B"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-fell-back",
+      "window": "Settings"
+    }
+  ],
+  "seed": "Settings > Ask with two models down: Use picks the other, Delete asks first, and Ask falls back to the one left"
 }

@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/ask-fresh-install-downloads-nothing-walk",
+  "clock": 120,
+  "seed": "A fresh Photonz with no Ask model: opening Ask and typing downloads nothing and starts no model; the dialog comes only when the request is sent",
+  "setup": {
+    "forget": ["all"],
+    "askModelMissing": true
+  },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "control": "Ask", "present": true },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "measure the gaps between the buttons" },
+    { "do": "wait", "seconds": 4 },
+    { "do": "expect", "control": "Ask Setup Download", "present": false },
+    { "do": "describe", "stage": "1-typed", "note": "Ask open with words typed on a Mac with no model: no dialog yet, nothing downloading, no model starting" },
+    { "do": "snapshot", "name": "1-typed" }
+  ]
+}

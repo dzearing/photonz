@@ -1,36 +1,131 @@
 {
   "out": "/tmp/photonz-playtest/ask-sets-itself-up-walk",
   "clock": 240,
+  "seed": "Ask on a Mac with no model: one dialog offers the set for a 36 GB Mac, Not Now keeps the words, Download sets it up and the request runs without typing it again",
   "setup": {
     "forget": [
       "all"
     ],
-    "askModelMissing": true
+    "askModelMissing": true,
+    "askMac": 36
   },
   "steps": [
-    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "press", "control": "Ask" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "type", "text": "annotate the ux with measurements around the major ui elements" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Ask Send" },
-    { "do": "waitFor", "condition": "askPhase", "value": "stopped|planning", "timeout": 20 },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-asked", "note": "what Ask says when the Mac has no model for it yet, and the one button that leads to the fix" },
-    { "do": "snapshot", "name": "1-asked" },
-    { "do": "press", "control": "Ask Set Up" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "describe", "stage": "2-settings", "note": "Settings > Ask: the model, its size and where it goes, and one Download button" },
-    { "do": "snapshot", "name": "2-settings", "window": "Settings" },
-    { "do": "expect", "control": "Ask Pictures Offer", "present": true },
-    { "do": "press", "control": "Ask Pictures Download" },
-    { "do": "wait", "seconds": 1.5 },
-    { "do": "expect", "control": "Ask Pictures Progress", "present": true },
-    { "do": "describe", "stage": "3-pictures", "note": "the picture model downloading in Settings > Ask, with how far along it is and a Stop" },
-    { "do": "snapshot", "name": "3-pictures", "window": "Settings" },
-    { "do": "press", "control": "Ask Pictures Stop" },
-    { "do": "wait", "seconds": 1 },
-    { "do": "expect", "control": "Ask Pictures Offer", "present": true }
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "annotate the ux with measurements around the major ui elements"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Download",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Model",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Pictures",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-dialog",
+      "note": "the setup dialog on a 36 GB Mac: what Ask is, the model it gets with its size, the space left, Download and Not Now"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-dialog"
+    },
+    {
+      "do": "press",
+      "control": "Ask Setup Not Now"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Download",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-not-now",
+      "note": "Not Now: nothing downloaded, the words still in the field"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-not-now"
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Download",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Ask Setup Download"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 90
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Download",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "3-runs",
+      "note": "the model is down and the request runs by itself, the words not typed again"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-runs"
+    }
   ]
 }

@@ -64,19 +64,23 @@ struct AskBuiltInModelTests {
                 #expect(file.url.scheme == "https", "\(file.name)")
                 #expect(file.url.absoluteString.contains("/resolve/"), "pinned to a revision: \(file.name)")
                 #expect(file.bytes > 100_000_000, "\(file.name)")
-                #expect(file.url.lastPathComponent == file.name)
+                #expect(file.name == file.url.lastPathComponent || file.name.hasSuffix("/" + file.url.lastPathComponent))
             }
             #expect(choice.gigabytes * 1e9 > Double(choice.downloadBytes), "\(choice.id) holds at least what it downloads")
             #expect(!choice.name.contains("\u{2014}"))
         }
+        // No two models keep a file under the same name.
+        let names = AskBuiltInModels.ranked.flatMap(\.files).map(\.name)
+        #expect(Set(names).count == names.count)
     }
 
     @Test("A Mac is offered the best model it can hold, and none when it can hold none")
     func recommendedFitsTheMac() throws {
         let best = try #require(AskBuiltInModels.ranked.first)
         #expect(AskBuiltInModels.recommended(memoryGigabytes: 68.7) == best)
-        let small = try #require(AskBuiltInModels.recommended(memoryGigabytes: 17.2))
-        #expect(small.gigabytes <= 17.2 * AskModels.memoryShare)
+        let small = try #require(AskBuiltInModels.recommended(memoryGigabytes: 38.7))
+        #expect(small.gigabytes <= 38.7 * AskModels.memoryShare)
+        #expect(AskBuiltInModels.recommended(memoryGigabytes: 17.2) == nil)
         #expect(AskBuiltInModels.recommended(memoryGigabytes: 4) == nil)
     }
 
@@ -109,7 +113,7 @@ struct AskBuiltInModelTests {
         #expect(from > 36 && from <= 48, "\(from)")
         for mac in [48.0, 64, 96, 128] { #expect(AskBuiltInModels.recommended(memoryGigabytes: mac) == best, "\(mac)") }
         for mac in [16.0, 18, 24, 32, 36] { #expect(AskBuiltInModels.recommended(memoryGigabytes: mac) != best, "\(mac)") }
-        #expect(AskBuiltInModels.recommended(memoryGigabytes: 36)?.id == "gemma-4-26b-a4b")
+        #expect(AskBuiltInModels.recommended(memoryGigabytes: AskMacSizes.reported(36))?.id == "qwen3.6-35b-a3b")
     }
 
     @Test("A Mac that has Qwen3.6 35B keeps using it, and is offered the new default beside it")

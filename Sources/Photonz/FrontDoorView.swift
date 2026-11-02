@@ -187,6 +187,11 @@ struct FrontDoorView: View {
     /// into it. Anything else says why and keeps the words.
     private func describe() {
         guard canDescribe else { return }
+        // No model on this Mac yet: the setup dialog, then this Create.
+        if AskSetup.needed {
+            editorState.ask.needsSetup { describe() }
+            return
+        }
         switch AskFromNothing.start(prompt, picked: image.size) {
         case nil: return
         case .video?: editorState.ask.refusal = AskFromNothing.videoSentence

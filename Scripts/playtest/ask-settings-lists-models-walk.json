@@ -1,0 +1,109 @@
+{
+  "out": "/tmp/photonz-playtest/ask-settings-lists-models-walk",
+  "clock": 180,
+  "seed": "Settings > Ask lists every model as a row with what it needs, its quality and speed and Download, opened from Ask's setup dialog straight at the Ask section, on a 16 GB Mac with nothing downloaded",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "askModelMissing": true,
+    "askMac": 16
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "measure the gaps between the buttons"
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Other Models",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-dialog",
+      "note": "the setup dialog on a 16 GB Mac"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-dialog"
+    },
+    {
+      "do": "press",
+      "control": "Ask Setup Other Models"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "control": "Ask Model Gemma 4 E4B",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Download Gemma 4 E4B",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Ask Model Qwen3.8 27B",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Model Qwen3.6 27B",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-settings",
+      "note": "Settings opened from the dialog, at the Ask section: a row a model with needs, quality and speed, Download; the big ones say they are too big for this Mac"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-settings",
+      "window": "Settings"
+    },
+    {
+      "do": "reveal",
+      "control": "Ask Use Ollama"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "3-settings-end",
+      "window": "Settings"
+    }
+  ]
+}

@@ -38,7 +38,13 @@ enum AskLocalModel {
     static var eyesOverride: String? { UserDefaults.standard.string(forKey: "ask.eyes") }
 
     /// This Mac's memory, in GB, for which models it can hold.
-    static var memoryGigabytes: Double { AskModels.gigabytes(ofMemory: ProcessInfo.processInfo.physicalMemory) }
+    static var memoryGigabytes: Double {
+        if let walkMac { return AskMacSizes.reported(walkMac) }
+        return AskModels.gigabytes(ofMemory: ProcessInfo.processInfo.physicalMemory)
+    }
+
+    /// Set by a walk's setup only (`PlaytestSetup.askMac`): plan as a Mac of this size.
+    static var walkMac: Int?
 
     /// How much the model reads at once on this Mac, in tokens: the server
     /// is started with it and every request is fitted to it.

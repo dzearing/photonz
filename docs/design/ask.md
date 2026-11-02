@@ -543,6 +543,88 @@ memory is estimated, not measured). Files go in `~/Library/Application
 Support/Photonz/Models`, shared by every build on the Mac, each downloaded from
 a pinned revision and kept only once its size is exact.
 
+### Choosing a model (2026-11-01)
+
+The user, 2026-10-24: "in settings, I would like multiple model options to
+choose from ... by default, model should not be downloaded and clicking ask
+should bring you to a dialog which downloads a recommended model set if needed
+based on the mac configuration."
+
+* **Nothing is downloaded until a person wants Ask.** A fresh Photonz has no
+  model and starts no helper: typing in Ask warms a model only when one is on
+  the Mac (`AskModelServer.warm`).
+* **The first Ask opens one dialog** (`AskSetupSheet`; also Create in the New
+  window): what Ask is, the set for this Mac with each part's size, the total
+  and the space left, Download and Not Now. Not Now keeps the words in their
+  field. Download starts the set; the dialog shows each part's progress, with
+  Stop and Hide (the download carries on hidden), and once everything is down
+  the request runs without being typed again. Other Models… opens Settings at
+  the Ask section.
+* **The set** is `AskModelSetup.plan` in PhotonzCore, tested: the best offered
+  chat model the Mac holds by the three-fifths rule whose download fits the
+  free disk (2 GB kept spare), stepping down when the disk is short, then the
+  picture model when it fits beside it in memory and on disk. A Mac too small
+  says so; a full disk says how much to free.
+* **Settings > Ask** lists every offered model as a row (`AskModelRow`): name,
+  one line on what it is good at, In Use when Ask answers with it, the smallest
+  Mac sold that holds it and its download size ("Too big for this Mac" when it
+  is), quality and speed as five dots each with the real numbers in the help
+  tag, and Download, Use or Delete. A download shows its progress, size and
+  Stop. The picture model is a row of its own. Deleting the model in use falls
+  back to the next one on the Mac, or to the dialog. Qwen3.6 27B is no longer
+  offered (Qwen3.8 27B is the same size, newer and better) and shows only on a
+  Mac that has it.
+* **Ratings are measured**, by fixed bands (`AskModelRating`): quality from
+  the held-out total (2 from 20, 3 from 35, 4 from 50, 5 from 60), speed from
+  the median seconds a request (2 at or under 180, 3 at or under 90, 4 at or
+  under 45, 5 at or under 20). Below 20 on the held-out set a model cannot do
+  Ask's work, and its row says "Too weak for Ask" instead of a Download.
+* **Delete confirms in its row** (Cancel, "Delete 21.0 GB"), not in an alert:
+  a walk's click could not press an alert's button, nor a destructive-role
+  button in the row (2026-11-01), so the button is a plain one.
+
+Measured on an M4 Max, 64 GB, on the held-out set (45 cases, totals only).
+"GB held" is the server's resident size, median over the run, at this Mac's
+64k window (a 32 GB Mac or smaller runs a 32k window and holds somewhat less):
+
+| Model | Held-out | Quality | s / request (median) | Speed | GB held | Download | Smallest Mac | Tool calls broken | Run |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Qwen3.8 27B (default) | 57.8 | 4 | 141.9 | 2 | 24.4 | 21.3 GB | 48 GB | | `20261024-163432-ask-held-out` |
+| Qwen3.6 35B | 60.2 | 5 | 49.1 | 3 | 21.7 | 21.0 GB | 36 GB | | `20261024-191502-ask-held-out` |
+| Gemma 4 26B | 20.2 | 2 | 35.5 | 4 | 23.1 | 15.4 GB | 36 GB | 148 of 278 | `20261102-004807-ask-held-out` |
+| Qwen3.5 9B | measuring | | | | | 6.6 GB | | | `20261102-023538-ask-held-out` (not offered until it is in) |
+| Qwen3.5 4B | 12.4, too weak | 1 | 57.4 | 3 | 7.8 | 3.4 GB | 16 GB | 49 of 207 | `20261102-012713-ask-held-out` |
+| Gemma 4 E4B | 4.5, too weak | 1 | 13.3 | 5 | 7.3 | 5.2 GB | 16 GB | 74 of 123 | `20261102-002913-ask-held-out` |
+| Gemma 4 E2B | 4.6, too weak | 1 | 15.8 | 5 | 4.2 | 3.4 GB | 8 GB | 27 of 102 | `20261102-001045-ask-held-out` |
+| Z-Image Turbo (pictures) | 57.5 with it, 35.9 without | 4 | 31 a drawing request | 4 | 12 more | 11.2 GB | beside the chat model | | `20261022-043200-ask-held-out` |
+
+The Gemma and Qwen3.5 runs had only that model on the probe and no picture
+model (`--models <id>`), as the Mac each is for would run it. The small models
+fail mostly by writing tool calls Ask cannot read (the broken counts above),
+which is what Ask's instructions, about 16k tokens of them, ask of a model.
+
+What each Mac gets (`AskModelSetup.plan`, plenty of disk):
+
+| Mac | Gets | Download |
+| --- | --- | --- |
+| 8 GB | "This Mac doesn't have enough memory for Ask." | nothing |
+| 16 GB | the same | nothing |
+| 24 GB | the same | nothing |
+| 32 GB | the same | nothing |
+| 36 GB | Qwen3.6 35B | 21.0 GB |
+| 48 GB | Qwen3.8 27B | 21.3 GB |
+| 64 GB | Qwen3.8 27B and Z-Image Turbo | 32.5 GB |
+
+Below 36 GB no model measured so far can do Ask's work (queue task
+`settings-offers-several-ask-models-with-what-eac` stays open on it).
+
+Walks: `ask-sets-itself-up-walk` (8 GB Mac: dialog, Not Now, Download, the
+request runs), `ask-settings-lists-models-walk` (16 GB Mac: Settings from the
+dialog, at Ask), `ask-offers-the-new-default-model-walk`,
+`ask-deletes-an-older-model-walk` (Use, Delete, fall back). A walk can plan for
+another Mac size with `"askMac": 8`, and a download in a walk with its own
+models folder clones the Mac's copy, so it is done in a second.
+
 ### Walks share one model (2026-10-30)
 
 Every walk starts a new probe, and every probe used to load the whole model

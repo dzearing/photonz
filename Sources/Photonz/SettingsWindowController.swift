@@ -1,4 +1,5 @@
 import AppKit
+import Observation
 import PhotonzCore
 import SwiftUI
 
@@ -14,8 +15,9 @@ import SwiftUI
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
-    func present(store: SilencedQuestions) {
+    func present(store: SilencedQuestions, at section: SettingsSection? = nil) {
         AppFront.activate()
+        if let section { SettingsJump.shared.go(to: section) }
         if let window {
             window.makeKeyAndOrderFront(nil)
             return
@@ -24,7 +26,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let window = NSWindow(contentViewController: hosting)
         window.title = SettingsWindowModel.windowTitle
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        window.setContentSize(CGSize(width: 520, height: 400))
+        // Tall enough from Ask for its whole list of models.
+        window.setContentSize(CGSize(width: 520, height: section == .ask ? 620 : 400))
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.center()
@@ -35,4 +38,27 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         window = nil
     }
+}
+
+/// A part of the Settings page that can be opened straight to.
+enum SettingsSection: String, Hashable {
+    case ask
+}
+
+/// Asks the Settings page to bring a section to the top, whether the window
+/// is new or already open.
+@MainActor
+@Observable
+final class SettingsJump {
+    static let shared = SettingsJump()
+    private(set) var section: SettingsSection?
+    private(set) var pass = 0
+
+    func go(to section: SettingsSection) {
+        self.section = section
+        pass &+= 1
+    }
+
+    /// The page is there: a later ⌘, opens at the top as usual.
+    func landed() { section = nil }
 }

@@ -18,6 +18,10 @@ final class AskModelServer {
 
     /// Set by a walk's setup only (`PlaytestSetup.askModelMissing`).
     static var walkFolder: URL?
+    /// Set by a walk's setup only, with `walkFolder`: the Mac's own models
+    /// folder, which a download in the walk clones a file from when it is
+    /// there, so a walk that presses Download is done in a second.
+    static var walkSource: URL?
     /// Set by a walk's setup only: this walk shares the run's one model
     /// server (`AskWalkServer`) instead of loading its own.
     static var walkShares = false
@@ -89,6 +93,13 @@ final class AskModelServer {
         if running == choice.id { stop() }
         for file in choice.files {
             try? FileManager.default.removeItem(at: Self.folder.appending(path: file.name))
+        }
+        // A model kept in a folder of its own takes the folder too, once empty.
+        for folder in Set(choice.files.map { ($0.name as NSString).deletingLastPathComponent }) where !folder.isEmpty {
+            let url = Self.folder.appending(path: folder)
+            if (try? FileManager.default.contentsOfDirectory(atPath: url.path))?.isEmpty == true {
+                try? FileManager.default.removeItem(at: url)
+            }
         }
     }
 

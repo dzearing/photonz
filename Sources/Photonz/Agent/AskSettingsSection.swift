@@ -2,13 +2,14 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// Settings' Ask section (`docs/design/ask.md`): which model on this Mac
-/// answers Ask, and the one-time download when there is none. The only place a
-/// model is ever chosen; Ask itself never asks (the user, 2026-10-19).
+/// Settings' Ask section (`docs/design/ask.md`, "Choosing a model"): every
+/// model Ask can run, one row each, with what it needs, its measured quality
+/// and speed, and Download, Use and Delete; the picture model is a row of its
+/// own. Nothing is downloaded until a person presses Download here or in Ask's
+/// setup dialog (`AskSetupSheet`, which offers the set for the Mac).
 ///
-/// By default the model runs inside Photonz, so the whole setup is one
-/// Download here. Ollama is a choice for people who already keep it running,
-/// off unless they turn it on.
+/// By default the model runs inside Photonz. Ollama is a choice for people
+/// who already keep it running, off unless they turn it on.
 struct AskSettingsSection: View {
     @State private var installed: [String]?
     @State private var checked = false
@@ -19,9 +20,10 @@ struct AskSettingsSection: View {
     @State private var pull: Double?
     @State private var pullTrouble: String?
     @State private var picturesInstalled = AskPictureServer.isInstalled
-    @State private var deleting: AskBuiltInModels.Choice?
+    @State private var deleting: AskSettingsDelete?
     private var fetch: AskModelDownload { AskModelDownload.shared }
     private var pictureFetch: AskModelDownload { AskModelDownload.pictures }
+    private var memory: Double { AskLocalModel.memoryGigabytes }
 
     var body: some View {
         Section {
@@ -30,7 +32,7 @@ struct AskSettingsSection: View {
             } else {
                 builtIn
             }
-            if Experiments.shared.isEnabled(FeatureCatalog.askPaintsFlag) {
+            if AskSetup.paints {
                 pictures
             }
             Toggle("Use Ollama instead", isOn: $useOllama)
@@ -44,120 +46,143 @@ struct AskSettingsSection: View {
             Text("Ask")
         }
         .task { await reload() }
-        .confirmationDialog(deleting.map { "Delete \($0.name)?" } ?? "", isPresented: Binding(
-            get: { deleting != nil }, set: { if !$0 { deleting = nil } }
-        )) {
-            if let old = deleting {
-                Button("Delete \(AskBuiltInModels.sizeWords(old.downloadBytes))", role: .destructive) {
-                    AskModelServer.shared.delete(old)
-                    if AskLocalModel.builtInChosen == old.id {
-                        AskLocalModel.builtInChosen = nil
-                        builtInChosen = ""
-                    }
-                    downloaded = AskModelServer.downloaded
-                }
-            }
-        } message: {
-            Text("Ask can download it again later.")
-        }
         .onChange(of: fetch.active) { _, _ in downloaded = AskModelServer.downloaded }
         .onChange(of: pictureFetch.active) { _, _ in picturesInstalled = AskPictureServer.isInstalled }
     }
 
     // MARK: Built in
 
+    /// The model Ask answers with now, or nil with none downloaded.
+    private var inUse: AskBuiltInModels.Choice? {
+        AskBuiltInModels.resolve(chosen: builtInChosen.isEmpty ? nil : builtInChosen, downloaded: downloaded,
+                                 memoryGigabytes: memory)
+    }
+
+    /// One row a model: what it is, what it needs, how good and fast it is,
+    /// and Download, Use or Delete. Nothing is downloaded until a person
+    /// presses Download here or in Ask's setup dialog.
     @ViewBuilder
     private var builtIn: some View {
-        let have = AskBuiltInModels.ranked.filter { downloaded.contains($0.id) }
-        if let downloading = fetch.item {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Downloading \(downloading.name)")
-                ProgressView(value: fetch.fraction)
-                    .playtestControl("Ask Download Progress", detail: String(format: "%.0f%%", fetch.fraction * 100))
-                Text("\(AskBuiltInModels.sizeWords(fetch.done)) of \(AskBuiltInModels.sizeWords(downloading.totalBytes))")
-                    .font(.callout).foregroundStyle(.secondary).monospacedDigit()
-            }
-            Button("Stop") { fetch.stop() }
-                .playtestControl("Ask Stop Download", detail: "Stop")
-        } else if let automatic = AskBuiltInModels.resolve(chosen: nil, downloaded: downloaded,
-                                                             memoryGigabytes: AskLocalModel.memoryGigabytes) {
-            if have.count > 1 {
-                Picker("Model", selection: $builtInChosen) {
-                    Text("Automatic (\(automatic.name))").tag("")
-                    ForEach(have, id: \.id) { Text($0.name).tag($0.id) }
-                }
-                .onChange(of: builtInChosen) { _, now in AskLocalModel.builtInChosen = now.isEmpty ? nil : now }
-                .playtestControl("Ask Model", detail: builtInChosen.isEmpty ? "Automatic" : builtInChosen)
-            } else {
-                LabeledContent("Model", value: automatic.name)
-                    .playtestControl("Ask Model", detail: automatic.name)
-            }
-            Text("Runs inside Photonz. Nothing leaves the Mac.")
-                .font(.callout).foregroundStyle(.secondary)
-            // A newer default than the one this Mac has: offered beside it,
-            // which keeps answering until the new one is down.
-            if let newer = AskBuiltInModels.newer(downloaded: downloaded, memoryGigabytes: AskLocalModel.memoryGigabytes) {
-                LabeledContent("New default: \(newer.name) (\(AskBuiltInModels.sizeWords(newer.downloadBytes)))") {
-                    Button("Download") { fetch.start(newer) }
-                        .playtestControl("Ask Download Newer", detail: "Download \(newer.name)")
-                }
-            }
-            let inUse = AskBuiltInModels.resolve(chosen: AskLocalModel.builtInChosen, downloaded: downloaded,
-                                                 memoryGigabytes: AskLocalModel.memoryGigabytes)?.id
-            ForEach(AskBuiltInModels.removable(downloaded: downloaded, inUse: inUse), id: \.id) { old in
-                LabeledContent(old.name) {
-                    Button("Delete") { deleting = old }
-                        .playtestControl("Ask Delete \(old.name)", detail: "Delete")
-                }
-            }
-        } else if let offer = AskBuiltInModels.recommended(memoryGigabytes: AskLocalModel.memoryGigabytes) {
-            Text("Ask needs a model on this Mac: \(offer.name), \(AskBuiltInModels.sizeWords(offer.downloadBytes)). It goes in Application Support > Photonz > Models.")
-                .font(.callout)
-                .fixedSize(horizontal: false, vertical: true)
-                .playtestControl("Ask Download Offer", detail: offer.name)
-            Button("Download") { fetch.start(offer) }
-                .playtestControl("Ask Download", detail: "Download \(offer.name)")
-        } else {
-            Text("Ask needs more memory than this Mac has.")
-                .font(.callout)
+        let using = inUse?.id
+        ForEach(AskModelSetup.listed(downloaded: downloaded), id: \.id) { choice in
+            modelRow(choice, inUse: choice.id == using)
         }
         if let trouble = fetch.trouble {
             Text(trouble).font(.callout).foregroundStyle(.secondary)
         }
     }
 
+    private func modelRow(_ choice: AskBuiltInModels.Choice, inUse: Bool) -> some View {
+        let have = downloaded.contains(choice.id)
+        let fits = AskModelSetup.fits(choice, memoryGigabytes: memory)
+        let mac = AskMacSizes.smallest(holding: choice.gigabytes)
+        return AskModelRow(
+            name: choice.name, blurb: choice.blurb, inUse: inUse,
+            needs: mac.map { "Needs \([8, 18].contains($0) ? "an" : "a") \($0) GB Mac" } ?? "Needs more memory than any Mac",
+            size: AskBuiltInModels.sizeWords(choice.downloadBytes),
+            tooBig: !fits, measured: choice.measured,
+            downloading: fetch.item?.id == choice.id ? fetch : nil
+        ) {
+            if fetch.item?.id == choice.id {
+                Button("Stop") { fetch.stop() }
+                    .playtestControl("Ask Stop \(choice.name)", detail: "Stop")
+            } else if deleting?.id == choice.id {
+                confirmDelete
+            } else if have {
+                if !inUse {
+                    Button("Use") { use(choice) }
+                        .playtestControl("Ask Use \(choice.name)", detail: "Use")
+                }
+                Button("Delete") {
+                    deleting = AskSettingsDelete(id: choice.id, name: choice.name, bytes: choice.downloadBytes)
+                }
+                .playtestControl("Ask Delete \(choice.name)", detail: "Delete")
+            } else if choice.measured?.canDoAsksWork == false {
+                Text("Too weak for Ask").font(.callout).foregroundStyle(.secondary)
+            } else {
+                Button("Download") { fetch.start(choice) }
+                    .disabled(!fits || fetch.active)
+                    .playtestControl("Ask Download \(choice.name)", detail: fits ? "Download" : "too big for this Mac")
+            }
+        }
+        .playtestControl("Ask Model \(choice.name)",
+                         detail: [inUse ? "in use" : nil, have ? "downloaded" : nil, fits ? nil : "too big"]
+                            .compactMap { $0 }.joined(separator: ", "))
+    }
+
+    /// Delete asks in the row itself: Cancel, or Delete with what it frees.
+    /// Ask can download it again later.
+    @ViewBuilder
+    private var confirmDelete: some View {
+        if let old = deleting {
+            Button("Cancel") { deleting = nil }
+                .playtestControl("Ask Cancel Delete", detail: old.name)
+            Button("Delete \(AskBuiltInModels.sizeWords(old.bytes))") {
+                deleting = nil
+                delete(old)
+            }
+            .playtestControl("Ask Confirm Delete", detail: old.name)
+        }
+    }
+
+    private func use(_ choice: AskBuiltInModels.Choice) {
+        AskModelServer.shared.stop()
+        builtInChosen = choice.id
+        AskLocalModel.builtInChosen = choice.id
+    }
+
+    private func delete(_ old: AskSettingsDelete) {
+        if old.id == AskPictureModelPlan.id {
+            AskPictureServer.delete()
+            picturesInstalled = AskPictureServer.isInstalled
+            return
+        }
+        if let choice = AskBuiltInModels.choice(id: old.id) { AskModelServer.shared.delete(choice) }
+        // Ask falls back to the next model on the Mac, or to its setup dialog.
+        if AskLocalModel.builtInChosen == old.id {
+            AskLocalModel.builtInChosen = nil
+            builtInChosen = ""
+        }
+        downloaded = AskModelServer.downloaded
+    }
+
     // MARK: Pictures
 
-    /// The picture model Ask paints its drawings with: set up here in one
-    /// download, run by Photonz. Offered when the Mac can hold it beside the
-    /// chat model; without it Ask draws with the chat model alone.
+    /// The picture model Ask paints its drawings with, a row like the
+    /// chat models': it runs beside whichever chat model is in use, so what
+    /// it needs is memory on top of that one's. Without it Ask draws with the
+    /// chat model alone.
     @ViewBuilder
     private var pictures: some View {
-        let chat = useOllama ? nil : AskBuiltInModels.resolve(chosen: AskLocalModel.builtInChosen, downloaded: downloaded,
-                                                              memoryGigabytes: AskLocalModel.memoryGigabytes)
-            ?? AskBuiltInModels.recommended(memoryGigabytes: AskLocalModel.memoryGigabytes)
-        if pictureFetch.active {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(pictureFetch.settingUp ? "Setting up \(AskPictureModelPlan.name)"
-                     : "Downloading \(AskPictureModelPlan.name)")
-                ProgressView(value: pictureFetch.fraction)
-                    .playtestControl("Ask Pictures Progress", detail: String(format: "%.0f%%", pictureFetch.fraction * 100))
-                Text("\(AskBuiltInModels.sizeWords(pictureFetch.done)) of \(AskBuiltInModels.sizeWords(AskPictureModelPlan.downloadBytes))")
-                    .font(.callout).foregroundStyle(.secondary).monospacedDigit()
+        let chat = useOllama ? nil : inUse ?? AskBuiltInModels.recommended(memoryGigabytes: memory)
+        let fits = AskPictureModelPlan.fits(memoryGigabytes: memory, beside: chat)
+        AskModelRow(
+            name: AskPictureModelPlan.name, blurb: AskPictureModelPlan.blurb, inUse: picturesInstalled,
+            needs: String(format: "Needs %.0f GB more", AskPictureModelPlan.gigabytes),
+            size: AskBuiltInModels.sizeWords(AskPictureModelPlan.downloadBytes),
+            tooBig: !fits, measured: AskPictureModelPlan.measured,
+            downloading: pictureFetch.active ? pictureFetch : nil,
+            settingUp: pictureFetch.settingUp
+        ) {
+            if pictureFetch.active {
+                Button("Stop") { pictureFetch.stop() }
+                    .playtestControl("Ask Pictures Stop", detail: "Stop")
+            } else if deleting?.id == AskPictureModelPlan.id {
+                confirmDelete
+            } else if picturesInstalled {
+                Button("Delete") {
+                    deleting = AskSettingsDelete(id: AskPictureModelPlan.id, name: AskPictureModelPlan.name,
+                                                 bytes: AskPictureModelPlan.downloadBytes)
+                }
+                .playtestControl("Ask Pictures Delete", detail: "Delete")
+            } else {
+                Button("Download") { AskPictureServer.download() }
+                    .disabled(!fits)
+                    .playtestControl("Ask Pictures Download", detail: fits ? "Download \(AskPictureModelPlan.name)" : "too big for this Mac")
             }
-            Button("Stop") { pictureFetch.stop() }
-                .playtestControl("Ask Pictures Stop", detail: "Stop")
-        } else if picturesInstalled {
-            LabeledContent("Pictures", value: AskPictureModelPlan.name)
-                .playtestControl("Ask Pictures", detail: AskPictureModelPlan.name)
-        } else if AskPictureModelPlan.fits(memoryGigabytes: AskLocalModel.memoryGigabytes, beside: chat) {
-            Text("Ask can paint its drawings with \(AskPictureModelPlan.name), \(AskBuiltInModels.sizeWords(AskPictureModelPlan.downloadBytes)). It goes in Application Support > Photonz > Models.")
-                .font(.callout)
-                .fixedSize(horizontal: false, vertical: true)
-                .playtestControl("Ask Pictures Offer", detail: AskPictureModelPlan.name)
-            Button("Download \(AskPictureModelPlan.name)") { AskPictureServer.download() }
-                .playtestControl("Ask Pictures Download", detail: "Download \(AskPictureModelPlan.name)")
         }
+        .playtestControl("Ask Pictures", detail: [picturesInstalled ? "in use" : nil, fits ? nil : "too big"]
+                            .compactMap { $0 }.joined(separator: ", "))
         if let trouble = pictureFetch.trouble {
             Text(trouble).font(.callout).foregroundStyle(.secondary)
         }
@@ -215,6 +240,7 @@ struct AskSettingsSection: View {
 
     private func reload() async {
         downloaded = AskModelServer.downloaded
+        builtInChosen = AskLocalModel.builtInChosen ?? ""
         picturesInstalled = AskPictureServer.isInstalled
         guard useOllama else { return }
         installed = await AskLocalModel.ollamaInstalled()
@@ -269,5 +295,99 @@ extension AskLocalModel {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+}
+
+/// A model a person asked to delete, waiting for the confirmation.
+struct AskSettingsDelete: Equatable {
+    let id: String
+    let name: String
+    let bytes: Int64
+}
+
+/// One model in Settings > Ask: its name and what it is good at, marked when
+/// Ask uses it; what it needs and its size, "Too big for this Mac" when it
+/// is; its quality and speed as five dots each, with the measured numbers in
+/// the help tag; and its buttons. A download shows its progress and size in
+/// place of the needs.
+struct AskModelRow<Buttons: View>: View {
+    let name: String
+    let blurb: String
+    let inUse: Bool
+    let needs: String
+    let size: String
+    let tooBig: Bool
+    let measured: AskModelMeasure?
+    var downloading: AskModelDownload?
+    var settingUp = false
+    @ViewBuilder let buttons: () -> Buttons
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(name).font(.body.weight(.medium))
+                    if inUse {
+                        Label("In Use", systemImage: "checkmark.circle.fill")
+                            .labelStyle(.titleAndIcon)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.tint)
+                    }
+                }
+                Text(blurb)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let downloading {
+                    ProgressView(value: downloading.fraction)
+                        .playtestControl("Ask Progress \(name)", detail: String(format: "%.0f%%", downloading.fraction * 100))
+                    Text(settingUp ? "Setting up" : "\(AskBuiltInModels.sizeWords(downloading.done)) of \(size)")
+                        .font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                } else {
+                    HStack(spacing: 6) {
+                        Text("\(needs) · \(size)")
+                            .foregroundStyle(.secondary)
+                        if tooBig {
+                            Text("Too big for this Mac")
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                    .font(.caption)
+                }
+                if let measured {
+                    HStack(spacing: 14) {
+                        AskRatingDots(label: "Quality", value: measured.quality)
+                            .help(measured.qualityWords)
+                        AskRatingDots(label: "Speed", value: measured.speed)
+                            .help(measured.speedWords)
+                    }
+                }
+            }
+            Spacer(minLength: 8)
+            HStack(spacing: 6) { buttons() }
+                .controlSize(.small)
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+/// A 1 to 5 rating as five dots, filled up to the value.
+struct AskRatingDots: View {
+    let label: String
+    let value: Int
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 2) {
+                ForEach(1...5, id: \.self) { dot in
+                    Circle()
+                        .fill(dot <= value ? AnyShapeStyle(.secondary) : AnyShapeStyle(.quaternary))
+                        .frame(width: 6, height: 6)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label) \(value) of 5")
     }
 }

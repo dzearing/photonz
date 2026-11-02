@@ -281,6 +281,13 @@ struct EditorView: View {
             .overlay {
                 if Experiments.shared.askEnabled { AskComposerOverlay() }
             }
+            // Ask pressed with no model on this Mac: the setup dialog.
+            .sheet(isPresented: Binding(
+                get: { Experiments.shared.askEnabled && editorState.ask.isSetupShown },
+                set: { if !$0 { editorState.ask.hideSetup() } }
+            )) {
+                AskSetupSheet().environment(editorState)
+            }
             // The panel's toggle, in the window's own title bar rather than in
             // the panel or on the canvas, so the way back never moves and
             // never goes away with the thing it collapses. Only with a

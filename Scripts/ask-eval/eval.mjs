@@ -4,6 +4,7 @@
 //
 //   run --engine ask|skill --tag "<what changed>" [--set climb|held-out] [--cases a,b]
 //       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 3] [--on <switch>,<switch>]
+//       [--models <id>,<id>]              the probe has only these built-in models, and no picture model
 //   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
 //   report [--engine ask]                   the latest climb and held-out totals side by side
 //   lines <run> [--with <run>]              a run's judge lines in total (drawings, all cases), held-out runs too
@@ -185,12 +186,15 @@ async function commandRun() {
              caseIDs: cases.map((c) => c.id), engineModel: engine === "skill" ? SKILL_MODEL : null, cases: {},
              // Switches the run turns on that are off at Next defaults (--on a,b): a try measured
              // before it is anybody's default. Recorded so the run never reads as the default app.
-             switched: Object.fromEntries((option("on") ?? "").split(",").filter(Boolean).map((name) => [name, true])) };
+             switched: Object.fromEntries((option("on") ?? "").split(",").filter(Boolean).map((name) => [name, true])),
+             // The built-in models the probe is lent (--models a,b), when a run measures one.
+             models: (option("models") ?? "").split(",").filter(Boolean) };
     runDir = runDirOf(meta.id, set);
     mkdirSync(runDir, { recursive: true });
   }
   console.log(`==> ${meta.id}: ${engine}, ${set} set, "${meta.tag}", ${meta.caseIDs.length} cases, judged by ${JUDGE_MODEL} (rubric ${RUBRIC_ID}), ${judgeRuns} looks each`);
   if (Object.keys(meta.switched ?? {}).length) console.log(`    switched on, off at Next defaults: ${Object.keys(meta.switched).join(", ")}`);
+  if (meta.models?.length) console.log(`    only these models downloaded, no picture model: ${meta.models.join(", ")}`);
   if (sealed) console.log("    held out: each case is scored and kept, but only the total is printed or recorded");
   let done = Object.values(meta.cases).filter((r) => !r.unrun).length;
   let build = !flag("no-build");
@@ -207,7 +211,7 @@ async function commandRun() {
     process.stdout.write(sealed ? `--> held-out case ${done + 1} of ${meta.caseIDs.length} ... ` : `--> ${testCase.id}: "${testCase.request.slice(0, 60)}" ... `);
     let got;
     try {
-      got = engine === "ask" ? await runAsk(testCase, dir, { build, switched: meta.switched }) : await runSkill(testCase, dir, { build, switched: meta.switched });
+      got = engine === "ask" ? await runAsk(testCase, dir, { build, switched: meta.switched, models: meta.models }) : await runSkill(testCase, dir, { build, switched: meta.switched });
     } catch (error) {
       got = { error: error.message };
       await quitProbe();

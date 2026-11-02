@@ -215,6 +215,12 @@ final class AppCoordinator {
         settingsWindow.present(store: EditorState.silencedQuestions)
     }
 
+    /// Settings opened at one section, in view at the top: Ask's way to its
+    /// models lands on them, not on whatever heads the page.
+    func showSettings(section: SettingsSection) {
+        settingsWindow.present(store: EditorState.silencedQuestions, at: section)
+    }
+
     /// "Take the Tour" on the first run offer. The tour brings a sample
     /// picture, so `TutorialLauncher` opens a window of its own for it: the
     /// guide never starts on an empty canvas with nothing to point at, and it

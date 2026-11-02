@@ -131,6 +131,16 @@ final class AskModelDownload {
         let target = folder.appending(path: file.name)
         let part = folder.appending(path: file.name + ".part")
         try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+        // A walk's download clones the Mac's own copy (`AskModelServer.walkSource`).
+        if let source = AskModelServer.walkSource, Self.isWhole(file, in: source) {
+            try? FileManager.default.removeItem(at: part)
+            if (try? FileManager.default.copyItem(at: source.appending(path: file.name), to: part)) != nil {
+                try? FileManager.default.removeItem(at: target)
+                try FileManager.default.moveItem(at: part, to: target)
+                progress(file.bytes)
+                return
+            }
+        }
         let home = URL(fileURLWithPath: NSHomeDirectory())
         // The cache's snapshot names are links to its blobs: the blob is the file.
         if let cached = AskBuiltInModels.huggingFaceCache(for: file.url, home: home)?.resolvingSymlinksInPath(),

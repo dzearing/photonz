@@ -172,6 +172,15 @@ final class AskSession {
         let words = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !words.isEmpty else { return }
         refusal = nil
+        // No model on this Mac yet: the setup dialog, and these words once it is done.
+        if AskSetup.needed {
+            needsSetup { [weak self, weak editor] in
+                guard let self, let editor else { return }
+                if self.draft.isEmpty { self.draft = words }
+                self.ask(in: editor)
+            }
+            return
+        }
         if editor.document == nil {
             switch AskFromNothing.start(words, picked: BlankCanvas.defaultPreset.size) {
             case nil: return
@@ -188,6 +197,66 @@ final class AskSession {
         }
         draft = ""
         send(words, in: editor)
+    }
+
+    // MARK: Setting up
+
+    /// The setup dialog is up (`AskSetupSheet`).
+    var isSetupShown = false
+    /// What was asked with no model on the Mac, run once the set is down.
+    @ObservationIgnored private var waitingForSetup: (@MainActor () -> Void)?
+    @ObservationIgnored private var setupWatch: Task<Void, Never>?
+
+    /// Opens the setup dialog; `then` runs once the set it offers is down.
+    func needsSetup(then: @escaping @MainActor () -> Void) {
+        waitingForSetup = then
+        isSetupShown = true
+    }
+
+    /// Not Now: nothing downloads, and the words stay in their field.
+    func cancelSetup() {
+        waitingForSetup = nil
+        isSetupShown = false
+    }
+
+    /// Hide while the set downloads: it carries on, and so does the request.
+    /// With nothing downloading (Other Models…) the request is let go.
+    func hideSetup() {
+        isSetupShown = false
+        if !AskSetup.downloading { waitingForSetup = nil }
+    }
+
+    /// Stop: the downloads end, and the words stay in their field.
+    func stopSetup() {
+        setupWatch?.cancel()
+        setupWatch = nil
+        AskModelDownload.shared.stop()
+        AskModelDownload.pictures.stop()
+        cancelSetup()
+    }
+
+    /// Download: the set starts down, and the request runs when it is all
+    /// there. A chat model that did not come down puts the dialog back with why.
+    func startSetup(_ plan: AskSetupPlan) {
+        if let chat = plan.chat { AskModelDownload.shared.start(chat) }
+        if plan.picture { AskPictureServer.download() }
+        setupWatch?.cancel()
+        setupWatch = Task { [weak self] in
+            while AskSetup.downloading {
+                try? await Task.sleep(for: .milliseconds(400))
+                if Task.isCancelled { return }
+            }
+            guard let self, !Task.isCancelled else { return }
+            setupWatch = nil
+            if AskSetup.needed {
+                isSetupShown = true
+                return
+            }
+            isSetupShown = false
+            let then = waitingForSetup
+            waitingForSetup = nil
+            then?()
+        }
     }
 
     /// Asks `words` in a window that was just made for them: the New

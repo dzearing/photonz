@@ -254,13 +254,18 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// (its tools' commands run with that HOME too), so a walk that presses
     /// Install never touches the person's Claude Code or Copilot.
     public var agentHome: Bool
+    /// Ask plans for a Mac of this memory size (one `AskMacSizes.sold`, in
+    /// GB) instead of this one's, so a walk about what an 8 GB Mac is offered
+    /// means the same on a 64 GB Mac. Nil means this Mac.
+    public var askMac: Int?
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, timelineRoom: Bool = false,
                 front: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
-                askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false) {
+                askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil) {
+        self.askMac = askMac
         self.offline = offline
         self.agentHome = agentHome
         self.askModelsOnly = askModelsOnly
@@ -280,7 +285,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && history == nil && !timedWithoutMarkers
-            && !askModelMissing && askModelsOnly == nil && !offline && !agentHome
+            && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -290,7 +295,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["agentHome", "askModelMissing", "askModelsOnly", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
+    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
                             "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -342,6 +347,16 @@ public struct PlaytestSetup: Sendable, Equatable {
             }
             only = ids
         }
+        var mac: Int?
+        if let raw = fields["askMac"], !(raw is NSNull) {
+            guard let number = raw as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  AskMacSizes.sold.contains(number.intValue), Double(number.intValue) == number.doubleValue else {
+                throw PlaytestScriptError.invalidSetup(
+                    field: "askMac", reason: "is a Mac's memory as sold, in GB: one of "
+                        + AskMacSizes.sold.map(String.init).joined(separator: ", "))
+            }
+            mac = number.intValue
+        }
         self.init(forget: forget,
                   captures: try Self.words(fields["captures"], field: "captures"),
                   scratch: try Self.words(fields["scratch"], field: "scratch"),
@@ -357,7 +372,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                   askModelMissing: try Self.yesOrNo(fields["askModelMissing"], field: "askModelMissing") ?? false,
                   askModelsOnly: only,
                   offline: try Self.yesOrNo(fields["offline"], field: "offline") ?? false,
-                  agentHome: try Self.yesOrNo(fields["agentHome"], field: "agentHome") ?? false)
+                  agentHome: try Self.yesOrNo(fields["agentHome"], field: "agentHome") ?? false,
+                  askMac: mac)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {
@@ -486,6 +502,11 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// Which filter History opens on, which is the one picked last, and how
     /// tall its pane was dragged.
     case history
+    /// Which model Settings > Ask was told to use, and whether Ask runs on
+    /// Ollama. A walk that pressed Use and did not forget it left that model
+    /// in use for every walk after it (`ask-deletes-an-older-model-walk`,
+    /// 2026-11-01).
+    case ask
 }
 
 /// One feature a walk switches on or off for the length of its run.

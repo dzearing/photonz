@@ -23,7 +23,27 @@ struct SettingsDialog: View {
         _rows = State(initialValue: SettingsWindowModel.rows(of: store))
     }
 
+    private var jump: SettingsJump { SettingsJump.shared }
+
     var body: some View {
+        ScrollViewReader { proxy in
+            page
+                .onAppear { land(proxy) }
+                .onChange(of: jump.pass) { land(proxy) }
+        }
+    }
+
+    /// Brings the section asked for to the top, once the page is laid out.
+    private func land(_ proxy: ScrollViewProxy) {
+        guard let section = jump.section else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(80))
+            proxy.scrollTo(section, anchor: .top)
+            jump.landed()
+        }
+    }
+
+    private var page: some View {
         VStack(spacing: 0) {
             Form {
                 // Whether Photonz opens by itself at login. First, because it
@@ -43,6 +63,7 @@ struct SettingsDialog: View {
                 // Which model answers Ask (Next, `next-ask`).
                 if Experiments.shared.askEnabled {
                     AskSettingsSection()
+                        .id(SettingsSection.ask)
                 }
                 // Using Photonz from Claude Code and Copilot (Next,
                 // `next-agent-channel`): the server and skill ship in the app.

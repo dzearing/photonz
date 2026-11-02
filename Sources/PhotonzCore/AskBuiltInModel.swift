@@ -60,14 +60,25 @@ public enum AskBuiltInModels {
         public let draft: File?
         /// Memory it holds while Ask uses it at Ask's window, in GB, draft included.
         public let gigabytes: Double
+        /// What Settings says it is good at, one short line.
+        public let blurb: String
+        /// Its held-out score and speed (`AskModelMeasure`), or nil before it is measured.
+        public let measured: AskModelMeasure?
+        /// Whether Settings and the setup dialog offer it. One that is not is
+        /// still listed, to use or delete, on a Mac that already has it.
+        public let offered: Bool
 
-        public init(id: String, name: String, model: File, eyes: File?, draft: File? = nil, gigabytes: Double) {
+        public init(id: String, name: String, model: File, eyes: File?, draft: File? = nil, gigabytes: Double,
+                    blurb: String = "", measured: AskModelMeasure? = nil, offered: Bool = true) {
             self.id = id
             self.name = name
             self.model = model
             self.eyes = eyes
             self.draft = draft
             self.gigabytes = gigabytes
+            self.blurb = blurb
+            self.measured = measured
+            self.offered = offered
         }
 
         /// What it cannot run without.
@@ -78,11 +89,14 @@ public enum AskBuiltInModels {
         public var sees: Bool { eyes != nil }
     }
 
-    private static func file(_ repo: String, _ revision: String, _ name: String, _ bytes: Int64) -> File {
+    /// One pinned file. `folder` keeps it in a folder of its model's own, for
+    /// repositories whose file names another model's share ("mmproj-F16.gguf").
+    private static func file(_ repo: String, _ revision: String, _ name: String, _ bytes: Int64,
+                             folder: String? = nil) -> File {
         // A literal address: only a typo could make it nil, and the tests read every one.
         let url = URL(string: "https://huggingface.co/\(repo)/resolve/\(revision)/\(name)")
             ?? URL(fileURLWithPath: "/dev/null")
-        return File(name: name, url: url, bytes: bytes)
+        return File(name: folder.map { "\($0)/\(name)" } ?? name, url: url, bytes: bytes)
     }
 
     /// Qwen3.8 27B first, by the user's call on 2026-10-24 ("we should be
@@ -108,38 +122,77 @@ public enum AskBuiltInModels {
                draft: file("ggml-org/Qwen3.8-27B-GGUF", "a316ea527fde32c12487be7574e2db5ac2ad2a7e",
                            "mtp-Qwen3.8-27B-Q4_0.gguf", 1_680_271_776),
                // The median over the climb set, as the 35B's 21.7 is; 27.6 at its peak.
-               gigabytes: 24.4),
+               gigabytes: 24.4,
+               blurb: "Best at sheets, layouts and video. Slow to start.",
+               measured: AskModelMeasure(heldOut: 57.8, medianSeconds: 141.9, run: "20261024-163432-ask-held-out")),
         Choice(id: "qwen3.6-35b-a3b", name: "Qwen3.6 35B",
                model: file("ggml-org/Qwen3.6-35B-A3B-GGUF", "7878dc9a905c7c9379e5e8d6a1aa9affdd6839c5",
                            "Qwen3.6-35B-A3B-Q4_K_M.gguf", 20_419_565_568),
                eyes: file("ggml-org/Qwen3.6-35B-A3B-GGUF", "7878dc9a905c7c9379e5e8d6a1aa9affdd6839c5",
                           "mmproj-Qwen3.6-35B-A3B-Q8_0.gguf", 614_194_304),
-               gigabytes: 21.7),
+               gigabytes: 21.7,
+               blurb: "Best at drawings, and quick.",
+               measured: AskModelMeasure(heldOut: 60.2, medianSeconds: 49.1, run: "20261024-191502-ask-held-out")),
         Choice(id: "qwen3.6-27b", name: "Qwen3.6 27B",
                model: file("ggml-org/Qwen3.6-27B-GGUF", "1132d03976d88e30a09ab0ddbf1531d5e1b46e7c",
                            "Qwen3.6-27B-Q4_K_M.gguf", 19_095_766_304),
                eyes: file("ggml-org/Qwen3.6-27B-GGUF", "1132d03976d88e30a09ab0ddbf1531d5e1b46e7c",
                           "mmproj-Qwen3.6-27B-Q8_0.gguf", 629_247_104),
-               gigabytes: 22.8),
+               // Not offered: Qwen3.8 27B is the same size and shape, newer
+               // and better on the eval, so a Mac that has this one keeps it
+               // only until it deletes it.
+               gigabytes: 22.8,
+               blurb: "Older than Qwen3.8 27B, and slower.",
+               offered: false),
         Choice(id: "gemma-4-26b-a4b", name: "Gemma 4 26B",
                model: file("ggml-org/gemma-4-26B-A4B-it-GGUF", "9cf8c8db0f83fb4582f15381f8fb1a7c1b0b9ca2",
                            "gemma-4-26B-A4B-it-Q4_0.gguf", 14_618_145_824),
                eyes: file("ggml-org/gemma-4-26B-A4B-it-GGUF", "9cf8c8db0f83fb4582f15381f8fb1a7c1b0b9ca2",
                           "mmproj-gemma-4-26B-A4B-it-Q8_0.gguf", 806_408_320),
-               gigabytes: 18.5),
+               // Measured held 23.1 GB at the 64k window (`20261102-004807-ask-held-out`).
+               gigabytes: 23.1,
+               blurb: "Gets video right more than drawings.",
+               measured: AskModelMeasure(heldOut: 20.2, medianSeconds: 35.5, run: "20261102-004807-ask-held-out")),
         Choice(id: "gemma-4-e4b", name: "Gemma 4 E4B",
                model: file("ggml-org/gemma-4-E4B-it-GGUF", "a69f018d7678a2b9f5e705f8903d6fb29b9b25dc",
                            "gemma-4-E4B-it-Q4_0.gguf", 4_590_807_392),
                eyes: file("ggml-org/gemma-4-E4B-it-GGUF", "a69f018d7678a2b9f5e705f8903d6fb29b9b25dc",
                           "mmproj-gemma-4-E4B-it-Q8_0.gguf", 559_874_816),
-               gigabytes: 7.5),
+               gigabytes: 7.3,
+               blurb: "Small and fast.",
+               measured: AskModelMeasure(heldOut: 4.5, medianSeconds: 13.3, run: "20261102-002913-ask-held-out")),
+        Choice(id: "qwen3.5-9b", name: "Qwen3.5 9B",
+               model: file("unsloth/Qwen3.5-9B-GGUF", "3885219b6810b007914f3a7950a8d1b469d598a5",
+                           "Qwen3.5-9B-Q4_K_M.gguf", 5_680_522_464, folder: "qwen3.5-9b"),
+               eyes: file("unsloth/Qwen3.5-9B-GGUF", "3885219b6810b007914f3a7950a8d1b469d598a5",
+                          "mmproj-F16.gguf", 918_166_080, folder: "qwen3.5-9b"),
+               // Offered once its held-out run is in (`20261102-023538-ask-held-out`, under way).
+               gigabytes: 7.5,
+               blurb: "Small, for Macs with 16 GB.",
+               offered: false),
+        Choice(id: "qwen3.5-4b", name: "Qwen3.5 4B",
+               model: file("unsloth/Qwen3.5-4B-GGUF", "e87f176479d0855a907a41277aca2f8ee7a09523",
+                           "Qwen3.5-4B-Q4_K_M.gguf", 2_740_937_888, folder: "qwen3.5-4b"),
+               eyes: file("unsloth/Qwen3.5-4B-GGUF", "e87f176479d0855a907a41277aca2f8ee7a09523",
+                          "mmproj-F16.gguf", 672_423_616, folder: "qwen3.5-4b"),
+               gigabytes: 7.8,
+               blurb: "Small.",
+               measured: AskModelMeasure(heldOut: 12.4, medianSeconds: 57.4, run: "20261102-012713-ask-held-out")),
+        Choice(id: "gemma-4-e2b", name: "Gemma 4 E2B",
+               model: file("ggml-org/gemma-4-E2B-it-GGUF", "6938c58e698502037401a5f19f6905f2fb2f7dee",
+                           "gemma-4-E2B-it-Q4_0.gguf", 2_841_481_184),
+               eyes: file("ggml-org/gemma-4-E2B-it-GGUF", "6938c58e698502037401a5f19f6905f2fb2f7dee",
+                          "mmproj-gemma-4-E2B-it-Q8_0.gguf", 557_368_064),
+               gigabytes: 4.2,
+               blurb: "Smallest and fastest.",
+               measured: AskModelMeasure(heldOut: 4.6, medianSeconds: 15.8, run: "20261102-001045-ask-held-out")),
     ]
 
     public static func choice(id: String) -> Choice? { ranked.first { $0.id == id } }
 
     /// What a Mac is offered: the best it can hold (`AskModels.memoryShare`).
     public static func recommended(memoryGigabytes: Double) -> Choice? {
-        ranked.first { $0.gigabytes <= memoryGigabytes * AskModels.memoryShare }
+        ranked.first { AskModelSetup.offerable($0) && $0.gigabytes <= memoryGigabytes * AskModels.memoryShare }
     }
 
     /// The model chosen in Settings while it is downloaded, else the best

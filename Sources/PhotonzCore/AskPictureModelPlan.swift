@@ -53,6 +53,14 @@ public enum AskPictureModelPlan {
     /// more, up to about 25 GB, and gives it back after.
     public static let gigabytes = 12.0
 
+    /// What Settings says it is for.
+    public static let blurb = "Paints Ask's drawings. Needs room beside the chat model."
+
+    /// Measured on the held-out set at Next defaults with it on (57.5) against
+    /// 35.9 without, 31 s a drawing request (`docs/design/ask.md`, "Painting
+    /// a drawing"; run `20261022-043200-ask-held-out`).
+    public static let measured = AskModelMeasure(heldOut: 57.5, medianSeconds: 31, run: "20261022-043200-ask-held-out")
+
     /// Whether a Mac can hold it beside the chat model Ask uses.
     public static func fits(memoryGigabytes: Double, beside chat: AskBuiltInModels.Choice?) -> Bool {
         (chat?.gigabytes ?? 0) + gigabytes <= memoryGigabytes * AskModels.memoryShare
