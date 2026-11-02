@@ -240,6 +240,7 @@ enum LegibilitySheet {
             }
         }
         failures += stillUnderThePointer(out: out)
+        failures += louderThanDisabled()
         let seconds = Date().timeIntervalSince(started)
         print(String(format: "legibility: %d words and icons measured on %d specimens, light and dark, in %.0fs; "
                      + "pictures in %@", measured, catalogue.count, seconds, out.path))
@@ -252,6 +253,72 @@ enum LegibilitySheet {
         print("legibility: UNREADABLE (the user: no white on white or black on black, ever):")
         for failure in failures { print("  \(failure)") }
         return false
+    }
+
+    // MARK: - A button you can press never looks disabled
+
+    /// How much more contrast than a disabled icon every icon of a button you
+    /// can press must have. The faint cross the user reported on 2026-10-24
+    /// was drawn in exactly the disabled tone (a ratio of 1); the rule's
+    /// quietest pressable tone, a switch that is off, reads about twice it.
+    static let louderThanDisabledBy = 1.5
+
+    /// Every icon in `LegibilityCatalogue.pressableIcons`, light and dark, is
+    /// measured against the pixels behind it and held to
+    /// `louderThanDisabledBy` times the contrast of a disabled panel icon
+    /// button, so a button you can press can never again be drawn as faint as
+    /// one you cannot (the user, 2026-10-24: "buttons which are active should
+    /// not look diminished"). `PHOTONZ_LEGIBILITY_SHOW=louder` prints the
+    /// readings.
+    private static func louderThanDisabled() -> [String] {
+        var failures: [String] = []
+        let show = ProcessInfo.processInfo.environment["PHOTONZ_LEGIBILITY_SHOW"] == "louder"
+        for scheme in [ColorScheme.light, .dark] {
+            let schemeName = scheme == .dark ? "dark" : "light"
+            func readings(_ view: AnyView) -> [InkReading]? {
+                let specimen = Specimen(control: "", state: "", ground: .panel) { view }
+                func drawn(_ pass: VideoKit.InkPass) -> InkPicture? {
+                    render(framed(specimen, scheme: scheme, backdrop: .clear, pass: pass)).flatMap(picture)
+                }
+                guard let shown = drawn(.shown), let bare = drawn(.bare), let mask = drawn(.mask) else { return nil }
+                return InkReading.read(shown: shown, bare: bare, mask: coverage(mask: mask, bare: bare))
+            }
+            guard let disabled = readings(LegibilityCatalogue.disabledIcon)?.map(\.contrast).max() else {
+                failures.append("Panel icon button, disabled, \(schemeName): could not be measured")
+                continue
+            }
+            let floor = disabled * louderThanDisabledBy
+            if show { print(String(format: "  louder %@: disabled %.2f:1, floor %.2f:1", schemeName, disabled, floor)) }
+            if let old = readings(LegibilityCatalogue.oldFaintCross)?.map(\.contrast).max() {
+                if show { print(String(format: "  louder %@, the old faint cross: %.2f:1", schemeName, old)) }
+                if old >= floor {
+                    failures.append(String(format: "The old faint cross, %@: reads %.2f:1, over the %.2f:1 "
+                                           + "floor, so the check would no longer catch it", schemeName, old, floor))
+                }
+            } else {
+                failures.append("The old faint cross, \(schemeName): could not be measured")
+            }
+            for (control, view) in LegibilityCatalogue.pressableIcons {
+                guard let found = readings(view), !found.isEmpty else {
+                    failures.append("\(control), \(schemeName): could not be measured")
+                    continue
+                }
+                for reading in found {
+                    if show {
+                        print(String(format: "  louder %@, %@: %.2f:1 at %d,%d", control, schemeName,
+                                     reading.contrast, reading.minX / 2, reading.minY / 2))
+                    }
+                    if reading.contrast < floor {
+                        failures.append(String(
+                            format: "%@, %@: an icon you can press reads %.2f:1 at %d,%d, within %.1fx of a "
+                                + "disabled one (%.2f:1): a button that works must not look disabled",
+                            control, schemeName, reading.contrast, reading.minX / 2, reading.minY / 2,
+                            louderThanDisabledBy, disabled))
+                    }
+                }
+            }
+        }
+        return failures
     }
 
     // MARK: - A button that cannot be pressed sits still

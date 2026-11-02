@@ -91,6 +91,8 @@ struct TransitionsGroup: View {
                 .playtestControl("Search transitions", detail: "Transitions")
             if !query.isEmpty {
                 Button { query = "" } label: {
+                    // quiet on purpose: the Mac's own search field draws its clear button
+                    // this light, and it is part of the field rather than a button beside it
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 11))
                         .foregroundStyle(.tertiary)

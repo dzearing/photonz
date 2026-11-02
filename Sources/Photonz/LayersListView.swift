@@ -899,6 +899,8 @@ struct LayersListView: View {
                     .playtestField("Find a layer")
                 if !editorState.layerSearchQuery.isEmpty {
                     Button { editor.layerSearchQuery = "" } label: {
+                        // quiet on purpose: the Mac's own search field draws its clear button
+                        // this light, and it is part of the field rather than a button beside it
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 11))
                             .foregroundStyle(.tertiary)

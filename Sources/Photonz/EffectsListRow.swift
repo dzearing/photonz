@@ -198,10 +198,13 @@ struct EffectsListRow<Accessory: View, Settings: View, HeaderDrop: ViewModifier>
     }
 
     private var grip: some View {
+        // The eye's tone at rest, not a fainter one: a grip you can drag is a
+        // control, and the panel's one rule for icon buttons
+        // (`IconButtonTone`) draws only what cannot be used faint.
         Image(systemName: "line.3.horizontal")
             .font(.system(size: 10))
-            .foregroundStyle(carry == 0 ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.primary))
             .frame(height: ColorPartLayout.rowHeight)
+            .panelIconTone(active: carry != 0)
             .panelEdgeIcon("reorder", of: title)
             .contentShape(Rectangle())
             .panelHelp("Drag to change what paints over what")
@@ -226,8 +229,9 @@ struct EffectsListRow<Accessory: View, Settings: View, HeaderDrop: ViewModifier>
                 .panelEdgeIcon("remove", of: title)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(.tertiary)
+        // The eye's tone, not the tertiary it wore: the user, 2026-10-24, "the
+        // remove x button on effects seems disabled but it is not".
+        .buttonStyle(.panelIcon())
         .panelHelp("Remove this \(kindWord)")
         .playtestControl("Remove", detail: "takes the effect out of the list")
     }
@@ -296,7 +300,7 @@ struct EffectsListRow<Accessory: View, Settings: View, HeaderDrop: ViewModifier>
     private var isShowing: Bool { isMixed ? false : isOn }
 
     /// The switch, drawn as the eye a layer row wears: the same glyph pair, the
-    /// same 11pt, the same tertiary tint when off, in the same shared slot down
+    /// same 11pt, the same quieter tone when off, in the same shared slot down
     /// the panel's edge. Asked for by the user on 2026-09-08 — the app has one
     /// picture for "this is not showing" and an effect had a second one.
     private var effectEye: some View {
@@ -305,12 +309,11 @@ struct EffectsListRow<Accessory: View, Settings: View, HeaderDrop: ViewModifier>
         } label: {
             Image(systemName: isShowing ? "eye" : "eye.slash")
                 .font(.system(size: 11))
-                .foregroundStyle(isShowing ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
                 .frame(height: ColorPartLayout.rowHeight)
                 .panelEdgeIcon("eye", of: title)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.panelIcon(isOn: isShowing))
         .opacity(isMixed ? MixedLook.controlOpacity : 1)
         .panelHelp(switchHelp)
         .accessibilityLabel(isShowing ? "Hide \(title)" : "Show \(title)")

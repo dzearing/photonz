@@ -265,8 +265,11 @@ private struct TransformSizeLink: View {
                 }
                 Image(systemName: "link")
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(linked || isHovering ? AnyShapeStyle(.secondary)
-                                                          : AnyShapeStyle(.quaternary))
+                    // The panel's one rule for an icon button: a switch
+                    // that is off is quieter than on, never as faint as a
+                    // control that cannot be used (`IconButtonTone`).
+                    .foregroundStyle(PanelIconInk.ink(IconButtonTone(
+                        enabled: true, isOn: linked, look: isHovering ? .hovered : .rest)))
                     .frame(width: 14, height: 12)
             }
             .frame(width: 14)

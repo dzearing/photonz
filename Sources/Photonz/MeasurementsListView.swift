@@ -138,8 +138,10 @@ struct MeasurementsListView: View {
             } label: {
                 Image(systemName: layer.isVisible ? "eye" : "eye.slash")
                     .font(.system(size: 11))
-                    .foregroundStyle(layer.isVisible ? .primary : .tertiary)
+                    .frame(width: EditorChromeLayout.panelEdgeIconWidth)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.panelIcon(isOn: layer.isVisible))
             .panelHelp(layer.isVisible ? "Hide Measurement" : "Show Measurement")
             .panelEdgeIcon("eye", of: MeasureSpecList.displayName(for: layer))
         }

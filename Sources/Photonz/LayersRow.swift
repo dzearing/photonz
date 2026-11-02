@@ -170,8 +170,10 @@ struct LayersRow: View, Equatable {
             } label: {
                 Image(systemName: display.isLocked ? "lock.fill" : "lock.open")
                     .font(.system(size: 11))
-                    .foregroundStyle(display.isLocked ? .primary : .tertiary)
+                    .frame(width: EditorChromeLayout.panelEdgeIconWidth)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.panelIcon(isOn: display.isLocked))
             .panelHelp(display.isLocked ? "Unlock Layer" : "Lock Layer")
             .playtestControl("Lock", detail: place(display.isLocked ? "locked" : "unlocked"))
             // The slot is what keeps the padlock still: shut and open are two
@@ -183,8 +185,10 @@ struct LayersRow: View, Equatable {
             } label: {
                 Image(systemName: display.isVisible ? "eye" : "eye.slash")
                     .font(.system(size: 11))
-                    .foregroundStyle(display.isVisible ? .primary : .tertiary)
+                    .frame(width: EditorChromeLayout.panelEdgeIconWidth)
+                    .contentShape(Rectangle())
             }
+            .buttonStyle(.panelIcon(isOn: display.isVisible))
             .panelHelp(display.isVisible ? "Hide Layer" : "Show Layer")
             .playtestControl("Visibility", detail: place(display.isVisible ? "shown" : "hidden"))
             .panelEdgeIcon("eye", of: display.name)

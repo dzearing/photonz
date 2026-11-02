@@ -1,0 +1,30 @@
+{
+  "feature": "A button you can press never looks disabled",
+  "epic": "agent-drivable",
+  "summary": "The cross that removes an effect, the reorder grip beside it and every other working icon button on the panel rows are now drawn in the same tone as the eye, come up a little with a soft wash under the pointer, and only a button that cannot be pressed is drawn faint.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/active-icon-buttons-look-live-walk.json (no flags).",
+  "switched": {},
+  "try": [
+    { "do": "Draw a rectangle (R, drag), then add a Shadow and a Blur from the plus on the Effects header.", "shot": "2026-11-02-icon-tone-1-at-rest-before-after.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the end of the Shadow row: the grip, the eye and the cross should read as one strength.", "shot": "2026-11-02-icon-tone-1-at-rest-row-zoom.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Rest the pointer on Shadow's cross: it brightens and a soft square comes up behind it.", "shot": "2026-11-02-icon-tone-2-cross-under-the-pointer-row-zoom.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the eye on the Blur row to switch it off: the crossed-out eye goes a step quieter, the cross beside it stays full." },
+    { "do": "Switch to light mode (System Settings, Appearance) and look at the same rows.", "shot": "2026-11-02-icon-tone-effect-row-light.png" },
+    { "do": "In the Layers list, look at the padlock on an unlocked layer: it is now a step quieter than a locked one, not as faint as before." }
+  ],
+  "evaluate": [
+    "Does the cross on an effect row now read as something you can press, at a glance?",
+    "Is the hover square on the small row buttons welcome, or would you rather they only brightened?",
+    "The open padlock on every unlocked layer row is now drawn at the secondary tone instead of the faint one. Is the Layers list still calm enough?",
+    "Is a switched-off eye (crossed out, a step quieter) still easy to tell from a switched-on one?"
+  ],
+  "rough": [
+    "The mock draws the reorder grip and the layer eye in its faint colour (image page, .efx .drag and .lrow .eye); the app draws both in the label tone, because your report of 2026-10-24 says a button that works must not look diminished (your call on 2026-10-24).",
+    "The rule: at rest the system label tone (0.85), hovered and pressed full ink with a soft wash, a switch that is off the secondary tone (0.55), disabled the tertiary tone (0.25), the only faint one. It lives in IconButtonTone (core) and the panel's PanelIconButtonStyle.",
+    "Moved onto the rule: effect row cross, grip and eye (EffectsListRow.swift:207, :234, :316); motion row cross and eye and the Motion header's play button (MotionListInspector.swift:174, :191, :737); layer row padlock and eye (LayersRow.swift:176, :191); measurement row eye (MeasurementsListView.swift:144); keyed-property stop cross and the two key-step arrows (PropertyKeysInspector.swift:695, :735); the timing strip's zoom buttons and its cross (TimelineZoomBar.swift:79, MotionStripView.swift:253); the width and height link in the transform popover (TransformValuesPopover.swift:271).",
+    "Kept faint on purpose, each with a written reason on the control: the clear button in three search fields (LayersListView.swift:902, LibraryPanel.swift:251, TransitionsGroup.swift:94), drawn the way the Mac's own search field draws it; the question mark on section headers (InspectorPanel.swift:2839), a hint rather than a control.",
+    "Not changed: icon buttons that rest at the secondary tone (the floating history and Quick Access buttons, transport and timeline kit buttons) are not faint by the task's measure and keep their own styles; the sweep found none in the timeline headers, the dock or the Ask rows drawn at tertiary or below.",
+    "Two checks keep it from coming back: a unit test reads every Swift file in the app and fails on any icon-only button that sets a tertiary, quaternary or under-half opacity ink of its own without a quiet-on-purpose reason (FaintIconScanTests), and the legibility sheet that runs after every test run measures the real effect row and the panel icon button in every state, light and dark, and fails any icon you can press that reads within 1.5x of a disabled one's contrast. Measured: the old cross read 1.87:1 light and 2.24:1 dark, the disabled tone 1.83:1 and 2.25:1; now the cross reads 14.7:1 and 11.4:1, the switched-off eye 4.7:1 and 6.1:1.",
+    "The window pictures are of the window behind another app, which does not change these grey tones; the tones were also measured from the view itself by the legibility sheet."
+  ]
+}

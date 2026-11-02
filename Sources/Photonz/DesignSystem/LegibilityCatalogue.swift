@@ -159,6 +159,7 @@ enum LegibilityCatalogue {
             ("Icon button", { pointer in
                 AnyView(Button {} label: { symbol("trash") }.buttonStyle(IconActionButtonStyle())
                     .environment(\.shownPointer, pointer)) }),
+            ("Panel icon button", { pointer in panelIcon(pointer: pointer) }),
             ("Tool bar button", { pointer in
                 AnyView(Button {} label: { symbol("cursorarrow").font(.system(size: 15, weight: .medium)) }
                     .buttonStyle(.tool(isActive: false))
@@ -176,10 +177,78 @@ enum LegibilityCatalogue {
         ]
     }
 
+    // MARK: - The panel's icon buttons
+
+    /// A panel row's cross, drawn by `PanelIconButtonStyle`.
+    private static func panelIcon(isOn: Bool = true, pointer: Kit.ShownPointer = .live,
+                                  disabled: Bool = false) -> AnyView {
+        AnyView(Button {} label: {
+            symbol("xmark").font(.system(size: 9, weight: .semibold)).frame(width: 17, height: 22)
+        }
+        .buttonStyle(.panelIcon(isOn: isOn))
+        .disabled(disabled)
+        .environment(\.shownPointer, pointer))
+    }
+
+    /// The effect row the user reported on 2026-10-24, as the panel draws it:
+    /// a Shadow with its grip, its eye and its cross.
+    private static func effectRow(isOn: Bool) -> AnyView {
+        AnyView(EffectsListRow(
+            title: "Shadow", kindWord: "shadow", isOn: isOn, isFolded: true, toggleFold: {},
+            switchReading: isOn ? "on" : "off", switchHelp: "", setOn: { _ in }, remove: {},
+            reorder: .init(index: 0, canMove: { _ in true }, move: { _ in }),
+            headerDrop: EmptyModifier(),
+            accessory: { EmptyView() }, settings: { EmptyView() })
+            .frame(width: 260))
+    }
+
+    /// Icon buttons that can be pressed, each held to reading clearly louder
+    /// than a disabled one (`LegibilitySheet.louderThanDisabled`).
+    static var pressableIcons: [(String, AnyView)] {
+        [
+            ("Panel icon button, rest", panelIcon()),
+            ("Panel icon button, hovered", panelIcon(pointer: .hovered)),
+            ("Panel icon button, pressed", panelIcon(pointer: .pressed)),
+            ("Panel icon button, switch off", panelIcon(isOn: false)),
+            ("Effect row, on", effectRow(isOn: true)),
+            ("Effect row, off", effectRow(isOn: false)),
+        ]
+    }
+
+    /// The cross as it was drawn until 2026-11-02, in the system's tertiary:
+    /// the check must still find it too faint, or it has gone blunt.
+    static var oldFaintCross: AnyView {
+        AnyView(Button {} label: {
+            symbol("xmark").font(.system(size: 9, weight: .semibold)).frame(width: 17, height: 22)
+                .measuredInk()
+        }
+        .buttonStyle(.plain)
+        // quiet on purpose: the faint look the check exists to refuse
+        .foregroundStyle(.tertiary))
+    }
+
+    /// The disabled tone every icon in `pressableIcons` is measured against.
+    static var disabledIcon: AnyView { panelIcon(disabled: true) }
+
+    private static var panelIcons: [Specimen] {
+        [
+            Specimen(control: "Panel icon button", state: "rest", ground: .panel) { panelIcon() },
+            Specimen(control: "Panel icon button", state: "hovered", ground: .panel) { panelIcon(pointer: .hovered) },
+            Specimen(control: "Panel icon button", state: "pressed", ground: .panel) { panelIcon(pointer: .pressed) },
+            Specimen(control: "Panel icon button", state: "switch off", ground: .panel) { panelIcon(isOn: false) },
+            Specimen(control: "Panel icon button", state: "disabled", ground: .panel, disabled: true) {
+                panelIcon(disabled: true)
+            },
+            // The title, the grip, the eye and the cross.
+            Specimen(control: "Effect row", state: "on", ground: .panel, inks: 4) { effectRow(isOn: true) },
+            Specimen(control: "Effect row", state: "off", ground: .panel, inks: 4) { effectRow(isOn: false) },
+        ]
+    }
+
     // MARK: - The panel
 
     private static var panel: [Specimen] {
-        [
+        panelIcons + [
             Specimen(control: "Panel row", state: "label and value", ground: .panel, inks: 2) {
                 AnyView(PanelFieldRow("Opacity") { Kit.ValueFace(value: "100%") }.frame(width: 260))
             },

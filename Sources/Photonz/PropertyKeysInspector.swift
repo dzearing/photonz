@@ -691,8 +691,8 @@ private struct PropertyKeyRow: View {
                 .frame(width: 16, height: 18)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(.secondary)
+        // The panel's one tone for an icon button (`IconButtonTone`).
+        .buttonStyle(.panelIcon())
         // Not 0: SwiftUI stops hit testing a view at no opacity at all, and a
         // click that lands a beat before the hover does must still count.
         .opacity(isHovering ? 1 : 0.001)
@@ -731,8 +731,8 @@ private struct PropertyKeyRow: View {
                 .frame(width: 12, height: 18)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(can ? AnyShapeStyle(.secondary) : AnyShapeStyle(.quaternary))
+        // Faint only when there is no key that way: the rule's disabled tone.
+        .buttonStyle(.panelIcon())
         .disabled(!can)
         .opacity(isKeyed ? 1 : 0)
         .panelHelp(forward ? "Next key" : "Previous key")

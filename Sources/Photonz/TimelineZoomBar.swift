@@ -74,8 +74,9 @@ struct TimelineZoomControl: View {
                 .frame(width: 18, height: 16)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(enabled ? AnyShapeStyle(.secondary) : AnyShapeStyle(.quaternary))
+        // Faint only when it cannot zoom further: the rule's disabled tone
+        // (`IconButtonTone`), never a quiet one while it works.
+        .buttonStyle(.panelIcon())
         .disabled(!enabled)
         .accessibilityLabel(name)
         .panelHelp(help)

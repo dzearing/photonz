@@ -2836,6 +2836,9 @@ struct SectionHelpMark: View {
 
     var body: some View {
         Button { isOpen.toggle() } label: {
+            // quiet on purpose: a hint about the section, not a control that
+            // changes anything, and it sits on every header, so it stays out of
+            // the way of the plus and the grip beside it
             Image(systemName: "questionmark.circle")
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)

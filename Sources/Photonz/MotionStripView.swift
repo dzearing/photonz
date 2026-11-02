@@ -246,9 +246,11 @@ struct MotionStripView: View {
             Button { editorState.toggleMotionStrip() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 9, weight: .semibold))
+                    .frame(width: 16, height: 16)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
+            // The zoom buttons' tone beside it (`IconButtonTone`).
+            .buttonStyle(.panelIcon())
             .accessibilityLabel("Put the timing strip away")
             .panelHelp("Put the timing strip away (⌥⌘T)")
             .playtestControl("Hide Timing", detail: "Timing strip")

@@ -167,12 +167,11 @@ private struct MotionRowView: View {
         } label: {
             Image(systemName: motion.isOn ? "eye" : "eye.slash")
                 .font(.system(size: 11))
-                .foregroundStyle(motion.isOn ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
                 .frame(height: ColorPartLayout.rowHeight)
                 .panelEdgeIcon("eye", of: motion.property.title)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.panelIcon(isOn: motion.isOn))
         .panelHelp("Stops it moving, and keeps every number on it")
         .accessibilityLabel(motion.isOn ? "Stop \(motion.property.title) moving"
                                         : "Let \(motion.property.title) move")
@@ -189,8 +188,7 @@ private struct MotionRowView: View {
                 .panelEdgeIcon("remove", of: motion.property.title)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(.tertiary)
+        .buttonStyle(.panelIcon())
         .panelHelp("Stop this property moving at all")
         .playtestControl("Remove", detail: "takes the motion out of the list")
     }
@@ -734,8 +732,9 @@ struct MotionPreviewButton: View {
             Image(systemName: editorState.isMotionPlaying ? "pause.fill" : "play.fill")
                 .font(.system(size: 10, weight: .medium))
         }
-        .buttonStyle(.plain)
-        .foregroundStyle(editorState.isMotionPlaying ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+        // The plus's tone beside it: a play button that can be pressed is not
+        // a quieter thing than the plus (`IconButtonTone`).
+        .buttonStyle(.panelIcon())
         .disabled(!editorState.canPlayMotion)
         .accessibilityLabel(editorState.isMotionPlaying ? "Pause the preview" : "Play the preview")
         .panelHelp(editorState.isMotionPlaying
