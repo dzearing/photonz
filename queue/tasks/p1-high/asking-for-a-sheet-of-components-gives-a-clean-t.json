@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-02T22:55:59.603Z",
+  "updated": "2026-11-02T22:56:06.750Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -451,6 +451,10 @@
     {
       "t": "2026-11-02T22:55:59.602Z",
       "note": "Pictures looked at: before (203358: Hover near Default, 240 margins), after (222158: three distinct blues, 64 margins, slider thumbs, selection on One/Two/Three), after-2 (215441: same, Pressed deep blue), gaps tried (220847: Disabled column with holes, judged patchy), walk window capture (sheet live, three blues, selection on Two, chips over headers). Tests: Scripts/test.sh green (15,197; one earlier run red on the flaky stopwatch, filed). Walk ask-builds-base-components-walk ok at Next defaults. Audit: queue/audits/2026-11-02-component-sheet-states-read-as-states.json"
+    },
+    {
+      "t": "2026-11-02T22:56:06.749Z",
+      "note": "States that read at a glance, a selection that follows its name, slider thumbs kept and even margins shipped (f27c36ba); walk passes. Ask scores 84 and 74.8 on this build (judges 7.4 and 7.4); typography reached 8 once, but aligned, designed and asked stay at 7, short of the 8-of-10 bar, so it stays open."
     }
   ],
   "started": "2026-11-02T21:27:00.531Z",
