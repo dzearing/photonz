@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-02T20:53:18.014Z",
+  "updated": "2026-11-02T22:55:59.603Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -411,9 +411,49 @@
     {
       "t": "2026-11-02T20:53:18.013Z",
       "note": "Section rules, even margins, no dropped segmented control and a Disabled field never darker shipped (9012e022). Ask scores 84 and 70.6 on this build (judges 7.4 and 7.2, was 6.2 to 6.6); clean and aligned reach 8, typography and designed stay at 7, short of the 8-of-10 bar, so it stays open."
+    },
+    {
+      "t": "2026-11-02T21:27:00.532Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T21:34:53.104Z",
+      "note": "Adversarial read before building: the request is the user's own words; every judge of five Ask runs on 2026-11-02 named Hover a shade off Default (#007AFF to #006CDF, contrast 1.24, past the 1.2 'can tell apart' bar). A Photoshop or Figma user reading a kit page expects Hover visibly between Default and Pressed. Building, in Ask's planner only (the skill's agent reads refusals and keeps its settled hover): a coloured surface a later look only shades goes on darker until 1.35 apart, and each later look shading it the same way stands 1.2 further than the one before (Pressed past Hover), twins kept twins, Disabled and greys left."
+    },
+    {
+      "t": "2026-11-02T21:39:20.127Z",
+      "note": "Run 20261102-213447-ask scored 0 and is not a measurement: I edited AskPlanning.swift while its probe build ran ('input file was modified during the build'), so the app never started."
+    },
+    {
+      "t": "2026-11-02T21:54:46.294Z",
+      "note": "Run 20261102-213915-ask (Hover shaded to 1.35 and sheet margin 64 to 96): 84, judge 8,7,8,7,7 (mean 7.4). No judge names Hover near Default and the margin is 64 again (run 203358's 240 margins were the model's x; all three judges there read 'right side mostly empty'). New: 2 of 3 read Hover and Pressed as alike (Pressed only 1.2 past the darker Hover), all 3 read 'Second segmented state has no selected segment' (the model hid the selection instead of moving it, read off the trace). Building: Pressed a whole state past Hover; a look named by the control's own words gets the selection round them."
+    },
+    {
+      "t": "2026-11-02T22:08:51.875Z",
+      "note": "Run 20261102-215441-ask (+ Pressed a whole state past Hover, selection follows its name): 74.8, judge 7,7,7,7,8. The segmented control's selection moves to Two and Three; Pressed plainly darker. Named now: Button's four columns against three-column sections below with Disabled jumping right (2 of 3), badge numerals off-centre, Disabled slider faint, alert dots. Building: a state keeps one column down the whole table (gaps allowed), homes set by the widest header row."
+    },
+    {
+      "t": "2026-11-02T22:22:03.489Z",
+      "note": "Tried and reverted: a state keeping one column down the table with gaps (Disabled always last). Run 20261102-220847-ask 81.2, judge 7,7,7,7,7: all three judges named the gaps ('Text Field and Slider skip columns so the grid looks patchy', 'state columns jump around and leave odd gaps'). Chose no gaps (the earlier rule) over gaps on that evidence; kept only that column homes come from the widest header row, so a three-state section planned first no longer puts a four-state row's Pressed after its Disabled. Same run: 'default slider has no thumb' from every judge, read off the trace: Pressed set the knob visible while growing it, and the parser hid it in Default; a part a look also resizes now stays shown."
+    },
+    {
+      "t": "2026-11-02T22:55:59.368Z",
+      "note": "Built: Ask's planner shades a coloured surface a later look only shades until it reads as a state (lightness contrast 1.35 from the first look), and each later look shading it the same way a whole state past the one before (Pressed past Hover), twins kept twins, greys/hue changes/Disabled left (AgentNewComponent.madePlain, readsAsAState, shadedToAState). A look named by the control's own words gets the selection round them when the model hid it or left it behind (selectionFollowsItsName, the exact call from run 213915). A sheet starts 64 to 96 from the edge, and a left-set title the model sends after the rows takes that x too (alignSheet, widestSheetMargin; run 203358 had 240 either side). Column homes come from the widest header row. A part a look shows AND resizes stays shown in the first look (componentSpec; the Default slider had no thumb)."
+    },
+    {
+      "t": "2026-11-02T22:55:59.442Z",
+      "note": "Eval (rubric f5ae1562), Ask component-table: before 84 and 70.6 (judges 7.4, 7.2). This pass: 84 (hover + margin; 8,7,8,7,7), 74.8 (+ Pressed step, selection; 7,7,7,7,8), 81.2 (gaps, reverted; 7,7,7,7,7), 84 final (8,8,7,7,7). No judge names Hover near Default in four runs (it was named in every run before); segmented selection and slider thumb no longer named. NOT at the 8-of-10 bar (aligned, designed, asked at 7), so left pending. Skill not re-measured: these changes are Ask's planner except the thumb fix."
+    },
+    {
+      "t": "2026-11-02T22:55:59.518Z",
+      "note": "Left rough (this task covers it, not filed): Hover and Pressed still read as close by 2 of 3 judges in two runs; right side empty under a four-state Button; badge numeral a little off-centre; 'text' read as type styles. Filed: the-full-test-suite-stays-green-on-a-busy-mac-wh (a flat 48 ms stopwatch check failed the full suite once on unchanged code)."
+    },
+    {
+      "t": "2026-11-02T22:55:59.602Z",
+      "note": "Pictures looked at: before (203358: Hover near Default, 240 margins), after (222158: three distinct blues, 64 margins, slider thumbs, selection on One/Two/Three), after-2 (215441: same, Pressed deep blue), gaps tried (220847: Disabled column with holes, judged patchy), walk window capture (sheet live, three blues, selection on Two, chips over headers). Tests: Scripts/test.sh green (15,197; one earlier run red on the flaky stopwatch, filed). Walk ask-builds-base-components-walk ok at Next defaults. Audit: queue/audits/2026-11-02-component-sheet-states-read-as-states.json"
     }
   ],
-  "started": "2026-11-02T19:50:45.790Z",
+  "started": "2026-11-02T21:27:00.531Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
