@@ -22379,3 +22379,10 @@ the ghost, and pinching in seemed to stop short.
 - Ask's planner keeps words a later look hides while rewriting them (segmented control's First label) and keeps a part grown both ways centred (pressed slider knob) (`1f3ee881`). Ask component-table 79.2 and 65.8 on this build (77.6 and 78.8 before): judges 6 to 7, still short of the 8 bar; same-build spread about 7 points.
 - Tried and reverted a header row per kind of component (one judge: "doesn't read as a table"). The eval's component-table case now waits 540 s, as the walk does (a 300 s wait scored a slow run 0).
 - Next: what judges still name is the empty right half and the Disabled column near the edge, Hover near Default, and a Disabled placeholder darker than Default's that could not be reproduced (Ask's trace cuts answers at 3000 characters).
+
+## 2026-11-02 — Component sheet: section rules, even margins, no lost controls
+
+- A hairline between sections of the table, the late-asked title keeps the 64 margin, words centred in one part keep their own boxes when centring would stack them (a segmented control was being dropped), a Disabled field never ends darker than its Default, Ask's trace keeps 20000 characters (`9012e022`). Each reproduced from the trace or the finished document first.
+- Ask component-table 84 (judges 8,7,8,7,7) and 70.6 (8,7,8,7,6; judges read "and text" as wanting type styles), was 65.8 to 79.2. Clean and aligned at 8; typography and designed at 7. Still short of the bar.
+- Tried and reverted: look contrast bar 1.2 to 1.3 (also refuses a hover the skill relies on).
+- Next: Hover near Default (named by every judge), the right quarter left empty under a four-state row, re-measure the skill.

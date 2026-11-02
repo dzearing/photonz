@@ -1,0 +1,33 @@
+{
+  "feature": "Ask's component sheet: sections parted by a line, even margins, every control kept",
+  "epic": "agent-skills",
+  "summary": "A sheet Ask makes now has a thin line between each group of rows and the next header, so Checkbox and Radio read as sitting under Toggle's Off and On. The page keeps the same margin on both sides, a segmented control is no longer dropped, and a Disabled text field is no longer darker than its Default.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default, a blank picture 1440 by 1024, the built-in Qwen3.8 27B model.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Image, then press Ask (Command K)." },
+    { "do": "Type: create a table of apple like quality base components that show different states and text, and press Send." },
+    { "do": "Wait for it (four to six minutes on this Mac)." },
+    { "do": "Look at the lines between the groups of rows, and at Checkbox and Radio under Toggle's Off and On.", "shot": "2026-11-02-component-sheet-rules-ask-after.png" },
+    { "do": "Compare with the build before: no lines, the last column 24 points from the right edge, and no segmented control.", "shot": "2026-11-02-component-sheet-rules-ask-before.png" },
+    { "do": "Look at the Text Field row: Disabled is a faint grey field with a faint placeholder.", "shot": "2026-11-02-component-sheet-rules-ask-after-2.png" },
+    { "do": "See it in the editor window, where the name chips sit above each look.", "shot": "2026-11-02-component-sheet-rules-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: the whole sheet goes, lines included." }
+  ],
+  "evaluate": [
+    "Do the lines make it clear which header each row is under?",
+    "Would you want a line between every row instead of only between groups?",
+    "Does the Disabled text field now read as disabled rather than darker?",
+    "Are six Sheet Rule rows at the top of the Layers list acceptable, or should they sit inside one group?"
+  ],
+  "rough": [
+    "Not at the bar: Ask scored 84 (judges 8, 7, 8, 7, 7) and 70.6 (8, 7, 8, 7, 6) on this build, against 65.8 and 79.2 (judges 6 to 7) before. Clean and aligned reach 8; typography and designed stay at 7. The task stays open (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Every judge in both runs still says Hover looks almost the same as Default (#006CDF over #007AFF). Raising the bar for a visible step was tried and taken out, because it also refuses a hover the skill relies on. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Rows with three states leave the right quarter of the page empty under a four-state Button row, and judges name it. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "In the second run the judges read 'states and text' as asking for a row of text styles, which the model did not make that time, so that run scored lower. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The lines are real layers, so the Layers list shows six Sheet Rule rows at the top. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The name chips over each look still cover the headers in the window. That is the-name-chips-over-component-copies-stay-clear.",
+    "The skill was not measured again this pass. Its sheets get the same lines from the same layout.",
+    "No mock covers this surface; the bar is the user's own words and the eval."
+  ]
+}
