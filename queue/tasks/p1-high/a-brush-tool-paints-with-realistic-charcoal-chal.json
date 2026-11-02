@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T14:32:04.475Z",
-  "updated": "2026-11-02T15:21:04.916Z",
+  "updated": "2026-11-02T16:14:41.351Z",
   "deps": [
     "pressing-b-picks-a-brush-that-paints-freehand-st",
     "charcoal-chalk-and-crayon-catch-on-a-paper-grain",
@@ -306,10 +306,23 @@
     {
       "t": "2026-11-02T15:21:04.915Z",
       "note": "decision \"Lighting the paint as one surface did not lift Ask's painting: still 4 and 5 on looks painted against the 5 and 6 you chose. Close the brush epic, close it and carry the look as its own task, or keep trying here?\" resolved: Close the brush epic as it stands"
+    },
+    {
+      "t": "2026-11-02T16:13:25.874Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T16:14:33.912Z",
+      "note": "Closing per the user's answer on 2026-11-02 (card option a, close as it stands). All eleven slices are done. Item 9's looks-painted half ends at 4 and 5 against the 5 and 6 gate, accepted by the user; reads as a landscape is 8 and 8 against 7. Audit 2026-10-31-a-brush-tool-paints-with-realistic-charcoal-chal.json updated to say so. No code changed in this pass, so no tests or walks were rerun."
+    },
+    {
+      "t": "2026-11-02T16:14:41.349Z",
+      "note": "Brush epic closed as it stands, the user's call on 2026-11-02 (card option a). All eleven slices are done: B picks the Brush, eight media with their own settings, pressure, tilt and speed, the agent's MCP brush tools, brushed vector paths, painting that never reflows, no lag on 12 MP (worst 7.4 ms per move). Ask's painting reads as a landscape 8 and 8 (bar 7); looks painted ends at 4 and 5, under the 5 and 6 gate, which the user accepted. Audit: queue/audits/2026-10-31-a-brush-tool-paints-with-realistic-charcoal-chal.json, walk brush-epic-try-path-walk."
     }
   ],
-  "started": "2026-11-01T21:56:20.491Z",
+  "started": "2026-11-02T16:13:25.873Z",
   "walks": [
     "brush-epic-try-path-walk"
-  ]
+  ],
+  "completed": "2026-11-02T16:14:41.350Z"
 }
