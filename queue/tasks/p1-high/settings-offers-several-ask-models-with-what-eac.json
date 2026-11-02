@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T12:11:00.440Z",
-  "updated": "2026-11-01T14:53:14.061Z",
+  "updated": "2026-11-02T05:15:59.764Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-10-24: 'in settings, I would like multiple model options to choose from. There should be a download button to download them on demand, and then use them. Each should have some requirements and maybe something like quality / speed ratings. This would allow users to opt into the ask functionality without requiring a model to be downloaded. I think by default, model should not be downloaded and clicking ask should bring you to a dialog which downloads a recommended model set if needed based on the mac configuration.' Today: Sources/Photonz/Agent/AskSettingsSection.swift offers one recommended model with Download (:81-85) and a Picker over the ones you have (:68-70), plus the picture model's Download (:121-125). An Ollama branch remains (:141-175). The choices are in Sources/PhotonzCore/AskBuiltInModel.swift (Qwen3.6 35B 21.7 GB, Qwen3.6 27B 22.8 GB, Gemma 4 26B 18.5 GB, all from Hugging Face at pinned revisions) and the picture model is in AskPictureModelPlan.swift (about 11 GB). Downloads go through AskModelDownload.swift. Nothing smaller than 18.5 GB exists, so a 16 GB Mac gets 'Ask needs more memory than this Mac has.' Scoring: Scripts/ask-eval.sh, held-out set. Check what happens today when Ask is pressed with no model (not reproduced here). Ties in with the memory task (photonz-uses-little-memory-and-what-made-it-use): smaller models lower memory as well.",
@@ -72,6 +72,62 @@
     {
       "t": "2026-11-01T14:53:14.060Z",
       "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-11-01T23:48:14.014Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T00:13:22.836Z",
+      "note": "Adversarial pass before building: a first-time person presses Ask and today gets 'Ask needs its model. Get it in Settings.' plus Open Settings, then one Download of a 21 GB model with no idea what it costs or whether a smaller one would do; on a 16 GB Mac there was nothing at all (smallest was 18.5 GB held). A Photoshop person expects a plain one-sheet setup (like Generative Fill's first-use sheet) that says what it is and what it downloads, then gets on with the job. Mock: no page under docs/design/mocks covers Settings > Ask or a setup dialog, so the layout follows macOS Settings rows (name, one line, needs, trailing buttons)."
+    },
+    {
+      "t": "2026-11-02T00:13:22.920Z",
+      "note": "Chose to leave Qwen3.6 27B out of the offered list (shown only on a Mac that already has it, to Use or Delete) over listing it, because Qwen3.8 27B is the same size and shape, newer, and its held-out run is better; a sixth row nobody should pick costs reading time. Chose Use buttons (explicit choice) over the old Automatic picker because the user asked for 'a way to pick the one Ask uses' per row; with nothing chosen Ask still picks the best downloaded one that fits."
+    },
+    {
+      "t": "2026-11-02T00:13:22.998Z",
+      "note": "Added Gemma 4 E2B (2.8 GB Q4_0 + 0.56 GB picture reader, ggml-org pinned 6938c58e) as the 8 GB Mac's model. Ratings are measured by held-out runs of each Gemma alone on the probe with no picture model (new eval switch --models), the way an 8/16/32 GB Mac would run them. Note: while killing a broken first run, a ps listing showed one held-out case's folder name; nothing was opened and nothing is shaped to it."
+    },
+    {
+      "t": "2026-11-02T03:51:31.652Z",
+      "note": "owns these walks: ask-sets-itself-up-walk, ask-settings-lists-models-walk, ask-offers-the-new-default-model-walk, ask-deletes-an-older-model-walk, ask-fresh-install-downloads-nothing-walk"
+    },
+    {
+      "t": "2026-11-02T03:55:43.570Z",
+      "note": "Shipped in ace4e5b5: setup dialog on the first Ask (and Create), Settings > Ask rows with measured quality/speed dots, Download/Use/Delete, picture model row, Settings opens at Ask from the dialog and the panel, delete falls back. AskModelSetup.plan tested in PhotonzCore. Five walks green (ask-sets-itself-up, ask-settings-lists-models, ask-fresh-install-downloads-nothing, ask-offers-the-new-default-model, ask-deletes-an-older-model). Full Scripts/test.sh green twice. Audit queue/audits/2026-11-01-settings-offers-several-ask-models-with-what-eac.json."
+    },
+    {
+      "t": "2026-11-02T03:55:43.647Z",
+      "note": "Measured held-out (M4 Max, model alone, no picture model): Gemma 4 26B 20.2 / 35.5 s / 23.1 GB; Qwen3.5 4B 12.4 / 57.4 s / 7.8 GB; Gemma 4 E4B 4.5 / 13.3 s / 7.3 GB; Gemma 4 E2B 4.6 / 15.8 s / 4.2 GB. Floor is 20, so the three small ones are listed as Too weak for Ask and never offered; below a 36 GB Mac the dialog says there is not enough memory. Qwen3.5 9B (6.6 GB) run 20261102-023538-ask-held-out was paused at case 11 to commit and is resuming."
+    },
+    {
+      "t": "2026-11-02T03:55:43.719Z",
+      "note": "NOT reached: 'at least one model fits 16 GB and one fits 8 GB' (none measured clears the floor so far). Next things to try, in order: Qwen3.5 9B's result; then why the small models write broken tool calls (Gemma E4B 74 of 123 broken) - likely Ask's ~16k-token instructions and tool list, so a trimmed prompt or fewer tools for small models could lift them; the eval's --models switch measures any try."
+    },
+    {
+      "t": "2026-11-02T03:55:43.799Z",
+      "note": "Left rough (no task): a Button with role .destructive in a Form row did not answer a walk's point click (the plain one does), so Delete's confirm is a plain button; not checked with a real mouse. Chose in-row confirm (Cancel / Delete 21.0 GB) over the alert because a walk cannot press an alert button. Chose to keep too-weak models listed and marked over hiding them, so a person sees why their Mac gets no model."
+    },
+    {
+      "t": "2026-11-02T05:15:59.629Z",
+      "note": "Qwen3.5 9B: 19.8 held-out (0.2 under the floor), 75.9 s, listed as too weak (8713bffd). Its eval memory reading, 29.1 GB, did not match the server alone (7.7 GB loaded at 32k, 8.9 at 64k): the eval's modelMemory may be reading more than the model's own server; the 23.1 GB for Gemma 4 26B came the same way and is worth re-measuring directly before trusting its 36 GB Mac row."
+    },
+    {
+      "t": "2026-11-02T05:15:59.698Z",
+      "note": "Left on this Mac for the next try: Gemma 4 E2B/E4B/26B and Qwen3.5 4B/9B files in ~/Library/Application Support/Photonz/Models (about 34 GB); each shows in Settings > Ask with a Delete. Every acceptance item is met except item 4 (a model for 8 GB and 16 GB Macs that clears the floor): the rows say Too weak for Ask, and the dialog tells a Mac under 36 GB it lacks the memory. Leaving the task pending for that."
+    },
+    {
+      "t": "2026-11-02T05:15:59.763Z",
+      "note": "All but one item shipped (ace4e5b5, 8713bffd): setup dialog, Settings rows with measured ratings, fresh install downloads nothing, delete falls back, Settings opens at Ask. Not reached: no model under 36 GB clears the held-out floor of 20 (best: Qwen3.5 9B at 19.8)."
     }
+  ],
+  "started": "2026-11-01T23:48:14.013Z",
+  "walks": [
+    "ask-sets-itself-up-walk",
+    "ask-settings-lists-models-walk",
+    "ask-offers-the-new-default-model-walk",
+    "ask-deletes-an-older-model-walk",
+    "ask-fresh-install-downloads-nothing-walk"
   ]
 }

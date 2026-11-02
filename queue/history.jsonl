@@ -15142,3 +15142,16 @@
 {"t":"2026-11-01T23:20:48.632Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
 {"t":"2026-11-01T23:20:48.700Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
 {"t":"2026-11-01T23:20:56.634Z","ev":"task_done","id":"while-ask-works-the-agent-panel-says-what-it-is","from":"in_progress","note":"Live stage line in the Agent panel (565dd00e) now measured on all five request kinds: fox 192 s / longest 15.0 s, scene 245 s / 12.5 s, edit 109 s / 9.5 s, photo 166 s / 7.8 s, sheet 242-269 s / 18.2-97.2 s; every gap over 8 s is on a stage that shows its time. Fox walk re-filmed (passed): the Agent group stays in view through checking and trying again, and the finished frame shows the made row with no live line (reel-2, sheet-2 in the audit). Across-requests walk given a 10 s settle ceiling after each landing (the rotating check read the panel mid-redraw). Follow-ups: while-ask-writes-a-long-plan-its-line-names-each, find-out-whether-landing-a-component-sheet-holds. test.sh green."}
+{"t":"2026-11-01T23:48:13.834Z","ev":"sweep_pass","walks":97,"seconds":1598,"passed":93,"failed":4,"complete":false,"total":1079,"interrupted":true}
+{"t":"2026-11-01T23:48:14.020Z","ev":"task_started","id":"settings-offers-several-ask-models-with-what-eac","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one","priority":"p1-high"}
+{"t":"2026-11-02T00:13:22.838Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T00:13:22.922Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T00:13:23.000Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T03:51:31.654Z","ev":"task_walks","id":"settings-offers-several-ask-models-with-what-eac","walks":["ask-sets-itself-up-walk","ask-settings-lists-models-walk","ask-offers-the-new-default-model-walk","ask-deletes-an-older-model-walk","ask-fresh-install-downloads-nothing-walk"]}
+{"t":"2026-11-02T03:55:43.572Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T03:55:43.649Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T03:55:43.721Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T03:55:43.801Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T05:15:59.631Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T05:15:59.700Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T05:15:59.765Z","ev":"task_pending","id":"settings-offers-several-ask-models-with-what-eac","from":"in_progress","note":"All but one item shipped (ace4e5b5, 8713bffd): setup dialog, Settings rows with measured ratings, fresh install downloads nothing, delete falls back, Settings opens at Ask. Not reached: no model under 36 GB clears the held-out floor of 20 (best: Qwen3.5 9B at 19.8)."}
