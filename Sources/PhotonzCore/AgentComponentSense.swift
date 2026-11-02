@@ -368,6 +368,90 @@ extension AgentNewComponent {
         return out
     }
 
+    /// Words a later look hides while rewriting them to what another part of
+    /// that look says are left as they were. Hiding words and rewriting them
+    /// at once says two things; with the new words already shown elsewhere it
+    /// reads as the model moving a selection by moving its words, and the
+    /// words it hid are gone from the look (the eval, 2026-11-02: a
+    /// segmented control's Second look set "First" to "Second" and hid it,
+    /// and every judge read "loses its First label"). Words only hidden, a
+    /// badge's count in its Empty look, stay hidden.
+    static func wordsStayPut(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
+        guard var looks = args["looks"]?.arrayValue else { return args }
+        var touched = false
+        for (index, look) in found.looks.enumerated().dropFirst() where index - 1 < looks.count {
+            let shown = found.inLook(look)
+            guard var object = looks[index - 1].objectValue, var changes = object["changes"]?.arrayValue else { continue }
+            changes = changes.compactMap { entry in
+                let name = (entry["part"]?.stringValue ?? "").trimmingCharacters(in: .whitespaces)
+                guard entry["visible"]?.boolValue == false,
+                      let words = entry["text"]?.stringValue?.trimmingCharacters(in: .whitespaces), !words.isEmpty,
+                      let part = found.parts.first(where: { $0.name == name }), part.kind == .text,
+                      words != part.text?.trimmingCharacters(in: .whitespaces),
+                      shown.parts.contains(where: { other in
+                          other.name != name && other.kind == .text && !other.hidden
+                              && other.text?.trimmingCharacters(in: .whitespaces) == words
+                      }),
+                      var change = entry.objectValue else { return entry }
+                touched = true
+                change["text"] = nil
+                change["visible"] = nil
+                return change.keys.contains(where: { $0 != "part" }) ? .object(change) : nil
+            }
+            object["changes"] = .array(changes)
+            looks[index - 1] = .object(object)
+        }
+        guard touched else { return args }
+        var out = args
+        out["looks"] = .array(looks)
+        return out
+    }
+
+    /// A part a later look grows or shrinks both ways stays centred on what
+    /// it was centred on in the first look and that look leaves where it was
+    /// (a knob on its track), else on its own centre where the change gave no
+    /// place on that side. A part grown one way only (a progress fill) keeps
+    /// its edge, and one only moved keeps where it was put (the eval,
+    /// 2026-11-02: a Pressed knob grown 26 to 36 from its top left sat 5
+    /// points under its track: "the pressed slider's track sits off the
+    /// thumb's centre").
+    static func grownStaysCentred(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
+        guard var looks = args["looks"]?.arrayValue else { return args }
+        var touched = false
+        for (index, look) in found.looks.enumerated().dropFirst() where index - 1 < looks.count {
+            let shown = found.inLook(look)
+            for (at, part) in shown.parts.enumerated() where !part.hidden && part.kind != .text {
+                let was = found.parts[at].frame, now = part.frame
+                let wider = now.width - was.width, taller = now.height - was.height
+                guard abs(wider) > 0.5, abs(taller) > 0.5, (wider > 0) == (taller > 0) else { continue }
+                let asked = look.changes.first { $0.part == part.name }?.change
+                let anchors = shown.parts.indices.filter { other in
+                    other != at && !shown.parts[other].hidden && shown.parts[other].frame == found.parts[other].frame
+                }
+                func anchor(_ centre: (CGRect) -> CGFloat) -> CGFloat? {
+                    anchors.filter { abs(centre(found.parts[$0].frame) - centre(was)) < 0.5 }
+                        .max { found.parts[$0].frame.width * found.parts[$0].frame.height
+                            < found.parts[$1].frame.width * found.parts[$1].frame.height }
+                        .map { centre(found.parts[$0].frame) }
+                }
+                let midX = anchor(\.midX) ?? (asked?.x == nil ? was.midX : nil)
+                let midY = anchor(\.midY) ?? (asked?.y == nil ? was.midY : nil)
+                if let midX, abs(now.midX - midX) > 0.5 {
+                    looks[index - 1] = setting("x", .number(Double(midX - now.width / 2)), on: part.name, in: looks[index - 1])
+                    touched = true
+                }
+                if let midY, abs(now.midY - midY) > 0.5 {
+                    looks[index - 1] = setting("y", .number(Double(midY - now.height / 2)), on: part.name, in: looks[index - 1])
+                    touched = true
+                }
+            }
+        }
+        guard touched else { return args }
+        var out = args
+        out["looks"] = .array(looks)
+        return out
+    }
+
     /// The arguments with each of these set right, every one kept only when
     /// the call it leaves could still be built.
     static func madeSensible(_ args: [String: AgentJSON]) -> [String: AgentJSON] {
@@ -378,7 +462,9 @@ extension AgentNewComponent {
         var out = args
         for step in [{ (args: [String: AgentJSON]) in numbersLeftOff(args) },
                      { args in onTypeScale(args) },
+                     { args in built(args).map { wordsStayPut(args, $0) } ?? args },
                      { args in built(args).map { heldInside(args, $0) } ?? args },
+                     { args in built(args).map { grownStaysCentred(args, $0) } ?? args },
                      { args in built(args).map { offLooksOff(args, $0) } ?? args },
                      { args in built(args).map { onIsNotOff(args, $0) } ?? args },
                      { args in built(args).map { marksStandOut(args, $0) } ?? args },

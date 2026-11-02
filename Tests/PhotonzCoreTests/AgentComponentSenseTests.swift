@@ -478,4 +478,72 @@ struct AgentComponentSenseTests {
         #expect(Self.part("Note", in: spec, look: "Two")?.hidden == false)
     }
 
+    @Test("Words a later look hides while rewriting them to what another part says stay as they were; words only hidden stay hidden")
+    func hiddenAndRewrittenWordsStay() throws {
+        // The eval, 2026-11-02, the model's own call: the Second look set
+        // Label 1 to "Second" and hid it, so "First" was gone from the
+        // Second and Third looks (every judge: "loses its First label").
+        let spec = try Self.plain(##"""
+            {"name":"Segmented Control","x":240,"y":520,"labels":true,"firstLook":"First",
+             "parts":[{"name":"Background","shape":"rectangle","x":0,"y":0,"width":240,"height":32,"cornerRadius":8,"fill":"#E9E9EA"},
+                      {"name":"Segment 1","shape":"rectangle","x":2,"y":2,"width":78,"height":28,"cornerRadius":6,"fill":"#FFFFFF"},
+                      {"name":"Label 1","shape":"text","text":"First","color":"#1C1C1E","fontSize":13,"weight":"medium","x":2,"y":2,"width":78,"height":28,"alignment":"center"},
+                      {"name":"Label 2","shape":"text","text":"Second","color":"#1C1C1E","fontSize":13,"x":82,"y":2,"width":78,"height":28,"alignment":"center"},
+                      {"name":"Label 3","shape":"text","text":"Third","color":"#1C1C1E","fontSize":13,"x":162,"y":2,"width":76,"height":28,"alignment":"center"}],
+             "looks":[{"name":"Second","changes":[{"part":"Segment 1","x":82},{"part":"Label 1","text":"Second","visible":false},{"part":"Label 2","text":"Second","visible":true}]},
+                      {"name":"Third","changes":[{"part":"Segment 1","x":162},{"part":"Label 1","text":"Third","visible":false},{"part":"Label 3","text":"Third","visible":true}]}]}
+            """##)
+        for look in ["First", "Second", "Third"] {
+            let label = Self.part("Label 1", in: spec, look: look)
+            #expect(label?.hidden == false, "\(look)")
+            #expect(label?.text == "First", "\(look)")
+        }
+        #expect(Self.part("Label 2", in: spec, look: "First")?.hidden == false)
+        // A badge whose Empty look hides its count keeps it hidden.
+        let badge = try Self.plain(##"""
+            {"name":"Badge","x":0,"y":0,"labels":true,"firstLook":"Default",
+             "parts":[{"name":"Dot","shape":"ellipse","x":0,"y":0,"width":24,"height":24,"fill":"#FF3B30"},
+                      {"name":"Count","shape":"text","text":"3","color":"#FFFFFF","fontSize":13,"x":0,"y":0,"width":24,"height":24,"alignment":"center"}],
+             "looks":[{"name":"Empty","changes":[{"part":"Count","visible":false}]}]}
+            """##)
+        #expect(Self.part("Count", in: badge, look: "Empty")?.hidden == true)
+    }
+
+    @Test("A part a later look grows both ways stays centred on what it was centred on; one grown one way keeps its edge")
+    func grownPartStaysCentred() throws {
+        // The eval, 2026-11-02: a Pressed slider knob grown 26 to 36 from
+        // its top left sat 5 points below its track (every judge: "the
+        // pressed slider's track sits off the thumb's centre").
+        let spec = try Self.plain(##"""
+            {"name":"Slider","x":0,"y":0,"labels":true,"firstLook":"Default",
+             "parts":[{"name":"Track","shape":"rectangle","x":0,"y":14,"width":240,"height":4,"cornerRadius":2,"fill":"#E5E5EA"},
+                      {"name":"Fill","shape":"rectangle","x":0,"y":14,"width":120,"height":4,"cornerRadius":2,"fill":"#007AFF"},
+                      {"name":"Knob","shape":"ellipse","x":105,"y":3,"width":26,"height":26,"fill":"#FFFFFF","stroke":"#D1D1D6","strokeWidth":1}],
+             "looks":[{"name":"Pressed","changes":[{"part":"Knob","x":100,"y":3,"width":36,"height":36}]}]}
+            """##)
+        let track = try #require(Self.part("Track", in: spec, look: "Pressed"))
+        let knob = try #require(Self.part("Knob", in: spec, look: "Pressed"))
+        #expect(abs(knob.frame.midY - track.frame.midY) < 0.5, "\(knob.frame) on \(track.frame)")
+        #expect(abs(knob.frame.midX - 118) < 0.5, "the knob's own across centre is kept: \(knob.frame)")
+        #expect(knob.frame.width == 36 && knob.frame.height == 36)
+        let rest = try #require(Self.part("Knob", in: spec, look: "Default"))
+        #expect(rest.frame == CGRect(x: 105, y: 3, width: 26, height: 26))
+        // A progress fill grown across only keeps its left edge.
+        let bar = try Self.plain(##"""
+            {"name":"Progress","x":0,"y":0,"labels":true,"firstLook":"Default",
+             "parts":[{"name":"Track","shape":"rectangle","x":0,"y":0,"width":240,"height":4,"fill":"#E5E5EA"},
+                      {"name":"Fill","shape":"rectangle","x":0,"y":0,"width":144,"height":4,"fill":"#007AFF"}],
+             "looks":[{"name":"Complete","changes":[{"part":"Fill","width":240,"fill":"#34C759"}]}]}
+            """##)
+        #expect(Self.part("Fill", in: bar, look: "Complete")?.frame == CGRect(x: 0, y: 0, width: 240, height: 4))
+        // A toggle knob that only moves along keeps where the model put it.
+        let toggle = try Self.plain(##"""
+            {"name":"Toggle","x":0,"y":0,"labels":true,"firstLook":"Off",
+             "parts":[{"name":"Track","shape":"rectangle","x":0,"y":0,"width":51,"height":31,"cornerRadius":15.5,"fill":"#E9E9EA"},
+                      {"name":"Knob","shape":"ellipse","x":2,"y":2,"width":27,"height":27,"fill":"#FFFFFF"}],
+             "looks":[{"name":"On","changes":[{"part":"Track","fill":"#34C759"},{"part":"Knob","x":22}]}]}
+            """##)
+        #expect(Self.part("Knob", in: toggle, look: "On")?.frame == CGRect(x: 22, y: 2, width: 27, height: 27))
+    }
+
 }
