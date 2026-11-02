@@ -2,6 +2,10 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.23.0 — 2026-11-02
+
+**Choose the model Ask runs on.** Nothing downloads until you want Ask. The first time you press Ask, one short dialog says what Ask is, which models suit this Mac and how much space they take, with Download and Not Now; once they are down, your request runs without typing it again. Settings > Ask lists every model with one line on what it is good at, the smallest Mac that holds it, and its quality and speed as dots, with Download, Use and Delete right in the row. Macs with 16 to 32 GB of memory are now offered a smaller model that fits them.
+
 ## 0.22.0 — 2026-11-01
 
 **A new way to move, size and turn things.** Pick a layer and a small chip by the rotate knob offers three steps, in the order they apply: Size, Skew & distort, and 3D. The grips look the same in every step, sit just off your picture so they never cover it, and light up when you point at one. Corners keep a picture's proportions, and Shift stretches it. The rotate knob shows a turning arrow; double-click it to go back to straight. Skew & distort reshapes the picture itself, so you can still size and turn it afterwards. In 3D you tip and swing the layer, push it back or pull it forward, and set the perspective from a small control right beside it. Right-click any step on the chip to undo just that step; a step you have changed shows a dot.
