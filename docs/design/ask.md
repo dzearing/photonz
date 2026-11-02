@@ -592,7 +592,7 @@ Measured on an M4 Max, 64 GB, on the held-out set (45 cases, totals only).
 | Qwen3.8 27B (default) | 57.8 | 4 | 141.9 | 2 | 24.4 | 21.3 GB | 48 GB | | `20261024-163432-ask-held-out` |
 | Qwen3.6 35B | 60.2 | 5 | 49.1 | 3 | 21.7 | 21.0 GB | 36 GB | | `20261024-191502-ask-held-out` |
 | Gemma 4 26B | 20.2 | 2 | 35.5 | 4 | 23.1 | 15.4 GB | 36 GB | 148 of 278 | `20261102-004807-ask-held-out` |
-| Qwen3.5 9B | measuring | | | | | 6.6 GB | | | `20261102-023538-ask-held-out` (not offered until it is in) |
+| Qwen3.5 9B | 19.8, too weak | 1 | 75.9 | 3 | 7.7 (loaded, 32k; the run read 29.1) | 6.6 GB | 16 GB | 32 of 175 | `20261102-023538-ask-held-out` |
 | Qwen3.5 4B | 12.4, too weak | 1 | 57.4 | 3 | 7.8 | 3.4 GB | 16 GB | 49 of 207 | `20261102-012713-ask-held-out` |
 | Gemma 4 E4B | 4.5, too weak | 1 | 13.3 | 5 | 7.3 | 5.2 GB | 16 GB | 74 of 123 | `20261102-002913-ask-held-out` |
 | Gemma 4 E2B | 4.6, too weak | 1 | 15.8 | 5 | 4.2 | 3.4 GB | 8 GB | 27 of 102 | `20261102-001045-ask-held-out` |

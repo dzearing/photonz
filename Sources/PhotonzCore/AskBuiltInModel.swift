@@ -166,10 +166,12 @@ public enum AskBuiltInModels {
                            "Qwen3.5-9B-Q4_K_M.gguf", 5_680_522_464, folder: "qwen3.5-9b"),
                eyes: file("unsloth/Qwen3.5-9B-GGUF", "3885219b6810b007914f3a7950a8d1b469d598a5",
                           "mmproj-F16.gguf", 918_166_080, folder: "qwen3.5-9b"),
-               // Offered once its held-out run is in (`20261102-023538-ask-held-out`, under way).
-               gigabytes: 7.5,
-               blurb: "Small, for Macs with 16 GB.",
-               offered: false),
+               // Resident once loaded at the 32k window a 16 GB Mac runs, measured
+               // with the server alone (8.9 at 64k); the eval read 29.1 during
+               // its run, which its files cannot account for.
+               gigabytes: 7.7,
+               blurb: "Small, and slow to answer.",
+               measured: AskModelMeasure(heldOut: 19.8, medianSeconds: 75.9, run: "20261102-023538-ask-held-out")),
         Choice(id: "qwen3.5-4b", name: "Qwen3.5 4B",
                model: file("unsloth/Qwen3.5-4B-GGUF", "e87f176479d0855a907a41277aca2f8ee7a09523",
                            "Qwen3.5-4B-Q4_K_M.gguf", 2_740_937_888, folder: "qwen3.5-4b"),

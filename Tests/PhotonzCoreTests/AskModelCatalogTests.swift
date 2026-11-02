@@ -148,7 +148,7 @@ struct AskModelCatalogTests {
 
     @Test("The small models measured too weak are listed, marked, and never offered")
     func smallOnesAreTooWeak() throws {
-        for id in ["gemma-4-e4b", "gemma-4-e2b", "qwen3.5-4b"] {
+        for id in ["gemma-4-e4b", "gemma-4-e2b", "qwen3.5-4b", "qwen3.5-9b"] {
             let choice = try #require(AskBuiltInModels.choice(id: id))
             #expect(choice.measured?.canDoAsksWork == false, "\(id)")
             #expect(AskModelSetup.listed(downloaded: []).contains(choice))

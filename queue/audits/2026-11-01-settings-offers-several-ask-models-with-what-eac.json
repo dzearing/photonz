@@ -5,13 +5,37 @@
   "setup": "Photonz Dev, release Next, no flag changed from its default. To see a Mac with no model, move the Models folder aside: ~/Library/Application Support/Photonz/Models.",
   "switched": {},
   "try": [
-    { "do": "With no model on the Mac, press Ask, type a request and press Return.", "shot": "2026-11-01-ask-models-1-dialog-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Press Not Now: your words stay in the field and nothing downloads.", "shot": "2026-11-01-ask-models-2-not-now-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "Press Return again, then Download: when it is done the request runs without typing it again.", "shot": "2026-11-01-ask-models-3-runs-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
-    { "do": "In the dialog, press Other Models…: Settings opens at the Ask section with every model in view.", "shot": "2026-11-01-ask-models-4-settings-sc.png" },
-    { "do": "Hover the Quality and Speed dots on a row to read the measured numbers behind them.", "shot": "2026-11-01-ask-models-5-settings-end-sc.png" },
-    { "do": "With two models down, press Use on the other one, then Delete and Delete 21.0 GB on the one in use.", "shot": "2026-11-01-ask-models-7-delete-sc.png" },
-    { "do": "Check Ask falls back to the model left (In Use moves to it) and the deleted one offers Download again.", "shot": "2026-11-01-ask-models-8-fell-back-sc.png" }
+    {
+      "do": "With no model on the Mac, press Ask, type a request and press Return.",
+      "shot": "2026-11-01-ask-models-1-dialog-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Not Now: your words stay in the field and nothing downloads.",
+      "shot": "2026-11-01-ask-models-2-not-now-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Return again, then Download: when it is done the request runs without typing it again.",
+      "shot": "2026-11-01-ask-models-3-runs-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the dialog, press Other Models…: Settings opens at the Ask section with every model in view.",
+      "shot": "2026-11-01-ask-models-4-settings-sc.png"
+    },
+    {
+      "do": "Hover the Quality and Speed dots on a row to read the measured numbers behind them.",
+      "shot": "2026-11-01-ask-models-5-settings-end-sc.png"
+    },
+    {
+      "do": "With two models down, press Use on the other one, then Delete and Delete 21.0 GB on the one in use.",
+      "shot": "2026-11-01-ask-models-7-delete-sc.png"
+    },
+    {
+      "do": "Check Ask falls back to the model left (In Use moves to it) and the deleted one offers Download again.",
+      "shot": "2026-11-01-ask-models-8-fell-back-sc.png"
+    }
   ],
   "evaluate": [
     "Does the setup dialog tell you enough (what Ask is, what it will download, how much room it takes) to press Download without opening Settings?",
@@ -21,7 +45,7 @@
     "Should models too weak for Ask stay listed (marked Too weak for Ask) or be hidden?"
   ],
   "rough": [
-    "No model measured so far can do Ask's work below a 36 GB Mac: Gemma 4 E2B scored 4.6, Gemma 4 E4B 4.5 and Qwen3.5 4B 12.4 on the held-out set, against a floor of 20; Qwen3.5 9B's run was paused part way and resumes after this commit. The 8 and 16 GB acceptance item is not reached and settings-offers-several-ask-models-with-what-eac stays open for it.",
+    "No model measured so far can do Ask's work below a 36 GB Mac: Qwen3.5 9B scored 19.8, Qwen3.5 4B 12.4, Gemma 4 E2B 4.6 and Gemma 4 E4B 4.5 on the held-out set, against a floor of 20. The 8 and 16 GB acceptance item is not reached and settings-offers-several-ask-models-with-what-eac stays open for it.",
     "The small models mostly fail by writing tool calls Ask cannot read (Gemma 4 E4B: 74 of 123 broken). That points at Ask's long instructions as much as at the models; it is logged on settings-offers-several-ask-models-with-what-eac as the next thing to try.",
     "Memory each model holds was measured at this Mac's 64k window; a Mac under 48 GB runs a 32k window and holds somewhat less, so Gemma 4 26B may fit a 32 GB Mac in practice. Its row says 36 GB, the measured number.",
     "No mock page covers Settings > Ask or the setup dialog; both follow the macOS Settings row pattern (name, one line, details, trailing buttons) and a plain macOS sheet.",
@@ -29,23 +53,129 @@
     "The setup dialog's pictures were taken with the window behind another app (no blue default button). The fresh-install picture shows Ask open with words typed and no dialog: the models folder held 0 KB before and after, and no model helper was running."
   ],
   "ratings": [
-    { "model": "Qwen3.8 27B", "heldOut": 57.8, "quality": 4, "secondsMedian": 141.9, "speed": 2, "gbHeld": 24.4, "download": "21.3 GB", "smallestMac": "48 GB", "run": "20261024-163432-ask-held-out" },
-    { "model": "Qwen3.6 35B", "heldOut": 60.2, "quality": 5, "secondsMedian": 49.1, "speed": 3, "gbHeld": 21.7, "download": "21.0 GB", "smallestMac": "36 GB", "run": "20261024-191502-ask-held-out" },
-    { "model": "Gemma 4 26B", "heldOut": 20.2, "quality": 2, "secondsMedian": 35.5, "speed": 4, "gbHeld": 23.1, "download": "15.4 GB", "smallestMac": "36 GB", "run": "20261102-004807-ask-held-out" },
-    { "model": "Qwen3.5 4B", "heldOut": 12.4, "quality": 1, "secondsMedian": 57.4, "speed": 3, "gbHeld": 7.8, "download": "3.4 GB", "smallestMac": "16 GB", "run": "20261102-012713-ask-held-out", "note": "too weak for Ask" },
-    { "model": "Gemma 4 E4B", "heldOut": 4.5, "quality": 1, "secondsMedian": 13.3, "speed": 5, "gbHeld": 7.3, "download": "5.2 GB", "smallestMac": "16 GB", "run": "20261102-002913-ask-held-out", "note": "too weak for Ask" },
-    { "model": "Gemma 4 E2B", "heldOut": 4.6, "quality": 1, "secondsMedian": 15.8, "speed": 5, "gbHeld": 4.2, "download": "3.4 GB", "smallestMac": "8 GB", "run": "20261102-001045-ask-held-out", "note": "too weak for Ask" },
-    { "model": "Z-Image Turbo (pictures)", "heldOut": 57.5, "quality": 4, "secondsMedian": 31, "speed": 4, "gbHeld": 12, "download": "11.2 GB", "run": "20261022-043200-ask-held-out", "note": "held-out total with it on, 35.9 without" }
+    {
+      "model": "Qwen3.8 27B",
+      "heldOut": 57.8,
+      "quality": 4,
+      "secondsMedian": 141.9,
+      "speed": 2,
+      "gbHeld": 24.4,
+      "download": "21.3 GB",
+      "smallestMac": "48 GB",
+      "run": "20261024-163432-ask-held-out"
+    },
+    {
+      "model": "Qwen3.6 35B",
+      "heldOut": 60.2,
+      "quality": 5,
+      "secondsMedian": 49.1,
+      "speed": 3,
+      "gbHeld": 21.7,
+      "download": "21.0 GB",
+      "smallestMac": "36 GB",
+      "run": "20261024-191502-ask-held-out"
+    },
+    {
+      "model": "Gemma 4 26B",
+      "heldOut": 20.2,
+      "quality": 2,
+      "secondsMedian": 35.5,
+      "speed": 4,
+      "gbHeld": 23.1,
+      "download": "15.4 GB",
+      "smallestMac": "36 GB",
+      "run": "20261102-004807-ask-held-out"
+    },
+    {
+      "model": "Qwen3.5 9B",
+      "heldOut": 19.8,
+      "quality": 1,
+      "secondsMedian": 75.9,
+      "speed": 3,
+      "gbHeld": 7.7,
+      "download": "6.6 GB",
+      "smallestMac": "16 GB",
+      "run": "20261102-023538-ask-held-out",
+      "note": "too weak for Ask, 0.2 under the floor; 7.7 GB measured loaded at a 32k window, the eval read 29.1"
+    },
+    {
+      "model": "Qwen3.5 4B",
+      "heldOut": 12.4,
+      "quality": 1,
+      "secondsMedian": 57.4,
+      "speed": 3,
+      "gbHeld": 7.8,
+      "download": "3.4 GB",
+      "smallestMac": "16 GB",
+      "run": "20261102-012713-ask-held-out",
+      "note": "too weak for Ask"
+    },
+    {
+      "model": "Gemma 4 E4B",
+      "heldOut": 4.5,
+      "quality": 1,
+      "secondsMedian": 13.3,
+      "speed": 5,
+      "gbHeld": 7.3,
+      "download": "5.2 GB",
+      "smallestMac": "16 GB",
+      "run": "20261102-002913-ask-held-out",
+      "note": "too weak for Ask"
+    },
+    {
+      "model": "Gemma 4 E2B",
+      "heldOut": 4.6,
+      "quality": 1,
+      "secondsMedian": 15.8,
+      "speed": 5,
+      "gbHeld": 4.2,
+      "download": "3.4 GB",
+      "smallestMac": "8 GB",
+      "run": "20261102-001045-ask-held-out",
+      "note": "too weak for Ask"
+    },
+    {
+      "model": "Z-Image Turbo (pictures)",
+      "heldOut": 57.5,
+      "quality": 4,
+      "secondsMedian": 31,
+      "speed": 4,
+      "gbHeld": 12,
+      "download": "11.2 GB",
+      "run": "20261022-043200-ask-held-out",
+      "note": "held-out total with it on, 35.9 without"
+    }
   ],
   "howRated": "Quality is the held-out eval total (Scripts/ask-eval.sh, 45 cases, judged in total only): 1 under 20, 2 from 20, 3 from 35, 4 from 50, 5 from 60. Speed is the median seconds from Send to a result over that run: 5 at or under 20 s, 4 at or under 45, 3 at or under 90, 2 at or under 180, else 1. Under 20 a model cannot do Ask's work and is marked, never offered. All on an M4 Max, 64 GB; the small models alone on the probe with no picture model (--models), as the Macs they are for would run them.",
   "macs": [
-    { "mac": "8 GB", "gets": "not enough memory for Ask" },
-    { "mac": "16 GB", "gets": "not enough memory for Ask" },
-    { "mac": "24 GB", "gets": "not enough memory for Ask" },
-    { "mac": "32 GB", "gets": "not enough memory for Ask" },
-    { "mac": "36 GB", "gets": "Qwen3.6 35B, 21.0 GB" },
-    { "mac": "48 GB", "gets": "Qwen3.8 27B, 21.3 GB" },
-    { "mac": "64 GB", "gets": "Qwen3.8 27B and Z-Image Turbo, 32.5 GB" }
+    {
+      "mac": "8 GB",
+      "gets": "not enough memory for Ask"
+    },
+    {
+      "mac": "16 GB",
+      "gets": "not enough memory for Ask"
+    },
+    {
+      "mac": "24 GB",
+      "gets": "not enough memory for Ask"
+    },
+    {
+      "mac": "32 GB",
+      "gets": "not enough memory for Ask"
+    },
+    {
+      "mac": "36 GB",
+      "gets": "Qwen3.6 35B, 21.0 GB"
+    },
+    {
+      "mac": "48 GB",
+      "gets": "Qwen3.8 27B, 21.3 GB"
+    },
+    {
+      "mac": "64 GB",
+      "gets": "Qwen3.8 27B and Z-Image Turbo, 32.5 GB"
+    }
   ],
   "freshInstall": "ask-fresh-install-downloads-nothing-walk on an empty models folder: 0 KB before launch (folder absent), 0 KB after launch, opening Ask and typing; no llama-server or picture helper running."
 }
