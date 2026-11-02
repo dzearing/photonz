@@ -22,5 +22,7 @@
     "minCells": 8,
     "rowLabels": true
   },
-  "skillTimeout": 480
+  "skillTimeout": 480,
+  "timeout": 540,
+  "timeoutWhy": "Qwen3.8 27B takes 242 to 310 s over this request (2026-11-02), and Ask's own model turn is 600 s: at 300 a slow run scored 0 with nothing wrong (run 20261102-190046-ask). The same wait as ask-builds-base-components-walk."
 }

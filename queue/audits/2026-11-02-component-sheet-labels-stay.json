@@ -1,0 +1,27 @@
+{
+  "feature": "Ask's component sheet: every label kept, grown parts centred",
+  "epic": "agent-skills",
+  "summary": "When Ask draws a component whose later states move a selection (a segmented control), the labels no longer disappear, and a part that grows in a state (a pressed slider knob) stays centred on its track.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default, a blank picture 1440 by 1024, the built-in Qwen3.8 27B model.",
+  "switched": {},
+  "try": [
+    { "do": "File > New > Image, then press Ask (Command K)." },
+    { "do": "Type: create a table of apple like quality base components that show different states and text, and press Send." },
+    { "do": "Wait for it (four to six and a half minutes on this Mac)." },
+    { "do": "Look at the Slider row: the pressed knob sits on the middle of its track.", "shot": "2026-11-02-component-sheet-labels-after.png" },
+    { "do": "Compare with the build before: the Segmented Control lost its First label and the pressed knob sat under its track.", "shot": "2026-11-02-component-sheet-labels-before.png" },
+    { "do": "Press Command Z once: the whole sheet goes." }
+  ],
+  "evaluate": [
+    "Does every segmented control state still show all its labels?",
+    "Does the pressed slider knob sit on its track?",
+    "Would you rather have Checkbox and Radio under their own Off and On header, as in the tried picture (2026-11-02-component-sheet-header-per-kind-tried.png), or sharing Toggle's as now?"
+  ],
+  "rough": [
+    "Not at the bar: Ask scored 79.2 (judges 7, 7, 6, 6, 7) and 65.8 (6, 7, 6, 6, 6) on this build, and 77.6 and 78.8 on the build before. The same code moves about 7 points from run to run. The task stays open (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Tried and taken out: the header row again above each kind of component. No judge said a row had no header after it, but one said the sheet no longer read as a table, and the user asked for a header for each state. Picture: 2026-11-02-component-sheet-header-per-kind-tried.png. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Judges still name: the Disabled button close to the right edge with most rows leaving the right half empty, Hover near Default on buttons, and in one run a Disabled field placeholder darker than Default's (the model's call was cut off in the log, so not reproduced). Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "One run this pass got 0 because the eval stopped waiting at 300 s while the model was still planning. The eval now waits 540 s for this request, the same as the walk.",
+    "No mock covers this surface; the bar is the user's own words and the eval."
+  ]
+}

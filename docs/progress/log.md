@@ -22373,3 +22373,9 @@ the ghost, and pinching in seemed to stop short.
 - Preflight ran in a clean worktree at origin/main (the go loop kept running, its runner's uncommitted edits stayed out of the test run): `Scripts/test.sh` green first time (15,172 tests), DMG built. The release commit was rebased onto main and checked to add no code beyond the tested commit before tagging.
 - Release workflow green on the first run with `Photonz.dmg`; latest download answers 200; Deploy site announced 0.23.0 and the live `version.json` reports it.
 ## 2026-11-02 component sheet pass: Pressed steps apart from Hover, sheet page ends under its title, Ask model turn 600 s (fe41414b). Ask component-table 77.6, still short of the 8 bar.
+
+## 2026-11-02 — Component sheet: labels kept, grown parts centred
+
+- Ask's planner keeps words a later look hides while rewriting them (segmented control's First label) and keeps a part grown both ways centred (pressed slider knob) (`1f3ee881`). Ask component-table 79.2 and 65.8 on this build (77.6 and 78.8 before): judges 6 to 7, still short of the 8 bar; same-build spread about 7 points.
+- Tried and reverted a header row per kind of component (one judge: "doesn't read as a table"). The eval's component-table case now waits 540 s, as the walk does (a 300 s wait scored a slow run 0).
+- Next: what judges still name is the empty right half and the Disabled column near the edge, Hover near Default, and a Disabled placeholder darker than Default's that could not be reproduced (Ask's trace cuts answers at 3000 characters).
