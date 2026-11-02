@@ -46,9 +46,19 @@
       "present": true
     },
     {
+      "do": "expect",
+      "control": "Ask Setup Download",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Setup Model",
+      "present": true
+    },
+    {
       "do": "describe",
       "stage": "1-dialog",
-      "note": "the setup dialog on a 16 GB Mac"
+      "note": "the setup dialog on a 16 GB Mac: it offers the small model that fits, with its size and Download"
     },
     {
       "do": "snapshot",
@@ -74,6 +84,16 @@
     },
     {
       "do": "expect",
+      "control": "Ask Model Qwen3.5 9B",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Ask Download Qwen3.5 9B",
+      "present": true
+    },
+    {
+      "do": "expect",
       "control": "Ask Model Qwen3.8 27B",
       "present": true
     },
@@ -85,7 +105,7 @@
     {
       "do": "describe",
       "stage": "2-settings",
-      "note": "Settings opened from the dialog, at the Ask section: a row a model with needs, quality and speed, Download; the big ones say they are too big for this Mac"
+      "note": "Settings opened from the dialog, at the Ask section: Qwen3.5 9B offers its Download on a 16 GB Mac; the big ones say they are too big for this Mac, the small weak ones that they are too weak"
     },
     {
       "do": "snapshot",

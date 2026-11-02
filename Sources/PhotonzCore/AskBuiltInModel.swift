@@ -153,25 +153,20 @@ public enum AskBuiltInModels {
                gigabytes: 23.1,
                blurb: "Gets video right more than drawings.",
                measured: AskModelMeasure(heldOut: 20.2, medianSeconds: 35.5, run: "20261102-004807-ask-held-out")),
-        Choice(id: "gemma-4-e4b", name: "Gemma 4 E4B",
-               model: file("ggml-org/gemma-4-E4B-it-GGUF", "a69f018d7678a2b9f5e705f8903d6fb29b9b25dc",
-                           "gemma-4-E4B-it-Q4_0.gguf", 4_590_807_392),
-               eyes: file("ggml-org/gemma-4-E4B-it-GGUF", "a69f018d7678a2b9f5e705f8903d6fb29b9b25dc",
-                          "mmproj-gemma-4-E4B-it-Q8_0.gguf", 559_874_816),
-               gigabytes: 7.3,
-               blurb: "Small and fast.",
-               measured: AskModelMeasure(heldOut: 4.5, medianSeconds: 13.3, run: "20261102-002913-ask-held-out")),
         Choice(id: "qwen3.5-9b", name: "Qwen3.5 9B",
                model: file("unsloth/Qwen3.5-9B-GGUF", "3885219b6810b007914f3a7950a8d1b469d598a5",
                            "Qwen3.5-9B-Q4_K_M.gguf", 5_680_522_464, folder: "qwen3.5-9b"),
                eyes: file("unsloth/Qwen3.5-9B-GGUF", "3885219b6810b007914f3a7950a8d1b469d598a5",
                           "mmproj-F16.gguf", 918_166_080, folder: "qwen3.5-9b"),
-               // Resident once loaded at the 32k window a 16 GB Mac runs, measured
-               // with the server alone (8.9 at 64k); the eval read 29.1 during
-               // its run, which its files cannot account for.
-               gigabytes: 7.7,
-               blurb: "Small, and slow to answer.",
-               measured: AskModelMeasure(heldOut: 19.8, medianSeconds: 75.9, run: "20261102-023538-ask-held-out")),
+               // The most it held over a held-out run planned as a 16 GB Mac,
+               // at that Mac's 32k window (7.7 just loaded): it fits a 16 GB Mac
+               // by the three-fifths rule, with 0.2 GB to spare.
+               gigabytes: 10.1,
+               blurb: "Fits a 16 GB Mac. Basic, and slow to answer.",
+               // Run as a 16 GB Mac (`--mac 16`). At this Mac's 64k window it
+               // scored 21.2 at 76.3 s (`20261102-023538-ask-held-out`).
+               measured: AskModelMeasure(heldOut: 20.7, medianSeconds: 91.8, run: "20261102-122343-ask-held-out",
+                                         mac: "M4 Max set up as a 16 GB Mac")),
         Choice(id: "qwen3.5-4b", name: "Qwen3.5 4B",
                model: file("unsloth/Qwen3.5-4B-GGUF", "e87f176479d0855a907a41277aca2f8ee7a09523",
                            "Qwen3.5-4B-Q4_K_M.gguf", 2_740_937_888, folder: "qwen3.5-4b"),
@@ -188,6 +183,14 @@ public enum AskBuiltInModels {
                gigabytes: 4.2,
                blurb: "Smallest and fastest.",
                measured: AskModelMeasure(heldOut: 4.6, medianSeconds: 15.8, run: "20261102-001045-ask-held-out")),
+        Choice(id: "gemma-4-e4b", name: "Gemma 4 E4B",
+               model: file("ggml-org/gemma-4-E4B-it-GGUF", "a69f018d7678a2b9f5e705f8903d6fb29b9b25dc",
+                           "gemma-4-E4B-it-Q4_0.gguf", 4_590_807_392),
+               eyes: file("ggml-org/gemma-4-E4B-it-GGUF", "a69f018d7678a2b9f5e705f8903d6fb29b9b25dc",
+                          "mmproj-gemma-4-E4B-it-Q8_0.gguf", 559_874_816),
+               gigabytes: 7.3,
+               blurb: "Small and fast.",
+               measured: AskModelMeasure(heldOut: 4.5, medianSeconds: 13.3, run: "20261102-002913-ask-held-out")),
     ]
 
     public static func choice(id: String) -> Choice? { ranked.first { $0.id == id } }
@@ -210,8 +213,11 @@ public enum AskBuiltInModels {
     /// answering until they download it or pick otherwise.
     public static func newer(downloaded: [String], memoryGigabytes: Double) -> Choice? {
         guard !downloaded.isEmpty, let best = recommended(memoryGigabytes: memoryGigabytes),
-              !downloaded.contains(best.id) else { return nil }
-        return best
+              !downloaded.contains(best.id), let rank = ranked.firstIndex(of: best) else { return nil }
+        // Only a step up: a Mac that has a model ranked above it is not
+        // offered a smaller one as its new default.
+        let had = ranked.indices.filter { downloaded.contains(ranked[$0].id) }
+        return had.allSatisfy { $0 > rank } ? best : nil
     }
 
     /// Downloaded models a person may delete: every one but the one in use.

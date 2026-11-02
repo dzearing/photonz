@@ -592,14 +592,20 @@ Measured on an M4 Max, 64 GB, on the held-out set (45 cases, totals only).
 | Qwen3.8 27B (default) | 57.8 | 4 | 141.9 | 2 | 24.4 | 21.3 GB | 48 GB | | `20261024-163432-ask-held-out` |
 | Qwen3.6 35B | 60.2 | 5 | 49.1 | 3 | 21.7 | 21.0 GB | 36 GB | | `20261024-191502-ask-held-out` |
 | Gemma 4 26B | 20.2 | 2 | 35.5 | 4 | 23.1 | 15.4 GB | 36 GB | 148 of 278 | `20261102-004807-ask-held-out` |
-| Qwen3.5 9B | 19.8, too weak | 1 | 75.9 | 3 | 7.7 (loaded, 32k; the run read 29.1) | 6.6 GB | 16 GB | 32 of 175 | `20261102-023538-ask-held-out` |
+| Qwen3.5 9B (16 GB Mac) | 20.7 | 2 | 91.8 | 2 | 10.1 (peak, 32k) | 6.6 GB | 16 GB | 41 of 190 | `20261102-122343-ask-held-out` |
 | Qwen3.5 4B | 12.4, too weak | 1 | 57.4 | 3 | 7.8 | 3.4 GB | 16 GB | 49 of 207 | `20261102-012713-ask-held-out` |
 | Gemma 4 E4B | 4.5, too weak | 1 | 13.3 | 5 | 7.3 | 5.2 GB | 16 GB | 74 of 123 | `20261102-002913-ask-held-out` |
 | Gemma 4 E2B | 4.6, too weak | 1 | 15.8 | 5 | 4.2 | 3.4 GB | 8 GB | 27 of 102 | `20261102-001045-ask-held-out` |
 | Z-Image Turbo (pictures) | 57.5 with it, 35.9 without | 4 | 31 a drawing request | 4 | 12 more | 11.2 GB | beside the chat model | | `20261022-043200-ask-held-out` |
 
 The Gemma and Qwen3.5 runs had only that model on the probe and no picture
-model (`--models <id>`), as the Mac each is for would run it. The small models
+model (`--models <id>`), as the Mac each is for would run it. Qwen3.5 9B's row
+was also planned as a 16 GB Mac (`--mac 16`: that Mac's 32k window and
+memory), since that is the Mac it is for; at this Mac's 64k window the same
+model scored 21.2 at 76.3 s (`20261102-023538-ask-held-out`). That 64k run
+was first read as 19.8, too weak: three of its cases had been put off for a
+person at the Mac and counted as 0. Run to the end on 2026-11-02 it was 21.2,
+and the eval now prints an unfinished run as UNFINISHED, never as a score. The small models
 fail mostly by writing tool calls Ask cannot read (the broken counts above),
 which is what Ask's instructions, about 16k tokens of them, ask of a model.
 
@@ -608,15 +614,20 @@ What each Mac gets (`AskModelSetup.plan`, plenty of disk):
 | Mac | Gets | Download |
 | --- | --- | --- |
 | 8 GB | "This Mac doesn't have enough memory for Ask." | nothing |
-| 16 GB | the same | nothing |
-| 24 GB | the same | nothing |
-| 32 GB | the same | nothing |
+| 16 GB | Qwen3.5 9B | 6.6 GB |
+| 24 GB | Qwen3.5 9B | 6.6 GB |
+| 32 GB | Qwen3.5 9B (the picture model needs 22.1 GB beside it, 20.6 allowed) | 6.6 GB |
 | 36 GB | Qwen3.6 35B | 21.0 GB |
 | 48 GB | Qwen3.8 27B | 21.3 GB |
 | 64 GB | Qwen3.8 27B and Z-Image Turbo | 32.5 GB |
 
-Below 36 GB no model measured so far can do Ask's work (queue task
-`settings-offers-several-ask-models-with-what-eac` stays open on it).
+An 8 GB Mac may hold 5.2 GB. Only Gemma 4 E2B fits (4.6 held-out); Qwen3.5
+4B might, if its 7.8 GB reading is high, but scores 12.4. Both are far under the
+floor, so their rows say Too weak for Ask and the dialog says the memory is
+short.
+Among models on a Mac, `ranked` puts the small ones in score order, so a Mac
+holding several answers with the best, and the New default offer only ever
+steps up (`AskBuiltInModels.newer`).
 
 Walks: `ask-sets-itself-up-walk` (8 GB Mac: dialog, Not Now, Download, the
 request runs), `ask-settings-lists-models-walk` (16 GB Mac: Settings from the

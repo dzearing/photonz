@@ -5,6 +5,7 @@
 //   run --engine ask|skill --tag "<what changed>" [--set climb|held-out] [--cases a,b]
 //       [--resume <run>] [--minutes N] [--no-build] [--judge-runs 3] [--on <switch>,<switch>]
 //       [--models <id>,<id>]              the probe has only these built-in models, and no picture model
+//       [--mac 16]                        Ask plans as a Mac of this size would: its window and what it holds
 //   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
 //   report [--engine ask]                   the latest climb and held-out totals side by side
 //   lines <run> [--with <run>]              a run's judge lines in total (drawings, all cases), held-out runs too
@@ -143,6 +144,7 @@ function historyLine(meta) {
   const line = {
     run: meta.id, engine: meta.engine, set: meta.set ?? "climb", tag: meta.tag, commit: meta.commit, started: meta.started, finished: new Date().toISOString(),
     ...(Object.keys(meta.switched ?? {}).length ? { switched: meta.switched } : {}),
+    ...(meta.models?.length ? { models: meta.models } : {}), ...(meta.mac ? { mac: meta.mac } : {}),
     wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
     total: meta.total, groups: meta.groups, lookups: meta.lookups, model: meta.model, caseCount: Object.keys(meta.cases).length,
     lines: meta.lines ?? judgeLines(meta.cases),
@@ -188,13 +190,16 @@ async function commandRun() {
              // before it is anybody's default. Recorded so the run never reads as the default app.
              switched: Object.fromEntries((option("on") ?? "").split(",").filter(Boolean).map((name) => [name, true])),
              // The built-in models the probe is lent (--models a,b), when a run measures one.
-             models: (option("models") ?? "").split(",").filter(Boolean) };
+             models: (option("models") ?? "").split(",").filter(Boolean),
+             // The Mac size Ask plans as (--mac 16): a 16 GB Mac reads a 32k window, not this Mac's 64k.
+             mac: option("mac") ? Number(option("mac")) : null };
     runDir = runDirOf(meta.id, set);
     mkdirSync(runDir, { recursive: true });
   }
   console.log(`==> ${meta.id}: ${engine}, ${set} set, "${meta.tag}", ${meta.caseIDs.length} cases, judged by ${JUDGE_MODEL} (rubric ${RUBRIC_ID}), ${judgeRuns} looks each`);
   if (Object.keys(meta.switched ?? {}).length) console.log(`    switched on, off at Next defaults: ${Object.keys(meta.switched).join(", ")}`);
   if (meta.models?.length) console.log(`    only these models downloaded, no picture model: ${meta.models.join(", ")}`);
+  if (meta.mac) console.log(`    Ask plans as a ${meta.mac} GB Mac would`);
   if (sealed) console.log("    held out: each case is scored and kept, but only the total is printed or recorded");
   let done = Object.values(meta.cases).filter((r) => !r.unrun).length;
   let build = !flag("no-build");
@@ -211,7 +216,7 @@ async function commandRun() {
     process.stdout.write(sealed ? `--> held-out case ${done + 1} of ${meta.caseIDs.length} ... ` : `--> ${testCase.id}: "${testCase.request.slice(0, 60)}" ... `);
     let got;
     try {
-      got = engine === "ask" ? await runAsk(testCase, dir, { build, switched: meta.switched, models: meta.models }) : await runSkill(testCase, dir, { build, switched: meta.switched });
+      got = engine === "ask" ? await runAsk(testCase, dir, { build, switched: meta.switched, models: meta.models, mac: meta.mac }) : await runSkill(testCase, dir, { build, switched: meta.switched });
     } catch (error) {
       got = { error: error.message };
       await quitProbe();
@@ -242,6 +247,10 @@ async function commandRun() {
   saveMeta(runDir, meta);
   const finished = meta.caseIDs.every((id) => meta.cases[id] && !meta.cases[id].unrun);
   const sheet = sealed ? null : await drawSheet(runDir, meta);
+  // A case not run counts 0 in the total, so a run with any left reads as unfinished, never as its score
+  // (2026-11-02: three cases deferred for a person at the Mac read as Qwen3.5 9B's 19.8; finished, it was 21.2).
+  const unrun = meta.caseIDs.filter((id) => !meta.cases[id] || meta.cases[id].unrun).length;
+  if (unrun) console.log(`==> ${meta.id}: UNFINISHED, ${unrun} of ${meta.caseIDs.length} cases not run yet; the total below counts them as 0 and is not this run's score`);
   console.log(`==> ${meta.id}: total ${meta.total} over ${Object.keys(meta.cases).length} cases (${Object.entries(meta.groups).map(([g, v]) => `${g} ${v}`).join(", ")}), ${Math.round(meta.wallSeconds / 60)} min of cases`);
   console.log(`    ${describe(meta.lookups)}`);
   if (meta.model) console.log(`    ${meta.engineModel ?? engine}: ${meta.model.medianSeconds ?? "-"}s a request (median), ${meta.model.brokenCalls} of ${meta.model.calls} tool calls broken, ${meta.model.refused} refused by Ollama, ${meta.model.gigabytes ?? "-"} GB held`);

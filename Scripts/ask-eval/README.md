@@ -34,7 +34,16 @@ it is a total, so it works on held-out runs too, and every run records it.
 `--minutes N` stops starting new cases after N minutes and prints the
 `--resume <run>` line that carries on. That is how a go loop runner, whose
 commands stop at ten minutes, gets a whole run done in pieces. A run goes into
-the history only when every case in it has run.
+the history only when every case in it has run. Until then its total counts
+each case not run as 0, so the run prints UNFINISHED and how many are left
+above that total: it is not the run's score (Qwen3.5 9B read 19.8 with three
+cases put off for a person at the Mac, and 21.2 once they ran).
+
+`--models <id>,<id>` lends the probe only those built-in models and no picture
+model, to measure one model as a smaller Mac would hold it. `--mac <GB>` plans
+as a Mac of that size (its window and what it holds): a 16 GB Mac reads a 32k
+window where this Mac reads 64k, so a model offered to small Macs is rated with
+`--models <id> --mac 16`. Both are kept with the run, so `--resume` keeps them.
 
 ## What a run does, per case, one case at a time
 

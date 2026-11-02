@@ -90,7 +90,7 @@ struct AskModelCatalogTests {
     static let roomy: Int64 = 500 * gb
 
     @Test("The set each Mac size gets, with room on the disk",
-          arguments: [(8, nil, false), (16, nil, false), (24, nil, false), (32, nil, false),
+          arguments: [(8, nil, false), (16, "qwen3.5-9b", false), (24, "qwen3.5-9b", false), (32, "qwen3.5-9b", false),
                       (36, "qwen3.6-35b-a3b", false), (48, "qwen3.8-27b", false), (64, "qwen3.8-27b", true)])
     func setBySize(size: Int, chat: String?, picture: Bool) throws {
         let plan = AskModelSetup.plan(memoryGigabytes: AskMacSizes.reported(size), freeBytes: Self.roomy,
@@ -148,12 +148,32 @@ struct AskModelCatalogTests {
 
     @Test("The small models measured too weak are listed, marked, and never offered")
     func smallOnesAreTooWeak() throws {
-        for id in ["gemma-4-e4b", "gemma-4-e2b", "qwen3.5-4b", "qwen3.5-9b"] {
+        for id in ["gemma-4-e4b", "gemma-4-e2b", "qwen3.5-4b"] {
             let choice = try #require(AskBuiltInModels.choice(id: id))
             #expect(choice.measured?.canDoAsksWork == false, "\(id)")
             #expect(AskModelSetup.listed(downloaded: []).contains(choice))
             #expect(!AskModelSetup.offerable(choice))
         }
+    }
+
+    @Test("A 16 GB Mac is offered a small model that can do Ask's work, rated lower than the big ones")
+    func sixteenGigabyteMac() throws {
+        let small = try #require(AskBuiltInModels.choice(id: "qwen3.5-9b"))
+        let measured = try #require(small.measured)
+        #expect(measured.canDoAsksWork)
+        #expect(AskModelSetup.offerable(small))
+        #expect(AskMacSizes.smallest(holding: small.gigabytes) == 16)
+        let best = try #require(AskBuiltInModels.choice(id: "qwen3.6-35b-a3b")?.measured)
+        #expect(AskModelRating.quality(heldOut: measured.heldOut) < AskModelRating.quality(heldOut: best.heldOut))
+        #expect(AskBuiltInModels.recommended(memoryGigabytes: AskMacSizes.reported(16)) == small)
+    }
+
+    @Test("Among the models on a Mac, the one that scored higher answers first")
+    func rankedByScore() throws {
+        let small = ["gemma-4-e4b", "gemma-4-e2b", "qwen3.5-4b", "qwen3.5-9b"]
+        #expect(AskBuiltInModels.resolve(chosen: nil, downloaded: small, memoryGigabytes: 17.2)?.id == "qwen3.5-9b")
+        let measured = AskBuiltInModels.ranked.filter { small.contains($0.id) }.compactMap(\.measured?.heldOut)
+        #expect(measured == measured.sorted(by: >))
     }
 
     @Test("A model too weak for Ask's work is never offered or recommended")

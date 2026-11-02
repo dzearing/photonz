@@ -1,7 +1,7 @@
 {
   "feature": "Choosing Ask's model, and setting it up on the first Ask",
   "epic": "agent-ask",
-  "summary": "Nothing downloads until you want Ask. The first Ask opens one dialog that offers the right model set for this Mac, downloads it and then runs what you typed. Settings > Ask lists every model with what it needs and its measured quality and speed, with Download, Use and Delete.",
+  "summary": "Nothing downloads until you want Ask. The first Ask opens one dialog that offers the right model set for this Mac, downloads it and then runs what you typed; a 16 to 32 GB Mac now gets Qwen3.5 9B, a basic model marked as basic. Settings > Ask lists every model with what it needs and its measured quality and speed, with Download, Use and Delete.",
   "setup": "Photonz Dev, release Next, no flag changed from its default. To see a Mac with no model, move the Models folder aside: ~/Library/Application Support/Photonz/Models.",
   "switched": {},
   "try": [
@@ -21,8 +21,14 @@
       "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
-      "do": "In the dialog, press Other Models…: Settings opens at the Ask section with every model in view.",
-      "shot": "2026-11-01-ask-models-4-settings-sc.png"
+      "do": "On a 16 GB Mac (walk ask-settings-lists-models-walk), press Ask and Return: the dialog offers Qwen3.5 9B, 6.6 GB.",
+      "shot": "2026-11-02-ask-models-16gb-dialog-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the dialog, press Other Models…: Settings opens at the Ask section; Qwen3.5 9B offers Download, the big ones say Too big, the weak ones Too weak.",
+      "shot": "2026-11-02-ask-models-16gb-settings-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
       "do": "Hover the Quality and Speed dots on a row to read the measured numbers behind them.",
@@ -40,14 +46,15 @@
   "evaluate": [
     "Does the setup dialog tell you enough (what Ask is, what it will download, how much room it takes) to press Download without opening Settings?",
     "Are five dots for quality and speed, with the real numbers on hover, the right amount of detail on each row?",
-    "On a Mac under 36 GB the dialog says it does not have enough memory for Ask. Is that the right answer, or would you rather be offered a weak model marked as weak?",
+    "On a 16 to 32 GB Mac the dialog now offers Qwen3.5 9B, rated 2 of 5 for quality and for speed (about 90 s a request). Is a basic Ask marked as basic better than no Ask at all on those Macs?",
     "Is Delete confirming in the row (Cancel, Delete 21.0 GB) clear enough, compared with a separate alert?",
-    "Should models too weak for Ask stay listed (marked Too weak for Ask) or be hidden?"
+    "Should models too weak for Ask stay listed (marked Too weak for Ask) or be hidden?",
+    "An 8 GB Mac is still told it does not have enough memory: the only model that fits scored 4.6. Is that the right answer for now?"
   ],
   "rough": [
-    "No model measured so far can do Ask's work below a 36 GB Mac: Qwen3.5 9B scored 19.8, Qwen3.5 4B 12.4, Gemma 4 E2B 4.6 and Gemma 4 E4B 4.5 on the held-out set, against a floor of 20. The 8 and 16 GB acceptance item is not reached and settings-offers-several-ask-models-with-what-eac stays open for it.",
-    "The small models mostly fail by writing tool calls Ask cannot read (Gemma 4 E4B: 74 of 123 broken). That points at Ask's long instructions as much as at the models; it is logged on settings-offers-several-ask-models-with-what-eac as the next thing to try.",
-    "Memory each model holds was measured at this Mac's 64k window; a Mac under 48 GB runs a 32k window and holds somewhat less, so Gemma 4 26B may fit a 32 GB Mac in practice. Its row says 36 GB, the measured number.",
+    "An 8 GB Mac gets no model: the only one that fits it, Gemma 4 E2B, scored 4.6 held-out against the floor of 20 (Qwen3.5 4B, 12.4, reads 7.8 GB). Its row says Too weak for Ask and the dialog says the memory is short, as the task's own item allows when a size cannot do Ask's work.",
+    "Qwen3.5 9B clears the floor only just: 20.7 run as a 16 GB Mac (32k window) and 21.2 at a 64k window, so on a 16 GB Mac Ask is basic: video and simple marks work far better than drawings and layouts. Its speed was measured on an M4 Max; a base 16 GB Mac will be slower than the 92 s shown.",
+    "The 16 GB Mac's dialog does not show the quality dots, only the model's name and size; the dots and the Basic line are in Settings > Ask. Chose that over adding ratings to the dialog to keep it to one decision.",
     "No mock page covers Settings > Ask or the setup dialog; both follow the macOS Settings row pattern (name, one line, details, trailing buttons) and a plain macOS sheet.",
     "Delete confirms in its row rather than in an alert: a walk could not press an alert's button, nor a red destructive-role button in the row, so the confirming button is a plain one.",
     "The setup dialog's pictures were taken with the window behind another app (no blue default button). The fresh-install picture shows Ask open with words typed and no dialog: the models folder held 0 KB before and after, and no model helper was running."
@@ -88,15 +95,15 @@
     },
     {
       "model": "Qwen3.5 9B",
-      "heldOut": 19.8,
-      "quality": 1,
-      "secondsMedian": 75.9,
-      "speed": 3,
-      "gbHeld": 7.7,
+      "heldOut": 20.7,
+      "quality": 2,
+      "secondsMedian": 91.8,
+      "speed": 2,
+      "gbHeld": 10.1,
       "download": "6.6 GB",
       "smallestMac": "16 GB",
-      "run": "20261102-023538-ask-held-out",
-      "note": "too weak for Ask, 0.2 under the floor; 7.7 GB measured loaded at a 32k window, the eval read 29.1"
+      "run": "20261102-122343-ask-held-out",
+      "note": "run as a 16 GB Mac (--mac 16, 32k window), peak memory 10.1 GB; at 64k it scored 21.2 at 76.3 s (20261102-023538-ask-held-out, first misread as 19.8 with three cases unrun)"
     },
     {
       "model": "Qwen3.5 4B",
@@ -146,7 +153,7 @@
       "note": "held-out total with it on, 35.9 without"
     }
   ],
-  "howRated": "Quality is the held-out eval total (Scripts/ask-eval.sh, 45 cases, judged in total only): 1 under 20, 2 from 20, 3 from 35, 4 from 50, 5 from 60. Speed is the median seconds from Send to a result over that run: 5 at or under 20 s, 4 at or under 45, 3 at or under 90, 2 at or under 180, else 1. Under 20 a model cannot do Ask's work and is marked, never offered. All on an M4 Max, 64 GB; the small models alone on the probe with no picture model (--models), as the Macs they are for would run them.",
+  "howRated": "Quality is the held-out eval total (Scripts/ask-eval.sh, 45 cases, judged in total only): 1 under 20, 2 from 20, 3 from 35, 4 from 50, 5 from 60. Speed is the median seconds from Send to a result over that run: 5 at or under 20 s, 4 at or under 45, 3 at or under 90, 2 at or under 180, else 1. Under 20 a model cannot do Ask's work and is marked, never offered. All on an M4 Max, 64 GB; the small models alone on the probe with no picture model (--models), as the Macs they are for would run them; Qwen3.5 9B also planned as a 16 GB Mac (--mac 16).",
   "macs": [
     {
       "mac": "8 GB",
@@ -154,15 +161,15 @@
     },
     {
       "mac": "16 GB",
-      "gets": "not enough memory for Ask"
+      "gets": "Qwen3.5 9B, 6.6 GB"
     },
     {
       "mac": "24 GB",
-      "gets": "not enough memory for Ask"
+      "gets": "Qwen3.5 9B, 6.6 GB"
     },
     {
       "mac": "32 GB",
-      "gets": "not enough memory for Ask"
+      "gets": "Qwen3.5 9B, 6.6 GB (the picture model would need 22.1 GB beside it, 20.6 allowed)"
     },
     {
       "mac": "36 GB",

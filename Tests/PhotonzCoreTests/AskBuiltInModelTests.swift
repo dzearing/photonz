@@ -80,7 +80,8 @@ struct AskBuiltInModelTests {
         #expect(AskBuiltInModels.recommended(memoryGigabytes: 68.7) == best)
         let small = try #require(AskBuiltInModels.recommended(memoryGigabytes: 38.7))
         #expect(small.gigabytes <= 38.7 * AskModels.memoryShare)
-        #expect(AskBuiltInModels.recommended(memoryGigabytes: 17.2) == nil)
+        #expect(AskBuiltInModels.recommended(memoryGigabytes: 17.2)?.id == "qwen3.5-9b")
+        #expect(AskBuiltInModels.recommended(memoryGigabytes: 8.6) == nil)
         #expect(AskBuiltInModels.recommended(memoryGigabytes: 4) == nil)
     }
 
@@ -126,6 +127,8 @@ struct AskBuiltInModelTests {
         #expect(AskBuiltInModels.newer(downloaded: old + [best.id], memoryGigabytes: 68.7) == nil)
         #expect(AskBuiltInModels.newer(downloaded: [], memoryGigabytes: 68.7) == nil)
         #expect(AskBuiltInModels.newer(downloaded: ["gemma-4-26b-a4b"], memoryGigabytes: 36) == nil)
+        // A Mac with only a weaker small model is offered the one that fits and does Ask's work.
+        #expect(AskBuiltInModels.newer(downloaded: ["gemma-4-e4b"], memoryGigabytes: 17.2)?.id == "qwen3.5-9b")
         // Once the new one is down, Automatic moves to it and the old one can go.
         #expect(AskBuiltInModels.resolve(chosen: nil, downloaded: old + [best.id], memoryGigabytes: 68.7) == best)
         #expect(AskBuiltInModels.removable(downloaded: old + [best.id], inUse: best.id).map(\.id) == ["qwen3.6-35b-a3b"])
