@@ -15155,3 +15155,12 @@
 {"t":"2026-11-02T05:15:59.631Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
 {"t":"2026-11-02T05:15:59.700Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
 {"t":"2026-11-02T05:15:59.765Z","ev":"task_pending","id":"settings-offers-several-ask-models-with-what-eac","from":"in_progress","note":"All but one item shipped (ace4e5b5, 8713bffd): setup dialog, Settings rows with measured ratings, fresh install downloads nothing, delete falls back, Settings opens at Ask. Not reached: no model under 36 GB clears the held-out floor of 20 (best: Qwen3.5 9B at 19.8)."}
+{"t":"2026-11-02T12:11:31.138Z","ev":"sweep_pass","walks":1081,"seconds":24883,"passed":1033,"failed":48,"complete":true,"total":1081}
+{"t":"2026-11-02T12:11:31.339Z","ev":"task_started","id":"settings-offers-several-ask-models-with-what-eac","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one","priority":"p1-high"}
+{"t":"2026-11-02T14:13:20.825Z","ev":"task_created","id":"ask-works-on-an-8-gb-mac","priority":"p2-normal","title":"Ask works on an 8 GB Mac"}
+{"t":"2026-11-02T14:13:38.559Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T14:13:38.634Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T14:13:38.709Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T14:13:38.783Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T14:13:38.857Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
+{"t":"2026-11-02T14:13:38.950Z","ev":"task_done","id":"settings-offers-several-ask-models-with-what-eac","from":"in_progress","note":"16-32 GB Macs now get Qwen3.5 9B (held-out 20.7 as a 16 GB Mac, 21.2 at 64k), in the dialog and Settings (ffe113f9); 8 GB says Too weak per the item's clause, follow-up ask-works-on-an-8-gb-mac. Tests and five walks green; audit updated."}
