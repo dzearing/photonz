@@ -206,6 +206,42 @@ struct AgentComponentSheetTests {
         #expect(AgentNewComponent.sectionGap > AgentNewComponent.rowGap)
     }
 
+    @Test("Sections are parted by one hairline across the table, halfway between a section's last row and the next header row; rows of one section are not")
+    func sectionRules() throws {
+        // Judges of the eval, 2026-11-02, of a Toggle section with Checkbox
+        // and Radio under it, every run: "checkbox and radio have no state
+        // headers". A rule between sections shows which header a row is under.
+        var document = Self.blank()
+        let button = try Self.add(Self.row("Button", y: 100, looks: Self.states), to: &document)
+        let toggle = try Self.add(Self.row("Toggle", y: 200, looks: ["Off", "On"]), to: &document)
+        let check = try Self.add(Self.row("Checkbox", y: 300, looks: ["Off", "On"]), to: &document)
+        _ = try Self.add(Self.row("Field", y: 400, looks: ["Default", "Focused"]), to: &document)
+        let rules = document.layers.filter { $0.name == PhotonzDocument.sheetRuleName }
+        #expect(rules.count == 2, "one between each pair of sections: \(rules.map(\.frame))")
+        for rule in rules {
+            #expect(rule.annotation?.shape == .line)
+            #expect(rule.frame.height <= 4, "a hairline, with its drawing room: \(rule.frame)")
+        }
+        let names = Self.words(in: document).filter { $0.name.hasSuffix(" Label") }
+        let left = try #require(names.map(\.frame.minX).min())
+        let edges = document.layers.filter { $0.text != nil || $0.componentID != nil || $0.instanceOf != nil }
+            .compactMap { document.canvasBounds(of: $0.id)?.maxX }
+        let right = try #require(edges.max())
+        let first = try #require(rules.min { $0.frame.minY < $1.frame.minY })
+        #expect(abs(first.frame.minX - left) <= 2 && abs(first.frame.maxX - right) <= 2,
+                "from the names' edge to the table's right: \(first.frame) against \(left)...\(right)")
+        let buttonBottom = try #require(Self.boxes(button, in: document).first).midY + AgentNewComponent.rowHeight / 2
+        let off = try #require(Self.words(in: document).first { $0.text?.string == "Off" })
+        #expect(abs(first.frame.midY - (buttonBottom + off.frame.minY) / 2) <= 1, "halfway: \(first.frame.midY)")
+        // None between Toggle and Checkbox, which share a header row.
+        let toggleBottom = try #require(Self.boxes(toggle, in: document).first).maxY
+        let checkTop = try #require(Self.boxes(check, in: document).first).minY
+        #expect(!rules.contains { $0.frame.midY > toggleBottom && $0.frame.midY < checkTop })
+        // Laid out again, still one of each.
+        _ = try Self.add(Self.row("Slider", y: 500, looks: ["Default", "Focused"]), to: &document)
+        #expect(document.layers.filter { $0.name == PhotonzDocument.sheetRuleName }.count == 2)
+    }
+
     @Test("Laying the table out again leaves one set of words: no header or caption twice")
     func noWordsTwice() throws {
         var document = Self.blank()

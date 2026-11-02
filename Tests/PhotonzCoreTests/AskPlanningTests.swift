@@ -318,6 +318,11 @@ struct AskPlanningTests {
         #expect(talk.messages.last?["content"]?.stringValue?.contains("title") == true)
         _ = talk.take(try Self.reply([("add_text", #"{"text":"Base Components","x":40,"y":40,"fontSize":32}"#)]))
         #expect(talk.steps.map(\.tool) == ["add_text", "add_component"])
+        // The title asked for after the rows keeps the page margin too: set
+        // at 24, it pulled the table to 24 from both edges and every judge
+        // read the last column as crammed against the right edge (the eval,
+        // 2026-11-02).
+        #expect(talk.steps.map { $0.arguments["x"]?.doubleValue } == [64, 64])
         guard case .planned = talk.take(try Self.reply([])) else { Issue.record("asked twice"); return }
     }
 

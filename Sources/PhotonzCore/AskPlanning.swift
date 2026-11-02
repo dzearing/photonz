@@ -644,6 +644,8 @@ public struct AskConversation: Sendable {
                     if askedForTitle, name == "add_text", !steps.contains(where: { $0.tool == "add_text" }),
                        !steps.contains(where: { $0.arguments.encodedString().contains("\"$") }) {
                         steps.insert(step, at: 0)
+                        // It keeps the page margin, as a title planned first does.
+                        alignSheet()
                         sameRefusals = 0
                         lastRefused = ""
                         tell(name, "Planned as step 1.")

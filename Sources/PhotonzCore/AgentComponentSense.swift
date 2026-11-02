@@ -309,6 +309,9 @@ extension AgentNewComponent {
     /// How far a dimmed word is set from what is behind it towards the first
     /// look's colour, tried in turn until it reads.
     static let dimmings = [0.45, 0.6, 0.75, 0.9]
+    /// How far from the canvas's white a Disabled surface over a white
+    /// first look may stand: #F2F2F7 is 13 off, #E5E5EA (26 off) is set back.
+    static let faintestGrey = 14.0 / 255
 
     /// A Disabled look whose words stand out more than the first look's
     /// (a disabled field in black over a default in grey) has them set
@@ -347,7 +350,13 @@ extension AgentNewComponent {
     /// A Disabled look whose surface stands further from the canvas than
     /// the first look's (a disabled field on #E5E5EA under a default on
     /// #F2F2F7) has it set halfway from the canvas to the first look's, so
-    /// it reads faded rather than more active (judges, 2026-10-24).
+    /// it reads faded rather than more active (judges, 2026-10-24). Over a
+    /// first look in the canvas's own white, halfway is white again, so a
+    /// surface no further off than `faintestGrey` is kept as drawn (a
+    /// disabled field in #F2F2F7 under a white Default, the system's own
+    /// look) and one further off is set that far: made white, its faint
+    /// words no longer read and were set darker than Default's (the eval,
+    /// 2026-11-02).
     static func disabledFillsFaint(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
         var out = args
         guard var looks = out["looks"]?.arrayValue else { return args }
@@ -360,7 +369,12 @@ extension AgentNewComponent {
                 guard let was = found.parts[at].look.fill?.hexValue.flatMap(RGBA.init(hex:)),
                       let now = part.look.fill?.hexValue.flatMap(RGBA.init(hex:)),
                       was.a >= 1, now.a >= 1, far(now) > far(was) + 0.5 / 255 else { continue }
-                let faint = RGBA(r: (canvas.r + was.r) / 2, g: (canvas.g + was.g) / 2, b: (canvas.b + was.b) / 2)
+                if far(was) < 0.5 / 255, far(now) <= faintestGrey { continue }
+                let faint = far(was) < 0.5 / 255
+                    ? RGBA(r: canvas.r + (now.r - canvas.r) * faintestGrey / far(now),
+                           g: canvas.g + (now.g - canvas.g) * faintestGrey / far(now),
+                           b: canvas.b + (now.b - canvas.b) * faintestGrey / far(now))
+                    : RGBA(r: (canvas.r + was.r) / 2, g: (canvas.g + was.g) / 2, b: (canvas.b + was.b) / 2)
                 looks[index - 1] = setting("fill", .string(faint.hexString), on: part.name, in: looks[index - 1])
             }
         }
@@ -452,6 +466,38 @@ extension AgentNewComponent {
         return out
     }
 
+    /// Words centred in a part that would land on other words, in the first
+    /// look or a later one, while the call also gave them a box of their own,
+    /// are set in that box instead (centred in it). Centring and a box say
+    /// two things; a small model gave each of a segmented control's labels
+    /// its own slot and centred them all in the track, and the control was
+    /// refused as words on words until it was left off the sheet (the eval,
+    /// 2026-11-02). Words centred with no box of their own stay centred.
+    static func wordsInTheirOwnPlace(_ args: [String: AgentJSON], _ found: AgentNewComponent) -> [String: AgentJSON] {
+        func built(_ args: [String: AgentJSON]) -> AgentNewComponent? {
+            if case .success(let found) = AgentTools.componentSpec("add_component", args) { return found }
+            return nil
+        }
+        var out = args, spec = found
+        while let (a, b) = ([spec] + spec.looks.dropFirst().map { spec.inLook($0) }).lazy.compactMap(\.wordsOverWords).first {
+            let loose = Set([a, b].filter { name in
+                spec.parts.contains { $0.name == name && $0.kind == .text && $0.centerIn != nil
+                    && $0.frame.width > 0 && $0.frame.height > 0 }
+            })
+            guard !loose.isEmpty, var parts = out["parts"]?.arrayValue else { break }
+            for (at, part) in parts.enumerated() {
+                guard let name = part["name"]?.stringValue?.trimmingCharacters(in: .whitespaces), loose.contains(name),
+                      var object = part.objectValue else { continue }
+                object["centerIn"] = nil
+                parts[at] = .object(object)
+            }
+            out["parts"] = .array(parts)
+            guard let next = built(out) else { return args }
+            spec = next
+        }
+        return out
+    }
+
     /// The arguments with each of these set right, every one kept only when
     /// the call it leaves could still be built.
     static func madeSensible(_ args: [String: AgentJSON]) -> [String: AgentJSON] {
@@ -461,6 +507,7 @@ extension AgentNewComponent {
         }
         var out = args
         for step in [{ (args: [String: AgentJSON]) in numbersLeftOff(args) },
+                     { args in built(args).map { wordsInTheirOwnPlace(args, $0) } ?? args },
                      { args in onTypeScale(args) },
                      { args in built(args).map { wordsStayPut(args, $0) } ?? args },
                      { args in built(args).map { heldInside(args, $0) } ?? args },

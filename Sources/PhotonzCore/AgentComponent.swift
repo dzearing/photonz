@@ -328,6 +328,8 @@ extension AgentNewComponent {
     /// #1D4ED8, 1.38; #007AFF to #0062CC, 1.42) is plain, and was refused
     /// while this was measured on the largest channel alone.
     static let leastLookContrast = 1.2
+    /// The same for a Disabled look's surface fill (white to #F2F2F7 is 1.12).
+    static let leastDisabledContrast = 1.1
     /// A colour that moves this far on one channel, out of 255, is a new
     /// colour however alike the two are in lightness (grey to green).
     static let leastHueStep = 48.0
@@ -389,6 +391,15 @@ extension AgentNewComponent {
                     continue
                 }
                 if plain { return nil }
+                // A disabled surface is faint by nature: a whole box gone
+                // from white to #F2F2F7 reads as a disabled field beside its
+                // Default (the system's own look), though it is under the
+                // bar for other states.
+                if part.kind != .text, ink == new.fill, Self.stateWords(look.name).contains("disabled"),
+                   let one = ink.hexValue.flatMap(RGBA.init(hex:)), let two = was.flatMap(RGBA.init(hex:)),
+                   RGBA.contrast(one.linearLuminance, two.linearLuminance) >= Self.leastDisabledContrast {
+                    return nil
+                }
                 small.append("\(part.name) \(was ?? "") to \(ink.hexValue ?? "")")
             }
         }
@@ -442,8 +453,12 @@ extension AgentNewComponent {
             args["parts"] = .array(parts)
         }
         guard let found = spec(), var looks = args["looks"]?.arrayValue else { return .object(args) }
-        // Words a later look leaves unreadable get, in that look, the shade
-        // nearest their own that reads.
+        // Words a later look leaves unreadable get, in that look, their own
+        // first look's colour when that reads there, else the shade nearest
+        // their own that reads. The nearest stock shade to a Disabled
+        // field's faint #E5E5EA on white was #8E8E93, far darker than its
+        // Default's #C7C7CC, and every judge read "the disabled placeholder
+        // is darker than the enabled one" (the eval, 2026-11-02).
         for (index, look) in found.looks.enumerated().dropFirst() where index - 1 < looks.count {
             var shown = found.inLook(look)
             var fixed: Set<String> = []
@@ -451,7 +466,10 @@ extension AgentNewComponent {
                   let part = shown.parts.first(where: { $0.name == words }),
                   case .some(.some(let behind)) = shown.wordsBackdrop(part), let ground = RGBA(hex: behind.colour),
                   var said = looks[index - 1].objectValue {
-                let colour = readable(near: part.colorHex ?? defaultWordColour, on: ground)
+                let own = found.parts.first(where: { $0.name == words })?.colorHex ?? defaultWordColour
+                let colour = own != part.colorHex
+                    && (RGBA(hex: own).map { RGBA.lightnessContrast(text: $0, on: ground) >= Self.leastWordLightness } ?? false)
+                    ? own : readable(near: part.colorHex ?? defaultWordColour, on: ground)
                 var changes = said["changes"]?.arrayValue ?? []
                 if let at = changes.firstIndex(where: { named($0) == words }), var change = changes[at].objectValue {
                     change["color"] = .string(colour)

@@ -869,8 +869,10 @@ final class AskSession {
                 watch?.cancel()
                 // Long enough to hold a whole component call, so a look the
                 // planner let through can be rebuilt from the trace (a blue
-                // Off toggle could not be, cut at 300, 2026-10-24).
-                note("answered: \(reply["message"]?.encodedString().prefix(3000) ?? "")")
+                // Off toggle could not be, cut at 300, 2026-10-24), nor a
+                // first answer of nine components (a Disabled field drawn
+                // darker than its Default was past 3000, 2026-11-02).
+                note("answered: \(reply["message"]?.encodedString().prefix(20000) ?? "")")
             } catch let trouble as AskLocalModel.Trouble {
                 if case .server(let words) = trouble { note("the model's server said: \(words.prefix(300))") }
                 if case .server(let words) = trouble, AskConversation.isUnreadableReply(words), !talk.steps.isEmpty {

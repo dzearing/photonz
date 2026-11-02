@@ -152,6 +152,10 @@ extension PhotonzDocument {
     static func rowLabelName(_ row: String) -> String { "\(row) Label" }
     static func captionName(row: String, look: String) -> String { "\(row) \(look) Label" }
     static func headerName(_ state: String) -> String { "\(state) Header" }
+    /// The hairline the table sets between one section and the next.
+    static let sheetRuleName = "Sheet Rule"
+    /// The rule's colour: the system's separator grey on white.
+    static let sheetRuleHex = "#E5E5EA"
 
     /// Rows that share a header row: rows with the same states, whatever
     /// their order, each section where its first row was. A section's
@@ -279,7 +283,7 @@ extension PhotonzDocument {
         }).max(by: { $0.frame.maxY < $1.frame.maxY }) {
             x = title.frame.minX.rounded()
         }
-        removeLayers(ids: Set(oldWords.map(\.id)))
+        removeLayers(ids: Set(oldWords.map(\.id)).union(layers.filter { $0.name == Self.sheetRuleName }.map(\.id)))
 
         func words(_ string: String, weight: TextWeight, color: String, name: String) -> Layer {
             let content = AgentText(string: string, origin: .zero, fontSize: AgentNewComponent.labelSize,
@@ -407,11 +411,19 @@ extension PhotonzDocument {
         }
 
         var made: [Layer] = []
+        // Where a hairline parts one section (or a header row set again over
+        // a tall row) from the rows above it: halfway across the gap. Judges
+        // of the eval, 2026-11-02, every run, of Checkbox and Radio under a
+        // Toggle's header row: "checkbox and radio have no state headers".
+        var rules: [CGFloat] = []
         let lineHeight = measure(AgentText(string: "Ag", origin: .zero, fontSize: AgentNewComponent.labelSize).content, nil).height
         var y = top
         var bottom = top
         for (index, section) in sections.enumerated() {
-            if index > 0 { y = (bottom + AgentNewComponent.sectionGap).rounded() }
+            if index > 0 {
+                rules.append((bottom + AgentNewComponent.sectionGap / 2).rounded())
+                y = (bottom + AgentNewComponent.sectionGap).rounded()
+            }
             let left = placings[index]
             func headerRow() {
                 for (column, header) in section.headers.enumerated() {
@@ -446,6 +458,7 @@ extension PhotonzDocument {
                 let row = rows[index]
                 let band = band(index)
                 if previous != nil, band > Self.tallRow {
+                    rules.append((bottom + AgentNewComponent.sectionGap / 2).rounded())
                     y = (bottom + AgentNewComponent.sectionGap).rounded()
                     headerRow()
                 }
@@ -464,6 +477,14 @@ extension PhotonzDocument {
         for layer in made { addLayer(layer) }
         let right = (rows.flatMap { $0.looks.compactMap { canvasBounds(of: $0.layer)?.maxX } }
             + made.map(\.frame.maxX)).max() ?? (x + nameColumn)
+        // Each rule runs from the names' edge to the table's right, never past it.
+        for at in rules {
+            var rule = AnnotationBuilder.layer(
+                content: AnnotationContent(shape: .line, strokeWidth: 1, colorHex: Self.sheetRuleHex),
+                from: CGPoint(x: x, y: at + 0.5), to: CGPoint(x: right, y: at + 0.5))
+            rule.name = Self.sheetRuleName
+            addLayer(rule)
+        }
         return AgentSheetLayout(headers: sections.map(\.headers), columns: columns,
                                 frame: CGRect(x: x, y: top, width: (right - x).rounded(.up),
                                               height: bottom - top),

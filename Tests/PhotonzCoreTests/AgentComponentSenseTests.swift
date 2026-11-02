@@ -279,6 +279,58 @@ struct AgentComponentSenseTests {
         #expect(spec.problem == nil)
     }
 
+    @Test("Words centred in one box that would land on each other keep the places their own boxes give them, in every look")
+    func wordsKeepTheirOwnPlaces() throws {
+        // Ask's trace, 2026-11-02 (run 20261102-190923): a segmented
+        // control's Two and Three both centred in its Background, each given
+        // its own slot, and One centred in the Selection that moves in later
+        // looks. Refused three times as words on words, the control was left
+        // off the sheet.
+        let spec = try Self.plain(##"""
+            {"firstLook":"One","labels":true,"looks":[{"changes":[{"part":"Selection","x":82},{"opacity":0.6,"part":"Label One"},{"opacity":1,"part":"Label Two"}],"name":"Two"},{"changes":[{"part":"Selection","x":162},{"opacity":0.6,"part":"Label One"},{"opacity":0.6,"part":"Label Two"},{"opacity":1,"part":"Label Three"}],"name":"Three"}],"name":"Segmented Control","parts":[{"cornerRadius":8,"fill":"#F2F2F7","height":32,"name":"Background","shape":"rectangle","width":240,"x":0,"y":0},{"cornerRadius":6,"fill":"#FFFFFF","height":28,"name":"Selection","shadow":{"color":"#000000","opacity":0.1,"radius":2},"shape":"rectangle","width":78,"x":2,"y":2},{"centerIn":"Selection","color":"#1C1C1E","fontSize":13,"height":28,"name":"Label One","shape":"text","text":"One","weight":"medium","width":78,"x":2,"y":2},{"centerIn":"Background","color":"#1C1C1E","fontSize":13,"height":28,"name":"Label Two","shape":"text","text":"Two","weight":"regular","width":80,"x":80,"y":2},{"centerIn":"Background","color":"#1C1C1E","fontSize":13,"height":28,"name":"Label Three","shape":"text","text":"Three","weight":"regular","width":78,"x":160,"y":2}],"x":24,"y":520}
+            """##)
+        #expect(spec.problem == nil, "\(spec.problem ?? "")")
+        #expect(spec.looks.map(\.name) == ["One", "Two", "Three"])
+        for look in spec.looks {
+            let shown = spec.inLook(look)
+            let spots = ["Label One", "Label Two", "Label Three"].compactMap { name in
+                shown.parts.first { $0.name == name }.flatMap { shown.wordsSpot($0) }
+            }
+            #expect(spots.count == 3)
+            #expect(spots.map(\.midX) == spots.map(\.midX).sorted() && spots[0].maxX < spots[1].minX && spots[1].maxX < spots[2].minX,
+                    "in \(look.name), One, Two and Three sit side by side: \(spots)")
+        }
+        // Words centred in a box with no box of their own stay centred.
+        let card = try Self.plain(##"""
+            {"name": "Badge", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 40, "height": 24, "cornerRadius": 12, "fill": "#FF3B30"},
+                       {"name": "Count", "shape": "text", "text": "3", "fontSize": 13, "x": 0, "y": 0, "width": 0, "height": 0, "centerIn": "Back", "color": "#FFFFFF"}],
+             "looks": [{"name": "Hover", "changes": [{"part": "Back", "fill": "#C4170C"}]}]}
+            """##)
+        #expect(card.parts.last?.centerIn == "Back")
+    }
+
+    @Test("A Disabled field drawn faint grey with fainter words never ends with words darker than Default's")
+    func disabledFieldNeverDarker() throws {
+        // Ask's trace, 2026-11-02 (run 20261102-200517), the call as the
+        // model sent it: every judge of two runs read "the disabled text
+        // field's placeholder is darker than the enabled one's".
+        let spec = try Self.plain(##"""
+            {"firstLook":"Default","labels":true,"looks":[{"changes":[{"part":"Background","stroke":"#007AFF","strokeWidth":2}],"name":"Focused"},{"changes":[{"fill":"#F2F2F7","part":"Background","stroke":"#F2F2F7"},{"color":"#E5E5EA","part":"Placeholder"}],"name":"Disabled"}],"name":"Text Field","parts":[{"cornerRadius":8,"fill":"#FFFFFF","height":36,"name":"Background","shape":"rectangle","stroke":"#E5E5EA","strokeWidth":1,"width":240,"x":0,"y":0},{"alignment":"left","color":"#C7C7CC","fontSize":15,"height":36,"name":"Placeholder","shape":"text","text":"Placeholder","weight":"regular","width":216,"x":12,"y":0}],"x":240,"y":440}
+            """##)
+        let read = { (hex: String?, ground: String?) in
+            abs(RGBA.lightnessContrast(text: RGBA(hex: hex ?? "") ?? RGBA(r: 0, g: 0, b: 0), on: RGBA(hex: ground ?? "#FFFFFF") ?? RGBA(r: 1, g: 1, b: 1)))
+        }
+        #expect(spec.looks.map(\.name) == ["Default", "Focused", "Disabled"])
+        let words = Self.part("Placeholder", in: spec, look: "Disabled")?.colorHex
+        let ground = Self.part("Background", in: spec, look: "Disabled")?.look.fill?.hexValue
+        let first = spec.parts.last?.colorHex
+        #expect(read(words, ground) <= read(first, "#FFFFFF") + AgentNewComponent.disabledLeeway,
+                "Disabled \(words ?? "") on \(ground ?? "") against Default \(first ?? "") on white")
+        #expect(read(words, ground) >= AgentNewComponent.leastWordLightness, "still reads")
+        #expect(spec.problem == nil)
+    }
+
     @Test("A look named with a number on the end is named its state; one that would repeat a name is left out")
     func numberedLooks() throws {
         // Ask's segmented control, 2026-10-24: a header read "Selected2", and

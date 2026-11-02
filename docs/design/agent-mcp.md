@@ -409,7 +409,11 @@ states shared a header). Sections stand 56 apart, rows 32 apart, every row at
 least 44 tall with its looks centred in it so small controls keep the rhythm
 of buttons, and within a section the shorter rows come first so none sits far
 from its header under a tall one; a tall row (over 88 points, a card) under
-any other row gets its section's header row again right above it. A state keeps
+any other row gets its section's header row again right above it. A 1 point
+hairline (#E5E5EA, `Sheet Rule`) runs across the table halfway between one
+section and the next header row, from the names' edge to the table's right, so
+rows under a shared header read as its rows (2026-11-02: every judge read
+Checkbox and Radio under a Toggle's header as "no state headers"). A state keeps
 the column an earlier header row gave it when that column is one of its
 section's own, so Focused is not under Pressed in the next section
 (`keepingColumns`). Every look and header starts at its column's left edge,
