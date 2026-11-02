@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-02T16:13:25.531Z",
+  "updated": "2026-11-02T17:54:28.407Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -295,9 +295,45 @@
     {
       "t": "2026-11-02T16:13:25.530Z",
       "note": "rotating check 2026-11-02T16:13:25Z, 18 walks run from 111 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-builds-base-components-walk failing."
+    },
+    {
+      "t": "2026-11-02T16:45:12.649Z",
+      "note": "rotating check 2026-11-02T16:45:12Z, 18 walks run from 111 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-builds-base-components-walk failing."
+    },
+    {
+      "t": "2026-11-02T16:45:12.978Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-02T17:13:26.988Z",
+      "note": "Fresh baseline on Qwen3.8 27B (20261102-165105-ask): component-table 78.8, judge 6.6 (clean 7, typography 7, aligned 6, designed 6, didWhatWasAsked 7), 282.5 s. Judges: Hover and Pressed look almost the same (#006CDF vs #0065D1, contrast 1.11: madePlain only compared each look with the first), 246 pt empty under the table (canvas grown by the left margin 240 while the title sits at 48), Checkbox and Radio share Toggle's Off/On header and read as headerless, pressed slider thumb below its track. Walk ask-builds-base-components-walk reproduced failing: waitFor askPhase 300 s ran out with nothing built; the model needs 242 to 300 s for this request, so the walk timed out on slow runs, not a stall."
+    },
+    {
+      "t": "2026-11-02T17:54:27.970Z",
+      "note": "Built (fe41414b): Pressed steps apart from Hover after the first look's widening (madePlain, general to any look that recolours a part: it helps any request with states, per the 2026-10-24 digest's test); room under a sheet that grows the canvas = room above the title (AgentSheetLayout.pageTop); words a later look shows and restyles stay shown; Ask's model turn 600 s instead of 300 with a 'took too long' message; walk waits 540 s."
+    },
+    {
+      "t": "2026-11-02T17:54:28.043Z",
+      "note": "Eval (rubric f5ae1562), Ask component-table: baseline 78.8 (judge 7,7,6,6,7), after-1 64.5 (the step-apart pass ran before the widening so never fired, and the model hid a segmented label), after-2 77.6 (6,7,6,6,7). Judges no longer name Hover/Pressed or the bottom margin. Skill not re-measured: its only change is the bottom margin, which moves the page in its favour. NOT at the 8-of-10 bar for Ask, so left pending."
+    },
+    {
+      "t": "2026-11-02T17:54:28.116Z",
+      "note": "Chose 600 s for a model turn over streaming with a no-news limit, because it is a two-line change that fixes the cut-off today; the stall question stays on find-out-why-ask-sometimes-waits-five-minutes-fo."
+    },
+    {
+      "t": "2026-11-02T17:54:28.188Z",
+      "note": "Pictures looked at: baseline result (Hover=Pressed, 246 empty under), after-1 (Pressed unchanged, One missing), after-2 (Pressed #005CBF plainly darker, page ends 64 under, segmented First hidden by the model's own call), walk window capture (three distinct blues; chips over headers = the-name-chips-over-component-copies-stay-clear). Tests: Scripts/test.sh 15,188 passed. ask-builds-base-components-walk ok at Next defaults (405 s). Audit: queue/audits/2026-11-02-component-sheet-steps-apart.json"
+    },
+    {
+      "t": "2026-11-02T17:54:28.260Z",
+      "note": "Left rough (this task covers it): the model's segmented control hides its first label in later looks; pressed slider track off its thumb; Checkbox/Radio under Toggle's shared header read as headerless."
+    },
+    {
+      "t": "2026-11-02T17:54:28.406Z",
+      "note": "Pressed steps apart, page ends under its title, no cut-off answer shipped (fe41414b); walk passes. Ask is at 6 to 7 of 10 per judge line (77.6), short of the 8-of-10 bar, so it stays open."
     }
   ],
-  "started": "2026-10-24T11:12:59.292Z",
+  "started": "2026-11-02T16:45:12.977Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
