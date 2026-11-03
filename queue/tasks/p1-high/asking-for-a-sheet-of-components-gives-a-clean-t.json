@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-03T04:49:45.235Z",
+  "updated": "2026-11-03T04:50:14.888Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -105,13 +105,9 @@
       "note": "Eval (rubric f5ae1562). Ask component-table: 59 and 51.1 on the final code (52 before; runs on the same code range 37 to 59), judge 5 to 6 per line. Ask design-system-sheet 66.8 (52.8 before), judge 5 to 7. Skill component-table 83.6 (88.8 before; judge 7 to 8), skill design-system-sheet 82 (86.4 before; judge 6 to 8). NOT at the 8-of-10 bar: what is left is the empty cells under shared headers (every judge names them) and what the model draws (a dark Off track, tight button padding, a lumpy tab icon). Left pending."
     },
     {
-      "t": "2026-11-03T04:49:45.234Z",
-      "note": "... 17 earlier entries elided",
-      "elided": 17
-    },
-    {
-      "t": "2026-10-24T08:34:26.657Z",
-      "note": "claimed by go loop"
+      "t": "2026-11-03T04:50:14.887Z",
+      "note": "... 18 earlier entries elided",
+      "elided": 18
     },
     {
       "t": "2026-10-24T09:12:37.762Z",
@@ -504,6 +500,10 @@
     {
       "t": "2026-11-03T04:49:45.233Z",
       "note": "Left rough, this task covers it: wide controls at different widths per row, tiny badges and variants shown as states (the model's choices), empty right under rows with fewer states, no type styles row. The skill's eval title check missed 'Base Components' once (asked 7.5): not reproduced, left here."
+    },
+    {
+      "t": "2026-11-03T04:50:14.886Z",
+      "note": "Weak states left out, title on the table's edge, stacked words parted and painted edges on columns shipped (749f630f); walk passes at Next defaults. Ask's designed line went from 7 to 8 in three of four runs (86.4, 80.8, 86, 86.4), but every run still has one line at 7 (aligned or designed), and the skill had aligned 7 in its one run: the 8-of-10 bar is not met, so it stays open."
     }
   ],
   "started": "2026-11-03T03:13:52.434Z",

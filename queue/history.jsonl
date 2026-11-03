@@ -15350,3 +15350,15 @@
 {"t":"2026-11-03T02:43:04.460Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-03T02:43:04.525Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-03T02:43:04.625Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Row names set as headings shipped (d78647db); walk passes at Next defaults. Ask scores 86 (typography 7 to 8 in every look), the skill 88.4 with every line at 8 or more; Ask's designed stays at 7, short of the 8-of-10 bar, so it stays open."}
+{"t":"2026-11-03T03:13:52.177Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-03T03:13:52.267Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1804,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-03T03:13:52.441Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-11-03T04:49:35.203Z","ev":"task_walks","id":"asking-for-a-sheet-of-components-gives-a-clean-t","walks":["ask-builds-base-components-walk"]}
+{"t":"2026-11-03T04:49:44.777Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-03T04:49:44.861Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-03T04:49:44.936Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-03T04:49:45.010Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-03T04:49:45.085Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-03T04:49:45.159Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-03T04:49:45.236Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
+{"t":"2026-11-03T04:50:14.889Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Weak states left out, title on the table's edge, stacked words parted and painted edges on columns shipped (749f630f); walk passes at Next defaults. Ask's designed line went from 7 to 8 in three of four runs (86.4, 80.8, 86, 86.4), but every run still has one line at 7 (aligned or designed), and the skill had aligned 7 in its one run: the 8-of-10 bar is not met, so it stays open."}
