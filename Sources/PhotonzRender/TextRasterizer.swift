@@ -749,6 +749,61 @@ public enum TextRasterizer {
         return ink.midX - naturalSize(text).width / 2
     }
 
+    /// How far a single line's ink sits from the middle of the box
+    /// `naturalSize` measures for it, across and down, in document points
+    /// (positive is right and down): across, the ink of the words; down, the
+    /// band from a capital's top to the line it stands on, so "Placeholder"
+    /// and "Button" sit at one height and a descender never lifts a word.
+    /// Read off the words as they are drawn, so it is right for whatever face
+    /// and size they are set in. Empty, many-line and curved words report
+    /// zero: there is no one ink to centre.
+    ///
+    /// Anything that centres words in a shape by centring their box needs
+    /// this: a badge's "3" sat 1.5 left of and 2 above its circle's middle,
+    /// a button's label 2.5 left and 1.5 up (the eval, 2026-11-02).
+    public static func inkCentreOffset(_ text: TextContent) -> CGVector {
+        guard !text.string.isEmpty, !text.string.contains(where: \.isNewline), text.onPath == nil else { return .zero }
+        var plain = TextContent(string: text.string, fontName: text.fontName, fontSize: text.fontSize,
+                                colorHex: "#000000", weight: text.weight)
+        plain.lineHeight = text.lineHeight
+        plain.tracking = text.tracking
+        plain.alignment = text.alignment
+        let scale: CGFloat = 4
+        let box = naturalSize(plain)
+        guard let words = rasterize(plain, size: box, scale: scale).flatMap({ inkRows($0, scale: scale) }) else { return .zero }
+        var capital = plain
+        capital.string = "H"
+        let capitalBox = naturalSize(capital)
+        guard let band = rasterize(capital, size: capitalBox, scale: scale).flatMap({ inkRows($0, scale: scale) }) else {
+            return .zero
+        }
+        return CGVector(dx: words.midX - box.width / 2, dy: band.midY - capitalBox.height / 2)
+    }
+
+    /// The box round a drawing's ink, in points from its top left.
+    private static func inkRows(_ image: CGImage, scale: CGFloat) -> CGRect? {
+        let width = image.width, height = image.height
+        var data = [UInt8](repeating: 0, count: width * height * 4)
+        let drawn: Bool = data.withUnsafeMutableBytes { bytes in
+            guard let context = CGContext(data: bytes.baseAddress, width: width, height: height,
+                                          bitsPerComponent: 8, bytesPerRow: width * 4,
+                                          space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drawn else { return nil }
+        var minX = Int.max, maxX = -1, minY = Int.max, maxY = -1
+        for y in 0..<height {
+            for x in 0..<width where data[(y * width + x) * 4 + 3] > 127 {
+                minX = min(minX, x); maxX = max(maxX, x); minY = min(minY, y); maxY = max(maxY, y)
+            }
+        }
+        guard maxX >= 0 else { return nil }
+        return CGRect(x: CGFloat(minX) / scale, y: CGFloat(minY) / scale,
+                      width: CGFloat(maxX - minX + 1) / scale, height: CGFloat(maxY - minY + 1) / scale)
+    }
+
     /// The document-size face `text` is set in, as a descriptor.
     ///
     /// The inline editor builds its draft font from this with a scale transform

@@ -83,13 +83,20 @@ struct AgentComponentSheetTests {
         #expect(Set(steps).count == 1, "\(steps)")
         // An even rhythm down: rows no taller than a control are one height,
         // so their middles are equally far apart (judges, 2026-10-24: "the
-        // slider and switch rows are tight").
+        // slider and switch rows are tight"), each kind's header row and all.
         let middles = rows.map { $0[0].midY }
         let pitches = zip(middles.dropFirst(), middles).map { $0 - $1 }
-        #expect(pitches.allSatisfy { $0 == AgentNewComponent.rowHeight + AgentNewComponent.rowGap }, "\(pitches)")
-        // Headers are set once for the whole table, not once per row.
-        let headers = Self.words(in: document).filter { $0.text?.string == "Hover" }
-        #expect(headers.count == 1)
+        #expect(Set(pitches).count == 1, "\(pitches)")
+        // Each kind has its own header row; rows of one family share one.
+        #expect(Self.words(in: document).filter { $0.text?.string == "Hover" }.count == 3)
+        var family = Self.blank()
+        let rowsOfOne = try ["Primary Button", "Secondary Button", "Plain Button"].enumerated().map { index, name in
+            try Self.add(Self.row(name, y: 100 + index * 100, width: 120, looks: Self.states), to: &family)
+        }
+        #expect(Self.words(in: family).filter { $0.text?.string == "Hover" }.count == 1, "one header row for the family")
+        let familyMiddles = rowsOfOne.map { Self.boxes($0, in: family)[0].midY }
+        #expect(zip(familyMiddles.dropFirst(), familyMiddles).allSatisfy { $0 - $1 == AgentNewComponent.rowHeight + AgentNewComponent.rowGap },
+                "\(familyMiddles)")
         // The row names line up on one edge.
         let names = Self.words(in: document).filter { ["Button", "Field", "Checkbox"].contains($0.text?.string ?? "") }
         #expect(Set(names.map(\.frame.minX)).count == 1)
@@ -99,7 +106,7 @@ struct AgentComponentSheetTests {
     func parkedRows() throws {
         var document = Self.blank()
         var copies: [[UUID]] = []
-        for (index, name) in ["Button", "Field", "Toggle"].enumerated() {
+        for (index, name) in ["Primary Button", "Secondary Button", "Plain Button"].enumerated() {
             let made = try Self.add(Self.row(name, y: 100 + index * 60, looks: Self.states), to: &document)
             // What History does after every edit in the app.
             let moved = document.parkOriginals()
@@ -141,8 +148,8 @@ struct AgentComponentSheetTests {
         var document = Self.blank()
         let button = try Self.add(Self.row("Button", y: 100, looks: Self.states), to: &document)
         let toggle = try Self.add(Self.row("Toggle", y: 200, looks: ["Off", "On"]), to: &document)
-        let field = try Self.add(Self.row("Field", y: 300, looks: Self.states), to: &document)
-        let switcher = try Self.add(Self.row("Switch", y: 400, looks: ["On", "Off"]), to: &document)
+        let field = try Self.add(Self.row("Plain Button", y: 300, looks: Self.states), to: &document)
+        let switcher = try Self.add(Self.row("Wi-Fi Toggle", y: 400, looks: ["On", "Off"]), to: &document)
         let badge = try Self.add(Self.row("Badge", y: 500, looks: ["Default", "Hover"]), to: &document)
         let words = Self.words(in: document)
         let headers = words.filter { $0.name.hasSuffix(" Header") }
@@ -159,7 +166,7 @@ struct AgentComponentSheetTests {
         #expect(headed(badge) == ["Default", "Hover"])
         // Rows that share their states sit together under one header row.
         let tops = [button, field, toggle, switcher, badge].map { Self.boxes($0, in: document).map(\.minY).min() ?? 0 }
-        #expect(tops == tops.sorted(), "Button and Field, then Toggle and Switch, then Badge: \(tops)")
+        #expect(tops == tops.sorted(), "the two Buttons, then the two Toggles, then Badge: \(tops)")
         #expect(headers.filter { $0.text?.string == "Off" }.count == 1)
         #expect(headers.filter { $0.text?.string == "Default" }.count == 2)
         // Every header row is on the one grid.
@@ -217,7 +224,7 @@ struct AgentComponentSheetTests {
         let check = try Self.add(Self.row("Checkbox", y: 300, looks: ["Off", "On"]), to: &document)
         _ = try Self.add(Self.row("Field", y: 400, looks: ["Default", "Focused"]), to: &document)
         let rules = document.layers.filter { $0.name == PhotonzDocument.sheetRuleName }
-        #expect(rules.count == 2, "one between each pair of sections: \(rules.map(\.frame))")
+        #expect(rules.count == 3, "one between each pair of sections: \(rules.map(\.frame))")
         for rule in rules {
             #expect(rule.annotation?.shape == .line)
             #expect(rule.frame.height <= 4, "a hairline, with its drawing room: \(rule.frame)")
@@ -233,19 +240,27 @@ struct AgentComponentSheetTests {
         let buttonBottom = try #require(Self.boxes(button, in: document).first).midY + AgentNewComponent.rowHeight / 2
         let off = try #require(Self.words(in: document).first { $0.text?.string == "Off" })
         #expect(abs(first.frame.midY - (buttonBottom + off.frame.minY) / 2) <= 1, "halfway: \(first.frame.midY)")
-        // None between Toggle and Checkbox, which share a header row.
+        // Toggle and Checkbox are two kinds: each its own header row, a rule between.
         let toggleBottom = try #require(Self.boxes(toggle, in: document).first).maxY
         let checkTop = try #require(Self.boxes(check, in: document).first).minY
-        #expect(!rules.contains { $0.frame.midY > toggleBottom && $0.frame.midY < checkTop })
-        // Laid out again, still one of each.
+        #expect(rules.contains { $0.frame.midY > toggleBottom && $0.frame.midY < checkTop })
+        // Laid out again, still one between each pair.
         _ = try Self.add(Self.row("Slider", y: 500, looks: ["Default", "Focused"]), to: &document)
-        #expect(document.layers.filter { $0.name == PhotonzDocument.sheetRuleName }.count == 2)
+        #expect(document.layers.filter { $0.name == PhotonzDocument.sheetRuleName }.count == 4)
+        // Rows of one family share a header row and have none between them.
+        var family = Self.blank()
+        let primary = try Self.add(Self.row("Primary Button", y: 100, looks: Self.states), to: &family)
+        let secondary = try Self.add(Self.row("Secondary Button", y: 200, looks: Self.states), to: &family)
+        let familyRules = family.layers.filter { $0.name == PhotonzDocument.sheetRuleName }
+        let primaryBottom = try #require(Self.boxes(primary, in: family).first).maxY
+        let secondaryTop = try #require(Self.boxes(secondary, in: family).first).minY
+        #expect(!familyRules.contains { $0.frame.midY > primaryBottom && $0.frame.midY < secondaryTop })
     }
 
     @Test("Laying the table out again leaves one set of words: no header or caption twice")
     func noWordsTwice() throws {
         var document = Self.blank()
-        for (index, name) in ["A", "B", "C", "D"].enumerated() {
+        for (index, name) in ["A Button", "B Button", "C Button", "D Button"].enumerated() {
             _ = try Self.add(Self.row(name, y: 100 + index * 100, looks: Self.states), to: &document)
         }
         let strings = Self.words(in: document).compactMap(\.text?.string)
@@ -318,11 +333,51 @@ struct AgentComponentSheetTests {
         #expect(middle.sheet?.pageTop == 56)
     }
 
+    @Test("A look that grows a part sits on the same line as the row's other looks: a Pressed slider's track stays level")
+    func grownLookStaysLevel() throws {
+        // The eval, 2026-11-03 (run 20261103-001307-ask): a Pressed slider
+        // grew its thumb from 24 to 28, its box reached 2 higher, and centring
+        // each look by its own box set its track and label 2 lower; two
+        // judges of three read "the pressed slider row sits slightly lower".
+        var document = Self.blank()
+        let slider = try Self.add(##"""
+            {"name": "Slider", "x": 40, "y": 100, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Track", "shape": "rectangle", "x": 0, "y": 12, "width": 240, "height": 4, "fill": "#E5E5EA"},
+                       {"name": "Thumb", "shape": "ellipse", "x": 100, "y": 2, "width": 24, "height": 24, "fill": "#FFFFFF", "stroke": "#D1D1D6", "strokeWidth": 1},
+                       {"name": "Caption", "shape": "text", "text": "Volume", "x": 0, "y": 32, "width": 0, "height": 0, "fontSize": 13, "color": "#8E8E93"}],
+             "looks": [{"name": "Pressed", "changes": [{"part": "Thumb", "x": 98, "y": 0, "width": 28, "height": 28}]},
+                       {"name": "Disabled", "changes": [{"part": "Track", "fill": "#F2F2F7"}]}]}
+            """##, to: &document)
+        let tracks = slider.looks.compactMap { look -> CGFloat? in
+            guard let main = document.layer(id: look.layer),
+                  let track = main.group?.children.first(where: { $0.name == "Track" }) else { return nil }
+            return main.frame.minY + track.frame.minY
+        }
+        #expect(tracks.count == 3)
+        #expect(Set(tracks).count == 1, "every look's track on one line: \(tracks)")
+    }
+
+    @Test("A section of fewer states keeps them in the order the widest row gives them, with no gaps: Pressed before Disabled")
+    func fewerStatesKeepTheirOrder() throws {
+        // The eval, 2026-11-03 (run 20261103-001307-ask): under a Button of
+        // Default, Hover, Pressed and Disabled, a Slider of Default, Disabled
+        // and Pressed kept Pressed in the third column and put Disabled in
+        // the second, and a judge read "the slider puts Disabled before Pressed".
+        var document = Self.blank()
+        _ = try Self.add(Self.row("Button", y: 100, looks: Self.states), to: &document)
+        let slider = try Self.add(Self.row("Slider", y: 200, looks: ["Default", "Disabled", "Pressed"]), to: &document)
+        let lefts = Self.boxes(slider, in: document).map(\.minX)
+        #expect(lefts[0] < lefts[2] && lefts[2] < lefts[1], "Default, Pressed, Disabled from the left: \(lefts)")
+        let headers = Self.words(in: document).filter { $0.name.hasSuffix(" Header") && $0.frame.minY > 150 }
+            .sorted { $0.frame.minX < $1.frame.minX }.compactMap(\.text?.string)
+        #expect(headers == ["Default", "Pressed", "Disabled"], "\(headers)")
+    }
+
     @Test("A row taller than a control keeps its own height, the same gap between it and the next")
     func tallRows() throws {
         var document = Self.blank()
-        let card = try Self.add(Self.row("Card", y: 100, width: 160, height: 80, looks: Self.states), to: &document)
-        let button = try Self.add(Self.row("Button", y: 300, looks: Self.states), to: &document)
+        let card = try Self.add(Self.row("Tall Tile", y: 100, width: 160, height: 80, looks: Self.states), to: &document)
+        let button = try Self.add(Self.row("Short Tile", y: 300, looks: Self.states), to: &document)
         let cardBox = try #require(Self.boxes(card, in: document).first)
         let buttonBox = try #require(Self.boxes(button, in: document).first)
         // The card goes under the shorter button row, the same gap between them.
@@ -502,8 +557,8 @@ struct AgentComponentSheetTests {
     @Test("In a section, the shorter rows sit nearest its header row and the tall ones under them")
     func shortRowsFirst() throws {
         var document = Self.blank()
-        let card = try Self.add(Self.row("Card", y: 100, width: 160, height: 160, looks: Self.states), to: &document)
-        let link = try Self.add(Self.row("Link", y: 300, looks: Self.states), to: &document)
+        let card = try Self.add(Self.row("Card Tile", y: 100, width: 160, height: 160, looks: Self.states), to: &document)
+        let link = try Self.add(Self.row("Link Tile", y: 300, looks: Self.states), to: &document)
         let cardTop = Self.boxes(card, in: document).map(\.minY).min() ?? 0
         let linkTop = Self.boxes(link, in: document).map(\.minY).min() ?? 0
         #expect(linkTop < cardTop)
@@ -575,5 +630,9 @@ struct AgentComponentSheetTests {
                                              ["Default", "Hover"], ["Default", "Hover", "Pressed"]])
         #expect(sections[0].cells == [[0, 1, 2, 3], [0, 1, 2, 3]], "names match whatever their case")
         #expect(sections[1].cells == [[0, 1], [1, 0]])
+        // Given names, only one family shares: Toggle and Checkbox do not, two Buttons do.
+        let named = PhotonzDocument.sheetSections([["Off", "On"], ["On", "Off"], ["Default", "Hover"], ["Default", "Hover"]],
+                                                  names: ["Toggle", "Checkbox", "Primary Button", "Secondary Button"])
+        #expect(named.map(\.rows) == [[0], [1], [2, 3]])
     }
 }

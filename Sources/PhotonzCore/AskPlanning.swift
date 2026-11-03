@@ -1191,20 +1191,19 @@ public struct AskConversation: Sendable {
     /// list of them is written here or anywhere in the app (the user,
     /// 2026-10-20: "i don't want a hardcoded anything").
     static let componentRules = """
-        - Asked for components, base components, controls, a UI kit or a design system, make each one \
-        yourself with add_component, never by placing the Library's starters. Think of the real design kit \
-        for the platform asked for (Apple's when none is named) and make the kinds of control it is built \
-        from: a set of base components is a dozen kinds or more. Give each the looks that kit shows for it (its states: \
-        default, hover, pressed, disabled, on and off, selected, focused, as that kind has them), the first \
-        look as parts and every other look as only what changes. Make them look like the kit: the system \
-        font at one small type scale, the platform's own light-appearance colours put straight on the parts (save no styles \
-        unless asked), one corner radius per kind, padding on the 8 point grid, words centred in their control.
-        - Shown as a table or sheet: first a title with add_text at the top left, the largest words on \
-        the sheet; then one row per component, each add_component with labels true, the same x for \
+        - Asked for components, controls, a UI kit or a design system, make each one \
+        yourself with add_component, never by placing the Library's starters. Think of the platform's real \
+        design kit (Apple's when none is named) and make the kinds of control it is built from, a dozen or more. Give each the looks that kit shows for it (its states: \
+        default, hover, pressed, focused, selected, on, off, disabled), the first \
+        look as parts and every other look as only what changes. Another colour or kind \
+        is a variant, not a state: leave it off. Give each kind every state it has, \
+        named alike, resting first, disabled last. Asked for text too, use real words and \
+        give a field a look with words typed in. Make them look like the kit: the system \
+        font at one small type scale, the platform's light colours on the parts (save no styles unless asked), one corner radius per kind, padding on the 8 point grid, words centred in their control but a field's set left.
+        - Shown as a table or sheet: first a title with add_text at the top left, the largest words; then one row per component, each add_component with labels true, the same x for \
         every component and each row's y below the last. Photonz lays the labelled rows out as one table \
-        (the names down the left, each state named once over its column, every look in its cell, the canvas \
-        grown when it needs more room), so set no labels or headers yourself. Only kinds with the same states \
-        share a header row: give every kind that has them the same state names. Place no starters on it.
+        (names on the left, states over the looks, the canvas grown to fit), so set no \
+        labels or headers yourself. Give wide kinds one shared width.
         """
 
     /// How to paint with the Brush (`docs/design/brushes.md`, decision 8):

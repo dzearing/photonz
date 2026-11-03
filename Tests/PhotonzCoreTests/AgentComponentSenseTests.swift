@@ -549,6 +549,63 @@ struct AgentComponentSenseTests {
         #expect(RGBA(hex: disabled) == RGBA(hex: "#1A88FF"), "\(disabled)")
     }
 
+    @Test("A Disabled part is never made faint into the colour of the part it sits on: a switch keeps its knob")
+    func disabledKnobStaysOnItsTrack() throws {
+        // The eval, 2026-11-02 (run 20261102-234115-ask), the model's own
+        // call: Disabled set the track #F2F2F4 and the white knob #E5E5EA;
+        // making the knob faint put it at #F1F1F4 on that track, and two
+        // judges of three read "the disabled toggle has no knob".
+        let spec = try Self.plain(##"""
+            {"firstLook":"Off","labels":false,"name":"Toggle","x":64,"y":288,
+             "parts":[{"cornerRadius":16,"fill":"#E9E9EA","height":31,"name":"Track","shape":"rectangle","width":51,"x":0,"y":0},
+                      {"fill":"#FFFFFF","height":27,"name":"Knob","shadow":{"radius":2,"x":0,"y":1},"shape":"ellipse","width":27,"x":2,"y":2}],
+             "looks":[{"changes":[{"fill":"#34C759","part":"Track"},{"part":"Knob","x":22}],"name":"On"},
+                      {"changes":[{"fill":"#F2F2F4","part":"Track"},{"fill":"#E5E5EA","part":"Knob","removeShadow":true}],"name":"Disabled"}]}
+            """##)
+        let track = try #require(Self.part("Track", in: spec, look: "Disabled")?.look.fill?.hexValue)
+        let knob = try #require(Self.part("Knob", in: spec, look: "Disabled")?.look.fill?.hexValue)
+        let apart = try #require(AgentNewComponent.apart(knob, track))
+        #expect(apart >= 10, "the knob \(knob) stands off its track \(track) by \(apart)")
+    }
+
+    @Test("A shade set to read as a state keeps the control's hue: a blue Pressed never turns teal")
+    func shadesKeepTheirHue() throws {
+        // The eval, 2026-11-02 (run 20261102-234115-ask), the model's own
+        // call: Default #0071E3, Hover #0077ED, Pressed #0060C2. The planner
+        // pushed each further the way the model had nudged it, a nudge not
+        // in proportion to the blue, and Pressed came out #006B92: all three
+        // judges read "the pressed button turns teal".
+        let spec = try Self.plain(##"""
+            {"name":"Button","x":0,"y":0,"labels":false,"firstLook":"Default",
+             "parts":[{"name":"Back","shape":"rectangle","x":0,"y":0,"width":120,"height":32,"fill":"#0071E3"},
+                      {"name":"Label","shape":"text","text":"Button","color":"#FFFFFF","x":34,"y":5,"width":0,"height":0}],
+             "looks":[{"name":"Hover","changes":[{"part":"Back","fill":"#0077ED"}]},
+                      {"name":"Pressed","changes":[{"part":"Back","fill":"#0060C2"}]},
+                      {"name":"Disabled","changes":[{"part":"Back","fill":"#E5E5EA"},{"part":"Label","color":"#B0B0B8"}]}]}
+            """##)
+        let first = try #require(RGBA(hex: "#0071E3")).hsl.hue
+        var fills: [String: String] = [:]
+        for look in ["Hover", "Pressed"] {
+            let fill = try #require(Self.part("Back", in: spec, look: look)?.look.fill?.hexValue)
+            fills[look] = fill
+            let hue = try #require(RGBA(hex: fill)).hsl.hue
+            #expect(abs(hue - first) <= 3, "\(look) \(fill) keeps Default's hue \(first), not \(hue)")
+        }
+        let hover = try #require(fills["Hover"]), pressed = try #require(fills["Pressed"])
+        #expect(AgentNewComponent.readsAsAState(hover, from: "#0071E3"), "\(hover)")
+        #expect(AgentNewComponent.readsAsAState(pressed, from: "#0071E3"), "\(pressed)")
+        #expect(AgentNewComponent.plainlyApart(pressed, hover) == true, "\(pressed) beside \(hover)")
+        #expect(try #require(RGBA(hex: pressed)).linearLuminance < (try #require(RGBA(hex: hover))).linearLuminance,
+                "Pressed is the darker: \(pressed), \(hover)")
+        // Widening one shade from another keeps the hue too.
+        for (asked, was) in [("#0060C2", "#005BC2"), ("#0065D1", "#006CDF"), ("#2563EB", "#2A68F0")] {
+            let made = AgentNewComponent.widened(asked, from: was)
+            let hue = try #require(RGBA(hex: made)).hsl.hue, wasHue = try #require(RGBA(hex: was)).hsl.hue
+            #expect(abs(hue - wasHue) <= 3, "\(asked) from \(was) made \(made)")
+            #expect(AgentNewComponent.plainlyApart(made, was) == true, "\(made) \(was)")
+        }
+    }
+
     @Test("A look named by words the control says has its selection around those words, not hidden or left behind")
     func selectionFollowsItsName() throws {
         // The eval, 2026-11-02 (run 20261102-213915-ask), the model's own

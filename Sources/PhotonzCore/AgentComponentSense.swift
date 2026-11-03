@@ -375,6 +375,15 @@ extension AgentNewComponent {
                            g: canvas.g + (now.g - canvas.g) * faintestGrey / far(now),
                            b: canvas.b + (now.b - canvas.b) * faintestGrey / far(now))
                     : RGBA(r: (canvas.r + was.r) / 2, g: (canvas.g + was.g) / 2, b: (canvas.b + was.b) / 2)
+                // Never faint into what it sits on: a switch's knob made
+                // #F1F1F4 on its #F2F2F4 track was gone (the eval,
+                // 2026-11-02: "the disabled toggle has no knob").
+                let middle = CGPoint(x: part.frame.midX, y: part.frame.midY)
+                if let under = shown.parts[..<at].last(where: {
+                       $0.kind != .text && !$0.hidden && $0.frame.contains(middle) && $0.look.fill != nil
+                   })?.look.fill?.hexValue,
+                   let gap = Self.apart(faint.hexString, under), gap < 10,
+                   (Self.apart(part.look.fill?.hexValue, under) ?? 0) > gap { continue }
                 looks[index - 1] = setting("fill", .string(faint.hexString), on: part.name, in: looks[index - 1])
             }
         }

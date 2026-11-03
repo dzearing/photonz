@@ -8,8 +8,8 @@ import Foundation
 // each labelled add_component lays the whole table out again: a header row
 // naming each state once over its column, the components' names down the left
 // on one edge, every look starting at its column's left edge on one grid, and the same gap
-// between every pair of rows. Only rows with the same states share a header
-// row, so no cell under a header is ever left empty (every judge of the
+// between every pair of rows. Only rows of one family (Primary Button,
+// Secondary Button) with the same states share a header row, so no cell under a header is ever left empty (every judge of the
 // 2026-10-23 sheets named the holes under shared headers); a row with other
 // states (a toggle's Off and On) starts a header row of its own, set a little
 // further down so it reads as a new section. Nothing here knows
@@ -169,12 +169,20 @@ extension PhotonzDocument {
         var cells: [[Int]]
     }
 
-    static func sheetSections(_ rows: [[String]]) -> [SheetSection] {
+    ///
+    /// With `names`, rows share a header row only when they are also of one
+    /// family (Primary Button, Secondary Button): a Checkbox under a
+    /// Toggle's header row read as a row with "no state headers" of its own
+    /// to every judge of two runs of the eval, 2026-11-02, rule between
+    /// sections or not, and a page of a design kit gives each control its
+    /// own block. Their columns are still the table's.
+    static func sheetSections(_ rows: [[String]], names: [String]? = nil) -> [SheetSection] {
         func key(_ name: String) -> String { name.trimmingCharacters(in: .whitespaces).lowercased() }
         var groups: [(keys: [String], rows: [Int])] = []
         for (index, row) in rows.enumerated() {
             // A look named twice keeps both, so a row is its states with repeats.
-            let keys = row.map(key).sorted()
+            var keys = row.map(key).sorted()
+            if let names, names.indices.contains(index) { keys.insert("\u{0}" + family(names[index]), at: 0) }
             if let at = groups.firstIndex(where: { $0.keys == keys }) {
                 groups[at].rows.append(index)
             } else {
@@ -227,15 +235,24 @@ extension PhotonzDocument {
         // Each state's home: where the widest header row naming it puts it.
         var home: [String: Int] = [:]
         let widestFirst = sections.indices.sorted { (-sections[$0].headers.count, $0) < (-sections[$1].headers.count, $1) }
+        // States with a home keep the order of their homes, each as near
+        // its home as the section's own columns allow (a judge, 2026-11-03,
+        // of a Slider of Default, Disabled and Pressed under a four-state
+        // Button: "the slider puts Disabled before Pressed"); states with
+        // none take the columns left, in their order.
         func placed(_ section: SheetSection) -> [Int] {
-            var column = Array(repeating: -1, count: section.headers.count)
-            var taken = Set<Int>()
-            for (at, header) in section.headers.enumerated() {
-                guard let wanted = home[key(header)], wanted < section.headers.count, !taken.contains(wanted) else { continue }
-                column[at] = wanted
-                taken.insert(wanted)
+            let count = section.headers.count
+            var column = Array(repeating: -1, count: count)
+            let homed = section.headers.indices.compactMap { at in home[key(section.headers[at])].map { (at, $0) } }
+                .sorted { ($0.1, $0.0) < ($1.1, $1.0) }
+            var last = -1
+            for (index, (at, wanted)) in homed.enumerated() {
+                let room = count - 1 - (homed.count - 1 - index)
+                last = min(max(wanted, last + 1), room)
+                column[at] = last
             }
-            var free = (0..<section.headers.count).filter { !taken.contains($0) }.makeIterator()
+            let taken = Set(column.filter { $0 >= 0 })
+            var free = (0..<count).filter { !taken.contains($0) }.makeIterator()
             for at in column.indices where column[at] < 0 { column[at] = free.next() ?? at }
             return column
         }
@@ -316,9 +333,19 @@ extension PhotonzDocument {
             updateLayer(id: id) { $0.frame.origin.x += dx; $0.frame.origin.y += dy }
         }
 
-        let sections = Self.keepingColumns(Self.sheetSections(rows.map { $0.looks.map(\.name) }))
+        let sections = Self.keepingColumns(Self.sheetSections(rows.map { $0.looks.map(\.name) }, names: rows.map(\.name)))
         let columns = sections.map(\.headers.count).max() ?? 0
         let sizes = rows.map { $0.looks.map { canvasBounds(of: $0.layer)?.size ?? .zero } }
+        // How far below its own origin each look's drawing starts. A look
+        // that grows a part (a Pressed slider's bigger thumb) reaches higher
+        // than the first, and centring each look by its own box set its
+        // track 2 lower than the others' (two judges of three, 2026-11-03:
+        // "the pressed slider row sits slightly lower"). So a row's looks
+        // are centred as one, each keeping its parts where the others have them.
+        let reach = rows.map { $0.looks.map { look -> CGFloat in
+            guard let box = canvasBounds(of: look.layer), let layer = self.layer(id: look.layer) else { return 0 }
+            return box.minY - layer.frame.minY
+        } }
         let nameColumn = max(AgentNewComponent.labelColumn,
                              ((rows.map { width($0.name) }.max() ?? 0) + AgentNewComponent.nameGap).rounded(.up))
         // Each section's cells are as wide as its widest look or header
@@ -471,7 +498,9 @@ extension PhotonzDocument {
             var previous: CGFloat?
             for (index, cells) in ordered {
                 let row = rows[index]
-                let band = band(index)
+                let lowest = reach[index].min() ?? 0
+                let span = (zip(reach[index], sizes[index]).map { $0 + $1.height }.max() ?? 0) - lowest
+                let band = max(band(index), span)
                 if previous != nil, band > Self.tallRow {
                     rules.append((bottom + AgentNewComponent.sectionGap / 2).rounded())
                     y = (bottom + AgentNewComponent.sectionGap).rounded()
@@ -479,8 +508,7 @@ extension PhotonzDocument {
                 }
                 previous = band
                 for (at, look) in row.looks.enumerated() {
-                    let size = sizes[index][at]
-                    move(look.layer, to: CGPoint(x: left(cells[at]), y: y + (band - size.height) / 2))
+                    move(look.layer, to: CGPoint(x: left(cells[at]), y: y + (band - span) / 2 + reach[index][at] - lowest))
                 }
                 if let label = self.layer(id: row.label) {
                     move(row.label, to: CGPoint(x: x, y: y + (band - label.frame.height) / 2))

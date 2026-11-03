@@ -151,13 +151,15 @@ enum AgentDesignWork {
         let measure: (TextContent, CGFloat?) -> CGSize = { content, width in
             TextRasterizer.naturalSize(content, maxWidth: width ?? .greatestFiniteMagnitude)
         }
+        // Centred words are centred by their ink, the way a person sees them.
+        let ink: (TextContent) -> CGVector = { TextRasterizer.inkCentreOffset($0) }
         // Tried on a copy first, so a call that cannot be built answers its
         // sentence and leaves no empty step in the history.
         var trial = document
-        _ = try trial.agentAddComponent(spec, measure: measure).get()
+        _ = try trial.agentAddComponent(spec, measure: measure, ink: ink).get()
         var built: AgentMadeComponent?
         editor.asOneUndoStep {
-            editor.perform { built = try? $0.agentAddComponent(spec, measure: measure).get() }
+            editor.perform { built = try? $0.agentAddComponent(spec, measure: measure, ink: ink).get() }
             // A table that runs past the canvas grows it from the top left,
             // so nothing already there moves, keeping the table's own left
             // margin on the right and under its last row.

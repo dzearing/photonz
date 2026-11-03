@@ -636,6 +636,19 @@ extension AgentNewComponent {
     /// other way when that way runs out of room.
     static func widened(_ new: String, from was: String) -> String {
         guard let base = RGBA(hex: was), let asked = RGBA(hex: new) else { return new }
+        // One hue, one control: moved lighter or darker on that hue, so a
+        // blue Pressed set apart from its Hover stays blue (the eval,
+        // 2026-11-02: pushed the way the model nudged it, #0060C2 from
+        // #005BC2 came out teal).
+        if !readsAsAState(new, from: was, byLightness: false) {
+            let darker = asked.linearLuminance <= base.linearLuminance
+            for way in [darker, !darker] {
+                for amount in stride(from: 0.04, through: 1, by: 0.02) {
+                    let shade = Self.shade(base, darker: way, by: amount).hexString
+                    if plainlyApart(shade, was) == true { return shade }
+                }
+            }
+        }
         var lean = [asked.r - base.r, asked.g - base.g, asked.b - base.b]
         if lean.map(abs).max() ?? 0 < 0.5 / 255 { lean = [-1, -1, -1] }
         let biggest = lean.map(abs).max() ?? 1
@@ -648,6 +661,14 @@ extension AgentNewComponent {
             for sign in [1.0, -1.0] where plainlyApart(going(sign, step), was) == true { return going(sign, step) }
         }
         return going(1, 160)
+    }
+
+    /// `colour` taken toward black (`darker`) or white by `amount`, 0 to 1,
+    /// its hue kept: Apple's pressed blue #0062CC is its #007AFF taken 0.2
+    /// toward black.
+    static func shade(_ colour: RGBA, darker: Bool, by amount: Double) -> RGBA {
+        func moved(_ channel: Double) -> Double { darker ? channel * (1 - amount) : channel + (1 - channel) * amount }
+        return RGBA(r: moved(colour.r), g: moved(colour.g), b: moved(colour.b), a: colour.a)
     }
 
     /// How far in lightness a later look's coloured surface stands from its
@@ -676,20 +697,16 @@ extension AgentNewComponent {
     /// lean, and the other way when that way runs out of room.
     static func shadedToAState(_ new: String, from first: String, contrast: Double = leastStateContrast) -> String {
         guard let base = RGBA(hex: first), let asked = RGBA(hex: new) else { return new }
-        var lean = [asked.r - base.r, asked.g - base.g, asked.b - base.b]
-        if lean.map(abs).max() ?? 0 < 0.5 / 255 { lean = [-1, -1, -1] }
-        let biggest = lean.map(abs).max() ?? 1
-        let from = (biggest * 255).rounded(.up)
-        func going(_ sign: Double, _ step: Double) -> String {
-            let scale = step / 255 / biggest
-            return RGBA(r: min(max(base.r + sign * lean[0] * scale, 0), 1), g: min(max(base.g + sign * lean[1] * scale, 0), 1),
-                        b: min(max(base.b + sign * lean[2] * scale, 0), 1)).hexString
-        }
-        func far(_ hex: String) -> Bool {
-            RGBA(hex: hex).map { RGBA.contrast($0.linearLuminance, base.linearLuminance) >= contrast } ?? false
-        }
-        for step in stride(from: from, through: 255, by: 2) {
-            for sign in [1.0, -1.0] where far(going(sign, step)) { return going(sign, step) }
+        // Taken toward black or white on the first look's own hue, never
+        // further along the model's nudge: a nudge out of proportion to the
+        // colour turned a blue Pressed teal (#0060C2 to #006B92, every judge
+        // of run 20261102-234115-ask).
+        let darker = asked.linearLuminance <= base.linearLuminance
+        for way in [darker, !darker] {
+            for amount in stride(from: 0.01, through: 1, by: 0.01) {
+                let shade = Self.shade(base, darker: way, by: amount)
+                if RGBA.contrast(shade.linearLuminance, base.linearLuminance) >= contrast { return shade.hexString }
+            }
         }
         return new
     }
@@ -818,9 +835,15 @@ extension PhotonzDocument {
     ///
     /// Nothing is left half built: a look whose change cannot land leaves the
     /// document as it was.
+    ///
+    /// `ink` is how far the words' ink sits from the middle of that box (the
+    /// app's drawing: across, the ink of the words; down, a capital's band),
+    /// so centred words are centred where a person sees them. Zero centres
+    /// the box itself.
     public mutating func agentAddComponent(
         _ spec: AgentNewComponent,
-        measure: (TextContent, CGFloat?) -> CGSize
+        measure: (TextContent, CGFloat?) -> CGSize,
+        ink: (TextContent) -> CGVector = { _ in .zero }
     ) -> Result<AgentMadeComponent, AgentToolError> {
         func fail(_ words: String) -> Result<AgentMadeComponent, AgentToolError> {
             .failure(AgentToolError("add_component: \(words)"))
@@ -831,7 +854,7 @@ extension PhotonzDocument {
         for part in spec.parts {
             children.append(Self.componentPiece(part, measure: measure))
         }
-        Self.placeWords(&children, spec: spec, boxes: spec.parts.map(\.frame))
+        Self.placeWords(&children, spec: spec, boxes: spec.parts.map(\.frame), ink: ink)
         let group = Layer(name: spec.name, content: .group(GroupContent(children: children)),
                           frame: CGRect(origin: spec.origin, size: .zero))
         trial.addLayer(group)
@@ -894,7 +917,7 @@ extension PhotonzDocument {
                     pieces[at] = changed
                 }
             }
-            Self.placeWords(&pieces, spec: spec, boxes: boxes)
+            Self.placeWords(&pieces, spec: spec, boxes: boxes, ink: ink)
             content.children = pieces
             main.content = .group(content)
             main.frame.origin = CGPoint(x: spec.origin.x + CGFloat(index) * step, y: spec.origin.y)
@@ -1020,23 +1043,28 @@ extension PhotonzDocument {
     /// Sits words where their part said: centred in the part named by
     /// `centerIn`; else in their box (`boxes`, the look's own), centred down
     /// it and across it unless aligned left or right; else at their top left.
-    static func placeWords(_ pieces: inout [Layer], spec: AgentNewComponent, boxes: [CGRect]) {
+    /// Centred is by their ink (`ink`), never only by their box: a "3" whose
+    /// box was centred in a 24 point badge sat 1.5 left and 2 above its
+    /// middle (the eval, 2026-11-02).
+    static func placeWords(_ pieces: inout [Layer], spec: AgentNewComponent, boxes: [CGRect],
+                           ink: (TextContent) -> CGVector = { _ in .zero }) {
         for (index, part) in spec.parts.enumerated() where part.kind == .text && index < pieces.count {
             let size = pieces[index].frame.size
+            let off = pieces[index].text.map(ink) ?? .zero
             if let target = part.centerIn,
                let at = spec.parts.firstIndex(where: { $0.name == target }), at < pieces.count {
                 let box = AgentDrawing.box(of: pieces[at])
-                pieces[index].frame.origin = CGPoint(x: (box.midX - size.width / 2).rounded(),
-                                                     y: (box.midY - size.height / 2).rounded())
+                pieces[index].frame.origin = CGPoint(x: (box.midX - size.width / 2 - off.dx).rounded(),
+                                                     y: (box.midY - size.height / 2 - off.dy).rounded())
                 continue
             }
             let box = boxes[index]
             let x: CGFloat = switch (box.width > 0, part.alignment) {
             case (false, _), (true, .left?): box.minX
             case (true, .right?): box.maxX - size.width
-            default: box.midX - size.width / 2
+            default: box.midX - size.width / 2 - off.dx
             }
-            let y = box.height > 0 ? box.midY - size.height / 2 : box.minY
+            let y = box.height > 0 ? box.midY - size.height / 2 - off.dy : box.minY
             pieces[index].frame.origin = CGPoint(x: x.rounded(), y: y.rounded())
         }
     }

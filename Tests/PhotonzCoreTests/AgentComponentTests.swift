@@ -195,6 +195,31 @@ struct AgentComponentTests {
                 "new words keep to the right edge of their box")
     }
 
+    @Test("Centred words are set by their ink, so a numeral in a badge looks centred, not by its box")
+    func wordsCentredByTheirInk() throws {
+        // Ink that sits 2 left of and 1 above the middle of its box, as a
+        // glyph drawn flush left in a box rounded up and inset does.
+        let ink: (TextContent) -> CGVector = { _ in CGVector(dx: -2, dy: -1) }
+        var document = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
+        let made = try document.agentAddComponent(try Self.spec(Self.button), measure: Self.measure, ink: ink).get()
+        #expect(Self.piece("Label", of: "Default", in: document, made)?.frame == CGRect(x: 30, y: 11, width: 64, height: 20))
+        #expect(Self.piece("Label", of: "Busy", in: document, made)?.frame == CGRect(x: 22, y: 11, width: 80, height: 20),
+                "new words are set by their own ink too")
+
+        let json = ##"""
+            {"name": "Row", "x": 0, "y": 0, "labels": false,
+             "parts": [{"name": "Back", "shape": "rectangle", "x": 0, "y": 0, "width": 300, "height": 44, "fill": "#F2F2F7"},
+                       {"name": "Title", "shape": "text", "text": "Wi-Fi", "x": 16, "y": 0, "width": 200, "height": 44, "alignment": "left"},
+                       {"name": "Value", "shape": "text", "text": "Home", "x": 200, "y": 0, "width": 84, "height": 44, "alignment": "right"}],
+             "firstLook": "Default", "looks": [{"name": "Long", "changes": [{"part": "Value", "text": "Office Network"}]}]}
+            """##
+        var row = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
+        let madeRow = try row.agentAddComponent(try Self.spec(json), measure: Self.measure, ink: ink).get()
+        #expect(Self.piece("Title", of: "Default", in: row, madeRow)?.frame == CGRect(x: 16, y: 13, width: 40, height: 20),
+                "words set left keep their edge and are only centred down")
+        #expect(Self.piece("Value", of: "Default", in: row, madeRow)?.frame == CGRect(x: 252, y: 13, width: 32, height: 20))
+    }
+
     @Test("The model is sent add_component's keys in the order a person writes them; other tools stay sorted")
     func keysInWritingOrder() throws {
         let body: AgentJSON = ["tools": .array(AskTools.modelTools)]
