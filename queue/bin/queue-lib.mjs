@@ -180,6 +180,8 @@ export function taskRow(t) {
   // says WHY a pending task is not being claimed, so it does not read as stuck
   const screen = waitingForScreen(t);
   if (screen) row.waitingForScreen = screen;
+  const capped = cappedForToday(t);
+  if (capped) row.cappedForToday = capped;
   // an in-progress row otherwise reads as the loop working on it
   if (t.heldBy) { row.heldBy = t.heldBy; if (t.heldSince) row.heldSince = t.heldSince; }
   // the dialog header names the release, and it opens from the row, so this
@@ -915,12 +917,31 @@ export function waitingForScreen(t) {
     : null;
 }
 
+// ---- at most three passes a day --------------------------------------------
+// The user, 2026-11-02: one task (Ask's component sheet) was claimed five times
+// and worked for about seven hours in a day, each runner putting it back to
+// pending because a judged bar was not quite reached. A task the loop has
+// claimed MAX_PASSES_A_DAY times since local midnight is not ready again until
+// tomorrow; the user can still hand it over by hand (`status <id> pending` does
+// not reset the count, `hold` and working it in a window are unaffected).
+export const MAX_PASSES_A_DAY = Math.max(1, Number(process.env.PHOTONZ_MAX_PASSES_A_DAY) || 3);
+export function passesToday(t, at = new Date()) {
+  const midnight = new Date(at); midnight.setHours(0, 0, 0, 0);
+  return (Array.isArray(t.log) ? t.log : [])
+    .filter((e) => e && e.note === 'claimed by go loop' && e.t && new Date(e.t) >= midnight).length;
+}
+export function cappedForToday(t, at = new Date()) {
+  return t && t.status === 'pending' && passesToday(t, at) >= MAX_PASSES_A_DAY
+    ? `worked ${MAX_PASSES_A_DAY} times today: waits until tomorrow, or for you`
+    : null;
+}
+
 export function readyTasks(tasks = readAllTasks()) {
   const doneIds = new Set(tasks.filter((t) => t.status === 'done').map((t) => t.id));
   // `!t.heldBy` is belt and braces: a held task is in_progress, but a hand edit
   // to pending that kept the holder must still not hand it to the loop.
   const ready = tasks.filter((t) => t.status === 'pending' && !t.heldBy && (t.deps || []).every((d) => doneIds.has(d))
-    && !waitingForScreen(t));
+    && !waitingForScreen(t) && !cappedForToday(t));
   ready.sort((a, b) => PRIORITIES.indexOf(a.priority) - PRIORITIES.indexOf(b.priority) || (a.seq ?? Infinity) - (b.seq ?? Infinity) || (a.created || '').localeCompare(b.created || ''));
   return ready;
 }
