@@ -237,6 +237,10 @@ private final class Run {
     private var lastBrushDrag: BrushDragReading?
     /// Films of the canvas's picture under way (`filmCanvas`), by name.
     private var canvasFilms: [String: CanvasFilm] = [:]
+    /// Whether a walk's pointer step is holding the space bar down right now
+    /// (`"modifiers": ["space"]`). A `move` holds it until the next pointer
+    /// step, the way it holds ⌥; a `drag` lets it go with the button.
+    private var walkHoldsSpace = false
     /// The recording's window a video guide opened, when the walk is in one.
     /// Nil in every other walk, and the two are never both set: a window holds
     /// a picture or a recording, never both.
@@ -1349,6 +1353,7 @@ private final class Run {
             // canvas in the same state a person holding ⌥ would.
             canvas.pointerModifiers = flags
             PlaytestPointer.restingModifiers = flags
+            holdSpace(modifiers.contains(.space), on: canvas)
             let inCanvas = canvas.convert(inWindow, from: nil)
             if let event = mouseEvent(.mouseMoved, at: inCanvas, on: canvas, flags: flags) {
                 canvas.mouseMoved(with: event)
@@ -1563,6 +1568,8 @@ private final class Run {
             if brushArmed { MainThreadMeter.shared.reset() }
             let simulatedBefore = PaintRasterizer.strokesSimulated
             var pressMS: Double = 0
+            let laterSpace = (halfway ?? modifiers).contains(.space)
+            holdSpace(modifiers.contains(.space), on: canvas)
             if let event = mouseEvent(.leftMouseDown, at: a, on: canvas, flags: flags) {
                 let began = ProcessInfo.processInfo.systemUptime
                 canvas.mouseDown(with: event)
@@ -1575,6 +1582,7 @@ private final class Run {
                 let p = CGPoint(x: a.x + (b.x - a.x) * t + along.x * shiver + across.x * sway,
                                 y: a.y + (b.y - a.y) * t + along.y * shiver + across.y * sway)
                 let moveFlags = t > 0.5 ? laterFlags : flags
+                if t > 0.5 { holdSpace(laterSpace, on: canvas) }
                 if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: moveFlags) {
                     let began = ProcessInfo.processInfo.systemUptime
                     canvas.mouseDragged(with: event)
@@ -1636,6 +1644,7 @@ private final class Run {
             }
             let simulatedByRelease = PaintRasterizer.strokesSimulated
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: laterFlags) { canvas.mouseUp(with: event) }
+            holdSpace(false, on: canvas)
             for film in canvasFilms.values where film.releasedAt == nil { film.released(canvas) }
             await sleep(0.05)
             var landedAsHeld = ""
@@ -18447,6 +18456,7 @@ private final class Run {
             case .shift: wanted.insert(.shift)
             case .option: wanted.insert(.option)
             case .control: wanted.insert(.control)
+            case .space: break
             }
         }
         return find(chord: menuCharacters(for: key), flags: wanted, in: bar, path: [], depth: 0)
@@ -19301,6 +19311,9 @@ private final class Run {
             return "; \"\(name)\" is not a dialog this build knows; the ones it does: "
                 + Self.dialogNames.joined(separator: ", ")
         }
+        if case .cropBox = condition {
+            return "; the crop box reads \"\(Self.spellCropBox(editor?.cropRect))\""
+        }
         guard case .sectionDirectlyUnder = condition else { return "" }
         let drawn = InspectorLayoutProbe.shared.measured.map(\.title)
         guard !drawn.isEmpty else { return "; the dock is drawing no sections at all" }
@@ -19371,6 +19384,7 @@ private final class Run {
         case .panelMenuOpen(let label): VideoKit.DropdownButton.isHeldOpenForAWalk(label)
         case .zoomControl(let shown): editor.canvasZoomControl.isShown == shown
         case .displayZoom(let percent): Int((editor.displayZoom * 100).rounded()) == percent
+        case .cropBox(let spelled): Self.spellCropBox(editor.cropRect) == spelled
         case .clipsOfOneRecording(let count):
             (Dictionary(grouping: editor.document?.timelineClipLayers.compactMap(\.movie) ?? [], by: { $0 })
                 .values.map(\.count).max() ?? 0) == count
@@ -19421,6 +19435,22 @@ private final class Run {
 
     // MARK: - Events
 
+    /// The crop box as a `cropBox` wait spells it.
+    static func spellCropBox(_ rect: CGRect?) -> String {
+        guard let rect else { return "none" }
+        return [rect.minX, rect.minY, rect.width, rect.height]
+            .map { String(Int($0.rounded())) }.joined(separator: ", ")
+    }
+
+    /// Presses or lets go of the space bar on the canvas, as the key itself
+    /// would arrive, when that changes what is held.
+    private func holdSpace(_ held: Bool, on canvas: CanvasNSView) {
+        guard held != walkHoldsSpace, let window = canvas.window, let key = PlaytestKey("space"),
+              let event = keyEvent(key, flags: [], down: held, in: window) else { return }
+        walkHoldsSpace = held
+        if held { canvas.keyDown(with: event) } else { canvas.keyUp(with: event) }
+    }
+
     private func eventFlags(_ modifiers: [PlaytestModifier]) -> NSEvent.ModifierFlags {
         var flags: NSEvent.ModifierFlags = []
         for modifier in modifiers {
@@ -19429,6 +19459,8 @@ private final class Run {
             case .shift: flags.insert(.shift)
             case .option: flags.insert(.option)
             case .control: flags.insert(.control)
+            // A key, not a flag: `holdSpace` presses it.
+            case .space: break
             }
         }
         return flags

@@ -1592,12 +1592,29 @@ struct PlaytestScriptTests {
         #expect(PlaytestKey("space")?.characters(with: [.shift]) == " ")
     }
 
+    /// Space is held like a modifier by a pointer step: the Crop tool moves
+    /// its box under it, the way a marquee moves under Space in Photoshop.
+    @Test func spaceIsHeldByMovesAndDrags() throws {
+        let script = try decode("""
+        { "steps": [
+          { "do": "move", "at": [10, 10], "modifiers": ["space"] },
+          { "do": "drag", "from": [10, 10], "to": [90, 90], "halfway": ["space"] }
+        ] }
+        """)
+        guard case .move(_, let held) = script.steps[0] else { Issue.record("move"); return }
+        #expect(held == [.space])
+        guard case .drag(_, _, _, let first, let later, _, _, _, _, _, _, _, _) = script.steps[1]
+        else { Issue.record("drag"); return }
+        #expect(first.isEmpty)
+        #expect(later == [.space])
+    }
+
     @Test func modifiersDecodeByTheirMacNames() throws {
         let script = try decode("""
         { "steps": [ { "do": "key", "key": "c", "modifiers": ["shift", "option", "control", "command"] } ] }
         """)
         guard case .key(_, let mods) = script.steps[0] else { Issue.record("key"); return }
-        #expect(Set(mods) == Set(PlaytestModifier.allCases))
+        #expect(Set(mods) == [.shift, .option, .control, .command])
         #expect(throws: PlaytestScriptError.self) {
             try decode("{ \"steps\": [ { \"do\": \"key\", \"key\": \"c\", \"modifiers\": [\"hyper\"] } ] }")
         }
@@ -5086,6 +5103,19 @@ struct PlaytestScriptTests {
               case .waitFor(let gone, let timeout) = script.steps[1] else { Issue.record("waitFor"); return }
         #expect(up == .zoomControl(shown: true))
         #expect(gone == .zoomControl(shown: false) && timeout == 7)
+    }
+
+    /// The Crop tool's pending box, spelled as the walk's own document
+    /// numbers: how a walk proves a drag drew the box it meant.
+    @Test func waitForReadsTheCropBox() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "cropBox", "value": "100, 50, 300, 200" }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let box, _) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(box == .cropBox("100, 50, 300, 200"))
     }
 
     /// Ask with nothing at work and nothing waiting: what a walk that sent

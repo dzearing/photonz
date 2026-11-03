@@ -198,29 +198,40 @@ extension CanvasNSView {
             beginTextSession(layerID: nil, at: snappedTextOrigin(p, event: event))
             return
         }
-        // Crop mode owns the pointer: handles resize, inside moves, outside
-        // draws a fresh rect. Double-click inside commits.
+        // Crop mode owns the pointer: a handle resizes, and a press anywhere
+        // else draws a new box from the press to the pointer, inside the
+        // current one as much as outside it (the box opens over the whole
+        // picture, so "outside" used to be nowhere). Space held carries the
+        // box instead. Double-click inside commits. See `Crop.press`.
         if tool == .crop {
             if event.clickCount == 2, let rect = cropRect, rect.contains(p) {
                 cropDrag = nil
                 onCropCommit()
                 return
             }
-            if let rect = cropRect,
-               let handle = Handles.hit(at: p, frame: rect, zoom: viewport.zoom,
-                                        screenTolerance: CanvasPointer.cropTolerance,
-                                        edgeGrab: Experiments.shared.edgeGrabEnabled) {
-                cropDrag = CropDrag(kind: .resize(handle), startRect: rect, lastPoint: p)
+            let pressView = convert(event.locationInWindow, from: nil)
+            let draws = Experiments.shared.cropDrawsABoxEnabled
+            switch Crop.press(at: p, cropRect: cropRect, zoom: viewport.zoom,
+                              spaceHeld: draws && cropSpaceHeld,
+                              edgeGrab: Experiments.shared.edgeGrabEnabled, drawsInside: draws) {
+            case .resize(let handle):
+                cropDrag = CropDrag(kind: .resize(handle), startRect: cropRect, lastPoint: p,
+                                    pressView: pressView)
                 // The hover cue already put these arrows up, but a press that
                 // arrived without one (a click straight onto a handle) still
                 // has to hold them for the drag.
                 if Experiments.shared.grabCueEnabled {
                     applyGrabCursor(CanvasCursor.cursor(for: .resize(handle), transform: .identity))
                 }
-            } else if let rect = cropRect, rect.contains(p) {
-                cropDrag = CropDrag(kind: .move, startRect: rect, lastPoint: p)
-            } else {
-                cropDrag = CropDrag(kind: .define(anchor: p), startRect: cropRect, lastPoint: p)
+            case .move:
+                cropDrag = CropDrag(kind: .move, startRect: cropRect, lastPoint: p, pressView: pressView)
+                if cropSpaceHeld { applyGrabCursor(.closedHand, force: true) }
+            case .draw:
+                cropDrag = CropDrag(kind: .define(anchor: p), startRect: cropRect, lastPoint: p,
+                                    pressView: pressView)
+                // A draw wears the tool's crosshair, whatever the pointer was
+                // last showing (the arrows of the handle just let go of).
+                applyGrabCursor(nil)
             }
             return
         }
@@ -913,22 +924,17 @@ extension CanvasNSView {
             ?? resizeDrag?.layerID ?? moveDrag?.layerID ?? multiMove?.pick.id
         let u = uprightPoint(p, of: dragging)
         if var drag = cropDrag {
-            let bounds = cropBounds ?? CGRect(origin: .zero, size: viewport.documentSize)
-            switch drag.kind {
-            case .resize(let handle):
-                guard let start = drag.startRect else { break }
-                cropRect = Crop.resize(start, dragging: handle, to: p,
-                                       aspect: cropAspect, bounds: bounds)
-            case .move:
-                if let rect = cropRect {
-                    cropRect = Crop.moved(rect, by: CGPoint(x: p.x - drag.lastPoint.x,
-                                                            y: p.y - drag.lastPoint.y),
-                                          in: bounds)
-                }
-            case .define(let anchor):
-                // An empty drag (a stray click) keeps the existing rect.
-                cropRect = Crop.dragRect(anchor: anchor, current: p, aspect: cropAspect,
-                                         bounds: bounds) ?? drag.startRect
+            // A press that has not left the click tolerance is a click, and a
+            // click keeps the box it found: a hand never presses perfectly
+            // still, and a one point box is not what anybody meant.
+            let now = convert(event.locationInWindow, from: nil)
+            let tolerance: CGFloat = Experiments.shared.cropDrawsABoxEnabled ? 3 : 0
+            if !drag.moved, hypot(now.x - drag.pressView.x, now.y - drag.pressView.y) > tolerance {
+                drag.moved = true
+            }
+            if drag.moved {
+                pointerModifiers = event.modifierFlags
+                cropDragged(&drag, to: p)
             }
             drag.lastPoint = p
             cropDrag = drag

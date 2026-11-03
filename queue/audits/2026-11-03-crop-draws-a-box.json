@@ -1,0 +1,31 @@
+{
+  "feature": "Crop: drag across the picture to draw the box you keep",
+  "epic": "image-editing",
+  "task": "with-the-crop-tool-dragging-across-the-picture-d",
+  "summary": "With the Crop tool, dragging anywhere on the picture now draws the crop box, even inside the box that opens over the whole picture. The handles still resize it, and Space moves it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default (the new switch, Drag across the picture to crop, is on in Next). Open any screenshot.",
+  "switched": {},
+  "try": [
+    { "do": "Press C for the Crop tool, then drag across the part of the picture you want to keep.", "shot": "2026-11-03-crop-draws-a-box-2-drawing-inside-the-full-box-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag again, starting inside the box you just drew: a new box replaces it. A plain click changes nothing." },
+    { "do": "Drag a corner or edge handle to adjust the box." },
+    { "do": "Start a new drag and, with the button still down, hold Space and move: the box slides. Let go of Space to keep sizing.", "shot": "2026-11-03-crop-draws-a-box-4-space-slides-the-box-being-drawn-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Release the button, hold Space (the pointer turns into an open hand) and drag to move the box.", "shot": "2026-11-03-crop-draws-a-box-5-space-held-the-hand-is-open-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press the arrow keys to nudge the box (Shift for 10). Drag with Option to draw out from the centre, or with Shift to get a square." },
+    { "do": "Press Return to crop, or Escape to cancel.", "shot": "2026-11-03-crop-draws-a-box-7-cropped-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does dragging to crop feel like drawing a marquee, the way you wanted?",
+    "Is Space the right key for moving the box, or would you reach for something else?",
+    "Is the size pill under the box while you drag useful, or noise?",
+    "Should a drag that starts inside the box ever move it without Space, the way Photoshop moves the picture under a crop?"
+  ],
+  "rough": [
+    "Before and after reel: 2026-11-03-crop-draws-a-box-reel.mp4 and the contact sheet 2026-11-03-crop-draws-a-box-sheet.png. The before frames are the same drag with the new switch off: the box stays over the whole picture (2026-11-03-crop-draws-a-box-before-sc.png).",
+    "No mock covers the Crop tool's gestures; the gestures follow the task's checklist and Photoshop and Preview's marquee.",
+    "The crop box does not snap to edges, guides or layers, either while drawing or while pulling a handle; it stays inside the picture and lands on whole pixels when you crop. That matches how resizing already behaved.",
+    "While Space slides a box being drawn, the pointer stays a crosshair rather than turning into a hand.",
+    "Space with the Crop tool is taken for moving the box, so on a picture with motion Space no longer plays the preview while Crop is in hand.",
+    "Chose: with Space held, a press anywhere moves the box, not only a press inside it, because the pointer is an open hand everywhere then and a press that did nothing would be a dead control."
+  ]
+}

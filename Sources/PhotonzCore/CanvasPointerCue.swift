@@ -125,11 +125,20 @@ public enum CanvasPointer {
     /// The crop box is axis-aligned in document space, so unlike a layer there
     /// is no transform to read the handles through.
     public static func cropCue(at p: CGPoint, cropRect: CGRect?, zoom: CGFloat,
-                               edgeGrabEnabled: Bool = false) -> CanvasPointerCue? {
-        guard let cropRect else { return nil }
-        return Handles.hit(at: p, frame: cropRect, zoom: zoom,
-                           screenTolerance: cropTolerance,
-                           edgeGrab: edgeGrabEnabled).map { .resize($0) }
+                               edgeGrabEnabled: Bool = false,
+                               spaceHeld: Bool = false,
+                               drawsInside: Bool = true) -> CanvasPointerCue? {
+        // Read off the press itself, so the pointer can never promise a
+        // different gesture: the arrows on a handle, the open hand with Space
+        // held, and nothing (the tool's crosshair) where a press draws.
+        // Inside the box under the rule Current keeps, a press moves it and
+        // the crosshair stays, as it always has there.
+        switch Crop.press(at: p, cropRect: cropRect, zoom: zoom, spaceHeld: spaceHeld,
+                          edgeGrab: edgeGrabEnabled, drawsInside: drawsInside) {
+        case .resize(let handle): .resize(handle)
+        case .move: spaceHeld ? .grab : nil
+        case .draw: nil
+        }
     }
 
     /// Maps a document point into `layer`'s untransformed frame space, the

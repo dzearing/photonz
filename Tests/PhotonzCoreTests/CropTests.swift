@@ -279,3 +279,166 @@ struct CropTests {
         #expect(lines.contains { $0.from == CGPoint(x: 0, y: 60) && $0.to == CGPoint(x: 300, y: 60) })
     }
 }
+
+/// The Crop tool draws the box you want, the way a marquee is drawn
+/// (`with-the-crop-tool-dragging-across-the-picture-d`, the user 2026-11-03):
+/// a press anywhere that is not a handle draws, inside the current box or
+/// outside it, and Space is what moves.
+@Suite("Crop drawing")
+struct CropDrawingTests {
+    let bounds = CGRect(x: 0, y: 0, width: 400, height: 300)
+    let full = CGRect(x: 0, y: 0, width: 400, height: 300)
+
+    // MARK: What a press does
+
+    @Test func aPressInsideTheBoxDrawsRatherThanMoves() {
+        let press = Crop.press(at: CGPoint(x: 200, y: 150), cropRect: full, zoom: 1, spaceHeld: false)
+        #expect(press == .draw)
+    }
+
+    @Test func aPressOutsideTheBoxDraws() {
+        let box = CGRect(x: 100, y: 100, width: 100, height: 100)
+        #expect(Crop.press(at: CGPoint(x: 20, y: 20), cropRect: box, zoom: 1, spaceHeld: false) == .draw)
+        #expect(Crop.press(at: CGPoint(x: 20, y: 20), cropRect: nil, zoom: 1, spaceHeld: false) == .draw)
+    }
+
+    @Test func aPressOnAHandleStillResizes() {
+        let box = CGRect(x: 100, y: 100, width: 100, height: 100)
+        #expect(Crop.press(at: CGPoint(x: 100, y: 100), cropRect: box, zoom: 1, spaceHeld: false)
+                == .resize(.topLeft))
+        #expect(Crop.press(at: CGPoint(x: 200, y: 150), cropRect: box, zoom: 1, spaceHeld: false)
+                == .resize(.right))
+    }
+
+    @Test func withSpaceHeldEveryPressMovesTheBox() {
+        let box = CGRect(x: 100, y: 100, width: 100, height: 100)
+        #expect(Crop.press(at: CGPoint(x: 150, y: 150), cropRect: box, zoom: 1, spaceHeld: true) == .move)
+        // On a handle too: the open hand is what the pointer shows, so the
+        // handle under it is not what the press takes.
+        #expect(Crop.press(at: CGPoint(x: 100, y: 100), cropRect: box, zoom: 1, spaceHeld: true) == .move)
+        #expect(Crop.press(at: CGPoint(x: 20, y: 20), cropRect: box, zoom: 1, spaceHeld: true) == .move)
+        // With no box there is nothing to move, so the press draws one.
+        #expect(Crop.press(at: CGPoint(x: 20, y: 20), cropRect: nil, zoom: 1, spaceHeld: true) == .draw)
+    }
+
+    @Test func theCueSaysWhatThePressDoes() {
+        let box = CGRect(x: 100, y: 100, width: 100, height: 100)
+        #expect(CanvasPointer.cropCue(at: CGPoint(x: 150, y: 150), cropRect: box, zoom: 1) == nil)
+        #expect(CanvasPointer.cropCue(at: CGPoint(x: 100, y: 100), cropRect: box, zoom: 1)
+                == .resize(.topLeft))
+        #expect(CanvasPointer.cropCue(at: CGPoint(x: 150, y: 150), cropRect: box, zoom: 1,
+                                      spaceHeld: true) == .grab)
+        #expect(CanvasPointer.cropCue(at: CGPoint(x: 100, y: 100), cropRect: box, zoom: 1,
+                                      spaceHeld: true) == .grab)
+    }
+
+    // MARK: The box a drag draws
+
+    @Test func aPlainDrawRunsFromThePressToThePointer() {
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 50, y: 40), current: CGPoint(x: 250, y: 140),
+                                  aspect: .free, fromCenter: false, square: false, bounds: bounds)
+        #expect(rect == CGRect(x: 50, y: 40, width: 200, height: 100))
+    }
+
+    @Test func aDrawBackwardsStandardizes() {
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 250, y: 140), current: CGPoint(x: 50, y: 40),
+                                  aspect: .free, fromCenter: false, square: false, bounds: bounds)
+        #expect(rect == CGRect(x: 50, y: 40, width: 200, height: 100))
+    }
+
+    @Test func aDrawStaysOnThePicture() {
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 300, y: 200), current: CGPoint(x: 900, y: 900),
+                                  aspect: .free, fromCenter: false, square: false, bounds: bounds)
+        #expect(rect == CGRect(x: 300, y: 200, width: 100, height: 100))
+    }
+
+    @Test func shiftKeepsASquareOnAFreeCrop() {
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 50, y: 40), current: CGPoint(x: 250, y: 100),
+                                  aspect: .free, fromCenter: false, square: true, bounds: bounds)
+        #expect(rect == CGRect(x: 50, y: 40, width: 200, height: 200))
+    }
+
+    @Test func shiftKeepsTheLockedAspectRatherThanASquare() {
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 0, y: 0), current: CGPoint(x: 160, y: 10),
+                                  aspect: .sixteenNine, fromCenter: false, square: true, bounds: bounds)
+        #expect(rect == CGRect(x: 0, y: 0, width: 160, height: 90))
+    }
+
+    @Test func optionDrawsOutFromTheCentre() {
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 200, y: 150), current: CGPoint(x: 260, y: 190),
+                                  aspect: .free, fromCenter: true, square: false, bounds: bounds)
+        #expect(rect == CGRect(x: 140, y: 110, width: 120, height: 80))
+    }
+
+    @Test func optionFromTheCentreStopsAtTheNearestEdge() {
+        // 50 from the left edge, so the box can be at most 100 wide.
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 50, y: 150), current: CGPoint(x: 300, y: 170),
+                                  aspect: .free, fromCenter: true, square: false, bounds: bounds)
+        #expect(rect == CGRect(x: 0, y: 130, width: 100, height: 40))
+    }
+
+    @Test func optionAndShiftDrawASquareFromTheCentre() {
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 200, y: 150), current: CGPoint(x: 230, y: 200),
+                                  aspect: .free, fromCenter: true, square: true, bounds: bounds)
+        #expect(rect == CGRect(x: 150, y: 100, width: 100, height: 100))
+    }
+
+    @Test func optionFromTheCentreKeepsALockedAspectInsideThePicture() {
+        // 16:9 from the middle, pulled far: as wide as the picture allows.
+        let rect = Crop.drawnRect(anchor: CGPoint(x: 200, y: 150), current: CGPoint(x: 900, y: 150),
+                                  aspect: .sixteenNine, fromCenter: true, square: false, bounds: bounds)
+        let r = try! #require(rect)
+        #expect(abs(r.width / r.height - 16.0 / 9.0) < 0.0001)
+        #expect(bounds.contains(r))
+        #expect(abs(r.midX - 200) < 0.0001 && abs(r.midY - 150) < 0.0001)
+        #expect(abs(r.width - 400) < 0.0001)
+    }
+
+    @Test func anEmptyDrawIsNoBox() {
+        let p = CGPoint(x: 100, y: 100)
+        #expect(Crop.drawnRect(anchor: p, current: p, aspect: .free, fromCenter: false,
+                               square: false, bounds: bounds) == nil)
+        #expect(Crop.drawnRect(anchor: p, current: p, aspect: .free, fromCenter: true,
+                               square: false, bounds: bounds) == nil)
+    }
+
+    // MARK: Space while drawing
+
+    @Test func spaceWhileDrawingSlidesTheBoxAndItsAnchorTogether() {
+        let rect = CGRect(x: 50, y: 50, width: 100, height: 80)
+        let slid = Crop.slidDraw(anchor: CGPoint(x: 50, y: 50), rect: rect,
+                                 by: CGPoint(x: 30, y: 20), in: bounds)
+        #expect(slid.rect == CGRect(x: 80, y: 70, width: 100, height: 80))
+        #expect(slid.anchor == CGPoint(x: 80, y: 70))
+    }
+
+    @Test func spaceWhileDrawingStopsAtThePictureEdge() {
+        let rect = CGRect(x: 250, y: 50, width: 100, height: 80)
+        let slid = Crop.slidDraw(anchor: CGPoint(x: 350, y: 130), rect: rect,
+                                 by: CGPoint(x: 200, y: 0), in: bounds)
+        #expect(slid.rect == CGRect(x: 300, y: 50, width: 100, height: 80))
+        // Only as far as the box went: the anchor keeps its corner of it.
+        #expect(slid.anchor == CGPoint(x: 400, y: 130))
+    }
+}
+
+@Suite("Crop press, the rule Current keeps")
+struct CropPressCurrentTests {
+    @Test func withoutDrawingInsideAPressInsideMovesAndOutsideDraws() {
+        let box = CGRect(x: 100, y: 100, width: 100, height: 100)
+        #expect(Crop.press(at: CGPoint(x: 150, y: 150), cropRect: box, zoom: 1, spaceHeld: false,
+                           drawsInside: false) == .move)
+        #expect(Crop.press(at: CGPoint(x: 20, y: 20), cropRect: box, zoom: 1, spaceHeld: false,
+                           drawsInside: false) == .draw)
+        #expect(Crop.press(at: CGPoint(x: 100, y: 100), cropRect: box, zoom: 1, spaceHeld: false,
+                           drawsInside: false) == .resize(.topLeft))
+    }
+
+    @Test func theFlagIsOnInNextAndNowhereElse() {
+        let flag = FeatureCatalog.cropDrawsABoxFlag
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(flag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == flag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == flag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(flag))
+    }
+}

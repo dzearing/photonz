@@ -252,6 +252,8 @@ extension Experiments {
     /// edge. Exists only in the Next release's catalog, so Current always
     /// reads false and a short box still has no side handle to pull.
     var edgeGrabEnabled: Bool { isEnabled(FeatureCatalog.edgeGrabFlag) }
+    /// `next-crop-draws-a-box`: a crop drag anywhere off a handle draws.
+    var cropDrawsABoxEnabled: Bool { isEnabled(FeatureCatalog.cropDrawsABoxFlag) }
 
     /// `next-grab-cue`: whether the pointer turns into a hand over a pill that
     /// drags on its own (an arrow's caption, a measurement's number). Exists

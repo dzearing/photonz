@@ -147,9 +147,14 @@ public enum Crop {
     /// the drag is still empty.
     public static func dragRect(anchor: CGPoint, current: CGPoint,
                                 aspect: CropAspect, bounds: CGRect) -> CGRect? {
+        dragRect(anchor: anchor, current: current, ratio: aspect.ratio, bounds: bounds)
+    }
+
+    private static func dragRect(anchor: CGPoint, current: CGPoint,
+                                 ratio: CGFloat?, bounds: CGRect) -> CGRect? {
         let c = CGPoint(x: min(max(bounds.minX, current.x), bounds.maxX),
                         y: min(max(bounds.minY, current.y), bounds.maxY))
-        guard let ratio = aspect.ratio else {
+        guard let ratio else {
             let rect = CGRect(x: anchor.x, y: anchor.y,
                               width: c.x - anchor.x, height: c.y - anchor.y).standardized
             let clamped = rect.intersection(bounds)
@@ -175,6 +180,79 @@ public enum Crop {
                                 aspect: CropAspect, canvas: CGSize) -> CGRect? {
         dragRect(anchor: anchor, current: current, aspect: aspect,
                  bounds: CGRect(origin: .zero, size: canvas))
+    }
+
+    /// What a press with the Crop tool does.
+    public enum Press: Equatable, Sendable {
+        /// Pull the box by one of its eight handles.
+        case resize(ResizeHandle)
+        /// Carry the box, without changing its size (Space held).
+        case move
+        /// Draw a new box from the press to the pointer, the way a marquee is
+        /// drawn. Inside the current box as much as outside it: the box opens
+        /// over the whole picture, so a rule that moved it on a press inside
+        /// left nowhere on the picture to draw (the user, 2026-11-03).
+        case draw
+    }
+
+    /// The press at `p` (document coordinates). With Space held every press
+    /// carries the box, the open hand the pointer is wearing; otherwise a
+    /// handle resizes and everywhere else draws.
+    ///
+    /// `drawsInside` false is the rule this replaced, kept for the release
+    /// that has not taken it: a press inside the box moves it, and only a
+    /// press outside draws.
+    public static func press(at p: CGPoint, cropRect: CGRect?, zoom: CGFloat, spaceHeld: Bool,
+                             edgeGrab: Bool = false, drawsInside: Bool = true) -> Press {
+        guard let cropRect else { return .draw }
+        if spaceHeld { return .move }
+        if let handle = Handles.hit(at: p, frame: cropRect, zoom: zoom,
+                                    screenTolerance: CanvasPointer.cropTolerance,
+                                    edgeGrab: edgeGrab) {
+            return .resize(handle)
+        }
+        if !drawsInside, cropRect.contains(p) { return .move }
+        return .draw
+    }
+
+    /// The box a draw makes, from the press `anchor` to the pointer.
+    ///
+    /// `fromCenter` (⌥) grows it out from the press both ways; `square` (⇧)
+    /// keeps it square on a free crop, and on a locked one the lock already
+    /// decides the shape. It never leaves `bounds`: a box drawn from the
+    /// middle stops when its nearer side reaches an edge, so the middle stays
+    /// where you pressed. Nil while the drag is still empty.
+    public static func drawnRect(anchor: CGPoint, current: CGPoint, aspect: CropAspect,
+                                 fromCenter: Bool, square: Bool, bounds: CGRect) -> CGRect? {
+        let ratio = aspect.ratio ?? (square ? 1 : nil)
+        guard fromCenter else { return dragRect(anchor: anchor, current: current, ratio: ratio, bounds: bounds) }
+        let a = CGPoint(x: min(max(bounds.minX, anchor.x), bounds.maxX),
+                        y: min(max(bounds.minY, anchor.y), bounds.maxY))
+        let maxHalfW = min(a.x - bounds.minX, bounds.maxX - a.x)
+        let maxHalfH = min(a.y - bounds.minY, bounds.maxY - a.y)
+        var halfW = abs(current.x - a.x)
+        var halfH = abs(current.y - a.y)
+        if let ratio {
+            halfW = min(max(halfW, halfH * ratio), maxHalfW, maxHalfH * ratio)
+            halfH = halfW / ratio
+        } else {
+            halfW = min(halfW, maxHalfW)
+            halfH = min(halfH, maxHalfH)
+        }
+        guard halfW > 0, halfH > 0 else { return nil }
+        return CGRect(x: a.x - halfW, y: a.y - halfH, width: 2 * halfW, height: 2 * halfH)
+    }
+
+    /// Space held part way through a draw: the box being drawn slides with
+    /// the pointer instead of growing, and the press it is drawn from slides
+    /// with it, so letting Space go carries on drawing from where the box now
+    /// is. The box stops at the edge of `bounds`, and the anchor only goes as
+    /// far as the box did.
+    public static func slidDraw(anchor: CGPoint, rect: CGRect, by delta: CGPoint,
+                                in bounds: CGRect) -> (anchor: CGPoint, rect: CGRect) {
+        let slid = moved(rect, by: delta, in: bounds)
+        let dx = slid.minX - rect.minX, dy = slid.minY - rect.minY
+        return (CGPoint(x: anchor.x + dx, y: anchor.y + dy), slid)
     }
 
     /// The four rule-of-thirds segments inside `rect` (two vertical, two

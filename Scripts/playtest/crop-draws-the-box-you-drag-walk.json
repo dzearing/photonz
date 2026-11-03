@@ -1,0 +1,67 @@
+{
+  "out": "/tmp/photonz-playtest/crop-draws-the-box-you-drag",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "c" },
+    { "do": "waitFor", "condition": "tool", "value": "crop" },
+    { "do": "waitFor", "condition": "cropBox", "value": "0, 0, 1440, 960", "timeout": 2 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "move", "at": [400, 300] },
+    { "do": "expectCue", "says": "none" },
+    { "do": "snapshot", "name": "1-the-box-opens-over-the-whole-picture" },
+
+    { "do": "drag", "from": [300, 200], "to": [900, 600], "steps": 10, "hold": "2-drawing-inside-the-full-box", "readout": "600 × 400" },
+    { "do": "waitFor", "condition": "cropBox", "value": "300, 200, 600, 400", "timeout": 1 },
+    { "do": "snapshot", "name": "3-the-box-drawn" },
+
+    { "do": "click", "at": [600, 400] },
+    { "do": "waitFor", "condition": "cropBox", "value": "300, 200, 600, 400", "timeout": 1 },
+
+    { "do": "drag", "from": [400, 300], "to": [1000, 700], "steps": 10 },
+    { "do": "waitFor", "condition": "cropBox", "value": "400, 300, 600, 400", "timeout": 1 },
+
+    { "do": "move", "at": [1000, 700] },
+    { "do": "expectCue", "says": "resize-up-left-down-right" },
+    { "do": "drag", "from": [1000, 700], "to": [1100, 800], "steps": 8, "readout": "700 × 500" },
+    { "do": "waitFor", "condition": "cropBox", "value": "400, 300, 700, 500", "timeout": 1 },
+
+    { "do": "drag", "from": [100, 100], "to": [500, 400], "steps": 8, "halfway": ["space"], "hold": "4-space-slides-the-box-being-drawn" },
+    { "do": "waitFor", "condition": "cropBox", "value": "300, 250, 200, 150", "timeout": 1 },
+
+    { "do": "move", "at": [400, 325], "modifiers": ["space"] },
+    { "do": "expectCue", "says": "grab" },
+    { "do": "snapshot", "name": "5-space-held-the-hand-is-open" },
+    { "do": "move", "at": [60, 60], "modifiers": ["space"] },
+    { "do": "expectCue", "says": "grab" },
+    { "do": "drag", "from": [400, 325], "to": [500, 425], "steps": 8, "modifiers": ["space"], "readout": "400, 350" },
+    { "do": "waitFor", "condition": "cropBox", "value": "400, 350, 200, 150", "timeout": 1 },
+    { "do": "move", "at": [460, 400] },
+    { "do": "expectCue", "says": "none" },
+
+    { "do": "key", "key": "right" },
+    { "do": "waitFor", "condition": "cropBox", "value": "401, 350, 200, 150", "timeout": 1 },
+    { "do": "key", "key": "down", "modifiers": ["shift"] },
+    { "do": "waitFor", "condition": "cropBox", "value": "401, 360, 200, 150", "timeout": 1 },
+
+    { "do": "drag", "from": [720, 480], "to": [820, 530], "steps": 8, "modifiers": ["option"] },
+    { "do": "waitFor", "condition": "cropBox", "value": "620, 430, 200, 100", "timeout": 1 },
+
+    { "do": "drag", "from": [100, 100], "to": [300, 200], "steps": 8, "modifiers": ["shift"] },
+    { "do": "waitFor", "condition": "cropBox", "value": "100, 100, 200, 200", "timeout": 1 },
+
+    { "do": "drag", "from": [500, 500], "to": [800, 800], "steps": 8, "cancel": true },
+    { "do": "waitFor", "condition": "cropBox", "value": "100, 100, 200, 200", "timeout": 1 },
+
+    { "do": "drag", "from": [200, 150], "to": [1240, 850], "steps": 10 },
+    { "do": "waitFor", "condition": "cropBox", "value": "200, 150, 1040, 700", "timeout": 1 },
+    { "do": "snapshot", "name": "6-ready-to-crop" },
+    { "do": "key", "key": "return" },
+    { "do": "waitFor", "condition": "tool", "value": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "7-cropped", "note": "the picture is now the 1040 x 700 drawn" },
+    { "do": "snapshot", "name": "7-cropped" }
+  ]
+}

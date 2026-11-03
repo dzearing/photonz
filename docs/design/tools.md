@@ -9,6 +9,32 @@ All tool math lives in `PhotonzCore` (mostly `Geometry`) and is unit-tested. Vie
 - Per-layer crop: `layer.crop` rect, non-destructive, applied at render time.
 - UI: rule-of-thirds grid overlay, edge/corner handles, aspect-ratio locks (1:1, 4:3, 16:9, free), ⏎ commits, ⎋ cancels.
 
+### Gestures (Next, `next-crop-draws-a-box`, 2026-11-03)
+
+The box opens over the whole picture, so "a press outside it draws" left
+nowhere on the picture to draw. The user: "what I really want to do is select a
+box, rather than resize a box". So the tool draws the box you want, the way a
+marquee is drawn. What a press does is `Crop.press`; the box a draw makes is
+`Crop.drawnRect`; Space while drawing is `Crop.slidDraw` (all PhotonzCore,
+`CropDrawingTests`). The canvas side is `CanvasCropGestures.swift`.
+
+| Where | Gesture | Does | Pointer |
+| --- | --- | --- | --- |
+| Anywhere off a handle, inside the box or outside it | drag | draws a new box from the press to the pointer, replacing the old one; a pill under it says `W × H` | crosshair |
+| The same | click (no travel past 3 points) | nothing: the box stays | crosshair |
+| One of the eight handles | drag | resizes, keeping the aspect lock | resize arrows |
+| While drawing | ⌥ | draws out from the press | |
+| While drawing | ⇧ | keeps it square (a locked aspect already decides the shape) | |
+| While drawing | hold Space | the box being drawn slides with the pointer; let go and drawing carries on from there | |
+| Anywhere, Space held | drag | carries the box (pill says where it sits) | open hand, closed while carrying |
+| Box up | ← → ↑ ↓ | nudge by 1, ⇧ by 10 | |
+| Inside the box | double-click | crops | |
+| | ⏎ / ⎋ | crops / cancels; ⎋ mid-drag puts the box back | |
+
+Crop has no snapping (to edges, guides or layers) while drawing or while
+resizing: the box is held inside the picture and pixel-aligned on commit.
+Current keeps the old rule (a press inside the box moves it).
+
 ## Resize
 
 - `PhotonzDocument.resize(to:)` scales all layer frames via `Geometry.resizeScale`.

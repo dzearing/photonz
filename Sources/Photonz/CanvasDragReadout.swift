@@ -71,6 +71,13 @@ extension CanvasNSView {
         if let drag = pathCornerDrag, drag.moved, let box = selectedLayerFrame {
             return (.reshape, box, .radius(drag.radius))
         }
+        // The crop box, drawn or pulled by a handle, says the size it will
+        // keep; carried, where it now sits. It is a box on the picture, so the
+        // picture's own numbers are the reading.
+        if let cropDrag, cropDrag.moved, let box = cropRect {
+            if case .move = cropDrag.kind { return (.move, box, DragReadout.subject(.move, box: box)) }
+            return (.sweep, box, DragReadout.subject(.sweep, box: box))
+        }
         if !barCarries, let resizeDrag, resizeDrag.frame != resizeDrag.startFrame {
             return reading(.resize, canvasBox: resizeDrag.frame, of: resizeDrag.layerID)
         }

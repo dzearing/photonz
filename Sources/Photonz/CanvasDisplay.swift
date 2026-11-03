@@ -157,6 +157,7 @@ extension CanvasNSView {
             applyGrabCursor(nil, force: true)
             endpointDrag = nil
             cropDrag = nil
+            cropSpaceHeld = false
             transformDrag = nil
             transformHold = nil
             hideMeasureHoverReadout()

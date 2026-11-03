@@ -48,7 +48,7 @@
     { "do": "snapshot", "name": "11-handle-bottom-right" },
 
     { "do": "move", "at": [600, 400] },
-    { "do": "describe", "stage": "12-inside-the-box", "note": "pointer inside the crop box, where a press moves it; expect cue none and cursor crosshair" },
+    { "do": "describe", "stage": "12-inside-the-box", "note": "pointer inside the crop box, where a press draws a new box; expect cue none and cursor crosshair" },
 
     { "do": "move", "at": [1200, 800] },
     { "do": "describe", "stage": "13-outside-the-box", "note": "pointer in the dimmed surround, where a press draws a fresh box; expect cue none and cursor crosshair" },

@@ -49,6 +49,10 @@ extension CanvasNSView {
         // keeps what you drew as an open line, the other throws it away.
         if penKeyDown(event) { return }
         if brushKeyDown(event) { return }
+        // The Crop tool's own keys: Space (held, it moves the box) and the
+        // arrows (nudge it). Ahead of Space as play, since a person with the
+        // Crop tool in hand is cropping.
+        if cropKeyDown(event) { return }
         // Space: watch it loop, or stop watching (`next-motion`). Nothing in an
         // image window wants Space otherwise — the app's only other one is the
         // video transport, in a window this code never runs in — and a preview

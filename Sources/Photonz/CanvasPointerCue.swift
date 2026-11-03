@@ -114,14 +114,16 @@ extension CanvasNSView {
     /// about the one thing it exists to answer.
     private func pointerCue(at p: CGPoint) -> (cue: CanvasPointerCue, transform: LayerTransform)? {
         guard Experiments.shared.grabCueEnabled, let viewport else { return nil }
-        // Crop is its own mode with its own pointer, and its crosshair keeps
-        // every spot the crosshair is still true of: inside the box, where a
-        // press moves it, and outside, where a press draws a fresh one. It
-        // gives way only on the eight handles, which are the one press you
-        // cannot see coming. The box is axis-aligned, so no transform.
+        // Crop is its own mode with its own pointer: its crosshair everywhere
+        // a press draws a box (inside the current one and outside it), the
+        // resize arrows on the eight handles, and an open hand everywhere
+        // while Space is held, when a press carries the box. The box is
+        // axis-aligned, so no transform.
         if tool == .crop {
             return CanvasPointer.cropCue(at: p, cropRect: cropRect, zoom: viewport.zoom,
-                                         edgeGrabEnabled: Experiments.shared.edgeGrabEnabled)
+                                         edgeGrabEnabled: Experiments.shared.edgeGrabEnabled,
+                                         spaceHeld: cropSpaceHeld,
+                                         drawsInside: Experiments.shared.cropDrawsABoxEnabled)
                 .map { ($0, .identity) }
         }
         // A picked path's points and levers say what they are under EVERY tool
@@ -497,6 +499,7 @@ extension CanvasNSView {
         // for exactly the same reason: ⌘ takes the point off the grid under a
         // hand that is already still.
         refreshDrawLanding()
+        cropFlagsChanged()
         // ⌘ toggles measure snapping — refresh the hover dot so it jumps on/off
         // the edge live while held.
         refreshMeasureCreation(modifierFlags: event.modifierFlags)

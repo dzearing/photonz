@@ -636,6 +636,10 @@ public enum PlaytestEdge: String, CaseIterable, Hashable, Codable, Sendable {
 
 public enum PlaytestModifier: String, CaseIterable, Hashable, Codable, Sendable {
     case command, shift, option, control
+    /// The space bar, held by a pointer step (`move`, `drag`) the way a hand
+    /// holds it: the Crop tool carries its box under it. It is a key, not a
+    /// modifier flag, so the harness presses and lets go of it as key events.
+    case space
 }
 
 /// A pinch on the timeline's tracks (`PlaytestStep.timelinePinch`).
@@ -872,6 +876,10 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// The zoom the canvas's percent reads, as a whole percent: how a walk
     /// proves a double click on it went to 100.
     case displayZoom(Int)
+    /// The Crop tool's pending box reads exactly this, its x, y, width and
+    /// height in document points rounded to whole ones ("100, 50, 300, 200"),
+    /// or "none" with no box.
+    case cropBox(String)
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
@@ -5238,7 +5246,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 case let other: throw f.invalid("value", "zoomControl is \"shown\" or \"hidden\", not \"\(other)\"")
                 }
             case "displayZoom": .displayZoom(Int(try f.number("value")))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionFolded, sectionOpen, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, askSettled, askPicturesSetUp, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
+            case "cropBox": .cropBox(try f.string("value"))
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionFolded, sectionOpen, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, askPhase, askSettled, askPicturesSetUp, dialogUp, dialogGone, panelMenuOpen, zoomControl, displayZoom or cropBox")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":
@@ -6927,10 +6936,10 @@ public enum PlaytestStep: Sendable, Equatable {
         /// instruction, a missing one is silence.
         func optionalModifiers(_ field: String) throws -> [PlaytestModifier]? {
             guard let raw = fields[field] else { return nil }
-            guard let names = raw as? [String] else { throw invalid(field, "must be a list of command, shift, option, control") }
+            guard let names = raw as? [String] else { throw invalid(field, "must be a list of command, shift, option, control, space") }
             return try names.map { name in
                 guard let modifier = PlaytestModifier(rawValue: name) else {
-                    throw invalid(field, "\"\(name)\" is not a modifier; use command, shift, option, control")
+                    throw invalid(field, "\"\(name)\" is not a modifier; use command, shift, option, control, space")
                 }
                 return modifier
             }

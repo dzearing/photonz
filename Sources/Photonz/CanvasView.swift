@@ -1231,13 +1231,24 @@ final class CanvasNSView: NSView {
         enum Kind {
             case resize(ResizeHandle)
             case move
+            /// Drawing a new box from `anchor`. Space held part way slides
+            /// the anchor with the box (`Crop.slidDraw`), so it can change.
             case define(anchor: CGPoint)
         }
-        let kind: Kind
+        var kind: Kind
         let startRect: CGRect?
         var lastPoint: CGPoint
+        /// Where the press landed, in view points, and whether the pointer
+        /// has since travelled past the click tolerance. A click that never
+        /// does is a click, so it keeps the box it found.
+        var pressView: CGPoint = .zero
+        var moved = false
     }
     var cropDrag: CropDrag?
+    /// Space is down with the Crop tool in hand: the pointer is an open hand
+    /// and a press carries the box, and a box being drawn slides instead of
+    /// growing. Set and cleared by the key itself (`keyDown`/`keyUp`).
+    var cropSpaceHeld = false
     /// Selected layer (committed state, echoed from EditorState). Only
     /// `apply` writes this and the two below; it lives in CanvasDisplay.swift,
     /// and an extension in another file cannot reach a private setter.

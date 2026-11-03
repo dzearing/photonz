@@ -80,6 +80,10 @@ public enum FeatureCatalog {
     public static let keyValuesFlag = "next-key-values"
 
     public static let grabCueFlag = "next-grab-cue"
+    /// The Crop tool draws the box you want: a drag anywhere off a handle
+    /// draws a new box, Space moves it, the arrows nudge it
+    /// (`with-the-crop-tool-dragging-across-the-picture-d`, the user 2026-11-03).
+    public static let cropDrawsABoxFlag = "next-crop-draws-a-box"
     /// Edit's panel built behind View with the rest of Edit, so its sections
     /// come in with the slide rather than just after it (`EditModeArrival`).
     public static let panelWithTheSlideFlag = "next-panel-with-the-slide"
@@ -545,6 +549,16 @@ public enum FeatureCatalog {
                     title: "Pull the side of a label to set where it wraps",
                     description: "Grab any part of a picked object's outline to move that side, so a one-line label's wrap width can be dragged. Off means only the square handles resize.",
                     area: .selecting,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: cropDrawsABoxFlag,
+                    title: "Drag across the picture to crop",
+                    description: "With the Crop tool, a drag anywhere draws the box to keep, and Space held moves it. Off means a drag inside the box moves it.",
+                    area: .tools,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],
