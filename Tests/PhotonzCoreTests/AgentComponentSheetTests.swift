@@ -67,6 +67,26 @@ struct AgentComponentSheetTests {
         #expect(headers.allSatisfy { $0.text?.fontSize == AgentNewComponent.labelSize })
     }
 
+    @Test("A row's name is a heading a step above the state names: larger, semibold, and its column fits it")
+    func rowNameIsAHeading() throws {
+        // Judges of the eval, 2026-11-03, of names and state headers both at
+        // 13: "the labels are very small", "tiny labels ... feel more like a
+        // wireframe than a polished kit".
+        var document = Self.blank()
+        let made = try Self.add(Self.row("Segmented Control", y: 100, looks: Self.states), to: &document)
+        let words = Self.words(in: document)
+        let name = try #require(words.first { $0.text?.string == "Segmented Control" })
+        #expect(name.text?.fontSize == AgentNewComponent.rowNameSize)
+        #expect(name.text?.weight == .semibold)
+        #expect(AgentNewComponent.rowNameSize > AgentNewComponent.labelSize)
+        let headers = words.filter { Self.states.contains($0.text?.string ?? "") }
+        #expect(headers.allSatisfy { $0.text?.fontSize == AgentNewComponent.labelSize })
+        let looks = Self.boxes(made, in: document)
+        #expect(name.frame.maxX + AgentNewComponent.nameGap <= (looks.first?.minX ?? 0) + 1,
+                "the first look starts clear of the larger name")
+        #expect(abs(name.frame.midY - looks[0].midY) <= 1, "the name is level with its looks")
+    }
+
     @Test("Rows share one grid: each column's looks share a left edge, the gaps between rows are equal")
     func oneGrid() throws {
         var document = Self.blank()

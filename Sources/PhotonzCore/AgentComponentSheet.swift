@@ -346,8 +346,9 @@ extension PhotonzDocument {
             guard let box = canvasBounds(of: look.layer), let layer = self.layer(id: look.layer) else { return 0 }
             return box.minY - layer.frame.minY
         } }
+        // Each row's name is measured as it is set, at its own size.
         let nameColumn = max(AgentNewComponent.labelColumn,
-                             ((rows.map { width($0.name) }.max() ?? 0) + AgentNewComponent.nameGap).rounded(.up))
+                             ((labels.map(\.frame.width).max() ?? 0) + AgentNewComponent.nameGap).rounded(.up))
         // Each section's cells are as wide as its widest look or header
         // needs. The grid's columns are as wide as the canvas allows, with
         // the last column's widest look ending the left margin from the

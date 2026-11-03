@@ -378,7 +378,9 @@ struct AgentComponentTests {
         #expect(name.frame.minX == 100)
         #expect(name.frame.maxX <= boxes[0].minX)
         #expect(abs(name.frame.midY - boxes[0].midY) <= 1, "the name sits level with the row")
-        #expect(Set(words.compactMap { $0.text?.fontSize }).count == 1, "one size for every label")
+        #expect(name.text?.fontSize == AgentNewComponent.rowNameSize, "the row's name is its heading")
+        #expect(Set(words.filter { $0.id != name.id }.compactMap { $0.text?.fontSize }) == [AgentNewComponent.labelSize],
+                "one size for every state name")
         // A second set asked onto the same spot goes under it, words and all.
         let again = try document.agentAddComponent(try Self.spec(json), measure: Self.measure).get()
         let secondName = try #require(again.labels.first.flatMap { document.layer(id: $0) })

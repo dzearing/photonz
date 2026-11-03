@@ -113,6 +113,11 @@ public struct AgentNewComponent: Hashable, Sendable {
     public static let labelColumn: CGFloat = 160
     /// The size labels are set at, and the room under a look for its name.
     public static let labelSize: CGFloat = 13
+    /// The size a labelled row's name is set at: a step above the state
+    /// names, the platform's headline size, so the sheet reads title, row,
+    /// state. With both at 13 every judge of a run of the eval (2026-11-03)
+    /// called the labels "very small" or "tiny".
+    public static let rowNameSize: CGFloat = 17
     public static let captionGap: CGFloat = 8
 
     public init(name: String, origin: CGPoint, property: String = defaultProperty,
@@ -954,8 +959,9 @@ extension PhotonzDocument {
     /// may sit on any backdrop. Answers the words' ids, the name first.
     mutating func labelRow(_ spec: AgentNewComponent, mains: [UUID],
                            measure: (TextContent, CGFloat?) -> CGSize) -> [UUID] {
-        func words(_ string: String, weight: TextWeight, color: String, name: String) -> Layer {
-            let content = AgentText(string: string, origin: .zero, fontSize: AgentNewComponent.labelSize,
+        func words(_ string: String, weight: TextWeight, color: String, name: String,
+                   size: CGFloat = AgentNewComponent.labelSize) -> Layer {
+            let content = AgentText(string: string, origin: .zero, fontSize: size,
                                     weight: weight, colorHex: color).content
             var layer = TextBuilder.layer(content: content, at: .zero, naturalSize: measure(content, nil))
             layer.name = name
@@ -967,7 +973,8 @@ extension PhotonzDocument {
         let boxes = mains.compactMap { canvasBounds(of: $0) }
         guard boxes.count == mains.count, let first = boxes.first else { return [] }
         var made: [Layer] = []
-        var title = words(spec.name, weight: .semibold, color: AgentDrawing.defaultStrokeHex, name: "\(spec.name) Label")
+        var title = words(spec.name, weight: .semibold, color: AgentDrawing.defaultStrokeHex, name: "\(spec.name) Label",
+                          size: AgentNewComponent.rowNameSize)
         title.frame.origin = CGPoint(x: spec.origin.x, y: (first.midY - title.frame.height / 2).rounded())
         made.append(title)
         for (look, box) in zip(spec.looks, boxes) {
