@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-02T22:56:06.750Z",
+  "updated": "2026-11-03T01:36:32.868Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -455,9 +455,49 @@
     {
       "t": "2026-11-02T22:56:06.749Z",
       "note": "States that read at a glance, a selection that follows its name, slider thumbs kept and even margins shipped (f27c36ba); walk passes. Ask scores 84 and 74.8 on this build (judges 7.4 and 7.4); typography reached 8 once, but aligned, designed and asked stay at 7, short of the 8-of-10 bar, so it stays open."
+    },
+    {
+      "t": "2026-11-02T23:26:48.805Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-03T01:36:22.772Z",
+      "note": "Adversarial read before building: the request is the user's own words; in run 20261102-222158 (84) judges named the lopsided fourth column, variants shown as states (segmented, alert, badge), Hover near Pressed, the badge numeral off-centre and no filled text field. A Figma or Photoshop user reading a kit page expects each control in its own block, states left to right in one order, labels optically centred."
+    },
+    {
+      "t": "2026-11-03T01:36:22.844Z",
+      "note": "Measured before fixing: a badge's 3 ink sits 1.5 left and 2 above its circle's centre, a button's label 2.5 left and 1.5 up (CoreGraphics scan of result.png). Pressed #0060C2 from the model came out #006B92 (teal): shadedToAState and widened pushed along the model's nudge, not the hue. A Disabled knob #E5E5EA made faint to #F1F1F4 on its #F2F2F4 track. Each reproduced as a failing test with the exact call."
+    },
+    {
+      "t": "2026-11-03T01:36:22.918Z",
+      "note": "Built (3c95a980): add_component centres words by their drawn ink (TextRasterizer.inkCentreOffset; across the words' ink, down a capital's band), passed into placeWords as an optional ink closure so core stays pure; state shades go toward black or white on the first look's hue (AgentNewComponent.shade); a Disabled part is never made faint into what it sits on; the sheet gives each kind its own header row and rule, only one family shares (sheetSections names:); homed states keep their homes' order with no gaps; a row's looks are centred as one so a grown thumb stays level; prompt: states not variants, one order, real words when text is asked, a field's words left, wide kinds one width."
+    },
+    {
+      "t": "2026-11-03T01:36:22.999Z",
+      "note": "Chose a header row per kind over a shared header for kinds with the same states, because every judge of two runs read Checkbox under Toggle's headers as headerless, rule or not, and a design kit page gives each control its own block. Family rows (Primary/Secondary Button) still share. Seven sheet tests renamed to one family so they keep testing what happens inside a section."
+    },
+    {
+      "t": "2026-11-03T01:36:23.072Z",
+      "note": "Eval (rubric f5ae1562), Ask component-table: before 84 (222158; 8,8,7,7,7). After: 84.8 (234115, ink + prompt: asked 7 to 8), 84.8 (235612, + hue, field left, knob), 86.4 (001307, + block per kind; 8,8,7,8,8), 86 (002713, + order, level; 8,8,8,7,8), 84.8 final trimmed wording (012849; 8,7,8,7,8). Skill 88.4 (003200; 8,8,8,8,9), every line at 8 or more. Ask NOT at the bar: aligned or designed at 7 in every run, so left pending."
+    },
+    {
+      "t": "2026-11-03T01:36:23.145Z",
+      "note": "Prompt trim: my lines pushed the first request to 16543 tokens against 16384 (AskDocumentFitTests); rewrote them and dropped duplicates (Place no starters, the shared-header sentence the block-per-kind change made wrong) until the full suite passed."
+    },
+    {
+      "t": "2026-11-03T01:36:23.219Z",
+      "note": "Pictures looked at: before 222158 (shared Toggle/Checkbox headers, badge 3 off centre), 234115 (teal Pressed, centred placeholders, knobless disabled toggle), 235612 (blue Pressed, field words left, knob back), 001307 and 002713 (a block per kind, Disabled after Pressed, slider level), skill 003200 (every line 8+, faint boxes by Off/On headers), final 012849, walk capture (a rule and header row per kind). Tests: Scripts/test.sh green (15,205). Walk ask-builds-base-components-walk ok at Next defaults. Audit: queue/audits/2026-11-02-component-sheet-a-block-per-kind.json"
+    },
+    {
+      "t": "2026-11-03T01:36:23.293Z",
+      "note": "Filed: find-out-why-a-sheet-the-skill-built-shows-faint (p2, measured stray pixels, cause not reproduced). Left rough, this task covers it: the empty fourth column on the right, variants shown as states, labels called tiny in the last run."
+    },
+    {
+      "t": "2026-11-03T01:36:32.867Z",
+      "note": "A block per kind, ink-centred words, hue-kept state shades, a knob that stays and states in order shipped (3c95a980); walk passes at Next defaults. Ask scores 84.8 to 86.4 on this build (judges 7.6 to 7.8, was 7.4), the skill 88.4 with every line at 8 or more; Ask's aligned or designed stays at 7, short of the 8-of-10 bar, so it stays open."
     }
   ],
-  "started": "2026-11-02T21:27:00.531Z",
+  "started": "2026-11-02T23:26:48.804Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]

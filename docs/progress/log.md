@@ -22386,3 +22386,10 @@ the ghost, and pinching in seemed to stop short.
 - Ask component-table 84 (judges 8,7,8,7,7) and 70.6 (8,7,8,7,6; judges read "and text" as wanting type styles), was 65.8 to 79.2. Clean and aligned at 8; typography and designed at 7. Still short of the bar.
 - Tried and reverted: look contrast bar 1.2 to 1.3 (also refuses a hover the skill relies on).
 - Next: Hover near Default (named by every judge), the right quarter left empty under a four-state row, re-measure the skill.
+
+## 2026-11-02 (late): component sheet, a block per kind
+
+- Words in a component are centred by their drawn ink (a badge's "3" sat 1.5 left and 2 up), state shades keep the control's hue (a blue Pressed had turned teal), a Disabled part never fades into what it sits on (a switch kept no knob).
+- The sheet gives each kind its own header row and divider; only one family (Primary/Secondary Button) shares one. States keep their order with no gaps; a look that grows a part sits level.
+- Ask component-table 84 to 84.8, 84.8, 86.4, 86, 84.8 (judge mean 7.4 to 7.6 to 7.8); the skill 88.4, every line 8 or more. Ask still has aligned or designed at 7, so the task stays open.
+- Next: the empty fourth column under a four-state row, variants still shown as states, labels read as tiny; filed the faint boxes in the skill's render as find-out-why-a-sheet-the-skill-built-shows-faint.

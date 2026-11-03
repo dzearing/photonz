@@ -1,0 +1,30 @@
+{
+  "feature": "Asking for a sheet of components: a block per kind, centred words, states that keep their colour",
+  "epic": "agent-skills",
+  "summary": "A component sheet from Ask now gives every kind its own header row and divider, keeps each state's columns in order, centres words where the eye sees them, and shades Hover and Pressed on the control's own colour. Ask scores 86 and 86.4 on the user's request (was 84), and the skill 88.4 with every judge line at 8 or more.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A blank picture, then Ask (Command K).",
+  "switched": {},
+  "try": [
+    { "do": "On a blank picture press Command K and type: create a table of apple like quality base components that show different states and text", "shot": "2026-11-02-sheet-kinds-walk-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look down the left: each component has its own row of state names above it and a thin divider below it.", "shot": "2026-11-02-sheet-kinds-after-ask.png" },
+    { "do": "Compare the Button row's Default, Hover and Pressed: one blue, lighter for Hover, deeper for Pressed, never teal.", "shot": "2026-11-02-sheet-kinds-after-ask-2.png" },
+    { "do": "Zoom on a button or badge: the words sit in the middle of the shape, not a couple of points left and up." },
+    { "do": "Look at the text field row: placeholder and typed words start at the field's left padding, and one look has words typed in." },
+    { "do": "Compare with the sheet from before this pass, and the user's first one.", "shot": "2026-11-02-sheet-kinds-before-ask.png" },
+    { "do": "Ask the Photonz skill for the same thing to see its sheet.", "shot": "2026-11-02-sheet-kinds-after-skill.png" }
+  ],
+  "evaluate": [
+    "Does a block per kind (its own state names and divider) read better than Checkbox and Radio sharing Toggle's names?",
+    "Do Hover and Pressed now read as two different states of the same blue button at a glance?",
+    "Do labels in buttons and badges look centred to you?",
+    "Is the empty space to the right of rows with three states, under a four-state Button, still the thing you notice first?"
+  ],
+  "rough": [
+    "Ask is not at the 8-of-10 bar on every line: the best run (86.4) was clean 8, typography 8, aligned 7, designed 8, asked 8; the next (86) aligned 8 but designed 7. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t), which stays open.",
+    "Every judge of the last Ask run named the mostly empty fourth column on the right: only Button and Text Field have four states. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The model still sometimes shows variants as states (an alert's Warning and Error, which segment is picked) and in one run left Disabled off the Toggle. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The skill's sheet showed faint boxes beside its Off and On headers that no layer accounts for, named by all three judges. Filed as find-out-why-a-sheet-the-skill-built-shows-faint.",
+    "The final wording (trimmed so Ask's first request stays inside its budget) measured 84.8: clean 8, typography 7, aligned 8, designed 7, asked 8. Judges called the 13 point labels tiny and the right side sparse. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "No mock covers this surface: it is what Ask makes on the canvas, judged against Apple's design kit pages."
+  ]
+}
