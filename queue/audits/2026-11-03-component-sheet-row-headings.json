@@ -1,0 +1,27 @@
+{
+  "feature": "Asking for a sheet of components: each row's name reads as its heading",
+  "epic": "agent-skills",
+  "summary": "On a component sheet, each component's name on the left is now set larger than the state names above its looks (17 point semibold over 13), so the page reads title, component, state. Ask's typography score went from 7 to 8 from every judge, and its total from 84.8 to 86. The skill holds at 88.4 with every line at 8 or more.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A blank picture, then Ask (Command K).",
+  "switched": {},
+  "try": [
+    { "do": "On a blank picture press Command K and type: create a table of apple like quality base components that show different states and text", "shot": "2026-11-03-component-sheet-row-headings-walk-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Read down the left: Button, Toggle, Text Field and the rest are a step larger than Default, Hover and Pressed above the looks.", "shot": "2026-11-03-component-sheet-row-headings-after.png" },
+    { "do": "Compare with the sheet from before this pass, where names and state names were both 13 point.", "shot": "2026-11-03-component-sheet-row-headings-before.png" },
+    { "do": "Ask the Photonz skill for the same thing and check its names read the same way.", "shot": "2026-11-03-component-sheet-row-headings-skill.png" },
+    { "do": "Press Command Z once: the whole sheet goes back in one step." }
+  ],
+  "evaluate": [
+    "Do the larger component names make the sheet easier to scan, top to bottom?",
+    "Is 17 point right for the names, or would you rather they were the same 13 point as the state names?",
+    "Is the empty space to the right of rows with two or three states still the thing you notice first?"
+  ],
+  "rough": [
+    "Ask is still short of the 8-of-10 bar on one line: this run scored clean 8, typography 8, aligned 8, designed 7, asked 8. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t), which stays open.",
+    "Judges still name the empty right side under rows with fewer states than Button's four, and states that are weak (a grey dot as Empty, an alert Pressed that barely changes). Both come from which states the model picks. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Two of three judges again said a request for 'text' should have brought a row of type styles. That would put more than four sizes on the sheet, against this task's own type scale bar, so it was not built. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The walk capture shows a faint grey mark right of the On toggle. Added to find-out-why-a-sheet-the-skill-built-shows-faint, which tracks the same ghost marks in the skill's sheet.",
+    "The state chips the editor draws over each copy cover the state names in the window. Covered by the-name-chips-over-component-copies-stay-clear.",
+    "No mock covers this surface: it is what Ask makes on the canvas, judged against Apple's design kit pages."
+  ]
+}
