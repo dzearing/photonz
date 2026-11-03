@@ -15376,3 +15376,7 @@
 {"t":"2026-11-03T13:46:05.825Z","ev":"task_started","id":"ask-can-mock-a-web-page-from-its-address-and-loo","title":"Ask can mock a web page from its address and look things up, and nothing on the web can steer it","priority":"p1-high"}
 {"t":"2026-11-03T14:30:23.642Z","ev":"task_created","id":"with-the-crop-tool-dragging-across-the-picture-d","priority":"p1-high","title":"With the Crop tool, dragging across the picture draws the crop box you want"}
 {"t":"2026-11-03T14:30:23.758Z","ev":"task_resequenced","id":"with-the-crop-tool-dragging-across-the-picture-d","from":3980,"to":5e-8}
+{"t":"2026-11-03T14:52:14.198Z","ev":"task_created","id":"a-page-mock-makes-same-named-controls-copies-of","priority":"p2-normal","title":"A page mock makes same-named controls copies of one component"}
+{"t":"2026-11-03T14:52:18.624Z","ev":"task_walks","id":"ask-can-mock-a-web-page-from-its-address-and-loo","walks":["ask-mocks-a-web-page-walk","ask-search-not-set-up-walk","ask-web-settings-walk"]}
+{"t":"2026-11-03T14:53:23.687Z","ev":"task_created","id":"every-screenshot-is-on-the-clipboard-every-time","priority":"p1-high","title":"Every screenshot is on the clipboard, every time, and pastes everywhere"}
+{"t":"2026-11-03T14:53:23.796Z","ev":"task_resequenced","id":"every-screenshot-is-on-the-clipboard-every-time","from":3980,"to":1e-8}
