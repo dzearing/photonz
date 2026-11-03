@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T14:53:23.683Z",
-  "updated": "2026-11-03T15:26:32.447Z",
+  "updated": "2026-11-03T16:46:05.812Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake): 'lately when i take a screenshot, it isn't reliably copying it to clipboard. it's rather annoying. i think something regressed. make sure that screenshots are copied to clipboard reliably'. Timing matches e0648dd9 (shipped in v0.22.0). Code: Sources/Photonz/Capture/CaptureStore.swift (add: handOffNewScreenshot before writePNG; the later copy skipped when handedOff.changeCount still matches), Sources/Photonz/ClipboardHandOff.swift (promised types made in the background, then handed to the system clipboard type by type), Sources/PhotonzRender/ClipboardPicture.swift. Not reproduced yet by the intake window.",
@@ -33,6 +33,49 @@
     {
       "t": "2026-11-03T15:26:32.446Z",
       "note": "seq 1e-8 -> 10"
+    },
+    {
+      "t": "2026-11-03T15:28:35.669Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-03T15:57:39.238Z",
+      "note": "Reproduced. System log for the user's four captures today (06:28:37, 06:33:18, 06:34:37, 06:51:57): each was taken TWICE at the same millisecond, by the installed /Applications/Photonz.app 0.21.0 (pid 35362, running since 10-31 04:55) and by Photonz Dev (pid 8872; the unified log labels the Dev binary 'Photonz Probe', WindowServer names it 'Photonz (Dev)'). Carbon RegisterEventHotKey lets any number of processes hold the same key and each receives it. Both write the same file name and both write the clipboard. The promise hand-off of e0648dd9 on its own: 8/8, then 20/20 under 16-core load, web/native/file/electron reads at 0 s and 1 s (Scripts/clipboard-timing/targets.swift + capture-walk.py). With a stand-in second app copying the way 0.21.0 does (Scripts/clipboard-timing/second-app.swift): 2/18 web pastes failed at 150 ms idle; under load 3/22 failed (empty or no picture) at 150-300 ms."
+    },
+    {
+      "t": "2026-11-03T16:45:59.040Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-03T16:45:59.111Z",
+      "note": "Chose: a running build without the step-aside mark keeps the shortcuts and the new build stands down, over the new build keeping them too, because two answering apps is the bug itself; until the installed 0.21.0 is updated the user's captures come from it alone."
+    },
+    {
+      "t": "2026-11-03T16:45:59.189Z",
+      "note": "Chose: the copy opened last answers when both know the rule, over Dev-always-wins, because it is one plain rule a person can predict and the loop relaunching Dev makes Dev the usual answerer anyway."
+    },
+    {
+      "t": "2026-11-03T16:45:59.265Z",
+      "note": "Acceptance (1) e0648dd9 suspects checked: file URL is promised and answered on the main thread after the file is written (never handed early); setData inside the provider sticks (standalone owner/reader in /tmp, a later reader gets committed data); a paste waiting on a busy main thread waited up to 40 s and still got the data; the capture's own later copy skip is correct. None failed alone. git bisect not needed: the system log named the cause."
+    },
+    {
+      "t": "2026-11-03T16:45:59.335Z",
+      "note": "left rough: if another Photonz opens DURING a recording, the recording app gives back its shortcuts including ctrl-shift-F5 stop (the stop control still works). Rare; did not earn a task."
+    },
+    {
+      "t": "2026-11-03T16:45:59.406Z",
+      "note": "left rough: an update that replaces a running copy's bundle on disk reads as the new build until that copy relaunches, so for that window both could answer. Updates relaunch at once; did not earn a task."
+    },
+    {
+      "t": "2026-11-03T16:45:59.476Z",
+      "note": "left rough: pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves (Ghoztty has no Accessibility grant to drive other apps). The live hand-over between two running apps is proven by unit tests, not a real shortcut press: the loop cannot press the user's shortcut or rebuild Dev."
+    },
+    {
+      "t": "2026-11-03T16:46:05.810Z",
+      "note": "Cause: the installed Photonz 0.21.0 and Photonz Dev both answered every capture shortcut (system log, all four captures 2026-11-03), photographed twice under one file name and fought over the clipboard; reproduced with Scripts/clipboard-timing/run.sh twoapps (2/18 web pastes at 150 ms got no picture idle, 3/22 under load). Fix c999166a: CaptureShortcutOwner (PhotonzCore, 7 tests) + CaptureShortcutClaim/CaptureCenter: exactly one running Photonz holds the shortcuts (never the probe; an older build without the Info.plist step-aside mark keeps them; else the one opened last). One app: 80/80 at once, 81/81 at 1 s, 80/80 at 10 s, 20/20 under load across web/native/file/electron reads; Nov 1 Copy race 120/120; Scripts/test.sh green. Audit queue/audits/2026-11-03-every-screenshot-is-on-the-clipboard.json. Until the installed 0.21.0 is updated, the new Dev leaves the shortcuts to it."
     }
-  ]
+  ],
+  "started": "2026-11-03T15:28:35.668Z",
+  "walks": [],
+  "completed": "2026-11-03T16:46:05.811Z"
 }

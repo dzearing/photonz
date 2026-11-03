@@ -15450,3 +15450,13 @@
 {"t":"2026-11-03T15:27:24.967Z","ev":"task_note","id":"ask-can-mock-a-web-page-from-its-address-and-loo"}
 {"t":"2026-11-03T15:27:25.043Z","ev":"task_note","id":"audit-pictures-show-the-window-the-way-a-person"}
 {"t":"2026-11-03T15:28:18.806Z","ev":"digest","file":"2026-11-03.md"}
+{"t":"2026-11-03T15:28:35.674Z","ev":"task_started","id":"every-screenshot-is-on-the-clipboard-every-time","title":"Every screenshot is on the clipboard, every time, and pastes everywhere","priority":"p1-high"}
+{"t":"2026-11-03T15:57:39.240Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-03T16:45:59.042Z","ev":"task_walks","id":"every-screenshot-is-on-the-clipboard-every-time","walks":[]}
+{"t":"2026-11-03T16:45:59.113Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-03T16:45:59.191Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-03T16:45:59.267Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-03T16:45:59.337Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-03T16:45:59.408Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-03T16:45:59.478Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-03T16:46:05.813Z","ev":"task_done","id":"every-screenshot-is-on-the-clipboard-every-time","from":"in_progress","note":"Cause: the installed Photonz 0.21.0 and Photonz Dev both answered every capture shortcut (system log, all four captures 2026-11-03), photographed twice under one file name and fought over the clipboard; reproduced with Scripts/clipboard-timing/run.sh twoapps (2/18 web pastes at 150 ms got no picture idle, 3/22 under load). Fix c999166a: CaptureShortcutOwner (PhotonzCore, 7 tests) + CaptureShortcutClaim/CaptureCenter: exactly one running Photonz holds the shortcuts (never the probe; an older build without the Info.plist step-aside mark keeps them; else the one opened last). One app: 80/80 at once, 81/81 at 1 s, 80/80 at 10 s, 20/20 under load across web/native/file/electron reads; Nov 1 Copy race 120/120; Scripts/test.sh green. Audit queue/audits/2026-11-03-every-screenshot-is-on-the-clipboard.json. Until the installed 0.21.0 is updated, the new Dev leaves the shortcuts to it."}
