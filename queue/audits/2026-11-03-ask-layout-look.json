@@ -1,0 +1,42 @@
+{
+  "feature": "Ask tidies the layout it made before handing back",
+  "epic": "agent-ask",
+  "summary": "After Ask builds a layout, it checks the result and fixes what a person would spot at once: words that cannot be read on their button turn a colour that reads, a centred heading that drifted is centred over what sits under it, words stacked on words are moved apart, and words off the canvas come back. Anything it cannot fix, it says in one short sentence.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default, a blank 1440 x 900 canvas, the built-in model.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Make a blank canvas, click Ask in the title bar, type 'Make a pricing section on brand' and press Send.",
+      "shot": "2026-11-03-ask-layout-look-before-sc.png",
+      "shotNote": "Before, 2026-10-24: button labels dark on blue, and 'Pricing' sits right of the cards' middle."
+    },
+    {
+      "do": "Wait for the row 'Made a pricing section on brand' in the Agent group (about five minutes on this Mac).",
+      "shot": "2026-11-03-ask-layout-look-after-sc.png",
+      "shotNote": "After, today. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the heading and the line under it: both are centred over the row of cards."
+    },
+    {
+      "do": "Look at the button on the coloured card: its label is white."
+    },
+    {
+      "do": "Turn the row's switch off and on: the whole section, fixes included, goes and comes back as one change."
+    },
+    {
+      "do": "Press Command Z once: the whole section is gone, fixes included."
+    }
+  ],
+  "evaluate": [
+    "Does the section now look like a person laid it out, with nothing you would nudge first?",
+    "Is white the right label colour on a coloured button, or would you rather Ask kept the colour it chose when that colour still reads?",
+    "Should 'Some words still overlap.' appear beside the change when Ask could not part them, or would you rather it say nothing?"
+  ],
+  "rough": [
+    "No mock covers the layout Ask makes: agent-generate-wt.html gives only the request.",
+    "Ask takes about five minutes for this request on this Mac, about 90 s of it reading its first instructions. The walk now waits 420 s instead of 300 s for the plan, since it judges the result, not the speed.",
+    "The check fixes positions and colours only. It does not change sizes or spacing between cards, and it leaves videos alone because their words sit over footage.",
+    "The score on the pricing case and the held-out layout and video groups were not measured in this run: the eval needs the probe in front, and the Mac was in use."
+  ]
+}
