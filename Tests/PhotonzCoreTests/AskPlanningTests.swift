@@ -531,6 +531,28 @@ struct AskPlanningTests {
         #expect(resolved["document"] == "d1")
     }
 
+    @Test("A price written $12 stays a price: words are never swapped for what a step made")
+    func pricesAreNotReferences() throws {
+        // The eval, 2026-11-03: the Starter card's "$12" was added after
+        // step 12 and printed as step 12's layer id across all three cards.
+        let step = AskStep(tool: "add_text", arguments: try Self.json(
+            #"{"text":"$12","name":"$3","x":0,"y":0,"caption":"$2"}"#))
+        let resolved = step.resolvedArguments(document: "d1", made: [2: "B", 3: "C", 12: "L"])
+        #expect(resolved["text"] == "$12")
+        #expect(resolved["name"] == "$3")
+        #expect(resolved["caption"] == "$2")
+        let parts = AskStep(tool: "add_component", arguments: try Self.json(
+            #"{"parts":[{"kind":"text","text":"$9"}],"layer":"$9"}"#))
+        let built = parts.resolvedArguments(document: "d1", made: [9: "N"])
+        #expect(built["parts"]?.arrayValue?.first?["text"] == "$9")
+        #expect(built["layer"] == "N")
+        let plan = AskPlan(steps: [
+            AskStep(tool: "add_shape", arguments: try Self.json(#"{"kind":"rectangle"}"#)),
+            AskStep(tool: "add_text", arguments: try Self.json(#"{"text":"$1","x":0,"y":0}"#)),
+        ], summary: "")
+        #expect(!plan.isNamedLater(1))
+    }
+
     @Test("What a step made is read from its answer: a layer, a clip or a title")
     func madeID() {
         #expect(AskStep.madeID(fromAnswer: #"{"layer":"L1","name":"Box"}"#) == "L1")

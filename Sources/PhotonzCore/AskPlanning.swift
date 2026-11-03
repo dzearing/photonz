@@ -165,16 +165,43 @@ public struct AskStep: Hashable, Sendable {
         func resolve(_ value: AgentJSON) -> AgentJSON {
             switch value {
             case .string(let word):
-                if word.hasPrefix("$"), let n = Int(word.dropFirst()), let id = made[n] { return .string(id) }
+                if let n = Self.stepNamed(word), let id = made[n] { return .string(id) }
                 return value
             case .array(let array): return .array(array.map(resolve))
-            case .object(let object): return .object(object.mapValues(resolve))
+            case .object(let object):
+                return .object(Dictionary(uniqueKeysWithValues: object.map { key, inner in
+                    (key, Self.wordKeys.contains(key) ? inner : resolve(inner))
+                }))
             default: return value
             }
         }
         var object = resolve(arguments).objectValue ?? [:]
         object["document"] = .string(document)
         return .object(object)
+    }
+
+    /// Arguments that hold words a person reads, never a step's name: a
+    /// price written "$12" stays a price (the eval, 2026-11-03, printed step
+    /// 12's layer id as the Starter card's price).
+    static let wordKeys: Set<String> = ["text", "caption", "subtitle", "title", "subject", "label", "labels",
+                                         "name", "asked", "plan", "scene", "placeholder"]
+
+    /// N when `word` is a step's name, `$N`.
+    static func stepNamed(_ word: String) -> Int? {
+        word.hasPrefix("$") ? Int(word.dropFirst()) : nil
+    }
+
+    /// Whether these arguments name step `number` where a step's name can go.
+    func names(step number: Int) -> Bool {
+        func names(_ value: AgentJSON) -> Bool {
+            switch value {
+            case .string(let word): Self.stepNamed(word) == number
+            case .array(let array): array.contains(where: names)
+            case .object(let object): object.contains { key, inner in !Self.wordKeys.contains(key) && names(inner) }
+            default: false
+            }
+        }
+        return names(arguments)
     }
 
     /// The step checked and typed, ready for the app to run.
@@ -301,16 +328,7 @@ public struct AskPlan: Hashable, Sendable {
     /// A step the app refuses changes nothing, so it can be passed over,
     /// unless a later step was counting on it.
     public func isNamedLater(_ number: Int) -> Bool {
-        let name = AgentJSON.string("$\(number)")
-        func names(_ value: AgentJSON) -> Bool {
-            switch value {
-            case .string: value == name
-            case .array(let array): array.contains(where: names)
-            case .object(let object): object.values.contains(where: names)
-            default: false
-            }
-        }
-        return steps.dropFirst(number).contains { names($0.arguments) }
+        steps.dropFirst(number).contains { $0.names(step: number) }
     }
 }
 

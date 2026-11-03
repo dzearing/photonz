@@ -205,6 +205,45 @@ struct AskLayoutCheckTests {
         #expect(review.sentence == AskLayoutCheck.overlapSentence)
     }
 
+    @Test func partedWordsKeepTheirOrder() {
+        // Moving the price clear of the name must not slide it under the
+        // line that was below it: that line moves down with it.
+        let (_, after) = Self.review([
+            Self.box("Card", CGRect(x: 100, y: 100, width: 300, height: 400), fill: "#FFFFFF"),
+            Self.words("Pro", CGRect(x: 140, y: 140, width: 60, height: 24)),
+            Self.words("$29", CGRect(x: 140, y: 150, width: 80, height: 53), size: 44),
+            Self.words("per month", CGRect(x: 140, y: 210, width: 70, height: 17), size: 14),
+        ])
+        let price = Self.frame("$29", in: after) ?? .zero
+        let per = Self.frame("per month", in: after) ?? .zero
+        #expect(price.minY >= 164)
+        #expect(per.minY >= price.maxY)
+    }
+
+    @Test func aLineSpillingOutOfItsBoxIsNotPartedFrom() {
+        // A line running across three cards: the price under it is left
+        // where it is, and the overlap is owned up to.
+        let cards = (0..<3).map { Self.box("Card \($0)", CGRect(x: 60 + CGFloat($0) * 480, y: 220, width: 360, height: 440), fill: "#FFFFFF") }
+        let (review, after) = Self.review(cards + [
+            Self.words("85039844-EEF5-49CD-AEE3-4C3C9F890C94", CGRect(x: 96, y: 300, width: 1080, height: 58), size: 48),
+            Self.words("$29", CGRect(x: 572, y: 310, width: 90, height: 53), size: 44),
+            Self.words("per month", CGRect(x: 572, y: 370, width: 70, height: 17), size: 14),
+        ])
+        #expect(Self.frame("$29", in: after)?.minY == 310)
+        #expect(review.sentence == AskLayoutCheck.overlapSentence)
+    }
+
+    @Test func partingStopsShortOfAButton() {
+        let (review, after) = Self.review([
+            Self.box("Card", CGRect(x: 100, y: 100, width: 300, height: 400), fill: "#FFFFFF"),
+            Self.words("Name", CGRect(x: 140, y: 140, width: 80, height: 40)),
+            Self.words("Features", CGRect(x: 140, y: 160, width: 120, height: 200)),
+            Self.box("Button", CGRect(x: 140, y: 380, width: 220, height: 48), fill: "#E5E7EB"),
+        ])
+        #expect(Self.frame("Features", in: after)?.minY == 160)
+        #expect(review.sentence == AskLayoutCheck.overlapSentence)
+    }
+
     @Test func wordsSideBySideThatTouchAreOwnedUpTo() {
         let (review, _) = Self.review([
             Self.words("Left words", CGRect(x: 100, y: 100, width: 200, height: 20)),

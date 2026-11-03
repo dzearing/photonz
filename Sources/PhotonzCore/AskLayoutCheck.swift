@@ -125,14 +125,42 @@ public enum AskLayoutCheck {
                     // shared) the lower is stacked under the upper; side by
                     // side they are not moved.
                     guard both.width >= min(a.width, b.width) * stackedShare else { overlapLeft = true; continue }
+                    let home = backdrop(of: lower, in: layers)
+                    let room = home?.frame ?? canvas
+                    // A line spilling out of what it sits on is not a stack
+                    // to part: moving what is under it only makes it worse
+                    // (the eval, 2026-11-03, a price line across three cards
+                    // pushed two prices under their "per month").
+                    guard room.contains(a), backdrop(of: upper, in: layers)?.id == home?.id else { overlapLeft = true; continue }
                     let size: CGFloat
                     if case .text(let content) = layers[lower].content { size = content.fontSize } else { size = 16 }
                     let gap = max(4, (size * 0.25).rounded())
-                    let to = CGRect(x: b.minX, y: (a.maxY + gap).rounded(), width: b.width, height: b.height)
-                    let room = backdrop(of: lower, in: layers)?.frame ?? canvas
-                    guard room.contains(to) else { overlapLeft = true; continue }
-                    moved(lower, to: to.origin)
-                    review.notes.append("moved \(layers[lower].name) down off \(layers[upper].name)")
+                    let delta = (a.maxY + gap).rounded() - b.minY
+                    // The lower words and every word under them in their
+                    // column, on the same box, move down together, so their
+                    // order holds; nothing moves when that would leave the
+                    // box or run into something else made there (a button).
+                    let column = words.filter { other in
+                        let f = layers[other].frame
+                        return other == lower || (other != upper && f.minY >= b.minY
+                            && f.intersection(b).width >= min(f.width, b.width) * stackedShare
+                            && backdrop(of: other, in: layers)?.id == home?.id)
+                    }
+                    let fixed = layers.indices.filter { other in
+                        made.contains(layers[other].id) && layers[other].isVisible && !column.contains(other)
+                            && layers[other].id != home?.id && room.contains(layers[other].frame)
+                            && !isMadeWords(layers[other])
+                    }.map { layers[$0].frame }
+                    let fits = column.allSatisfy { other in
+                        let was = layers[other].frame, now = was.offsetBy(dx: 0, dy: delta)
+                        return room.contains(now) && !fixed.contains { !$0.intersects(was) && $0.intersects(now) }
+                    }
+                    guard fits else { overlapLeft = true; continue }
+                    for other in column {
+                        moved(other, to: CGPoint(x: layers[other].frame.minX, y: layers[other].frame.minY + delta))
+                    }
+                    review.notes.append("moved \(layers[lower].name) down off \(layers[upper].name)"
+                                        + (column.count > 1 ? ", with \(column.count - 1) under it" : ""))
                     settled = false
                     break outer
                 }

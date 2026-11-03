@@ -220,13 +220,15 @@ async function runAskOnce(testCase, dir, { build, switched, models, mac }) {
   const limit = testCase.timeout ?? 300;
   const steps = [
     ...startSteps(testCase, { waitForCopies: true }),
-    // Command K and Return, with the probe in front (`front` in the walk's
-    // setup): on 2026-10-28 a click on the title bar's Ask button and on Send
-    // reached nothing in a walk, so every Ask walk and case stopped at its
-    // first word, while the keys a person uses still worked.
-    { do: "key", key: "k", modifiers: ["command"] }, { do: "wait", seconds: 0.5 },
+    // The title bar's Ask button and Send, pressed. On 2026-10-28 a press
+    // reached nothing and Command K with the probe in front took over; by
+    // 2026-11-03 the probe could no longer take the front on an idle Mac
+    // (every case failed at its first word: "no text field has the keyboard")
+    // while ask-makes-a-pricing-section-walk pressed Ask and Send with the
+    // window behind another app and ran, twice.
+    { do: "press", control: "Ask" }, { do: "wait", seconds: 0.5 },
     { do: "type", text: testCase.request }, { do: "wait", seconds: 0.3 },
-    { do: "key", key: "return" },
+    { do: "press", control: "Ask Send" },
     // Ask starts at once: a Send that did not take is found in seconds, not
     // after the whole limit (two held-out cases sat 300 s idle, 2026-10-20).
     { do: "waitFor", condition: "askPhase", value: "planning|running|ran|stopped", timeout: 15 },
