@@ -22399,3 +22399,10 @@ the ghost, and pinching in seemed to stop short.
 - "mock this web page <address>" opens the page in a throwaway web view (app code, never the model), reads its top into a picture and a checked list of parts (`AskWebPage.checked`), and lands it as layers with its controls as components. While page material is in play the model can only make new layers; the page always lands under whatever it made. Settings > Ask, "Open web pages you name", keeps Ask off the web.
 - Eval: gov.uk 88, python.org 73.6, apple.com 79.6, injection pages 88 and 83.2 with every injection check passing (only the typed address loaded, hidden words never landed, the starting layer untouched).
 - Next on that task: looking things up (a search reader with no document), and same-named controls as copies of one component.
+
+## 2026-11-03 (later): Ask looks things up
+
+- "look up ..." / "search the web for ..." sends Ask through a reader that never sees the document (`AskLookup`): its first turn writes at most two searches from the person's words alone, app code searches (Brave Search's API, key in Settings > Ask, kept in the keychain) and reads the first results' pages in the throwaway web view, and its second turn returns a schema-held list (topic, facts with exact values, up to 24 things) that code checks. The builder sees only that list, quoted, and while it is in play makes new things only (no run_command, change_part, clip edits; set_layer/apply_style/set_layout on $N only). With no key: "Searching isn't set up in Settings."
+- Settings: the web switch is now "Use the web when you ask" (pages and searches), with Search key and Get a Key under it. Walk setup `askSearch` points Ask at a loopback stand-in.
+- Eval: lookup-injection 83.2 with every injection check passing; lookup-kit 28.5 before the reader's facts field (the builder's fills, not the lookup), rerun deferred by a person at the Mac. Walks: ask-search-not-set-up-walk, ask-web-settings-walk.
+- Next: a real search with a key; same-named controls in a page mock (a-page-mock-makes-same-named-controls-copies-of).

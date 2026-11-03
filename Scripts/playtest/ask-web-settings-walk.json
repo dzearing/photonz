@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/ask-web-settings-walk",
+  "seed": "Settings > Ask at Next defaults: one switch, Use the web when you ask, on by default, keeps Ask off the web entirely (pages and searches) when off; under it while it is on, the Search key field and Get a Key. Turning the switch off takes the key row away; on brings it back.",
+  "clock": 120,
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "reveal", "control": "Ask Open Web Pages" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Ask Open Web Pages", "present": true },
+    { "do": "expect", "control": "Ask Search Key", "present": true },
+    { "do": "describe", "stage": "1-on", "note": "the web switch on by default, the search key field and Get a Key under it" },
+    { "do": "snapshot", "name": "1-web-on", "window": "Settings" },
+    { "do": "press", "control": "Ask Open Web Pages" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Ask Search Key", "present": false },
+    { "do": "snapshot", "name": "2-web-off", "window": "Settings" },
+    { "do": "press", "control": "Ask Open Web Pages" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Ask Search Key", "present": true }
+  ]
+}

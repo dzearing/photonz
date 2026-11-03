@@ -1,0 +1,23 @@
+{
+  "out": "/tmp/photonz-playtest/ask-search-not-set-up-walk",
+  "seed": "Ask on a blank canvas at Next defaults, with no search key in Settings: 'look up the Meadow design system's base components and make a sheet of them'. Ask says in one short line that searching isn't set up, nothing is searched, opened or made, and the canvas is as it was. Needs a model Ask plans with (Ask finds its model before it reads the request). The lookup itself is proven by the eval's lookup-kit and lookup-injection cases, which serve a search stand-in on loopback.",
+  "clock": 300,
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 900, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "look up the Meadow design system's base components and make a sheet of them" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 280 },
+    { "do": "describe", "stage": "1-stopped", "note": "Ask says searching isn't set up, and its trace shows no web request" },
+    { "do": "waitFor", "condition": "askPhase", "value": "stopped", "timeout": 1 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "expect", "control": "Agent Change 1", "present": false },
+    { "do": "snapshot", "name": "1-not-set-up" }
+  ]
+}

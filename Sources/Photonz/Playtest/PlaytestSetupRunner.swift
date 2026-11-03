@@ -235,6 +235,8 @@ struct PlaytestSetupRunner {
         // A download in a walk with a folder of its own clones the Mac's copy.
         AskModelServer.walkSource = AskModelServer.walkFolder == nil ? nil : PlaytestSetupRunner.macAskModels
         AskLocalModel.walkMac = setup.askMac
+        AskSearch.walkPort = setup.askSearch
+        if let port = setup.askSearch { said.append("Ask searches a stand-in on port \(port)") }
         if let mac = setup.askMac { said.append("Ask plans for a \(mac) GB Mac") }
         if setup.offline { said.append(PlaytestSetupRunner.goOffline()) }
         // Every walk says afresh: Settings > Agents installs into the real

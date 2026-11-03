@@ -126,6 +126,9 @@ final class AskSession {
     /// (`AskWebReader`), and every address the last request loaded: the
     /// eval's network check reads them.
     @ObservationIgnored private var webRead: AskWebReader.Read?
+    /// What the reader found for a request that asked to look something up
+    /// (`AskLookup`), checked, or nil.
+    @ObservationIgnored private var lookedUp: AskLookup.Found?
     @ObservationIgnored private(set) var webRequests: [String] = []
     /// Where each voted row's case was saved, so taking the vote back takes
     /// the case away too.
@@ -383,7 +386,30 @@ final class AskSession {
         // model (`AskWeb`): what the model sees is the page's picture and a
         // checked description.
         webRead = nil
+        lookedUp = nil
         webRequests = []
+        if AskWeb.address(in: words) == nil, AskLookup.wants(in: words) {
+            // Looked up by a reader that never sees the document (`AskLookup`).
+            guard AskWeb.allowed(in: .standard) else {
+                note("web: kept off the web in Settings")
+                phase = .stopped(AskWeb.offTheWebSentence)
+                return
+            }
+            guard let service = AskSearch.service else {
+                note("web: searching is not set up")
+                phase = .stopped(AskLookup.notSetUpSentence)
+                return
+            }
+            let found = await Self.lookUp(words, model: model, service: service, note: note, say: say) { [weak self] in
+                self?.webRequests.append($0)
+            }
+            guard !Task.isCancelled else { return }
+            guard let found else {
+                phase = .stopped(AskLookup.nothingFoundSentence)
+                return
+            }
+            lookedUp = found
+        }
         if let address = AskWeb.address(in: words) {
             let host = AskWeb.shortHost(address)
             guard AskWeb.allowed(in: .standard) else {
@@ -409,7 +435,7 @@ final class AskSession {
             }
         }
         let opened = await Self.conversation(words, in: editor, model: model, memory: memory, web: webRead,
-                                             note: note, say: say)
+                                             lookedUp: lookedUp, note: note, say: say)
         guard !Task.isCancelled else { return }
         guard var talk = opened else {
             phase = .stopped(AskCopy.noDocumentSentence)
@@ -500,7 +526,12 @@ final class AskSession {
             if let after = editor.document {
                 let made = AskChangeWords.sentence(landed.landed, asked: words, before: landed.before, after: after)
                 let components = landed.landed.filter { $0.tool == AskWeb.pageTool && $0.arguments["component"] != nil }.count
-                changes.record(asked: words, sentence: webRead.map { AskWeb.sentence(host: $0.page.host, components: components) } ?? made,
+                // A request that looked something up says where it looked.
+                let said = webRead.map { AskWeb.sentence(host: $0.page.host, components: components) }
+                    ?? lookedUp.map { AskLookup.sentence(hosts: $0.hosts, made: made,
+                                                         components: landed.landed.filter { $0.tool == "add_component" }.count) }
+                    ?? made
+                changes.record(asked: words, sentence: said,
                                before: landed.before, after: after, sources: landed.sources)
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
@@ -826,7 +857,7 @@ final class AskSession {
     /// The talk with the model, opened with the document read and the
     /// Library handed over up front: "on brand" is its components and styles.
     private static func conversation(_ words: String, in editor: EditorState, model: String, memory: String = "",
-                                     web: AskWebReader.Read? = nil,
+                                     web: AskWebReader.Read? = nil, lookedUp: AskLookup.Found? = nil,
                                      note: (String) -> Void, say: (AskStage) -> Void) async -> AskConversation? {
         guard let document = editor.agentID else { return nil }
         say(.reading(video: editor.documentHasTime))
@@ -854,7 +885,7 @@ final class AskSession {
                                paints: paints,
                                brushes: Experiments.shared.brushEnabled && !editor.documentHasTime,
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
-                               window: AskLocalModel.window, web: web?.page)
+                               window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp)
     }
 
     /// The longest side of the canvas picture the planning model is shown:
@@ -972,6 +1003,59 @@ final class AskSession {
         // Out of turns with steps written: offer what it has.
         if !talk.steps.isEmpty || talk.web != nil { return .success(talk.plan(summary: "")) }
         return .failure(.said(AskConversation.noPlanSentence))
+    }
+
+    /// Looks the request up on the web (`AskLookup`), the reader's way: its
+    /// first turn sees the person's words and nothing else and writes the
+    /// searches; app code runs them and reads the first results' pages;
+    /// its second turn reads all that and answers with a list, checked. The
+    /// reader never sees the document, and every address loaded is handed to
+    /// `loaded` for the trace and the eval's network check. Nil when nothing
+    /// usable came back.
+    private static func lookUp(_ words: String, model: String, service: (endpoint: URL, key: String),
+                               note: (String) -> Void, say: (AskStage) -> Void,
+                               loaded: (String) -> Void) async -> AskLookup.Found? {
+        say(.searchingWeb)
+        let asked = try? await AskLocalModel.chat(AskLookup.searchesBody(model: model, request: words))
+        let searches = AskLookup.searches(fromAnswer: asked?["message"]?["content"]?.stringValue ?? "", request: words)
+        note("lookup: searches \(searches)")
+        var results: [AskLookup.Result] = []
+        for query in searches {
+            guard !Task.isCancelled else { return nil }
+            switch await AskSearch.search(query, endpoint: service.endpoint, key: service.key) {
+            case .success(let found):
+                loaded(found.address)
+                note("web request: \(found.address)")
+                note("lookup: \(found.results.count) results for \(query)")
+                for result in found.results where !results.contains(where: { $0.address == result.address }) { results.append(result) }
+            case .failure:
+                note("lookup: the search for \(query) failed")
+            }
+        }
+        guard !results.isEmpty else { return nil }
+        var pages: [(host: String, text: String)] = []
+        for address in AskLookup.toRead(results) {
+            guard !Task.isCancelled else { return nil }
+            let host = AskWeb.shortHost(address)
+            say(.openingPage(host))
+            let read = await AskWebReader.text(address)
+            for request in read.requests {
+                loaded(request)
+                note("web request: \(request)")
+            }
+            if let text = read.text {
+                pages.append((host, text))
+                note("lookup: read \(text.count) characters from \(host)")
+            }
+        }
+        say(.readingWhatItFound)
+        guard !Task.isCancelled,
+              let answer = try? await AskLocalModel.chat(AskLookup.readingBody(model: model, request: words, results: results, pages: pages))["message"]?["content"]?.stringValue
+        else { return nil }
+        let hosts = pages.isEmpty ? results.prefix(1).map { AskWeb.shortHost($0.address) } : pages.map(\.host)
+        let found = AskLookup.found(fromAnswer: answer, hosts: hosts)
+        note("lookup: found \(found?.items.count ?? 0) things: \(found?.listing.prefix(1500) ?? answer.prefix(300))")
+        return found
     }
 
     /// The size a page is read at: the canvas's, within what a page reads

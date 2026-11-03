@@ -20,6 +20,11 @@ public enum AskStage: Hashable, Sendable {
     case lookingAtCanvas
     /// Opening a web page the request named (`AskWeb`), by its short host.
     case openingPage(String)
+    /// The reader searching the web for a request that asked to look
+    /// something up (`AskLookup`).
+    case searchingWeb
+    /// The reader reading what the search found.
+    case readingWhatItFound
     /// The planning model at work; turn 1 is the first answer.
     case thinking(turn: Int)
     /// The planning model reading the request and everything sent with it,
@@ -91,6 +96,8 @@ public enum AskStage: Hashable, Sendable {
         case .reading(let video): return (video ? "Reading the video" : "Reading the picture", "", "")
         case .lookingAtCanvas: return ("Looking at the canvas", "", "")
         case .openingPage(let host): return ("Opening ", host, "")
+        case .searchingWeb: return ("Searching the web", "", "")
+        case .readingWhatItFound: return ("Reading what it found", "", "")
         case .thinking(let turn): return (turn <= 1 ? "Thinking it through" : "Working out the steps", "", "")
         case .readingRequest(let percent): return ("Reading your request, \(percent)%", "", "")
         case .writing: return ("Writing the steps", "", "")

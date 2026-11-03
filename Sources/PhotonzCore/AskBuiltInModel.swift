@@ -303,6 +303,11 @@ public enum AskServerChat {
         if let model = body["model"] { out["model"] = model }
         if let temperature = body["options"]?["temperature"] { out["temperature"] = temperature }
         if let tools = body["tools"] { out["tools"] = tools }
+        // An answer held to a schema (Ollama's `format`): the server's
+        // grammar keeps the model to it (the reader's lists, `AskLookup`).
+        if let schema = body["format"], schema.objectValue != nil {
+            out["response_format"] = ["type": "json_schema", "json_schema": ["name": "answer", "schema": schema]]
+        }
         if body["think"]?.boolValue == false {
             out["chat_template_kwargs"] = ["enable_thinking": false]
         }

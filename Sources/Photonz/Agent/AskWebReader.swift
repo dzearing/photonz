@@ -59,14 +59,32 @@ final class AskWebReader: NSObject, WKNavigationDelegate, WKUIDelegate {
         return await reader.read()
     }
 
-    private func read() async -> Result<Read, Trouble> {
+    /// A page's words for Ask's reader (`AskLookup`): every run of words a
+    /// person can see, line by line, read in the same throwaway view. Only
+    /// ever an address the search service returned (`AskLookup.toRead`).
+    static func text(_ address: URL) async -> (text: String?, requests: [String]) {
+        let reader = AskWebReader(address: address, size: CGSize(width: 1280, height: 900))
+        defer { reader.close() }
+        guard await reader.load(), let said = try? await reader.view.evaluateJavaScript(Self.readingText) as? String else {
+            return (nil, reader.requests)
+        }
+        return (AskLookup.pageText(Data(said.utf8)), reader.requests)
+    }
+
+    /// Loads the address and waits for it to show, at most `seconds`.
+    private func load() async -> Bool {
         view.load(URLRequest(url: address, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: Self.seconds))
         let start = Date()
         while !finished, !failed, Date().timeIntervalSince(start) < Self.seconds, !Task.isCancelled {
             try? await Task.sleep(for: .milliseconds(100))
         }
-        guard committed, !Task.isCancelled else { return .failure(.couldNotOpen) }
+        guard committed, !Task.isCancelled else { return false }
         try? await Task.sleep(for: .milliseconds(Int(Self.settle * 1000)))
+        return !Task.isCancelled
+    }
+
+    private func read() async -> Result<Read, Trouble> {
+        guard await load() else { return .failure(.couldNotOpen) }
         // The page's own scrolling put back to its top.
         _ = try? await view.evaluateJavaScript("window.scrollTo(0, 0); 0")
         guard let said = try? await view.evaluateJavaScript(Self.reading) as? String,
@@ -200,6 +218,51 @@ final class AskWebReader: NSObject, WKNavigationDelegate, WKUIDelegate {
       return 0;
     })()
     """#
+
+    /// Every run of words a person can see on the whole page, a block a
+    /// line: nothing not displayed, see-through, clipped away, off the page's
+    /// sides, smaller than 6 points or the colour of the page behind it.
+    /// Plain data only; `AskLookup.pageText` cleans and caps it.
+    static let readingText = #"""
+(() => {
+  const out = [];
+  const docW = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+  const seen = (el) => {
+    for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+      const cs = getComputedStyle(e);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) < 0.05) return false;
+      if (cs.clip && cs.clip !== 'auto' && /rect\(\s*0/.test(cs.clip)) return false;
+      if (cs.clipPath && /inset\(\s*(50|100)%/.test(cs.clipPath)) return false;
+    }
+    return true;
+  };
+  const bg = getComputedStyle(document.body || document.documentElement).backgroundColor;
+  const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
+  let last = null, line = '';
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const raw = node.textContent.replace(/\s+/g, ' ');
+    if (!raw.trim()) continue;
+    const el = node.parentElement;
+    if (!el || ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE'].includes(el.tagName)) continue;
+    if (!seen(el)) continue;
+    const cs = getComputedStyle(el);
+    if (parseFloat(cs.fontSize) < 6) continue;
+    if (cs.color === bg) continue;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const r = range.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1 || r.right < 0 || r.left > docW || r.bottom + window.scrollY < 0) continue;
+    let block = el;
+    while (block && getComputedStyle(block).display.startsWith('inline')) block = block.parentElement;
+    if (block !== last && line) { out.push(line.trim()); line = ''; }
+    last = block;
+    line += raw;
+    if (out.length > 1500) break;
+  }
+  if (line) out.push(line.trim());
+  return JSON.stringify({ title: document.title, text: out.join('\n').slice(0, 20000) });
+})()
+"""#
 
     /// Walks the page as drawn: every box with a fill or an edge, every run of
     /// words a person can see (not hidden, clipped away, see-through or off the

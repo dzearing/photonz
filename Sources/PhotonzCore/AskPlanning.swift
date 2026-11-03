@@ -415,6 +415,10 @@ public struct AskConversation: Sendable {
     /// is here the model's tools make new layers and nothing else
     /// (`AskWeb.doing`), and the page always lands (`webPlan`).
     public let web: AskWebPage?
+    /// What a reader found on the web for this request (`AskLookup`), checked,
+    /// or nil. While it is here the model's tools make new things only
+    /// (`AskLookup.doing`) and it is told the list, never the web's own text.
+    public let lookedUp: AskLookup.Found?
 
     /// `memory` is what Ask did earlier in this window (`AskMemory.prompt`),
     /// and `canvas` a picture of the canvas as it is now, for a model that
@@ -422,9 +426,11 @@ public struct AskConversation: Sendable {
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
-                window: Int = AskConversation.contextWindow, web: AskWebPage? = nil) {
+                window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
+                lookedUp: AskLookup.Found? = nil) {
         self.request = request
         self.web = web
+        self.lookedUp = web == nil ? lookedUp : nil
         self.window = window
         self.paints = paints
         self.brushes = brushes
@@ -441,6 +447,7 @@ public struct AskConversation: Sendable {
         var instructions = web.map { Self.webInstructions(documentRead: described, page: $0) }
             ?? Self.instructions(documentRead: described, paints: paints, painting: painting, video: video)
         if web == nil, AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
+        if web == nil, let lookedUp { instructions += "\n\(AskLookup.rules)\n\(lookedUp.listing)" }
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
         if !titles.isEmpty {
@@ -514,9 +521,25 @@ public struct AskConversation: Sendable {
 
     /// The tools the model is shown: while a web page is in play, only the
     /// ones that make new layers (`AskWeb`).
-    var offeredTools: [AgentJSON] { web == nil ? AskTools.modelTools(painting: painting, video: video) : AskTools.webModelTools }
-    var lookingTools: [String] { web == nil ? AskTools.looking(painting: painting, video: video) : AskWeb.looking }
-    var doingTools: [String] { web == nil ? AskTools.doing(painting: painting, video: video) : AskWeb.doing }
+    /// With what a reader found on the web, only the ones that make new
+    /// things (`AskLookup`).
+    var offeredTools: [AgentJSON] {
+        guard web == nil else { return AskTools.webModelTools }
+        let all = AskTools.modelTools(painting: painting, video: video)
+        guard lookedUp != nil else { return all }
+        let allowed = Set(AskLookup.looking + AskLookup.doing)
+        return all.filter { allowed.contains($0["function"]?["name"]?.stringValue ?? "") }
+    }
+    var lookingTools: [String] {
+        guard web == nil else { return AskWeb.looking }
+        let all = AskTools.looking(painting: painting, video: video)
+        return lookedUp == nil ? all : all.filter(AskLookup.looking.contains)
+    }
+    var doingTools: [String] {
+        guard web == nil else { return AskWeb.doing }
+        let all = AskTools.doing(painting: painting, video: video)
+        return lookedUp == nil ? all : all.filter(AskLookup.doing.contains)
+    }
 
     /// The plan as it runs: with a web page, the page lands first, under
     /// what the model made of it.
@@ -599,6 +622,11 @@ public struct AskConversation: Sendable {
                 // While a page is in play, only what this request makes may change.
                 if web != nil, name == "set_layer", !(arguments["layer"]?.stringValue ?? "").hasPrefix("$") {
                     refuse(name, arguments, "Not planned: while mocking a page, set_layer changes only a layer this plan makes, named $N.")
+                    continue
+                }
+                // While web material is in play, only what this request makes may change.
+                if lookedUp != nil, let refusal = AskLookup.refusal(name, arguments) {
+                    refuse(name, arguments, refusal)
                     continue
                 }
                 if name == "change_part", let refusal = partNotInShort(arguments) {

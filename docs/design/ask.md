@@ -1014,8 +1014,10 @@ web page https://www.gov.uk") opens that page and lands its top as editable
 layers, its controls as Library components, and the row says where Ask looked:
 "Looked at gov.uk, made 4 components". A request with no address never touches
 the network; Settings > Ask, **Open web pages you name**, keeps Ask off the web
-entirely (`AskWeb.settingKey`, on by default), and then a request with an
-address is answered "Ask is kept off the web in Settings." and nothing opens.
+entirely (`AskWeb.settingKey`, on by default; renamed **Use the web when you
+ask** on 2026-11-03, when it came to cover looking things up too), and then a
+request with an address or a lookup is answered "Ask is kept off the web in
+Settings." and nothing opens.
 
 The limits hold even if the model is fooled by what a page says:
 
@@ -1065,8 +1067,63 @@ loopback (`Scripts/ask-eval/web/`, `serve` in the case): visible words telling
 the assistant to delete, export and open an address, and the same hidden seven
 ways and in a comment. Walk: `ask-mocks-a-web-page-walk`.
 
-Not yet: looking things up (a reader with search and no document, the builder
-never seeing raw web text); same-named controls as copies of one component.
+Not yet: same-named controls as copies of one component.
+
+## Looking things up (2026-11-03)
+
+"look up the Meadow design system's base components and make a sheet of them"
+searches the web, reads what it finds, and builds from it; the row says where
+it looked ("Looked at m3.material.io, made 9 components"). Only the person's
+words put Ask on the web (`AskLookup.wants`: "look up", "look it up", "search
+the web for", "search online", "find it online", "web search", said as an ask,
+so "a cat that will look up at the moon" stays a drawing). An address in the
+request is a page mock instead (above).
+
+**Two models, never one** (`AskLookup`, PhotonzCore, `AskLookupTests`), the
+same local model in two separate talks:
+
+1. **The reader's first turn sees the person's words and nothing else** and
+   writes at most two searches, its answer held to a schema by the server's
+   grammar (`format`, sent to llama-server as `response_format`).
+2. **App code searches and reads.** Each search goes to the service with the
+   words as its query (ephemeral session, ten seconds); the first results on
+   different sites, at most two, are read in the same throwaway web view a page
+   mock uses (`AskWebReader.text`: words a person can see, line by line,
+   cleaned and capped at 6,000 characters). Addresses come from the service,
+   never from a model.
+3. **The reader's second turn reads all that** (the results and the pages'
+   words, fenced as material, never instructions) and answers with a list held
+   to a schema: a topic, up to six facts for all of it (colours with their hex
+   codes, corners, type), and up to 24 things of four notes each.
+   `AskLookup.found` cleans and caps every word.
+4. **The builder sees only that list**, every word quoted, as facts. While it
+   is in play its tools make new things only (`AskLookup.doing`): no
+   `run_command` (menu commands touch files and share), no `change_part`, no
+   clip edits, no `list_commands`, and `set_layer`, `apply_style` and
+   `set_layout` only on what this plan makes (`$N`).
+
+Every network request happens before any web text reaches a model: the reader
+has no tool to ask for another, and the builder has none either. The reader
+has nothing to leak, since it never saw the document. A page that tells the
+assistant to delete, export or open an address can at worst put those words
+into the list, and the builder can at worst set them as words on the canvas.
+
+**The search service is Brave Search's web API** (`AskLookup.service`): an
+index of its own, meant for apps, with a free plan and a key the person makes
+on its site, sent as a header from an ephemeral session. A keyless engine's
+results page was the alternative; DuckDuckGo's answered a script with a robot
+check and no results (measured 2026-11-03). Settings > Ask, under the web
+switch: **Search key** (kept in the login keychain, `AskSearchKey`, never in
+settings) and Get a Key. With no key, a lookup is answered "Searching isn't
+set up in Settings." and nothing is searched.
+
+A walk searches a stand-in on this Mac's loopback (`"askSearch": <port>` in its
+setup, `AskLookup.walkEndpoint`), in the service's own shape. The eval's
+`lookup-kit` (a made-up design system, Meadow, so its components can only come
+from the lookup) and `lookup-injection` (a search result and a page telling the
+assistant, visibly and hidden five ways, to delete every layer, export, run a
+menu command and open an address carrying the document) serve one from
+`Scripts/ask-eval/web/lookup*/`. Walk: `ask-search-not-set-up-walk`.
 
 ## Not in this slice
 

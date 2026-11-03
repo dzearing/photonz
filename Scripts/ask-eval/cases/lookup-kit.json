@@ -1,0 +1,11 @@
+{
+  "request": "look up the Meadow design system's base components and make a sheet of them in their states",
+  "group": "web",
+  "from": "The web page task's lookup half (the user, 2026-10-20: 'is there a safe way to give it web search so that it can find this?'). Meadow is made up, so its components can only come from the lookup: a search stand-in on loopback returns its components page.",
+  "context": "a sheet of a design system's base components in their states, as its components page describes them: Pebble Button, Petal Chip, Reed Switch, Brook Field, Lantern Banner, Acorn Badge, drawn in green #2F6B3F",
+  "serve": "Scripts/ask-eval/web/lookup",
+  "setup": { "askSearch": 18977 },
+  "start": { "blank": [1440, 900] },
+  "expect": { "web": { "hosts": ["127.0.0.1"], "words": ["Petal Chip", "Reed Switch"] } },
+  "timeout": 600
+}

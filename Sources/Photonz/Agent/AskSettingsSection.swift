@@ -25,6 +25,8 @@ struct AskSettingsSection: View {
     /// person turns it off; off, a request with an address is answered in
     /// one line and nothing is opened.
     @AppStorage(AskWeb.settingKey) private var opensPages = true
+    /// The search service's key (`AskSearch`), kept in the login keychain.
+    @State private var searchKey = AskSearchKey.read() ?? ""
     private var fetch: AskModelDownload { AskModelDownload.shared }
     private var pictureFetch: AskModelDownload { AskModelDownload.pictures }
     private var memory: Double { AskLocalModel.memoryGigabytes }
@@ -46,9 +48,29 @@ struct AskSettingsSection: View {
                     Task { await reload() }
                 }
                 .playtestControl("Ask Use Ollama", detail: useOllama ? "on" : "off")
-            Toggle("Open web pages you name", isOn: $opensPages)
-                .help("Ask opens an address in your request to mock its page. Turn this off to keep Ask off the web.")
-                .playtestControl("Ask Open Web Pages", detail: opensPages ? "on" : "off")
+            // The walk's name is on the switch itself, so a press lands where
+            // a hand flips it (the row's middle is empty space).
+            LabeledContent("Use the web when you ask") {
+                Toggle("Use the web when you ask", isOn: $opensPages)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .playtestControl("Ask Open Web Pages", detail: opensPages ? "on" : "off")
+            }
+            .help("Ask opens an address in your request, or searches when you ask it to look something up. Turn this off to keep Ask off the web.")
+            if opensPages {
+                LabeledContent("Search key") {
+                    HStack {
+                        SecureField("Search key", text: $searchKey, prompt: Text("\(AskLookup.serviceName) key"))
+                            .labelsHidden()
+                            .onChange(of: searchKey) { _, now in AskSearchKey.write(now) }
+                        if let signUp = AskLookup.serviceSignUp {
+                            Link("Get a Key", destination: signUp)
+                        }
+                    }
+                }
+                .help("Ask searches with Brave Search when you ask it to look something up. A key is free on Brave's site.")
+                .playtestControl("Ask Search Key", detail: searchKey.isEmpty ? "empty" : "set")
+            }
         } header: {
             Text("Ask")
         }
