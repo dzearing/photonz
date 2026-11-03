@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-03T01:36:32.868Z",
+  "updated": "2026-11-03T02:43:04.624Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -105,36 +105,9 @@
       "note": "Eval (rubric f5ae1562). Ask component-table: 59 and 51.1 on the final code (52 before; runs on the same code range 37 to 59), judge 5 to 6 per line. Ask design-system-sheet 66.8 (52.8 before), judge 5 to 7. Skill component-table 83.6 (88.8 before; judge 7 to 8), skill design-system-sheet 82 (86.4 before; judge 6 to 8). NOT at the 8-of-10 bar: what is left is the empty cells under shared headers (every judge names them) and what the model draws (a dark Off track, tight button padding, a lumpy tab icon). Left pending."
     },
     {
-      "t": "2026-10-24T01:38:56.169Z",
-      "note": "Left rough (not filed, this task covers it): rows with fewer states leave holes under a shared header; one idea is a header per exact set of states, at the cost of more header rows. Look names like Selected2 read as debug text."
-    },
-    {
-      "t": "2026-10-24T01:38:56.233Z",
-      "note": "Pictures looked at: Ask after (title, light look, cards and alert on visible surfaces, Off checkbox empty, every label legible; holes under headers), Ask design sheet after, skill design sheet after (tidy matrix, holes), window capture (name chips over headers, already its own task). Tests: Scripts/test.sh 14304 passed; ask-builds-base-components-walk ok. Audit: queue/audits/2026-10-24-component-sheet-legible-states.json"
-    },
-    {
-      "t": "2026-10-24T01:38:56.298Z",
-      "note": "The checks and the planner fixes shipped (bf4dc3c2). Ask's sheets look clearly cleaner but are judged 5 to 7 of 10 and the skill 6 to 8; the 8-of-10 bar is not met, so it stays open."
-    },
-    {
-      "t": "2026-10-24T04:24:21.138Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-10-24T05:46:41.760Z",
-      "note": "Built (f4fe5124): only rows with exactly the same states share a header row, so no cell under a header is empty; sections stand 56 apart; every row is at least 44 tall so sliders and switches keep the buttons' rhythm; shorter rows come first in a section; a section too wide for the shared column step spreads its own cells over the same width (one 400 pt nav bar had grown a sheet to 2448 pt); the canvas grows with the left margin under the table too (AgentSheetLayout.canvas(around:)). Words are judged by APCA lightness contrast 20 (RGBA.lightnessContrast) instead of the 1.6 ratio, which let #007AFF on #0056CC through. Skill recipe and Ask's rules say only kinds with the same states share a header row."
-    },
-    {
-      "t": "2026-10-24T05:46:41.832Z",
-      "note": "Chose a header row per exact set of states over empty cells under a shared header, because every judge of the 2026-10-23 sheets named the holes; after the change no judge names a hole, and two of nine name sections changing columns."
-    },
-    {
-      "t": "2026-10-24T05:46:41.897Z",
-      "note": "Eval (rubric f5ae1562). Skill component-table 86.4 (sections alone, aligned 7 for packed small rows), then 88.8 with even rows: judge 8, 8, 8, 8, 9, at the bar. Skill design-system-sheet 68.9 (the model shrank navigation to one link), 84, then 85.2 twice with wide sections spread: judge 8, 8, 7, 8, 9 and 8, 8, 7, 7, 8, NOT at the bar (aligned and designed 7: wide sections off the 5-column grid, cards under the nav's header). Ask component-table 57.3 and 48 (alignment rule 9.4, judge 5 to 6); Ask design-system-sheet 37.7 and 49.4 (judge 5 to 6). Ask's shortfall is its own drawings: overlapping Back and title, Off checkbox ticked, dark or blue Off toggle, empty cards, Selected2, up to 8 type sizes."
-    },
-    {
-      "t": "2026-10-24T05:46:41.963Z",
-      "note": "Pictures looked at: skill component-table after (full matrix, no holes, even rows), skill design sheet after (no holes, cards under the nav section's header), Ask after (clean table, flaws inside the drawings), the walk's window capture (table under the name chips, already the-name-chips-over-component-copies-stay-clear). Tests: Scripts/test.sh 14323 passed. ask-builds-base-components-walk: one run timed out waiting for the model's first answer (folded into find-out-why-ask-sometimes-waits-five-minutes-fo), the next passed. Audit: queue/audits/2026-10-24-component-sheet-sections.json"
+      "t": "2026-11-03T02:43:04.623Z",
+      "note": "... 8 earlier entries elided",
+      "elided": 8
     },
     {
       "t": "2026-10-24T05:46:42.032Z",
@@ -495,9 +468,45 @@
     {
       "t": "2026-11-03T01:36:32.867Z",
       "note": "A block per kind, ink-centred words, hue-kept state shades, a knob that stays and states in order shipped (3c95a980); walk passes at Next defaults. Ask scores 84.8 to 86.4 on this build (judges 7.6 to 7.8, was 7.4), the skill 88.4 with every line at 8 or more; Ask's aligned or designed stays at 7, short of the 8-of-10 bar, so it stays open."
+    },
+    {
+      "t": "2026-11-03T02:07:23.870Z",
+      "note": "rotating check 2026-11-03T02:07:23Z, 22 walks run from 111 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-builds-base-components-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-11-03T02:07:24.223Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-03T02:43:04.182Z",
+      "note": "Rotating check's failure of ask-builds-base-components-walk (askPhase not reached in 540s) did not reproduce: Scripts/playtest.sh Scripts/playtest/ask-builds-base-components-walk.json --no-build ran ok in 239.3s at Next defaults (first try DEFERRED, exit 6, person at the Mac). The eval's own Ask runs took 244 to 375s. Read it as a slow model turn while the rotating check loaded the Mac, not an app fault."
+    },
+    {
+      "t": "2026-11-03T02:43:04.249Z",
+      "note": "Adversarial read: judges of 012849 called the 13 point names and state names 'very small' and 'tiny ... like a wireframe'; a design kit page heads each block with a larger name. Chose 17 semibold (the platform's headline size) over 15 because 17 is already on the sheet in components, so the type scale rule stays at 4 sizes."
+    },
+    {
+      "t": "2026-11-03T02:43:04.326Z",
+      "note": "Built (d78647db): AgentNewComponent.rowNameSize 17, a labelled row's name set at it, the name column measured from the names as set. Test first: 'A row's name is a heading a step above the state names'; the old 'one size for every label' expectation now says one size for every state name."
+    },
+    {
+      "t": "2026-11-03T02:43:04.392Z",
+      "note": "Eval (rubric f5ae1562), component-table: Ask before 84.8 (012849; 8,7,8,7,8), after 86 (021253; 8,8,8,7,8, typography 8 in every look, 4 sizes 13/15/17/48). Skill 88.4 (023437; 8,8,8,8,9), same as before. Ask NOT at the bar: designed 7 (7,7,8), so left pending."
+    },
+    {
+      "t": "2026-11-03T02:43:04.457Z",
+      "note": "Pictures looked at: before 012849 (13 point names), after 021253 (17 point names, alert with a Pressed look, empty right under 2 to 3 state rows), skill 023437 (names read as headings, every line 8+), walk capture (sheet live, faint mark right of the On toggle, chips over headers). Tests: Scripts/test.sh green (one earlier run red on the Aurora stopwatch, 36.5 vs 33 ms, 5.8 ms alone; folded into the-full-test-suite-stays-green-on-a-busy-mac-wh). Audit: queue/audits/2026-11-03-component-sheet-row-headings.json"
+    },
+    {
+      "t": "2026-11-03T02:43:04.522Z",
+      "note": "Left rough, this task covers it: empty right under rows with fewer states, weak states the model picks (grey dot Empty, alert Pressed), judges wanting a type styles row (would break the four-size bar, not built). Folded: faint mark by the On toggle into find-out-why-a-sheet-the-skill-built-shows-faint."
+    },
+    {
+      "t": "2026-11-03T02:43:04.622Z",
+      "note": "Row names set as headings shipped (d78647db); walk passes at Next defaults. Ask scores 86 (typography 7 to 8 in every look), the skill 88.4 with every line at 8 or more; Ask's designed stays at 7, short of the 8-of-10 bar, so it stays open."
     }
   ],
-  "started": "2026-11-02T23:26:48.804Z",
+  "started": "2026-11-03T02:07:24.222Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]
