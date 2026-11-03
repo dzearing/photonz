@@ -5,11 +5,11 @@
   "epic": "agent-skills",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:42:40.412Z",
-  "updated": "2026-11-03T02:43:04.624Z",
+  "updated": "2026-11-03T04:49:45.235Z",
   "deps": [
     "a-scored-test-set-for-what-ask-and-the-photonz-s",
     "asking-for-base-components-builds-the-real-set-w"
@@ -105,45 +105,9 @@
       "note": "Eval (rubric f5ae1562). Ask component-table: 59 and 51.1 on the final code (52 before; runs on the same code range 37 to 59), judge 5 to 6 per line. Ask design-system-sheet 66.8 (52.8 before), judge 5 to 7. Skill component-table 83.6 (88.8 before; judge 7 to 8), skill design-system-sheet 82 (86.4 before; judge 6 to 8). NOT at the 8-of-10 bar: what is left is the empty cells under shared headers (every judge names them) and what the model draws (a dark Off track, tight button padding, a lumpy tab icon). Left pending."
     },
     {
-      "t": "2026-11-03T02:43:04.623Z",
-      "note": "... 8 earlier entries elided",
-      "elided": 8
-    },
-    {
-      "t": "2026-10-24T05:46:42.032Z",
-      "note": "Left rough (not filed, this task covers it): wide sections do not share the column grid; Ask's 'Off checkbox drawn ticked' recurs in most Ask runs and has no general check yet (the hidden-part inference only works when a later look says visible true); add_component's words-on-words check estimates widths from font size, so '← Back' and a centred title can still overlap once measured."
-    },
-    {
-      "t": "2026-10-24T05:46:47.987Z",
-      "note": "No more empty cells, an even row rhythm and sane widths shipped (f4fe5124); the skill reaches 8 on every line for the user's request (88.8), but its design-system sheet has 7s on aligned and designed, and Ask on this Mac is at 5 to 6 because of its own drawings: the 8-of-10 bar is not met, so it stays open."
-    },
-    {
-      "t": "2026-10-24T06:04:44.883Z",
-      "note": "claimed by go loop"
-    },
-    {
-      "t": "2026-10-24T08:17:53.805Z",
-      "note": "Built (a9c8c518): looks and headers start at their column's left edge; a state keeps its column across sections; a section too wide takes every other column, a many-state one widens every column (within 1.25x the canvas), only wider ones spread; the last column's room is reserved only for what lands there, and nothing goes past the table's edge (a strided look past the margin grew the canvas and widened every later layout); a tall row under short ones repeats its section's header. add_component refuses an empty one-box card and checks words on words at 0.56 of a size a letter. Ask's planner (AgentComponentSense.madeSensible) sets words on 13/15/17, hides an Off tick, greys an Off track drawn in colour or near black, dims a Disabled look's words brighter than Default's, and builds each component once while planning so a call that fails at run time is refused with its reason (a planned Navigation was silently skipped). AgentToolError is a LocalizedError (skips read 'error 1'). Skill: named kinds drawn whole."
-    },
-    {
-      "t": "2026-10-24T08:17:53.871Z",
-      "note": "Chose left edges over centred looks because every judge of the centred sheets named looks centred while wider ones start at the edge; the skill went 77.6/80.8 to 79.6/84.8 on the switch, then 86/81.2 with the widening rule. Chose every-other-column over centring between two columns because judges read the latter as 'offset'."
-    },
-    {
-      "t": "2026-10-24T08:17:53.936Z",
-      "note": "Eval (rubric f5ae1562). Skill component-table 86 (judge 8, 8, 7, 8, 8), design sheet 85.6 (8, 7, 8, 8, 9) and 81.2 (8, 8, 7, 8, 9). Ask component-table 54.9, 52.8, 54.5, 58.3 (final: 6, 7, 7, 5, 6); Ask design sheet 76.8, 30.9 (Navigation skipped at run time, fixed since), 79.2, 77.2 (final: 6, 7, 6, 6, 7); before this pass 48 to 59 and 37.7 to 66.8. NOT at the 8-of-10 bar: skill aligned 7, Ask 5 to 7. Left pending."
-    },
-    {
-      "t": "2026-10-24T08:17:54.002Z",
-      "note": "Left rough (not filed, this task covers it): judges still mark aligned when sections have different column counts; Ask's own drawings (segmented control with one option, looks named Selected 1/2/3, two rows both called Button, a blue Off toggle once more although the same call rebuilt by hand is caught: the trace truncates the call so it could not be read; an Off radio dot; a Disabled field darker than Default in the walk's run). The chips over headers are the-name-chips-over-component-copies-stay-clear."
-    },
-    {
-      "t": "2026-10-24T08:17:54.068Z",
-      "note": "Pictures looked at: Ask after (both cases: titled tables on left edges, grey Off toggle and empty Off box in one, blue Off toggle in the other), skill after (both: one grid, wide sections on the button columns), the walk's window capture (table under name chips). Tests: Scripts/test.sh 14341 passed; ask-builds-base-components-walk ok. Audit: queue/audits/2026-10-24-component-sheet-grid.json"
-    },
-    {
-      "t": "2026-10-24T08:17:59.521Z",
-      "note": "One grid with left edges, kept columns and wide sections on whole columns, plus Off/Disabled sense, one type scale and a planning-time build check shipped (a9c8c518). The skill is at 8 on every line but aligned (7); Ask on this Mac is at 5 to 7 (its own drawings): the 8-of-10 bar is not met, so it stays open."
+      "t": "2026-11-03T04:49:45.234Z",
+      "note": "... 17 earlier entries elided",
+      "elided": 17
     },
     {
       "t": "2026-10-24T08:34:26.657Z",
@@ -504,9 +468,45 @@
     {
       "t": "2026-11-03T02:43:04.622Z",
       "note": "Row names set as headings shipped (d78647db); walk passes at Next defaults. Ask scores 86 (typography 7 to 8 in every look), the skill 88.4 with every line at 8 or more; Ask's designed stays at 7, short of the 8-of-10 bar, so it stays open."
+    },
+    {
+      "t": "2026-11-03T03:13:52.435Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-03T04:49:35.200Z",
+      "note": "walks ask-builds-base-components-walk -> ask-builds-base-components-walk"
+    },
+    {
+      "t": "2026-11-03T04:49:44.774Z",
+      "note": "Adversarial read: in run 021253 (86; designed 7,7,8) all three judges named weak states (alert Pressed deepening one button, badge Empty as a grey dot); earlier runs named a one-state alert row, so leaving the look out alone trades one complaint for the other. A kit page shows only controls whose states read."
+    },
+    {
+      "t": "2026-11-03T04:49:44.858Z",
+      "note": "Measured before fixing: raising leastSeenDifference to 2.5 would also drop a tab word turned blue (2.25, a real state), so built a narrower rule. Alert Pressed scored 1.76 (Delete is 10% of the alert, a 17/100 shade). Each case reproduced as a failing test from the exact call."
+    },
+    {
+      "t": "2026-11-03T04:49:44.933Z",
+      "note": "Built: seenDifference counts a state that only shades (under 24/100) parts covering under a quarter of the component (words by their ink, edges by their line) as no change: alert Pressed, a text button's tinted words, a 3 pt ring #0A84FF on a #0071E3 button go; a grey part turned blue stays. showsNothing: a non-Disabled look that takes the words away and leaves every shape faint (contrast under 1.35 to the canvas) goes. Ask's planner refuses a labelled component sent with states when none survive (its row would show one state). alignSheet puts a title sent after the rows on the rows' x, not the 64 margin. add_component parts stacked words whose measured lines overlap by up to a third (partStackedWords). The sheet starts each look's painted edge on its column (paintedInset; empty boxes, clear fills skipped)."
+    },
+    {
+      "t": "2026-11-03T04:49:45.007Z",
+      "note": "Chose leaving out a whole row whose states all look alike over keeping a one-state row, because judges named the one-state alert in all three looks of run 012849. Chose per-look painted edges over one inset per row, because a row's ring look and its plain look then each start on the column."
+    },
+    {
+      "t": "2026-11-03T04:49:45.082Z",
+      "note": "Eval (rubric f5ae1562), Ask component-table: before 86 (021253; 8,8,8,7,8). This pass: 86.4 (032445; 8,8,7,8,8, designed 8 from all three), 80.8 (033857; judge 8,8,8,8,9 but noOverlap 0 from alert title/body lines 2 pt into each other, fixed by partStackedWords), 86 (035320; 8,8,7,8,8), 86.4 final (040916; 8,8,8,7,8). Skill 84 (042025; 8,8,7,8,8, a sixth Text Field state of its own choosing; 88.4 before, range 83.6 to 88.8). NOT at the bar: every run has one line at 7, so left pending."
+    },
+    {
+      "t": "2026-11-03T04:49:45.156Z",
+      "note": "Pictures looked at: before 021253 (alert Pressed and grey badge), 032445 (no weak states; title at 64 over names at 92), 033857 (title on the table edge, Text Button Pressed and Focused ring gone, text button words 20 in), 040916 (clean; tiny badges, orange Default alert), skill 042025 (plain button words still in: clear fill, fixed after), walk capture (sheet live, states read, chips over headers). Tests: Scripts/test.sh green (15,211). Walk ask-builds-base-components-walk ok at Next defaults (530 s). Audit: queue/audits/2026-11-03-component-sheet-weak-states-out.json"
+    },
+    {
+      "t": "2026-11-03T04:49:45.233Z",
+      "note": "Left rough, this task covers it: wide controls at different widths per row, tiny badges and variants shown as states (the model's choices), empty right under rows with fewer states, no type styles row. The skill's eval title check missed 'Base Components' once (asked 7.5): not reproduced, left here."
     }
   ],
-  "started": "2026-11-03T02:07:24.222Z",
+  "started": "2026-11-03T03:13:52.434Z",
   "walks": [
     "ask-builds-base-components-walk"
   ]

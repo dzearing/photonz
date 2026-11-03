@@ -346,6 +346,12 @@ extension PhotonzDocument {
             guard let box = canvasBounds(of: look.layer), let layer = self.layer(id: look.layer) else { return 0 }
             return box.minY - layer.frame.minY
         } }
+        // How far in from its box each look starts painting, so what a
+        // person sees starts on the column: a text button's words centred in
+        // a box with no fill or edge sat 20 in, and judges read "the
+        // text-button labels are set in from their column edge" (the eval,
+        // 2026-11-03).
+        let insets = rows.map { $0.looks.map { paintedInset(of: $0.layer) } }
         // Each row's name is measured as it is set, at its own size.
         let nameColumn = max(AgentNewComponent.labelColumn,
                              ((labels.map(\.frame.width).max() ?? 0) + AgentNewComponent.nameGap).rounded(.up))
@@ -509,7 +515,8 @@ extension PhotonzDocument {
                 }
                 previous = band
                 for (at, look) in row.looks.enumerated() {
-                    move(look.layer, to: CGPoint(x: left(cells[at]), y: y + (band - span) / 2 + reach[index][at] - lowest))
+                    move(look.layer, to: CGPoint(x: left(cells[at]) - insets[index][at],
+                                                 y: y + (band - span) / 2 + reach[index][at] - lowest))
                 }
                 if let label = self.layer(id: row.label) {
                     move(row.label, to: CGPoint(x: x, y: y + (band - label.frame.height) / 2))
@@ -533,6 +540,27 @@ extension PhotonzDocument {
                                 frame: CGRect(x: x, y: top, width: (right - x).rounded(.up),
                                               height: bottom - top),
                                 pageTop: pageTop)
+    }
+
+    /// How far right of its box a look's paint starts: its parts that show
+    /// (words with letters, shapes with an inside or an edge), or 0 when
+    /// none of them do or the look is not a group of parts.
+    func paintedInset(of id: UUID) -> CGFloat {
+        guard let box = canvasBounds(of: id), let children = layer(id: id)?.group?.children else { return 0 }
+        func paints(_ child: Layer) -> Bool {
+            guard child.isVisible else { return false }
+            if let text = child.text { return !text.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            // A box filled with a colour of no opacity (the skill's #007AFF00
+            // under a plain button's words) paints nothing either.
+            if let annotation = child.annotation, annotation.drawsARingRatherThanBeingOne,
+               child.style.borderEffects.isEmpty, let fill = annotation.fill, !fill.isGradient,
+               (RGBA(hex: fill.hex)?.a ?? 1) <= 0.01 {
+                return false
+            }
+            return !child.paintsNothingAtAll
+        }
+        let painted = children.filter(paints).compactMap { canvasBounds(of: $0.id) }.reduce(CGRect.null) { $0.union($1) }
+        return painted.isNull ? 0 : max(0, painted.minX - box.minX)
     }
 
     /// The words the table set for one component: its name.

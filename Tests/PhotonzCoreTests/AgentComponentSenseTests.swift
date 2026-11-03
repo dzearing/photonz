@@ -419,6 +419,55 @@ struct AgentComponentSenseTests {
         #expect(nav.looks.map(\.name) == ["Default", "Selected"])
     }
 
+    @Test("A state that only deepens one small part a shade is left out; a small part turned another colour stays")
+    func shadeOfASmallPart() throws {
+        // Ask's Alert, word for word, 2026-11-03 (run 20261103-021253): its
+        // Pressed deepens the Delete button #FF3B30 to #D32F2F, a tenth of
+        // the alert, and all three judges read "the alert's Pressed barely
+        // looks different".
+        let alert = try Self.plain(##"""
+            {"firstLook":"Default","labels":true,"looks":[{"changes":[{"fill":"#D32F2F","part":"Delete"}],"name":"Pressed"}],"name":"Alert","parts":[{"cornerRadius":14,"fill":"#FFFFFF","height":120,"name":"Background","shadow":{"radius":24,"x":0,"y":8},"shape":"rectangle","width":320,"x":0,"y":0},{"alignment":"center","color":"#1C1C1E","fontSize":17,"height":22,"name":"Title","shape":"text","text":"Delete Photo?","weight":"semibold","width":280,"x":20,"y":16},{"alignment":"center","color":"#8E8E93","fontSize":13,"height":32,"name":"Message","shape":"text","text":"This photo will be permanently removed.","weight":"regular","width":280,"x":20,"y":44},{"cornerRadius":7,"fill":"#F2F2F7","height":28,"name":"Cancel","shape":"rectangle","width":140,"x":16,"y":84},{"centerIn":"Cancel","color":"#1C1C1E","fontSize":14,"height":28,"name":"Cancel Label","shape":"text","text":"Cancel","weight":"medium","width":140,"x":16,"y":84},{"cornerRadius":7,"fill":"#FF3B30","height":28,"name":"Delete","shape":"rectangle","width":140,"x":164,"y":84},{"centerIn":"Delete","color":"#FFFFFF","fontSize":14,"height":28,"name":"Delete Label","shape":"text","text":"Delete","weight":"medium","width":140,"x":164,"y":84}],"x":240,"y":760}
+            """##)
+        #expect(alert.looks.map(\.name) == ["Default"])
+        // The same small button turned from grey to blue is a state you see.
+        let picked = try Self.plain(##"""
+            {"name": "Toolbar", "x": 0, "y": 0, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 320, "height": 120, "fill": "#FFFFFF", "stroke": "#E5E5EA", "strokeWidth": 1},
+                       {"name": "Pick", "shape": "rectangle", "x": 164, "y": 84, "width": 140, "height": 28, "cornerRadius": 7, "fill": "#E5E5EA"}],
+             "looks": [{"name": "Selected", "changes": [{"part": "Pick", "fill": "#007AFF"}]}]}
+            """##)
+        #expect(picked.looks.map(\.name) == ["Default", "Selected"])
+        // Ask's Button and Text Button, word for word, 2026-11-03 (run
+        // 20261103-032445): a 3 point ring a shade off the button's own blue,
+        // and a text button whose Pressed only deepens its words. Judges:
+        // "Focused vs Default button barely differ", "Text Button's Pressed
+        // looks the same as Default". Hover, Pressed and Disabled stay.
+        let button = try Self.plain(##"""
+            {"firstLook":"Default","labels":true,"looks":[{"changes":[{"fill":"#0077ED","part":"Background"}],"name":"Hover"},{"changes":[{"fill":"#0060C0","part":"Background"}],"name":"Pressed"},{"changes":[{"fill":"#0071E3","part":"Background","stroke":"#0A84FF","strokeWidth":3}],"name":"Focused"},{"changes":[{"fill":"#E5E5EA","part":"Background"},{"color":"#B0B0B8","part":"Label"}],"name":"Disabled"}],"name":"Button","parts":[{"cornerRadius":8,"fill":"#0071E3","height":36,"name":"Background","shape":"rectangle","width":120,"x":0,"y":0},{"centerIn":"Background","color":"#FFFFFF","fontSize":15,"height":36,"name":"Label","shape":"text","text":"Continue","weight":"medium","width":120,"x":0,"y":0}],"x":240,"y":120}
+            """##)
+        #expect(button.looks.map(\.name) == ["Default", "Hover", "Pressed", "Disabled"])
+        let text = try Self.plain(##"""
+            {"firstLook":"Default","labels":true,"looks":[{"changes":[{"color":"#0077ED","part":"Label"}],"name":"Hover"},{"changes":[{"color":"#0060C0","part":"Label"}],"name":"Pressed"},{"changes":[{"cornerRadius":8,"part":"Background","stroke":"#0A84FF","strokeWidth":3}],"name":"Focused"},{"changes":[{"color":"#B0B0B8","part":"Label"}],"name":"Disabled"}],"name":"Text Button","parts":[{"fill":"none","height":36,"name":"Background","shape":"rectangle","width":120,"x":0,"y":0},{"centerIn":"Background","color":"#0071E3","fontSize":15,"height":36,"name":"Label","shape":"text","text":"Learn More","weight":"medium","width":120,"x":0,"y":0}],"x":240,"y":120}
+            """##)
+        #expect(text.looks.map(\.name) == ["Default", "Focused", "Disabled"])
+    }
+
+    @Test("A state that takes a control's words away and leaves it a faint shape is left out; Disabled and a changed count stay")
+    func stateThatShowsNothing() throws {
+        // Ask's Badge, word for word, 2026-11-03 (run 20261103-021253): its
+        // Empty look is a light grey dot with no number, and all three judges
+        // named it ("the empty badge is a gray dot", "the badge is tiny").
+        let badge = try Self.plain(##"""
+            {"firstLook":"Default","labels":true,"looks":[{"changes":[{"fill":"#E9E9EA","part":"Dot"},{"part":"Count","text":""}],"name":"Empty"}],"name":"Badge","parts":[{"fill":"#FF3B30","height":20,"name":"Dot","shape":"ellipse","width":20,"x":0,"y":0},{"centerIn":"Dot","color":"#FFFFFF","fontSize":12,"height":20,"name":"Count","shape":"text","text":"3","weight":"semibold","width":20,"x":0,"y":0}],"x":240,"y":920}
+            """##)
+        #expect(badge.looks.map(\.name) == ["Default"])
+        // A count that changes is a state; so is a faint Disabled.
+        let counted = try Self.plain(##"""
+            {"firstLook":"Default","labels":true,"looks":[{"changes":[{"part":"Count","text":"12"}],"name":"Many"},{"changes":[{"fill":"#E9E9EA","part":"Dot"},{"part":"Count","text":""}],"name":"Disabled"}],"name":"Badge","parts":[{"fill":"#FF3B30","height":20,"name":"Dot","shape":"ellipse","width":20,"x":0,"y":0},{"centerIn":"Dot","color":"#FFFFFF","fontSize":12,"height":20,"name":"Count","shape":"text","text":"3","weight":"semibold","width":20,"x":0,"y":0}],"x":240,"y":920}
+            """##)
+        #expect(counted.looks.map(\.name) == ["Default", "Many", "Disabled"])
+    }
+
     @Test("Blue words left unreadable on a blue look are set white, not near black")
     func whiteOnColour() throws {
         let spec = try Self.plain(##"""

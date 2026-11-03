@@ -63,6 +63,28 @@ struct AgentComponentTests {
         return main.group?.children.first { $0.name == name }
     }
 
+    @Test("Words stacked in boxes that do not touch never end with their lines overlapping, in any look")
+    func stackedWordsKeepTheirLines() throws {
+        // Ask's Alert, 2026-11-03 (run 20261103-033857): a title in an 18
+        // point box at 10 over a message in a 16 point box at 30, each line
+        // measured taller than its box (23 and 20 here, as SF Pro sets 15 and
+        // 13 point words), overlapped by 2 and read as words on words.
+        let json = ##"""
+            {"firstLook":"Info","labels":false,"looks":[{"changes":[{"part":"Title","text":"Upload failed"},{"part":"Body","text":"Check your connection and try again."}],"name":"Error"}],"name":"Alert","parts":[{"cornerRadius":12,"fill":"#FFFFFF","height":56,"name":"Card","shape":"rectangle","stroke":"#E5E5EA","strokeWidth":1,"width":320,"x":0,"y":0},{"alignment":"left","color":"#1D1D1F","fontSize":15,"height":18,"name":"Title","shape":"text","text":"Update available","weight":"semibold","width":264,"x":40,"y":10},{"alignment":"left","color":"#86868B","fontSize":13,"height":16,"name":"Body","shape":"text","text":"Version 2.0 is ready to install.","weight":"regular","width":264,"x":40,"y":30}],"x":240,"y":920}
+            """##
+        let lines: (TextContent, CGFloat?) -> CGSize = { content, width in
+            CGSize(width: width ?? CGFloat(content.string.count * 7), height: content.fontSize > 14 ? 23 : 20)
+        }
+        var document = PhotonzDocument(canvasSize: CGSize(width: 1440, height: 1024), layers: [])
+        let made = try document.agentAddComponent(try Self.spec(json), measure: lines).get()
+        for look in ["Info", "Error"] {
+            let title = try #require(Self.piece("Title", of: look, in: document, made)).frame
+            let body = try #require(Self.piece("Body", of: look, in: document, made)).frame
+            #expect(title.maxY <= body.minY, "\(look): title \(title) over body \(body)")
+            #expect(abs(title.midY - 19) <= 2 && abs(body.midY - 38) <= 2, "\(look): each line still sits in its own box")
+        }
+    }
+
     // MARK: The call
 
     @Test("add_component is offered to agents and to Ask, with an object schema")

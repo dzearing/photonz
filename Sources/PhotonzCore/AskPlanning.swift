@@ -615,6 +615,18 @@ public struct AskConversation: Sendable {
                 }
                 if name == "add_component" {
                     step = AskStep(tool: name, arguments: AgentNewComponent.madePlain(arguments))
+                    // Sent with states, left with none a person could tell
+                    // from its first look: its row would show one state, and
+                    // every judge named such a row ("the alert shows only one
+                    // state", the eval, 2026-11-03).
+                    let sent = arguments["looks"]?.arrayValue?.compactMap { $0["name"]?.stringValue } ?? []
+                    if arguments["labels"]?.boolValue == true, !sent.isEmpty,
+                       step.arguments["looks"]?.arrayValue?.isEmpty ?? true {
+                        let kind = arguments["name"]?.stringValue ?? "That component"
+                        let first = arguments["firstLook"]?.stringValue ?? AgentNewComponent.defaultLookName
+                        refuse(name, arguments, "Not planned: \(kind)'s \(sent.joined(separator: " and ")) looks the same as its \(first) at a glance, so its row would show one state. Give each state a change a person sees across the whole control, or plan another kind.")
+                        continue
+                    }
                 }
                 if let earlier = repeated(step) {
                     refuse(name, step.arguments, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
@@ -764,7 +776,7 @@ public struct AskConversation: Sendable {
                   let at = arguments["x"]?.doubleValue, at != x,
                   at < Self.sheetMargin || (at < canvasWidth / 4 && at > x),
                   (arguments["y"]?.doubleValue ?? 0) < top else { continue }
-            arguments["x"] = .number(at < Self.sheetMargin ? Self.sheetMargin : x)
+            arguments["x"] = .number(x)
             steps[index] = AskStep(tool: "add_text", arguments: .object(arguments))
         }
         func width(_ arguments: AgentJSON) -> Double {

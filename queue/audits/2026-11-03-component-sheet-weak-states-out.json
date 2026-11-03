@@ -1,0 +1,28 @@
+{
+  "feature": "Asking for a sheet of components: every state shown is one you can see, and the page shares one left edge",
+  "epic": "agent-skills",
+  "summary": "Ask now leaves out a state that only deepens one small part a shade (an alert's Pressed darkening its Delete button), only tints its words, adds a ring in nearly the control's own colour, or empties the control into a faint shape (a grey dot as a badge's Empty). A row left with one state is not drawn at all. A title the model sends after the rows now starts on the table's left edge. Each look starts its column with what it paints, so a text button's words sit on the column, not 20 points in. The judges' designed line went from 7 in five of the last six runs to 8 in three of this pass's four.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A blank picture, then Ask (Command K).",
+  "switched": {},
+  "try": [
+    { "do": "On a blank picture press Command K and type: create a table of apple like quality base components that show different states and text", "shot": "2026-11-03-component-sheet-weak-states-window-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look across each row: every state changes how the control looks at a glance.", "shot": "2026-11-03-component-sheet-weak-states-after.png" },
+    { "do": "Compare with the sheet before this pass: the alert's Pressed and the badge's grey Empty barely differ from their first look.", "shot": "2026-11-03-component-sheet-weak-states-before.png" },
+    { "do": "Check the title and the row names start on one left edge, and a text button's words start on their column.", "shot": "2026-11-03-component-sheet-weak-states-after-2.png" },
+    { "do": "Press Command Z once: the whole sheet goes back in one step." }
+  ],
+  "evaluate": [
+    "Does every state on the sheet look different from the one before it, at a glance?",
+    "Would you rather see a weak state than have a row left out (no alert row when its states look alike)?",
+    "Do the title, names and every column read as one clean grid now?",
+    "Is the empty space right of rows with three states still the first thing you notice?"
+  ],
+  "rough": [
+    "Ask is still short of the 8-of-10 bar: each of this pass's four runs had one line at 7 (aligned twice, designed twice; 86.4, 80.8, 86, 86.4). Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t), which stays open.",
+    "What holds the 7s now is mostly what the model chooses: wide controls at different widths from row to row, tiny badges, an orange Default alert, variants such as Day/Week/Month shown as states. Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The skill scored 84 in one run (88.4 before), aligned 7: its model gave Text Field a sixth state and the eval's title check missed. Nothing in it comes from this pass's changes; covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "Judges still name the empty right side under rows with fewer states and ask for a row of type styles (which would break the four-size bar). Covered by this task (asking-for-a-sheet-of-components-gives-a-clean-t).",
+    "The state chips the editor draws over each copy cover the state names in the window. Covered by the-name-chips-over-component-copies-stay-clear.",
+    "No mock covers this surface: it is what Ask makes on the canvas, judged against Apple's design kit pages."
+  ]
+}

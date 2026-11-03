@@ -122,6 +122,40 @@ struct AgentComponentSheetTests {
         #expect(Set(names.map(\.frame.minX)).count == 1)
     }
 
+    @Test("A look starts its column with what it paints: a text button's words, not the empty box round them")
+    func paintedEdgeOnTheColumn() throws {
+        // Ask's Text Button, 2026-11-03 (runs 20261103-033857 and -035320):
+        // words centred in a 120 point box with no fill or edge sat 20 in
+        // from the column, and judges read "the text-button labels are set
+        // in from their column edge", "text buttons are centred while the
+        // other controls sit left".
+        // The skill's Plain Button, 2026-11-03 (run 20261103-042025-skill),
+        // fills its box with a blue of no opacity, which paints nothing too.
+        for fill in ["none", "#007AFF00"] {
+        var document = Self.blank()
+        let button = try Self.add(Self.row("Button", y: 100, width: 120, looks: ["Default", "Focused", "Disabled"]), to: &document)
+        let text = try Self.add(##"""
+            {"name": "Text Button", "x": 40, "y": 200, "labels": true, "firstLook": "Default",
+             "parts": [{"name": "Background", "shape": "rectangle", "x": 0, "y": 0, "width": 120, "height": 36, "fill": "\##(fill)"},
+                       {"name": "Label", "shape": "text", "text": "Learn More", "fontSize": 15, "x": 0, "y": 0, "width": 0, "height": 0, "centerIn": "Background", "color": "#0071E3"}],
+             "looks": [{"name": "Focused", "changes": [{"part": "Background", "stroke": "#0A84FF", "strokeWidth": 2}]},
+                       {"name": "Disabled", "changes": [{"part": "Label", "color": "#B0B0B8"}]}]}
+            """##, to: &document)
+        let columns = Self.boxes(button, in: document).map(\.minX)
+        func painted(_ look: AgentMadeComponent.Look) -> CGRect? {
+            guard let main = document.layer(id: look.layer), let children = main.group?.children else { return nil }
+            let label = children.first { $0.name == "Label" }
+            let ring = children.first { $0.name == "Background" && !$0.paintsNothingAtAll && fill == "none" }
+                ?? (look.name == "Focused" ? children.first { $0.name == "Background" } : nil)
+            return (ring ?? label).flatMap { document.canvasBounds(of: $0.id) }
+        }
+        for (column, look) in zip(columns, text.looks) {
+            let edge = try #require(painted(look)).minX
+            #expect(abs(edge - column) <= 1, "\(fill), \(look.name): what it paints starts at \(edge), its column at \(column)")
+        }
+        }
+    }
+
     @Test("Rows whose originals the editor parked in the Library, leaving copies on the canvas, are still one table")
     func parkedRows() throws {
         var document = Self.blank()

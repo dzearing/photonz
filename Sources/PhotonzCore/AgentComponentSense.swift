@@ -636,9 +636,41 @@ extension AgentNewComponent {
         }
         func far(_ x: RGBA, _ y: RGBA) -> Double { max(abs(x.r - y.r), abs(x.g - y.g), abs(x.b - y.b)) * 100 }
         var seen = 0.0
+        // What changed only in colour, how far, and how much of the
+        // component's paint that is: words by their ink, an edge by its line.
+        var shadedShare = 0.0
+        var strongest = 0.0
+        var onlyColour = true
         for (p, q) in zip(a, b) {
             if p.hidden != q.hidden || p.text != q.text || p.fontSize != q.fontSize { return .infinity }
             if p.hidden { continue }
+            if p.frame != q.frame || p.look.opacity != q.look.opacity { onlyColour = false }
+            let spotShare = { () -> Double in
+                let spot = box(p)
+                return spot.isNull ? 0 : Double(spot.width * spot.height / area)
+            }()
+            func shade(_ move: Double, _ share: Double) {
+                guard move > 0 else { return }
+                strongest = max(strongest, move)
+                shadedShare += share
+            }
+            if p.kind == .text {
+                shade(far(ink(p.colorHex ?? Self.defaultWordColour), ink(q.colorHex ?? Self.defaultWordColour)),
+                      spotShare * Self.inkShare)
+            } else {
+                shade(far(ink(p.look.fill?.hexValue), ink(q.look.fill?.hexValue)), spotShare)
+                // An edge is drawn over the fill: one that comes, goes or
+                // changes moves its line from the fill's colour or its own.
+                let behind = ink(p.look.fill?.hexValue)
+                func line(_ part: AgentComponentPart) -> RGBA {
+                    part.look.stroke == nil || (part.look.strokeWidth ?? 1) <= 0 ? behind : ink(part.look.stroke?.hexValue)
+                }
+                let perimeter = Double(2 * (p.frame.width + p.frame.height))
+                func edge(_ part: AgentComponentPart) -> Double {
+                    part.look.stroke == nil ? 0 : min(perimeter * Double(part.look.strokeWidth ?? 1) / Double(area), spotShare)
+                }
+                shade(far(line(p), line(q)), max(edge(p), edge(q)))
+            }
             // A part moved or grown by a quarter of itself, or by a dozen
             // points, plainly shows; less (a knob 24 to 28) counts by the
             // room it gains or loses, as far as its paint stands from the
@@ -678,7 +710,54 @@ extension AgentNewComponent {
                 }
             }
         }
+        // One small part a shade deeper is the same component to the eye,
+        // however the sum reads: an alert whose Pressed deepens its Delete
+        // button #FF3B30 to #D32F2F, a tenth of the alert, scored 1.8, and
+        // all three judges read "the alert's Pressed barely looks different"
+        // (the eval, 2026-11-03). A small part turned another colour (grey
+        // to blue, black words to blue) still shows.
+        // So is a word or a ring a shade off (a text button's Pressed words
+        // #0071E3 to #0060C0, a 3 point ring #0A84FF round a #0071E3 button:
+        // "Text Button's Pressed looks the same as Default", "Focused vs
+        // Default button barely differ", the eval, 2026-11-03).
+        if onlyColour, strongest < Self.plainShade, shadedShare < Self.smallPartShare { return 0 }
         return seen
+    }
+
+    /// A colour move (out of 100, the largest channel) under this is a
+    /// shade of the same colour rather than another colour.
+    static let plainShade = 24.0
+    /// A part this share of the component or less is a small part of it.
+    static let smallPartShare = 0.25
+    /// Paint this close to the canvas (a contrast ratio) is a faint shape.
+    static let faintAgainstCanvas = 1.35
+
+    /// Whether a look shows nothing a person reads as the control: its words
+    /// taken away and every shape in it faint against the canvas, as a
+    /// badge's Empty look drawn as a light grey dot with no number (all three
+    /// judges of the eval, 2026-11-03: "the empty badge is just a grey
+    /// dot"). A Disabled look is faint by design and never counts.
+    func showsNothing(_ look: AgentComponentLook) -> Bool {
+        guard !Self.stateWords(look.name).contains("disabled") else { return false }
+        func says(_ parts: [AgentComponentPart]) -> Bool {
+            parts.contains { !$0.hidden && $0.kind == .text && !($0.text ?? "").trimmingCharacters(in: .whitespaces).isEmpty }
+        }
+        guard says(parts), let first = looks.first, says(drawn(first)) else { return false }
+        let shown = drawn(look)
+        guard !says(shown) else { return false }
+        let canvas = RGBA(hex: Self.canvasColour) ?? RGBA(r: 1, g: 1, b: 1)
+        func stands(_ hex: String?, _ opacity: Double) -> Bool {
+            guard let hex, let colour = RGBA(hex: hex) else { return false }
+            let alpha = colour.a * opacity
+            let seen = RGBA(r: colour.r * alpha + canvas.r * (1 - alpha), g: colour.g * alpha + canvas.g * (1 - alpha),
+                            b: colour.b * alpha + canvas.b * (1 - alpha))
+            return RGBA.contrast(seen.linearLuminance, canvas.linearLuminance) >= Self.faintAgainstCanvas
+        }
+        return !shown.contains { part in
+            !part.hidden && part.kind != .text
+                && (stands(part.look.fill?.hexValue, part.look.opacity ?? 1)
+                    || stands(part.look.stroke?.hexValue, part.look.opacity ?? 1))
+        }
     }
 
     /// The arguments without any later look a person could not tell from an
@@ -689,7 +768,7 @@ extension AgentNewComponent {
         var kept = [found.looks[0]]
         var gone: [Int] = []
         for (index, look) in found.looks.enumerated().dropFirst() {
-            if kept.contains(where: { found.seenDifference($0, look) < leastSeenDifference }) {
+            if found.showsNothing(look) || kept.contains(where: { found.seenDifference($0, look) < leastSeenDifference }) {
                 gone.append(index - 1)
             } else {
                 kept.append(look)

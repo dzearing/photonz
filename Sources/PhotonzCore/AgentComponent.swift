@@ -1074,6 +1074,32 @@ extension PhotonzDocument {
             let y = box.height > 0 ? box.midY - size.height / 2 - off.dy : box.minY
             pieces[index].frame.origin = CGPoint(x: x.rounded(), y: y.rounded())
         }
+        partStackedWords(&pieces, spec: spec, boxes: boxes)
+    }
+
+    /// Words stacked in boxes that do not touch (an alert's title over its
+    /// message, 2 apart) whose lines, measured taller than their boxes, now
+    /// reach into each other by a little are parted, half each way, so each
+    /// line keeps its own room: a title's 23 point line over a message's 20
+    /// point one, set in 18 and 16 point boxes, overlapped by 2 and read as
+    /// words on words (the eval, 2026-11-03, run 20261103-033857-ask).
+    /// Words that overlap by more were asked for that way and are left.
+    static func partStackedWords(_ pieces: inout [Layer], spec: AgentNewComponent, boxes: [CGRect]) {
+        let placed = spec.parts.indices.filter { index in
+            index < pieces.count && index < boxes.count && spec.parts[index].kind == .text
+                && spec.parts[index].centerIn == nil && pieces[index].isVisible
+        }.sorted { pieces[$0].frame.minY < pieces[$1].frame.minY }
+        for (at, upper) in placed.enumerated() {
+            for lower in placed.dropFirst(at + 1) {
+                let top = pieces[upper].frame, bottom = pieces[lower].frame
+                guard boxes[upper].maxY <= boxes[lower].minY, top.minX < bottom.maxX, bottom.minX < top.maxX else { continue }
+                let reach = top.maxY - bottom.minY
+                guard reach > 0, reach <= min(top.height, bottom.height) / 3 else { continue }
+                let up = (reach / 2).rounded(.down)
+                pieces[upper].frame.origin.y -= up
+                pieces[lower].frame.origin.y += (reach - up).rounded(.up)
+            }
+        }
     }
 }
 

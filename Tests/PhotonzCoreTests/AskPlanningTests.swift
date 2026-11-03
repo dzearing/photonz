@@ -160,6 +160,14 @@ struct AskPlanningTests {
                                      ("add_text", #"{"text":"Base Components","x":240,"y":48,"fontSize":32}"#)]))
         #expect(far.steps.map(\.tool) == ["add_component", "add_text"])
         #expect(far.steps.map { $0.arguments["x"]?.doubleValue } == [96, 96])
+        // Sent after the rows at 24, past the page margin, it still starts on
+        // the rows' edge, not on the margin: a title at 64 over names at 96
+        // read to all three judges as "the title is indented differently
+        // from the table" (the eval, 2026-11-03, run 20261103-032445-ask).
+        var edge = Self.sheet()
+        _ = edge.take(try Self.reply([Self.component("Button", x: 240, y: 120, width: 120),
+                                      ("add_text", #"{"text":"Base Components","x":24,"y":24,"fontSize":34}"#)]))
+        #expect(edge.steps.map { $0.arguments["x"]?.doubleValue } == [96, 96])
         // A title set to the right (centred over the page) is the model's own.
         var centred = Self.sheet()
         _ = centred.take(try Self.reply([("add_text", #"{"text":"Base Components","x":600,"y":40,"fontSize":32}"#),
@@ -224,6 +232,29 @@ struct AskPlanningTests {
         #expect(talk.steps.isEmpty)
         let said = talk.messages.last?["content"]?.stringValue ?? ""
         #expect(said.contains("Back"), "\(said)")
+    }
+
+    @Test("A labelled component sent with states nobody could tell apart is refused while planning, so no row of the sheet shows one state")
+    func componentWhoseStatesAllLookTheSame() throws {
+        var talk = Self.sheet()
+        // Ask's Alert, 2026-11-03 (run 20261103-021253), cut to its buttons:
+        // a Pressed that only deepens the Delete button. Every judge read it
+        // as "nearly the same as Default", and with the look left out the row
+        // shows one state ("the alert shows only one state", run 012849).
+        _ = talk.take(try Self.reply([("add_component", """
+            {"name":"Alert","x":240,"y":760,"labels":true,"firstLook":"Default",\
+            "parts":[{"name":"Background","shape":"rectangle","x":0,"y":0,"width":320,"height":120,"cornerRadius":14,"fill":"#FFFFFF","shadow":{"radius":24,"x":0,"y":8}},\
+            {"name":"Title","shape":"text","text":"Delete Photo?","fontSize":17,"weight":"semibold","alignment":"center","x":20,"y":16,"width":280,"height":22,"color":"#1C1C1E"},\
+            {"name":"Cancel","shape":"rectangle","x":16,"y":84,"width":140,"height":28,"cornerRadius":7,"fill":"#F2F2F7"},\
+            {"name":"Delete","shape":"rectangle","x":164,"y":84,"width":140,"height":28,"cornerRadius":7,"fill":"#FF3B30"}],\
+            "looks":[{"name":"Pressed","changes":[{"part":"Delete","fill":"#D32F2F"}]}]}
+            """)]))
+        #expect(talk.steps.isEmpty)
+        let said = talk.messages.last?["content"]?.stringValue ?? ""
+        #expect(said.contains("Not planned") && said.contains("Pressed"), "\(said)")
+        // A component whose Hover plainly shows is planned.
+        _ = talk.take(try Self.reply([Self.component("Button", x: 40, y: 100, width: 120)]))
+        #expect(talk.steps.map(\.tool) == ["add_component"], "\(talk.messages.last?["content"]?.stringValue ?? "")")
     }
 
     @Test("A tool's refusal reads as its own words wherever it is shown, not as an error number")
