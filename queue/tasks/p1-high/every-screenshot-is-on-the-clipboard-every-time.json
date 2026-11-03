@@ -4,12 +4,12 @@
   "goal": "Since about 2026-11-01 a screenshot taken with Photonz is not reliably on the clipboard: sometimes the paste that follows gets nothing or the old clipboard. Copying a capture to the clipboard is the heart of the app; it must work every single time, into every kind of app, however fast the paste follows.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 1e-8,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T14:53:23.683Z",
-  "updated": "2026-11-03T14:53:23.795Z",
+  "updated": "2026-11-03T15:26:32.447Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake): 'lately when i take a screenshot, it isn't reliably copying it to clipboard. it's rather annoying. i think something regressed. make sure that screenshots are copied to clipboard reliably'. Timing matches e0648dd9 (shipped in v0.22.0). Code: Sources/Photonz/Capture/CaptureStore.swift (add: handOffNewScreenshot before writePNG; the later copy skipped when handedOff.changeCount still matches), Sources/Photonz/ClipboardHandOff.swift (promised types made in the background, then handed to the system clipboard type by type), Sources/PhotonzRender/ClipboardPicture.swift. Not reproduced yet by the intake window.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-11-03T14:53:23.794Z",
       "note": "seq 3980 -> 1e-8"
+    },
+    {
+      "t": "2026-11-03T15:26:32.446Z",
+      "note": "seq 1e-8 -> 10"
     }
   ]
 }

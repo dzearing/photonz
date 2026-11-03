@@ -3,13 +3,13 @@
   "title": "The rotating walk check moves on through the set instead of re-running the same Ask walks every time",
   "goal": "The short walk check that runs after each task is meant to cover the whole set a chunk at a time. Since midday on 2026-10-25 it has re-run the same block of slow Ask walks on every check, hit its 30 minute limit, and started from the same place next time, so the rest of the set is never reached and each check costs three times what it should.",
   "epic": "unmanned-loop",
-  "priority": "p2-normal",
-  "seq": 550,
+  "priority": "p1-high",
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-26T14:17:11.190Z",
-  "updated": "2026-11-02T14:50:11.623Z",
+  "updated": "2026-11-03T15:26:33.366Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced in the 2026-10-26 digest pass. Commands and output:\n\n$ cat queue/sweep/rotation.json -> \"cursor\": 103 (unchanged since the 11:51Z check on 2026-10-25)\n$ grep '\"ev\":\"slice_pass\"' queue/history.jsonl | tail -3 -> 13:20Z walks 22 of 30 timedOut true; 15:43Z walks 21 timedOut true; 17:08Z walks 19 timedOut true, each seconds 1803-1806\n$ grep -E '^[a-z0-9-]+-walk +[0-9]+s' queue/sweep/slice-2026-10-25-081308.log and -093850.log -> the same run every time: 3d-grippers-on-a-picked-layer-walk, an-editing-session-walk, arrow-*, then ask-adds-a-title-page-walk 82-93s, ask-annotates-a-screenshot-walk 80-105s, ask-builds-base-components-walk 206-303s, ask-cancels-a-waiting-request-walk 121-146s, ask-draws-a-dog-walk 151-183s, ask-draws-a-scene-walk 159-185s, ask-draws-an-illustration-walk 331-354s ...\n$ grep 'Sized to' queue/loop.log | tail -1 -> 'Sized to 10 minutes at 19.8s a walk, the median of the last 10 rotating checks.'\n\nCause, read from code: queue/bin/sweep.sh around line 268 advances the rotation only when SLICE_TIMED_OUT is 0 ('a check cut off on the clock runs the same walks again next time rather than skipping them'), and queue/bin/sweep-schedule.mjs picks 30 walks from the median pace. From cursor 103 the next 30 walks hold about 20 Ask walks on the 27B model, so every check is stopped on the clock and the cursor never moves: a deadlock until the Ask walks get faster. ask-walks-share-one-model-instead-of-loading-a-f (one shared model) will shave the model load off each Ask walk but does not move the cursor, so this is its own fix. Do not let a fix skip walks nobody ran: advance only past finished walks.",
@@ -92,6 +92,18 @@
     {
       "t": "2026-11-02T14:50:11.622Z",
       "note": "seq 530 -> 550"
+    },
+    {
+      "t": "2026-11-03T15:25:30.424Z",
+      "note": "digest 2026-11-03: worse, and now costing a fifth of the loop's day. Nine of the ten rotating checks between 2026-11-02T16:13Z and 2026-11-03T05:20Z stopped on the 30 minute clock (1803 to 1806 s each), running 17 to 22 walks from position 111 every time, and the place they start never moved until the tenth (15:00Z, 1134 s, 24 walks, 111 to 133). loop-day.mjs --hours 24: slices 289m, 20.1% of the day. The changed list (queue/sweep/rotation.json) carries twelve Ask walks at 100 to 425 s each, which every check runs first. Raised to p1."
+    },
+    {
+      "t": "2026-11-03T15:25:30.498Z",
+      "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-11-03T15:26:33.365Z",
+      "note": "seq 550 -> 130"
     }
   ],
   "walks": []

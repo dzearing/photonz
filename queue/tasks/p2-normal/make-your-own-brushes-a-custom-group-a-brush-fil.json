@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p2-normal",
   "seq": 540,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-25T11:15:03.282Z",
-  "updated": "2026-11-02T14:50:11.558Z",
+  "updated": "2026-11-03T15:25:30.720Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left out of brushes-are-picked-from-a-library-of-tiles-that on purpose (its notes: the Custom group, importing and making a brush from a selection are not part of it). BrushLibrary (PhotonzCore/BrushLibrary.swift) lists BrushMedium.allCases by BrushGroup; a custom brush is a saved BrushSettings preset with a name, so BrushLibrary needs a preset list beside the media and BrushGroup a .custom case. Tiles already render any BrushSettings (BrushPreview, BrushPreviewCache). Needs brush-editor.html for what New brush opens.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-02T14:50:11.557Z",
       "note": "seq 520 -> 540"
+    },
+    {
+      "t": "2026-11-03T15:25:30.719Z",
+      "note": "the user closed the brush epic as it stands on 2026-11-02 (card option a, over the recommended follow-up); a Custom brush group is new work in that epic and is re-filed if the user asks for it"
     }
   ]
 }

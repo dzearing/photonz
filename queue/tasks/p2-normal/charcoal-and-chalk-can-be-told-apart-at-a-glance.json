@@ -5,11 +5,11 @@
   "epic": "image-paint",
   "priority": "p2-normal",
   "seq": 590,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-31T06:35:44.560Z",
-  "updated": "2026-11-02T14:50:11.889Z",
+  "updated": "2026-11-03T15:25:30.794Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the brush epic final audit, 2026-10-31: queue/audits/2026-10-31-brush-epic-measures.txt and -blind-1/2/3.png with keys. The runner could tell them apart (charcoal a dense dark core with a soft dusty halo; chalk a lighter broken streaky film), but the judges read charcoal's halo as chalk dust and chalk's streaks as charcoal streaks. Judges' cues: chalk powdery and opaque, charcoal velvety black. The dry media slice (charcoal-chalk-and-crayon-catch-on-a-paper-grain) spent 19 versions on this; PaintKeepsItsPixelsTests fingerprints will need re-taking on purpose. Wikimedia references used: see the measures file.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-11-02T14:50:11.888Z",
       "note": "seq 570 -> 590"
+    },
+    {
+      "t": "2026-11-03T15:25:30.793Z",
+      "note": "the user closed the brush epic as it stands on 2026-11-02 and declined a follow-up task for how the paint looks; telling charcoal from chalk is that same look work (19 versions in the dry media slice). Re-filed if the user reacts to it"
     }
   ]
 }

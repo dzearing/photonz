@@ -1,21 +1,25 @@
 {
   "id": "the-full-test-suite-stays-green-on-a-busy-mac-wh",
-  "title": "The full test suite stays green on a busy Mac when a shape border width drag is timed",
-  "goal": "One timing check in the test suite (how fast a border redraws while its width is dragged) is judged against a fixed number of milliseconds, so the whole suite fails on unchanged code whenever the Mac is busy, and a runner cannot commit until a second run passes.",
+  "title": "The full test suite never fails on unchanged code when the Mac is busy",
+  "goal": "Some checks in the test suite fail now and then in a full run and pass on their own, so a runner or a release cannot trust a red run and has to run the whole suite again. One is a timing check judged against a flat number of milliseconds; three are video checks (a size estimate, a cut export, a moving title background). Each one either reads something the rest of the suite changes, or shows a real problem under load: find out which and fix it.",
   "epic": "agent-drivable",
   "priority": "p2-normal",
-  "seq": 125,
+  "seq": 130,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-02T22:47:36.700Z",
-  "updated": "2026-11-03T02:34:33.598Z",
+  "updated": "2026-11-03T15:26:33.567Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced 2026-11-02 in asking-for-a-sheet-of-components-gives-a-clean-t, tree with only Agent component planner changes:\n  $ Scripts/test.sh\n  ✘ Test dragTheWidth() recorded an issue at ShapeBorderRenderTests.swift:262:13: Expectation failed: (median → 52.961916) < (48 → 48.0)\n  ✘ Test dragTheWidth() failed after 181.377 seconds with 1 issue.\n  ✘ Test run with 1331 tests in 207 suites failed after 219.950 seconds with 1 issue.\nSame tree:\n  $ Scripts/test.sh --filter ShapeBorderRenderTests  ->  ✔ dragTheWidth() passed after 0.351 seconds; 8 tests passed\n  $ Scripts/test.sh  ->  all five groups passed (15,197 tests)\nThe check is `if MachineSpeed.isGating { #expect(median < 48) }` in the suite \"A Width drag on a drawn package stays inside a frame\" (Tests/PhotonzRenderTests/ShapeBorderRenderTests.swift:201), which runs in the rest group beside three other swift test processes, not with the stopwatch suites. CLAUDE.md: a speed budget goes in a ...PerfTests suite and is judged against a ruler taken beside it, never a flat millisecond count.",
+  "notes": "Reproduced 2026-11-02 in asking-for-a-sheet-of-components-gives-a-clean-t, tree with only Agent component planner changes:\n  $ Scripts/test.sh\n  ✘ Test dragTheWidth() recorded an issue at ShapeBorderRenderTests.swift:262:13: Expectation failed: (median → 52.961916) < (48 → 48.0)\n  ✘ Test dragTheWidth() failed after 181.377 seconds with 1 issue.\n  ✘ Test run with 1331 tests in 207 suites failed after 219.950 seconds with 1 issue.\nSame tree:\n  $ Scripts/test.sh --filter ShapeBorderRenderTests  ->  ✔ dragTheWidth() passed after 0.351 seconds; 8 tests passed\n  $ Scripts/test.sh  ->  all five groups passed (15,197 tests)\nThe check is `if MachineSpeed.isGating { #expect(median < 48) }` in the suite \"A Width drag on a drawn package stays inside a frame\" (Tests/PhotonzRenderTests/ShapeBorderRenderTests.swift:201), which runs in the rest group beside three other swift test processes, not with the stopwatch suites. CLAUDE.md: a speed budget goes in a ...PerfTests suite and is judged against a ruler taken beside it, never a flat millisecond count.\n\nFolded in 2026-11-03 from the-full-test-run-never-fails-on-a-video-check-t:\nSeen while measuring the-full-test-run-never-fails-on-a-speed-budget, 2026-10-30, in about 25 full Scripts/test.sh runs on this Mac (16 cores, go loop idle):\n- BusyVideoSizeTests.swift:251 (A long recording that is quiet and then busy is weighed from stretches of it): near(landed 2102302, weighed 1597442) failed, once.\n- BusyVideoSizeTests.swift:148 (Where the budget cannot hold, what the sheet weighs is what lands, speed 900): near(landed 1712276, weighed 1339509) failed, once.\n- VideoCutExportTests.swift:35 (Exporting a recording with the middle dropped writes only what is left): Caught error .readerGaveUp(\"no picture came out of the recording for 30 seconds\"), once.\nBoth BusyVideoSizeTests are in the .serialized run (Scripts/test.sh side run). Command: Scripts/test.sh with no arguments; output lines above are verbatim from those runs. Neither is a speed budget, so they were left out of the speed-budget task.",
   "acceptance": [
     "The width-drag timing is judged against a ruler taken beside it (MachineSpeed / PerfClock) or moved into a PerfTests suite that runs with nothing beside it",
-    "Scripts/test.sh passes three runs in a row with the probe building beside it, on unchanged code"
+    "Scripts/test.sh passes three runs in a row with the probe building beside it, on unchanged code",
+    "The busy-video size estimate and the cut export that waits 30 s for its recording are each reproduced or explained: what about a busy Mac makes the weighed size miss, and what holds the reader",
+    "The Aurora and Behind Glass check (TitleBackgroundsRenderTests: playback, scrubbing and export draw the same frames) passes 20 full Scripts/test.sh runs in a row, or its difference is shown to be GPU rounding with numbers and bounded to 1 level per pixel",
+    "A real defect in the app found on the way (an estimate that is wrong under load, a reader that stalls) is fixed, not loosened in the test",
+    "None of these checks fails in ten full Scripts/test.sh runs in a row on this Mac"
   ],
   "log": [
     {
@@ -25,6 +29,14 @@
     {
       "t": "2026-11-03T02:34:33.597Z",
       "note": "also 2026-11-03: TitleBackgroundsRenderTests 'Aurora and Behind Glass at 1080p each draw inside a frame' read 36.5 ms against a 33 ms budget in one full Scripts/test.sh run on unchanged render code; alone it measured 5.8 ms median and the next full run was green."
+    },
+    {
+      "t": "2026-11-03T15:25:30.275Z",
+      "note": "triage 2026-11-03: folded in the-full-test-run-never-fails-on-a-video-check-t (dropped as a near-twin: a check that fails inside a full run and passes alone). Its three checks now sit on this task: the busy-video size estimate landing about a quarter off, a cut export getting no picture from its recording for 30 s, and TitleBackgroundsRenderTests (Aurora and Behind Glass playback/scrub/export frames) failing once in the v0.22.0 preflight while passing 3 of 3 alone on 2026-11-02. A real app defect found under load is fixed, not loosened in the test."
+    },
+    {
+      "t": "2026-11-03T15:26:33.566Z",
+      "note": "seq 125 -> 130"
     }
   ]
 }

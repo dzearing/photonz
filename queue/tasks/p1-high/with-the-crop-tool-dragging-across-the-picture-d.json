@@ -4,12 +4,12 @@
   "goal": "With the Crop tool, the person wants to drag out the area to keep, the way a marquee is drawn, not to nudge a full-size box in from its edges. Today a press inside the crop box moves it, and only a press outside it draws a new one; since the box starts as the whole picture, there is no 'outside' on the picture, so drawing a crop box is effectively impossible. Dragging anywhere on the picture should draw a new crop box; the handles still resize it.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 5e-8,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T14:30:23.638Z",
-  "updated": "2026-11-03T14:30:23.757Z",
+  "updated": "2026-11-03T15:26:32.520Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake): 'the crop tool is rather irritating because what I really want to do is select a box, rather than resize a box. I think resizing is fine but if i drag a box, that should adjust the cropping rectangle to that.' Code: Sources/Photonz/CanvasPointerDrags.swift ~201-223: in Crop mode a press on a handle resizes (CropDrag .resize), a press inside cropRect MOVES it (.move), only a press outside DEFINES a new rect (.define(anchor:)). The box starts as the whole picture, so the inside-moves rule swallows every drag on the picture. Change the inside case to define; move becomes Space-drag. Crop math in Sources/PhotonzCore/Crop.swift.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-11-03T14:30:23.756Z",
       "note": "seq 3980 -> 5e-8"
+    },
+    {
+      "t": "2026-11-03T15:26:32.519Z",
+      "note": "seq 5e-8 -> 20"
     }
   ]
 }
