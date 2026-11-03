@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T14:30:23.638Z",
-  "updated": "2026-11-03T15:26:32.520Z",
+  "updated": "2026-11-03T18:29:30.844Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake): 'the crop tool is rather irritating because what I really want to do is select a box, rather than resize a box. I think resizing is fine but if i drag a box, that should adjust the cropping rectangle to that.' Code: Sources/Photonz/CanvasPointerDrags.swift ~201-223: in Crop mode a press on a handle resizes (CropDrag .resize), a press inside cropRect MOVES it (.move), only a press outside DEFINES a new rect (.define(anchor:)). The box starts as the whole picture, so the inside-moves rule swallows every drag on the picture. Change the inside case to define; move becomes Space-drag. Crop math in Sources/PhotonzCore/Crop.swift.",
@@ -35,6 +35,48 @@
     {
       "t": "2026-11-03T15:26:32.519Z",
       "note": "seq 5e-8 -> 20"
+    },
+    {
+      "t": "2026-11-03T17:16:57.490Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-03T18:05:42.088Z",
+      "note": "Reproduced first: crop-before walk with next-crop-draws-a-box off, a drag 300,200 to 900,600 inside the box that opens over the whole picture leaves cropBox 0, 0, 1440, 960 (nothing drawn)."
+    },
+    {
+      "t": "2026-11-03T18:05:42.171Z",
+      "note": "Adversarial review before building: a first-time user presses on the picture and drags, which is a marquee everywhere else in the app, so drawing is the expected verb; Photoshop users know Space-to-move from the marquee; risk is losing move-inside, covered by Space-drag and the arrows. No mock covers Crop gestures. Gaps the app could not deliver: no keyUp on the canvas and no way for a walk to hold Space, both added; no crop size readout or snapping existed for resizing either, so the readout pill was added to both and snapping left out (resizing has none)."
+    },
+    {
+      "t": "2026-11-03T18:05:42.246Z",
+      "note": "Chose: gated behind a new Next flag next-crop-draws-a-box (on in Next, absent in Current) because the crop press is shared code and Current must not change. Chose: Space held means every press moves the box (handles included) because the pointer is an open hand everywhere then. Chose: a 3pt click tolerance so a click keeps the box."
+    },
+    {
+      "t": "2026-11-03T18:05:42.321Z",
+      "note": "Review on the real app (probe): a draw that started right after a handle drag held the resize arrows as its cursor while the button was down (walk log 'cursor while down resize-up-left-down-right'); fixed, a draw press now puts the crosshair back. Looked at 2-drawing, 4-space-slides, 7-cropped captures and the contact sheet: they show the box drawn inside the full-picture box with its 600 x 400 pill, the slid box, and the cropped 1040 x 700 picture; the before frames show the box unchanged."
+    },
+    {
+      "t": "2026-11-03T18:05:42.394Z",
+      "note": "owns these walks: crop-draws-the-box-you-drag-walk, crop-cue-walk"
+    },
+    {
+      "t": "2026-11-03T18:29:30.680Z",
+      "note": "left rough (no task, below the follow-up bar): crop has no snapping while drawing or resizing (it never had, the acceptance item asked for parity with resizing, which this has); the pointer stays a crosshair while Space slides a box being drawn; Space with Crop in hand no longer plays a picture's motion preview. All three are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-11-03T18:29:30.756Z",
+      "note": "Walks: crop-draws-the-box-you-drag-walk (new, Next defaults, no flags) passes: draw inside the full box, click keeps it, redraw over it, handle resize, Space slide mid-draw, Space-drag move, nudge 1 and Shift 10, Option from centre, Shift square, Escape mid-drag, Return commits. crop-cue, crop-resize-command, crop-rounds-the-card, every-handle-lights-on-hover pass. design-mode-tool-strip-walk fails at a Tool Component menu (already in the sweep's failing list) and tool-and-library-dropdowns-open-on-a-click-walk times out at a component drag on main too (folded into walks-that-fail-in-the-full-sweep-26). Scripts/test.sh green."
+    },
+    {
+      "t": "2026-11-03T18:29:30.842Z",
+      "note": "Crop in Next: a drag anywhere off a handle draws the crop box (inside the full-picture box too), handles resize, Space slides a box being drawn and moves one at rest, arrows nudge, Option/Shift draw from centre/square, size pill while drawing or resizing. Behind next-crop-draws-a-box (on in Next). Verified by crop-draws-the-box-you-drag-walk at Next defaults with real captures, a before walk with the switch off, unit tests, full test.sh. Audit queue/audits/2026-11-03-crop-draws-a-box.json with reel and contact sheet; docs/design/tools.md crop section updated. Commit b0f4807b."
     }
-  ]
+  ],
+  "started": "2026-11-03T17:16:57.489Z",
+  "walks": [
+    "crop-draws-the-box-you-drag-walk",
+    "crop-cue-walk"
+  ],
+  "completed": "2026-11-03T18:29:30.843Z"
 }
