@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Foundation
 import ImageIO
@@ -121,6 +122,11 @@ final class AskSession {
     @ObservationIgnored private(set) var lastSources: [AskDrawingSource] = []
     /// The model the last request ran on.
     @ObservationIgnored private(set) var lastModel: String?
+    /// The web page the request in hand names, as the reader read it
+    /// (`AskWebReader`), and every address the last request loaded: the
+    /// eval's network check reads them.
+    @ObservationIgnored private var webRead: AskWebReader.Read?
+    @ObservationIgnored private(set) var webRequests: [String] = []
     /// Where each voted row's case was saved, so taking the vote back takes
     /// the case away too.
     @ObservationIgnored private var savedVotes: [UUID: URL] = [:]
@@ -373,7 +379,37 @@ final class AskSession {
         let remembered = editor.document.map { AskMemory.turns(from: changes, in: $0) } ?? []
         if !remembered.isEmpty { note("remembering \(remembered.count) earlier requests") }
         let memory = AskMemory.prompt(remembered)
-        let opened = await Self.conversation(words, in: editor, model: model, memory: memory, note: note, say: say)
+        // An address the person typed is opened by app code, never by the
+        // model (`AskWeb`): what the model sees is the page's picture and a
+        // checked description.
+        webRead = nil
+        webRequests = []
+        if let address = AskWeb.address(in: words) {
+            let host = AskWeb.shortHost(address)
+            guard AskWeb.allowed(in: .standard) else {
+                note("web: kept off the web in Settings")
+                phase = .stopped(AskWeb.offTheWebSentence)
+                return
+            }
+            say(.openingPage(host))
+            let size = Self.pageSize(for: editor.document?.canvasSize)
+            note("web: opening \(address.absoluteString) at \(Int(size.width)) x \(Int(size.height))")
+            let read = await AskWebReader.read(address, size: size)
+            guard !Task.isCancelled else { return }
+            switch read {
+            case .success(let read):
+                webRead = read
+                webRequests = read.requests
+                note("web: read \(read.page.parts.count) parts, \(read.pictures.count) pictures, \(read.requests.count) requests")
+                for request in read.requests { note("web request: \(request)") }
+            case .failure:
+                note("web: could not open \(address.absoluteString)")
+                phase = .stopped(AskWeb.couldNotOpen(host))
+                return
+            }
+        }
+        let opened = await Self.conversation(words, in: editor, model: model, memory: memory, web: webRead,
+                                             note: note, say: say)
         guard !Task.isCancelled else { return }
         guard var talk = opened else {
             phase = .stopped(AskCopy.noDocumentSentence)
@@ -462,8 +498,9 @@ final class AskSession {
                 continue
             }
             if let after = editor.document {
-                changes.record(asked: words, sentence: AskChangeWords.sentence(landed.landed, asked: words,
-                                                                              before: landed.before, after: after),
+                let made = AskChangeWords.sentence(landed.landed, asked: words, before: landed.before, after: after)
+                let components = landed.landed.filter { $0.tool == AskWeb.pageTool && $0.arguments["component"] != nil }.count
+                changes.record(asked: words, sentence: webRead.map { AskWeb.sentence(host: $0.page.host, components: components) } ?? made,
                                before: landed.before, after: after, sources: landed.sources)
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
@@ -518,6 +555,18 @@ final class AskSession {
                                          part: &drawn, drawings: drawings)
                 enter(stages.working)
                 var refusal: String?
+                if step.tool == AskWeb.pageTool {
+                    switch Self.landPage(step, from: webRead, in: editor) {
+                    case .success(let id):
+                        landed.append(step)
+                        made[number] = id
+                    case .failure(let refused):
+                        refusal = refused.message
+                    }
+                    if let refusal { skipped[number] = refusal }
+                    stepsRun = number
+                    continue
+                }
                 switch step.request(document: document, made: made) {
                 case .failure(let refused):
                     refusal = refused.message
@@ -777,6 +826,7 @@ final class AskSession {
     /// The talk with the model, opened with the document read and the
     /// Library handed over up front: "on brand" is its components and styles.
     private static func conversation(_ words: String, in editor: EditorState, model: String, memory: String = "",
+                                     web: AskWebReader.Read? = nil,
                                      note: (String) -> Void, say: (AskStage) -> Void) async -> AskConversation? {
         guard let document = editor.agentID else { return nil }
         say(.reading(video: editor.documentHasTime))
@@ -791,9 +841,11 @@ final class AskSession {
         if paints { note("drawings painted by the picture model") }
         // Only when there is something of Ask's or the person's to look at:
         // a blank canvas or a lone screenshot plans as it always did.
-        let looks = !memory.isEmpty || (editor.document?.layers.count ?? 0) > 1
+        let looks = web == nil && (!memory.isEmpty || (editor.document?.layers.count ?? 0) > 1)
         if looks, !editor.documentHasTime { say(.lookingAtCanvas) }
-        let canvas = looks ? await Self.canvasPicture(of: document, in: editor, model: model) : nil
+        // With a web page, the picture the model sees is the page.
+        let page: (png: Data, scale: Double)? = await AskLocalModel.sees(model) ? web.map { ($0.png, 1) } : nil
+        let canvas = looks ? await Self.canvasPicture(of: document, in: editor, model: model) : page
         if let canvas { note("canvas picture, \(canvas.png.count / 1024) KB at \(Int(canvas.scale * 100))%") }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
@@ -802,7 +854,7 @@ final class AskSession {
                                paints: paints,
                                brushes: Experiments.shared.brushEnabled && !editor.documentHasTime,
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
-                               window: AskLocalModel.window)
+                               window: AskLocalModel.window, web: web?.page)
     }
 
     /// The longest side of the canvas picture the planning model is shown:
@@ -881,7 +933,7 @@ final class AskSession {
                         continue
                     }
                     note("unreadable reply after \(talk.steps.count) steps: offering them")
-                    return .success(AskPlan(steps: talk.steps, summary: "", names: talk.names))
+                    return .success(talk.plan(summary: ""))
                 }
                 return .failure(trouble)
             } catch {
@@ -918,8 +970,61 @@ final class AskSession {
             }
         }
         // Out of turns with steps written: offer what it has.
-        if !talk.steps.isEmpty { return .success(AskPlan(steps: talk.steps, summary: "", names: talk.names)) }
+        if !talk.steps.isEmpty || talk.web != nil { return .success(talk.plan(summary: "")) }
         return .failure(.said(AskConversation.noPlanSentence))
+    }
+
+    /// The size a page is read at: the canvas's, within what a page reads
+    /// sensibly at, 1440 x 900 without a canvas.
+    static func pageSize(for canvas: CGSize?) -> CGSize {
+        guard let canvas, canvas.width > 0, canvas.height > 0 else { return CGSize(width: 1440, height: 900) }
+        return CGSize(width: min(max(canvas.width, 640), 2560).rounded(), height: min(max(canvas.height, 400), 2400).rounded())
+    }
+
+    /// Lands an add_page_parts step: the parts it names, as the page drew
+    /// them, one group (a component when the step names one). The canvas
+    /// scale makes up for a page read at a size the canvas is not.
+    private static func landPage(_ step: AskStep, from read: AskWebReader.Read?,
+                                 in editor: EditorState) -> Result<String, AgentToolError> {
+        guard let read else { return .failure(AgentToolError("There is no web page in this request.")) }
+        guard let canvas = editor.document?.canvasSize else { return .failure(AgentToolError(AskCopy.noDocumentSentence)) }
+        let ids = Set(step.arguments["parts"]?.arrayValue?.compactMap(\.stringValue) ?? [])
+        let parts = read.page.parts.filter { ids.contains($0.id) }
+        guard !parts.isEmpty else { return .failure(AgentToolError("Those parts are not on the page.")) }
+        var images: [String: ImageRef] = [:]
+        for part in parts where part.kind == .image {
+            if let picture = read.pictures[part.id] { images[part.id] = editor.store.register(picture) }
+        }
+        let component = step.arguments["component"]?.stringValue
+        let name = component ?? step.arguments["name"]?.stringValue ?? read.page.host
+        let scale = read.page.size.width > 0 ? canvas.width / read.page.size.width : 1
+        var made: UUID?
+        editor.perform { document in
+            made = document.addWebParts(parts, of: read.page, name: name, component: component, images: images,
+                                        font: Self.font(for:), measure: { content, width in
+                                            TextRasterizer.naturalSize(content, maxWidth: width ?? .greatestFiniteMagnitude)
+                                        }, scale: scale)
+        }
+        guard let made else { return .failure(AgentToolError("Photonz could not place those parts.")) }
+        return .success(made.uuidString)
+    }
+
+    /// The family this Mac draws a page's font stack with: the first one it
+    /// has, the system's own for a sans serif, nil (SF Pro) when none fits.
+    static func font(for stack: [String]) -> String? {
+        let families = NSFontManager.shared.availableFontFamilies
+        let byLower = Dictionary(families.map { ($0.lowercased(), $0) }, uniquingKeysWith: { first, _ in first })
+        for name in stack {
+            let lower = name.lowercased()
+            if let found = byLower[lower] { return found }
+            switch lower {
+            case "sans-serif", "system-ui", "-apple-system", "blinkmacsystemfont", "ui-sans-serif": return nil
+            case "serif", "ui-serif": return ["New York", "Times New Roman", "Georgia"].first { byLower[$0.lowercased()] != nil }
+            case "monospace", "ui-monospace": return ["SF Mono", "Menlo", "Courier New"].first { byLower[$0.lowercased()] != nil }
+            default: continue
+            }
+        }
+        return nil
     }
 
     private static func text(of answer: AgentWork.Answer) -> String {

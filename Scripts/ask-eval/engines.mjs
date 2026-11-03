@@ -6,6 +6,7 @@
 //
 // Either way the result is read back over the MCP bridge (read_document and
 // render_picture), so what is scored is the document the app holds.
+import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -203,6 +204,18 @@ export async function runAsk(testCase, dir, { build, switched, models, mac }) {
   return { engine: second.engine, unrun: "Ask never started: the walk's Send did not take, twice" };
 }
 
+/// A static server for a case's local pages, on 127.0.0.1 only, that ends
+/// itself after `seconds` however this run ends.
+function serve(folder, port, seconds) {
+  const child = spawn("perl", ["-e", `alarm ${Math.ceil(seconds)}; exec @ARGV`, "python3", "-m", "http.server", String(port),
+    "--bind", "127.0.0.1", "--directory", path.resolve(repo, folder)], { stdio: "ignore" });
+  return child;
+}
+
+function stopServing(child) {
+  try { child.kill("SIGTERM"); } catch {}
+}
+
 async function runAskOnce(testCase, dir, { build, switched, models, mac }) {
   const limit = testCase.timeout ?? 300;
   const steps = [
@@ -222,7 +235,12 @@ async function runAskOnce(testCase, dir, { build, switched, models, mac }) {
     { do: "describe", stage: "ended", note: "where the request ended" },
   ];
   const started = Date.now();
+  // A case that mocks a local page (`serve`) gets a server on this Mac's own
+  // loopback for as long as its walk runs, and never longer.
+  const server = testCase.serve ? serve(testCase.serve, testCase.port ?? 18977, limit + 240) : null;
+  if (server) await new Promise((resolve) => setTimeout(resolve, 800));
   const [walked, unprepared] = await Promise.all([walk(dir, "ask-walk", steps, { clock: limit + 180, build, testCase, switched, models, mac }), prepare(testCase)]);
+  if (server) stopServing(server);
   const ended = walked.log.filter((e) => e.state?.ask).at(-1)?.state.ask;
   // How the model's tool calls came back (AskConversation's count, noted each
   // turn) and how much memory it held: the model bake-off's columns.
@@ -236,6 +254,8 @@ async function runAskOnce(testCase, dir, { build, switched, models, mac }) {
     steps: ended?.steps ?? [], skipped: ended?.skipped ?? [], says: ended?.says ?? "",
     // Where each drawing came from: stored, template or drawn for the request.
     sources: ended?.sources ?? [],
+    // Every address a mocked web page loaded (AskWebReader), and the rows.
+    webRequests: ended?.webRequests ?? [], changes: ended?.changes ?? [],
     calls: turn ? Number(turn[1]) : null, brokenCalls: turn ? Number(turn[2]) : null,
     modelGigabytes: await modelMemory(ended?.trace),
   };

@@ -1,0 +1,21 @@
+{
+  "request": "mock this web page https://www.apple.com",
+  "group": "web",
+  "from": "A runner's pick for the web page task (2026-11-03): a page of pictures, pill buttons and centred type.",
+  "context": "a mock of the top of the web page https://www.apple.com, to be judged against that page's own look",
+  "start": {
+    "blank": [
+      1440,
+      900
+    ]
+  },
+  "expect": {
+    "web": {
+      "words": [
+        "MacBook Pro"
+      ]
+    }
+  },
+  "timeout": 420,
+  "expectWhy": "A page mock is judged on its own words landing and on the judge's look against the page; how many top level pieces it lands in says nothing about it (minCells, dropped 2026-11-03 after the first run read 6 pieces on a faithful gov.uk)."
+}

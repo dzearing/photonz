@@ -57,7 +57,7 @@ const mean = (values) => (values.length ? Math.round(values.reduce((s, v) => s +
 
 async function scoreCase(testCase, dir, got, judgeRuns) {
   if (!got.read || !got.picture) return { rules: null, judge: null, named: null, score: 0 };
-  const rules = ruleScore(got.read, testCase);
+  const rules = ruleScore(got.read, testCase, got.engine);
   const [judge, named] = await Promise.all([
     rules.score === 0 ? null : judgePicture({ picture: got.picture, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted, video: testCase.group === "video", photo: !!testCase.photo }),
     ["drawing", "photo"].includes(testCase.group) && rules.score !== 0 ? nameBlind({ picture: got.picture, names: testCase.names ?? [], runs: judgeRuns }) : null,

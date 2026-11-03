@@ -20990,6 +20990,9 @@ private final class Run {
                 // built-in looked up by name), template (a coded
                 // illustration) or drawn for the request.
                 "sources": editor.ask.lastSources.map(\.rawValue),
+                // Every address the last request's web page loaded, the typed
+                // one first (`AskWebReader`): the eval's network check.
+                "webRequests": editor.ask.webRequests,
                 // The Agent group's rows, newest first: what changed, on or off.
                 "changes": editor.ask.changes.shown.map {
                     "\($0.sentence) (\($0.isOn ? "on" : "off"))\($0.note.map { ": \($0)" } ?? "")"

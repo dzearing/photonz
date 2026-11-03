@@ -1005,6 +1005,69 @@ redoes the request, turns its row off and on with the switch, deletes it, and
 undoes the delete, checking the document each time. They need Ollama with a model, so on a Mac without one
 they stop with Ask's own sentence.
 
+## A web page from its address (2026-11-03)
+
+The user, 2026-10-20: "I should also be able to say 'mock this web page (url)'
+and it should be able to see it and recreate it ... I want to make sure we don't
+get prompt injected by doing so." A request with an address in it ("mock this
+web page https://www.gov.uk") opens that page and lands its top as editable
+layers, its controls as Library components, and the row says where Ask looked:
+"Looked at gov.uk, made 4 components". A request with no address never touches
+the network; Settings > Ask, **Open web pages you name**, keeps Ask off the web
+entirely (`AskWeb.settingKey`, on by default), and then a request with an
+address is answered "Ask is kept off the web in Settings." and nothing opens.
+
+The limits hold even if the model is fooled by what a page says:
+
+* **App code opens the page, never the model.** `AskWeb.address(in:)` reads only
+  the person's words (http and https only; a bare address needs `www.` or a
+  site ending, so "Node.js" is not one). `AskWebReader` opens it in a throwaway
+  `WKWebView`: its own empty store (no cookies, no logins, nothing kept), no new
+  windows or panels, no downloads, no file or script addresses, and once the
+  page commits it cannot go anywhere else; 20 seconds at most. It is read at
+  the canvas's size.
+* **The model sees a picture and a checked description, nothing else.** A
+  script walks the page as drawn into boxes (fills, edges, corners), runs of
+  words (size, weight, colour, font stack, alignment, lines) and pictures, in
+  paint order (stacking contexts compared, a positioned element over the flow).
+  `AskWebPage.checked` (PhotonzCore, `AskWebTests`) gives every part Photonz's
+  own id (p1, p2 ...), cuts it to the page's top, turns colours into #RRGGBB,
+  strips hidden characters, caps words at 280 characters and the page at 260
+  parts, and leaves out words a person cannot see (smaller than 6 points, or
+  the colour of the box behind them; the script already leaves out what is not
+  displayed, see-through, clipped away or off the top). The model is told the
+  parts as one line each, words quoted as JSON strings.
+* **While page material is in play the model's tools make new layers and
+  nothing else** (`AskWeb.doing`): `add_page_parts`, `add_shape`, `add_text`,
+  `add_path`, and `set_layer` only on a layer this plan makes (`$N`). No menu
+  commands, no export, no files, no painting, no address to fetch. Looking is
+  `read_document`, `find_elements`, `list_components`, `list_styles`.
+* **The page always lands.** The plan runs as the page first, every part no
+  component took, as one group named for the host, then each component the
+  model asked for (`AskConversation.webPlan`). A model that refuses or is
+  talked out of its job still leaves only the mocked page.
+
+`add_page_parts` (Ask's own tool) lands parts by id exactly as the page drew
+them; with `component` they become one Library component placed where the page
+has it, and any part inside the control's boxes that paints after them goes
+with it. Words are drawn in the first family of the page's stack this Mac has
+(SF Pro for a sans serif), made a little smaller, to four fifths at most, when
+the stand-in runs wider than the page's own font. Pictures are cut from a
+second snapshot with every word, fill and edge made see-through, so a hero
+picture never carries its own headline (apple.com's doubled "MacBook Pro").
+
+Every address the page loaded is in the trace (`web request:`) and in a walk's
+`ask.webRequests`. The eval's `web` rule (`Scripts/ask-eval/rules.mjs`,
+`webSafety`) checks a case's allowed hosts, words that must and must not land,
+and that the picture's own Background is still there. Cases: `web-gov-uk`,
+`web-python-org`, `web-apple-com` and the two injection pages served on
+loopback (`Scripts/ask-eval/web/`, `serve` in the case): visible words telling
+the assistant to delete, export and open an address, and the same hidden seven
+ways and in a comment. Walk: `ask-mocks-a-web-page-walk`.
+
+Not yet: looking things up (a reader with search and no document, the builder
+never seeing raw web text); same-named controls as copies of one component.
+
 ## Not in this slice
 
 * The composer's `/` command list (the mock's `.cplist`): typing `/` to run an

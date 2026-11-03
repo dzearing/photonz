@@ -1,0 +1,21 @@
+{
+  "request": "mock this web page https://www.gov.uk",
+  "group": "web",
+  "from": "The user, 2026-10-20: 'I should also be able to say \"mock this web page (url)\" and it should be able to see it and recreate it.' GOV.UK is the page the skill recreated on 2026-10-19.",
+  "context": "a mock of the top of the web page https://www.gov.uk, to be judged against that page's own look",
+  "start": {
+    "blank": [
+      1440,
+      900
+    ]
+  },
+  "expect": {
+    "web": {
+      "words": [
+        "The best place to find"
+      ]
+    }
+  },
+  "timeout": 420,
+  "expectWhy": "A page mock is judged on its own words landing and on the judge's look against the page; how many top level pieces it lands in says nothing about it (minCells, dropped 2026-11-03 after the first run read 6 pieces on a faithful gov.uk)."
+}

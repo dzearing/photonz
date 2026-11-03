@@ -21,6 +21,10 @@ struct AskSettingsSection: View {
     @State private var pullTrouble: String?
     @State private var picturesInstalled = AskPictureServer.isInstalled
     @State private var deleting: AskSettingsDelete?
+    /// Ask may open a web page the request names (`AskWeb`). On until the
+    /// person turns it off; off, a request with an address is answered in
+    /// one line and nothing is opened.
+    @AppStorage(AskWeb.settingKey) private var opensPages = true
     private var fetch: AskModelDownload { AskModelDownload.shared }
     private var pictureFetch: AskModelDownload { AskModelDownload.pictures }
     private var memory: Double { AskLocalModel.memoryGigabytes }
@@ -42,6 +46,9 @@ struct AskSettingsSection: View {
                     Task { await reload() }
                 }
                 .playtestControl("Ask Use Ollama", detail: useOllama ? "on" : "off")
+            Toggle("Open web pages you name", isOn: $opensPages)
+                .help("Ask opens an address in your request to mock its page. Turn this off to keep Ask off the web.")
+                .playtestControl("Ask Open Web Pages", detail: opensPages ? "on" : "off")
         } header: {
             Text("Ask")
         }

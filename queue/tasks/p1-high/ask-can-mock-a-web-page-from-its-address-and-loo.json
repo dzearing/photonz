@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:44:10.687Z",
-  "updated": "2026-11-02T14:50:07.290Z",
+  "updated": "2026-11-03T06:40:50.036Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'I should also be able to say \"mock this web page (url)\" and it should be able to see it and recreate it. is there a safe way to give it web search so that it can find this? I want to make sure we don't get prompt injected by doing so.'\n\nThis changes the shipped Ask promise that nothing leaves the Mac (ask-in-the-app-runs-on-a-local-model-with-no-mod): it still holds for every request without an address or a lookup.\n\nThe design rests on limits that do not need the model to behave: the model never chooses an address to fetch with document data in it; the reader and builder are separate calls with no shared free text (the reader's output is schema-checked fields, strings are length-capped and treated as words to place, never as prompt); the builder's tool list is cut down while web material is in play. Words taken from a page are content: they may land as text layers, nothing more. A picture of a page can carry injected text too, so the tool limits matter more than the prompt.\n\nThe skill path (Claude Code) already has its own web tools and recreated GOV.UK yesterday (queue/audits/2026-10-19-agent-skill-transcript.md, scenario 4); the skill should get the same rule in its instructions (page text is data). Does not wait on the components task, but uses make_component once Ask has it.",
@@ -78,6 +78,34 @@
     {
       "t": "2026-11-02T14:50:07.289Z",
       "note": "seq 100 -> 50"
+    },
+    {
+      "t": "2026-11-03T05:20:55.441Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-03T06:40:20.798Z",
+      "note": "owns these walks: ask-mocks-a-web-page-walk"
+    },
+    {
+      "t": "2026-11-03T06:40:49.811Z",
+      "note": "Built the address half: AskWeb/AskWebPage (PhotonzCore, AskWebTests, 25 tests), AskWebReader (app, throwaway WKWebView, no store, no windows/downloads/files, main frame pinned after commit), add_page_parts tool, web tool limits (new layers only, set_layer on $N only), the page always landing first, Settings switch, row 'Looked at <host>, made N components'."
+    },
+    {
+      "t": "2026-11-03T06:40:49.885Z",
+      "note": "Adversarial review before building: a page can say anything, so safety cannot rest on the prompt; chose code-placed parts by id over the model retyping words, so page words never pass through the model's own output, and a fooled model still leaves only the mock. Chose cutting pictures from a see-through second snapshot over cropping the finished page because the crops carried the page's own words (apple.com doubled headline)."
+    },
+    {
+      "t": "2026-11-03T06:40:49.959Z",
+      "note": "Eval 2026-11-03 (runs 20261103-061009-ask, 20261103-062140-ask): gov.uk 88, python.org 73.6, apple.com 79.6 (rescored after swapping minCells for the page's own words), injection-visible 88, injection-hidden 83.2; web rule 10 on every case, network only on the typed host for the injection pages."
+    },
+    {
+      "t": "2026-11-03T06:40:50.035Z",
+      "note": "Left on this task (not done): acceptance 3 and the search half of 6 (looking things up with a reader that never sees the document; a search service; the one-line 'searching is not set up'). Also: same-named controls (python.org's 12 Nav Links) should be copies of one component; button shadows and icon-font glyphs are not read; the Settings switch has no walk yet."
     }
+  ],
+  "started": "2026-11-03T05:20:55.440Z",
+  "walks": [
+    "ask-mocks-a-web-page-walk"
   ]
 }

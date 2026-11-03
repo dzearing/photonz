@@ -70,6 +70,11 @@ public enum AskTools {
     /// checks every call.
     public static let modelTools: [AgentJSON] = (looking + doing).compactMap(modelTool)
 
+    /// The tools while a web page is in play (`AskWeb`): the page tool and
+    /// the few that make new layers.
+    public static let webModelTools: [AgentJSON] =
+        AskWeb.looking.compactMap(modelTool) + [AskWeb.pageToolSchema] + AskWeb.doing.filter { $0 != AskWeb.pageTool }.compactMap(modelTool)
+
     /// Fields an agent outside the app gets and Ask is not shown: set_layer's
     /// flat turn and 3D turn (the reworked selection, 2026-11-01). Ask's
     /// window is tight (`AskDocumentFitTests`), and turning a layer in 3D is
@@ -406,6 +411,10 @@ public struct AskConversation: Sendable {
     private let video: Bool
     /// The parts' names of each layer the document says in short, by id.
     private let namesInShort: [String: [String]]
+    /// The web page the request names, as app code read it, or nil. While it
+    /// is here the model's tools make new layers and nothing else
+    /// (`AskWeb.doing`), and the page always lands (`webPlan`).
+    public let web: AskWebPage?
 
     /// `memory` is what Ask did earlier in this window (`AskMemory.prompt`),
     /// and `canvas` a picture of the canvas as it is now, for a model that
@@ -413,8 +422,9 @@ public struct AskConversation: Sendable {
     public init(request: String, documentRead: String, components: String = "", styles: String = "",
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
-                window: Int = AskConversation.contextWindow) {
+                window: Int = AskConversation.contextWindow, web: AskWebPage? = nil) {
         self.request = request
+        self.web = web
         self.window = window
         self.paints = paints
         self.brushes = brushes
@@ -428,8 +438,9 @@ public struct AskConversation: Sendable {
         // Sized to fit: a traced drawing of hundreds of paths is said in short.
         let described = AskDocumentDigest.fitted(documentRead)
         namesInShort = AskDocumentDigest.namesInShort(described)
-        var instructions = Self.instructions(documentRead: described, paints: paints, painting: painting, video: video)
-        if AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
+        var instructions = web.map { Self.webInstructions(documentRead: described, page: $0) }
+            ?? Self.instructions(documentRead: described, paints: paints, painting: painting, video: video)
+        if web == nil, AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
         if !titles.isEmpty {
@@ -437,7 +448,10 @@ public struct AskConversation: Sendable {
         }
         if !memory.isEmpty { instructions += "\n\(memory)" }
         var asking: AgentJSON = ["role": "user", "content": .string(request)]
-        if let canvas {
+        if let canvas, web != nil {
+            instructions += "\nThe picture with the request is the web page as Photonz read it, one pixel a canvas point."
+            asking = ["role": "user", "content": .string(request), "images": [.string(canvas.base64EncodedString())]]
+        } else if let canvas {
             instructions += canvasScale < 0.995
                 ? "\nThe picture with the request is the canvas as it is now, at \(Int((canvasScale * 100).rounded())) percent of its size: a canvas point is a pixel of it divided by \(String(format: "%.2f", canvasScale))."
                 : "\nThe picture with the request is the canvas as it is now, one pixel a canvas point."
@@ -470,14 +484,14 @@ public struct AskConversation: Sendable {
 
     /// The body of one `POST /api/chat`, fitted to the window.
     public func chatBody(model: String) -> AgentJSON {
-        ["model": .string(model), "messages": .array(fittedMessages()), "tools": .array(AskTools.modelTools(painting: painting, video: video)),
+        ["model": .string(model), "messages": .array(fittedMessages()), "tools": .array(offeredTools),
          "stream": false, "think": false, "keep_alive": "30m",
          "options": ["num_ctx": .number(Double(window)), "temperature": 0]]
     }
 
     /// About how many tokens `messages` and the tools take.
     public func estimatedTokens(of messages: [AgentJSON]) -> Int {
-        Self.toolTokens(painting: painting, video: video) + messages.reduce(0) { $0 + AskTokens.estimate(message: $1) }
+        (web == nil ? Self.toolTokens(painting: painting, video: video) : Self.webToolTokens) + messages.reduce(0) { $0 + AskTokens.estimate(message: $1) }
     }
 
     /// About how many tokens the talk so far takes, before any fitting.
@@ -496,6 +510,20 @@ public struct AskConversation: Sendable {
         [false, true].map { video in templated(AskTools.modelTools(painting: painting, video: video)) }
     }
     static func toolTokens(painting: Bool, video: Bool) -> Int { toolTokensTable[painting ? 1 : 0][video ? 1 : 0] }
+    static let webToolTokens = templated(AskTools.webModelTools)
+
+    /// The tools the model is shown: while a web page is in play, only the
+    /// ones that make new layers (`AskWeb`).
+    var offeredTools: [AgentJSON] { web == nil ? AskTools.modelTools(painting: painting, video: video) : AskTools.webModelTools }
+    var lookingTools: [String] { web == nil ? AskTools.looking(painting: painting, video: video) : AskWeb.looking }
+    var doingTools: [String] { web == nil ? AskTools.doing(painting: painting, video: video) : AskWeb.doing }
+
+    /// The plan as it runs: with a web page, the page lands first, under
+    /// what the model made of it.
+    public func plan(summary: String) -> AskPlan {
+        if let web { return webPlan(steps, page: web, summary: summary) }
+        return AskPlan(steps: steps, summary: summary, names: names)
+    }
 
     /// The messages as sent: when the plan has outgrown the window, the
     /// oldest tool answers are left out first, the newest last. The
@@ -535,6 +563,9 @@ public struct AskConversation: Sendable {
         self.calls += calls.count
         guard !calls.isEmpty else {
             let sentence = content.trimmingCharacters(in: .whitespacesAndNewlines)
+            // With a page, finishing (or refusing) lands the page as it is:
+            // a model talked out of its job still leaves only the mocked page.
+            if web != nil { return .planned(plan(summary: steps.isEmpty ? "" : sentence)) }
             if steps.isEmpty, !nudged {
                 // A small model gives up early: ask once more to try.
                 nudged = true
@@ -547,14 +578,29 @@ public struct AskConversation: Sendable {
             // A sheet of labelled rows with no title is asked for one once
             // (the eval, 2026-10-23: twelve rows and no title).
             if askForTitle() { return .again(looks: []) }
-            return .planned(AskPlan(steps: steps, summary: sentence, names: names))
+            return .planned(plan(summary: sentence))
         }
         var looks: [AskLook] = []
         for (name, said) in calls {
             let arguments = name == "add_text" || name == "add_component" ? Self.withoutEntities(said) : said
-            if AskTools.looking(painting: painting, video: video).contains(name) {
+            if lookingTools.contains(name) {
                 looks.append(AskLook(tool: name, arguments: arguments))
-            } else if AskTools.doing(painting: painting, video: video).contains(name) {
+            } else if let web, name == AskWeb.pageTool {
+                switch pageStep(arguments, page: web) {
+                case .success(let step):
+                    steps.append(step)
+                    sameRefusals = 0
+                    lastRefused = ""
+                    tell(name, "Planned, with parts \(step.arguments["parts"]?.arrayValue?.compactMap(\.stringValue).joined(separator: ", ") ?? ""). Plan the next control, or finish.")
+                case .failure(let refused):
+                    refuse(name, arguments, refused.message)
+                }
+            } else if doingTools.contains(name) {
+                // While a page is in play, only what this request makes may change.
+                if web != nil, name == "set_layer", !(arguments["layer"]?.stringValue ?? "").hasPrefix("$") {
+                    refuse(name, arguments, "Not planned: while mocking a page, set_layer changes only a layer this plan makes, named $N.")
+                    continue
+                }
                 if name == "change_part", let refusal = partNotInShort(arguments) {
                     refuse(name, arguments, refusal)
                     continue
@@ -694,7 +740,7 @@ public struct AskConversation: Sendable {
         // unchanged sends it every round after; the plan it has is offered
         // instead of the rest of the rounds going on the same refusal.
         if sameRefusals >= Self.mostSameRefusals, !steps.isEmpty, looks.isEmpty {
-            return .planned(AskPlan(steps: steps, summary: "", names: names))
+            return .planned(plan(summary: ""))
         }
         return .again(looks: looks)
     }
@@ -1153,6 +1199,21 @@ public struct AskConversation: Sendable {
             rest = rest[rest.index(after: close)...]
         }
         return found
+    }
+
+    /// What the model is told for a request that mocks a web page.
+    static func webInstructions(documentRead: String, page: AskWebPage) -> String {
+        """
+        You are Ask, the helper inside Photonz, a Mac picture and video editor. Turn the person's request \
+        into a plan of tool calls on the document in front of them.
+        - Looking tools (\(AskWeb.looking.joined(separator: ", "))) answer right away.
+        - Editing tools are NOT run now. Each call is written into a plan that runs when you finish. To name \
+        what a planned step makes, write "$N" where its id goes.
+        \(AskWeb.rules)
+        \(page.listing)
+        The document now (read_document):
+        \(documentRead)
+        """
     }
 
     /// What the model is told before the person's request.

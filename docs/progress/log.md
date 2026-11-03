@@ -22393,3 +22393,9 @@ the ghost, and pinching in seemed to stop short.
 - The sheet gives each kind its own header row and divider; only one family (Primary/Secondary Button) shares one. States keep their order with no gaps; a look that grows a part sits level.
 - Ask component-table 84 to 84.8, 84.8, 86.4, 86, 84.8 (judge mean 7.4 to 7.6 to 7.8); the skill 88.4, every line 8 or more. Ask still has aligned or designed at 7, so the task stays open.
 - Next: the empty fourth column under a four-state row, variants still shown as states, labels read as tiny; filed the faint boxes in the skill's render as find-out-why-a-sheet-the-skill-built-shows-faint.
+
+## 2026-11-03 — Ask mocks a web page from its address
+
+- "mock this web page <address>" opens the page in a throwaway web view (app code, never the model), reads its top into a picture and a checked list of parts (`AskWebPage.checked`), and lands it as layers with its controls as components. While page material is in play the model can only make new layers; the page always lands under whatever it made. Settings > Ask, "Open web pages you name", keeps Ask off the web.
+- Eval: gov.uk 88, python.org 73.6, apple.com 79.6, injection pages 88 and 83.2 with every injection check passing (only the typed address loaded, hidden words never landed, the starting layer untouched).
+- Next on that task: looking things up (a search reader with no document), and same-named controls as copies of one component.

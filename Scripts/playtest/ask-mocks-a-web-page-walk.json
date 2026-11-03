@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/ask-mocks-a-web-page-walk",
+  "seed": "Ask on a blank canvas at Next defaults, the user's own request: 'mock this web page https://www.gov.uk'. App code opens the page in a throwaway web view, the model sees only its picture and a checked list of its parts, and the page lands as editable layers with its controls as components, one row saying 'Looked at gov.uk'. Needs a model Ask plans with (docs/design/ask.md) and the network.",
+  "clock": 420,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 900, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "mock this web page https://www.gov.uk" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 400 },
+    { "do": "describe", "stage": "run-ended", "note": "where the request ended, its trace and every address the page loaded" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran", "timeout": 1 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-ran", "note": "the page's top on the canvas as layers, and one row saying where Ask looked" },
+    { "do": "expect", "control": "Agent Change 1", "present": true },
+    { "do": "expectLayers", "atLeast": 1 },
+    { "do": "snapshot", "name": "1-ran" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectLayers", "atLeast": 2 }
+  ]
+}
