@@ -106,6 +106,34 @@ over (its reason kept for a walk in `skipped`), and the rest run, unless a later
 then the run stops and what already landed is undone, so a plan that goes
 wrong half way leaves nothing half done. Stop does the same.
 
+### Looking at a layout (2026-11-03)
+
+A local model plans from numbers, not a picture, so its layouts came out
+almost right: a heading "centred" at an x that was really its left edge,
+button words dark on a blue fill, a price stacked onto the line under it.
+Before it hands back, the run reads the finished document
+(`AskLayoutCheck`, PhotonzCore, unit tested) and mends, in the same undo step,
+what a person would see at a glance, on any request:
+
+- words that do not read against the topmost filled box behind them (or the
+  white page) take the nearest shade that does, and plain dark words on a
+  coloured fill where white reads turn white, the way the system sets a
+  button label (the same shades add_component uses);
+- a centred line that drifted less than a quarter of the way off the middle
+  of what it sits on (its button), or of the row below it, is centred on it;
+- words stacked onto the words above them in the same column move down to
+  clear them, when that keeps them inside what they sit on;
+- words hanging off the canvas come back on.
+
+Only layers the request made are touched. A video is left alone, since what
+is behind its words is footage. What it cannot mend (words side by side on
+each other, or no room to part them) is said beside the change in one short
+sentence, "Some words still overlap." Every look is a `look:` line in the trace.
+
+add_text given no colour picks its default the same way
+(`AskLayoutCheck.defaultInk`), for Ask and for an agent over MCP alike: white
+on a blue button rather than near black.
+
 ## One row per request: off, on, delete
 
 `AskChanges.swift` (PhotonzCore, tested in `AskChangesTests`). Each request

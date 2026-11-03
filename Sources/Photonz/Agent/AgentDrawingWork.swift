@@ -245,9 +245,14 @@ enum AgentDrawingWork {
            !NSFontManager.shared.availableFontFamilies.contains(family) {
             throw Failure("add_text: there is no font called \(family) on this Mac. Leave fontName out for SF Pro.")
         }
-        let content = text.content
+        var content = text.content
         let natural = TextRasterizer.naturalSize(content, maxWidth: text.width ?? .greatestFiniteMagnitude)
         let size = CGSize(width: text.width ?? natural.width, height: natural.height)
+        // Words given no colour take one that reads on what is behind them:
+        // white on a blue button, not the near black that suits a page.
+        if text.colorHex == nil, let document = editor.document {
+            content.colorHex = AskLayoutCheck.defaultInk(at: CGRect(origin: text.origin, size: size), in: document)
+        }
         var layer = TextBuilder.layer(content: content, at: text.origin, naturalSize: size)
         if let name = text.name { layer.name = name }
         if !text.shadow { layer.style.shadows = [] }

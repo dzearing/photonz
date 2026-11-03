@@ -536,7 +536,8 @@ final class AskSession {
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
-            said = talk.note
+            let sayings = [talk.note, landed.layoutSentence].compactMap { $0 }
+            said = sayings.isEmpty ? nil : sayings.joined(separator: " ")
             phase = .ran
             revealRows()
             return
@@ -560,6 +561,8 @@ final class AskSession {
         /// What each step made, by step number.
         let made: [Int: String]
         let sources: [AskDrawingSource]
+        /// What the look over the layout could not mend, in one sentence.
+        let layoutSentence: String?
     }
 
     /// Runs the plan as one undo step. Nil when nothing is left changed: the
@@ -576,6 +579,7 @@ final class AskSession {
         var landed: [AskStep] = []
         var made: [Int: String] = [:]
         var sources: [AskDrawingSource] = []
+        var layoutSentence: String?
         let drawings = plan.steps.filter { $0.tool == "add_drawing" || $0.tool == "add_photo" }.count
         var drawn = 0
         await editor.asOneUndoStepAwaiting {
@@ -634,6 +638,13 @@ final class AskSession {
                 }
                 stepsRun = number
             }
+            // Ask looks over the layout it made before it hands back, and
+            // mends what it can in this same undo step (`AskLayoutCheck`).
+            guard failure == nil, !landed.isEmpty, let now = editor.document else { return }
+            let review = AskLayoutCheck.review(now, before: before)
+            for line in review.notes { note("look: " + line) }
+            if !review.fixes.isEmpty { editor.perform { AskLayoutCheck.apply(review, to: &$0) } }
+            layoutSentence = review.sentence
         }
         if let failure {
             // What ran is one step in the history: take it back, so a plan
@@ -648,7 +659,7 @@ final class AskSession {
             return nil
         }
         lastSources = sources
-        return Ran(before: before, landed: landed, made: made, sources: sources)
+        return Ran(before: before, landed: landed, made: made, sources: sources, layoutSentence: layoutSentence)
     }
 
     /// What a step's line says while it runs, and once its painting is

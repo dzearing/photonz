@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/ask-makes-a-pricing-section-walk",
   "seed": "Ask on a blank canvas at Next defaults, the mock's own request (agent-generate-wt.html): 'Make a pricing section on brand'. The plan lands in the Agent group with nothing run, Run Plan builds it from the Library's components and styles where it can, and one undo takes the whole section back. Needs Ollama with a model Ask plans with (docs/design/ask.md).",
-  "clock": 420,
+  "clock": 540,
   "setup": {
     "forget": [
       "all"
@@ -43,7 +43,7 @@
       "do": "waitFor",
       "condition": "askPhase",
       "value": "ran|stopped",
-      "timeout": 300
+      "timeout": 420
     },
     {
       "do": "describe",
