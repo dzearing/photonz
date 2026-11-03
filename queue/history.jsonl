@@ -15372,3 +15372,7 @@
 {"t":"2026-11-03T06:40:49.961Z","ev":"task_note","id":"ask-can-mock-a-web-page-from-its-address-and-loo"}
 {"t":"2026-11-03T06:40:50.037Z","ev":"task_note","id":"ask-can-mock-a-web-page-from-its-address-and-loo"}
 {"t":"2026-11-03T06:41:04.484Z","ev":"task_pending","id":"ask-can-mock-a-web-page-from-its-address-and-loo","from":"in_progress","note":"Address half shipped in 7d8deef3 (page mocking, injection limits, Settings switch, eval and audit 2026-11-03-ask-mocks-a-web-page.json). Still to do: looking things up through a reader with no document and a search service (acceptance 3 and the search half of 6), and same-named controls as copies of one component."}
+{"t":"2026-11-03T13:46:05.618Z","ev":"sweep_pass","walks":1083,"seconds":25469,"passed":1033,"failed":50,"complete":true,"total":1083}
+{"t":"2026-11-03T13:46:05.825Z","ev":"task_started","id":"ask-can-mock-a-web-page-from-its-address-and-loo","title":"Ask can mock a web page from its address and look things up, and nothing on the web can steer it","priority":"p1-high"}
+{"t":"2026-11-03T14:30:23.642Z","ev":"task_created","id":"with-the-crop-tool-dragging-across-the-picture-d","priority":"p1-high","title":"With the Crop tool, dragging across the picture draws the crop box you want"}
+{"t":"2026-11-03T14:30:23.758Z","ev":"task_resequenced","id":"with-the-crop-tool-dragging-across-the-picture-d","from":3980,"to":5e-8}

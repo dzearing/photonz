@@ -1,0 +1,36 @@
+{
+  "id": "with-the-crop-tool-dragging-across-the-picture-d",
+  "title": "With the Crop tool, dragging across the picture draws the crop box you want",
+  "goal": "With the Crop tool, the person wants to drag out the area to keep, the way a marquee is drawn, not to nudge a full-size box in from its edges. Today a press inside the crop box moves it, and only a press outside it draws a new one; since the box starts as the whole picture, there is no 'outside' on the picture, so drawing a crop box is effectively impossible. Dragging anywhere on the picture should draw a new crop box; the handles still resize it.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 5e-8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-03T14:30:23.638Z",
+  "updated": "2026-11-03T14:30:23.757Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-03 (intake): 'the crop tool is rather irritating because what I really want to do is select a box, rather than resize a box. I think resizing is fine but if i drag a box, that should adjust the cropping rectangle to that.' Code: Sources/Photonz/CanvasPointerDrags.swift ~201-223: in Crop mode a press on a handle resizes (CropDrag .resize), a press inside cropRect MOVES it (.move), only a press outside DEFINES a new rect (.define(anchor:)). The box starts as the whole picture, so the inside-moves rule swallows every drag on the picture. Change the inside case to define; move becomes Space-drag. Crop math in Sources/PhotonzCore/Crop.swift.",
+  "acceptance": [
+    "At Next defaults, Crop tool on a screenshot: press anywhere that is not a handle (inside the current box or outside it) and drag: a new crop box is drawn from the press to the pointer, live, and replaces the old one. A click without a drag changes nothing.",
+    "The eight handles still resize the box as today (and keep the aspect lock when one is set).",
+    "Moving a box: hold Space while drawing to reposition the box being drawn (as Photoshop's and Preview's marquee do); with the box drawn, hold Space and drag inside it to move it; the arrow keys nudge it (Shift for 10). Option draws from the centre, Shift keeps a square (or the locked aspect). Double-click inside or Return still commits, Escape cancels, as today.",
+    "The hover cursor says what a press will do: a crosshair where it draws, the resize cursors on handles, the open hand with Space held.",
+    "Snapping and the size readout work while drawing as they do while resizing.",
+    "Walks: draw a crop box inside a full-picture box; redraw over it; resize by a handle; Space-reposition while drawing; Space-drag to move; nudge; commit; Escape. Before and after reel in the audit under queue/audits/.",
+    "Update docs/design/tools.md's crop section with the new gestures.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-03T14:30:23.640Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-03T14:30:23.756Z",
+      "note": "seq 3980 -> 5e-8"
+    }
+  ]
+}
