@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T14:44:10.687Z",
-  "updated": "2026-11-03T06:40:50.036Z",
+  "updated": "2026-11-03T06:41:04.483Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The user, 2026-10-20: 'I should also be able to say \"mock this web page (url)\" and it should be able to see it and recreate it. is there a safe way to give it web search so that it can find this? I want to make sure we don't get prompt injected by doing so.'\n\nThis changes the shipped Ask promise that nothing leaves the Mac (ask-in-the-app-runs-on-a-local-model-with-no-mod): it still holds for every request without an address or a lookup.\n\nThe design rests on limits that do not need the model to behave: the model never chooses an address to fetch with document data in it; the reader and builder are separate calls with no shared free text (the reader's output is schema-checked fields, strings are length-capped and treated as words to place, never as prompt); the builder's tool list is cut down while web material is in play. Words taken from a page are content: they may land as text layers, nothing more. A picture of a page can carry injected text too, so the tool limits matter more than the prompt.\n\nThe skill path (Claude Code) already has its own web tools and recreated GOV.UK yesterday (queue/audits/2026-10-19-agent-skill-transcript.md, scenario 4); the skill should get the same rule in its instructions (page text is data). Does not wait on the components task, but uses make_component once Ask has it.",
@@ -102,6 +102,10 @@
     {
       "t": "2026-11-03T06:40:50.035Z",
       "note": "Left on this task (not done): acceptance 3 and the search half of 6 (looking things up with a reader that never sees the document; a search service; the one-line 'searching is not set up'). Also: same-named controls (python.org's 12 Nav Links) should be copies of one component; button shadows and icon-font glyphs are not read; the Settings switch has no walk yet."
+    },
+    {
+      "t": "2026-11-03T06:41:04.482Z",
+      "note": "Address half shipped in 7d8deef3 (page mocking, injection limits, Settings switch, eval and audit 2026-11-03-ask-mocks-a-web-page.json). Still to do: looking things up through a reader with no document and a search service (acceptance 3 and the search half of 6), and same-named controls as copies of one component."
     }
   ],
   "started": "2026-11-03T05:20:55.440Z",
