@@ -44,6 +44,18 @@ final class HotkeyCenter {
         nextID += 1
     }
 
+    /// Whether any shortcut is held right now.
+    var isRegistered: Bool { !hotkeyRefs.isEmpty }
+
+    /// Gives every shortcut back to the system, so another Photonz can take
+    /// them (`CaptureShortcutOwner`). The handler stays installed; it simply
+    /// has nothing left to be called for.
+    func unregisterAll() {
+        for ref in hotkeyRefs { UnregisterEventHotKey(ref) }
+        hotkeyRefs.removeAll()
+        actions.removeAll()
+    }
+
     private func installHandlerIfNeeded() {
         guard handlerRef == nil else { return }
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),

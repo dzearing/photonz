@@ -290,6 +290,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>NSHumanReadableCopyright</key><string>Copyright © 2026 David Zearing. MIT License.</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
+    <!-- This build gives the capture shortcuts to the Photonz opened last, so
+         two copies never both answer (CaptureShortcutOwner). Without it, a
+         running copy is taken for one from before that rule. -->
+    <key>PhotonzCaptureShortcutsStepAside</key><true/>
     <!-- Screen recording (phase 12): TCC requires a microphone usage string when
          the user opts to record mic audio, or the app is killed on first access. -->
     <key>NSMicrophoneUsageDescription</key><string>Photonz records microphone audio when you include it in a screen recording.</string>

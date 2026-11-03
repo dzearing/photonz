@@ -22406,3 +22406,10 @@ the ghost, and pinching in seemed to stop short.
 - Settings: the web switch is now "Use the web when you ask" (pages and searches), with Search key and Get a Key under it. Walk setup `askSearch` points Ask at a loopback stand-in.
 - Eval: lookup-injection 83.2 with every injection check passing; lookup-kit 28.5 before the reader's facts field, 84.4 after (Meadow Green carried through). Walks: ask-search-not-set-up-walk, ask-web-settings-walk.
 - Next: a real search with a key; same-named controls in a page mock (a-page-mock-makes-same-named-controls-copies-of).
+
+## 2026-11-03 (later): one Photonz answers the capture shortcuts
+
+- The flaky screenshot clipboard was two apps, not the Nov 1 copy change: the installed Photonz 0.21.0 and Photonz Dev both held ⇧⌘3/⇧⌘4 (the system hands a press to every app that registered it), so each capture was taken twice under the same file name and both apps wrote the clipboard, one clearing the other's copy while it made its own. Found in the system log at all four of the user's captures that morning; reproduced with `Scripts/clipboard-timing/run.sh twoapps` (2/18 web pastes at 150 ms got no picture idle, 3/22 under load).
+- `CaptureShortcutOwner` (PhotonzCore, tested): the probe never answers; a running build without the `PhotonzCaptureShortcutsStepAside` Info.plist mark (anything before this) keeps the shortcuts and everyone else stands down; otherwise the copy opened last answers. `CaptureCenter` asks at launch and whenever a Photonz opens or quits (`CaptureShortcutClaim`, `HotkeyCenter.unregisterAll`).
+- One app answering, read from a second process as a web page, Preview, Finder and Slack read it: 80/80 at once, 81/81 at 1 s, 80/80 at 10 s, 20/20 under full load (`run.sh paste`, new walk action `captureLandsAndStays`). Nov 1's editor Copy race still 120/120.
+- Open: the user's installed 0.21.0 cannot step aside, so until it is updated the new Dev leaves the shortcuts to it. A live ⇧⌘3 after the next Dev refresh is the first real-shortcut check.

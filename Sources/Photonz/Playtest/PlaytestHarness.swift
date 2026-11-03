@@ -5074,7 +5074,8 @@ private final class Run {
             note(number, step.name, "copied \(newest.url.lastPathComponent) the way its tile's Copy does; "
                  + "the clipboard \(NSPasteboard.general.changeCount == before ? "did not move" : "moved")")
 
-        case .action(.captureLands):
+        case .action(.captureLands), .action(.captureLandsAndStays):
+            let stays = step == .action(.captureLandsAndStays)
             guard let newest = coordinator.capture.store.entries.first(where: { $0.kind == .image }),
                   let source = CGImageSourceCreateWithURL(newest.url as CFURL, nil),
                   let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
@@ -5089,10 +5090,20 @@ private final class Run {
             PlaytestLentCaptures.remember(landed.url)
             coordinator.capture.onCaptureComplete?(landed)
             await sleep(1.5)
-            try? FileManager.default.removeItem(at: landed.url)
-            store.reload()
+            if stays {
+                // Taken away later, off the walk's clock; a killed walk's is
+                // taken back at the next launch (`PlaytestLentCaptures`).
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(10.5))
+                    try? FileManager.default.removeItem(at: landed.url)
+                    store.reload()
+                }
+            } else {
+                try? FileManager.default.removeItem(at: landed.url)
+                store.reload()
+            }
             note(number, step.name, "landed \(landed.url.lastPathComponent) as a capture does, "
-                 + "then took it away again")
+                 + (stays ? "and keeps it for twelve seconds" : "then took it away again"))
 
         case .action(.beginHeldSave):
             guard let newest = coordinator.lastCapture else {
@@ -8256,7 +8267,7 @@ private final class Run {
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture,
                  .hotkeyCaptureFullScreen, .hotkeyCaptureRegion, .hotkeyRecord,
-                 .hotkeyEditLastCapture, .showCaptureToast, .copyNewestCapture, .captureLands, .beginHeldSave, .finishHeldSave,
+                 .hotkeyEditLastCapture, .showCaptureToast, .copyNewestCapture, .captureLands, .captureLandsAndStays, .beginHeldSave, .finishHeldSave,
                  .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace,
                  .recordingControlDrill, .stopThenOpenDrill:
                 break  // handled above, in the branch that asks for a recording

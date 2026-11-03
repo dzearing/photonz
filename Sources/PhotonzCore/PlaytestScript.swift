@@ -1138,6 +1138,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// toasted), then taken away again after a second and a half so the
     /// person's Screenshots folder keeps nothing of the walk.
     case captureLands
+    /// `captureLands`, with the new file kept for twelve seconds instead of a
+    /// second and a half, so a second process can paste it the way Finder,
+    /// Mail or Slack attach the file ten seconds later
+    /// (Scripts/clipboard-timing/targets.swift).
+    case captureLandsAndStays
     /// Start saving the newest recording the way the window's Save does, as
     /// far as the corner can tell: after its quiet window a progress bar is
     /// due. `finishHeldSave` says it saved. Together they are a toast asked for

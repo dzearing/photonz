@@ -67,6 +67,31 @@ final class CaptureCenter {
         // history overlay inside somebody else's walk. A walk presses these
         // through the menu bar anyway, which is in-process and unaffected.
         guard AppInfo.flavor.claimsInputOutsideItself else { return }
+        // Exactly one running Photonz answers the shortcuts: the system hands a
+        // press to every app holding it, and two answering photographed the
+        // screen twice and fought over the clipboard (`CaptureShortcutOwner`).
+        // Asked again whenever another copy opens or quits.
+        let workspace = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
+            workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+                guard let id = app?.bundleIdentifier, CaptureShortcutClaim.isPhotonz(id) else { return }
+                MainActor.assumeIsolated { self?.claimShortcutsIfOurs() }
+            }
+        }
+        claimShortcutsIfOurs()
+    }
+
+    /// Holds the system-wide shortcuts when this copy is the one that answers
+    /// them, and gives them back when another is.
+    private func claimShortcutsIfOurs() {
+        let ours = CaptureShortcutClaim.isOurs()
+        guard ours != hotkeys.isRegistered else { return }
+        guard ours else {
+            hotkeys.unregisterAll()
+            NSLog("Capture shortcuts: another Photonz answers them now")
+            return
+        }
         hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.hotkeyPressed(.captureFullScreen) }
         hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.hotkeyPressed(.captureRegion) }
         hotkeys.register(.commandShift(kVK_ANSI_5)) { [weak self] in self?.hotkeyPressed(.record) }

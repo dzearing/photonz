@@ -1,0 +1,27 @@
+{
+  "feature": "Every screenshot is on the clipboard, every time",
+  "epic": "image-editing",
+  "summary": "Your captures were being taken twice: the installed Photonz 0.21.0 and Photonz Dev both answered every capture shortcut and fought over the clipboard, so a quick paste could find it empty. Now only one running Photonz answers the shortcuts.",
+  "setup": "Photonz Dev once the loop has refreshed it with this build, release Next, no flag changed from its default. Your installed /Applications/Photonz.app is 0.21.0 (running since 2026-10-31) and cannot step aside, so until it is updated the new Dev leaves the shortcuts to it and only that one answers.",
+  "switched": {},
+  "try": [
+    { "do": "With Photonz Dev and the installed Photonz both running, press ⇧⌘3 and paste straight away into a Claude or Slack message." },
+    { "do": "Press ⇧⌘4, drag a region, and check that one frozen overlay comes up, not two stacked." },
+    { "do": "Check the corner: one Copied toast per capture, and one new tile in History." },
+    { "do": "Quit the installed Photonz, press ⇧⌘3 again: Photonz Dev now answers on its own." },
+    { "do": "To measure it yourself: COUNT=40 Scripts/clipboard-timing/run.sh paste (one app) and run.sh twoapps (the race this removes)." }
+  ],
+  "evaluate": [
+    "Does a paste straight after ⇧⌘3 now land the screenshot every time?",
+    "With both apps open, is it right that the one opened last takes your screenshots once both are on this build?",
+    "Do you still want the installed release running beside Photonz Dev, or would you rather update it so both follow the rule?"
+  ],
+  "rough": [
+    "Cause, from the Mac's own log: at 06:28:37, 06:33:18, 06:34:37 and 06:51:57 today the installed 0.21.0 (pid 35362) and Photonz Dev (pid 8872, which the system log labels with the probe's binary name) both photographed the screen within 2 ms of the press, wrote the same file name and both wrote the clipboard. The Nov 1 copy change was not at fault on its own.",
+    "Before, measured from a second process with one capture written by the app and a second app copying the way 0.21.0 does (run.sh twoapps): 2 of 18 web pastes 150 ms after the capture got no picture on an idle Mac; with every core busy, 3 of 22 pastes at 150 to 300 ms got an empty clipboard or no picture.",
+    "After, one app answering (run.sh paste), read as a web page, Preview, Finder and Slack read the clipboard: 80/80 at once, 81/81 at 1 s, 80/80 at 10 s, 20/20 at once with all 16 cores loaded. The editor Copy race from Nov 1 still passes: 120/120 early pastes get the new picture.",
+    "Not verified on your real shortcut: the loop cannot press ⇧⌘3 for you or rebuild Photonz Dev, so the hand-over between two running apps is proven by unit tests of the rule and the Info.plist mark, not by a live press. The first press after the loop refreshes Photonz Dev is the real test.",
+    "The pastes were made by a second process reading the clipboard the way each kind of app does, not by pasting into Chrome, Preview, Slack or Mail themselves: this terminal has no Accessibility grant to drive other apps.",
+    "Your installed Photonz 0.21.0 cannot step aside, so while it runs it keeps the shortcuts and its older copy (clipboard empty for about 115 ms while it makes the picture) is what you get. Updating it to a build with this change ends that."
+  ]
+}
