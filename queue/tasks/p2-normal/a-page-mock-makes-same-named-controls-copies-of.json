@@ -1,0 +1,27 @@
+{
+  "id": "a-page-mock-makes-same-named-controls-copies-of",
+  "title": "A page mock makes same-named controls copies of one component",
+  "goal": "When Ask mocks a web page, controls that are the same thing (python.org has twelve navigation links) become one Library component with copies placed on the page, instead of twelve separate components all called Nav Link.",
+  "epic": "agent-ask",
+  "priority": "p2-normal",
+  "seq": 128.75,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-03T14:52:14.194Z",
+  "updated": "2026-11-03T14:52:14.197Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen on 2026-11-03 (queue/audits/2026-11-03-ask-mocks-a-web-page.json, rough): python.org came back as 23 components, twelve of them called Nav Link. add_page_parts lands each call as its own component (AskConversation.webPlan / addWebParts); same name + same box shape could be one component placed with per-copy words.",
+  "acceptance": [
+    "Mocking https://www.python.org lands its navigation links as copies of one Nav Link component, each with its own words",
+    "The Library shows one entry per kind of control the page has, not one per control",
+    "The eval cases web-gov-uk, web-python-org and web-apple-com score no lower than 88, 73.6 and 79.6"
+  ],
+  "log": [
+    {
+      "t": "2026-11-03T14:52:14.196Z",
+      "note": "created (manual)"
+    }
+  ]
+}
