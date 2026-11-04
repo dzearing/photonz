@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-03T14:53:23.683Z",
-  "updated": "2026-11-03T16:46:05.812Z",
+  "updated": "2026-11-04T01:36:23.553Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake): 'lately when i take a screenshot, it isn't reliably copying it to clipboard. it's rather annoying. i think something regressed. make sure that screenshots are copied to clipboard reliably'. Timing matches e0648dd9 (shipped in v0.22.0). Code: Sources/Photonz/Capture/CaptureStore.swift (add: handOffNewScreenshot before writePNG; the later copy skipped when handedOff.changeCount still matches), Sources/Photonz/ClipboardHandOff.swift (promised types made in the background, then handed to the system clipboard type by type), Sources/PhotonzRender/ClipboardPicture.swift. Not reproduced yet by the intake window.",
@@ -73,6 +73,10 @@
     {
       "t": "2026-11-03T16:46:05.810Z",
       "note": "Cause: the installed Photonz 0.21.0 and Photonz Dev both answered every capture shortcut (system log, all four captures 2026-11-03), photographed twice under one file name and fought over the clipboard; reproduced with Scripts/clipboard-timing/run.sh twoapps (2/18 web pastes at 150 ms got no picture idle, 3/22 under load). Fix c999166a: CaptureShortcutOwner (PhotonzCore, 7 tests) + CaptureShortcutClaim/CaptureCenter: exactly one running Photonz holds the shortcuts (never the probe; an older build without the Info.plist step-aside mark keeps them; else the one opened last). One app: 80/80 at once, 81/81 at 1 s, 80/80 at 10 s, 20/20 under load across web/native/file/electron reads; Nov 1 Copy race 120/120; Scripts/test.sh green. Audit queue/audits/2026-11-03-every-screenshot-is-on-the-clipboard.json. Until the installed 0.21.0 is updated, the new Dev leaves the shortcuts to it."
+    },
+    {
+      "t": "2026-11-04T01:36:23.552Z",
+      "note": "User, 2026-11-03: the report came from another Mac running ONE Photonz, so the two-copies cause found here was not theirs. Its fix (c999166a) stands; the single-app fault continues in a-screenshot-is-on-the-clipboard-every-time-on-a."
     }
   ],
   "started": "2026-11-03T15:28:35.668Z",

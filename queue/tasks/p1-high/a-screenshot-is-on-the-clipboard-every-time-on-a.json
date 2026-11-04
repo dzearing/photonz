@@ -1,0 +1,34 @@
+{
+  "id": "a-screenshot-is-on-the-clipboard-every-time-on-a",
+  "title": "A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app",
+  "goal": "The user's report of screenshots not reliably reaching the clipboard came from ANOTHER Mac running a single, released Photonz, not this one. The task every-screenshot-is-on-the-clipboard-every-time found and fixed a different fault that only exists on this Mac (the installed app and Photonz Dev both answering the capture shortcut, c999166a), and checked the suspects in e0648dd9 only with a stand-in reader process, never with real paste targets. The single-app fault is unexplained and unfixed. Find it and fix it.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 1e-8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T01:36:23.358Z",
+  "updated": "2026-11-04T01:36:23.478Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-03 (intake), correcting the closed task: 'when i earlier said that i wasn't getting photos into the clipboard this was on another machine not running 2 copies of photonz, so your assumptions were wrong.' The other Mac's version and the apps pasted into are being asked; add them to this log when known. Prior work: every-screenshot-is-on-the-clipboard-every-time (done, c999166a, keep it: one running Photonz holds the capture shortcuts). Its own log admits: 'pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves'. Code: Sources/Photonz/Capture/CaptureStore.swift, Sources/Photonz/ClipboardHandOff.swift, Sources/PhotonzRender/ClipboardPicture.swift.",
+  "acceptance": [
+    "Do NOT explain this with two running copies: on the user's other Mac only one Photonz runs. Test with exactly one Photonz running, the RELEASED build (dist/Photonz.app from Scripts/build-app.sh --release, or the 0.23.0 DMG), with Photonz Dev and the probe quit, and say so in the audit.",
+    "Reproduce with REAL paste targets, not a stand-in reader: capture (region, window, full screen) and paste with Cmd-V into Preview, Notes, Chrome, Safari, Slack or Teams, Messages, Mail and Claude, at once and after a few seconds, 20 captures per target. If the loop cannot press keys into other apps, build what lets it (an Accessibility-granted helper, or AppleScript/System Events in a walk), or hand the person a one-command script that runs the matrix and writes a report, and say which.",
+    "Re-check e0648dd9's design against real apps, since promised (lazily provided) clipboard data behaves differently per app: Electron and browsers read some types on change, Messages and Mail may ask for TIFF or a file promise, Universal Clipboard pushes to other devices, and clipboard managers read immediately. Also check: the capture toast or History write racing the hand-over; the provider object's lifetime when no paste comes for minutes; what happens after the app is idle, sleeps or is hidden; and macOS 26 vs 27 differences.",
+    "If promised data is the cause and cannot be made reliable for every target, put the real PNG and TIFF bytes on the clipboard (made off the main thread first, then written in one go, within a few hundred milliseconds), keeping the editor's instant-Copy behaviour only where it is proven safe.",
+    "Fixed: 20 of 20 captures paste correctly in every target above with one released Photonz running, numbers in the audit, and a repeatable check left in the repo.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T01:36:23.360Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-04T01:36:23.477Z",
+      "note": "seq 3980 -> 1e-8"
+    }
+  ]
+}

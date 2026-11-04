@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-11-04T00:31:52.178Z",
+  "updated": "2026-11-04T01:23:24.802Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -180,11 +180,19 @@
     {
       "t": "2026-11-04T00:31:52.177Z",
       "note": "Four of five items met; held-out item needs a run on final code and a cause. See the log entry of 2026-11-03."
+    },
+    {
+      "t": "2026-11-04T01:02:28.063Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-04T01:23:24.801Z",
+      "note": "2026-11-03 second pass. Reproduced item 1's literal case at 0cd7c11c: asking for 'three of the Card starter components' made one shape named Card Starter, then make_component and three place_component 'Card Starter' failed as they ran (the Library has Card), so Pro and Team's words float on white with no card, and Ask said nothing. Picture /tmp/photonz-playtest/ask-card-check/1-ran-sc.png. The model never heard the refusal: place_component's name is only checked at run time."
     }
   ],
   "walks": [
     "ask-makes-a-pricing-section-walk",
     "ask-annotates-a-screenshot-walk"
   ],
-  "started": "2026-11-03T19:00:24.562Z"
+  "started": "2026-11-04T01:02:28.062Z"
 }
