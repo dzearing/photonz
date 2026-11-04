@@ -22440,3 +22440,14 @@ No app code changed. Task a-screenshot-is-on-the-clipboard-every-time-on-a is bl
 Changed: `DocumentRenderer.wrapped` holds every bitmap's edge (`clampedToExtent().cropped(to:)`), so a picture with straight alpha, which is anything read from a PNG, no longer darkens where it is resampled past its edge. New `TurnedEdgeSeamTests` and `a-turned-layer-has-no-seam-walk`.
 Measured at Next defaults, worst levels off white along the outline: 25 percent 31 to 0, 50 percent 64 to 0, export 1x 64 to 0; 79, 100, 200 percent and export 2x were already 0 because the enlarging path clamps. With `next-crisp-zoom` off: 79 percent 63 to 0, 100 percent 46 to 0.
 Open: the user's line was narrower than the one reproduced at 79 percent, and that they were on Current is inferred from the title bar. The audit asks them to check their own picture.
+
+## 2026-11-04: Typing / in Ask lists the commands you can run
+
+Ask's field now turns into the command list on `/`: `AskCommandList` in
+PhotonzCore (a row per choice, ellipsis rows open their sheet), `AskCommandsList`
+in the app, Return, arrows and a click, one undo step. After a request the
+conversation sits in the mock's left dock (`AskConversationDock`), which takes
+room from the canvas and holds the field; Command K floats it back. Next:
+`ask-chat-has-the-mock-s-new-conversation-button` for what the mock still has.
+Open: `ask-stops-a-running-request-walk` fails when it is first to use a cold
+model, before this change too, and is filed on its own.

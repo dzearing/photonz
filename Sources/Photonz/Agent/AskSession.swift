@@ -70,6 +70,19 @@ final class AskSession {
     private(set) var stepsRun = 0
     /// Whether the composer is up over the canvas.
     var isComposerShown = false
+    /// Whether the conversation has its dock at the window's left, the
+    /// mock's `.cdock`. An ask puts it there and its close takes it away; it
+    /// takes room from the canvas, so it never sits over the picture or the
+    /// Agent group. The composer over the canvas floats it back while it is up.
+    var isConversationDocked = false
+    /// Whether this window is wide enough to give the canvas's room to the
+    /// dock. The editor says, as the window changes.
+    var dockFits = true
+    /// The dock is taking the composer's place: the panel drops its own field
+    /// so a person never sees their words typed into two boxes.
+    var isDockHoldingTheField: Bool { isConversationDocked && dockFits }
+    /// What `/` lists for the words in the field.
+    private(set) var commands = AskCommandList.Listing()
     /// Once this window has asked, the panel keeps its Agent group.
     private(set) var hasAsked = false
     /// Bumped to ask the panel to open the Agent group and bring it into view.
@@ -152,6 +165,58 @@ final class AskSession {
         isComposerShown = false
     }
 
+    // MARK: Commands
+
+    /// The field is a command search rather than a request.
+    var isListingCommands: Bool { AskCommandList.query(in: draft) != nil }
+
+    /// Reads the field again: the list follows every word typed.
+    func refreshCommands(in editor: EditorState) {
+        guard let query = AskCommandList.query(in: draft) else {
+            commands = AskCommandList.Listing()
+            return
+        }
+        commands = AskCommandList.matching(query) { editor.canRun($0.call) }
+    }
+
+    /// The arrow keys, and the pointer over a row.
+    func moveCommandPick(by step: Int) { commands = commands.moved(by: step) }
+    func pickCommand(at index: Int) { commands = commands.highlighting(index) }
+
+    /// Whether Return in the field has anything to do.
+    var canSubmit: Bool {
+        if isListingCommands { return commands.picked != nil }
+        return !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Return and the send button, in every field Ask has: the picked
+    /// command when the field is listing them, else the request.
+    func submit(in editor: EditorState) {
+        if isListingCommands {
+            if let picked = commands.picked { runCommand(picked, in: editor) }
+        } else {
+            ask(in: editor)
+        }
+    }
+
+    /// Runs a listed command as its menu row does: one undo step, through
+    /// the same call. The composer goes so the picture is not dimmed under
+    /// the result and a sheet the command opens has nothing over it. What it
+    /// changed gets a row beside the requests.
+    func runCommand(_ entry: AskCommandEntry, in editor: EditorState) {
+        guard editor.canRun(entry.call) else { return }
+        draft = ""
+        commands = AskCommandList.Listing()
+        isComposerShown = false
+        let before = editor.document
+        editor.run(entry.call)
+        guard let before, let after = editor.document else { return }
+        if changes.record(asked: AskCopy.commandAsked(entry), sentence: entry.title,
+                          before: before, after: after) != nil {
+            hasAsked = true
+        }
+    }
+
     /// Why the last request asked with nothing open was not run (a video,
     /// or something that would already have to be open), shown under the
     /// field that asked it, which keeps the words. Cleared by the next ask.
@@ -179,7 +244,7 @@ final class AskSession {
     /// nothing open says why under the field and keeps the words.
     func ask(in editor: EditorState) {
         let words = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !words.isEmpty else { return }
+        guard !words.isEmpty, !isListingCommands else { return }
         refusal = nil
         // No model on this Mac yet: the setup dialog, and these words once it is done.
         if AskSetup.needed {
@@ -288,6 +353,7 @@ final class AskSession {
     private func send(_ words: String, in editor: EditorState) {
         hasAsked = true
         isComposerShown = false
+        isConversationDocked = true
         // Whatever hides the Agent group comes out first: a video in View, a
         // closed panel. The panel may only be built after this, so the reveal
         // waits for it (`isRevealPending`).
@@ -1136,8 +1202,20 @@ enum AskCopy {
     static let button = "Ask"
     static let buttonTooltip = "Ask for a change"
     static let menuRow = "Ask…"
-    static let composerPlaceholder = "Ask for a change"
+    static let composerPlaceholder = "Ask, or type / for a command"
+    /// The mock's whole line, over the budget, so it is the field's tip.
+    static let composerTip = "Ask for a change, or type / for a command"
     static let composerHeader = "Agent"
+    static let dockTooltip = "Dock the conversation"
+    static let floatTooltip = "Float the conversation"
+    static let commandsHeader = "Commands"
+    static let noCommands = "Nothing matches"
+    static let done = "Done"
+    static func commandNeeds(_ entry: AskCommandEntry) -> String { "Needs \(entry.needs)" }
+    /// A row's request when a command made it, which keeps it out of the
+    /// thumbs: there was no request to judge.
+    static let commandMark = "/"
+    static func commandAsked(_ entry: AskCommandEntry) -> String { commandMark + entry.apiName }
     static let onDevice = "on-device"
     static let empty = "Ask for something"
     static let stop = "Stop"

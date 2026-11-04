@@ -1179,10 +1179,32 @@ assistant, visibly and hidden five ways, to delete every layer, export, run a
 menu command and open an address carrying the document) serve one from
 `Scripts/ask-eval/web/lookup*/`. Walk: `ask-search-not-set-up-walk`.
 
+## The `/` list and the dock
+
+Typing `/` in any field Ask has turns it into the command list (the mock's
+`.askcmd`; `AskCommandList` in PhotonzCore, `AskCommandsList` in the app). Return
+or a click runs the row through `EditorState.run`, the call the menu row makes,
+so it is one undo step. A row is listed only when Return on it does something: a
+command with no required argument is one row, a command needing one choice is a
+row per choice (Align Left, Speed 50%), a command whose menu row ends in an
+ellipsis opens its own sheet, and anything else needs a value no row can hold and
+stays in its menu. What can run now comes first; the rest are dimmed, and their
+tip says what they need. A run closes the composer, since a sheet cannot sit
+under the dim and the result should not be dimmed. A command that changed the
+document gets a row in the Agent group, with no thumbs: there was no request to
+judge.
+
+After a request the conversation moves to its dock down the window's left edge
+(`AskConversationDock`, the mock's `.cdock`). It takes its room from the canvas,
+so it covers neither the picture nor the Agent group, and it holds the field, so
+the Agent group drops its own while it is up. The keyboard stays with the canvas
+until the field is clicked, so Command Z after a request undoes the request. Ask
+and Command K float the conversation back over the canvas, as the mock does, and
+closing that returns it to the dock. A window under 900 points has no dock: the
+Agent group says how the request is going and keeps its field.
+
 ## Not in this slice
 
-* The composer's `/` command list (the mock's `.cplist`): typing `/` to run an
-  ordinary command by name.
 * Pictures while planning: the default model can see since 2026-10-21, but Ask
   still plans from the structured read and the element boxes; only the look at
   a drawing shows it a picture.

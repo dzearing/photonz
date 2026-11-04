@@ -1,0 +1,61 @@
+{
+  "feature": "Typing / in Ask lists the commands you can run",
+  "epic": "agent-ask",
+  "summary": "Ask's field is now also the command list: type / and every menu command is there by name, filtered as you type, and Return runs it. After you ask, the conversation stays on screen in a dock at the window's left instead of vanishing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any picture with a layer on it. Walks: ask-slash-lists-commands-walk, ask-stays-up-after-asking-walk, ask-narrow-window-has-no-dock-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Pick a layer, press Command K and type /.",
+      "shot": "2026-11-04-ask-commands-1-list.png",
+      "shotNote": "This picture shows the window behind another app, so blue buttons and picked controls can read grey."
+    },
+    {
+      "do": "Type duplic. The list narrows to Duplicate Layer.",
+      "shot": "2026-11-04-ask-commands-2-filtered.png",
+      "shotNote": "This picture shows the window behind another app, so blue buttons and picked controls can read grey."
+    },
+    {
+      "do": "Press Return. The layer is copied, the composer goes, and Duplicate Layer is a row in the Agent group.",
+      "shot": "2026-11-04-ask-commands-3-ran.png",
+      "shotNote": "This picture shows the window behind another app, so blue buttons and picked controls can read grey."
+    },
+    {
+      "do": "Press Command Z. One press takes the copy back."
+    },
+    {
+      "do": "Press Command K, type add a blue rectangle, press Return. The dock opens at the left with your words and what it is doing.",
+      "shot": "2026-11-04-ask-commands-4-dock-working.png",
+      "shotNote": "This picture shows the window behind another app, so blue buttons and picked controls can read grey."
+    },
+    {
+      "do": "When it finishes, click the row in the Agent group. The rectangle is picked on the canvas and in Layers.",
+      "shot": "2026-11-04-ask-commands-5-row-picks.png",
+      "shotNote": "This picture shows the window behind another app, so blue buttons and picked controls can read grey."
+    },
+    {
+      "do": "Press Command K. The same conversation floats back over the canvas; Escape returns it to the dock.",
+      "shot": "2026-11-04-ask-commands-6-floated-back.png",
+      "shotNote": "This picture shows the window behind another app, so blue buttons and picked controls can read grey."
+    },
+    {
+      "do": "Click the X on the dock. The canvas takes the room back and the Agent group's field returns."
+    }
+  ],
+  "evaluate": [
+    "Is 300 points at the left the right price for keeping the conversation up, or should the dock close by itself when a request finishes?",
+    "Should a command you run from / get a row in the Agent group, or do only requests belong there?",
+    "On a picture, are the dimmed commands that cannot run now useful under the list, or just noise?",
+    "Does a row per choice (Align Left, Speed 50%) read well, or would you rather pick the command and then the choice?"
+  ],
+  "rough": [
+    "The canvas zoom changes as the dock comes and goes, because the picture refits the narrower column, so the picture jumps a little when Command K floats the conversation back.",
+    "The mock's line \"Ask for a change, or type / for a command\" is 41 characters, over the chrome's 30: the field says \"Ask, or type / for a command\" and the mock's whole line is the field's hover tip (UX-PATTERNS §4).",
+    "The mock's \"No command matches.\" is a no-X placeholder and a sentence: the list says Nothing matches (UX-PATTERNS §4).",
+    "The mock's New conversation button is left out of the chat header, and the chat shows the latest request rather than the whole transcript. Task ask-chat-has-the-mock-s-new-conversation-button covers both.",
+    "The mock's rows carry an icon for each command. The app's command table has none, so a row shows the icon of its area (layers, timeline, view). Task ask-chat-has-the-mock-s-new-conversation-button covers it.",
+    "A few commands are not in the list because they need a value no row can hold: a length, a word, or a name from this document. They stay in their menus.",
+    "Below 900 points of window there is no dock, and the Agent group alone says how a request is going.",
+    "Toggle commands in the list do not show their tick."
+  ]
+}

@@ -77,8 +77,9 @@
       "field": "Agent Working"
     },
     {
-      "do": "expectInView",
-      "field": "Agent Request"
+      "do": "expect",
+      "control": "Ask Dock Request",
+      "present": true
     },
     {
       "do": "snapshot",
@@ -113,8 +114,9 @@
       "note": "the panel scrolled back up to the box's own sections, the Agent group out of sight below"
     },
     {
-      "do": "expectInView",
-      "field": "Agent Request",
+      "do": "expect",
+      "control": "Ask Dock Request",
+      "present": true,
       "out": true
     },
     {
@@ -161,8 +163,9 @@
       "field": "Agent Working"
     },
     {
-      "do": "expectInView",
-      "field": "Agent Request"
+      "do": "expect",
+      "control": "Ask Dock Request",
+      "present": true
     },
     {
       "do": "snapshot",

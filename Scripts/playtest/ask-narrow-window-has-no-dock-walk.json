@@ -1,0 +1,27 @@
+{
+  "out": "/tmp/photonz-playtest/ask-narrow-window-has-no-dock-walk",
+  "seed": "typing-in-ask-lists-the-commands-you-can-run: a window too narrow to give the canvas's room away gets no dock, the Agent group keeps its field, and / lists commands there too; at Next defaults, no flag touched",
+  "clock": 300,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 800, "canvasHeight": 600, "width": 860, "height": 760 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "add a blue rectangle" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "planning", "timeout": 30 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Ask Dock", "present": false },
+    { "do": "expect", "control": "Agent Request", "present": true },
+    { "do": "waitFor", "condition": "askSettled", "timeout": 200 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Agent Request" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "type", "text": "/duplic" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Ask Commands", "present": true },
+    { "do": "snapshot", "name": "1-list-in-the-panel" }
+  ]
+}

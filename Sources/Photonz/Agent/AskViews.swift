@@ -123,26 +123,41 @@ struct AskComposerOverlay: View {
                 Text(AskCopy.composerHeader).font(.system(size: 12, weight: .semibold))
                 Spacer()
                 Text(AskCopy.onDevice).font(.system(size: 11)).foregroundStyle(.secondary)
+                // The mock's dock button: the conversation down the left edge.
+                if ask.dockFits {
+                    Button {
+                        ask.isConversationDocked = true
+                        ask.closeComposer()
+                    } label: {
+                        Image(systemName: "sidebar.left").font(.system(size: 11, weight: .semibold))
+                    }
+                    .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
+                    .toolTip(AskCopy.dockTooltip)
+                    .playtestControl("Ask Dock It", detail: AskCopy.dockTooltip)
+                }
                 Button { ask.closeComposer() } label: {
                     Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
                 }
                 .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
                 .toolTip("Close", key: "esc")
             }
+            AskConversationLines()
+            if fieldHasFocus { AskCommandsList() }
             HStack(alignment: .bottom, spacing: 8) {
                 TextField(AskCopy.composerPlaceholder, text: $ask.draft, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
                     .lineLimit(1...4)
                     .focused($fieldHasFocus)
-                    .onSubmit { ask.ask(in: editorState) }
+                    .askFieldKeys(ask, in: editorState)
+                    .help(AskCopy.composerTip)
                     .playtestControl("Ask Request", detail: "the Ask composer's field")
-                Button { ask.ask(in: editorState) } label: {
+                Button { ask.submit(in: editorState) } label: {
                     Label(AskCopy.button, systemImage: "sparkles")
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .disabled(ask.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(!ask.canSubmit)
                 .playtestControl("Ask Send", detail: "the Ask composer's Ask button")
             }
             // Asked with nothing open, a request it cannot do there: why,
@@ -176,6 +191,7 @@ struct AskComposerOverlay: View {
 /// request moves down the list as it goes and never jumps.
 struct AgentPanel: View {
     @Environment(EditorState.self) private var editorState
+    @FocusState private var fieldHasFocus: Bool
 
     var body: some View {
         let ask = editorState.ask
@@ -223,7 +239,7 @@ struct AgentPanel: View {
                 .frame(maxHeight: 240)
                 .fixedSize(horizontal: false, vertical: rows.count <= 8)
             }
-            chatIn(ask)
+            if !ask.isDockHoldingTheField { chatIn(ask) }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
@@ -326,7 +342,7 @@ struct AgentPanel: View {
                 .buttonStyle(.plain)
                 .help(row.asked)
                 .playtestControl("Agent Change \(number) Words", detail: row.sentence)
-                voteButtons(row, number: number, ask: ask)
+                if !row.asked.hasPrefix(AskCopy.commandMark) { voteButtons(row, number: number, ask: ask) }
                 Toggle("", isOn: Binding(get: { row.isOn },
                                          set: { ask.setChange(row.id, on: $0, in: editorState) }))
                     .labelsHidden()
@@ -355,11 +371,13 @@ struct AgentPanel: View {
                 ask.setChange(row.id, on: !row.isOn, in: editorState)
             }
             Button(AskCopy.delete) { ask.deleteChange(row.id, in: editorState) }
-            Divider()
-            Toggle(AskCopy.goodResult, isOn: Binding(get: { row.verdict == .up },
-                                                     set: { _ in ask.vote(.up, on: row.id, in: editorState) }))
-            Toggle(AskCopy.badResult, isOn: Binding(get: { row.verdict == .down },
-                                                    set: { _ in ask.vote(.down, on: row.id, in: editorState) }))
+            if !row.asked.hasPrefix(AskCopy.commandMark) {
+                Divider()
+                Toggle(AskCopy.goodResult, isOn: Binding(get: { row.verdict == .up },
+                                                         set: { _ in ask.vote(.up, on: row.id, in: editorState) }))
+                Toggle(AskCopy.badResult, isOn: Binding(get: { row.verdict == .down },
+                                                        set: { _ in ask.vote(.down, on: row.id, in: editorState) }))
+            }
         }
         .playtestControl("Agent Change \(number)", detail: "\(row.sentence), \(row.isOn ? "on" : "off")")
     }
@@ -385,20 +403,284 @@ struct AgentPanel: View {
     /// The mock's `.chat-in`: ask again from the dock.
     private func chatIn(_ ask: AskSession) -> some View {
         @Bindable var ask = ask
-        return HStack(spacing: 6) {
-            TextField(AskCopy.composerPlaceholder, text: $ask.draft)
-                .textFieldStyle(.roundedBorder)
+        return VStack(alignment: .leading, spacing: 6) {
+            if fieldHasFocus { AskCommandsList() }
+            HStack(spacing: 6) {
+                TextField(AskCopy.composerPlaceholder, text: $ask.draft)
+                    .textFieldStyle(.roundedBorder)
+                    .controlSize(.small)
+                    .focused($fieldHasFocus)
+                    .askFieldKeys(ask, in: editorState)
+                    .help(AskCopy.composerTip)
+                    .playtestControl("Agent Request", detail: "the Agent group's field")
+                Button { ask.submit(in: editorState) } label: {
+                    Image(systemName: "sparkles")
+                }
+                .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .onSubmit { ask.ask(in: editorState) }
-                .playtestControl("Agent Request", detail: "the Agent group's field")
-            Button { ask.ask(in: editorState) } label: {
-                Image(systemName: "sparkles")
+                .disabled(!ask.canSubmit)
+                .toolTip(AskCopy.buttonTooltip)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .disabled(ask.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .toolTip(AskCopy.buttonTooltip)
         }
         .padding(.top, 2)
+    }
+}
+
+/// What the field does with its keys, in every field Ask has: Return runs the
+/// picked command or asks, the arrows move the pick, and every word typed
+/// reads the list again.
+private struct AskFieldKeys: ViewModifier {
+    let ask: AskSession
+    let editor: EditorState
+
+    func body(content: Content) -> some View {
+        content
+            .onSubmit { ask.submit(in: editor) }
+            .onKeyPress(keys: [.upArrow, .downArrow]) { press in
+                guard ask.isListingCommands else { return .ignored }
+                ask.moveCommandPick(by: press.key == .upArrow ? -1 : 1)
+                return .handled
+            }
+            .onChange(of: ask.draft, initial: true) { ask.refreshCommands(in: editor) }
+    }
+}
+
+extension View {
+    fileprivate func askFieldKeys(_ ask: AskSession, in editor: EditorState) -> some View {
+        modifier(AskFieldKeys(ask: ask, editor: editor))
+    }
+}
+
+/// The mock's `.askcmd`: `/` turns the field into this list, directly above
+/// it, where the person is already looking. What can run now comes first, and
+/// the rest sit dimmed under it, saying in their tip what they need.
+struct AskCommandsList: View {
+    @Environment(EditorState.self) private var editorState
+
+    private static let maxHeight: CGFloat = 196
+
+    var body: some View {
+        let ask = editorState.ask
+        if ask.isListingCommands {
+            let listing = ask.commands
+            VStack(alignment: .leading, spacing: 2) {
+                Text(AskCopy.commandsHeader.uppercased())
+                    .font(.system(size: 9.5, weight: .semibold))
+                    .kerning(0.8)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 10)
+                if listing.rows.isEmpty {
+                    Text(AskCopy.noCommands)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.secondary)
+                        .padding(10)
+                        .playtestControl("Ask Commands Empty", detail: AskCopy.noCommands)
+                } else {
+                    rows(listing, ask: ask)
+                }
+            }
+            .playtestControl("Ask Commands", detail: "\(listing.rows.count) rows, \(listing.runnableCount) can run")
+        }
+    }
+
+    private func rows(_ listing: AskCommandList.Listing, ask: AskSession) -> some View {
+        ScrollViewReader { scroller in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(listing.rows.enumerated()), id: \.element.id) { index, entry in
+                        row(entry, index: index, listing: listing, ask: ask).id(entry.id)
+                    }
+                }
+            }
+            .frame(maxHeight: Self.maxHeight)
+            .fixedSize(horizontal: false, vertical: listing.rows.count <= 5)
+            .onChange(of: listing.highlight) { _, now in
+                guard listing.rows.indices.contains(now) else { return }
+                scroller.scrollTo(listing.rows[now].id)
+            }
+        }
+    }
+
+    private func row(_ entry: AskCommandEntry, index: Int, listing: AskCommandList.Listing,
+                     ask: AskSession) -> some View {
+        let canRun = index < listing.runnableCount
+        let picked = canRun && index == listing.highlight
+        return Button { ask.runCommand(entry, in: editorState) } label: {
+            HStack(spacing: 10) {
+                Image(systemName: Self.symbol(entry.area))
+                    .font(.system(size: 12))
+                    .frame(width: 16)
+                // The menu's words win the row: in the panel's narrow column
+                // the API name gives way, never the name a person reads.
+                Text(entry.title)
+                    .font(.system(size: 12))
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                Spacer(minLength: 8)
+                Text(entry.apiName)
+                    .font(.system(size: 9.5, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.head)
+                    .foregroundStyle(.secondary)
+            }
+            .foregroundStyle(canRun ? .primary : .secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(picked ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear), in: .rect(cornerRadius: 8))
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .disabled(!canRun)
+        .focusEffectDisabled()
+        .playtestHover { over in if over, canRun { ask.pickCommand(at: index) } }
+        .help(canRun ? entry.menu : AskCopy.commandNeeds(entry))
+        .playtestControl("Ask Command \(entry.title)", detail: canRun ? entry.apiName : "can't run now")
+    }
+
+    /// The mock gives each row an icon; the table knows a command's area.
+    private static func symbol(_ area: AppCommand.Area) -> String {
+        switch area {
+        case .timeline: "film"
+        case .layers: "square.3.layers.3d"
+        case .edit: "pencil"
+        case .measure: "ruler"
+        case .view: "eye"
+        case .document: "doc"
+        }
+    }
+}
+
+/// The mock's `.chat-b`, the same in the composer and in the dock: what was
+/// last asked, and whether it is still working or what came of it.
+struct AskConversationLines: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let ask = editorState.ask
+        if !ask.asked.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(ask.asked)
+                    .font(.system(size: 12))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .foregroundStyle(.white)
+                    .background(Color.accentColor, in: .rect(cornerRadius: 10))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .playtestControl("Ask Asked", detail: ask.asked)
+                state(ask)
+            }
+        }
+    }
+
+    @ViewBuilder private func state(_ ask: AskSession) -> some View {
+        switch ask.phase {
+        case .planning, .running:
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text(ask.liveStage.line)
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .playtestControl("Ask State", detail: ask.liveStage.line)
+                Button(AskCopy.stop) { ask.stop() }
+                    .controlSize(.small)
+                    .toolTip(AskCopy.stopTooltip)
+                    .playtestControl("Ask Stop", detail: AskCopy.stop)
+            }
+        case .stopped(let sentence):
+            answer(sentence)
+        case .ran:
+            answer(ask.said ?? ask.changes.shown.first?.sentence ?? AskCopy.done)
+        case .idle:
+            EmptyView()
+        }
+    }
+
+    private func answer(_ words: String) -> some View {
+        Text(words)
+            .font(.system(size: 11.5))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .playtestControl("Ask State", detail: words)
+    }
+}
+
+/// The mock's `.cdock`, the conversation down the window's left edge: where
+/// Ask goes after a request, so what was asked and how it is going stay on
+/// screen. It takes its room from the canvas rather than floating over it, so
+/// it can cover neither the picture being changed nor the Agent group. The
+/// keyboard stays with the canvas until the field is clicked, so Command Z
+/// after a request undoes the request.
+struct AskConversationDock: View {
+    @Environment(EditorState.self) private var editorState
+    @FocusState private var fieldHasFocus: Bool
+
+    static let width: CGFloat = 300
+    /// Below this the canvas would be left too little, and the Agent group
+    /// alone says how a request is going.
+    static let narrowestWindow: CGFloat = 900
+
+    var body: some View {
+        @Bindable var ask = editorState.ask
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles").font(.system(size: 12, weight: .semibold))
+                Text(AskCopy.composerHeader).font(.system(size: 12, weight: .semibold))
+                Spacer()
+                Text(AskCopy.onDevice).font(.system(size: 11)).foregroundStyle(.secondary)
+                Button {
+                    ask.isConversationDocked = false
+                    ask.openComposer()
+                } label: {
+                    Image(systemName: "sidebar.left").font(.system(size: 11, weight: .semibold))
+                }
+                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
+                .toolTip(AskCopy.floatTooltip)
+                .playtestControl("Ask Float It", detail: AskCopy.floatTooltip)
+                Button { ask.isConversationDocked = false } label: {
+                    Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
+                }
+                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
+                .toolTip("Close")
+                .playtestControl("Ask Dock Close", detail: "the conversation dock's close")
+            }
+            .padding(10)
+            Divider()
+            ScrollView {
+                AskConversationLines().padding(10)
+            }
+            .frame(maxHeight: .infinity)
+            Divider()
+            VStack(alignment: .leading, spacing: 6) {
+                if fieldHasFocus { AskCommandsList() }
+                HStack(alignment: .bottom, spacing: 6) {
+                    TextField(AskCopy.composerPlaceholder, text: $ask.draft, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 12.5))
+                        .lineLimit(1...4)
+                        .focused($fieldHasFocus)
+                        .askFieldKeys(ask, in: editorState)
+                        .onExitCommand { KeyboardHandback.toCanvas() }
+                        .help(AskCopy.composerTip)
+                        .playtestControl("Ask Dock Request", detail: "the conversation dock's field")
+                    Button { ask.submit(in: editorState) } label: {
+                        Image(systemName: "sparkles")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(!ask.canSubmit)
+                    .toolTip(AskCopy.buttonTooltip)
+                    .playtestControl("Ask Dock Send", detail: AskCopy.buttonTooltip)
+                }
+            }
+            .padding(10)
+        }
+        .frame(width: Self.width)
+        .frame(maxHeight: .infinity)
+        .background(.regularMaterial)
+        .overlay(alignment: .trailing) { Divider() }
+        .playtestControl("Ask Dock", detail: editorState.ask.asked)
     }
 }

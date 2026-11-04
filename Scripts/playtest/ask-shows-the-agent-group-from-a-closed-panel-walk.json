@@ -74,8 +74,9 @@
       "field": "Agent Working"
     },
     {
-      "do": "expectInView",
-      "field": "Agent Request"
+      "do": "expect",
+      "control": "Ask Dock Request",
+      "present": true
     },
     {
       "do": "snapshot",
