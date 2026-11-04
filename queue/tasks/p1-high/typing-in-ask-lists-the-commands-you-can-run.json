@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:48.425Z",
-  "updated": "2026-11-03T15:26:32.752Z",
+  "updated": "2026-11-04T15:48:28.776Z",
   "deps": [
     "ask-makes-the-change-straight-away-and-each-chan"
   ],
@@ -106,6 +106,61 @@
     {
       "t": "2026-11-03T15:26:32.751Z",
       "note": "seq 70 -> 50"
+    },
+    {
+      "t": "2026-11-04T14:06:37.204Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-04T14:10:35.275Z",
+      "note": "Before building, trying to break it: (1) row click already works (AskSession.pickChange, prior task), so that item needs proof, not code. (2) 34 commands take required arguments: a bare row for Align or Speed would do nothing on Return, a control that does nothing. So each choice is its own row (Align Left, Speed 50%), rows ending in an ellipsis open their own sheet as the menu does, and anything else cannot run from one row and is left out. (3) Commands that open a sheet cannot sit under a dimming composer, so a run closes the overlay. (4) Keeping the composer focused after Ask would send Command Z to the text field and not the document, so the keyboard goes back to the canvas. (5) The mock's own left dock is the parking place: it takes layout room, so it can never cover the picture or the Agent group."
+    },
+    {
+      "t": "2026-11-04T14:42:04.129Z",
+      "note": "owns these walks: ask-slash-lists-commands-walk, ask-stays-up-after-asking-walk, ask-narrow-window-has-no-dock-walk"
+    },
+    {
+      "t": "2026-11-04T15:47:49.047Z",
+      "note": "Chose the mock's left dock over a floating card for where the conversation stays after Ask, because it takes layout room and so cannot cover the picture or the Agent group at any zoom; a floating card has no free corner once a picture fills the view."
+    },
+    {
+      "t": "2026-11-04T15:47:49.122Z",
+      "note": "Chose to close the composer after a / command over the mock's staying open, because a sheet a command opens cannot sit under the dim and the result should not be dimmed."
+    },
+    {
+      "t": "2026-11-04T15:47:49.195Z",
+      "note": "Chose to give the keyboard back to the canvas after Ask over keeping the field focused as the mock does, because Command Z would otherwise undo the text field and not the request."
+    },
+    {
+      "t": "2026-11-04T15:47:49.269Z",
+      "note": "Chose to give a / command that changed the document a row in the Agent group, no thumbs, reading the goal's 'after a run, the Agent group lists what changed'. Put as a question in the audit."
+    },
+    {
+      "t": "2026-11-04T15:47:49.341Z",
+      "note": "Older walks on this change: ask-shows-the-agent-group (5, updated to expect the dock's field), ask-queues, ask-cancels, ask-rows, ask-hero, ask-is-command, ask-stops ok. ask-row-thumbs timed out once at its 300s limit (step 8, a cold run), then passed 248s on the same build: a thin margin, not a fix. ask-stops fails when it is first to use a cold model, with or without this change (baseline run), so it is filed apart. Only 15 walks of those that send a request were run; the rest of the 30 come round in the rotating check."
+    },
+    {
+      "t": "2026-11-04T15:47:49.415Z",
+      "note": "Pictures opened and checked: 1-all, 2-filtered, 3-ran, narrow panel list, dock working, row picked, floated back. Narrow panel showed the API name squeezing the command's name; fixed with layout priority, but that picture was taken before the fix and was not re-taken after it."
+    },
+    {
+      "t": "2026-11-04T15:47:49.488Z",
+      "note": "left rough: toggle commands in the list show no tick, typing in the dock's field is not echoed anywhere since the panel drops its field while the dock is up; neither earned a task."
+    },
+    {
+      "t": "2026-11-04T15:48:14.699Z",
+      "note": "Correction to the two lines above: the narrow panel picture WAS re-taken after the fix (07:13) and opened: it reads Duplicate Layer whole, the API name gives way. And the count: 12 older walks were run, not all of them send a request, and the 3 new ones make 15. ask-queues and ask-cancels ran before the last edits (row priority, dock buttons, hover wrapper) and were not repeated; the rest of the 30 walks that send a request were not run and come round in the rotating check."
+    },
+    {
+      "t": "2026-11-04T15:48:28.774Z",
+      "note": "Typing / in Ask lists every command by name, filtered as you type; Return, arrows or a click run it as one undo step and close the list (AskCommandList in PhotonzCore, AskCommandsList in AskViews). After Ask the conversation stays up in the mock's left dock beside the canvas (AskConversationDock), covering neither the picture nor the Agent group; Command K floats it back. Clicking a row picks what it made. Verified: Scripts/test.sh green, 3 new walks at Next defaults with no flags. Audit: queue/audits/2026-11-04-typing-in-ask-lists-the-commands-you-can-run.json"
     }
-  ]
+  ],
+  "started": "2026-11-04T14:06:37.203Z",
+  "walks": [
+    "ask-slash-lists-commands-walk",
+    "ask-stays-up-after-asking-walk",
+    "ask-narrow-window-has-no-dock-walk"
+  ],
+  "completed": "2026-11-04T15:48:28.775Z"
 }

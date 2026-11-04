@@ -15518,3 +15518,18 @@
 {"t":"2026-11-04T07:07:52.014Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
 {"t":"2026-11-04T07:07:52.091Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
 {"t":"2026-11-04T07:07:52.178Z","ev":"task_done","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","from":"in_progress","note":"Thin line gone: DocumentRenderer.wrapped holds each bitmap's edge. Real app at Next defaults, levels off white along the outline: 25% 31 to 0, 50% 64 to 0, export 1x 64 to 0, the rest 0; with next-crisp-zoom off 79% 63 to 0, 100% 46 to 0. TurnedEdgeSeamTests plus a-turned-layer-has-no-seam-walk; Scripts/test.sh exit 0; 12MP/10-layer edit 7.8ms."}
+{"t":"2026-11-04T14:06:37.018Z","ev":"sweep_pass","walks":1088,"seconds":25076,"passed":1041,"failed":47,"complete":true,"total":1088}
+{"t":"2026-11-04T14:06:37.210Z","ev":"task_started","id":"typing-in-ask-lists-the-commands-you-can-run","title":"Typing / in Ask lists the commands you can run","priority":"p1-high"}
+{"t":"2026-11-04T14:10:35.277Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T14:42:04.131Z","ev":"task_walks","id":"typing-in-ask-lists-the-commands-you-can-run","walks":["ask-slash-lists-commands-walk","ask-stays-up-after-asking-walk","ask-narrow-window-has-no-dock-walk"]}
+{"t":"2026-11-04T14:43:35.106Z","ev":"task_created","id":"ask-chat-has-the-mock-s-new-conversation-button","priority":"p1-high","title":"Ask chat has the mock's New Conversation button, its whole transcript, and an icon for each command"}
+{"t":"2026-11-04T15:47:48.931Z","ev":"task_created","id":"stop-while-ask-s-model-is-still-loading-lets-the","priority":"p2-normal","title":"Stop while Ask's model is still loading lets the waiting request start straight away"}
+{"t":"2026-11-04T15:47:49.049Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:47:49.124Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:47:49.197Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:47:49.271Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:47:49.343Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:47:49.417Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:47:49.490Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:48:14.701Z","ev":"task_note","id":"typing-in-ask-lists-the-commands-you-can-run"}
+{"t":"2026-11-04T15:48:28.777Z","ev":"task_done","id":"typing-in-ask-lists-the-commands-you-can-run","from":"in_progress","note":"Typing / in Ask lists every command by name, filtered as you type; Return, arrows or a click run it as one undo step and close the list (AskCommandList in PhotonzCore, AskCommandsList in AskViews). After Ask the conversation stays up in the mock's left dock beside the canvas (AskConversationDock), covering neither the picture nor the Agent group; Command K floats it back. Clicking a row picks what it made. Verified: Scripts/test.sh green, 3 new walks at Next defaults with no flags. Audit: queue/audits/2026-11-04-typing-in-ask-lists-the-commands-you-can-run.json"}

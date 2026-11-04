@@ -1,0 +1,27 @@
+{
+  "id": "ask-chat-has-the-mock-s-new-conversation-button",
+  "title": "Ask chat has the mock's New Conversation button, its whole transcript, and an icon for each command",
+  "goal": "The Ask chat matches the last parts of the mock it still leaves out: a button that starts a new conversation, the earlier requests shown above the latest one, and each row of the / command list wearing its own icon rather than one for its area.",
+  "epic": "agent-ask",
+  "priority": "p1-high",
+  "seq": 127.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T14:43:35.102Z",
+  "updated": "2026-11-04T14:43:35.105Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left by typing-in-ask-lists-the-commands-you-can-run. Mock: askPalHTML in docs/design/mocks/shared/dist/photonz-ds.js. AskConversationLines and AskCommandsList.symbol in Sources/Photonz/Agent/AskViews.swift; AppCommandTable has no icon today. New Conversation has to decide what Ask forgets: its memory of what it made comes from the rows (AskSession.conversation).",
+  "acceptance": [
+    "The chat header has the mock's New Conversation button, and pressing it starts a conversation that does not lean on the one before",
+    "The chat shows the requests of this conversation in order, as the mock's chat does, not only the latest",
+    "Each row of the / list shows an icon for that command, as agent-generate-wt.html does, not one shared by its whole area"
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T14:43:35.104Z",
+      "note": "created (manual)"
+    }
+  ]
+}
