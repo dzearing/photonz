@@ -121,9 +121,10 @@ what a person would see at a glance, on any request:
   reads turn white, the way the system sets a button label (the same shades
   add_component uses). This overrides a colour the request named, on purpose:
   words are always legible;
-- a centred line alone on its row, drifted less than a quarter of the way off
-  the middle of what it sits on (its button) or of the row below it, is centred
-  on it. A line with other words on its row is one of a set and stays;
+- a centred line alone on its row is centred on the box it sits on (its
+  button), or, on the page, on the row below it when it is less than a quarter
+  of that row's width off its middle. A line with other words on its row is one
+  of a set and stays;
 - words hanging off the box they are on come back onto it, to its middle when
   the box is a chip or button;
 - words stacked onto the words above them in the same column move down to

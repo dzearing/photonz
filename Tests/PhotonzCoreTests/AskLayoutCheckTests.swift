@@ -168,6 +168,17 @@ struct AskLayoutCheckTests {
         #expect(Self.frame("Choose", in: after)?.midX == 300)
     }
 
+    @Test func aCentredLabelSetAtItsButtonsLeftEdgeIsCentredOnIt() {
+        // The eval on 2026-11-03: "Choose Pro", centred, x at the button's
+        // left edge. Far off the middle is no reason to leave it: the words
+        // say centred and the button is what they are on.
+        let (_, after) = Self.review([
+            Self.box("Button", CGRect(x: 580, y: 624, width: 280, height: 48), fill: "#4F46E5"),
+            Self.words("Choose Pro", CGRect(x: 580, y: 638, width: 84, height: 23), colour: "#FFFFFF", align: .center),
+        ], before: [Self.page()])
+        #expect(Self.frame("Choose Pro", in: after)?.midX == 720)
+    }
+
     @Test func leftAlignedWordsAreNotCentred() {
         let (_, after) = Self.review([
             Self.box("Card", CGRect(x: 100, y: 100, width: 300, height: 400), fill: "#F2F2F7"),

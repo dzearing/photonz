@@ -137,7 +137,9 @@ public enum AskLayoutCheck {
             }
             guard let under, frame.width < under.width else { continue }
             let off = abs(frame.midX - under.midX)
-            guard off > centredWithin, off < under.width * driftShare else { continue }
+            // On its own box the words say centred and the box says where.
+            // Over a row, a line far off its middle was put there on purpose.
+            guard off > centredWithin, home != nil || off < under.width * driftShare else { continue }
             moved(index, to: CGPoint(x: under.midX - frame.width / 2, y: frame.minY))
             review.notes.append("centred \(layers[index].name) on what is under it (\(Int(off.rounded())) pt off)")
         }
