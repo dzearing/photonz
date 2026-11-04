@@ -27,10 +27,18 @@ struct AskLayoutCheckTests {
         return Layer(name: name, content: .annotation(content), frame: frame)
     }
 
-    static func review(_ layers: [Layer], before: [Layer] = []) -> (AskLayoutCheck.Review, PhotonzDocument) {
+    /// The picture a blank canvas really holds: a locked Background image
+    /// the size of the page, one flat colour (`ImageStore.flatColourHex`).
+    static let pageRef = ImageRef(pixelSize: canvas)
+
+    static func page() -> Layer {
+        Layer(name: "Background", content: .image(pageRef), frame: CGRect(origin: .zero, size: canvas), isLocked: true)
+    }
+
+    static func review(_ layers: [Layer], before: [Layer] = [], pageColour: String = "#FFFFFF") -> (AskLayoutCheck.Review, PhotonzDocument) {
         let was = PhotonzDocument(canvasSize: canvas, layers: before)
         var after = PhotonzDocument(canvasSize: canvas, layers: before + layers)
-        let review = AskLayoutCheck.review(after, before: was)
+        let review = AskLayoutCheck.review(after, before: was, pictureColour: { $0 == pageRef ? pageColour : nil })
         AskLayoutCheck.apply(review, to: &after)
         return (review, after)
     }
@@ -176,6 +184,84 @@ struct AskLayoutCheckTests {
         #expect(Self.frame("Left", in: after)?.minX == 160)
     }
 
+    // MARK: On a real page
+
+    @Test func columnHeadingsOnARealPageStayOverTheirColumns() {
+        // Four centred headings, one over each column: none is a drifted
+        // title, and pulling them to the middle would stack all four.
+        let columns = (0..<4).map { Self.box("Column \($0)", CGRect(x: 80 + CGFloat($0) * 330, y: 300, width: 290, height: 300), fill: "#F2F2F7") }
+        let heads = (0..<4).map { Self.words("Head \($0)", CGRect(x: 185 + CGFloat($0) * 330, y: 240, width: 80, height: 30), align: .center) }
+        let (review, after) = Self.review(columns + heads, before: [Self.page()])
+        for n in 0..<4 { #expect(Self.frame("Head \(n)", in: after)?.minX == 185 + CGFloat(n) * 330) }
+        #expect(review.fixes.isEmpty)
+    }
+
+    @Test func aHeadingOverAnOffCentreRowCentresOnTheRowNotThePage() {
+        let row = Self.box("Row", CGRect(x: 100, y: 300, width: 800, height: 200), fill: "#F2F2F7")
+        let (_, after) = Self.review([Self.words("Plans", CGRect(x: 420, y: 200, width: 80, height: 30), align: .center), row],
+                                     before: [Self.page()])
+        #expect(Self.frame("Plans", in: after)?.midX == 500)
+    }
+
+    @Test func aLoneCentredLineWithNothingUnderItStaysPut() {
+        let (review, _) = Self.review([Self.words("Hello", CGRect(x: 500, y: 200, width: 80, height: 30), align: .center)],
+                                      before: [Self.page()])
+        #expect(review.fixes.isEmpty)
+    }
+
+    @Test func twoLabelsSharingABarAreNotPulledTogether() {
+        let (review, _) = Self.review([
+            Self.box("Bar", CGRect(x: 100, y: 100, width: 600, height: 60), fill: "#E5E7EB"),
+            Self.words("Yes", CGRect(x: 240, y: 120, width: 60, height: 20), align: .center),
+            Self.words("No", CGRect(x: 500, y: 120, width: 60, height: 20), align: .center),
+        ], before: [Self.page()])
+        #expect(review.fixes.isEmpty)
+    }
+
+    @Test func wordsAreReadAgainstTheRealPageColour() {
+        let (_, after) = Self.review([Self.words("Night", CGRect(x: 100, y: 100, width: 80, height: 30), colour: "#000000")],
+                                     before: [Self.page()], pageColour: "#000000")
+        #expect(Self.reads("Night", on: "#000000", in: after))
+    }
+
+    @Test func whiteWordsOnARealWhitePageAreCaught() {
+        let (_, after) = Self.review([Self.words("Pricing", CGRect(x: 100, y: 100, width: 120, height: 40), colour: "#FFFFFF")],
+                                     before: [Self.page()])
+        #expect(Self.reads("Pricing", on: "#FFFFFF", in: after))
+    }
+
+    @Test func aFilledBoxTheSizeOfThePageIsThePageNotABox() {
+        // A web page Ask rebuilt has a painted box for its background: a
+        // centred line is not pulled to the middle of it.
+        let (review, _) = Self.review([
+            Self.box("Backdrop", CGRect(origin: .zero, size: Self.canvas), fill: "#FFFFFF"),
+            Self.words("Hello", CGRect(x: 500, y: 200, width: 80, height: 30), align: .center),
+        ])
+        #expect(review.fixes.isEmpty)
+    }
+
+    @Test func aPictureThatIsNotFlatStaysUnknown() {
+        let photo = Layer(name: "Photo", content: .image(ImageRef(pixelSize: Self.canvas)), frame: CGRect(origin: .zero, size: Self.canvas))
+        let (review, _) = Self.review([Self.words("Over a photo", CGRect(x: 100, y: 100, width: 120, height: 40), colour: "#FFFFFF")],
+                                      before: [photo])
+        #expect(review.fixes.isEmpty)
+    }
+
+    @Test func theDefaultInkReadsOnADarkPage() {
+        let document = PhotonzDocument(canvasSize: Self.canvas, layers: [Self.page()])
+        let ink = AskLayoutCheck.defaultInk(at: CGRect(x: 100, y: 100, width: 80, height: 20), in: document,
+                                            pictureColour: { _ in "#000000" })
+        #expect(ink != TextContent.agentDefaultColour)
+    }
+
+    @Test func aPartedStackOnARealPageStaysInItsColumn() {
+        let (_, after) = Self.review([
+            Self.words("One", CGRect(x: 100, y: 100, width: 80, height: 40)),
+            Self.words("Two", CGRect(x: 100, y: 120, width: 80, height: 40)),
+        ], before: [Self.page()])
+        #expect((Self.frame("Two", in: after)?.minY ?? 0) >= 140)
+    }
+
     // MARK: Words on words
 
     @Test func wordsStackedOnWordsAreParted() {
@@ -244,12 +330,92 @@ struct AskLayoutCheckTests {
         #expect(review.sentence == AskLayoutCheck.overlapSentence)
     }
 
-    @Test func wordsSideBySideThatTouchAreOwnedUpTo() {
-        let (review, _) = Self.review([
-            Self.words("Left words", CGRect(x: 100, y: 100, width: 200, height: 20)),
-            Self.words("Right words", CGRect(x: 250, y: 100, width: 200, height: 20)),
-        ])
+    @Test func wordsBesideWordsMoveAlongTheLineNotDownIt() {
+        // The pricing walk on 2026-11-03: "/mo" beside a wide "$29" was
+        // pushed under it, so two cards read differently from the third.
+        let (review, after) = Self.review([
+            Self.box("Card", CGRect(x: 100, y: 100, width: 300, height: 400), fill: "#FFFFFF"),
+            Self.words("$29", CGRect(x: 140, y: 140, width: 96, height: 53), size: 44),
+            Self.words("/mo", CGRect(x: 208, y: 160, width: 40, height: 22), size: 16),
+        ], before: [Self.page()])
+        let price = Self.frame("$29", in: after) ?? .zero
+        let per = Self.frame("/mo", in: after) ?? .zero
+        #expect(per.minY == 160)
+        #expect(per.minX >= price.maxX - 4)
+        #expect(review.sentence == nil)
+    }
+
+    @Test func wordsBesideWordsWithNoRoomAreOwnedUpTo() {
+        let (review, after) = Self.review([
+            Self.box("Card", CGRect(x: 100, y: 100, width: 200, height: 100), fill: "#FFFFFF"),
+            Self.words("Left words", CGRect(x: 110, y: 120, width: 120, height: 20)),
+            Self.words("Right", CGRect(x: 180, y: 120, width: 110, height: 20)),
+        ], before: [Self.page()])
+        #expect(Self.frame("Right", in: after)?.minX == 180)
         #expect(review.sentence == AskLayoutCheck.overlapSentence)
+    }
+
+    // MARK: Words hanging off their box
+
+    @Test func wordsHangingOffTheirPillComeBackOnIt() {
+        // The pricing walk on 2026-11-03: a centred label given the pill's
+        // middle as its x began there, so "Popular" ran off the pill, white
+        // on white. The middle of the words was still on the pill, so the
+        // colour check saw nothing wrong.
+        let (review, after) = Self.review([
+            Self.box("Pro Badge", CGRect(x: 648, y: 224, width: 96, height: 32), fill: "#4F46E5"),
+            Self.words("Most Popular", CGRect(x: 696, y: 232, width: 88, height: 19), colour: "#FFFFFF", size: 13, align: .center),
+        ], before: [Self.page()])
+        #expect(Self.frame("Most Popular", in: after)?.midX == 696)
+        #expect(Self.colour("Most Popular", in: after) == "#FFFFFF")
+        #expect(review.sentence == nil)
+    }
+
+    @Test func wordsOnAPillStraddlingACardEdgeStayOnThePill() {
+        // The pricing walk on 2026-11-03: the words were wholly on their
+        // pill, and the card under the pill must not pull them down into it.
+        let (review, after) = Self.review([
+            Self.box("Card Pro", CGRect(x: 540, y: 240, width: 360, height: 440), fill: "#FFFFFF"),
+            Self.box("Pill", CGRect(x: 672, y: 224, width: 96, height: 32), fill: "#2F6FED"),
+            Self.words("Most popular", CGRect(x: 676, y: 230, width: 88, height: 20), colour: "#FFFFFF", size: 13),
+        ], before: [Self.page()])
+        #expect(Self.frame("Most popular", in: after)?.minY == 230)
+        #expect(review.fixes.isEmpty)
+    }
+
+    @Test func boxesTouchingByTheirPaddingAreNotOverlappingWords() {
+        // Every text box carries 2 points of padding a side: "$29" and "/mo"
+        // set side by side do not overlap because their boxes meet.
+        let (review, _) = Self.review([
+            Self.words("$29", CGRect(x: 100, y: 100, width: 90, height: 53), size: 44),
+            Self.words("/mo", CGRect(x: 186, y: 124, width: 40, height: 22), size: 16),
+        ], before: [Self.page()])
+        #expect(review.sentence == nil)
+    }
+
+    @Test func wordsHangingOffACardMoveJustFarEnoughToSitOnIt() {
+        let (_, after) = Self.review([
+            Self.box("Card", CGRect(x: 100, y: 100, width: 300, height: 400), fill: "#F2F2F7"),
+            Self.words("Long line of words", CGRect(x: 300, y: 200, width: 160, height: 20)),
+        ], before: [Self.page()])
+        #expect(Self.frame("Long line of words", in: after)?.maxX == 400)
+    }
+
+    @Test func wordsTooBigForTheirBoxAreOwnedUpTo() {
+        let (review, after) = Self.review([
+            Self.box("Pill", CGRect(x: 100, y: 100, width: 60, height: 30), fill: "#4F46E5"),
+            Self.words("Far too many words here", CGRect(x: 110, y: 105, width: 200, height: 20), colour: "#FFFFFF"),
+        ], before: [Self.page()])
+        #expect(Self.frame("Far too many words here", in: after)?.minX == 110)
+        #expect(review.sentence == AskLayoutCheck.spillSentence)
+    }
+
+    @Test func wordsMerelyTouchingABoxStayPut() {
+        let (review, _) = Self.review([
+            Self.box("Card", CGRect(x: 100, y: 100, width: 300, height: 400), fill: "#F2F2F7"),
+            Self.words("Above", CGRect(x: 140, y: 84, width: 80, height: 20)),
+        ], before: [Self.page()])
+        #expect(review.fixes.isEmpty)
     }
 
     // MARK: Off the canvas

@@ -115,24 +115,39 @@ Before it hands back, the run reads the finished document
 (`AskLayoutCheck`, PhotonzCore, unit tested) and mends, in the same undo step,
 what a person would see at a glance, on any request:
 
-- words that do not read against the topmost filled box behind them (or the
-  white page) take the nearest shade that does, and plain dark words on a
-  coloured fill where white reads turn white, the way the system sets a
-  button label (the same shades add_component uses);
-- a centred line that drifted less than a quarter of the way off the middle
-  of what it sits on (its button), or of the row below it, is centred on it;
+- words that do not read against what is behind them (the topmost filled box,
+  or the page, which is a flat picture the app reads the colour of) take the
+  nearest shade that does, and plain dark words on a coloured fill where white
+  reads turn white, the way the system sets a button label (the same shades
+  add_component uses). This overrides a colour the request named, on purpose:
+  words are always legible;
+- a centred line alone on its row, drifted less than a quarter of the way off
+  the middle of what it sits on (its button) or of the row below it, is centred
+  on it. A line with other words on its row is one of a set and stays;
+- words hanging off the box they are on come back onto it, to its middle when
+  the box is a chip or button;
 - words stacked onto the words above them in the same column move down to
-  clear them, when that keeps them inside what they sit on;
+  clear them, taking the words under them along, when that keeps them inside
+  what they sit on and clear of anything else made there; words that start
+  past the middle of the words they touch are on the same line ("$29" and
+  "/mo") and move along it instead;
 - words hanging off the canvas come back on.
 
 Only layers the request made are touched. A video is left alone, since what
-is behind its words is footage. What it cannot mend (words side by side on
-each other, or no room to part them) is said beside the change in one short
-sentence, "Some words still overlap." Every look is a `look:` line in the trace.
+is behind its words is footage, and so are words on a photo, whose colour is
+not one thing. What it cannot mend is said beside the change in one short
+sentence, "Some words still overlap." or "Some words run off their box."
+Every look is a `look:` line in the trace.
+
+A step's name (`$N`) is only swapped where a step's name can go, never in words
+a person reads (`AskStep.wordKeys`): a price written "$12" stays a price.
 
 add_text given no colour picks its default the same way
 (`AskLayoutCheck.defaultInk`), for Ask and for an agent over MCP alike: white
 on a blue button rather than near black.
+
+The eval drives Ask by pressing the title bar's Ask button and Send, which work
+with the window behind another app.
 
 ## One row per request: off, on, delete
 

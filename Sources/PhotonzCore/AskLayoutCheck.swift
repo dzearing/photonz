@@ -12,10 +12,13 @@ import Foundation
 ///
 /// - words that do not read against what is behind them take the nearest
 ///   shade that does (the same rule add_component uses);
-/// - a centred heading or label that drifted a little off the middle of what
-///   sits under it (its button, or the row below it) is centred on it;
+/// - a centred heading or label alone on its row that drifted a little off
+///   the middle of what sits under it (its button, or the row below it) is
+///   centred on it;
+/// - words hanging off the box they are on are brought back onto it;
 /// - words stacked onto the words above them are moved down to clear them,
-///   when that keeps them inside what they sit on;
+///   along with the words under them, when that keeps them inside what they
+///   sit on;
 /// - words hanging off the canvas come back on.
 ///
 /// What it cannot mend it owns up to in one short sentence. Only layers the
@@ -40,6 +43,9 @@ public enum AskLayoutCheck {
     /// Said beside the change when words still sit on words.
     public static let overlapSentence = "Some words still overlap."
 
+    /// Said beside the change when words are too big for the box they are on.
+    public static let spillSentence = "Some words run off their box."
+
     /// The colour behind words when nothing is painted under them.
     static let canvasColour = "#FFFFFF"
 
@@ -49,14 +55,35 @@ public enum AskLayoutCheck {
     /// A centred line a quarter of what is under it or more off its middle
     /// was put there on purpose (a heading over one column of a row).
     static let driftShare: CGFloat = 0.25
-    /// Words overlapping by less than this, either way, do not touch to the eye.
-    static let touchesBeyond: CGFloat = 2
+    /// Words with this share of their area on a box they are not wholly on
+    /// are hanging off it; less, they only touch it.
+    static let hangingShare: CGFloat = 0.3
+    /// A box with this share of it under words is hanging from them, however
+    /// little of the words that is.
+    static let coveredShare: CGFloat = 0.5
+    /// A box under this many times the width of its words, and under
+    /// `chipTallShare` times their height, is a chip or a button: words brought
+    /// onto it sit in its middle, not at its edge.
+    static let chipShare: CGFloat = 2
+    static let chipTallShare: CGFloat = 3
+    /// Boxes overlapping by less than this, either way, hold words that do
+    /// not touch to the eye: each box has 2 points of padding a side.
+    static let touchesBeyond: CGFloat = 5
+    /// How far a box moved along a line may still lap the one before it:
+    /// their padding, so the words themselves sit a few points apart.
+    static let sideBySideGap: CGFloat = 2
     /// Words sharing this much of the narrower one's width are in one
     /// column, stacked; less, they sit side by side.
     static let stackedShare: CGFloat = 0.5
 
+    /// The one colour a picture is, when it is one: pixels live in the app,
+    /// and a blank canvas's page is a picture (`ImageStore.flatColourHex`).
+    /// Nil for a photo or anything else whose colour cannot be read as one.
+    public typealias PictureColour = (ImageRef) -> String?
+
     /// Looks over every top-level layer `after` has that `before` did not.
-    public static func review(_ after: PhotonzDocument, before: PhotonzDocument) -> Review {
+    public static func review(_ after: PhotonzDocument, before: PhotonzDocument,
+                              pictureColour: PictureColour = { _ in nil }) -> Review {
         let had = Set(before.layers.map(\.id))
         var layers = after.layers
         let made = Set(layers.lazy.filter { !had.contains($0.id) }.map(\.id))
@@ -88,14 +115,24 @@ public enum AskLayoutCheck {
         for index in layers.indices where isMadeWords(layers[index]) {
             guard case .text(let content) = layers[index].content, content.alignment == .center else { continue }
             let frame = layers[index].frame
+            let home = backdrop(of: index, in: layers, canvas: canvas, picture: pictureColour)
+            // A line sharing its row with other words is one of a set (a
+            // heading over each column, two labels on a bar), not a title
+            // that drifted: pulling it to the middle would stack the set.
+            let hasCompany = layers.indices.contains { other in
+                other != index && isMadeWords(layers[other])
+                    && layers[other].frame.minY < frame.maxY && frame.minY < layers[other].frame.maxY
+                    && backdrop(of: other, in: layers, canvas: canvas, picture: pictureColour)?.id == home?.id
+            }
+            guard !hasCompany else { continue }
             let under: CGRect?
-            if let box = backdrop(of: index, in: layers)?.frame {
+            if let box = home?.frame {
                 under = box
             } else {
                 under = layers.indices.lazy
                     .filter { made.contains(layers[$0].id) && layers[$0].isVisible && $0 != index }
                     .map { layers[$0].frame }
-                    .filter { $0.minY >= frame.maxY - 1 }
+                    .filter { $0.minY >= frame.maxY - 1 && !$0.contains(canvas) }
                     .reduce(nil as CGRect?) { sofar, next in sofar.map { $0.union(next) } ?? next }
             }
             guard let under, frame.width < under.width else { continue }
@@ -103,6 +140,44 @@ public enum AskLayoutCheck {
             guard off > centredWithin, off < under.width * driftShare else { continue }
             moved(index, to: CGPoint(x: under.midX - frame.width / 2, y: frame.minY))
             review.notes.append("centred \(layers[index].name) on what is under it (\(Int(off.rounded())) pt off)")
+        }
+
+        // Words hanging off the box they are on come back onto it. The colour
+        // check reads the middle of the words, so without this "Popular" ran
+        // off a purple pill, white on white, and nothing saw it (the pricing
+        // walk, 2026-11-03).
+        var spillLeft = false
+        for index in layers.indices where isMadeWords(layers[index]) {
+            let frame = layers[index].frame
+            // The topmost filled box they touch decides: words wholly on it
+            // are home, whatever it sits on in turn (a pill across a card's
+            // edge).
+            let box = layers[..<index].last { layer in
+                guard layer.isVisible, !layer.frame.contains(canvas),
+                      case .annotation(let shape) = layer.content, shape.fill != nil,
+                      shape.shape == .rectangle || shape.shape == .ellipse else { return false }
+                if layer.frame.contains(frame) { return true }
+                let both = layer.frame.intersection(frame)
+                guard !both.isNull else { return false }
+                let shared = both.width * both.height
+                // Most of the words on it, or it mostly under the words (a
+                // pill far smaller than what was set on it).
+                return shared >= frame.width * frame.height * hangingShare
+                    || shared >= layer.frame.width * layer.frame.height * coveredShare
+            }
+            guard let box, !box.frame.contains(frame) else { continue }
+            guard frame.width <= box.frame.width, frame.height <= box.frame.height else {
+                spillLeft = true
+                review.notes.append("\(layers[index].name) is too big for \(box.name)")
+                continue
+            }
+            let chip = box.frame.width < frame.width * chipShare && box.frame.height < frame.height * chipTallShare
+            let x = chip
+                ? box.frame.midX - frame.width / 2
+                : min(max(frame.minX, box.frame.minX), box.frame.maxX - frame.width)
+            let y = min(max(frame.minY, box.frame.minY), box.frame.maxY - frame.height)
+            moved(index, to: CGPoint(x: x, y: y))
+            review.notes.append("brought \(layers[index].name) back onto \(box.name)")
         }
 
         // Words on words: the lower moved down to clear the upper, while it
@@ -121,17 +196,27 @@ public enum AskLayoutCheck {
                     let a = layers[upper].frame, b = layers[lower].frame
                     let both = a.intersection(b)
                     guard !both.isNull, both.width > touchesBeyond, both.height > touchesBeyond else { continue }
-                    // In one column (most of the narrower one's width
-                    // shared) the lower is stacked under the upper; side by
-                    // side they are not moved.
-                    guard both.width >= min(a.width, b.width) * stackedShare else { overlapLeft = true; continue }
-                    let home = backdrop(of: lower, in: layers)
+                    let home = backdrop(of: lower, in: layers, canvas: canvas, picture: pictureColour)
                     let room = home?.frame ?? canvas
                     // A line spilling out of what it sits on is not a stack
                     // to part: moving what is under it only makes it worse
                     // (the eval, 2026-11-03, a price line across three cards
                     // pushed two prices under their "per month").
-                    guard room.contains(a), backdrop(of: upper, in: layers)?.id == home?.id else { overlapLeft = true; continue }
+                    guard room.contains(a), backdrop(of: upper, in: layers, canvas: canvas, picture: pictureColour)?.id == home?.id else { overlapLeft = true; continue }
+                    // Starting past the middle of the upper words, they are
+                    // on its line ("$29" and "/mo"): they move along it, not
+                    // under it.
+                    if b.minX > a.midX {
+                        let along = CGRect(x: a.maxX - sideBySideGap, y: b.minY, width: b.width, height: b.height)
+                        guard room.contains(along) else { overlapLeft = true; continue }
+                        moved(lower, to: along.origin)
+                        review.notes.append("moved \(layers[lower].name) along from \(layers[upper].name)")
+                        settled = false
+                        break outer
+                    }
+                    // Otherwise, sharing little of the width, they only meet
+                    // at a corner and neither way is right.
+                    guard both.width >= min(a.width, b.width) * stackedShare else { overlapLeft = true; continue }
                     let size: CGFloat
                     if case .text(let content) = layers[lower].content { size = content.fontSize } else { size = 16 }
                     let gap = max(4, (size * 0.25).rounded())
@@ -144,7 +229,7 @@ public enum AskLayoutCheck {
                         let f = layers[other].frame
                         return other == lower || (other != upper && f.minY >= b.minY
                             && f.intersection(b).width >= min(f.width, b.width) * stackedShare
-                            && backdrop(of: other, in: layers)?.id == home?.id)
+                            && backdrop(of: other, in: layers, canvas: canvas, picture: pictureColour)?.id == home?.id)
                     }
                     let fixed = layers.indices.filter { other in
                         made.contains(layers[other].id) && layers[other].isVisible && !column.contains(other)
@@ -167,15 +252,15 @@ public enum AskLayoutCheck {
             }
         }
         if overlapLeft {
-            review.sentence = overlapSentence
             review.notes.append("words still overlap")
         }
+        review.sentence = overlapLeft ? overlapSentence : spillLeft ? spillSentence : nil
 
         // Words that cannot be read against what is behind them.
         for index in layers.indices where isMadeWords(layers[index]) {
             guard case .text(var content) = layers[index].content,
                   content.fill == nil, content.plateHex == nil, content.plateGradient == nil,
-                  let ground = groundColour(of: index, in: layers).flatMap({ RGBA(hex: $0) }),
+                  let ground = groundColour(of: index, in: layers, picture: pictureColour).flatMap({ RGBA(hex: $0) }),
                   let ink = RGBA(hex: content.colorHex),
                   let better = betterInk(ink, hex: content.colorHex, on: ground) else { continue }
             let was = content.colorHex
@@ -230,32 +315,34 @@ public enum AskLayoutCheck {
     /// The colour words with no colour of their own should take in `frame`
     /// of `document`: near black, unless what is painted behind that spot
     /// (a blue button) needs another shade to be read.
-    public static func defaultInk(at frame: CGRect, in document: PhotonzDocument) -> String {
+    public static func defaultInk(at frame: CGRect, in document: PhotonzDocument,
+                                  pictureColour: PictureColour = { _ in nil }) -> String {
         let ink = TextContent.agentDefaultColour
         var layers = document.layers
         let probe = Layer(name: "", content: .text(TextContent(string: "", colorHex: ink)), frame: frame)
         layers.append(probe)
-        guard let ground = groundColour(of: layers.count - 1, in: layers).flatMap({ RGBA(hex: $0) }),
+        guard let ground = groundColour(of: layers.count - 1, in: layers, picture: pictureColour).flatMap({ RGBA(hex: $0) }),
               let dark = RGBA(hex: ink) else { return ink }
         return betterInk(dark, hex: ink, on: ground) ?? ink
     }
 
     // MARK: What is behind
 
-    /// The topmost visible filled box under the middle of layer `index`,
-    /// looking through outlines and words. Nil on the canvas, and nil when
-    /// something else (a picture, a group) is there first.
-    static func backdrop(of index: Int, in layers: [Layer]) -> Layer? {
-        switch behind(index, in: layers) {
-        case .box(let layer, _): layer
-        default: nil
-        }
+    /// The topmost visible filled box or flat picture under the middle of
+    /// layer `index`, looking through outlines and words. Nil on the page
+    /// (whatever paints it fills the canvas, so nothing sits "in" it) and
+    /// nil when something else (a photo, a group) is there first.
+    static func backdrop(of index: Int, in layers: [Layer], canvas: CGRect, picture: PictureColour) -> Layer? {
+        guard case .box(let layer, _) = behind(index, in: layers, picture: picture),
+              !layer.frame.contains(canvas) else { return nil }
+        return layer
     }
 
-    /// The colour words at `index` are read against: a box's fill, the
-    /// canvas's white, or nil when it is not known (a photo, a gradient).
-    static func groundColour(of index: Int, in layers: [Layer]) -> String? {
-        switch behind(index, in: layers) {
+    /// The colour words at `index` are read against: a box's fill, a flat
+    /// picture's colour, the bare canvas's white, or nil when it is not known
+    /// (a photo, a gradient).
+    static func groundColour(of index: Int, in layers: [Layer], picture: PictureColour) -> String? {
+        switch behind(index, in: layers, picture: picture) {
         case .box(_, let hex): hex
         case .canvas: canvasColour
         case .unknown: nil
@@ -268,7 +355,7 @@ public enum AskLayoutCheck {
         case unknown
     }
 
-    private static func behind(_ index: Int, in layers: [Layer]) -> Behind {
+    private static func behind(_ index: Int, in layers: [Layer], picture: PictureColour) -> Behind {
         let frame = layers[index].frame
         let middle = CGPoint(x: frame.midX, y: frame.midY)
         for layer in layers[..<index].reversed() where layer.isVisible && layer.frame.contains(middle) {
@@ -282,6 +369,9 @@ public enum AskLayoutCheck {
                 let alpha = (RGBA(hex: fill.hex)?.a ?? 1) * layer.style.opacity
                 if alpha < 0.5 { continue }
                 return .box(layer, fill.hex)
+            case .image(let ref):
+                guard let flat = picture(ref) else { return .unknown }
+                return .box(layer, flat)
             default:
                 return .unknown
             }

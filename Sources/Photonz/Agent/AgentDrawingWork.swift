@@ -251,7 +251,8 @@ enum AgentDrawingWork {
         // Words given no colour take one that reads on what is behind them:
         // white on a blue button, not the near black that suits a page.
         if text.colorHex == nil, let document = editor.document {
-            content.colorHex = AskLayoutCheck.defaultInk(at: CGRect(origin: text.origin, size: size), in: document)
+            content.colorHex = AskLayoutCheck.defaultInk(at: CGRect(origin: text.origin, size: size), in: document,
+                                                         pictureColour: editor.store.flatColourHex(for:))
         }
         var layer = TextBuilder.layer(content: content, at: text.origin, naturalSize: size)
         if let name = text.name { layer.name = name }

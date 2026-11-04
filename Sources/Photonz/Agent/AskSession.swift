@@ -641,7 +641,7 @@ final class AskSession {
             // Ask looks over the layout it made before it hands back, and
             // mends what it can in this same undo step (`AskLayoutCheck`).
             guard failure == nil, !landed.isEmpty, let now = editor.document else { return }
-            let review = AskLayoutCheck.review(now, before: before)
+            let review = AskLayoutCheck.review(now, before: before, pictureColour: editor.store.flatColourHex(for:))
             for line in review.notes { note("look: " + line) }
             if !review.fixes.isEmpty { editor.perform { AskLayoutCheck.apply(review, to: &$0) } }
             layoutSentence = review.sentence
