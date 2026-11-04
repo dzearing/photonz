@@ -22413,3 +22413,11 @@ the ghost, and pinching in seemed to stop short.
 - `CaptureShortcutOwner` (PhotonzCore, tested): the probe never answers; a running build without the `PhotonzCaptureShortcutsStepAside` Info.plist mark (anything before this) keeps the shortcuts and everyone else stands down; otherwise the copy opened last answers. `CaptureCenter` asks at launch and whenever a Photonz opens or quits (`CaptureShortcutClaim`, `HotkeyCenter.unregisterAll`).
 - One app answering, read from a second process as a web page, Preview, Finder and Slack read it: 80/80 at once, 81/81 at 1 s, 80/80 at 10 s, 20/20 under full load (`run.sh paste`, new walk action `captureLandsAndStays`). Nov 1's editor Copy race still 120/120.
 - Open: the user's installed 0.21.0 cannot step aside, so until it is updated the new Dev leaves the shortcuts to it. A live ⇧⌘3 after the next Dev refresh is the first real-shortcut check.
+
+## 2026-11-03 (later): Ask looks over the layout it made
+
+- `AskLayoutCheck` (PhotonzCore) reads the finished document inside the run's undo step: recolours unreadable words, centres a lone centred line on its box or the row below, brings words back onto their box or the canvas, parts stacked words, and says what it could not mend. `ImageStore.flatColourHex` gives it the colour of a blank page, which is a picture. add_text with no colour reads what is behind it.
+- Found on the way: a price written `$12` printed as step 12's layer id (fixed, `AskStep.wordKeys`). The eval now presses Ask and Send, because the probe could not take the front on an idle Mac.
+- Filed: `text-keeps-every-word-at-every-zoom`, shared renderer, the last word of a tight line is lost at 67% zoom.
+- Held-out at b4b44ca5: total 55.8, drawing 56.9, layout 52.9, redline 33.2, video 67.4. Three later fixes to the check are not in that run.
+- Open: the task stays pending. Its held-out item needs a run on the final code and its cause is still not established. Why the total fell from 57.2 is unknown.

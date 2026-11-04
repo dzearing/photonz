@@ -1,42 +1,48 @@
 {
   "feature": "Ask tidies the layout it made before handing back",
   "epic": "agent-ask",
-  "summary": "After Ask builds a layout, it checks the result and fixes what a person would spot at once: words that cannot be read on their button turn a colour that reads, a centred heading that drifted is centred over what sits under it, words stacked on words are moved apart, and words off the canvas come back. Anything it cannot fix, it says in one short sentence.",
+  "summary": "After Ask builds a layout it checks the result and fixes what a person would spot at once: words that cannot be read, centred words that landed off their button or row, words run off their box, words on words, and words off the canvas. What it cannot fix it says in one short sentence. A price like $12 also no longer prints as a layer id.",
   "setup": "Photonz Dev, release Next, no switch changed from its default, a blank 1440 x 900 canvas, the built-in model.",
   "switched": {},
   "try": [
     {
       "do": "Make a blank canvas, click Ask in the title bar, type 'Make a pricing section on brand' and press Send.",
       "shot": "2026-11-03-ask-layout-look-before-sc.png",
-      "shotNote": "Before, 2026-10-24: button labels dark on blue, and 'Pricing' sits right of the cards' middle."
+      "shotNote": "Before, 2026-10-24, an earlier build and a different plan, so not a like for like comparison: dark labels on blue, heading right of the cards' middle."
     },
     {
-      "do": "Wait for the row 'Made a pricing section on brand' in the Agent group (about five minutes on this Mac).",
+      "do": "Wait for the row 'Made a pricing section on brand' in the Agent group, four to six minutes on this Mac.",
       "shot": "2026-11-03-ask-layout-look-after-sc.png",
-      "shotNote": "After, today. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+      "shotNote": "After, today's final build. The subtitle ending at 'cancel' is a drawing bug at this zoom, task text-keeps-every-word-at-every-zoom. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
-      "do": "Look at the heading and the line under it: both are centred over the row of cards."
+      "do": "Check that the heading sits over the middle of the cards and each button's label sits in the middle of its button."
     },
     {
-      "do": "Look at the button on the coloured card: its label is white."
+      "do": "Ask for a pill with words set at its middle: 'Add a rectangle filled #4F46E5 at x 648, y 224, 96 wide, 32 tall. Then add the words Most Popular in white, centred, at x 696, y 232.'",
+      "shot": "2026-11-03-ask-layout-look-pill-sc.png",
+      "shotNote": "Taken two small changes before the final build; the part that moves these words did not change after it. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
-      "do": "Turn the row's switch off and on: the whole section, fixes included, goes and comes back as one change."
+      "do": "Turn the pricing row's switch off and on: the whole section goes and comes back as one change."
     },
     {
       "do": "Press Command Z once: the whole section is gone, fixes included."
     }
   ],
   "evaluate": [
-    "Does the section now look like a person laid it out, with nothing you would nudge first?",
-    "Is white the right label colour on a coloured button, or would you rather Ask kept the colour it chose when that colour still reads?",
-    "Should 'Some words still overlap.' appear beside the change when Ask could not part them, or would you rather it say nothing?"
+    "Does the section look like a person laid it out, or is there something you would nudge first?",
+    "If you name a dark colour for words on a blue button, Ask turns them white anyway. Is that right, or should a colour you named always stand?",
+    "Is 'Some words still overlap.' above the row the right way to hear about what Ask could not fix?"
   ],
   "rough": [
     "No mock covers the layout Ask makes: agent-generate-wt.html gives only the request.",
-    "Ask takes about five minutes for this request on this Mac, about 90 s of it reading its first instructions. The walk now waits 420 s instead of 300 s for the plan, since it judges the result, not the speed.",
-    "The check fixes positions and colours only. It does not change sizes or spacing between cards, and it leaves videos alone because their words sit over footage.",
-    "The score on the pricing case and the held-out layout and video groups were not measured in this run: the eval needs the probe in front, and the Mac was in use."
+    "The subtitle loses its last word at this window zoom, in the after picture: task text-keeps-every-word-at-every-zoom, a drawing bug in shared code that this task may not change.",
+    "The badge pill can sit off the middle of its card, as in the after picture: the check centres words on their box, not a small box on the box under it.",
+    "Pricing case score on the final build's previous step: 60, against 67.9 on 2026-10-24. Runs of this one case vary widely, and the judge's main complaint is a generic, unbranded look, which this check does not touch.",
+    "Held-out on 2026-11-03 read layout 52.9 and video 67.4, both past their bars, but the total was 55.8 against 57.2 on 2026-10-30, with drawing down 3.4 and redline down 1.4. I do not know why, and that run predates the last three fixes here.",
+    "Ask takes four to six minutes for this request on this Mac, about 90 seconds of it reading its first instructions. The walk now waits 420 s, not 300 s, because the plan took up to 342 s; that widens a limit rather than speeding Ask up.",
+    "The cards are plain shapes with separate words on them, not Library components, because Ask is not shown starter components.",
+    "The check moves words and recolours them only. It does not fix sizes, spacing between cards, or words on a photo, and it leaves videos alone."
   ]
 }
