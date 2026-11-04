@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 3e-8,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T01:28:12.386Z",
-  "updated": "2026-11-04T01:28:12.518Z",
+  "updated": "2026-11-04T07:07:52.177Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake), screenshot queue/audits/2026-11-03-edge-seam-report.png (annotated by the user: 'Thin artifacts on edges after a rotation when zoomed out'): Photonz Dev, Image, layers 'Copied Selection' over 'Background' (locked), canvas 1026 x 831 at 79 percent. The Copied Selection is a white rectangle holding a red rounded shape, turned and reshaped with the new selection modes; a faint grey hairline runs along its outer edge across the white Background. Related renderer pieces: DocumentRenderer (layer transform, the warp / four-corner map added in c2dc5891 'Skew & distort reshapes the picture'), CIPerspectiveTransform for the reshape and 3D.",
@@ -29,6 +29,39 @@
     {
       "t": "2026-11-04T01:28:12.517Z",
       "note": "seq 3980 -> 3e-8"
+    },
+    {
+      "t": "2026-11-04T06:40:04.612Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-04T07:07:07.008Z",
+      "note": "owns these walks: a-turned-layer-has-no-seam-walk"
+    },
+    {
+      "t": "2026-11-04T07:07:51.856Z",
+      "note": "Cause: a bitmap with straight alpha (alphaInfo 3, every PNG decode) or no alpha, resampled past its own edge, comes out darker than either side; a premultiplied bitmap of the same colour never does. Evidence: same layer premultiplied reads 0, through a PNG reads 30, and a crop inset from the edge reads 0 because the sampler reads real pixels. Not transparent black from the 2D turn alone, and not the canvas downscale. Core Image's exact internal order was not established; the half-covered arithmetic I first guessed did not hold (peak 30, not 35)."
+    },
+    {
+      "t": "2026-11-04T07:07:51.931Z",
+      "note": "Chose clamping the edge once in wrapped() over an intermediate before each turn because it costs no extra pass or memory and also covers groups, half-pixel layers and shrunk layers, which a turn-only fix would miss. It is in the shared renderer, so Current changes too: the task says next, but the user's own report looks like Current and the renderer cannot differ by release."
+    },
+    {
+      "t": "2026-11-04T07:07:52.012Z",
+      "note": "Open: reproduced 79 percent only with next-crisp-zoom off (63 levels vs the user's 53), line 3 to 5 device pixels wide vs their 1 to 2. That flag exists only in Next and their title bar read Photonz (Dev), so Current is inferred, not observed. Audit asks them to check their own picture."
+    },
+    {
+      "t": "2026-11-04T07:07:52.089Z",
+      "note": "left rough: render(scale:) at a scale that misses whole pixels leaves the canvas's last row and column part covered, on an unturned layer too (probe: 0.79 read 202 off over 1466 px, 0.25 read 255 over 464). Not this seam. The Export sheet offers only 1x and 2x so a person cannot reach it; AgentWork passes a scale, not checked whether fractional. Did not earn a task."
+    },
+    {
+      "t": "2026-11-04T07:07:52.175Z",
+      "note": "Thin line gone: DocumentRenderer.wrapped holds each bitmap's edge. Real app at Next defaults, levels off white along the outline: 25% 31 to 0, 50% 64 to 0, export 1x 64 to 0, the rest 0; with next-crisp-zoom off 79% 63 to 0, 100% 46 to 0. TurnedEdgeSeamTests plus a-turned-layer-has-no-seam-walk; Scripts/test.sh exit 0; 12MP/10-layer edit 7.8ms."
     }
-  ]
+  ],
+  "started": "2026-11-04T06:40:04.611Z",
+  "walks": [
+    "a-turned-layer-has-no-seam-walk"
+  ],
+  "completed": "2026-11-04T07:07:52.176Z"
 }

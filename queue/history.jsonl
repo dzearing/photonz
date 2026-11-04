@@ -15509,3 +15509,12 @@
 {"t":"2026-11-04T06:09:37.549Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
 {"t":"2026-11-04T06:09:37.617Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
 {"t":"2026-11-04T06:09:37.696Z","ev":"task_blocked","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":"in_progress","note":"Cause not found and nothing fixed. Not reproduced here: 30/30 real Chrome pastes on the probe build. Needs the person: run Scripts/clipboard-timing/other-mac-report.sh on the other Mac and bring back its report; the released-only run needs Dev quit and native targets need an Accessibility grant. No decision card: this is a request to run something, not a product choice. Audit queue/audits/2026-11-03-screenshot-clipboard-one-photonz.json.","noQuestion":true}
+{"t":"2026-11-04T06:40:04.338Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-04T06:40:04.430Z","ev":"slice_pass","walks":12,"passed":10,"failed":2,"seconds":1806,"of":1087,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-04T06:40:04.617Z","ev":"task_started","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","title":"A turned or reshaped layer has no thin line along its edges at any zoom","priority":"p1-high"}
+{"t":"2026-11-04T07:07:07.010Z","ev":"task_walks","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","walks":["a-turned-layer-has-no-seam-walk"]}
+{"t":"2026-11-04T07:07:51.858Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
+{"t":"2026-11-04T07:07:51.933Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
+{"t":"2026-11-04T07:07:52.014Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
+{"t":"2026-11-04T07:07:52.091Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
+{"t":"2026-11-04T07:07:52.178Z","ev":"task_done","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","from":"in_progress","note":"Thin line gone: DocumentRenderer.wrapped holds each bitmap's edge. Real app at Next defaults, levels off white along the outline: 25% 31 to 0, 50% 64 to 0, export 1x 64 to 0, the rest 0; with next-crisp-zoom off 79% 63 to 0, 100% 46 to 0. TurnedEdgeSeamTests plus a-turned-layer-has-no-seam-walk; Scripts/test.sh exit 0; 12MP/10-layer edit 7.8ms."}
