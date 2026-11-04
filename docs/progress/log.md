@@ -22434,3 +22434,9 @@ No app code changed. Task a-screenshot-is-on-the-clipboard-every-time-on-a is bl
 - Added `Scripts/clipboard-timing/other-mac-report.sh` (runs on the failing Mac, no grants), `real-paste-chrome.mjs` and `clipwatch.swift`, and `run.sh chrome`.
 - Probe build, walk-landed captures: 30/30 real Chrome pastes; 15/15 for a sandboxed stand-in reader. Not reproduced.
 - Open: the released-app-only run, native paste targets, and three unconfirmed suspects (macOS shortcuts on, Universal Clipboard from this Mac's loop, two displays). See the audit.
+
+## 2026-11-03: no thin line along a turned or reshaped layer
+
+Changed: `DocumentRenderer.wrapped` holds every bitmap's edge (`clampedToExtent().cropped(to:)`), so a picture with straight alpha, which is anything read from a PNG, no longer darkens where it is resampled past its edge. New `TurnedEdgeSeamTests` and `a-turned-layer-has-no-seam-walk`.
+Measured at Next defaults, worst levels off white along the outline: 25 percent 31 to 0, 50 percent 64 to 0, export 1x 64 to 0; 79, 100, 200 percent and export 2x were already 0 because the enlarging path clamps. With `next-crisp-zoom` off: 79 percent 63 to 0, 100 percent 46 to 0.
+Open: the user's line was narrower than the one reproduced at 79 percent, and that they were on Current is inferred from the title bar. The audit asks them to check their own picture.

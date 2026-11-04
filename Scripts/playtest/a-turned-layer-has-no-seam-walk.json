@@ -1,0 +1,200 @@
+{
+  "out": "/tmp/photonz-playtest/a-turned-layer-has-no-seam-walk",
+  "seed": "The user's report of 2026-11-03: a thin grey line along a turned, reshaped layer on a white picture, plainest zoomed out. At Next defaults with no flag changed, a marquee copy of a white area holding a shape is pasted, reshaped with Skew & distort and turned, then photographed at 100, 200, 79, 50 and 25 percent and written out at 1x and 2x. Over white the copy's white must not show at all: only its shape can be seen.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/Plain white 1200x800.png",
+      "width": 1400,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        320
+      ],
+      "to": [
+        700,
+        480
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "rectSelect"
+    },
+    {
+      "do": "drag",
+      "from": [
+        400,
+        250
+      ],
+      "to": [
+        800,
+        550
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "copyMerged"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "pasteLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-pasted"
+    },
+    {
+      "do": "grip",
+      "grip": "chip-reshape"
+    },
+    {
+      "do": "grip",
+      "grip": "topRight",
+      "by": [
+        60,
+        -40
+      ]
+    },
+    {
+      "do": "grip",
+      "grip": "bottomLeft",
+      "by": [
+        -40,
+        30
+      ]
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "grip",
+      "grip": "knob",
+      "by": [
+        60,
+        40
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-turned",
+      "note": "the marquee copy of a white area holding a shape, pasted, reshaped with Skew & distort and turned, lying over the white picture it came from"
+    },
+    {
+      "do": "click",
+      "at": [
+        60,
+        60
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "zoom-100"
+    },
+    {
+      "do": "pinch",
+      "to": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "zoom-200"
+    },
+    {
+      "do": "pinch",
+      "to": 0.79
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "zoom-79"
+    },
+    {
+      "do": "pinch",
+      "to": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "zoom-50"
+    },
+    {
+      "do": "pinch",
+      "to": 0.25
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "snapshot",
+      "name": "zoom-25"
+    },
+    {
+      "do": "render",
+      "name": "export-1x"
+    },
+    {
+      "do": "render",
+      "name": "export-2x",
+      "scale": 2
+    }
+  ]
+}

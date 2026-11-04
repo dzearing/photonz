@@ -1,0 +1,29 @@
+{
+  "feature": "No thin line along a turned or reshaped layer",
+  "epic": "image-editing",
+  "summary": "A pasted picture that is turned, reshaped or tipped now blends into what is under it. The thin grey line along its edge is gone on the canvas and in exports.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The fix is in the shared renderer, so Current has it too. Walk: a-turned-layer-has-no-seam-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a white picture and draw a red rectangle on it." },
+    { "do": "Drag a marquee round the rectangle with white around it, then choose Copy Merged and Paste." },
+    { "do": "Pick Skew & distort on the chip and drag two corners." },
+    { "do": "Press Escape, then drag the knob to turn the layer." },
+    { "do": "Click off the layer and zoom to 50 percent.", "shot": "2026-11-03-edge-seam-after-50.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare the same view before the fix: a grey outline runs round the copy.", "shot": "2026-11-03-edge-seam-before-50.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Export at 1x and look at the copy's corner. Before the fix, 4 times enlarged:", "shot": "2026-11-03-edge-seam-before-export-1x.png" },
+    { "do": "The same corner after the fix, 4 times enlarged:", "shot": "2026-11-03-edge-seam-after-export-1x.png" }
+  ],
+  "evaluate": [
+    "On your own picture, is the line gone at 79 percent, where you first saw it?",
+    "Does a coloured layer's turned edge still look smooth, with no lighter or darker rim?",
+    "Does a pasted screenshot sitting half a pixel off now look as clean as one on whole pixels?"
+  ],
+  "rough": [
+    "Measured in the real app at Next defaults, worst level off white along the outline, before then after: 25 percent 31 then 0, 50 percent 64 then 0, 79 percent 0 then 0, 100 percent 0 then 0, 200 percent 0 then 0, export 1x 64 then 0, export 2x 0 then 0. The few near-white pixels left are the red shape's own soft edge.",
+    "With the sharp zoom copy switched off the same walk read 63 at 79 percent and 46 at 100 percent before the fix, and 0 after. That switch exists only in Next and your title bar said Photonz (Dev), so you were probably on Current. That is inferred, not observed.",
+    "My line at 79 percent was 3 to 5 screen pixels wide and yours was 1 to 2, so I matched your reading but not your exact state. Please check your own picture.",
+    "The seam was wider than the report: any pasted picture whose edge fell between pixels had it, including an unturned layer half a pixel off, and a turned group. All are fixed and tested.",
+    "No mock covers this surface."
+  ]
+}

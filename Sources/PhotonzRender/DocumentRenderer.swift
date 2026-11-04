@@ -234,7 +234,17 @@ public final class DocumentRenderer: @unchecked Sendable {
             return hit
         }
         contentCacheMisses += 1
-        let image = CIImage(cgImage: cg)
+        // The edge held and cut back to the same size. Wherever a turn, a
+        // reshape or a part-pixel position resamples past a bitmap's edge, the
+        // sample then reads the bitmap's own colour and the crop alone says how
+        // much of the pixel it covers. Left bare, a picture with straight alpha
+        // (anything read from a PNG: every marquee copy, every pasted picture)
+        // mixes with the nothing outside it before its alpha is applied, and
+        // the edge comes out darker than either side: a white layer on white
+        // drew a thin grey outline (reported by the user, 2026-11-03). On whole
+        // pixels nothing is resampled, so what is drawn does not change.
+        let plain = CIImage(cgImage: cg)
+        let image = plain.clampedToExtent().cropped(to: plain.extent)
         wrapCache[key] = image
         wrapOrder.append(key)
         if wrapOrder.count > Self.cacheCapacity {
