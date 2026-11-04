@@ -1,0 +1,34 @@
+{
+  "id": "animating-a-picture-is-as-simple-as-setting-a-mo",
+  "title": "Animating a picture is as simple as setting a moment and changing things: design it, then build it",
+  "goal": "Animating an image today starts from a + and an 'Animate a property' picker: the person must decide which property before doing anything. They do not want to think about properties. They want to move the playhead, change the layer (move it, fade it, turn it, resize it), and have that become a keyframe that tweens on its own; click a keyframe and change things, and the change stays on that keyframe. The video editor already works this way (Add Key makes one key moment with nothing chosen, then any change keys itself at the playhead: KeyMoments.swift, the user's rule of 2026-10-13 'Always: any change keys itself'). Design one simple keyframe workflow shared by animated pictures and video, show it to the user as a mock, and build it once approved.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 2.5e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T16:26:13.810Z",
+  "updated": "2026-11-04T16:26:13.938Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-04 (intake): 'The motion pane is totally unintuitive. I hit the + sign and i have to choose which property i want to animate. I do not want to think about this. I want to just start creating keyframes where maybe I position something, save a keyframe, or click on one, adjust some things (opacity position, transform, etc) and it persists on that keyframe and auto tweens. Don't we have this? We should be reusing a lot of the ux for videos for animated images. Please file a task to properly design an intuitive simplified way to create them.' Today: video has Add Key + any change keys itself (Sources/PhotonzCore/KeyMoments.swift, PropertyKeys.swift, LooksAtThePlayhead.swift); pictures lead with the Animate a property picker (Sources/Photonz/EditorState+PropertyKeys.swift, InspectorPanel 'Animate a property'). Related queued: ask-animates-what-it-makes-an-animated-svg-icon (Ask setting keys) should use the same model.",
+  "acceptance": [
+    "DESIGN FIRST, as a mock on the design site (docs/design/mocks/pages/, building on video-animate.html, video-motion.html and icon-animate-wt.html), interactive like the transform modes prototype (pages/selection-transform.html): a picture with a timeline strip; press Add Key (or K) to set a moment; drag, fade, turn and resize the layer and see the key take the change; move the playhead, change it again, see a second key and the tween play; click a key to go to it and change it; delete a key; play and loop. No property picker in the main path.",
+    "The design answers, with a recommendation each: where the keyframe strip lives for a picture (the same timeline as video, slimmed); what the Add Key control looks like and its shortcut; how a picture becomes animated (the first Add Key gives it a length and a playhead); how auto-key is shown so a change never keys by surprise (a visible key-moment marker at the playhead, and the change landing on it); easing per key (one simple choice, the video editor's curves under it); and where 'Animate a property' goes (kept only as an Advanced way in, never the first step).",
+    "The design REUSES the video editor's key model and controls (KeyMoments, the key line, the value rows that appear only for changed values, the key popover) rather than inventing a second one. Any difference between picture and video needs a reason written down.",
+    "Ask the user to review the mock (a decision card with the mock link and a marked screenshot) and wait for approval before building; record their decisions in this log.",
+    "BUILD (after approval): an animated picture is made by setting moments and changing things, at Next defaults, with walks for each step of the mock's flow, and the existing animated SVG export carries the result. A person who has never keyed anything can animate a layer moving and fading in under 30 seconds (time it in a walk from first click to playing).",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T16:26:13.812Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-04T16:26:13.937Z",
+      "note": "seq 3980 -> 2.5e-7"
+    }
+  ]
+}

@@ -15609,3 +15609,5 @@
 {"t":"2026-11-04T16:24:20.104Z","ev":"task_created","id":"ask-animates-what-it-makes-an-animated-svg-icon","priority":"p1-high","title":"Ask animates what it makes: an animated SVG icon from one request"}
 {"t":"2026-11-04T16:24:20.221Z","ev":"task_resequenced","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":3980,"to":2e-7}
 {"t":"2026-11-04T16:24:20.306Z","ev":"task_resequenced","id":"ask-animates-what-it-makes-an-animated-svg-icon","from":3990,"to":3e-7}
+{"t":"2026-11-04T16:26:13.814Z","ev":"task_created","id":"animating-a-picture-is-as-simple-as-setting-a-mo","priority":"p1-high","title":"Animating a picture is as simple as setting a moment and changing things: design it, then build it"}
+{"t":"2026-11-04T16:26:13.939Z","ev":"task_resequenced","id":"animating-a-picture-is-as-simple-as-setting-a-mo","from":3980,"to":2.5e-7}
