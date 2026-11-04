@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T01:55:58.347Z",
-  "updated": "2026-11-04T16:37:22.055Z",
+  "updated": "2026-11-04T19:57:49.944Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the manager pass 2026-10-23 19:00 on the probe built 18:39 from HEAD bf4dc3c2: Scripts/playtest-all.sh --no-build ask-annotates-a-screenshot ask-adds-a-title-page ask-makes-a-pricing-section -> 3 passed (walks pass whatever was made). Pricing trace (qwen3.6-35b-a3b): turn 3 add_text Subtitle; turn 4 add_shape rectangle with frame 320x480 at 120,240 (one card); turns 5, 6, 7 each add_shape {shape: rectangle, stroke: #D2D2D7, strokeWidth: 1} with NO frame -> 'refused: Not planned. add_shape: a rectangle needs a frame.' three times -> 'done'. Final ask state: says '', skipped [], changes ['Made a pricing section on brand (on)']. Picture: queue/manager/shots/2026-10-23-ask-pricing-one-empty-card.png. Code: Sources/PhotonzCore/AskPlanning.swift, refuse() counts sameRefusals; the early stop at 'if sameRefusals >= Self.mostSameRefusals, !steps.isEmpty, looks.isEmpty' returns .planned(AskPlan(steps:, summary: \"\")) silently (mostSameRefusals = 2, added in 6052b7d0 on 2026-10-23); the add_component special case just above it (removeLast(2), 'Leave X out ... plan the next kind') is the pattern to make general. The refusal text itself could name what is missing with an example from the call before it (the previous add_shape had a frame), which may be what the small model needs. Row words: AskSession.swift and AskCopy. Related, not the same: one-step-ask-cannot-run-no-longer-throws-away-th (p2) is a step failing at RUN time; ask-on-the-local-model-makes-results-that-look-f (p1) is how good a finished result looks.",
@@ -93,11 +93,36 @@
     {
       "t": "2026-11-04T16:37:22.052Z",
       "note": "owns these walks: ask-says-what-it-left-out-walk, ask-makes-a-pricing-section-walk"
+    },
+    {
+      "t": "2026-11-04T17:26:01.117Z",
+      "note": "Eval on qwen3.8-27b. Before, unchanged probe 8765bcb7, run 20261104-161737-ask: component-table 90, pricing-section 60. After, runs 20261104-170529/171415/171756: component-table 90, pricing-section 58.3, 59.3, 60.7. Earlier readings of pricing on the old code: 60 (001113), 61.4 (050033). No after run repeated a refused call (trace: at most one refusal, not sent back, leftOut empty), and with no repeat the messages sent to the model are the same as before the change, so this spread is the model's and the judge's, not this change; the model is not repeatable at temperature 0 (25 to 28 steps, indigo or blue)."
+    },
+    {
+      "t": "2026-11-04T19:57:49.439Z",
+      "note": "Reproduced with a scripted model: a refused rectangle sent back three times used to end planning silently; AskLeftOutTests now covers it. Run time reproduced the same way, with a planted layer id that does not exist. Chose keeping what landed over taking the change back because the task asks for it and the row now says what is missing. Chose the row saying what landed over 'Made part of ...' because splicing words into a request reads wrong on most verbs. Chose the conversation answering with the left out line alone, and the panel showing it only under the row, so a person never reads it twice in one panel."
+    },
+    {
+      "t": "2026-11-04T19:57:49.512Z",
+      "note": "Held-out, same model qwen3.8-27b, read from each group: before 20261104-021419 (50c54b72) total 64.5, layout 66.3, drawing 67.3, redline 33.6, video 59.9. After 20261104-172601 (c7f497ee) total 66.7, layout 48, drawing 70.1, redline 44.1, video 66.6. Layout is 3 cases, 1 ran out of the 300 s limit (scores 0), so the other two average 72. NOT shown to be free of this change: a model carrying on past a refusal can take longer, and held-out cases may not be read. Against it: pricing took 289 s on the old build, stuck models use the same three turns, 1 broken call of 158. Folded to ask-s-first-answer-after-its-model-loads-comes-i."
+    },
+    {
+      "t": "2026-11-04T19:57:49.579Z",
+      "note": "Item 'scores no lower': component-table 90 before, 90 after. pricing-section 60 before on the unchanged build; after 58.3, 59.3, 60.7. Taken as met, on this reasoning and not on the best reading: no climb run on either build repeated a refused call (0 refusals on component-table, at most one unrepeated on pricing), Ask's instructions are unchanged in the diff, so the model is sent the same messages, and older readings on the old code ran 60 to 61.4. If that reasoning is wrong, this item is not done."
+    },
+    {
+      "t": "2026-11-04T19:57:49.648Z",
+      "note": "left rough, not filed: the left out line is 58 characters against the panel's 40, it wraps under the row; the line cannot name what a model never wrote; a dock answer with a left out line drops the layout sentence, which still shows in the panel. Each is either in the audit or below the follow-up bar. Pictures looked at: before (one empty card, row claiming the section), after (full three cards, plain row), stopped-short and as-it-ran (row and line as the audit says)."
+    },
+    {
+      "t": "2026-11-04T19:57:49.942Z",
+      "note": "Ask leaves out a call it keeps getting refused and goes on, for every tool; a failed step and what names it are left out and the rest land as one undo step; the row says what landed with the left out line under it, and Ask answers with it (c7f497ee; AskLeftOut.swift, AskPlanning, AskSession). Verified: Scripts/test.sh green, ask-says-what-it-left-out-walk and ask-makes-a-pricing-section-walk pass at Next defaults. Not clean: held-out layout read 48 against 66.3, one of three cases out of time, cause not proved; pricing-section read 58.3, 59.3, 60.7 against 60, taken as spread because the model is sent the same messages (task log)."
     }
   ],
   "started": "2026-11-04T16:10:30.078Z",
   "walks": [
     "ask-says-what-it-left-out-walk",
     "ask-makes-a-pricing-section-walk"
-  ]
+  ],
+  "completed": "2026-11-04T19:57:49.943Z"
 }
