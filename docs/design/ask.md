@@ -4,9 +4,8 @@ Ask is the Agent in the editor (the mock: `docs/design/mocks/pages/agent-generat
 http://127.0.0.1:8791/#agent-generate-wt). You type what you want; a model
 running on this Mac turns it into a plan of the same commands the MCP server
 offers (`docs/design/agent-mcp.md`), and the moment it is done the change is
-made. The Agent group keeps one row per request saying what changed, with a
-switch to turn it off and on and a delete; one Command Z takes the latest
-request back whole. There is no Run Plan and no list of steps on screen (the
+made. The Agent group keeps a plain history, one row per request saying what
+changed; one Command Z takes the latest request back whole. There is no Run Plan and no list of steps on screen (the
 user, 2026-10-20: "I don't need to see all the actions taken, i just need a
 row that explains the change and a way to toggle it or delete it"). Nothing about the request or the
 document leaves the Mac.
@@ -20,7 +19,8 @@ Switch: `next-ask`, on by default in Next, absent from Current.
 | Title bar, right slot | **Ask** button (sparkle, Ask, ⌘K), the mock's `.askbtn` | `AskTitlebarButton`, hung in `TitlebarPanelToggle` |
 | Edit menu | **Ask…**, ⌘K | `EditorCommands` (undo/redo group) |
 | Over the window | The composer, the mock's `.askpal`: glass over a dimmed window, one field, Ask. Return asks, Escape or a click outside closes | `AskComposerOverlay` |
-| Dock | The **Agent** group, there once the window has asked: Working… while it works, then one row per request, newest at the top (what changed, a switch, a delete; right-click for Turn Off/On and Delete), and a field to ask again | `AgentPanel`, `InspectorSectionID.agent` |
+| Right panel | The **Agent** group, the one Agent place, there once the window has asked: the live request with Stop at its top, then the history, one plain row per request, newest first, and a field to ask again. Its menu holds Clear History… | `AgentPanel`, `AgentHistoryRow`, `AgentHistoryMenu`, `InspectorSectionID.agent` |
+| Left of the panel | The **card** a row shows while the pointer rests on it: the words, how Ask understood them, before and after pictures, thumbs | `AskHistoryCardOverlay`, `AskHistoryHover` |
 | Settings | **Ask**: which model answers, Automatic by default; the one-time setup when there is none | `AskSettingsSection` |
 
 **No model choice in the ask surface.** The mock's Model row (line 344) and its
@@ -198,28 +198,46 @@ A walk reaches these with `askReplies` in its setup, the model's replies written
 out one a turn, since no model can be counted on to get stuck
 (`ask-says-what-it-left-out-walk`).
 
-## One row per request: off, on, delete
+## One row per request: a plain history
 
-`AskChanges.swift` (PhotonzCore, tested in `AskChangesTests`). Each request
-that changed something is recorded as the document just before it ran and
-just after (`AskRecordedChange`). Turning it **off** applies the difference
-after→before onto the document as it is now; **on** applies before→after.
-Both are a three-way merge over the document's saved form (`DocumentMerge`):
-objects merge key by key, lists of things with ids (layers, group children,
-styles, tracks, clips) merge thing by thing, in the current document's order,
-with what the change added put back after the entry it followed. So later
-edits to other things stay. When something done since changed the very thing
-the request made (moved the layer it drew, say), the merge refuses, nothing
-moves, and the row says "A later change builds on this."
+The user, 2026-11-04: "I think it should just be history rather than having
+toggles and trashcans, because i think it's buggy. I can manipulate the things
+it created, and it muddies what it means to disable an agent history item." So a
+row has no switch and no delete, and undo is how a request is taken back. This
+replaced the rows of 2026-10-20, and the left dock of 2026-11-04 with them.
 
-Each switch or delete lands as one ordinary undo step. After an undo or redo
-each row reads its state off the document (`AskChangeList.follow`), so ⌘Z on
-the request shows its row off, and undoing a delete brings the row back.
+`AskChanges.swift` (PhotonzCore, tested in `AskChangesTests`). Each request that
+changed something is recorded as the document just before it ran and just after
+(`AskRecordedChange`), which is what the card pictures. After an undo or redo
+each row reads its state off the document (`AskChangeList.follow`): the
+difference after→before is applied onto the document as it is now by a
+three-way merge over its saved form (`DocumentMerge`), and if that finds
+something to take out the change is there. ⌘Z on the request leaves its row in
+the list, quieter, and its card says Undone; Ask forgets it (`AskMemory`).
+
+**Clear History…**, in the Agent group's three dots, the row's right-click menu
+and Edit (as Clear Agent History…), asks its yes or no at the top of the group
+and empties the list. Nothing on the canvas changes and undo still steps through
+it all. Ask forgets the talk with it. The question is in the group rather than a
+system alert because that is where the click was and a walk can press it.
+
+**The card** (`AskHistoryCard.swift`, app; `AskHistoryCard.swift`, PhotonzCore,
+tested in `AskHistoryCardTests`) comes up after the pointer rests 0.35 s on a
+row, moves to another row after 0.12 s (so crossing rows on the way to it does
+not change it), and goes 0.35 s after the pointer leaves row and card. It sits
+10 points left of the panel, never over it, level with its row, and slides above
+or below what the row made when that is free (`AskHistoryCardPlacement`). It is
+drawn in the window, not a popover window, so it takes no key and a walk
+photographs it. Its lines are `AskUnderstanding`: the model's own sentence, a
+drawing's plan statements, then what each run of steps did, five at most. Its
+pictures are drawn off the main thread on first hover at 272 pixels on the long
+side, a video's at the playhead, the last twelve rows kept and let go under
+memory pressure.
 
 The row's words come from the steps that landed (`AskChangeWords`): "Added 12
 measurements", "Added the title “Case 1”", "Added 5 texts and placed a
-component", 40 characters at most, wrapping to two lines in the panel. The
-tooltip is what was asked. Clicking the words picks on the canvas what the
+component", 40 characters at most, wrapping to two lines in the panel. What
+was asked is on the card. Clicking the words picks on the canvas what the
 change made (the layers it added, else the ones it edited), the mock's Last
 change click.
 
@@ -228,10 +246,10 @@ they hold whole document snapshots, which have no place in the saved file.
 
 ### Thumbs up and down
 
-Each row carries a quiet thumbs up and thumbs down between its words and its
-switch (faint until picked; also Good Result and Bad Result in its right-click
+The row's card carries a quiet thumbs up and thumbs down (Good Result and Bad
+Result in their tips; before 2026-11-04 they sat on the row and in its right-click
 menu; the same thumbs again takes the vote back). No mock covers them; they
-sit in the row because the row is what they judge. A vote saves the request,
+sit on the card, with what they judge. A vote saves the request,
 the document before, the document after and a picture of it under
 `~/Library/Application Support/<bundle id>/Ask feedback/<time-request>/`
 (`AskFeedbackFolder`, `AskFeedbackCase` in PhotonzCore), with where each
@@ -1093,8 +1111,7 @@ pieces, which neither a name nor one point reaches yet: folded into the task
   recording the lines it showed and when.
 
 Each presses the Ask button, types, sends, waits for `ran`, then undoes and
-redoes the request, turns its row off and on with the switch, deletes it, and
-undoes the delete, checking the document each time. They need Ollama with a model, so on a Mac without one
+redoes the request, checking the document and the row each time. They need Ollama with a model, so on a Mac without one
 they stop with Ask's own sentence.
 
 ## A web page from its address (2026-11-03)
@@ -1217,7 +1234,7 @@ assistant, visibly and hidden five ways, to delete every layer, export, run a
 menu command and open an address carrying the document) serve one from
 `Scripts/ask-eval/web/lookup*/`. Walk: `ask-search-not-set-up-walk`.
 
-## The `/` list and the dock
+## The `/` list, and where a request goes
 
 Typing `/` in any field Ask has turns it into the command list (the mock's
 `.askcmd`; `AskCommandList` in PhotonzCore, `AskCommandsList` in the app). Return
@@ -1232,14 +1249,11 @@ under the dim and the result should not be dimmed. A command that changed the
 document gets a row in the Agent group, with no thumbs: there was no request to
 judge.
 
-After a request the conversation moves to its dock down the window's left edge
-(`AskConversationDock`, the mock's `.cdock`). It takes its room from the canvas,
-so it covers neither the picture nor the Agent group, and it holds the field, so
-the Agent group drops its own while it is up. The keyboard stays with the canvas
-until the field is clicked, so Command Z after a request undoes the request. Ask
-and Command K float the conversation back over the canvas, as the mock does, and
-closing that returns it to the dock. A window under 900 points has no dock: the
-Agent group says how the request is going and keeps its field.
+After a request the composer closes and the Agent group comes forward, saying
+what was asked and how it is going, with Stop. The keyboard stays with the canvas
+until a field is clicked, so Command Z after a request undoes the request. Until
+2026-11-04 the conversation moved to a dock down the window's left edge; the user
+took that out the same day, and the Ask mocks with it.
 
 ## Not in this slice
 

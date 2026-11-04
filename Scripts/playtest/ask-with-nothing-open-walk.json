@@ -11,7 +11,7 @@
     { "do": "expectLayers", "atLeast": 1 },
     { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "control": "Agent Change 1 Switch", "reads": "on" },
+    { "do": "expect", "control": "Agent Change 1 State", "reads": "standing" },
     { "do": "describe", "stage": "3-drawn", "note": "the empty window became an 800 by 600 picture and Ask drew the lighthouse into it" },
     { "do": "snapshot", "name": "3-drawn" }
   ]

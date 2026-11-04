@@ -323,36 +323,22 @@
             <div class="cg-mini">
               <div class="mh"><i></i><i></i><i></i><span style="margin-left:6px">hero-card</span></div>
               <div class="mb">
-                <div class="cg-left"><span class="cg-lbl" style="color:var(--accent)">Agent</span><span class="cg-bar a"></span><span class="cg-bar"></span><span class="cg-bar"></span><span class="cg-bar"></span></div>
                 <div class="cg-art"><div class="cg-card">Ship it</div></div>
-                <div class="cg-rail"><i class="ic ic-layers"></i><i class="ic ic-sliders"></i><i class="ic ic-sparkle"></i><i class="ic ic-library"></i></div>
+                <div class="cg-right"><span class="cg-lbl">Layers</span><span class="cg-bar"></span><span class="cg-lbl" style="color:var(--accent)">Agent</span><span class="cg-bar a"></span><span class="cg-bar"></span></div>
               </div>
             </div>
-            <span class="docsp-l"><b>Docked left</b> .cdock</span>
-            <p class="docsp-d">The canvas is <b>never covered</b>, so you watch the card change while you steer. The width comes from the inspector, which rails itself — <b>not from the canvas</b>, so the window does not have to grow to hold a conversation.</p>
-          </div>
-          <div class="docsp">
-            <div class="cg-mini">
-              <div class="mh"><i></i><i></i><i></i><span style="margin-left:6px">hero-card · narrow</span></div>
-              <div class="mb">
-                <div class="cg-art"><div class="cg-card" style="width:64%">Ship it</div></div>
-                <div class="cg-rail"><i class="ic ic-layers"></i><i class="ic ic-sliders"></i></div>
-                <div class="cg-float"><span class="cg-lbl" style="color:var(--accent)">Agent</span><span class="cg-bar a"></span><span class="cg-bar"></span><span class="cg-bar"></span></div>
-              </div>
-            </div>
-            <span class="docsp-l"><b>Constrained</b> .cdock.as-overlay</span>
-            <p class="docsp-d">Below the width where a left dock still leaves a usable canvas, it <b>stops taking layout width and floats</b>, dismissed by clicking away or Escape. A panel that cannot afford to be inline becomes an overlay — never a sliver nobody can work in.</p>
+            <span class="docsp-l"><b>After asking</b> the Agent group</span>
+            <p class="docsp-d">The live request sits at the top of the <b>Agent group</b> in the right panel with its Stop, and under it a <b>plain history</b>, one row a request. Resting on a row shows how it was understood, with before and after pictures, to the left of the panel.</p>
           </div>
         </div>
       </div>
       <div class="docmeta">
-        <div class="docnum">04</div><h3 class="docname">Left, because it is an input</h3>
-        <p class="docrule">The conversation docks on the <b>left</b>, opposite the inspector. It is where you are <b>typing</b> — an input, next to the tool rail and the reading edge — while the right dock is an <b>output</b> you consult. Stacking a tall conversation on top of Layers and Properties made every group there fold, which is a lot of panel to lose for a chat.</p>
+        <div class="docnum">04</div><h3 class="docname">One Agent place, on the right</h3>
+        <p class="docrule"><b>Changed by the user on 2026-11-04.</b> There is no left dock. The composer takes one sentence and goes; the Agent group is where a request is followed and where it stays as history. Rows carry no switch and no trash, because what a request made can be changed by hand and turning it off would mean nothing plain. Undo takes a request back.</p>
         <div class="docdd">
-          <span class="do">Take the width from the inspector and rail it. The canvas keeps its size.</span>
-          <span class="no">Shrink a panel past the point it is usable. Float it instead.</span>
+          <span class="do">Show the live request and the history in the Agent group.</span>
+          <span class="no">Give the conversation a second place, or put a toggle on a row.</span>
         </div>
-        <p class="docapi"><b>Same node, three placements.</b> The chat <b>moves</b>; it is never duplicated, so there is no second transcript to keep in step. Hitting <b>Ask</b> while it is docked floats it back rather than opening the empty overlay it was moved out of.</p>
       </div>
     </div>
 

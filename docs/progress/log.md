@@ -22464,3 +22464,21 @@ Open: held-out layout read 48 against 66.3 because one of its three cases ran ou
 of the five minute limit. Pricing plans take 289 to 294 s on this Mac with or
 without this change, so that limit is close for layouts; the next whole held-out
 run says whether it was this change.
+
+## 2026-11-04: One Agent pane on the right
+
+The left dock from earlier the same day is gone, at the user's word. The right
+panel's Agent group is the one Agent place: the live request with Stop at its
+top, then a plain history, one row a request, with no switch and no trash. Undo
+takes a request back. Resting on a row shows a card left of the panel with how
+Ask understood the words and before and after pictures, and the thumbs moved
+there. Clear History… is in the group's menu, the row's right-click menu and Edit,
+and asks its yes or no in the group. Core: `AskUnderstanding`,
+`AskHistoryCardPlacement`, `AskChangeList.clear`; the row switch and delete and
+`putBack` went. The Ask mocks were changed to match, as the task asked.
+
+A `role: .destructive` button took no click from a walk here, while the same
+button without the role did, so Clear has none. Not established why.
+
+Open: Stop during a model load leaves the request busy until the load ends
+(task `stop-while-ask-s-model-is-still-loading-lets-the`).

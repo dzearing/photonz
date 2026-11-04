@@ -1,0 +1,415 @@
+{
+  "out": "/tmp/photonz-playtest/ask-one-agent-pane-walk",
+  "seed": "one-agent-pane-on-the-right-a-plain-history-of-r: at Next defaults, with the model's replies written into the walk: the Agent group is the one Agent place. The live request sits at its top with Stop, no dock ever appears at the left, a finished request is a plain row with no switch and no trash, resting on the row shows its card left of the panel with what Ask understood and before and after pictures, the card stays while the pointer is on it and goes when it leaves, undo takes the request back, and Clear History empties the list after a yes and leaves the canvas alone.",
+  "clock": 240,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "askReplies": [
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_shape",
+                "arguments": {
+                  "shape": "rectangle",
+                  "frame": {
+                    "x": 1000,
+                    "y": 560,
+                    "width": 400,
+                    "height": 300
+                  },
+                  "fill": "#2F6FED"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_text",
+                "arguments": {
+                  "text": "Hello there",
+                  "x": 1040,
+                  "y": 680,
+                  "fontSize": 48
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "A blue card with a greeting on it.",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Ask Dock It",
+      "present": false
+    },
+    {
+      "do": "type",
+      "text": "put a blue card with a greeting on it"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 90
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Ask Dock",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Switch",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Delete",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Thumbs Up",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 State",
+      "reads": "standing"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-row",
+      "note": "a finished request is one plain row, no switch, no trash, no thumbs"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-row"
+    },
+    {
+      "do": "move",
+      "control": "Agent Change 1 Words"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.1
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card",
+      "present": false
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card Asked",
+      "reads": "put a blue card with a greeting on it"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card Line 1",
+      "reads": "A blue card with a greeting on it."
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card Before",
+      "reads": "drawn"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card After",
+      "reads": "drawn"
+    },
+    {
+      "do": "describe",
+      "stage": "2-card",
+      "note": "after a short rest the card is up left of the panel: the words, how they were understood, before and after"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-card"
+    },
+    {
+      "do": "move",
+      "control": "Agent Card Asked"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "3-held",
+      "note": "the pointer crossed to the card and it stayed"
+    },
+    {
+      "do": "move",
+      "at": [
+        100,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-gone",
+      "note": "the pointer left and the card went"
+    },
+    {
+      "do": "press",
+      "control": "Agent Change 1 Words"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-picked",
+      "note": "a click on the row still picks what it made"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-picked"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 State",
+      "reads": "undone"
+    },
+    {
+      "do": "move",
+      "control": "Agent Change 1 Words"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Agent Card Undone",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "6-undone"
+    },
+    {
+      "do": "move",
+      "at": [
+        100,
+        700
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 State",
+      "reads": "standing"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Agent Menu",
+      "choose": "Clear History…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Agent Clear Question",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "7-clear-question"
+    },
+    {
+      "do": "press",
+      "control": "Agent Clear Cancel"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Agent Clear Question",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": true
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Agent Menu",
+      "choose": "Clear History…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Agent Clear Yes"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Clear Question",
+      "present": false
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3
+    },
+    {
+      "do": "describe",
+      "stage": "8-cleared",
+      "note": "the list is empty and the canvas is exactly as it was"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-cleared"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "9-undo-still-works",
+      "note": "undo still steps back through the request after the list was cleared"
+    }
+  ]
+}

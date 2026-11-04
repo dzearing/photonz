@@ -459,10 +459,13 @@ struct AskChangesWhatItMadeTests {
         #expect(turns.count == 1)
         #expect(turns.first?.made.first?.id == id.uuidString)
         #expect(turns.first?.made.first?.parts == ["sky", "water", "sun"])
-        // A row turned off made nothing that is still there: it is not remembered.
-        guard let row = rows.rows.first else { return }
-        _ = rows.setOn(false, id: row.id, in: beach)
+        // A request undone made nothing that is still there: it is not remembered.
+        rows.follow(blank)
         #expect(AskMemory.turns(from: rows, in: blank).isEmpty)
+        // Clear History forgets the talk as well as the list.
+        rows.follow(beach)
+        rows.clear()
+        #expect(AskMemory.turns(from: rows, in: beach).isEmpty)
         // At most the latest few.
         var many = AskChangeList()
         for n in 0..<(AskMemory.mostTurns + 3) {

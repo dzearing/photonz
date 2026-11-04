@@ -3,7 +3,7 @@
    Look lives in agent.css; the surface that hosts it lives in ask.{css,js}. */
 (function () {
   var PZ = window.PZ || {};
-  var all = PZ.all, isNarrow = PZ.isNarrow;
+  var all = PZ.all;
 
   /* ============================================================
      1 · A STEP IS A VIEW ONTO A LAYER
@@ -158,118 +158,7 @@
     wireComposer(chat);
   });
 
-  /* ============================================================
-     5 · DOCKING THE CONVERSATION — to the LEFT
-     ============================================================
-     The chat MOVES rather than being duplicated: one conversation, two hosts.
-     Space comes from the right dock, which rails itself, so the canvas keeps
-     its width. On a constrained shell the left dock floats over the canvas and
-     soft-dismisses instead of eating layout width. */
-  // the chat's host: an editor row, or the body of a document-less window
-  function editOf(pal) { return pal.closest('.edit, .shell-body') || pal.parentNode; }
-
-  function ensureCdock(edit) {
-    var c = edit.querySelector('.cdock');
-    if (c) return c;
-    c = document.createElement('div');
-    c.className = 'cdock';
-    c.innerHTML =
-      '<div class="cdock-h"><i class="ic ic-sparkle"></i><span>Agent</span><span class="sp"></span>' +
-      '<button class="btn ghost icon sm" data-ask-undock title="Float the conversation">' +
-      '<i class="ic ic-maximize"></i></button></div>';
-    edit.insertBefore(c, edit.firstElementChild);
-    if (!edit.querySelector('.cdock-scrim')) {
-      var scrim = document.createElement('div');
-      scrim.className = 'cdock-scrim';
-      edit.insertBefore(scrim, c);
-      scrim.addEventListener('click', function () {   // soft dismiss
-        var pal = edit.querySelector('.askpal');
-        if (pal) setDocked(pal, false);
-      });
-    }
-    return c;
-  }
-
-  function setDocked(pal, on) {
-    var edit = editOf(pal);
-    var chat = pal.querySelector('.chat') || (edit && edit.querySelector('.cdock .chat'));
-    if (!chat || !edit) return;
-    if (on) {
-      ensureCdock(edit).appendChild(chat);
-      // Space comes from the inspector, not the canvas. Remember what the dock
-      // was doing so undocking can put it back exactly.
-      if (!edit.hasAttribute('data-dock-prev')) {
-        edit.setAttribute('data-dock-prev', edit.getAttribute('data-dock') || 'open');
-      }
-      edit.setAttribute('data-dock', 'closed');
-      // too tight to be a panel? then be an overlay, not a narrower panel.
-      edit.querySelector('.cdock').classList.toggle('as-overlay', isNarrow ? isNarrow(edit) : false);
-      pal.classList.remove('on');
-      pal.setAttribute('aria-hidden', 'true');
-      var s1 = pal.parentNode && pal.parentNode.querySelector('.askscrim');
-      if (s1) s1.classList.remove('on');
-    } else {
-      pal.appendChild(chat);
-      var cd = edit.querySelector('.cdock'); if (cd) cd.remove();
-      var sc = edit.querySelector('.cdock-scrim'); if (sc) sc.remove();
-      if (edit.hasAttribute('data-dock-prev')) {
-        edit.setAttribute('data-dock', edit.getAttribute('data-dock-prev'));
-        edit.removeAttribute('data-dock-prev');
-      }
-      // Undocking has to REOPEN the overlay, or the conversation leaves the dock
-      // into a hidden pal and from the user's side it has simply gone.
-      pal.classList.add('on');
-      pal.setAttribute('aria-hidden', 'false');
-      var s2 = pal.parentNode && pal.parentNode.querySelector('.askscrim');
-      if (s2) s2.classList.add('on');
-    }
-    all('[data-ask]').forEach(function (b) {
-      if (document.querySelector(b.getAttribute('data-ask')) === pal) {
-        b.setAttribute('aria-expanded', on ? 'false' : 'true');
-      }
-    });
-    all('[data-ask-dock]', chat).forEach(function (b) {
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      b.title = on ? 'Float the conversation' : 'Dock the conversation';
-    });
-  }
-
-  function isDocked(edit) { return !!(edit && edit.querySelector('.cdock .chat')); }
-
-  document.addEventListener('click', function (e) {
-    // Ask, while the conversation is docked, FLOATS IT BACK. It used to open the
-    // empty overlay the chat had been moved out of, so the screen just dimmed
-    // behind a blank panel with no way to tell what had happened.
-    var ask = e.target.closest('[data-ask]');
-    if (ask) {
-      var pal0 = document.querySelector(ask.getAttribute('data-ask'));
-      if (pal0 && isDocked(editOf(pal0))) { e.stopPropagation(); setDocked(pal0, false); }
-      return;
-    }
-    var d = e.target.closest('[data-ask-dock]');
-    if (d) {
-      var pal = d.closest('.askpal') || (d.closest('.win') || document).querySelector('.askpal');
-      if (pal) { e.stopPropagation(); setDocked(pal, !d.closest('.cdock')); }
-      return;
-    }
-    var u = e.target.closest('[data-ask-undock]');
-    if (u) {
-      var p2 = (u.closest('.win') || document).querySelector('.askpal');
-      if (p2) setDocked(p2, false);
-    }
-  }, true);
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key !== 'Escape') return;
-    all('.cdock.as-overlay').forEach(function (c) {
-      var pal = (c.closest('.edit') || document).querySelector('.askpal');
-      if (pal) setDocked(pal, false);
-    });
-  });
-
-  // A page can author `data-ask-docked` on a shell to start docked.
-  all('[data-ask-docked]').forEach(function (win) {
-    var pal = win.querySelector('.askpal');
-    if (pal) setDocked(pal, true);
-  });
+  /* The left dock this section used to build is gone: the user took it out on
+     2026-11-04. The right panel's Agent group is the one Agent place, a plain
+     history with its details on hover (agent-generate-wt.html). Never rebuild it. */
 })();

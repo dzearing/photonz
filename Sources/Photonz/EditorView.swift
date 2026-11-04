@@ -85,11 +85,7 @@ struct EditorView: View {
         GeometryReader { geo in
             let inspectorShown = editorState.isInspectorShown
             // Width the canvas (and thus the floating toolbar) actually gets.
-            let dockFits = geo.size.width >= AskConversationDock.narrowestWindow
-            let askDockShown = Experiments.shared.askEnabled && editorState.ask.isConversationDocked
-                && !editorState.ask.isComposerShown && !editorState.isWatching && dockFits
             let canvasWidth = geo.size.width - (inspectorShown ? panelWidth + 1 : 0)
-                - (askDockShown ? AskConversationDock.width : 0)
             // Canvas and side column side by side, and the timing strip ACROSS
             // THE BOTTOM of both (`next-motion-strip`). It spans the whole
             // window on purpose: a lag is a relationship between two bars, so
@@ -97,12 +93,6 @@ struct EditorView: View {
             // canvas column would be the same crowding the column already has.
             VStack(spacing: 0) {
             HStack(spacing: 0) {
-                // Ask's conversation after a request (`AskConversationDock`):
-                // beside the canvas, so it covers nothing being changed.
-                if askDockShown {
-                    AskConversationDock()
-                        .transition(.move(edge: .leading))
-                }
                 canvas
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .tutorialAnchor(.canvas)
@@ -262,8 +252,6 @@ struct EditorView: View {
             }
             }
             .animation(.spring(duration: 0.28), value: editorState.motionStripPhase)
-            .animation(.spring(duration: 0.24, bounce: 0.1), value: askDockShown)
-            .onChange(of: dockFits, initial: true) { editorState.ask.dockFits = dockFits }
             // The one line a colour drop target is saying, drawn over the
             // whole window rather than by the swatch itself: a swatch is 18pt
             // wide in a column narrower than the sentence, and a sentence
@@ -288,6 +276,17 @@ struct EditorView: View {
             // (`KeyValuesPopover`): over the whole window, so a key near the
             // top of the timeline can open it over the canvas's foot.
             .overlay(alignment: .topLeading) { KeyValuesPopover() }
+            // The card a row of Ask's history shows, to the left of the panel
+            // and never over it: over the whole window, because the row is in
+            // the panel and the card is out over the canvas.
+            .overlay(alignment: .topLeading) {
+                if Experiments.shared.askEnabled, inspectorShown {
+                    GeometryReader { window in
+                        let frame = window.frame(in: .global)
+                        AskHistoryCardOverlay(bounds: frame, panelLeft: frame.maxX - panelWidth - 1)
+                    }
+                }
+            }
             // Ask's composer over the window (Next, `next-ask`), the mock's
             // `.askpal`: it dims the canvas and the dock, not the title bar.
             .overlay {

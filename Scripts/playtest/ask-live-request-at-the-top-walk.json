@@ -1,0 +1,142 @@
+{
+  "out": "/tmp/photonz-playtest/ask-live-request-at-the-top-walk",
+  "seed": "one-agent-pane-on-the-right-a-plain-history-of-r: at Next defaults, the live request sits at the top of the Agent group with its words, what it is doing now and Stop, and stopping one leaves no row and nothing on the canvas. Needs the model on the Mac, as ask-stops-a-running-request-walk does.",
+  "clock": 420,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "add a blue rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning",
+      "timeout": 30
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Ask Dock",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Working",
+      "reads": "add a blue rectangle"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stage",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stop",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Agent Request",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-live",
+      "note": "the live request is at the top of the Agent group, with no dock at the left"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-live"
+    },
+    {
+      "do": "press",
+      "control": "Agent Stop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stop",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Working",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "Agent State",
+      "present": false
+    },
+    {
+      "do": "waitFor",
+      "condition": "askSettled",
+      "timeout": 200
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Agent Stop",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1",
+      "present": false
+    },
+    {
+      "do": "expectLayers",
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "2-stopped",
+      "note": "stopped: no row, and the canvas as it was"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-stopped"
+    }
+  ]
+}

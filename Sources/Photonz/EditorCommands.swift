@@ -562,6 +562,10 @@ struct EditorCommands: Commands {
                 Button("Ask…") { if let editor { editor.ask.summon(in: editor) } }
                     .keyboardShortcut("k", modifiers: .command)
                     .disabled(editor == nil)
+                // The Agent group's menu row, in the menu bar too. The list
+                // goes, the canvas stays (`AskSession.clearHistory`).
+                Button(AskCopy.clearHistoryMenuRow) { if let editor { editor.ask.askToClearHistory(in: editor) } }
+                    .disabled(editor?.ask.changes.rows.isEmpty ?? true)
             }
         }
 

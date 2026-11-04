@@ -4,11 +4,12 @@ import Foundation
 import Testing
 
 /// Ask makes the change straight away, and each request is one row in the
-/// Agent group that can be turned off, on again, or deleted (the user,
-/// 2026-10-20). A request is recorded as the document before and after it, and
-/// turning it off takes that difference out of the document as it is NOW, so
-/// later edits to other layers stay.
-@Suite("Ask: each change one row, off, on and deleted")
+/// Agent group's history (the user, 2026-11-04: "I think it should just be
+/// history rather than having toggles and trashcans"). A request is recorded
+/// as the document before and after it; undo takes a request back, and each
+/// row reads off the document whether its change is still in it, by taking
+/// that difference out of the document as it is NOW.
+@Suite("Ask: each change one row of history")
 struct AskChangesTests {
 
     static func box(_ name: String, x: CGFloat = 0, color: String = "#000000") -> Layer {
@@ -22,7 +23,7 @@ struct AskChangesTests {
 
     // MARK: Taking a change out, and putting it back
 
-    @Test("Turning off a change that added layers takes them out, and turning it on puts them back")
+    @Test("Taking out a change that added layers takes them out")
     func addedLayersComeAndGo() throws {
         let base = Self.box("Screenshot")
         let before = Self.picture([base])
@@ -33,11 +34,9 @@ struct AskChangesTests {
 
         guard case .changed(let off) = change.takenOut(of: after) else { Issue.record("not taken out"); return }
         #expect(off == before)
-        guard case .changed(let on) = change.putBack(into: off) else { Issue.record("not put back"); return }
-        #expect(on == after)
     }
 
-    @Test("An edit to an existing layer goes back to what it was, and comes back")
+    @Test("An edit to an existing layer goes back to what it was")
     func editedLayerRestores() throws {
         let base = Self.box("Card")
         let before = Self.picture([base])
@@ -46,11 +45,9 @@ struct AskChangesTests {
         let change = AskRecordedChange(before: before, after: after)
         guard case .changed(let off) = change.takenOut(of: after) else { Issue.record("not taken out"); return }
         #expect(off.layer(id: base.id)?.frame.origin.x == 0)
-        guard case .changed(let on) = change.putBack(into: off) else { Issue.record("not put back"); return }
-        #expect(on.layer(id: base.id)?.frame.origin.x == 120)
     }
 
-    @Test("A later edit to a different layer stays when an earlier change is turned off")
+    @Test("A later edit to a different layer stays when an earlier change is taken out")
     func laterEditsStay() throws {
         let card = Self.box("Card")
         let other = Self.box("Other", x: 300)
@@ -72,13 +69,9 @@ struct AskChangesTests {
         #expect(off.layer(id: card.id)?.name == "Card")
         #expect(off.layer(id: other.id)?.frame.origin.y == 77)
         #expect(off.layer(id: added.id) != nil)
-        // ...and on again lands the drawn layer where it was, under the later one.
-        guard case .changed(let on) = change.putBack(into: off) else { Issue.record("not put back"); return }
-        #expect(on.layers.map(\.id) == later.layers.map(\.id))
-        #expect(on == later)
     }
 
-    @Test("A later change built on this one blocks turning it off, and changes nothing")
+    @Test("A later change built on this one blocks taking it out, and changes nothing")
     func laterDependencyBlocks() {
         let before = Self.picture([Self.box("Screenshot")])
         var after = before
@@ -116,7 +109,6 @@ struct AskChangesTests {
         after.addLayer(Self.box("Drawn"))
         let change = AskRecordedChange(before: before, after: after)
         #expect(change.takenOut(of: before) == .unchanged)
-        #expect(change.putBack(into: after) == .unchanged)
     }
 
     @Test("A layer added inside a group comes and goes inside that group")
@@ -176,8 +168,8 @@ struct AskChangesTests {
         c.addLayer(Self.box("Two"))
         list.record(asked: "first", sentence: "Drew a shape", before: a, after: b)
         list.record(asked: "second", sentence: "Drew a shape", before: b, after: c)
-        #expect(list.shown.map(\.asked) == ["second", "first"])
-        #expect(list.shown.allSatisfy { $0.isOn })
+        #expect(list.rows.map(\.asked) == ["second", "first"])
+        #expect(list.rows.allSatisfy { $0.isOn })
     }
 
     @Test("A request that changed nothing leaves no row")
@@ -186,67 +178,10 @@ struct AskChangesTests {
         let a = Self.picture([Self.box("One")])
         let made = list.record(asked: "noop", sentence: "x", before: a, after: a)
         #expect(made == nil)
-        #expect(list.shown.isEmpty)
+        #expect(list.rows.isEmpty)
     }
 
-    @Test("Switching a row off and on hands back the document, and the row follows")
-    func switchRow() throws {
-        var list = AskChangeList()
-        let a = Self.picture()
-        var b = a
-        b.addLayer(Self.box("One"))
-        let idMade = list.record(asked: "draw", sentence: "Drew a shape", before: a, after: b)
-        let id = try #require(idMade)
-        guard case .changed(let off) = list.setOn(false, id: id, in: b) else { Issue.record("no change"); return }
-        #expect(off == a)
-        #expect(list.row(id)?.isOn == false)
-        guard case .changed(let on) = list.setOn(true, id: id, in: off) else { Issue.record("no change"); return }
-        #expect(on == b)
-        #expect(list.row(id)?.isOn == true)
-    }
-
-    @Test("A blocked switch stays where it was and the row says why")
-    func blockedRowSays() throws {
-        var list = AskChangeList()
-        let a = Self.picture()
-        var b = a
-        let drawn = Self.box("One")
-        b.addLayer(drawn)
-        let idMade = list.record(asked: "draw", sentence: "Drew a shape", before: a, after: b)
-        let id = try #require(idMade)
-        var later = b
-        later.updateLayer(id: drawn.id) { $0.frame.origin.x = 99 }
-        let blocked = list.setOn(false, id: id, in: later)
-        #expect(blocked == .blocked)
-        #expect(list.row(id)?.isOn == true)
-        #expect(list.row(id)?.note == AskChangeList.laterChangeNote)
-        // The note goes once the row can switch again.
-        guard case .changed = list.setOn(false, id: id, in: b) else { Issue.record("no change"); return }
-        #expect(list.row(id)?.note == nil)
-    }
-
-    @Test("Deleting an on row takes its change out and the row goes; deleting an off row only removes the row")
-    func deleteRows() throws {
-        var list = AskChangeList()
-        let a = Self.picture()
-        var b = a
-        b.addLayer(Self.box("One"))
-        var c = b
-        c.addLayer(Self.box("Two"))
-        let firstMade = list.record(asked: "one", sentence: "Drew a shape", before: a, after: b)
-        let first = try #require(firstMade)
-        let secondMade = list.record(asked: "two", sentence: "Drew a shape", before: b, after: c)
-        let second = try #require(secondMade)
-        guard case .changed(let gone) = list.delete(id: first, in: c) else { Issue.record("no change"); return }
-        #expect(gone.layers.map(\.name) == ["Two"])
-        #expect(list.shown.map(\.id) == [second])
-        guard case .changed(let off) = list.setOn(false, id: second, in: gone) else { Issue.record("no change"); return }
-        let removed = list.delete(id: second, in: off)
-        #expect(removed == .unchanged)
-        #expect(list.shown.isEmpty)
-    }
-
-    @Test("After undo and redo the rows read what the document really holds, and a deleted row undone comes back")
+    @Test("After undo and redo the rows read what the document really holds")
     func resyncAfterUndo() throws {
         var list = AskChangeList()
         let a = Self.picture()
@@ -259,11 +194,36 @@ struct AskChangesTests {
         #expect(list.row(id)?.isOn == false)
         list.follow(b)
         #expect(list.row(id)?.isOn == true)
-        // Deleted, then the delete undone.
-        _ = list.delete(id: id, in: b)
-        #expect(list.shown.isEmpty)
-        list.follow(b)
-        #expect(list.shown.map(\.id) == [id])
+    }
+
+    @Test("A row keeps how Ask understood the request, for its card")
+    func rowKeepsWhatItUnderstood() throws {
+        var list = AskChangeList()
+        let a = Self.picture()
+        var b = a
+        b.addLayer(Self.box("One"))
+        let made = list.record(asked: "draw", sentence: "Drew a shape", before: a, after: b,
+                               understood: ["A blue box", "Drew a shape"])
+        #expect(list.row(try #require(made))?.understood == ["A blue box", "Drew a shape"])
+    }
+
+    @Test("Clear History empties the list and leaves the documents alone")
+    func clearEmptiesTheList() {
+        var list = AskChangeList()
+        let a = Self.picture()
+        var b = a
+        b.addLayer(Self.box("One"))
+        var c = b
+        c.addLayer(Self.box("Two"))
+        list.record(asked: "one", sentence: "Drew a shape", before: a, after: b)
+        list.record(asked: "two", sentence: "Drew a shape", before: b, after: c)
+        list.clear()
+        #expect(list.rows.isEmpty)
+        // What comes next is a row like any other.
+        var d = c
+        d.addLayer(Self.box("Three"))
+        list.record(asked: "three", sentence: "Drew a shape", before: c, after: d)
+        #expect(list.rows.map(\.asked) == ["three"])
     }
 
     // MARK: The row's words

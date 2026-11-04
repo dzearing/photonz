@@ -289,49 +289,8 @@
 .ask-att>.x>.ic{width:9px;height:9px}
 .ask-att>.x:hover{background:var(--glass-thin);color:var(--crit)}
 
-/* ============================================================
-   7 · THE CONVERSATION DOCK — down the LEFT edge
-   ============================================================
-   Docking answers the one thing the overlay cannot do: watch the canvas change
-   while you steer. It goes on the LEFT, opposite the inspector, for two
-   reasons. The conversation is an INPUT — it is where you are typing, next to
-   the tool rail and the reading edge — while the right dock is an OUTPUT you
-   consult. And it keeps the two out of a fight: stacking a tall conversation on
-   top of Layers and Properties made every group there fold.
-
-   Space comes from the RIGHT dock, not the canvas: docking the chat rails the
-   inspector, so the canvas keeps its width and the window does not need to grow
-   to hold a conversation. */
-.cdock{flex:0 0 auto;width:var(--cdock-w,300px);min-width:220px;max-width:420px;
-  display:flex;flex-direction:column;min-height:0;position:relative;z-index:8;
-  border-right:1px solid var(--edge-lo);
-  background:var(--glass-chrome);
-  backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur)}
-.cdock-h{flex:none;display:flex;align-items:center;gap:6px;min-height:32px;
-  padding:4px 6px 4px var(--pad-sm);border-bottom:1px solid var(--edge-lo);
-  font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:660;
-  color:var(--faint)}
-.cdock-h>.ic{width:12px;height:12px;color:var(--accent)}
-.cdock-h .sp{flex:1 1 auto}
-.cdock>.chat{flex:1 1 auto;min-height:0;border-left:0;background:transparent}
-.cdock>.chat>.chat-h{display:none}   /* the dock header IS the chat header */
-.cdock>.chat>.chat-b{padding:var(--gap-sm)}
-.cdock>.chat>.chat-in{padding:var(--gap-sm);border-top:1px solid var(--edge-lo)}
-
-/* ---- constrained: the dock floats and soft-dismisses ----
-   Below the point where a left dock plus a canvas plus a rail still leaves the
-   canvas usable, the conversation stops taking layout width and floats over the
-   canvas instead, dismissed by clicking away or Escape. A panel that cannot
-   afford to be inline becomes an overlay, never a sliver nobody can work in. */
-.cdock.as-overlay{position:absolute;top:var(--gap-sm);left:var(--gap-sm);
-  bottom:var(--gap-sm);width:min(320px,72%);
-  border:1px solid var(--edge-lo);border-radius:var(--r4);
-  box-shadow:var(--lg-shadow);z-index:22}
-/* the soft-dismiss catcher, only while the dock is floating over the content.
-   Keyed off its own sibling rather than off `.edit`, so it behaves the same in a
-   document-less window (`.shell-body`) as it does in an editor row. */
-.cdock-scrim{display:none;position:absolute;inset:0;z-index:21;background:transparent}
-.cdock-scrim:has(~ .cdock.as-overlay){display:block}
+/* The left dock (.cdock) was taken out by the user on 2026-11-04: the right
+   panel's Agent group is the one Agent place. */
 
 @media (prefers-reduced-motion:reduce){
   .step,.work-h,.work-h>.chev,.composer{transition:none}

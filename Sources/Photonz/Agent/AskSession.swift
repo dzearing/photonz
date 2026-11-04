@@ -15,7 +15,7 @@ import PhotonzRender
 /// whole request back (the user, 2026-10-20: "when I ask the agent to do
 /// something, I want it to auto run"). A step that fails takes back what
 /// already ran, so a bad plan leaves the document as it was. What landed is
-/// one row in `changes`, which turns off, on again, or is deleted.
+/// one row of history in `changes`; undo is how a request is taken back.
 ///
 /// A request sent while one is working waits in `line` and runs when the one
 /// before it is finished, so it plans against the document that one left. A
@@ -70,17 +70,10 @@ final class AskSession {
     private(set) var stepsRun = 0
     /// Whether the composer is up over the canvas.
     var isComposerShown = false
-    /// Whether the conversation has its dock at the window's left, the
-    /// mock's `.cdock`. An ask puts it there and its close takes it away; it
-    /// takes room from the canvas, so it never sits over the picture or the
-    /// Agent group. The composer over the canvas floats it back while it is up.
-    var isConversationDocked = false
-    /// Whether this window is wide enough to give the canvas's room to the
-    /// dock. The editor says, as the window changes.
-    var dockFits = true
-    /// The dock is taking the composer's place: the panel drops its own field
-    /// so a person never sees their words typed into two boxes.
-    var isDockHoldingTheField: Bool { isConversationDocked && dockFits }
+    /// The card a row of history shows while the pointer rests on it.
+    let card = AskHistoryHover()
+    /// Clear History is waiting for its yes, at the top of the Agent group.
+    private(set) var isConfirmingClear = false
     /// What `/` lists for the words in the field.
     private(set) var commands = AskCommandList.Listing()
     /// Once this window has asked, the panel keeps its Agent group.
@@ -153,10 +146,14 @@ final class AskSession {
     /// A request is being worked on: a send now waits in `line`.
     var isBusy: Bool { current != nil }
 
-    /// The short state the Agent group's header carries: working while it
-    /// works, else how many changes it holds.
+    /// The short state the Agent group's header carries: working while the
+    /// live request is showing, else how many rows it holds. Read off the
+    /// phase rather than `isBusy`, which a request stopped during a model
+    /// load keeps for as long as that load takes, with no live row to show
+    /// for it (`ask-live-request-at-the-top-walk`, 2026-11-04).
     var chip: String? {
-        isBusy ? AskCopy.workingChip : DockGroupHeader.countChip(changes.shown.count)
+        phase == .planning || phase == .running
+            ? AskCopy.workingChip : DockGroupHeader.countChip(changes.rows.count)
     }
 
     func openComposer() {
@@ -356,7 +353,6 @@ final class AskSession {
     private func send(_ words: String, in editor: EditorState) {
         hasAsked = true
         isComposerShown = false
-        isConversationDocked = true
         // Whatever hides the Agent group comes out first: a video in View, a
         // closed panel. The panel may only be built after this, so the reveal
         // waits for it (`isRevealPending`).
@@ -603,7 +599,8 @@ final class AskSession {
                                                          components: landed.landed.filter { $0.tool == "add_component" }.count) }
                     ?? made
                 changes.record(asked: words, sentence: said,
-                               before: landed.before, after: after, sources: landed.sources, leftOut: landed.leftOut)
+                               before: landed.before, after: after, sources: landed.sources, leftOut: landed.leftOut,
+                               understood: AskUnderstanding.lines(summary: self.plan?.summary ?? "", steps: landed.landed))
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
@@ -867,13 +864,6 @@ final class AskSession {
 
     // MARK: The rows
 
-    /// Turns a request's change off or on, as one undo step. When something
-    /// later builds on it, nothing moves and the row says so.
-    func setChange(_ id: UUID, on: Bool, in editor: EditorState) {
-        guard let document = editor.document else { return }
-        land(changes.setOn(on, id: id, in: document), in: editor)
-    }
-
     /// Puts the person's thumbs on a row (the same thumbs again takes it
     /// back). The request, the document before it and what it made are saved
     /// beside the vote, so a thumbs down becomes a case the eval has never
@@ -903,10 +893,32 @@ final class AskSession {
 
     private func note(_ line: String) { trace.append(line) }
 
-    /// Deletes a request's row, taking its change out first when it is on.
-    func deleteChange(_ id: UUID, in editor: EditorState) {
-        guard let document = editor.document else { return }
-        land(changes.delete(id: id, in: document), in: editor)
+    /// Clear History, from the Agent group's menu or Edit: the question goes
+    /// up in the Agent group, wherever that was.
+    func askToClearHistory(in editor: EditorState) {
+        guard !changes.rows.isEmpty else { return }
+        isConfirmingClear = true
+        editor.bringAgentAreaForward()
+        isRevealPending = true
+        revealRows()
+    }
+
+    func cancelClearHistory() {
+        isConfirmingClear = false
+    }
+
+    /// The list goes, and with it what Ask remembers of the talk. Nothing on
+    /// the canvas changes and undo still steps through it all. A request at
+    /// work carries on, and gets a row when it lands.
+    func clearHistory() {
+        isConfirmingClear = false
+        changes.clear()
+        card.forget()
+        savedVotes = [:]
+        guard !isBusy else { return }
+        said = nil
+        leftOut = nil
+        phase = .idle
     }
 
     /// Picks on the canvas what a row's change made, the mock's Last change
@@ -918,16 +930,9 @@ final class AskSession {
         editor.selectLayers(Set(ids))
     }
 
-    private func land(_ outcome: AskRecordedChange.Outcome, in editor: EditorState) {
-        guard case .changed(let next) = outcome else { return }
-        editor.perform { $0 = next }
-        revealRows()
-    }
-
     /// A change landing picks a layer or drops one, and the panel fills with
     /// that layer's sections or loses them, a frame or two later: the Agent
-    /// group is brought back into view now and once more when that settles,
-    /// so the row a person just pressed stays under their pointer.
+    /// group is brought back into view now and once more when that settles.
     private func revealRows() {
         revealPass &+= 1
         Task { [weak self] in
@@ -1218,11 +1223,8 @@ enum AskCopy {
     /// The mock's whole line, over the budget, so it is the field's tip.
     static let composerTip = "Ask for a change, or type / for a command"
     static let composerHeader = "Agent"
-    static let dockTooltip = "Dock the conversation"
-    static let floatTooltip = "Float the conversation"
     static let commandsHeader = "Commands"
     static let noCommands = "Nothing matches"
-    static let done = "Done"
     static func commandNeeds(_ entry: AskCommandEntry) -> String { "Needs \(entry.needs)" }
     /// A row's request when a command made it, which keeps it out of the
     /// thumbs: there was no request to judge.
@@ -1239,17 +1241,25 @@ enum AskCopy {
     static let nothingRan = "None of it could run. Nothing was changed."
     static let workingLine = "Working…"
     static let setUp = "Open Settings"
-    static let turnOff = "Turn Off"
-    static let turnOn = "Turn On"
-    static let delete = "Delete"
-    static let deleteTooltip = "Delete this change"
+    static let selectMade = "Select What It Made"
+    static let clearHistory = "Clear History…"
+    static let clearHistoryMenuRow = "Clear Agent History…"
+    static let clearHistoryQuestion = "Clear History?"
+    static let clearHistoryYes = "Clear"
+    static let clearHistoryCancel = "Cancel"
+    static let clearHistoryTip = "Empties the list. The canvas stays as it is."
+    static let historyMenuTip = "Clear the history"
+    static let cardUnderstood = "Understood as"
+    static let cardBefore = "Before"
+    static let cardAfter = "After"
+    static let cardUndone = "Undone"
     static let goodResult = "Good Result"
     static let badResult = "Bad Result"
     static let stoppedSentence = "Stopped. Nothing was changed."
     static let noDocumentSentence = "Open a picture or video first."
     /// A drawing that still did not read after being drawn again.
     static let couldNotDraw = "I couldn't make a clear drawing of that. Nothing was changed."
-    static let helpLine = "Each request is one row. Its switch turns the change off and on, and one Command Z takes back the latest. A request sent while one is working waits its turn."
+    static let helpLine = "Each request is one row. Rest on a row to see how it was understood, and click it to select what it made. One Command Z takes back the latest. A request sent while one is working waits its turn."
 }
 
 /// Where a vote on one of Ask's rows is saved:

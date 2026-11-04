@@ -8,7 +8,7 @@
     { "do": "askFromNothing", "from": "newWindow", "text": "a sunset over the sea", "width": 1280, "height": 900, "card": "1-typed" },
     { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "control": "Agent Change 1 Switch", "reads": "on" },
+    { "do": "expect", "control": "Agent Change 1 State", "reads": "standing" },
     { "do": "expectLayers", "atLeast": 2, "atMost": 400, "comment": "the background and whatever the drawing made" },
     { "do": "describe", "stage": "2-drawn", "note": "the sunset Ask drew into the new picture, with its row in the Agent area" },
     { "do": "snapshot", "name": "2-drawn" },

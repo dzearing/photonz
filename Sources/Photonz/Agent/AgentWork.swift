@@ -317,8 +317,8 @@ enum AgentWork {
     }
 
     /// The document at a moment, drawn the way a video export draws it.
-    private static func frame(of document: PhotonzDocument, store: ImageStore, atMS ms: Int,
-                              scale: CGFloat) async -> CGImage? {
+    static func frame(of document: PhotonzDocument, store: ImageStore, atMS ms: Int,
+                      scale: CGFloat) async -> CGImage? {
         let size = CGSize(width: (document.canvasSize.width * scale).rounded(),
                           height: (document.canvasSize.height * scale).rounded())
         let frames = DocumentFrames(document: document, store: store,

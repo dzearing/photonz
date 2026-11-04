@@ -1832,6 +1832,8 @@ struct InspectorPanel: View {
         case .soundEffects:
             // The mock's `#gEffects` plus and its `#efxMenu`.
             return AnyView(AddSoundEffectButton())
+        case .agent:
+            return AnyView(AgentHistoryMenu())
         case .transitions:
             // The mock's `.dgrp-h` plus (`#efxMenu`): the two verbs that act
             // on the picked tile across the whole timeline.

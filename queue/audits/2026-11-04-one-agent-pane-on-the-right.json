@@ -1,0 +1,61 @@
+{
+  "feature": "One Agent pane on the right",
+  "epic": "local-edit",
+  "summary": "The left dock is gone. The right panel's Agent group is the one Agent place: the live request with Stop at its top, and under it a plain history you hover for details.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press Command K, type a request and press Return.",
+      "shot": "2026-11-04-one-agent-pane-0-live.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Watch the Agent group: your words, the live line and Stop are at its top, and nothing opens at the left.",
+      "shot": "2026-11-04-one-agent-pane-1-row.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Rest the pointer on the finished row for a moment.",
+      "shot": "2026-11-04-one-agent-pane-2-card.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Move the pointer onto the card, then away from it."
+    },
+    {
+      "do": "Click the row to select what it made."
+    },
+    {
+      "do": "Press Command Z, then rest on the row again.",
+      "shot": "2026-11-04-one-agent-pane-3-undone.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose Clear History… from the three dots on the Agent header.",
+      "shot": "2026-11-04-one-agent-pane-4-clear.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Clear, then press Command Z.",
+      "shot": "2026-11-04-one-agent-pane-5-cleared.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the card come up soon enough without popping up while you pass over rows?",
+    "Can you get from a row onto the card without it going away?",
+    "Is Understood as telling you how your words were read, or only repeating the row?",
+    "Are the before and after pictures big enough to see what changed?",
+    "Is a yes or no inside the Agent group enough for Clear History, or do you want a dialog?"
+  ],
+  "rough": [
+    "The Ask mocks were changed to match, as the task asked: agent-generate-wt.html draws the rows and the card (2026-11-04-one-agent-pane-mock.png), agent.html loses the dock button and comp-agent.html says the dock is gone. They match the app.",
+    "A request you stop leaves no row, only the Stopped line until the next request. The history holds what changed something.",
+    "After Stop during a model load the row goes at once, but a new request waits for the load to end. Task stop-while-ask-s-model-is-still-loading-lets-the covers it.",
+    "On a video the pictures show the frame at the playhead, so a change elsewhere in time can look the same in both.",
+    "Waiting requests sit above the live one, so the column stays newest first. With nothing waiting the live request is the top line.",
+    "Clear History asks in the Agent group rather than a system dialog, so it is not in a window of its own.",
+    "The card is glass, so it reads mid grey over a white page. Its small labels use the main text colour to stay legible."
+  ]
+}

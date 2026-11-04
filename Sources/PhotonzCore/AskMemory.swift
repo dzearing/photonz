@@ -1,12 +1,13 @@
 import Foundation
 
 /// What Ask remembers of the talk in one window: the latest requests that
-/// still stand (their rows on), what each did in the person's words, and what
+/// still stand (not undone), what each did in the person's words, and what
 /// it made, by id, name, kind and parts, read from the document as it is now.
 /// Handed to the model with every request, so "it", "the water", "bluer" and
 /// "again but smaller" resolve to what was just made (the user, 2026-10-31:
 /// "is there any way for it to understand its previous steps"). It lives as
-/// long as the window's Ask rows: a row deleted or turned off is forgotten.
+/// long as the window's Ask rows: a request undone is forgotten, and Clear
+/// History forgets the lot.
 public enum AskMemory {
 
     /// The most requests remembered: enough for a few rounds of "now make
@@ -42,9 +43,9 @@ public enum AskMemory {
     }
 
     /// The turns `rows` remember, oldest first, the latest `mostTurns` that
-    /// are still on, each with what it made as `document` has it now.
+    /// still stand, each with what it made as `document` has it now.
     public static func turns(from rows: AskChangeList, in document: PhotonzDocument) -> [Turn] {
-        let standing = rows.shown.filter(\.isOn).prefix(mostTurns)
+        let standing = rows.rows.filter(\.isOn).prefix(mostTurns)
         return standing.reversed().map { row in
             let made = row.change.madeLayerIDs(in: document).compactMap { id -> Made? in
                 guard let layer = document.layer(id: id) else { return nil }

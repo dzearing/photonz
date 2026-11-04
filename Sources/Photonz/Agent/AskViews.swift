@@ -3,8 +3,8 @@ import SwiftUI
 
 // The three places Ask shows (`docs/design/ask.md`, the mock
 // `agent-generate-wt.html`): the Ask button in the title bar, the composer it
-// opens over the canvas, and the Agent group in the dock that holds a row for
-// each change.
+// opens over the canvas, and the Agent group in the right panel, the one place
+// a request is followed: the live request, and under it the history.
 // No model is chosen anywhere here: that lives in Settings (the user,
 // 2026-10-19).
 
@@ -123,25 +123,12 @@ struct AskComposerOverlay: View {
                 Text(AskCopy.composerHeader).font(.system(size: 12, weight: .semibold))
                 Spacer()
                 Text(AskCopy.onDevice).font(.system(size: 11)).foregroundStyle(.secondary)
-                // The mock's dock button: the conversation down the left edge.
-                if ask.dockFits {
-                    Button {
-                        ask.isConversationDocked = true
-                        ask.closeComposer()
-                    } label: {
-                        Image(systemName: "sidebar.left").font(.system(size: 11, weight: .semibold))
-                    }
-                    .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
-                    .toolTip(AskCopy.dockTooltip)
-                    .playtestControl("Ask Dock It", detail: AskCopy.dockTooltip)
-                }
                 Button { ask.closeComposer() } label: {
                     Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
                 }
                 .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
                 .toolTip("Close", key: "esc")
             }
-            AskConversationLines()
             if fieldHasFocus { AskCommandsList() }
             HStack(alignment: .bottom, spacing: 8) {
                 TextField(AskCopy.composerPlaceholder, text: $ask.draft, axis: .vertical)
@@ -184,20 +171,24 @@ struct AskComposerOverlay: View {
     }
 }
 
-/// The Agent group in the dock: one row a request, newest at the top, each
-/// saying what changed, with a switch to turn it off and on and a delete. The
-/// steps themselves are never shown (the user, 2026-10-20). Requests sent
-/// while one works sit above it, newest first, each with a cancel, so a
-/// request moves down the list as it goes and never jumps.
+/// The Agent group, the one place a request is followed (the user,
+/// 2026-11-04): the live request with Stop, and under it the history, one row
+/// a request, newest at the top, each saying what changed. A row has no switch
+/// and no delete: undo is how a request is taken back, and what it made can be
+/// changed by hand, so turning it off would mean nothing plain. Resting on a
+/// row shows its card (`AskHistoryCardOverlay`). Requests sent while one works
+/// sit above it, newest first, each with a cancel, so a request moves down the
+/// list as it goes and never jumps.
 struct AgentPanel: View {
     @Environment(EditorState.self) private var editorState
     @FocusState private var fieldHasFocus: Bool
 
     var body: some View {
         let ask = editorState.ask
-        let rows = ask.changes.shown
+        let rows = ask.changes.rows
         let waiting = ask.line.shown
         VStack(alignment: .leading, spacing: 6) {
+            if ask.isConfirmingClear { clearQuestion(ask) }
             ForEach(Array(waiting.enumerated()), id: \.element.id) { index, request in
                 // Numbered in the order they will run: 1 is next.
                 waitingRow(request, number: waiting.count - index, ask: ask)
@@ -232,14 +223,14 @@ struct AgentPanel: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                            changeRow(row, number: index + 1, ask: ask)
+                            AgentHistoryRow(row: row, number: index + 1)
                         }
                     }
                 }
                 .frame(maxHeight: 240)
                 .fixedSize(horizontal: false, vertical: rows.count <= 8)
             }
-            if !ask.isDockHoldingTheField { chatIn(ask) }
+            chatIn(ask)
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
@@ -326,88 +317,28 @@ struct AgentPanel: View {
         .playtestControl("Agent Waiting \(number)", detail: "\(request.words), waiting")
     }
 
-    private func changeRow(_ row: AskChangeList.Row, number: Int, ask: AskSession) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
-                // The mock's Last change click: the words pick what it made.
-                Button { ask.pickChange(row.id, in: editorState) } label: {
-                    Text(row.sentence)
-                        .font(.system(size: 11.5))
-                        .foregroundStyle(row.isOn ? .primary : .secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .help(row.asked)
-                .playtestControl("Agent Change \(number) Words", detail: row.sentence)
-                if !row.asked.hasPrefix(AskCopy.commandMark) { voteButtons(row, number: number, ask: ask) }
-                Toggle("", isOn: Binding(get: { row.isOn },
-                                         set: { ask.setChange(row.id, on: $0, in: editorState) }))
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .help(row.isOn ? AskCopy.turnOff : AskCopy.turnOn)
-                    .playtestControl("Agent Change \(number) Switch", detail: row.isOn ? "on" : "off")
-                Button { ask.deleteChange(row.id, in: editorState) } label: {
-                    Image(systemName: "trash").font(.system(size: 10.5))
-                }
-                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
-                .toolTip(AskCopy.deleteTooltip)
-                .playtestControl("Agent Change \(number) Delete", detail: AskCopy.deleteTooltip)
-            }
-            if let leftOut = row.leftOut {
-                Text(leftOut)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .playtestControl("Agent Change \(number) Left Out", detail: leftOut)
-            }
-            if let note = row.note {
-                Text(note)
-                    .font(.system(size: 10.5))
-                    .foregroundStyle(.secondary)
-                    .playtestControl("Agent Change \(number) Note", detail: note)
-            }
+    /// Clear History's yes or no, where the group's menu was clicked: no
+    /// window to come up, and the keyboard stays with the canvas.
+    private func clearQuestion(_ ask: AskSession) -> some View {
+        HStack(spacing: 6) {
+            Text(AskCopy.clearHistoryQuestion)
+                .font(.system(size: 11.5, weight: .medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .help(AskCopy.clearHistoryTip)
+            Button(AskCopy.clearHistoryCancel) { ask.cancelClearHistory() }
+                .controlSize(.small)
+                .playtestControl("Agent Clear Cancel", detail: AskCopy.clearHistoryCancel)
+            // No destructive role: with one, a click on this button did nothing
+            // in a window that was not key (`ask-one-agent-pane-walk`, 2026-11-04).
+            Button(AskCopy.clearHistoryYes) { ask.clearHistory() }
+                .controlSize(.small)
+                .help(AskCopy.clearHistoryTip)
+                .playtestControl("Agent Clear Yes", detail: AskCopy.clearHistoryYes)
         }
-        .padding(.vertical, 3)
-        .contentShape(.rect)
-        .contextMenu {
-            Button(row.isOn ? AskCopy.turnOff : AskCopy.turnOn) {
-                ask.setChange(row.id, on: !row.isOn, in: editorState)
-            }
-            Button(AskCopy.delete) { ask.deleteChange(row.id, in: editorState) }
-            if !row.asked.hasPrefix(AskCopy.commandMark) {
-                Divider()
-                Toggle(AskCopy.goodResult, isOn: Binding(get: { row.verdict == .up },
-                                                         set: { _ in ask.vote(.up, on: row.id, in: editorState) }))
-                Toggle(AskCopy.badResult, isOn: Binding(get: { row.verdict == .down },
-                                                        set: { _ in ask.vote(.down, on: row.id, in: editorState) }))
-            }
-        }
-        .playtestControl("Agent Change \(number)", detail: "\(row.sentence), \(row.isOn ? "on" : "off")")
+        .playtestControl("Agent Clear Question", detail: AskCopy.clearHistoryQuestion)
     }
 
-    /// A quiet thumbs up and down, faint until picked. A thumbs down keeps
-    /// the request as a test case the eval has never seen.
-    private func voteButtons(_ row: AskChangeList.Row, number: Int, ask: AskSession) -> some View {
-        HStack(spacing: 0) {
-            ForEach([AskVerdict.up, .down], id: \.self) { verdict in
-                let picked = row.verdict == verdict
-                let name = verdict == .up ? "Up" : "Down"
-                Button { ask.vote(verdict, on: row.id, in: editorState) } label: {
-                    Image(systemName: "hand.thumbs\(verdict == .up ? "up" : "down")\(picked ? ".fill" : "")")
-                        .font(.system(size: 10.5))
-                }
-                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: picked ? .primary : Color.secondary.opacity(0.7)))
-                .toolTip(verdict == .up ? AskCopy.goodResult : AskCopy.badResult)
-                .playtestControl("Agent Change \(number) Thumbs \(name)", detail: picked ? "picked" : "not picked")
-            }
-        }
-    }
-
-    /// The mock's `.chat-in`: ask again from the dock.
+    /// The mock's `.chat-in`: ask again from the panel.
     private func chatIn(_ ask: AskSession) -> some View {
         @Bindable var ask = ask
         return VStack(alignment: .leading, spacing: 6) {
@@ -554,140 +485,5 @@ struct AskCommandsList: View {
         case .view: "eye"
         case .document: "doc"
         }
-    }
-}
-
-/// The mock's `.chat-b`, the same in the composer and in the dock: what was
-/// last asked, and whether it is still working or what came of it.
-struct AskConversationLines: View {
-    @Environment(EditorState.self) private var editorState
-
-    var body: some View {
-        let ask = editorState.ask
-        if !ask.asked.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(ask.asked)
-                    .font(.system(size: 12))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .foregroundStyle(.white)
-                    .background(Color.accentColor, in: .rect(cornerRadius: 10))
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .playtestControl("Ask Asked", detail: ask.asked)
-                state(ask)
-            }
-        }
-    }
-
-    @ViewBuilder private func state(_ ask: AskSession) -> some View {
-        switch ask.phase {
-        case .planning, .running:
-            HStack(spacing: 6) {
-                ProgressView().controlSize(.small)
-                Text(ask.liveStage.line)
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .playtestControl("Ask State", detail: ask.liveStage.line)
-                Button(AskCopy.stop) { ask.stop() }
-                    .controlSize(.small)
-                    .toolTip(AskCopy.stopTooltip)
-                    .playtestControl("Ask Stop", detail: AskCopy.stop)
-            }
-        case .stopped(let sentence):
-            answer(sentence)
-        case .ran:
-            answer(ask.leftOut ?? ask.said ?? ask.changes.shown.first?.sentence ?? AskCopy.done)
-        case .idle:
-            EmptyView()
-        }
-    }
-
-    private func answer(_ words: String) -> some View {
-        Text(words)
-            .font(.system(size: 11.5))
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-            .playtestControl("Ask State", detail: words)
-    }
-}
-
-/// The mock's `.cdock`, the conversation down the window's left edge: where
-/// Ask goes after a request, so what was asked and how it is going stay on
-/// screen. It takes its room from the canvas rather than floating over it, so
-/// it can cover neither the picture being changed nor the Agent group. The
-/// keyboard stays with the canvas until the field is clicked, so Command Z
-/// after a request undoes the request.
-struct AskConversationDock: View {
-    @Environment(EditorState.self) private var editorState
-    @FocusState private var fieldHasFocus: Bool
-
-    static let width: CGFloat = 300
-    /// Below this the canvas would be left too little, and the Agent group
-    /// alone says how a request is going.
-    static let narrowestWindow: CGFloat = 900
-
-    var body: some View {
-        @Bindable var ask = editorState.ask
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 6) {
-                Image(systemName: "sparkles").font(.system(size: 12, weight: .semibold))
-                Text(AskCopy.composerHeader).font(.system(size: 12, weight: .semibold))
-                Spacer()
-                Text(AskCopy.onDevice).font(.system(size: 11)).foregroundStyle(.secondary)
-                Button {
-                    ask.isConversationDocked = false
-                    ask.openComposer()
-                } label: {
-                    Image(systemName: "sidebar.left").font(.system(size: 11, weight: .semibold))
-                }
-                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
-                .toolTip(AskCopy.floatTooltip)
-                .playtestControl("Ask Float It", detail: AskCopy.floatTooltip)
-                Button { ask.isConversationDocked = false } label: {
-                    Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
-                }
-                .buttonStyle(IconActionButtonStyle(diameter: 20, restingTint: .secondary))
-                .toolTip("Close")
-                .playtestControl("Ask Dock Close", detail: "the conversation dock's close")
-            }
-            .padding(10)
-            Divider()
-            ScrollView {
-                AskConversationLines().padding(10)
-            }
-            .frame(maxHeight: .infinity)
-            Divider()
-            VStack(alignment: .leading, spacing: 6) {
-                if fieldHasFocus { AskCommandsList() }
-                HStack(alignment: .bottom, spacing: 6) {
-                    TextField(AskCopy.composerPlaceholder, text: $ask.draft, axis: .vertical)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 12.5))
-                        .lineLimit(1...4)
-                        .focused($fieldHasFocus)
-                        .askFieldKeys(ask, in: editorState)
-                        .onExitCommand { KeyboardHandback.toCanvas() }
-                        .help(AskCopy.composerTip)
-                        .playtestControl("Ask Dock Request", detail: "the conversation dock's field")
-                    Button { ask.submit(in: editorState) } label: {
-                        Image(systemName: "sparkles")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .disabled(!ask.canSubmit)
-                    .toolTip(AskCopy.buttonTooltip)
-                    .playtestControl("Ask Dock Send", detail: AskCopy.buttonTooltip)
-                }
-            }
-            .padding(10)
-        }
-        .frame(width: Self.width)
-        .frame(maxHeight: .infinity)
-        .background(.regularMaterial)
-        .overlay(alignment: .trailing) { Divider() }
-        .playtestControl("Ask Dock", detail: editorState.ask.asked)
     }
 }

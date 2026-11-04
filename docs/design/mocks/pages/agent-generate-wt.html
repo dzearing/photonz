@@ -6,6 +6,23 @@
 <title>Photonz · agent-generate-wt</title>
 <link rel="stylesheet" href="/shared/photonz-ds.css">
 <style>
+  /* THE USER CHANGED THIS PAGE ON 2026-11-04. The right panel's Agent group is
+     the one Agent place: the live request with Stop at its top, under it a
+     plain history, one row a request, no switch and no trash. Resting on a row
+     shows #histCard to the left of the panel: how the words were understood and
+     small before and after pictures. There is no left dock. Undo takes a
+     request back, and Clear History in the group's menu empties the list. */
+  .hcard{position:absolute;right:10px;bottom:10px;width:288px;z-index:9;padding:12px;border-radius:14px;
+    background:var(--glass-thick,var(--glass-thin));backdrop-filter:blur(24px);box-shadow:0 6px 16px rgba(0,0,0,.18);
+    display:flex;flex-direction:column;gap:8px;font-size:11.5px}
+  .hcard b{font-size:12px}
+  .hcard .lab{font-size:10.5px;font-weight:600}
+  .hcard .pics{display:flex;gap:8px}
+  .hcard .pics>div{flex:1 1 0;font-size:10.5px;font-weight:600}
+  .hcard .pic{height:76px;border-radius:5px;background:#fff;margin-bottom:3px}
+  .hcard .pic.after{background:linear-gradient(#fff 45%,#7c4dff 45%,#ff5d8f)}
+  .hcard .votes{display:flex;justify-content:flex-end;gap:4px}
+  .edit:has(#agentChanges .step:hover) #histCard{display:flex !important}
   /* agent-generate-wt · an OPERATED walkthrough (PRODUCT-MODEL §4d): ONE app
      screen, rendered once, driven by the steps below. The agent is not a
      separate app or a floating chat: you reach it from the same command
@@ -97,6 +114,15 @@
 
           <div class="cnv">
             <div class="canvas">
+              <!-- The card a history row shows on hover, left of the panel. -->
+              <div class="hcard wt-off" id="histCard">
+                <b>make the Studio CTA bigger and use the accent</b>
+                <div><div class="lab">Understood as</div>
+                  <div>The Studio button, larger, in the accent colour</div>
+                  <div>Recoloured the Studio button</div></div>
+                <div class="pics"><div><div class="pic"></div>Before</div><div><div class="pic after"></div>After</div></div>
+                <div class="votes"><i class="ic sm ic-check"></i><i class="ic sm ic-x"></i></div>
+              </div>
               <div class="artboard-label">1440 × 900 · pricing-section</div>
 
               <div class="selwrap">
@@ -349,10 +375,9 @@
 
                 <div id="agentChanges" class="wt-off">
                   <div class="section">
-                    <div class="sec-h">Last change <span class="mut">2 commands · undoable</span></div>
-                    <div class="step" id="chgSize" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">CTA · Size</span><span class="sv"><span>11</span><i class="ic ic-arrow-right"></i><b>13</b></span></div>
-                    <div class="step" id="chgFill" role="button" tabindex="0" data-state="done"><span class="st"><i class="ic ic-check"></i></span><span class="sl">CTA · Fill</span><span class="sv"><b>Accent / 500</b></span></div>
-                    <p class="note">Click a change to select it on the canvas and keep going by hand.</p>
+                                        <div class="step" id="chgSize" role="button" tabindex="0"><span class="sl">Made the Studio button bigger</span></div>
+                    <div class="step" id="chgFill" role="button" tabindex="0"><span class="sl">Filled the Studio button with Accent</span></div>
+                    <p class="note">Click a row to select what it made. Rest on one to see how it was understood.</p>
                   </div>
                 </div>
 
@@ -423,9 +448,7 @@
             <div class="menuitem"><i class="ic ic-component"></i> Make component <span class="sc">⌥⌘K</span></div>
           </div>
           <div class="popover menu pop" id="agentMenu" style="position:absolute;right:var(--s4);top:34px;width:220px;z-index:11">
-            <div class="menuitem"><i class="ic ic-sliders"></i> Choose a model…</div>
-            <div class="menuitem"><i class="ic ic-undo"></i> Undo the whole batch <span class="sc">⌘Z</span></div>
-            <div class="menuitem"><i class="ic ic-export"></i> Copy plan as commands</div>
+            <div class="menuitem"><i class="ic ic-undo"></i> Clear History…</div>
           </div>
           <div class="popover menu pop" id="libMenu" style="position:absolute;right:var(--s4);bottom:var(--s4);width:216px;z-index:11">
             <div class="menuitem"><i class="ic ic-import"></i> Import files <span class="sc">⇧⌘I</span></div>
@@ -534,7 +557,7 @@
           data-show="#cvPricing,#layersList,#instRing1,#instRing2,#instRing3,#selCard2,#propsSel,#agentChanges"
           data-hide="#agentEmpty,#cvEmpty,#layersEmpty,#propsEmpty,#agentPlan"
           data-css="#ctaStudio=background:var(--accent);color:var(--accent-ink);font-size:13px;padding:10px 0"
-          data-set="#agentState=2 commands|#layerCount=4|#propKind=Instance|#ctaStudio=Choose Studio">
+          data-set="#agentState=2|#layerCount=4|#propKind=Instance|#ctaStudio=Choose Studio">
         <div class="wt-cap auto">
           <span class="wt-n">7</span>
           <p class="wt-do"><b>send</b>, with the request typed in the Agent group</p>
@@ -551,12 +574,29 @@
           data-show="#cvPricing,#layersList,#instRing1,#instRing2,#instRing3,#propsSel,#agentChanges,#selCta"
           data-hide="#agentEmpty,#cvEmpty,#layersEmpty,#propsEmpty,#agentPlan,#selCard2"
           data-css="#ctaStudio=background:var(--accent);color:var(--accent-ink);font-size:13px;padding:10px 0|#pFillSw=background:var(--accent)"
-          data-set="#agentState=2 commands|#layerCount=4|#propKind=Text layer|#ctaStudio=Choose Studio|#pFillVal=Accent / 500|#pFillNote=The change is a normal bound style on a normal layer. Nothing about it is agent-only, so you can keep editing or undo just this line.">
+          data-set="#agentState=2|#layerCount=4|#propKind=Text layer|#ctaStudio=Choose Studio|#pFillVal=Accent / 500|#pFillNote=The change is a normal bound style on a normal layer. Nothing about it is agent-only, so you can keep editing or undo just this line.">
         <div class="wt-cap auto">
           <span class="wt-n">8</span>
-          <p class="wt-do">the <b>CTA · Fill</b> change row</p>
-          <p class="wt-where">the Agent group, in <b>Last change</b></p>
+          <p class="wt-do">the <b>Filled the Studio button with Accent</b> row</p>
+          <p class="wt-where">the Agent group</p>
           <p class="wt-res">the selection jumps to that exact layer on the canvas and Properties shows the bound style. The agent hands the work back as ordinary layers, which is the whole point: the design stays yours.</p>
+        </div>
+      </li>
+
+      <li class="wt-step"
+          data-title="See how a request was understood"
+          data-cue="#chgFill" data-cue-label="Rest on the row" data-cue-place="left"
+          data-open="#gAgent,#gProps,#gLibrary" data-scope="styles"
+          data-select="#lrCard2" data-activate="#chgFill"
+          data-show="#cvPricing,#layersList,#instRing1,#instRing2,#instRing3,#propsSel,#agentChanges,#selCta,#histCard"
+          data-hide="#agentEmpty,#cvEmpty,#layersEmpty,#propsEmpty,#agentPlan,#selCard2"
+          data-css="#ctaStudio=background:var(--accent);color:var(--accent-ink);font-size:13px;padding:10px 0|#pFillSw=background:var(--accent)"
+          data-set="#agentState=2|#layerCount=4|#propKind=Text layer|#ctaStudio=Choose Studio|#pFillVal=Accent / 500|#pFillNote=The change is a normal bound style on a normal layer. Nothing about it is agent-only, so you can keep editing or undo just this line.">
+        <div class="wt-cap auto">
+          <span class="wt-n">9</span>
+          <p class="wt-do">Rest the pointer on a row</p>
+          <p class="wt-where">the Agent group</p>
+          <p class="wt-res">a card comes up to the left of the panel: how your words were understood, and small before and after pictures. It stays while the pointer is on it. Undo takes a request back; the row has no switch and no trash.</p>
         </div>
       </li>
 

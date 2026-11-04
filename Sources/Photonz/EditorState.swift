@@ -2969,6 +2969,7 @@ final class EditorState {
     /// Memory is short on the Mac: drop what is only kept to be quick, all of
     /// which is drawn again when next needed (`MemoryRelief`).
     func letGoOfCaches() {
+        ask.card.letGoOfPictures()
         thumbnailCache = [:]
         flatPictureMemo = [:]
         tileRenderer.letGo()

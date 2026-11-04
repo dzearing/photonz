@@ -201,6 +201,8 @@ struct EveryMenuCommandHasANameTests {
             "an agent has undo and redo tools of their own",
         "body: \"Ask…\"":
             "opens the Ask composer for a person; an agent is already the one asking",
+        "body: AskCopy.clearHistoryMenuRow":
+            "empties a person's list of what they asked, after their yes in the panel; it changes nothing an agent works on",
         "captureRows: CaptureMenuNames.captureRegion":
             "captures the screen, which needs a person at the Mac and the Screen Recording grant; open_document opens what History holds",
         "captureRows: CaptureMenuNames.captureFullScreen":

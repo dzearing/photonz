@@ -21037,10 +21037,9 @@ private final class Run {
                 // Every address the last request's web page loaded, the typed
                 // one first (`AskWebReader`): the eval's network check.
                 "webRequests": editor.ask.webRequests,
-                // The Agent group's rows, newest first: what changed, on or off.
-                "changes": editor.ask.changes.shown.map {
-                    "\($0.sentence) (\($0.isOn ? "on" : "off"))\($0.note.map { ": \($0)" } ?? "")"
-                },
+                // The history's rows, newest first: what changed, and off
+                // once it was undone.
+                "changes": editor.ask.changes.rows.map { "\($0.sentence) (\($0.isOn ? "on" : "off"))" },
             ] as [String: Any],
             // ...and what the canvas thinks is under the pointer, which is the
             // other half: these two disagreeing means the cue was right and the

@@ -1,14 +1,13 @@
 import Foundation
 
-// Ask makes the change straight away (the user, 2026-10-20: "I don't need to
-// see all the actions taken, i just need a row that explains the change and a
-// way to toggle it or delete it"). Each request is recorded as the document
-// before and after it. Turning the row off takes that difference out of the
-// document as it is NOW, and turning it on puts it back, by a three-way merge
-// over the document's saved form: what the request changed is undone or
-// redone, and everything changed since, anywhere else, stays. When something
-// later changed the very thing the request made, the merge refuses rather
-// than guess, and the row says so.
+// Ask makes the change straight away, and each request is one row of history
+// (the user, 2026-11-04: "I think it should just be history rather than having
+// toggles and trashcans"). Undo is how a request is taken back. Each request is
+// recorded as the document before and after it, which is what the row's card
+// pictures and what lets the row read, after an undo or a redo, whether its
+// change is still in the document: a three-way merge over the document's saved
+// form takes the difference out of the document as it is NOW, and if that finds
+// something to take out, the change is there.
 
 /// One request's change: the document just before it ran and just after.
 public struct AskRecordedChange: Hashable, Sendable {
@@ -21,7 +20,7 @@ public struct AskRecordedChange: Hashable, Sendable {
     }
 
     public enum Outcome: Hashable, Sendable {
-        /// The document with the change taken out (or put back).
+        /// The document with the change taken out.
         case changed(PhotonzDocument)
         /// Nothing to do: the document already reads that way.
         case unchanged
@@ -47,11 +46,6 @@ public struct AskRecordedChange: Hashable, Sendable {
         let edited = after.allLayerIDs.filter { present.contains($0) && before.layer(id: $0) != after.layer(id: $0) }
         let editedSet = Set(edited)
         return edited.filter { id in !editedSet.contains { after.parentID(of: $0) == id } }
-    }
-
-    /// `current` with this change made again.
-    public func putBack(into current: PhotonzDocument) -> Outcome {
-        DocumentMerge.apply(from: before, to: after, onto: current)
     }
 }
 
@@ -149,9 +143,9 @@ enum DocumentMerge {
     }
 }
 
-/// Ask's rows in one window, newest first: one per request, each on or off.
-/// Rows last for the session, beside the undo history they lean on; they hold
-/// whole document snapshots, which have no business in the saved file.
+/// Ask's history in one window, newest first: one row per request. Rows last
+/// for the session, beside the undo history they lean on; they hold whole
+/// document snapshots, which have no business in the saved file.
 public struct AskChangeList: Hashable, Sendable {
 
     public struct Row: Identifiable, Hashable, Sendable {
@@ -163,24 +157,20 @@ public struct AskChangeList: Hashable, Sendable {
         /// What the request did not make, in one short line (`AskPlanRun`).
         public let leftOut: String?
         public let change: AskRecordedChange
+        /// How Ask understood the request, in a few plain lines
+        /// (`AskUnderstanding`), for the row's card.
+        public let understood: [String]
+        /// Whether the change is in the document: false once it was undone.
         public internal(set) var isOn = true
-        /// Deleted. Kept out of sight so an undo of the delete brings it back.
-        public internal(set) var isDeleted = false
-        /// Why the last switch did nothing, when it could not.
-        public internal(set) var note: String?
         /// Where each drawing the request made came from, in step order.
         public internal(set) var sources: [AskDrawingSource] = []
         /// The person's thumbs on it, if any.
         public internal(set) var verdict: AskVerdict?
     }
 
-    public static let laterChangeNote = "A later change builds on this."
-
     public private(set) var rows: [Row] = []
 
     public init() {}
-
-    public var shown: [Row] { rows.filter { !$0.isDeleted } }
 
     public func row(_ id: UUID) -> Row? { rows.first { $0.id == id } }
 
@@ -188,44 +178,19 @@ public struct AskChangeList: Hashable, Sendable {
     @discardableResult
     public mutating func record(asked: String, sentence: String, before: PhotonzDocument,
                                 after: PhotonzDocument, sources: [AskDrawingSource] = [],
-                                leftOut: String? = nil) -> UUID? {
+                                leftOut: String? = nil, understood: [String] = []) -> UUID? {
         guard before != after else { return nil }
         let row = Row(id: UUID(), asked: asked, sentence: sentence, leftOut: leftOut,
-                      change: AskRecordedChange(before: before, after: after), sources: sources)
+                      change: AskRecordedChange(before: before, after: after), understood: understood,
+                      sources: sources)
         rows.insert(row, at: 0)
         return row.id
     }
 
-    /// Turns a row's change on or off in `document`. On `.changed`, the caller
-    /// lands the document it hands back as one undo step.
-    public mutating func setOn(_ on: Bool, id: UUID, in document: PhotonzDocument) -> AskRecordedChange.Outcome {
-        guard let index = rows.firstIndex(where: { $0.id == id }) else { return .unchanged }
-        let change = rows[index].change
-        let outcome = on ? change.putBack(into: document) : change.takenOut(of: document)
-        if outcome == .blocked {
-            rows[index].note = Self.laterChangeNote
-        } else {
-            rows[index].isOn = on
-            rows[index].note = nil
-        }
-        return outcome
-    }
-
-    /// Deletes a row for good: its change comes out first if it is on.
-    public mutating func delete(id: UUID, in document: PhotonzDocument) -> AskRecordedChange.Outcome {
-        guard let index = rows.firstIndex(where: { $0.id == id }) else { return .unchanged }
-        var outcome = AskRecordedChange.Outcome.unchanged
-        if rows[index].isOn {
-            outcome = rows[index].change.takenOut(of: document)
-            if outcome == .blocked {
-                rows[index].note = Self.laterChangeNote
-                return .blocked
-            }
-        }
-        rows[index].isOn = false
-        rows[index].isDeleted = true
-        rows[index].note = nil
-        return outcome
+    /// Clear History: the list goes. Nothing on the canvas changes, and undo
+    /// still steps through everything the requests did.
+    public mutating func clear() {
+        rows = []
     }
 
     /// Puts the person's thumbs on a row: the same thumbs again takes it
@@ -238,20 +203,16 @@ public struct AskChangeList: Hashable, Sendable {
     }
 
     /// Reads each row's state off `document` after an undo or a redo stepped
-    /// it: a row is on while there is something of its change to take out. A
-    /// deleted row whose change is back (its delete undone) comes back too.
+    /// it: a row is on while there is something of its change to take out.
+    /// Something built on it since can't be read either way, and the row
+    /// stays as it was.
     public mutating func follow(_ document: PhotonzDocument) {
         for index in rows.indices {
             switch rows[index].change.takenOut(of: document) {
-            case .changed:
-                rows[index].isOn = true
-                rows[index].isDeleted = false
-            case .unchanged:
-                rows[index].isOn = false
-            case .blocked:
-                break
+            case .changed: rows[index].isOn = true
+            case .unchanged: rows[index].isOn = false
+            case .blocked: break
             }
-            rows[index].note = nil
         }
     }
 }
