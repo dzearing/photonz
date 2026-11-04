@@ -15500,3 +15500,12 @@
 {"t":"2026-11-04T05:21:04.297Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-04T05:21:04.374Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-11-04T05:21:22.627Z","ev":"task_done","id":"ask-on-the-local-model-makes-results-that-look-f","from":"in_progress","note":"Ask's held-out layout reads 66.3 (bar 30) and video 59.9 (bar 55) on final code 50c54b72, total 64.5, with the cause named from totals. A placed copy now takes its own words, and a wrong component name is refused while planning. Verified by unit tests, Scripts/test.sh, three walks and the audit 2026-11-04-ask-copy-words.json. Two of four pricing tries got no first answer; folded into ask-s-first-answer-after-its-model-loads-comes-i."}
+{"t":"2026-11-04T05:52:02.472Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-04T05:52:02.563Z","ev":"slice_pass","walks":12,"passed":10,"failed":2,"seconds":1806,"of":1087,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-04T05:52:02.738Z","ev":"task_started","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","title":"A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app","priority":"p1-high"}
+{"t":"2026-11-04T05:59:30.648Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-04T06:09:37.414Z","ev":"task_walks","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","walks":[]}
+{"t":"2026-11-04T06:09:37.481Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-04T06:09:37.549Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-04T06:09:37.617Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-04T06:09:37.696Z","ev":"task_blocked","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":"in_progress","note":"Cause not found and nothing fixed. Not reproduced here: 30/30 real Chrome pastes on the probe build. Needs the person: run Scripts/clipboard-timing/other-mac-report.sh on the other Mac and bring back its report; the released-only run needs Dev quit and native targets need an Accessibility grant. No decision card: this is a request to run something, not a product choice. Audit queue/audits/2026-11-03-screenshot-clipboard-one-photonz.json.","noQuestion":true}

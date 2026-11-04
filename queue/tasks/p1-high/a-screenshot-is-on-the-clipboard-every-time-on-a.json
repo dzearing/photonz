@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 1e-8,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T01:36:23.358Z",
-  "updated": "2026-11-04T01:36:23.478Z",
+  "updated": "2026-11-04T06:09:37.695Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake), correcting the closed task: 'when i earlier said that i wasn't getting photos into the clipboard this was on another machine not running 2 copies of photonz, so your assumptions were wrong.' The other Mac's version and the apps pasted into are being asked; add them to this log when known. Prior work: every-screenshot-is-on-the-clipboard-every-time (done, c999166a, keep it: one running Photonz holds the capture shortcuts). Its own log admits: 'pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves'. Code: Sources/Photonz/Capture/CaptureStore.swift, Sources/Photonz/ClipboardHandOff.swift, Sources/PhotonzRender/ClipboardPicture.swift.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-11-04T01:36:23.477Z",
       "note": "seq 3980 -> 1e-8"
+    },
+    {
+      "t": "2026-11-04T05:52:02.734Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-04T05:59:30.646Z",
+      "note": "Runner side effect, 2026-11-03 21:55:09: my one mcp__photonz__list_documents call launched /Applications/Photonz.app 0.23.0 (pid 75545) through this session's photonz-mcp helper, which opens the installed app when none is listening. Not asked for by anyone. It ran about 4 minutes beside Photonz Dev and may have taken the capture shortcuts while it did. Quit by pid with SIGTERM once traced; Dev never touched. No more photonz MCP calls this run. The Chrome run at 21:56 overlapped it, but its captures came from the walk, not the shortcut."
+    },
+    {
+      "t": "2026-11-04T06:09:37.412Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-11-04T06:09:37.479Z",
+      "note": "Not reproduced, not fixed. Probe build (release config), walk-landed captures, Dev running: real Chrome paste 30/30 (Scripts/clipboard-timing/run.sh chrome), sandboxed stand-in 15/15 at about 2 per cell. Chrome took the file (types=[Files]), not public.png. Chrome run 1 overlapped the installed app I launched by accident; its captures came from the walk."
+    },
+    {
+      "t": "2026-11-04T06:09:37.547Z",
+      "note": "Acceptance state. 1 NOT MET: needs Dev quit, which the runner contract forbids, and the loop cannot press a capture shortcut. 2 NOT MET: Chrome only; Preview, Notes, Safari, Messages, Mail, Claude need Accessibility (AXIsProcessTrusted false, Apple Events -1743); Slack and Teams not installed. 3 PARTLY: sandbox read checked at small sample; idle, sleep, hidden, macOS 26 and provider lifetime past 3 s not checked. 4 not triggered: promised data not shown to be the cause, so nothing changed. 5 NOT MET."
+    },
+    {
+      "t": "2026-11-04T06:09:37.615Z",
+      "note": "Unconfirmed suspects for the other Mac: (a) macOS screenshot shortcuts on (all five off here, default on; RegisterEventHotKey failure is only NSLogged, HotkeyCenter.swift); (b) Universal Clipboard: useractivityd logged PBOARD CONTROLLER type updates and setAdvertisableItems on a pbcopy here, and scans UAReceiverScanTypeClipboard, so the loop's clipboard writes may reach a Mac on the same account; no evidence yet that it does; (c) captureFullScreen loops add() per display, so only the last display stays on the clipboard (code read, one display here). Chose a passive report on the failing Mac over a key-driving matrix because the fault is on that Mac and it needs no grants; verdicts ok, NO COPY, REPLACED, NO PICTURE each tested here on staged events."
+    },
+    {
+      "t": "2026-11-04T06:09:37.690Z",
+      "note": "Cause not found and nothing fixed. Not reproduced here: 30/30 real Chrome pastes on the probe build. Needs the person: run Scripts/clipboard-timing/other-mac-report.sh on the other Mac and bring back its report; the released-only run needs Dev quit and native targets need an Accessibility grant. No decision card: this is a request to run something, not a product choice. Audit queue/audits/2026-11-03-screenshot-clipboard-one-photonz.json."
+    },
+    {
+      "t": "2026-11-04T06:09:37.694Z",
+      "note": "waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one."
     }
-  ]
+  ],
+  "started": "2026-11-04T05:52:02.733Z",
+  "walks": []
 }
