@@ -15473,3 +15473,14 @@
 {"t":"2026-11-03T18:29:30.682Z","ev":"task_note","id":"with-the-crop-tool-dragging-across-the-picture-d"}
 {"t":"2026-11-03T18:29:30.758Z","ev":"task_note","id":"with-the-crop-tool-dragging-across-the-picture-d"}
 {"t":"2026-11-03T18:29:30.845Z","ev":"task_done","id":"with-the-crop-tool-dragging-across-the-picture-d","from":"in_progress","note":"Crop in Next: a drag anywhere off a handle draws the crop box (inside the full-picture box too), handles resize, Space slides a box being drawn and moves one at rest, arrows nudge, Option/Shift draw from centre/square, size pill while drawing or resizing. Behind next-crop-draws-a-box (on in Next). Verified by crop-draws-the-box-you-drag-walk at Next defaults with real captures, a before walk with the switch off, unit tests, full test.sh. Audit queue/audits/2026-11-03-crop-draws-a-box.json with reel and contact sheet; docs/design/tools.md crop section updated. Commit b0f4807b."}
+{"t":"2026-11-03T19:00:24.213Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-11-03T19:00:24.250Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-11-03T19:00:24.286Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-03T19:00:24.383Z","ev":"slice_pass","walks":12,"passed":6,"failed":6,"seconds":1806,"of":1086,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-03T19:00:24.572Z","ev":"task_started","id":"ask-on-the-local-model-makes-results-that-look-f","title":"Ask on the local model makes results that look finished","priority":"p1-high"}
+{"t":"2026-11-03T19:26:10.655Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-11-03T19:42:04.477Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-04T00:17:55.208Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-04T00:17:55.314Z","ev":"task_created","id":"text-keeps-every-word-at-every-zoom","priority":"p1-high","title":"Text keeps every word at every zoom"}
+{"t":"2026-11-04T00:31:52.105Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-11-04T00:31:52.179Z","ev":"task_pending","id":"ask-on-the-local-model-makes-results-that-look-f","from":"in_progress","note":"Four of five items met; held-out item needs a run on final code and a cause. See the log entry of 2026-11-03."}

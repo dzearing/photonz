@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-11-03T15:26:32.677Z",
+  "updated": "2026-11-04T00:31:52.178Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -160,10 +160,31 @@
     {
       "t": "2026-11-03T15:26:32.676Z",
       "note": "seq 60 -> 40"
+    },
+    {
+      "t": "2026-11-03T19:00:24.248Z",
+      "note": "rotating check 2026-11-03T19:00:24Z, 12 walks run from 133 onward in the rotation, STOPPED ON THE CLOCK so a late failure may be a casualty of the stop: ask-makes-a-pricing-section-walk failing."
+    },
+    {
+      "t": "2026-11-03T19:00:24.563Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-03T19:26:10.653Z",
+      "note": "2026-11-03 reproduced at 0c405471, probe at Next defaults: Scripts/playtest.sh Scripts/playtest/ask-makes-a-pricing-section-walk.json passed, planSeconds 297.3 against the walk's 300 s waitFor (the rotating check's failure was this edge: 'askPhase(ran|stopped) did not happen within 300.0s'). 88 s of it was reading the first 14921-token prompt. Result: title, subtitle, three even cards, words inside them, labels readable (#E5E7EB/#FFFFFF buttons this time); the visible flaw: 'Pricing' and its subtitle sat about 48 pt left of the cards' middle (add_text alignment center at x 592 with no width, so x was the left edge). Adversarial review: a Photoshop/Figma user would see the off-centre heading at once; a dark label on a blue fill (2026-10-24 run) reads as unfinished; the model cannot see, so a deterministic look over the read document is cheaper and surer than a second model pass (each turn is 10 to 50 s on top of ~300 s)."
+    },
+    {
+      "t": "2026-11-04T00:31:52.103Z",
+      "note": "2026-11-03 result, left pending on purpose. Landed: 484a181e, b4b44ca5, 55a7bc99, 4968641d; audit queue/audits/2026-11-03-ask-layout-look.json. Item 1: on the last walks the words sit inside three even cards with no words on words, but the cards are add_shape boxes with separate add_text words, not components with their own text (Ask is not shown starter components), so the item's 'their own text' is not literally what happens; the last eval's noOverlap rule still counted the Most popular pill's words over Card Pro (20261104-001113-ask, 7.5), a badge across a card edge on purpose. Item 2 met: fixes and 'Some words still overlap.' both seen live. Item 3 met, but before and after are different plans on different builds: the same-day before picture was overwritten. Item 4 met, seen live on the probe: dark words named on #007AFF turned #FFFFFF, white on the page turned #8E8E93, add_text with no colour read #FFFFFF on blue and #1C1C1E on the page. These needed forced requests: in the pricing runs the model chose readable colours itself. Item 5 NOT done: 20261103-200619-ask-held-out at b4b44ca5 read layout 52.9 (bar 30) and video 67.4 (bar 55), but it predates 55a7bc99 and 4968641d, and it is one reading of a noisy group (12.3 and 43.6 on the same model at different code). Cause NOT established. What is known: the $N swap dates from 2026-10-19, so it does not explain the drop; the low stretch (5.7 to 10.5) ended at ca5a53dc (37.7, add_component and the sheet rules), which is timing, not proof. Left: one held-out run on final code, about 2.7 hours in --minutes 4 pieces, and a cause, or a decision that the item no longer needs one. Total fell to 55.8 from 57.2 (drawing 60.3 to 56.9, redline 34.6 to 33.2), reason unknown; the check only touches words, so check drawing first. Pricing case 21.1 (id printed as a price), 53.1, 60 on the build before 4968641d; not rescored after. Chose to override a colour the request named when the words do not read over keeping it, because the user said text is always legible; it is an evaluate question in the audit. Chose press over Command K in the eval because the probe could not take the front. Left rough, no task: the badge pill can sit off its card's middle; the plan took up to 342 s, so the walk's wait went from 300 to 420 s, and no task owns Ask's speed (about 90 s reading the first prompt)."
+    },
+    {
+      "t": "2026-11-04T00:31:52.177Z",
+      "note": "Four of five items met; held-out item needs a run on final code and a cause. See the log entry of 2026-11-03."
     }
   ],
   "walks": [
     "ask-makes-a-pricing-section-walk",
     "ask-annotates-a-screenshot-walk"
-  ]
+  ],
+  "started": "2026-11-03T19:00:24.562Z"
 }
