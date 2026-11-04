@@ -15613,3 +15613,8 @@
 {"t":"2026-11-04T16:26:13.939Z","ev":"task_resequenced","id":"animating-a-picture-is-as-simple-as-setting-a-mo","from":3980,"to":2.5e-7}
 {"t":"2026-11-04T16:29:45.470Z","ev":"task_created","id":"one-agent-pane-on-the-right-a-plain-history-of-r","priority":"p1-high","title":"One Agent pane, on the right: a plain history of requests, details on hover, the live request with Stop"}
 {"t":"2026-11-04T16:29:45.582Z","ev":"task_resequenced","id":"one-agent-pane-on-the-right-a-plain-history-of-r","from":3980,"to":1e-8}
+{"t":"2026-11-04T16:37:22.056Z","ev":"task_walks","id":"when-ask-stops-part-way-it-says-so-and-one-refus","walks":["ask-says-what-it-left-out-walk","ask-makes-a-pricing-section-walk"]}
+{"t":"2026-11-04T16:40:35.664Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-04T16:40:35.746Z","ev":"task_created","id":"the-icon-previews-strip-reads-as-previews-no-chi","priority":"p1-high","title":"The icon previews strip reads as previews: no chip looks selected, and it says what it is"}
+{"t":"2026-11-04T16:40:35.856Z","ev":"task_resequenced","id":"the-icon-previews-strip-reads-as-previews-no-chi","from":3980,"to":4e-7}
+{"t":"2026-11-04T16:40:35.934Z","ev":"task_resequenced","id":"ask-animates-what-it-makes-an-animated-svg-icon","from":3e-7,"to":2.1e-7}

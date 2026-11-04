@@ -9,11 +9,12 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:19.981Z",
-  "updated": "2026-11-04T16:24:20.220Z",
+  "updated": "2026-11-04T16:40:35.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping. But I think it just drew a picture of a stick figure holding balloons. I'd like to be able to use ask for creating icons and especially animated svgs'. Today: AskPlanning routes 'icon' words to vector art (add_drawing), which is painted by the picture model and traced (AgentPictureKind); the doing tools include add_shape and add_path, which an icon route can use directly. Animation is a separate task: ask-animates-what-it-makes-an-animated-svg-icon.",
   "acceptance": [
+    "WHERE THE ICON GOES (user, 2026-11-04, after Ask put a 512 icon frame beside their picture and widened the canvas from about 1026 to 2112): Ask never grows the person's document or adds a frame beside their work to hold an icon. If the current picture is empty (only a Background), it becomes the icon: square, icon sized, the icon drawn on the canvas itself. Otherwise Ask opens a NEW picture sized for the icon in its own window, draws there, and its row says so (Made a new icon: Balloon). No new document kind: File > New stays Image or Video; New Image gets icon size presets (24 pt glyph on 512, 1024 app icon).",
     "Reproduce: 'make an icon of a balloon popping', 'a trash can icon', 'a settings gear icon, outline', 'a rocket app icon' on Ask at Next defaults; record what Ask makes today (screenshots in the audit).",
     "An icon request takes an icon route: drawn with shapes and paths directly (add_shape, add_path) on a square icon canvas or artboard, not painted by the picture model and traced. The route is chosen from the general words for an icon, never from subjects; the subject and its form come from the model's own knowledge (no hardcoded subjects, memory: no-hardcoded-generated-content). If tracing is kept for any case, the subject is reduced to one centred object first.",
     "Icon craft, checked automatically and in the eval rubric: one subject, no people or scenes unless asked; a stroke weight and corner radius consistent across parts; even padding inside the frame; reads at 16, 24 and 64 px (render each and judge); parts named for what they are ('balloon', 'knot', 'string').",
@@ -29,6 +30,10 @@
     {
       "t": "2026-11-04T16:24:20.219Z",
       "note": "seq 3980 -> 2e-7"
+    },
+    {
+      "t": "2026-11-04T16:40:35.662Z",
+      "note": "User, 2026-11-04, screenshot queue/audits/2026-11-04-ask-icon-confusion.png: Ask (before this task ran) drew 'Balloon popping icon' into a 512 x 512 icon frame placed to the RIGHT of the picture and widened the canvas to 2112 x 1024; the user could not find it, read the icon previews strip's dark 48 chip as a selection, and found no motion controls. First acceptance item added: where the icon goes."
     }
   ]
 }

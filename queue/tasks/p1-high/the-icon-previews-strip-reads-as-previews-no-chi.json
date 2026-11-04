@@ -1,0 +1,33 @@
+{
+  "id": "the-icon-previews-strip-reads-as-previews-no-chi",
+  "title": "The icon previews strip reads as previews: no chip looks selected, and it says what it is",
+  "goal": "The icon previews strip (top left of the canvas when an icon frame is picked, 2026-09-14) draws the icon at 16, 24, 32, 48 and 64 px, and the second biggest sits on a dark ground to show the icon on dark. The user read that dark 48 chip as 'selected', clicked the others, and nothing happened. Make the strip read for what it is: previews at real sizes, light and dark, nothing to pick.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 4e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T16:40:35.742Z",
+  "updated": "2026-11-04T16:40:35.855Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-04 (intake): 'i see this weird icon preview overlay on the top left ... the preview says we have 48 selected, and if i click on the other options it doesn't change'. Code: Sources/Photonz/IconPreviewsStrip.swift ('the one before the biggest on a dark ground, as icon-draw-wt.html draws it'), IconPreviewsOverlay.swift, EditorState+IconPreviews.swift. The mock icon-draw-wt.html changes with it: an approved departure, update the mock.",
+  "acceptance": [
+    "No chip looks selected: the dark-ground preview is shown as its own clearly labelled pair (each size on light AND on dark, or a Light/Dark toggle for the whole strip), never one chip singled out by a dark plate.",
+    "The strip says what it is in a few words ('Actual sizes') and its chips do not look like buttons (no hover lift, no pointer cursor) unless clicking does something; if a click is kept, it does something useful and visible (for example zoom the canvas to show the icon at that size), decided and written down.",
+    "It appears only while an icon frame or an icon-sized picture is what you are working in, as today, and never covers the icon itself.",
+    "Walk and before/after screenshots in the audit under queue/audits/ (the user's: queue/audits/2026-11-04-ask-icon-confusion.png).",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T16:40:35.744Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-04T16:40:35.854Z",
+      "note": "seq 3980 -> 4e-7"
+    }
+  ]
+}
