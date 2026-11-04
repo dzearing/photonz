@@ -22421,3 +22421,9 @@ the ghost, and pinching in seemed to stop short.
 - Filed: `text-keeps-every-word-at-every-zoom`, shared renderer, the last word of a tight line is lost at 67% zoom.
 - Held-out at b4b44ca5: total 55.8, drawing 56.9, layout 52.9, redline 33.2, video 67.4. Three later fixes to the check are not in that run.
 - Open: the task stays pending. Its held-out item needs a run on the final code and its cause is still not established. Why the total fell from 57.2 is unknown.
+
+## 2026-11-04: Ask on the local model makes results that look finished
+
+Changed: `place_component` takes `words`, so a copy says its own words; a wrong component name is refused while planning; `Scripts/ask-eval.sh time` gives per-group totals of cases out of time or stopped. Held-out on final code 50c54b72: total 64.5, layout 66.3, video 59.9.
+Next: the first-answer task owns a new finding, two of four pricing tries got no first answer in 300 to 420 s.
+Open: whether Ask should place Library Cards on a blank canvas, asked in the audit.

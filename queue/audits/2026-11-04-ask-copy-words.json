@@ -1,0 +1,45 @@
+{
+  "feature": "Ask puts a copy's words in the copy",
+  "epic": "agent-ask",
+  "summary": "When a document has its own component, Ask places copies that say their own words, instead of laying new text over them. A component name Ask gets wrong is now caught while it plans, so it can correct itself. The held-out layout score on the final build is 66.3, against a bar of 30.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default, a blank 1440 x 900 canvas, the built-in model.",
+  "switched": {},
+  "try": [
+    {
+      "do": "On a blank canvas, drag a Button from the Library's Comps tab onto the picture."
+    },
+    {
+      "do": "Click Ask in the title bar, type 'Add three more of the Button component in a row under it, saying Starter, Pro and Team' and press Send.",
+      "shot": "2026-11-04-ask-copy-words-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick one of the new buttons and read its row in Layers: it says Copy, and its own word is on it."
+    },
+    {
+      "do": "On a new blank canvas, ask 'Make a pricing section on brand' and wait for the row in the Agent group, four to six minutes on this Mac.",
+      "shot": "2026-11-04-ask-pricing-final-sc.png",
+      "shotNote": "The final build. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Check that the three cards sit in one even row, with every word inside its card."
+    },
+    {
+      "do": "Press Command Z once: the whole section is gone."
+    }
+  ],
+  "evaluate": [
+    "Does the pricing section look like a person laid it out, or would you nudge something first?",
+    "On a blank canvas Ask draws its cards as shapes with separate words, because starters are kept from it. Is that right, or should it place Library Cards?",
+    "Is four to six minutes for a pricing section something you would wait for?"
+  ],
+  "rough": [
+    "No mock covers the layout Ask makes: agent-generate-wt.html gives only the request.",
+    "Two of four pricing tries on the final build got no first answer from the model, at 300 s and at 420 s, and made nothing. The other two finished in 210 s and 347 s. I do not know why; memory was healthy afterwards. Folded into task ask-s-first-answer-after-its-model-loads-comes-i.",
+    "Asked for 'Card starter components' on a blank canvas, Ask draws shapes instead, because starters are kept from it. The copy words were seen working live with a Button only, not a Card.",
+    "When steps fail as a plan runs, Ask still says nothing about them: three failed copies left two plans' words on white with no message. That is task when-ask-stops-part-way-it-says-so-and-one-refus; the name check stops this one way of getting there.",
+    "The Most popular pill sits left of its card's middle in the final picture, and its words count as overlapping the card, as a badge across an edge does.",
+    "The pricing case scores 61.4, against 67.9 on 2026-10-24. The rules mark it down for eight type sizes, which this work does not touch.",
+    "The cause of the layout drop rests on totals from past runs, not a fresh same-code comparison. The layout group is only three cases, so one case moves it by a third."
+  ]
+}

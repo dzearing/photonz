@@ -1,0 +1,104 @@
+{
+  "out": "/tmp/photonz-playtest/ask-places-copies-with-their-words-walk",
+  "seed": "Ask with a component already in the document, at Next defaults: three more Buttons in a row, each saying its own word. The words go on the copies' own text through place_component's words, never add_text laid over them; the picture shows it. Needs Ask's model (docs/design/ask.md).",
+  "clock": 540,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 900,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        300,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Add three more of the Button component in a row under it, saying Starter, Pro and Team"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 420
+    },
+    {
+      "do": "describe",
+      "stage": "run-ended",
+      "note": "where the request ended: it runs as soon as the model is done, with no Run Plan"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran",
+      "timeout": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-ran",
+      "note": "the pricing section on the canvas, and one row in the Agent group saying what changed"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 5
+    },
+    {
+      "do": "snapshot",
+      "name": "1-ran"
+    }
+  ]
+}
