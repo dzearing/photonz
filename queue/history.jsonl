@@ -15603,3 +15603,9 @@
 {"t":"2026-11-04T16:08:49.854Z","ev":"task_resequenced","id":"picking-a-perspective-preset-or-sliding-it-keeps","from":600,"to":610}
 {"t":"2026-11-04T16:08:49.971Z","ev":"triage","summary":"filed 1 (an unmanned session opens the installed app, reproduced), merged 0, dropped 0, moved 0, reset 0, groomed 0; 5 findings folded onto owning tasks; p1 and p2 renumbered in steps of 10; two new loop-filed p1 tasks spot checked and kept; open 85 to 86"}
 {"t":"2026-11-04T16:10:15.443Z","ev":"digest","file":"2026-11-04.md"}
+{"t":"2026-11-04T16:10:30.084Z","ev":"task_started","id":"when-ask-stops-part-way-it-says-so-and-one-refus","title":"When Ask stops part way it says so, and one refused step no longer ends the change","priority":"p1-high"}
+{"t":"2026-11-04T16:17:37.045Z","ev":"task_note","id":"when-ask-stops-part-way-it-says-so-and-one-refus"}
+{"t":"2026-11-04T16:24:19.985Z","ev":"task_created","id":"ask-makes-icons-that-are-icons-one-subject-clean","priority":"p1-high","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px"}
+{"t":"2026-11-04T16:24:20.104Z","ev":"task_created","id":"ask-animates-what-it-makes-an-animated-svg-icon","priority":"p1-high","title":"Ask animates what it makes: an animated SVG icon from one request"}
+{"t":"2026-11-04T16:24:20.221Z","ev":"task_resequenced","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":3980,"to":2e-7}
+{"t":"2026-11-04T16:24:20.306Z","ev":"task_resequenced","id":"ask-animates-what-it-makes-an-animated-svg-icon","from":3990,"to":3e-7}

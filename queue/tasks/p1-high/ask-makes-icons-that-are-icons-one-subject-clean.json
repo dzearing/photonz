@@ -1,0 +1,34 @@
+{
+  "id": "ask-makes-icons-that-are-icons-one-subject-clean",
+  "title": "Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px",
+  "goal": "Asked for an icon (the user's 'a balloon icon popping'), Ask painted a scene with the picture model and traced it: a stick figure holding balloons. An icon request must give an icon: one subject, built from a few clean vector shapes and paths on an icon grid, consistent line weight and corner style, centred with even padding, readable from 16 to 64 px, every part a named, editable layer, in the style asked for (outline, filled, duotone, or the document's own icon style).",
+  "epic": "local-edit",
+  "priority": "p1-high",
+  "seq": 2e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T16:24:19.981Z",
+  "updated": "2026-11-04T16:24:20.220Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping. But I think it just drew a picture of a stick figure holding balloons. I'd like to be able to use ask for creating icons and especially animated svgs'. Today: AskPlanning routes 'icon' words to vector art (add_drawing), which is painted by the picture model and traced (AgentPictureKind); the doing tools include add_shape and add_path, which an icon route can use directly. Animation is a separate task: ask-animates-what-it-makes-an-animated-svg-icon.",
+  "acceptance": [
+    "Reproduce: 'make an icon of a balloon popping', 'a trash can icon', 'a settings gear icon, outline', 'a rocket app icon' on Ask at Next defaults; record what Ask makes today (screenshots in the audit).",
+    "An icon request takes an icon route: drawn with shapes and paths directly (add_shape, add_path) on a square icon canvas or artboard, not painted by the picture model and traced. The route is chosen from the general words for an icon, never from subjects; the subject and its form come from the model's own knowledge (no hardcoded subjects, memory: no-hardcoded-generated-content). If tracing is kept for any case, the subject is reduced to one centred object first.",
+    "Icon craft, checked automatically and in the eval rubric: one subject, no people or scenes unless asked; a stroke weight and corner radius consistent across parts; even padding inside the frame; reads at 16, 24 and 64 px (render each and judge); parts named for what they are ('balloon', 'knot', 'string').",
+    "An Ask eval case set of at least 12 icon requests across styles, judged by the model judge against references from SF Symbols, Material Symbols and Lucide; before and after totals in the audit; the after must beat the before by a clear margin and score at least 7 of 10 on 'reads as an icon'.",
+    "Copy as SVG and export give clean SVG of the icon (paths, no raster).",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T16:24:19.983Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-04T16:24:20.219Z",
+      "note": "seq 3980 -> 2e-7"
+    }
+  ]
+}

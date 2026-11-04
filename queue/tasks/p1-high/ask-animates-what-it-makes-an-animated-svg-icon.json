@@ -1,0 +1,34 @@
+{
+  "id": "ask-animates-what-it-makes-an-animated-svg-icon",
+  "title": "Ask animates what it makes: an animated SVG icon from one request",
+  "goal": "Ask cannot animate anything: none of its tools set keys, so 'a balloon icon popping' could only ever be a still picture. Give Ask (and agents over MCP) the tools to animate layers on the document's clock the way a person keys them in the app (position, scale, rotation, opacity, a path's shape where the app supports it, and the stroke draw-on), and a way to make an icon animation that plays as an animated SVG: 'a balloon icon popping' gives a balloon that swells, wobbles and bursts into a few fragments that fly out and fade, as editable keyed layers, exported or copied as an animated SVG that loops.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 3e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T16:24:20.100Z",
+  "updated": "2026-11-04T16:24:20.305Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping ... I'd like to be able to use ask for creating icons and especially animated svgs'. Today Ask's doing tools (AskPlanning.swift) and the MCP tools (AgentTools.swift) have no key or animation tool; the app keys layers (LayerMotion, MotionProperty) and exports animated SVG (SVGMotionExport, animatedSVGExportEnabled). Objective icon-animate: 'Animate SVG properties on the timeline, keyframes like any layer'. Depends on the icon task so the animated icon starts from a real icon.",
+  "acceptance": [
+    "New agent tools (AgentTools, offered to Ask and over MCP): set keys on a layer's property with times, values and easing (the same keys the timeline shows and the person can edit), make a picture document timed (a length, a loop), and read keys back in read_document. Each call is one undo step. Schema-checked like every tool.",
+    "Ask plans an animation from the request with the model's own sense of motion (anticipation, follow-through, easing, timing in milliseconds), never from coded animations per subject: the instructions teach general motion principles; the subject comes from the request.",
+    "The result exports and copies as an animated SVG that plays in Safari and Chrome and loops (the existing animated SVG export, SVGMotionExport), and plays the same in Photonz's own timeline. Properties the SVG export cannot carry are not used for an SVG request, or are said in the Ask row.",
+    "Eval: at least 10 animated icon requests ('a balloon popping', 'a bell ringing', 'a heart beating', 'a loading spinner', 'a checkmark drawing itself', 'a trash can lid opening'), judged from contact sheets of frames and the SVG playing, on 'the motion reads as what was asked' and 'it loops cleanly'. Before (none can animate) and after in the audit with reels; the after scores at least 7 of 10 on reads-as-asked.",
+    "Try path at Next defaults: Ask 'make an animated SVG icon of a balloon popping', play it, Copy SVG, paste into a browser, it plays.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T16:24:20.102Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-04T16:24:20.304Z",
+      "note": "seq 3990 -> 3e-7"
+    }
+  ]
+}
