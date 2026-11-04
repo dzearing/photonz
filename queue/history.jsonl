@@ -15484,3 +15484,10 @@
 {"t":"2026-11-04T00:17:55.314Z","ev":"task_created","id":"text-keeps-every-word-at-every-zoom","priority":"p1-high","title":"Text keeps every word at every zoom"}
 {"t":"2026-11-04T00:31:52.105Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-11-04T00:31:52.179Z","ev":"task_pending","id":"ask-on-the-local-model-makes-results-that-look-f","from":"in_progress","note":"Four of five items met; held-out item needs a run on final code and a cause. See the log entry of 2026-11-03."}
+{"t":"2026-11-04T01:02:27.764Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
+{"t":"2026-11-04T01:02:27.802Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-04T01:02:27.891Z","ev":"slice_pass","walks":13,"passed":8,"failed":5,"seconds":1805,"of":1086,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-04T01:02:28.069Z","ev":"task_started","id":"ask-on-the-local-model-makes-results-that-look-f","title":"Ask on the local model makes results that look finished","priority":"p1-high"}
+{"t":"2026-11-04T01:23:24.803Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-11-04T01:28:12.390Z","ev":"task_created","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","priority":"p1-high","title":"A turned or reshaped layer has no thin line along its edges at any zoom"}
+{"t":"2026-11-04T01:28:12.519Z","ev":"task_resequenced","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","from":3980,"to":3e-8}

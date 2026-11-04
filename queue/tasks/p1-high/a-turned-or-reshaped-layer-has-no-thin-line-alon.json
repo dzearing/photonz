@@ -1,0 +1,34 @@
+{
+  "id": "a-turned-or-reshaped-layer-has-no-thin-line-alon",
+  "title": "A turned or reshaped layer has no thin line along its edges at any zoom",
+  "goal": "A layer that has been turned, skewed or distorted shows a thin grey line along its outline where its own pixels meet what is under it, most visible zoomed out (the user's report: a Copied Selection of white with a red shape, turned and reshaped, on a white Background at 79 percent; the white-on-white edge should be invisible and is drawn as a faint line). Transformed layers must blend into what is under them exactly as the same pixels would unturned: no seam at any zoom, angle or reshape, on canvas and in export.",
+  "epic": "image-editing",
+  "priority": "p1-high",
+  "seq": 3e-8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T01:28:12.386Z",
+  "updated": "2026-11-04T01:28:12.518Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-03 (intake), screenshot queue/audits/2026-11-03-edge-seam-report.png (annotated by the user: 'Thin artifacts on edges after a rotation when zoomed out'): Photonz Dev, Image, layers 'Copied Selection' over 'Background' (locked), canvas 1026 x 831 at 79 percent. The Copied Selection is a white rectangle holding a red rounded shape, turned and reshaped with the new selection modes; a faint grey hairline runs along its outer edge across the white Background. Related renderer pieces: DocumentRenderer (layer transform, the warp / four-corner map added in c2dc5891 'Skew & distort reshapes the picture'), CIPerspectiveTransform for the reshape and 3D.",
+  "acceptance": [
+    "Reproduce: the user's case (a marquee copy of a white area holding a red shape, pasted, turned about 15 degrees and reshaped with Skew & distort, over a white Background) at 25, 50, 79, 100 and 200 percent, and in an export at 1x and 2x. MEASURE the seam: the largest difference from pure white along the layer's outline, in levels, before and after, in the audit with crops.",
+    "Find the cause in the render path for a transformed layer (the 2D turn, the Skew & distort reshape through the four-corner perspective map, and the 3D path): likely edge samples blended with transparent black (an un-clamped source resampled at its edge), straight versus premultiplied alpha mixed up, or the canvas downscale filtering the layer's edge on its own before it is composited. Say which, with the evidence.",
+    "Fixed: along the outline of a white layer on white, no pixel differs from white by more than 1 level at every zoom above and in exports, for a turn, a skew, a distort and a 3D tip; a coloured layer's edge stays smooth (antialiased) and does not grow a lighter or darker rim either, measured.",
+    "No change to how an UNturned layer draws (a render test holds it byte for byte), and the 12 MP / 10 layer re-render stays inside its 16 ms budget (perf note in the commit).",
+    "A render test in PhotonzRenderTests with the white-on-white turned and reshaped layer, so this cannot come back.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T01:28:12.388Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-04T01:28:12.517Z",
+      "note": "seq 3980 -> 3e-8"
+    }
+  ]
+}
