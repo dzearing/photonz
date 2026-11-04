@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T15:47:48.927Z",
-  "updated": "2026-11-04T16:08:46.591Z",
+  "updated": "2026-11-04T21:11:22.661Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-11-04 on source without typing-in-ask-lists-the-commands-you-can-run applied (its Sources diff reversed, probe rebuilt): Scripts/playtest.sh Scripts/playtest/ask-stops-a-running-request-walk.json printed: step 19 (expect): the control called \"Agent Waiting 1\" is in the panel, and this step says it should not be. Same failure with that change in, twice. Passes warm: ask-stops-a-running-request-walk 137s ok, after other model walks in one playtest-all run, and 116s ok in sweep 2026-11-03-230840, which is why sweeps never show it. Not yet looked at: where the cancelled request sits during the load; AskSession.stop cancels work, and finished() starts the next only when that task ends.",
@@ -25,6 +25,10 @@
     {
       "t": "2026-11-04T16:08:46.590Z",
       "note": "seq 155 -> 160"
+    },
+    {
+      "t": "2026-11-04T21:11:22.660Z",
+      "note": "also seen by one-agent-pane-on-the-right-a-plain-history-of-r on 2026-11-04: ask-live-request-at-the-top-walk pressed Stop 3.4s in on 'Getting the model ready'; phase went idle at once but askSettled had not held 60s later, so the work stays busy for the whole load. That task fixed the Agent header reading working through this (the chip now reads the phase); the wind-down itself is left to this task."
     }
   ],
   "walks": [

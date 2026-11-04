@@ -5,11 +5,11 @@
   "epic": "local-edit",
   "priority": "p1-high",
   "seq": 1e-8,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:29:45.466Z",
-  "updated": "2026-11-04T16:29:45.581Z",
+  "updated": "2026-11-04T21:56:46.994Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'There is now a left pane for agents and a right pane for agents. It's weird to have introduced a left pane rather than to update the right one, because the left pane has no button to toggle its collapsed state. but i never asked for a left pane. I just want the right agent pane to be the agent pane. I think it should just be history rather than having toggles and trashcans, because i think it's buggy. I can manipulate the things it created, and it muddies what it means to disable an agent history item. I'd prefer to just show requests, and if i hover over one, there's a popover on the left side which shows how it was interpreted and the before/after thumbs maybe? and a way to clear history. and that's where we show agent in progress with the stop button.' Origin of the left dock: 8765bcb7 (task typing-in-ask-lists-the-commands-you-can-run), 'After a request the conversation moves to the mock's left dock'. Code: Sources/Photonz/Agent/AskViews.swift, AskSession.swift, EditorView.swift; the Agent group in InspectorPanel.swift (.agent). This is an approved departure from the Ask mock: change the mock, do not file a decision card for it.",
@@ -30,6 +30,40 @@
     {
       "t": "2026-11-04T16:29:45.580Z",
       "note": "seq 3980 -> 1e-8"
+    },
+    {
+      "t": "2026-11-04T20:15:11.255Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-04T20:40:00.000Z",
+      "note": "Adversarial review before building. A first-time user: after Ask the composer closes and the only place to look is the Agent group, so the panel must come forward every time (it already does: bringAgentAreaForward + reveal). Hover is invisible until tried, so the row click still picks what it made and the card must not depend on being found. A Photoshop user reads this as the History panel: one row a step, no switches, undo takes back; that matches. Collisions: a hover card sits over the canvas, so it slides off what the row made when it can; a pointer travelling from row to card crosses other rows, so a switch of card waits a beat. Chose an in-window card over an NSPopover because a separate window is a focus risk in walks and cannot be photographed with the window. Chose a confirmation inside the Agent group over a system alert because a walk cannot press an alert and it keeps the question where the click was. Chose to remove the composer's copy of the conversation too: it existed for the dock, and the Agent group is the one place. Chose to keep waiting requests above the live one: the column stays newest first and a request moves down it without jumping, as ask.md settled."
+    },
+    {
+      "t": "2026-11-04T21:12:22.987Z",
+      "note": "owns these walks: ask-one-agent-pane-walk, ask-live-request-at-the-top-walk"
+    },
+    {
+      "t": "2026-11-04T21:56:46.778Z",
+      "note": "left rough, under the follow-up bar: on a video the card's pictures are the frame at the playhead, so a change elsewhere in time can look the same in both; a stopped request leaves no row, only the Stopped line until the next request. Both are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-11-04T21:56:46.845Z",
+      "note": "Not proved: a walk's hover runs the row's own hover closure, so SwiftUI's delivery of a real pointer to the row and across to the card was not exercised; only a person's hand proves the 0.35s grace is long enough to cross. Clicks on Words, Stop, Cancel and Clear were pointer clicks at the control's face."
+    },
+    {
+      "t": "2026-11-04T21:56:46.913Z",
+      "note": "Found: Clear with role .destructive took no click from a walk (window not key) while the same button without the role did; tested by removing .help first (still dead), then the role (worked). Why is not established, so Clear carries no role. ask-stops-a-running-request-walk fails cold at step 19 and passes warm (15s ok after a model walk): that is stop-while-ask-s-model-is-still-loading-lets-the, reproduced there before this change, and this task's finding is folded into it."
+    },
+    {
+      "t": "2026-11-04T21:56:46.992Z",
+      "note": "Shipped in 3bc0e202. Left dock and composer conversation gone; Agent group holds the live request with Stop and a plain history with no switch or trash; hover card left of the panel with plan lines, before and after pictures and thumbs; Clear History in the group menu, row right-click and Edit, with a yes in the group; Ask mocks changed to match. Verified: Scripts/test.sh exit 0; ask-one-agent-pane-walk 77 steps and ask-live-request-at-the-top-walk at Next defaults; 18 other Ask walks green; focus-drill clean 0/149 ticks lost; audit pictures opened and read. ask-stops-a-running-request-walk passes warm and fails cold, owned by stop-while-ask-s-model-is-still-loading-lets-the."
     }
-  ]
+  ],
+  "started": "2026-11-04T20:15:11.254Z",
+  "walks": [
+    "ask-one-agent-pane-walk",
+    "ask-live-request-at-the-top-walk"
+  ],
+  "completed": "2026-11-04T21:56:46.993Z"
 }
