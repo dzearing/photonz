@@ -4,12 +4,12 @@
   "goal": "The Ask chat matches the last parts of the mock it still leaves out: a button that starts a new conversation, the earlier requests shown above the latest one, and each row of the / command list wearing its own icon rather than one for its area.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 127.5,
+  "seq": 110,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T14:43:35.102Z",
-  "updated": "2026-11-04T14:43:35.105Z",
+  "updated": "2026-11-04T16:08:46.407Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left by typing-in-ask-lists-the-commands-you-can-run. Mock: askPalHTML in docs/design/mocks/shared/dist/photonz-ds.js. AskConversationLines and AskCommandsList.symbol in Sources/Photonz/Agent/AskViews.swift; AppCommandTable has no icon today. New Conversation has to decide what Ask forgets: its memory of what it made comes from the rows (AskSession.conversation).",
@@ -22,6 +22,14 @@
     {
       "t": "2026-11-04T14:43:35.104Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-11-04T16:04:31.919Z",
+      "note": "digest 2026-11-04 spot check: the mock has it (askPalHTML: a button titled New conversation in the chat header, one icon per row from ASK_CMDS). A shortfall against the mock on the focus epic, so it stays p1."
+    },
+    {
+      "t": "2026-11-04T16:08:46.406Z",
+      "note": "seq 127.5 -> 110"
     }
   ]
 }

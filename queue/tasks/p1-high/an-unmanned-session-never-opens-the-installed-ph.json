@@ -1,0 +1,33 @@
+{
+  "id": "an-unmanned-session-never-opens-the-installed-ph",
+  "title": "An unmanned session never opens the installed Photonz beside the app you are using",
+  "goal": "When an unmanned loop session uses a Photonz tool and its test copy is not running, the installed Photonz opens by itself on the person's Mac, the tool call fails anyway, and the app stays open after the session ends. That installed copy then holds the capture shortcuts ahead of the one the person is using. A session should reach the test copy or say it cannot, and open nothing else.",
+  "epic": "agent-mcp",
+  "priority": "p1-high",
+  "seq": 120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T16:08:36.161Z",
+  "updated": "2026-11-04T16:08:46.479Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the 2026-11-04 digest pass, Dev up, probe not running, installed 0.23.0:\n  (printf '%s\\n%s\\n' \"$INIT\" \"$CALL\"; sleep 28) | GO_LOOP_PID=1 /Applications/Photonz.app/Contents/Helpers/photonz-mcp\n  where INIT is an MCP initialize request and CALL is tools/call list_documents. Output:\n  photonz-mcp: launched Photonz (open -g -a /Applications/Photonz.app)\n  photonz-mcp: Photonz is not listening for agents...\n  ps then listed /Applications/Photonz.app/Contents/MacOS/Photonz, parent pid 1, started that second. Handshake and tools/list alone opened nothing.\nCause, read from code: launch() in Sources/PhotonzMCP/main.swift tries the helper's own bundle first (launchPath) whatever the choice says, so a loop session whose choice is probe opens the bundle the helper lives in, then waits for a probe socket that never comes. The server is installed in ~/.claude.json from /Applications, so every loop session uses that helper.\nSeen twice in a day: the clipboard runner at 21:55:09 on 2026-11-03 (pid 75545, logged on a-screenshot-is-on-the-clipboard-every-time-on-a) and this digest session at 07:58:24 on 2026-11-04 (pid 44993, parent 1, same second as the session; quit by hand). v0.23.0 predates c999166a, so it cannot step aside: CaptureShortcutOwner keeps the shortcuts with such a build and Dev stands down while it runs.",
+  "acceptance": [
+    "Reproduce first with the command in the notes: with Photonz Dev up and the probe not running, one tool call from a session with GO_LOOP_PID set prints launched Photonz (open -g -a /Applications/Photonz.app), then not listening, and the installed app stays open",
+    "With GO_LOOP_PID set, that same call opens the probe or answers with a plain line saying the probe is not running, and /Applications/Photonz.app is not opened",
+    "A person's own session, with no GO_LOOP_PID, still opens the app it was installed with, as it does today",
+    "Find out why this digest session opened the installed app at 07:58:24 on 2026-11-04 with no tool call at all, in the same second the session started, and close that path too. A handshake run by hand with probe.json on disk did not reproduce it, so check what happens when probe.json is missing",
+    "Say in the task log whether Photonz Dev takes the capture shortcuts back on its own after an older installed copy quits, without a relaunch"
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T16:08:36.163Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-11-04T16:08:46.478Z",
+      "note": "seq 128.75 -> 120"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "The user's report of screenshots not reliably reaching the clipboard came from ANOTHER Mac running a single, released Photonz, not this one. The task every-screenshot-is-on-the-clipboard-every-time found and fixed a different fault that only exists on this Mac (the installed app and Photonz Dev both answering the capture shortcut, c999166a), and checked the suspects in e0648dd9 only with a stand-in reader process, never with real paste targets. The single-app fault is unexplained and unfixed. Find it and fix it.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 1e-8,
+  "seq": 10,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T01:36:23.358Z",
-  "updated": "2026-11-04T06:09:37.695Z",
+  "updated": "2026-11-04T16:08:45.685Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake), correcting the closed task: 'when i earlier said that i wasn't getting photos into the clipboard this was on another machine not running 2 copies of photonz, so your assumptions were wrong.' The other Mac's version and the apps pasted into are being asked; add them to this log when known. Prior work: every-screenshot-is-on-the-clipboard-every-time (done, c999166a, keep it: one running Photonz holds the capture shortcuts). Its own log admits: 'pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves'. Code: Sources/Photonz/Capture/CaptureStore.swift, Sources/Photonz/ClipboardHandOff.swift, Sources/PhotonzRender/ClipboardPicture.swift.",
@@ -61,6 +61,14 @@
     {
       "t": "2026-11-04T06:09:37.694Z",
       "note": "waiting, but no decision card was opened against this task. Nothing returns a task to the queue except an answer, so this will sit here until someone opens one."
+    },
+    {
+      "t": "2026-11-04T16:08:36.428Z",
+      "note": "digest 2026-11-04: left blocked, no card opened, because it needs a report run on the other Mac rather than a choice; the digest asks for it at the top of Reflections. The runner's Universal Clipboard suspect is the cheapest thing for the user to rule out: if text copied here pastes on the other Mac, every clipboard write by the loop's walks may reach it. The shortcut half on this Mac has its own task now: an-unmanned-session-never-opens-the-installed-ph."
+    },
+    {
+      "t": "2026-11-04T16:08:45.684Z",
+      "note": "seq 1e-8 -> 10"
     }
   ],
   "started": "2026-11-04T05:52:02.733Z",
