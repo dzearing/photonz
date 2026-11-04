@@ -1,0 +1,35 @@
+{
+  "id": "one-agent-pane-on-the-right-a-plain-history-of-r",
+  "title": "One Agent pane, on the right: a plain history of requests, details on hover, the live request with Stop",
+  "goal": "Ask now has two places: a new left dock that the conversation moves to after a request (8765bcb7, 2026-11-04, from the Ask mock's left dock), with no button to fold it, and the right panel's Agent group with a toggle and a trash can on every row. The user never asked for a left pane, and the per-row toggle and delete muddy what 'turning off' a request means once they have edited what it made. Make the right panel's Agent group the one Agent place, as a plain history.",
+  "epic": "local-edit",
+  "priority": "p1-high",
+  "seq": 1e-8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-04T16:29:45.466Z",
+  "updated": "2026-11-04T16:29:45.581Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-04 (intake): 'There is now a left pane for agents and a right pane for agents. It's weird to have introduced a left pane rather than to update the right one, because the left pane has no button to toggle its collapsed state. but i never asked for a left pane. I just want the right agent pane to be the agent pane. I think it should just be history rather than having toggles and trashcans, because i think it's buggy. I can manipulate the things it created, and it muddies what it means to disable an agent history item. I'd prefer to just show requests, and if i hover over one, there's a popover on the left side which shows how it was interpreted and the before/after thumbs maybe? and a way to clear history. and that's where we show agent in progress with the stop button.' Origin of the left dock: 8765bcb7 (task typing-in-ask-lists-the-commands-you-can-run), 'After a request the conversation moves to the mock's left dock'. Code: Sources/Photonz/Agent/AskViews.swift, AskSession.swift, EditorView.swift; the Agent group in InspectorPanel.swift (.agent). This is an approved departure from the Ask mock: change the mock, do not file a decision card for it.",
+  "acceptance": [
+    "The left Ask dock is gone (the conversation no longer moves to the left after a request, and the canvas no longer narrows for it). Command K and the composer keep working; the '/' command list stays.",
+    "The right panel's Agent group is the one Agent place: the live request at the top while it runs, with its words, the live 'what it is doing now' line and a Stop button; under it, the history: one row per request, newest first, in the person's words (the row's summary line as today, for example 'Drew a cat'). No on/off toggle and no trash can on a row: undo is how a request is taken back.",
+    "Hovering a history row shows a popover to the LEFT of the panel (never over the canvas object it describes if avoidable, never over the panel): how Ask understood the request (its plan in a few plain lines), and small before and after thumbnails of the canvas. It shows on hover after a short delay, stays while the pointer is in it, and goes when the pointer leaves. Thumbs up and down, if kept, live in this popover, not on the row.",
+    "A 'Clear History' action (in the Agent group's header menu) empties the list after a confirmation; it never undoes anything on the canvas.",
+    "Update the Ask mock(s) on the design site to match (the left dock removed, the history and hover popover drawn), with a note that the user changed this on 2026-11-04, so no later runner rebuilds the left dock from the old mock.",
+    "Walks: ask, see the live request with Stop at the top of the Agent group; stop one; a finished request becomes a history row with no toggle or trash; hover shows the popover with plan and before/after; Clear History; no left dock appears at any point. focus-drill clean.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-04T16:29:45.468Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-04T16:29:45.580Z",
+      "note": "seq 3980 -> 1e-8"
+    }
+  ]
+}

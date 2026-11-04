@@ -15611,3 +15611,5 @@
 {"t":"2026-11-04T16:24:20.306Z","ev":"task_resequenced","id":"ask-animates-what-it-makes-an-animated-svg-icon","from":3990,"to":3e-7}
 {"t":"2026-11-04T16:26:13.814Z","ev":"task_created","id":"animating-a-picture-is-as-simple-as-setting-a-mo","priority":"p1-high","title":"Animating a picture is as simple as setting a moment and changing things: design it, then build it"}
 {"t":"2026-11-04T16:26:13.939Z","ev":"task_resequenced","id":"animating-a-picture-is-as-simple-as-setting-a-mo","from":3980,"to":2.5e-7}
+{"t":"2026-11-04T16:29:45.470Z","ev":"task_created","id":"one-agent-pane-on-the-right-a-plain-history-of-r","priority":"p1-high","title":"One Agent pane, on the right: a plain history of requests, details on hover, the live request with Stop"}
+{"t":"2026-11-04T16:29:45.582Z","ev":"task_resequenced","id":"one-agent-pane-on-the-right-a-plain-history-of-r","from":3980,"to":1e-8}
