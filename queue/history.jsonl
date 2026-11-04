@@ -15494,3 +15494,9 @@
 {"t":"2026-11-04T01:36:23.362Z","ev":"task_created","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","priority":"p1-high","title":"A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app"}
 {"t":"2026-11-04T01:36:23.479Z","ev":"task_resequenced","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":3980,"to":1e-8}
 {"t":"2026-11-04T01:36:23.554Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
+{"t":"2026-11-04T05:21:04.065Z","ev":"task_walks","id":"ask-on-the-local-model-makes-results-that-look-f","walks":["ask-makes-a-pricing-section-walk","ask-annotates-a-screenshot-walk","ask-places-copies-with-their-words-walk"]}
+{"t":"2026-11-04T05:21:04.142Z","ev":"task_note","id":"ask-s-first-answer-after-its-model-loads-comes-i"}
+{"t":"2026-11-04T05:21:04.219Z","ev":"task_note","id":"when-ask-stops-part-way-it-says-so-and-one-refus"}
+{"t":"2026-11-04T05:21:04.297Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-04T05:21:04.374Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
+{"t":"2026-11-04T05:21:22.627Z","ev":"task_done","id":"ask-on-the-local-model-makes-results-that-look-f","from":"in_progress","note":"Ask's held-out layout reads 66.3 (bar 30) and video 59.9 (bar 55) on final code 50c54b72, total 64.5, with the cause named from totals. A placed copy now takes its own words, and a wrong component name is refused while planning. Verified by unit tests, Scripts/test.sh, three walks and the audit 2026-11-04-ask-copy-words.json. Two of four pricing tries got no first answer; folded into ask-s-first-answer-after-its-model-loads-comes-i."}

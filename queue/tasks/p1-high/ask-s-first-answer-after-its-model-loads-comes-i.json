@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-24T20:25:25.315Z",
-  "updated": "2026-11-03T15:26:33.291Z",
+  "updated": "2026-11-04T05:21:04.141Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-10-24 by ask-uses-qwen3-8-27b-at-4-bit-by-default-instead: Qwen3.8 27B is dense and reads a prompt at 103-183 tok/s on the M4 Max (Qwen3.6 35B: 1,046), so Ask's ~10-12k-token first prompt costs 60-90 s cold. Warm reuse already works: /tmp bench with llama-server b11826, same 12.5k-token system prompt twice: 'read 12517 new tokens (0 cached), 62.8s' then 'read 20 new tokens (12498 cached), 1.6s'. Every eval case starts cold (the probe quits after each), and a person's first Ask after launch or after 5 idle minutes does too. Ideas: llama-server --slot-save-path plus POST /slots/0?action=save|restore keyed by model id + a hash of the standing prompt (system + tools, before the document), restored right after load in AskModelServer.start; or warm() sending the standing prompt as soon as the model loads (it already starts loading when a person opens Ask). Check qwen35 is hybrid (recurrent layers every 4th full attention), so a restore must carry the recurrent state too; llama.cpp's slot save does for whole-prompt matches. Trace of a cold case: scene-bird-singing-on-a-branch's first turn answered at 89.9 s.",
@@ -71,6 +71,10 @@
     {
       "t": "2026-11-03T15:26:33.290Z",
       "note": "seq 140 -> 120"
+    },
+    {
+      "t": "2026-11-04T05:21:04.140Z",
+      "note": "from ask-on-the-local-model-makes-results-that-look-f, 2026-11-04: a worse form of the slow first read. Probe at 50c54b72, Qwen3.8 27B, 'Make a pricing section on brand'. Two of four tries got no first answer at all: Scripts/ask-eval.sh run --engine ask --cases pricing-section (20261104-043832-ask) printed 0 with phase planning at 300 s, and Scripts/playtest-all.sh --no-build ask-makes-a-pricing-section printed FAILED step 8 askPhase within 420.0s; the trace stops at 'asking the model (about 14923 tokens of 65536)'. The next two tries answered first at 126 s and 138 s, and one eval read finished in 210 s. Same prompt size each time, 45 held-out cases just before had one run-out, swap and memory healthy afterwards. Cause not known. The eval's 300 s limit scores such a case 0 with nothing made: Scripts/ask-eval.sh time <run> counts them per group."
     }
   ]
 }

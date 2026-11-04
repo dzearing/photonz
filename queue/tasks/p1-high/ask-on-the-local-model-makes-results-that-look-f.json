@@ -5,11 +5,11 @@
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-20T05:14:41.231Z",
-  "updated": "2026-11-04T01:23:24.802Z",
+  "updated": "2026-11-04T05:21:22.626Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by ask-in-the-app-runs-on-a-local-model-with-no-mod (2026-10-19). qwen3:30b reads text only, so it plans from read_document and find_elements boxes. Pricing walk (Scripts/playtest/ask-makes-a-pricing-section-walk.json): it placed two starter Cards (linked copies, good) then add_text beside the cards' own Card title text. set_layer on a copy's word piece writes into the copy (agentWordCopyPiece), so the plan should target the piece; the skill (plugin/skills/photonz/SKILL.md) has the recipe a frontier model follows. Screenshot walk: 12 measurements after AskElements sorting and the 12 cap, still crowded near the switches. Options: a vision model for a look step (llama3.2-vision is on this Mac), a second planning pass fed render_picture, or recipe hints in AskConversation.instructions.",
@@ -188,11 +188,25 @@
     {
       "t": "2026-11-04T01:23:24.801Z",
       "note": "2026-11-03 second pass. Reproduced item 1's literal case at 0cd7c11c: asking for 'three of the Card starter components' made one shape named Card Starter, then make_component and three place_component 'Card Starter' failed as they ran (the Library has Card), so Pro and Team's words float on white with no card, and Ask said nothing. Picture /tmp/photonz-playtest/ask-card-check/1-ran-sc.png. The model never heard the refusal: place_component's name is only checked at run time."
+    },
+    {
+      "t": "2026-11-04T05:21:04.063Z",
+      "note": "walks ask-makes-a-pricing-section-walk, ask-annotates-a-screenshot-walk -> ask-makes-a-pricing-section-walk, ask-annotates-a-screenshot-walk, ask-places-copies-with-their-words-walk"
+    },
+    {
+      "t": "2026-11-04T05:21:04.372Z",
+      "note": "2026-11-04 result. Item 5 met on final code 50c54b72: 20261104-021419-ask-held-out read total 64.5, layout 66.3 (bar 30), video 59.9 (bar 55), drawing 67.3, redline 33.6, no layout case out of time. Climb: pricing-section 61.4 (20261104-050033-ask), and 0 on 20261104-043832-ask, which got no first answer. Cause of the drop, from totals only (Scripts/ask-eval.sh time): the layout group is three cases, so one case moves it by a third. Not the built-in runtime: Qwen3.6 35B read 10.8 under Ollama at 9e2b248e, beside 16.6 and 23.9 for 27B at that commit, and 5.7 to 10.5 built in, with plans of the same 8 to 10 steps, so the plans were weaker, not cut short. Adding add_component and its rules lifted that model to 37.7 and 22.4. On Qwen3.8 27B plans sit near the eval's 300 s limit: one of three layout cases ran out in the 12.3 and 43.6 runs, and a case still planning makes nothing and scores 0. Limit of this: past totals, no fresh same-code comparison. Item 1: new, the words of a copy reach its own text, place_component words; a wrong name is refused while planning. Read document on the final eval: three cards at y 240, gaps 60 and 60, every word inside a card; the only overlaps are the pill's words on Card Pro and a 1 pt touch of the per month and price boxes, with no ink touching. Chose to count item 1 met although default cards are shapes with separate words over placing starters because the user kept starters from the model (2026-10-20 and 10-23), so a blank canvas has no placeholder text to replace. Chose to accept the pill across its card's edge because a badge sits there on purpose. Seen live with a Button, not a Card. Chose to leave the eval's 300 s limit alone so readings stay comparable. Looked at 2026-11-04-ask-pricing-final-sc.png: heading centred, three even cards, labels readable; and the copy words picture. Pricing walk: 1 failed, no first answer in 420 s, then 1 passed; ask-annotates passed; ask-places-copies-with-their-words-walk passed. Scripts/test.sh green on the final tree. Left rough, no task: the pill off its card's middle, and eight type sizes in pricing. Rough items folded: the stall to ask-s-first-answer-after-its-model-loads-comes-i, silent run-time failures to when-ask-stops-part-way-it-says-so-and-one-refus."
+    },
+    {
+      "t": "2026-11-04T05:21:22.624Z",
+      "note": "Ask's held-out layout reads 66.3 (bar 30) and video 59.9 (bar 55) on final code 50c54b72, total 64.5, with the cause named from totals. A placed copy now takes its own words, and a wrong component name is refused while planning. Verified by unit tests, Scripts/test.sh, three walks and the audit 2026-11-04-ask-copy-words.json. Two of four pricing tries got no first answer; folded into ask-s-first-answer-after-its-model-loads-comes-i."
     }
   ],
   "walks": [
     "ask-makes-a-pricing-section-walk",
-    "ask-annotates-a-screenshot-walk"
+    "ask-annotates-a-screenshot-walk",
+    "ask-places-copies-with-their-words-walk"
   ],
-  "started": "2026-11-04T01:02:28.062Z"
+  "started": "2026-11-04T01:02:28.062Z",
+  "completed": "2026-11-04T05:21:22.625Z"
 }
