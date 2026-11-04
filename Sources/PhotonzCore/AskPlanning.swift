@@ -293,11 +293,14 @@ public struct AskPlan: Hashable, Sendable {
     public let summary: String
     /// Names of things the model looked up by id (components), for its lines.
     public let names: [String: String]
+    /// What planning could not make, nil when the model finished with it all.
+    public let unplanned: AskUnplanned?
 
-    public init(steps: [AskStep], summary: String, names: [String: String] = [:]) {
+    public init(steps: [AskStep], summary: String, names: [String: String] = [:], unplanned: AskUnplanned? = nil) {
         self.steps = steps
         self.summary = summary
         self.names = names
+        self.unplanned = unplanned
     }
 
     /// Step `number`'s line, as the Agent group shows it.
@@ -311,7 +314,7 @@ public struct AskPlan: Hashable, Sendable {
         arguments["plan"] = .array(statements.map { .string($0) })
         var changed = steps
         changed[number - 1] = AskStep(tool: changed[number - 1].tool, arguments: .object(arguments))
-        return AskPlan(steps: changed, summary: summary, names: names)
+        return AskPlan(steps: changed, summary: summary, names: names, unplanned: unplanned)
     }
 
     /// The plan with step `number`'s drawing plan replaced by `statements`;
@@ -321,14 +324,7 @@ public struct AskPlan: Hashable, Sendable {
         arguments["plan"] = statements.isEmpty ? nil : .array(statements.map { .string($0) })
         var changed = steps
         changed[number - 1] = AskStep(tool: changed[number - 1].tool, arguments: .object(arguments))
-        return AskPlan(steps: changed, summary: summary, names: names)
-    }
-
-    /// Whether a step after step `number` names what it makes (`$number`).
-    /// A step the app refuses changes nothing, so it can be passed over,
-    /// unless a later step was counting on it.
-    public func isNamedLater(_ number: Int) -> Bool {
-        steps.dropFirst(number).contains { $0.names(step: number) }
+        return AskPlan(steps: changed, summary: summary, names: names, unplanned: unplanned)
     }
 }
 
@@ -373,7 +369,7 @@ public struct AskConversation: Sendable {
     /// Thirty since 2026-10-23: a kit of base components is one add_component
     /// a round, a dozen or more of them, then its title and labels, and twelve
     /// rounds ran out before the last few components. A model stuck sending
-    /// one refused call is stopped sooner (`mostSameRefusals`).
+    /// one refused call is stopped sooner (`afterRefusals`).
     public static let mostRounds = 30
     /// More readouts than this crowd a screenshot past reading.
     public static let mostMeasurements = 12
@@ -592,9 +588,31 @@ public struct AskConversation: Sendable {
 
     /// The plan as it runs: with a web page, the page lands first, under
     /// what the model made of it.
-    public func plan(summary: String) -> AskPlan {
-        if let web { return webPlan(steps, page: web, summary: summary) }
-        return AskPlan(steps: steps, summary: summary, names: names)
+    /// `stoppedShort` says planning ended before the model said it was
+    /// finished: a refusal it would not leave, the round limit or a reply
+    /// that could not be read.
+    public func plan(summary: String, stoppedShort: Bool = false) -> AskPlan {
+        let unplanned = unplanned(stoppedShort: stoppedShort)
+        if let web {
+            let plan = webPlan(steps, page: web, summary: summary)
+            return AskPlan(steps: plan.steps, summary: plan.summary, names: plan.names, unplanned: unplanned)
+        }
+        return AskPlan(steps: steps, summary: summary, names: names, unplanned: unplanned)
+    }
+
+    /// What this plan could not make, so far.
+    private func unplanned(stoppedShort: Bool) -> AskUnplanned? {
+        let things = lost.filter { thing in
+            // Made after all, on a later try.
+            !steps.dropFirst(thing.atStep).contains { $0.tool == thing.tool && (thing.named == nil || Self.named($0.arguments) == thing.named) }
+        }.map(\.words)
+        guard stoppedShort || !things.isEmpty else { return nil }
+        return AskUnplanned(things: things, stoppedAfter: stoppedShort ? steps.last.map { AskLeftOutWords.thing($0, names: names) } ?? "the page" : nil)
+    }
+
+    /// What tells one thing a call makes from another of its kind.
+    private static func named(_ arguments: AgentJSON) -> String? {
+        arguments["name"]?.stringValue ?? arguments["text"]?.stringValue
     }
 
     /// The messages as sent: when the plan has outgrown the window, the
@@ -633,6 +651,7 @@ public struct AskConversation: Sendable {
             brokenCalls += calls.count
         }
         self.calls += calls.count
+        refusedThisTurn = []
         guard !calls.isEmpty else {
             let sentence = content.trimmingCharacters(in: .whitespacesAndNewlines)
             // With a page, finishing (or refusing) lands the page as it is:
@@ -661,8 +680,6 @@ public struct AskConversation: Sendable {
                 switch pageStep(arguments, page: web) {
                 case .success(let step):
                     steps.append(step)
-                    sameRefusals = 0
-                    lastRefused = ""
                     tell(name, "Planned, with parts \(step.arguments["parts"]?.arrayValue?.compactMap(\.stringValue).joined(separator: ", ") ?? ""). Plan the next control, or finish.")
                 case .failure(let refused):
                     refuse(name, arguments, refused.message)
@@ -690,16 +707,16 @@ public struct AskConversation: Sendable {
                 var step = AskStep(tool: name, arguments: arguments)
                 if name == "add_measurement",
                    steps.filter({ $0.tool == "add_measurement" }).count >= Self.mostMeasurements {
-                    tell(name, "Not planned: \(Self.mostMeasurements) measurements is the most a picture reads well with. Plan nothing more of them; finish.")
+                    refuse(name, arguments, "Not planned: \(Self.mostMeasurements) measurements is the most a picture reads well with. Plan nothing more of them; finish.", losesNothing: true)
                     continue
                 }
                 if name == "add_component",
                    steps.filter({ $0.tool == "add_component" }).count >= Self.mostComponents {
-                    tell(name, "Not planned: \(Self.mostComponents) components fill a sheet. Plan nothing more of them; finish.")
+                    refuse(name, arguments, "Not planned: \(Self.mostComponents) components fill a sheet. Plan nothing more of them; finish.", losesNothing: true)
                     continue
                 }
                 if name == "add_text", let words = arguments["text"]?.stringValue, let earlier = labelledBy(words) {
-                    tell(name, "Not planned: step \(earlier) already sets those words beside its row. Plan something else, or finish.")
+                    refuse(name, arguments, "Not planned: step \(earlier) already sets those words beside its row. Plan something else, or finish.", losesNothing: true)
                     continue
                 }
                 // The title comes first; after it the table names every row
@@ -720,7 +737,7 @@ public struct AskConversation: Sendable {
                 if name == "add_drawing" || name == "add_photo" {
                     let routed = Self.routed(name, arguments, request: request, paints: paints, brushes: brushes)
                     if let refusal = routed.refusal {
-                        tell(name, refusal)
+                        refuse(name, arguments, refusal)
                         continue
                     }
                     (name, arguments) = (routed.tool, routed.arguments)
@@ -730,7 +747,7 @@ public struct AskConversation: Sendable {
                 arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
                     brokenCalls += 1
-                    tell(name, "Not planned. \(problem)")
+                    refuse(name, arguments, "Not planned. \(problem)")
                     continue
                 }
                 if name == "add_drawing" {
@@ -757,11 +774,11 @@ public struct AskConversation: Sendable {
                     }
                 }
                 if let earlier = repeated(step) {
-                    refuse(name, step.arguments, "Not planned: step \(earlier) already does that. Plan something else, or finish.")
+                    refuse(name, step.arguments, "Not planned: step \(earlier) already does that. Plan something else, or finish.", losesNothing: true)
                     continue
                 }
                 if name == "add_drawing", let earlier = stacked(step) {
-                    tell(name, "Not planned: step \(earlier) already draws the whole picture in that place, and a second one would land on top of it. A scene is one add_drawing. Plan something else, or finish.")
+                    refuse(name, arguments, "Not planned: step \(earlier) already draws the whole picture in that place, and a second one would land on top of it. A scene is one add_drawing. Plan something else, or finish.", losesNothing: true)
                     continue
                 }
                 // Checked as it would run, with $N standing in for ids not made yet.
@@ -769,7 +786,7 @@ public struct AskConversation: Sendable {
                 case .success(.addComponent(_, let component)) where drawnBefore(component) != nil:
                     let (earlier, kind) = drawnBefore(component) ?? (0, "")
                     let made = steps.compactMap { $0.tool == "add_component" ? $0.arguments["name"]?.stringValue : nil }
-                    refuse(name, step.arguments, "Not planned: \(component.name) is drawn the same as \(kind), step \(earlier). A sheet shows each kind of control once. Planned so far: \(made.joined(separator: ", ")). Make a kind that is not in that list, drawn as that kind is, or finish.")
+                    refuse(name, step.arguments, "Not planned: \(component.name) is drawn the same as \(kind), step \(earlier). A sheet shows each kind of control once. Planned so far: \(made.joined(separator: ", ")). Make a kind that is not in that list, drawn as that kind is, or finish.", losesNothing: true)
                 case .success(.addComponent(_, let component)) where component.labels && namedBefore(component) != nil:
                     // Two rows with one name read as the same thing twice (the
                     // eval, 2026-10-24: a filled and a grey button both "Button").
@@ -786,15 +803,11 @@ public struct AskConversation: Sendable {
                         steps.insert(step, at: 0)
                         // It keeps the page margin, as a title planned first does.
                         alignSheet()
-                        sameRefusals = 0
-                        lastRefused = ""
                         tell(name, "Planned as step 1.")
                         continue
                     }
                     steps.append(step)
                     if name == "add_component" || name == "add_text" { alignSheet() }
-                    sameRefusals = 0
-                    lastRefused = ""
                     tell(name, "Planned as step \(steps.count). Refer to what it makes as $\(steps.count).")
                 case .failure(let failure):
                     brokenCalls += 1
@@ -802,29 +815,40 @@ public struct AskConversation: Sendable {
                 }
             } else {
                 brokenCalls += 1
-                tell(name, "\(name) is not one of your tools here. Use only the tools you were given.")
+                refuse(name, arguments, "\(name) is not one of your tools here. Use only the tools you were given.", losesNothing: true)
             }
         }
-        // A component sent back unchanged once is taken out of the talk and
-        // the model asked, as a new turn, for the next kind: told so in a
-        // tool answer it sent the same call a third time (the eval,
-        // 2026-10-23), and one kind it cannot draw ended the sheet.
-        if calls.count == 1, calls[0].0 == "add_component", sameRefusals == 1,
-           let kind = calls[0].1["name"]?.stringValue, leftOut.insert(kind).inserted,
-           messages.count >= 2, messages[messages.count - 1]["role"]?.stringValue == "tool" {
-            messages.removeLast(2)
-            messages.append(["role": "user", "content": .string("Leave \(kind) out: it could not be planned. Plan the next kind of component the sheet does not have yet, or finish.")])
-            sameRefusals = 0
-            lastRefused = ""
-            return .again(looks: [])
-        }
-        // A small model at temperature 0 that sends a refused call back
-        // unchanged sends it every round after; the plan it has is offered
-        // instead of the rest of the rounds going on the same refusal.
-        if sameRefusals >= Self.mostSameRefusals, !steps.isEmpty, looks.isEmpty {
-            return .planned(plan(summary: ""))
-        }
+        if let outcome = afterRefusals(calls: calls.count) { return outcome }
         return .again(looks: looks)
+    }
+
+    /// A turn of nothing but calls refused in an earlier round is taken out
+    /// of the talk and the model asked, as a new turn, for the next part: told
+    /// so in a tool answer a small model at temperature 0 sent the same call
+    /// a third time (the eval, 2026-10-23), and one thing it could not plan
+    /// ended the plan. Sent back even then, it will be sent every round after,
+    /// so the plan is offered, saying where it stopped when that lost anything.
+    private mutating func afterRefusals(calls: Int) -> Outcome? {
+        let turn = refusedThisTurn
+        let repeats = turn.count == calls && turn.allSatisfy { refusedBefore.contains($0.said) }
+        refusedBefore.formUnion(turn.map(\.said))
+        guard repeats, !turn.isEmpty else { return nil }
+        if turn.allSatisfy({ toldToLeave.contains($0.said) }) {
+            guard !steps.isEmpty else { return nil }
+            return .planned(plan(summary: "", stoppedShort: turn.contains { !$0.losesNothing }))
+        }
+        guard messages.count > calls, messages[messages.count - calls - 1]["role"]?.stringValue == "assistant" else { return nil }
+        messages.removeLast(calls + 1)
+        toldToLeave.formUnion(turn.map(\.said))
+        for call in turn where !call.losesNothing {
+            lost.append((call.tool, Self.named(call.arguments), AskLeftOutWords.thing(AskStep(tool: call.tool, arguments: call.arguments), names: names), steps.count))
+        }
+        let named = turn.map { call in
+            call.arguments["name"]?.stringValue ?? "that \(call.tool) call"
+        }
+        let next = turn.allSatisfy { $0.tool == "add_component" } ? "kind of component the sheet does not have yet" : "part"
+        messages.append(["role": "user", "content": .string("Leave \(named.joined(separator: " and ")) out: it could not be planned. Plan the next \(next), or finish.")])
+        return .again(looks: [])
     }
 
     /// Why a component whose call reads fine still could not be built, or
@@ -1166,13 +1190,16 @@ public struct AskConversation: Sendable {
     static let longestLookAnswer = 16000
     public static let noPlanSentence = "I couldn't make a plan for that."
     private var nudged = false
-    /// The last call refused, and how many rounds running it came back the same.
-    private var lastRefused = ""
-    private var sameRefusals = 0
-    /// Components the model was asked to leave out after sending one back unchanged.
-    private var leftOut: Set<String> = []
+    /// The calls this turn that were refused, as sent.
+    private var refusedThisTurn: [(said: String, tool: String, arguments: AgentJSON, losesNothing: Bool)] = []
+    /// Every call refused in an earlier round, as sent.
+    private var refusedBefore: Set<String> = []
+    /// Calls the model was asked to leave out after sending one back unchanged.
+    private var toldToLeave: Set<String> = []
+    /// What those calls would have made, and how many steps there were then:
+    /// a call the plan already covers (a step sent twice) loses nothing.
+    private var lost: [(tool: String, named: String?, words: String, atStep: Int)] = []
     private var askedForTitle = false
-    static let mostSameRefusals = 2
     static let nudge = "Try again with the tools and what is listed above: plan it step by step. Answer I can't only if no tool can do any part of it."
 
     /// Asks once for a title when the plan is a sheet of labelled rows with
@@ -1186,12 +1213,12 @@ public struct AskConversation: Sendable {
         return true
     }
 
-    /// Tells the model a call was not planned, counted toward stopping a
-    /// model that sends it back unchanged.
-    private mutating func refuse(_ tool: String, _ arguments: AgentJSON, _ text: String) {
-        let said = "\(tool) \(arguments.encodedString())"
-        sameRefusals = said == lastRefused ? sameRefusals + 1 : 0
-        lastRefused = said
+    /// Tells the model a call was not planned, kept to catch a model sending
+    /// it back unchanged (`afterRefusals`). `losesNothing` is a call the plan
+    /// has no need of: what it would make is already there, or there is
+    /// enough of it.
+    private mutating func refuse(_ tool: String, _ arguments: AgentJSON, _ text: String, losesNothing: Bool = false) {
+        refusedThisTurn.append(("\(tool) \(arguments.encodedString())", tool, arguments, losesNothing))
         tell(tool, text)
     }
 
@@ -1199,13 +1226,13 @@ public struct AskConversation: Sendable {
     /// paint_stroke step, in the medium the person named.
     private mutating func paintSketch(_ arguments: AgentJSON) {
         if steps.contains(where: { $0.tool == "paint_stroke" }), steps.count > 1 {
-            tell("add_drawing", Self.sketchedAlready)
+            refuse("add_drawing", arguments, Self.sketchedAlready, losesNothing: true)
             return
         }
         let svg = arguments["svg"]?.stringValue ?? ""
         guard !svg.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             brokenCalls += 1
-            tell("add_drawing", Self.sketchFirst)
+            refuse("add_drawing", arguments, Self.sketchFirst)
             return
         }
         let art: SVGArtwork
@@ -1213,7 +1240,7 @@ public struct AskConversation: Sendable {
         case .success(let read): art = read
         case .failure(let failure):
             brokenCalls += 1
-            tell("add_drawing", "Not planned. \(failure.message) Send the sketch again as one complete SVG.")
+            refuse("add_drawing", arguments, "Not planned. \(failure.message) Send the sketch again as one complete SVG.")
             return
         }
         let canvas = CGSize(width: canvasWidth > 0 ? canvasWidth : 960, height: canvasHeight > 0 ? canvasHeight : 640)
@@ -1221,13 +1248,11 @@ public struct AskConversation: Sendable {
         let calls = BrushSketch.calls(BrushSketch.strokes(art, canvas: canvas, medium: medium), medium: medium)
         guard !calls.isEmpty else {
             brokenCalls += 1
-            tell("add_drawing", "Not planned: that sketch has no filled shapes to paint. Send it again with a fill on every shape.")
+            refuse("add_drawing", arguments, "Not planned: that sketch has no filled shapes to paint. Send it again with a fill on every shape.")
             return
         }
         let first = steps.count + 1
         steps += calls.map { AskStep(tool: "paint_stroke", arguments: $0) }
-        sameRefusals = 0
-        lastRefused = ""
         tell("add_drawing", "Planned as steps \(first) to \(steps.count): your sketch painted in \(calls.count) strokes of \(medium.title.lowercased()). \(Self.afterSketch)")
     }
 

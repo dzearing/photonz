@@ -95,6 +95,9 @@ final class AskSession {
     /// One line about the last request beside its row: that it made another
     /// kind of picture than the one asked for, and why.
     private(set) var said: String?
+    /// What the last request did not make, in one short line (`AskPlanRun`).
+    /// The panel shows it under the row; the conversation answers with it.
+    private(set) var leftOut: String?
 
     /// What the request at work is doing now, set by the pipeline as each
     /// stage starts (`AskStage`): the one live line under it in the panel.
@@ -371,6 +374,7 @@ final class AskSession {
         // "As a photo" makes the last request again that way.
         let words = AgentPictureKind.remade(typed, after: changes.rows.first?.asked) ?? typed
         said = nil
+        leftOut = nil
         asked = words
         current = words
         plan = nil
@@ -590,7 +594,8 @@ final class AskSession {
                 continue
             }
             if let after = editor.document {
-                let made = AskChangeWords.sentence(landed.landed, asked: words, before: landed.before, after: after)
+                let made = AskChangeWords.sentence(landed.landed, asked: words, before: landed.before, after: after,
+                                                   madeAll: landed.leftOut == nil)
                 let components = landed.landed.filter { $0.tool == AskWeb.pageTool && $0.arguments["component"] != nil }.count
                 // A request that looked something up says where it looked.
                 let said = webRead.map { AskWeb.sentence(host: $0.page.host, components: components) }
@@ -598,12 +603,14 @@ final class AskSession {
                                                          components: landed.landed.filter { $0.tool == "add_component" }.count) }
                     ?? made
                 changes.record(asked: words, sentence: said,
-                               before: landed.before, after: after, sources: landed.sources)
+                               before: landed.before, after: after, sources: landed.sources, leftOut: landed.leftOut)
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
             let sayings = [talk.note, landed.layoutSentence].compactMap { $0 }
             said = sayings.isEmpty ? nil : sayings.joined(separator: " ")
+            leftOut = landed.leftOut
+            if let line = landed.leftOut { note("left out: \(line)") }
             phase = .ran
             revealRows()
             return
@@ -617,8 +624,8 @@ final class AskSession {
         if phase == .planning { phase = .idle }
     }
 
-    /// Steps the app refused, by number, with its reason. A refused step
-    /// changed nothing, so the rest ran without it.
+    /// Steps left out, by number, with the reason: a step the app refused
+    /// changed nothing, so the rest ran without it and what counted on it.
     private(set) var skipped: [Int: String] = [:]
 
     struct Ran {
@@ -629,6 +636,8 @@ final class AskSession {
         let sources: [AskDrawingSource]
         /// What the look over the layout could not mend, in one sentence.
         let layoutSentence: String?
+        /// What this change did not make, nil when it made it all.
+        let leftOut: String?
     }
 
     /// Runs the plan as one undo step. Nil when nothing is left changed: the
@@ -642,8 +651,7 @@ final class AskSession {
         stepsRun = 0
         skipped = [:]
         var failure: String?
-        var landed: [AskStep] = []
-        var made: [Int: String] = [:]
+        var ledger = AskPlanRun(plan: plan)
         var sources: [AskDrawingSource] = []
         var layoutSentence: String?
         let drawings = plan.steps.filter { $0.tool == "add_drawing" || $0.tool == "add_photo" }.count
@@ -654,21 +662,29 @@ final class AskSession {
                 if Task.isCancelled { failure = AskCopy.stoppedSentence; return }
                 let stages = Self.stages(of: step, number: number, of: plan.steps.count,
                                          part: &drawn, drawings: drawings)
+                // Counting on a step that was left out, it cannot run either.
+                if ledger.passOver(number) {
+                    skipped[number] = ledger.leftOut.last?.why
+                    stepsRun = number
+                    continue
+                }
                 enter(stages.working)
                 var refusal: String?
                 if step.tool == AskWeb.pageTool {
                     switch Self.landPage(step, from: webRead, in: editor) {
                     case .success(let id):
-                        landed.append(step)
-                        made[number] = id
+                        ledger.land(number, id: id)
                     case .failure(let refused):
                         refusal = refused.message
                     }
-                    if let refusal { skipped[number] = refusal }
+                    if let refusal {
+                        skipped[number] = refusal
+                        ledger.leaveOut(number, because: refusal)
+                    }
                     stepsRun = number
                     continue
                 }
-                switch step.request(document: document, made: made) {
+                switch step.request(document: document, made: ledger.made) {
                 case .failure(let refused):
                     refusal = refused.message
                 case .success(let request):
@@ -689,24 +705,19 @@ final class AskSession {
                     if answer.isError {
                         refusal = text
                     } else {
-                        landed.append(step)
-                        if let id = AskStep.madeID(fromAnswer: text) { made[number] = id }
+                        ledger.land(number, id: AskStep.madeID(fromAnswer: text))
                         if let source = AskDrawingSource.of(tool: step.tool, answer: text) { sources.append(source) }
                     }
                 }
                 if let refusal {
                     skipped[number] = refusal
-                    // Passed over, unless a later step counts on it.
-                    if plan.isNamedLater(number) {
-                        failure = AskCopy.stepFailed(number)
-                        return
-                    }
+                    ledger.leaveOut(number, because: refusal)
                 }
                 stepsRun = number
             }
             // Ask looks over the layout it made before it hands back, and
             // mends what it can in this same undo step (`AskLayoutCheck`).
-            guard failure == nil, !landed.isEmpty, let now = editor.document else { return }
+            guard failure == nil, !ledger.landed.isEmpty, let now = editor.document else { return }
             let review = AskLayoutCheck.review(now, before: before, pictureColour: editor.store.flatColourHex(for:))
             for line in review.notes { note("look: " + line) }
             if !review.fixes.isEmpty { editor.perform { AskLayoutCheck.apply(review, to: &$0) } }
@@ -714,18 +725,19 @@ final class AskSession {
         }
         if let failure {
             // What ran is one step in the history: take it back, so a plan
-            // that went wrong half way leaves nothing half done.
-            if !landed.isEmpty { editor.undo() }
+            // stopped half way leaves nothing half done.
+            if !ledger.landed.isEmpty { editor.undo() }
             stepsRun = 0
             phase = .stopped(failure)
             return nil
         }
-        guard !landed.isEmpty else {
+        guard !ledger.landed.isEmpty else {
             phase = .stopped(AskCopy.nothingRan)
             return nil
         }
         lastSources = sources
-        return Ran(before: before, landed: landed, made: made, sources: sources, layoutSentence: layoutSentence)
+        return Ran(before: before, landed: ledger.landed, made: ledger.made, sources: sources,
+                   layoutSentence: layoutSentence, leftOut: ledger.sentence)
     }
 
     /// What a step's line says while it runs, and once its painting is
@@ -1042,7 +1054,7 @@ final class AskSession {
                         continue
                     }
                     note("unreadable reply after \(talk.steps.count) steps: offering them")
-                    return .success(talk.plan(summary: ""))
+                    return .success(talk.plan(summary: "", stoppedShort: true))
                 }
                 return .failure(trouble)
             } catch {
@@ -1079,7 +1091,7 @@ final class AskSession {
             }
         }
         // Out of turns with steps written: offer what it has.
-        if !talk.steps.isEmpty || talk.web != nil { return .success(talk.plan(summary: "")) }
+        if !talk.steps.isEmpty || talk.web != nil { return .success(talk.plan(summary: "", stoppedShort: true)) }
         return .failure(.said(AskConversation.noPlanSentence))
     }
 
@@ -1235,7 +1247,6 @@ enum AskCopy {
     static let badResult = "Bad Result"
     static let stoppedSentence = "Stopped. Nothing was changed."
     static let noDocumentSentence = "Open a picture or video first."
-    static func stepFailed(_ n: Int) -> String { "Step \(n) failed. Nothing was changed." }
     /// A drawing that still did not read after being drawn again.
     static let couldNotDraw = "I couldn't make a clear drawing of that. Nothing was changed."
     static let helpLine = "Each request is one row. Its switch turns the change off and on, and one Command Z takes back the latest. A request sent while one is working waits its turn."

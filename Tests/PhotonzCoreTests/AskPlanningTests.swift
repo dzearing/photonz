@@ -103,7 +103,7 @@ struct AskPlanningTests {
         #expect(said.contains("add_text"))
     }
 
-    @Test("A refused call sent back unchanged twice ends the planning with the steps already written")
+    @Test("A refused call sent back after being told to leave it out ends the planning with the steps already written")
     func stuckOnARefusal() throws {
         var talk = Self.conversation()
         _ = talk.take(try Self.reply([("add_text", #"{"text":"Hi","x":8,"y":8}"#)]))
@@ -550,7 +550,7 @@ struct AskPlanningTests {
             AskStep(tool: "add_shape", arguments: try Self.json(#"{"kind":"rectangle"}"#)),
             AskStep(tool: "add_text", arguments: try Self.json(#"{"text":"$1","x":0,"y":0}"#)),
         ], summary: "")
-        #expect(!plan.isNamedLater(1))
+        #expect(!plan.steps[1].names(step: 1))
     }
 
     @Test("What a step made is read from its answer: a layer, a clip or a title")
@@ -561,16 +561,16 @@ struct AskPlanningTests {
         #expect(AskStep.madeID(fromAnswer: "Done.") == nil)
     }
 
-    @Test("A plan knows whether a later step names what a step makes")
+    @Test("A step knows whether it names what an earlier step makes")
     func referenced() throws {
         let plan = AskPlan(steps: [
             AskStep(tool: "add_shape", arguments: try Self.json(#"{"kind":"rectangle"}"#)),
             AskStep(tool: "add_text", arguments: try Self.json(#"{"text":"A","x":0,"y":0}"#)),
             AskStep(tool: "apply_style", arguments: try Self.json(#"{"style":"S","layers":["$1"]}"#)),
         ], summary: "")
-        #expect(plan.isNamedLater(1))
-        #expect(!plan.isNamedLater(2))
-        #expect(!plan.isNamedLater(3))
+        #expect(plan.steps[2].names(step: 1))
+        #expect(!plan.steps[2].names(step: 2))
+        #expect(!plan.steps[1].names(step: 1))
     }
 
     // MARK: Reading a plan

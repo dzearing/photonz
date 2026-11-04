@@ -111,10 +111,11 @@ As soon as planning ends, `AskSession` runs each step through `AgentWork.run`, t
 channel runs, inside `EditorState.asOneUndoStepAwaiting`, so the whole run is
 one step in the history.
 
-A step the app refuses changed nothing (every tool is atomic). It is passed
-over (its reason kept for a walk in `skipped`), and the rest run, unless a later step names what it would have made (`AskPlan.isNamedLater`):
-then the run stops and what already landed is undone, so a plan that goes
-wrong half way leaves nothing half done. Stop does the same.
+A step the app refuses changed nothing (every tool is atomic). It is left
+out (its reason kept for a walk in `skipped`) along with any step naming what
+it would have made, the rest run, and the row says so ("When Ask stops part
+way"). Stop takes back what already landed, so a stopped plan leaves nothing
+half done.
 
 ### Looking at a layout (2026-11-03)
 
@@ -159,6 +160,43 @@ on a blue button rather than near black.
 
 The eval drives Ask by pressing the title bar's Ask button and Send, which work
 with the window behind another app.
+
+### When Ask stops part way (2026-11-04)
+
+A change that stops short says so. On 2026-10-23 a model sent one refused
+rectangle back three times and Ask offered a title, a subtitle and one empty
+card under the row Made a pricing section on brand.
+
+**While it plans.** A turn of nothing but calls refused in an earlier round is
+taken out of the talk, for every tool, and the model asked as a new turn to
+leave it out and plan the next part or finish. Told that in a tool answer, a
+small model at temperature 0 sends the same call again. Sent back even then,
+planning stops. A turn that also planned something stays in the talk: the model
+is getting somewhere.
+
+**What counts as lost.** A call the plan does not need (a step sent twice, more
+components than a sheet holds) loses nothing, so repeating it stops the talk
+without a word. A call that was left out is forgotten when a later step of the
+same tool makes the same thing, by its name or words, or any step of that tool
+when it had neither.
+
+**As it runs.** A step that fails changed nothing, so every other step still
+runs, as one undo step. A step naming a left out step by `$N` is left out too
+(`AskPlanRun`). Until 2026-11-04 one failed step that a later step counted on
+took the whole plan back with Step 11 failed. Nothing was changed.
+
+**What a person sees.** The round limit, a reply that could not be read and a
+refusal the model would not leave all read Stopped after Card Starter; the rest
+could not be planned. A thing left out of a plan that finished reads Left out
+Badge; it could not be planned, and a step that failed as it ran reads Left out
+Card Pro and a step that needed it: that layer is not there. The line sits under
+the row for as long as the row lasts, and is what the conversation answers. The
+row itself says what landed (`madeAll: false`), never the request said as done.
+A change that made everything says nothing extra.
+
+A walk reaches these with `askReplies` in its setup, the model's replies written
+out one a turn, since no model can be counted on to get stuck
+(`ask-says-what-it-left-out-walk`).
 
 ## One row per request: off, on, delete
 

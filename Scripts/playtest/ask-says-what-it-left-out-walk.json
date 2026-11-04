@@ -1,0 +1,284 @@
+{
+  "out": "/tmp/photonz-playtest/ask-says-what-it-left-out-walk",
+  "seed": "Ask stopping short at Next defaults, with the model's replies written into the walk, since no model can be counted on to get stuck. First a model that will not leave a refused rectangle: the row says what landed and what did not. Then a plan with one step that fails as it runs and one counting on it: the other steps land as one undo step and the row says which were left out.",
+  "clock": 540,
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "askReplies": [
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_text",
+                "arguments": {
+                  "text": "Pricing",
+                  "x": 120,
+                  "y": 80,
+                  "fontSize": 48
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_shape",
+                "arguments": {
+                  "shape": "rectangle",
+                  "name": "Card Starter",
+                  "frame": {
+                    "x": 120,
+                    "y": 240,
+                    "width": 320,
+                    "height": 480
+                  },
+                  "fill": "#F5F5F7"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_shape",
+                "arguments": {
+                  "shape": "rectangle",
+                  "stroke": "#D2D2D7",
+                  "strokeWidth": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_shape",
+                "arguments": {
+                  "shape": "rectangle",
+                  "stroke": "#D2D2D7",
+                  "strokeWidth": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_shape",
+                "arguments": {
+                  "shape": "rectangle",
+                  "stroke": "#D2D2D7",
+                  "strokeWidth": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "function": {
+                "name": "add_shape",
+                "arguments": {
+                  "shape": "rectangle",
+                  "name": "Card Team",
+                  "frame": {
+                    "x": 500,
+                    "y": 240,
+                    "width": 320,
+                    "height": 480
+                  },
+                  "fill": "#F5F5F7"
+                }
+              }
+            },
+            {
+              "function": {
+                "name": "set_layer",
+                "arguments": {
+                  "layer": "6F9619FF-8B86-D011-B42D-00CF4FC964FF",
+                  "name": "Card Pro"
+                }
+              }
+            },
+            {
+              "function": {
+                "name": "set_layer",
+                "arguments": {
+                  "layer": "$2",
+                  "x": 40
+                }
+              }
+            },
+            {
+              "function": {
+                "name": "add_text",
+                "arguments": {
+                  "text": "Per month",
+                  "x": 520,
+                  "y": 300,
+                  "fontSize": 20
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "message": {
+          "role": "assistant",
+          "content": "Done.",
+          "tool_calls": []
+        }
+      }
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 900,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Make a pricing section on brand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 60
+    },
+    {
+      "do": "describe",
+      "stage": "stopped-short",
+      "note": "the model would not leave a refused call, so planning stopped short"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Words",
+      "reads": "Added the text “Pricing” and 1 more"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Left Out",
+      "reads": "Stopped after Card Starter; the rest could not be planned."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "1-stopped-short"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Add the other two cards"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 60
+    },
+    {
+      "do": "describe",
+      "stage": "failed-as-it-ran",
+      "note": "one step failed as it ran and a later step counted on it; the other two landed"
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 1 Left Out",
+      "reads": "Left out Card Pro and a step that needed it: that layer is not there."
+    },
+    {
+      "do": "expect",
+      "control": "Agent Change 2 Left Out",
+      "reads": "Stopped after Card Starter; the rest could not be planned."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "2-left-out-as-it-ran"
+    }
+  ]
+}

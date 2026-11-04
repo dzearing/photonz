@@ -45,6 +45,9 @@ public enum AskChangeWords {
         }
     }
 
+    /// One of what a step makes: "a shape", "text".
+    static func oneThing(_ step: AskStep) -> String? { kind(step)?.one }
+
     /// Steps whose own words already say what was made: a drawing's subject,
     /// the words of a text, a count of marks.
     private static let saysWhatItMade: Set<String> = [
@@ -91,8 +94,12 @@ public enum AskChangeWords {
     /// "Drew a cat", "Made the cat's ears bigger", "Added 8 measurements".
     /// `before` and `after` are the document either side of the request,
     /// which name the layers it changed.
+    /// `madeAll` false is a change that stopped short: its row says what
+    /// landed, never the request said as done.
     public static func sentence(_ steps: [AskStep], asked: String = "",
-                                before: PhotonzDocument? = nil, after: PhotonzDocument? = nil) -> String {
+                                before: PhotonzDocument? = nil, after: PhotonzDocument? = nil,
+                                madeAll: Bool = true) -> String {
+        let asked = madeAll ? asked : ""
         // Grouped by what each step's words say, most first, ties in the order asked.
         var groups: [(key: String, kind: Kind, steps: [AskStep])] = []
         for step in steps {

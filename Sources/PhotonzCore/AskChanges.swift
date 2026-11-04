@@ -160,6 +160,8 @@ public struct AskChangeList: Hashable, Sendable {
         public let asked: String
         /// What changed, in a few plain words.
         public let sentence: String
+        /// What the request did not make, in one short line (`AskPlanRun`).
+        public let leftOut: String?
         public let change: AskRecordedChange
         public internal(set) var isOn = true
         /// Deleted. Kept out of sight so an undo of the delete brings it back.
@@ -185,9 +187,10 @@ public struct AskChangeList: Hashable, Sendable {
     /// Records a request that ran. A request that changed nothing leaves no row.
     @discardableResult
     public mutating func record(asked: String, sentence: String, before: PhotonzDocument,
-                                after: PhotonzDocument, sources: [AskDrawingSource] = []) -> UUID? {
+                                after: PhotonzDocument, sources: [AskDrawingSource] = [],
+                                leftOut: String? = nil) -> UUID? {
         guard before != after else { return nil }
-        let row = Row(id: UUID(), asked: asked, sentence: sentence,
+        let row = Row(id: UUID(), asked: asked, sentence: sentence, leftOut: leftOut,
                       change: AskRecordedChange(before: before, after: after), sources: sources)
         rows.insert(row, at: 0)
         return row.id

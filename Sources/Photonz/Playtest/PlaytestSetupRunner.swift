@@ -236,6 +236,8 @@ struct PlaytestSetupRunner {
         AskModelServer.walkSource = AskModelServer.walkFolder == nil ? nil : PlaytestSetupRunner.macAskModels
         AskLocalModel.walkMac = setup.askMac
         AskSearch.walkPort = setup.askSearch
+        AskLocalModel.walkReplies = setup.askReplies.compactMap { try? AgentJSON.parse(Data($0.utf8)) }
+        if !setup.askReplies.isEmpty { said.append("Ask's model answers from the walk, \(setup.askReplies.count) replies") }
         if let port = setup.askSearch { said.append("Ask searches a stand-in on port \(port)") }
         if let mac = setup.askMac { said.append("Ask plans for a \(mac) GB Mac") }
         if setup.offline { said.append(PlaytestSetupRunner.goOffline()) }

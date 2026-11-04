@@ -262,6 +262,10 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// loopback, at this port (`AskLookup.walkEndpoint`), with no key: how a
     /// walk proves looking things up without the web. Nil means the real one.
     public var askSearch: Int?
+    /// What Ask's model answers, turn by turn, each one a chat reply as JSON
+    /// (the last again once they run out), so a walk reaches a plan no model
+    /// can be counted on to write. Empty means the real model.
+    public var askReplies: [String]
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
@@ -269,7 +273,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                 front: Bool = false,
                 history: Int? = nil, timedWithoutMarkers: Bool = false, askModelMissing: Bool = false,
                 askModelsOnly: [String]? = nil, offline: Bool = false, agentHome: Bool = false, askMac: Int? = nil,
-                askSearch: Int? = nil) {
+                askSearch: Int? = nil, askReplies: [String] = []) {
+        self.askReplies = askReplies
         self.askMac = askMac
         self.askSearch = askSearch
         self.offline = offline
@@ -291,7 +296,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
             && flags.isEmpty && timelineOpen == nil && !timelineRoom && !front && history == nil && !timedWithoutMarkers
-            && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil
+            && !askModelMissing && askModelsOnly == nil && !offline && !agentHome && askMac == nil && askSearch == nil && askReplies.isEmpty
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -301,7 +306,7 @@ public struct PlaytestSetup: Sendable, Equatable {
     }
 
     /// The known keys, named in the error when a walk uses another one.
-    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askSearch", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
+    static let knownKeys = ["agentHome", "askMac", "askModelMissing", "askModelsOnly", "askReplies", "askSearch", "captures", "expectNoControl", "flags", "forget", "front", "history", "offline", "scratch",
                             "timedWithoutMarkers", "timelineOpen", "timelineRoom"]
 
     /// The word a walk writes in `forget` to start from a machine that has
@@ -372,6 +377,14 @@ public struct PlaytestSetup: Sendable, Equatable {
             }
             search = number.intValue
         }
+        var replies: [String] = []
+        if let raw = fields["askReplies"], !(raw is NSNull) {
+            guard let list = raw as? [Any], list.allSatisfy({ $0 is [String: Any] }),
+                  let texts = try? list.map({ String(decoding: try JSONSerialization.data(withJSONObject: $0), as: UTF8.self) }) else {
+                throw PlaytestScriptError.invalidSetup(field: "askReplies", reason: "is a list of the model's replies, each an object")
+            }
+            replies = texts
+        }
         self.init(forget: forget,
                   captures: try Self.words(fields["captures"], field: "captures"),
                   scratch: try Self.words(fields["scratch"], field: "scratch"),
@@ -389,7 +402,8 @@ public struct PlaytestSetup: Sendable, Equatable {
                   offline: try Self.yesOrNo(fields["offline"], field: "offline") ?? false,
                   agentHome: try Self.yesOrNo(fields["agentHome"], field: "agentHome") ?? false,
                   askMac: mac,
-                  askSearch: search)
+                  askSearch: search,
+                  askReplies: replies)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {

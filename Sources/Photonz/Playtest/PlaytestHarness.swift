@@ -21029,6 +21029,7 @@ private final class Run {
                 "longestWithoutNews": editor.ask.stageLog.longestGap,
                 "trace": editor.ask.trace,
                 "skipped": editor.ask.skipped.map { "\($0.key): \($0.value)" }.sorted(),
+                "leftOut": editor.ask.leftOut ?? "",
                 // Where each drawing of the last run came from: stored (a
                 // built-in looked up by name), template (a coded
                 // illustration) or drawn for the request.

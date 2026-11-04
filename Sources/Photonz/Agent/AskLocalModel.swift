@@ -45,6 +45,12 @@ enum AskLocalModel {
 
     /// Set by a walk's setup only (`PlaytestSetup.askMac`): plan as a Mac of this size.
     static var walkMac: Int?
+    /// What the model answers, turn by turn, in a walk that says
+    /// (`PlaytestSetup.askReplies`): the last one again once they run out. How
+    /// a walk reaches a stop no model can be counted on to make.
+    #if PHOTONZ_PLAYTEST
+    static var walkReplies: [AgentJSON] = []
+    #endif
 
     /// How much the model reads at once on this Mac, in tokens: the server
     /// is started with it and every request is fitted to it.
@@ -156,6 +162,12 @@ enum AskLocalModel {
     /// One turn of the chat. A big model's first answer can take a while to
     /// load, so the wait is long; Stop cancels it.
     static func chat(_ body: AgentJSON) async throws -> AgentJSON {
+        #if PHOTONZ_PLAYTEST
+        if let reply = walkReplies.first {
+            if walkReplies.count > 1 { walkReplies.removeFirst() }
+            return reply
+        }
+        #endif
         if runtime == .builtIn {
             guard let choice = body["model"]?.stringValue.flatMap(AskBuiltInModels.choice(id:)),
                   AskModelServer.isDownloaded(choice) else { throw Trouble.noModel }

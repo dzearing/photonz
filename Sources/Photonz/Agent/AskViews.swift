@@ -357,6 +357,13 @@ struct AgentPanel: View {
                 .toolTip(AskCopy.deleteTooltip)
                 .playtestControl("Agent Change \(number) Delete", detail: AskCopy.deleteTooltip)
             }
+            if let leftOut = row.leftOut {
+                Text(leftOut)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .playtestControl("Agent Change \(number) Left Out", detail: leftOut)
+            }
             if let note = row.note {
                 Text(note)
                     .font(.system(size: 10.5))
@@ -592,7 +599,7 @@ struct AskConversationLines: View {
         case .stopped(let sentence):
             answer(sentence)
         case .ran:
-            answer(ask.said ?? ask.changes.shown.first?.sentence ?? AskCopy.done)
+            answer(ask.leftOut ?? ask.said ?? ask.changes.shown.first?.sentence ?? AskCopy.done)
         case .idle:
             EmptyView()
         }
