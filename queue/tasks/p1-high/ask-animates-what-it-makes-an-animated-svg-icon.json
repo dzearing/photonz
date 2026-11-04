@@ -4,13 +4,15 @@
   "goal": "Ask cannot animate anything: none of its tools set keys, so 'a balloon icon popping' could only ever be a still picture. Give Ask (and agents over MCP) the tools to animate layers on the document's clock the way a person keys them in the app (position, scale, rotation, opacity, a path's shape where the app supports it, and the stroke draw-on), and a way to make an icon animation that plays as an animated SVG: 'a balloon icon popping' gives a balloon that swells, wobbles and bursts into a few fragments that fly out and fade, as editable keyed layers, exported or copied as an animated SVG that loops.",
   "epic": "icon-animate",
   "priority": "p1-high",
-  "seq": 3e-7,
+  "seq": 3E-7,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
   "updated": "2026-11-04T16:24:20.305Z",
-  "deps": [],
+  "deps": [
+    "ask-makes-icons-that-are-icons-one-subject-clean"
+  ],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping ... I'd like to be able to use ask for creating icons and especially animated svgs'. Today Ask's doing tools (AskPlanning.swift) and the MCP tools (AgentTools.swift) have no key or animation tool; the app keys layers (LayerMotion, MotionProperty) and exports animated SVG (SVGMotionExport, animatedSVGExportEnabled). Objective icon-animate: 'Animate SVG properties on the timeline, keyframes like any layer'. Depends on the icon task so the animated icon starts from a real icon.",
   "acceptance": [
