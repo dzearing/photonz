@@ -183,6 +183,40 @@ extension PhotonzDocument {
     }
 }
 
+extension PhotonzDocument {
+
+    /// The text a copy shows that can take its own words, in reading order:
+    /// top to bottom, then left to right. Hidden text and text inside a copy
+    /// nested in this one are left out, since neither can be worded from here.
+    public func agentWordPieces(ofCopy copy: UUID) -> [UUID] {
+        guard let instance = layer(id: copy) else { return [] }
+        let pieces = instance.selfAndDescendants.filter { piece in
+            piece.text != nil && piece.isVisible && componentPiece(of: piece.id)?.isNested == false
+        }
+        func place(_ id: UUID) -> CGPoint { canvasFrame(of: id)?.origin ?? .zero }
+        return pieces.map(\.id).sorted {
+            let (a, b) = (place($0), place($1))
+            return a.y != b.y ? a.y < b.y : a.x < b.x
+        }
+    }
+
+    /// Replaces a copy's own text with `words`, one to a text in reading order;
+    /// any past the last text join it a line each, so none are lost. Nil when
+    /// they landed, otherwise why not.
+    @discardableResult
+    public mutating func agentWordCopy(_ copy: UUID, with words: [String]) -> String? {
+        guard !words.isEmpty else { return nil }
+        let pieces = agentWordPieces(ofCopy: copy)
+        guard !pieces.isEmpty else { return "\(layer(id: copy)?.name ?? "That copy") has no text of its own to take words." }
+        var said = words.prefix(pieces.count - 1).map { $0 }
+        said.append(words.dropFirst(pieces.count - 1).joined(separator: "\n"))
+        for (piece, line) in zip(pieces, said) where !line.isEmpty {
+            if case .refused(let why) = agentWordCopyPiece(piece, to: line) { return why }
+        }
+        return nil
+    }
+}
+
 /// What `list_styles` answers: the Styles shelf, colours then type.
 public struct AgentStyleListing: Codable, Hashable, Sendable {
     public struct Color: Codable, Hashable, Sendable {

@@ -891,6 +891,7 @@ final class AskSession {
         if let canvas { note("canvas picture, \(canvas.png.count / 1024) KB at \(Int(canvas.scale * 100))%") }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
+                               library: components.isError ? "" : Self.text(of: components),
                                styles: styles.isError ? "" : Self.text(of: styles),
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
                                paints: paints,

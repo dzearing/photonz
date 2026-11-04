@@ -52,7 +52,7 @@ public enum AgentRequest: Hashable, Sendable {
     case findMisalignments(document: String?, region: CGRect?)
     case markMisalignments(document: String?, region: CGRect?, findings: [String])
     case listComponents(document: String?)
-    case placeComponent(document: String?, component: String, center: CGPoint)
+    case placeComponent(document: String?, component: String, center: CGPoint, words: [String] = [])
     case export(document: String?, format: AgentExportFormat, path: String, scale: Double, background: Bool)
     // Slice 4: video (`AgentVideo.swift`).
     case newVideo(AgentNewVideo)
@@ -310,7 +310,7 @@ public enum AgentTools {
             ], required: ["width", "height"])),
         AgentTool(
             name: "add_shape",
-            description: "Draw a shape with the shape tool: a rectangle, ellipse or highlight in a frame, or a line or arrow between two points. It is an ordinary layer a person can edit. One undo step. run_command combine_shapes joins several into one outline.",
+            description: "Draw a shape with the shape tool: a rectangle, ellipse or highlight in a frame, or a line or arrow between two points. It is an ordinary layer a person can edit. run_command combine_shapes joins several into one outline.",
             inputSchema: schema(lookProperties.merging([
                 "document": documentProperty,
                 "shape": ["type": "string", "enum": .array(AnnotationShape.allCases.map { .string($0.rawValue) }),
@@ -322,7 +322,7 @@ public enum AgentTools {
             ]) { $1 }.merging(arrowLabelProperties) { $1 }, required: ["shape"])),
         AgentTool(
             name: "add_path",
-            description: "Draw a path with the Pen: points in order in canvas points, each a corner or smooth, open or closed. A closed path with nothing said is filled. One undo step.",
+            description: "Draw a path with the Pen: points in order in canvas points, each a corner or smooth, open or closed. A closed path with nothing said is filled.",
             inputSchema: schema(lookProperties.merging([
                 "document": documentProperty,
                 "points": ["type": "array", "description": "Two or more points, in the order the outline runs through them.",
@@ -340,7 +340,7 @@ public enum AgentTools {
             ]) { $1 }, required: ["points"])),
         AgentTool(
             name: "add_drawing",
-            description: "Draw a thing (a dog, a coffee cup, a smiley face) or a scene (the sun over mountains, a lighthouse on a cliff) as one drawing of editable layers, grouped and named. With its picture model running, Photonz paints it for the request and traces it into layers; otherwise it draws the svg you give. Nothing is looked up. Better than many add_shape and add_path calls. One undo step.",
+            description: "Draw a thing (a dog, a coffee cup, a smiley face) or a scene (the sun over mountains, a lighthouse on a cliff) as one drawing of editable layers, grouped and named. With its picture model running, Photonz paints it for the request and traces it into layers; otherwise it draws the svg you give. Nothing is looked up. Better than many add_shape and add_path calls.",
             inputSchema: schema([
                 "document": documentProperty,
                 "subject": ["type": "string", "description": "What it is, in a word or two: dog, coffee cup, smiley face, sun over mountains."],
@@ -355,7 +355,7 @@ public enum AgentTools {
             ], required: ["subject"])),
         AgentTool(
             name: "add_photo",
-            description: "Make a photo: a real photograph of anything (a dog on a beach, a kitten walking in the snow) painted for the request by the picture model on this Mac, as one picture layer filling the canvas or the frame given. For a photo, photograph or photorealistic picture; a drawing, vector art or an icon is add_drawing. Nothing is looked up. One undo step.",
+            description: "Make a photo: a real photograph of anything (a dog on a beach, a kitten walking in the snow) painted for the request by the picture model on this Mac, as one picture layer filling the canvas or the frame given. For a photo, photograph or photorealistic picture; a drawing, vector art or an icon is add_drawing. Nothing is looked up.",
             inputSchema: schema([
                 "document": documentProperty,
                 "subject": ["type": "string", "description": "What the photo shows, in the person's words: what it is, what it is doing, where, the light."],
@@ -367,7 +367,7 @@ public enum AgentTools {
             ], required: ["subject"])),
         AgentTool(
             name: "add_text",
-            description: "Set words with the Text tool, their top left at x and y. The box is measured to fit them. One undo step.",
+            description: "Set words with the Text tool, their top left at x and y. The box is measured to fit them.",
             inputSchema: schema([
                 "document": documentProperty,
                 "text": ["type": "string", "description": "The words. A new line is a line break."],
@@ -385,7 +385,7 @@ public enum AgentTools {
             ], required: ["text", "x", "y"])),
         AgentTool(
             name: "set_layer",
-            description: "Change a layer as the inspector would: its frame, name, visibility, paint, line, corners, opacity, shadow, and a text layer's words and size. Leave out what stays. One undo step.",
+            description: "Change a layer as the inspector would: its frame, name, visibility, paint, line, corners, opacity, shadow, and a text layer's words and size. Leave out what stays.",
             inputSchema: schema(lookProperties.merging([
                 "document": documentProperty,
                 "layer": ["type": "string", "description": "The layer's id from read_document."],
@@ -470,12 +470,14 @@ public enum AgentTools {
             inputSchema: schema(["document": documentProperty])),
         AgentTool(
             name: "place_component",
-            description: "Place a copy of a Library component, centred on a point, as dragging its tile does. One undo step.",
+            description: "Place a copy of a Library component, centred on a point.",
             inputSchema: schema([
                 "document": documentProperty,
                 "component": ["type": "string", "description": "Its id or its name from list_components."],
                 "x": ["type": "number", "description": "Centre, across."],
                 "y": ["type": "number", "description": "Centre, down."],
+                "words": ["type": "array", "items": ["type": "string"],
+                          "description": "Its text, top to bottom."],
             ], required: ["component", "x", "y"])),
         AgentTool(
             name: "export",
@@ -846,7 +848,8 @@ public enum AgentTools {
             return .success(.listComponents(document: document))
         case "place_component":
             return .success(.placeComponent(document: document, component: args["component"]?.stringValue ?? "",
-                                            center: CGPoint(x: args["x"]?.doubleValue ?? 0, y: args["y"]?.doubleValue ?? 0)))
+                                            center: CGPoint(x: args["x"]?.doubleValue ?? 0, y: args["y"]?.doubleValue ?? 0),
+                                            words: (args["words"]?.arrayValue ?? []).compactMap(\.stringValue)))
         case "export":
             guard let format = args["format"]?.stringValue.flatMap(AgentExportFormat.init(rawValue:)) else {
                 return fail("format is required.")

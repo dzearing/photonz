@@ -612,6 +612,57 @@ struct AskPlanningTests {
         #expect(plan.line(1).detail == "Card")
     }
 
+    @Test("A component the Library does not have is refused while planning, so the model hears the names and can go on")
+    func unknownComponentRefused() throws {
+        var talk = AskConversation(request: "three cards", documentRead: "{}", components: "[]",
+                                   library: #"[{"id":"C-1","name":"Card","from":"starter","detail":""}]"#)
+        _ = talk.take(try Self.reply([("place_component", #"{"component":"Card Starter","x":1,"y":1}"#)]))
+        let heard = talk.messages.last?["content"]?.stringValue ?? ""
+        #expect(heard.contains("Not planned") && heard.contains("Card"))
+        _ = talk.take(try Self.reply([("place_component", #"{"component":"card","x":1,"y":1}"#)]))
+        guard case .planned(let plan) = talk.take(try Self.reply([], content: "Done.")) else {
+            Issue.record("no plan"); return
+        }
+        #expect(plan.steps.count == 1)
+    }
+
+    @Test("A component this plan makes, or one named by its step, may be placed")
+    func madeComponentPlaces() throws {
+        var talk = AskConversation(request: "cards", documentRead: "{}", components: "[]", library: "[]")
+        _ = talk.take(try Self.reply([Self.component("Plan Card", x: 40, y: 40, width: 120, labels: false)]))
+        _ = talk.take(try Self.reply([("place_component", #"{"component":"Plan Card","x":1,"y":1}"#),
+                                      ("place_component", #"{"component":"$1","x":200,"y":1}"#)]))
+        guard case .planned(let plan) = talk.take(try Self.reply([], content: "Done.")) else {
+            Issue.record("no plan"); return
+        }
+        #expect(plan.steps.filter { $0.tool == "place_component" }.count == 2)
+    }
+
+    @Test("With no Library read, nothing is refused for its name")
+    func noLibraryNoRefusal() throws {
+        var talk = Self.conversation()
+        _ = talk.take(try Self.reply([("place_component", #"{"component":"Card","x":1,"y":1}"#)]))
+        guard case .planned(let plan) = talk.take(try Self.reply([], content: "Done.")) else {
+            Issue.record("no plan"); return
+        }
+        #expect(plan.steps.count == 1)
+    }
+
+    @Test("A price in a copy's words stays a price, never a step's name")
+    func wordsOfACopyAreWords() throws {
+        let step = AskStep(tool: "place_component",
+                           arguments: try Self.json(#"{"component":"Card","x":1,"y":1,"words":["Pro","$2"]}"#))
+        #expect(step.names(step: 2) == false)
+        let resolved = step.resolvedArguments(document: "D", made: [2: "LAYER"])
+        #expect(resolved["words"]?.arrayValue?.compactMap(\.stringValue) == ["Pro", "$2"])
+    }
+
+    @Test("Ask is told a copy takes its words when it is placed")
+    func toldToWordTheCopy() {
+        let system = Self.conversation().messages.first?["content"]?.stringValue ?? ""
+        #expect(system.contains("their text in words"))
+    }
+
     @Test("A component named by its name reads by that name")
     func componentByName() throws {
         let step = AskStep(tool: "place_component", arguments: try Self.json(#"{"component":"Card","x":1,"y":1}"#))

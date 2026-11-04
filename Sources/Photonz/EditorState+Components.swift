@@ -1094,6 +1094,15 @@ extension EditorState {
         perform(announcing: false) { _ = $0.agentWordCopyPiece(id, to: string) }
     }
 
+    /// A copy's own text replaced with `words` (`agentWordCopy`). Nil when they
+    /// landed, otherwise why not, with the copy left as it was.
+    func commitCopyWordsForAgent(of copy: UUID, to words: [String]) -> String? {
+        guard componentsEnabled, !words.isEmpty, var trial = document else { return nil }
+        if let refused = trial.agentWordCopy(copy, with: words) { return refused }
+        perform(announcing: false) { $0.agentWordCopy(copy, with: words) }
+        return nil
+    }
+
     /// Whether Make Its Wording a Property would do anything for this piece.
     func canExposePieceWording(of id: UUID) -> Bool {
         guard componentsEnabled else { return false }

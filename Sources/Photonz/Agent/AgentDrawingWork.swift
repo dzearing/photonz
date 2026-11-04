@@ -48,8 +48,8 @@ enum AgentDrawingWork {
             return try await markMisalignments(AgentDocuments.editor(id).get(), region: region, ids: findings)
         case .listComponents(let id):
             return try listComponents(AgentDocuments.editor(id).get())
-        case .placeComponent(let id, let component, let center):
-            return try placeComponent(AgentDocuments.editor(id).get(), component: component, at: center)
+        case .placeComponent(let id, let component, let center, let words):
+            return try placeComponent(AgentDocuments.editor(id).get(), component: component, at: center, words: words)
         case .export(let id, let format, let path, let scale, let background):
             guard format != .mp4 else { throw Failure("export: an MP4 is written from a video.") }
             return try await export(AgentDocuments.editor(id).get(), format: format, path: path,
@@ -544,7 +544,8 @@ enum AgentDrawingWork {
         return "document"
     }
 
-    private static func placeComponent(_ editor: EditorState, component: String, at center: CGPoint) throws -> Answer {
+    private static func placeComponent(_ editor: EditorState, component: String, at center: CGPoint,
+                                       words: [String]) throws -> Answer {
         _ = try AgentWork.document(of: editor)
         guard editor.componentsEnabled else { throw Failure("This release has no Library components.") }
         let entries = editor.componentEntries
@@ -556,8 +557,13 @@ enum AgentDrawingWork {
             throw Failure("There is no component called \(component). The Library has \(names).")
         }
         var placed: UUID?
-        editor.asOneUndoStep { placed = editor.placeComponent(componentID: id, at: center) }
+        var refused: String?
+        editor.asOneUndoStep {
+            placed = editor.placeComponent(componentID: id, at: center)
+            if let placed { refused = editor.commitCopyWordsForAgent(of: placed, to: words) }
+        }
         guard let placed else { throw Failure("Photonz could not place \(entry.name) there.") }
+        if let refused { throw Failure(refused) }
         return drawn(placed, in: editor)
     }
 

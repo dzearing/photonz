@@ -66,6 +66,7 @@ takes it there, so you never click.
   with `set_layer` `text` on that piece: they land on that copy alone and it keeps
   following the original in everything else. Never `make_unique` a copy just to
   change its words. To change how every copy looks, `run_command edit_original`.
+  `place_component` takes `words` too: the new copy's text, top to bottom, in one call.
 - New words get the Text tool's soft legibility shadow. Pass `shadow: false` to
   `add_text` for an icon or a flat design, and `set_layer` `removeShadow: true`
   after recolouring words that sit on a solid surface (recolouring adds the halo back).

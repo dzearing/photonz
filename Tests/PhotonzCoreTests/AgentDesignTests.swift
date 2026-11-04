@@ -274,6 +274,62 @@ struct AgentDesignTests {
         #expect(words(document, copy: second, source: title) == "Two")
     }
 
+    @Test("place_component takes the copy's words, and leaves them out when none are sent")
+    func placeComponentTakesWords() throws {
+        let args: AgentJSON = ["component": "Card", "x": 1, "y": 2, "words": ["Pro", "$29"]]
+        guard case .success(.placeComponent(_, _, _, let words)) = AgentTools.request(tool: "place_component", arguments: args)
+        else { Issue.record("not a place"); return }
+        #expect(words == ["Pro", "$29"])
+        guard case .success(.placeComponent(_, _, _, let none)) = AgentTools.request(
+            tool: "place_component", arguments: ["component": "Card", "x": 1, "y": 2])
+        else { Issue.record("not a place"); return }
+        #expect(none.isEmpty)
+    }
+
+    @Test("Words sent with a copy replace its own text in reading order, on that copy alone")
+    func copyTakesItsWordsInReadingOrder() throws {
+        var (document, title, first, second) = try rowPlacedTwice()
+        #expect(document.agentWordPieces(ofCopy: first).count == 1)
+        document.agentWordCopy(first, with: ["Starter"])
+        document.syncComponentInstances()
+        #expect(words(document, copy: first, source: title) == "Starter")
+        #expect(words(document, copy: second, source: title) == "Story")
+    }
+
+    @Test("A copy's text is read top to bottom, whatever order its layers are in")
+    func readingOrderIsWhereTheTextSits() throws {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600), layers: [
+            Layer(name: "Price", content: .text(TextContent(string: "$0")), frame: CGRect(x: 20, y: 80, width: 80, height: 20)),
+            Layer(name: "Plan", content: .text(TextContent(string: "Plan")), frame: CGRect(x: 20, y: 20, width: 80, height: 20)),
+        ])
+        let (price, plan) = (document.layers[0].id, document.layers[1].id)
+        let grouped = document.groupLayers(ids: [price, plan], name: "Card")
+        let group = try #require(grouped)
+        let made = document.makeComponent(id: group.id)
+        let component = try #require(made)
+        let placed = document.insertComponentInstance(of: component, at: CGPoint(x: 400, y: 300))
+        let copy = try #require(placed)
+        document.agentWordCopy(copy, with: ["Pro", "$29"])
+        document.syncComponentInstances()
+        #expect(words(document, copy: copy, source: plan) == "Pro")
+        #expect(words(document, copy: copy, source: price) == "$29")
+    }
+
+    @Test("Words past a copy's last text join that text a line each, so none are lost")
+    func extraWordsJoinTheLastText() throws {
+        var (document, title, first, _) = try rowPlacedTwice()
+        document.agentWordCopy(first, with: ["Pro", "$29", "per month"])
+        document.syncComponentInstances()
+        #expect(words(document, copy: first, source: title) == "Pro\n$29\nper month")
+    }
+
+    @Test("A locked copy says why its words did not land")
+    func lockedCopyKeepsItsWords() throws {
+        var (document, _, first, _) = try rowPlacedTwice()
+        document.updateLayer(id: first) { $0.isLocked = true }
+        #expect(document.agentWordCopy(first, with: ["x"])?.contains("lock") == true)
+    }
+
     @Test("A layer that is not inside a copy is left to set_layer's ordinary edit")
     func ordinaryLayerIsNotAPiece() throws {
         var (document, title, _, _) = try rowPlacedTwice()

@@ -95,6 +95,16 @@ shape, controls first, and a box two readers found is kept once. A small model
 reads a list top down; unsorted, it measured the page's full-width rows twice
 and missed every switch.
 
+## A copy's own words (2026-11-03)
+
+A plan cannot name a piece inside a copy, because the copy does not exist until
+the plan runs. So `place_component` takes `words`: the copy's text, top to
+bottom, each replacing what the original says on that copy alone. Words past the
+last text join it a line each, so none are lost. A component name is also checked
+while planning, against everything the Library can place, starters included:
+checked only as the step ran, a wrong name came back to nobody who could correct
+it. Starters stay out of what the model is shown up front.
+
 ## Running a plan
 
 As soon as planning ends, `AskSession` runs each step through `AgentWork.run`, the code the MCP

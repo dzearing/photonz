@@ -184,7 +184,7 @@ public struct AskStep: Hashable, Sendable {
     /// price written "$12" stays a price (the eval, 2026-11-03, printed step
     /// 12's layer id as the Starter card's price).
     static let wordKeys: Set<String> = ["text", "caption", "subtitle", "title", "subject", "label", "labels",
-                                         "name", "asked", "plan", "scene", "placeholder"]
+                                         "name", "asked", "plan", "scene", "placeholder", "words"]
 
     /// N when `word` is a step's name, `$N`.
     static func stepNamed(_ word: String) -> Int? {
@@ -360,6 +360,8 @@ public struct AskConversation: Sendable {
     public private(set) var note: String?
     /// What list_components named each id.
     public private(set) var names: [String: String] = [:]
+    /// What place_component can reach, nil when the Library was not read.
+    private var placeable: [(id: String, name: String)]?
     /// How many times the model has been asked; the app stops at `mostRounds`.
     public private(set) var rounds = 0
     /// Every tool call the model has made, and the ones that came back
@@ -441,12 +443,18 @@ public struct AskConversation: Sendable {
     /// `memory` is what Ask did earlier in this window (`AskMemory.prompt`),
     /// and `canvas` a picture of the canvas as it is now, for a model that
     /// sees, so "bluer" and "bigger" are judged against what is really there.
-    public init(request: String, documentRead: String, components: String = "", styles: String = "",
+    /// `library` is everything place_component can reach, starters included:
+    /// `components` leaves them out of what the model is shown, and a name
+    /// checked only as a step runs came back to nobody who could correct it
+    /// (2026-11-03: three copies of a "Card Starter" that was never there, and
+    /// two plans' words left on white).
+    public init(request: String, documentRead: String, components: String = "", library: String = "", styles: String = "",
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
                 lookedUp: AskLookup.Found? = nil) {
         self.request = request
+        self.placeable = Self.placeable(in: library)
         self.web = web
         self.lookedUp = web == nil ? lookedUp : nil
         self.window = window
@@ -487,6 +495,29 @@ public struct AskConversation: Sendable {
             asking,
         ]
         learnNames(components)
+    }
+
+    /// The names and ids in a list_components answer; nil when there is none
+    /// to go by, which refuses nothing.
+    private static func placeable(in listing: String) -> [(id: String, name: String)]? {
+        guard !listing.isEmpty, let entries = (try? AgentJSON.parse(Data(listing.utf8)))?.arrayValue else { return nil }
+        return entries.compactMap { entry in
+            entry["name"]?.stringValue.map { (entry["id"]?.stringValue ?? "", $0) }
+        }
+    }
+
+    /// Why place_component could not find `wanted`, as the run would say it,
+    /// while the model can still do something about it.
+    private func componentNotInLibrary(_ wanted: String) -> String? {
+        guard let placeable else { return nil }
+        let word = wanted.trimmingCharacters(in: .whitespaces)
+        if AskStep.stepNamed(word) != nil { return nil }
+        let made = steps.compactMap { $0.tool == "add_component" ? $0.arguments["name"]?.stringValue : nil }
+        let names = placeable.map(\.name) + made
+        if placeable.contains(where: { $0.id == word }) || names.contains(where: { $0.caseInsensitiveCompare(word) == .orderedSame }) {
+            return nil
+        }
+        return "Not planned: there is no component called \(word). The Library has \(names.joined(separator: ", ")). Place one of those by name, or plan something else."
     }
 
     private mutating func learnNames(_ listing: String) {
@@ -648,6 +679,11 @@ public struct AskConversation: Sendable {
                     continue
                 }
                 if name == "change_part", let refusal = partNotInShort(arguments) {
+                    refuse(name, arguments, refusal)
+                    continue
+                }
+                if name == "place_component", let refusal = componentNotInLibrary(arguments["component"]?.stringValue ?? "") {
+                    brokenCalls += 1
                     refuse(name, arguments, refusal)
                     continue
                 }
@@ -1291,7 +1327,7 @@ public struct AskConversation: Sendable {
         otherwise). The head goes on the thing, the tail where the label has room.
         \(drawingRules)
         - "On brand" means the document's saved styles and its own components, both listed \
-        below. Use them: place its components rather than drawing look-alikes, and paint with the saved styles. \
+        below. Use them: place its components (their text in words, not add_text) rather than drawing look-alikes, and paint with the saved styles. \
         An empty canvas is a place to build, not a reason to refuse.
         \(Self.componentRules)
         - On a video, times are seconds on the video's clock. add_title with clip puts a title page in \
