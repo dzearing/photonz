@@ -1,0 +1,31 @@
+{
+  "feature": "Finding why screenshots miss the clipboard on your other Mac",
+  "epic": "image-editing",
+  "summary": "Not fixed, and the cause is not found. On this Mac, captures pasted correctly every time, including real pastes into Chrome, so the next step is a report run on the Mac where it fails.",
+  "setup": "On the other Mac, with one Photonz running. Copy over the single file Scripts/clipboard-timing/other-mac-report.sh. It needs no permissions, no compiler and no copy of the repo. No app code changed in this task.",
+  "switched": {},
+  "try": [
+    { "do": "Copy Scripts/clipboard-timing/other-mac-report.sh to the other Mac." },
+    { "do": "In Terminal there, run: zsh other-mac-report.sh 10" },
+    { "do": "For ten minutes, take screenshots and paste them the way you normally do." },
+    { "do": "Note any paste that failed, and which app you were pasting into." },
+    { "do": "Bring back the photonz-clipboard-report file it leaves on the Desktop." }
+  ],
+  "evaluate": [
+    "Does the report say NO COPY for a screenshot that failed? That points at the shortcut or the capture, not the clipboard.",
+    "Does it say REPLACED? Then something else wrote over the picture, and this Mac's loop is a suspect.",
+    "Does copying text on this Mac show up when you paste on the other one? If so, Universal Clipboard links them.",
+    "Which version of Photonz is on that Mac, and which apps were you pasting into?"
+  ],
+  "rough": [
+    "Measured on the probe build, not the released 0.23.0: 30 of 30 captures pasted into real Chrome by its own paste command (24, then 6), at once, 1 s and 3 s.",
+    "A sandboxed stand-in reader got 15 of 15, about two per kind of read and delay. That rules out sandboxed apps always failing, not a rare failure, and it is still a stand-in.",
+    "Those captures were landed by a walk from a saved picture. No capture shortcut was pressed, and region, window and full screen were not tried separately.",
+    "Not tested at all: Preview, Notes, Safari, Messages, Mail and Claude need an Accessibility grant this loop does not have; Slack and Teams are not installed. No test covered a long idle, sleep or macOS 26.",
+    "The one-released-app run was not done: it needs Photonz Dev quit, and a runner may not quit it.",
+    "Chrome pasted the screenshot's FILE, not the PNG data, which the earlier stand-in reader never showed. So a paste into Chrome depends on that file being readable.",
+    "Suspect, unconfirmed: macOS's own screenshot shortcuts are off on this Mac but on by default on a fresh one, and macOS's own capture never touches the clipboard. The report prints their state.",
+    "Suspect, unconfirmed: Universal Clipboard is live here, each clipboard write is advertised, and the loop writes the clipboard all day. Nothing yet shows the other Mac receives it.",
+    "Suspect from reading code only: a full-screen capture on two displays leaves only the last display's picture on the clipboard. This Mac has one display."
+  ]
+}

@@ -22427,3 +22427,10 @@ the ghost, and pinching in seemed to stop short.
 Changed: `place_component` takes `words`, so a copy says its own words; a wrong component name is refused while planning; `Scripts/ask-eval.sh time` gives per-group totals of cases out of time or stopped. Held-out on final code 50c54b72: total 64.5, layout 66.3, video 59.9.
 Next: the first-answer task owns a new finding, two of four pricing tries got no first answer in 300 to 420 s.
 Open: whether Ask should place Library Cards on a blank canvas, asked in the audit.
+
+## 2026-11-03: screenshots on the clipboard with one Photonz (not fixed, cause not found)
+
+No app code changed. Task a-screenshot-is-on-the-clipboard-every-time-on-a is blocked on a report from the user's other Mac.
+- Added `Scripts/clipboard-timing/other-mac-report.sh` (runs on the failing Mac, no grants), `real-paste-chrome.mjs` and `clipwatch.swift`, and `run.sh chrome`.
+- Probe build, walk-landed captures: 30/30 real Chrome pastes; 15/15 for a sandboxed stand-in reader. Not reproduced.
+- Open: the released-app-only run, native paste targets, and three unconfirmed suspects (macOS shortcuts on, Universal Clipboard from this Mac's loop, two displays). See the audit.

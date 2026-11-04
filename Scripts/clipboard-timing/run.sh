@@ -8,16 +8,19 @@
 #   paste   new screenshots landing as a capture does, pasted from a second
 #           process the way a web page, Preview, Finder and Slack read them,
 #           at 0 s and 1 s (COUNT captures, default 40); every paste must get it
+#   chrome  new screenshots pasted for REAL into Chrome by its own paste command
+#           (throwaway profile), at once, 1 s and 3 s (COUNT captures, default 24).
+#           Its first row is the walk clearing the clipboard, not a capture
 #   twoapps the same with a second Photonz answering the shortcut too, as the
 #           installed 0.21.0 did beside Photonz Dev on 2026-11-03 (second-app);
 #           shows the race a single owner of the shortcuts removes
-# Usage: Scripts/clipboard-timing/run.sh [timing|race|stall|paste|twoapps]   (probe must be built)
+# Usage: Scripts/clipboard-timing/run.sh [timing|race|stall|paste|chrome|twoapps]   (probe must be built)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 HERE=Scripts/clipboard-timing
 T=/tmp/copy-timing
 mkdir -p "$T"
-for tool in watcher paster makeimages targets second-app; do
+for tool in watcher paster makeimages targets second-app clipwatch; do
   [[ -x "$T/$tool" ]] || swiftc -O "$HERE/$tool.swift" -o "$T/$tool"
 done
 FIXTURE="$PWD/Tests/PhotonzRenderTests/Fixtures/app-window-2x.png"
@@ -38,6 +41,18 @@ case "${1:-timing}" in
     python3 "$HERE/race.py" "$T/race.jsonl" ;;
   stall)
     Scripts/playtest.sh "$HERE/stall-walk.json" --no-build ;;
+  chrome)
+    COUNT="${COUNT:-24}"
+    SECONDS_NEEDED=$((COUNT * 6 + 30))
+    python3 "$HERE/capture-walk.py" "$COUNT" 3.5 "$T/capture-paste-walk.json" captureLandsAndStays
+    rm -f "$T/chrome.jsonl"
+    node "$HERE/real-paste-chrome.mjs" "$SECONDS_NEEDED" 0,1000,3000 3456 "$T/chrome.jsonl" &
+    PASTER=$!
+    sleep 3
+    PHOTONZ_PLAYTEST_TIMEOUT=$SECONDS_NEEDED Scripts/playtest.sh "$T/capture-paste-walk.json" --no-build > "$T/chrome-walk.txt" || true
+    kill $PASTER 2>/dev/null || true
+    sleep 2
+    python3 -c "import json,collections,sys; r=[json.loads(l) for l in open(sys.argv[1])][1:]; print(len(r),'captures', sorted(collections.Counter((x['delayMs'],x['outcome']) for x in r).items()))" "$T/chrome.jsonl" ;;
   paste|twoapps)
     COUNT="${COUNT:-40}"
     python3 "$HERE/capture-walk.py" "$COUNT" 1.75 "$T/capture-paste-walk.json" captureLandsAndStays
