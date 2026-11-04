@@ -1,0 +1,54 @@
+{
+  "feature": "When Ask stops part way it says so",
+  "epic": "agent-ask",
+  "summary": "Ask now gets past a step it keeps getting wrong, and one step failing no longer throws the whole change away. When something is still missing, the row says what landed and one short line says what did not.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Today's built-in model rarely gets stuck, so steps 4 to 6 are shown by ask-says-what-it-left-out-walk, which writes the model's replies into the walk. Everything else in that walk is the app as it ships.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a new 1440 by 900 picture and press Ask.",
+      "shot": "2026-11-04-ask-stops-part-way-before.png",
+      "shotNote": "The before picture: October's build, one empty card under a row saying the section was made."
+    },
+    {
+      "do": "Type Make a pricing section on brand and press Send."
+    },
+    {
+      "do": "Wait for it to finish. The row says Made a pricing section on brand with nothing under it, because this time all of it was made.",
+      "shot": "2026-11-04-ask-stops-part-way-after.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Run Scripts/playtest.sh Scripts/playtest/ask-says-what-it-left-out-walk.json to see a model that will not leave a refused rectangle."
+    },
+    {
+      "do": "Read the first picture: the row says what landed, and under it Stopped after Card Starter; the rest could not be planned.",
+      "shot": "2026-11-04-ask-stops-part-way-stopped-short.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the second picture: one step failed as it ran, the other card and its words still landed, and the row names what was left out.",
+      "shot": "2026-11-04-ask-stops-part-way-as-it-ran.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: everything that request made comes back off together."
+    }
+  ],
+  "evaluate": [
+    "Does Stopped after Card Starter; the rest could not be planned tell you enough to know what to ask for next?",
+    "When a change stops short, is a row that lists what landed (Added the text Pricing and 1 more) better than one that repeats your request?",
+    "Is the line in the right place under the row, or does it read as part of the row's title?",
+    "Would you rather keep what landed when one step fails, as it does now, or have the whole change taken back?"
+  ],
+  "rough": [
+    "Held-out layout fell from 66.3 to 48 on the same model (qwen3.8-27b, run 20261104-021419 at 50c54b72 against run 20261104-172601 at c7f497ee), and I have not shown this change is free of it. The group is three cases and one ran out of the eval's five minute limit, which scores 0, so the other two average 72. That timeout is the whole drop.",
+    "What points away from this change, without proving it: the pricing request took 289 seconds on the old build and 294 on the new one, both right at the 300 second limit, a model that stays stuck uses the same three turns as before, and only 1 of 158 calls in the run was broken. A model that carries on past a refusal can take longer, and the held-out rules stop me reading that case, so the next whole held-out run is what settles it.",
+    "The other held-out groups rose (total 64.5 to 66.7, drawing 67.3 to 70.1, redline 33.6 to 44.1, video 59.9 to 66.6). I do not credit this change with that: no climb run repeated a refused call, and this set swung 55.8 to 64.5 the day before.",
+    "Pricing-section read 58.3, 59.3 and 60.7 after, against 60 just before on the unchanged build. Two of three are lower. No after run repeated a refused call, and with no repeat the model is sent the same messages as before, so I read that as spread from run to run. Component-table held at 90.",
+    "The October stop does not happen at Next defaults on this Mac any more: the model is now qwen3.8-27b and it finished all of its pricing runs. The stop is proved by a unit test and a walk with written replies, so the fix has not been seen rescuing a real stuck model.",
+    "Stopped after Card Starter says where it stopped, not what was still to come: Ask cannot know what a model never wrote. The line is 58 characters, over the panel's 40; the task's own example is 60, and it wraps to two lines under the row. Chose the full sentence over a cut one because a cut one would not say what was missing.",
+    "No mock covers the left out line. It sits where the row's note already sits, in the same small grey text.",
+    "A step that left out a change to one part of a group leaves the rest of that group as made, so a change can land looking unfinished. The row says so, but the canvas does not."
+  ]
+}

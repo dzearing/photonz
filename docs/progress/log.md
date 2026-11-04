@@ -22451,3 +22451,16 @@ room from the canvas and holds the field; Command K floats it back. Next:
 `ask-chat-has-the-mock-s-new-conversation-button` for what the mock still has.
 Open: `ask-stops-a-running-request-walk` fails when it is first to use a cold
 model, before this change too, and is filed on its own.
+
+## 2026-11-04: When Ask stops part way it says so
+
+Ask takes a call it keeps getting refused out of the talk and goes on, for every
+tool. A plan keeps what it could not make (`AskUnplanned`) and a run keeps what
+it left out (`AskPlanRun`); a failed step no longer takes the change back. The
+row says what landed, with the left out line under it. Walks can write the
+model's replies into their setup (`askReplies`). Design in `docs/design/ask.md`.
+
+Open: held-out layout read 48 against 66.3 because one of its three cases ran out
+of the five minute limit. Pricing plans take 289 to 294 s on this Mac with or
+without this change, so that limit is close for layouts; the next whole held-out
+run says whether it was this change.
