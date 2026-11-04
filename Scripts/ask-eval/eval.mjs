@@ -9,6 +9,7 @@
 //   compare [<run>] [--with <run>|best]     a run against the best so far, case by case
 //   report [--engine ask]                   the latest climb and held-out totals side by side
 //   lines <run> [--with <run>]              a run's judge lines in total (drawings, all cases), held-out runs too
+//   time <run> [<run> ...]                  per group: cases, how many ran out of time or stopped, median seconds and steps, held-out runs too
 //   history                                 every finished run, newest last
 //   calibrate                               the judge against the user's own verdicts
 //   feedback                                take the thumbs down saved in the apps into the held-out set
@@ -147,7 +148,7 @@ function historyLine(meta) {
     ...(meta.models?.length ? { models: meta.models } : {}), ...(meta.mac ? { mac: meta.mac } : {}),
     wallSeconds: meta.wallSeconds, rubric: RUBRIC_ID, judgeModel: JUDGE_MODEL, engineModel: meta.engineModel,
     total: meta.total, groups: meta.groups, lookups: meta.lookups, model: meta.model, caseCount: Object.keys(meta.cases).length,
-    lines: meta.lines ?? judgeLines(meta.cases),
+    lines: meta.lines ?? judgeLines(meta.cases), time: timeByGroup(meta.cases),
   };
   // A held-out run is recorded in total only, so no case can be climbed on.
   if (meta.set === "held-out") return line;
@@ -441,6 +442,38 @@ function lines() {
   if (option("with")) show(option("with"));
 }
 
+/// Per group, how many of a run's cases were cut off by their time limit and
+/// the median seconds a plan took. A case still planning at its limit has made
+/// nothing and scores 0, so a group of a few cases swings by a whole case when a
+/// slow model's plans sit near the limit. A total, so it works on held-out runs.
+export function timeByGroup(cases) {
+  const groups = {};
+  for (const c of Object.values(cases)) {
+    const g = (groups[c.group ?? "other"] ??= { cases: 0, ranOut: 0, stopped: 0, overFive: 0, seconds: [], steps: [] });
+    g.cases += 1;
+    if (c.engine?.phase === "stopped") g.stopped += 1;
+    if (c.seconds > 300) g.overFive += 1;
+    g.steps.push(c.engine?.steps?.length ?? 0);
+    if (/"ran\|stopped"\) did not happen within/.test(c.engine?.said ?? "")) g.ranOut += 1;
+    else if (c.seconds > 0) g.seconds.push(c.seconds);
+  }
+  return Object.fromEntries(Object.entries(groups).map(([name, g]) => {
+    const median = (list) => list.length ? Math.round([...list].sort((a, b) => a - b)[Math.floor(list.length / 2)]) : null;
+    return [name, { cases: g.cases, ranOut: g.ranOut, stopped: g.stopped, overFive: g.overFive, medianSeconds: median(g.seconds), medianSteps: median(g.steps) }];
+  }));
+}
+
+function time() {
+  for (const id of argv.slice(1).filter((a) => !a.startsWith("--"))) {
+    const dir = findRunDir(id);
+    if (!dir) throw new Error(`no run ${id}`);
+    const meta = JSON.parse(readFileSync(path.join(dir, "run.json"), "utf8"));
+    const got = timeByGroup(meta.cases);
+    console.log(`${id}  ${meta.engineModel ?? meta.engine}  total ${meta.total}`);
+    for (const [name, g] of Object.entries(got)) console.log(`    ${name.padEnd(10)}${String(meta.groups?.[name] ?? "-").padStart(6)}  ${g.ranOut} of ${g.cases} ran out of time, ${g.overFive} finished past five minutes, ${g.stopped} stopped part way, ${g.medianSeconds ?? "-"}s and ${g.medianSteps ?? "-"} steps a plan (median)`);
+  }
+}
+
 /// The two numbers a runner reports: the latest climb run and the latest
 /// held-out run of an engine on the current rubric.
 function report() {
@@ -465,6 +498,7 @@ try {
   else if (command === "feedback") importFeedback();
   else if (command === "report") report();
   else if (command === "lines") lines();
+  else if (command === "time") time();
   else if (command === "sheet") {
     const runDir = findRunDir(positional);
     console.log(await drawSheet(runDir, JSON.parse(readFileSync(path.join(runDir, "run.json"), "utf8"))));

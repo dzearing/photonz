@@ -30,6 +30,10 @@ starts and the history records them as `switched`, so it never reads as the
 default app. `lines` prints the judge's lines as means over a run's drawing
 cases and over all its cases, with the median seconds a drawing request took;
 it is a total, so it works on held-out runs too, and every run records it.
+`time <run> [<run> ...]` prints, per group, how many cases ran out of their time
+limit or stopped part way and the median seconds and steps of a plan, also a total: a case still
+planning at its limit has made nothing and scores 0, so read this before reading
+a group's swing as Ask getting better or worse.
 
 `--minutes N` stops starting new cases after N minutes and prints the
 `--resume <run>` line that carries on. That is how a go loop runner, whose
