@@ -564,7 +564,7 @@ final class AskSession {
             // the Agent group comes back into view, so its line can still be
             // read while the drawing is checked or drawn again.
             revealRows()
-            let miss = await look(at: plan, made: ran.made, in: canvas, model: model, note: note, say: say)
+            let miss = talk.landsAsDrawn ? nil : await look(at: plan, made: ran.made, in: canvas, model: model, note: note, say: say)
             if Task.isCancelled {
                 // Stopped while it looked at what it drew: what ran comes
                 // back off, so a stop leaves the document as it was.
@@ -1012,15 +1012,23 @@ final class AskSession {
         let page: (png: Data, scale: Double)? = await AskLocalModel.sees(model) ? web.map { ($0.png, 1) } : nil
         let canvas = looks ? await Self.canvasPicture(of: document, in: editor, model: model) : page
         if let canvas { note("canvas picture, \(canvas.png.count / 1024) KB at \(Int(canvas.scale * 100))%") }
+        let brushes = Experiments.shared.brushEnabled && !editor.documentHasTime
+        // An icon is designed in words before it is drawn (`AskIcon.designAsk`).
+        var iconDesign: String?
+        if AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil), !AskLocalModel.answersAreScripted {
+            let answer = try? await AskLocalModel.chat(AskIcon.designBody(model: model, request: words))
+            iconDesign = (answer?["message"]?["content"]?.stringValue).flatMap(AskIcon.design(fromAnswer:))
+            note("icon: design: \(iconDesign ?? "none")")
+        }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
                                library: components.isError ? "" : Self.text(of: components),
                                styles: styles.isError ? "" : Self.text(of: styles),
                                titles: titles.map { $0.isError ? "" : Self.text(of: $0) } ?? "",
                                paints: paints,
-                               brushes: Experiments.shared.brushEnabled && !editor.documentHasTime,
+                               brushes: brushes,
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
-                               window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp)
+                               window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp, iconDesign: iconDesign)
     }
 
     /// The longest side of the canvas picture the planning model is shown:

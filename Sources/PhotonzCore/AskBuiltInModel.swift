@@ -302,6 +302,7 @@ public enum AskServerChat {
         var out: [String: AgentJSON] = ["stream": false, "max_tokens": .number(Double(mostTokensATurn))]
         if let model = body["model"] { out["model"] = model }
         if let temperature = body["options"]?["temperature"] { out["temperature"] = temperature }
+        if let most = body["options"]?["num_predict"] { out["max_tokens"] = most }
         if let tools = body["tools"] { out["tools"] = tools }
         // An answer held to a schema (Ollama's `format`): the server's
         // grammar keeps the model to it (the reader's lists, `AskLookup`).

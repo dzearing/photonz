@@ -22494,3 +22494,20 @@ button without the role did, so Clear has none. Not established why.
 
 Open: Stop during a model load leaves the request busy until the load ends
 (task `stop-while-ask-s-model-is-still-loading-lets-the`).
+
+## 2026-11-05: Ask's action icons get a design first
+
+An icon where something is happening to the object is now designed in words
+before it is drawn (`AskIcon.designAsk`), and what is drawn from a design lands
+without the look and redraw. An object at rest answers "at rest" and plans as it
+did. The 14 icon cases: 86.5 to 88.3, reads as an icon 7.3 (run
+20261105-043455-ask).
+
+Tried and dropped: a design for every icon (84.0: a rocket fell from 92 to 72 as
+stacked triangles), and drawing in the design's own short talk (the balloon read
+28.6, named a bomb, though it looked fine in a lab run outside the app).
+
+Open: the balloon reads 55.4, did what was asked 5, reads as an icon 4, against
+7 for each. Five versions read 84.8, 44.8, 42.5, 55.4 and 28.6, one run each, so
+a single reading of that one case says little. Untried: several drawings and a
+pick by eye, or the traced fallback the checklist allows.

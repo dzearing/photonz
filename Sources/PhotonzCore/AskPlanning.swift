@@ -427,6 +427,12 @@ public struct AskConversation: Sendable {
     private let icon: Bool
     /// How many times this request's icon went back to the model.
     private var iconSendBacks = 0
+    /// The icon was designed in words first (`AskIcon.designAsk`), so what
+    /// was drawn is not looked at and drawn again. The look names a bare
+    /// outline with no hint of the request, and it called a torn balloon a
+    /// light bulb or a magnifying glass where the judge named it popping 3 of
+    /// 3; each redraw then lost the tear or the balloon (the eval, 2026-11-05).
+    public let landsAsDrawn: Bool
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
@@ -453,15 +459,16 @@ public struct AskConversation: Sendable {
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
-                lookedUp: AskLookup.Found? = nil) {
+                lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil) {
         self.request = request
         self.placeable = Self.placeable(in: library)
         self.web = web
         self.lookedUp = web == nil ? lookedUp : nil
         self.window = window
         let painting = brushes && AgentPictureKind.asked(in: request) == .paint
-        let icon = web == nil && !painting && AskIcon.asked(in: request)
+        let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil)
         self.icon = icon
+        landsAsDrawn = icon && iconDesign != nil
         self.paints = paints && !icon
         self.brushes = brushes
         let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
@@ -498,7 +505,17 @@ public struct AskConversation: Sendable {
             ["role": "system", "content": .string(instructions)],
             asking,
         ]
+        if icon, let iconDesign {
+            messages.append(["role": "assistant", "content": .string(iconDesign)])
+            messages.append(["role": "user", "content": .string(AskIcon.drawTheDesign)])
+        }
         learnNames(components)
+    }
+
+    /// Whether `request` takes the icon route (`AskIcon`): the words for an
+    /// icon, unless it is a painting or a web page.
+    public static func takesIconRoute(_ request: String, brushes: Bool, web: Bool) -> Bool {
+        !web && !(brushes && AgentPictureKind.asked(in: request) == .paint) && AskIcon.asked(in: request)
     }
 
     /// The names and ids in a list_components answer; nil when there is none

@@ -1,7 +1,7 @@
 {
   "feature": "Ask makes icons that are icons",
   "epic": "local-edit",
-  "summary": "Ask an icon and you get a few clean named shapes in a square picture of its own, instead of a traced painting beside your work. Most requests now read as real icons; the popping balloon does not yet.",
+  "summary": "Ask an icon and you get a few clean named shapes in a square picture of its own, instead of a traced painting beside your work. Most requests now read as real icons; the popping balloon now shows a tear and is named as popping, but it is still a lumpy icon.",
   "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: ask-makes-an-icon-walk, ask-puts-an-icon-in-its-own-picture-walk, new-image-icon-sizes-walk.",
   "switched": {},
   "try": [
@@ -33,20 +33,22 @@
       "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
-      "do": "Compare before and after for five requests, the balloon included.",
-      "shot": "2026-11-04-ask-icons-before-after.png"
+      "do": "Ask for an icon of a balloon popping and compare it with this sheet.",
+      "shot": "2026-11-05-ask-icons-balloon-designed-sheet.png"
     }
   ],
   "evaluate": [
     "Do the trash can, search and padlock icons look like they belong beside SF Symbols?",
     "Is a new window the right place for an icon asked for on a screenshot, or would you rather be asked?",
     "Is the plain dark outline the right look when you name no style, or did you prefer the colour of the old traced icons?",
-    "Is the balloon good enough to animate, or should it stay open until it reads as popping?"
+    "Is this balloon good enough to animate, or should it stay open until it looks like a clean icon?"
   ],
   "rough": [
-    "The popping balloon got worse: 74.4 before, 29.7 after. It reads as a sun or a ring with rays, and the local model kept it whole through three changes to its instructions. This keeps ask-makes-icons-that-are-icons-one-subject-clean open.",
+    "The popping balloon is still short of its bar: 55.4 in the shipped version, did what was asked 5 and reads as an icon 4, against 7 for each. It is named as popping 3 of 3 blind, up from 0, but the body is lumpy and the string floats loose. This keeps ask-makes-icons-that-are-icons-one-subject-clean open.",
+    "The balloon's score is mostly noise so far: five versions read 84.8, 44.8, 42.5, 55.4 and 28.6, one run each. The 84.8 was not the shipped version and did not repeat.",
+    "When something is happening to the object, Ask now writes a short design first, about ten seconds more, and lands what it draws without the look and redraw. Only one of the 14 eval cases is an action icon, so that route is lightly measured.",
+    "An icon at rest that still does not read after two redraws lands with the line: This icon may not read clearly yet. An icon drawn from a design never gets that line, because it is not looked at.",
     "Ask's model writes one SVG that lands as shape and path layers, rather than one add_shape or add_path call per part as the task said. The layers are the same kind and it is one undo step.",
-    "An icon that still does not read after two redraws now lands with the line: This icon may not read clearly yet. Before, Ask threw it away.",
     "Some old traced icons had more colour and charm than the new plain ones: compare the gear and the rocket on the before and after sheet.",
     "The numbers in an icon's SVG are fractions, because a 24 grid does not divide into 512. The file is clean paths with no picture.",
     "The held-out set was not run: it takes about two and a half hours and needs the Mac to itself. Only the climb number is measured.",

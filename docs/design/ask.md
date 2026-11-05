@@ -406,7 +406,14 @@ Either way:
 * **Placed.** Centred, 60 per cent of the canvas's shorter side, or in the box
   asked for, kept on the canvas. An icon has its own rules, below.
 * **An icon** (`AskIcon`, `AskIconCheck`, chosen from the general words for an
-  icon, never a subject) is never painted and traced. The model draws it as one
+  icon, never a subject) is never painted and traced. When something is happening
+  to the object, the model first says its design in under a hundred words
+  (`AskIcon.designAsk`: the object, what happens to its outline, each part with
+  rough coordinates), about ten seconds, because a small model writing an SVG
+  straight off keeps the object whole; what it draws from a design lands without
+  being looked at and redrawn, since every redraw lost the action. An object at
+  rest skips the design, since coordinates replace the form the model knows. It
+  draws as one
   SVG of a few clean shapes on a 24 grid, which lands as real shape and path
   layers named for their parts, fitted to the icon frame's live area. The SVG is
   checked before it lands (parts, ids, one line weight, nothing lost at 16 px,

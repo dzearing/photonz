@@ -46,6 +46,55 @@ public enum AskIcon {
         return nil
     }
 
+    // MARK: Designed in words first
+
+    /// The most a design may write: it is under a hundred words.
+    public static let mostDesignTokens = 400
+
+    /// What the model is asked before it draws. A small model writing an SVG
+    /// straight off keeps the object whole and adds rays (a balloon popping
+    /// came out as a sun, through three changes to the rules, 2026-11-04);
+    /// thinking first tore the balloon open but took eight minutes. Saying
+    /// the design in a few lines gets most of that in ten seconds. An object
+    /// simply at rest skips it: rough coordinates replace the form the model
+    /// knows, and a rocket fell from 92 to 72 as stacked triangles (the eval,
+    /// 2026-11-05). It holds for any subject: nothing here knows what the icon
+    /// is of.
+    static let designAsk = """
+        If the request names only an object, or an idea an object stands for, with nothing happening to the object, \
+        reply only: at rest. Otherwise, before drawing, design this icon in words, under 100 words, no SVG yet. Say: \
+        1) the one object, and every \
+        part that makes it recognisable at rest, all of which stay in the icon; 2) if something is happening to it, \
+        what that does to the object: which part of its outline is missing, open, torn, tilted or moved, and where \
+        on the 24 grid; 3) each part as a shape with rough coordinates on the 24 grid, the whole icon about 20 \
+        across and inside 2 to 22. Any marks showing the action start 2 clear of the object and point away from it, \
+        at least 3 apart everywhere, so they never meet at a point.
+        """
+
+    /// What follows the design in the talk. A request that changes an icon
+    /// already there has no use for one, so it is not told to draw.
+    public static let drawTheDesign = """
+        Draw exactly that design, every part it names, unless this request changes an icon that is already there. A \
+        line of 2 clogs anything small: a part under 4 across is one straight line or a solid shape with \
+        stroke="none", never a small outline or a wiggle, and a curve bends once.
+        """
+
+    /// The body of the one call that designs the icon: no tools, no document.
+    public static func designBody(model: String, request: String) -> AgentJSON {
+        ["model": .string(model), "stream": false, "think": false, "keep_alive": "30m",
+         "messages": [["role": "system", "content": .string("You design icons.\n\(AskConversation.iconRules)")],
+                      ["role": "user", "content": .string("\(request)\n\n\(designAsk)")]],
+         "options": ["temperature": 0, "num_predict": .number(Double(mostDesignTokens))]]
+    }
+
+    /// The design in `answer`, or nil when it holds none, which only costs
+    /// the icon its head start.
+    public static func design(fromAnswer answer: String) -> String? {
+        let words = AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines)
+        let atRest = words.lowercased().trimmingCharacters(in: .punctuationCharacters) == "at rest"
+        return words.isEmpty || atRest || words.contains("<svg") ? nil : words
+    }
+
     /// Whether `plan` draws an icon.
     public static func isIn(_ plan: AskPlan) -> Bool {
         plan.steps.contains { $0.tool == "add_drawing" && $0.arguments["icon"]?.boolValue == true }

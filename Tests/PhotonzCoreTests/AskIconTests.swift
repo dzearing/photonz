@@ -36,6 +36,82 @@ struct AskIconTests {
         }
     }
 
+    // MARK: Designed in words first
+
+    @Test("The design is asked for on its own: the icon rules and the request, no tools, short and plain")
+    func designBody() {
+        let body = AskIcon.designBody(model: "m", request: "a kite tangling icon")
+        let messages = body["messages"]?.arrayValue ?? []
+        #expect(body["model"]?.stringValue == "m")
+        #expect(body["tools"] == nil)
+        #expect(body["think"]?.boolValue == false)
+        #expect(body["options"]?["num_predict"]?.intValue == AskIcon.mostDesignTokens)
+        #expect(messages.first?["content"]?.stringValue?.contains("24 24") == true)
+        let asked = messages.last?["content"]?.stringValue ?? ""
+        #expect(asked.hasPrefix("a kite tangling icon"))
+        #expect(asked.contains("no SVG yet"))
+    }
+
+    @Test("A design is the model's words; nothing to go on gives no design")
+    func designAnswer() {
+        #expect(AskIcon.design(fromAnswer: "<think>hm</think>\n A kite, its tail knotted. \n") == "A kite, its tail knotted.")
+        #expect(AskIcon.design(fromAnswer: "   ") == nil)
+        #expect(AskIcon.design(fromAnswer: "<svg viewBox=\"0 0 24 24\"></svg>") == nil)
+    }
+
+    @Test("An object simply at rest takes no design: coordinates made a rocket out of stiff triangles")
+    func atRestTakesNoDesign() {
+        for answer in ["at rest", "At rest.", "<think>hm</think>\nAT REST", " at rest\n"] {
+            #expect(AskIcon.design(fromAnswer: answer) == nil, "\(answer)")
+        }
+        #expect(AskIcon.design(fromAnswer: "The kite is at rest no longer: its tail is knotted.") != nil)
+        #expect(AskIcon.designAsk.contains("reply only: at rest"))
+    }
+
+    @Test("Small parts are ruled on only where a design is drawn, so an icon at rest plans as it did")
+    func smallPartsRule() {
+        #expect(AskIcon.drawTheDesign.contains("under 4 across"))
+        #expect(!AskConversation.iconRules.contains("under 4 across"))
+    }
+
+    @Test("The design follows the request, and drawing it is left to the plan")
+    func designInTheTalk() {
+        let talk = AskConversation(request: "a kite tangling icon", documentRead: #"{"kind":"picture","canvas":{"width":1440,"height":1024}}"#,
+                                   iconDesign: "A kite, its tail knotted.")
+        let messages = talk.chatBody(model: "m")["messages"]?.arrayValue ?? []
+        let said = messages.compactMap { $0["content"]?.stringValue }
+        #expect(messages.dropFirst().first?["content"]?.stringValue == "a kite tangling icon")
+        #expect(said.contains("A kite, its tail knotted."))
+        #expect(messages.last?["role"]?.stringValue == "user")
+        #expect(messages.last?["content"]?.stringValue == AskIcon.drawTheDesign)
+    }
+
+    @Test("Only the icon route takes a design")
+    func designOnlyOnTheIconRoute() {
+        #expect(AskConversation.takesIconRoute("a kite icon", brushes: true, web: false))
+        #expect(!AskConversation.takesIconRoute("draw a kite", brushes: true, web: false))
+        #expect(!AskConversation.takesIconRoute("a kite icon", brushes: false, web: true))
+        let talk = AskConversation(request: "draw a kite", documentRead: #"{"kind":"picture","canvas":{"width":1440,"height":1024}}"#,
+                                   iconDesign: "A kite.")
+        let said = (talk.chatBody(model: "m")["messages"]?.arrayValue ?? []).compactMap { $0["content"]?.stringValue }
+        #expect(!said.contains("A kite."))
+    }
+
+    @Test("A designed icon lands as drawn: every redraw of a torn balloon lost the tear or the balloon")
+    func designedLandsAsDrawn() {
+        let read = #"{"kind":"picture","canvas":{"width":1440,"height":1024}}"#
+        #expect(AskConversation(request: "a kite tangling icon", documentRead: read, iconDesign: "A kite, its tail knotted.").landsAsDrawn)
+        #expect(!AskConversation(request: "a kite icon", documentRead: read).landsAsDrawn)
+        #expect(!AskConversation(request: "draw a kite", documentRead: read, iconDesign: "A kite.").landsAsDrawn)
+    }
+
+    @Test("The built-in model is held to what a call says it may write")
+    func mostTokens() {
+        let held = AskServerChat.body(fromOllama: ["options": ["num_predict": 300]])
+        #expect(held["max_tokens"]?.intValue == 300)
+        #expect(AskServerChat.body(fromOllama: [:])["max_tokens"]?.intValue == AskServerChat.mostTokensATurn)
+    }
+
     @Test("An app icon is drawn at 1024, any other icon at 512")
     func sides() {
         #expect(AskIcon.side(for: "a rocket app icon") == 1024)

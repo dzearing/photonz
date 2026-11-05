@@ -52,6 +52,16 @@ enum AskLocalModel {
     static var walkReplies: [AgentJSON] = []
     #endif
 
+    /// Whether a walk has scripted what the model says, so a call its script
+    /// does not know about would use up a reply meant for the plan.
+    static var answersAreScripted: Bool {
+        #if PHOTONZ_PLAYTEST
+        !walkReplies.isEmpty
+        #else
+        false
+        #endif
+    }
+
     /// How much the model reads at once on this Mac, in tokens: the server
     /// is started with it and every request is fitted to it.
     static var window: Int { AskConversation.contextWindow(memoryGigabytes: memoryGigabytes) }
