@@ -22507,6 +22507,8 @@ Tried and dropped: a design for every icon (84.0: a rocket fell from 92 to 72 as
 stacked triangles), and drawing in the design's own short talk (the balloon read
 28.6, named a bomb, though it looked fine in a lab run outside the app).
 
+Held-out 68.4 over all 45 cases on df457197, against 66.7 on the run before.
+
 Open: the balloon reads 55.4, did what was asked 5, reads as an icon 4, against
 7 for each. Five versions read 84.8, 44.8, 42.5, 55.4 and 28.6, one run each, so
 a single reading of that one case says little. Untried: several drawings and a
