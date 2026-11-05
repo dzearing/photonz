@@ -1,0 +1,35 @@
+{
+  "id": "preview-a-page-of-components-and-use-it-hover-pr",
+  "title": "Preview a page of components and use it: hover, press, toggle and focus show each component's own looks",
+  "goal": "A person who has made a page of components (buttons, switches, fields, tabs, each with looks for its states) has no way to try it: the canvas is always for editing, so they cannot hover a button to see its Hover look or click a switch to see it turn On. Add a Preview mode for the page in front of them, where every component behaves like the real control, using only the looks they made, with nothing to set up.",
+  "epic": "ui-prototyping",
+  "priority": "p1-high",
+  "seq": 1.5e-8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-05T14:44:52.741Z",
+  "updated": "2026-11-05T14:44:52.859Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-04 (intake): 'When we make a component, i'm not sure how to preview it interactively. e.g. i make a page with a bunch of components and want to preview it and hover over things or click on things...is this possible already?' and 2026-11-05: 'what happened to previewing the states of controls' (the intake window had proposed Preview mode and not filed it). Today: components have looks per state (ComponentVersionMatching names them), nothing plays them. Objective ui-prototyping ('Click-through prototyping') was staged later; this is its first step, asked for by the user. Mock reference: docs/design/mocks/pages/ui-prototype.html.",
+  "acceptance": [
+    "DESIGN FIRST, as an interactive mock on the design site (like pages/selection-transform.html): how Preview is entered (a Preview button in the title bar and a shortcut, Command-Return proposed) and left (Escape, the same button); what the window looks like in Preview (editing chrome gone, the page at 100 percent or fitted, a small Preview pill saying how to leave); what each kind of component does. Show it to the user as a decision card with the mock link and a marked screenshot, and build after approval.",
+    "In Preview, at Next defaults: pointing at a component shows its Hover look; pressing shows Pressed; releasing over it is a click. A click on a switch, checkbox, radio, tab or segmented control flips it to its On or Selected look and it stays (a radio or tab group keeps one selected); Tab and Shift-Tab move Focus with the Focused look; a component shown in its Disabled look does not respond. A component with no look for a state simply keeps its current look for that state.",
+    "Which look means which state comes from the look's own name and kind, as the component sheets already name them (Default, Hover, Pressed, Focused, Disabled, On, Off, Selected), not from anything set by hand; a component whose looks are named otherwise gets a short note in Preview, not an error.",
+    "Nothing in Preview changes the document: leaving puts every component back as it was, and Undo history is untouched.",
+    "Walks: enter Preview on a page with a button, a switch, a tab group and a disabled field; hover, press, click, Tab; leave and confirm the document is unchanged. A reel in the audit under queue/audits/.",
+    "The later step (connections between frames, click a button to go to another page, as docs/design/mocks/pages/ui-prototype.html draws) is NOT part of this task; note it in the log for the user to ask for.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:44:52.743Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-05T14:44:52.858Z",
+      "note": "seq 3980 -> 1.5e-8"
+    }
+  ]
+}

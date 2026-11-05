@@ -15662,3 +15662,5 @@
 {"t":"2026-11-05T14:42:40.956Z","ev":"leftovers_cleared","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","task":"measure-whether-qwen-image-2-1-can-paint-and-edi","why":"the task was answered by 841cf2f6; stash 3583be90 kept as a backup"}
 {"t":"2026-11-05T14:43:03.442Z","ev":"task_pending","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":"blocked","note":"unblocked by the user: fix the suspects from here (walks off the real clipboard, multi-display capture, shortcut failures said aloud, failed copy noticed); the other Mac's report only confirms"}
 {"t":"2026-11-05T14:43:03.517Z","ev":"task_resequenced","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":10,"to":1e-8}
+{"t":"2026-11-05T14:44:52.745Z","ev":"task_created","id":"preview-a-page-of-components-and-use-it-hover-pr","priority":"p1-high","title":"Preview a page of components and use it: hover, press, toggle and focus show each component's own looks"}
+{"t":"2026-11-05T14:44:52.860Z","ev":"task_resequenced","id":"preview-a-page-of-components-and-use-it-hover-pr","from":3980,"to":1.5e-8}
