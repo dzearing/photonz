@@ -2,14 +2,14 @@
   "id": "ask-makes-icons-that-are-icons-one-subject-clean",
   "title": "Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px",
   "goal": "Asked for an icon (the user's 'a balloon icon popping'), Ask painted a scene with the picture model and traced it: a stick figure holding balloons. An icon request must give an icon: one subject, built from a few clean vector shapes and paths on an icon grid, consistent line weight and corner style, centred with even padding, readable from 16 to 64 px, every part a named, editable layer, in the style asked for (outline, filled, duotone, or the document's own icon style).",
-  "epic": "local-edit",
+  "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 2e-7,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:19.981Z",
-  "updated": "2026-11-05T14:46:18.610Z",
+  "updated": "2026-11-05T14:47:30.122Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping. But I think it just drew a picture of a stick figure holding balloons. I'd like to be able to use ask for creating icons and especially animated svgs'. Today: AskPlanning routes 'icon' words to vector art (add_drawing), which is painted by the picture model and traced (AgentPictureKind); the doing tools include add_shape and add_path, which an icon route can use directly. Animation is a separate task: ask-animates-what-it-makes-an-animated-svg-icon.",
@@ -117,6 +117,14 @@
     {
       "t": "2026-11-05T14:46:18.609Z",
       "note": "User, 2026-11-05: icons are now the loop's focus (objective icon-svg): create, ask, animate, preview, edit, ask for tweaks, export. Added the tweak requirement above."
+    },
+    {
+      "t": "2026-11-05T14:46:39.595Z",
+      "note": "digest 2026-11-05: epic moved from local-edit, which is staged later, to agent-ask, which is what this request serves."
+    },
+    {
+      "t": "2026-11-05T14:47:30.122Z",
+      "note": "digest 2026-11-05: epic moved again, to icon-vector, because the focus became icon-svg during this pass and its success list names this task under ASK FOR ONE."
     }
   ],
   "started": "2026-11-05T02:53:05.050Z",

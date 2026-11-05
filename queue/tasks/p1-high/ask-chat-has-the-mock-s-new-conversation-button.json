@@ -1,7 +1,7 @@
 {
   "id": "ask-chat-has-the-mock-s-new-conversation-button",
-  "title": "Ask chat has the mock's New Conversation button, its whole transcript, and an icon for each command",
-  "goal": "The Ask chat matches the last parts of the mock it still leaves out: a button that starts a new conversation, the earlier requests shown above the latest one, and each row of the / command list wearing its own icon rather than one for its area.",
+  "title": "Each row of the / command list wears its own icon",
+  "goal": "Typing / in Ask lists the commands you can run, and today every row in an area shows that area's one icon, where the mock gives each command its own. Give each row its own icon so the list can be read at a glance.",
   "epic": "agent-ask",
   "priority": "p1-high",
   "seq": 110,
@@ -9,13 +9,11 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T14:43:35.102Z",
-  "updated": "2026-11-04T16:08:46.407Z",
+  "updated": "2026-11-05T14:46:39.596Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left by typing-in-ask-lists-the-commands-you-can-run. Mock: askPalHTML in docs/design/mocks/shared/dist/photonz-ds.js. AskConversationLines and AskCommandsList.symbol in Sources/Photonz/Agent/AskViews.swift; AppCommandTable has no icon today. New Conversation has to decide what Ask forgets: its memory of what it made comes from the rows (AskSession.conversation).",
   "acceptance": [
-    "The chat header has the mock's New Conversation button, and pressing it starts a conversation that does not lean on the one before",
-    "The chat shows the requests of this conversation in order, as the mock's chat does, not only the latest",
     "Each row of the / list shows an icon for that command, as agent-generate-wt.html does, not one shared by its whole area"
   ],
   "log": [
@@ -30,6 +28,10 @@
     {
       "t": "2026-11-04T16:08:46.406Z",
       "note": "seq 127.5 -> 110"
+    },
+    {
+      "t": "2026-11-05T14:46:39.596Z",
+      "note": "digest 2026-11-05: narrowed to the icons. The first two items were a New Conversation button and a whole transcript in the chat, and the user took that chat out on 2026-11-04 (one-agent-pane-on-the-right-a-plain-history-of-r, 3bc0e202: the composer closes after a request and the Agent group is the one Agent place; ask.md says the same). Building them now would put back what the user removed. The shared mock's askPalHTML in photonz-ds.js still draws the New conversation button; the Ask pages were updated that day and this one was missed, so take it out while here."
     }
   ]
 }

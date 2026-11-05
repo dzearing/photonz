@@ -15667,3 +15667,15 @@
 {"t":"2026-11-05T14:45:19.116Z","ev":"task_resequenced","id":"preview-a-page-of-components-and-use-it-hover-pr","from":1.5e-8,"to":4.5e-7}
 {"t":"2026-11-05T14:46:18.611Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T14:46:18.700Z","ev":"task_note","id":"ask-animates-what-it-makes-an-animated-svg-icon"}
+{"t":"2026-11-05T14:47:30.207Z","ev":"task_reprioritized","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-05T14:47:30.282Z","ev":"task_note","id":"opening-an-svg-file-gives-you-its-drawing-to-edi"}
+{"t":"2026-11-05T14:47:30.356Z","ev":"task_reprioritized","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-05T14:47:30.429Z","ev":"task_note","id":"icon-snapping-reaches-what-the-icon-mock-draws"}
+{"t":"2026-11-05T14:47:30.507Z","ev":"task_reprioritized","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-05T14:47:30.583Z","ev":"task_note","id":"copying-an-icon-carries-the-white-canvas-the-exp"}
+{"t":"2026-11-05T14:47:30.659Z","ev":"task_reprioritized","id":"rounding-corners-works-the-same-way-on-a-rectang","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-05T14:47:30.733Z","ev":"task_note","id":"rounding-corners-works-the-same-way-on-a-rectang"}
+{"t":"2026-11-05T14:47:30.807Z","ev":"task_reprioritized","id":"the-repeats-label-on-the-timing-strip-s-ruler-ne","from":"p2-normal","to":"p1-high"}
+{"t":"2026-11-05T14:47:30.881Z","ev":"task_note","id":"the-repeats-label-on-the-timing-strip-s-ruler-ne"}
+{"t":"2026-11-05T14:47:49.327Z","ev":"task_created","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli","priority":"p1-high","title":"A clip's own sound is the bottom half of the clip, not a row of its own"}
+{"t":"2026-11-05T14:47:49.442Z","ev":"task_resequenced","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli","from":3980,"to":4.4e-7}

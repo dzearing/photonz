@@ -1,7 +1,7 @@
 {
   "id": "animating-a-picture-is-as-simple-as-setting-a-mo",
   "title": "Animating a picture is as simple as setting a moment and changing things: design it, then build it",
-  "goal": "Animating an image today starts from a + and an 'Animate a property' picker: the person must decide which property before doing anything. They do not want to think about properties. They want to move the playhead, change the layer (move it, fade it, turn it, resize it), and have that become a keyframe that tweens on its own; click a keyframe and change things, and the change stays on that keyframe. The video editor already works this way (Add Key makes one key moment with nothing chosen, then any change keys itself at the playhead: KeyMoments.swift, the user's rule of 2026-10-13 'Always: any change keys itself'). Design one simple keyframe workflow shared by animated pictures and video, show it to the user as a mock, and build it once approved.",
+  "goal": "Animating a picture today starts with choosing a property from a list, and the user does not want to think about properties: they want to move to a moment, change the layer and have that tween on its own, the way the video editor already works. Design one simple way of keying shared by pictures and video, show it to the user as a mock, and build it once they approve.",
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 2.5e-7,
@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:26:13.810Z",
-  "updated": "2026-11-04T16:26:13.938Z",
+  "updated": "2026-11-05T14:46:39.597Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'The motion pane is totally unintuitive. I hit the + sign and i have to choose which property i want to animate. I do not want to think about this. I want to just start creating keyframes where maybe I position something, save a keyframe, or click on one, adjust some things (opacity position, transform, etc) and it persists on that keyframe and auto tweens. Don't we have this? We should be reusing a lot of the ux for videos for animated images. Please file a task to properly design an intuitive simplified way to create them.' Today: video has Add Key + any change keys itself (Sources/PhotonzCore/KeyMoments.swift, PropertyKeys.swift, LooksAtThePlayhead.swift); pictures lead with the Animate a property picker (Sources/Photonz/EditorState+PropertyKeys.swift, InspectorPanel 'Animate a property'). Related queued: ask-animates-what-it-makes-an-animated-svg-icon (Ask setting keys) should use the same model.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-11-04T16:26:13.937Z",
       "note": "seq 3980 -> 2.5e-7"
+    },
+    {
+      "t": "2026-11-05T14:46:39.597Z",
+      "note": "digest 2026-11-05: goal rewritten in plain words. The file names and the 2026-10-13 rule it carried are still in the notes."
     }
   ]
 }

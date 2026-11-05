@@ -1,0 +1,36 @@
+{
+  "id": "a-clip-s-own-sound-is-the-bottom-half-of-the-cli",
+  "title": "A clip's own sound is the bottom half of the clip, not a row of its own",
+  "goal": "A recording that carries its own sound is drawn today as two rows joined behind the scenes: the picture on its video track and its sound on a companion row under it ('V2 sound'), moving, trimming and cutting together. The user finds two implicitly attached rows confusing. While the sound is attached, draw ONE clip: the picture across the top and its waveform across the bottom half of the same rectangle, on the video track. Detach Audio moves the sound to a real Audio track of its own, as today; Re-attach puts it back inside the clip.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 4.4e-7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-05T14:47:49.323Z",
+  "updated": "2026-11-05T14:47:49.441Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User, 2026-11-05 (intake): 'If audio is attached to a video segment, it should appear in the same lane as sort of the bottom half of the video rectangle, rather than its own track. if you right click and separate the audio then yes, separate track. but having the 2 rows implicitly attached to each other is really confusing.' History: 0.18.0 (2026-10-19) 'A recording's own sound sits on a row just under its video and is joined to it ... Detach Audio moves the sound to an Audio track, and Re-attach brings it back'. Code: Sources/PhotonzCore/TimelineTrack.swift (its comment still says 'its sound is drawn inside its clip'), SoundClip.swift, Waveform.swift, TrackRange.swift; Sources/Photonz/ClipPiecesBar.swift ('the two move, trim and cut as one until Detach Audio parts them'), EditorCommands.swift (Detach / Re-attach Audio). An approved departure from the video mocks: change the mocks, no decision card.",
+  "acceptance": [
+    "At Next defaults, a recording with sound on the timeline is one clip on its video track: thumbnails in the top part, the waveform in the bottom part, one outline, one name. No companion sound row is shown for it, and the track list has no 'V2 sound' row while every clip on that track keeps its sound attached.",
+    "Everything that worked on the joined pair works on the one clip: move, trim either edge (Command for ripple), blade, delete, Freeze Frame, Speed Stops, Clean Noise, the volume line and its keys (drawn and edited on the waveform half), fades, transitions. Picking and right-clicking the waveform half acts on the clip and offers its sound commands (Detach Audio, Clean Noise, volume), the picture half its picture commands.",
+    "Detach Audio puts the sound on an Audio track of its own (an existing free one, else a new one), as a separate clip that moves independently, and the clip's bottom half goes away. Re-attach Audio puts it back inside the clip when the two still line up, as today.",
+    "The clip grows a little taller only if needed to keep both halves readable; a track height choice, if any, still works. Muted sound reads as muted on the bottom half.",
+    "Grown-up tool check in the audit: Final Cut draws attached audio inside the clip; Premiere links two items across tracks. Say why Photonz follows Final Cut here (the user's call), with screenshots before and after.",
+    "Update the video mocks on the design site (video.html, video-audio mocks) to draw attached sound inside the clip, noting the user changed it on 2026-11-05, so no later runner rebuilds the companion row.",
+    "Walks: a recording with sound shows one clip with a waveform half; trim, blade and move keep it together; Detach Audio gives a separate Audio track clip; Re-attach restores the half. Existing sound walks updated.",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:47:49.325Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-11-05T14:47:49.440Z",
+      "note": "seq 3980 -> 4.4e-7"
+    }
+  ]
+}

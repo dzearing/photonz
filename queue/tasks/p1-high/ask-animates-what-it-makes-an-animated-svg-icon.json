@@ -1,7 +1,7 @@
 {
   "id": "ask-animates-what-it-makes-an-animated-svg-icon",
   "title": "Ask animates what it makes: an animated SVG icon from one request",
-  "goal": "Ask cannot animate anything: none of its tools set keys, so 'a balloon icon popping' could only ever be a still picture. Give Ask (and agents over MCP) the tools to animate layers on the document's clock the way a person keys them in the app (position, scale, rotation, opacity, a path's shape where the app supports it, and the stroke draw-on), and a way to make an icon animation that plays as an animated SVG: 'a balloon icon popping' gives a balloon that swells, wobbles and bursts into a few fragments that fly out and fade, as editable keyed layers, exported or copied as an animated SVG that loops.",
+  "goal": "Ask cannot animate anything today, so 'a balloon icon popping' can only ever be a still picture. Give Ask and outside agents a way to key layers the way a person does, so one request gives an animated SVG that loops and stays editable.",
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 2.1e-7,
@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
-  "updated": "2026-11-05T14:46:18.699Z",
+  "updated": "2026-11-05T14:46:39.597Z",
   "deps": [
     "ask-makes-icons-that-are-icons-one-subject-clean"
   ],
@@ -44,6 +44,10 @@
     {
       "t": "2026-11-05T14:46:18.698Z",
       "note": "User, 2026-11-05: icons are now the loop's focus (objective icon-svg): create, ask, animate, preview, edit, ask for tweaks, export. Added the tweak requirement above."
+    },
+    {
+      "t": "2026-11-05T14:46:39.597Z",
+      "note": "digest 2026-11-05: goal shortened; the detail is on the checklist. Waiting flagged, not changed: this task depends on ask-makes-icons-that-are-icons-one-subject-clean, which intake set on purpose, and that task is open on one case, the balloon. The key tools on this checklist do not need the balloon; only its try path does. The icons audit already asks the user whether the balloon is good enough to animate, so the digest puts that to them."
     }
   ]
 }
