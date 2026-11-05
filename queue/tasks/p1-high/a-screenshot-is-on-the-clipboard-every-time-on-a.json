@@ -5,11 +5,11 @@
   "epic": "image-editing",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T01:36:23.358Z",
-  "updated": "2026-11-05T14:49:57.372Z",
+  "updated": "2026-11-05T16:12:40.157Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake), correcting the closed task: 'when i earlier said that i wasn't getting photos into the clipboard this was on another machine not running 2 copies of photonz, so your assumptions were wrong.' The other Mac's version and the apps pasted into are being asked; add them to this log when known. Prior work: every-screenshot-is-on-the-clipboard-every-time (done, c999166a, keep it: one running Photonz holds the capture shortcuts). Its own log admits: 'pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves'. Code: Sources/Photonz/Capture/CaptureStore.swift, Sources/Photonz/ClipboardHandOff.swift, Sources/PhotonzRender/ClipboardPicture.swift.",
@@ -91,8 +91,38 @@
     {
       "t": "2026-11-05T14:49:57.371Z",
       "note": "seq 1e-8 -> 10"
+    },
+    {
+      "t": "2026-11-05T15:00:17.596Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-05T15:04:25.901Z",
+      "note": "Reproduced suspect 1 before changing anything: Scripts/playtest.sh a-size-measurement-is-one-group-walk with the real clipboard's changeCount read either side: 6795 -> 6797, moved 2. A walk does write the person's clipboard."
+    },
+    {
+      "t": "2026-11-05T15:04:25.975Z",
+      "note": "Chose shared capture code over a Next-only change because the reported fault is in the RELEASED app and this task's checklist says so; a Next-only fix would never reach the other Mac. Current has no Settings window (next-settings-window), so the shortcut notice opens the Mac's Keyboard pane directly and works in both; the Settings rows show wherever Settings exists."
+    },
+    {
+      "t": "2026-11-05T16:10:51.942Z",
+      "note": "walks none -> screenshot-reaches-the-clipboard-walk"
+    },
+    {
+      "t": "2026-11-05T16:12:23.944Z",
+      "note": "Acceptance state. (1) MET but for its wording: real clipboard moved 0 across 35 walks incl all 26 with a clipboard step (6797 before, 6818 after, the 21 being the opt-in Chrome run), not across a rotating check, which only the loop runs; Scripts/clipboard-timing/real-clipboard-untouched.sh repeats it; absent from the release binary by strings, with controls. (2) MET with stand-in displays, Chose the display under the pointer over one joined picture because a joined one mixes pixel densities. (3) MET; a refused registration tested in unit tests only. (4) MET; forced in a walk, Copy Again clicked at a point on its face, 0 false alarms in 20 captures. NOT MET: 20 of 20 in every target (real Chrome 20 of 20 only; Preview, Notes, Safari, Messages, Mail, Claude blocked by Apple Events -1743, Slack and Teams not installed) and the run with exactly one released Photonz (Dev and the installed app were running; a runner may not quit Dev). Promised data was not shown to be a cause, so it stays."
+    },
+    {
+      "t": "2026-11-05T16:12:24.020Z",
+      "note": "Left rough, no task earned: a paste reading a promised type whose maker returned nil took about 2 s in the forced walk; only reachable on a copy that has already failed, and the notice covers it. Rough audit lines are all covered by the card on this task."
+    },
+    {
+      "t": "2026-11-05T16:12:40.151Z",
+      "note": "Four suspects fixed and pushed (76fdef76). Not reached: 20 of 20 in every target (real Chrome 20 of 20 only) and a run with exactly one released Photonz. Cause on the other Mac still not confirmed. The card asks how to do the last check; audit queue/audits/2026-11-05-screenshot-clipboard-suspects-fixed.json."
     }
   ],
-  "started": "2026-11-04T05:52:02.733Z",
-  "walks": []
+  "started": "2026-11-05T15:00:17.595Z",
+  "walks": [
+    "screenshot-reaches-the-clipboard-walk"
+  ]
 }

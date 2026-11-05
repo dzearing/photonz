@@ -15759,3 +15759,12 @@
 {"t":"2026-11-05T14:59:11.221Z","ev":"task_resequenced","id":"a-24-unit-artboard-rules-itself-into-units","from":138.75,"to":78}
 {"t":"2026-11-05T14:59:11.295Z","ev":"task_resequenced","id":"an-icon-picture-s-svg-reads-in-24-whole-units","from":139.375,"to":79}
 {"t":"2026-11-05T15:00:03.481Z","ev":"manager","filed":5,"readyBefore":90,"readyAfter":94,"report":"queue/manager/2026-11-05-0659.md"}
+{"t":"2026-11-05T15:00:17.527Z","ev":"manager_pass","exit":0,"ready":94}
+{"t":"2026-11-05T15:00:17.601Z","ev":"task_started","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","title":"A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app","priority":"p1-high"}
+{"t":"2026-11-05T15:04:25.903Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-05T15:04:25.977Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-05T16:10:51.944Z","ev":"task_walks","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","walks":["screenshot-reaches-the-clipboard-walk"]}
+{"t":"2026-11-05T16:12:23.946Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-05T16:12:24.022Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
+{"t":"2026-11-05T16:12:24.067Z","ev":"decision_opened","id":"a-screenshot-is-on-the-clipboard-every-time-on-a-the-fixes-are-in-and-the-rows-ma","taskId":"a-screenshot-is-on-the-clipboard-every-time-on-a","question":"The fixes are in, and the rows marked here are the likeliest cause. How should the last check be done?"}
+{"t":"2026-11-05T16:12:40.158Z","ev":"task_blocked","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":"in_progress","note":"Four suspects fixed and pushed (76fdef76). Not reached: 20 of 20 in every target (real Chrome 20 of 20 only) and a run with exactly one released Photonz. Cause on the other Mac still not confirmed. The card asks how to do the last check; audit queue/audits/2026-11-05-screenshot-clipboard-suspects-fixed.json."}
