@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
-  "updated": "2026-11-05T02:22:32.758Z",
+  "updated": "2026-11-05T14:46:18.699Z",
   "deps": [
     "ask-makes-icons-that-are-icons-one-subject-clean"
   ],
@@ -17,6 +17,7 @@
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping ... I'd like to be able to use ask for creating icons and especially animated svgs'. Today Ask's doing tools (AskPlanning.swift) and the MCP tools (AgentTools.swift) have no key or animation tool; the app keys layers (LayerMotion, MotionProperty) and exports animated SVG (SVGMotionExport, animatedSVGExportEnabled). Objective icon-animate: 'Animate SVG properties on the timeline, keyframes like any layer'. Depends on the icon task so the animated icon starts from a real icon.",
   "acceptance": [
     "New agent tools (AgentTools, offered to Ask and over MCP): set keys on a layer's property with times, values and easing (the same keys the timeline shows and the person can edit), make a picture document timed (a length, a loop), and read keys back in read_document. Each call is one undo step. Schema-checked like every tool.",
+    "ASK FOR TWEAKS (user, 2026-11-05): a follow-up on an animation ('pop faster', 'bounce more', 'loop with a pause', 'make the pieces fly further') changes that animation's keys in place as one undo step, measured with at least 6 two-turn animation cases in the eval.",
     "Ask plans an animation from the request with the model's own sense of motion (anticipation, follow-through, easing, timing in milliseconds), never from coded animations per subject: the instructions teach general motion principles; the subject comes from the request.",
     "The result exports and copies as an animated SVG that plays in Safari and Chrome and loops (the existing animated SVG export, SVGMotionExport), and plays the same in Photonz's own timeline. Properties the SVG export cannot carry are not used for an SVG request, or are said in the Ask row.",
     "Eval: at least 10 animated icon requests ('a balloon popping', 'a bell ringing', 'a heart beating', 'a loading spinner', 'a checkmark drawing itself', 'a trash can lid opening'), judged from contact sheets of frames and the SVG playing, on 'the motion reads as what was asked' and 'it loops cleanly'. Before (none can animate) and after in the audit with reels; the after scores at least 7 of 10 on reads-as-asked.",
@@ -39,6 +40,10 @@
     {
       "t": "2026-11-05T02:22:32.757Z",
       "note": "From ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04: icons now land as named shape and path layers in their own picture, which is what this task keys. But 'a balloon popping' does not read yet (29.7, seen as a sun), so a balloon to animate depends on that task's open item."
+    },
+    {
+      "t": "2026-11-05T14:46:18.698Z",
+      "note": "User, 2026-11-05: icons are now the loop's focus (objective icon-svg): create, ask, animate, preview, edit, ask for tweaks, export. Added the tweak requirement above."
     }
   ]
 }

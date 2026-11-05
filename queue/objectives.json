@@ -1,6 +1,6 @@
 {
   "updated": "2026-10-24T14:36:45.513Z",
-  "focus": "agent-drivable",
+  "focus": "icon-svg",
   "principles": [
     "Feature work dominates. Foundational work earns its place by unblocking the feature in focus, and says which one in its goal.",
     "Every area of the window has one purpose, and everything in it serves that purpose. Putting a control in an area whose purpose it does not share (zoom in the tool bar, a meter in the timeline bar, a sentence in the chrome) confuses people, however useful the control is. Elegant, easy to understand and sensible to an end user beats complete. (The user, 2026-09-29.)",
@@ -379,7 +379,7 @@
     {
       "id": "icon-svg",
       "title": "Make Photonz the best platform for building icons and animated SVGs",
-      "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar. Moved to now on 2026-09-13: the user asked for a pen that draws polygons with hard edges and bezier curves, for building elaborate SVG icons.",
+      "note": "Icon work as a first-class discipline: drawn on a real grid with keylines, previewed at size, exported as clean SVG, and animated on the same timeline every other layer uses. The icon clickthroughs (Draw an icon on the grid, Paint an icon with a gradient) and the iconography reference define the bar. Moved to now on 2026-09-13: the user asked for a pen that draws polygons with hard edges and bezier curves, for building elaborate SVG icons. Made the FOCUS on 2026-11-05 at the user's ask (it replaces agent-drivable as the focus; agent-drivable stays now).",
       "stage": "now",
       "children": [
         {
@@ -414,9 +414,9 @@
           "stage": "now",
           "children": [],
           "success": [
-            "Add Rotation, Position, Scale or Opacity to a layer from the plus on its Motion list, type From and To, and it plays on the artboard at once",
-            "Move the pivot on the canvas, pick a curve from a list that draws each one or draw your own, and set Repeat to Forever",
-            "The timing strip shows a bar per moving layer that says which layer it is, and a spinner turning about the artboard loops with no stutter"
+            "Animating an icon is setting a moment and changing things: the first Add Key makes it animated, any change at the playhead keys itself, keys tween and loop; no property picker is the first step (the user, 2026-11-04: \"I do not want to think about this\").",
+            "Click a key to go to it and change it; the change stays on that key. Easing is one simple choice per key with the curves under it.",
+            "Ask can make the animation and tweak it (\"bounce more\", \"slower\"), and it exports as an animated SVG that loops in Safari and Chrome."
           ]
         },
         {
@@ -440,9 +440,14 @@
         }
       ],
       "success": [
-        "A person who knows Figma or Illustrator can draw a 24 unit icon on keylines, check it at real sizes, animate it and export clean SVG, without being taught (icon-draw-wt.html, icon-animate-wt.html, icon-export-anim-wt.html)",
-        "The icon surfaces match their mocks side by side",
-        "Everything is reachable in Next with default settings"
+        "The user, 2026-11-05: \"I would really like to be able to easily create icons, animated icons, preview them, edit them, ask for them, ask for tweaks to them.\" Each of the following works at Next defaults, walked end to end:",
+        "CREATE: File > New Image offers icon sizes; an icon is drawn on keylines with clean vector shapes, and the picture you are in is never widened to hold it.",
+        "ASK FOR ONE: \"make an icon of X\" gives one clean, named, editable icon that reads at 16 to 64 px, on an empty canvas or in a new icon picture (ask-makes-icons-that-are-icons-one-subject-clean).",
+        "ANIMATE: set a moment, change the icon, set another, and it tweens and loops, with no property picker in the way (animating-a-picture-is-as-simple-as-setting-a-mo); Ask animates one from a request (ask-animates-what-it-makes-an-animated-svg-icon).",
+        "PREVIEW: see it at real sizes, light and dark, still and playing, without mistaking the preview for a control (the-icon-previews-strip-reads-as-previews-no-chi).",
+        "EDIT: every part is a layer you can pick, reshape and recolour, and every key is one you can see and change.",
+        "ASK FOR TWEAKS: \"make the knot smaller\", \"pop faster\", \"make it outline\" changes that icon or its animation in place, as one undo step.",
+        "EXPORT: Copy SVG and Export give clean SVG, static or animated, that plays in Safari and Chrome."
       ],
       "spec": {
         "mocks": [

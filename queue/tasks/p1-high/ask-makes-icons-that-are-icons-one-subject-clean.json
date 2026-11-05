@@ -9,12 +9,13 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:19.981Z",
-  "updated": "2026-11-05T08:05:21.362Z",
+  "updated": "2026-11-05T14:46:18.610Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping. But I think it just drew a picture of a stick figure holding balloons. I'd like to be able to use ask for creating icons and especially animated svgs'. Today: AskPlanning routes 'icon' words to vector art (add_drawing), which is painted by the picture model and traced (AgentPictureKind); the doing tools include add_shape and add_path, which an icon route can use directly. Animation is a separate task: ask-animates-what-it-makes-an-animated-svg-icon.",
   "acceptance": [
     "STILL OPEN: 'make an icon of a balloon popping', the user's own request, reads as a balloon bursting: at least 7 of 10 on didWhatWasAsked and reads as an icon, and named as a balloon blind (Scripts/ask-eval.sh run --engine ask --cases icon-balloon-popping). Reached 2026-11-05 on the shipped code (df457197, run 20261105-043455-ask): 55.4, didWhatWasAsked 5, reads as an icon 4, named 3 of 3, against 74.4 before.",
+    "ASK FOR TWEAKS (user, 2026-11-05): a follow-up on an icon Ask made ('make the knot smaller', 'make it outline', 'thicker lines', 'rounder corners') changes THAT icon in place as one undo step, using its named parts (change_part and the icon's own layers), measured with at least 6 two-turn icon cases in the eval.",
     "Held-out total measured on the shipped prompt, beside the climb total: held-out 68.4 over all 45 cases (run 20261105-055127-ask-held-out, df457197; 66.7 on the run before), climb 88.3 on the 14 icon cases (run 20261105-043455-ask). Measure it again if the prompt changes. Scripts/ask-eval.sh report shows a later one-case try as its climb line, not this reading.",
     "WHERE THE ICON GOES (user, 2026-11-04, after Ask put a 512 icon frame beside their picture and widened the canvas from about 1026 to 2112): Ask never grows the person's document or adds a frame beside their work to hold an icon. If the current picture is empty (only a Background), it becomes the icon: square, icon sized, the icon drawn on the canvas itself. Otherwise Ask opens a NEW picture sized for the icon in its own window, draws there, and its row says so (Made a new icon: Balloon). No new document kind: File > New stays Image or Video; New Image gets icon size presets (24 pt glyph on 512, 1024 app icon).",
     "Reproduce: 'make an icon of a balloon popping', 'a trash can icon', 'a settings gear icon, outline', 'a rocket app icon' on Ask at Next defaults; record what Ask makes today (screenshots in the audit).",
@@ -112,6 +113,10 @@
     {
       "t": "2026-11-05T08:05:21.361Z",
       "note": "The balloon is still short of its bar: 55.4, didWhatWasAsked 5, reads as an icon 4 against 7 each. Everything else on the checklist is reached; the 14 icon cases read 88.3 and held-out 68.4, shipped in df457197."
+    },
+    {
+      "t": "2026-11-05T14:46:18.609Z",
+      "note": "User, 2026-11-05: icons are now the loop's focus (objective icon-svg): create, ask, animate, preview, edit, ask for tweaks, export. Added the tweak requirement above."
     }
   ],
   "started": "2026-11-05T02:53:05.050Z",
