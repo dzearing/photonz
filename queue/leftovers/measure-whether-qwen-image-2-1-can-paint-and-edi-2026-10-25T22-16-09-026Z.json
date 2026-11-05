@@ -24,5 +24,6 @@
   "stash": "3583be905c200273d515fdad8594e22ea356f695",
   "restore": "git stash apply 3583be905c200273d515fdad8594e22ea356f695",
   "why": "",
-  "handed": null
+  "handed": "2026-11-05T14:42:40.955Z",
+  "clearedWhy": "the task was answered by 841cf2f6; stash 3583be90 kept as a backup"
 }

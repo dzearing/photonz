@@ -15656,3 +15656,7 @@
 {"t":"2026-11-05T08:05:12.157Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T08:05:12.231Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T08:05:21.363Z","ev":"task_pending","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":"in_progress","note":"The balloon is still short of its bar: 55.4, didWhatWasAsked 5, reads as an icon 4 against 7 each. Everything else on the checklist is reached; the 14 icon cases read 88.3 and held-out 68.4, shipped in df457197."}
+{"t":"2026-11-05T14:41:19.415Z","ev":"sweep_pass","walks":951,"seconds":23729,"passed":910,"failed":41,"complete":false,"total":1096,"interrupted":true}
+{"t":"2026-11-05T14:42:40.795Z","ev":"task_released","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","by":"intake"}
+{"t":"2026-11-05T14:42:40.897Z","ev":"task_done","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","from":"pending","note":"Answered by 841cf2f6 (2026-10-30, 'Ask photo models measured: Z-Image Turbo stays over Qwen-Image-2.1 and MOSS-Image'). Closed by the intake window 2026-11-05; its 2026-10-25 leftovers stash (3583be90) is kept as a backup, not reapplied."}
+{"t":"2026-11-05T14:42:40.956Z","ev":"leftovers_cleared","id":"measure-whether-qwen-image-2-1-can-paint-and-edi","task":"measure-whether-qwen-image-2-1-can-paint-and-edi","why":"the task was answered by 841cf2f6; stash 3583be90 kept as a backup"}
