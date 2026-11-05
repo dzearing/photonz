@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
-  "updated": "2026-11-04T16:40:35.933Z",
+  "updated": "2026-11-05T02:22:32.758Z",
   "deps": [
     "ask-makes-icons-that-are-icons-one-subject-clean"
   ],
@@ -35,6 +35,10 @@
     {
       "t": "2026-11-04T16:40:35.932Z",
       "note": "seq 3e-7 -> 2.1e-7"
+    },
+    {
+      "t": "2026-11-05T02:22:32.757Z",
+      "note": "From ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04: icons now land as named shape and path layers in their own picture, which is what this task keys. But 'a balloon popping' does not read yet (29.7, seen as a sun), so a balloon to animate depends on that task's open item."
     }
   ]
 }

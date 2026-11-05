@@ -15633,3 +15633,15 @@
 {"t":"2026-11-04T21:56:46.847Z","ev":"task_note","id":"one-agent-pane-on-the-right-a-plain-history-of-r"}
 {"t":"2026-11-04T21:56:46.915Z","ev":"task_note","id":"one-agent-pane-on-the-right-a-plain-history-of-r"}
 {"t":"2026-11-04T21:56:46.995Z","ev":"task_done","id":"one-agent-pane-on-the-right-a-plain-history-of-r","from":"in_progress","note":"Shipped in 3bc0e202. Left dock and composer conversation gone; Agent group holds the live request with Stop and a plain history with no switch or trash; hover card left of the panel with plan lines, before and after pictures and thumbs; Clear History in the group menu, row right-click and Edit, with a yes in the group; Ask mocks changed to match. Verified: Scripts/test.sh exit 0; ask-one-agent-pane-walk 77 steps and ask-live-request-at-the-top-walk at Next defaults; 18 other Ask walks green; focus-drill clean 0/149 ticks lost; audit pictures opened and read. ask-stops-a-running-request-walk passes warm and fails cold, owned by stop-while-ask-s-model-is-still-loading-lets-the."}
+{"t":"2026-11-04T22:27:23.414Z","ev":"slice_pass","walks":18,"passed":18,"failed":0,"seconds":1806,"of":1093,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-04T22:27:23.592Z","ev":"task_started","id":"ask-makes-icons-that-are-icons-one-subject-clean","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px","priority":"p1-high"}
+{"t":"2026-11-04T22:31:06.952Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T01:44:10.404Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T02:22:11.316Z","ev":"task_walks","id":"ask-makes-icons-that-are-icons-one-subject-clean","walks":["ask-makes-an-icon-walk","ask-puts-an-icon-in-its-own-picture-walk","new-image-icon-sizes-walk"]}
+{"t":"2026-11-05T02:22:32.393Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T02:22:32.466Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T02:22:32.540Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T02:22:32.614Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T02:22:32.686Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T02:22:32.759Z","ev":"task_note","id":"ask-animates-what-it-makes-an-animated-svg-icon"}
+{"t":"2026-11-05T02:22:32.833Z","ev":"task_pending","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":"in_progress","note":"Most icons now read and land in the right place (69.3 to 86.5, shipped), but the user's own balloon reads as a sun at 29.7 and the held-out set was not run: both are open on the checklist."}
