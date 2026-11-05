@@ -4,16 +4,22 @@
   "goal": "The user's report of screenshots not reliably reaching the clipboard came from ANOTHER Mac running a single, released Photonz, not this one. The task every-screenshot-is-on-the-clipboard-every-time found and fixed a different fault that only exists on this Mac (the installed app and Photonz Dev both answering the capture shortcut, c999166a), and checked the suspects in e0648dd9 only with a stand-in reader process, never with real paste targets. The single-app fault is unexplained and unfixed. Find it and fix it.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 10,
-  "status": "blocked",
+  "seq": 1e-8,
+  "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T01:36:23.358Z",
-  "updated": "2026-11-04T16:08:45.685Z",
+  "updated": "2026-11-05T14:43:03.516Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake), correcting the closed task: 'when i earlier said that i wasn't getting photos into the clipboard this was on another machine not running 2 copies of photonz, so your assumptions were wrong.' The other Mac's version and the apps pasted into are being asked; add them to this log when known. Prior work: every-screenshot-is-on-the-clipboard-every-time (done, c999166a, keep it: one running Photonz holds the capture shortcuts). Its own log admits: 'pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves'. Code: Sources/Photonz/Capture/CaptureStore.swift, Sources/Photonz/ClipboardHandOff.swift, Sources/PhotonzRender/ClipboardPicture.swift.",
   "acceptance": [
+    "UNBLOCKED by the user, 2026-11-05 (\"how is it blocked on me\"): do NOT wait for a report from the other Mac. Fix every suspect that can be fixed from here, then ask for the report only to confirm.",
+    "(1) Walks and the probe never write the REAL clipboard: everything a walk copies or pastes goes through a private named pasteboard only the probe reads (Probe builds only; the shipping app is untouched). Prove with a pasteboard changeCount watcher on NSPasteboard.general across a rotating check: zero changes. This stops Universal Clipboard carrying the loop's writes to the user's other Mac, and stops walks clobbering the user's clipboard here.",
+    "(2) A full screen capture on a Mac with several displays leaves ALL of them usable, not only the last (captureFullScreen calls add() per display, each replacing the clipboard): decide and build the right result (the display under the pointer on the clipboard, or one combined picture), with a test using two fake displays.",
+    "(3) When Photonz cannot register a capture shortcut (RegisterEventHotKey fails, or macOS's own screenshot shortcuts hold the same keys), it says so once in plain words with a way to fix it (Settings, or the macOS Keyboard Shortcuts pane), instead of only NSLogging; and Settings shows each capture shortcut's state.",
+    "(4) A capture whose clipboard write fails (the item is not readable as PNG within 2 s, checked from a background reader) shows a short notice with Copy Again, so a missed copy is never silent.",
+    "Then put Scripts/clipboard-timing/other-mac-report.sh in the digest for the user to run on the other Mac to CONFIRM, not as a blocker.",
     "Do NOT explain this with two running copies: on the user's other Mac only one Photonz runs. Test with exactly one Photonz running, the RELEASED build (dist/Photonz.app from Scripts/build-app.sh --release, or the 0.23.0 DMG), with Photonz Dev and the probe quit, and say so in the audit.",
     "Reproduce with REAL paste targets, not a stand-in reader: capture (region, window, full screen) and paste with Cmd-V into Preview, Notes, Chrome, Safari, Slack or Teams, Messages, Mail and Claude, at once and after a few seconds, 20 captures per target. If the loop cannot press keys into other apps, build what lets it (an Accessibility-granted helper, or AppleScript/System Events in a walk), or hand the person a one-command script that runs the matrix and writes a report, and say which.",
     "Re-check e0648dd9's design against real apps, since promised (lazily provided) clipboard data behaves differently per app: Electron and browsers read some types on change, Messages and Mail may ask for TIFF or a file promise, Universal Clipboard pushes to other devices, and clipboard managers read immediately. Also check: the capture toast or History write racing the hand-over; the provider object's lifetime when no paste comes for minutes; what happens after the app is idle, sleeps or is hidden; and macOS 26 vs 27 differences.",
@@ -69,6 +75,14 @@
     {
       "t": "2026-11-04T16:08:45.684Z",
       "note": "seq 1e-8 -> 10"
+    },
+    {
+      "t": "2026-11-05T14:43:03.440Z",
+      "note": "unblocked by the user: fix the suspects from here (walks off the real clipboard, multi-display capture, shortcut failures said aloud, failed copy noticed); the other Mac's report only confirms"
+    },
+    {
+      "t": "2026-11-05T14:43:03.515Z",
+      "note": "seq 10 -> 1e-8"
     }
   ],
   "started": "2026-11-04T05:52:02.733Z",
