@@ -228,6 +228,31 @@ The `NSStatusItem` menu is the always-available entry point:
 Screen Recording permission (TCC) is requested user-initiated from the agent;
 see `docs/progress/log.md` for the macOS 26 TCC caveats.
 
+### What can keep a capture off the clipboard (2026-11-05)
+
+The user's other Mac, one released Photonz, did not always get screenshots on
+the clipboard. No single cause was reproduced there. Each thing that could do it
+from here was closed:
+
+- **A capture key macOS still holds.** ⇧⌘3 and ⇧⌘4 are macOS's on every new Mac,
+  and they save to the Desktop without touching the clipboard, which reads as
+  Photonz failing to copy. `CaptureShortcutReport` holds each key's state; the
+  corner says a problem once (`AppCoordinator.sayShortcutTroubleOnce`, remembered
+  under `capture.shortcutProblemsTold`, forgotten when fixed) with a button to
+  the Mac's Keyboard pane, and Settings lists every key where Settings exists.
+  A key macOS refused to register reads the same way.
+- **Several displays.** One entry per display used to replace the clipboard in
+  turn. `FullScreenCaptureLanding` keeps every display in history and puts the
+  one under the pointer on the clipboard, once. The others toast "Saved to
+  History". One joined picture was rejected: it mixes pixel densities.
+- **A copy that fails.** `ClipboardHandOff` reads the picture back off the main
+  thread after the hand over (`ClipboardProof`). No readable PNG in 2 seconds, on
+  a clipboard nothing newer has replaced, takes down the "Copied" toast and puts
+  up a notice with Copy Again.
+- **The loop itself.** Walks wrote the real clipboard, which Universal Clipboard
+  can carry to another Mac on the same account. A probe now has a private one
+  (`PlaytestPrivateClipboard`).
+
 ## History overlay (replaces the in-editor carousel)
 
 A **global, top-of-screen overlay**, not editor chrome.

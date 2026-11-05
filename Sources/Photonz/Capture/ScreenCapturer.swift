@@ -153,11 +153,20 @@ enum ScreenCapturer {
     }
 
     /// Captures every attached screen (system ⇧⌘3 behavior: one image per display).
-    static func captureAllScreens() async throws -> [CGImage] {
-        var images: [CGImage] = []
+    static func captureAllScreens() async throws -> [DisplayShot] {
+        var shots: [DisplayShot] = []
         for screen in NSScreen.screens {
-            images.append(try await capture(screen: screen))
+            shots.append(DisplayShot(image: try await capture(screen: screen),
+                                     scale: screen.backingScaleFactor, frame: screen.frame))
         }
-        return images
+        return shots
+    }
+
+    /// One display's picture from a full screen capture, and where that display
+    /// is, so the one under the pointer can be picked out of them.
+    struct DisplayShot: @unchecked Sendable { // CGImage is immutable
+        let image: CGImage
+        let scale: CGFloat
+        let frame: CGRect
     }
 }

@@ -251,14 +251,17 @@ final class CaptureStore {
     /// beside it as the layered copy an editor opens instead of the flat
     /// pixels (a clicked window and its shadow, `WindowCaptureShadow`). The
     /// picture goes first, so the layered copy is never older than it.
+    ///
+    /// `copies` false keeps it off the clipboard: the other displays of a full
+    /// screen capture, which only one of may hold (`FullScreenCaptureLanding`).
     @discardableResult
     func add(_ image: CGImage, takenAt date: Date = .now, scale: CGFloat = 1,
-             layers: WindowCaptureShadow.Built? = nil) -> CaptureEntry? {
+             layers: WindowCaptureShadow.Built? = nil, copies: Bool = true) -> CaptureEntry? {
         ensureDirectory()
         let url = uniqueURL(prefix: "Screenshot", date: date, ext: "png")
         // On the clipboard first, so the paste that follows a capture is never
         // the clipboard from before while the file is written.
-        if copiesNewScreenshots { handOffNewScreenshot(image, at: url) }
+        if copiesNewScreenshots && copies { handOffNewScreenshot(image, at: url) }
         writePNG(image, to: url, scale: scale)
         if let layers {
             do {
@@ -699,13 +702,31 @@ final class CaptureStore {
             guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
             return CGImageSourceCreateImageAtIndex(source, 0, nil)
         })
-        ClipboardHandOff.write([.string(.fileURL, url.absoluteString), .png(picture), .tiff(picture)])
+        ClipboardHandOff.write([.string(.fileURL, url.absoluteString), .png(picture), .tiff(picture)],
+                               onMissed: { [weak self] in self?.onCopyMissed?(url) })
+    }
+
+    /// The picture at this URL did not reach the clipboard (`ClipboardProof`).
+    @ObservationIgnored var onCopyMissed: ((URL) -> Void)?
+
+    /// Copy Again on the notice a missed copy puts up: a fresh copy from the
+    /// file, whatever the last one left behind.
+    func copyAgain(_ url: URL) {
+        guard let entry = entries.first(where: { $0.url == url }) else { return }
+        handedOff = nil
+        copyToPasteboard(entry)
     }
 
     /// Whether a new screenshot goes on the clipboard the moment it is taken,
     /// before its file is written (`add`). The app turns it on; a walk that
     /// adds captures of its own leaves it off.
     @ObservationIgnored var copiesNewScreenshots = false
+
+    #if PHOTONZ_PLAYTEST
+    /// Probe only. The next new screenshot's picture cannot be made, which is
+    /// how a walk sees what a failed copy looks like.
+    @ObservationIgnored var playtestNextCopyFails = false
+    #endif
 
     /// The screenshot `add` put on the clipboard, and the clipboard's count
     /// when it did, so the capture's own copy right after it is not a second.
@@ -716,12 +737,18 @@ final class CaptureStore {
     /// asks for it on this thread, which is busy writing that file until it
     /// is there, so nobody is handed a path with nothing at it yet.
     private func handOffNewScreenshot(_ image: CGImage, at url: URL) {
-        let picture = ClipboardPicture(image)
+        var picture = ClipboardPicture(image)
+        #if PHOTONZ_PLAYTEST
+        if playtestNextCopyFails {
+            playtestNextCopyFails = false
+            picture = ClipboardPicture(making: { nil })
+        }
+        #endif
         ClipboardHandOff.write([
             .later(.fileURL) { Data(url.absoluteString.utf8) },
             .png(picture),
             .tiff(picture),
-        ])
+        ], onMissed: { [weak self] in self?.onCopyMissed?(url) })
         handedOff = (url, NSPasteboard.general.changeCount)
     }
 

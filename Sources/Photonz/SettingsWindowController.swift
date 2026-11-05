@@ -15,19 +15,20 @@ import SwiftUI
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
-    func present(store: SilencedQuestions, at section: SettingsSection? = nil) {
+    func present(store: SilencedQuestions, shortcuts: @escaping () -> [CaptureShortcutReport.Row],
+                 at section: SettingsSection? = nil) {
         AppFront.activate()
         if let section { SettingsJump.shared.go(to: section) }
         if let window {
             window.makeKeyAndOrderFront(nil)
             return
         }
-        let hosting = NSHostingController(rootView: SettingsDialog(store: store))
+        let hosting = NSHostingController(rootView: SettingsDialog(store: store, shortcuts: shortcuts))
         let window = NSWindow(contentViewController: hosting)
         window.title = SettingsWindowModel.windowTitle
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         // Tall enough from Ask for its whole list of models.
-        window.setContentSize(CGSize(width: 520, height: section == .ask ? 620 : 400))
+        window.setContentSize(CGSize(width: 520, height: section == .ask ? 620 : 560))
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.center()

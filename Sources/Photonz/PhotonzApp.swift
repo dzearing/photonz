@@ -20,6 +20,8 @@ struct PhotonzApp: App {
         HeroReel.runIfAsked()
         #endif
         #if PHOTONZ_PLAYTEST
+        // First of all: nothing a probe does may reach the person's clipboard.
+        PlaytestPrivateClipboard.install()
         // Before anything reads a feature flag, and before the menu bar exists:
         // a walk that says it runs with a feature switched off has to have it
         // off while the Help menu is being built, or the shelf it claims is

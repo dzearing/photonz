@@ -24,6 +24,19 @@ struct ClipboardPictureTests {
         return context.makeImage()!
     }
 
+    @Test func aRealPNGReadsAsAPicture() {
+        #expect(ClipboardPicture.isReadablePicture(ClipboardPicture(picture()).png))
+    }
+
+    /// What a failed copy leaves: nothing, nothing at all, or bytes no paste
+    /// target could open.
+    @Test func nothingOrJunkDoesNotReadAsAPicture() {
+        #expect(!ClipboardPicture.isReadablePicture(nil))
+        #expect(!ClipboardPicture.isReadablePicture(Data()))
+        #expect(!ClipboardPicture.isReadablePicture(Data("not a picture".utf8)))
+        #expect(!ClipboardPicture.isReadablePicture(Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])))
+    }
+
     private func firstPixel(_ image: CGImage) -> [UInt8] {
         var pixels = [UInt8](repeating: 0, count: 4)
         let context = CGContext(data: &pixels, width: 1, height: 1, bitsPerComponent: 8,

@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/screenshot-reaches-the-clipboard-walk",
+  "seed": "The user, 2026-11-05: fix what can be fixed from here for screenshots not reaching the clipboard on their other Mac. At Next defaults with no flag touched: a full screen capture of two displays keeps both and leaves the one under the pointer on the clipboard; a copy that fails says so and Copy Again, clicked at a point on its face, puts the picture on the clipboard; keys macOS holds are said once in the corner and shown in Settings.",
+  "setup": {
+    "forget": ["all"],
+    "captures": ["../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png"]
+  },
+  "steps": [
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "captureTwoDisplays" },
+    { "do": "expectToast", "says": "Copied to clipboard" },
+    { "do": "snapshot", "name": "1-two-displays", "window": "Toast" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "captureLandsCopyFails" },
+    { "do": "expectToast", "says": "Screenshot not copied" },
+    { "do": "snapshot", "name": "2-copy-missed", "window": "Toast" },
+    { "do": "readClipboard", "stage": "after the failed copy" },
+    { "do": "action", "action": "clickCopyAgain" },
+    { "do": "expectToast", "says": "Screenshot not copied", "absent": true },
+    { "do": "readClipboard", "stage": "after Copy Again" },
+    { "do": "action", "action": "shortcutsHeldByMacOS" },
+    { "do": "expectToast", "says": "macOS holds" },
+    { "do": "snapshot", "name": "3-keys-held", "window": "Toast" },
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "shortcut", "key": ",", "modifiers": ["command"], "menuItem": "Settings…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expect", "row": "Shortcut ⇧⌘4", "present": true },
+    { "do": "snapshot", "name": "4-settings", "window": "Settings" }
+  ]
+}

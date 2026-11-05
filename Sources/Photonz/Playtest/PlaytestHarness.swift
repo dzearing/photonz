@@ -5119,6 +5119,110 @@ private final class Run {
             note(number, step.name, "landed \(landed.url.lastPathComponent) as a capture does, "
                  + (stays ? "and keeps it for twelve seconds" : "then took it away again"))
 
+        case .action(.captureTwoDisplays):
+            guard let newest = coordinator.capture.store.entries.first(where: { $0.kind == .image }),
+                  let source = CGImageSourceCreateWithURL(newest.url as CFURL, nil),
+                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+                  let half = image.cropping(to: CGRect(x: 0, y: 0, width: image.width / 2, height: image.height)) else {
+                throw Failure(description: "history holds no picture to stand in for two displays; "
+                    + "lend one with \"captures\" in the walk's setup")
+            }
+            let store = coordinator.capture.store
+            let before = Set(store.entries.map(\.url))
+            let first = CGRect(x: 0, y: 0, width: 1000, height: 800)
+            let second = CGRect(x: 1000, y: 0, width: 1000, height: 800)
+            coordinator.capture.land([.init(image: image, scale: 2, frame: first),
+                                      .init(image: half, scale: 1, frame: second)],
+                                     pointer: CGPoint(x: 500, y: 400))
+            let landed = store.entries.map(\.url).filter { !before.contains($0) }
+            landed.forEach(PlaytestLentCaptures.remember)
+            await sleep(1.0)
+            defer {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(6))
+                    landed.forEach { try? FileManager.default.removeItem(at: $0) }
+                    store.reload()
+                }
+            }
+            guard landed.count == 2 else {
+                throw Failure(description: "two displays landed \(landed.count) picture(s) in history")
+            }
+            guard let png = NSPasteboard.general.data(forType: .png),
+                  let copied = CGImageSourceCreateWithData(png as CFData, nil)
+                    .flatMap({ CGImageSourceCreateImageAtIndex($0, 0, nil) }) else {
+                throw Failure(description: "no picture on the clipboard after two displays landed")
+            }
+            guard copied.width == image.width else {
+                throw Failure(description: "the clipboard holds the display \(copied.width) wide, "
+                    + "and the pointer was over the one \(image.width) wide")
+            }
+            note(number, step.name, "both displays in history, and the one under the pointer "
+                 + "(\(copied.width) wide) on the clipboard")
+
+        case .action(.captureLandsCopyFails):
+            guard let newest = coordinator.capture.store.entries.first(where: { $0.kind == .image }),
+                  let source = CGImageSourceCreateWithURL(newest.url as CFURL, nil),
+                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+                throw Failure(description: "history holds no picture to land again; "
+                    + "lend one with \"captures\" in the walk's setup")
+            }
+            let store = coordinator.capture.store
+            store.playtestNextCopyFails = true
+            guard let landed = store.add(image, scale: 2) else {
+                throw Failure(description: "the screenshot did not land in history")
+            }
+            PlaytestLentCaptures.remember(landed.url)
+            coordinator.capture.onCaptureComplete?(landed)
+            await sleep(ClipboardProof.limit + 0.8)
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(15))
+                try? FileManager.default.removeItem(at: landed.url)
+                store.reload()
+            }
+            note(number, step.name, "landed \(landed.url.lastPathComponent) with a copy that cannot be made")
+
+        case .action(.clickCopyAgain):
+            let name = ClipboardProof.noticeAction
+            let target = NSApp.windows.filter { $0.title == ToastController.panelTitle && $0.isVisible }
+                .compactMap { window in window.contentView.flatMap { view in
+                    Self.findAll(PanelTargetView.self, in: view).first { $0.name == name } } }
+                .first
+            guard let target, let window = target.window else {
+                throw Failure(description: "no toast offers \"\(name)\"")
+            }
+            let frame = target.convert(target.bounds, to: nil)
+            let point = CGPoint(x: frame.midX, y: frame.midY)
+            let stamp = ProcessInfo.processInfo.systemUptime
+            guard let down = NSEvent.mouseEvent(
+                    with: .leftMouseDown, location: point, modifierFlags: [], timestamp: stamp,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1),
+                  let up = NSEvent.mouseEvent(
+                    with: .leftMouseUp, location: point, modifierFlags: [], timestamp: stamp + 0.02,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 0) else {
+                throw Failure(description: "the click on \"\(name)\" could not be made")
+            }
+            MainThreadMeter.shared.deliverWalkClick(down: down, up: up)
+            await sleep(1.0)
+            guard ClipboardPicture.isReadablePicture(NSPasteboard.general.data(forType: .png)) else {
+                throw Failure(description: "clicked \"\(name)\" at \(point) and the clipboard holds no picture")
+            }
+            note(number, step.name, "clicked \"\(name)\" at \(point) on the toast; the picture is on the clipboard")
+
+        case .action(.shortcutsHeldByMacOS):
+            let center = coordinator.capture
+            center.playtestShortcutRows = CaptureShortcutReport.rows(
+                answersHere: true, failed: [], macOSHolds: [.fullScreen, .region])
+            UserDefaults.standard.removeObject(forKey: AppCoordinator.shortcutProblemsToldKey)
+            let before = coordinator.playtestNotesSaid.count
+            coordinator.sayShortcutTroubleOnce()
+            coordinator.sayShortcutTroubleOnce()
+            await sleep(0.4)
+            let said = coordinator.playtestNotesSaid.dropFirst(before)
+            guard said.count == 1 else {
+                throw Failure(description: "two launches with the same keys held said \(Array(said))")
+            }
+            note(number, step.name, "said \"\(said.first ?? "")\" once")
+
         case .action(.beginHeldSave):
             guard let newest = coordinator.lastCapture else {
                 throw Failure(description: "history is empty, so there is nothing to save; "
@@ -8281,7 +8385,7 @@ private final class Run {
                  .openMissingRecording,
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture,
                  .hotkeyCaptureFullScreen, .hotkeyCaptureRegion, .hotkeyRecord,
-                 .hotkeyEditLastCapture, .showCaptureToast, .copyNewestCapture, .captureLands, .captureLandsAndStays, .beginHeldSave, .finishHeldSave,
+                 .hotkeyEditLastCapture, .showCaptureToast, .copyNewestCapture, .captureLands, .captureLandsAndStays, .captureTwoDisplays, .captureLandsCopyFails, .clickCopyAgain, .shortcutsHeldByMacOS, .beginHeldSave, .finishHeldSave,
                  .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace,
                  .recordingControlDrill, .stopThenOpenDrill:
                 break  // handled above, in the branch that asks for a recording

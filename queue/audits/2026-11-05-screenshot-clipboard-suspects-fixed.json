@@ -1,0 +1,31 @@
+{
+  "feature": "Screenshots reach the clipboard, or Photonz says why not",
+  "epic": "image-editing",
+  "summary": "Four things that could keep a screenshot off the clipboard are fixed, and the most likely one now says so out loud. The fault on your other Mac is still not reproduced, so none of this is proven to be its cause, and it reaches that Mac only with the next release.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is screenshot-reaches-the-clipboard-walk. Nothing here was run with exactly one released Photonz: Photonz Dev and the installed app were running, and a runner may not quit Dev.",
+  "switched": {},
+  "try": [
+    { "do": "Turn on macOS's own Save picture of selected area shortcut in Keyboard Shortcuts, then quit and reopen Photonz.", "shot": "2026-11-05-clipboard-3-keys-held-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Keyboard Settings on that notice." },
+    { "do": "Press Command Comma and read the Capture Shortcuts section.", "shot": "2026-11-05-clipboard-4-settings-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With two displays, put the pointer on one and press Shift Command 3, then paste.", "shot": "2026-11-05-clipboard-1-two-displays-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open History and check the other display's picture is there too." },
+    { "do": "Look at the failed copy notice. Only a walk can force one.", "shot": "2026-11-05-clipboard-2-copy-missed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "On your other Mac, are macOS's own screenshot shortcuts still on? If they are, that alone explains pictures missing the clipboard.",
+    "Is the display under the pointer the right one to paste, rather than one picture of every display?",
+    "Does saying a held key once, at launch, reach you, or would you rather hear it when you press the key?",
+    "After the next release, does the report from your other Mac come back clean?"
+  ],
+  "rough": [
+    "Not reached: 20 of 20 pastes in every target. Measured: real Chrome 20 of 20, at once, 1 s and 3 s, on the probe build with Dev running. Preview, Notes, Safari, Messages, Mail and Claude are unmeasured because this terminal may not press keys in other apps (Apple Events -1743), and Slack and Teams are not installed.",
+    "The two displays were stand-ins: this Mac has one display, so a real two display capture has not been run.",
+    "A failed copy was forced in a walk. No real failed copy has been seen, so the two second limit has only been checked for false alarms: none in 20 captures.",
+    "A key macOS refused to register was tested in unit tests only, not by making macOS refuse one.",
+    "The zero on the real clipboard is from 35 walks, including all 26 with a clipboard step, not from a rotating check, which only the loop runs. The walks that only press copy keys were not all run; a stand-in showed AppKit's own copy goes to the private clipboard too. Scripts/clipboard-timing/real-clipboard-untouched.sh repeats it.",
+    "Current has no Settings window, so the shortcut list shows only in Next. The corner notice shows in both.",
+    "Universal Clipboard was never shown to carry the loop's copies to your other Mac. It is closed off as a suspect, not confirmed as a cause.",
+    "No mock covers these surfaces."
+  ]
+}

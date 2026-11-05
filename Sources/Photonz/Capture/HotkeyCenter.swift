@@ -29,7 +29,10 @@ final class HotkeyCenter {
     private var handlerRef: EventHandlerRef?
     private var nextID: UInt32 = 1
 
-    func register(_ hotkey: Hotkey, action: @escaping () -> Void) {
+    /// False when macOS refused it, which `CaptureCenter` passes on to the
+    /// person rather than leaving in the log.
+    @discardableResult
+    func register(_ hotkey: Hotkey, action: @escaping () -> Void) -> Bool {
         installHandlerIfNeeded()
         let id = EventHotKeyID(signature: OSType(0x5048_545A) /* 'PHTZ' */, id: nextID)
         var ref: EventHotKeyRef?
@@ -37,11 +40,12 @@ final class HotkeyCenter {
                                          GetApplicationEventTarget(), 0, &ref)
         guard status == noErr, let ref else {
             NSLog("HotkeyCenter: failed to register keyCode \(hotkey.keyCode) (status \(status))")
-            return
+            return false
         }
         actions[nextID] = action
         hotkeyRefs.append(ref)
         nextID += 1
+        return true
     }
 
     /// Whether any shortcut is held right now.

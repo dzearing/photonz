@@ -1165,6 +1165,19 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Mail or Slack attach the file ten seconds later
     /// (Scripts/clipboard-timing/targets.swift).
     case captureLandsAndStays
+    /// A full screen capture of two stand-in displays with the pointer over the
+    /// FIRST, so a clipboard left to the last display fails it: both must land
+    /// in history and the clipboard must hold the first.
+    case captureTwoDisplays
+    /// A screenshot landing whose copy cannot be made, then waiting out the
+    /// check, so the notice and its Copy Again are on screen.
+    case captureLandsCopyFails
+    /// Copy Again on the notice `captureLandsCopyFails` leaves, clicked at a
+    /// point on its face the way a hand does.
+    case clickCopyAgain
+    /// Launch with macOS holding ⇧⌘3 and ⇧⌘4: the corner must say so, and a
+    /// second launch with the same keys held must say nothing.
+    case shortcutsHeldByMacOS
     /// Start saving the newest recording the way the window's Save does, as
     /// far as the corner can tell: after its quiet window a progress bar is
     /// due. `finishHeldSave` says it saved. Together they are a toast asked for

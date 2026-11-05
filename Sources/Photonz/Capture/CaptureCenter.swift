@@ -38,6 +38,9 @@ final class CaptureCenter {
     /// Fired after a capture lands in the store, so the resident agent can pop
     /// the post-capture Quick Access Overlay (phase 11.7). Carries the new entry.
     @ObservationIgnored var onCaptureComplete: ((CaptureEntry) -> Void)?
+    /// A capture kept in history that is NOT the one on the clipboard: the
+    /// other displays of a full screen capture.
+    @ObservationIgnored var onCaptureKept: ((CaptureEntry) -> Void)?
 
     @ObservationIgnored private let hotkeys = HotkeyCenter()
     @ObservationIgnored private var rectSelection: RectSelectionController?
@@ -89,20 +92,48 @@ final class CaptureCenter {
         guard ours != hotkeys.isRegistered else { return }
         guard ours else {
             hotkeys.unregisterAll()
+            shortcutsThatFailed = []
             NSLog("Capture shortcuts: another Photonz answers them now")
             return
         }
-        hotkeys.register(.commandShift(kVK_ANSI_3)) { [weak self] in self?.hotkeyPressed(.captureFullScreen) }
-        hotkeys.register(.commandShift(kVK_ANSI_4)) { [weak self] in self?.hotkeyPressed(.captureRegion) }
-        hotkeys.register(.commandShift(kVK_ANSI_5)) { [weak self] in self?.hotkeyPressed(.record) }
+        claim(.captureFullScreen, .commandShift(kVK_ANSI_3))
+        claim(.captureRegion, .commandShift(kVK_ANSI_4))
+        claim(.record, .commandShift(kVK_ANSI_5))
         // Dedicated stop shortcut for recording — ⇧⌘5 collides with macOS's own
         // screenshot toolbar, so ⌃⇧F5 reliably stops a recording in progress.
-        hotkeys.register(.controlShift(kVK_F5)) { [weak self] in self?.hotkeyPressed(.stopRecording) }
-        hotkeys.register(.commandShift(kVK_ANSI_H)) { [weak self] in self?.hotkeyPressed(.toggleHistory) }
+        claim(.stopRecording, .controlShift(kVK_F5))
+        claim(.toggleHistory, .commandShift(kVK_ANSI_H))
         // ⇧⌘6 continues the 3/4/5 family. Global hotkeys pre-empt the app's own
         // key equivalents, so it must not reuse anything the editor binds.
-        hotkeys.register(.commandShift(kVK_ANSI_6)) { [weak self] in self?.hotkeyPressed(.editLastCapture) }
+        claim(.editLastCapture, .commandShift(kVK_ANSI_6))
     }
+
+    private func claim(_ command: CaptureHotkey, _ hotkey: HotkeyCenter.Hotkey) {
+        if hotkeys.register(hotkey, action: { [weak self] in self?.hotkeyPressed(command) }) {
+            shortcutsThatFailed.remove(command)
+        } else {
+            shortcutsThatFailed.insert(command)
+        }
+    }
+
+    /// The shortcuts macOS refused this copy.
+    @ObservationIgnored private(set) var shortcutsThatFailed: Set<CaptureHotkey> = []
+
+    /// Each capture shortcut and whether it works right now, read fresh so a
+    /// key freed in System Settings shows as soon as anyone looks.
+    func shortcutRows() -> [CaptureShortcutReport.Row] {
+        #if PHOTONZ_PLAYTEST
+        if let pretended = playtestShortcutRows { return pretended }
+        #endif
+        return CaptureShortcutReport.rows(answersHere: hotkeys.isRegistered || !shortcutsThatFailed.isEmpty,
+                                          failed: shortcutsThatFailed,
+                                          macOSHolds: WelcomeState.currentShortcutConflicts())
+    }
+
+    #if PHOTONZ_PLAYTEST
+    /// Probe only. What a walk has told the shortcuts to read as.
+    @ObservationIgnored var playtestShortcutRows: [CaptureShortcutReport.Row]?
+    #endif
 
     /// Takes every toast down. The capture shortcuts call it before anything
     /// of theirs appears (`CaptureHotkey.clearsToasts`).
@@ -312,13 +343,20 @@ final class CaptureCenter {
         guard ensurePermission() else { return }
         Task {
             do {
-                let scale = NSScreen.main?.backingScaleFactor ?? 2
-                for image in try await ScreenCapturer.captureAllScreens() {
-                    if let entry = store.add(image, scale: scale) { onCaptureComplete?(entry) }
-                }
+                land(try await ScreenCapturer.captureAllScreens(), pointer: NSEvent.mouseLocation)
             } catch {
                 NSLog("Full-screen capture failed: \(error)")
             }
+        }
+    }
+
+    /// Every display into history, and only the one under the pointer on the
+    /// clipboard (`FullScreenCaptureLanding`).
+    func land(_ shots: [ScreenCapturer.DisplayShot], pointer: CGPoint) {
+        for step in FullScreenCaptureLanding.steps(displays: shots.map(\.frame), pointer: pointer) {
+            let shot = shots[step.display]
+            guard let entry = store.add(shot.image, scale: shot.scale, copies: step.goesOnClipboard) else { continue }
+            if step.goesOnClipboard { onCaptureComplete?(entry) } else { onCaptureKept?(entry) }
         }
     }
 

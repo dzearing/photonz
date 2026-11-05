@@ -22513,3 +22513,23 @@ Open: the balloon reads 55.4, did what was asked 5, reads as an icon 4, against
 7 for each. Five versions read 84.8, 44.8, 42.5, 55.4 and 28.6, one run each, so
 a single reading of that one case says little. Untried: several drawings and a
 pick by eye, or the traced fallback the checklist allows.
+
+## 2026-11-05: What can keep a screenshot off the clipboard
+
+The user unblocked the other-Mac clipboard task: fix what can be fixed from here.
+The fault itself is still not reproduced, so these close suspects, not a proven
+cause, and they reach that Mac only with the next release.
+
+- Walks and the probe have a private clipboard (`PlaytestPrivateClipboard`, probe
+  builds only). Before: one walk moved the real one twice. After: 35 walks, moved
+  0. Absent from the release binary by `strings`.
+- A full screen capture keeps every display and copies the one under the pointer
+  (`FullScreenCaptureLanding`). Stand-in displays only: this Mac has one.
+- Keys macOS holds, or refuses, are said once in the corner and listed in
+  Settings (`CaptureShortcutReport`). macOS's keys save to the Desktop and never
+  touch the clipboard, the most likely cause, though not confirmed.
+- A copy that cannot be read back in 2 s says so and offers Copy Again
+  (`ClipboardProof`). Forced in a walk; no false alarm in 20 real Chrome pastes.
+
+Real Chrome 20 of 20. Native targets unmeasured: no Apple Events grant here.
+Open: the 20 of 20 in every target on one released Photonz.

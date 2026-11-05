@@ -17,9 +17,12 @@ struct SettingsDialog: View {
     /// What is silenced right now. Held rather than read every draw so pressing
     /// a button animates the row away instead of the list flickering.
     @State private var rows: [SettingsWindowModel.QuestionRow]
+    /// Each capture shortcut's state, asked for fresh.
+    private let shortcuts: () -> [CaptureShortcutReport.Row]
 
-    init(store: SilencedQuestions) {
+    init(store: SilencedQuestions, shortcuts: @escaping () -> [CaptureShortcutReport.Row]) {
         self.store = store
+        self.shortcuts = shortcuts
         _rows = State(initialValue: SettingsWindowModel.rows(of: store))
     }
 
@@ -49,6 +52,9 @@ struct SettingsDialog: View {
                 // Whether Photonz opens by itself at login. First, because it
                 // is the one setting every copy of the app has.
                 GeneralSettingsSection()
+                // Which capture shortcuts really reach Photonz. A key macOS
+                // keeps never does, and its picture misses the clipboard.
+                CaptureShortcutsSettingsSection(rows: shortcuts)
                 Section {
                     if rows.isEmpty {
                         emptyRow
@@ -79,7 +85,7 @@ struct SettingsDialog: View {
         // usual height is two thirds empty and reads as unfinished. This holds
         // the General switch and both of today's questions without scrolling
         // and grows from there.
-        .frame(minWidth: 460, idealWidth: 520, minHeight: 260, idealHeight: 400)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 260, idealHeight: 560)
         .animation(.easeOut(duration: 0.18), value: rows)
         // Silencing happens in an editor window while this one is open, so the
         // page re-reads whenever it comes back to the front.

@@ -17,6 +17,8 @@
 # Usage: Scripts/clipboard-timing/run.sh [timing|race|stall|paste|chrome|twoapps]   (probe must be built)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+# These measure the Mac's real clipboard, which every other walk is kept off.
+export PHOTONZ_PROBE_REAL_CLIPBOARD=1
 HERE=Scripts/clipboard-timing
 T=/tmp/copy-timing
 mkdir -p "$T"

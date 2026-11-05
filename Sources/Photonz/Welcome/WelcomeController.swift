@@ -48,6 +48,8 @@ final class WelcomeController: NSObject, NSWindowDelegate {
     static let stepsMigratedKey = "setup.stepsMigrated"
 
     private var panel: NSPanel?
+    /// Whether the setup window is up.
+    var isOpen: Bool { panel != nil }
     private var poll: Timer?
     private var state: WelcomeState?
     private weak var capture: CaptureCenter?
@@ -371,7 +373,7 @@ final class WelcomeController: NSObject, NSWindowDelegate {
         }
     }
 
-    private static func openKeyboardSettings() {
+    static func openKeyboardSettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension") {
             NSWorkspace.shared.open(url)
         }

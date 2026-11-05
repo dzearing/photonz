@@ -1,4 +1,5 @@
 import AppKit
+import PhotonzCore
 import PhotonzRender
 
 /// One clipboard write that is on the clipboard the instant Copy is pressed.
@@ -19,6 +20,11 @@ import PhotonzRender
 /// or is force quit a second after a copy still leaves the picture to paste,
 /// and Photonz keeps none of it (`PromisedData`). A quit before then is safe
 /// as well: AppKit asks the provider for anything still owed.
+///
+/// A copy that asks is then read back (`ClipboardProof`): off the main thread,
+/// and only once everything is handed over, so the answer comes from the system
+/// clipboard rather than from a promise of ours. No picture there in two
+/// seconds and `onMissed` is called, so a copy never fails in silence.
 final class ClipboardHandOff: NSObject, NSPasteboardItemDataProvider, Sendable {
 
     /// What one type on the clipboard carries.
@@ -45,7 +51,8 @@ final class ClipboardHandOff: NSObject, NSPasteboardItemDataProvider, Sendable {
     /// one listed first. Clearing and writing happen together: the clipboard
     /// is never left empty while anything is made.
     @MainActor @discardableResult
-    static func write(_ flavors: [Flavor], to pasteboard: NSPasteboard = .general) -> Bool {
+    static func write(_ flavors: [Flavor], to pasteboard: NSPasteboard = .general,
+                      onMissed: (@MainActor @Sendable () -> Void)? = nil) -> Bool {
         let item = NSPasteboardItem()
         var promised: [NSPasteboard.PasteboardType: PromisedData] = [:]
         var promisedOrder: [NSPasteboard.PasteboardType] = []
@@ -76,8 +83,11 @@ final class ClipboardHandOff: NSObject, NSPasteboardItemDataProvider, Sendable {
         }
         flushPromises()
         pasteboard.clearContents()
-        guard pasteboard.writeObjects([item]) else { return false }
-        handOver(everyPromise, to: pasteboard, whileItHolds: pasteboard.changeCount)
+        guard pasteboard.writeObjects([item]) else {
+            if let onMissed { DispatchQueue.main.async { MainActor.assumeIsolated { onMissed() } } }
+            return false
+        }
+        handOver(everyPromise, to: pasteboard, whileItHolds: pasteboard.changeCount, onMissed: onMissed)
         return true
     }
 
@@ -88,9 +98,13 @@ final class ClipboardHandOff: NSObject, NSPasteboardItemDataProvider, Sendable {
     /// newer copy, here or anywhere) is left alone.
     @MainActor
     private static func handOver(_ promises: [(NSPasteboard.PasteboardType, PromisedData)],
-                                 to pasteboard: NSPasteboard, whileItHolds changeCount: Int) {
+                                 to pasteboard: NSPasteboard, whileItHolds changeCount: Int,
+                                 onMissed: (@MainActor @Sendable () -> Void)?) {
         guard !promises.isEmpty else { return }
-        nonisolated(unsafe) let board = pasteboard // only touched on the main thread
+        // Read on the main thread while handing over, and by `prove` once that
+        // is finished, never both at once.
+        nonisolated(unsafe) let board = pasteboard
+        let wrote = Date()
         DispatchQueue.global(qos: .utility).async {
             for (type, promise) in promises {
                 promise.prepare()
@@ -98,6 +112,34 @@ final class ClipboardHandOff: NSObject, NSPasteboardItemDataProvider, Sendable {
                     guard board.changeCount == changeCount else { return }
                     _ = board.data(forType: type)
                 }
+            }
+            guard let onMissed else { return }
+            // Behind every pass above on the main queue.
+            DispatchQueue.main.async {
+                DispatchQueue.global(qos: .utility).async {
+                    prove(board, holds: changeCount, since: wrote, onMissed: onMissed)
+                }
+            }
+        }
+    }
+
+    /// Looks for the picture on the clipboard until `ClipboardProof` has an
+    /// answer. Runs on a background thread and holds it for two seconds at most.
+    private nonisolated static func prove(_ board: NSPasteboard, holds changeCount: Int, since wrote: Date,
+                                          onMissed: @escaping @MainActor @Sendable () -> Void) {
+        while true {
+            let now = board.changeCount
+            let readable = now == changeCount && ClipboardPicture.isReadablePicture(board.data(forType: .png))
+            switch ClipboardProof.verdict(wrote: changeCount, now: now, pictureReadable: readable,
+                                          elapsed: Date().timeIntervalSince(wrote)) {
+            case .held, .movedOn:
+                return
+            case .missed:
+                NSLog("Copy check: no picture on the clipboard after \(ClipboardProof.limit) s")
+                DispatchQueue.main.async { MainActor.assumeIsolated { onMissed() } }
+                return
+            case .keepWaiting:
+                Thread.sleep(forTimeInterval: 0.05)
             }
         }
     }

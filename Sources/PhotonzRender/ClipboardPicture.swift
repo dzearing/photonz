@@ -58,6 +58,18 @@ public final class ClipboardPicture: Sendable {
         return state.withLock { $0.png }
     }
 
+    /// Whether `data` is a picture a paste target could open: a PNG whose header
+    /// reads, which is all that a check of a copy needs and far cheaper than
+    /// decoding its pixels.
+    public static func isReadablePicture(_ data: Data?) -> Bool {
+        guard let data, !data.isEmpty,
+              let source = CGImageSourceCreateWithData(data as CFData, nil),
+              CGImageSourceGetCount(source) > 0,
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Int else { return false }
+        return width > 0
+    }
+
     /// The same picture as a TIFF, for the apps that ask for nothing else.
     public func tiff() -> Data? {
         guard let png, let image = ImageCodec.decode(png) else { return nil }

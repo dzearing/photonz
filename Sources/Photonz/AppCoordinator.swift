@@ -141,6 +141,12 @@ final class AppCoordinator {
             self?.capture.store.copyToPasteboard(entry)
             self?.showCaptureToast(entry)
         }
+        // The other displays of a full screen capture: in history, and in the
+        // corner saying so, with the clipboard left to the one under the pointer.
+        capture.onCaptureKept = { [weak self] entry in
+            self?.showCaptureToast(entry, message: "Saved to History")
+        }
+        capture.store.onCopyMissed = { [weak self] url in self?.sayCopyMissed(url) }
         historyOverlay.onDismiss = { [weak self] in
             self?.isHistoryShown = false
             self?.highlightedCaptureURL = nil
@@ -192,6 +198,11 @@ final class AppCoordinator {
         // tour yet.
         welcome.startTour = { [weak self] in self?.startFirstRunTour() }
         if !launchedAtLogin { welcome.presentIfNeeded(capture: capture) }
+        // After the setup window has had its moment to open (`presentIfNeeded`).
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            self?.sayShortcutTroubleOnce()
+        }
         // Background update discovery (badge on the menu-bar icon).
         startUpdateChecks()
     }
@@ -212,13 +223,13 @@ final class AppCoordinator {
     /// (`next-settings-window`), so the rows that call this are behind the same
     /// flag and Current has no Settings anywhere.
     func showSettings() {
-        settingsWindow.present(store: EditorState.silencedQuestions)
+        settingsWindow.present(store: EditorState.silencedQuestions, shortcuts: capture.shortcutRows)
     }
 
     /// Settings opened at one section, in view at the top: Ask's way to its
     /// models lands on them, not on whatever heads the page.
     func showSettings(section: SettingsSection) {
-        settingsWindow.present(store: EditorState.silencedQuestions, at: section)
+        settingsWindow.present(store: EditorState.silencedQuestions, shortcuts: capture.shortcutRows, at: section)
     }
 
     /// "Take the Tour" on the first run offer. The tour brings a sample
@@ -267,7 +278,7 @@ final class AppCoordinator {
     /// toast auto-fades; hovering it pins it and reveals Edit / Dismiss. History
     /// is still a deliberate ⇧⌘H away. If a capture is highlighted in an open
     /// overlay, keep that behavior in sync.
-    func showCaptureToast(_ entry: CaptureEntry) {
+    func showCaptureToast(_ entry: CaptureEntry, message: String = "Copied to clipboard!") {
         if historyOverlay.isShown { highlightedCaptureURL = entry.url }
         let isVideo = entry.kind == .video
         // A recording macOS is still closing is copied when it lands, and its
@@ -276,7 +287,7 @@ final class AppCoordinator {
             && capture.store.isSaving(entry.url)
         toasts.present(
             entry: entry, store: capture.store,
-            message: "Copied to clipboard!", on: activeScreen(),
+            message: message, on: activeScreen(),
             whileSaving: stillClosing ? "Copying…" : nil,
             editAction: captureToastEditAction,
             onEdit: { [weak self] in
@@ -287,6 +298,39 @@ final class AppCoordinator {
             // image on the clipboard, so they don't.
             onCopyVideo: isVideo ? { [weak self] in self?.copyRecording(entry, as: .mp4) } : nil,
             onCopyGIF: isVideo ? { [weak self] in self?.copyRecording(entry, as: .gif) } : nil)
+    }
+
+    /// A copy that never reached the clipboard: the corner stops saying it did
+    /// and offers it again.
+    func sayCopyMissed(_ url: URL) {
+        toasts.dismissToast(forCapture: url)
+        toasts.presentNote(title: ClipboardProof.noticeTitle, detail: ClipboardProof.noticeDetail,
+                           symbol: "exclamationmark.triangle", on: activeScreen(),
+                           action: (ClipboardProof.noticeAction, { [weak self] in
+                               self?.capture.store.copyAgain(url)
+                           }))
+    }
+
+    static let shortcutProblemsToldKey = "capture.shortcutProblemsTold"
+
+    /// Says what is wrong with the capture shortcuts, once for each thing that
+    /// is: a key macOS keeps saves its picture to the Desktop and never touches
+    /// the clipboard, which looks exactly like Photonz failing to copy. A Mac
+    /// with the setup window up is hearing it there, so that launch says nothing.
+    func sayShortcutTroubleOnce() {
+        let key = Self.shortcutProblemsToldKey
+        #if PHOTONZ_PLAYTEST
+        guard capture.playtestShortcutRows != nil else { return }
+        #endif
+        guard !welcome.isOpen else { return }
+        let rows = capture.shortcutRows()
+        let told = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+        let notice = CaptureShortcutReport.notice(for: rows, alreadyTold: told)
+        // What is fixed is forgotten, so a problem that comes back is news.
+        UserDefaults.standard.set(CaptureShortcutReport.problems(in: rows).sorted(), forKey: key)
+        guard let notice else { return }
+        toasts.presentNote(title: notice.title, detail: notice.detail, symbol: "keyboard",
+                           on: activeScreen(), action: (notice.action, { WelcomeController.openKeyboardSettings() }))
     }
 
     /// An edited recording saved into history: the same corner card a

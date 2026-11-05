@@ -23,9 +23,14 @@ final class ToastController {
         /// Asked each time, because a recording's toast changes its words when
         /// the file lands.
         let message: () -> String?
-        init(panel: NSPanel, progress: ToastProgress? = nil, message: @escaping () -> String? = { nil }) {
+        /// The capture this toast is for, so a copy that turns out to have
+        /// failed can take its "Copied" down.
+        let capture: URL?
+        init(panel: NSPanel, progress: ToastProgress? = nil, capture: URL? = nil,
+             message: @escaping () -> String? = { nil }) {
             self.panel = panel
             self.progress = progress
+            self.capture = capture
             self.message = message
         }
     }
@@ -72,7 +77,7 @@ final class ToastController {
 
         let panel = makePanel()
         let said = ToastSaying(entry: entry, store: store, message: message, whileSaving: whileSaving)
-        let item = Item(panel: panel, message: { said.words })
+        let item = Item(panel: panel, capture: entry?.url, message: { said.words })
         let id = item.id
 
         let view = ToastView(
@@ -117,7 +122,11 @@ final class ToastController {
     /// other candidate and was rejected: it takes the keyboard, it has to be
     /// dismissed, and "the file you asked for is still landing" is news, not a
     /// question.
-    func presentNote(title: String, detail: String, symbol: String, on screen: NSScreen) {
+    ///
+    /// `action` adds one button, for a note that has a way out. That note holds
+    /// longer: it is asking for something, not just telling.
+    func presentNote(title: String, detail: String, symbol: String, on screen: NSScreen,
+                     action: (label: String, run: () -> Void)? = nil) {
         self.screen = screen
         #if PHOTONZ_PLAYTEST
         playtestNotesSaid.append(title)
@@ -133,8 +142,11 @@ final class ToastController {
 
         let view = NoteToastView(
             title: title, detail: detail, symbol: symbol,
+            action: action.map { action in
+                (action.label, { [weak self] in action.run(); self?.remove(id, animated: true) })
+            },
             onDismiss: { [weak self] in self?.remove(id, animated: true) },
-            holdSeconds: Experiments.shared.captureToastHoldSeconds,
+            holdSeconds: Experiments.shared.captureToastHoldSeconds * (action == nil ? 1 : 4),
             fadeSeconds: Experiments.shared.captureToastFadeSeconds)
         let hosting = NSHostingView(rootView: view)
         let size = hosting.fittingSize
@@ -232,6 +244,12 @@ final class ToastController {
     /// shortcut calls this before its overlay, setup card or window appears,
     /// so nothing in the corner is in the picture or in the way. Instant on
     /// purpose: a fade is a few frames a freeze-frame could photograph.
+    /// Takes down the toast saying this capture was copied.
+    func dismissToast(forCapture url: URL) {
+        guard let item = items.first(where: { $0.capture == url }) else { return }
+        remove(item.id, animated: true)
+    }
+
     func clearAll() {
         hush.clear()
         guard !items.isEmpty else { return }
@@ -381,6 +399,7 @@ struct NoteToastView: View {
     let title: String
     let detail: String
     let symbol: String
+    var action: (label: String, run: () -> Void)?
     let onDismiss: () -> Void
     let holdSeconds: Double
     let fadeSeconds: Double
@@ -405,6 +424,12 @@ struct NoteToastView: View {
                 Text(detail)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                if let action {
+                    Button(action.label, action: action.run)
+                        .controlSize(.small)
+                        .padding(.top, 3)
+                        .playtestControl(action.label)
+                }
             }
             .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)

@@ -159,6 +159,9 @@ done
 ENVS=()
 [[ -n "${PHOTONZ_PLAYTEST_PACE:-}" ]] && ENVS=(--env "PHOTONZ_PLAYTEST_PACE=$PHOTONZ_PLAYTEST_PACE")
 [[ "${PHOTONZ_ALLOW_LOCKED_WALK:-}" == "1" ]] && ENVS+=(--env "PHOTONZ_ALLOW_LOCKED_WALK=1")
+# The probe keeps off the Mac's real clipboard (PlaytestPrivateClipboard). Only
+# Scripts/clipboard-timing/, which measures that clipboard on purpose, asks.
+[[ "${PHOTONZ_PROBE_REAL_CLIPBOARD:-}" == "1" ]] && ENVS+=(--env "PHOTONZ_PROBE_REAL_CLIPBOARD=1")
 # quit_probe waits for LaunchServices to let the last probe go, so -600 here
 # should not happen; if it still does (a quit slower than the wait), wait again
 # and try twice more rather than handing the walk no app.
