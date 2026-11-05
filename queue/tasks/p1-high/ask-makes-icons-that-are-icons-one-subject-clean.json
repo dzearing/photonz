@@ -9,13 +9,13 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:19.981Z",
-  "updated": "2026-11-05T02:22:32.832Z",
+  "updated": "2026-11-05T08:05:21.362Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping. But I think it just drew a picture of a stick figure holding balloons. I'd like to be able to use ask for creating icons and especially animated svgs'. Today: AskPlanning routes 'icon' words to vector art (add_drawing), which is painted by the picture model and traced (AgentPictureKind); the doing tools include add_shape and add_path, which an icon route can use directly. Animation is a separate task: ask-animates-what-it-makes-an-animated-svg-icon.",
   "acceptance": [
-    "STILL OPEN: 'make an icon of a balloon popping', the user's own request, reads as a balloon bursting: at least 7 of 10 on didWhatWasAsked and reads as an icon, and named as a balloon blind (Scripts/ask-eval.sh run --engine ask --cases icon-balloon-popping). Reached 2026-11-04: 29.7, didWhatWasAsked 3, reads as an icon 4, against 74.4 before.",
-    "STILL OPEN: the held-out total is measured on the final prompt and reported beside the climb total (Scripts/ask-eval.sh report).",
+    "STILL OPEN: 'make an icon of a balloon popping', the user's own request, reads as a balloon bursting: at least 7 of 10 on didWhatWasAsked and reads as an icon, and named as a balloon blind (Scripts/ask-eval.sh run --engine ask --cases icon-balloon-popping). Reached 2026-11-05 on the shipped code (df457197, run 20261105-043455-ask): 55.4, didWhatWasAsked 5, reads as an icon 4, named 3 of 3, against 74.4 before.",
+    "Held-out total measured on the shipped prompt, beside the climb total: held-out 68.4 over all 45 cases (run 20261105-055127-ask-held-out, df457197; 66.7 on the run before), climb 88.3 on the 14 icon cases (run 20261105-043455-ask). Measure it again if the prompt changes. Scripts/ask-eval.sh report shows a later one-case try as its climb line, not this reading.",
     "WHERE THE ICON GOES (user, 2026-11-04, after Ask put a 512 icon frame beside their picture and widened the canvas from about 1026 to 2112): Ask never grows the person's document or adds a frame beside their work to hold an icon. If the current picture is empty (only a Background), it becomes the icon: square, icon sized, the icon drawn on the canvas itself. Otherwise Ask opens a NEW picture sized for the icon in its own window, draws there, and its row says so (Made a new icon: Balloon). No new document kind: File > New stays Image or Video; New Image gets icon size presets (24 pt glyph on 512, 1024 app icon).",
     "Reproduce: 'make an icon of a balloon popping', 'a trash can icon', 'a settings gear icon, outline', 'a rocket app icon' on Ask at Next defaults; record what Ask makes today (screenshots in the audit).",
     "An icon request takes an icon route: drawn with shapes and paths directly (add_shape, add_path) on a square icon canvas or artboard, not painted by the picture model and traced. The route is chosen from the general words for an icon, never from subjects; the subject and its form come from the model's own knowledge (no hardcoded subjects, memory: no-hardcoded-generated-content). If tracing is kept for any case, the subject is reduced to one centred object first.",
@@ -76,9 +76,45 @@
     {
       "t": "2026-11-05T02:22:32.831Z",
       "note": "Most icons now read and land in the right place (69.3 to 86.5, shipped), but the user's own balloon reads as a sun at 29.7 and the held-out set was not run: both are open on the checklist."
+    },
+    {
+      "t": "2026-11-05T02:53:05.051Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-05T03:12:16.004Z",
+      "note": "Lab, straight to the model with temperature 0: with thinking on it tore the balloon open, but took 8945 tokens and 483 s. A short written design first (about 170 tokens, about 25 s for design and drawing) gets most of that on balloon, broken heart, padlock, bulb and rocket, so the design step goes into the icon route."
+    },
+    {
+      "t": "2026-11-05T04:23:09.173Z",
+      "note": "Design step for every icon: 84.0 on the 14 (run 20261105-034048-ask, against 86.5), reads as an icon 6.9. Balloon 44.8, because its redraw closed the tear; rocket 92 to 72 as stacked triangles. So a design now applies only when something is happening to the object, a redraw keeps it, and an object at rest plans as before."
+    },
+    {
+      "t": "2026-11-05T05:17:20.191Z",
+      "note": "Design only for an action, landing as drawn: 88.3 on the 14 (run 20261105-043455-ask), reads as an icon 7.3, at-rest cases back at their old scores. Balloon 55.4: the model wrote a body half the size its own design said, under the plan's long rules; the same design drawn in a short talk came out whole in the lab, so the drawing moves into the design's talk."
+    },
+    {
+      "t": "2026-11-05T05:19:24.652Z",
+      "note": "Run 20261105-051720-ask in the eval history is a failed build of mine (a compile error, no document open), not a reading: its 0 means nothing."
+    },
+    {
+      "t": "2026-11-05T08:05:12.080Z",
+      "note": "Shipped df457197: an action icon is designed in words first and lands as drawn; an object at rest plans as before. 14 icon cases 86.5 to 88.3 (run 20261105-043455-ask), reads as an icon 7.3. Held-out 68.4 over all 45 (66.7 before). Tests green, the three owned walks pass at Next defaults."
+    },
+    {
+      "t": "2026-11-05T08:05:12.155Z",
+      "note": "Left open: the balloon reads 55.4 on shipped code, didWhatWasAsked 5 and reads as an icon 4 against 7 each, named 3 of 3. Five versions read 84.8, 44.8, 42.5, 55.4 and 28.6, one run each, so a single reading of this case says little: repeat a version before believing it. The 84.8 was design for every icon, not the shipped version. Next ideas, untried: several drawings and a pick by eye, or the traced fallback the checklist allows. The lab's yes-or-no on 'the object fills the picture' and 'only short marks stand apart' told two detached balloons from one good one, four pictures in all."
+    },
+    {
+      "t": "2026-11-05T08:05:12.229Z",
+      "note": "Dropped after measuring: a design for every icon (84.0, rocket 92 to 72), a redraw told to keep the design (42.5), and drawing in the design's own short talk (28.6, named a bomb). A lab run outside the app looked better than the app every time, so lab pictures predict little here. Only one of the 14 cases is an action icon, so the design route is lightly measured; left rough, in the audit, no task filed since this task covers it."
+    },
+    {
+      "t": "2026-11-05T08:05:21.361Z",
+      "note": "The balloon is still short of its bar: 55.4, didWhatWasAsked 5, reads as an icon 4 against 7 each. Everything else on the checklist is reached; the 14 icon cases read 88.3 and held-out 68.4, shipped in df457197."
     }
   ],
-  "started": "2026-11-04T22:27:23.586Z",
+  "started": "2026-11-05T02:53:05.050Z",
   "walks": [
     "ask-makes-an-icon-walk",
     "ask-puts-an-icon-in-its-own-picture-walk",

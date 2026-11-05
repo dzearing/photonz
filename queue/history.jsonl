@@ -15645,3 +15645,14 @@
 {"t":"2026-11-05T02:22:32.686Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
 {"t":"2026-11-05T02:22:32.759Z","ev":"task_note","id":"ask-animates-what-it-makes-an-animated-svg-icon"}
 {"t":"2026-11-05T02:22:32.833Z","ev":"task_pending","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":"in_progress","note":"Most icons now read and land in the right place (69.3 to 86.5, shipped), but the user's own balloon reads as a sun at 29.7 and the held-out set was not run: both are open on the checklist."}
+{"t":"2026-11-05T02:53:04.791Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-05T02:53:04.880Z","ev":"slice_pass","walks":13,"passed":12,"failed":1,"seconds":1803,"of":1096,"couldNotRun":0,"timedOut":true,"rotating":true}
+{"t":"2026-11-05T02:53:05.056Z","ev":"task_started","id":"ask-makes-icons-that-are-icons-one-subject-clean","title":"Ask makes icons that are icons: one subject, clean vector shapes, readable at 24 px","priority":"p1-high"}
+{"t":"2026-11-05T03:12:16.006Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T04:23:09.175Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T05:17:20.193Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T05:19:24.654Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T08:05:12.082Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T08:05:12.157Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T08:05:12.231Z","ev":"task_note","id":"ask-makes-icons-that-are-icons-one-subject-clean"}
+{"t":"2026-11-05T08:05:21.363Z","ev":"task_pending","id":"ask-makes-icons-that-are-icons-one-subject-clean","from":"in_progress","note":"The balloon is still short of its bar: 55.4, didWhatWasAsked 5, reads as an icon 4 against 7 each. Everything else on the checklist is reached; the 14 icon cases read 88.3 and held-out 68.4, shipped in df457197."}
