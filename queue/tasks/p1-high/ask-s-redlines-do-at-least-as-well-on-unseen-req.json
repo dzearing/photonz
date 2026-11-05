@@ -4,12 +4,12 @@
   "goal": "After Ask started choosing measurements in code, its scores on unseen measuring requests fell even though the settings screenshot request got better. Find what kind of measuring request now does worse and fix it, without tuning to any one request.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 70,
+  "seq": 170,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-21T06:33:47.359Z",
-  "updated": "2026-11-04T16:08:46.115Z",
+  "updated": "2026-11-05T14:49:58.586Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured, not guessed: held-out run 20261021-010309-ask-held-out (before, commit 4514d304) redline group 35.4; after the calm redline (c9200d34) 20261021-050656-ask-held-out redline 19.5; after the follow-up fixes (aa4e3ce3: an empty find_measurements answer says to fall back to find_elements, Ask lays only the ids that answer the request, a redline never drops below three marks) 20261021-055152-ask-held-out redline 19.6. Totals 20.1 / 19.2 / 19.5. Only one baseline run exists, so a lucky baseline is possible: rerun the before commit's held-out once before chasing. A runner may not open Scripts/ask-eval/held-out/ or .ask-eval/held-out-runs/; the user can look at .ask-eval/held-out-runs/20261021-055152-ask-held-out/contact-sheet.png. Ideas not yet checked: requests that name a dimension the plan never measures (a card's width, the title's size), pictures LayoutRead reads poorly (dark app windows, photos), and the prompt sending every measuring request to find_measurements.",
@@ -97,6 +97,14 @@
     {
       "t": "2026-11-04T16:08:46.114Z",
       "note": "seq 100 -> 70"
+    },
+    {
+      "t": "2026-11-05T14:49:18.353Z",
+      "note": "digest 2026-11-05: the first checklist item looks reached without anyone working on it. Held-out redline read 44.1 on both of the last two runs (c7f497ee, df457197), over the 35 bar, on the default model; the 33.6 of 2026-11-04 was the last reading under it. The climb settings-measurements case last read 57.9 on this model, but that was 2026-10-24, so it needs one fresh reading against its 47. I did not take it: it loads the model and somebody was at the Mac. Whoever claims this: take that reading first. If it holds, what is left is naming a cause for a drop that has since gone, and this should close rather than spend a cycle."
+    },
+    {
+      "t": "2026-11-05T14:49:58.585Z",
+      "note": "seq 70 -> 170"
     }
   ],
   "walks": []

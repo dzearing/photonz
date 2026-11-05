@@ -4,12 +4,12 @@
   "goal": "The short walk check that runs after each task is meant to cover the whole set a chunk at a time. Since midday on 2026-10-25 it has re-run the same block of slow Ask walks on every check, hit its 30 minute limit, and started from the same place next time, so the rest of the set is never reached and each check costs three times what it should.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 130,
+  "seq": 230,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-26T14:17:11.190Z",
-  "updated": "2026-11-04T16:04:31.768Z",
+  "updated": "2026-11-05T14:49:59.044Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced in the 2026-10-26 digest pass. Commands and output:\n\n$ cat queue/sweep/rotation.json -> \"cursor\": 103 (unchanged since the 11:51Z check on 2026-10-25)\n$ grep '\"ev\":\"slice_pass\"' queue/history.jsonl | tail -3 -> 13:20Z walks 22 of 30 timedOut true; 15:43Z walks 21 timedOut true; 17:08Z walks 19 timedOut true, each seconds 1803-1806\n$ grep -E '^[a-z0-9-]+-walk +[0-9]+s' queue/sweep/slice-2026-10-25-081308.log and -093850.log -> the same run every time: 3d-grippers-on-a-picked-layer-walk, an-editing-session-walk, arrow-*, then ask-adds-a-title-page-walk 82-93s, ask-annotates-a-screenshot-walk 80-105s, ask-builds-base-components-walk 206-303s, ask-cancels-a-waiting-request-walk 121-146s, ask-draws-a-dog-walk 151-183s, ask-draws-a-scene-walk 159-185s, ask-draws-an-illustration-walk 331-354s ...\n$ grep 'Sized to' queue/loop.log | tail -1 -> 'Sized to 10 minutes at 19.8s a walk, the median of the last 10 rotating checks.'\n\nCause, read from code: queue/bin/sweep.sh around line 268 advances the rotation only when SLICE_TIMED_OUT is 0 ('a check cut off on the clock runs the same walks again next time rather than skipping them'), and queue/bin/sweep-schedule.mjs picks 30 walks from the median pace. From cursor 103 the next 30 walks hold about 20 Ask walks on the 27B model, so every check is stopped on the clock and the cursor never moves: a deadlock until the Ask walks get faster. ask-walks-share-one-model-instead-of-loading-a-f (one shared model) will shave the model load off each Ask walk but does not move the cursor, so this is its own fix. Do not let a fix skip walks nobody ran: advance only past finished walks.",
@@ -108,6 +108,14 @@
     {
       "t": "2026-11-04T16:04:31.767Z",
       "note": "digest 2026-11-04: still costing. Five of the six rotating checks in the last 24 hours stopped on the 30 minute clock (1805 to 1806 s, 12 or 13 walks each), all from position 133; slices 158m, 11.0% of the day. The sixth (15:48Z, 442 s) moved the cursor to 156 only because a person was at the Mac, so 26 of its Ask walks deferred."
+    },
+    {
+      "t": "2026-11-05T14:48:01.717Z",
+      "note": "digest 2026-11-05: four rotating checks in 24 hours, slices 82m, 5.7% of the day. Two ran clean (442 s, 867 s, the second moved the cursor 156 to 187). Two stopped on the 30 minute clock (1806 s and 1803 s, 18 and 13 walks), both from 187, because the changed list now holds 19 Ask walks after 3bc0e202 rewrote them. Cursor still 187 at last read, so the fault is the same one."
+    },
+    {
+      "t": "2026-11-05T14:49:59.043Z",
+      "note": "seq 130 -> 230"
     }
   ],
   "walks": []

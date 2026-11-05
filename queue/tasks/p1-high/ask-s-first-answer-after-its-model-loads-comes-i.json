@@ -4,12 +4,12 @@
   "goal": "Since Qwen3.8 27B became Ask's default, the first request after the model loads spends about a minute reading Ask's standing instructions before it does anything, so measuring a screenshot takes about 83 seconds where it took 14. Make that first read come back from disk so a cold Ask answers about as fast as a warm one.",
   "epic": "agent-drivable",
   "priority": "p1-high",
-  "seq": 90,
+  "seq": 190,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-24T20:25:25.315Z",
-  "updated": "2026-11-04T19:57:49.370Z",
+  "updated": "2026-11-05T14:49:58.741Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-10-24 by ask-uses-qwen3-8-27b-at-4-bit-by-default-instead: Qwen3.8 27B is dense and reads a prompt at 103-183 tok/s on the M4 Max (Qwen3.6 35B: 1,046), so Ask's ~10-12k-token first prompt costs 60-90 s cold. Warm reuse already works: /tmp bench with llama-server b11826, same 12.5k-token system prompt twice: 'read 12517 new tokens (0 cached), 62.8s' then 'read 20 new tokens (12498 cached), 1.6s'. Every eval case starts cold (the probe quits after each), and a person's first Ask after launch or after 5 idle minutes does too. Ideas: llama-server --slot-save-path plus POST /slots/0?action=save|restore keyed by model id + a hash of the standing prompt (system + tools, before the document), restored right after load in AskModelServer.start; or warm() sending the standing prompt as soon as the model loads (it already starts loading when a person opens Ask). Check qwen35 is hybrid (recurrent layers every 4th full attention), so a restore must carry the recurrent state too; llama.cpp's slot save does for whole-prompt matches. Trace of a cold case: scene-bird-singing-on-a-branch's first turn answered at 89.9 s.",
@@ -87,6 +87,14 @@
     {
       "t": "2026-11-04T19:57:49.369Z",
       "note": "from when-ask-stops-part-way-it-says-so-and-one-refus, 2026-11-04: the cold first read matters beyond measuring. Pricing plans on qwen3.8-27b took 289 s (old build) and 294 s (c7f497ee) with 106 to 133 s of that the first turn, right at the eval's 300 s limit, and held-out run 20261104-172601 lost one of its three layout cases to that limit (layout 48 against 66.3; the other two average 72). Worth reading held-out layout's 'ran out of time' count from 'Scripts/ask-eval.sh time' on the next whole run: if it stays, either this speed work or Ask carrying on past a refusal is the cause."
+    },
+    {
+      "t": "2026-11-05T14:48:01.791Z",
+      "note": "digest 2026-11-05: the question left open by when-ask-stops-part-way-it-says-so-and-one-refus is answered as far as the numbers can. Held-out layout read 66.3 (0 of 3 ran out, 50c54b72), then 48 and 49.5 (1 of 3 ran out each time, c7f497ee and df457197). Median seconds in that group went 166, 256, 215. So a layout request now sits at the five minute limit often enough to lose a case on every run. Whether carrying on past a refusal added that time is still not shown, but the drop has repeated, so it is not one bad run. Faster first reads are what would clear it."
+    },
+    {
+      "t": "2026-11-05T14:49:58.740Z",
+      "note": "seq 90 -> 190"
     }
   ]
 }

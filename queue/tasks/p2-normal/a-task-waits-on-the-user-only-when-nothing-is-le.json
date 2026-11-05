@@ -1,0 +1,31 @@
+{
+  "id": "a-task-waits-on-the-user-only-when-nothing-is-le",
+  "title": "A task waits on the user only when nothing is left to try from here",
+  "goal": "The clipboard task sat blocked for a day, and the digest told the user only they could move it, when four of its suspects could be fixed from this Mac. The user asked how it was blocked on them. A task should wait on a person only when every suspect that can be tested or fixed without them has been, and the digest should say what was tried before it asks.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 570,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-11-05T14:49:57.107Z",
+  "updated": "2026-11-05T14:50:00.827Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: a-screenshot-is-on-the-clipboard-every-time-on-a went blocked on 2026-11-03 waiting for a report from the other Mac, the 2026-11-04 digest called it one job only you can do, and on 2026-11-05 the user unblocked it and listed what could be fixed from here (walks off the real clipboard, several displays, shortcut failures said aloud, a failed copy noticed). The same digest noted the rule gap as first seen. A task that needs a report but no choice has no card, so nothing brings it back but a person. Files: queue/bin/runner-prompt.md and the digest prompt.",
+  "acceptance": [
+    "The runner prompt says a task may be set blocked on a person only after listing, in its log, every suspect it could test or fix without them and what happened to each",
+    "The digest prompt says to read that list before telling the user a task needs them, and to send the task back to the queue if the list has a gap",
+    "A task waiting on a report rather than a choice names what brings it back, so it does not depend on someone remembering"
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:49:57.109Z",
+      "note": "created (digest)"
+    },
+    {
+      "t": "2026-11-05T14:50:00.826Z",
+      "note": "seq 4080 -> 570"
+    }
+  ]
+}

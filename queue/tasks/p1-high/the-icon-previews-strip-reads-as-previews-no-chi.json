@@ -4,12 +4,12 @@
   "goal": "The icon previews strip (top left of the canvas when an icon frame is picked, 2026-09-14) draws the icon at 16, 24, 32, 48 and 64 px, and the second biggest sits on a dark ground to show the icon on dark. The user read that dark 48 chip as 'selected', clicked the others, and nothing happened. Make the strip read for what it is: previews at real sizes, light and dark, nothing to pick.",
   "epic": "icon-grid",
   "priority": "p1-high",
-  "seq": 4e-7,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:40:35.742Z",
-  "updated": "2026-11-05T14:47:30.124Z",
+  "updated": "2026-11-05T14:49:57.677Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i see this weird icon preview overlay on the top left ... the preview says we have 48 selected, and if i click on the other options it doesn't change'. Code: Sources/Photonz/IconPreviewsStrip.swift ('the one before the biggest on a dark ground, as icon-draw-wt.html draws it'), IconPreviewsOverlay.swift, EditorState+IconPreviews.swift. The mock icon-draw-wt.html changes with it: an approved departure, update the mock.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-11-05T14:47:30.124Z",
       "note": "digest 2026-11-05: epic moved from image-editing to icon-grid, whose title holds live previews at every size. The focus's success list names this task under PREVIEW."
+    },
+    {
+      "t": "2026-11-05T14:49:57.676Z",
+      "note": "seq 4e-7 -> 50"
     }
   ]
 }

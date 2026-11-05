@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-23T14:07:33.733Z",
-  "updated": "2026-10-24T12:35:55.600Z",
+  "updated": "2026-11-05T14:48:01.941Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, 2026-10-23 digest. Scripts/ask-eval.sh report prints: held-out 60.3 (45 cases, 20261023-105134-ask-held-out), nothing else. queue/evals/ask-eval-history.jsonl held-out groups (total, drawing, layout, redline, video): 20261022-094634 60.3 65.3 23.3 37.9 59.7 (Ollama); 20261022-231423 61 69.1 6.4 31.5 48.1 (built in, first run); 20261023-034535 58.1 67.4 5.7 5.5 51.6; 20261023-105134 60.3 69.5 7.3 13.6 49.8. The scene task (a-scene-of-things-doing-something-together-is-dr) was claimed five times in 24 hours chasing a total of 61 that its own group (drawing, 65.7 to 69.5) never moved. Code: Scripts/ask-eval/eval.mjs; prompt: queue/bin/runner-prompt.md around the held-out rule. The layout and redline drops themselves are on ask-on-the-local-model-makes-results-that-look-f and ask-s-redlines-do-at-least-as-well-on-unseen-req.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-10-24T12:35:55.599Z",
       "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-11-05T14:48:01.940Z",
+      "note": "digest 2026-11-05: two more reasons. Held-out layout fell 66.3 to 48 and held there at 49.5 while the total rose 64.5 to 68.4, the same masking this task describes. And a single case can swing widely with nothing changed: icon-balloon-popping read 84.8, 44.8, 42.5, 55.4 and 28.6 across close versions, so a report that shows one case's one reading should say so. Fold that in if it is cheap; it does not widen the checklist."
     }
   ]
 }

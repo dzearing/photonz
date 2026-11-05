@@ -4,12 +4,12 @@
   "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
   "epic": "unmanned-loop",
   "priority": "p1-high",
-  "seq": 150,
+  "seq": 250,
   "status": "pending",
   "release": "next",
   "area": "queue",
   "created": "2026-10-17T18:11:57.395Z",
-  "updated": "2026-11-05T14:41:19.325Z",
+  "updated": "2026-11-05T14:49:59.194Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-11-05T14:41:19Z DID NOT FINISH (the run was interrupted: whoever was running it went away): it reached 951 of 1096 walks in 395 minutes, of which 910 passed. The walks it never reached are unknown, not passing.\n\nFailing walks (41): a-click-on-the-cut-opens-its-tiles-walk, a-cut-opens-into-its-two-clips-walk, a-dip-fades-out-and-back-in-walk, a-notice-lets-a-click-through-walk, arrow-parts-walk, ask-draws-an-illustration-walk, ask-finds-nothing-off-walk, ask-makes-it-again-as-a-photo-walk, caption-lines-join-and-a-word-moves-back-walk, caption-two-lines-walk, color-row-reaches-what-is-picked-walk, component-drag-lands-a-copy-walk, copy-and-paste-a-range-walk, design-mode-tool-strip-walk, drop-hands-you-the-pointer-walk, every-panel-keeps-its-margins-walk, expand-the-cut-from-its-menus-walk, find-what-stayed-a-picture-walk, frame-live-other-kinds-walk, icon-stroke-weight-walk, insert-a-title-before-a-clip-walk, layer-row-lifts-at-scale-walk, layers-list-follows-pick-walk, measure-row-menu-walk, name-field-handback-redline, one-unit-word-walk, outline-width-walk, panel-takes-picture-walk, pick-leaves-settings-alone-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, roll-the-cut-between-two-clips-walk, saved-colour-cannot-come-walk, section-fold-motion-walk, segment-tooltips-walk, segmented-chip-refraction-film-walk, segmented-thumb-film-walk, separate-shadow-walk, text-style-comes-away-walk, tile-comes-away-walk, title-pages-and-name-cards-walk, title-presets-library-shelf-walk\n\nThose 41 are UNCONFIRMED. This run was cut short, and a stop takes the probe app down with it,\nso a walk failing in its last moments may be a casualty of the stop rather than a break.\nRe-run one on its own with Scripts/playtest.sh before believing it; the next sweep that covers the set decides.\n\nNever finished: titles-move-in-parts-walk was still running when the run was stopped. It is not a pass and not a failure; nobody asked it anything.\n\nNot run this time and still failing from the last check (6): tool-settings-capsule-walk, transition-edge-follows-the-pointer-walk, transition-picker-at-a-cut-walk, transition-placement-and-hold-walk, transition-tile-comes-away-walk, transitions-where-clips-meet-walk\nThis run was interrupted before reaching them. They are unread, not fixed.\n\nAlready named by another open task, so read that one before re-diagnosing (8):\n  a-click-on-the-cut-opens-its-tiles-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  a-cut-opens-into-its-two-clips-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  copy-and-paste-a-range-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  expand-the-cut-from-its-menus-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  insert-a-title-before-a-clip-walk -> a-clip-or-title-held-as-an-insert-shows-what-mov (guessed from its wording, so read it before believing it)\n  roll-the-cut-between-two-clips-from-the-menu-bar-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  roll-the-cut-between-two-clips-walk -> a-clip-dropped-a-frame-from-a-cut-lands-on-the-c (that task says it owns this walk)\n  section-fold-motion-walk -> folding-a-section-that-lets-the-panel-fit-again (that task says it owns this walk)\n\n1 of those are guesses. A task stops being guessed at by naming its walks:\n  node queue/bin/queue.mjs walks <task id> <walk> [<walk> ...]\n  node queue/bin/queue.mjs walks <task id> --none      (it only mentions them in passing)\n\nThis task owns the other 33: a-dip-fades-out-and-back-in-walk, a-notice-lets-a-click-through-walk, arrow-parts-walk, ask-draws-an-illustration-walk, ask-finds-nothing-off-walk, ask-makes-it-again-as-a-photo-walk, caption-lines-join-and-a-word-moves-back-walk, caption-two-lines-walk, color-row-reaches-what-is-picked-walk, component-drag-lands-a-copy-walk, design-mode-tool-strip-walk, drop-hands-you-the-pointer-walk, every-panel-keeps-its-margins-walk, find-what-stayed-a-picture-walk, frame-live-other-kinds-walk, icon-stroke-weight-walk, layer-row-lifts-at-scale-walk, layers-list-follows-pick-walk, measure-row-menu-walk, name-field-handback-redline, one-unit-word-walk, outline-width-walk, panel-takes-picture-walk, pick-leaves-settings-alone-walk, saved-colour-cannot-come-walk, segment-tooltips-walk, segmented-chip-refraction-film-walk, segmented-thumb-film-walk, separate-shadow-walk, text-style-comes-away-walk, tile-comes-away-walk, title-pages-and-name-cards-walk, title-presets-library-shelf-walk\n\nFull output: queue/sweep/2026-11-05-000550.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -100,21 +100,9 @@
       "note": "seq 40 -> 80"
     },
     {
-      "t": "2026-11-05T14:41:19.324Z",
-      "note": "... 5 earlier entries elided",
-      "elided": 5
-    },
-    {
-      "t": "2026-10-22T19:09:29.086Z",
-      "note": "rotating check 2026-10-22T19:09:28Z, 32 walks run from 507 onward in the rotation: ask-makes-a-picture-from-the-new-window-walk (its script changed since the last check), ask-with-nothing-open-walk (its script changed since the last check) failing. This is a slice, not a sweep: the rest of the set is unchecked."
-    },
-    {
-      "t": "2026-10-23T14:01:25.431Z",
-      "note": "sweep 2026-10-23T14:01:25Z: 2 failing (caption-lines-join-and-a-word-moves-back-walk, component-drag-lands-a-copy-walk)"
-    },
-    {
-      "t": "2026-10-23T14:07:58.037Z",
-      "note": "seq 90 -> 120"
+      "t": "2026-11-05T14:49:59.193Z",
+      "note": "... 8 earlier entries elided",
+      "elided": 8
     },
     {
       "t": "2026-10-23T20:07:24.221Z",
@@ -499,6 +487,18 @@
     {
       "t": "2026-11-05T14:41:19.323Z",
       "note": "sweep 2026-11-05T14:41:19Z: 41 failing (a-click-on-the-cut-opens-its-tiles-walk, a-cut-opens-into-its-two-clips-walk, a-dip-fades-out-and-back-in-walk, a-notice-lets-a-click-through-walk, arrow-parts-walk, ask-draws-an-illustration-walk, ask-finds-nothing-off-walk, ask-makes-it-again-as-a-photo-walk, caption-lines-join-and-a-word-moves-back-walk, caption-two-lines-walk, color-row-reaches-what-is-picked-walk, component-drag-lands-a-copy-walk, copy-and-paste-a-range-walk, design-mode-tool-strip-walk, drop-hands-you-the-pointer-walk, every-panel-keeps-its-margins-walk, expand-the-cut-from-its-menus-walk, find-what-stayed-a-picture-walk, frame-live-other-kinds-walk, icon-stroke-weight-walk, insert-a-title-before-a-clip-walk, layer-row-lifts-at-scale-walk, layers-list-follows-pick-walk, measure-row-menu-walk, name-field-handback-redline, one-unit-word-walk, outline-width-walk, panel-takes-picture-walk, pick-leaves-settings-alone-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk, roll-the-cut-between-two-clips-walk, saved-colour-cannot-come-walk, section-fold-motion-walk, segment-tooltips-walk, segmented-chip-refraction-film-walk, segmented-thumb-film-walk, separate-shadow-walk, text-style-comes-away-walk, tile-comes-away-walk, title-pages-and-name-cards-walk, title-presets-library-shelf-walk)"
+    },
+    {
+      "t": "2026-11-05T14:49:18.278Z",
+      "note": "digest 2026-11-05: the 2026-11-05 run was put down at 951 of 1096 because somebody came back to the Mac, so 145 walks are unread and the six carried from last time (tool-settings-capsule and five transition walks) are not fixed. Three failures are new. Re-run alone at df457197 with Scripts/playtest-all.sh --no-build: layers-list-follows-pick-walk passed (21 s), so that one is not a standing break; layer-row-lifts-at-scale-walk failed the same way twice (step 13 dragRow: no row called design or Separate in the layers list), so it is real and yours. ask-draws-an-illustration-walk (step 12: 1 layer, not at least 4, after 206 s) was not re-run, because it needs the Mac to itself and somebody was on it. ask-makes-it-again-as-a-photo-walk (step 21) is worth reading first since One Agent pane promised rows in the person's words: its row reads Made a photo of A red fox sitting uprig..., which is the model's prompt, not 'a fox'."
+    },
+    {
+      "t": "2026-11-05T14:49:57.223Z",
+      "note": "digest 2026-11-05, correcting my line above: that the photo row shows the model's prompt is my reading of the words, not something I traced."
+    },
+    {
+      "t": "2026-11-05T14:49:59.192Z",
+      "note": "seq 150 -> 250"
     }
   ],
   "standing": "walk-sweep",

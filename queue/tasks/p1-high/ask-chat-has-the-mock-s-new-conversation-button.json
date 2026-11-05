@@ -4,12 +4,12 @@
   "goal": "Typing / in Ask lists the commands you can run, and today every row in an area shows that area's one icon, where the mock gives each command its own. Give each row its own icon so the list can be read at a glance.",
   "epic": "agent-ask",
   "priority": "p1-high",
-  "seq": 110,
+  "seq": 210,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T14:43:35.102Z",
-  "updated": "2026-11-05T14:46:39.596Z",
+  "updated": "2026-11-05T14:49:58.895Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left by typing-in-ask-lists-the-commands-you-can-run. Mock: askPalHTML in docs/design/mocks/shared/dist/photonz-ds.js. AskConversationLines and AskCommandsList.symbol in Sources/Photonz/Agent/AskViews.swift; AppCommandTable has no icon today. New Conversation has to decide what Ask forgets: its memory of what it made comes from the rows (AskSession.conversation).",
@@ -32,6 +32,10 @@
     {
       "t": "2026-11-05T14:46:39.596Z",
       "note": "digest 2026-11-05: narrowed to the icons. The first two items were a New Conversation button and a whole transcript in the chat, and the user took that chat out on 2026-11-04 (one-agent-pane-on-the-right-a-plain-history-of-r, 3bc0e202: the composer closes after a request and the Agent group is the one Agent place; ask.md says the same). Building them now would put back what the user removed. The shared mock's askPalHTML in photonz-ds.js still draws the New conversation button; the Ask pages were updated that day and this one was missed, so take it out while here."
+    },
+    {
+      "t": "2026-11-05T14:49:58.894Z",
+      "note": "seq 110 -> 210"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "The user's report of screenshots not reliably reaching the clipboard came from ANOTHER Mac running a single, released Photonz, not this one. The task every-screenshot-is-on-the-clipboard-every-time found and fixed a different fault that only exists on this Mac (the installed app and Photonz Dev both answering the capture shortcut, c999166a), and checked the suspects in e0648dd9 only with a stand-in reader process, never with real paste targets. The single-app fault is unexplained and unfixed. Find it and fix it.",
   "epic": "image-editing",
   "priority": "p1-high",
-  "seq": 1e-8,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T01:36:23.358Z",
-  "updated": "2026-11-05T14:43:03.516Z",
+  "updated": "2026-11-05T14:49:57.372Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-03 (intake), correcting the closed task: 'when i earlier said that i wasn't getting photos into the clipboard this was on another machine not running 2 copies of photonz, so your assumptions were wrong.' The other Mac's version and the apps pasted into are being asked; add them to this log when known. Prior work: every-screenshot-is-on-the-clipboard-every-time (done, c999166a, keep it: one running Photonz holds the capture shortcuts). Its own log admits: 'pastes were made by a second process reading the clipboard as each app kind does, not by pasting into Chrome/Preview/Slack/Mail themselves'. Code: Sources/Photonz/Capture/CaptureStore.swift, Sources/Photonz/ClipboardHandOff.swift, Sources/PhotonzRender/ClipboardPicture.swift.",
@@ -83,6 +83,14 @@
     {
       "t": "2026-11-05T14:43:03.515Z",
       "note": "seq 10 -> 1e-8"
+    },
+    {
+      "t": "2026-11-05T14:48:02.238Z",
+      "note": "digest 2026-11-05: the 2026-11-04 digest told the user this needed them, and they answered 'how is it blocked on me'. They were right: four of the suspects could be fixed from here. Noted in today's digest as a finding against how a task gets parked on a person."
+    },
+    {
+      "t": "2026-11-05T14:49:57.371Z",
+      "note": "seq 1e-8 -> 10"
     }
   ],
   "started": "2026-11-04T05:52:02.733Z",

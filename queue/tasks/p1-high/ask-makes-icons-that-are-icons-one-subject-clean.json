@@ -4,12 +4,12 @@
   "goal": "Asked for an icon (the user's 'a balloon icon popping'), Ask painted a scene with the picture model and traced it: a stick figure holding balloons. An icon request must give an icon: one subject, built from a few clean vector shapes and paths on an icon grid, consistent line weight and corner style, centred with even padding, readable from 16 to 64 px, every part a named, editable layer, in the style asked for (outline, filled, duotone, or the document's own icon style).",
   "epic": "icon-vector",
   "priority": "p1-high",
-  "seq": 2e-7,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:19.981Z",
-  "updated": "2026-11-05T14:47:30.122Z",
+  "updated": "2026-11-05T14:49:57.445Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping. But I think it just drew a picture of a stick figure holding balloons. I'd like to be able to use ask for creating icons and especially animated svgs'. Today: AskPlanning routes 'icon' words to vector art (add_drawing), which is painted by the picture model and traced (AgentPictureKind); the doing tools include add_shape and add_path, which an icon route can use directly. Animation is a separate task: ask-animates-what-it-makes-an-animated-svg-icon.",
@@ -125,6 +125,14 @@
     {
       "t": "2026-11-05T14:47:30.122Z",
       "note": "digest 2026-11-05: epic moved again, to icon-vector, because the focus became icon-svg during this pass and its success list names this task under ASK FOR ONE."
+    },
+    {
+      "t": "2026-11-05T14:48:01.569Z",
+      "note": "digest 2026-11-05: on the user's own request the old route still beats the shipped one. Run 20261104-223110-ask (traced, before) read 74.4, judge 6, named 3 of 3; shipped df457197 read 55.4, judge 4.4, named 3 of 3. The pictures agree: the before panel of 2026-11-04-ask-icons-before-after.png is a plain balloon with a tear and a string, and 2026-11-05-ask-icons-balloon-designed-sheet.png has a blob with a notch, a string floating loose below it, and nothing readable at 24 or 16 px. Two things for the next claim. Read the shipped version three times before changing anything, because one reading of this case ranged 28.6 to 84.8. Then try the two ideas already in this log (several drawings with a pick by eye, or the traced route, which the checklist allows for this case). This task has taken two claims and about nine hours so far."
+    },
+    {
+      "t": "2026-11-05T14:49:57.444Z",
+      "note": "seq 2e-7 -> 20"
     }
   ],
   "started": "2026-11-05T02:53:05.050Z",

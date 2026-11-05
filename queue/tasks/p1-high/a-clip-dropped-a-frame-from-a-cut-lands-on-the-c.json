@@ -4,12 +4,12 @@
   "goal": "Nine video walks fail the same way in both of the last two full walk runs: a clip dropped onto the timeline a frame short of a cut (5.96 s next to a cut at 6 s) now lands where it was dropped instead of on the cut, so it overlaps the clip before it, and every later trim, roll and transition is a frame off. Find out whether dropping stopped snapping to the cut or the walks' drop step changed, and make a drop beside a cut land on it, the way Premiere does with snapping on.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 140,
+  "seq": 240,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-03T15:25:54.878Z",
-  "updated": "2026-11-03T15:26:33.440Z",
+  "updated": "2026-11-05T14:49:59.119Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carved out of walks-that-fail-in-the-full-sweep-26 by the 2026-11-03 digest: one cause behind nine of its 50, the same lesson as the walk press fault on 2026-11-01. Evidence, run 2026-11-03 at head 26d9c8c4:\n  $ Scripts/playtest-all.sh --no-build a-cut-opens-into-its-two-clips-walk\n  a-cut-opens-into-its-two-clips-walk 13s FAILED step 30 (expectClip): no clip called \"b-roll\" is on V1, starting at 6.0s, ending at 13.0s; the timeline: b-roll on V1 5.96s to 12.92s; Tutorial Sample on V1 0.00s to 5.96s\nThe walk cuts at 6 s (W), drops scratch/b-roll.mp4 with dropOnTimeline seconds 5.96 (step 16), expects b-roll 6 to 14 (step 18, passes, likely within tolerance), then Q at 7 s; the result shows the drop overlapped the first clip by 0.04 s. copy-and-paste-a-range-walk and transition-edge-follows-the-pointer-walk drop at 6.95 and read 13.95 and 'Length 4.9s'; the transition walks read 'Spare after 1.1s' for 1.0s. Failing in the 2026-11-01 and 2026-11-03 full runs. Possibly related: the-frame-shown-at-a-whole-second-is-the-one-tha (a 33 ms frame grid).",
@@ -31,6 +31,10 @@
     {
       "t": "2026-11-03T15:26:33.439Z",
       "note": "seq 3980 -> 140"
+    },
+    {
+      "t": "2026-11-05T14:49:59.118Z",
+      "note": "seq 140 -> 240"
     }
   ],
   "walks": [

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "loop",
   "created": "2026-10-22T16:26:02.189Z",
-  "updated": "2026-10-23T14:04:50.670Z",
+  "updated": "2026-11-05T14:48:01.866Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the digest pass 2026-10-22 16:24 UTC with Ollama not running (pgrep -fl ollama empty, curl localhost:11434/api/ps empty):\n  Scripts/ask-eval.sh run --engine ask --cases video-latest-recording-after-this-one,video-dissolve-where-the-copy-starts --tag digest-repro-2026-10-22\nOutput: both cases ran in about 1 s ('asked, quiet after 0.13s'), ask state phase stopped, says 'Ask needs Ollama. See Settings.', steps []. Scored 8.6 and 7.5 (judge read 'the video is unchanged'), total 8.1, printed '==> WORSE: throw it away (against \"picture model try: z-image-turbo q8 + vtracer\")' and appended run 20261022-162402-ask to queue/evals/ask-eval-history.jsonl. The digest pass removed that history line and the run folder by hand. Code: Scripts/ask-eval/eval.mjs.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-23T14:04:50.642Z",
       "note": "2026-10-23 digest: goal reworded to cover the model built into Photonz as well as Ollama (see the 2026-10-22 22:20 line); the work is unchanged."
+    },
+    {
+      "t": "2026-11-05T14:48:01.865Z",
+      "note": "digest 2026-11-05: seen again. Run 20261105-051720-ask sits in the eval history with total 0, wall 17 s and no model, from a failed build, and the runner had to write a line in its own task log saying the 0 means nothing."
     }
   ]
 }

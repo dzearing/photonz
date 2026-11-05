@@ -4,12 +4,12 @@
   "goal": "A recording that carries its own sound is drawn today as two rows joined behind the scenes: the picture on its video track and its sound on a companion row under it ('V2 sound'), moving, trimming and cutting together. The user finds two implicitly attached rows confusing. While the sound is attached, draw ONE clip: the picture across the top and its waveform across the bottom half of the same rectangle, on the video track. Detach Audio moves the sound to a real Audio track of its own, as today; Re-attach puts it back inside the clip.",
   "epic": "video-editing",
   "priority": "p1-high",
-  "seq": 4.4e-7,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:47:49.323Z",
-  "updated": "2026-11-05T14:47:49.441Z",
+  "updated": "2026-11-05T14:49:57.751Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-05 (intake): 'If audio is attached to a video segment, it should appear in the same lane as sort of the bottom half of the video rectangle, rather than its own track. if you right click and separate the audio then yes, separate track. but having the 2 rows implicitly attached to each other is really confusing.' History: 0.18.0 (2026-10-19) 'A recording's own sound sits on a row just under its video and is joined to it ... Detach Audio moves the sound to an Audio track, and Re-attach brings it back'. Code: Sources/PhotonzCore/TimelineTrack.swift (its comment still says 'its sound is drawn inside its clip'), SoundClip.swift, Waveform.swift, TrackRange.swift; Sources/Photonz/ClipPiecesBar.swift ('the two move, trim and cut as one until Detach Audio parts them'), EditorCommands.swift (Detach / Re-attach Audio). An approved departure from the video mocks: change the mocks, no decision card.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-11-05T14:47:49.440Z",
       "note": "seq 3980 -> 4.4e-7"
+    },
+    {
+      "t": "2026-11-05T14:49:57.750Z",
+      "note": "seq 4.4e-7 -> 60"
     }
   ]
 }

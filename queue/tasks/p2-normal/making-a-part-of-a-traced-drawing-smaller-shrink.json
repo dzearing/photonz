@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-01T01:26:13.360Z",
-  "updated": "2026-11-02T14:50:08.585Z",
+  "updated": "2026-11-05T14:48:02.165Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced: node Scripts/ask-eval/followup.mjs run --run after-5 --cases icon-sun-smaller (code bb3ea1fb). Model called change_part with part Sun and at, a point in the disc. Judge: \"The yellow sun disc did get smaller, but the space it left was filled with a thick green ring instead of the background, the rays stayed at their original size and position, and the top of the hill bulges upward\" (part 5 words 6 rest 4). Pictures: .ask-eval/followups/after-5/icon-sun-smaller/first.png and second.png. Layer tree of that icon: Green [path] covers 43,138 426x294 (under the sun), Yellow (disc) plus Yellow 2..13 and Pale yellow 1..6 (rays and highlights) as separate colour layers. splitPiece (Sources/PhotonzCore/AgentPartChange.swift) takes only the smallest ring at the point. Ideas: gather pieces of the same and near colours within a radius of the picked piece; or cut the hole out of the layer beneath. Found while running ask-changes-what-it-just-made-make-the-water-blu.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-11-02T14:50:08.584Z",
       "note": "seq 100 -> 90"
+    },
+    {
+      "t": "2026-11-05T14:48:02.164Z",
+      "note": "digest 2026-11-05: the reproduction here has moved. 'an icon of a sun over a hill' no longer goes through tracing since 3e03a854, because icons land as shapes. Re-run followup.mjs icon-sun-smaller before starting: it may now pass, or fail differently, and that case belongs with the ASK FOR TWEAKS item on ask-makes-icons-that-are-icons-one-subject-clean. The traced drawing half (the Statue of Liberty robe) is untouched by that change."
     }
   ],
   "walks": []
