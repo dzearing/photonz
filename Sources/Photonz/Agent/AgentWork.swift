@@ -92,7 +92,22 @@ enum AgentWork {
             return try AgentPaintWork.answer(request)
         case .changePart(let id, let change):
             return try changePart(AgentDocuments.editor(id).get(), change)
+        case .restyleIcon(let id, let change):
+            return try restyleIcon(AgentDocuments.editor(id).get(), change)
         }
+    }
+
+    /// restyle_icon: the whole icon's look, line weight or colour changed in
+    /// place (`AgentIconRestyle`), as one undo step.
+    private static func restyleIcon(_ editor: EditorState, _ change: AgentIconRestyle) throws -> Answer {
+        var changed = try document(of: editor)
+        let answer: AgentIconRestyled
+        switch changed.agentRestyleIcon(change) {
+        case .success(let made): answer = made
+        case .failure(let refused): throw Failure(refused.message)
+        }
+        editor.asOneUndoStep { editor.perform { $0 = changed } }
+        return .json(answer)
     }
 
     /// change_part: one named part of a painting or a drawing changed in

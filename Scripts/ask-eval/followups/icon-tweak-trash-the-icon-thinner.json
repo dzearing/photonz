@@ -1,0 +1,13 @@
+{
+  "group": "icon",
+  "start": {
+    "blank": [
+      512,
+      512
+    ]
+  },
+  "from": "ask-makes-icons-that-are-icons-one-subject-clean: tweaks to an icon Ask made (the user, 2026-11-05)",
+  "make": "a trash can icon",
+  "then": "make the icon thinner",
+  "part": "the line weight of the whole icon"
+}

@@ -403,6 +403,14 @@ Either way:
 * **The look the person named** reaches the call (`AgentDrawingWords.lookWords`:
   line art, silhouette, watercolor, flat... words for a look, never a subject);
   a look the model guessed that the person never said is taken off.
+* **A tweak to an icon** (`AgentIconRestyle`, tool `restyle_icon`) changes the
+  whole icon in place, one undo step: outline or filled, a step thicker or
+  thinner, a colour. It is offered only on a picture holding an icon, so nothing
+  else Ask is shown changes. Filling makes the big closed shapes solid and a line
+  lying on one becomes a white cut; outlining brings the cut back in the icon's
+  ink. One part is still change_part or set_layer. "Make it outline" after an
+  icon is a tweak, never the icon made again, and "make the icon thinner" on a
+  picture holding one never draws a new one.
 * **Placed.** Centred, 60 per cent of the canvas's shorter side, or in the box
   asked for, kept on the canvas. An icon has its own rules, below.
 * **An icon** (`AskIcon`, `AskIconCheck`, chosen from the general words for an

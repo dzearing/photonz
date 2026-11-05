@@ -1,0 +1,153 @@
+{
+  "out": "/tmp/photonz-playtest/ask-tweaks-an-icon-walk",
+  "seed": "The user, 2026-11-05: ask for tweaks to an icon. At Next defaults, a follow-up on an icon Ask made changes that icon in place: no new window, no part lost, one Command Z takes the tweak back and leaves the icon.",
+  "clock": 780,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 512,
+      "canvasHeight": 512,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "an envelope icon, outline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-icon",
+      "note": "the blank picture became the icon, drawn in lines"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 16
+    },
+    {
+      "do": "snapshot",
+      "name": "1-the-icon"
+    },
+    {
+      "do": "press",
+      "control": "Ask"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "make it filled"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Ask Send"
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "planning|running|ran|stopped",
+      "timeout": 15
+    },
+    {
+      "do": "waitFor",
+      "condition": "askPhase",
+      "value": "ran|stopped",
+      "timeout": 300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "2-filled",
+      "note": "the same icon in the same window, its shapes solid, every part still there"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 16
+    },
+    {
+      "do": "snapshot",
+      "name": "2-filled"
+    },
+    {
+      "do": "writeSVG",
+      "name": "filled"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "one Command Z took the tweak back and the icon is outlines again"
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 3,
+      "atMost": 16
+    },
+    {
+      "do": "snapshot",
+      "name": "3-undone"
+    }
+  ]
+}

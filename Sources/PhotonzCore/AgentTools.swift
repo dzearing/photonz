@@ -81,6 +81,7 @@ public enum AgentRequest: Hashable, Sendable {
     case paintStroke(document: String?, stroke: AgentStroke)
     // A part of what was made (`AgentPartChange.swift`)
     case changePart(document: String?, change: AgentPartChange)
+    case restyleIcon(document: String?, change: AgentIconRestyle)
 }
 
 /// Why a call was refused, in one sentence a model can act on.
@@ -297,7 +298,7 @@ public enum AgentTools {
                 "command": ["type": "string", "description": "The command's name from list_commands, such as split_at_playhead."],
                 "arguments": ["type": "object", "description": "The command's arguments, as list_commands gives them."],
             ], required: ["command"])),
-    ] + drawingTools + videoTools + designTools + componentTools + paintTools + partTools
+    ] + drawingTools + videoTools + designTools + componentTools + paintTools + partTools + iconTools
 
     /// Slice 3: build a picture out of real layers and export it.
     static let drawingTools: [AgentTool] = [
@@ -585,6 +586,8 @@ public enum AgentTools {
             return paintRequest(name, args, document: document)
         case _ where partToolNames.contains(name):
             return partRequest(name, args, document: document)
+        case _ where iconToolNames.contains(name):
+            return iconRequest(name, args, document: document)
         default:
             return .failure(AgentToolError("There is no tool called \(name).", isUnknownTool: true))
         }

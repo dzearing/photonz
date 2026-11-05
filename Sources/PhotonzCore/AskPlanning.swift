@@ -31,6 +31,10 @@ public enum AskTools {
     /// Offered only for a painting, with the Brush there to paint it: what
     /// every other request is shown stays exactly as it was.
     public static let paintingLooking = ["list_brushes"]
+    /// Offered only on a picture holding an icon, so what every other request
+    /// is shown stays exactly as it was.
+    public static let iconDoing = ["restyle_icon"]
+    public static let iconModelTools: [AgentJSON] = iconDoing.compactMap(modelTool)
     public static let paintingDoing = ["paint_stroke"]
 
     public static func looking(painting: Bool) -> [String] { painting ? looking + paintingLooking : looking }
@@ -435,6 +439,8 @@ public struct AskConversation: Sendable {
     public let landsAsDrawn: Bool
     /// What the model draws whole lands torn (`AskIconBreak`).
     private let tearsTheIcon: Bool
+    /// The picture holds an icon, so it can be restyled (`AgentIconRestyle`).
+    private let holdsIcon: Bool
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
@@ -468,8 +474,10 @@ public struct AskConversation: Sendable {
         self.lookedUp = web == nil ? lookedUp : nil
         self.window = window
         let painting = brushes && AgentPictureKind.asked(in: request) == .paint
-        let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil)
+        let holdsIcon = web == nil && AskIcon.holdsIcon(documentRead)
+        let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil, holdsIcon: holdsIcon)
         self.icon = icon
+        self.holdsIcon = holdsIcon
         landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil)
         tearsTheIcon = icon && iconBreak != nil
         self.paints = paints && !icon
@@ -487,6 +495,7 @@ public struct AskConversation: Sendable {
             ?? Self.instructions(documentRead: described, paints: paints && !icon, painting: painting, video: video,
                                  icon: icon, iconLook: AskIcon.documentLook(documentRead))
         if web == nil, AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
+        if holdsIcon, !icon { instructions += "\n\(AskIcon.tweakRules)" }
         if web == nil, let lookedUp { instructions += "\n\(AskLookup.rules)\n\(lookedUp.listing)" }
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
         if !styles.isEmpty { instructions += "\nThe saved styles (list_styles):\n\(styles)" }
@@ -519,8 +528,9 @@ public struct AskConversation: Sendable {
 
     /// Whether `request` takes the icon route (`AskIcon`): the words for an
     /// icon, unless it is a painting or a web page.
-    public static func takesIconRoute(_ request: String, brushes: Bool, web: Bool) -> Bool {
+    public static func takesIconRoute(_ request: String, brushes: Bool, web: Bool, holdsIcon: Bool = false) -> Bool {
         !web && !(brushes && AgentPictureKind.asked(in: request) == .paint) && AskIcon.asked(in: request)
+            && !(holdsIcon && AskIcon.meansTheOneHere(request))
     }
 
     /// The names and ids in a list_components answer; nil when there is none
@@ -600,7 +610,7 @@ public struct AskConversation: Sendable {
     /// things (`AskLookup`).
     var offeredTools: [AgentJSON] {
         guard web == nil else { return AskTools.webModelTools }
-        let all = AskTools.modelTools(painting: painting, video: video)
+        let all = AskTools.modelTools(painting: painting, video: video) + (holdsIcon ? AskTools.iconModelTools : [])
         guard lookedUp != nil else { return all }
         let allowed = Set(AskLookup.looking + AskLookup.doing)
         return all.filter { allowed.contains($0["function"]?["name"]?.stringValue ?? "") }
@@ -612,7 +622,7 @@ public struct AskConversation: Sendable {
     }
     var doingTools: [String] {
         guard web == nil else { return AskWeb.doing }
-        let all = AskTools.doing(painting: painting, video: video)
+        let all = AskTools.doing(painting: painting, video: video) + (holdsIcon ? AskTools.iconDoing : [])
         return lookedUp == nil ? all : all.filter(AskLookup.doing.contains)
     }
 

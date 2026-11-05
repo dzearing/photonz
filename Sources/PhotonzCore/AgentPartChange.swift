@@ -495,8 +495,11 @@ extension PhotonzDocument {
 
     static func collectColours(_ layer: Layer, into colours: inout [String]) {
         for child in layer.group?.children ?? [] { collectColours(child, into: &colours) }
-        if let fill = layer.path?.fill { colours.append(fill.hex) }
-        if let fill = layer.annotation?.fill { colours.append(fill.hex) }
+        // A shape drawn only in line is that line's colour.
+        if let path = layer.path { colours.append(path.fill?.hex ?? path.colorHex) }
+        if let annotation = layer.annotation {
+            colours.append(annotation.fill?.hex ?? (layer.style.borderWidth > 0 ? layer.style.borderColorHex : annotation.colorHex))
+        }
         if let text = layer.text { colours.append(text.colorHex) }
     }
 
@@ -513,6 +516,8 @@ extension PhotonzDocument {
             if let fill = annotation.fill { annotation.fill = Paint(hex: shift(fill.hex)) }
             annotation.colorHex = shift(annotation.colorHex)
             layer.content = .annotation(annotation)
+            // A box's edge is its Border.
+            if layer.style.borderWidth > 0 { layer.style.borderColorHex = shift(layer.style.borderColorHex) }
         } else if var text = layer.text {
             text.colorHex = shift(text.colorHex)
             layer.content = .text(text)

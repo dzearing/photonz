@@ -1,0 +1,13 @@
+{
+  "group": "icon",
+  "start": {
+    "blank": [
+      512,
+      512
+    ]
+  },
+  "from": "ask-makes-icons-that-are-icons-one-subject-clean: tweaks to an icon Ask made (the user, 2026-11-05)",
+  "make": "make an icon of a balloon",
+  "then": "make the knot smaller",
+  "part": "the knot"
+}

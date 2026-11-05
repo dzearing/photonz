@@ -1018,7 +1018,8 @@ final class AskSession {
         // something is happening to it (`AskIcon.designAsk`).
         var iconDesign: String?
         var iconBreak: String?
-        if AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil), !AskLocalModel.answersAreScripted {
+        if AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil, holdsIcon: AskIcon.holdsIcon(Self.text(of: read))),
+           !AskLocalModel.answersAreScripted {
             let broken = try? await AskLocalModel.chat(AskIconBreak.questionBody(model: model, request: words))
             iconBreak = (broken?["message"]?["content"]?.stringValue).flatMap(AskIconBreak.object(fromAnswer:))
             note("icon: breaks: \(iconBreak ?? "no")")

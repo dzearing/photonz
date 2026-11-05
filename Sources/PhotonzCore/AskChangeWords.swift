@@ -32,6 +32,7 @@ public enum AskChangeWords {
         case "add_component": Kind(verb: "Made", one: "a component", many: "components")
         case "set_layer": Kind(verb: editVerb(step.arguments), one: "a layer", many: "layers")
         case "change_part": Kind(verb: partVerb(step.arguments), one: partName(step.arguments), many: "parts")
+        case "restyle_icon": Kind(verb: "Restyled", one: "the icon", many: "icons")
         case "add_style": Kind(verb: "Saved", one: "a style", many: "styles")
         case "apply_style": Kind(verb: "Restyled", one: "a layer", many: "layers")
         case "set_layout": Kind(verb: "Laid out", one: "a group", many: "groups")

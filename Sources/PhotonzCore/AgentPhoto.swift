@@ -73,6 +73,8 @@ public enum AgentPictureKind: String, Hashable, Sendable {
     public static func remade(_ request: String, after earlier: String?) -> String? {
         guard let earlier = earlier?.trimmingCharacters(in: .whitespacesAndNewlines), !earlier.isEmpty,
               let kind = asked(in: request) else { return nil }
+        // An icon is vector already: "make it outline" after one changes it.
+        if kind == .vector, AskIcon.asked(in: earlier) { return nil }
         let typed = AgentDrawingWords.words(request)
         let kindWords = vectorFirst.union(photoWords).union(paintWords).union(drawWords)
         guard typed.allSatisfy({ againWords.contains($0) || kindWords.contains($0) }) else { return nil }

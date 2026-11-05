@@ -46,6 +46,35 @@ public enum AskIcon {
         return nil
     }
 
+    // MARK: Changing the icon that is there
+
+    /// What the model is told on a picture that holds an icon.
+    static let tweakRules = """
+        - This picture holds an icon. To change the whole icon's look, line weight or colour ("make it outline", \
+        "make it filled", "thicker lines", "thinner", "make it red") call restyle_icon once: it keeps every part. To \
+        change one part the words name, use change_part or set_layer. Never draw the icon again to change it, and \
+        never remove a part unless the words say to.
+        """
+
+    /// Whether `read` shows a picture holding an icon: a square frame of an
+    /// icon's size with something drawn in it.
+    public static func holdsIcon(_ read: String) -> Bool {
+        guard let json = try? AgentJSON.parse(Data(read.utf8)) else { return false }
+        return (json["layers"]?.arrayValue ?? []).contains { layer in
+            guard layer["kind"]?.stringValue == "frame", let width = layer["frame"]?["width"]?.doubleValue,
+                  width == layer["frame"]?["height"]?.doubleValue else { return false }
+            return IconPreviews.isIconSize(CGSize(width: width, height: width)) && !(layer["children"]?.arrayValue ?? []).isEmpty
+        }
+    }
+
+    /// Whether `request` is about an icon already there ("make the icon
+    /// thinner") and not asking for one ("an icon of the sun").
+    public static func meansTheOneHere(_ request: String) -> Bool {
+        let typed = " " + AgentDrawingWords.words(request).joined(separator: " ") + " "
+        guard !typed.contains(" icon of ") else { return false }
+        return [" the icon ", " this icon ", " that icon ", " my icon "].contains { typed.contains($0) }
+    }
+
     // MARK: Designed in words first
 
     /// The most a design may write: it is under a hundred words.
