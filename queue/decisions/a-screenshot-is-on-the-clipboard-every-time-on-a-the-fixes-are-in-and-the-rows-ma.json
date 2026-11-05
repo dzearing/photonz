@@ -1,0 +1,51 @@
+{
+  "id": "a-screenshot-is-on-the-clipboard-every-time-on-a-the-fixes-are-in-and-the-rows-ma",
+  "taskId": "a-screenshot-is-on-the-clipboard-every-time-on-a",
+  "question": "The fixes are in, and the rows marked here are the likeliest cause. How should the last check be done?",
+  "context": "Screenshots missing the clipboard was never reproduced. Four possible causes are fixed on main. Real Chrome pasted 20 of 20. The other apps could not be tested from here, and your other Mac has none of this until a release.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Release it, then check on the other Mac",
+      "summary": "The four fixes go out in the next release. You install it on the other Mac, run the report for ten minutes and bring it back.",
+      "pros": [
+        "Tests the Mac that actually fails",
+        "Needs no new permission on this Mac"
+      ],
+      "cons": [
+        "Publishes a release before the fault is confirmed fixed"
+      ],
+      "mitigation": "Each fix is small, and a failed copy now says so instead of failing silently."
+    },
+    {
+      "id": "b",
+      "label": "Let the loop paste into real apps here",
+      "summary": "You allow this terminal to press keys in other apps, and a runner pastes 20 captures into each app on this Mac, then reports the numbers.",
+      "pros": [
+        "Gives the 20 of 20 numbers for every app"
+      ],
+      "cons": [
+        "Keys get pressed in your apps while it runs",
+        "This Mac has never shown the fault, so a clean result proves little"
+      ],
+      "mitigation": "It would wait until you step away from the Mac."
+    },
+    {
+      "id": "c",
+      "label": "Stop here, no release and no more checks",
+      "summary": "The fixes stay on main and go out whenever the next release does. The task retires without the 20 of 20.",
+      "pros": [
+        "Frees the queue for the balloon and the icon work"
+      ],
+      "cons": [
+        "Nothing confirms the other Mac is fixed"
+      ],
+      "mitigation": "Tell the intake window if it happens again.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-05T16:12:24.066Z",
+  "shot": "2026-11-05-clipboard-card-marked.png"
+}
