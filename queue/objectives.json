@@ -347,7 +347,11 @@
           "title": "Click-through prototyping",
           "note": "Moved to now by the user's ask, 2026-11-05: Preview a page of components first (preview-a-page-of-components-and-use-it-hover-pr); connections between frames later.",
           "stage": "now",
-          "children": []
+          "children": [],
+          "success": [
+            "A person can press Preview on a page of components and hover, press, click and Tab through it: every component shows its own Hover, Pressed, On/Selected and Focused looks, a Disabled one does not respond, and leaving Preview leaves the document unchanged (walked at Next defaults).",
+            "Later: a click on a component can take Preview to another frame, as ui-prototype.html draws."
+          ]
         }
       ],
       "success": [

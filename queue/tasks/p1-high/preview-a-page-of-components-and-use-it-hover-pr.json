@@ -4,12 +4,12 @@
   "goal": "A person who has made a page of components (buttons, switches, fields, tabs, each with looks for its states) has no way to try it: the canvas is always for editing, so they cannot hover a button to see its Hover look or click a switch to see it turn On. Add a Preview mode for the page in front of them, where every component behaves like the real control, using only the looks they made, with nothing to set up.",
   "epic": "ui-prototyping",
   "priority": "p1-high",
-  "seq": 1.5e-8,
+  "seq": 4.5e-7,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:44:52.741Z",
-  "updated": "2026-11-05T14:44:52.859Z",
+  "updated": "2026-11-05T14:45:19.115Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'When we make a component, i'm not sure how to preview it interactively. e.g. i make a page with a bunch of components and want to preview it and hover over things or click on things...is this possible already?' and 2026-11-05: 'what happened to previewing the states of controls' (the intake window had proposed Preview mode and not filed it). Today: components have looks per state (ComponentVersionMatching names them), nothing plays them. Objective ui-prototyping ('Click-through prototyping') was staged later; this is its first step, asked for by the user. Mock reference: docs/design/mocks/pages/ui-prototype.html.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-11-05T14:44:52.858Z",
       "note": "seq 3980 -> 1.5e-8"
+    },
+    {
+      "t": "2026-11-05T14:45:19.114Z",
+      "note": "seq 1.5e-8 -> 4.5e-7"
     }
   ]
 }

@@ -15664,3 +15664,4 @@
 {"t":"2026-11-05T14:43:03.517Z","ev":"task_resequenced","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":10,"to":1e-8}
 {"t":"2026-11-05T14:44:52.745Z","ev":"task_created","id":"preview-a-page-of-components-and-use-it-hover-pr","priority":"p1-high","title":"Preview a page of components and use it: hover, press, toggle and focus show each component's own looks"}
 {"t":"2026-11-05T14:44:52.860Z","ev":"task_resequenced","id":"preview-a-page-of-components-and-use-it-hover-pr","from":3980,"to":1.5e-8}
+{"t":"2026-11-05T14:45:19.116Z","ev":"task_resequenced","id":"preview-a-page-of-components-and-use-it-hover-pr","from":1.5e-8,"to":4.5e-7}
