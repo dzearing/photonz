@@ -9,9 +9,10 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
-  "updated": "2026-11-05T14:49:57.519Z",
+  "updated": "2026-11-05T14:59:10.848Z",
   "deps": [
-    "ask-makes-icons-that-are-icons-one-subject-clean"
+    "ask-makes-icons-that-are-icons-one-subject-clean",
+    "an-agent-can-set-read-and-change-a-layer-s-keys"
   ],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'i tried to create an animated svg of a balloon icon popping ... I'd like to be able to use ask for creating icons and especially animated svgs'. Today Ask's doing tools (AskPlanning.swift) and the MCP tools (AgentTools.swift) have no key or animation tool; the app keys layers (LayerMotion, MotionProperty) and exports animated SVG (SVGMotionExport, animatedSVGExportEnabled). Objective icon-animate: 'Animate SVG properties on the timeline, keyframes like any layer'. Depends on the icon task so the animated icon starts from a real icon.",
@@ -52,6 +53,10 @@
     {
       "t": "2026-11-05T14:49:57.518Z",
       "note": "seq 2.1e-7 -> 30"
+    },
+    {
+      "t": "2026-11-05T14:59:10.847Z",
+      "note": "manager 2026-11-05: the tools on this checklist's first line moved to an-agent-can-set-read-and-change-a-layer-s-keys, which has no wait on the balloon, and this task now also depends on it. The wait on the icon task stays as intake set it. Build what is left here: Ask planning the motion, the tweaks, the eval and the try path."
     }
   ]
 }

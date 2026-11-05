@@ -1,0 +1,142 @@
+{
+ "out": "/tmp/photonz-playtest/mgr-m5",
+ "seed": "manager pass: two overlapping circles, the cloud case",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1280,
+   "height": 1000
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "24",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    792,
+    544
+   ],
+   "to": [
+    804,
+    556
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    798,
+    544
+   ],
+   "to": [
+    810,
+    556
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "click",
+   "at": [
+    794,
+    550
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    808,
+    550
+   ],
+   "modifiers": [
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "snapshot",
+   "name": "1-both"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Layers Menu",
+   "choose": "Union"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "snapshot",
+   "name": "2-union"
+  },
+  {
+   "do": "writeSVG",
+   "name": "3-union",
+   "frame": "Frame"
+  }
+ ]
+}

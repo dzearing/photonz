@@ -1,0 +1,208 @@
+{
+ "out": "/tmp/photonz-playtest/mgr-m2",
+ "seed": "manager pass: the focus workflow on a 24 unit frame",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "24",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "1-frame"
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    792,
+    542
+   ],
+   "to": [
+    804,
+    554
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    796,
+    546
+   ],
+   "to": [
+    808,
+    558
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    792,
+    542
+   ],
+   "to": [
+    804,
+    554
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    796,
+    548
+   ],
+   "to": [
+    808,
+    558
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "snapshot",
+   "name": "2-two-shapes"
+  },
+  {
+   "do": "selectRow",
+   "row": "Ellipse"
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle",
+   "modifiers": [
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panel",
+   "stage": "3-both"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Layers Menu",
+   "choose": "Union"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "togglePathOutline"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "snapshot",
+   "name": "4-union-outline"
+  },
+  {
+   "do": "panel",
+   "stage": "4-union"
+  },
+  {
+   "do": "writeSVG",
+   "name": "5-still"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Motion",
+   "choose": "Rotation"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "6-motion"
+  },
+  {
+   "do": "panel",
+   "stage": "6-motion"
+  },
+  {
+   "do": "writeSVG",
+   "name": "7-animated"
+  },
+  {
+   "do": "action",
+   "action": "exportDialogToWebPage"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "8-export"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  }
+ ]
+}

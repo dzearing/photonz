@@ -1,0 +1,33 @@
+{
+  "id": "an-agent-can-set-read-and-change-a-layer-s-keys",
+  "title": "An agent can set, read and change a layer's keys",
+  "goal": "Ask and outside agents have no way to key a layer, so nothing they make can move. Give them the same keys a person sets on the timeline, so animation work can start now without waiting for a better balloon.",
+  "epic": "icon-animate",
+  "priority": "p1-high",
+  "seq": 76,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-05T14:58:50.343Z",
+  "updated": "2026-11-05T14:59:11.146Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of ask-animates-what-it-makes-an-animated-svg-icon so its wait on the balloon holds only what needs a good icon. The 2026-11-05 digest raised this: the tools for keying layers do not need a good balloon, only animation's last try does. That wait stays exactly as intake set it. Files: AgentTools.swift, AskPlanning.swift, LayerMotion, MotionProperty, KeyMoments.swift, PropertyKeys.swift, SVGMotionExport. Use the keys the video editor uses, since animating-a-picture-is-as-simple-as-setting-a-mo is designing one shared way of keying; if that design changes the model, the tools follow it. No code for a particular subject or animation (Hard rules in queue/bin/runner-prompt.md). Nothing here teaches Ask when to animate: that stays in the task it came from.",
+  "acceptance": [
+    "New agent tools, offered to Ask and over MCP, set keys on a layer's property with times, values and easing, and make a picture timed with a length and a loop; each call is one undo step and schema checked like every tool",
+    "read_document shows a layer's keys, and keys set by a tool appear on the timeline where a person can pick and change them",
+    "An icon keyed through the tools exports as an animated SVG that loops and plays the same in Photonz's own timeline",
+    "The agent coverage check counts the new tools, and the skill's reference lists them",
+    "Try path: through the MCP tools on the probe, key a shape's rotation, play it, Copy SVG. Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:58:50.345Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-05T14:59:11.145Z",
+      "note": "seq 139.6875 -> 76"
+    }
+  ]
+}

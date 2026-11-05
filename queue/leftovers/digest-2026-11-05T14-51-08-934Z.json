@@ -1,0 +1,28 @@
+{
+  "id": "digest-2026-11-05T14-51-08-934Z",
+  "task": null,
+  "kind": "digest",
+  "label": "the daily digest pass",
+  "title": "",
+  "outcome": "ok",
+  "at": "2026-11-05T14:51:08.934Z",
+  "files": [
+    "docs/design/ask.md",
+    "docs/design/references/qwen-image-2-1-measure/README.md",
+    "docs/design/references/qwen-image-2-1-measure/bench.py",
+    "docs/design/references/qwen-image-2-1-measure/beside.sh",
+    "docs/design/references/qwen-image-2-1-measure/combine.py",
+    "docs/design/references/qwen-image-2-1-measure/foot.py",
+    "docs/design/references/qwen-image-2-1-measure/make_edits.py",
+    "docs/design/references/qwen-image-2-1-measure/qwen_server.py",
+    "docs/design/references/qwen-image-2-1-measure/score_edits.py",
+    "docs/design/references/qwen-image-2-1-measure/summarize.py",
+    "docs/design/references/qwen-image-2-1-measure/zbench.py"
+  ],
+  "count": 11,
+  "state": "stashed",
+  "stash": "335e3a5f3782fed37554a377127869d863f51215",
+  "restore": "git stash apply 335e3a5f3782fed37554a377127869d863f51215",
+  "why": "",
+  "handed": null
+}

@@ -1,0 +1,117 @@
+{
+ "out": "/tmp/photonz-playtest/mgr-m7",
+ "seed": "manager pass: grid over a 24 unit frame, and what Copy puts behind a frame",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1280,
+   "height": 1000
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "24",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    792,
+    542
+   ],
+   "to": [
+    806,
+    556
+   ]
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "showGrid"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "1-grid-on"
+  },
+  {
+   "do": "action",
+   "action": "hideGrid"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    810,
+    560
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "clearClipboard"
+  },
+  {
+   "do": "shortcut",
+   "key": "c",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Copy"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "readClipboard",
+   "stage": "2-frame",
+   "svg": true
+  }
+ ]
+}

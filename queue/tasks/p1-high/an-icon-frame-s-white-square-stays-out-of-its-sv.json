@@ -1,0 +1,33 @@
+{
+  "id": "an-icon-frame-s-white-square-stays-out-of-its-sv",
+  "title": "An icon frame's white square stays out of its SVG",
+  "goal": "Draw an icon in an icon frame and both Export and Copy write a white square behind it, so it cannot sit on a coloured page or a dark theme. Nobody drew that square, and the Export sheet offers no way to leave it out.",
+  "epic": "icon-export",
+  "priority": "p1-high",
+  "seq": 74,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-05T14:58:49.976Z",
+  "updated": "2026-11-05T14:59:11.072Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-11-05 on the probe built 00:05 from df457197. queue/manager/shots/2026-11-05-walks/m3.json writeSVG frame Frame with the default background of drop: '<rect x=\"0\" y=\"0\" width=\"24\" height=\"24\" fill=\"#FFFFFF\"/>' sits under the path. m7.json copies the frame and readClipboard svg shows the same rect in a 408 byte public.svg-image. The Export sheet photographed in m2.json (Frame, A web page, SVG) has no Background row. Cause, read not run: SVGExport.backdrop(in:flatImages:) only recognises a flat bottom layer covering the canvas, and exportTarget(frameID:) keeps the frame's surface. The two tasks that left the canvas out (an-icon-exported-as-svg-comes-out-with-nothing-b, an-icon-exported-as-a-picture-can-come-out-with) never covered a frame. Decided here: a new icon frame's default white counts as not drawn, so it drops by default, and a surface the person set is kept unless they say otherwise. The first-class check is objective icon-export: 'nothing behind the icon that was not drawn'. Related, not this task: copying-an-icon-carries-the-white-canvas-the-exp is the picture on the clipboard from a blank canvas. The clip-1 clipPath round the frame goes too if nothing reaches past the frame.",
+  "acceptance": [
+    "An icon drawn in an icon frame at Next defaults exports as SVG with no rectangle behind the drawing, whether it is still or animated, and the file's only shapes are the ones drawn",
+    "Copying that frame puts the same SVG on the clipboard, with no rectangle behind the drawing",
+    "A frame given its own colour on purpose keeps that colour, and the Export sheet's Background row appears for a frame as it does for a canvas",
+    "A screen sized frame exports exactly as it does today",
+    "Try path: New Frame, 24, draw a circle, Export as SVG, open the file in a browser on a dark page. Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:58:49.978Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-05T14:59:11.071Z",
+      "note": "seq 137.5 -> 74"
+    }
+  ]
+}

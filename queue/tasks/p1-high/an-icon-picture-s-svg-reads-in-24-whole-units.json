@@ -1,0 +1,35 @@
+{
+  "id": "an-icon-picture-s-svg-reads-in-24-whole-units",
+  "title": "An icon picture's SVG reads in 24 whole units",
+  "goal": "An icon drawn in a 512 picture exports with long fractions, because 24 units do not divide into 512. A person handing the file to a developer expects a 24 by 24 icon with whole numbers, the way an icon frame already writes it.",
+  "epic": "icon-export",
+  "priority": "p1-high",
+  "seq": 79,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-05T14:58:50.222Z",
+  "updated": "2026-11-05T14:59:11.294Z",
+  "deps": [
+    "a-picture-made-for-an-icon-works-like-an-icon-gu"
+  ],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-11-04-ask-makes-icons-that-are-icons.json: 'The numbers in an icon's SVG are fractions, because a 24 grid does not divide into 512.' Objective icon-export: whole-unit coordinates. An icon frame already writes whole units (m5.json: 'M18 6 C18 9.314 ...'). Decided here: keep the 512 canvas, which is what the user's task named, and let one unit be 512 / 24 in the picture; only the SVG writes in units. App Icon stays 1024 with its own numbers. Waits for the task that marks a document as an icon, since that mark says which pictures write this way.",
+  "acceptance": [
+    "An icon drawn on whole units in a File, New, Image, Icon picture exports as SVG with viewBox 0 0 24 24 and every point on a whole unit, except where a curve's own handles need a fraction",
+    "An icon Ask made exports the same way, and Copy puts that same SVG on the clipboard",
+    "The drawing looks the same at every size as before: a rendered comparison of the 512 canvas and the exported file differs by no visible amount",
+    "PNG export of the same picture still comes out at 512 unless the sheet says otherwise",
+    "Try path: File, New, Image, Icon, draw with the Pen, Export as SVG, read the file. Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:58:50.224Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-05T14:59:11.293Z",
+      "note": "seq 139.375 -> 79"
+    }
+  ]
+}

@@ -15744,3 +15744,18 @@
 {"t":"2026-11-05T14:50:00.981Z","ev":"task_resequenced","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":10,"to":20}
 {"t":"2026-11-05T14:50:01.168Z","ev":"triage","summary":"focus changed to icon-svg during the pass; filed 1, merged 0, dropped 0, moved 5 (icon work p2 to p1), reset 0, groomed 5 (one task narrowed after its chat was removed, 2 goals rewritten, 2 epics fixed, 1 measured bar added); 13 findings folded onto owning tasks; all priorities renumbered; open 89 to 91"}
 {"t":"2026-11-05T14:50:52.443Z","ev":"digest","file":"2026-11-05.md"}
+{"t":"2026-11-05T14:51:08.935Z","ev":"leftovers","id":"digest","task":null,"state":"stashed","count":11,"stash":"335e3a5f3782fed37554a377127869d863f51215"}
+{"t":"2026-11-05T14:58:49.857Z","ev":"task_created","id":"a-picture-made-for-an-icon-works-like-an-icon-gu","priority":"p1-high","title":"A picture made for an icon works like an icon: guides, snapping and real-size previews"}
+{"t":"2026-11-05T14:58:49.980Z","ev":"task_created","id":"an-icon-frame-s-white-square-stays-out-of-its-sv","priority":"p1-high","title":"An icon frame's white square stays out of its SVG"}
+{"t":"2026-11-05T14:58:50.103Z","ev":"task_created","id":"a-24-unit-artboard-rules-itself-into-units","priority":"p1-high","title":"A 24 unit artboard rules itself into units"}
+{"t":"2026-11-05T14:58:50.226Z","ev":"task_created","id":"an-icon-picture-s-svg-reads-in-24-whole-units","priority":"p1-high","title":"An icon picture's SVG reads in 24 whole units"}
+{"t":"2026-11-05T14:58:50.347Z","ev":"task_created","id":"an-agent-can-set-read-and-change-a-layer-s-keys","priority":"p1-high","title":"An agent can set, read and change a layer's keys"}
+{"t":"2026-11-05T14:59:10.773Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-11-05T14:59:10.849Z","ev":"task_note","id":"ask-animates-what-it-makes-an-animated-svg-icon"}
+{"t":"2026-11-05T14:59:10.923Z","ev":"task_note","id":"icon-snapping-reaches-what-the-icon-mock-draws"}
+{"t":"2026-11-05T14:59:10.997Z","ev":"task_resequenced","id":"a-picture-made-for-an-icon-works-like-an-icon-gu","from":135,"to":72}
+{"t":"2026-11-05T14:59:11.073Z","ev":"task_resequenced","id":"an-icon-frame-s-white-square-stays-out-of-its-sv","from":137.5,"to":74}
+{"t":"2026-11-05T14:59:11.147Z","ev":"task_resequenced","id":"an-agent-can-set-read-and-change-a-layer-s-keys","from":139.6875,"to":76}
+{"t":"2026-11-05T14:59:11.221Z","ev":"task_resequenced","id":"a-24-unit-artboard-rules-itself-into-units","from":138.75,"to":78}
+{"t":"2026-11-05T14:59:11.295Z","ev":"task_resequenced","id":"an-icon-picture-s-svg-reads-in-24-whole-units","from":139.375,"to":79}
+{"t":"2026-11-05T15:00:03.481Z","ev":"manager","filed":5,"readyBefore":90,"readyAfter":94,"report":"queue/manager/2026-11-05-0659.md"}

@@ -1,0 +1,127 @@
+{
+ "out": "/tmp/photonz-playtest/mgr-m4",
+ "seed": "manager pass: the Icon picture route, drawing inside the canvas",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 512,
+   "canvasHeight": 512,
+   "width": 1280,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "showIconKeylines"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "modeIcon"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "1-icon-mode"
+  },
+  {
+   "do": "panel",
+   "stage": "1"
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    131,
+    171
+   ],
+   "to": [
+    293,
+    333
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "positionAndSize"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "snapshot",
+   "name": "2-drawn"
+  },
+  {
+   "do": "panel",
+   "stage": "2"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Motion",
+   "choose": "Rotation"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "3-motion"
+  },
+  {
+   "do": "panel",
+   "stage": "3"
+  },
+  {
+   "do": "writeSVG",
+   "name": "4-animated"
+  },
+  {
+   "do": "action",
+   "action": "exportDialogToWebPage"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "5-export"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  }
+ ]
+}

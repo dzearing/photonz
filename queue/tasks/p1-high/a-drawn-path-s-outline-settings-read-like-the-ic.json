@@ -9,13 +9,15 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-08T18:52:37.115Z",
-  "updated": "2026-11-05T14:49:57.904Z",
+  "updated": "2026-11-05T14:59:10.772Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Align row (task a-drawn-path-takes-an-outline-inside-centred-or, 2026-10-08). Mock: docs/design/mocks/pages/icon-draw-wt.html ~line 411 (#secStroke: Width select reading 1.75, Caps seg Butt/Round/Square with Round on, Align select Center). App: Sources/Photonz/ShapePartSettings.swift .stroke slot (thickness slider labelled Thickness) and Sources/Photonz/PathLineStylePickers.swift (Pattern, Ends, Corners picture segments, Align dropdown). Ends is hidden on a closed solid path by design (PathContent.showsLineEnds) while the mock always shows Caps. Thickness and Ends are the words lines and arrows use too, so renaming for paths alone splits the vocabulary: that is a card for the user, not a runner guess. Pattern and Corners go further than the mock and are not differences.",
   "acceptance": [
     "A picked closed path's outline settings are compared side by side with the Stroke section of icon-draw-wt.html, and every difference is fixed, or logged as 'Chose X over Y because Z' where the runner keeps the app's way",
     "Width and Caps (Caps as the words Butt, Round and Square) read the same on a drawn path, a shape, a line and an arrow, and walks that expect Thickness or Ends are updated in the same commit",
+    "Turning the outline on in an icon starts it at an icon's weight, Center aligned with round corners and caps, as the mock's 1.75 round stroke reads, so an exported icon needs no clip path to draw its line; away from icons the outline starts as it does today",
+    "In a 1000 point tall window with a picked path in an icon frame, Width, Caps and Align can all be reached without a scroll inside the Appearance section",
     "A walk at Next defaults photographs the result and an audit sits beside the mock"
   ],
   "log": [
@@ -150,6 +152,10 @@
     {
       "t": "2026-11-05T14:49:57.903Z",
       "note": "seq 210 -> 80"
+    },
+    {
+      "t": "2026-11-05T14:59:10.771Z",
+      "note": "manager 2026-11-05, reproduced with queue/manager/shots/2026-11-05-walks/m3.json: Union in a 24 unit frame, then Outline on, reads Thickness 4 px, Align Inside, Corners Sharp, so a 16 unit shape turns nearly solid (queue/manager/shots/2026-11-05-first-outline-weight-4.png). Its SVG says stroke-width=\"8\" and draws the path three times, with a clip path doing the inside edge, which is why Center matters for Figma and Illustrator. The same picture cuts Appearance off inside its own scroll: Align reads 83 pt and Corners 51 pt below what is on screen, with Columns and Layout open under it on a 24 unit icon. Added both to the checklist because the focus workflow's 1.75 round stroke runs straight through here."
     }
   ],
   "started": "2026-10-08T19:08:27.440Z",

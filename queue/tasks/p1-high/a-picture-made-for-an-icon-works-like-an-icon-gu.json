@@ -1,0 +1,33 @@
+{
+  "id": "a-picture-made-for-an-icon-works-like-an-icon-gu",
+  "title": "A picture made for an icon works like an icon: guides, snapping and real-size previews",
+  "goal": "File, New, Image offers Icon and App Icon, and Ask puts its icons in pictures like these, but what opens is an ordinary picture: no keylines, no snapping to units and no previews at real sizes, and the window says Image. Everything that helps you draw an icon only works inside a frame, which someone starting from the File menu never makes.",
+  "epic": "icon-grid",
+  "priority": "p1-high",
+  "seq": 72,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-05T14:58:49.853Z",
+  "updated": "2026-11-05T14:59:10.996Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-11-05 on the probe built 00:05 from df457197. queue/manager/shots/2026-11-05-walks/m1.json: blank 512 by 512, draw an ellipse, expectIconPreviews [16,24,32,48,64]. Output: 'the icon previews strip is showing nothing ... it is speaking for \"no icon\", and the icon frames in the document are: none'. m4.json adds showIconKeylines and modeIcon: no keyline is drawn (queue/manager/shots/2026-11-05-icon-picture-no-guides.png). The walk used blank at the preset's size; NewCanvasDialog onCreate passes only a size, so the Icon row makes the same document. Cause: IconPreviews.isIconFrame, iconFrameID and CanvasIconKeylines only look at layers where isFrame is true; BlankCanvas.iconPresets (512, 1024) make a Background layer and no frame. Decided here: do NOT judge by size, or every square PNG grows keylines. Mark the document as an icon when the Icon or App Icon row or Ask's icon route makes it (a Codable field with a default, so older files read as not an icon) and have the frame rules answer for that canvas. Do not add a hidden frame: Ask's rule is that the icon is drawn on the canvas itself. FeatureCatalog says every picture starts in Image; this is the one change to that sentence, update its description. Flags next-icon-frames, next-icon-previews, already on at Next defaults. The previews strip's own look is the-icon-previews-strip-reads-as-previews-no-chi and is not part of this.",
+  "acceptance": [
+    "At Next defaults with no flag changed, File, New, Image, Icon opens a picture that shows the keylines, puts points on whole units with the Pen and the shape tools, and shows the previews strip as soon as something is drawn",
+    "The same picture opens with the window's mode chip reading Icon, and so does App Icon and a picture Ask made for an icon",
+    "A square picture that was not made as an icon (a 512 by 512 PNG opened from disk, or a Square canvas) gets none of this and stays in Image mode",
+    "Mirror Across Center and Center on the Artboard work about the middle of the picture, and an outline or a Pen line starts at an icon's weight there as it does in an icon frame",
+    "Try path: File, New, Image, Icon, Create, draw a circle with the Ellipse tool. A walk covers it, and Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:58:49.855Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-05T14:59:10.995Z",
+      "note": "seq 135 -> 72"
+    }
+  ]
+}

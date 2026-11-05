@@ -1,0 +1,33 @@
+{
+  "id": "a-24-unit-artboard-rules-itself-into-units",
+  "title": "A 24 unit artboard rules itself into units",
+  "goal": "The icon drawing mock rules a 24 unit artboard into its units so you can see where a point will land. In the app the frame shows keylines but no units, and turning the Grid on draws lines four units apart that ignore the frame.",
+  "epic": "icon-grid",
+  "priority": "p1-high",
+  "seq": 78,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-05T14:58:50.099Z",
+  "updated": "2026-11-05T14:59:11.220Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "REPRODUCED 2026-11-05: queue/manager/shots/2026-11-05-walks/m7.json, action showGrid on a 24 frame, picture queue/manager/shots/2026-11-05-grid-on-24-unit-frame.png: lines about 218 pixels apart on a frame of about 1310, so 4 units, drawn across the whole canvas. Whole-unit snapping itself works (IconSnap.swift). Mock: docs/design/mocks/pages/icon-draw-wt.html, 'the quiet 24 unit grid' and the Grid & snap group. The grid stays in the View menu: that was settled by the card on 2026-10-20 and the placement contract row for the View menu, so add no control. Objective icon-grid success line 1. The canvas grid's level-of-detail ladder is in UX-PATTERNS D16; the units are the frame's own, not a second grid setting.",
+  "acceptance": [
+    "With the Grid on over a 24 unit icon frame or icon picture, one quiet line falls on every unit inside the artboard, starting from its corner, at any zoom where the lines are at least 6 screen points apart",
+    "MEASURED, and today's window fails it: in a crop of a 24 unit artboard at fit zoom, 23 evenly spaced lines cross it each way (today 5, four units apart)",
+    "The lines sit under the keylines and read quieter than them in light and dark, as the mock draws them, and the grid outside the artboard is unchanged",
+    "Whether the units show without the Grid switched on is decided against icon-draw-wt.html and written in the audit",
+    "Try path: New Frame, 24, View, Show Grid. A walk photographs it beside the mock, and Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-11-05T14:58:50.101Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-11-05T14:59:11.219Z",
+      "note": "seq 138.75 -> 78"
+    }
+  ]
+}

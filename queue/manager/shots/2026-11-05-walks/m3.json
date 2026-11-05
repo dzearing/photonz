@@ -1,0 +1,141 @@
+{
+ "out": "/tmp/photonz-playtest/mgr-m3",
+ "seed": "manager pass: clean two shape union, outline defaults, frame export",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1280,
+   "height": 1000
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "24",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "1-frame"
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "drag",
+   "from": [
+    792,
+    542
+   ],
+   "to": [
+    804,
+    554
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    798,
+    548
+   ],
+   "to": [
+    808,
+    558
+   ],
+   "steps": 6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "selectRow",
+   "row": "Ellipse"
+  },
+  {
+   "do": "selectRow",
+   "row": "Rectangle",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Layers Menu",
+   "choose": "Union"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "snapshot",
+   "name": "2-union"
+  },
+  {
+   "do": "writeSVG",
+   "name": "3-union",
+   "frame": "Frame"
+  },
+  {
+   "do": "action",
+   "action": "togglePathOutline"
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "snapshot",
+   "name": "4-outline"
+  },
+  {
+   "do": "panel",
+   "stage": "4"
+  },
+  {
+   "do": "writeSVG",
+   "name": "5-outline",
+   "frame": "Frame"
+  }
+ ]
+}

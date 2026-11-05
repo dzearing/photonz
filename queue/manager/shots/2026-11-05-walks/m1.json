@@ -1,0 +1,20 @@
+{
+  "out": "/tmp/photonz-playtest/mgr-m1",
+  "seed": "manager pass: what File New Image Icon gives a first-time user",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 512, "canvasHeight": 512, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "snapshot", "name": "1-icon-picture" },
+    { "do": "panel", "stage": "1-empty" },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "drag", "from": [520, 300], "to": [700, 480], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "2-drawn" },
+    { "do": "panel", "stage": "2-drawn" },
+    { "do": "expectIconPreviews", "sides": [16, 24, 32, 48, 64] }
+  ]
+}
