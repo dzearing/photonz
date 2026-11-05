@@ -406,7 +406,17 @@ Either way:
 * **Placed.** Centred, 60 per cent of the canvas's shorter side, or in the box
   asked for, kept on the canvas. An icon has its own rules, below.
 * **An icon** (`AskIcon`, `AskIconCheck`, chosen from the general words for an
-  icon, never a subject) is never painted and traced. When something is happening
+  icon, never a subject) is never painted and traced. A short question comes
+  first: is the one object bursting, breaking, tearing or cracking
+  (`AskIconBreak.question`)? When it is, the model only says what the object is
+  and draws it whole, the way it draws every icon well, and a vector tool tears
+  the outline it drew: the biggest closed shape loses a stretch at its upper
+  right, two teeth cross the gap, three marks fly out, lines thin in proportion
+  and a small closed outline lands solid. The tool reads only shapes and knows
+  nothing of what they are. The model could not write that geometry itself: on
+  "a balloon popping" it scored from 25 to 85 on the same words, and told to tear
+  a clean balloon it lost the balloon. That route lands without being looked at
+  and redrawn. When something else is happening
   to the object, the model first says its design in under a hundred words
   (`AskIcon.designAsk`: the object, what happens to its outline, each part with
   rough coordinates), about ten seconds, because a small model writing an SVG

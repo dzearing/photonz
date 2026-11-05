@@ -433,6 +433,8 @@ public struct AskConversation: Sendable {
     /// light bulb or a magnifying glass where the judge named it popping 3 of
     /// 3; each redraw then lost the tear or the balloon (the eval, 2026-11-05).
     public let landsAsDrawn: Bool
+    /// What the model draws whole lands torn (`AskIconBreak`).
+    private let tearsTheIcon: Bool
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
@@ -459,7 +461,7 @@ public struct AskConversation: Sendable {
                 titles: String = "", paints: Bool = false, brushes: Bool = false,
                 memory: String = "", canvas: Data? = nil, canvasScale: Double = 1,
                 window: Int = AskConversation.contextWindow, web: AskWebPage? = nil,
-                lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil) {
+                lookedUp: AskLookup.Found? = nil, iconDesign: String? = nil, iconBreak: String? = nil) {
         self.request = request
         self.placeable = Self.placeable(in: library)
         self.web = web
@@ -468,7 +470,8 @@ public struct AskConversation: Sendable {
         let painting = brushes && AgentPictureKind.asked(in: request) == .paint
         let icon = Self.takesIconRoute(request, brushes: brushes, web: web != nil)
         self.icon = icon
-        landsAsDrawn = icon && iconDesign != nil
+        landsAsDrawn = icon && (iconDesign != nil || iconBreak != nil)
+        tearsTheIcon = icon && iconBreak != nil
         self.paints = paints && !icon
         self.brushes = brushes
         let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
@@ -491,7 +494,9 @@ public struct AskConversation: Sendable {
             instructions += "\nThe title styles add_title takes, by name (list_titles):\n\(titles)"
         }
         if !memory.isEmpty { instructions += "\n\(memory)" }
-        var asking: AgentJSON = ["role": "user", "content": .string(request)]
+        // Something breaking is drawn whole and torn afterwards (`AskIconBreak`).
+        let said = icon ? iconBreak.map { AskIconBreak.wholeRequest(object: $0, request: request) } ?? request : request
+        var asking: AgentJSON = ["role": "user", "content": .string(said)]
         if let canvas, web != nil {
             instructions += "\nThe picture with the request is the web page as Photonz read it, one pixel a canvas point."
             asking = ["role": "user", "content": .string(request), "images": [.string(canvas.base64EncodedString())]]
@@ -499,7 +504,7 @@ public struct AskConversation: Sendable {
             instructions += canvasScale < 0.995
                 ? "\nThe picture with the request is the canvas as it is now, at \(Int((canvasScale * 100).rounded())) percent of its size: a canvas point is a pixel of it divided by \(String(format: "%.2f", canvasScale))."
                 : "\nThe picture with the request is the canvas as it is now, one pixel a canvas point."
-            asking = ["role": "user", "content": .string(request), "images": [.string(canvas.base64EncodedString())]]
+            asking = ["role": "user", "content": .string(said), "images": [.string(canvas.base64EncodedString())]]
         }
         messages = [
             ["role": "system", "content": .string(instructions)],
@@ -782,6 +787,16 @@ public struct AskConversation: Sendable {
                     if !problems.isEmpty {
                         iconSendBacks += 1
                         refuse(name, arguments, "Not planned: that is not an icon yet. \(problems.joined(separator: " ")) Call add_drawing once more with the whole svg drawn again.")
+                        continue
+                    }
+                }
+                if tearsTheIcon, name == "add_drawing", var object = arguments.objectValue {
+                    if let torn = arguments["svg"]?.stringValue.flatMap(AskIconBreak.applied(to:)) {
+                        object["svg"] = .string(torn)
+                        arguments = .object(object)
+                    } else if iconSendBacks < AskIconCheck.mostSendBacks {
+                        iconSendBacks += 1
+                        refuse(name, arguments, AskIconBreak.needsAnOutline)
                         continue
                     }
                 }

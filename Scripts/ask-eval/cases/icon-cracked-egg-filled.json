@@ -1,0 +1,26 @@
+{
+  "request": "a cracked egg icon, filled",
+  "group": "icon",
+  "from": "Three more breaking objects, so the tear is measured on more than the balloon (2026-11-05)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "egg",
+    "crack",
+    "hatch"
+  ],
+  "reference": {
+    "sf": "oval.portrait.fill",
+    "lucide": "egg",
+    "material": "egg"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

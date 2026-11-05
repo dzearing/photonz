@@ -60,6 +60,9 @@ public struct SVGArtwork: Hashable, Sendable {
     }
 
     public let viewBox: CGRect?
+
+    /// How an id reads as a part's name.
+    static func readableID(_ id: String) -> String { SVGReader.readable(id) }
     public private(set) var parts: [Part]
 
     /// The same drawing with its parts named, bottom first. A name list

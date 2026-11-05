@@ -74,8 +74,14 @@ public enum AskIcon {
     /// What follows the design in the talk. A request that changes an icon
     /// already there has no use for one, so it is not told to draw.
     public static let drawTheDesign = """
-        Draw exactly that design, every part it names, unless this request changes an icon that is already there. A \
-        line of 2 clogs anything small: a part under 4 across is one straight line or a solid shape with \
+        Draw exactly that design, every part it names, unless this request changes an icon that is already there. \
+        \(smallParts)
+        """
+
+    /// How small parts stay clean, for an icon drawn from a design or whole
+    /// to be torn; an icon at rest plans without it.
+    static let smallParts = """
+        A line of 2 clogs anything small: a part under 4 across is one straight line or a solid shape with \
         stroke="none", never a small outline or a wiggle, and a curve bends once.
         """
 

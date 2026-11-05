@@ -1013,12 +1013,20 @@ final class AskSession {
         let canvas = looks ? await Self.canvasPicture(of: document, in: editor, model: model) : page
         if let canvas { note("canvas picture, \(canvas.png.count / 1024) KB at \(Int(canvas.scale * 100))%") }
         let brushes = Experiments.shared.brushEnabled && !editor.documentHasTime
-        // An icon is designed in words before it is drawn (`AskIcon.designAsk`).
+        // Something breaking is drawn whole and torn by a tool (`AskIconBreak`);
+        // any other icon is designed in words before it is drawn when
+        // something is happening to it (`AskIcon.designAsk`).
         var iconDesign: String?
+        var iconBreak: String?
         if AskConversation.takesIconRoute(words, brushes: brushes, web: web != nil), !AskLocalModel.answersAreScripted {
-            let answer = try? await AskLocalModel.chat(AskIcon.designBody(model: model, request: words))
-            iconDesign = (answer?["message"]?["content"]?.stringValue).flatMap(AskIcon.design(fromAnswer:))
-            note("icon: design: \(iconDesign ?? "none")")
+            let broken = try? await AskLocalModel.chat(AskIconBreak.questionBody(model: model, request: words))
+            iconBreak = (broken?["message"]?["content"]?.stringValue).flatMap(AskIconBreak.object(fromAnswer:))
+            note("icon: breaks: \(iconBreak ?? "no")")
+            if iconBreak == nil {
+                let answer = try? await AskLocalModel.chat(AskIcon.designBody(model: model, request: words))
+                iconDesign = (answer?["message"]?["content"]?.stringValue).flatMap(AskIcon.design(fromAnswer:))
+                note("icon: design: \(iconDesign ?? "none")")
+            }
         }
         return AskConversation(request: words, documentRead: Self.text(of: read),
                                components: components.isError ? "" : AskTools.withoutStarters(Self.text(of: components)),
@@ -1028,7 +1036,8 @@ final class AskSession {
                                paints: paints,
                                brushes: brushes,
                                memory: memory, canvas: canvas?.png, canvasScale: canvas?.scale ?? 1,
-                               window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp, iconDesign: iconDesign)
+                               window: AskLocalModel.window, web: web?.page, lookedUp: lookedUp, iconDesign: iconDesign,
+                               iconBreak: iconBreak)
     }
 
     /// The longest side of the canvas picture the planning model is shown:

@@ -1,0 +1,26 @@
+{
+  "request": "an icon of a soap bubble bursting",
+  "group": "icon",
+  "from": "Three more breaking objects, so the tear is measured on more than the balloon (2026-11-05)",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "bubble",
+    "burst",
+    "pop"
+  ],
+  "reference": {
+    "sf": "bubble.circle",
+    "lucide": "circle-dashed",
+    "material": "bubble_chart"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}
