@@ -1,0 +1,28 @@
+{
+  "request": "a trash can icon",
+  "group": "icon",
+  "from": "The user's screenshot of an icon frame beside their picture, 2026-11-04 (queue/audits/2026-11-04-ask-icon-confusion.png)",
+  "start": {
+    "open": "Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png"
+  },
+  "context": "a screenshot of a settings screen",
+  "names": [
+    "trash",
+    "bin",
+    "garbage",
+    "delete",
+    "waste",
+    "rubbish"
+  ],
+  "reference": {
+    "sf": "trash",
+    "lucide": "trash-2",
+    "material": "delete"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true,
+    "ownPicture": true
+  }
+}

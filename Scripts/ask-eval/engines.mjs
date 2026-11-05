@@ -108,6 +108,13 @@ async function collect(dir, before = []) {
     } else {
       const picture = await bridge.tool("render_picture", { document: pick.id, maxSize: 1600 }, 120_000);
       writeFileSync(path.join(dir, "result.png"), Buffer.from(picture.image, "base64"));
+      // An icon's frame on its own, the way it leaves the app: no blank canvas
+      // behind it (`icon-sheet.mjs` shows this one when it is there).
+      const frame = read.layers?.find((l) => l.kind === "frame");
+      if (frame) {
+        const alone = await bridge.tool("render_picture", { document: pick.id, layer: frame.id, maxSize: 1024 }, 120_000).catch(() => null);
+        if (alone?.image) writeFileSync(path.join(dir, "icon.png"), Buffer.from(alone.image, "base64"));
+      }
     }
     writeFileSync(path.join(dir, "read.json"), JSON.stringify(read, null, 2));
     return { read, picture: path.join(dir, "result.png"), document: pick.id, documents: docs.length };

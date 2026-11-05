@@ -418,6 +418,44 @@ function askedOfVideo(read, expect, clips, check) {
   }
 }
 
+/// The drawn parts of an icon: every layer that is not a group or a frame.
+const iconParts = (nodes) => nodes.filter((n) => !n.layer.children);
+/// Names only a tracer or a tool gives: "Pale yellow 7", "Path 3", "Shape".
+const NAMELESS = /^(((pale|light|dark|deep|bright|muted|soft)\s+)?(white|black|gr[ae]y|red|orange|yellow|green|blue|teal|cyan|purple|violet|pink|brown|tan|beige|cream|gold|olive|navy)|path|shape|layer|ellipse|oval|rectangle|rect|circle|drawing)(\s*\d+)?$/i;
+const MOST_ICON_PARTS = 20;
+
+/// What makes an icon an icon, read from the document (`expect.iconCraft`): it
+/// is vector parts on a square canvas of its own, a few of them, each named for
+/// what it is, one stroke weight, and the drawing centred with even padding.
+/// `ownPicture` is a case that started on somebody's work: the icon must not
+/// be in that document at all, so it must be a square picture of its own.
+export function iconCraft(nodes, read, expect = {}) {
+  const parts = iconParts(nodes);
+  if (!parts.length) return { score: 0, note: "no parts" };
+  const checks = [];
+  const check = (good, note) => checks.push({ good: !!good, note });
+  const { width, height } = read.canvas;
+  check(Math.abs(width - height) < 1 && width <= 1024, `canvas ${width} x ${height}`);
+  const flat = parts.filter((n) => n.layer.kind === "image");
+  check(!flat.length, flat.length ? `${flat.length} picture layers in the icon` : "vector parts only");
+  check(parts.length <= MOST_ICON_PARTS, `${parts.length} parts`);
+  const nameless = parts.filter((n) => NAMELESS.test((n.layer.name ?? "").trim()));
+  check(nameless.length === 0, nameless.length ? `${nameless.length} of ${parts.length} parts not named for what they are (${nameless[0].layer.name})` : "every part named");
+  const weights = [...new Set(parts.map((n) => n.layer.path?.strokeWidth ?? n.layer.shape?.strokeWidth ?? 0).filter((w) => w > 0).map((w) => Math.round(w * 10) / 10))];
+  check(weights.length <= 1 || Math.max(...weights) / Math.min(...weights) < 1.15, weights.length ? `stroke weights ${weights.join(", ")}` : "no strokes");
+  // Padding: how far the drawing's box sits from each edge of the canvas.
+  const box = bounds(parts.map((n) => n.frame));
+  const left = box.x, right = width - box.x - box.width, top = box.y, bottom = height - box.y - box.height;
+  const side = Math.min(width, height);
+  const across = Math.abs(left - right) / side, down = Math.abs(top - bottom) / side;
+  check(across <= 0.04 && down <= 0.04, `centred to ${Math.round(Math.max(across, down) * 100)}% of the side`);
+  const margin = Math.min(left, right, top, bottom) / side;
+  check(margin >= 0.03 && margin <= 0.25, `margin ${Math.round(margin * 100)}% of the side`);
+  if (expect.ownPicture) check(read.layerCount <= 60 && !(read.layers ?? []).some((l) => l.kind === "image" && l.name !== "Background"), "the icon is in a picture of its own");
+  const failed = checks.filter((c) => !c.good);
+  return { score: 10 * (checks.length - failed.length) / checks.length, note: (failed.length ? failed : checks).map((c) => c.note).join("; ") };
+}
+
 /// The rule scores for one case: { score, rules: { name: { score, note } } }.
 /// A case that mocks a web page (`expect.web`): what the page could not make
 /// Ask do. Every address loaded is on a host the case allows, words the page
@@ -446,7 +484,8 @@ export function score(read, testCase, engine = null) {
   const mine = made(read);
   if (!mine.length) return { score: 0, rules: { made: { score: 0, note: "nothing was made" } } };
   const nodes = flatten(mine);
-  const drawing = testCase.group === "drawing";
+  const icon = testCase.group === "icon";
+  const drawing = testCase.group === "drawing" || icon;
   const laidOut = testCase.group === "sheet" || testCase.group === "layout";
   const video = testCase.group === "video";
   const clips = video ? timeline(read) : [];
@@ -456,7 +495,8 @@ export function score(read, testCase, engine = null) {
     noOverlap: drawing || video || testCase.group === "web" ? null : noOverlap(nodes),
     typeScale: laidOut ? typeScale(nodes) : null,
     alignment: laidOut ? alignment(nodes) : null,
-    composed: drawing ? composed(nodes, read) : null,
+    composed: testCase.group === "drawing" ? composed(nodes, read) : null,
+    iconCraft: expect.iconCraft ? iconCraft(nodes, read, expect) : null,
     plays: video ? plays(read, clips) : null,
     asked: video ? askedOfVideoRule(read, expect, clips) : asked(nodes, read, expect),
     web: expect.web ? webSafety(read, expect.web, engine) : null,

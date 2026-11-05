@@ -35,7 +35,7 @@ struct NewCanvasDialog: View {
                 .font(.headline)
 
             VStack(spacing: 0) {
-                ForEach(BlankCanvas.presets) { preset in
+                ForEach(BlankCanvas.presets(withIcons: Experiments.shared.iconFramesEnabled)) { preset in
                     row(id: preset.id, title: preset.title,
                         detail: Self.dimensions(preset.size)) {
                         width = Double(preset.size.width)

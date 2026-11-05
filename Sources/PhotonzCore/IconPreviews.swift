@@ -21,11 +21,15 @@ public enum IconPreviews {
     /// chip would be bigger than the canvas it sits on.
     public static let interfaceSides: [CGFloat] = [16, 24, 32, 48, 64]
 
-    /// The biggest square that is an icon rather than a screen. 512 is the app
-    /// icon, which is the largest size anybody draws one at; the smallest
-    /// screen the app offers is a 390 point phone, so the two lists overlap in
-    /// size and only the SHAPE tells them apart — a phone is not square.
+    /// The biggest square that is an icon rather than a screen, bar the app
+    /// icon below; the smallest screen the app offers is a 390 point phone, so
+    /// the two lists overlap in size and only the SHAPE tells them apart — a
+    /// phone is not square.
     public static let largestIconSide: CGFloat = 512
+
+    /// An app icon, drawn at the one size bigger than that. Only exactly this:
+    /// the Square screen is 1000, and it is a screen.
+    public static let appIconSide: CGFloat = 1024
 
     /// The margin around a preview on its chip, on every side. One number, so
     /// five chips of five sizes read as one row of squares.
@@ -37,7 +41,7 @@ public enum IconPreviews {
     /// find the strip gone.
     public static func isIconSize(_ size: CGSize) -> Bool {
         guard size.width >= 1, size.width == size.height else { return false }
-        return size.width <= largestIconSide
+        return size.width <= largestIconSide || size.width == appIconSide
     }
 
     /// The sizes one frame is shown at, smallest first.
@@ -50,7 +54,7 @@ public enum IconPreviews {
     /// drawn AT its size from the shapes, never a small picture blown up.
     /// Twice is where it stops: a 16 shown at 64 is a different icon.
     public static func sides(forFrameSide side: CGFloat) -> [CGFloat] {
-        guard side >= 1, side <= largestIconSide else { return [] }
+        guard side >= 1, side <= largestIconSide || side == appIconSide else { return [] }
         var sides = interfaceSides.filter { $0 <= side * 2 }
         if side <= (interfaceSides.last ?? 0), !sides.contains(side) { sides.append(side) }
         return sides.sorted()

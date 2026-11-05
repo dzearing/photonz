@@ -1,0 +1,26 @@
+{
+  "request": "a rocket app icon",
+  "group": "icon",
+  "from": "The user's own words and the task's list, 2026-11-04",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "rocket",
+    "spaceship",
+    "spacecraft"
+  ],
+  "reference": {
+    "sf": "airplane.departure",
+    "lucide": "rocket",
+    "material": "rocket_launch"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

@@ -62,6 +62,12 @@ enum AgentDrawingWork {
     // MARK: A new picture
 
     private static func newPicture(_ size: CGSize) async throws -> Answer {
+        let made = try await openPicture(size)
+        return .json(AgentWork.listing(made, front: AgentDocuments.front === made))
+    }
+
+    /// A new blank picture in its own window, and its editor.
+    static func openPicture(_ size: CGSize) async throws -> EditorState {
         guard let coordinator = AgentWork.coordinator else {
             throw Failure("Photonz is still starting up. Try again in a moment.")
         }
@@ -71,7 +77,7 @@ enum AgentDrawingWork {
         let deadline = Date().addingTimeInterval(AgentWork.openPatienceSeconds)
         while Date() < deadline {
             if let made = AgentDocuments.open.first(where: { !before.contains($0.agentID ?? "") && $0.document != nil }) {
-                return .json(AgentWork.listing(made, front: AgentDocuments.front === made))
+                return made
             }
             try await Task.sleep(for: .milliseconds(100))
         }
@@ -125,13 +131,27 @@ enum AgentDrawingWork {
         let from: String
         let parts: Int
         let canUndo: Bool
+        /// The new picture an icon opened in, when it opened one: every call
+        /// after this one names it to work on the icon.
+        var document: String?
     }
 
     /// A thing drawn in one go: painted for the request by the picture model
     /// and traced when it is running, else the agent's own SVG, as a named
     /// group (an icon frame for an icon) of layers a person can edit, picked,
     /// as one undo step. Nothing is looked up: there is no stored drawing.
-    private static func addDrawing(_ call: AgentDrawingCall, to editor: EditorState) async throws -> Answer {
+    private static func addDrawing(_ call: AgentDrawingCall, to asked: EditorState) async throws -> Answer {
+        // An icon is the agent's own shapes, never painted and traced, and it
+        // never lands in a document it would have to grow.
+        var editor = asked
+        var opened: String?
+        if call.icon {
+            guard call.svg != nil else { throw Failure(AgentDrawingCall.needsIconSVG(call.subject)) }
+            if AgentDrawingPlacement.iconPlace(blank: isBlank(editor), box: call.frame) == .newPicture {
+                editor = try await openPicture(CGSize(width: call.side, height: call.side))
+                opened = editor.agentID
+            }
+        }
         let document = try AgentWork.document(of: editor)
         let drawing: SVGArtwork
         let from: String
@@ -156,23 +176,24 @@ enum AgentDrawingWork {
             throw Failure(AgentDrawingCall.needsSVG(call.subject))
         }
         var made: UUID?
-        editor.asOneUndoStep {
+        let target = editor
+        target.asOneUndoStep {
             if call.icon {
-                let blank = isBlank(document, in: editor)
-                editor.perform { made = $0.addDrawing(drawing, named: call.layerName, icon: true, box: call.frame, blank: blank) }
+                let blank = isBlank(target)
+                target.perform { made = $0.addDrawing(drawing, named: call.layerName, icon: true, side: call.side, box: call.frame, blank: blank) }
             } else {
                 let group = drawing.group(named: call.layerName,
                                           fitting: fitted ?? AgentDrawingPlacement.box(call.frame, on: document.canvasSize))
-                editor.addDrawnLayer(group, remembering: false)
+                target.addDrawnLayer(group, remembering: false)
                 made = group.id
             }
-            if let made { editor.selectLayer(made) }
+            if let made { target.selectLayer(made) }
         }
-        guard let made, let layer = editor.document?.layer(id: made) else {
-            throw Failure("Photonz could not add that drawing to \(AgentWork.title(of: editor)).")
+        guard let made, let layer = target.document?.layer(id: made) else {
+            throw Failure("Photonz could not add that drawing to \(AgentWork.title(of: target)).")
         }
         return .json(DrawnDrawing(layer: made.uuidString, name: layer.name, frame: Box(AgentDrawing.box(of: layer)),
-                                  from: from, parts: drawing.parts.count, canUndo: editor.canUndo))
+                                  from: from, parts: drawing.parts.count, canUndo: target.canUndo, document: opened))
     }
 
     struct MadePhoto: Encodable {
@@ -216,8 +237,9 @@ enum AgentDrawingWork {
     /// Whether the picture holds nothing anybody made: no layers, or only a
     /// locked background of one flat colour, which is what a new blank
     /// picture is. A screenshot's background is not flat, so it never counts.
-    private static func isBlank(_ document: PhotonzDocument, in editor: EditorState) -> Bool {
-        document.layers.allSatisfy { layer in
+    static func isBlank(_ editor: EditorState) -> Bool {
+        guard let document = editor.document, !editor.documentHasTime else { return false }
+        return document.layers.allSatisfy { layer in
             guard layer.isLocked, let ref = layer.imageRef, let image = editor.store.image(for: ref) else { return false }
             return isFlat(image)
         }

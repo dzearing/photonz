@@ -422,6 +422,11 @@ public struct AskConversation: Sendable {
     private let brushes: Bool
     /// This request is a painting and the Brush is there to paint it.
     private let painting: Bool
+    /// This request is for an icon (`AskIcon`): the model draws it itself and
+    /// nothing is painted, whatever the picture model could do.
+    private let icon: Bool
+    /// How many times this request's icon went back to the model.
+    private var iconSendBacks = 0
     /// The document has a timeline, or does not say: the video tools are
     /// offered. A picture is not shown them (`AskTools.videoOnly`).
     private let video: Bool
@@ -454,20 +459,23 @@ public struct AskConversation: Sendable {
         self.web = web
         self.lookedUp = web == nil ? lookedUp : nil
         self.window = window
-        self.paints = paints
+        let painting = brushes && AgentPictureKind.asked(in: request) == .paint
+        let icon = web == nil && !painting && AskIcon.asked(in: request)
+        self.icon = icon
+        self.paints = paints && !icon
         self.brushes = brushes
         let parsed = try? AgentJSON.parse(Data(documentRead.utf8))
         video = parsed?["kind"]?.stringValue != "picture"
         let size = parsed?["canvas"]
         canvasWidth = size?["width"]?.doubleValue ?? 0
         canvasHeight = size?["height"]?.doubleValue ?? 0
-        let painting = brushes && AgentPictureKind.asked(in: request) == .paint
         self.painting = painting
         // Sized to fit: a traced drawing of hundreds of paths is said in short.
         let described = AskDocumentDigest.fitted(documentRead)
         namesInShort = AskDocumentDigest.namesInShort(described)
         var instructions = web.map { Self.webInstructions(documentRead: described, page: $0) }
-            ?? Self.instructions(documentRead: described, paints: paints, painting: painting, video: video)
+            ?? Self.instructions(documentRead: described, paints: paints && !icon, painting: painting, video: video,
+                                 icon: icon, iconLook: AskIcon.documentLook(documentRead))
         if web == nil, AskDocumentDigest.saysInShort(described) { instructions += "\n\(Self.inShortRules)" }
         if web == nil, let lookedUp { instructions += "\n\(AskLookup.rules)\n\(lookedUp.listing)" }
         if !components.isEmpty { instructions += "\nThe Library's components (list_components):\n\(components)" }
@@ -744,11 +752,21 @@ public struct AskConversation: Sendable {
                     if let line = routed.note { note = line }
                     step = AskStep(tool: name, arguments: arguments)
                 }
+                if icon, name == "add_drawing" { arguments = Self.asIcon(arguments, request: request) }
                 arguments = name == "add_drawing" ? Self.withStyleWords(arguments, from: request) : arguments
                 if name == "add_drawing", let problem = drawingProblem(arguments) {
                     brokenCalls += 1
                     refuse(name, arguments, "Not planned. \(problem)")
                     continue
+                }
+                if icon, name == "add_drawing", iconSendBacks < AskIconCheck.mostSendBacks,
+                   case .success(let art)? = arguments["svg"]?.stringValue.map({ SVGArtwork.parse($0) }) {
+                    let problems = AskIconCheck.problems(art, look: AskIcon.look(in: request), appIcon: AskIcon.isAppIcon(request))
+                    if !problems.isEmpty {
+                        iconSendBacks += 1
+                        refuse(name, arguments, "Not planned: that is not an icon yet. \(problems.joined(separator: " ")) Call add_drawing once more with the whole svg drawn again.")
+                        continue
+                    }
                 }
                 if name == "add_drawing" {
                     var drawing = arguments
@@ -1016,6 +1034,22 @@ public struct AskConversation: Sendable {
         }
     }
 
+    /// An add_drawing call made as the icon the person asked for, whether or
+    /// not the model said so: a small model called a balloon icon a drawing
+    /// and it landed on the whole canvas (the eval, 2026-11-04).
+    static func asIcon(_ arguments: AgentJSON, request: String) -> AgentJSON {
+        guard var object = arguments.objectValue else { return arguments }
+        object["icon"] = true
+        object["side"] = .number(Double(AskIcon.side(for: request)))
+        // An icon is one plain thing: statements about it only send a good
+        // one back (a gear refused for not showing "It is a gear").
+        object["plan"] = nil
+        if let look = AskIcon.look(in: request), object["style"]?.stringValue?.isEmpty ?? true {
+            object["style"] = .string(look.rawValue)
+        }
+        return .object(object)
+    }
+
     /// Why an add_drawing call cannot draw, or nil when it can: with no
     /// picture model to paint it, the drawing is the model's own SVG, and that
     /// SVG has to read.
@@ -1062,7 +1096,7 @@ public struct AskConversation: Sendable {
         steps = []
         rounds = 0
         messages.append(["role": "user", "content": .string(AskDrawingCheck.revisionNote(subject: subject, seen: seen, paints: paints,
-                                                                                       unmet: unmet))])
+                                                                                       unmet: unmet, icon: icon && unmet.isEmpty))])
     }
 
     /// The drawing already planned that this one would land on top of: both
@@ -1324,8 +1358,10 @@ public struct AskConversation: Sendable {
     }
 
     /// What the model is told before the person's request.
-    static func instructions(documentRead: String, paints: Bool = false, painting: Bool = false, video: Bool = true) -> String {
-        let drawingRules = painting ? Self.brushRules : paints ? Self.paintingRules : Self.drawingRules
+    static func instructions(documentRead: String, paints: Bool = false, painting: Bool = false, video: Bool = true,
+                             icon: Bool = false, iconLook: String? = nil) -> String {
+        let iconRules = Self.iconRules + (iconLook.map { "\n- " + $0 } ?? "")
+        let drawingRules = icon ? iconRules : painting ? Self.brushRules : paints ? Self.paintingRules : Self.drawingRules
         return """
         You are Ask, the helper inside Photonz, a Mac picture and video editor. The person typed \
         a request about the document in front of them. Turn it into a plan of tool calls on that document.
@@ -1411,6 +1447,35 @@ public struct AskConversation: Sendable {
         branch or a rope. No words, no outlines around shapes.
         - After the sketch is painted you may add a few small paint_stroke strokes of detail or light (medium, \
         color, settings.size, and path: x,y pairs with spaces, such as 40,60 300,52), then finish.
+        """
+
+    /// How to make an icon (`AskIcon`): the craft of icon design, which holds
+    /// for any subject. What the subject looks like is the model's own
+    /// knowledge; nothing here names one.
+    static let iconRules = """
+        - This request is for an icon. Draw it yourself: call add_drawing once with subject, icon true, style \
+        set to the look named if any, and svg: your own icon as one complete SVG, the way the icons in SF Symbols, \
+        Material Symbols and Lucide are drawn. It lands as real shape and path layers. Send no frame unless the \
+        person says where in this picture it goes. Never add_photo. Change an icon that is already there with the \
+        editing tools instead.
+        - The grid: <svg viewBox="0 0 24 24">, the drawing about 20 across, centred. Whole or half numbers. Use \
+        rect, circle, line and short paths with arcs, as an icon designer does.
+        - One subject: the one object the request names, reduced to the simplest silhouette that still says what it \
+        is, in 2 to 8 shapes. No person, no hand, no ground, no scene, no shadow, no words, no backdrop unless asked. \
+        Draw its true outline, the shape only this object has, never a plain circle standing in for it. An action or \
+        a change of state happens to the object itself: break its outline where it happens, leave a gap, take a piece \
+        away, tilt or open it, so it no longer looks whole and at rest. Then at most four small marks (short lines, \
+        fragments or an arrow) around that place, a gap of 2 away, never touching the object: marks stuck on a whole \
+        shape read as a sun or a target.
+        - The look. Outline, or when no look is named: fill="none" stroke="#1D1D1F" stroke-width="2" \
+        stroke-linecap="round" stroke-linejoin="round" on the svg, every line that one weight. Filled: solid shapes \
+        with fill="#1D1D1F" and no stroke, details cut out with gaps of 2 or fill-rule="evenodd". Duotone: the big \
+        shapes in a light tint (#B9C4FF), the details on top in a dark tone of the same colour (#2F49D1), no third colour.
+        - An app icon is different: viewBox="0 0 1024 1024", first a rect id="tile" filling it with rx="228" and a \
+        rich colour or a linear gradient, then the one subject on it, big and simple, in white or a light tint, about \
+        60 per cent of the tile, in solid shapes. No thin lines.
+        - It must read at 16 px: nothing thinner than 1.5, no gap under 1.5, no detail under 2 on the 24 grid. Every \
+        shape has an id naming the part it is (id="lid", id="handle"), never the kind of shape.
         """
 
     /// How to draw when there is no picture model: the model's own svg.
@@ -1695,8 +1760,14 @@ public enum AskDrawingCheck {
     /// or a place, so asking whether "Bluebird" is "a bird on a branch
     /// singing" got no and threw away a scene that showed exactly that. The
     /// pose and the setting are the plan check's (`planBody`).
-    public static func judgeBody(model: String, subject: String, seen: String) -> AgentJSON {
-        let question = """
+    public static func judgeBody(model: String, subject: String, seen: String, icon: Bool = false) -> AgentJSON {
+        // An icon stands for an idea through a familiar object: a search icon
+        // IS a magnifying glass, so the two names need not match.
+        let question = icon ? """
+        An icon was asked for: "\(subject)". Someone shown it, without being told what it was, named it in a few \
+        words: "\(seen)". Icons stand for an idea through a familiar object, so judge only this: could what they \
+        named stand for what was asked, as it would on a button or in a menu? Answer only yes or no.
+        """ : """
         A drawing was asked to show: "\(subject)". Someone shown it, without being told what it was, named it in a \
         few words: "\(seen)". A name that short leaves out any pose, action, mood or setting, so judge only the \
         kind of thing: is what they named the main thing asked for, or a kind of it? Answer only yes or no.
@@ -1711,7 +1782,17 @@ public enum AskDrawingCheck {
         AskConversation.withoutThinking(answer).trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("yes")
     }
 
-    static func revisionNote(subject: String, seen: String, paints: Bool = false, unmet: [String] = []) -> String {
+    static func revisionNote(subject: String, seen: String, paints: Bool = false, unmet: [String] = [],
+                             icon: Bool = false) -> String {
+        if icon {
+            return """
+            Someone who could not see this request looked at the icon and said it shows: "\(seen)". It has to stand \
+            for \(subject) at a glance, and it was taken back. Do not send the same drawing again: call add_drawing \
+            with subject "\(subject)" and a new svg whose silhouette is plainly different from \(seen), keeping the \
+            icon's look. Say with its outline what only \(subject) has, and if something is happening, show it \
+            happening to the object.
+            """
+        }
         if !unmet.isEmpty {
             let listed = unmet.map { "\"\($0)\"" }.joined(separator: ", ")
             return """

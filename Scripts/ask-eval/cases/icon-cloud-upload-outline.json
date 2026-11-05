@@ -1,0 +1,25 @@
+{
+  "request": "an outline icon for uploading to the cloud",
+  "group": "icon",
+  "from": "The task ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "cloud",
+    "upload"
+  ],
+  "reference": {
+    "sf": "icloud.and.arrow.up",
+    "lucide": "cloud-upload",
+    "material": "cloud_upload"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

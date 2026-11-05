@@ -404,9 +404,21 @@ Either way:
   line art, silhouette, watercolor, flat... words for a look, never a subject);
   a look the model guessed that the person never said is taken off.
 * **Placed.** Centred, 60 per cent of the canvas's shorter side, or in the box
-  asked for, kept on the canvas. An icon is a 512 point icon frame with the
-  drawing on its live area (the keylines); on a blank picture (nothing but its
-  flat background) the picture becomes that frame.
+  asked for, kept on the canvas. An icon has its own rules, below.
+* **An icon** (`AskIcon`, `AskIconCheck`, chosen from the general words for an
+  icon, never a subject) is never painted and traced. The model draws it as one
+  SVG of a few clean shapes on a 24 grid, which lands as real shape and path
+  layers named for their parts, fitted to the icon frame's live area. The SVG is
+  checked before it lands (parts, ids, one line weight, nothing lost at 16 px,
+  the look asked for) and sent back twice at most with what to change. It goes
+  where it cannot disturb anything (`AgentDrawingPlacement.iconPlace`): a blank
+  picture becomes the icon, a square canvas holding a frame with no surface of
+  its own (512, or 1024 for an app icon); a box the request named holds it in
+  place; anything else opens a new picture in its own window, and the row says
+  so ("Made a new icon: Balloon"). The document is never grown and nothing is
+  put beside the person's work. Each try lands in that new picture, so taking
+  one back opens no second window, and a request that ends with nothing closes
+  it.
 * **Looked at before it hands back** (`AskDrawingCheck`), every drawing, scenes
   included. The drawing is rendered and shown, with no hint of the request, to
   a model on this Mac that can see: the planning model itself when it can
@@ -552,8 +564,9 @@ tool (`AgentPictureKind`, `Sources/PhotonzCore/AgentPhoto.swift`):
   needs. It is painted at the box's aspect at about a million pixels, every
   side a multiple of 16 (`/photo` in `Scripts/picture-model/server.py`).
 * **Vector layers** ("vector art", "draw", "illustration", "icon", "logo",
-  "line art"): `add_drawing`, painted and traced as before. An icon or vector
-  word wins over a photo word ("a photo icon" is an icon).
+  "line art"): `add_drawing`, painted and traced as before, except an icon, which
+  the model draws itself. An icon or vector word wins over a photo word ("a photo
+  icon" is an icon).
 * **A painting** ("paint", "painting", "brush"): painted with the Brush,
   stroke by stroke (since 2026-10-31, `docs/design/brushes.md` decision 8).
   Only for a painting is the model shown `list_brushes` and `paint_stroke` and

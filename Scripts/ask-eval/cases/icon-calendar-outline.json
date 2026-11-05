@@ -1,0 +1,26 @@
+{
+  "request": "a calendar icon, outline style",
+  "group": "icon",
+  "from": "The task ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "calendar",
+    "date",
+    "schedule"
+  ],
+  "reference": {
+    "sf": "calendar",
+    "lucide": "calendar",
+    "material": "calendar_month"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

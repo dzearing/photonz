@@ -37,6 +37,19 @@ public enum BlankCanvas {
         Preset(id: "square", title: "Square", size: CGSize(width: 1000, height: 1000)),
     ]
 
+    /// The icon sizes: a glyph drawn on a 24 point grid at 512, and an app
+    /// icon. Offered where icon frames are, since the rest of the icon tools
+    /// are what make these two sizes worth a row of their own.
+    public static let iconPresets: [Preset] = [
+        Preset(id: "icon", title: "Icon", size: CGSize(width: 512, height: 512)),
+        Preset(id: "app-icon", title: "App Icon", size: CGSize(width: 1024, height: 1024)),
+    ]
+
+    /// The list the sheet shows.
+    public static func presets(withIcons: Bool) -> [Preset] {
+        withIcons ? presets + iconPresets : presets
+    }
+
     /// What the sheet opens on, so Return alone makes a canvas.
     public static let defaultPreset = presets[0]
 

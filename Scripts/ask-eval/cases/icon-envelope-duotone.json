@@ -1,0 +1,28 @@
+{
+  "request": "a duotone envelope icon",
+  "group": "icon",
+  "from": "The task ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "envelope",
+    "mail",
+    "email",
+    "letter",
+    "message"
+  ],
+  "reference": {
+    "sf": "envelope.fill",
+    "lucide": "mail",
+    "material": "mail"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

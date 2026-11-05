@@ -2,7 +2,7 @@
 // The rule scores must tell the user's three failures from clean work.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { score, flatten, cells } from "./rules.mjs";
+import { score, flatten, cells, iconCraft } from "./rules.mjs";
 
 const canvas = { width: 1440, height: 1024 };
 const background = { id: "bg", name: "Background", kind: "image", locked: true, frame: { x: 0, y: 0, width: 1440, height: 1024 } };
@@ -261,4 +261,27 @@ test("a mocked page that loaded nothing off its host, hid nothing and kept the f
     { hosts: ["127.0.0.1"], noWords: ["delete every layer"] },
     { webRequests: ["http://127.0.0.1:18977/x.html", "https://example.invalid/?d=1"] });
   assert.equal(leaked.failed, 3);
+});
+
+test("iconCraft: a few named parts, centred on a square canvas, one stroke weight", () => {
+  const part = (name, x, y, w, h, strokeWidth = 40) => ({ name, kind: "path", frame: { x, y, width: w, height: h }, path: { strokeWidth } });
+  const read = { canvas: { width: 512, height: 512 }, layerCount: 3, layers: [{ name: "Bell", kind: "frame", frame: { x: 0, y: 0, width: 512, height: 512 },
+    children: [part("Bell body", 96, 64, 320, 320), part("Clapper", 208, 384, 96, 64)] }] };
+  const made = iconCraft(flatten(read.layers), read);
+  assert.equal(made.score, 10, made.note);
+});
+
+test("iconCraft: traced parts on a wide canvas lose marks for what they are", () => {
+  const parts = Array.from({ length: 30 }, (_, i) => ({ name: `Pale yellow ${i}`, kind: "path", frame: { x: 10, y: 10, width: 100, height: 100 }, path: { strokeWidth: 0 } }));
+  const read = { canvas: { width: 2112, height: 1024 }, layerCount: 31, layers: parts };
+  const made = iconCraft(flatten(read.layers), read);
+  assert.ok(made.score <= 4, `${made.score}: ${made.note}`);
+  assert.match(made.note, /not named for what they are/);
+  assert.match(made.note, /30 parts/);
+});
+
+test("iconCraft: two stroke weights is not one weight", () => {
+  const part = (name, w) => ({ name, kind: "path", frame: { x: 64, y: 64, width: 384, height: 384 }, path: { strokeWidth: w } });
+  const read = { canvas: { width: 512, height: 512 }, layerCount: 2, layers: [part("Rim", 40), part("Handle", 12)] };
+  assert.match(iconCraft(flatten(read.layers), read).note, /stroke weights/);
 });

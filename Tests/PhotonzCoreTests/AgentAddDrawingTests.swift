@@ -92,17 +92,4 @@ struct AgentAddDrawingTests {
         #expect(document.layers.first?.frame == CGRect(x: 0, y: 0, width: 512, height: 512))
         #expect(document.layer(id: id)?.frame == CGRect(x: 0, y: 0, width: 512, height: 512))
     }
-
-    @Test("An icon beside other work is a new icon frame next to it, nothing moved")
-    func iconBesideWork() throws {
-        var document = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600))
-        let drawing = try SVGArtwork.parse(Self.svg).get()
-        let first = document.addDrawing(drawing, named: "Sun", icon: false, box: nil)
-        let before = document.layer(id: first)?.frame
-        let id = document.addDrawing(drawing, named: "Smiley face", icon: true, box: nil)
-        #expect(document.layer(id: first)?.frame == before)
-        let frame = try #require(document.layer(id: id))
-        #expect(frame.isFrame && frame.frame.size == CGSize(width: 512, height: 512))
-        #expect(document.canvasSize.width >= frame.frame.maxX && document.canvasSize.height >= frame.frame.maxY)
-    }
 }

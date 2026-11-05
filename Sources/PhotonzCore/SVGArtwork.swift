@@ -54,6 +54,9 @@ public struct SVGArtwork: Hashable, Sendable {
         /// The named groups it sits in, outermost first: only read when the
         /// drawing is parsed keeping its groups.
         public var groups: [String] = []
+        /// How its lines end and turn; nil where the SVG does not say.
+        public var lineEnd: PathLineEnd?
+        public var lineCorner: PathLineCorner?
     }
 
     public let viewBox: CGRect?
@@ -177,7 +180,10 @@ public struct SVGArtwork: Hashable, Sendable {
                                           paint: Paint(hex: ink), strokeWidth: strokeWidth,
                                           fill: outline.closed ? (part.fillPaint ?? part.fill.map { Paint(hex: $0) }) : nil,
                                           fillRule: outline.evenOdd ? .evenOdd : .nonZero)
-                layer = PathBuilder.layer(content, at: content.bounds.origin, name: partName)
+                var drawn = content
+                if let end = part.lineEnd { drawn.lineEnd = end }
+                if let corner = part.lineCorner { drawn.lineCorner = corner }
+                layer = PathBuilder.layer(drawn, at: drawn.bounds.origin, name: partName)
             }
             if part.opacity < 1 { layer.style.opacity = max(0, part.opacity) }
             return layer
@@ -251,7 +257,7 @@ public struct SVGArtwork: Hashable, Sendable {
         let margin = IconKeylines.margin(forSide: side)
         let live = CGRect(x: margin, y: margin, width: side - 2 * margin, height: side - 2 * margin)
         return Layer.frameLayer(name: name, origin: origin, size: CGSize(width: side, height: side),
-                                children: layers(named: name, fitting: live))
+                                children: layers(named: name, fitting: live), backgroundHex: nil)
     }
 }
 
@@ -319,6 +325,8 @@ private struct SVGReader {
         var groupName: String?
         var fillPaint: Paint?
         var groups: [String] = []
+        var lineEnd: PathLineEnd?
+        var lineCorner: PathLineCorner?
     }
 
     mutating func read() {
@@ -434,6 +442,12 @@ private struct SVGReader {
         if let o = value("fill-opacity").flatMap(SVGNumbers.length) { state.fillOpacity = o }
         if let o = value("stroke-opacity").flatMap(SVGNumbers.length) { state.strokeOpacity = o }
         if let rule = value("fill-rule") { state.evenOdd = rule == "evenodd" }
+        if let end = value("stroke-linecap").flatMap({ word in PathLineEnd.allCases.first { $0.svgName == word } }) {
+            state.lineEnd = end
+        }
+        if let corner = value("stroke-linejoin").flatMap({ word in PathLineCorner.allCases.first { $0.svgName == word } }) {
+            state.lineCorner = corner
+        }
         if let transform = node.attributes["transform"] {
             state.transform = SVGTransform.parse(transform).concatenating(state.transform)
         }
@@ -551,6 +565,8 @@ private struct SVGReader {
             for index in before..<parts.count {
                 if parts[index].fill != nil { parts[index].fillPaint = paint }
                 parts[index].groups = state.groups
+                parts[index].lineEnd = state.lineEnd
+                parts[index].lineCorner = state.lineCorner
             }
         }
         var name = id

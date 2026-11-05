@@ -1,0 +1,28 @@
+{
+  "request": "a search icon",
+  "group": "icon",
+  "from": "The task ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "search",
+    "magnifying glass",
+    "magnifier",
+    "loupe",
+    "magnify"
+  ],
+  "reference": {
+    "sf": "magnifyingglass",
+    "lucide": "search",
+    "material": "search"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

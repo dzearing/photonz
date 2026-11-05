@@ -1,0 +1,25 @@
+{
+  "request": "a camera icon, filled",
+  "group": "icon",
+  "from": "The task ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "camera",
+    "photo"
+  ],
+  "reference": {
+    "sf": "camera.fill",
+    "lucide": "camera",
+    "material": "photo_camera"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

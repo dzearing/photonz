@@ -155,6 +155,21 @@ again), and is scored from what plays, never the document alone:
   no blind naming. The score is 4 x rules + 6 x judge, scaled by
   didWhatWasAsked like everything else.
 
+## Icon cases
+
+An `icon` case (since 2026-11-04) is a request for an icon. It is scored like a
+drawing, with `expect.iconCraft` in place of `composed` (`rules.mjs`,
+`iconCraft`): a square canvas of its own, vector parts only, 20 parts at most,
+each named for what it is, one stroke weight, centred with even padding.
+`ownPicture` is a case started on somebody's work: the icon must not be in that
+document. Its `reference` names how SF Symbols, Lucide and Material Symbols draw
+something comparable, and the judge reads a sheet (`icon-sheet.swift`), not the
+bare picture: the icon large, at 64, 24 and 16 pixels on light and on dark, and
+those references, with one more line, `readsAsIcon` (`rubric-icon.md`, kept out
+of the rubric id so nothing else stops comparing). SF Symbols are drawn from the
+Mac; the other two are fetched once into `.ask-eval/references/` and only ever
+reach the judge. `lines <run>` prints the line's mean under `icon`.
+
 ## The held-out set
 
 `held-out/` is 45 requests a runner never climbs on (2026-10-20, after Ask

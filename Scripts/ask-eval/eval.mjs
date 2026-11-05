@@ -24,6 +24,7 @@ import { judgePicture, nameBlind, JUDGE_MODEL, RUBRIC_ID, run } from "./judge.mj
 import { repo, runAsk, runSkill, quitProbe, SKILL_MODEL } from "./engines.mjs";
 import { combine } from "./scoring.mjs";
 import { tally, describe } from "./lookups.mjs";
+import { iconSheet } from "./icon-sheet.mjs";
 
 const here = path.join(repo, "Scripts/ask-eval");
 const runsDir = path.join(repo, ".ask-eval/runs");
@@ -59,9 +60,13 @@ const mean = (values) => (values.length ? Math.round(values.reduce((s, v) => s +
 async function scoreCase(testCase, dir, got, judgeRuns) {
   if (!got.read || !got.picture) return { rules: null, judge: null, named: null, score: 0 };
   const rules = ruleScore(got.read, testCase, got.engine);
+  // An icon is judged on a sheet of it at the sizes it is used, beside references;
+  // it is still named blind from the picture alone.
+  const icon = testCase.group === "icon";
+  const judged = icon && rules.score !== 0 ? await iconSheet(testCase, dir, got.picture) : got.picture;
   const [judge, named] = await Promise.all([
-    rules.score === 0 ? null : judgePicture({ picture: got.picture, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted, video: testCase.group === "video", photo: !!testCase.photo }),
-    ["drawing", "photo"].includes(testCase.group) && rules.score !== 0 ? nameBlind({ picture: got.picture, names: testCase.names ?? [], runs: judgeRuns }) : null,
+    rules.score === 0 ? null : judgePicture({ picture: judged, request: testCase.request, context: testCase.context, runs: judgeRuns, crafted: !!testCase.crafted, video: testCase.group === "video", photo: !!testCase.photo, icon }),
+    ["drawing", "photo", "icon"].includes(testCase.group) && rules.score !== 0 ? nameBlind({ picture: got.picture, names: testCase.names ?? [], runs: judgeRuns }) : null,
   ]);
   // A drawing that spells out what it is gets named from its words, not its
   // shapes (the user's dog had "Dog" over it), so that naming does not count.
@@ -127,7 +132,7 @@ export function judgeLines(cases) {
   const ran = Object.values(cases).filter((r) => !r.unrun);
   const means = (list) => {
     const out = {};
-    for (const key of ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic"]) {
+    for (const key of ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic", "readsAsIcon"]) {
       const values = list.map((r) => r.judge?.lines?.[key]).filter((v) => typeof v === "number");
       if (values.length) out[key] = Math.round(values.reduce((a, b) => a + b, 0) / values.length * 10) / 10;
     }
@@ -136,7 +141,7 @@ export function judgeLines(cases) {
   const drawings = ran.filter((r) => r.group === "drawing");
   const seconds = drawings.map((r) => r.seconds).filter((v) => typeof v === "number").sort((a, b) => a - b);
   return {
-    drawing: means(drawings), all: means(ran),
+    drawing: means(drawings), icon: means(ran.filter((r) => r.group === "icon")), all: means(ran),
     drawingSeconds: seconds.length ? seconds[Math.floor((seconds.length - 1) / 2)] : null,
   };
 }

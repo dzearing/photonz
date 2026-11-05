@@ -840,3 +840,32 @@ struct SVGExportRenderTests {
         return context.makeImage()!
     }
 }
+
+/// What Ask's icon route hands over: `Copy SVG` and Export read the same file.
+@Suite("An icon Ask drew leaves as nothing but its shapes")
+struct AskIconExportTests {
+
+    static let bell = ##"""
+    <svg viewBox="0 0 24 24" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path id="bell-body" d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+    <path id="clapper" d="M10 21a2 2 0 0 0 4 0"/></svg>
+    """##
+
+    @Test func theIconFrameExportsAsPathsWithNoPictureAndNoCanvas() throws {
+        let store = ImageStore()
+        let white = try #require(SolidImage.make(size: CGSize(width: 1440, height: 1024), hex: "#FFFFFF"))
+        var document = PhotonzDocument.withBaseImage(store.register(white))
+        let drawing = try SVGArtwork.parse(Self.bell).get()
+        let id = document.addDrawing(drawing, named: "Bell", icon: true, box: nil, blank: true)
+        let scoped = try #require(document.frameDocument(id: id))
+        let text = SVGExporter.export(scoped, store: store).text
+        #expect(!text.contains("base64"))
+        #expect(!text.contains("<image"))
+        // A frame clips what it holds, and that rectangle paints nothing:
+        // what is left outside the clip must hold no rectangle at all.
+        let painted = text.replacingOccurrences(of: #"<clipPath[\s\S]*?</clipPath>"#, with: "", options: .regularExpression)
+        #expect(!painted.contains("<rect"), "the frame has no surface, so nothing is painted behind the icon: \(text)")
+        #expect(text.contains("<path"))
+        #expect(text.contains("stroke-linecap=\"round\""))
+    }
+}

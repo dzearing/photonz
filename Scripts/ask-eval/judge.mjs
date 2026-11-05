@@ -25,13 +25,17 @@ export const PHOTO = readFileSync(path.join(here, "rubric-photo.md"), "utf8").tr
 /// A video case is judged on a contact sheet of the frames it plays, with
 /// flow in place of aligned (2026-10-21).
 export const VIDEO_RUBRIC = readFileSync(path.join(here, "rubric-video.md"), "utf8");
+/// The extra line an icon is judged on (a case in the icon group), judged on
+/// the sheet icon-sheet.swift draws. Like the crafted and photo lines it is
+/// added for those cases only, so every other case is asked what it always was.
+export const ICON = readFileSync(path.join(here, "rubric-icon.md"), "utf8").trim();
 /// Which rubric scored a run: a run scored by another rubric is not compared.
 export const RUBRIC_ID = createHash("sha256").update(RUBRIC + NAMING + CRAFTED + VIDEO_RUBRIC + JUDGE_MODEL).digest("hex").slice(0, 8);
-export const LINES = ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic"];
+export const LINES = ["clean", "typography", "aligned", "flow", "designed", "didWhatWasAsked", "crafted", "photographic", "readsAsIcon"];
 
 /// The rubric for one case: with the crafted line for an illustration, and
 /// the video rubric for a video.
-export function rubricFor({ crafted, video = false, photo = false }) {
+export function rubricFor({ crafted, video = false, photo = false, icon = false }) {
   if (video) return VIDEO_RUBRIC;
   let rubric = RUBRIC;
   if (crafted) {
@@ -41,6 +45,10 @@ export function rubricFor({ crafted, video = false, photo = false }) {
   if (photo) {
     rubric = rubric.replace("\nRead the picture at", `${PHOTO}\n\nRead the picture at`)
       .replace('"didWhatWasAsked": n,', '"didWhatWasAsked": n, "photographic": n,');
+  }
+  if (icon) {
+    rubric = rubric.replace("\nRead the picture at", `${ICON}\n\nRead the picture at`)
+      .replace('"didWhatWasAsked": n,', '"didWhatWasAsked": n, "readsAsIcon": n,');
   }
   return rubric;
 }
@@ -102,8 +110,8 @@ const median = (values) => {
 };
 
 /// The rubric, `runs` times at once: each line's median, and their mean.
-export async function judgePicture({ picture, request, context, runs = 3, crafted = false, video = false, photo = false }) {
-  const prompt = rubricFor({ crafted, video, photo }).replaceAll("{{request}}", request)
+export async function judgePicture({ picture, request, context, runs = 3, crafted = false, video = false, photo = false, icon = false }) {
+  const prompt = rubricFor({ crafted, video, photo, icon }).replaceAll("{{request}}", request)
     .replaceAll("{{context}}", context ? `It was made on ${context}: judge what the request did to it, not the picture underneath.` : "");
   const answers = (await Promise.all(Array.from({ length: runs }, () => ask(picture, prompt)))).filter(Boolean);
   if (!answers.length) return { score: null, lines: {}, why: "the judge gave no answer", answers };
@@ -111,6 +119,7 @@ export async function judgePicture({ picture, request, context, runs = 3, crafte
   for (const line of LINES) {
     if (line === "crafted" && !crafted) continue;
     if (line === "photographic" && !photo) continue;
+    if (line === "readsAsIcon" && !icon) continue;
     // A picture is never judged on flow, nor a video on alignment.
     if ((line === "flow") !== video && (line === "flow" || line === "aligned")) continue;
     const values = answers.map((a) => a[line]);

@@ -344,13 +344,14 @@ public enum AgentTools {
             inputSchema: schema([
                 "document": documentProperty,
                 "subject": ["type": "string", "description": "What it is, in a word or two: dog, coffee cup, smiley face, sun over mountains."],
-                "svg": ["type": "string", "description": "Your own drawing of it as one complete SVG, needed when Photonz cannot paint it (its picture model is not running); when given, nothing is painted: a viewBox, a few flat colours, curves and ellipses where the thing is round, every part touching the part it belongs to, an id on each shape naming its part (head, left-ear, body). No text."],
-                "icon": ["type": "boolean", "description": "Make it an icon: a 512 point square icon frame with the drawing on its keylines. On a blank picture the picture becomes that frame."],
+                "svg": ["type": "string", "description": "Your own drawing as one complete SVG, needed when Photonz cannot paint it; when given, nothing is painted: a viewBox, a few flat colours, curves and ellipses where the thing is round, every part touching the part it belongs to, an id on each shape naming its part (head, left-ear, body). No text."],
+                "icon": ["type": "boolean", "description": "An icon, from your svg: fills a blank picture, or the frame, or opens a new picture."],
+                "side": ["type": "integer", "description": "1024 for an app icon."],
                 "frame": boxProperty("Where the drawing goes, fitted and centred in this box. Centred on the canvas, 60 per cent of its shorter side, when left out."),
                 "name": ["type": "string", "description": "The group's name in the Layers list. The subject when left out."],
                 "style": ["type": "string", "description": "The look asked for, in the person's words (line art, silhouette, watercolor, flat). Leave it out when none was named."],
-                "asked": ["type": "string", "description": "The person's own words for the drawing, when they say more than the subject does (what it is doing, where). Used when Photonz paints the drawing with its picture model."],
-                "scene": ["type": "boolean", "description": "true when the drawing is a place or a scene that fills the picture with its own sky or ground (a landscape, a skyline, a beach at sunset), so it is painted edge to edge. Used when Photonz paints the drawing."],
+                "asked": ["type": "string", "description": "The person's own words for the drawing, when they say more than the subject does (what it is doing, where)."],
+                "scene": ["type": "boolean", "description": "true when the drawing is a place or a scene that fills the picture with its own sky or ground (a landscape, a skyline, a beach at sunset), so it is painted edge to edge."],
                 "plan": ["type": "array", "items": ["type": "string"], "description": "Only when the request names more than the thing: one to four short statements someone looking at the picture can answer yes or no, for each pose, action, view, mood and relationship the request names, and when two things act together which parts touch (its paws on the keys) and what is in front. Nothing the request did not ask for. Painted from, and checked against the drawing once it is made."],
             ], required: ["subject"])),
         AgentTool(
@@ -739,7 +740,9 @@ public enum AgentTools {
             }
             let svg = args["svg"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
             return .success(.addDrawing(document: document, drawing: AgentDrawingCall(
-                subject: subject, svg: svg, icon: args["icon"]?.boolValue ?? false, frame: region(args["frame"]),
+                subject: subject, svg: svg, icon: args["icon"]?.boolValue ?? false,
+                side: args["side"]?.intValue.map { CGFloat(min(max($0, 16), 1024)) } ?? AgentDrawingPlacement.iconSide,
+                frame: region(args["frame"]),
                 name: args["name"]?.stringValue,
                 style: args["style"]?.stringValue.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 },
                 asked: args["asked"]?.stringValue, scene: args["scene"]?.boolValue ?? false,

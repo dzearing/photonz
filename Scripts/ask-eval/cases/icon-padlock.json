@@ -1,0 +1,26 @@
+{
+  "request": "a padlock icon",
+  "group": "icon",
+  "from": "The task ask-makes-icons-that-are-icons-one-subject-clean, 2026-11-04",
+  "start": {
+    "blank": [
+      1440,
+      1024
+    ]
+  },
+  "names": [
+    "lock",
+    "padlock",
+    "security"
+  ],
+  "reference": {
+    "sf": "lock",
+    "lucide": "lock",
+    "material": "lock"
+  },
+  "expect": {
+    "words": false,
+    "icon": true,
+    "iconCraft": true
+  }
+}

@@ -82,8 +82,9 @@ struct AskScenePlanTests {
     @Test("Drawings side by side, each in its own box, are both planned")
     func drawingsSideBySide() {
         var talk = Self.conversation("draw a sun icon and a moon icon side by side")
-        _ = talk.take(Self.reply("add_drawing", ["subject": "sun", "frame": ["x": 100, "y": 100, "width": 400, "height": 400]]))
-        _ = talk.take(Self.reply("add_drawing", ["subject": "moon", "frame": ["x": 800, "y": 100, "width": 400, "height": 400]]))
+        let svg: AgentJSON = .string(##"<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><circle id="disc" cx="12" cy="12" r="9"/></svg>"##)
+        _ = talk.take(Self.reply("add_drawing", ["subject": "sun", "svg": svg, "frame": ["x": 100, "y": 100, "width": 400, "height": 400]]))
+        _ = talk.take(Self.reply("add_drawing", ["subject": "moon", "svg": svg, "frame": ["x": 800, "y": 100, "width": 400, "height": 400]]))
         #expect(talk.steps.count == 2)
     }
 

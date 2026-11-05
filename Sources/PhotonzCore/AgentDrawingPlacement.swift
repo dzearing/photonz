@@ -17,6 +17,8 @@ public struct AgentDrawingCall: Hashable, Sendable {
     public var svg: String?
     /// Make an icon: a square icon frame with the drawing on its keylines.
     public var icon: Bool
+    /// An icon's side in points: 512, or 1024 for an app icon.
+    public var side: CGFloat
     /// Where the drawing goes; centred on the canvas when nil.
     public var frame: CGRect?
     public var name: String?
@@ -39,9 +41,10 @@ public struct AgentDrawingCall: Hashable, Sendable {
     /// about the picture.
     public static let mostStatements = 6
 
-    public init(subject: String, svg: String? = nil, icon: Bool = false, frame: CGRect? = nil,
-                name: String? = nil, style: String? = nil, asked: String? = nil,
+    public init(subject: String, svg: String? = nil, icon: Bool = false, side: CGFloat = AgentDrawingPlacement.iconSide,
+                frame: CGRect? = nil, name: String? = nil, style: String? = nil, asked: String? = nil,
                 scene: Bool = false, plan: [String] = []) {
+        self.side = side
         self.plan = plan
         self.style = style
         self.asked = asked
@@ -72,6 +75,12 @@ public struct AgentDrawingCall: Hashable, Sendable {
     /// it and it sent no SVG of its own.
     public static func needsSVG(_ subject: String) -> String {
         "add_drawing: Photonz cannot paint \(subject) on this Mac right now. Call add_drawing again with svg: your own drawing of it as one complete SVG."
+    }
+
+    /// What the agent is told when it asks for an icon with no drawing of its
+    /// own: an icon is never painted and traced.
+    public static func needsIconSVG(_ subject: String) -> String {
+        "add_drawing: an icon is drawn, never painted. Call add_drawing again with svg: your own icon of \(subject) as one complete SVG of a few clean shapes."
     }
 
     /// The longest a name made from the subject gets in the Layers list.
@@ -173,8 +182,29 @@ public enum AgentDrawingPlacement {
     /// How much of the canvas's shorter side a drawing with no box spans:
     /// big enough to be the picture, with room round it.
     public static let share: CGFloat = 0.6
-    /// The side of an icon frame Ask makes: the biggest an icon frame is.
-    public static let iconSide: CGFloat = IconPreviews.largestIconSide
+    /// The side of an icon Ask makes.
+    public static let iconSide: CGFloat = 512
+    /// The side of an app icon, the one size bigger than that.
+    public static let appIconSide: CGFloat = IconPreviews.appIconSide
+
+    /// Where an icon lands. Never beside the person's work and never by
+    /// growing their document (the user, 2026-11-04: Ask put a frame to the
+    /// right of their picture, widened it from 1026 to 2112, and they could
+    /// not find the icon).
+    public enum IconPlace: Hashable, Sendable {
+        /// The picture is blank, so it becomes the icon.
+        case thisPicture
+        /// The box the request named, in this picture: several icons side
+        /// by side, or one where a person said to put it.
+        case inBox
+        /// A new picture of its own, in its own window.
+        case newPicture
+    }
+
+    public static func iconPlace(blank: Bool, box: CGRect?) -> IconPlace {
+        if box != nil { return .inBox }
+        return blank ? .thisPicture : .newPicture
+    }
 
     /// The box a drawing is fitted into: the one asked for, kept on the
     /// canvas (a model sometimes gives the canvas's centre as the corner), or
@@ -217,38 +247,28 @@ public enum AgentDrawingPlacement {
 extension PhotonzDocument {
 
     /// Adds `drawing` and answers the id of what it made: a group named
-    /// `name`, or for an icon a square icon frame holding the parts. On a
-    /// blank picture an icon's frame IS the picture: the canvas becomes the
-    /// frame's square, which is how an icon is set up by hand.
+    /// `name`, or for an icon on a blank picture a square icon frame holding
+    /// the parts. That frame IS the picture: the canvas becomes its square,
+    /// which is how an icon is set up by hand, and it paints no surface of
+    /// its own, so the icon leaves as nothing but its shapes.
     ///
     /// `blank` says the picture holds nothing anybody made: no layers, or
     /// only the flat locked background a new blank picture is. Only the app
     /// can tell a flat background from a screenshot, so it says; left out,
-    /// only a picture with no layers at all is blank.
+    /// only a picture with no layers at all is blank. An icon on anything
+    /// else belongs in a picture of its own, which only the app can open
+    /// (`AgentDrawingPlacement.iconPlace`); here it is an ordinary drawing in
+    /// its box, and the canvas never grows.
     @discardableResult
-    public mutating func addDrawing(_ drawing: SVGArtwork, named name: String, icon: Bool, box: CGRect?,
+    public mutating func addDrawing(_ drawing: SVGArtwork, named name: String, icon: Bool,
+                                    side: CGFloat = AgentDrawingPlacement.iconSide, box: CGRect?,
                                     blank: Bool? = nil) -> UUID {
-        if icon {
-            let side = AgentDrawingPlacement.iconSide
-            let size = CGSize(width: side, height: side)
-            let origin: CGPoint
-            if blank ?? layers.isEmpty {
-                // The whole picture becomes the icon: its flat background is
-                // squeezed to the square with it.
-                resize(to: size)
-                origin = .zero
-            } else if let box {
-                origin = box.origin
-            } else if hasFrames {
-                origin = placementForNewFrame(size: size, visible: CGRect(origin: .zero, size: canvasSize))
-            } else {
-                // Beside what is there, never over it.
-                let used = layers.reduce(CGRect.null) { $0.union($1.localBounds) }
-                origin = CGPoint(x: (used.maxX + Self.frameGutter).rounded(), y: max(0, used.minY).rounded())
-            }
-            let frame = drawing.iconFrame(named: name, side: side, origin: origin)
+        if icon, box == nil, blank ?? layers.isEmpty {
+            // The whole picture becomes the icon: its flat background is
+            // squeezed to the square with it.
+            resize(to: CGSize(width: side, height: side))
+            let frame = drawing.iconFrame(named: name, side: side, origin: .zero)
             addLayer(frame)
-            growCanvas(toTakeIn: frame.frame)
             return frame.id
         }
         let group = drawing.group(named: name, fitting: AgentDrawingPlacement.box(box, on: canvasSize))

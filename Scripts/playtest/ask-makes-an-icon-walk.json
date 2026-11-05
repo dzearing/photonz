@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/ask-makes-an-icon-walk",
+  "seed": "ask-makes-icons-that-are-icons-one-subject-clean, at Next defaults with no flag touched. On a blank picture an icon request makes the picture the icon: a square canvas, a frame with no surface, the parts as named shapes and paths, and the copied SVG has no picture in it. One Command Z takes it all back, canvas size included.",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "a trash can icon" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-the-icon", "note": "the blank picture became the icon: 512 square, a clear frame, parts named for what they are" },
+    { "do": "expectLayers", "atLeast": 3, "atMost": 16, "comment": "the background, the frame and a few parts, never the dozens a trace makes" },
+    { "do": "snapshot", "name": "1-the-icon" },
+    { "do": "writeSVG", "name": "icon" },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command"], "menuItem": "Copy" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "2-the-icon-copied", "svg": true },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-undone", "note": "one Command Z took the icon back and the canvas is 1440 x 1024 again" },
+    { "do": "expectLayers", "count": 1 }
+  ]
+}

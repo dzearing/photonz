@@ -212,7 +212,8 @@ struct AskPhotoTests {
         #expect(talk.steps.first?.tool == "add_drawing")
         #expect(talk.steps.first?.arguments["subject"]?.stringValue == "fox")
         var icon = Self.conversation("a photo icon of a camera")
-        _ = icon.take(Self.reply("add_drawing", ["subject": "camera", "icon": true]))
+        let svg: AgentJSON = .string(##"<svg viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><circle id="lens" cx="12" cy="12" r="9"/></svg>"##)
+        _ = icon.take(Self.reply("add_drawing", ["subject": "camera", "icon": true, "svg": svg]))
         #expect(icon.steps.first?.tool == "add_drawing")
     }
 

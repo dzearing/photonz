@@ -35,7 +35,7 @@ checked.
 | --- | --- |
 | Documents | `list_documents`, `list_history` (screenshots and recordings, newest first), `open_document` (a path or a History index), `new_picture`, `new_video` |
 | Seeing | `read_document`, `render_picture`, `video_frame`, `contact_sheet` |
-| Drawing | `add_photo` (a real photograph of anything, painted by Photonz's picture model and kept as one picture layer filling the canvas or `frame`; `look: painting` for a painted picture), `add_drawing` (anything, a thing or a scene, as editable layers: painted for the request by Photonz's picture model and traced when it is running, else your own SVG; nothing is looked up; `icon` for an icon frame, `style` for a look the person named, `scene` for a place with its own sky), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words, `flip` to mirror it in place; `run_command mirror_across_center` makes the mirrored second half of a symmetrical drawing) |
+| Drawing | `add_photo` (a real photograph of anything, painted by Photonz's picture model and kept as one picture layer filling the canvas or `frame`; `look: painting` for a painted picture), `add_drawing` (anything, a thing or a scene, as editable layers: painted for the request by Photonz's picture model and traced when it is running, else your own SVG; nothing is looked up; `icon` with your own `svg` for an icon, `style` for a look the person named, `scene` for a place with its own sky), `add_shape` (rectangle, ellipse, highlight, line, arrow), `add_path` (the Pen: corner and smooth points), `add_text`, `set_layer` (frame, paint, line, corners, opacity, shadow, words, `flip` to mirror it in place; `run_command mirror_across_center` makes the mirrored second half of a symmetrical drawing) |
 | Painting | `list_brushes` (pencil, charcoal, chalk, crayon, marker, airbrush, oil, watercolour and every setting each has), `set_brush` (the brush in hand), `paint_stroke` (one stroke through `points` or a short `path`, optional pen pressure; its own `medium`, `color` and `settings` for this stroke only; `part` names what it paints; one undo step) |
 | Changing a part | `change_part` (one named part of something already made, in place: a painting's strokes of that `part` as `read_document` lists them, or the layers of that name in a drawing; recolour toward `color` keeping its shading, or shift `hue`, `saturation`, `lightness`, `warmth` (a photo's go through its colour grade); `scale` about its middle; move by `dx`, `dy`; or `remove`; on a drawing traced into colour layers, `at` (a canvas point inside the part) splits that piece out under the part's name; one undo step) |
 | Measuring a screenshot | `find_measurements` (the redline code chooses: one size of each kind of control, then the spacing), `mark_measurements` (lays the ids you pick, readouts kept clear); `find_elements` and `add_measurement` for one particular thing |
@@ -173,11 +173,18 @@ short way to write a stroke's points. `render_picture` after the block-in and at
 
 0. Try `add_drawing` first, for anything: pass what to draw in the person's words as
    `subject` (what it is, what it is doing, where), the look they named as `style`, `scene:
-   true` for a place with its own sky or ground, `icon: true` for an icon. When Photonz's
-   picture model is running it paints that and traces it into editable layers. When it
-   answers that it cannot paint, call it again with `svg`, your own drawing as one whole
-   SVG. Photonz has no stored drawings and no scenes of its own. Build it by hand, below,
-   when you want your own drawing.
+   true` for a place with its own sky or ground. When Photonz's picture model is running
+   it paints that and traces it into editable layers. When it answers that it cannot
+   paint, call it again with `svg`, your own drawing as one whole SVG. Photonz has no
+   stored drawings and no scenes of its own. Build it by hand, below, when you want your
+   own drawing.
+
+   **An icon is never painted.** Call `add_drawing` with `icon: true` and `svg`: a 24 x 24
+   viewBox, one subject in 2 to 8 clean shapes, one line weight (2) or solid fills, no
+   person, scene or words, an `id` naming each part. `side: 1024` for an app icon. On a
+   blank picture the picture becomes the icon; with `frame` it goes in that box; otherwise
+   it opens in a new picture, and the answer's `document` is the one to carry on in. It
+   never grows the document.
 1. `new_picture` square (1024 x 1024); keep a margin of about a tenth on every side.
 2. Build from real shapes and paths: `add_shape` for geometric parts, `add_path` with
    smooth points for curves (a cloud is a closed path of smooth bumps, or ellipses

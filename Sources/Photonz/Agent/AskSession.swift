@@ -508,6 +508,18 @@ final class AskSession {
             return
         }
         var revisions = 0
+        // Where this request lands: the window it was asked in, or the new
+        // picture an icon opened (`AgentDrawingPlacement.iconPlace`). Every
+        // try lands there and is taken back there, so the person's own
+        // picture is never touched and a second try opens no second window.
+        var canvas = editor
+        var openedForIcon = false
+        // The icon that landed did not read to the model that looked at it.
+        var unclear = false
+        // A request that ends with nothing to show closes what it opened.
+        func closeOpened() {
+            if openedForIcon { canvas.hostWindow?.close() }
+        }
         // The plans the first try's drawings were checked against, held for
         // every try after it, and the closest try so far, kept to land if a
         // later one comes out worse.
@@ -528,22 +540,36 @@ final class AskSession {
             }
             if let carrying = carried.flatMap({ AskDrawingCheck.carryingPlans($0, into: plan) }) {
                 plan = carrying
-            } else {
+            } else if !AskIcon.isIn(plan) {
                 plan = await Self.withDrawingPlans(plan, asked: words, model: model, note: note, say: say)
             }
             guard !Task.isCancelled else { return }
             carried = carried ?? AskDrawingCheck.drawings(in: plan).map(\.plan)
             self.plan = plan
-            guard let ran = await run(plan, in: editor) else { return }
+            if !openedForIcon, let side = AskIcon.side(of: plan), !AgentDrawingWork.isBlank(editor) {
+                do {
+                    canvas = try await AgentDrawingWork.openPicture(CGSize(width: side, height: side))
+                    openedForIcon = true
+                    note("icon: opened a new picture \(Int(side)) square")
+                } catch {
+                    phase = .stopped(AskCopy.nothingRan)
+                    return
+                }
+            }
+            guard let ran = await run(plan, in: canvas) else {
+                closeOpened()
+                return
+            }
             // What landed is picked and the panel fills with its sections:
             // the Agent group comes back into view, so its line can still be
             // read while the drawing is checked or drawn again.
             revealRows()
-            let miss = await look(at: plan, made: ran.made, in: editor, model: model, note: note, say: say)
+            let miss = await look(at: plan, made: ran.made, in: canvas, model: model, note: note, say: say)
             if Task.isCancelled {
                 // Stopped while it looked at what it drew: what ran comes
                 // back off, so a stop leaves the document as it was.
-                editor.undo()
+                canvas.undo()
+                closeOpened()
                 stepsRun = 0
                 phase = .stopped(AskCopy.stoppedSentence)
                 return
@@ -555,8 +581,8 @@ final class AskSession {
                 // The last try came out worse than an earlier one: that one
                 // lands in its place, the closest Ask came.
                 enter(.keepingClosest)
-                editor.undo()
-                editor.perform { $0 = held.after }
+                canvas.undo()
+                canvas.perform { $0 = held.after }
                 landed = held.ran
                 lastSources = held.ran.sources
                 self.plan = held.plan
@@ -565,15 +591,23 @@ final class AskSession {
                 // It reads as the thing but still misses part of its plan
                 // after the last try: it stays, the closest Ask came.
                 note("keeping the last drawing: still not shown: \(miss.unmet.joined(separator: "; "))")
+            } else if let miss, revisions >= AskDrawingCheck.mostRevisions, AskIcon.asked(in: words) {
+                // A plain outline, shown with no hint of what it is, is the
+                // hardest thing to name: a balloon was seen as a ship's wheel
+                // and a light bulb (the eval, 2026-11-04). An icon a person
+                // can judge beats nothing, so it stays, and Ask says so.
+                note("keeping the last icon: still seen as \(miss.seen)")
+                unclear = true
             } else if let miss {
-                if AskDrawingCheck.isCloser(attempt, than: closest?.attempt), let after = editor.document {
+                if AskDrawingCheck.isCloser(attempt, than: closest?.attempt), let after = canvas.document {
                     closest = (attempt, after, ran, plan)
                 }
                 // What was drawn does not read as what was asked, or does not
                 // show what its plan said: it comes back off, and is drawn
                 // again or owned up to.
-                editor.undo()
+                canvas.undo()
                 guard revisions < AskDrawingCheck.mostRevisions, !Task.isCancelled else {
+                    closeOpened()
                     stepsRun = 0
                     lastPlanSeconds = Date().timeIntervalSince(started)
                     phase = .stopped(AskCopy.couldNotDraw)
@@ -589,7 +623,13 @@ final class AskSession {
                 phase = .planning
                 continue
             }
-            if let after = editor.document {
+            if openedForIcon, let person = editor.document, let after = canvas.document {
+                // The person's picture did not change: the row says where it went.
+                let name = after.layers.first(where: \.isFrame)?.name ?? "Icon"
+                changes.recordElsewhere(asked: words, sentence: AskChangeWords.madeNewIcon(name), document: person,
+                                        sources: landed.sources, leftOut: landed.leftOut,
+                                        understood: AskUnderstanding.lines(summary: self.plan?.summary ?? "", steps: landed.landed))
+            } else if let after = editor.document {
                 let made = AskChangeWords.sentence(landed.landed, asked: words, before: landed.before, after: after,
                                                    madeAll: landed.leftOut == nil)
                 let components = landed.landed.filter { $0.tool == AskWeb.pageTool && $0.arguments["component"] != nil }.count
@@ -604,7 +644,7 @@ final class AskSession {
             }
             lastPlanSeconds = Date().timeIntervalSince(started)
             note("done")
-            let sayings = [talk.note, landed.layoutSentence].compactMap { $0 }
+            let sayings = [talk.note, landed.layoutSentence, unclear ? AskCopy.iconMayNotRead : nil].compactMap { $0 }
             said = sayings.isEmpty ? nil : sayings.joined(separator: " ")
             leftOut = landed.leftOut
             if let line = landed.leftOut { note("left out: \(line)") }
@@ -788,7 +828,7 @@ final class AskSession {
             }
             var reads = AskDrawingCheck.reads(seen, as: drawing.subject)
             if reads == nil, let answer = try? await AskLocalModel.chat(
-                AskDrawingCheck.judgeBody(model: model, subject: drawing.subject, seen: seen))["message"]?["content"]?.stringValue {
+                AskDrawingCheck.judgeBody(model: model, subject: drawing.subject, seen: seen, icon: AskIcon.isIn(plan)))["message"]?["content"]?.stringValue {
                 reads = AskDrawingCheck.judged(answer)
             }
             note("look: \(drawing.subject) seen as \(seen) -> \(reads == true ? "reads" : "does not read")")
@@ -1259,6 +1299,7 @@ enum AskCopy {
     static let noDocumentSentence = "Open a picture or video first."
     /// A drawing that still did not read after being drawn again.
     static let couldNotDraw = "I couldn't make a clear drawing of that. Nothing was changed."
+    static let iconMayNotRead = "This icon may not read clearly yet."
     static let helpLine = "Each request is one row. Rest on a row to see how it was understood, and click it to select what it made. One Command Z takes back the latest. A request sent while one is working waits its turn."
 }
 

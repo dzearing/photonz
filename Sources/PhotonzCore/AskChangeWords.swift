@@ -45,6 +45,19 @@ public enum AskChangeWords {
         }
     }
 
+    /// The row of an icon that opened in a new picture: the person's own
+    /// picture did not change, so this says where it went.
+    public static func madeNewIcon(_ name: String) -> String {
+        let lead = "Made a new icon: "
+        var kept = ""
+        for word in name.split(whereSeparator: \.isWhitespace) {
+            let longer = kept.isEmpty ? String(word) : kept + " " + word
+            if lead.count + longer.count > budget { break }
+            kept = longer
+        }
+        return lead + (kept.isEmpty ? String(name.prefix(budget - lead.count)) : kept)
+    }
+
     /// One of what a step makes: "a shape", "text".
     static func oneThing(_ step: AskStep) -> String? { kind(step)?.one }
 

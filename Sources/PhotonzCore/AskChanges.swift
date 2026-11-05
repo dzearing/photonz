@@ -166,6 +166,9 @@ public struct AskChangeList: Hashable, Sendable {
         public internal(set) var sources: [AskDrawingSource] = []
         /// The person's thumbs on it, if any.
         public internal(set) var verdict: AskVerdict?
+        /// It landed in a picture of its own, so nothing in this window can
+        /// step it off.
+        public internal(set) var inAnotherPicture = false
     }
 
     public private(set) var rows: [Row] = []
@@ -183,6 +186,20 @@ public struct AskChangeList: Hashable, Sendable {
         let row = Row(id: UUID(), asked: asked, sentence: sentence, leftOut: leftOut,
                       change: AskRecordedChange(before: before, after: after), understood: understood,
                       sources: sources)
+        rows.insert(row, at: 0)
+        return row.id
+    }
+
+    /// Records a request whose work landed in another picture: the document
+    /// here did not change, and the row says where it went.
+    @discardableResult
+    public mutating func recordElsewhere(asked: String, sentence: String, document: PhotonzDocument,
+                                         sources: [AskDrawingSource] = [], leftOut: String? = nil,
+                                         understood: [String] = []) -> UUID {
+        var row = Row(id: UUID(), asked: asked, sentence: sentence, leftOut: leftOut,
+                      change: AskRecordedChange(before: document, after: document), understood: understood,
+                      sources: sources)
+        row.inAnotherPicture = true
         rows.insert(row, at: 0)
         return row.id
     }
@@ -207,7 +224,7 @@ public struct AskChangeList: Hashable, Sendable {
     /// Something built on it since can't be read either way, and the row
     /// stays as it was.
     public mutating func follow(_ document: PhotonzDocument) {
-        for index in rows.indices {
+        for index in rows.indices where !rows[index].inAnotherPicture {
             switch rows[index].change.takenOut(of: document) {
             case .changed: rows[index].isOn = true
             case .unchanged: rows[index].isOn = false

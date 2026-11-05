@@ -1,0 +1,21 @@
+{
+  "out": "/tmp/photonz-playtest/ask-puts-an-icon-in-its-own-picture-walk",
+  "seed": "The user, 2026-11-04: Ask put a 512 icon frame to the right of their picture and widened the canvas from about 1026 to 2112. At Next defaults, an icon asked for on a screenshot opens a new picture of its own: the screenshot keeps its size and its one layer, and the row says where the icon went.",
+  "clock": 420,
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "snapshot", "name": "1-the-screenshot" },
+    { "do": "press", "control": "Ask" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "type", "text": "a bell icon" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Ask Send" },
+    { "do": "waitFor", "condition": "askPhase", "value": "ran|stopped", "timeout": 300 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "2-the-icon-made", "note": "a new window holds the icon; the row reads Made a new icon" },
+    { "do": "snapshot", "name": "2-the-icon-made" }
+  ]
+}
