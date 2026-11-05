@@ -345,8 +345,8 @@
         {
           "id": "ui-prototyping",
           "title": "Click-through prototyping",
-          "note": "",
-          "stage": "later",
+          "note": "Moved to now by the user's ask, 2026-11-05: Preview a page of components first (preview-a-page-of-components-and-use-it-hover-pr); connections between frames later.",
+          "stage": "now",
           "children": []
         }
       ],
