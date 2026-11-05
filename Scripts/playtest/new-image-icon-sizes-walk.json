@@ -1,0 +1,18 @@
+{
+  "out": "/tmp/photonz-playtest/new-image-icon-sizes-walk",
+  "seed": "ask-makes-icons-that-are-icons-one-subject-clean: no new document kind, so File > New stays Image or Video, and New Image gains Icon and App Icon sizes at Next defaults. The first picture shows the two rows; pressing App Icon and Create proves both can be pressed. The walk stays on the window it started in, so it does not photograph the new canvas.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "newCanvasDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "snapshot", "name": "1-new-image-with-icon-sizes" },
+    { "do": "press", "control": "App Icon" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Create in New Window" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "2-the-asking-window-unchanged", "note": "the window the walk started in, unchanged; the new picture opened in a window of its own" },
+    { "do": "snapshot", "name": "2-the-asking-window-unchanged" }
+  ]
+}

@@ -2594,9 +2594,14 @@ public struct ClipboardSVGClaim: Sendable, Equatable {
     public var asText: Bool
     /// Words the plain text must hold: a redline's spec list, say.
     public var textHas: String?
+    /// The drawing was fitted into its frame rather than drawn on its grid
+    /// (an icon Ask drew on a 24 grid, in a 512 frame), so its numbers are
+    /// fractions: the claim is instead that it is shapes, with no picture in it.
+    public var fitted: Bool
 
     public init(carries: Bool? = nil, sameAs: String? = nil, asText: Bool = false,
-                textHas: String? = nil) {
+                textHas: String? = nil, fitted: Bool = false) {
+        self.fitted = fitted
         self.carries = carries
         self.sameAs = sameAs
         self.asText = asText
@@ -6734,7 +6739,8 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             let svgClaim = claimsSVG || textHas != nil
                 ? ClipboardSVGClaim(carries: claimsSVG ? (carriesSVG ?? true) : nil,
-                                    sameAs: svgSameAs, asText: asText, textHas: textHas) : nil
+                                    sameAs: svgSameAs, asText: asText, textHas: textHas,
+                                    fitted: try f.optionalFlag("svgFitted") ?? false) : nil
             self = .readClipboard(stage: try f.string("stage"),
                                   behind: f.has("behind")
                                       ? try f.enumValue("behind", PictureCorners.self) : nil,

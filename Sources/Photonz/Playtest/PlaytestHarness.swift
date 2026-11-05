@@ -968,7 +968,12 @@ private final class Run {
             throw Failure(description: "readClipboard claimed the copy carries the drawing as SVG, "
                           + "and there is no SVG in the clipboard's \(slot)")
         }
-        let offGrid = SVGWholeUnits.fractionalCoordinates(in: svg)
+        if claim.fitted {
+            guard !svg.contains("<image"), !svg.contains("base64"), svg.contains("<path") else {
+                throw Failure(description: "the copied SVG was to be shapes with no picture in it, and it is not")
+            }
+        }
+        let offGrid = claim.fitted ? [] : SVGWholeUnits.fractionalCoordinates(in: svg)
         guard offGrid.isEmpty else {
             throw Failure(description: "the copied SVG puts \(offGrid.count) place(s) off whole units: "
                           + offGrid.prefix(8).joined(separator: ", "))

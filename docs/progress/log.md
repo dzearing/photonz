@@ -2,6 +2,18 @@
 
 Append-only. Newest entry on top. One entry per working session: what changed, what's next, open questions.
 
+## 2026-11-04: Ask makes icons that are icons
+
+An icon request now takes its own route (`AskIcon`, `AskIconCheck`): the model
+draws one SVG on a 24 grid, it lands as named shape and path layers, and it is
+never painted and traced. A blank picture becomes the icon; anything else opens
+a new picture, and the person's document is never grown. New Image has Icon and
+App Icon sizes. The eval has 14 icon cases judged on a sheet at 64, 24 and 16 px
+beside references: 69.3 before, 86.5 after, reads as an icon 5.1 to 7.3.
+
+Open: "a balloon popping" fell from 74.4 to 29.7 and reads as a sun, so the task
+stays open. The held-out set was not run.
+
 ## 2026-09-22 — A GIF says how big it will be
 
 The Export sheet could say what a video would weigh and not what a GIF or a

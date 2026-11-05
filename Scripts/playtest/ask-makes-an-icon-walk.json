@@ -21,7 +21,7 @@
     { "do": "clearClipboard" },
     { "do": "shortcut", "key": "c", "modifiers": ["command"], "menuItem": "Copy" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "readClipboard", "stage": "2-the-icon-copied", "svg": true },
+    { "do": "readClipboard", "stage": "2-the-icon-copied", "svg": true, "svgFitted": true },
     { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "3-undone", "note": "one Command Z took the icon back and the canvas is 1440 x 1024 again" },

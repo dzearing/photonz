@@ -1,0 +1,56 @@
+{
+  "feature": "Ask makes icons that are icons",
+  "epic": "local-edit",
+  "summary": "Ask an icon and you get a few clean named shapes in a square picture of its own, instead of a traced painting beside your work. Most requests now read as real icons; the popping balloon does not yet.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: ask-makes-an-icon-walk, ask-puts-an-icon-in-its-own-picture-walk, new-image-icon-sizes-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a new blank image, press Ask, and type: a trash can icon.",
+      "shot": "2026-11-04-ask-icons-blank-picture-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a screenshot, press Ask, and type: a bell icon. The screenshot keeps its size and the row reads Made a new icon: Bell.",
+      "shot": "2026-11-04-ask-icons-own-picture-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the new window Ask opened for the bell."
+    },
+    {
+      "do": "Press Command C on the icon and paste it somewhere that reads SVG."
+    },
+    {
+      "do": "Press Command Z on the icon from the blank image; the canvas goes back to its old size."
+    },
+    {
+      "do": "Ask for a rocket app icon and look at its 1024 tile."
+    },
+    {
+      "do": "Choose File, New, Image and find the Icon and App Icon rows.",
+      "shot": "2026-11-04-ask-icons-new-image-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare before and after for five requests, the balloon included.",
+      "shot": "2026-11-04-ask-icons-before-after.png"
+    }
+  ],
+  "evaluate": [
+    "Do the trash can, search and padlock icons look like they belong beside SF Symbols?",
+    "Is a new window the right place for an icon asked for on a screenshot, or would you rather be asked?",
+    "Is the plain dark outline the right look when you name no style, or did you prefer the colour of the old traced icons?",
+    "Is the balloon good enough to animate, or should it stay open until it reads as popping?"
+  ],
+  "rough": [
+    "The popping balloon got worse: 74.4 before, 29.7 after. It reads as a sun or a ring with rays, and the local model kept it whole through three changes to its instructions. This keeps ask-makes-icons-that-are-icons-one-subject-clean open.",
+    "Ask's model writes one SVG that lands as shape and path layers, rather than one add_shape or add_path call per part as the task said. The layers are the same kind and it is one undo step.",
+    "An icon that still does not read after two redraws now lands with the line: This icon may not read clearly yet. Before, Ask threw it away.",
+    "Some old traced icons had more colour and charm than the new plain ones: compare the gear and the rocket on the before and after sheet.",
+    "The numbers in an icon's SVG are fractions, because a 24 grid does not divide into 512. The file is clean paths with no picture.",
+    "The held-out set was not run: it takes about two and a half hours and needs the Mac to itself. Only the climb number is measured.",
+    "No mock covers where an icon lands; the rule is the user's own, from 2026-11-04.",
+    "The walk for New Image proves the two rows are there and can be pressed. It did not photograph the 1024 canvas that opens."
+  ]
+}
