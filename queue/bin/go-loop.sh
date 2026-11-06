@@ -42,6 +42,12 @@ set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO"
 export GO_LOOP_PID=$$
+# The whole walk set every three days, not every day (the user, 2026-11-05: 96
+# tasks waiting and about five done a day; at 1,098 walks a whole set takes five
+# to six hours, 22 per cent of the loop's week). Rotating checks still run, at
+# most every four hours (sweep-schedule.mjs sliceFloorHours), and a runner can
+# still ask for the whole set straight away.
+export PHOTONZ_SWEEP_FLOOR_HOURS="${PHOTONZ_SWEEP_FLOOR_HOURS:-72}"
 # The absolute path of THIS file, kept for the reload check below. :A resolves
 # it whole, so the check still works if the loop was started through a relative
 # path or a symlink.
