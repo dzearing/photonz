@@ -47,7 +47,7 @@
     "Should an icon that is saved and reopened always come back in Icon, even if you had moved it to Image?"
   ],
   "rough": [
-    "No mock draws the New Image route into an icon; the keylines and card are the ones an icon frame already shows, as icon-draw-wt.html draws them.",
+    "No mock covers the New Image route into an icon. The keylines and the card are the ones an icon frame already shows.",
     "The Dark ground leaves out the whole Background, so anything painted onto the Background itself does not appear there.",
     "The keylines assume a pale picture. On a Background painted dark they keep the deep violet and rely on their casing to read.",
     "Undoing Ask's icon takes the drawing back but leaves the chip on Icon, because the mode belongs to the window and nothing undoes a window setting.",
