@@ -20,7 +20,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "0-cut-panel-away", "note": "an eight second recording cut at two seconds, the playhead at six, and the panel put away with the title bar's toggle. The split left the first piece picked" },
     { "do": "snapshot", "name": "0-cut-panel-away" },
-    { "comment": "Click the second piece on the timeline, the way a person picks it.", "do": "windowClick", "at": [1100, 895] },
+    { "comment": "Click the second piece on the timeline, the way a person picks it.", "do": "windowClick", "at": [1100, 868] },
     { "do": "wait", "seconds": 0.5 },
 
     { "do": "key", "key": "r", "modifiers": ["command"] },

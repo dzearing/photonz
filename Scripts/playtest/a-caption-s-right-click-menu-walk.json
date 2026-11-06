@@ -10,14 +10,14 @@
     { "do": "tool", "tool": "select" },
     { "do": "clickRuler", "seconds": 3.0 },
     { "comment": "THE FIRST TEST: the line at three seconds, right clicked straight away.",
-      "do": "rightClick", "at": [430, 905], "space": "window", "shot": "1-caption",
+      "do": "rightClick", "at": [430, 865], "space": "window", "shot": "1-caption",
       "rows": ["Edit Words", "Join with Next Line", "Start Here", "—", "Delete", "—", "More"],
       "more": ["Rewrite Captions", "Timing", "Export Subtitles", "Safe Areas", "Reset Captions", "Clear Captions"],
       "keys": { "Delete": "⌫" } },
     { "comment": "THE SECOND TEST: another line, after the first right click picked its own.",
-      "do": "rightClick", "at": [622, 905], "space": "window", "shot": "2-another-caption",
+      "do": "rightClick", "at": [622, 865], "space": "window", "shot": "2-another-caption",
       "rows": ["Edit Words", "Join with Next Line", "Start Here", "—", "Delete", "—", "More"] },
-    { "do": "rightClick", "at": [622, 905], "space": "window", "choose": "More > Timing > Later" },
+    { "do": "rightClick", "at": [622, 865], "space": "window", "choose": "More > Timing > Later" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "3-caption-menus", "note": "Two caption lines right clicked one after the other, each with its own five-row menu; More > Timing > Later moved every line later" }
   ]

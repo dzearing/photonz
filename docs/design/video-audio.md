@@ -540,11 +540,20 @@ points is a smear and a level line has nowhere to be dragged.
   obvious next thing and is not built.
 - **Anything above one file per layer**: no buses, no sends, no sub-mixes.
 
-## Linked sound (2026-09-23)
+## Linked sound (2026-09-23, drawn inside the clip since 2026-11-05)
 
-A clip's own sound is on the timeline from the moment it opens: a segment with
-its waveform on an Audio track under the picture, the way Premiere puts a
-clip's audio on A1 under V1. It is not a second layer. It is the clip's own
+**The user, 2026-11-05: two rows implicitly attached to each other are confusing.**
+So a clip's own sound is the bottom part of the clip, on its video track, the way
+Final Cut draws attached audio: one rectangle, one outline, one ring when picked
+(`ClipHalves.swift`, `ClipHalf`). The document still keeps a sound row per picture
+track (`DocumentTrack.attachedTo`) because that is where Mute and Solo live, but
+it is never listed: `timelineLanes` is what the timeline, the walks and the agent
+read, `timelineTracks` also has the rows. Its lock follows the picture track. Mute,
+Solo and Delete Sound are on the track header's menu, the Track menu and the
+Audio section. The bullets below still hold, read "the half" for "the segment".
+
+A clip's own sound is on the timeline from the moment it opens. It is not a
+second layer. It is the clip's own
 time, cuts and level drawn again as sound (`PhotonzDocument.linkedSoundTrackID`
 / `linkedSoundClipIDs`, `DocumentTracks.swift`), so every edit to the clip moves,
 trims and cuts its sound with nothing to keep in step, and every drag on the
@@ -554,9 +563,10 @@ segment is a drag on the clip.
   that would overlap something already on a track goes to the next, and a new
   one is made when none is free (its id is the clip's id with the first byte
   turned, so it is stable). A sound layer (music) always wins a lane over a
-  linked segment. A video with no sound still shows an empty Audio track.
+  linked segment. A video with no Audio track of its own, silent or not, shows
+  an empty one waiting, since a clip's own sound is no place to put music.
 - Detach Audio (right-click, the Video menu, the panel) writes the tracks down
-  and puts the new sound layer on the very track the segment was on.
+  and puts the new sound layer on the first free Audio track, else a new one.
 - Mute or solo on that audio track decides whether the clip is heard; deleting
   it takes the clip's sound away and keeps its picture.
 - Fades are two points on the level (`AudioLevel.setFadeIn/Out`), written by a

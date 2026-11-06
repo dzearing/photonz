@@ -35,8 +35,8 @@ struct LinkedSoundTests {
         let doc = PhotonzDocument.recording(Self.movie(), name: "take")
         let clip = try #require(doc.layers.first?.id)
         let tracks = doc.timelineTracks
-        #expect(tracks.map(\.name) == ["V1", "V1 sound"])
-        #expect(tracks.map(\.kind) == [.video, .audio])
+        #expect(tracks.map(\.name) == ["V1", "V1 sound", "Audio"])
+        #expect(tracks.map(\.kind) == [.video, .audio, .audio])
         #expect(doc.clipIDs(onTrack: tracks[0].id) == [clip])
         // The audio track holds no layer of its own: it holds the clip's sound.
         #expect(doc.clipIDs(onTrack: tracks[1].id).isEmpty)
@@ -101,7 +101,7 @@ struct LinkedSoundTests {
         let screen = doc.layers[0].id
         let pip = Self.clip(Self.movie(3000), name: "face", atMS: 1000)
         doc.addLayer(pip)
-        #expect(doc.timelineTracks.map(\.name) == ["V2", "V2 sound", "V1", "V1 sound"])
+        #expect(doc.timelineTracks.map(\.name) == ["V2", "V2 sound", "V1", "V1 sound", "Audio"])
         #expect(doc.linkedSoundTrackID(ofClip: pip.id) == doc.timelineTracks[1].id)
         #expect(doc.linkedSoundTrackID(ofClip: screen) == doc.timelineTracks[3].id)
     }

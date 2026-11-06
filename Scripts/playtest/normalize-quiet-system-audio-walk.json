@@ -13,7 +13,7 @@
     { "do": "panel", "stage": "1-quiet" },
     { "do": "snapshot", "name": "1-quiet" },
 
-    { "do": "rightClick", "at": [576, 850], "space": "window", "choose": "Normalize > Peaks to -1 dB" },
+    { "do": "rightClick", "at": [576, 808], "space": "window", "choose": "Normalize > Peaks to -1 dB" },
     { "do": "wait", "seconds": 1.0 },
     { "do": "expect", "field": "Gain in dB", "reads": "+31.7" },
     { "do": "describe", "stage": "2-normalized", "note": "Right-click, Normalize > Peaks to -1 dB: the segment wears +31.7 dB, the waveform fills its lane, the Gain row reads +31.7" },
@@ -29,7 +29,7 @@
     { "do": "describe", "stage": "3-panel-normalize", "note": "Undo put the gain back to nothing; the panel's Normalize button set the same +31.7 dB" },
     { "do": "snapshot", "name": "3-panel-normalize" },
 
-    { "do": "rightClick", "at": [576, 850], "space": "window", "choose": "Normalize > Loudness for Web, -14 LUFS" },
+    { "do": "rightClick", "at": [576, 808], "space": "window", "choose": "Normalize > Loudness for Web, -14 LUFS" },
     { "do": "wait", "seconds": 1.5 },
     { "do": "expect", "field": "Gain in dB", "reads": "+28.3" },
     { "do": "describe", "stage": "4-loudness", "note": "Normalize > Loudness for Web: +28.3 dB, measured on the noise-cleaned sound since Clean noise is on by default (the raw fixture measures -42.7 LUFS in ffmpeg and gave +28.7 before cleaning), less than the peak normalize, so the loudest peak stays under -1 dB" },

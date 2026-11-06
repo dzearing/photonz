@@ -134,7 +134,6 @@
       "do": "expectTimeline",
       "tracks": [
         "V1",
-        "V1 sound",
         "Audio"
       ],
       "lengthMS": 12000

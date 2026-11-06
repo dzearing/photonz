@@ -185,13 +185,12 @@ struct ClipsAcrossTracksTests {
     @Test("A clip of the wrong kind for its track stops the whole move: picture never lands on sound")
     func wrongKindStopsAll() throws {
         var (doc, first, _, v1) = try Self.twoOnV1()
-        let audio = doc.addTrack(.audio)
         let title = Self.title("Hello", 0, 2000)
         doc.addLayer(title)
         // The title in the hand down onto V1, so the first clip would go down
         // onto Audio, past V1's own sound row.
-        let plain = doc.timelineTracks.filter { $0.attachedTo == nil }.map(\.id)
-        #expect(plain.firstIndex(of: v1).map { plain[$0 + 1] } == audio)
+        let plain = doc.timelineLanes
+        #expect(plain.firstIndex { $0.id == v1 }.map { plain[$0 + 1].kind } == .audio)
         #expect(!doc.canMoveClips([title.id, first], carrying: title.id, to: .onto(v1)))
     }
 

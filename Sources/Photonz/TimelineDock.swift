@@ -419,7 +419,9 @@ struct TimelineDock: View {
                         // The tracks a new title brings arrive a frame after
                         // its words (`readingALatePass`).
                         let (order, trackRows) = lateTrackRows.read(editorState) {
-                            (editorState.timelineTrackRows.map(\.id), editorState.timelineRows)
+                            // Where each track is in the document's own list,
+                            // which is what Add Track Above and Below count in.
+                            (editorState.shownDocument?.timelineTracks.map(\.id) ?? [], editorState.timelineRows)
                         }
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
                             let rows = editorState.timelineRowZoom
@@ -466,8 +468,7 @@ struct TimelineDock: View {
                                     carry.rowFrames[row.id] = frame
                                     editorState.revealOpenedTimelineRow(row.id, at: frame)
                                 }
-                                // A sound row stands and moves with its track.
-                                .modifier(TrackRowDragPlacement(id: row.soundRowOwner ?? row.id, session: carry))
+                                .modifier(TrackRowDragPlacement(id: row.id, session: carry))
                             }
                             if listening, listeningBefore == nil {
                                 TimelineCaptionsListeningRow(laneWidth: laneWidth)
@@ -806,7 +807,7 @@ struct TimelineDock: View {
     /// its clips, and the rows of the parts inside them.
     static func height(of track: TimelineTrackRowModel, wordsOpen: Bool = true,
                        rows: TimelineRowZoom = .compact) -> CGFloat {
-        let lane = rows.height(track.carriesSound ? soundLaneHeight : laneHeight)
+        let lane = rows.height(track.restingLaneHeight)
         let motionLanes = track.clips.reduce(0) { $0 + $1.lanes.count }
         let inner = track.inner.reduce(CGFloat(0)) { total, group in
             total + 3 + rows.height(group.isSound ? soundLaneHeight : laneHeight)
@@ -823,7 +824,7 @@ struct TimelineDock: View {
     /// One track's lane and its words, without the rows that open inside its
     /// clips: what the timeline fits itself to (`naturalBodyHeight`).
     static func ownHeight(of track: TimelineTrackRowModel, wordsOpen: Bool = true) -> CGFloat {
-        let lane = track.carriesSound ? soundLaneHeight : laneHeight
+        let lane = track.restingLaneHeight
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
         // The open cut's rows are part of the track itself, right under its
         // lane, so the timeline grows to show them.
@@ -837,21 +838,14 @@ struct TimelineDock: View {
         let carry = editorState.trackRowDrag
         if let id = carry.grabbedID,
            let track = editorState.timelineTrackRows.first(where: { $0.id == id }) {
-            let all = editorState.timelineTrackRows
-            let order = all.map(\.id)
-            // Its sound row rides with it.
-            let carried = [track] + all.filter { $0.track.attachedTo == id }
+            let order = editorState.timelineTrackRows.map(\.id)
             LiftedTrackRow(session: carry,
-                           row: VStack(alignment: .leading, spacing: Self.rowSpacing) {
-                               ForEach(carried) { row in
-                                   TimelineTrackRow(row: row, inGroup: carry.grabbedInGroup,
-                                                    index: order.firstIndex(of: row.id) ?? 0,
-                                                    trackCount: order.count, laneWidth: laneWidth,
-                                                    isBlade: isBlade, rows: editorState.timelineRowZoom,
-                                                    isLifted: true)
-                                       .equatable()
-                               }
-                           })
+                           row: TimelineTrackRow(row: track, inGroup: carry.grabbedInGroup,
+                                                 index: order.firstIndex(of: track.id) ?? 0,
+                                                 trackCount: order.count, laneWidth: laneWidth,
+                                                 isBlade: isBlade, rows: editorState.timelineRowZoom,
+                                                 isLifted: true)
+                               .equatable())
         }
     }
 

@@ -31,13 +31,13 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
       "do": "expect",
       "control": "Track V1 sound",
-      "present": true
+      "present": false
     },
     {
       "do": "describe",
@@ -61,8 +61,8 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound",
-        "V2"
+        "V2",
+        "Audio"
       ]
     },
     {
@@ -78,9 +78,9 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound",
         "V2",
-        "V3"
+        "V3",
+        "Audio"
       ]
     },
     {
@@ -106,9 +106,9 @@
       "tracks": [
         "V4",
         "V1",
-        "V1 sound",
         "V2",
-        "V3"
+        "V3",
+        "Audio"
       ]
     },
     {
@@ -125,8 +125,8 @@
       "tracks": [
         "V4",
         "V1",
-        "V1 sound",
-        "V3"
+        "V3",
+        "Audio"
       ]
     },
     {
@@ -141,7 +141,7 @@
     {
       "do": "dragClip",
       "clip": "Tutorial Sample",
-      "tracksUp": -2,
+      "tracksUp": -1,
       "byMS": 500
     },
     {
@@ -161,7 +161,7 @@
         "V4",
         "V1",
         "V3",
-        "V3 sound"
+        "Audio"
       ]
     },
     {
@@ -187,9 +187,9 @@
       "do": "expectTracks",
       "tracks": [
         "V3",
-        "V3 sound",
         "V4",
-        "V1"
+        "V1",
+        "Audio"
       ]
     },
     {
@@ -206,9 +206,9 @@
       "do": "expectTracks",
       "tracks": [
         "V3",
-        "V3 sound",
         "V1",
-        "V4"
+        "V4",
+        "Audio"
       ]
     },
     {
@@ -276,9 +276,9 @@
       "do": "expectTracks",
       "tracks": [
         "V3",
-        "V3 sound",
         "V1",
-        "V4"
+        "V4",
+        "Audio"
       ]
     },
     {

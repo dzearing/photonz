@@ -8,7 +8,7 @@
     { "do": "action", "action": "videoPause" },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "windowClick", "at": [600, 945] },
+    { "do": "windowClick", "at": [600, 906.2] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expect", "field": "Gain in dB", "reads": "0.0" },
     { "do": "describe", "stage": "1-picked", "note": "The talking sample's sound picked: a white trim grip at each end of its segment, the level line running across both at the ordinary level" },
@@ -24,7 +24,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectClip", "clip": "Sample Talk", "track": "V1", "startsAt": 0, "endsAt": 17.25 },
 
-    { "do": "windowDrag", "from": [700, 926], "to": [700, 936], "steps": 8 },
+    { "do": "windowDrag", "from": [700, 892], "to": [700, 899.5], "steps": 8 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "3-turned-down" },
     { "do": "describe", "stage": "3-turned-down", "note": "The level line grabbed in the middle of the segment, well away from either grip, moves the level down" },
@@ -39,7 +39,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectClip", "clip": "Sample Talk", "track": "V1", "startsAt": 0, "endsAt": 17.25 },
 
-    { "do": "windowDrag", "from": [700, 936], "to": [700, 918], "steps": 8 },
+    { "do": "windowDrag", "from": [700, 899.5], "to": [700, 886], "steps": 8 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "5-turned-up" },
     { "do": "describe", "stage": "5-turned-up", "note": "The level line dragged up past the ordinary level, again in the middle of the segment" },

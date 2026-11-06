@@ -1654,6 +1654,17 @@ struct EditorCommands: Commands {
                     get: { track?.isHidden ?? false },
                     set: { _ in editor?.run(.hideTrack) }))
                 .disabled(track == nil)
+                // The sound inside its clips has no track row to pick, so its
+                // switches are here with the track they are on.
+                if let track, editor?.trackHasClipSound(track.id) == true {
+                    Toggle("Mute Sound", isOn: Binding(
+                        get: { editor?.clipSoundIsMuted(onTrack: track.id) ?? false },
+                        set: { _ in editor?.run(.muteSound) }))
+                    Toggle("Solo Sound", isOn: Binding(
+                        get: { editor?.clipSoundIsSolo(onTrack: track.id) ?? false },
+                        set: { _ in editor?.run(.soloSound) }))
+                    Button("Delete Sound") { editor?.run(.deleteSound) }
+                }
             }
             Toggle("Solo Track", isOn: Binding(
                 get: { track?.isSolo ?? false },

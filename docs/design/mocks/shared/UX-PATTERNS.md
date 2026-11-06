@@ -3187,7 +3187,7 @@ them. There are four kinds:
 | --- | --- | --- |
 | **Video** | pictures: recordings, images, overlays, adjustment and matte clips | `V1`, `V2`, `V3`, `V4` (`video-compositing`) |
 | **Titles** | text, graphics and component instances | `Title`, `Gfx` (`video-title-wt`, `video-move-wt`) |
-| **Audio** | sound: a recording's own sound, music, a voice-over | `Audio`, or by what is on it (`Music`, `Voiceover` in `video-audio`) |
+| **Audio** | sound: music, a voice-over, a recording's sound once detached. A recording's own sound is the bottom of its clip on the video track until Detach Audio, never a row of its own (the user, 2026-11-05) | `Audio`, or by what is on it (`Music`, `Voiceover` in `video-audio`) |
 | **Captions** | caption cues, one clip per cue | `CAP`, which arrives when captions are generated (`video.html`, `video-captions`) |
 
 What a person can do with them, each of which the pages draw or a user task

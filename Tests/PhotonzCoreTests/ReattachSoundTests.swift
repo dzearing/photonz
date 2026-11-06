@@ -91,7 +91,7 @@ struct ReattachSoundTests {
         let after = try #require(doc.reattachingSound(ofLayer: clip)).document
         let row = try #require(after.linkedSoundTrackID(ofClip: clip))
         #expect(after.track(id: row)?.attachedTo == after.trackID(ofClip: clip))
-        #expect(after.timelineTracks.map(\.name) == ["V1", "V1 sound"])
+        #expect(after.timelineTracks.map(\.name) == ["V1", "V1 sound", "Audio"])
     }
 
     @Test("Detach then re-attach leaves the timeline as it opened")

@@ -35,11 +35,11 @@
       "do": "windowDrag",
       "from": [
         551.9,
-        860
+        833
       ],
       "to": [
         552.8,
-        860
+        833
       ],
       "steps": 3
     },
@@ -74,7 +74,7 @@
       "do": "rightClick",
       "at": [
         551.9,
-        893
+        866
       ],
       "space": "window",
       "shot": "2-clip-menu",
@@ -98,7 +98,7 @@
       "do": "rightClick",
       "at": [
         553.8,
-        893
+        866
       ],
       "space": "window",
       "shot": "4-cut-menu",
@@ -150,11 +150,11 @@
       "do": "windowDrag",
       "from": [
         744.9,
-        860
+        833
       ],
       "to": [
         745.9,
-        860
+        833
       ],
       "steps": 3
     },
@@ -171,7 +171,7 @@
       "do": "rightClick",
       "at": [
         557.7,
-        893
+        866
       ],
       "space": "window",
       "choose": "Roll Edit to 0:03.01"
@@ -193,11 +193,11 @@
       "do": "windowDrag",
       "from": [
         358.8,
-        860
+        833
       ],
       "to": [
         359.8,
-        860
+        833
       ],
       "steps": 3
     },
@@ -210,7 +210,7 @@
       "do": "rightClick",
       "at": [
         363.7,
-        860
+        833
       ],
       "space": "window",
       "shot": "7-ruler-menu",
@@ -220,11 +220,11 @@
       "do": "windowDrag",
       "from": [
         1132.9,
-        860
+        833
       ],
       "to": [
         1133.9,
-        860
+        833
       ],
       "steps": 3
     },
@@ -237,7 +237,7 @@
       "do": "rightClick",
       "at": [
         1139.7,
-        860
+        833
       ],
       "space": "window",
       "choose": "Set Out"
@@ -246,11 +246,11 @@
       "do": "windowDrag",
       "from": [
         939.9,
-        860
+        833
       ],
       "to": [
         940.8,
-        860
+        833
       ],
       "steps": 3
     },
@@ -263,7 +263,7 @@
       "do": "rightClick",
       "at": [
         945.7,
-        860
+        833
       ],
       "space": "window",
       "choose": "Add Marker"
@@ -291,7 +291,7 @@
       "do": "rightClick",
       "at": [
         1200,
-        785
+        758
       ],
       "space": "window",
       "shot": "9-scrub-menu"
@@ -300,7 +300,7 @@
       "do": "rightClick",
       "at": [
         35,
-        893
+        866
       ],
       "space": "window",
       "shot": "10-track-menu"
@@ -309,7 +309,7 @@
       "do": "rightClick",
       "at": [
         349.2,
-        893
+        866
       ],
       "space": "window",
       "shot": "11-first-piece-menu",
@@ -332,7 +332,7 @@
       "do": "rightClick",
       "at": [
         1314.3,
-        893
+        866
       ],
       "space": "window",
       "choose": "Ripple Delete"
@@ -374,7 +374,7 @@
       "do": "rightClick",
       "at": [
         349.2,
-        893
+        866
       ],
       "space": "window",
       "choose": "Rename…"

@@ -47,7 +47,7 @@ struct CaptionsTrackPlaceTests {
     @Test("Captions written on a titled recording list under the picture and over the sound")
     func listedUnderThePicture() {
         let (doc, _, _, captions) = Self.captioned()
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions"])
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions", "Audio"])
         let row = doc.timelineTracks[3]
         #expect(row.kind == .captions)
         #expect(doc.clipIDs(onTrack: row.id) == [captions])
@@ -61,7 +61,7 @@ struct CaptionsTrackPlaceTests {
                           frame: CGRect(x: 0, y: 0, width: 100, height: 40))
         title.time = LayerTime(inMS: 0, outMS: 3000)
         doc.addLayer(title)
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions"])
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions", "Audio"])
     }
 
     @Test("Captions written after the tracks were written down land under the last picture track")
@@ -69,7 +69,7 @@ struct CaptionsTrackPlaceTests {
         var (doc, _, _) = Self.titled()
         doc.addTrack(.video)
         doc.landCaptions(CaptionCues.cues(from: Self.heard))
-        #expect(doc.timelineTracks.map(\.name) == ["V2", "Title", "V1", "V1 sound", "Captions"])
+        #expect(doc.timelineTracks.map(\.name) == ["V2", "Title", "V1", "V1 sound", "Captions", "Audio"])
     }
 
     @Test("Writing the tracks down keeps the Captions row where it is listed")
@@ -84,7 +84,7 @@ struct CaptionsTrackPlaceTests {
     func emptyCaptionsTrack() {
         var (doc, _, _) = Self.titled()
         let id = doc.addTrack(.captions)
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions"])
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions", "Audio"])
         #expect(doc.timelineTracks[3].id == id)
     }
 
@@ -94,7 +94,7 @@ struct CaptionsTrackPlaceTests {
         let row = doc.timelineTracks[3].id
         let topRow = doc.timelineTracks[0].id
         do { let moved = doc.moveTrack(row, .above(topRow)); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.name) == ["Captions", "Title", "V1", "V1 sound"])
+        #expect(doc.timelineTracks.map(\.name) == ["Captions", "Title", "V1", "V1 sound", "Audio"])
         // Another edit later leaves it where it was put.
         doc.updateLayer(id: title) { $0.time = LayerTime(inMS: 500, outMS: 2500) }
         doc.addTrack(.video)

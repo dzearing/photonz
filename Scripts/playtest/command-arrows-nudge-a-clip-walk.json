@@ -24,7 +24,7 @@
     {
       "comment": "The middle of piece 2 on V1 in the 1728x990 probe window, clicked the way a hand clicks it.",
       "do": "windowClick",
-      "at": [1300, 894]
+      "at": [1300, 867]
     },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 2"] },
@@ -77,7 +77,7 @@
     { "do": "describe", "stage": "7-nothing-picked", "note": "with nothing picked Command Right moved nothing" },
     { "do": "snapshot", "name": "7-nothing-picked" },
 
-    { "do": "windowClick", "at": [1300, 894] },
+    { "do": "windowClick", "at": [1300, 867] },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 2"] },
     { "do": "menus", "stage": "8-rename", "menu": "Clip", "choose": "Clip > Rename…" },

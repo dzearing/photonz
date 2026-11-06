@@ -271,21 +271,18 @@ struct TimelineGapTests {
         #expect(doc.gapCloseRefusal(gap)?.reading == "V1 is locked")
     }
 
-    @Test("A clip whose own sound is on a locked track does not move, and the sound's track is named")
-    func lockedSoundTrackKeepsTheGapOpen() throws {
-        var (doc, tail, track, audio) = try Self.liftedSpeaking()
-        doc.updateTrack(audio) { $0.isLocked = true }
+    @Test("A clip with its own sound on a locked track does not move, and its track is named")
+    func lockedTrackKeepsASpeakingClip() throws {
+        var (doc, tail, track, _) = try Self.liftedSpeaking()
+        doc.updateTrack(track) { $0.isLocked = true }
         let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
         #expect(!doc.canCloseGap(gap))
-        #expect(doc.gapCloseRefusal(gap)?.reading == "V1 sound is locked")
+        #expect(doc.gapCloseRefusal(gap)?.reading == "V1 is locked")
         let before = doc
         let closed = doc.closeGap(gap)
         #expect(!closed)
         #expect(doc == before)
         #expect(doc.layer(id: tail)?.time?.inMS == 8000)
-        // The same gap picked on the sound's own row says the same.
-        let soundGap = try #require(doc.gap(onTrack: audio, atMS: 5000))
-        #expect(doc.gapCloseRefusal(soundGap)?.reading == "V1 sound is locked")
     }
 
     @Test("Captions on a locked Captions track name that track")

@@ -31,6 +31,8 @@ extension EditorState {
         case .muteTrack: trackInHand?.isMuted ?? false
         case .hideTrack: trackInHand?.isHidden ?? false
         case .soloTrack: trackInHand?.isSolo ?? false
+        case .muteSound: trackInHandID.map(clipSoundIsMuted(onTrack:)) ?? false
+        case .soloSound: trackInHandID.map(clipSoundIsSolo(onTrack:)) ?? false
         case .lockTrack: trackInHand?.isLocked ?? false
         case .showClickEffects: clickEffectClip.map { clickEffect(ofClip: $0.id).isOn } ?? false
         case .expandCut: isCutInHandExpanded
@@ -120,6 +122,9 @@ extension EditorState {
         case .addTrackAbove: if let track = trackInHand, let index = trackInHandIndex { addTrack(track.kind, at: index) }
         case .addTrackBelow:
             if let track = trackInHand, let index = trackInHandIndex { addTrack(track.kind, at: index + 1) }
+        case .muteSound: if let id = trackInHandID { toggleClipSoundMuted(onTrack: id) }
+        case .soloSound: if let id = trackInHandID { toggleClipSoundSolo(onTrack: id) }
+        case .deleteSound: if let id = trackInHandID { deleteClipSound(onTrack: id) }
         case .muteTrack: if let track = trackInHand { toggleTrackMuted(track.id) }
         case .hideTrack: if let track = trackInHand { toggleTrackHidden(track.id) }
         case .soloTrack: if let track = trackInHand { toggleTrackSolo(track.id) }
@@ -445,6 +450,7 @@ extension EditorState {
         case .snapInTimeline, .addVideoTrack, .addAudioTrack, .addCaptionsTrack: return timed
         case .addTrackAbove, .addTrackBelow, .soloTrack, .lockTrack, .deleteTrack: return track != nil
         case .muteTrack: return track?.kind == .audio
+        case .muteSound, .soloSound, .deleteSound: return track.map { trackHasClipSound($0.id) } ?? false
         case .hideTrack: return track != nil && track?.kind != .audio
         case .groupTrack: return track != nil && track?.groupID == nil
         case .ungroupTracks: return track?.groupID != nil

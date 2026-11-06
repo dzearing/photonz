@@ -107,7 +107,7 @@
       "tracks": [
         "V2",
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -189,9 +189,8 @@
       "do": "expectTracks",
       "tracks": [
         "V2",
-        "V2 sound",
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -230,7 +229,7 @@
       "tracks": [
         "V2",
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -273,9 +272,8 @@
       "tracks": [
         "V3",
         "V2",
-        "V2 sound",
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -374,7 +372,7 @@
       "do": "dragClip",
       "clip": "b-roll",
       "byMS": 250,
-      "tracksUp": -2,
+      "tracksUp": -1,
       "hold": "4-refused-on-its-own-lane",
       "reads": "Audio takes sound only",
       "lights": [
@@ -422,7 +420,7 @@
         "option"
       ],
       "byMS": 500,
-      "tracksUp": -2,
+      "tracksUp": -1,
       "hold": "5-copies-refused",
       "reads": "Audio takes sound only",
       "lights": [

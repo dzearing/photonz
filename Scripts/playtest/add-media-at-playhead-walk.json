@@ -41,7 +41,7 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -90,9 +90,8 @@
       "do": "expectTracks",
       "tracks": [
         "V2",
-        "V2 sound",
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -156,7 +155,7 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {

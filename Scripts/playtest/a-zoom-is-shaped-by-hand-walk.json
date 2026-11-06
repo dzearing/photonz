@@ -39,7 +39,7 @@
       "do": "rightClick",
       "at": [
         550.0,
-        893
+        866
       ],
       "space": "window",
       "choose": "Add Zoom",
@@ -57,11 +57,11 @@
       "do": "windowDrag",
       "from": [
         995.8,
-        922
+        923
       ],
       "to": [
         937.9,
-        922
+        923
       ],
       "steps": 10
     },
@@ -73,11 +73,11 @@
       "do": "windowDrag",
       "from": [
         1129,
-        922
+        923
       ],
       "to": [
         1082.7,
-        922
+        923
       ],
       "steps": 10
     },

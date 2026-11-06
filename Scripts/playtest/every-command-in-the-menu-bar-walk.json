@@ -137,8 +137,8 @@
       "do": "expectTimeline",
       "tracks": [
         "V1",
-        "V1 sound",
-        "Audio"
+        "Audio",
+        "Audio 2"
       ]
     },
     {
@@ -188,7 +188,7 @@
       "do": "expectTimeline",
       "tracks": [
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {

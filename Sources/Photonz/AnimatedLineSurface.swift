@@ -29,6 +29,8 @@ struct AnimatedLineSurface<Drag: Gesture, BeyondMenu: View, SegmentMenu: View>: 
     let line: AnimatedLine
     let width: CGFloat
     let height: CGFloat
+    /// How far either side of the line a press still takes it.
+    var reach: CGFloat = AnimatedLine.lineReach
     /// Where the latest right click landed, in the line's own points, or nil
     /// when it was not on this line's row.
     let rightPress: @MainActor () -> CGPoint?
@@ -61,7 +63,7 @@ struct AnimatedLineSurface<Drag: Gesture, BeyondMenu: View, SegmentMenu: View>: 
     private func strip(_ lines: [[CGPoint]]) -> some View {
         Color.clear
             .frame(width: width, height: height)
-            .contentShape(LineStrip(lines: lines, width: AnimatedLine.lineReach * 2))
+            .contentShape(LineStrip(lines: lines, width: reach * 2))
             .onTapGesture(coordinateSpace: .local) { click($0) }
             .gesture(drag)
     }

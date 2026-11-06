@@ -290,6 +290,13 @@ extension PhotonzDocument {
 
         var sound: [DocumentTrack] = []
         for layer in looseSound {
+            // The Audio track left waiting is where the first sound goes, once
+            // the tracks are written down, rather than a second one under it.
+            if let waiting = written[Self.waitingAudioTrackID], !retired.contains(waiting.id),
+               (clips[waiting.id] ?? []).isEmpty {
+                clips[waiting.id] = [layer.id]
+                continue
+            }
             let name = Self.freeTrackName(.audio, used: used)
             used.insert(name)
             sound.append(DocumentTrack(id: layer.id, name: name, kind: .audio))
@@ -349,14 +356,20 @@ extension PhotonzDocument {
                 row.kind = .audio
                 row.attachedTo = owner.id
                 row.groupID = owner.groupID
+                // The sound is inside the clip, so it locks with the track
+                // the clip is on. A row locked in an older document has no
+                // switch left to free it.
+                row.isLocked = owner.isLocked
                 all.append(row)
                 linked[row.id] = clipIDs
             }
         }
-        // A video with no sound anywhere still has an Audio track waiting
-        // under its picture, the way the mock's blank project does, so there
-        // is somewhere to put the music before there is any.
-        if !all.contains(where: { $0.kind == .audio }), clipLayers.contains(where: \.isClip) {
+        // A video with no Audio track still has one waiting under its picture,
+        // the way the mock's blank project does, so there is somewhere to put
+        // the music before there is any. A clip's own sound is inside the
+        // clip, so it is no such place.
+        if !all.contains(where: { $0.kind == .audio && $0.attachedTo == nil }),
+           clipLayers.contains(where: \.isClip) {
             all.append(DocumentTrack(id: Self.waitingAudioTrackID,
                                      name: Self.freeTrackName(.audio, used: used), kind: .audio))
         }
@@ -393,6 +406,17 @@ extension PhotonzDocument {
     /// Every audio track's linked clips at once, for drawing the whole timeline
     /// off one reading.
     public var linkedSoundsByTrack: [UUID: [UUID]] { trackLayout().linked }
+
+    /// The tracks the timeline lists, top to bottom. A clip's own sound is
+    /// drawn inside the clip (`ClipHalves`), so the sound rows that keep its
+    /// Mute and Solo are in `timelineTracks` and not here.
+    public var timelineLanes: [DocumentTrack] { timelineTracks.filter { $0.attachedTo == nil } }
+
+    /// The sound rows of the clips on a picture track: what its Mute and Solo
+    /// are read from, since no row of their own is listed.
+    public func soundRowIDs(ofTrack id: UUID) -> [UUID] {
+        timelineTracks.filter { $0.attachedTo == id }.map(\.id)
+    }
 
     /// The clips whose own sound is drawn on this sound row, linked to them.
     public func linkedSoundClipIDs(onTrack id: UUID) -> [UUID] { trackLayout().linked[id] ?? [] }

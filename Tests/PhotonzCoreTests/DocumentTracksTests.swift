@@ -124,7 +124,7 @@ struct DocumentTracksTests {
         var (doc, recording, title, music) = Self.cut()
         let tracks = doc.timelineTracks
         doc.deleteTracks([tracks[3].id, tracks[0].id])
-        #expect(doc.timelineTracks.map(\.name) == ["V1", "V1 sound"])
+        #expect(doc.timelineTracks.map(\.name) == ["V1", "V1 sound", "Audio"])
         #expect(doc.layer(id: title) == nil)
         #expect(doc.layer(id: music) == nil)
         #expect(doc.layer(id: recording) != nil)

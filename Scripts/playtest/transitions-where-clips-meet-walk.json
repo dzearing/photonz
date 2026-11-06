@@ -163,7 +163,7 @@
       "do": "rightClick",
       "at": [
         890,
-        893
+        866
       ],
       "space": "window",
       "choose": "Transition > At the Start…"
@@ -205,7 +205,7 @@
       "do": "rightClick",
       "at": [
         890,
-        893
+        866
       ],
       "space": "window",
       "choose": "Transition > At the End…"
@@ -295,7 +295,7 @@
       "do": "rightClick",
       "at": [
         346,
-        893
+        866
       ],
       "space": "window",
       "choose": "Transition…",
@@ -344,7 +344,7 @@
       "do": "rightClick",
       "at": [
         621,
-        860
+        833
       ],
       "space": "window",
       "choose": "Transition…"

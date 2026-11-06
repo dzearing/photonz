@@ -12804,7 +12804,7 @@ private final class Run {
     private func checkTracks(_ expected: [String]) throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document else { throw Failure(description: "no document is open") }
-        let tracks = document.timelineTracks.map { ($0.groupID == nil ? "" : "  ") + $0.name }
+        let tracks = document.timelineLanes.map { ($0.groupID == nil ? "" : "  ") + $0.name }
         let spelled = tracks.map { "\"\($0)\"" }.joined(separator: ", ")
         guard tracks == expected else {
             throw Failure(description: "the timeline's tracks read \(spelled), not "
@@ -17130,7 +17130,7 @@ private final class Run {
             wrong.append(editor.isTimelineSnapping ? "the timeline is snapping" : "snapping is off")
         }
         if let want = claim.tracks {
-            let names = editor.document?.timelineTracks.map(\.name) ?? []
+            let names = editor.document?.timelineLanes.map(\.name) ?? []
             if names != want {
                 wrong.append("the tracks are \(names.isEmpty ? "none" : names.joined(separator: ", ")), "
                              + "not \(want.joined(separator: ", "))")
@@ -20144,11 +20144,19 @@ private final class Run {
             return (top + bottom) / 2 + (bottom - top) * lean
         }
         let tracks = editor.document?.timelineTracks ?? []
-        guard let id = tracks.first(where: { $0.name.compare(name, options: .caseInsensitive) == .orderedSame })?.id
+        guard let named = tracks.first(where: { $0.name.compare(name, options: .caseInsensitive) == .orderedSame })
         else {
             throw Failure(description: "no track is called \"\(name)\"; the tracks: "
                 + tracks.map(\.name).joined(separator: ", "))
         }
+        // "V1 sound" is the bottom half of V1's clips, which has no row of its
+        // own (`ClipHalves`). Aimed low in it, clear of the volume line, which
+        // takes the press along its own strip.
+        if let owner = named.attachedTo, let row = editor.trackDropRows[owner] {
+            let halves = ClipHalves(laneHeight: row.maxY - row.minY)
+            return row.minY + halves.picture + halves.sound * (0.8 + lean)
+        }
+        let id = named.id
         guard let row = editor.trackDropRows[id] else {
             throw Failure(description: "the track \"\(name)\" is not on screen: is the timeline open, "
                 + "or its group folded?")

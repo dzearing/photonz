@@ -16,11 +16,11 @@
     { "do": "action", "action": "videoSeekMiddle" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "describe", "stage": "0-set-in", "note": "a walk's right click cannot put the pointer over the ruler, so the menu acts at the playhead, the ruler's own fallback: Set In at 4.0s" },
-    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Set In" },
+    { "do": "rightClick", "at": [750, 833], "space": "window", "choose": "Set In" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "action", "action": "videoSeekThreeQuarters" },
     { "do": "wait", "seconds": 0.3 },
-    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Set Out" },
+    { "do": "rightClick", "at": [750, 833], "space": "window", "choose": "Set Out" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectTimeline", "markInMS": 4000, "markOutMS": 6000, "lengthMS": 8000 },
     { "do": "snapshot", "name": "1-marked" },
@@ -45,7 +45,7 @@
 
     { "do": "writeVideo", "name": "whole-video", "format": "mp4", "quality": "standard", "range": "whole", "seconds": 8.0, "within": 0.15, "startsAtMS": 0 },
 
-    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Clear Range" },
+    { "do": "rightClick", "at": [750, 833], "space": "window", "choose": "Clear Range" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectTimeline", "hasIn": false, "hasOut": false },
     { "do": "action", "action": "exportDialogAsVideo" },

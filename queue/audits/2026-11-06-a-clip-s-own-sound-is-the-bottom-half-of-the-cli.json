@@ -1,0 +1,60 @@
+{
+  "feature": "A clip's own sound is the bottom half of the clip",
+  "epic": "video-editing",
+  "summary": "A recording with sound is now one clip on its video track: the picture on top, the waveform underneath, one outline. The separate V1 sound row is gone. Detach Audio still moves the sound to an Audio track, and Re-attach Audio puts it back inside the clip.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording with sound.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording with sound and look at V1: one clip, picture over waveform, and an empty Audio track under it.",
+      "shot": "2026-11-06-clip-sound-inside-1-one-clip.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the waveform half: the clip is picked, with one ring round both halves.",
+      "shot": "2026-11-06-clip-sound-inside-2-picked-by-the-sound.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the clip's right edge in by a second, from either half: picture and sound end together.",
+      "shot": "2026-11-06-clip-sound-inside-4b-trimmed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press B and click the waveform half: one cut goes through both halves.",
+      "shot": "2026-11-06-clip-sound-inside-4c-bladed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right click V1's header and choose Mute Sound: the waveform dims and a slashed speaker appears on the half.",
+      "shot": "2026-11-06-clip-sound-inside-5-muted.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right click the waveform half and choose Detach Audio: the sound moves to the Audio track and the clip becomes picture only.",
+      "shot": "2026-11-06-clip-sound-inside-6-detached.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right click the sound on Audio and choose Re-attach Audio: it goes back inside the clip.",
+      "shot": "2026-11-06-clip-sound-inside-7-re-attached.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does a recording now read as one thing rather than two rows you have to keep in your head?",
+    "Is an even split of picture and sound right, or should the picture get more of the height?",
+    "Is the empty Audio track under a recording useful as the place for music, or would you rather it stayed away until you need it?",
+    "Is Mute Sound easy enough to find on the track header's right-click menu, the Track menu and the Audio section, or do you want a switch on the header?",
+    "Can you still set the volume by dragging the line in the half, or is it too fine?"
+  ],
+  "rough": [
+    "Grown-up tool check: Final Cut draws attached audio inside the clip, Premiere links two items across tracks. Photonz follows Final Cut here because that is your call on 2026-11-05. Before: 2026-10-13-sound-under-its-video-0-opened.png. After: the first picture above.",
+    "The video mocks now draw the sound inside the clip, changed as you asked on 2026-11-05. 2026-11-06-clip-sound-inside-mock-and-app.png has the mock over the app. The mock's waveform is bars and its clip colours are its own, your call on 2026-11-05 covers the drawing.",
+    "The timeline stands 28 points taller for a recording than before, because the clip is 56 points and the empty Audio track stays under it. A timeline with many tracks scrolls sooner.",
+    "The volume line has 17 points of travel in the half, where the old row gave 23. It is coarser under the hand; taller rows or the Audio section's slider give finer control.",
+    "The strip that takes a press along the volume line is narrower on the half, so a drag near the line still moves the clip. A sideways drag right on the line changes nothing, as it did on the old row.",
+    "Mute and Solo for a clip's sound have no switch on the track header, only menus and the Audio section. The header's Solo and Lock are the track's; Lock now covers picture and sound together.",
+    "Deleting the only Audio track takes what is on it, then an empty Audio track comes back to wait, the way a silent recording's always has. So under a recording you cannot get rid of the last empty Audio track."
+  ]
+}

@@ -53,7 +53,7 @@ struct AttachedSoundRowTests {
     func opensUnderItsVideo() throws {
         let doc = PhotonzDocument.recording(Fixture.movie(), name: "take")
         let clip = doc.layers[0].id
-        #expect(Self.shape(doc) == ["V1", ">V1"])
+        #expect(Self.shape(doc) == ["V1", ">V1", "Audio"])
         #expect(Self.soundIsUnderItsVideo(doc, clip))
         let row = try #require(doc.timelineTracks.first { $0.attachedTo != nil })
         #expect(row.kind == .audio)
@@ -65,7 +65,7 @@ struct AttachedSoundRowTests {
     @Test("The user's layout: the sound is under V3, not under the empty tracks below it")
     func userLayoutSoundUnderV3() throws {
         let (doc, clip) = try Self.userLayout()
-        #expect(Self.shape(doc) == ["V3", ">V3", "V2", "V1"])
+        #expect(Self.shape(doc) == ["V3", ">V3", "V2", "V1", "Audio"])
         #expect(Self.soundIsUnderItsVideo(doc, clip))
     }
 
@@ -104,7 +104,7 @@ struct AttachedSoundRowTests {
         let v1 = try #require(doc.timelineTracks.first { $0.name == "V1" }?.id)
         let done2 = doc.moveClip(clip, toTrack: v1)
         #expect(done2)
-        #expect(Self.shape(doc) == ["V3", "V2", "V1", ">V1"])
+        #expect(Self.shape(doc) == ["V3", "V2", "V1", ">V1", "Audio"])
         #expect(Self.soundIsUnderItsVideo(doc, clip))
         _ = doc.moveClipToNewTrack(clip, at: 0)
         #expect(Self.soundIsUnderItsVideo(doc, clip))
@@ -117,7 +117,7 @@ struct AttachedSoundRowTests {
         let v1 = try #require(doc.timelineTracks.first { $0.name == "V1" }?.id)
         let done3 = doc.moveTrack(v3, .below(v1))
         #expect(done3)
-        #expect(Self.shape(doc) == ["V2", "V1", "V3", ">V3"])
+        #expect(Self.shape(doc) == ["V2", "V1", "V3", ">V3", "Audio"])
         #expect(Self.soundIsUnderItsVideo(doc, clip))
         // Dropped right under a track that has a sound row, it goes under
         // that row rather than between the two.
@@ -127,7 +127,7 @@ struct AttachedSoundRowTests {
         let bottom = try #require(other.timelineTracks.first { $0.name == "V1" }?.id)
         let done4 = other.moveTrack(bottom, .below(top))
         #expect(done4)
-        #expect(Self.shape(other) == ["V3", ">V3", "V1", "V2"])
+        #expect(Self.shape(other) == ["V3", ">V3", "V1", "V2", "Audio"])
     }
 
     @Test("A sound row cannot be carried away from its video, and takes no clips")
@@ -154,7 +154,7 @@ struct AttachedSoundRowTests {
         var demo = Fixture.clip(Fixture.movie(4000), name: "demo", atMS: 6000)
         demo.trackID = v1
         doc.addLayer(demo)
-        #expect(Self.shape(doc) == ["V1", ">V1"])
+        #expect(Self.shape(doc) == ["V1", ">V1", "Audio"])
         let row = try #require(doc.linkedSoundTrackID(ofClip: intro))
         #expect(doc.linkedSoundTrackID(ofClip: demo.id) == row)
     }
@@ -165,7 +165,7 @@ struct AttachedSoundRowTests {
         let screen = doc.layers[0].id
         let pip = Fixture.clip(Fixture.movie(3000), name: "face", atMS: 1000)
         doc.addLayer(pip)
-        #expect(Self.shape(doc) == ["V2", ">V2", "V1", ">V1"])
+        #expect(Self.shape(doc) == ["V2", ">V2", "V1", ">V1", "Audio"])
         #expect(Self.soundIsUnderItsVideo(doc, screen))
         #expect(Self.soundIsUnderItsVideo(doc, pip.id))
     }
@@ -225,7 +225,8 @@ struct AttachedSoundRowTests {
     @Test("Detach Audio makes a new Audio track when the one there is busy")
     func detachMakesRoom() throws {
         var (doc, clip) = try Self.userLayout()
-        let audio = doc.addTrack(.audio)
+        doc.materializeTracks()
+        let audio = try #require(doc.timelineLanes.first { $0.kind == .audio }?.id)
         let music = doc.addSound(SoundRef(durationMS: 9000), name: "music", atMS: 0)
         doc.updateLayer(id: music) { $0.trackID = audio }
         #expect(doc.trackID(ofClip: music) == audio)
@@ -270,7 +271,7 @@ struct AttachedSoundRowTests {
             $0.trackID = v1.id
             $0.soundTrackID = audio.id
         }
-        #expect(Self.shape(doc) == ["V1", ">V1"])
+        #expect(Self.shape(doc) == ["V1", ">V1", "Audio"])
         let row = try #require(doc.linkedSoundTrackID(ofClip: clip))
         #expect(doc.track(id: row)?.isMuted == true)
         #expect(!doc.audioMix().contains { $0.layerID == clip })
@@ -278,7 +279,7 @@ struct AttachedSoundRowTests {
         #expect(!doc.timelineTracks.contains { $0.id == audio.id })
         // Writing the tracks down keeps the same picture and drops the pin.
         doc.materializeTracks()
-        #expect(Self.shape(doc) == ["V1", ">V1"])
+        #expect(Self.shape(doc) == ["V1", ">V1", "Audio"])
         #expect(doc.layer(id: clip)?.soundTrackID == nil)
         #expect(doc.track(id: row)?.isMuted == true)
     }

@@ -66,13 +66,17 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// Switched off, or left out by another track being soloed: its clips are
     /// drawn faint, because the picture or the mix is going on without them.
     let isOff: Bool
-    /// On an audio track: the clips whose own sound is drawn here, linked to
-    /// them, so every one is that clip's bar a second time, as sound.
+    /// The clips on this track that still carry their own sound, each drawn
+    /// a second time as the bottom half of the clip (`ClipHalves`).
     var linked: [MotionStripGroup] = []
-    /// On an audio track: which sound track it is from the top, which picks
-    /// the colour its fade diamonds and level points wear
-    /// (`VideoKit.Palette.soundTrack`).
+    /// Which sound track its sound is from the top, which picks the colour
+    /// its fade diamonds and level points wear (`VideoKit.Palette.soundTrack`).
     var soundNumber = 0
+    /// The sound inside its clips is muted.
+    var soundIsMuted = false
+    /// The sound inside its clips is out of the mix, muted or left out by
+    /// another track being soloed, so its waveform is drawn faint.
+    var soundIsOff = false
     /// On a Captions track: no hold anywhere pushed the picture alone, so no
     /// cue can carry a drift mark and an unpicked one can be drawn as the
     /// light `CaptionCueBar`.
@@ -100,6 +104,14 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// line needs somewhere to be dragged.
     var carriesSound: Bool { track.kind == .audio || clips.contains(where: \.isSound) }
 
+    /// How tall the lane stands at the rows' resting zoom: a clip with its
+    /// own sound needs room for both halves, one of pure sound the kit's
+    /// taller lane.
+    var restingLaneHeight: CGFloat {
+        if !linked.isEmpty { return ClipHalves.restingLaneHeight }
+        return carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight
+    }
+
     /// Nothing is drawn on the lane, so it is drawn as the mock's empty slot
     /// (`.lane.empty`), the place a clip goes. Not on a locked track, which
     /// takes nothing and is striped as locked, and not on a Captions track,
@@ -119,12 +131,6 @@ enum TimelineRowModel: Identifiable {
         case .group(let group, _, _): group.id
         case .track(let row, _): row.id
         }
-    }
-
-    /// For a picture track's sound row, the track it belongs to.
-    var soundRowOwner: UUID? {
-        if case .track(let row, _) = self { return row.track.attachedTo }
-        return nil
     }
 }
 
@@ -161,7 +167,9 @@ extension EditorState {
         let linkedByTrack = document.linkedSoundsByTrack
         let linkedClips = Set(linkedByTrack.values.joined())
         let open = expandedGroupIDs
-        return tracks.map { track in
+        // A clip's own sound is drawn inside the clip, so its row is read
+        // here for its switches and never drawn.
+        return tracks.filter { $0.attachedTo == nil }.map { track in
             var clips: [MotionStripGroup] = []
             var inner: [MotionStripGroup] = []
             var nesting: [UUID: TimelineRowNesting] = [:]
@@ -177,9 +185,9 @@ extension EditorState {
             for id in document.clipIDs(onTrack: track.id) {
                 guard let layer = document.layer(id: id) else { continue }
                 if var group = byLayer[id] ?? Self.partsOnlyBar(layer, in: document) {
-                    // A clip whose sound is on an audio track of its own is
-                    // drawn as picture only: its waveform and level line are
-                    // on the segment under it.
+                    // A clip with its own sound is drawn as two halves: this
+                    // is the picture, and its waveform and level line are on
+                    // the half under it.
                     if linkedClips.contains(id) { group.isSound = false }
                     clips.append(group)
                 }
@@ -209,7 +217,9 @@ extension EditorState {
                     inner.append(group)
                 }
             }
-            let linked = (linkedByTrack[track.id] ?? []).compactMap { id -> MotionStripGroup? in
+            let soundRows = tracks.filter { $0.attachedTo == track.id }
+            let ownSound = soundRows.flatMap { linkedByTrack[$0.id] ?? [] }
+            let linked = (track.kind == .audio ? linkedByTrack[track.id] ?? [] : ownSound).compactMap { id -> MotionStripGroup? in
                 guard var group = byLayer[id] else { return nil }
                 group.isSound = true
                 group.trackKind = .audio
@@ -222,7 +232,9 @@ extension EditorState {
             var row = TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
                                             linked: linked)
             row.nesting = nesting
-            row.soundNumber = tracks.soundTrackNumber(of: track.id) ?? 0
+            row.soundNumber = tracks.soundTrackNumber(of: soundRows.first?.id ?? track.id) ?? 0
+            row.soundIsMuted = soundRows.contains(where: \.isMuted)
+            row.soundIsOff = row.soundIsMuted || (soloSound && !soundRows.contains(where: \.isSolo))
             if isKeyTrackOpen(track.id) {
                 row.rampedClips = clips.map(\.layerID).filter {
                     document.layer(id: $0)?.clipPieces?.pieces.contains { $0.speedRamp != nil } == true
@@ -388,10 +400,46 @@ extension EditorState {
         if let made { holdTracks([made]) }
     }
 
+    // MARK: The sound inside a track's clips
+
+    /// The rows holding the switches of the sound inside a track's clips,
+    /// which has no header of its own to wear them.
+    private func clipSoundRows(onTrack id: UUID) -> [DocumentTrack] {
+        (document?.soundRowIDs(ofTrack: id) ?? []).compactMap { document?.track(id: $0) }
+    }
+
+    func trackHasClipSound(_ id: UUID) -> Bool { !clipSoundRows(onTrack: id).isEmpty }
+
+    func clipSoundIsMuted(onTrack id: UUID) -> Bool { clipSoundRows(onTrack: id).contains(where: \.isMuted) }
+
+    func clipSoundIsSolo(onTrack id: UUID) -> Bool { clipSoundRows(onTrack: id).contains(where: \.isSolo) }
+
+    /// Mute or unmute all of it in one step to undo, so rows that disagree
+    /// end up agreeing.
+    func toggleClipSoundMuted(onTrack id: UUID) {
+        let muted = !clipSoundIsMuted(onTrack: id)
+        let rows = clipSoundRows(onTrack: id).map(\.id)
+        perform { document in rows.forEach { document.updateTrack($0) { $0.isMuted = muted } } }
+        documentMomentChanged()
+    }
+
+    func toggleClipSoundSolo(onTrack id: UUID) {
+        let solo = !clipSoundIsSolo(onTrack: id)
+        let rows = clipSoundRows(onTrack: id).map(\.id)
+        perform { document in rows.forEach { document.updateTrack($0) { $0.isSolo = solo } } }
+        documentMomentChanged()
+    }
+
+    /// The clips keep their pictures and lose their sound, in one step to undo.
+    func deleteClipSound(onTrack id: UUID) {
+        let rows = clipSoundRows(onTrack: id).map(\.id)
+        guard !rows.isEmpty else { return }
+        pauseDocument()
+        perform { $0.deleteTracks(rows) }
+        documentMomentChanged()
+    }
+
     func beginRenamingTrack(_ id: UUID) {
-        // A picture track's sound row is named for its track: renaming it
-        // renames the track.
-        let id = document?.track(id: id)?.attachedTo ?? id
         selectedTrackIDs = [id]
         renamingTrackID = id
     }

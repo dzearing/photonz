@@ -83,6 +83,13 @@
 .tlgrid .lane{cursor:default}
 .tlgrid .track .lane{height:28px}
 .tlgrid .track .lane>.clip{height:28px}
+/* A recording's own sound is the bottom of its clip, not a row of its own (the
+   user, 2026-11-05). Detach Audio moves it to an Audio track. */
+.tlgrid .track.has-own-sound .lane{height:56px}
+.tlgrid .track.has-own-sound .lane>.clip{height:56px;overflow:hidden}
+.tlgrid .track.has-own-sound .clip .lbl{position:absolute;top:7px;left:8px}
+.tlgrid .clip .ownsound{position:absolute;left:0;right:0;bottom:0;height:28px;display:flex;align-items:center;gap:1px;padding:0 2px;background:rgba(10,30,28,.82)}
+.tlgrid .clip .ownsound i{flex:1;background:#4fb3a5;border-radius:1px}
 .tlgrid .lane .gl{position:absolute;top:0;bottom:0;width:1px;background:var(--edge-lo);pointer-events:none}
 .tlgrid .track .lane.rlane{height:20px;display:block}
 .tlgrid .rlane>.ruler{margin-bottom:0;height:19px;cursor:ew-resize}
@@ -803,6 +810,7 @@
             '<span class="ducktag">duck -8 dB</span>';
         } else {
           inner='<span class="lbl">'+c.label+'</span>';
+          if(tr.kind==="video") inner+='<div class="ownsound">'+Array.from({length:40}).map(function(_,i){return '<i style="height:'+(20+((i*37)%70))+'%"></i>';}).join("")+'</div>';
           if(c.speed) inner+='<span class="speed">'+c.speed+'</span>';
           keyTimes(c.id).forEach(function(kt){
             if(kt>=c.t && kt<=c.t+c.dur){ inner+='<span class="kfm" style="left:'+(((kt-c.t)/c.dur)*100)+'%"></span>'; }
@@ -812,6 +820,7 @@
         el.innerHTML=inner;
         lane.appendChild(el);
       });
+      if(tr.kind==="video") row.classList.add("has-own-sound");
       row.appendChild(lab); row.appendChild(lane); grid.appendChild(row);
     });
     // playhead overlay spanning every row

@@ -309,7 +309,7 @@ public struct AgentDocumentRead: Codable, Hashable, Sendable {
             layersNotListed: only == nil && count > mostLayersListed ? count - mostLayersListed : nil)
         guard hasTime else { return read }
         let byID = Dictionary(document.layers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        read.tracks = document.timelineTracks.map { track in
+        read.tracks = document.timelineLanes.map { track in
             Track(id: track.id.uuidString, name: track.name, kind: track.kind.rawValue,
                   hidden: track.isHidden ? true : nil, muted: track.isMuted ? true : nil,
                   locked: track.isLocked ? true : nil,

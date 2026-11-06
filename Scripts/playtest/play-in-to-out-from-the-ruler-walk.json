@@ -15,7 +15,7 @@
     { "do": "expectTimeline", "markInMS": 2000, "markOutMS": 4000, "playheadMS": 0, "rate": 0 },
 
     { "do": "describe", "stage": "0-ruler-menu", "note": "right-click on the ruler, Play In to Out: it plays from the In and stops on the Out" },
-    { "do": "rightClick", "at": [1200, 860], "space": "window", "shot": "0-ruler-menu-play-in-to-out", "choose": "Play In to Out" },
+    { "do": "rightClick", "at": [1200, 833], "space": "window", "shot": "0-ruler-menu-play-in-to-out", "choose": "Play In to Out" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectTimeline", "rate": 1, "playheadMS": 3000, "withinMS": 1000 },
     { "do": "wait", "seconds": 2.5 },

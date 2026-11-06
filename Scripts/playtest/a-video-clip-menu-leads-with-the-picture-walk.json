@@ -51,11 +51,7 @@
     },
     {
       "do": "rightClick",
-      "at": [
-        900,
-        893
-      ],
-      "space": "window",
+      "on": "Tutorial Sample clip",
       "shot": "2-video-clip-menu",
       "keys": {
         "Detach Audio": "⌃⇧D",
@@ -68,11 +64,7 @@
     },
     {
       "do": "rightClick",
-      "at": [
-        900,
-        893
-      ],
-      "space": "window",
+      "on": "Tutorial Sample clip",
       "choose": "Audio > Clean Noise"
     },
     {
@@ -81,11 +73,7 @@
     },
     {
       "do": "rightClick",
-      "at": [
-        691,
-        943
-      ],
-      "space": "window",
+      "on": "Tutorial Sample sound clip",
       "shot": "3-linked-sound-menu",
       "keys": {
         "Detach Audio": "⌃⇧D"
@@ -100,11 +88,7 @@
     },
     {
       "do": "rightClick",
-      "at": [
-        691,
-        943
-      ],
-      "space": "window",
+      "on": "Tutorial Sample sound clip",
       "choose": "Detach Audio"
     },
     {
@@ -118,11 +102,7 @@
     },
     {
       "do": "rightClick",
-      "at": [
-        691,
-        943
-      ],
-      "space": "window",
+      "on": "Tutorial Sample sound clip",
       "shot": "4-audio-clip-menu",
       "unticked": [
         "Remove Noise Cleaning"
@@ -171,11 +151,7 @@
     },
     {
       "do": "rightClick",
-      "at": [
-        900,
-        893
-      ],
-      "space": "window",
+      "on": "Tutorial Sample clip",
       "shot": "6-video-clip-menu-detached"
     }
   ]

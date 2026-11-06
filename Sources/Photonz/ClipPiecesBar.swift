@@ -2,6 +2,21 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
+/// Which part of a clip's one rectangle a bar is (`ClipHalves`).
+enum ClipHalf: Equatable {
+    /// All of it: a clip with no sound of its own, or a sound on its own track.
+    case whole
+    /// The top, over a sound half this tall.
+    case picture(soundHeight: CGFloat)
+    /// The bottom, under the picture.
+    case sound
+
+    var isPicture: Bool { if case .picture = self { true } else { false } }
+    var isSound: Bool { self == .sound }
+    /// How much of the clip is below this bar.
+    var soundBelow: CGFloat { if case .picture(let height) = self { height } else { 0 } }
+}
+
 /// **A clip's bar in the timeline**, drawn as the pieces it is cut into and
 /// built to be taken hold of (`ClipBarDrag.swift`,
 /// `docs/design/video-surface.md` §10.4).
@@ -39,13 +54,19 @@ struct ClipPiecesBar: View {
     var kind: VideoKit.ClipKind?
     /// The lane's height, where the dock sets one.
     var height: CGFloat?
-    /// This bar is a clip's own sound, drawn on the audio track under the
-    /// clip and LINKED to it: every drag on it is a drag on the clip, so the
-    /// two move, trim and cut as one until Detach Audio parts them.
+    /// This bar is a clip's own sound, drawn as the bottom half of the clip
+    /// and LINKED to it: every drag on it is a drag on the clip, so the two
+    /// move, trim and cut as one until Detach Audio parts them.
     var isLinkedSound = false
     /// The sound lane's own colour (`VideoKit.Palette.soundTrack`): the ring
     /// round its fade diamonds and the fill of its level points.
     var soundTint: Color = VideoKit.Palette.soundTrack(0)
+    /// Which part of the clip's one rectangle this bar is.
+    var half: ClipHalf = .whole
+    /// The sound on this bar is muted: it wears the mark that says so.
+    var soundIsMuted = false
+    /// The sound on this bar is out of the mix, so its waveform is faint.
+    var soundIsOff = false
 
     /// What a walk and the help call this bar's parts: the clip's name, or
     /// "<clip> sound" for its linked sound, so the two are never confused.
@@ -87,6 +108,24 @@ struct ClipPiecesBar: View {
 
     /// The kit's corner on the dock, the strip's own everywhere else.
     private var cornerRadius: CGFloat { kind == nil ? 4 : VideoKit.Metrics.clipCornerRadius }
+
+    /// The piece's outline: square where the clip's other half meets it, so
+    /// the two read as one rectangle.
+    private var pieceShape: UnevenRoundedRectangle {
+        let top = half.isSound ? 0 : cornerRadius
+        let bottom = half.isPicture ? 0 : cornerRadius
+        return UnevenRoundedRectangle(topLeadingRadius: top, bottomLeadingRadius: bottom,
+                                      bottomTrailingRadius: bottom, topTrailingRadius: top)
+    }
+
+    /// A clip's border, kept off the join between its halves: a whole
+    /// rectangle's, run past the join and cut off by the piece's own edge.
+    private func border(_ style: some ShapeStyle) -> some View {
+        RoundedRectangle(cornerRadius: cornerRadius)
+            .strokeBorder(style, lineWidth: 1)
+            .padding(.top, half.isSound ? -2 * cornerRadius : 0)
+            .padding(.bottom, half.isPicture ? -2 * cornerRadius : 0)
+    }
 
     /// The widest a grip gets. It gives way to the piece it is on rather than
     /// eating it: two fixed grips on a quarter second piece would leave no
@@ -404,7 +443,7 @@ struct ClipPiecesBar: View {
         let picked = isPiecePicked(index, of: pieces.count)
         let pictures = picturesOpacity
         if shown.width > 0 {
-        RoundedRectangle(cornerRadius: cornerRadius)
+        pieceShape
             .fill(fill(item, picked: picked))
             .overlay(alignment: .topLeading) {
                 filmstrip(item, index: index, pieceWidth: raw, shown: shown, pictures: pictures)
@@ -451,9 +490,20 @@ struct ClipPiecesBar: View {
                         level: drawnSoundLevel(lengthMS: pieces.totalLengthMS),
                         fromLayerMS: start + Int(span * Double(shown.startFraction)),
                         toLayerMS: start + Int(span * Double(shown.endFraction))),
-                        color: kind == nil ? .white.opacity(0.55) : soundTint.opacity(0.55),
+                        color: kind == nil ? .white.opacity(0.55) : soundTint.opacity(soundIsOff ? 0.2 : 0.55),
                         isShape: kind != nil)
                         .padding(.vertical, kind == nil ? 2 : 0)
+                }
+            }
+            .overlay(alignment: .leading) {
+                if soundIsMuted, shown.width > 24 {
+                    Image(systemName: "speaker.slash.fill")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(VideoKit.Palette.ink)
+                        // Past the fade handle at the clip's start.
+                        .padding(.leading, 16 + offTheLeft(of: shown.x, ruler: ruler))
+                        .allowsHitTesting(false)
+                        .accessibilityLabel("Muted")
                 }
             }
             .overlay(alignment: .bottomLeading) {
@@ -485,15 +535,17 @@ struct ClipPiecesBar: View {
                     kitBadge(badge)
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-            .overlay {
+            .clipShape(pieceShape)
+            .overlay(alignment: .top) {
                 // `outline: 2px; outline-offset: 1px`: picked is a ring round
                 // the clip in the accent, never a change to the clip's colour,
-                // which says what the clip IS.
-                if kind != nil, picked {
+                // which says what the clip IS. One ring round both halves,
+                // drawn from the picture.
+                if kind != nil, picked, !half.isSound {
                     RoundedRectangle(cornerRadius: cornerRadius + 2)
                         .strokeBorder(VideoKit.Palette.accent, lineWidth: 2)
                         .padding(-3)
+                        .frame(height: barHeight + half.soundBelow)
                         .allowsHitTesting(false)
                 }
             }
@@ -770,9 +822,9 @@ struct ClipPiecesBar: View {
         } else if let kind {
             ZStack(alignment: isSound ? .topLeading : .leading) {
                 if soundOnThePanelGround {
-                    RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(soundTint.opacity(0.35), lineWidth: 1)
-                } else if let border = kind.border {
-                    RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(border)
+                    border(soundTint.opacity(0.35))
+                } else if let color = kind.border {
+                    border(color)
                 }
                 if let piece, isStill(piece) {
                     stillFace(piece, width: width, hiddenLeading: hiddenLeading)

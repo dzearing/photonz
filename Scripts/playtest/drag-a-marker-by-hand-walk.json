@@ -16,7 +16,7 @@
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectTimeline", "markers": 1, "markerAtMS": 2000, "playheadMS": 6500 },
     { "do": "describe", "stage": "0-marker-at-two", "note": "M dropped a marker at 0:02 and the playhead was parked at 0:06.5, out of the way" },
-    { "do": "windowDrag", "from": [549, 858], "to": [937, 858], "steps": 12, "hold": "1-marker-under-the-pointer" },
+    { "do": "windowDrag", "from": [549, 831], "to": [937, 831], "steps": 12, "hold": "1-marker-under-the-pointer" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectTimeline", "markers": 1, "markerAtMS": 4000, "withinMS": 60, "playheadMS": 6500 },
     { "do": "describe", "stage": "1-dragged-by-hand", "note": "a real press on the marker's flag at 0:02, dragged along the ruler to about 0:04 and let go: the marker moved there, the playhead stayed at 0:06.5, and no range was drawn" },

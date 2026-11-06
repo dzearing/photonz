@@ -16,7 +16,8 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample sound", "count": 0 },
-    { "comment": "The clip on V1 in the 1728x990 probe window, clicked the way a hand clicks it.", "do": "windowClick", "at": [726, 893] },
+    { "comment": "The clip on V1 in the 1728x990 probe window, clicked the way a hand clicks it.", "do": "windowClick", "lane": "V1",
+      "seconds": 2.9 },
     { "do": "wait", "seconds": 0.5 },
 
     { "do": "menus", "stage": "1-clip-menu-linked", "menu": "Clip", "choose": "Clip > Detach Audio" },

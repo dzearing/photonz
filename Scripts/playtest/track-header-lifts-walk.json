@@ -80,7 +80,6 @@
       "tracks": [
         "Title",
         "V1",
-        "V1 sound",
         "Audio"
       ]
     },
@@ -104,7 +103,6 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound",
         "Title",
         "Audio"
       ]
@@ -134,7 +132,6 @@
       "tracks": [
         "Audio",
         "V1",
-        "V1 sound",
         "Title"
       ]
     },
@@ -164,7 +161,6 @@
       "tracks": [
         "Audio",
         "V1",
-        "V1 sound",
         "Title"
       ]
     },
@@ -189,7 +185,6 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound",
         "Title",
         "Audio"
       ]

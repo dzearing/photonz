@@ -51,6 +51,9 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case muteTrack = "mute_track"
     case hideTrack = "hide_track"
     case soloTrack = "solo_track"
+    case muteSound = "mute_sound"
+    case soloSound = "solo_sound"
+    case deleteSound = "delete_sound"
     case lockTrack = "lock_track"
     case groupTrack = "group_track"
     case ungroupTracks = "ungroup_tracks"
@@ -474,6 +477,7 @@ public enum AppCommandTable {
     private static let cutInHand = "a cut picked, or the cut at the playhead on the clip in hand"
     private static let marked = "an in and an out set"
     private static let trackInHand = "a track picked, or the track of the clip in hand"
+    private static let clipSoundInHand = "a track whose clips carry their own sound in hand"
 
     /// The speeds Clip > Speed offers, in percent.
     public static let speeds = ClipSpeed.stops
@@ -544,6 +548,9 @@ public enum AppCommandTable {
             make(.hideTrack, "Hide Track", track, .timeline, needs: "a video or captions track in hand",
                  picks: .track, toggle: true),
             make(.soloTrack, "Solo Track", track, .timeline, needs: trackInHand, picks: .track, toggle: true),
+            make(.muteSound, "Mute Sound", track, .timeline, needs: clipSoundInHand, picks: .track, toggle: true),
+            make(.soloSound, "Solo Sound", track, .timeline, needs: clipSoundInHand, picks: .track, toggle: true),
+            make(.deleteSound, "Delete Sound", track, .timeline, needs: clipSoundInHand, picks: .track),
             make(.lockTrack, "Lock Track", track, .timeline, needs: trackInHand, picks: .track, toggle: true),
             make(.groupTrack, "Group Track", track, .timeline, needs: "a track in hand that is in no group",
                  picks: .track),

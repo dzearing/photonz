@@ -159,7 +159,21 @@ struct TimelineTrackRow: View {
     private var isRangeTool: Bool { editorState.timelineTool == .range }
 
     private var laneHeight: CGFloat {
-        rows.height(row.carriesSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight)
+        rows.height(row.restingLaneHeight)
+    }
+
+    /// How a clip with its own sound shares this lane.
+    private var halves: ClipHalves { ClipHalves(laneHeight: laneHeight) }
+
+    /// How tall a clip's picture is drawn: its top half where it carries its
+    /// own sound, else the whole lane. A silent clip on the same track is one
+    /// rectangle the lane's full height.
+    private func pictureHeight(of clip: MotionStripGroup) -> CGFloat {
+        carriesItsSound(clip) ? halves.picture : laneHeight
+    }
+
+    private func carriesItsSound(_ clip: MotionStripGroup) -> Bool {
+        row.linked.contains { $0.layerID == clip.layerID }
     }
 
     /// This track is the thing in hand: picked on its header, nothing else
@@ -194,7 +208,7 @@ struct TimelineTrackRow: View {
                 // (AppKit's own click count) opens the name for typing.
                 Button {
                     let event = NSApp.currentEvent
-                    if (event?.clickCount ?? 1) >= 2, !isSoundRow {
+                    if (event?.clickCount ?? 1) >= 2 {
                         beginRenaming()
                     } else {
                         let flags = event?.modifierFlags ?? NSEvent.modifierFlags
@@ -202,28 +216,19 @@ struct TimelineTrackRow: View {
                                               extending: flags.contains(.shift) || flags.contains(.command))
                     }
                 } label: {
-                    if isSoundRow {
-                        // A picture track's own sound row has no name of its
-                        // own: it hangs off the track above it.
-                        SoundRowMark(isSelected: isPicked, height: laneHeight)
-                            .frame(width: layout.nameWidth, height: laneHeight, alignment: .leading)
-                            .padding(.leading, layout.nameX)
-                            .contentShape(Rectangle())
-                    } else {
-                        // While the switches are up the icon gives the name its
-                        // room: the switches already say what kind of track it
-                        // is. It gives way too when the column is too narrow.
-                        VideoKit.TrackHeader(title: track.name, symbol: layout.showsIcon ? symbol : nil,
-                                             width: layout.nameWidth,
-                                             uppercase: false,
-                                             // Written by the app off the sound:
-                                             // the mock's sparkle and lavender.
-                                             isAutomatic: row.isCaptions && layout.showsIcon,
-                                             isSelected: isPicked)
-                            .padding(.leading, layout.nameX)
-                            .frame(height: laneHeight)
-                            .contentShape(Rectangle())
-                    }
+                    // While the switches are up the icon gives the name its
+                    // room: the switches already say what kind of track it
+                    // is. It gives way too when the column is too narrow.
+                    VideoKit.TrackHeader(title: track.name, symbol: layout.showsIcon ? symbol : nil,
+                                         width: layout.nameWidth,
+                                         uppercase: false,
+                                         // Written by the app off the sound:
+                                         // the mock's sparkle and lavender.
+                                         isAutomatic: row.isCaptions && layout.showsIcon,
+                                         isSelected: isPicked)
+                        .padding(.leading, layout.nameX)
+                        .frame(height: laneHeight)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .playtestControl("Track \(track.name)",
@@ -410,9 +415,6 @@ struct TimelineTrackRow: View {
 
     private var showsAllSwitches: Bool { isHovered }
     private var isSound: Bool { track.kind == .audio }
-    /// The row a picture track's clips' own sound is drawn on, right under it
-    /// (`DocumentTrack.attachedTo`).
-    private var isSoundRow: Bool { track.attachedTo != nil }
     private var shownSwitches: Int {
         if showsAllSwitches { return 3 }
         return [isSound ? track.isMuted : track.isHidden, track.isSolo, track.isLocked].filter { $0 }.count
@@ -533,9 +535,11 @@ struct TimelineTrackRow: View {
             }
             let paintedIDs = Set(painted.map(\.id))
             ForEach(row.clips.filter { !paintedIDs.contains($0.id) }) { clip in
-                TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
+                TimelineClipView(group: clip, laneWidth: laneWidth, height: pictureHeight(of: clip),
+                                 half: carriesItsSound(clip) ? .picture(soundHeight: halves.sound) : .whole,
                                  alternate: alternates.contains(clip.id), isCaptionCue: row.isCaptions,
                                  soundNumber: row.soundNumber)
+                    .opacity(row.isOff && !row.linked.isEmpty ? 0.4 : 1)
                     .allowsHitTesting(!track.isLocked)
                     .modifier(TimingName(on: !row.isCaptions, name: "Timing \(clip.layerName)"))
             }
@@ -544,47 +548,48 @@ struct TimelineTrackRow: View {
             // something inside to open and retime (`TimelineChildMarks`).
             if !row.isCaptions {
                 ForEach(row.clips) { clip in
-                    TimelineChildMarks(layerID: clip.layerID, laneWidth: laneWidth, height: laneHeight)
+                    TimelineChildMarks(layerID: clip.layerID, laneWidth: laneWidth, height: pictureHeight(of: clip))
                 }
             }
             // Each click of a recording, as a tick along the foot of its bar
             // (`ClickTicksView`).
             if editorState.canWorkWithClickEffects, !isBlade, !isTrackSelect, !row.isCaptions {
                 ForEach(row.clips) { clip in
-                    ClickTicksView(layerID: clip.layerID, laneWidth: laneWidth, height: laneHeight,
+                    ClickTicksView(layerID: clip.layerID, laneWidth: laneWidth, height: pictureHeight(of: clip),
                                    isLocked: track.isLocked)
                 }
             }
             if isBlade, !track.isLocked {
                 ForEach(row.clips) { clip in
                     TimelineBlade(group: clip, laneWidth: laneWidth)
+                        .frame(height: pictureHeight(of: clip))
                 }
             }
             if isTrackSelect, !track.isLocked {
                 ForEach(row.clips) { clip in
                     TimelineTrackSelect(group: clip, laneWidth: laneWidth)
+                        .frame(height: pictureHeight(of: clip))
                 }
             }
-            // A clip's own sound: the clip's bar a second time, as sound, so
-            // every drag on it is a drag on the clip and the two never part
-            // until Detach Audio.
+            // A clip's own sound: the bottom half of the clip, its bar a second
+            // time as sound, so every drag on it is a drag on the clip and the
+            // two never part until Detach Audio.
             ForEach(row.linked) { clip in
-                TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
-                                 isLinkedSound: true, soundNumber: row.soundNumber)
+                TimelineClipView(group: clip, laneWidth: laneWidth, height: halves.sound, half: .sound,
+                                 isLinkedSound: true, soundNumber: row.soundNumber,
+                                 soundIsMuted: row.soundIsMuted, soundIsOff: row.soundIsOff)
                     .allowsHitTesting(!track.isLocked)
                     .playtestField("Timing \(clip.layerName) sound")
-                // Joined to its picture: a staple across the gap at its start
-                // and a link mark, so the two read as one clip.
-                if isSoundRow, let bar = clip.bar {
-                    SoundJoin(laneWidth: laneWidth, height: laneHeight, inMS: bar.inMS, ruler: ruler,
-                              tint: VideoKit.Palette.soundTrack(row.soundNumber))
-                        .allowsHitTesting(false)
-                }
+                    .padding(.top, halves.picture)
                 if isBlade, !track.isLocked {
                     TimelineBlade(group: clip, laneWidth: laneWidth, isLinkedSound: true)
+                        .frame(height: halves.sound)
+                        .padding(.top, halves.picture)
                 }
                 if isTrackSelect, !track.isLocked {
                     TimelineTrackSelect(group: clip, laneWidth: laneWidth, isLinkedSound: true)
+                        .frame(height: halves.sound)
+                        .padding(.top, halves.picture)
                 }
             }
             if !isBlade, !isTrackSelect {
@@ -617,7 +622,9 @@ struct TimelineTrackRow: View {
         }
         .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
         .coordinateSpace(name: Self.laneSpace(track.id))
-        .opacity(row.isOff ? 0.4 : 1)
+        // A track of clips with their own sound dims its pictures alone:
+        // hiding the picture leaves the sound playing.
+        .opacity(row.isOff && row.linked.isEmpty ? 0.4 : 1)
         .clipShape(TimelineEdgeClip())
         .overlay(alignment: .top) { insertionLine(atTop: true) }
         .overlay(alignment: .bottom) { insertionLine(atTop: false) }
@@ -899,28 +906,22 @@ struct TimelineTrackMenu: View {
         headerRows
     }
 
-    @ViewBuilder private var headerRows: some View {
-        if track.attachedTo != nil {
-            soundRowRows
-        } else {
-            trackRows
+    /// The switches of the sound inside this track's clips, which has no
+    /// header of its own to wear them.
+    @ViewBuilder private var clipSoundRows: some View {
+        if editorState.trackHasClipSound(track.id) {
+            Button(editorState.clipSoundIsMuted(onTrack: track.id) ? "Unmute Sound" : "Mute Sound") {
+                editorState.toggleClipSoundMuted(onTrack: track.id)
+            }
+            Button(editorState.clipSoundIsSolo(onTrack: track.id) ? "Stop Soloing" : "Solo Sound") {
+                editorState.toggleClipSoundSolo(onTrack: track.id)
+            }
+            Button("Delete Sound", role: .destructive) { editorState.deleteClipSound(onTrack: track.id) }
+            Divider()
         }
     }
 
-    /// A picture track's own sound row answers for the sound and nothing
-    /// else: it has no name, joins no group and stands beside no new track,
-    /// since it goes wherever its picture track goes.
-    @ViewBuilder private var soundRowRows: some View {
-        Button(track.isMuted ? "Unmute Sound" : "Mute Sound") { editorState.toggleTrackMuted(track.id) }
-        Button(track.isSolo ? "Stop Soloing" : "Solo Sound") { editorState.toggleTrackSolo(track.id) }
-        Button(track.isLocked ? "Unlock Sound" : "Lock Sound") { editorState.toggleTrackLocked(track.id) }
-        Divider()
-        MenuRowsView(rows: editorState.timelineViewMenuRows())
-        Divider()
-        Button("Delete Sound", role: .destructive) { editorState.deleteTrack(track.id) }
-    }
-
-    @ViewBuilder private var trackRows: some View {
+    @ViewBuilder private var headerRows: some View {
         let acted = editorState.tracksActedOn(from: track.id)
         Button("Rename…") { editorState.beginRenamingTrack(track.id) }
         Divider()
@@ -932,6 +933,7 @@ struct TimelineTrackMenu: View {
         Button(track.isSolo ? "Stop Soloing" : "Solo Track") { editorState.toggleTrackSolo(track.id) }
         Button(track.isLocked ? "Unlock Track" : "Lock Track") { editorState.toggleTrackLocked(track.id) }
         Divider()
+        clipSoundRows
         Button(acted.count > 1 ? "Group \(acted.count) Tracks" : "Group Track") {
             editorState.groupTracks(from: track.id)
         }
@@ -961,72 +963,6 @@ struct TimelineTrackMenu: View {
     }
 }
 
-// MARK: - A picture track's own sound row
-
-/// The header of the row a picture track's clips' sound is drawn on: no name
-/// of its own, an elbow hanging off the track above and a link mark, so the
-/// row reads as part of that track rather than a track beside it (the user,
-/// 2026-10-13: attached audio needs "some sort of ui affordance that it is
-/// attached").
-struct SoundRowMark: View {
-    let isSelected: Bool
-    let height: CGFloat
-
-    var body: some View {
-        HStack(spacing: 3) {
-            // Up through the gap to the track above, then across.
-            Canvas { context, size in
-                var path = Path()
-                path.move(to: CGPoint(x: 4, y: -TimelineDock.rowSpacing))
-                path.addLine(to: CGPoint(x: 4, y: size.height / 2 - 3))
-                path.addQuadCurve(to: CGPoint(x: 7, y: size.height / 2),
-                                  control: CGPoint(x: 4, y: size.height / 2))
-                path.addLine(to: CGPoint(x: size.width, y: size.height / 2))
-                context.stroke(path, with: .foreground, style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
-            }
-            .frame(width: 12, height: height)
-            Image(systemName: "link")
-                .font(.system(size: 9, weight: .semibold))
-                .measuredInk()
-        }
-        .foregroundStyle(isSelected ? AnyShapeStyle(VideoKit.Palette.ink) : AnyShapeStyle(VideoKit.Palette.faint))
-        .accessibilityHidden(true)
-    }
-}
-
-/// Where a clip's sound starts on its picture track's sound row: a staple
-/// across the gap up to the picture, and a link mark at the start of the
-/// sound, so the picture and its sound read as one clip in two parts.
-struct SoundJoin: View {
-    let laneWidth: CGFloat
-    let height: CGFloat
-    let inMS: Int
-    let ruler: MotionStripRuler
-    let tint: Color
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let fraction = ruler.fraction(ofMS: Double(inMS))
-        if fraction >= 0, fraction < 1 {
-            let x = laneWidth * fraction
-            ZStack(alignment: .topLeading) {
-                // Clear of the fade handle at the sound's top corner.
-                Capsule()
-                    .fill(tint)
-                    .frame(width: 2, height: TimelineDock.rowSpacing + 6)
-                    .offset(x: x + 16, y: -TimelineDock.rowSpacing - 3)
-                Image(systemName: "link")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(Experiments.shared.soundOnThePanelGroundEnabled
-                                     ? VideoKit.Palette.ink.color(colorScheme) : VideoKit.ClipKind.audio.ink)
-                    .padding(.bottom, 3)
-                    .frame(width: 12, height: height, alignment: .bottom)
-                    .offset(x: x + 4)
-            }
-        }
-    }
-}
-
 // MARK: - A clip on a lane
 
 /// One clip in a lane: the pieces bar every clip gesture lives on, or, for a
@@ -1036,14 +972,19 @@ struct TimelineClipView: View {
     let group: MotionStripGroup
     let laneWidth: CGFloat
     let height: CGFloat
+    /// Which part of the clip's rectangle this bar is.
+    var half: ClipHalf = .whole
     var alternate = false
     /// This bar is a cue on a Captions track.
     var isCaptionCue = false
-    /// This bar is a clip's own sound on the audio track under it.
+    /// This bar is a clip's own sound, the bottom half of the clip.
     var isLinkedSound = false
     /// Which sound track the bar is on, for the colour its fades and level
     /// points wear.
     var soundNumber = 0
+    /// The sound on this bar is muted, or out of the mix for any reason.
+    var soundIsMuted = false
+    var soundIsOff = false
 
     var body: some View {
         let own = isCaptionCue ? .caption : TimelineTrackRow.clipKind(group.trackKind)
@@ -1057,7 +998,8 @@ struct TimelineClipView: View {
                 ClipPiecesBar(layerID: group.layerID, layerName: group.layerName,
                               bar: bar, laneWidth: laneWidth, isSound: group.isSound,
                               kind: kind, height: height, isLinkedSound: isLinkedSound,
-                              soundTint: VideoKit.Palette.soundTrack(soundNumber))
+                              soundTint: VideoKit.Palette.soundTrack(soundNumber),
+                              half: half, soundIsMuted: soundIsMuted, soundIsOff: soundIsOff)
             }
         } else {
             // A layer with no times of its own: one clip the length of the

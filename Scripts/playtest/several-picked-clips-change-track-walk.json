@@ -146,7 +146,7 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -208,8 +208,8 @@
       "do": "expectTracks",
       "tracks": [
         "V2",
-        "V2 sound",
-        "V1"
+        "V1",
+        "Audio"
       ]
     },
     {
@@ -263,7 +263,7 @@
       "do": "expectTracks",
       "tracks": [
         "V1",
-        "V1 sound"
+        "Audio"
       ]
     },
     {
@@ -295,7 +295,7 @@
       "do": "dragClip",
       "clip": "Tutorial Sample",
       "byMS": 500,
-      "tracksUp": -2,
+      "tracksUp": -1,
       "hold": "5-refused-on-sound",
       "reads": "Audio takes sound only"
     },
@@ -420,7 +420,7 @@
       "do": "dragClip",
       "clip": "b-roll",
       "byMS": 500,
-      "tracksUp": -2,
+      "tracksUp": -1,
       "hold": "9-alone-onto-sound",
       "reads": "Audio takes sound only"
     },

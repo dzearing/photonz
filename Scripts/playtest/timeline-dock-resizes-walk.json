@@ -77,7 +77,7 @@
       "do": "windowDrag",
       "from": [
         864,
-        763
+        736
       ],
       "to": [
         864,
@@ -154,17 +154,17 @@
     },
     {
       "do": "expectTimeline",
-      "dockHeight": 228
+      "dockHeight": 256
     },
     {
       "do": "windowDrag",
       "from": [
         864,
-        763
+        736
       ],
       "to": [
         864,
-        613
+        614
       ],
       "steps": 10
     },

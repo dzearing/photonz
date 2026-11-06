@@ -1,0 +1,368 @@
+{
+  "out": "/tmp/photonz-playtest/a-clip-s-sound-is-inside-the-clip-walk",
+  "seed": "A recording with sound is one clip at Next defaults: the picture over its waveform on V1, no sound row. The waveform half is picked and dragged by the pointer, a cut goes through both halves, mute reads on the half, Detach Audio sends the sound to the Audio track and Re-attach puts it back.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V1",
+        "Audio"
+      ]
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0,
+      "endsAt": 8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample sound",
+      "count": 0
+    },
+    {
+      "do": "describe",
+      "stage": "1-one-clip",
+      "note": "At defaults: one clip on V1, picture over its waveform, and no sound row"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-one-clip"
+    },
+    {
+      "do": "windowClick",
+      "lane": "V1 sound",
+      "seconds": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-picked-by-the-sound",
+      "note": "A click on the waveform half picks the clip: one ring round both halves"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-picked-by-the-sound"
+    },
+    {
+      "do": "windowDrag",
+      "fromLane": "V1 sound",
+      "from": 3,
+      "to": 4,
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 1,
+      "endsAt": 9
+    },
+    {
+      "do": "describe",
+      "stage": "3-moved-by-the-sound",
+      "note": "Dragged by the waveform half: the whole clip moved a second"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-moved-by-the-sound"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0,
+      "endsAt": 8
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "b",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-cut",
+      "note": "Command B at 0:04: both halves are cut at the same place"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-cut"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "windowDrag",
+      "fromLane": "V1 sound",
+      "from": 7.97,
+      "to": 7,
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0,
+      "endsAt": 7,
+      "within": 0.1
+    },
+    {
+      "do": "describe",
+      "stage": "4b-trimmed",
+      "note": "The right edge taken by the waveform half: picture and sound end together a second earlier"
+    },
+    {
+      "do": "snapshot",
+      "name": "4b-trimmed"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0,
+      "endsAt": 8
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "windowClick",
+      "lane": "V1 sound",
+      "seconds": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4c-bladed",
+      "note": "The Blade clicked on the waveform half: one cut through both halves at 0:05"
+    },
+    {
+      "do": "snapshot",
+      "name": "4c-bladed"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Mute Sound"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-muted",
+      "note": "Mute Sound on V1's header: the waveform half reads as muted"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-muted"
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Unmute Sound"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Tutorial Sample sound clip",
+      "lacks": [
+        "Freeze Frame…"
+      ],
+      "choose": "Detach Audio"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V1",
+        "Audio"
+      ]
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample sound",
+      "track": "Audio",
+      "startsAt": 0
+    },
+    {
+      "do": "describe",
+      "stage": "6-detached",
+      "note": "Right click on the waveform half, Detach Audio: the sound is its own clip on Audio and the half is gone"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-detached"
+    },
+    {
+      "do": "rightClick",
+      "on": "Tutorial Sample sound clip",
+      "choose": "Re-attach Audio"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample sound",
+      "count": 0
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V1",
+        "Audio"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "7-re-attached",
+      "note": "Re-attach Audio: the half is back inside the clip"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-re-attached"
+    }
+  ]
+}

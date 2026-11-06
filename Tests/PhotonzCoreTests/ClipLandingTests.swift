@@ -78,13 +78,13 @@ struct ClipLandingTests {
         #expect(landing.trackName == "Audio")
     }
 
-    @Test("A sound over a recording passes its sound row and makes an Audio track under it")
+    @Test("A sound over a recording with sound lands on the Audio track waiting under it")
     func soundPassesTheSoundRow() throws {
         let doc = PhotonzDocument.recording(Self.take, name: "take")
         let v1 = try #require(Self.track(named: "V1", in: doc))
         let landing = doc.clipLanding(kind: .audio, lengthMS: 3000, atMS: 1000,
                                       over: .onto(v1), edit: .overwrite)
-        #expect(landing.target == .newTrack(at: 2))
+        #expect(landing.target == .onto(PhotonzDocument.waitingAudioTrackID))
         #expect(landing.trackName == "Audio")
         #expect(landing.allowed)
     }

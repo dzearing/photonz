@@ -34,7 +34,7 @@
     {
       "do": "describe",
       "stage": "1-opened",
-      "note": "At defaults: the recording on V1, its own sound as a green segment with a waveform on the row hanging right under V1, joined to it by a staple and a link mark, both ringed as one pick"
+      "note": "At defaults: the recording on V1, its own sound as the bottom half of the clip, joined to it by a staple and a link mark, both ringed as one pick"
     },
     {
       "do": "panel",
@@ -53,14 +53,9 @@
     },
     {
       "do": "windowDrag",
-      "from": [
-        726.6,
-        943
-      ],
-      "to": [
-        893.5,
-        943
-      ],
+      "fromLane": "V1 sound",
+      "from": 2.9,
+      "to": 3.76,
       "steps": 10
     },
     {
@@ -109,11 +104,11 @@
       "do": "windowDrag",
       "from": [
         1143.5,
-        926
+        890
       ],
       "to": [
         1143.5,
-        933
+        895.2
       ],
       "steps": 6
     },
@@ -124,7 +119,7 @@
     {
       "do": "expect",
       "field": "Volume reading",
-      "reads": "-9.3 dB \u00b10.5"
+      "reads": "-8.7 dB \u00b10.5"
     },
     {
       "do": "describe",
@@ -143,11 +138,11 @@
       "do": "windowDrag",
       "from": [
         165.8,
-        919
+        888
       ],
       "to": [
         300.9,
-        919
+        888
       ],
       "steps": 8
     },
@@ -175,11 +170,7 @@
     },
     {
       "do": "rightClick",
-      "at": [
-        726.6,
-        943
-      ],
-      "space": "window",
+      "on": "Tutorial Sample sound clip",
       "choose": "Detach Audio"
     },
     {
@@ -194,7 +185,7 @@
     {
       "do": "describe",
       "stage": "5-detached",
-      "note": "Right-click, Detach Audio: the sound leaves the row under V1 for an Audio track of its own, named, no longer joined"
+      "note": "Right-click, Detach Audio: the sound leaves the clip for an Audio track of its own, named, no longer joined"
     },
     {
       "do": "panel",
@@ -205,16 +196,9 @@
       "name": "5-detached"
     },
     {
-      "do": "windowDrag",
-      "from": [
-        726.6,
-        943
-      ],
-      "to": [
-        893.5,
-        943
-      ],
-      "steps": 10
+      "do": "dragClip",
+      "clip": "Tutorial Sample sound",
+      "byMS": 860
     },
     {
       "do": "wait",

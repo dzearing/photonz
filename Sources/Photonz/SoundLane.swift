@@ -195,6 +195,9 @@ struct SoundLevelLine: View {
         let points = shownLevel.points
         return AnimatedLineSurface(
             line: animated, width: width, height: height,
+            // A clip's sound half is short: the line's usual strip would
+            // cover most of it and leave nowhere to take the clip by.
+            reach: min(AnimatedLine.lineReach, height / 6),
             rightPress: { rightPressPoint },
             click: { lineClick($0, animated) },
             drag: fader,

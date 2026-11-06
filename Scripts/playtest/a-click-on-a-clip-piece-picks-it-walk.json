@@ -32,7 +32,7 @@
       "space": "window",
       "what": "chrome"
     },
-    { "do": "windowClick", "at": [1300, 894] },
+    { "do": "windowClick", "at": [1300, 867] },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 2"] },
     { "do": "reveal", "control": "Time section" },
@@ -44,7 +44,7 @@
       "note": "THE TEST: a click on the second piece's bar picked the clip with piece 2 in hand: the accent ring sits round piece 2 and Properties reads Piece 2 of 2, with the clip line running 4.0s to 8.0s, the way a click picks a clip in Premiere's timeline"
     },
     { "do": "snapshot", "name": "1-click-picks-piece-2" },
-    { "do": "windowClick", "at": [550, 894] },
+    { "do": "windowClick", "at": [550, 867] },
     { "do": "wait", "seconds": 0.5 },
     { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 1"] },
     { "do": "expect", "field": "Piece", "reads": "1 of 2" },

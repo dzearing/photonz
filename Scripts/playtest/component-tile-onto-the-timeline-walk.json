@@ -51,7 +51,7 @@
     { "do": "action", "action": "undo" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectClip", "clip": "Badge", "count": 0 },
-    { "do": "expectTracks", "tracks": ["V1", "V1 sound"] },
+    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
     {
       "do": "describe",
       "stage": "3-one-undo",

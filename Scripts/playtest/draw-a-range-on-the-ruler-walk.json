@@ -40,7 +40,7 @@
     { "do": "clickRuler", "seconds": 8.0 },
     { "do": "expectTimeline", "markInMS": 5000, "markOutMS": 9000, "playheadMS": 8000, "withinMS": 40 },
     { "do": "describe", "stage": "4-click-inside-keeps-it", "note": "a click on the ruler inside the range moves the playhead and keeps the range. A walk's right click cannot put the pointer over the ruler, so its menu acts at the playhead, the ruler's own fallback: the playhead inside the range is the click on the band" },
-    { "do": "rightClick", "at": [750, 860], "space": "window", "shot": "4-range-menu", "choose": "Split at Range Edges" },
+    { "do": "rightClick", "at": [750, 833], "space": "window", "shot": "4-range-menu", "choose": "Split at Range Edges" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2 },
     { "do": "expectClip", "clip": "b-roll", "pieces": 2 },

@@ -31,7 +31,7 @@
     { "do": "describe", "stage": "1-range-across-the-cut", "note": "a range from 0:05 to 0:09 across the cut at 0:07, the playhead inside it at 0:06. A walk's right click cannot put the pointer over the ruler, so the ruler's menu acts at the playhead, which is inside the range" },
     { "do": "snapshot", "name": "1-range-across-the-cut" },
 
-    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Merge into One Clip" },
+    { "do": "rightClick", "at": [750, 833], "space": "window", "choose": "Merge into One Clip" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Merged Clip", "track": "V1", "startsAt": 5.0, "endsAt": 9.0, "count": 1 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 5.0, "count": 1 },
@@ -59,7 +59,7 @@
     { "do": "clickRuler", "seconds": 6.0 },
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectTimeline", "markInMS": 5000, "markOutMS": 9000, "withinMS": 40 },
-    { "do": "rightClick", "at": [750, 860], "space": "window", "choose": "Merge into One Clip" },
+    { "do": "rightClick", "at": [750, 833], "space": "window", "choose": "Merge into One Clip" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Merged Clip", "track": "V1", "startsAt": 5.0, "endsAt": 9.0, "count": 1 },
     { "do": "describe", "stage": "4-merged-again", "note": "Merge into One Clip again from the range's right click: the merged clip is back" },

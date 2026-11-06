@@ -40,11 +40,11 @@
       "do": "windowDrag",
       "from": [
         735.2,
-        860
+        833
       ],
       "to": [
         1121.3,
-        860
+        833
       ],
       "steps": 12
     },
@@ -72,7 +72,7 @@
       "do": "windowClick",
       "at": [
         1314.3,
-        860
+        833
       ],
       "count": 2
     },
@@ -126,7 +126,7 @@
       "do": "windowClick",
       "at": [
         1314.3,
-        860
+        833
       ],
       "count": 1
     },
@@ -154,7 +154,7 @@
       "do": "windowClick",
       "at": [
         1314.3,
-        860
+        833
       ],
       "count": 2
     },
@@ -191,7 +191,7 @@
       "do": "windowClick",
       "at": [
         933.1,
-        860
+        833
       ],
       "count": 2
     },
@@ -250,7 +250,7 @@
       "do": "rightClick",
       "at": [
         933.1,
-        860
+        833
       ],
       "space": "window",
       "choose": "Clear Range"
@@ -277,7 +277,7 @@
       "do": "windowClick",
       "at": [
         1532,
-        786
+        759
       ],
       "count": 2
     },
