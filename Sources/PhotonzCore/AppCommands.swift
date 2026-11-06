@@ -42,6 +42,7 @@ public enum AppCommandID: String, CaseIterable, Hashable, Sendable {
     case addCaptionsForRange = "add_captions_for_range"
     case splitEverythingAtPlayhead = "split_everything_at_playhead"
     case snapInTimeline = "snap_in_timeline"
+    case preview = "preview"
     // Sequence > Track
     case addVideoTrack = "add_video_track"
     case addAudioTrack = "add_audio_track"
@@ -936,6 +937,7 @@ public enum AppCommandTable {
     static let view: [AppCommand] = {
         let menu = "View"
         return [
+            make(.preview, MenuToggleNames.preview, menu, .view, needs: "a picture with component copies", toggle: true),
             make(.zoomIn, "Zoom In", menu, .view, needs: "a document"),
             make(.zoomOut, "Zoom Out", menu, .view, needs: "a document"),
             make(.zoomToFit, "Zoom to Fit", menu, .view, needs: "a document"),

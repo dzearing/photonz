@@ -158,6 +158,10 @@ public enum FeatureCatalog {
 
     public static let componentsFlag = "next-components"
 
+    /// Preview: a page of component copies behaves like the real controls
+    /// (`ComponentPreview`).
+    public static let componentPreviewFlag = "next-component-preview"
+
     public static let stylesFlag = "next-styles"
 
     public static let starterComponentsFlag = "next-starter-components"
@@ -1563,6 +1567,16 @@ public enum FeatureCatalog {
                     name: componentsFlag,
                     title: "Make a component out of what you drew",
                     description: "Option Command K turns a group into a named component that sits on the Library's Components shelf. Off means no Make Component.",
+                    area: .library,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: componentPreviewFlag,
+                    title: "Try a page of components as real controls",
+                    description: "A Preview button in the title bar, View ▸ Preview and Command Return make every copy on the page show its own Hover, Pressed, On and Focused looks. Off means the canvas is only for editing.",
                     area: .library,
                     isEnabled: false,
                     parameters: []),

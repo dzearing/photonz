@@ -50,7 +50,8 @@ extension CanvasNSView {
     }
 
     func refreshComponentChrome() {
-        guard viewport != nil, document != nil,
+        // Preview shows the page, so nothing says what anything on it is.
+        guard !isPreviewing, viewport != nil, document != nil,
               !markedComponents.isEmpty || !markedComponentInstances.isEmpty else {
             componentChromeLayer.isHidden = true
             componentChromeLayer.sublayers?.forEach { $0.removeFromSuperlayer() }

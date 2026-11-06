@@ -22633,3 +22633,12 @@ Changed: `set_keys`, `remove_keys` and `set_timing` (`AgentKeys.swift`) write th
 Next: `ask-animates-what-it-makes-an-animated-svg-icon` teaches Ask to use the tools.
 
 Open: a looping motion also stands still on the canvas, with a different cause (`a-looping-motion-moves-on-the-canvas-while-it-pl`, filed). The SVG has not been watched in a real browser.
+
+## 2026-11-06: a page of components can be tried
+
+Changed: Preview (`ComponentPreview`, `EditorState+ComponentPreview`, `next-component-preview`), from the title bar, View ▸ Preview and ⌘Return. Each copy plays its own looks, read from their names, on a value nothing keeps. A copy's own words now follow it into every look (`applyOverrides`), which the panel's State row needed too.
+
+Next: `leaving-preview-slides-back-without-a-hitch`, and a click going to another frame when the user asks for it.
+
+Open: going in has to happen on its own turn of the main loop; that is measured and worked round, and why is not known. A walk's claims read state, so a window that did not fold stayed green until `expect` claims on the pill and the panel went in.
+

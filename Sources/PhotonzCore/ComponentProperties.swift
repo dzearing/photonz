@@ -1222,11 +1222,13 @@ extension PhotonzDocument {
         // on any of these: what it turns lives in the copy's own layout, put on
         // by `applyRootOverrides` where that layout is built.
         let root = mainComponent(componentID: componentID, version: version)?.id
-        let properties = componentProperties(of: componentID, version: version)
-            .filter { $0.target != root }
-        guard !properties.isEmpty, !overrides.isEmpty else { return }
+        guard !overrides.isEmpty else { return }
         let answers = Dictionary(overrides.map { ($0.property, $0.value) },
                                  uniquingKeysWith: { _, last in last })
+        let properties = componentProperties(of: componentID, version: version)
+            .filter { $0.target != root }
+            + wordingCarriedAcrossLooks(answers, of: componentID, version: version)
+        guard !properties.isEmpty else { return }
         for property in properties {
             guard var value = answers[property.id], value.kind == property.kind else { continue }
             if case .color(let answer) = value {
@@ -1258,6 +1260,34 @@ extension PhotonzDocument {
                            numberSlot: property.numberSlot, contents: holder)
             }
         }
+    }
+
+    /// The wording knobs this look does not have and another look does, aimed
+    /// at this look's own piece, for the answers a copy has given them.
+    ///
+    /// A knob made after the looks exist sits on one drawing, which is how
+    /// place_component's words and Make Its Wording a Property both land, so a
+    /// tab worded Privacy read Tab again the moment it showed any other look,
+    /// on the panel's State row and in Preview alike. Words are the copy's own
+    /// in every look. Only words: a look's colours are what make it that look.
+    private func wordingCarriedAcrossLooks(_ answers: [UUID: ComponentPropertyValue], of componentID: UUID,
+                                           version: UUID?) -> [ComponentProperty] {
+        guard let main = mainComponent(componentID: componentID, version: version) else { return [] }
+        var known = Set(main.componentProperties.map(\.id))
+        guard answers.keys.contains(where: { !known.contains($0) }) else { return [] }
+        var carried: [ComponentProperty] = []
+        for look in componentVersions(of: componentID) where look.layerID != main.id {
+            guard let other = layer(id: look.layerID) else { continue }
+            for property in other.componentProperties
+            where property.kind == .text && answers[property.id] != nil && !known.contains(property.id) {
+                guard let piece = counterpartPiece(of: property.target, under: other, in: main) else { continue }
+                var here = property
+                here.target = piece
+                carried.append(here)
+                known.insert(property.id)
+            }
+        }
+        return carried
     }
 
     /// Puts one copy's answers to the knobs that name the original ITSELF onto

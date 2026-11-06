@@ -1,0 +1,32 @@
+{
+  "feature": "Preview a page of components",
+  "epic": "ui-prototyping",
+  "summary": "You can now try a page of components: point at a button and it shows its Hover look, press it and it shows Pressed, click a switch and it stays On, and Tab moves Focus. Leaving puts everything back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a picture holding copies of components that have looks named Hover, Pressed, On and so on.",
+  "switched": {},
+  "try": [
+    { "do": "Press Preview in the title bar, or ⌘Return.", "shot": "2026-11-06-component-preview-1-preview.png" },
+    { "do": "Rest the pointer on a button.", "shot": "2026-11-06-component-preview-2-hover.png" },
+    { "do": "Hold the mouse down on it, slide off, and let go: no click.", "shot": "2026-11-06-component-preview-3-pressed.png" },
+    { "do": "Click a switch, then move away: it stays On.", "shot": "2026-11-06-component-preview-4-switch-on.png" },
+    { "do": "Click another tab: one stays picked, and it keeps its words.", "shot": "2026-11-06-component-preview-5-tab.png" },
+    { "do": "Point at a component with no state looks and read the pill.", "shot": "2026-11-06-component-preview-6-note.png" },
+    { "do": "Press Tab a few times, then Space on a tab.", "shot": "2026-11-06-component-preview-7-focus.png" },
+    { "do": "Press Esc: your selection, zoom and Undo are as you left them.", "shot": "2026-11-06-component-preview-8-left.png" }
+  ],
+  "evaluate": [
+    "Does a page you made yourself behave the way you expected, with nothing to set up?",
+    "Does the pause coming out of Preview bother you on a real page?",
+    "Is it clear enough what on the page is live, with no hint from us?",
+    "Should measurements on the page hide in Preview? Today they stay."
+  ],
+  "rough": [
+    "Reel: 2026-11-06-component-preview-reel.mp4, frames on 2026-11-06-component-preview-sheet.png. It is a slide show of the walk's pictures, not a film of a hand.",
+    "Coming out of Preview stalls for about 0.37 seconds on a 30 layer page, going in about 0.2. Filed as its own task.",
+    "A copy's own words sit 7 to 11 points off centre in the control. This is older than Preview and filed as its own task.",
+    "Going in only folds the window when it happens on its own turn of the main loop. We measured that and worked round it in the command; why SwiftUI does this is not known.",
+    "A row picked by hand from the menu bar in Preview still acts on the document, though most are dimmed because nothing is picked. The keys for them are stopped.",
+    "A copy showing a look other than the first keeps its words but its panel may not offer them to edit. Read in the code, not tried.",
+    "No difference from component-preview.html was seen beyond this: the page is centred above the pill rather than in the whole window, which is the same promise that the pill never sits on the page (decision preview-a-page-of-components-and-use-it-hover-pr-should-a-page-of-components-work)."
+  ]
+}

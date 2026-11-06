@@ -2632,6 +2632,16 @@ struct EditorCommands: Commands {
             .keyboardShortcut("t", modifiers: [.command, .option])
             .disabled(!(editor?.hasMotionStrip ?? false))
         }
+        // Trying the page (`ComponentPreview`): the View menu's because, like
+        // the rows around it, it changes what the window offers and nothing
+        // about the document.
+        if Experiments.shared.componentPreviewEnabled {
+            Toggle(MenuToggleNames.preview, isOn: Binding(
+                get: { editor?.isPreviewing ?? false },
+                set: { _ in editor?.run(.preview) }))
+            .keyboardShortcut(.return, modifiers: .command)
+            .disabled(!(editor?.showsPreviewButton ?? false))
+        }
         // What this window is set up for (Next, `next-window-modes`). Here
         // rather than anywhere else because a mode is a VIEW preference in
         // the strictest sense: it changes what the window offers and

@@ -30,6 +30,12 @@ extension CanvasNSView {
             onPlaceClick(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
             return
         }
+        // Preview: the press belongs to the control under it.
+        if isPreviewing {
+            window?.makeFirstResponder(self)
+            onPreview(.down(previewPoint(event, viewport), zoom: viewport.zoom))
+            return
+        }
         // A picked zoom's box takes a press on its clip before any tool does:
         // carry it, pull a corner, or draw it again (`EditorState+Zoom`).
         if zoomOwnsPicture, !isWatching, tool != .hand,
@@ -842,6 +848,10 @@ extension CanvasNSView {
     }
 
     override func mouseDragged(with event: NSEvent) {
+        if isPreviewing, let viewport {
+            onPreview(.dragged(previewPoint(event, viewport), zoom: viewport.zoom))
+            return
+        }
         guard let viewport, !isWatching else { return }
         if zoomBoxPressing {
             onZoomBoxDrag(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
@@ -1339,6 +1349,10 @@ extension CanvasNSView {
     }
 
     override func mouseUp(with event: NSEvent) {
+        if isPreviewing, let viewport {
+            onPreview(.up(previewPoint(event, viewport), zoom: viewport.zoom))
+            return
+        }
         guard let viewport, !isWatching else { return }
         // Whatever grip was in the hand is let go of (`CanvasSelectionGrips`).
         heldGrip = nil

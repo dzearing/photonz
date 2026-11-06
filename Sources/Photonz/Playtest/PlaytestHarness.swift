@@ -3226,6 +3226,11 @@ private final class Run {
         case .expectShows(let drawing):
             note(number, step.name, try checkShows(drawing), state: describe())
 
+        case .expectPreview(let on, let at, let shows, let saying, let unchanged):
+            note(number, step.name, try checkPreview(on: on, at: at, shows: shows, note: saying,
+                                                      unchanged: unchanged),
+                 state: describe())
+
         case .expectPicked(let layers, let outline):
             note(number, step.name, try checkPicked(layers, outline: outline), state: describe())
 
@@ -8255,6 +8260,7 @@ private final class Run {
                 editor.playtestExportDestination = .readme
                 editor.isExportDialogPresented = true
             case .showLibrary: editor.setLibraryVisible(true)
+            case .togglePreview: editor.run(.preview)
             case .showComponentShelf:
                 editor.setLibraryVisible(true)
                 editor.showComponentsInLibrary()
@@ -10262,6 +10268,65 @@ private final class Run {
 
     /// Fails the run unless every picked copy is showing the drawing called
     /// `drawing`, naming what each one shows instead.
+    /// `expectPreview`. The look is read off the document the canvas was last
+    /// HANDED, not off the session, so it fails when the rules are right and the
+    /// picture never changed.
+    private func checkPreview(on: Bool?, at: PlaytestPoint?, shows: String?, note saying: String?,
+                              unchanged: Bool?) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else {
+            throw Failure(description: "there is no document to ask")
+        }
+        var said: [String] = []
+        if let on {
+            guard editor.isPreviewing == on else {
+                throw Failure(description: "the walk says Preview is \(on ? "on" : "off"), and it is not")
+            }
+            said.append("Preview is \(on ? "on" : "off")")
+        }
+        if let at, let shows {
+            let canvasPoint = at.point
+            guard let copy = editor.previewSession.copy(at: canvasPoint, in: document) else {
+                throw Failure(description: "there is no copy of a component at \(short(canvasPoint))")
+            }
+            let drawn = editor.playtestLastDrawn ?? document
+            let look = drawn.layer(id: copy)?.instanceOf.flatMap { componentID in
+                drawn.instanceVersion(of: copy).flatMap { drawn.componentVersion(of: componentID, id: $0) }
+            }
+            guard look?.name == shows else {
+                throw Failure(description: "the canvas was handed \(look?.name ?? "nothing") for the copy at "
+                    + "\(short(canvasPoint)), and the walk says \(shows)")
+            }
+            said.append("the copy at \(short(canvasPoint)) shows \(shows)")
+        }
+        if let saying {
+            let now = editor.previewNote ?? ""
+            guard now == saying else {
+                throw Failure(description: "the pill's note says \"\(now)\", and the walk says \"\(saying)\"")
+            }
+            said.append(saying.isEmpty ? "the pill has no note" : "the pill says \(saying)")
+        }
+        if let unchanged, let before = editor.playtestDocumentBeforePreview {
+            guard (document == before.document) == unchanged else {
+                throw Failure(description: unchanged ? "the document is not as Preview found it"
+                                                     : "the document is as Preview found it")
+            }
+            // Undo reads off while Preview is up, on purpose, so it can only
+            // be held against what Preview found once Preview has ended.
+            if !editor.isPreviewing {
+                guard editor.canUndo == before.canUndo, editor.canRedo == before.canRedo else {
+                    throw Failure(description: "Undo is not as Preview found it: undo \(editor.canUndo) "
+                        + "against \(before.canUndo), redo \(editor.canRedo) against \(before.canRedo)")
+                }
+            }
+            said.append(editor.isPreviewing ? "the document is as Preview found it"
+                                            : "the document and Undo are as Preview found them")
+        } else if unchanged != nil {
+            throw Failure(description: "Preview was never entered, so there is nothing to compare")
+        }
+        return said.joined(separator: "; ")
+    }
+
     private func checkShows(_ drawing: String) throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document else {

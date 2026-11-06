@@ -28,6 +28,7 @@ extension EditorState {
     func isOn(_ id: AppCommandID) -> Bool? {
         switch id {
         case .snapInTimeline: isTimelineSnapping
+        case .preview: isPreviewing
         case .muteTrack: trackInHand?.isMuted ?? false
         case .hideTrack: trackInHand?.isHidden ?? false
         case .soloTrack: trackInHand?.isSolo ?? false
@@ -115,6 +116,12 @@ extension EditorState {
         case .addCaptionsForRange: addCaptionsInRange()
         case .splitEverythingAtPlayhead: splitEverything(atMS: documentTimeMS)
         case .snapInTimeline: toggleTimelineSnapping()
+        // On the next turn of the main loop. An agent's call and a walk's step
+        // arrive from async work, and called from there the state changed and
+        // the canvas and title bar followed but the editor's own view did not:
+        // the panel and tool bar stayed up and the pill never drew, measured
+        // 2026-11-06 with every claim green. A press lands on a turn of its own.
+        case .preview: DispatchQueue.main.async { [weak self] in self?.togglePreview() }
         // Sequence > Track
         case .addVideoTrack: addTrack(.video)
         case .addAudioTrack: addTrack(.audio)
@@ -448,6 +455,7 @@ extension EditorState {
         case .mergeIntoOneClip: return canMergeRange
         case .addCaptionsForRange: return canAddCaptionsInRange
         case .splitEverythingAtPlayhead: return canSplitEverythingAtPlayhead
+        case .preview: return showsPreviewButton
         case .snapInTimeline, .addVideoTrack, .addAudioTrack, .addCaptionsTrack: return timed
         case .addTrackAbove, .addTrackBelow, .soloTrack, .lockTrack, .deleteTrack: return track != nil
         case .muteTrack: return track?.kind == .audio

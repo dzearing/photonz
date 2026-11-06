@@ -99,7 +99,7 @@ extension CanvasNSView {
     }
 
     func canvasNameChips() -> [CanvasNameChip] {
-        guard let viewport, let document else { return [] }
+        guard !isPreviewing, let viewport, let document else { return [] }
         var chips: [CanvasNameChip] = []
         // Which drawings say which version they are, worked out once for the
         // whole canvas rather than per chip, and empty for every document that

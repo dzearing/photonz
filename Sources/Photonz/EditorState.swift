@@ -277,6 +277,8 @@ final class EditorState {
     /// the playhead, so a walk can read what the picture was given (a zoom's
     /// window at a frame) rather than working it out again.
     @ObservationIgnored var playtestLastDrawn: PhotonzDocument?
+    /// Probe only: what Preview found, so a walk can claim it left it so.
+    @ObservationIgnored var playtestDocumentBeforePreview: (document: PhotonzDocument, canUndo: Bool, canRedo: Bool)?
     /// Probe only: the Export sheet opens on SVG, because a walk cannot click
     /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
     /// out of every shipping build.
@@ -1447,6 +1449,21 @@ final class EditorState {
     /// recording opens in View every time, whatever the last one was left in.
     /// A picture ignores it (`isWatching`).
     private(set) var viewEditMode: ViewEditMode = .edit
+    /// The window is trying the page rather than editing it (`ComponentPreview`,
+    /// `EditorState+ComponentPreview`). Everything that folds away for View folds
+    /// away for this too (`isWatching`).
+    var isPreviewing = false
+    /// All that has happened on the page in Preview. Read by the canvas's draw
+    /// and written on every press, so observed by nobody: the note and the mode
+    /// are what views read.
+    @ObservationIgnored var previewSession = ComponentPreview()
+    /// What the pill adds under the pointer, nil for nothing.
+    var previewNote: String?
+    /// Whether this picture has anything to preview, kept so the title bar
+    /// reads a word that changes rarely rather than the whole document.
+    var offersPreview = false
+    /// How the window goes back when Preview ends.
+    @ObservationIgnored var beforePreview: PreviewReturn?
     /// The layer picked when View put the handles away, handed back on Edit.
     @ObservationIgnored var pickedBeforeView: UUID?
     /// How far Edit mode has got arriving, a pass at a time: the ruler and
@@ -1566,7 +1583,8 @@ final class EditorState {
 
     /// The window is a player right now: no tool bar, no tracks, no panel, no
     /// handles. Everything that folds away in View reads this one answer.
-    var isWatching: Bool { documentHasTime && viewEditMode == .view }
+    /// Preview reads the same: it is the same window with the same things gone.
+    var isWatching: Bool { (documentHasTime && viewEditMode == .view) || isPreviewing }
 
     /// Switch between View and Edit. The picture refits to the room it now
     /// has, because in View it has the whole window and in Edit it shares it.
@@ -1614,6 +1632,7 @@ final class EditorState {
     /// Lands a document that has just opened in its mode, at once rather
     /// than animated: the window should open already being what it is.
     func openInItsMode(_ document: PhotonzDocument, forAGuide: Bool = false) {
+        forgetPreview()
         pickedBeforeView = nil
         editArrival = .settled
         isEditorKeptBehindView = false
@@ -1633,7 +1652,7 @@ final class EditorState {
 
     /// The picture fitted to the room it has in this mode: the whole canvas
     /// in View, clear of the floating tool bar in Edit.
-    private func refitForViewEditMode() {
+    func refitForViewEditMode() {
         guard let current = viewport, canvasViewSize.width > 0, canvasViewSize.height > 0 else { return }
         viewport = fittedViewport(documentSize: current.documentSize, in: canvasViewSize)
         appPlaced(viewport, fitted: true)
@@ -1663,6 +1682,7 @@ final class EditorState {
     /// Something started an edit while the window was a player: it becomes
     /// the editor, so the edit has somewhere to show.
     func switchToEditForAnEdit() {
+        if isPreviewing { return leavePreview() }
         guard isWatching else { return }
         setViewEditMode(.edit)
     }
@@ -2346,9 +2366,27 @@ final class EditorState {
     }
 
     /// What the floating tool bar covers at the foot of the canvas, which a
-    /// fitted picture keeps clear of. Nothing in View mode, which has no bar.
+    /// fitted picture keeps clear of. Nothing in View mode, which has no bar,
+    /// and in Preview the pill's strip, so the pill never sits on the page.
     private var fitObscuredBottom: CGFloat {
-        isWatching ? 0 : EditorChromeLayout.toolBarCovers(bar: Experiments.shared.toolBar)
+        if isPreviewing { return PreviewPill.covers }
+        return isWatching ? 0 : EditorChromeLayout.toolBarCovers(bar: Experiments.shared.toolBar)
+    }
+
+    /// The camera and how it got there, for Preview to hand back.
+    var cameraToReturnTo: (viewport: Viewport?, placed: Viewport?, fitted: Bool) {
+        (viewport, viewportTheAppPlaced, viewportTheAppFitted)
+    }
+
+    /// Puts back the camera Preview took over, refitting instead when the
+    /// window changed size while it was up.
+    func returnCamera(_ camera: (viewport: Viewport?, placed: Viewport?, fitted: Bool)) {
+        guard let saved = camera.viewport, saved.viewSize == canvasViewSize else {
+            return refitForViewEditMode()
+        }
+        viewport = saved
+        viewportTheAppPlaced = camera.placed
+        viewportTheAppFitted = camera.fitted
     }
 
     /// Records a camera the app placed on its own, so a resize can tell
@@ -2392,8 +2430,10 @@ final class EditorState {
         _ = menuDocumentRevision
         return _history
     }
-    var canUndo: Bool { menuReadsHistory?.canUndo ?? false }
-    var canRedo: Bool { menuReadsHistory?.canRedo ?? false }
+    // Preview changes nothing, so it has nothing to undo, and the page being
+    // tried is not to be taken back a step under the person trying it.
+    var canUndo: Bool { !isPreviewing && menuReadsHistory?.canUndo ?? false }
+    var canRedo: Bool { !isPreviewing && menuReadsHistory?.canRedo ?? false }
 
     /// The .photonz package backing this document; nil until first save (or
     /// always, for plain-image documents the user hasn't saved as a package).
@@ -5373,6 +5413,7 @@ final class EditorState {
     }
 
     func undo() {
+        guard !isPreviewing else { return }
         discardDragPreview() // undone edits may invalidate a held sprite
         if stylePreview != nil { stylePreview = nil }
         if paintPreview != nil { paintPreview = nil }
@@ -5404,6 +5445,7 @@ final class EditorState {
     }
 
     func redo() {
+        guard !isPreviewing else { return }
         discardDragPreview()
         if stylePreview != nil { stylePreview = nil }
         if paintPreview != nil { paintPreview = nil }
@@ -5534,6 +5576,7 @@ final class EditorState {
         if let id = editingCaptionLayerID, document.layer(id: id) == nil {
             editingCaptionLayerID = nil
         }
+        notePreviewOffer(document)
         submit(document)
     }
 
@@ -5543,6 +5586,10 @@ final class EditorState {
     /// Export paths rasterize the document itself and never come through here.
     private func displayDocument(_ document: PhotonzDocument) -> PhotonzDocument {
         var document = displayFiltered(document)
+        // Preview's looks are the same kind of thing: what is shown right now,
+        // on a value nothing keeps, so leaving has nothing to put back
+        // (`ComponentPreview.drawn`).
+        if isPreviewing { document = previewSession.drawn(document) }
         // ...and where in its loop the preview is, which is the same kind of
         // fact: the motion is never stored, it is worked out at the moment the
         // canvas is drawn, exactly like the blur and the shadow above it. Stop

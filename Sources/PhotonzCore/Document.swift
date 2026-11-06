@@ -516,8 +516,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// GROUP a click landed in rather than the layer itself can walk back up.
     /// A hidden or locked group is skipped whole: nothing inside it can be
     /// picked without unhiding or unlocking it first.
+    ///
+    /// `throughLocks` answers for what is on screen rather than what can be
+    /// edited: Preview tries a page, and a lock only ever meant "not while I
+    /// am editing" (`ComponentPreview`).
     public func hitTestPath(_ point: CGPoint, zoom: CGFloat = 1,
-                            captionPillSize: CaptionPillSizing? = nil) -> [Int]? {
+                            captionPillSize: CaptionPillSizing? = nil,
+                            throughLocks: Bool = false) -> [Int]? {
         // Where anything is seen in space, every layer is clicked where the
         // camera PUT it: the point is carried back onto the layer's own flat
         // plane before anything else is asked (`Space3D.swift`). `offset` is
@@ -531,7 +536,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                     projection: Projection3D? = nil, inherited: Affine3D? = nil) -> [Int]? {
             for index in (order ?? Array(list.indices)).reversed() {
                 let layer = list[index]
-                guard layer.isVisible, !layer.isLocked else { continue }
+                guard layer.isVisible, throughLocks || !layer.isLocked else { continue }
                 var point = point
                 var move: Affine3D?
                 if let projection {

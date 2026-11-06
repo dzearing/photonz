@@ -19,6 +19,8 @@ import PhotonzCore
 extension CanvasNSView {
 
     override func menu(for event: NSEvent) -> NSMenu? {
+        // Preview is trying the page: nothing on it is there to be edited.
+        if isPreviewing { return nil }
         // The selection chip's own menu: reset a mode (`CanvasSelectionGrips`).
         if let chip = chipResetMenu(atView: convert(event.locationInWindow, from: nil)) { return chip }
         guard let aimed = contextMenuAim(at: event) else { return super.menu(for: event) }

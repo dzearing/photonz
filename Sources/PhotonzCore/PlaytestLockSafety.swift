@@ -129,6 +129,9 @@ public enum PlaytestLockSafety {
         "action", "appKey", "holdAppKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
+        // Added 2026-11-06 by reading: it asks the app's own Preview state and
+        // the document, and never a name.
+        "expectPreview",
         // Added 2026-10-04 by reading: it asks the document for a path's
         // corner radii, the same read `expectPath` makes, and no name.
         "expectCorners",

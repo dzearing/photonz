@@ -62,6 +62,10 @@ struct CanvasView: NSViewRepresentable {
     /// View mode (`ViewEditMode`): the canvas is a player's picture, so a
     /// press picks nothing and a double click goes full screen.
     var isWatching: Bool = false
+    /// Preview (`ComponentPreview`): the page is being tried, so every press,
+    /// move and key goes to `onPreview` and to nothing else.
+    var isPreviewing: Bool = false
+    var onPreview: (CanvasPreviewEvent) -> Void = { _ in }
     /// See `EditorState.captionCloseRequest`: each bump closes an open caption
     /// field with the tool kept.
     let captionCloseRequest: Int
@@ -483,6 +487,8 @@ struct CanvasView: NSViewRepresentable {
 
     private func update(_ view: CanvasNSView) {
         view.isWatching = isWatching
+        view.onPreview = onPreview
+        view.setPreviewing(isPreviewing)
         view.penPaint = penPaint
         view.penStrokeWidth = penStrokeWidth
         view.armedStrokeWidthIsChosen = armedStrokeWidthIsChosen
@@ -1337,6 +1343,9 @@ final class CanvasNSView: NSView {
     var handPan: HandPan?
     /// View mode: presses pick nothing (`CanvasView.isWatching`).
     var isWatching = false
+    /// Preview: the page is being tried (`CanvasView.isPreviewing`).
+    var isPreviewing = false
+    var onPreview: (CanvasPreviewEvent) -> Void = { _ in }
     var captionCloseRequest = 0
     var typeInLayerToken = 0
     /// In-progress drag-to-create (document coordinates).

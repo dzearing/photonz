@@ -905,6 +905,13 @@ extension Experiments {
         libraryEnabled && isEnabled(FeatureCatalog.componentsFlag)
     }
 
+    /// `next-component-preview`: whether a page of copies can be tried as the
+    /// real controls (`ComponentPreview`). Copies come from components, so it
+    /// needs them.
+    var componentPreviewEnabled: Bool {
+        componentsEnabled && isEnabled(FeatureCatalog.componentPreviewFlag)
+    }
+
     /// `next-styles`: whether a color can be saved under a name, whether the
     /// inspector's color rows offer the styles button, and whether the
     /// Library's Styles scope has anything in it. A style is something you

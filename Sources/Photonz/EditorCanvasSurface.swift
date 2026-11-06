@@ -47,6 +47,8 @@ struct EditorCanvasSurface: View {
                    dragPreview: editorState.dragPreview,
                    tool: editorState.activeTool,
                    isWatching: editorState.isWatching,
+                   isPreviewing: editorState.isPreviewing,
+                   onPreview: { editorState.previewEvent($0) },
                    captionCloseRequest: editorState.captionCloseRequest,
                    typeInLayer: editorState.typeInLayer,
                    transformModeRequest: editorState.transformModeRequest,

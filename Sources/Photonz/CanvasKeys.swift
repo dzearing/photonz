@@ -11,11 +11,21 @@ extension CanvasNSView {
     /// Key equivalents reach a view before they reach the main menu, which is
     /// the one place the Pen can answer Command Z before Undo does.
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if isPreviewing, event.modifierFlags.contains(.command),
+           !ComponentPreview.commandKeyReachesTheMenus(event.charactersIgnoringModifiers ?? "") {
+            return true
+        }
         if penUndoKeyEquivalent(event) { return true }
         return super.performKeyEquivalent(with: event)
     }
 
     override func keyDown(with event: NSEvent) {
+        // Preview: the keys are the page's. None of them reaches a tool.
+        if isPreviewing {
+            onPreview(.key(code: event.keyCode, shift: event.modifierFlags.contains(.shift),
+                           repeated: event.isARepeat))
+            return
+        }
         // Adjusting the grid takes every key the canvas would otherwise act on,
         // so an arrow moves the markers rather than the last layer you happened
         // to have selected, ⏎ finishes the adjustment rather than opening a

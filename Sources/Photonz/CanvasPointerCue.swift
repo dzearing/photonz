@@ -23,6 +23,10 @@ extension CanvasNSView {
     }
 
     override func mouseMoved(with event: NSEvent) {
+        if isPreviewing, let viewport {
+            onPreview(.moved(previewPoint(event, viewport), zoom: viewport.zoom))
+            return
+        }
         // View mode offers nothing to grab, so nothing lights up.
         if isWatching { return }
         // While the grid is being adjusted nothing on the canvas is hoverable:
@@ -74,6 +78,7 @@ extension CanvasNSView {
     }
 
     override func mouseExited(with event: NSEvent) {
+        if isPreviewing { onPreview(.moved(nil, zoom: 1)) }
         hoverPoint = nil
         // `pointerIconFrameID` is deliberately LEFT as it is. Reading the Width
         // row means reaching up to the tool bar, and a number that changed on

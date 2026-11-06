@@ -183,6 +183,14 @@ struct EditorView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
+                    // The one thing Preview adds: where the tool bar was, on a
+                    // strip the fit keeps clear (`PreviewPill`).
+                    .overlay(alignment: .bottom) {
+                        if editorState.isPreviewing {
+                            PreviewPill()
+                                .transition(.opacity.combined(with: .offset(y: 10)))
+                        }
+                    }
                     .clipped()  // keep a transient over-wide toolbar off the panel
                     // What the capsule takes, so every other bottom overlay
                     // (the Measure hint, the crop pill, the legend) clears one

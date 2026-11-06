@@ -2507,6 +2507,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// a walk cannot reach with the pointer, so this is how the shelf the app
     /// arrives stocked with gets photographed.
     case showComponentShelf
+    /// View ▸ Preview (`ComponentPreview`), since a walk in the background has
+    /// a frozen menu bar. `component-preview-front-walk` is the real key.
+    case togglePreview
     /// ...and the Media shelf, which is where the captures the app already
     /// keeps are. Which scope the shelf opens on is remembered between runs, so
     /// a walk that wants one says so rather than hoping.
@@ -3848,6 +3851,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// nearest drawing under those same rows. So a walk that draws the real
     /// combination afterwards needs this to prove the copy moved onto it.
     case expectShows(drawing: String)
+    /// What Preview is doing (`ComponentPreview`): whether it is on, the look
+    /// the canvas was last handed for the copy at `at`, what the pill's note
+    /// says ("" for none), and whether the document is exactly the one Preview
+    /// began on, with Undo as it was.
+    case expectPreview(on: Bool?, at: PlaytestPoint?, shows: String?, note: String?, unchanged: Bool?)
     /// How many measurements must be on the canvas right now.
     ///
     /// `expectPicked` asks what the app is holding; this asks what it has
@@ -4763,7 +4771,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "agentTool", "expectPictureMoves", "appKey", "holdAppKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
+        "action", "agentTool", "expectPictureMoves", "expectPreview", "appKey", "holdAppKey", "appearance", "askFromNothing", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "clipboardText", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dragTitlePart", "dragPart", "markZoom", "expectZoomSteady",
@@ -4947,6 +4955,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectEdited: "expectEdited"
         case .memory: "memory"
         case .expectShows: "expectShows"
+        case .expectPreview: "expectPreview"
         case .scrollPanel: "scrollPanel"
         case .wheel: "wheel"
         case .reveal: "reveal"
@@ -6726,6 +6735,19 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectListStill(moved: try f.optionalFlag("moved") ?? false)
         case "expectShows":
             self = .expectShows(drawing: try f.string("drawing"))
+        case "expectPreview":
+            let at = f.fields["at"] == nil ? nil : try f.point("at")
+            let shows = try f.optionalString("shows")
+            let note = f.fields["note"] as? String
+            let on = try f.optionalFlag("on")
+            let unchanged = try f.optionalFlag("unchanged")
+            if (at == nil) != (shows == nil) {
+                throw f.invalid("shows", "expectPreview names a point and the look there together, \"at\" with \"shows\"")
+            }
+            if on == nil, shows == nil, note == nil, unchanged == nil {
+                throw f.invalid("on", "expectPreview has to claim something: on, at with shows, note or unchanged")
+            }
+            self = .expectPreview(on: on, at: at, shows: shows, note: note, unchanged: unchanged)
         case "expectEdited":
             self = .expectEdited(try f.optionalFlag("edited") ?? f.optionalFlag("is") ?? true)
         case "memory":

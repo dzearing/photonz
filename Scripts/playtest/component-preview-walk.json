@@ -1,0 +1,648 @@
+{
+  "out": "/tmp/photonz-playtest/component-preview-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "The user's ask of 2026-11-04 at Next defaults: a page with a button, a switch, a tab group and a disabled field. Go into Preview, hover, press, click, Tab, and leave. Every look is claimed off the document the canvas was handed, and leaving has to find the document and Undo exactly as Preview found them.",
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 800,
+      "canvasHeight": 600,
+      "width": 1200,
+      "height": 860
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Button\", \"x\": 40, \"y\": 1000, \"labels\": false, \"firstLook\": \"Default\", \"parts\": [{\"name\": \"Box\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 120, \"height\": 36, \"cornerRadius\": 8, \"fill\": \"#0A84FF\"}, {\"name\": \"Label\", \"shape\": \"text\", \"text\": \"Save\", \"x\": 0, \"y\": 9, \"width\": 120, \"height\": 18, \"fontSize\": 13, \"color\": \"#FFFFFF\"}], \"looks\": [{\"name\": \"Hover\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#3B9DFF\"}]}, {\"name\": \"Pressed\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#0060C8\"}]}, {\"name\": \"Focused\", \"changes\": [{\"part\": \"Box\", \"stroke\": \"#FF9F0A\", \"strokeWidth\": 3}]}, {\"name\": \"Disabled\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#C7C7CC\"}]}]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Switch\", \"x\": 40, \"y\": 1100, \"labels\": false, \"firstLook\": \"Off\", \"parts\": [{\"name\": \"Track\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 52, \"height\": 30, \"cornerRadius\": 15, \"fill\": \"#E9E9EA\"}, {\"name\": \"Knob\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 26, \"height\": 26, \"cornerRadius\": 13, \"fill\": \"#FFFFFF\"}], \"looks\": [{\"name\": \"Hover\", \"changes\": [{\"part\": \"Track\", \"fill\": \"#A9A9B2\"}]}, {\"name\": \"Focused\", \"changes\": [{\"part\": \"Track\", \"stroke\": \"#FF9F0A\", \"strokeWidth\": 3}]}, {\"name\": \"On\", \"changes\": [{\"part\": \"Track\", \"fill\": \"#34C759\"}, {\"part\": \"Knob\", \"x\": 24}]}, {\"name\": \"On Hover\", \"changes\": [{\"part\": \"Track\", \"fill\": \"#1A8F3A\"}, {\"part\": \"Knob\", \"x\": 24}]}, {\"name\": \"On Focused\", \"changes\": [{\"part\": \"Track\", \"fill\": \"#34C759\", \"stroke\": \"#FF9F0A\", \"strokeWidth\": 3}, {\"part\": \"Knob\", \"x\": 24}]}]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Tab\", \"x\": 40, \"y\": 1200, \"labels\": false, \"firstLook\": \"Default\", \"parts\": [{\"name\": \"Plate\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 96, \"height\": 34, \"cornerRadius\": 6, \"fill\": \"#F2F2F7\"}, {\"name\": \"Label\", \"shape\": \"text\", \"text\": \"Tab\", \"x\": 0, \"y\": 8, \"width\": 96, \"height\": 18, \"fontSize\": 13, \"color\": \"#3A3A3C\"}], \"looks\": [{\"name\": \"Hover\", \"changes\": [{\"part\": \"Plate\", \"fill\": \"#BBD3F7\"}]}, {\"name\": \"Focused\", \"changes\": [{\"part\": \"Plate\", \"stroke\": \"#FF9F0A\", \"strokeWidth\": 3}]}, {\"name\": \"Selected\", \"changes\": [{\"part\": \"Plate\", \"fill\": \"#0A84FF\"}, {\"part\": \"Label\", \"color\": \"#FFFFFF\"}]}]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Field\", \"x\": 40, \"y\": 1300, \"labels\": false, \"firstLook\": \"Default\", \"parts\": [{\"name\": \"Box\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 220, \"height\": 34, \"cornerRadius\": 6, \"fill\": \"#FFFFFF\", \"stroke\": \"#C7C7CC\", \"strokeWidth\": 2}, {\"name\": \"Words\", \"shape\": \"text\", \"text\": \"Robin Avery\", \"x\": 10, \"y\": 8, \"width\": 200, \"height\": 18, \"fontSize\": 13, \"color\": \"#1C1C1E\"}], \"looks\": [{\"name\": \"Hover\", \"changes\": [{\"part\": \"Box\", \"stroke\": \"#3A3A3C\"}]}, {\"name\": \"Focused\", \"changes\": [{\"part\": \"Box\", \"stroke\": \"#0A84FF\"}]}, {\"name\": \"Disabled\", \"changes\": [{\"part\": \"Box\", \"fill\": \"#F2F2F7\"}, {\"part\": \"Words\", \"color\": \"#6C6C70\"}]}]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "add_component",
+      "arguments": "{\"name\": \"Plan\", \"x\": 40, \"y\": 1400, \"labels\": false, \"firstLook\": \"Compact\", \"parts\": [{\"name\": \"Card\", \"shape\": \"rectangle\", \"x\": 0, \"y\": 0, \"width\": 220, \"height\": 60, \"cornerRadius\": 10, \"fill\": \"#F2F2F7\"}, {\"name\": \"Words\", \"shape\": \"text\", \"text\": \"Pro plan\", \"x\": 12, \"y\": 20, \"width\": 190, \"height\": 18, \"fontSize\": 13, \"color\": \"#1C1C1E\"}], \"looks\": [{\"name\": \"Expanded\", \"changes\": [{\"part\": \"Card\", \"fill\": \"#BBD3F7\"}]}]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Tab\", \"x\": 120, \"y\": 80, \"words\": [\"General\"]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Tab\", \"x\": 230, \"y\": 80, \"words\": [\"Privacy\"]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Tab\", \"x\": 340, \"y\": 80, \"words\": [\"Billing\"]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Field\", \"x\": 180, \"y\": 190}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Field\", \"x\": 500, \"y\": 190, \"words\": [\"robin@example.com\"]}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Switch\", \"x\": 110, \"y\": 290}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Plan\", \"x\": 500, \"y\": 300}"
+    },
+    {
+      "do": "agentTool",
+      "tool": "place_component",
+      "arguments": "{\"component\": \"Button\", \"x\": 640, \"y\": 500, \"words\": [\"Save\"]}"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        190
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Disabled",
+      "in": "State"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        120,
+        80
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Selected",
+      "in": "State"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        640,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Button"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "0-editing"
+    },
+    {
+      "do": "expect",
+      "control": "Preview pill",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Layers section",
+      "present": true
+    },
+    {
+      "do": "action",
+      "action": "togglePreview"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectPreview",
+      "on": true,
+      "at": [
+        640,
+        500
+      ],
+      "shows": "Default",
+      "note": ""
+    },
+    {
+      "do": "expect",
+      "control": "Preview pill",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Layers section",
+      "present": false
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "snapshot",
+      "name": "1-preview"
+    },
+    {
+      "do": "move",
+      "at": [
+        640,
+        500
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        640,
+        500
+      ],
+      "shows": "Hover"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-hover"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        500
+      ],
+      "to": [
+        642,
+        500
+      ],
+      "steps": 3,
+      "hold": "3-pressed"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        640,
+        500
+      ],
+      "shows": "Hover"
+    },
+    {
+      "do": "move",
+      "at": [
+        110,
+        290
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        110,
+        290
+      ],
+      "shows": "Hover"
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        290
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        110,
+        290
+      ],
+      "shows": "On Hover"
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        110,
+        290
+      ],
+      "shows": "On"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-switch-on"
+    },
+    {
+      "do": "drag",
+      "from": [
+        110,
+        290
+      ],
+      "to": [
+        300,
+        420
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        110,
+        290
+      ],
+      "shows": "On"
+    },
+    {
+      "do": "click",
+      "at": [
+        230,
+        80
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        230,
+        80
+      ],
+      "shows": "Selected"
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        120,
+        80
+      ],
+      "shows": "Default"
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "5-tab"
+    },
+    {
+      "do": "move",
+      "at": [
+        500,
+        190
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        500,
+        190
+      ],
+      "shows": "Disabled"
+    },
+    {
+      "do": "click",
+      "at": [
+        500,
+        190
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        500,
+        190
+      ],
+      "shows": "Disabled"
+    },
+    {
+      "do": "move",
+      "at": [
+        500,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "note": "Plan: no state looks"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-note"
+    },
+    {
+      "do": "move",
+      "at": [
+        300,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "note": ""
+    },
+    {
+      "do": "key",
+      "key": "tab"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        120,
+        80
+      ],
+      "shows": "Focused"
+    },
+    {
+      "do": "key",
+      "key": "tab",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        120,
+        80
+      ],
+      "shows": "Default"
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        640,
+        500
+      ],
+      "shows": "Focused"
+    },
+    {
+      "do": "key",
+      "key": "tab"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "tab"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        340,
+        80
+      ],
+      "shows": "Focused"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-focus"
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        340,
+        80
+      ],
+      "shows": "Selected"
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        230,
+        80
+      ],
+      "shows": "Default"
+    },
+    {
+      "do": "key",
+      "key": "tab"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        180,
+        190
+      ],
+      "shows": "Focused"
+    },
+    {
+      "do": "key",
+      "key": "tab"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "at": [
+        110,
+        290
+      ],
+      "shows": "On Focused"
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPreview",
+      "on": true,
+      "unchanged": true
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectPreview",
+      "on": false,
+      "unchanged": true
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Button"
+      ]
+    },
+    {
+      "do": "expect",
+      "control": "Preview pill",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Layers section",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "8-left"
+    },
+    {
+      "do": "click",
+      "at": [
+        110,
+        290
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectShows",
+      "drawing": "Off"
+    },
+    {
+      "do": "click",
+      "at": [
+        120,
+        80
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectShows",
+      "drawing": "Selected"
+    }
+  ]
+}

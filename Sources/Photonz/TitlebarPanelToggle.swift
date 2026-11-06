@@ -42,7 +42,8 @@ struct TitlebarPanelToggleInstaller: NSViewRepresentable {
 
     func updateNSView(_ view: InstallerView, context: Context) {
         view.install()
-        view.fitWidth(offersViewEdit: editorState.documentHasTime)
+        view.fitWidth(offersViewEdit: editorState.documentHasTime,
+                      offersPreview: editorState.showsPreviewButton)
     }
 
     static func dismantleNSView(_ view: InstallerView, coordinator: ()) {
@@ -56,6 +57,8 @@ struct TitlebarPanelToggleInstaller: NSViewRepresentable {
         private var accessory: NSTitlebarAccessoryViewController?
         /// Whether the box has room for View | Edit beside the toggle.
         private var fittedForViewEdit = false
+        /// Whether the box has room for Preview beside Ask.
+        private var fittedForPreview = false
 
         init(editorState: EditorState) {
             let toggle = NSHostingView(
@@ -121,12 +124,14 @@ struct TitlebarPanelToggleInstaller: NSViewRepresentable {
         /// Makes room for View | Edit to the toggle's left, or gives it back.
         /// Only when a document with time comes or goes, never per pass: the
         /// box is fixed between those for the reason given in `init`.
-        func fitWidth(offersViewEdit: Bool) {
-            guard offersViewEdit != fittedForViewEdit else { return }
+        func fitWidth(offersViewEdit: Bool, offersPreview: Bool) {
+            guard offersViewEdit != fittedForViewEdit || offersPreview != fittedForPreview else { return }
             fittedForViewEdit = offersViewEdit
+            fittedForPreview = offersPreview
             var frame = accessoryView.frame
             frame.size.width = TitlebarPanelToggle.boxWidth
                 + (offersViewEdit ? TitlebarViewEditSwitch.width + TitlebarViewEditSwitch.gap : 0)
+                + (offersPreview ? PreviewTitlebarButton.width + TitlebarViewEditSwitch.gap : 0)
             accessoryView.frame = frame
         }
 
@@ -167,8 +172,16 @@ struct TitlebarPanelToggle: View {
         HStack(spacing: TitlebarViewEditSwitch.gap) {
             // Ask (Next, `next-ask`), the mock's `.askbtn` in the title bar's
             // right slot. Read at launch, like the box's width.
+            if editorState.showsPreviewButton {
+                PreviewTitlebarButton()
+            }
             if Self.offersAsk {
+                // Ask goes in Preview but keeps its room: taking it out of the
+                // row would slide Preview out from under the pointer, and the
+                // second click, the one that leaves, would land beside it.
                 AskTitlebarButton()
+                    .opacity(editorState.isPreviewing ? 0 : 1)
+                    .allowsHitTesting(!editorState.isPreviewing)
             }
             if editorState.documentHasTime {
                 TitlebarViewEditSwitch()

@@ -30,6 +30,8 @@ public enum MenuToggleNames {
     /// column that holds several.
     public static let panel = PanelCopy.menuItem
     public static let library = "Show Library"
+    /// Trying a page of components (`ComponentPreview`).
+    public static let preview = ComponentPreviewCopy.button
     /// The space an icon has to live inside, on any frame the size an icon is
     /// drawn at (`next-icon-frames`). On the View menu with the grid, because
     /// like the grid it is a view preference rather than anything a document

@@ -4170,3 +4170,46 @@ the reflow that `History.perform` already runs.
 
 Tested in `ScreenHugTests`, walked by
 `Scripts/playtest/a-screen-hugs-what-it-holds-walk.json` at Next defaults.
+
+## Landed: a page of components can be tried (Next, `next-component-preview`, 2026-11-06)
+
+Preview makes every copy on the page behave like the real control, with nothing
+to set up. Press the Preview button in the title bar, View ▸ Preview or ⌘Return;
+Esc, the same button or ⌘Return leaves. The design and its rules are
+`docs/design/mocks/pages/component-preview.html`, which the user approved as
+drawn on 2026-11-06. The next step, a click going to another frame
+(`ui-prototype.html`), is not built.
+
+**What a look means comes from its name** (`ComponentLookName`). A name is up to
+four things: a family ("Primary"), where a latching control rests ("On",
+"Selected"), a moment ("Hover", "Pressed", "Focused") and "Disabled". A copy
+wants the look of its own family resting the same way, so an On switch shows On
+Hover and never the plain Hover drawn for the off control. A state with no look
+keeps the look it has.
+
+**Nothing reaches the document.** All of it lives in `ComponentPreview`, a value
+thrown away on leaving. `displayDocument` draws `drawn(_:)`, a changed copy
+nothing keeps, so nothing goes through `History` and a document changed from
+outside while Preview is up is simply drawn again. Undo reads off while it is up,
+and Command keys other than the ones that leave the page alone stop at the canvas
+(`commandKeyReachesTheMenus`). A row picked from the menu bar by hand still acts:
+most are dimmed because nothing is picked, and the ones that are not are a
+person asking for an edit.
+
+**What counts as the page:** copies that can be seen on the canvas. Ask leaves the
+looks of what it made as copies well below the page, and Tab must not stop there.
+A lock is ignored, because it only ever meant not while editing.
+
+**Words are a copy's own in every look.** A wording knob made after the looks
+exist sits on one drawing, so a tab worded Privacy read Tab again in any other
+look, on the panel's State row as well as in Preview. `applyOverrides` now carries
+a text answer across to the matching piece of the look being shown. Only words: a
+look's colours are what make it that look.
+
+**Going in has to happen on a turn of the main loop of its own.** Called from
+inside async work, the state changed and the canvas and title bar followed, but
+the editor's own view did not: the panel and tool bar stayed up and the pill never
+drew. Why SwiftUI behaves so is not known; what was measured is that the same walk
+folds when the call hops to the next turn. `AppCommandRunner` does that hop, so an
+agent's `run_command preview` and a walk's `togglePreview` are both safe.
+
