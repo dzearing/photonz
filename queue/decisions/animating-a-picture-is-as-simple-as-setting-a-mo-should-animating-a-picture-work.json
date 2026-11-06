@@ -1,0 +1,64 @@
+{
+  "id": "animating-a-picture-is-as-simple-as-setting-a-mo-should-animating-a-picture-work",
+  "taskId": "animating-a-picture-is-as-simple-as-setting-a-mo",
+  "question": "Should animating a picture work like this prototype: press Add Key (1), and from then on a change to that layer lands on the hollow diamond at the playhead (2), with a slim bar (3) and the video timeline's rows (4) under the picture?",
+  "context": "Try it at http://127.0.0.1:8791/index.html#picture-keys and press Show me, or just use the bell. This is the review your task asked for: nothing is built until you answer. Reproduced first on the real app: today the only way in is the plus and a list of properties, then a form, and once a layer rotates a drag from its middle moves the pivot and not the layer.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Build it as shown, on pictures and videos: K adds a key, the Lens loses its letter, the Add Key button replaces Animate a property on video, and the pivot shows only on the Rotation row",
+      "summary": "Pick a layer, press Add Key or K, change things, and it tweens. The plus and the From and To form go from pictures. A video's panel gets the same button.",
+      "pros": [
+        "Nothing to choose before you start",
+        "One way of keying on pictures and videos",
+        "K is one press, and it is the letter you asked about"
+      ],
+      "cons": [
+        "The Lens has no letter any more, only its menu row",
+        "Your video mock draws an Animate a property button, and your bell mock draws the pivot from the start; both change"
+      ],
+      "mitigation": "Animate a property stays one click away, under the arrow beside Add Key. The pivot is one click away on the Rotation row."
+    },
+    {
+      "id": "b",
+      "label": "Build it as shown, on pictures and videos, but K stays the Lens and Add Key has no letter",
+      "summary": "Everything in the prototype except the key: Add Key is the button, the right-click and the menu row, with no letter of its own.",
+      "pros": [
+        "Nobody's Lens habit changes"
+      ],
+      "cons": [
+        "Animating is slower by hand: every key is a click"
+      ],
+      "mitigation": "A letter can be added later without changing anything else."
+    },
+    {
+      "id": "c",
+      "label": "Not yet: change the prototype first, and build nothing until you see it again",
+      "summary": "Say what is wrong in the note on your answer. The prototype changes, and a new card comes back to you.",
+      "pros": [
+        "Nothing gets built on a design you doubt"
+      ],
+      "cons": [
+        "Pictures keep the plus and the form a while longer"
+      ],
+      "mitigation": "The prototype takes minutes to change; the build does not."
+    },
+    {
+      "id": "d",
+      "label": "Do not build this: pictures keep the plus and the From and To form",
+      "summary": "Drops the task. Animating a picture stays as it is today.",
+      "pros": [
+        "No change to learn"
+      ],
+      "cons": [
+        "The motion pane stays the way you found it"
+      ],
+      "mitigation": "Ask's animated icons would need their own answer.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-06T01:05:54.501Z",
+  "shot": "2026-11-05-picture-keys-review.png"
+}

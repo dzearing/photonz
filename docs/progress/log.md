@@ -22548,3 +22548,20 @@ Held-out 62.7 against 68.4, mostly more time-outs, cause unknown.
 
 Next: the held-out fall is an open question, and the tear reads lower than no tear
 on an egg and a bubble; both are filed.
+
+## 2026-11-05: Animating a picture: a prototype for the user to review
+
+Changed: no app code. A new interactive mock, `docs/design/mocks/pages/picture-keys.html`:
+pick a layer, press Add Key, change it, and it tweens, on the video editor's key model
+and a slimmed video timeline. It carries the six design answers and a table of every
+difference from video, with reasons. A review card is open.
+
+Reproduced first on the real app: the plus, a list of properties and a From and To
+form are the only way in, and once a layer rotates a drag from its middle moves the
+pivot and not the layer.
+
+Next: the user's answer. The build is blocked on it. The task log lists what the app
+cannot do yet.
+
+Open question: whether K moves off the Lens (on the card).
+
