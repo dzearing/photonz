@@ -3001,6 +3001,13 @@ avoids it the same five ways:
   `2026-09-20-icon-keylines-read-as-guides`): the margin became a wash between
   the frame's edge and the live area, and the square keyline became four
   hairlines that run out past the frame. A circle is exempt by its shape.
+- **A grid that is ruled finer inside a frame takes the canvas grid's place
+  there.** With the Grid on, an icon's artboard is ruled into its own units,
+  counted from its corner, and the canvas grid steps round it, because two grids
+  counted from different places cannot be read at once. Its pull goes with it: a
+  drag lands on the lines it can see. The lines stop short of the frame's edges,
+  so they close no rectangle, and under six points a unit they leave the canvas
+  grid to run across as it did (`IconUnits`).
 - **Ink sunk out of the way.** The canvas grid is the accent colour mixed most
   of the way into grey; the columns are a soft warm wash. Nothing saturated,
   nothing a layer would plausibly be painted.

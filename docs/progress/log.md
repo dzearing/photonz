@@ -22642,3 +22642,13 @@ Next: `leaving-preview-slides-back-without-a-hitch`, and a click going to anothe
 
 Open: going in has to happen on its own turn of the main loop; that is measured and worked round, and why is not known. A walk's claims read state, so a window that did not fold stayed green until `expect` claims on the pill and the panel went in.
 
+
+## 2026-11-06: a 24 unit artboard rules itself into units
+
+With the Grid on, an icon frame or icon picture is ruled into its own units:
+one quiet line per unit from its corner, a stronger one every fourth, under the
+keylines and over the drawing. The canvas grid steps round it, and moves,
+resizes, arrow keys and text inside it land on those units. Under six points a
+unit the canvas grid runs across as before. `IconUnits`, `CanvasIconUnits.swift`,
+`Scripts/measure-icon-units.py`. Next: the snap dots belong to the icon snapping
+task. No open questions.

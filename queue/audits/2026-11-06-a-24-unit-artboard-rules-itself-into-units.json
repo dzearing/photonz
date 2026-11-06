@@ -1,0 +1,30 @@
+{
+  "feature": "A 24 unit artboard rules itself into units",
+  "epic": "icon-grid",
+  "summary": "With the Grid on, an icon frame or icon picture shows one quiet line on every unit, counted from its corner, so you can see where a point will land. Moving, resizing or nudging something inside it lands on those lines.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-24-unit-artboard-rules-itself-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Choose File, New Frame, pick 24 under Icons, and press Add Frame.", "shot": "2026-11-06-a-24-unit-artboard-grid-off-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Choose View, Show Grid.", "shot": "2026-11-06-a-24-unit-artboard-grid-on-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare the artboard with the mock, which is on the left here.", "shot": "2026-11-06-a-24-unit-artboard-beside-the-mock.png" },
+    { "do": "Draw a circle with the Ellipse tool.", "shot": "2026-11-06-a-24-unit-artboard-drawn-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the circle a little way, then press the Right Arrow key once." },
+    { "do": "Paint the frame near black with its Fill swatch.", "shot": "2026-11-06-a-24-unit-artboard-dark-frame-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Zoom out to 600%, then to 500%.", "shot": "2026-11-06-a-24-unit-artboard-six-points-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Can you count units on the artboard without the lines competing with the keylines?",
+    "Is it right that the units appear only with the Grid on, as the mock's step 1 has it, rather than on every icon frame?",
+    "Does the jump at 600%, where the units give way to the canvas grid below it, feel natural as you zoom?",
+    "Is a line every unit still quiet enough at 600%, where they are six points apart?"
+  ],
+  "rough": [
+    "Decided against icon-draw-wt.html: the units show only with the Grid on, because the mock's artboard stays plain until step 1 turns the grid on. Show Grid in the View menu is that step, your call on 2026-10-20.",
+    "Measured on the real window at 3200%: 23 lines each way, every one 64 pixels from the next. Unit lines stand 21 levels off a white artboard and 16 off a near black one, against 124 and 154 for a keyline.",
+    "The mock marks the live area and the square with closed dashed outlines; the app keeps its wash and its hairlines that run off the edges, per UX-PATTERNS §D16.",
+    "The mock's Snap to step lights a dot on every crossing. The app draws none yet, folded into icon-snapping-reaches-what-the-icon-mock-draws.",
+    "Under six points a unit nothing is ruled, so a big icon at fit zoom, such as a 1024 app icon, still shows the canvas grid running across it.",
+    "A grid set to Columns only still rules both ways on an artboard, because the units are the frame's own and whole units pull both ways."
+  ]
+}

@@ -1031,6 +1031,11 @@ final class CanvasNSView: NSView {
     /// dashed sublayer per icon frame showing its live area and center lines.
     /// See `CanvasIconKeylines.swift`.
     let iconKeylineLayerGroup = CALayer()
+    /// An icon's artboard ruled into units: every unit, then every fourth unit
+    /// drawn again on top. See `CanvasIconUnits.swift`.
+    let iconUnitLayers = [CAShapeLayer(), CAShapeLayer()]
+    /// What those two were last drawn with, for a scripted walk to read.
+    var drawnIconUnits: [IconUnitRuling] = []
     /// Whether icon frames draw their guides, echoed from `EditorState`. A
     /// view preference rather than anything a document carries, so one switch
     /// covers every frame in every window.
@@ -1690,13 +1695,14 @@ final class CanvasNSView: NSView {
             annotationGridSnap = (nil, nil)
             return icon.point(nearest: p, zoom: viewport.zoom)
         }
+        let pull = canvasGridPull(at: opposite ?? p)
         let snap = AnnotationSnapping.snap(p, shape: shape, opposite: opposite,
                                            edges: edgeMap, zoom: viewport.zoom,
                                            free: refused, holding: held,
                                            gridHolding: drawGridHold,
-                                           gridSpacing: canvasSnapSpacing,
-                                           gridOrigin: canvasSnapOrigin,
-                                           gridAxes: canvasSnapAxes,
+                                           gridSpacing: pull.spacing,
+                                           gridOrigin: pull.origin,
+                                           gridAxes: pull.axes,
                                            guides: canvasSnapGuides)
         snapGuide = (snap.guideX, snap.guideY)
         annotationGridSnap = (snap.gridX, snap.gridY)
@@ -1730,12 +1736,13 @@ final class CanvasNSView: NSView {
     ///   leaves nothing behind for the next gesture to stand on.
     func snappedTextOrigin(_ p: CGPoint, event: NSEvent) -> CGPoint {
         guard let viewport else { return p }
+        let pull = canvasGridPull(at: p)
         return AnnotationSnapping.snap(p, shape: nil, opposite: nil, edges: edgeMap,
                                        zoom: viewport.zoom,
                                        free: event.modifierFlags.contains(.command),
-                                       gridSpacing: canvasSnapSpacing,
-                                       gridOrigin: canvasSnapOrigin,
-                                       gridAxes: canvasSnapAxes,
+                                       gridSpacing: pull.spacing,
+                                       gridOrigin: pull.origin,
+                                       gridAxes: pull.axes,
                                        guides: canvasSnapGuides).point
     }
 
@@ -2285,8 +2292,13 @@ final class CanvasNSView: NSView {
     /// place, as the ones a drag lands on. Nil when nothing is pulling, and
     /// then the keys are the one and ten points they have always been.
     var canvasNudgeGrid: NudgeGrid? {
-        guard let spacing = canvasSnapSpacing else { return nil }
-        return NudgeGrid(spacing: spacing, origin: canvasSnapOrigin, axes: canvasSnapAxes)
+        let held = pickedLayerIDs.count > 1 ? Array(pickedLayerIDs)
+                                            : selectedLayerID.map { [$0] } ?? []
+        return nudgeGrid(from: canvasGridPull(holding: held))
+    }
+
+    func nudgeGrid(from pull: CanvasGridPull) -> NudgeGrid? {
+        pull.spacing.map { NudgeGrid(spacing: $0, origin: pull.origin, axes: pull.axes) }
     }
 
     /// Whether an arrow key has a layer to move: the same question the two
@@ -2449,6 +2461,14 @@ final class CanvasNSView: NSView {
         // same reason: over everything drawn, so the margin survives the white
         // an icon frame paints itself, and under every piece of chrome, so a
         // selection outline or a handle is never seen through a dash.
+        // An icon's units go just under them: over what is drawn for the same
+        // reason, and never across a keyline.
+        for shape in iconUnitLayers {
+            shape.fillColor = nil
+            shape.lineWidth = 1
+            shape.isHidden = true
+            layer?.addSublayer(shape)
+        }
         iconKeylineLayerGroup.isHidden = true
         layer?.addSublayer(iconKeylineLayerGroup)
 

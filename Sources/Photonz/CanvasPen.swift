@@ -280,7 +280,7 @@ extension CanvasNSView {
     /// started on, and a path started on bare canvas stays exactly as the Pen
     /// has always been even when it crosses an icon.
     func refreshPenSnapping(at p: CGPoint?) {
-        penSession.grid = canvasNudgeGrid
+        penSession.grid = nudgeGrid(from: plainCanvasGridPull)
         penSession.iconSnap = penIconSnap(at: p)
     }
 

@@ -7883,6 +7883,10 @@ private final class Run {
                 if let id = editor.selectedLayerID, editor.document?.layer(id: id)?.isFrame == true {
                     editor.setFrameBackground(id: id, hex: "#3B82F6")
                 }
+            case .paintScreenSurfaceDark:
+                if let id = editor.selectedLayerID, editor.document?.layer(id: id)?.isFrame == true {
+                    editor.setFrameBackground(id: id, hex: "#14161A")
+                }
             case .newFrameDialog: editor.isNewFrameDialogPresented = true
             case .frameSelection:
                 // The log has to say what the frame ended up holding, because
@@ -21330,6 +21334,7 @@ private final class Run {
             // person might call a grid.
             "columns": canvas?.playtestColumnReport ?? "no canvas",
             "iconKeylines": canvas?.playtestIconKeylineReport ?? "no canvas",
+            "iconUnits": canvas?.playtestIconUnitReport ?? "no canvas",
             // The named colors in the document, and what each one paints, so a
             // walk can prove an edit to a style reached everything wearing it.
             "styles": (editor.document?.colorStyles ?? []).map {

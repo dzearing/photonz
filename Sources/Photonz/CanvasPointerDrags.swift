@@ -1144,13 +1144,14 @@ extension CanvasNSView {
             let reshape = reworked ? layer?.shownReshape : nil
             let startBox = reshape.map { $0.outerBox(of: drag.startFrame) } ?? drag.startFrame
             drag.flips = resizeFlips(for: layer, start: startBox, handle: drag.handle, pointer: p)
+            let pull = canvasGridPull(holding: [drag.layerID])
             drag.snapped = resizedFrame(for: layer, start: startBox, handle: drag.handle,
                                         pointer: p, preserveAspect: aspect,
                                         peers: snapping ? drag.peers : [],
                                         columns: snapping ? drag.columns : [],
-                                        gridSpacing: snapping && !slant ? canvasSnapSpacing : nil,
-                                        gridOrigin: canvasSnapOrigin,
-                                        gridAxes: canvasSnapAxes,
+                                        gridSpacing: snapping && !slant ? pull.spacing : nil,
+                                        gridOrigin: pull.origin,
+                                        gridAxes: pull.axes,
                                         guides: slant ? [] : canvasSnapGuides,
                                         holding: snapping ? held : .none,
                                         flips: drag.flips)
@@ -1211,13 +1212,14 @@ extension CanvasNSView {
                     // upright three alone: catching one of them would land it
                     // somewhere neither the piece nor the line agrees on.
                     let slant = isOnASlant(drag.layerID)
+                    let pull = canvasGridPull(holding: [drag.layerID])
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.size,
                                                             canvas: slant ? .zero : viewport.documentSize,
                                                             peers: drag.peers,
                                                             columnBands: drag.columns,
-                                                            gridSpacing: slant ? nil : canvasSnapSpacing,
-                                                            gridOrigin: canvasSnapOrigin,
-                                                            gridAxes: canvasSnapAxes,
+                                                            gridSpacing: slant ? nil : pull.spacing,
+                                                            gridOrigin: pull.origin,
+                                                            gridAxes: pull.axes,
                                                             guides: slant ? [] : canvasSnapGuides,
                                                             zoom: viewport.zoom,
                                                             holding: held)
@@ -1267,13 +1269,14 @@ extension CanvasNSView {
                 if held.isFree {
                     drag.snapped = Snapping.Result(origin: proposed)
                 } else {
+                    let pull = canvasGridPull(holding: Array(pickedLayerIDs))
                     drag.snapped = Snapping.snapFrameOrigin(proposed, size: drag.plan.bounds.size,
                                                             canvas: viewport.documentSize,
                                                             peers: drag.peers,
                                                             columnBands: drag.columns,
-                                                            gridSpacing: canvasSnapSpacing,
-                                                            gridOrigin: canvasSnapOrigin,
-                                                            gridAxes: canvasSnapAxes,
+                                                            gridSpacing: pull.spacing,
+                                                            gridOrigin: pull.origin,
+                                                            gridAxes: pull.axes,
                                                             guides: canvasSnapGuides,
                                                             zoom: viewport.zoom,
                                                             holding: held)

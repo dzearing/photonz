@@ -2584,6 +2584,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// one surface a white halo behind dark text cannot be seen against, so
     /// this is how a walk photographs the halo rule at all.
     case paintScreenSurface
+    /// The same swatch, painted near black: a frame stays white in the dark
+    /// appearance, so this is how a walk photographs a guide on a dark surface.
+    case paintScreenSurfaceDark
     /// Put every sheet away. Escape reaches the window, not the sheet in front
     /// of it, so a walk that photographs a sheet needs a way back out.
     case closeSheets

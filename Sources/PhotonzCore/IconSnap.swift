@@ -9,7 +9,9 @@ import Foundation
 /// meant 3 is not a clean file. So inside an icon frame every point the Pen
 /// puts down lands on a WHOLE UNIT, counted from the frame's own corner, with
 /// no setting to find first. The canvas grid does not get a say in there: four
-/// points apart, it could only ever reach one unit in four.
+/// points apart, it could only ever reach one unit in four. A layer already
+/// drawn lands on the same units when it is moved with the Grid on
+/// (`IconUnits`, `iconUnitBox(holding:zoom:)`).
 ///
 /// Two things pull harder than plain rounding, because they are what a person
 /// drawing an icon is actually aiming at:

@@ -1,0 +1,267 @@
+{
+  "out": "/tmp/photonz-playtest/a-24-unit-artboard-rules-itself-walk",
+  "seed": "New Frame, 24, View, Show Grid at Next defaults: one quiet line on every unit inside the artboard, the grid outside it as it always was",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1280,
+      "height": 1000
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "describe",
+      "stage": "1-grid-off",
+      "note": "the Grid is off: the frame shows its keylines and no units"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-grid-off"
+    },
+    {
+      "do": "action",
+      "action": "showGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "2-grid-on",
+      "note": "View, Show Grid: the frame is ruled into its 24 units"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-grid-on"
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        790,
+        540
+      ],
+      "to": [
+        810,
+        560
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-drawn",
+      "note": "a circle drawn on the ruled artboard: the units stay over it, the keylines over them"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-drawn"
+    },
+    {
+      "do": "drag",
+      "from": [
+        800,
+        550
+      ],
+      "to": [
+        803.3,
+        552.6
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-moved",
+      "note": "moved 3.3 by 2.6 by hand: it lands on whole units from the frame's corner, 793 by 542, where the four point canvas grid would have put it on 792 by 544"
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse",
+      "at": [
+        793,
+        542
+      ],
+      "size": [
+        20,
+        20
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "5-nudged",
+      "note": "an arrow key steps one unit"
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse",
+      "at": [
+        794,
+        542
+      ],
+      "size": [
+        20,
+        20
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "6-dark-app"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "pinch",
+      "to": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-far-out",
+      "note": "under six points a unit there is no room: nothing ruled, and the canvas grid crosses the artboard as it always did"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-far-out"
+    },
+    {
+      "do": "pinch",
+      "to": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "8-six-points",
+      "note": "six points a unit: ruled again"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-six-points"
+    },
+    {
+      "do": "pinch",
+      "to": 32
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        789,
+        539
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "paintScreenSurfaceDark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "10-dark-frame",
+      "note": "an artboard painted near black: the units still read, and quieter than the keylines"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-dark-frame"
+    },
+    {
+      "do": "action",
+      "action": "hideGrid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "9-grid-off",
+      "note": "the Grid off: the units go with it"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-grid-off"
+    }
+  ]
+}

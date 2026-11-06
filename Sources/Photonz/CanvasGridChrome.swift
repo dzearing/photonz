@@ -39,6 +39,8 @@ import PhotonzCore
 ///   at roughly the view's width halved whatever the spacing — and running the lines
 ///   out over the surround as well adds no lines at all, only length to the
 ///   ones already being drawn.
+/// - **Not over a ruled icon.** With units ruled on an artboard the lines step
+///   round it (`CanvasIconUnits.swift`). Everywhere else they run right across.
 /// - **The accent, sunk into the surface.** The lines are the brand colour
 ///   mixed halfway into a neutral and drawn at a low alpha, resolved against
 ///   the window's own appearance so they read the same in light and dark.
@@ -50,6 +52,8 @@ extension CanvasNSView {
     func refreshCanvasGrid() {
         refreshGridOriginMarkers()
         refreshGuideChrome()
+        // First, because the lines below step round whatever it rules.
+        let ruledArtboards = refreshIconUnitChrome()
         guard canvasGridEnabled, let settings = canvasGrid,
               let viewport, viewport.zoom > 0 else {
             hideCanvasGrid()
@@ -94,16 +98,24 @@ extension CanvasNSView {
                 // pixels, which is the difference between a hairline and a
                 // grey smear.
                 let vx = viewport.viewPoint(fromDocument: CGPoint(x: x, y: 0)).x.rounded()
-                path.move(to: CGPoint(x: vx, y: visible.minY))
-                path.addLine(to: CGPoint(x: vx, y: visible.maxY))
+                for span in IconUnits.spans(ofLineAt: vx, running: .vertical,
+                                            from: visible.minY, to: visible.maxY,
+                                            clearOf: ruledArtboards) {
+                    path.move(to: CGPoint(x: vx, y: span.lowerBound))
+                    path.addLine(to: CGPoint(x: vx, y: span.upperBound))
+                }
             }
             if settings.axes.drawsRows {
                 for y in CanvasGridLevels.lines(spacing: level.spacing,
                                                 from: topLeft.y, to: bottomRight.y,
                                                 origin: canvasGridOrigin.y) {
                     let vy = viewport.viewPoint(fromDocument: CGPoint(x: 0, y: y)).y.rounded()
-                    path.move(to: CGPoint(x: visible.minX, y: vy))
-                    path.addLine(to: CGPoint(x: visible.maxX, y: vy))
+                    for span in IconUnits.spans(ofLineAt: vy, running: .horizontal,
+                                                from: visible.minX, to: visible.maxX,
+                                                clearOf: ruledArtboards) {
+                        path.move(to: CGPoint(x: span.lowerBound, y: vy))
+                        path.addLine(to: CGPoint(x: span.upperBound, y: vy))
+                    }
                 }
             }
             shape.path = path
@@ -207,7 +219,7 @@ extension CanvasNSView {
     /// levels out of two hundred and fifty five. A mid ink is never the
     /// strongest of the four, and it is never absent, which is the trade a
     /// surface you build on wants.
-    private func canvasGridInk() -> CGColor {
+    func canvasGridInk() -> CGColor {
         // Mostly neutral, with enough of the accent left in it to belong to
         // the app. Any more accent and it reads as blueprint paper laid on
         // the canvas rather than as the canvas's own surface.
