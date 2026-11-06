@@ -1,0 +1,429 @@
+{
+ "out": "/tmp/photonz-playtest/icon-previews-read-as-previews-walk",
+ "seed": "On 2026-11-04 the user read the one dark chip in the icon previews row as the selected size, clicked the others and nothing happened. This walk draws an icon at Next defaults and goes over the card the way a hand does: the pointer rests on it and presses it at points on its face, a picture of each, every press landing on the card and changing nothing.",
+ "setup": {
+  "forget": [
+   "shapes",
+   "frames",
+   "tools",
+   "color"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1700,
+   "height": 1000
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "24",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.4
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "drag",
+   "from": [
+    791,
+    542
+   ],
+   "to": [
+    809,
+    556
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "ellipse"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "drag",
+   "from": [
+    796,
+    537
+   ],
+   "to": [
+    804,
+    545
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "describe",
+   "stage": "1-rest",
+   "note": "a drawn icon at rest"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-rest"
+  },
+  {
+   "do": "move",
+   "at": [
+    60,
+    62
+   ],
+   "space": "window"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "2-over-title"
+  },
+  {
+   "do": "expectClickReaches",
+   "at": [
+    60,
+    62
+   ],
+   "space": "window",
+   "what": "chrome"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    60,
+    62
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "3-pressed-title"
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "move",
+   "at": [
+    38,
+    125
+   ],
+   "space": "window"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "4-over-light16"
+  },
+  {
+   "do": "expectClickReaches",
+   "at": [
+    38,
+    125
+   ],
+   "space": "window",
+   "what": "chrome"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    38,
+    125
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "5-pressed-light16"
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "move",
+   "at": [
+    150,
+    115
+   ],
+   "space": "window"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "6-over-light48"
+  },
+  {
+   "do": "expectClickReaches",
+   "at": [
+    150,
+    115
+   ],
+   "space": "window",
+   "what": "chrome"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    150,
+    115
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "7-pressed-light48"
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "move",
+   "at": [
+    68,
+    185
+   ],
+   "space": "window"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "8-over-dark24"
+  },
+  {
+   "do": "expectClickReaches",
+   "at": [
+    68,
+    185
+   ],
+   "space": "window",
+   "what": "chrome"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    68,
+    185
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "9-pressed-dark24"
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "move",
+   "at": [
+    150,
+    175
+   ],
+   "space": "window"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "10-over-dark48"
+  },
+  {
+   "do": "expectClickReaches",
+   "at": [
+    150,
+    175
+   ],
+   "space": "window",
+   "what": "chrome"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    150,
+    175
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "11-pressed-dark48"
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "move",
+   "at": [
+    105,
+    212
+   ],
+   "space": "window"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "12-over-number32"
+  },
+  {
+   "do": "expectClickReaches",
+   "at": [
+    105,
+    212
+   ],
+   "space": "window",
+   "what": "chrome"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    105,
+    212
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "snapshot",
+   "name": "13-pressed-number32"
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Ellipse"
+   ]
+  }
+ ]
+}

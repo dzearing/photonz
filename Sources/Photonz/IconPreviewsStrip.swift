@@ -3,13 +3,12 @@ import SwiftUI
 
 /// The icon previews strip (Next, `next-icon-previews`).
 ///
-/// A glass row in the canvas's top left corner, one chip per size, holding the
-/// icon frame you are working in drawn at each interface size up to twice its
-/// own (16, 24, 32 and 48 for a 24 point glyph) with the number under each, and
-/// the one before the biggest on a dark ground, as icon-draw-wt.html draws it. It appears when an icon frame is what you are in and goes
-/// the moment you pick anything else.
+/// A glass card in a corner of the canvas holding the icon frame you are working
+/// in, drawn at each interface size up to twice its own, on a Light ground and
+/// a Dark one, with the number under each pair. It appears when an icon frame is
+/// what you are in and goes the moment you pick anything else.
 ///
-/// Three things about it are deliberate and are the whole reason it works:
+/// Three things about the pictures are deliberate and are why it works:
 ///
 ///  - **Each picture is drawn AT that many pixels**, by the same path Export
 ///    takes (`DocumentRenderer.iconPreview`). A big picture shrunk smoothly
@@ -18,119 +17,128 @@ import SwiftUI
 ///  - **Nothing is smoothed on the way to the screen** (`.interpolation(.none)`),
 ///    so on a retina display you are looking at the icon's own pixels made
 ///    square rather than at a softened guess at them.
-///  - **When the icon moves, so do the chips.** The card is where a motion is
+///  - **When the icon moves, so do the previews.** The card is where a motion is
 ///    reviewed, because a swing that reads beautifully on a 512 point canvas is
 ///    a shimmer at 16, so the transport lives here rather than somewhere you
 ///    would have to look away to reach (`EditorState+Motion`).
 ///
-/// With nothing moving it is still pure chrome: no header, and no hit testing
-/// at all, so it can never eat a drag, and it is never in an export.
+/// And one thing about the card: **nothing in it looks pickable.** It used to be
+/// a row of chips, one per size, with one of them on a dark plate as the mock
+/// drew it. On 2026-11-04 the user read that plate as the selected size, clicked
+/// the others and nothing changed. So there is no chip: each ground is one
+/// continuous band that every size sits on, and a press on the card does
+/// nothing. It takes the press rather than letting it through, so a click on
+/// the previews cannot pick something hidden under them and put them away.
 struct IconPreviewsStrip: View {
-    let tiles: [IconPreviewTile]
-    /// Whether this frame has anything to play. With a still icon the card is
-    /// exactly the row of pictures it has always been.
+    @Environment(EditorState.self) private var editorState
+    /// Which sizes there is room for. Told, not read, so that panning the
+    /// canvas does not redraw the pictures.
+    let sides: [CGFloat]
+    /// Whether this frame has anything to play.
     let showsTransport: Bool
 
-    /// Between two chips.
-    static let gap: CGFloat = 10
-    /// Inside the glass, on every side.
-    static let padding: CGFloat = 10
-    /// The number under a chip, and the air above it.
-    static let labelHeight: CGFloat = 16
-    /// The transport row, and the air under it. Nought when there is no
-    /// transport, which is what `iconPreviewsReservedRect` leans on.
-    static let headerHeight: CGFloat = 24
-    /// The corner every chip is cut with.
-    private static let chipRadius: CGFloat = 7
+    private static let groundRadius: CGFloat = 7
     private static let cardRadius: CGFloat = 12
-    /// The dark chip, in the mock's own near black and its edge, the same in
+    /// The Dark ground, in the mock's own near black and its edge, the same in
     /// light and dark mode: it is a ground to test against, not chrome.
-    private static let darkGround = Color(hex: IconPreviews.darkChipHex)
+    private static let darkGround = Color(hex: IconPreviews.darkGroundHex)
     private static let darkEdge = Color(hex: "#2A2F45")
+    /// The words on the grounds. Fixed, not system colours, because what is
+    /// behind them is fixed too whatever the mode.
+    private static let wordOnLight = Color(hex: "#555B6E")
+    private static let wordOnDark = Color(hex: "#AEB4C8")
+
+    private var groundWidth: CGFloat {
+        IconPreviews.groundWidth(sides: sides, hasTransport: showsTransport)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if showsTransport { header }
-            chips
+        let tiles = editorState.iconPreviewTiles(sides: sides)
+        VStack(alignment: .leading, spacing: 0) {
+            header
+                .frame(height: IconPreviews.titleHeight)
+                .padding(.bottom, IconPreviews.titleGap)
+            ground("Light", fill: Color(hex: editorState.iconPreviewGroundHex),
+                   edge: AnyShapeStyle(.separator), word: Self.wordOnLight,
+                   pictures: tiles.map { ($0.side, $0.light) })
+                .padding(.bottom, IconPreviews.groundGap)
+            ground("Dark", fill: Self.darkGround, edge: AnyShapeStyle(Self.darkEdge),
+                   word: Self.wordOnDark, pictures: tiles.map { ($0.side, $0.dark) })
+                .padding(.bottom, IconPreviews.groundGap)
+            numbers(tiles)
         }
-        .padding(Self.padding)
+        .frame(width: groundWidth)
+        .padding(IconPreviews.cardPadding)
         .glassEffect(.regular, in: .rect(cornerRadius: Self.cardRadius))
-        // Clicks only once there is something to click. With a still icon the
-        // card is what it always was: chrome that can never eat a drag. With a
-        // transport it takes them, the way the zoom bar and the tool settings
-        // capsule do, and the pictures themselves still refuse them.
-        .allowsHitTesting(showsTransport)
-        .padding(EditorChromeLayout.cornerInset)
-        .transition(.opacity)
+        // The press stops here. Nothing happens, and that is the point.
+        .contentShape(.rect(cornerRadius: Self.cardRadius))
+        .onTapGesture {}
     }
 
-    /// Play, and how fast. The two controls that turn a row of pictures into a
-    /// review: one says watch it, the other says slowly enough to judge it.
+    /// What this is, and with a motion to review, the two controls that turn
+    /// it into a review: one says watch it, the other says slowly enough to
+    /// judge it.
     private var header: some View {
         HStack(spacing: 8) {
-            Text("Real size")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.tertiary)
+            Text("Actual sizes")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .fixedSize()
             Spacer(minLength: 0)
-            IconPreviewPlayButton()
-            MotionSpeedMenu(name: "Preview Speed")
-        }
-        .frame(height: Self.headerHeight - 6)
-    }
-
-    private var chips: some View {
-        HStack(alignment: .bottom, spacing: Self.gap) {
-            ForEach(tiles) { tile in
-                VStack(spacing: 4) {
-                    chip(tile)
-                    Text("\(Int(tile.side))")
-                        .font(.system(size: 9, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.tertiary)
-                }
-                // A walk can name one preview and read its size off the label.
-                .playtestControl("Icon preview \(Int(tile.side))",
-                                 detail: (tile.image == nil ? "Drawing" : "Drawn")
-                                     + (tile.onDarkGround ? ", dark ground" : ""))
+            if showsTransport {
+                IconPreviewPlayButton()
+                MotionSpeedMenu(name: "Preview Speed")
             }
         }
-        .allowsHitTesting(false)
     }
 
-    /// The ground under one preview: the mock's near black on the dark chip,
-    /// the frame's own surface on a light one (so the glyph sits on the chip
-    /// as icon-draw-wt.html draws it, rather than on a white square inside a
-    /// grey one), and the plain chip for a frame whose surface stays in the
-    /// picture.
-    private func ground(_ tile: IconPreviewTile) -> AnyShapeStyle {
-        if tile.onDarkGround { return AnyShapeStyle(Self.darkGround) }
-        if let hex = tile.groundHex { return AnyShapeStyle(Color(hex: hex)) }
-        return AnyShapeStyle(.quaternary)
-    }
-
-    /// One preview on its chip. The chip is what makes a picture visible at
-    /// all: a frame that paints no surface of its own comes back transparent,
-    /// and transparent on glass is nothing.
-    private func chip(_ tile: IconPreviewTile) -> some View {
-        RoundedRectangle(cornerRadius: Self.chipRadius)
-            .fill(ground(tile))
-            .overlay {
-                if let image = tile.image {
+    /// One band every size sits on, side by side along their bottom edges.
+    private func ground(_ word: String, fill: Color, edge: AnyShapeStyle, word wordColour: Color,
+                        pictures: [(side: CGFloat, image: CGImage?)]) -> some View {
+        let height = IconPreviews.groundHeight(sides: sides)
+        let leadings = IconPreviews.columnLeadings(sides: sides)
+        return ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: Self.groundRadius).fill(fill)
+            RoundedRectangle(cornerRadius: Self.groundRadius).strokeBorder(edge, lineWidth: 1)
+            ForEach(Array(zip(pictures, leadings)), id: \.0.side) { picture, leading in
+                if let image = picture.image {
                     // Exactly `side` points across, which is the size the icon
                     // will really be: not resizable, not scaled to fit, and
                     // never smoothed.
                     Image(decorative: image, scale: 1)
                         .interpolation(.none)
-                        .frame(width: tile.side, height: tile.side)
+                        .frame(width: picture.side, height: picture.side)
+                        .offset(x: leading,
+                                y: height - IconPreviews.groundInsetY - picture.side)
                 }
             }
-            .overlay {
-                RoundedRectangle(cornerRadius: Self.chipRadius)
-                    .strokeBorder(tile.onDarkGround ? AnyShapeStyle(Self.darkEdge)
-                                                    : AnyShapeStyle(.separator),
-                                  lineWidth: 1)
+            Text(word)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(wordColour)
+                .offset(x: IconPreviews.groundInsetX, y: 3)
+        }
+        .frame(width: groundWidth, height: height)
+    }
+
+    /// The numbers, one under each pair.
+    private func numbers(_ tiles: [IconPreviewTile]) -> some View {
+        let leadings = IconPreviews.columnLeadings(sides: sides)
+        return ZStack(alignment: .topLeading) {
+            Color.clear
+            ForEach(Array(zip(tiles, leadings)), id: \.0.id) { tile, leading in
+                Text("\(Int(tile.side))")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.primary)
+                    .frame(width: tile.side)
+                    .offset(x: leading)
+                    // A walk can name one size and read it off the label.
+                    .playtestControl("Icon preview \(Int(tile.side))",
+                                     detail: tile.light == nil || tile.dark == nil
+                                         ? "Drawing" : "Drawn")
             }
-            .frame(width: IconPreviews.chipSide(for: tile.side),
-                   height: IconPreviews.chipSide(for: tile.side))
+        }
+        .frame(width: groundWidth, height: IconPreviews.numberHeight)
     }
 }
 

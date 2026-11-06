@@ -182,14 +182,14 @@ struct IconPreviewRenderTests {
     }
 }
 
-/// The one chip on a dark ground (icon-draw-wt.html, step 11).
+/// The Dark ground (icon-draw-wt.html, step 11).
 ///
-/// The mock draws the same glyph light on that chip, because a glyph drawn in
+/// The mock draws the same glyph light on that ground, because a glyph drawn in
 /// one dark grey is a template: the Mac draws it in the label colour, which is
 /// light on a dark ground. So a picture in one dark grey is redrawn in the
 /// light ink there, edges and all. Anything else (a blue glyph, an app icon of
 /// many colours) is shown exactly as drawn, since that is how it will be seen.
-@Suite("An icon previewed on the dark chip")
+@Suite("An icon previewed on the Dark ground")
 struct IconPreviewDarkGroundTests {
 
     /// A side by side picture with the given colours painted as blocks on a
@@ -226,7 +226,7 @@ struct IconPreviewDarkGroundTests {
         }
     }
 
-    @Test("A glyph in one dark grey is drawn light on the dark chip, edges kept")
+    @Test("A glyph in one dark grey is drawn light on the Dark ground, edges kept")
     func templateGlyphGoesLight() {
         let glyph = picture([srgb(0.06, 0.06, 0.06)])
         let onDark = IconPreviewInk.onDarkGround(glyph)
@@ -270,7 +270,7 @@ struct IconPreviewDarkGroundTests {
         #expect(IconPreviewInk.onDarkGround(empty) === empty)
     }
 
-    @Test("The hairline icon, previewed for the dark chip, comes back light")
+    @Test("The hairline icon, previewed for the Dark ground, comes back light")
     func throughTheRenderer() {
         let renderer = DocumentRenderer()
         var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400))
@@ -353,7 +353,7 @@ struct IconPreviewMotionPerfTests {
         #expect(document.motionCycleLengthMS == 1260)
 
         // One frame of the loop is: work out where this frame's contents are at
-        // this moment, then draw the whole row of chips from it. Exactly what
+        // this moment, then draw the whole row from it. Exactly what
         // `EditorState+IconPreviews` does, and timed together because they only
         // ever happen together.
         func strip(atMS ms: Int) {

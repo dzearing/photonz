@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The icon preview strip in the top left of the canvas, and the read of the
-/// selection that decides whether there is one.
+/// The icon preview strip in a corner of the canvas, and the read of the
+/// selection that decides whether there is one and which corner.
 ///
 /// It is a view of its own for a measured reason. `iconPreviewFrameID` asks
 /// which icon frame the PICKED layer sits in, so it reads `selectedLayerID`;
@@ -17,14 +17,18 @@ struct IconPreviewsOverlay: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        let tiles = editorState.iconPreviewTiles
-        if !tiles.isEmpty {
-            IconPreviewsStrip(tiles: tiles, showsTransport: editorState.iconPreviewsPlayable)
+        if let placement = editorState.iconPreviewPlacement {
+            IconPreviewsStrip(sides: placement.sides,
+                              showsTransport: editorState.iconPreviewsPlayable)
+                .frame(width: placement.frame.width, height: placement.frame.height)
+                .offset(x: placement.frame.minX, y: placement.frame.minY)
+                .transition(.opacity)
+                // Stepping out of the icon's way, or giving up a size to do it,
+                // is a move rather than a jump: a card that appeared in another
+                // corner between two frames would read as a glitch.
+                .animation(.easeInOut(duration: 0.2), value: placement)
                 .animation(.easeInOut(duration: 0.2), value: editorState.iconPreviewFrameID)
-                // The transport row arrives the moment the first motion is
-                // added, and the card grows to hold it. Faded in for the same
-                // reason the card itself is: a row of chrome that appeared
-                // between two frames would read as a glitch.
+                // The transport arrives the moment the first motion is added.
                 .animation(.easeInOut(duration: 0.2), value: editorState.iconPreviewsPlayable)
         }
     }

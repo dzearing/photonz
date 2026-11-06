@@ -1136,7 +1136,7 @@ public final class DocumentRenderer: @unchecked Sendable {
     ///
     /// Nil for anything that is not a frame, and for a size nobody could draw.
     ///
-    /// `onDarkGround` is the strip's one dark chip: the frame is drawn without
+    /// `onDarkGround` is the strip's Dark ground: the frame is drawn without
     /// its own surface, and a glyph drawn in one dark grey comes back in the
     /// light ink there, the way the Mac draws a template on dark
     /// (`IconPreviewInk`).

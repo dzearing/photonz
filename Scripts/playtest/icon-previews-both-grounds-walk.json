@@ -1,9 +1,9 @@
 {
-  "out": "/tmp/photonz-playtest/icon-previews-dark-chip-walk",
-  "seed": "The row of small previews beside an icon frame showed a 24 point icon at 16 and 24 only, while the icon mock draws it at 16, 24, 32 and 48 with 32 on a dark chip, so a glyph is checked on both grounds. This walk makes a 24 point icon frame at Next defaults, draws in it, and reads the row: four sizes, the 32 on dark. Then a 16 point frame, which shows at 16, 24 and 32 with the 24 on dark.",
+  "out": "/tmp/photonz-playtest/icon-previews-both-grounds-walk",
+  "seed": "Every size in the icon previews card is drawn on a Light and a Dark ground, so a glyph is checked on both and no size is singled out. This walk makes a 24 point icon frame at Next defaults, draws in it and reads the card, then a 16 point frame, which shows at 16, 24 and 32.",
   "setup": { "forget": ["shapes", "frames", "tools", "color"] },
   "steps": [
-    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1700, "height": 1000 },
     { "do": "wait", "seconds": 1 },
     { "do": "action", "action": "newFrameDialog" },
     { "do": "wait", "seconds": 0.9 },
@@ -11,8 +11,8 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "press", "control": "Add Frame" },
     { "do": "wait", "seconds": 1.4 },
-    { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "dark": 32 },
-    { "do": "describe", "stage": "1-empty", "note": "a fresh 24 point icon frame: the previews row shows it at 16, 24, 32 and 48, the 32 on a dark chip, as icon-draw-wt.html step 11 draws it" },
+    { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "bothGrounds": true },
+    { "do": "describe", "stage": "1-empty", "note": "a fresh 24 point icon frame: the card shows it at 16, 24, 32 and 48, each on Light and on Dark" },
     { "do": "snapshot", "name": "1-empty" },
     { "do": "tool", "tool": "rectangle" },
     { "do": "wait", "seconds": 0.4 },
@@ -24,10 +24,10 @@
     { "do": "wait", "seconds": 0.9 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "dark": 32 },
+    { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "bothGrounds": true },
     { "do": "expect", "control": "Icon preview 32", "present": true },
     { "do": "expect", "control": "Icon preview 48", "present": true },
-    { "do": "describe", "stage": "2-drawn", "note": "two shapes drawn in it: every chip redraws, the 32 and 48 drawn at those sizes from the shapes rather than blown up, and the dark chip shows the drawing without the frame's white artboard behind it" },
+    { "do": "describe", "stage": "2-drawn", "note": "two shapes drawn in it: every picture redraws, the 32 and 48 drawn at those sizes from the shapes rather than blown up, and the Dark ground shows the drawing without the frame's white artboard behind it" },
     { "do": "snapshot", "name": "2-drawn" },
     { "do": "render", "name": "2-drawn-doc" },
     { "do": "action", "action": "newFrameDialog" },
@@ -36,8 +36,8 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "press", "control": "Add Frame" },
     { "do": "wait", "seconds": 1.4 },
-    { "do": "expectIconPreviews", "sides": [16, 24, 32], "dark": 24 },
-    { "do": "describe", "stage": "3-sixteen", "note": "a 16 point frame is shown at 16, 24 and 32, up to twice its own size, with the one before the biggest on dark" },
+    { "do": "expectIconPreviews", "sides": [16, 24, 32], "bothGrounds": true },
+    { "do": "describe", "stage": "3-sixteen", "note": "a 16 point frame is shown at 16, 24 and 32, up to twice its own size, each on both grounds" },
     { "do": "snapshot", "name": "3-sixteen" }
   ]
 }

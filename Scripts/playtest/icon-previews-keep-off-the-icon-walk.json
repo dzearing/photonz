@@ -1,0 +1,190 @@
+{
+ "out": "/tmp/photonz-playtest/icon-previews-keep-off-the-icon-walk",
+ "seed": "The icon previews card never covers the icon. A frame fitted to the view leaves less than a card's width beside it, so this walk uses an ordinary window at Next defaults and reads what the card does: it gives up its biggest sizes to stay beside a picked frame, lies on the empty artboard once something else is picked, and goes altogether when zoomed so far in that every corner has the drawing in it, coming back on the way out.",
+ "setup": {
+  "forget": [
+   "shapes",
+   "frames",
+   "tools",
+   "color"
+  ]
+ },
+ "steps": [
+  {
+   "do": "blank",
+   "canvasWidth": 1600,
+   "canvasHeight": 1100,
+   "width": 1240,
+   "height": 900
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "512",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.4
+  },
+  {
+   "do": "describe",
+   "stage": "1-frame-picked",
+   "note": "the frame itself is picked, so the card keeps clear of it and its handles"
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24,
+    32,
+    48,
+    64
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "snapshot",
+   "name": "1-frame-picked"
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "drag",
+   "from": [
+    700,
+    450
+   ],
+   "to": [
+    900,
+    650
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "describe",
+   "stage": "2-shape-picked",
+   "note": "a shape in the middle is picked: the card may lie on the empty artboard"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-shape-picked"
+  },
+  {
+   "do": "pinch",
+   "to": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectIconPreviews",
+   "absent": true
+  },
+  {
+   "do": "describe",
+   "stage": "3-zoomed-in",
+   "note": "the picked shape fills the view, so the card has gone rather than cover it"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-zoomed-in"
+  },
+  {
+   "do": "pinch",
+   "to": 1
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "4-back-out",
+   "note": "zoomed back out, the card returns"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-back-out"
+  },
+  {
+   "do": "action",
+   "action": "newFrameDialog"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.9
+  },
+  {
+   "do": "press",
+   "control": "24",
+   "in": "Icons"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Add Frame"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.4
+  },
+  {
+   "do": "expectIconPreviews",
+   "sides": [
+    16,
+    24
+   ],
+   "bothGrounds": true
+  },
+  {
+   "do": "describe",
+   "stage": "5-tight",
+   "note": "a new 24 point frame is fitted to the view and picked: the gutter beside it holds 16 and 24, so the card gives up 32 and 48 rather than lie on the frame's handles"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-tight"
+  }
+ ]
+}

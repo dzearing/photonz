@@ -1,0 +1,53 @@
+{
+  "feature": "The icon previews read as previews",
+  "epic": "icon-grid",
+  "summary": "The card of small previews now says Actual sizes and shows every size on a Light and a Dark ground, so no size looks picked. Pressing it does nothing, and it moves out of the way rather than cover your icon.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: icon-previews-read-as-previews-walk, icon-previews-both-grounds-walk, icon-previews-keep-off-the-icon-walk, icon-previews-stay-with-nothing-picked-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Before: the old row, with the 32 alone on a dark plate.",
+      "shot": "2026-11-05-icon-previews-strip-before-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose File, New Image, then add a 24 point icon frame and draw two shapes in it.",
+      "shot": "2026-11-05-icon-previews-strip-after-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the card in the top left: Actual sizes, a Light band and a Dark band, each holding every size."
+    },
+    {
+      "do": "Move the pointer over the card, then click the Light band, the Dark band and a number.",
+      "shot": "2026-11-05-icon-previews-strip-sheet.png"
+    },
+    {
+      "do": "Check that nothing changed and your shape is still picked. The reel 2026-11-05-icon-previews-strip-reel.mp4 shows the same pass, old beside new, with the pointer drawn on afterwards."
+    },
+    {
+      "do": "Make the window smaller and pick the frame itself: the card gives up its biggest sizes to stay beside it.",
+      "shot": "2026-11-05-icon-previews-strip-tight-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Zoom in until the drawing fills the view: the card goes, and comes back as you zoom out.",
+      "shot": "2026-11-05-icon-previews-strip-zoomed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does anything on the card still look like something you could pick?",
+    "Does Actual sizes tell you what the card is at a glance?",
+    "Is it fine for the card to drop its biggest sizes in a small window, or would you rather it kept them all and moved further away?",
+    "When you zoom right in and the card goes, do you miss it?"
+  ],
+  "rough": [
+    "Matches icon-draw-wt.html, which this task redrew in place of its single dark chip, as the task's notes approve (the-icon-previews-strip-reads-as-previews-no-chi). 2026-11-05-icon-previews-strip-mock-beside-app.png shows the two side by side.",
+    "icon-animate-wt.html and icon-phase-wt.html still print Real size on this card, where the app now says Actual sizes as this task's checklist asks (the-icon-previews-strip-reads-as-previews-no-chi).",
+    "A fresh frame fitted to a small window shows only 16 and 24 while the frame itself is picked, and more sizes appear once you pick a shape in it, so the card changes as you work.",
+    "A drag that starts on the card no longer reaches the canvas under it. That is the cost of a press doing nothing.",
+    "While a motion plays there are twice as many small pictures to draw per frame. motion-loop-preview-walk passes, but I did not measure the cost.",
+    "The word pairs on the grounds are fixed colours, and the title and numbers use the system label colour. All of it was photographed with the app in dark mode only, because a walk cannot set light mode."
+  ]
+}

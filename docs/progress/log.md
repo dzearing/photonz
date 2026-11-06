@@ -22582,3 +22582,7 @@ and Ask setting keys through the same model (`ask-animates-what-it-makes-an-anim
 
 Open questions: whether a first timer stalls after the first key, and whether a still
 export should show the first moment or the playhead's.
+
+## 2026-11-05: the icon previews read as previews
+
+The card says Actual sizes and draws every size on a Light and a Dark ground, so nothing looks picked. A press stops at the card and does nothing. The card keeps off the icon: another corner, then the empty artboard, then fewer sizes, and it goes when zoomed right in (`IconPreviews.placement`). icon-draw-wt.html is redrawn to match. Open question: the animate mocks still print Real size on this card.

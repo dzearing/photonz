@@ -3140,22 +3140,22 @@ struct PlaytestScriptTests {
         }
     }
 
-    @Test("An expectIconPreviews step can name the size on the dark chip")
-    func expectIconPreviewsNamesTheDarkChip() throws {
+    @Test("An expectIconPreviews step can claim every size is drawn on both grounds")
+    func expectIconPreviewsClaimsBothGrounds() throws {
         let script = try decode("""
-        { "steps": [ { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "dark": 32 },
+        { "steps": [ { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "bothGrounds": true },
                      { "do": "expectIconPreviews", "sides": [16, 24] },
                      { "do": "expectIconPreviews", "absent": true } ] }
         """)
-        guard case .expectIconPreviews(let sides, let absent, let dark) = script.steps[0],
+        guard case .expectIconPreviews(let sides, let absent, let both) = script.steps[0],
               case .expectIconPreviews(_, _, let unclaimed) = script.steps[1],
               case .expectIconPreviews(_, let none, _) = script.steps[2] else {
             Issue.record("expectIconPreviews"); return
         }
         #expect(sides == [16, 24, 32, 48])
         #expect(!absent)
-        #expect(dark == 32)
-        #expect(unclaimed == nil)
+        #expect(both)
+        #expect(!unclaimed)
         #expect(none)
     }
 

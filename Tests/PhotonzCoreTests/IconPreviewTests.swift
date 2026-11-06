@@ -72,16 +72,15 @@ struct IconPreviewTests {
         #expect(IconPreviews.sides(forFrameSide: 0).isEmpty)
     }
 
-    // MARK: - What the dark chip draws
+    // MARK: - What each ground draws
 
-    @Test("A light chip is painted the frame's own flat surface, under the exported picture")
-    func lightChipIsTheSurface() throws {
-        // icon-draw-wt.html draws the glyph straight on a light chip. The
-        // frame sat as a white square inside a grey chip; painting the chip in
-        // the artboard's colour gives the mock's chip, while the picture on it
-        // stays exactly what Export writes. Left out of the picture, a soft
-        // edge blended on screen reads up to a fifth darker than in the file,
-        // which would flatter the very hairlines the strip is there to catch.
+    @Test("The light ground is the frame's own flat surface, under the exported picture")
+    func lightGroundIsTheSurface() throws {
+        // The glyph sits straight on the ground rather than on a white square
+        // inside a grey one, while the picture on it stays exactly what Export
+        // writes. Left out of the picture, a soft edge blended on screen reads
+        // up to a fifth darker than in the file, which would flatter the very
+        // hairlines the strip is there to catch.
         var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
         let frame = document.addFrame(origin: CGPoint(x: 10, y: 10),
                                       size: CGSize(width: 24, height: 24))
@@ -91,11 +90,29 @@ struct IconPreviewTests {
         #expect(document.iconPreviewDocument(id: UUID(), onDarkGround: false) == nil)
     }
 
-    @Test("On the dark chip an icon frame is drawn without its own surface")
-    func darkChipDropsTheSurface() throws {
+    @Test("The ground labelled Light is light whatever the frame is painted")
+    func lightGroundIsAlwaysLight() {
+        // It says Light on it, so it has to be. A dark or a mid surface stays
+        // in the picture as the square it really is, on the plain light ground.
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
+        let cream = document.addFrame(origin: .zero, size: CGSize(width: 24, height: 24),
+                                      backgroundHex: "#FFF6E0")
+        let black = document.addFrame(origin: CGPoint(x: 30, y: 0),
+                                      size: CGSize(width: 24, height: 24),
+                                      backgroundHex: "#101010")
+        let blue = document.addFrame(origin: CGPoint(x: 60, y: 0),
+                                     size: CGSize(width: 24, height: 24),
+                                     backgroundHex: "#2050C0")
+        #expect(document.iconPreviewGroundHex(id: cream.id) == "#FFF6E0")
+        #expect(document.iconPreviewGroundHex(id: black.id) == IconPreviews.lightGroundHex)
+        #expect(document.iconPreviewGroundHex(id: blue.id) == IconPreviews.lightGroundHex)
+    }
+
+    @Test("On the dark ground an icon frame is drawn without its own surface")
+    func darkGroundDropsTheSurface() throws {
         // The frame's white is the artboard, not the icon: left in, the dark
-        // chip would be a white square with a dark rim, and the glyph would
-        // never be seen against the dark at all.
+        // ground would hold a white square, and the glyph would never be seen
+        // against the dark at all.
         var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
         let frame = document.addFrame(origin: CGPoint(x: 10, y: 10),
                                       size: CGSize(width: 24, height: 24))
@@ -104,12 +121,12 @@ struct IconPreviewTests {
         #expect(document.iconPreviewDocument(id: UUID(), onDarkGround: true) == nil)
     }
 
-    @Test("A surface the chip cannot paint stays in the picture")
+    @Test("A surface the ground cannot be stays in the picture")
     func gradientOrClearSurfaceStays() throws {
         var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
         let clear = document.addFrame(origin: .zero, size: CGSize(width: 24, height: 24),
                                       backgroundHex: nil)
-        #expect(document.iconPreviewGroundHex(id: clear.id) == nil)
+        #expect(document.iconPreviewGroundHex(id: clear.id) == IconPreviews.lightGroundHex)
         let shaded = document.addFrame(origin: CGPoint(x: 50, y: 0),
                                        size: CGSize(width: 24, height: 24))
         document.updateLayer(id: shaded.id) { frame in
@@ -117,37 +134,137 @@ struct IconPreviewTests {
             group.background = Paint(hex: "#2050C0", kind: .linear)
             frame.content = .group(group)
         }
-        // A gradient is not one colour a chip can be, so it sits on the plain
-        // chip, still exactly as Export draws it.
-        #expect(document.iconPreviewGroundHex(id: shaded.id) == nil)
+        // A gradient is not one colour a ground can be, so it sits on the plain
+        // light ground, still exactly as Export draws it.
+        #expect(document.iconPreviewGroundHex(id: shaded.id) == IconPreviews.lightGroundHex)
         let light = try #require(document.iconPreviewDocument(id: shaded.id, onDarkGround: false))
         #expect(light == document.frameDocument(id: shaded.id))
     }
 
-    // MARK: - The chip each preview sits on
+    // MARK: - The card
 
-    @Test("One chip is dark: the one before the biggest, as the mock puts 32 on dark under a 24")
-    func oneDarkChip() {
-        // icon-draw-wt.html step 11 draws 16, 24, 48 on light and 32 on dark,
-        // so a glyph is checked on both grounds. The biggest stays light, where
-        // the detail is read; the size beside it shows the dark ground.
-        #expect(IconPreviews.darkSide(among: IconPreviews.sides(forFrameSide: 24)) == 32)
-        #expect(IconPreviews.darkSide(among: IconPreviews.sides(forFrameSide: 16)) == 24)
-        #expect(IconPreviews.darkSide(among: IconPreviews.sides(forFrameSide: 512)) == 48)
-        #expect(IconPreviews.darkSide(among: [10, 16]) == 10)
-        // A lone chip stays light: with one picture there is no second ground
-        // to compare against, and the light one is the one people draw on.
-        #expect(IconPreviews.darkSide(among: [16]) == nil)
-        #expect(IconPreviews.darkSide(among: []) == nil)
+    @Test("The card is sized from its sizes, so where it fits can be worked out")
+    func cardSizes() {
+        let all = IconPreviews.interfaceSides
+        // 184 points of icons, four gaps of ten, eight either side of them on
+        // the ground, ten either side of that on the glass.
+        #expect(IconPreviews.cardSize(sides: all, hasTransport: false).width == 260)
+        // Two grounds of 64 and six each above and below, then the title, the
+        // numbers and the card's own padding.
+        #expect(IconPreviews.groundHeight(sides: all) == 76)
+        #expect(IconPreviews.cardSize(sides: all, hasTransport: false).height == 216)
+        // The title row is always there, so a transport arriving never moves it.
+        #expect(IconPreviews.cardSize(sides: all, hasTransport: true)
+            == IconPreviews.cardSize(sides: all, hasTransport: false))
     }
 
-    @Test("Every preview sits on a chip with the same margin round it")
-    func chipSides() {
-        // The chip is the icon plus one even margin, so five chips of five
-        // sizes read as one row of squares rather than five arbitrary boxes.
-        #expect(IconPreviews.chipSide(for: 16) == 26)
-        #expect(IconPreviews.chipSide(for: 64) == 74)
-        #expect(IconPreviews.chipSide(for: 16) - 16 == IconPreviews.chipSide(for: 48) - 48)
+    @Test("A narrow card still holds its title and the words on each ground")
+    func narrowCard() {
+        // Light sits above the smallest icon, so a ground is never shorter than
+        // the word and that icon together, however small the sizes are.
+        #expect(IconPreviews.groundHeight(sides: [16]) == 38)
+        let lone = IconPreviews.cardSize(sides: [16], hasTransport: false)
+        #expect(lone.width == IconPreviews.minimumGroundWidth + 20)
+        // Play and the speed menu need more room than the title alone.
+        #expect(IconPreviews.cardSize(sides: [16], hasTransport: true).width > lone.width)
+    }
+
+    @Test("The sizes down a ground step by their own width and one gap")
+    func columnsLineUp() {
+        #expect(IconPreviews.columnLeadings(sides: [16, 24, 32]) == [8, 34, 68])
+    }
+
+    // MARK: - Where the card goes
+
+    private let room = CGSize(width: 1200, height: 900)
+    private let toolBar = CGRect(x: 400, y: 840, width: 400, height: 48)
+
+    private func place(_ bounds: CGSize? = nil, icon: CGRect, ink: [CGRect] = [],
+                       chrome: [CGRect]? = nil) -> IconPreviews.Placement? {
+        IconPreviews.placement(sides: IconPreviews.interfaceSides, hasTransport: false,
+                               in: bounds ?? room, inset: 12, icon: icon, ink: ink,
+                               chrome: chrome ?? [toolBar])
+    }
+
+    @Test("With room to spare the card is top left and shows every size")
+    func topLeftByDefault() throws {
+        let placed = try #require(place(icon: CGRect(x: 500, y: 300, width: 200, height: 200)))
+        #expect(placed.anchor == .topLeading)
+        #expect(placed.sides == IconPreviews.interfaceSides)
+        #expect(placed.frame.origin == CGPoint(x: 12, y: 12))
+    }
+
+    @Test("An icon under the top left corner sends the card to the next corner")
+    func stepsAsideFromTheIcon() throws {
+        let icon = CGRect(x: 40, y: 40, width: 300, height: 300)
+        let placed = try #require(place(icon: icon))
+        #expect(placed.anchor == .topTrailing)
+        #expect(!placed.frame.intersects(icon))
+    }
+
+    @Test("A frame with no corner free lets the card lie on its empty margin, never on the ink")
+    func liesOnTheEmptyArtboard() throws {
+        // A frame fitted to the view reaches past every corner the card could
+        // take, but what is drawn in it does not: the blank artboard is no loss.
+        let icon = CGRect(x: 120, y: 10, width: 880, height: 880)
+        let ink = [CGRect(x: 420, y: 300, width: 300, height: 300)]
+        let placed = try #require(place(icon: icon, ink: ink))
+        #expect(placed.sides == IconPreviews.interfaceSides)
+        #expect(placed.anchor == .topLeading)
+        #expect(!placed.frame.intersects(ink[0]))
+    }
+
+    @Test("Where the whole card cannot fit it drops its biggest sizes, not the small ones")
+    func dropsTheBiggestFirst() throws {
+        // A gutter of 200 beside a drawing that fills its frame: the 16 is the
+        // size that matters most, because it is the one a hairline dies at.
+        let icon = CGRect(x: 212, y: 0, width: 900, height: 900)
+        let placed = try #require(place(icon: icon, ink: [icon]))
+        #expect(placed.sides == [16, 24, 32, 48])
+        #expect(!placed.frame.intersects(icon))
+    }
+
+    @Test("With nowhere left that does not cover the drawing, the card goes")
+    func goesRatherThanCovers() {
+        let everywhere = CGRect(origin: .zero, size: room)
+        #expect(place(icon: everywhere, ink: [everywhere]) == nil)
+    }
+
+    @Test("It is never parked on other chrome")
+    func keepsOffTheChrome() {
+        // The top two corners are taken by the icon, and a tool bar as wide as
+        // the view takes the bottom two.
+        let icon = CGRect(x: 0, y: 0, width: 1200, height: 300)
+        let bar = CGRect(x: 0, y: 700, width: 1200, height: 200)
+        #expect(place(icon: icon, ink: [icon], chrome: [bar]) == nil)
+    }
+
+    // MARK: - What the card keeps clear of
+
+    @Test("The drawing is what is in the frame and can be seen, in canvas space")
+    func inkIsVisibleChildren() throws {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
+        let frame = document.addFrame(origin: CGPoint(x: 50, y: 50),
+                                      size: CGSize(width: 24, height: 24))
+        #expect(document.iconPreviewInk(id: frame.id).isEmpty)
+        func box(_ rect: CGRect) -> Layer {
+            Layer(name: "Box", content: .annotation(AnnotationContent(shape: .rectangle)),
+                  frame: rect)
+        }
+        let shown = box(CGRect(x: 2, y: 3, width: 10, height: 10))
+        var hidden = box(CGRect(x: 0, y: 0, width: 20, height: 20))
+        hidden.isVisible = false
+        let spilling = box(CGRect(x: 20, y: 20, width: 40, height: 40))
+        document.updateLayer(id: frame.id) { layer in
+            guard var group = layer.group else { return }
+            group.children = [shown, hidden, spilling]
+            layer.content = .group(group)
+        }
+        // A frame clips, so what spills past its edge is not on screen to cover.
+        #expect(document.iconPreviewInk(id: frame.id)
+            == [CGRect(x: 52, y: 53, width: 10, height: 10),
+                CGRect(x: 70, y: 70, width: 4, height: 4)])
+        #expect(document.iconPreviewInk(id: UUID()).isEmpty)
     }
 
     // MARK: - Finding the frame in a document

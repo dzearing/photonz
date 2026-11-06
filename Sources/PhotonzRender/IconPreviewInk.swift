@@ -2,10 +2,10 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 
-/// What a preview looks like on the strip's one dark chip
+/// What a preview looks like on the strip's Dark ground
 /// (icon-draw-wt.html, step 11).
 ///
-/// The mock draws the same glyph LIGHT on that chip, and it is right to: a
+/// The mock draws the same glyph LIGHT on that ground, and it is right to: a
 /// glyph drawn in one dark grey is a template, and the Mac draws a template in
 /// the label colour, which is light on a dark ground. Shown as drawn it would
 /// be black on near black, which tells nobody anything.
@@ -15,7 +15,7 @@ import PhotonzCore
 /// shown exactly as drawn, because that is how they will really be seen.
 public enum IconPreviewInk {
 
-    /// The picture to put on the dark chip: the same coverage in the light
+    /// The picture to put on the Dark ground: the same coverage in the light
     /// ink when it is a one colour dark glyph, otherwise the picture itself.
     public static func onDarkGround(_ image: CGImage) -> CGImage {
         guard isOneDarkColour(image), let ink = inkColour,

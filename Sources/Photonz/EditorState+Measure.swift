@@ -608,36 +608,39 @@ extension EditorState {
                           width: layer.frame.width * viewport.zoom,
                           height: layer.frame.height * viewport.zoom)
         }
-        // Chrome along the bottom is a hard no: a legend parked behind the
-        // tool bar is invisible, and one under the mode hint's slot gets
-        // covered for two seconds every time the mode changes. The slot is
-        // reserved even while no pill is up, so the legend never jumps.
-        let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
-                                                     toolBarWidth: toolBarWidth,
-                                                     noticeSize: MeasureModeHint.reservedSize,
-                                                     toolSettingsSize: toolSettingsSize,
-                                                     bar: Experiments.shared.toolBar)
         // Nothing stands in a canvas corner any more: the panel toggle moved
         // into the window's title bar on 2026-09-06, so there is no corner
         // chrome to tuck under and the legend takes whichever corner it wins
-        // outright — except the icon previews strip, which owns the top left
-        // while you are drawing in an icon frame (`next-icon-previews`) and is
-        // the one piece of corner chrome the legend still has to walk around.
-        //
-        // And the zoom control's corner, reserved like the notice's slot is,
-        // whether or not it is up: it comes up on every zoom, and a legend
-        // that jumped corners each time somebody pinched would be worse.
-        let zoomCorner = Experiments.shared.canvasZoomControlEnabled
-            ? [CanvasZoomControl.reservedFrame(canvasSize: viewport.viewSize,
-                                               avoiding: canvasZoomControlAvoids(canvasSize: viewport.viewSize))]
-            : []
-        let blocked = chrome + (iconPreviewsReservedRect.map { [$0] } ?? []) + zoomCorner
+        // outright — except the icon previews card, which takes a corner while
+        // you are drawing in an icon frame (`next-icon-previews`) and is the
+        // one piece of corner chrome the legend still has to walk around.
+        let blocked = canvasFloorChrome(in: viewport) + (iconPreviewsReservedRect.map { [$0] } ?? [])
         return PanelPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
                                           in: viewport.viewSize,
                                           inset: Self.measureLegendInset,
                                           avoiding: occupied,
                                           blocked: blocked,
                                           gap: EditorChromeLayout.toolBarStackGap)
+    }
+
+    /// What stands along the bottom of the canvas, which nothing parked in a
+    /// corner may lie on.
+    ///
+    /// A hard no: something parked behind the tool bar is invisible, and one
+    /// under the mode hint's slot gets covered for two seconds every time the
+    /// mode changes. The slot is reserved even while no pill is up, so nothing
+    /// jumps. The zoom control's corner is reserved the same way, whether or
+    /// not it is up: it comes up on every zoom, and something that jumped
+    /// corners each time somebody pinched would be worse.
+    func canvasFloorChrome(in viewport: Viewport) -> [CGRect] {
+        let chrome = EditorChromeLayout.bottomChrome(canvasSize: viewport.viewSize,
+                                                     toolBarWidth: toolBarWidth,
+                                                     noticeSize: MeasureModeHint.reservedSize,
+                                                     toolSettingsSize: toolSettingsSize,
+                                                     bar: Experiments.shared.toolBar)
+        guard Experiments.shared.canvasZoomControlEnabled else { return chrome }
+        return chrome + [CanvasZoomControl.reservedFrame(canvasSize: viewport.viewSize,
+                                                         avoiding: canvasZoomControlAvoids(canvasSize: viewport.viewSize))]
     }
 
     /// How far the legend sits below the canvas's top edge in its slot: the

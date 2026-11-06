@@ -9,8 +9,9 @@ import PhotonzRender
 // An icon is the only thing in this app drawn at one size and looked at at
 // another. So while an icon frame is what you are working in, the same drawing
 // is shown small at the top left of the canvas, at the sizes it will really be
-// used (up to twice its own size, one of them on a dark ground), and it is redrawn as the picture changes. A hairline that disappears at
-// 16 disappears there, while you can still thicken it.
+// used (up to twice its own size, each on a light and a dark ground), and it is
+// redrawn as the picture changes. A hairline that disappears at 16 disappears
+// there, while you can still thicken it.
 //
 // Two rules decide what it costs:
 //
@@ -64,39 +65,76 @@ extension EditorState {
         if id != lastIconPreviewFrameID { lastIconPreviewFrameID = id }
     }
 
-    /// What the strip draws: one tile per size, in size order, each carrying
-    /// the frame drawn at that many pixels. Empty whenever there is no icon
-    /// frame in hand, which is what makes the strip cost nothing the rest of
-    /// the time.
+    /// Where the card goes and which sizes it has room for, or nil when there
+    /// is no icon in hand or nowhere to put it that does not cover the drawing
+    /// (`IconPreviews.placement`).
     ///
-    /// A tile whose picture has not landed yet carries nil and draws as an
-    /// empty chip, so the row keeps its shape rather than growing a column at a
-    /// time.
+    /// Everything it keeps clear of is worked out from the frame AS DRAWN,
+    /// never the moving one: a card that hopped corners with a swinging icon
+    /// would be the worst thing on the screen.
+    var iconPreviewPlacement: IconPreviews.Placement? {
+        guard let frameID = iconPreviewFrameID, let document,
+              let authored = document.layer(id: frameID),
+              let icon = document.canvasBounds(of: frameID) else { return nil }
+        let sides = IconPreviews.sides(forFrameSize: authored.frame.size)
+        guard !sides.isEmpty else { return nil }
+        let playable = iconPreviewsPlayable
+        let inset = EditorChromeLayout.cornerInset
+        guard let viewport else {
+            // Not laid out yet, so nothing can be under it.
+            let size = IconPreviews.cardSize(sides: sides, hasTransport: playable)
+            return IconPreviews.Placement(sides: sides, anchor: .topLeading,
+                                          frame: CGRect(origin: CGPoint(x: inset, y: inset), size: size))
+        }
+        func onScreen(_ box: CGRect) -> CGRect {
+            CGRect(origin: viewport.viewPoint(fromDocument: box.origin),
+                   size: CGSize(width: box.width * viewport.zoom, height: box.height * viewport.zoom))
+        }
+        // What is picked stays in view with its handles, the frame included:
+        // a card on a corner handle is a card eating the drag that handle is for.
+        let picked = selectedLayerID.flatMap { document.canvasBounds(of: $0) }.map { [$0] } ?? []
+        return IconPreviews.placement(sides: sides, hasTransport: playable, in: viewport.viewSize,
+                                      inset: inset, icon: onScreen(icon),
+                                      ink: (document.iconPreviewInk(id: frameID) + picked).map(onScreen),
+                                      chrome: canvasFloorChrome(in: viewport))
+    }
+
+    /// What the strip draws at the sizes it has room for right now. A walk's
+    /// way in: the card itself is told its sizes, so that panning the canvas
+    /// does not redraw it.
     var iconPreviewTiles: [IconPreviewTile] {
+        iconPreviewTiles(sides: iconPreviewPlacement?.sides ?? [])
+    }
+
+    /// One tile per size, in size order, each carrying the frame drawn at that
+    /// many pixels on both grounds. Empty whenever there is no icon frame in
+    /// hand, which is what makes the strip cost nothing the rest of the time.
+    ///
+    /// A picture that has not landed yet is nil and leaves its place on the
+    /// ground empty, so the card keeps its shape.
+    func iconPreviewTiles(sides: [CGFloat]) -> [IconPreviewTile] {
         guard let frameID = iconPreviewFrameID, let document,
               let authored = document.layer(id: frameID) else { return [] }
-        // The sizes come off the frame AS DRAWN, never off the moving one. A
-        // frame with a scale motion on it is a different size every frame, and
-        // a row that added and dropped a column thirty times a second would be
-        // unreadable at exactly the moment it is being watched.
-        let sides = IconPreviews.sides(forFrameSize: authored.frame.size)
-        guard !sides.isEmpty else { return [] }
         let source = iconPreviewSource(document, frameID: frameID)
         let frame = source.layer(id: frameID) ?? authored
-        let dark = IconPreviews.darkSide(among: sides)
-        let ground = document.iconPreviewGroundHex(id: frameID)
         return sides.map { side in
-            IconPreviewTile(side: side, onDarkGround: side == dark, groundHex: ground,
-                            image: iconPreview(of: frame, in: source, side: side,
-                                               onDarkGround: side == dark))
+            IconPreviewTile(side: side,
+                            light: iconPreview(of: frame, in: source, side: side, onDarkGround: false),
+                            dark: iconPreview(of: frame, in: source, side: side, onDarkGround: true))
         }
+    }
+
+    /// The colour of the Light ground for the icon in hand.
+    var iconPreviewGroundHex: String {
+        iconPreviewFrameID.flatMap { document?.iconPreviewGroundHex(id: $0) }
+            ?? IconPreviews.lightGroundHex
     }
 
     /// The picture the previews are drawn from: the one you drew, or where the
     /// loop has got to while the preview runs.
     ///
     /// This is what makes the strip the REVIEW rather than a still life. The
-    /// icon moves in the four chips at the sizes it will really be used, which
+    /// icon moves on both grounds at the sizes it will really be used, which
     /// is the only place a swing that reads beautifully on a 512 point canvas
     /// can be caught being a shimmer at 16.
     ///
@@ -151,27 +189,9 @@ extension EditorState {
         return iconPreviews[key]?.image
     }
 
-    /// How much room the strip takes in the canvas's top left corner, so
-    /// anything else that wants that corner can step around it. Generous: it is
-    /// laid out by SwiftUI, so its exact size is not knowable here, and
-    /// over-reserving only makes the other thing step aside a little sooner.
-    var iconPreviewsReservedRect: CGRect? {
-        // The sides, not the tiles: this is a measurement, and asking for the
-        // tiles would order a batch of pictures to find out how wide a row of
-        // them is.
-        guard let frameID = iconPreviewFrameID, let document,
-              let frame = document.layer(id: frameID) else { return nil }
-        let sides = IconPreviews.sides(forFrameSize: frame.frame.size)
-        guard !sides.isEmpty else { return nil }
-        let chips = sides.map { IconPreviews.chipSide(for: $0) }
-        let width = chips.reduce(0, +) + CGFloat(sides.count - 1) * IconPreviewsStrip.gap
-            + IconPreviewsStrip.padding * 2
-        let height = (chips.max() ?? 0) + IconPreviewsStrip.labelHeight
-            + IconPreviewsStrip.padding * 2
-            + (iconPreviewsPlayable ? IconPreviewsStrip.headerHeight : 0)
-        let inset = EditorChromeLayout.cornerInset
-        return CGRect(x: inset, y: inset, width: width, height: height)
-    }
+    /// Where the card is, so anything else that wants that corner can step
+    /// around it.
+    var iconPreviewsReservedRect: CGRect? { iconPreviewPlacement?.frame }
 
     /// Whether the previews card carries a transport.
     ///
@@ -186,15 +206,11 @@ extension EditorState {
     }
 }
 
-/// One preview in the strip: a size, and the frame drawn at it.
+/// One size in the strip: the frame drawn at it, on each ground.
 struct IconPreviewTile: Identifiable {
     let side: CGFloat
-    /// The one chip on a dark ground, as the icon mock draws 32 under a 24.
-    let onDarkGround: Bool
-    /// What a light chip is painted: the frame's own flat surface, which the
-    /// picture then leaves out, or nil for the plain chip.
-    let groundHex: String?
-    let image: CGImage?
+    let light: CGImage?
+    let dark: CGImage?
     var id: Int { Int(side) }
 }
 
@@ -202,7 +218,7 @@ struct IconPreviewTile: Identifiable {
 struct IconPreviewKey: Hashable {
     let frameID: UUID
     let side: Int
-    /// The dark chip's picture can be a different colour from the same size
-    /// on a light one, so it is cached on its own.
+    /// The picture on the Dark ground can be a different colour from the same
+    /// size on the Light one, so it is cached on its own.
     let onDarkGround: Bool
 }

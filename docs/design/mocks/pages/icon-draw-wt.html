@@ -85,14 +85,19 @@
 
   /* ---------- REAL SIZE · the only review that matters for an icon ---------- */
   #icon-draw-wt .ig-sizes{position:absolute;left:var(--s4);top:var(--s4);z-index:6;
-    display:flex;align-items:flex-end;gap:var(--pad-sm);padding:var(--gap-sm) var(--pad-sm);
+    display:flex;flex-direction:column;gap:4px;padding:10px;
     border-radius:var(--r3);background:var(--glass-2);border:1px solid var(--edge-lo);
     backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
-  #icon-draw-wt .ig-sz{display:flex;flex-direction:column;align-items:center;gap:5px}
-  #icon-draw-wt .ig-sz .px{display:grid;place-items:center;border-radius:7px;background:var(--panel-2);
-    border:1px solid var(--line);color:var(--ink)}
-  #icon-draw-wt .ig-sz .px.inv{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
-  #icon-draw-wt .ig-sz .n{font-family:var(--mono);font-size:9px;color:var(--faint)}
+  /* Two continuous grounds, every size on both. No chip per size: on 2026-11-04
+     one dark chip in a row of light ones read as the selected size. */
+  #icon-draw-wt .ig-sizes .ttl{font-size:10px;font-weight:640;color:var(--ink);margin-bottom:2px}
+  #icon-draw-wt .ig-gr{position:relative;display:flex;align-items:flex-end;gap:10px;padding:6px 8px;
+    border-radius:7px;background:#fff;color:#14161f;border:1px solid var(--line)}
+  #icon-draw-wt .ig-gr.dk{background:#0b0d14;color:#f2f4ff;border-color:#2a2f45}
+  #icon-draw-wt .ig-gr .w{position:absolute;left:8px;top:3px;font-size:9px;font-weight:560;color:#555b6e}
+  #icon-draw-wt .ig-gr.dk .w{color:#aeb4c8}
+  #icon-draw-wt .ig-ns{display:flex;gap:10px;padding:0 8px}
+  #icon-draw-wt .ig-ns .n{font-family:var(--mono);font-size:9px;color:var(--ink);text-align:center}
 
   /* ---------- Grid & snap panel group · every number is a control ----------
      The Show and Snap to rows are `.seg.multi` — the design system's toggle
@@ -214,34 +219,20 @@
 
               <!-- REAL SIZE · the review that decides whether a glyph works -->
               <div class="ig-sizes wt-off" id="igSizes">
-                <span class="ig-sz">
-                  <span class="px" style="width:26px;height:26px">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
-                    </svg>
-                  </span><span class="n">16</span>
+                <span class="ttl">Actual sizes</span>
+                <span class="ig-gr"><span class="w">Light</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
                 </span>
-                <span class="ig-sz">
-                  <span class="px" style="width:34px;height:34px">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
-                    </svg>
-                  </span><span class="n">24</span>
+                <span class="ig-gr dk"><span class="w">Dark</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/></svg>
                 </span>
-                <span class="ig-sz">
-                  <span class="px inv" style="width:42px;height:42px">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
-                    </svg>
-                  </span><span class="n">32</span>
-                </span>
-                <span class="ig-sz">
-                  <span class="px" style="width:58px;height:58px">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M9 13H15A3 3 0 0 0 15.907 7.14A4 4 0 0 0 8.093 7.14A3 3 0 0 0 9 13Z"/><path d="M12 20V16M10 18l2-2 2 2"/>
-                    </svg>
-                  </span><span class="n">48</span>
-                </span>
+                <span class="ig-ns"><span class="n" style="width:16px">16</span><span class="n" style="width:24px">24</span><span class="n" style="width:32px">32</span><span class="n" style="width:48px">48</span></span>
               </div>
             </div>
 

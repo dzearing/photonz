@@ -3190,8 +3190,8 @@ private final class Run {
         case .expectPicked(let layers, let outline):
             note(number, step.name, try checkPicked(layers, outline: outline), state: describe())
 
-        case .expectIconPreviews(let sides, let absent, let dark):
-            note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, dark: dark),
+        case .expectIconPreviews(let sides, let absent, let bothGrounds):
+            note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, bothGrounds: bothGrounds),
                  state: describe())
 
         case .expectMeasures(let count, let reads, let inks, let chips):
@@ -10252,7 +10252,7 @@ private final class Run {
     /// ones the document holds, because the two ways this goes wrong are "the
     /// strip is gone" and "the strip is showing the wrong icon", and a bare
     /// list of numbers tells them apart from neither.
-    private func checkIconPreviews(sides: [Int], absent: Bool, dark: Int?) throws -> String {
+    private func checkIconPreviews(sides: [Int], absent: Bool, bothGrounds: Bool) throws -> String {
         let editor = try requireEditor()
         let showing = editor.iconPreviewTiles.map { Int($0.side) }
         let frameID = editor.iconPreviewFrameID
@@ -10277,13 +10277,14 @@ private final class Run {
                 + "not \(list(sides)); it is speaking for \"\(named)\", and the icon frames in "
                 + "the document are: \(inTheDocument)")
         }
-        let onDark = editor.iconPreviewTiles.filter(\.onDarkGround).map { Int($0.side) }
-        if let dark, onDark != [dark] {
-            throw Failure(description: "the icon previews strip has \(list(onDark)) on the dark "
-                + "chip, not \(dark); it is showing \(list(showing)) for \"\(named)\"")
+        let unfinished = editor.iconPreviewTiles.filter { $0.light == nil || $0.dark == nil }
+            .map { Int($0.side) }
+        if bothGrounds, !unfinished.isEmpty {
+            throw Failure(description: "the icon previews strip has \(list(unfinished)) missing "
+                + "from a ground; it is showing \(list(showing)) for \"\(named)\"")
         }
-        let darkNote = onDark.isEmpty ? "" : " (\(list(onDark)) on the dark chip)"
-        return "icon previews for \"\(named)\" at \(list(showing))\(darkNote), as claimed"
+        let groundsNote = bothGrounds ? ", each on both grounds" : ""
+        return "icon previews for \"\(named)\" at \(list(showing))\(groundsNote), as claimed"
     }
 
     /// How thick the ink is through one document point of the document as it
