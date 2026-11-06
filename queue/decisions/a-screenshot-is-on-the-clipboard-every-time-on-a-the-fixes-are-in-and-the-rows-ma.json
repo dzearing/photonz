@@ -45,7 +45,12 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
+  "status": "resolved",
   "created": "2026-11-05T16:12:24.066Z",
-  "shot": "2026-11-05-clipboard-card-marked.png"
+  "shot": "2026-11-05-clipboard-card-marked.png",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-11-06T01:40:38.781Z"
+  }
 }
