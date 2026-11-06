@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p1-high",
   "seq": 72,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:58:49.853Z",
-  "updated": "2026-11-05T14:59:10.996Z",
+  "updated": "2026-11-06T10:01:14.387Z",
   "deps": [],
   "blockedBy": [],
   "notes": "REPRODUCED 2026-11-05 on the probe built 00:05 from df457197. queue/manager/shots/2026-11-05-walks/m1.json: blank 512 by 512, draw an ellipse, expectIconPreviews [16,24,32,48,64]. Output: 'the icon previews strip is showing nothing ... it is speaking for \"no icon\", and the icon frames in the document are: none'. m4.json adds showIconKeylines and modeIcon: no keyline is drawn (queue/manager/shots/2026-11-05-icon-picture-no-guides.png). The walk used blank at the preset's size; NewCanvasDialog onCreate passes only a size, so the Icon row makes the same document. Cause: IconPreviews.isIconFrame, iconFrameID and CanvasIconKeylines only look at layers where isFrame is true; BlankCanvas.iconPresets (512, 1024) make a Background layer and no frame. Decided here: do NOT judge by size, or every square PNG grows keylines. Mark the document as an icon when the Icon or App Icon row or Ask's icon route makes it (a Codable field with a default, so older files read as not an icon) and have the frame rules answer for that canvas. Do not add a hidden frame: Ask's rule is that the icon is drawn on the canvas itself. FeatureCatalog says every picture starts in Image; this is the one change to that sentence, update its description. Flags next-icon-frames, next-icon-previews, already on at Next defaults. The previews strip's own look is the-icon-previews-strip-reads-as-previews-no-chi and is not part of this.",
@@ -28,6 +28,50 @@
     {
       "t": "2026-11-05T14:59:10.995Z",
       "note": "seq 135 -> 72"
+    },
+    {
+      "t": "2026-11-06T08:41:31.821Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T08:45:22.000Z",
+      "note": "Reproduced on today's tree: queue/manager/shots/2026-11-05-walks/m1.json fails at expectIconPreviews, 'speaking for no icon ... icon frames in the document are: none'. Adversarial read before building: (1) DocumentHasNoKindTests and WindowMode.swift both say a document has no kind, so the mark must be about the CANVAS, standing in for a frame, and a screen frame on it stays a screen; the mode itself is still never stored. (2) Ask's icon lands as a real frame filling the canvas, so keylines and snapping already work there and only the chip is missing; a marked canvas filled by such a frame must not draw guides twice. (3) A canvas cropped off an icon size stops being one, the same way a frame's size says what it is. (4) Mirror and Center already use the canvas middle for a loose layer, so that item needs pinning, not building."
+    },
+    {
+      "t": "2026-11-06T09:28:00.000Z",
+      "note": "Chose a mark on the canvas (madeAsIcon) over a mark on the document's kind, because DocumentHasNoKindTests holds: a screen laid on an icon's canvas stays a screen, and the mode is still never written to the file."
+    },
+    {
+      "t": "2026-11-06T09:28:00.000Z",
+      "note": "Chose to hold the strip back until something is drawn over showing white squares, because an empty canvas has nothing to judge at 16 and the goal says as soon as something is drawn."
+    },
+    {
+      "t": "2026-11-06T09:28:00.000Z",
+      "note": "Chose IconCanvasHandoff beside the window id over a new field on EditorWindowID.blankCanvas, because that id is Codable and a changed case could stop an old restored window decoding."
+    },
+    {
+      "t": "2026-11-06T09:28:00.000Z",
+      "note": "Walks told the truth only after three corrections, all found by looking: m1's coordinates drew the ellipse off a 512 canvas with the walk green, so expectIconPreviews gained inked; shapes land on whole points in EVERY picture, so the discriminating check for units is the Pen at 200% (151 in an icon, 150.5 in a plain picture); Escape discards an unfinished Pen line, Return keeps it."
+    },
+    {
+      "t": "2026-11-06T09:28:00.000Z",
+      "note": "left rough: the card overlaps a corner of the picture on a window this size, never the drawing; that is the existing placement rule (icon first, then ink), so no task. Keylines assume a pale canvas when the Background is painted dark, and the Dark ground drops the whole Background; both are in the audit and did not earn a task until someone hits them."
+    },
+    {
+      "t": "2026-11-06T10:00:48.240Z",
+      "note": "owns these walks: icon-picture-from-the-new-sheet-walk, a-square-picture-is-not-an-icon-walk, a-saved-icon-opens-as-an-icon-walk, ask-tweaks-an-icon-walk"
+    },
+    {
+      "t": "2026-11-06T10:01:14.385Z",
+      "note": "File, New, Image, Icon and App Icon now make a picture whose canvas answers as an icon frame does: keylines, whole units for the Pen, starting weight, Artboard pivot, previews once something is drawn. The window opens in Icon, also for a saved one and for Ask's icon; a square picture stays Image. Commit fa789f6f. Verified: IconCanvasTests, 4 walks at Next defaults with pictures opened, 28 of 29 icon-named walks (icon-stroke-weight-walk already failing on 2026-11-05, folded into walks-that-fail-in-the-full-sweep-26), Scripts/test.sh exit 0 on the last run after two unrelated video failures under load, logged on the-full-test-suite-stays-green-on-a-busy-mac-wh."
     }
-  ]
+  ],
+  "started": "2026-11-06T08:41:31.820Z",
+  "walks": [
+    "icon-picture-from-the-new-sheet-walk",
+    "a-square-picture-is-not-an-icon-walk",
+    "a-saved-icon-opens-as-an-icon-walk",
+    "ask-tweaks-an-icon-walk"
+  ],
+  "completed": "2026-11-06T10:01:14.386Z"
 }
