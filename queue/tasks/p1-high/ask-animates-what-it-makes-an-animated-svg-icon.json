@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-11-04T16:24:20.100Z",
-  "updated": "2026-11-06T01:06:36.072Z",
+  "updated": "2026-11-06T12:14:52.519Z",
   "deps": [
     "ask-makes-icons-that-are-icons-one-subject-clean",
     "an-agent-can-set-read-and-change-a-layer-s-keys"
@@ -61,6 +61,10 @@
     {
       "t": "2026-11-06T01:06:36.071Z",
       "note": "Waiting on the user's answer to the card on animating-a-picture-is-as-simple-as-setting-a-mo: if approved, a picture is animated with keys on a lap and the Motion entries' From and To form stops being offered, so build Ask's animation on keys, not on that form."
+    },
+    {
+      "t": "2026-11-06T12:14:52.518Z",
+      "note": "From an-agent-can-set-read-and-change-a-layer-s-keys, 2026-11-06: the key tools are built and in Ask's reach only for a request with animate, animation, keyframe or motion in it, or a document with a lap (AskTools.keyDoing, asksForMotion). No instructions teach them yet. contact_sheet and video_frame now work on a keyed picture, which this task's eval needs. Widen the gate here if a request like 'a spinning loader' must reach them."
     }
   ]
 }

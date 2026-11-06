@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p1-high",
   "seq": 76,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:58:50.343Z",
-  "updated": "2026-11-06T01:06:36.142Z",
+  "updated": "2026-11-06T12:15:31.845Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of ask-animates-what-it-makes-an-animated-svg-icon so its wait on the balloon holds only what needs a good icon. The 2026-11-05 digest raised this: the tools for keying layers do not need a good balloon, only animation's last try does. That wait stays exactly as intake set it. Files: AgentTools.swift, AskPlanning.swift, LayerMotion, MotionProperty, KeyMoments.swift, PropertyKeys.swift, SVGMotionExport. Use the keys the video editor uses, since animating-a-picture-is-as-simple-as-setting-a-mo is designing one shared way of keying; if that design changes the model, the tools follow it. No code for a particular subject or animation (Hard rules in queue/bin/runner-prompt.md). Nothing here teaches Ask when to animate: that stays in the task it came from.",
@@ -32,6 +32,31 @@
     {
       "t": "2026-11-06T01:06:36.141Z",
       "note": "Related: animating-a-picture-is-as-simple-as-setting-a-mo proposes keys on a picture with no video duration (a lap). Its card is with the user; the agent's key calls should not assume hasTime."
+    },
+    {
+      "t": "2026-11-06T10:56:34.920Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T11:01:40.000Z",
+      "note": "Adversarial pass before building. The key model is ready (PictureKeys, KeyMoments, PropertyKeys), so the tools call it and add no second model. What the idea runs into: (1) set_playhead, video_frame, contact_sheet and run_command's timeline commands all refuse a keyed picture because they ask hasTime, so an agent could key a layer and never look at it or play it. (2) export writes a still SVG, so acceptance item 3 fails through the tool even though Copy SVG moves. (3) setKeyedValue on an unkeyed value of a still picture just changes the layer, so the tool cannot be a loop over it. (4) a two-key motion may export on the motion's curve rather than the keys' own eases: to be tested, not assumed. (5) an agent will naturally put a key exactly on the lap's end, which the strip's drag bound (last key + 1) does not expect. Chose three tools (set_keys, remove_keys, set_timing) over one do-everything tool because each stays one plain sentence for a small model. Chose offering them to Ask only when the request or the document is about motion over every request, the way painting and icon tools are gated, because tools cost reading time on every request and teaching Ask when to animate belongs to ask-animates-what-it-makes-an-animated-svg-icon. Volume keys left out: they are the mixer's level points, not a motion."
+    },
+    {
+      "t": "2026-11-06T11:25:58.696Z",
+      "note": "owns these walks: agent-keys-walk"
+    },
+    {
+      "t": "2026-11-06T12:14:52.364Z",
+      "note": "Built set_keys, remove_keys, set_timing (AgentKeys.swift), keys and lap in read_document, and made set_playhead, video_frame, contact_sheet, render_picture, run_command and play_pause answer on a keyed picture. Found by testing and fixed here: an exported SVG ignored a two-key motion's own curves (MotionSVG.keyStops), and export wrote a still. Found by opening the audit pictures and fixed here: a keyed picture played FROZEN on the canvas for a person's Space as well as an agent, because the crisp tile stayed over the composite, under a green walk. Reproduced first with a new expectPictureMoves step failing on both agent-keys-walk and picture-keys-walk, then fixed. Chose scoping that fix to keyed pictures over every play in Next because widening it did not cure looping motion, so it was not the same bug. Left rough, no task: opacity 0 to 100 here against 0 to 1 on set_layer (in the audit); volume keys left out. Item 4: the check that exists today is AgentToolsTests' tool list plus a new test that the skill names every tool. The wider panel check is the-agent-coverage-check-counts-panel-controls-a, not built yet. No browser was used: the SVG was read and compared value by value. No Ask eval was run."
+    },
+    {
+      "t": "2026-11-06T12:15:31.843Z",
+      "note": "Agents can key a layer: set_keys, remove_keys and set_timing over MCP and for Ask on motion requests, keys in read_document, on the strip where a person picks and changes them, copied and exported as a looping SVG (commit c9a842f9 or its rebase). Verified by Scripts/test.sh exit 0, agent-keys-walk and picture-keys-walk at Next defaults with no flag, and Scripts/agent-keys-drill.mjs over the real MCP bridge on the probe. Also fixed: SVG ignoring a two-key motion's curves, and keyed pictures playing frozen on the canvas. Not done: no real browser watched the SVG (it was read and compared value by value), and no Ask eval was run. Looping motion still stands still on the canvas: filed as a-looping-motion-moves-on-the-canvas-while-it-pl."
     }
-  ]
+  ],
+  "started": "2026-11-06T10:56:34.919Z",
+  "walks": [
+    "agent-keys-walk"
+  ],
+  "completed": "2026-11-06T12:15:31.844Z"
 }
