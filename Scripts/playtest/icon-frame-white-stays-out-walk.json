@@ -1,0 +1,274 @@
+{
+  "out": "/tmp/photonz-playtest/icon-frame-white-stays-out",
+  "seed": "an icon frame's white stays out of its SVG, a chosen colour stays in, a screen does not change",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        792,
+        542
+      ],
+      "to": [
+        806,
+        556
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "1-icon-drawn"
+    },
+    {
+      "do": "describe",
+      "stage": "1-the-file",
+      "note": "a circle in a new 24 frame at Next defaults, written as Export writes the picked frame: no rectangle, and nothing left to cut, so the only shape in the file is the circle"
+    },
+    {
+      "do": "writeSVG",
+      "name": "icon",
+      "frame": "Frame",
+      "lacks": "<rect"
+    },
+    {
+      "do": "writeSVG",
+      "name": "icon-uncut",
+      "frame": "Frame",
+      "lacks": "clip-path"
+    },
+    {
+      "do": "writeSVG",
+      "name": "whole-drawing",
+      "lacks": "<rect"
+    },
+    {
+      "do": "writeSVG",
+      "name": "icon-kept",
+      "frame": "Frame",
+      "background": "keep",
+      "carries": "#FFFFFF"
+    },
+    {
+      "do": "click",
+      "at": [
+        810,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "shortcut",
+      "key": "c",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Copy"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "2-copied",
+      "svg": true,
+      "svgSameAs": "icon"
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsSVG"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-the-sheet",
+      "note": "the Export sheet on the frame: Include the background is there, unticked, with a white swatch"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-sheet-unticked"
+    },
+    {
+      "do": "press",
+      "control": "Include the background"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "snapshot",
+      "name": "4-sheet-ticked"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "paintScreenSurface"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "5-a-colour-on-purpose",
+      "note": "the frame given a blue of its own: it stays in the file and in the copy, and the sheet opens ticked"
+    },
+    {
+      "do": "writeSVG",
+      "name": "chosen",
+      "frame": "Frame",
+      "carries": "#3B82F6"
+    },
+    {
+      "do": "writeSVG",
+      "name": "chosen-unticked",
+      "frame": "Frame",
+      "background": "dropChosen",
+      "lacks": "#3B82F6"
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "shortcut",
+      "key": "c",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Copy"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "5-copied-blue",
+      "svg": true,
+      "svgSameAs": "chosen"
+    },
+    {
+      "do": "action",
+      "action": "exportDialogAsSVG"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "5-sheet-chosen"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "Phone"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "6-a-screen",
+      "note": "a phone screen writes its white exactly as it always did, whichever way the box would be"
+    },
+    {
+      "do": "writeSVG",
+      "name": "screen",
+      "frame": "Frame 2",
+      "carries": "#FFFFFF"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-screen"
+    }
+  ]
+}

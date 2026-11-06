@@ -3293,7 +3293,11 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// `frame` names a frame to write on its own, the way the Export sheet
     /// writes a frame picked in its Export menu (`exportTarget(frameID:)`).
-    case writeSVG(name: String, background: SVGExport.Background, frame: String? = nil)
+    ///
+    /// `lacks` is a run of text the file must not hold and `carries` one it
+    /// must, which is how a walk claims there is no rectangle behind an icon.
+    case writeSVG(name: String, background: SVGExport.Background, frame: String? = nil,
+                  lacks: String? = nil, carries: String? = nil)
     /// Write the document out as a picture to `<out>/<name>.<ext>`, at the
     /// format, quality and scale Export would use (Next,
     /// `next-export-quality`), and log how many bytes it came to.
@@ -5535,7 +5539,9 @@ public enum PlaytestStep: Sendable, Equatable {
                 ? try f.enumValue("background", SVGExport.Background.self)
                 : SVGExport.Background.drop
             self = .writeSVG(name: try f.string("name"), background: background,
-                             frame: try f.optionalString("frame"))
+                             frame: try f.optionalString("frame"),
+                             lacks: try f.optionalString("lacks"),
+                             carries: try f.optionalString("carries"))
         case "writePicture":
             let canvas = f.has("background")
                 ? try f.enumValue("background", SVGExport.Background.self)

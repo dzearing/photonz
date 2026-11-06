@@ -2816,7 +2816,7 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
-        case .writeSVG(let name, let background, let frameName):
+        case .writeSVG(let name, let background, let frameName, let lacks, let carries):
             let editor = try requireEditor()
             guard let whole = editor.document else {
                 throw Failure(description: "the document did not write as SVG")
@@ -2848,6 +2848,12 @@ private final class Run {
                 ? "every layer as shapes"
                 : written.fallbacks.map { "\($0.layerName) as a picture" }.joined(separator: ", ")
             let text = String(data: written.data, encoding: .utf8) ?? ""
+            if let lacks, text.contains(lacks) {
+                throw Failure(description: "\(name).svg was not to hold \"\(lacks)\", and it does:\n\(text)")
+            }
+            if let carries, !text.contains(carries) {
+                throw Failure(description: "\(name).svg was to hold \"\(carries)\", and it does not:\n\(text)")
+            }
             let animations = text.components(separatedBy: "<animate").count - 1
             let motion = animations > 0
                 ? ", \(animations) moving \(animations == 1 ? "part" : "parts")"
@@ -2857,9 +2863,10 @@ private final class Run {
             // having to open it.
             let canvas: String
             if let backdrop = SVGExporter.backdrop(in: document, store: editor.store) {
-                canvas = background == .drop
-                    ? ", nothing behind the drawing"
-                    : ", the \(backdrop.color.hexString) canvas behind the drawing"
+                let stays = background == .keep || (background == .drop && backdrop.isChosen)
+                canvas = stays
+                    ? ", the \(backdrop.color.hexString) \(backdrop.isFrameSurface ? "frame" : "canvas") behind the drawing"
+                    : ", nothing behind the drawing"
             } else {
                 canvas = ""
             }

@@ -22604,3 +22604,7 @@ What changed: File, New, Image, Icon and App Icon now make a picture whose canva
 Walks: `icon-picture-from-the-new-sheet-walk`, `a-square-picture-is-not-an-icon-walk`. `expectIconPreviews` gained `inked`, because a walk drew its circle off the picture and stayed green with an empty strip. `startFromEmpty` gained `answer`, for a row that opens a sheet.
 
 What's next: nothing on this task. Open question: whether a painted Background should stay on the Dark ground.
+
+## 2026-11-06: an icon frame's white stays out of its SVG
+
+An icon frame's untouched white now leaves Export and Copy with the canvas, and the frame's cut goes too when nothing reaches past it. A chosen colour stays, the Export sheet's row opens ticked on it, and unticking it is `.dropChosen`. Screen frames are unchanged. `writeSVG` gains `lacks` and `carries` claims. Open question in the audit: whether a hand drawn square frame of 512 or less should count as an icon here.

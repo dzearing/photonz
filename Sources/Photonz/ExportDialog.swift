@@ -119,6 +119,8 @@ struct ExportDialog: View {
     /// and shown on the sheet each time, so it can never be a setting somebody
     /// left on months ago.
     @State private var keepsBackground = false
+    /// The canvas or frame `keepsBackground` is an answer about.
+    @State private var askedAboutBackdrop: UUID?
     /// What each lossy format is set to while the sheet is up, seeded from what
     /// was remembered. Held here rather than written straight back so that
     /// moving the slider and then pressing Cancel changes nothing, and so that
@@ -167,7 +169,8 @@ struct ExportDialog: View {
 
     /// What the file does with the canvas the drawing was made on.
     private var background: SVGExport.Background {
-        backdrop != nil && !keepsBackground ? .drop : .keep
+        guard let backdrop, !keepsBackground else { return .keep }
+        return backdrop.isChosen ? .dropChosen : .drop
     }
 
     /// The format a destination implies, as an Export answer.
@@ -208,6 +211,13 @@ struct ExportDialog: View {
         backdrop = holdsTransparency
             ? SVGExport.backdrop(in: target, flatImages: flatImages)
             : nil
+        // A colour somebody gave a frame opens ticked, and a white nobody drew
+        // opens unticked. Asked once per thing the row is about, so moving
+        // between formats never undoes what you just said about it.
+        if let backdrop, backdrop.layerID != askedAboutBackdrop {
+            askedAboutBackdrop = backdrop.layerID
+            keepsBackground = backdrop.isChosen
+        }
     }
 
     /// Whether the file being written could hold see-through pixels at all.
@@ -739,7 +749,7 @@ struct ExportDialog: View {
                     .toggleStyle(.checkbox)
                     .playtestControl(Self.backgroundLabel,
                                      detail: keepsBackground
-                                         ? "Export, the \(backdrop.color.hexString) canvas goes in"
+                                         ? "Export, the \(backdrop.color.hexString) \(backdrop.isFrameSurface ? "frame" : "canvas") goes in"
                                          : "Export, nothing behind the drawing")
                 Spacer(minLength: 0)
                 RoundedRectangle(cornerRadius: 3, style: .continuous)
@@ -752,7 +762,7 @@ struct ExportDialog: View {
                     .accessibilityHidden(true)
             }
             Text(keepsBackground
-                 ? "The canvas colour is painted behind your drawing."
+                 ? "The \(backdrop.isFrameSurface ? "frame" : "canvas") colour is painted behind your drawing."
                  : "Nothing behind your drawing, so it sits on any colour.")
                 .font(.caption)
                 .foregroundStyle(.secondary)

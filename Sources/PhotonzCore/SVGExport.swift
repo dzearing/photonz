@@ -56,8 +56,14 @@ public enum SVGExport {
         case keep
         /// Leave the canvas out, so there is nothing painted behind the
         /// drawing and it sits on any colour it is dropped onto. Only the
-        /// canvas goes: everything that is part of the drawing stays.
+        /// canvas goes: everything that is part of the drawing stays. That
+        /// counts an icon frame's untouched white as canvas, and a colour
+        /// somebody gave a frame as drawing (`leftOut(of:flatImages:background:)`).
         case drop
+        /// `drop`, and the surface of the frame being exported as well, even
+        /// one somebody chose. What unticking Include the background says when
+        /// the thing it is asking about is a colour they picked.
+        case dropChosen
     }
 
     /// The layer that is only the canvas the drawing sits on, and the colour
@@ -67,10 +73,19 @@ public enum SVGExport {
         public var layerID: UUID
         /// What colour it is, so the Export sheet can show what would go.
         public var color: RGBA
+        /// Whether this is the surface a frame paints rather than a canvas
+        /// layer: the frame stays and only its surface goes.
+        public var isFrameSurface: Bool
+        /// Whether somebody made this part of the drawing, so it stays unless
+        /// they say otherwise. The Export sheet opens ticked on one of these.
+        public var isChosen: Bool
 
-        public init(layerID: UUID, color: RGBA) {
+        public init(layerID: UUID, color: RGBA, isFrameSurface: Bool = false,
+                    isChosen: Bool = false) {
             self.layerID = layerID
             self.color = color
+            self.isFrameSurface = isFrameSurface
+            self.isChosen = isChosen
         }
     }
 
@@ -161,14 +176,12 @@ public enum SVGExport {
                              typeSetter: TypeSetter? = nil,
                              flatImages: [UUID: RGBA] = [:],
                              background: Background = .keep) -> Result {
-        let omit = background == .drop
-            ? backdrop(in: document, flatImages: flatImages)?.layerID
-            : nil
+        let gone = leftOut(of: document, flatImages: flatImages, background: background)
         var writer = Writer(picture: picture, outlineText: outlineText,
                             pictureEdge: pictureEdge,
                             type: typeSetter,
                             animation: animation, flatImages: flatImages,
-                            omitLayer: omit)
+                            omitLayer: gone.layerID, omitSurfaces: gone.surfaces)
         return writer.run(animation == .still ? document.keyedStill : document.lappingKeys)
     }
 
@@ -183,10 +196,15 @@ public enum SVGExport {
     /// keeps the offer away from everything else, because a screenshot is a
     /// photograph rather than a flat colour, and a screen's own background is
     /// inside the frame rather than under the canvas.
+    ///
+    /// An icon frame filling the canvas answers for its own surface instead,
+    /// which is what a frame exported on its own always is
+    /// (`frameBackdrop(_:canvas:)`).
     public static func backdrop(in document: PhotonzDocument,
                                 flatImages: [UUID: RGBA]) -> Backdrop? {
-        guard let bottom = document.layers.first(where: \.isVisible),
-              let colour = flatColor(of: bottom, in: flatImages), colour.a > 0,
+        guard let bottom = document.layers.first(where: \.isVisible) else { return nil }
+        if bottom.isFrame { return frameBackdrop(bottom, canvas: document.canvasSize) }
+        guard let colour = flatColor(of: bottom, in: flatImages), colour.a > 0,
               bottom.transform.isIdentity,
               bottom.style.blendMode == .normal,
               !bottom.style.effects.contains(where: { $0.isOn }),
@@ -197,7 +215,7 @@ public enum SVGExport {
     /// Whether `frame` reaches every corner of a canvas that size. Half a
     /// point of slack, so a canvas laid out in fractions is not disqualified
     /// by arithmetic nobody could see.
-    private static func covers(_ canvas: CGSize, _ frame: CGRect) -> Bool {
+    static func covers(_ canvas: CGSize, _ frame: CGRect) -> Bool {
         frame.insetBy(dx: -0.5, dy: -0.5)
             .contains(CGRect(origin: .zero, size: canvas))
     }
@@ -691,6 +709,8 @@ private struct Writer {
     /// The one top-level layer this export leaves out: the canvas the drawing
     /// was made on, when Export was asked for a file with nothing behind it.
     var omitLayer: UUID?
+    /// The frames whose surface is left out; the frames themselves stay.
+    var omitSurfaces: Set<UUID> = []
     var defs: [String] = []
     var fallbacks: [SVGExport.Fallback] = []
     var unmoved: [SVGExport.Fallback] = []
@@ -867,7 +887,7 @@ private struct Writer {
             // and nothing has to reason about a transform; the ring round the
             // frame is written outside it, since a border is painted over the
             // edge rather than cut by it.
-            let cut = cutBox(of: layer)
+            let cut = cutBox(of: layer).flatMap { cutsSomething(layer) ? $0 : nil }
             let held = cut == nil ? inner : inner + 1
             var body = surface(of: layer, group: group, level: held)
             let outside = carried
@@ -1018,6 +1038,27 @@ private struct Writer {
         return box
     }
 
+    /// Whether a group's cut has any work to do. It always has, but for a frame
+    /// whose surface was left out: a cut round an icon that sits wholly inside
+    /// its frame would be a rectangle in the file that nobody drew.
+    ///
+    /// In a file that plays, the shapes are asked where they go through the
+    /// lap, because the cut has to catch whatever swings out past the edge.
+    func cutsSomething(_ layer: Layer) -> Bool {
+        guard omitSurfaces.contains(layer.id), !layer.style.cornerRadii.isRound else { return true }
+        let box = CGRect(origin: .zero, size: layer.frame.size)
+        func spill(_ children: [Layer]) -> Bool {
+            children.contains { $0.isVisible && !box.contains($0.turnedReach) }
+        }
+        if spill(layer.children) { return true }
+        guard case .moving(let cycleMS) = animation, layer.hasMotionInside else { return false }
+        let posing = Set(MotionProperty.allCases)
+        let step = max(1, cycleMS / SVGExport.momentsAskedAboutPerLap)
+        return stride(from: 0, through: cycleMS, by: step).contains { ms in
+            spill(layer.children.map { $0.posedTree(atMS: ms, cycleMS: cycleMS, posing: posing) })
+        }
+    }
+
     /// Writes one cut into the definitions and hands back its name.
     mutating func defineCut(_ box: CGRect, radii: CornerRadii) -> String {
         let name = "clip-\(nextCutNumber)"
@@ -1131,6 +1172,7 @@ private struct Writer {
     /// A frame's own surface, under everything in it.
     mutating func surface(of layer: Layer, group: GroupContent, level: Int) -> [String] {
         guard group.isFrame, let background = group.background,
+              !omitSurfaces.contains(layer.id),
               layer.frame.width > 0, layer.frame.height > 0 else { return [] }
         let box = CGRect(origin: .zero, size: layer.frame.size)
         let paint = fill(background, box: box)

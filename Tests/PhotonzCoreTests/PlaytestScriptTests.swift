@@ -82,8 +82,8 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "writeSVG", "name": "whole" },
                      { "do": "writeSVG", "name": "icon", "frame": "Icon 24" } ] }
         """)
-        guard case .writeSVG(_, _, let none) = script.steps[0],
-              case .writeSVG(let name, let background, let frame) = script.steps[1] else {
+        guard case .writeSVG(_, _, let none, _, _) = script.steps[0],
+              case .writeSVG(let name, let background, let frame, _, _) = script.steps[1] else {
             Issue.record("writeSVG"); return
         }
         #expect(none == nil)
@@ -3354,6 +3354,25 @@ struct PlaytestScriptTests {
         #expect(contains == "mix-blend-mode:multiply")
         #expect(script.steps[0].name == "expectSVG")
         #expect(PlaytestStep.names.contains("expectSVG"))
+    }
+
+    // A log line saying nothing is behind the drawing is printing, not
+    // checking: the walk stays green if the file quietly grows a rectangle.
+    @Test("A writeSVG step can claim what the file does and does not carry")
+    func writeSVGClaimsWhatTheFileCarries() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "writeSVG", "name": "icon", "frame": "Frame",
+                       "lacks": "<rect", "carries": "#FF3B30" } ] }
+        """)
+        guard case .writeSVG(let name, let background, let frame, let lacks, let carries)
+                = script.steps[0] else {
+            Issue.record("writeSVG"); return
+        }
+        #expect(name == "icon")
+        #expect(background == .drop)
+        #expect(frame == "Frame")
+        #expect(lacks == "<rect")
+        #expect(carries == "#FF3B30")
     }
 
     @Test("expectSVG has to claim something")

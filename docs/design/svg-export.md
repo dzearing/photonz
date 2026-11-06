@@ -357,7 +357,17 @@ is part of the drawing. That is what keeps the answer safe:
 * a **screenshot** is a photograph rather than a flat colour, so it is never
   the canvas and its picture always goes out;
 * a **screen exported as a frame** is scoped to the frame, whose own surface is
-  inside it rather than under it, so it always keeps its background;
+  inside it rather than under it, so it always keeps its background, and the
+  sheet has no row for it;
+* an **icon frame** is the exception to that (square, at a size an icon is drawn
+  at, `IconPreviews.isIconSize`). Its untouched white is the artboard, so it goes
+  with the canvas, frame picked or whole drawing, and the frame's cut goes too
+  when nothing reaches past the frame through the whole lap. Only frames lying on
+  the canvas count: an icon inside a screen has the screen behind it. A colour
+  somebody gave the frame, or a white frame they rounded, shadowed, faded or set
+  moving, is theirs: it stays, the row opens ticked, and unticking it is
+  `.dropChosen`. White picked by hand reads as white left alone, because a frame
+  keeps only its colour (`FrameSurfaceExport.swift`);
 * a flat swatch **drawn on top** of the canvas is not the bottom layer, and a
   flat colour that does not reach the edges is not the canvas either.
 

@@ -23,6 +23,7 @@
     { "do": "panel", "stage": "2-frame-picked" },
 
     { "do": "writeSVG", "name": "3-animated-bell" },
+    { "do": "writeSVG", "name": "3-animated-bell-frame", "frame": "Icon", "lacks": "#FFFFFF", "carries": "<animate" },
     { "do": "describe", "stage": "3-written", "note": "THE TEST the acceptance asks for: the file the app writes, written. The log line above says how big it is and how many moving parts are in it. There is no picture inside it, so the icon stays sharp at every size and a browser can play it with nothing else loaded." },
 
     { "do": "action", "action": "tutorialNext" },

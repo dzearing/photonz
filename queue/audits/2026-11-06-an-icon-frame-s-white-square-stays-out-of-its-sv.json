@@ -1,0 +1,50 @@
+{
+  "feature": "An icon frame's white stays out of its SVG",
+  "epic": "icon-export",
+  "summary": "An icon drawn in an icon frame now leaves with nothing behind it, from Export and from Copy, so it sits on a dark page or a coloured one. A colour you gave the frame stays, and a screen exports as it always did.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: icon-frame-white-stays-out-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open New Frame, pick 24 under Icons, and press Add Frame.",
+      "shot": "2026-11-06-icon-frame-white-1-drawn.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a circle in the frame with the Ellipse tool."
+    },
+    {
+      "do": "Open Export, pick SVG, and read the Include the background row: unticked, with a white swatch.",
+      "shot": "2026-11-06-icon-frame-white-2-sheet.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Save the file and open it in a browser on a dark page. In the picture, Before is the same circle written with the background kept.",
+      "shot": "2026-11-06-icon-frame-white-dark-page.png"
+    },
+    {
+      "do": "Pick the frame, press Command C, and paste into an app that reads SVG."
+    },
+    {
+      "do": "Give the frame a colour, open Export again, and read the row: ticked, with that colour in the swatch.",
+      "shot": "2026-11-06-icon-frame-white-3-chosen.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Add a Phone frame, open Export on it, and check there is no row and the white is in the file."
+    }
+  ],
+  "evaluate": [
+    "Does the icon sit cleanly on your dark page with no box round it?",
+    "Is a coloured frame opening ticked what you expect, given a plain one opens unticked?",
+    "Should a screen frame stay without the row, or would you want to leave its surface out too?",
+    "A square frame of 512 or less counts as an icon by the app's own rule. Is losing its white right for a hand drawn 300 by 300 frame?"
+  ],
+  "rough": [
+    "No mock covers this surface: the Export sheet's background row is not on a mock page.",
+    "White picked by hand reads the same as white left alone, because a frame only stores its colour. It leaves the file unless you tick the box, and Copy has no box to tick.",
+    "A moving shape close to the edge can keep the frame's clip in the file. The sample bell does: its box corner reaches 24.48 at full swing, though its ink stops inside 24. The clip paints nothing, and there is no white behind the bell.",
+    "The checkbox was pressed by name in the walk, not clicked at a point, because a walk cannot click inside a sheet. The save panel is not driven either: the file comes from the same writer the sheet calls.",
+    "The Export sheet offers no row on a whole drawing that has no flat canvas under it, so an icon frame's white stays in that one case."
+  ]
+}

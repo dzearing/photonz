@@ -121,8 +121,8 @@ public actor ExportSizer {
         // on nothing and every other layer is where it was. Reading which
         // bitmaps are flat walks their pixels, so it is only asked for when
         // something is being left out.
-        let target = background == .drop
-            ? scoped.drawn(with: .drop, flatImages: FlatBitmap.colors(in: scoped, store: store))
+        let target = background != .keep
+            ? scoped.drawn(with: background, flatImages: FlatBitmap.colors(in: scoped, store: store))
             : scoped
         rendersMade += 1
         guard let image = renderer.render(target, store: store, scale: scale) else { return nil }

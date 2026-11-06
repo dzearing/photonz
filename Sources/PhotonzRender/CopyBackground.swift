@@ -30,7 +30,7 @@ public extension PhotonzDocument {
     /// a screenshot, a photograph or a drawing with no canvas under it comes
     /// back exactly as it went in.
     func copied(with background: SVGExport.Background, store: ImageStore) -> PhotonzDocument {
-        guard background == .drop else { return self }
-        return drawn(with: .drop, flatImages: FlatBitmap.canvasColor(in: self, store: store))
+        guard background != .keep else { return self }
+        return drawn(with: background, flatImages: FlatBitmap.canvasColor(in: self, store: store))
     }
 }
