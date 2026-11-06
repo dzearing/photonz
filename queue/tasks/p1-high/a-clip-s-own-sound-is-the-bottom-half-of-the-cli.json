@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:47:49.323Z",
-  "updated": "2026-11-05T14:49:57.751Z",
+  "updated": "2026-11-06T08:25:04.397Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-05 (intake): 'If audio is attached to a video segment, it should appear in the same lane as sort of the bottom half of the video rectangle, rather than its own track. if you right click and separate the audio then yes, separate track. but having the 2 rows implicitly attached to each other is really confusing.' History: 0.18.0 (2026-10-19) 'A recording's own sound sits on a row just under its video and is joined to it ... Detach Audio moves the sound to an Audio track, and Re-attach brings it back'. Code: Sources/PhotonzCore/TimelineTrack.swift (its comment still says 'its sound is drawn inside its clip'), SoundClip.swift, Waveform.swift, TrackRange.swift; Sources/Photonz/ClipPiecesBar.swift ('the two move, trim and cut as one until Detach Audio parts them'), EditorCommands.swift (Detach / Re-attach Audio). An approved departure from the video mocks: change the mocks, no decision card.",
@@ -35,6 +35,70 @@
     {
       "t": "2026-11-05T14:49:57.750Z",
       "note": "seq 4.4e-7 -> 60"
+    },
+    {
+      "t": "2026-11-06T06:06:37.694Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T06:16:11.280Z",
+      "note": "owns these walks: a-clip-s-sound-is-inside-the-clip-walk, a-clip-s-sound-is-linked-under-it-walk, a-clip-s-sound-stays-under-its-video-walk, re-attach-audio-walk"
+    },
+    {
+      "t": "2026-11-06T08:22:36.834Z",
+      "note": "Before building: a first-time user sees one clip with a waveform, which is what Final Cut users expect; a Premiere user loses the A1 row, the user's call on 2026-11-05. The risk was the short half: the volume line's press strip took most of it, so a drag on the waveform did nothing (reproduced in the walk, fixed by narrowing the strip to height/6)."
+    },
+    {
+      "t": "2026-11-06T08:22:36.913Z",
+      "note": "Chose to keep the sound row in the document, unlisted, over removing it because Mute and Solo already live there and old documents carry it. timelineLanes is what the timeline, walks and agent read; timelineTracks still has the rows."
+    },
+    {
+      "t": "2026-11-06T08:22:36.989Z",
+      "note": "Chose a true half, 28 over 28 (56 point lane), over 28 over 22 because at 22 the volume line had 11 points of travel; 56 gives 17 and matches the user's words 'the bottom half'."
+    },
+    {
+      "t": "2026-11-06T08:22:37.066Z",
+      "note": "Chose to keep an Audio track waiting under a recording with sound over showing V1 alone because the mock always lists Audio and there would be nowhere obvious to put music. Costs 28 points of dock height. Detach Audio lands on it, and music added after the tracks are written down takes it rather than making Audio 2."
+    },
+    {
+      "t": "2026-11-06T08:22:37.143Z",
+      "note": "Chose the sound's lock to follow its picture track over keeping a separate lock because the sound is inside the clip and an old locked row would have no switch left to free it. Lock Sound and Unlock Sound are gone; a gap refused for that reason now reads V1 is locked."
+    },
+    {
+      "t": "2026-11-06T08:22:37.218Z",
+      "note": "Chose Mute Sound, Solo Sound and Delete Sound as new commands (mute_sound, solo_sound, delete_sound) on the track header menu and the Track menu over a fourth header switch, because the sound clip menu is at its 11 row limit and the header layout holds three switches."
+    },
+    {
+      "t": "2026-11-06T08:22:37.293Z",
+      "note": "Current is untouched: the dock is only reached behind next-cut-a-recording."
+    },
+    {
+      "t": "2026-11-06T08:22:37.369Z",
+      "note": "Pictures opened and checked: 1-one-clip, 2-picked, 4-cut, 4b-trimmed, 4c-bladed, 5-muted, 6-detached, 7-re-attached, the mock over the app. They show one rectangle, one ring, a cut through both halves, the mute mark clear of the fade handle."
+    },
+    {
+      "t": "2026-11-06T08:22:37.446Z",
+      "note": "Not walked by hand on the half: Freeze Frame, Speed Stops, Clean Noise and transitions. They use the same bars as before and their existing walks stayed green (hold-pushes-the-sound, a-video-clip-menu-leads-with-the-picture, the-speed-curve-shows-under-a-clip); transitions-where-clips-meet-walk was already failing in the sweeps and stops before it reaches a clip."
+    },
+    {
+      "t": "2026-11-06T08:22:37.529Z",
+      "note": "left rough: TrackDropRow.joiningSoundRows and the 'V1 sound is locked' refusal path are now unreachable from the app, kept because they are harmless and tested; nobody using the app can notice. The 'V1 sound' lane name a walk may aim at is not in docs/design/playtest-harness.md, because that file has somebody else's uncommitted edit; it is commented in trackRowMiddle."
+    },
+    {
+      "t": "2026-11-06T08:25:04.307Z",
+      "note": "walks a-clip-s-sound-is-inside-the-clip-walk, a-clip-s-sound-is-linked-under-it-walk, a-clip-s-sound-stays-under-its-video-walk, re-attach-audio-walk -> a-clip-s-sound-is-inside-the-clip-walk, a-clip-s-sound-is-linked-under-it-walk, a-clip-s-sound-stays-under-its-video-walk, re-attach-audio-walk"
+    },
+    {
+      "t": "2026-11-06T08:25:04.395Z",
+      "note": "One clip with its sound in the bottom half at Next defaults; Detach and Re-attach work, mocks updated. 15,537 tests pass. Walks: new a-clip-s-sound-is-inside-the-clip-walk plus about 130 others green; video-tool-bar and transitions-where-clips-meet still fail and are on the standing walk task, neither from this change. Full set requested. Audit: queue/audits/2026-11-06-a-clip-s-own-sound-is-the-bottom-half-of-the-cli.json"
     }
-  ]
+  ],
+  "started": "2026-11-06T06:06:37.693Z",
+  "walks": [
+    "a-clip-s-sound-is-inside-the-clip-walk",
+    "a-clip-s-sound-is-linked-under-it-walk",
+    "a-clip-s-sound-stays-under-its-video-walk",
+    "re-attach-audio-walk"
+  ],
+  "completed": "2026-11-06T08:25:04.396Z"
 }

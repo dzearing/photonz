@@ -14929,7 +14929,7 @@
 {"t":"2026-11-01T09:49:49.355Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-11-01T09:49:49.390Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-01T09:51:40.086Z","ev":"slice_pass","walks":39,"passed":30,"failed":9,"seconds":624,"of":1070,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-01T09:51:40.258Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high","repeats":2,"until":"2026-11-01T10:11:31.202Z","rolledUp":true}
+{"t":"2026-11-01T09:51:40.258Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high","repeats":4,"until":"2026-11-01T21:56:20.497Z","rolledUp":true}
 {"t":"2026-11-01T10:10:59.904Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T10:10:59.978Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T10:11:06.950Z","ev":"task_pending","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"Item 9 still open: five more measured experiments, none moved looks painted past 5 (bar 8); nothing shipped. Next lever named in the log: light a Paint layer as one surface."}
@@ -14939,7 +14939,7 @@
 {"t":"2026-11-01T10:26:28.226Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T10:26:31.485Z","ev":"task_blocked","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"Item 9's looks-painted bar of 8 is one no digital painting reached in a calibration (a skilled person's Krita painting scores 5 and 6, Ask's 4 and 5, real canvases 9 to 10); the one untried lever moved it within noise and was not shipped. Card asks the user whether to close, aim for the person's score, or keep 8."}
 {"t":"2026-11-01T12:41:45.408Z","ev":"sweep_pass","walks":463,"seconds":8086,"passed":273,"failed":190,"complete":false,"total":1070,"interrupted":true}
-{"t":"2026-11-01T12:41:45.597Z","ev":"task_started","id":"while-ask-works-the-agent-panel-says-what-it-is","title":"While Ask works, the Agent panel says what it is doing right now","priority":"p1-high","repeats":1,"until":"2026-11-01T12:41:45.597Z","rolledUp":true}
+{"t":"2026-11-01T12:41:45.597Z","ev":"task_started","id":"while-ask-works-the-agent-panel-says-what-it-is","title":"While Ask works, the Agent panel says what it is doing right now","priority":"p1-high","repeats":2,"until":"2026-11-01T22:57:36.278Z","rolledUp":true}
 {"t":"2026-11-01T12:43:48.626Z","ev":"decision_resolved","id":"a-brush-tool-paints-with-realistic-charcoal-chal-ask-s-paintings-show-what-you-as","taskId":"a-brush-tool-paints-with-realistic-charcoal-chal","choice":"b"}
 {"t":"2026-11-01T12:43:48.687Z","ev":"task_unblocked","id":"a-brush-tool-paints-with-realistic-charcoal-chal","decision":"a-brush-tool-paints-with-realistic-charcoal-chal-ask-s-paintings-show-what-you-as"}
 {"t":"2026-11-01T12:45:05.881Z","ev":"task_created","id":"the-reworked-selection-ships-cleaner-grips-a-tag","priority":"p1-high","title":"The reworked selection ships: cleaner grips, a tag that never covers the knob, and a 3D mode you switch into by the rotate knob"}
@@ -15061,7 +15061,7 @@
 {"t":"2026-11-01T16:55:55.548Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-11-01T16:55:55.585Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-01T16:57:43.154Z","ev":"slice_pass","walks":38,"passed":22,"failed":16,"seconds":551,"of":1073,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-01T16:57:43.321Z","ev":"task_started","id":"skew-distort-reshapes-the-picture-from-the-selec","title":"Skew & distort reshapes the picture from the selection chip","priority":"p1-high"}
+{"t":"2026-11-01T16:57:43.321Z","ev":"task_started","id":"skew-distort-reshapes-the-picture-from-the-selec","title":"Skew & distort reshapes the picture from the selection chip","priority":"p1-high","repeats":1,"until":"2026-11-01T16:57:43.321Z","rolledUp":true}
 {"t":"2026-11-01T17:22:52.757Z","ev":"task_walks","id":"skew-distort-reshapes-the-picture-from-the-selec","walks":["skew-and-distort-walk"]}
 {"t":"2026-11-01T17:23:45.497Z","ev":"task_walks","id":"skew-distort-reshapes-the-picture-from-the-selec","walks":["skew-and-distort-walk","keystone-from-the-menu-walk"]}
 {"t":"2026-11-01T17:35:46.547Z","ev":"task_note","id":"skew-distort-reshapes-the-picture-from-the-selec"}
@@ -15074,7 +15074,7 @@
 {"t":"2026-11-01T17:47:19.878Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-11-01T17:47:19.918Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-01T17:49:09.257Z","ev":"slice_pass","walks":38,"passed":28,"failed":10,"seconds":632,"of":1075,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-01T17:49:09.429Z","ev":"task_started","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d","title":"Perspective pill and a shadow that grows as a 3D layer comes forward","priority":"p1-high"}
+{"t":"2026-11-01T17:49:09.429Z","ev":"task_started","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d","title":"Perspective pill and a shadow that grows as a 3D layer comes forward","priority":"p1-high","repeats":1,"until":"2026-11-01T17:49:09.429Z","rolledUp":true}
 {"t":"2026-11-01T18:05:46.703Z","ev":"task_note","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d"}
 {"t":"2026-11-01T19:12:08.765Z","ev":"task_walks","id":"perspective-pill-and-a-shadow-that-grows-as-a-3d","walks":["perspective-pill-walk"]}
 {"t":"2026-11-01T19:12:22.355Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
@@ -15083,7 +15083,7 @@
 {"t":"2026-11-01T19:23:58.841Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-11-01T19:23:58.878Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-01T19:25:48.972Z","ev":"slice_pass","walks":38,"passed":22,"failed":16,"seconds":617,"of":1076,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-01T19:25:49.148Z","ev":"task_started","id":"reset-each-transform-mode-on-its-own-with-a-dot","title":"Reset each transform mode on its own, with a dot on a changed mode","priority":"p1-high"}
+{"t":"2026-11-01T19:25:49.148Z","ev":"task_started","id":"reset-each-transform-mode-on-its-own-with-a-dot","title":"Reset each transform mode on its own, with a dot on a changed mode","priority":"p1-high","repeats":1,"until":"2026-11-01T19:25:49.148Z","rolledUp":true}
 {"t":"2026-11-01T19:40:34.341Z","ev":"task_walks","id":"reset-each-transform-mode-on-its-own-with-a-dot","walks":["reset-each-transform-mode-walk","transform-resets-from-the-menu-walk"]}
 {"t":"2026-11-01T20:24:55.333Z","ev":"task_note","id":"reset-each-transform-mode-on-its-own-with-a-dot"}
 {"t":"2026-11-01T20:24:55.399Z","ev":"task_note","id":"reset-each-transform-mode-on-its-own-with-a-dot"}
@@ -15094,7 +15094,7 @@
 {"t":"2026-11-01T20:34:09.134Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
 {"t":"2026-11-01T20:34:09.170Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-01T20:35:59.204Z","ev":"slice_pass","walks":37,"passed":26,"failed":11,"seconds":487,"of":1078,"couldNotRun":0,"timedOut":false,"rotating":true}
-{"t":"2026-11-01T20:35:59.376Z","ev":"task_started","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou","title":"A walk's press on a picture tile, swatch or colour well in the panel takes effect again","priority":"p1-high"}
+{"t":"2026-11-01T20:35:59.376Z","ev":"task_started","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou","title":"A walk's press on a picture tile, swatch or colour well in the panel takes effect again","priority":"p1-high","repeats":1,"until":"2026-11-01T20:35:59.376Z","rolledUp":true}
 {"t":"2026-11-01T21:33:45.637Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
 {"t":"2026-11-01T21:33:45.714Z","ev":"task_created","id":"picking-a-perspective-preset-or-sliding-it-keeps","priority":"p2-normal","title":"Picking a perspective preset or sliding it keeps the perspective popover open"}
 {"t":"2026-11-01T21:34:14.608Z","ev":"task_note","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou"}
@@ -15107,22 +15107,19 @@
 {"t":"2026-11-01T21:34:31.903Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-01T21:34:39.252Z","ev":"task_done","id":"a-walk-s-press-on-a-picture-tile-swatch-or-colou","from":"in_progress","note":"Walk presses on plain SwiftUI buttons work again (f0ca90e3). Cause: macOS 27.0.1 (2026-10-25) stopped firing a SwiftUI Button when the walk dequeued the press itself and left the release to the run loop; MainThreadMeter.deliverWalkClick now hands the release over too. arrow-styles, chip-styles-picking, picker-controls ok 3 runs each at Next defaults, no front:true; any-colour-chip-reads, brush chooser walks, perspective-pill (Strong, slider, Info, Subtle), measure-chip-styles (Orange, Reset Colors), arrow-appearance-simple (S/M/L, Advanced) and 10 walks red in the last sweep pass; new a-press-fires-a-plain-button-walk runs first in every rotating check; Scripts/test.sh green; full sweep requested --now."}
 {"t":"2026-11-01T21:37:11.660Z","ev":"sweep_pass","walks":9,"seconds":116,"passed":9,"failed":0,"complete":false,"total":1079,"interrupted":true}
-{"t":"2026-11-01T21:37:11.831Z","ev":"task_started","id":"any-colour-you-pick-for-an-arrow-or-measurement","title":"Any colour you pick for an arrow or measurement keeps its chip's words readable, Glass included","priority":"p1-high"}
+{"t":"2026-11-01T21:37:11.831Z","ev":"task_started","id":"any-colour-you-pick-for-an-arrow-or-measurement","title":"Any colour you pick for an arrow or measurement keeps its chip's words readable, Glass included","priority":"p1-high","repeats":1,"until":"2026-11-01T21:37:11.831Z","rolledUp":true}
 {"t":"2026-11-01T21:40:25.246Z","ev":"task_note","id":"any-colour-you-pick-for-an-arrow-or-measurement"}
 {"t":"2026-11-01T21:40:25.353Z","ev":"task_done","id":"any-colour-you-pick-for-an-arrow-or-measurement","from":"in_progress","note":"Last item ticked: any-colour-chip-reads-walk passes by pointer press at Next defaults (custom light green and indigo, every chip style, 4.5:1 or better on white, black and photo; worst 4.68). Color row, retint, warning and Reset Colors shipped earlier in 91a9d770. Audit queue/audits/2026-10-31-any-colour-chip-reads.json now carries five real window pictures."}
-{"t":"2026-11-01T21:40:57.028Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high"}
 {"t":"2026-11-01T21:41:40.598Z","ev":"task_pending","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"back to pending: the loop was paused for a release seconds after this task started; nothing of it was written yet"}
 {"t":"2026-11-01T21:50:41.178Z","ev":"task_created","id":"a-moving-aurora-title-background-draws-the-same","priority":"p1-high","title":"A moving Aurora title background draws the same frame in playback, scrubbing and export, even with the Mac busy"}
 {"t":"2026-11-01T21:56:19.958Z","ev":"loop_started","pid":36463}
 {"t":"2026-11-01T21:56:20.004Z","ev":"loop_awake","held":true,"pid":36473,"screenLocked":false}
-{"t":"2026-11-01T21:56:20.497Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high"}
 {"t":"2026-11-01T22:28:41.371Z","ev":"decision_opened","id":"a-brush-tool-paints-with-realistic-charcoal-chal-lighting-the-paint-as-one-surfac","taskId":"a-brush-tool-paints-with-realistic-charcoal-chal","question":"Lighting the paint as one surface did not lift Ask's painting: still 4 and 5 on looks painted against the 5 and 6 you chose. Close the brush epic, close it and carry the look as its own task, or keep trying here?"}
 {"t":"2026-11-01T22:29:03.305Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T22:29:03.371Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T22:29:03.436Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-01T22:29:03.512Z","ev":"task_blocked","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"One-surface lighting built and measured: try path still looks painted 4 and 5 against the 5 and 6 gate, so it did not ship (patch kept). Card asks whether to close the epic, close it and carry the look as its own task, or keep trying."}
 {"t":"2026-11-01T22:57:36.112Z","ev":"sweep_pass","walks":84,"seconds":1679,"resumed":true,"answered":93,"parts":2,"passed":89,"failed":4,"complete":false,"total":1079,"interrupted":true}
-{"t":"2026-11-01T22:57:36.278Z","ev":"task_started","id":"while-ask-works-the-agent-panel-says-what-it-is","title":"While Ask works, the Agent panel says what it is doing right now","priority":"p1-high"}
 {"t":"2026-11-01T23:12:58.332Z","ev":"task_created","id":"while-ask-writes-a-long-plan-its-line-names-each","priority":"p2-normal","title":"While Ask writes a long plan, its line names each step as it is written"}
 {"t":"2026-11-01T23:13:08.502Z","ev":"task_walks","id":"while-ask-writes-a-long-plan-its-line-names-each","walks":[]}
 {"t":"2026-11-01T23:13:08.581Z","ev":"task_created","id":"find-out-whether-landing-a-component-sheet-holds","priority":"p2-normal","title":"Find out whether landing a component sheet holds the app for half a second"}
@@ -15133,7 +15130,7 @@
 {"t":"2026-11-01T23:20:48.700Z","ev":"task_note","id":"while-ask-works-the-agent-panel-says-what-it-is"}
 {"t":"2026-11-01T23:20:56.634Z","ev":"task_done","id":"while-ask-works-the-agent-panel-says-what-it-is","from":"in_progress","note":"Live stage line in the Agent panel (565dd00e) now measured on all five request kinds: fox 192 s / longest 15.0 s, scene 245 s / 12.5 s, edit 109 s / 9.5 s, photo 166 s / 7.8 s, sheet 242-269 s / 18.2-97.2 s; every gap over 8 s is on a stage that shows its time. Fox walk re-filmed (passed): the Agent group stays in view through checking and trying again, and the finished frame shows the made row with no live line (reel-2, sheet-2 in the audit). Across-requests walk given a 10 s settle ceiling after each landing (the rotating check read the panel mid-redraw). Follow-ups: while-ask-writes-a-long-plan-its-line-names-each, find-out-whether-landing-a-component-sheet-holds. test.sh green."}
 {"t":"2026-11-01T23:48:13.834Z","ev":"sweep_pass","walks":97,"seconds":1598,"passed":93,"failed":4,"complete":false,"total":1079,"interrupted":true}
-{"t":"2026-11-01T23:48:14.020Z","ev":"task_started","id":"settings-offers-several-ask-models-with-what-eac","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one","priority":"p1-high"}
+{"t":"2026-11-01T23:48:14.020Z","ev":"task_started","id":"settings-offers-several-ask-models-with-what-eac","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one","priority":"p1-high","repeats":1,"until":"2026-11-01T23:48:14.020Z","rolledUp":true}
 {"t":"2026-11-02T00:13:22.838Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
 {"t":"2026-11-02T00:13:22.922Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
 {"t":"2026-11-02T00:13:23.000Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
@@ -15146,7 +15143,7 @@
 {"t":"2026-11-02T05:15:59.700Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
 {"t":"2026-11-02T05:15:59.765Z","ev":"task_pending","id":"settings-offers-several-ask-models-with-what-eac","from":"in_progress","note":"All but one item shipped (ace4e5b5, 8713bffd): setup dialog, Settings rows with measured ratings, fresh install downloads nothing, delete falls back, Settings opens at Ask. Not reached: no model under 36 GB clears the held-out floor of 20 (best: Qwen3.5 9B at 19.8)."}
 {"t":"2026-11-02T12:11:31.138Z","ev":"sweep_pass","walks":1081,"seconds":24883,"passed":1033,"failed":48,"complete":true,"total":1081}
-{"t":"2026-11-02T12:11:31.339Z","ev":"task_started","id":"settings-offers-several-ask-models-with-what-eac","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one","priority":"p1-high"}
+{"t":"2026-11-02T12:11:31.339Z","ev":"task_started","id":"settings-offers-several-ask-models-with-what-eac","title":"Settings offers several Ask models with what each needs and how good and fast it is, downloaded only when chosen, and pressing Ask the first time sets up the right one","priority":"p1-high","repeats":1,"until":"2026-11-02T12:11:31.339Z","rolledUp":true}
 {"t":"2026-11-02T14:13:20.825Z","ev":"task_created","id":"ask-works-on-an-8-gb-mac","priority":"p2-normal","title":"Ask works on an 8 GB Mac"}
 {"t":"2026-11-02T14:13:38.559Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
 {"t":"2026-11-02T14:13:38.634Z","ev":"task_note","id":"settings-offers-several-ask-models-with-what-eac"}
@@ -15245,7 +15242,7 @@
 {"t":"2026-11-02T14:50:12.098Z","ev":"task_resequenced","id":"picking-a-perspective-preset-or-sliding-it-keeps","from":4090,"to":620}
 {"t":"2026-11-02T14:50:28.604Z","ev":"triage","summary":"merged 1 (Aurora flake into the-full-test-run-never-fails-on-a-video-check-t, after a 3 of 3 pass alone), dropped 1 as fixed (a-walk-can-press-the-buttons-in-the-settings-win, reproduced fixed by f0ca90e3), priority moves 0, reset 0 (guard found nothing), notes folded 5, renumbered 77, kept 2 found-selection defects as exceptions; open 89 -> 87"}
 {"t":"2026-11-02T14:51:19.533Z","ev":"digest","file":"2026-11-02.md"}
-{"t":"2026-11-02T14:51:38.803Z","ev":"task_started","id":"a-button-you-can-press-never-looks-disabled-the","title":"A button you can press never looks disabled: the remove x on an effect reads as bright as the eye beside it","priority":"p1-high"}
+{"t":"2026-11-02T14:51:38.803Z","ev":"task_started","id":"a-button-you-can-press-never-looks-disabled-the","title":"A button you can press never looks disabled: the remove x on an effect reads as bright as the eye beside it","priority":"p1-high","repeats":1,"until":"2026-11-02T14:51:38.803Z","rolledUp":true}
 {"t":"2026-11-02T15:21:04.845Z","ev":"decision_resolved","id":"a-brush-tool-paints-with-realistic-charcoal-chal-lighting-the-paint-as-one-surfac","taskId":"a-brush-tool-paints-with-realistic-charcoal-chal","choice":"a"}
 {"t":"2026-11-02T15:21:04.917Z","ev":"task_unblocked","id":"a-brush-tool-paints-with-realistic-charcoal-chal","decision":"a-brush-tool-paints-with-realistic-charcoal-chal-lighting-the-paint-as-one-surfac"}
 {"t":"2026-11-02T15:38:48.693Z","ev":"task_walks","id":"a-button-you-can-press-never-looks-disabled-the","walks":["active-icon-buttons-look-live-walk","appearance-effects-walk"]}
@@ -15259,14 +15256,14 @@
 {"t":"2026-11-02T16:13:25.576Z","ev":"task_note","id":"the-name-chips-over-component-copies-stay-clear"}
 {"t":"2026-11-02T16:13:25.614Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-02T16:13:25.704Z","ev":"slice_pass","walks":18,"passed":16,"failed":2,"seconds":1806,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-02T16:13:25.880Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high"}
+{"t":"2026-11-02T16:13:25.880Z","ev":"task_started","id":"a-brush-tool-paints-with-realistic-charcoal-chal","title":"A Brush tool paints with realistic charcoal, chalk, oil, watercolour, marker, crayon and airbrush, and the agent can paint with it","priority":"p1-high","repeats":1,"until":"2026-11-02T16:13:25.880Z","rolledUp":true}
 {"t":"2026-11-02T16:14:33.914Z","ev":"task_note","id":"a-brush-tool-paints-with-realistic-charcoal-chal"}
 {"t":"2026-11-02T16:14:41.352Z","ev":"task_done","id":"a-brush-tool-paints-with-realistic-charcoal-chal","from":"in_progress","note":"Brush epic closed as it stands, the user's call on 2026-11-02 (card option a). All eleven slices are done: B picks the Brush, eight media with their own settings, pressure, tilt and speed, the agent's MCP brush tools, brushed vector paths, painting that never reflows, no lag on 12 MP (worst 7.4 ms per move). Ask's painting reads as a landscape 8 and 8 (bar 7); looks painted ends at 4 and 5, under the 5 and 6 gate, which the user accepted. Audit: queue/audits/2026-10-31-a-brush-tool-paints-with-realistic-charcoal-chal.json, walk brush-epic-try-path-walk."}
 {"t":"2026-11-02T16:45:12.651Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T16:45:12.687Z","ev":"task_note","id":"the-name-chips-over-component-copies-stay-clear"}
 {"t":"2026-11-02T16:45:12.723Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-02T16:45:12.812Z","ev":"slice_pass","walks":18,"passed":16,"failed":2,"seconds":1803,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-02T16:45:12.984Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-11-02T16:45:12.984Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high","repeats":5,"until":"2026-11-02T23:26:48.811Z","rolledUp":true}
 {"t":"2026-11-02T17:13:26.990Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T17:54:27.972Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T17:54:28.045Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -15277,7 +15274,6 @@
 {"t":"2026-11-02T17:54:28.408Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Pressed steps apart, page ends under its title, no cut-off answer shipped (fe41414b); walk passes. Ask is at 6 to 7 of 10 per judge line (77.6), short of the 8-of-10 bar, so it stays open."}
 {"t":"2026-11-02T18:25:06.642Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-02T18:25:06.732Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1803,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-02T18:25:06.906Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-11-02T19:19:52.235Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T19:19:52.309Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T19:19:52.383Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -15287,7 +15283,6 @@
 {"t":"2026-11-02T19:20:14.593Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Labels kept and grown parts centred shipped (1f3ee881); the eval now waits 540 s for this request. Ask scores 79.2 and 65.8 on this build (judges 6 to 7 of 10), short of the 8-of-10 bar, so it stays open."}
 {"t":"2026-11-02T19:50:45.532Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-02T19:50:45.622Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1803,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-02T19:50:45.797Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-11-02T20:05:09.769Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T20:45:05.053Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T20:45:05.126Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -15301,7 +15296,6 @@
 {"t":"2026-11-02T20:53:18.015Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Section rules, even margins, no dropped segmented control and a Disabled field never darker shipped (9012e022). Ask scores 84 and 70.6 on this build (judges 7.4 and 7.2, was 6.2 to 6.6); clean and aligned reach 8, typography and designed stay at 7, short of the 8-of-10 bar, so it stays open."}
 {"t":"2026-11-02T21:27:00.267Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-02T21:27:00.362Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1804,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-02T21:27:00.538Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-11-02T21:34:53.106Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T21:39:20.129Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-02T21:54:46.296Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -15315,7 +15309,6 @@
 {"t":"2026-11-02T22:56:06.751Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"States that read at a glance, a selection that follows its name, slider thumbs kept and even margins shipped (f27c36ba); walk passes. Ask scores 84 and 74.8 on this build (judges 7.4 and 7.4); typography reached 8 once, but aligned, designed and asked stay at 7, short of the 8-of-10 bar, so it stays open."}
 {"t":"2026-11-02T23:26:48.536Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-02T23:26:48.625Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1803,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-02T23:26:48.811Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-11-03T01:28:27.564Z","ev":"task_created","id":"find-out-why-a-sheet-the-skill-built-shows-faint","priority":"p2-normal","title":"Find out why a sheet the skill built shows faint boxes where earlier header words were"}
 {"t":"2026-11-03T01:36:22.774Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-03T01:36:22.846Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -15330,7 +15323,7 @@
 {"t":"2026-11-03T02:07:23.913Z","ev":"task_note","id":"the-name-chips-over-component-copies-stay-clear"}
 {"t":"2026-11-03T02:07:23.950Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-03T02:07:24.037Z","ev":"slice_pass","walks":22,"passed":20,"failed":2,"seconds":1803,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-03T02:07:24.229Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
+{"t":"2026-11-03T02:07:24.229Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high","repeats":2,"until":"2026-11-03T03:13:52.441Z","rolledUp":true}
 {"t":"2026-11-03T02:34:33.599Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
 {"t":"2026-11-03T02:42:30.132Z","ev":"task_note","id":"find-out-why-a-sheet-the-skill-built-shows-faint"}
 {"t":"2026-11-03T02:43:04.185Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -15342,7 +15335,6 @@
 {"t":"2026-11-03T02:43:04.625Z","ev":"task_pending","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"in_progress","note":"Row names set as headings shipped (d78647db); walk passes at Next defaults. Ask scores 86 (typography 7 to 8 in every look), the skill 88.4 with every line at 8 or more; Ask's designed stays at 7, short of the 8-of-10 bar, so it stays open."}
 {"t":"2026-11-03T03:13:52.177Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-03T03:13:52.267Z","ev":"slice_pass","walks":18,"passed":17,"failed":1,"seconds":1804,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-03T03:13:52.441Z","ev":"task_started","id":"asking-for-a-sheet-of-components-gives-a-clean-t","title":"Asking for a sheet of components gives a clean, titled table of them in their states","priority":"p1-high"}
 {"t":"2026-11-03T04:49:35.203Z","ev":"task_walks","id":"asking-for-a-sheet-of-components-gives-a-clean-t","walks":["ask-builds-base-components-walk"]}
 {"t":"2026-11-03T04:49:44.777Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
 {"t":"2026-11-03T04:49:44.861Z","ev":"task_note","id":"asking-for-a-sheet-of-components-gives-a-clean-t"}
@@ -15355,7 +15347,7 @@
 {"t":"2026-11-03T04:50:53.132Z","ev":"task_done","id":"asking-for-a-sheet-of-components-gives-a-clean-t","from":"pending","note":"Capped by the user, 2026-11-02: five passes and about 7 hours today on judged gains (Ask component-table 70.6 -> 84 / 74.8). Ship what landed (f27c36ba and the passes before it) and stop. Left as is, not filed: Hover and Pressed still read as close to 2 of 3 judges; the right side can sit empty under a four-state row."}
 {"t":"2026-11-03T05:20:55.170Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-03T05:20:55.260Z","ev":"slice_pass","walks":17,"passed":16,"failed":1,"seconds":1806,"of":1082,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-03T05:20:55.447Z","ev":"task_started","id":"ask-can-mock-a-web-page-from-its-address-and-loo","title":"Ask can mock a web page from its address and look things up, and nothing on the web can steer it","priority":"p1-high"}
+{"t":"2026-11-03T05:20:55.447Z","ev":"task_started","id":"ask-can-mock-a-web-page-from-its-address-and-loo","title":"Ask can mock a web page from its address and look things up, and nothing on the web can steer it","priority":"p1-high","repeats":2,"until":"2026-11-03T13:46:05.825Z","rolledUp":true}
 {"t":"2026-11-03T06:40:20.800Z","ev":"task_walks","id":"ask-can-mock-a-web-page-from-its-address-and-loo","walks":["ask-mocks-a-web-page-walk"]}
 {"t":"2026-11-03T06:40:49.813Z","ev":"task_note","id":"ask-can-mock-a-web-page-from-its-address-and-loo"}
 {"t":"2026-11-03T06:40:49.887Z","ev":"task_note","id":"ask-can-mock-a-web-page-from-its-address-and-loo"}
@@ -15363,7 +15355,6 @@
 {"t":"2026-11-03T06:40:50.037Z","ev":"task_note","id":"ask-can-mock-a-web-page-from-its-address-and-loo"}
 {"t":"2026-11-03T06:41:04.484Z","ev":"task_pending","id":"ask-can-mock-a-web-page-from-its-address-and-loo","from":"in_progress","note":"Address half shipped in 7d8deef3 (page mocking, injection limits, Settings switch, eval and audit 2026-11-03-ask-mocks-a-web-page.json). Still to do: looking things up through a reader with no document and a search service (acceptance 3 and the search half of 6), and same-named controls as copies of one component."}
 {"t":"2026-11-03T13:46:05.618Z","ev":"sweep_pass","walks":1083,"seconds":25469,"passed":1033,"failed":50,"complete":true,"total":1083}
-{"t":"2026-11-03T13:46:05.825Z","ev":"task_started","id":"ask-can-mock-a-web-page-from-its-address-and-loo","title":"Ask can mock a web page from its address and look things up, and nothing on the web can steer it","priority":"p1-high"}
 {"t":"2026-11-03T14:30:23.642Z","ev":"task_created","id":"with-the-crop-tool-dragging-across-the-picture-d","priority":"p1-high","title":"With the Crop tool, dragging across the picture draws the crop box you want"}
 {"t":"2026-11-03T14:30:23.758Z","ev":"task_resequenced","id":"with-the-crop-tool-dragging-across-the-picture-d","from":3980,"to":5e-8}
 {"t":"2026-11-03T14:52:14.198Z","ev":"task_created","id":"a-page-mock-makes-same-named-controls-copies-of","priority":"p2-normal","title":"A page mock makes same-named controls copies of one component"}
@@ -15450,7 +15441,7 @@
 {"t":"2026-11-03T15:27:24.967Z","ev":"task_note","id":"ask-can-mock-a-web-page-from-its-address-and-loo"}
 {"t":"2026-11-03T15:27:25.043Z","ev":"task_note","id":"audit-pictures-show-the-window-the-way-a-person"}
 {"t":"2026-11-03T15:28:18.806Z","ev":"digest","file":"2026-11-03.md"}
-{"t":"2026-11-03T15:28:35.674Z","ev":"task_started","id":"every-screenshot-is-on-the-clipboard-every-time","title":"Every screenshot is on the clipboard, every time, and pastes everywhere","priority":"p1-high"}
+{"t":"2026-11-03T15:28:35.674Z","ev":"task_started","id":"every-screenshot-is-on-the-clipboard-every-time","title":"Every screenshot is on the clipboard, every time, and pastes everywhere","priority":"p1-high","repeats":1,"until":"2026-11-03T15:28:35.674Z","rolledUp":true}
 {"t":"2026-11-03T15:57:39.240Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
 {"t":"2026-11-03T16:45:59.042Z","ev":"task_walks","id":"every-screenshot-is-on-the-clipboard-every-time","walks":[]}
 {"t":"2026-11-03T16:45:59.113Z","ev":"task_note","id":"every-screenshot-is-on-the-clipboard-every-time"}
@@ -15463,7 +15454,7 @@
 {"t":"2026-11-03T17:16:57.180Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-11-03T17:16:57.219Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-03T17:16:57.309Z","ev":"slice_pass","walks":12,"passed":7,"failed":5,"seconds":1806,"of":1085,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-03T17:16:57.499Z","ev":"task_started","id":"with-the-crop-tool-dragging-across-the-picture-d","title":"With the Crop tool, dragging across the picture draws the crop box you want","priority":"p1-high"}
+{"t":"2026-11-03T17:16:57.499Z","ev":"task_started","id":"with-the-crop-tool-dragging-across-the-picture-d","title":"With the Crop tool, dragging across the picture draws the crop box you want","priority":"p1-high","repeats":1,"until":"2026-11-03T17:16:57.499Z","rolledUp":true}
 {"t":"2026-11-03T18:05:42.090Z","ev":"task_note","id":"with-the-crop-tool-dragging-across-the-picture-d"}
 {"t":"2026-11-03T18:05:42.173Z","ev":"task_note","id":"with-the-crop-tool-dragging-across-the-picture-d"}
 {"t":"2026-11-03T18:05:42.248Z","ev":"task_note","id":"with-the-crop-tool-dragging-across-the-picture-d"}
@@ -15477,7 +15468,7 @@
 {"t":"2026-11-03T19:00:24.250Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-11-03T19:00:24.286Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-03T19:00:24.383Z","ev":"slice_pass","walks":12,"passed":6,"failed":6,"seconds":1806,"of":1086,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-03T19:00:24.572Z","ev":"task_started","id":"ask-on-the-local-model-makes-results-that-look-f","title":"Ask on the local model makes results that look finished","priority":"p1-high"}
+{"t":"2026-11-03T19:00:24.572Z","ev":"task_started","id":"ask-on-the-local-model-makes-results-that-look-f","title":"Ask on the local model makes results that look finished","priority":"p1-high","repeats":1,"until":"2026-11-03T19:00:24.572Z","rolledUp":true}
 {"t":"2026-11-03T19:26:10.655Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-11-03T19:42:04.477Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-04T00:17:55.208Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
@@ -15487,7 +15478,7 @@
 {"t":"2026-11-04T01:02:27.764Z","ev":"task_note","id":"playing-a-five-minute-captioned-recording-never"}
 {"t":"2026-11-04T01:02:27.802Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-04T01:02:27.891Z","ev":"slice_pass","walks":13,"passed":8,"failed":5,"seconds":1805,"of":1086,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-04T01:02:28.069Z","ev":"task_started","id":"ask-on-the-local-model-makes-results-that-look-f","title":"Ask on the local model makes results that look finished","priority":"p1-high"}
+{"t":"2026-11-04T01:02:28.069Z","ev":"task_started","id":"ask-on-the-local-model-makes-results-that-look-f","title":"Ask on the local model makes results that look finished","priority":"p1-high","repeats":1,"until":"2026-11-04T01:02:28.069Z","rolledUp":true}
 {"t":"2026-11-04T01:23:24.803Z","ev":"task_note","id":"ask-on-the-local-model-makes-results-that-look-f"}
 {"t":"2026-11-04T01:28:12.390Z","ev":"task_created","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","priority":"p1-high","title":"A turned or reshaped layer has no thin line along its edges at any zoom"}
 {"t":"2026-11-04T01:28:12.519Z","ev":"task_resequenced","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","from":3980,"to":3e-8}
@@ -15502,7 +15493,7 @@
 {"t":"2026-11-04T05:21:22.627Z","ev":"task_done","id":"ask-on-the-local-model-makes-results-that-look-f","from":"in_progress","note":"Ask's held-out layout reads 66.3 (bar 30) and video 59.9 (bar 55) on final code 50c54b72, total 64.5, with the cause named from totals. A placed copy now takes its own words, and a wrong component name is refused while planning. Verified by unit tests, Scripts/test.sh, three walks and the audit 2026-11-04-ask-copy-words.json. Two of four pricing tries got no first answer; folded into ask-s-first-answer-after-its-model-loads-comes-i."}
 {"t":"2026-11-04T05:52:02.472Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-04T05:52:02.563Z","ev":"slice_pass","walks":12,"passed":10,"failed":2,"seconds":1806,"of":1087,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-04T05:52:02.738Z","ev":"task_started","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","title":"A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app","priority":"p1-high"}
+{"t":"2026-11-04T05:52:02.738Z","ev":"task_started","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","title":"A screenshot is on the clipboard every time on a Mac running ONE Photonz, the released app","priority":"p1-high","repeats":1,"until":"2026-11-04T05:52:02.738Z","rolledUp":true}
 {"t":"2026-11-04T05:59:30.648Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
 {"t":"2026-11-04T06:09:37.414Z","ev":"task_walks","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","walks":[]}
 {"t":"2026-11-04T06:09:37.481Z","ev":"task_note","id":"a-screenshot-is-on-the-clipboard-every-time-on-a"}
@@ -15511,7 +15502,7 @@
 {"t":"2026-11-04T06:09:37.696Z","ev":"task_blocked","id":"a-screenshot-is-on-the-clipboard-every-time-on-a","from":"in_progress","note":"Cause not found and nothing fixed. Not reproduced here: 30/30 real Chrome pastes on the probe build. Needs the person: run Scripts/clipboard-timing/other-mac-report.sh on the other Mac and bring back its report; the released-only run needs Dev quit and native targets need an Accessibility grant. No decision card: this is a request to run something, not a product choice. Audit queue/audits/2026-11-03-screenshot-clipboard-one-photonz.json.","noQuestion":true}
 {"t":"2026-11-04T06:40:04.338Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
 {"t":"2026-11-04T06:40:04.430Z","ev":"slice_pass","walks":12,"passed":10,"failed":2,"seconds":1806,"of":1087,"couldNotRun":0,"timedOut":true,"rotating":true}
-{"t":"2026-11-04T06:40:04.617Z","ev":"task_started","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","title":"A turned or reshaped layer has no thin line along its edges at any zoom","priority":"p1-high"}
+{"t":"2026-11-04T06:40:04.617Z","ev":"task_started","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","title":"A turned or reshaped layer has no thin line along its edges at any zoom","priority":"p1-high","repeats":1,"until":"2026-11-04T06:40:04.617Z","rolledUp":true}
 {"t":"2026-11-04T07:07:07.010Z","ev":"task_walks","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon","walks":["a-turned-layer-has-no-seam-walk"]}
 {"t":"2026-11-04T07:07:51.858Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
 {"t":"2026-11-04T07:07:51.933Z","ev":"task_note","id":"a-turned-or-reshaped-layer-has-no-thin-line-alon"}
@@ -15820,3 +15811,19 @@
 {"t":"2026-11-06T05:47:59.539Z","ev":"task_note","id":"the-icon-previews-strip-reads-as-previews-no-chi"}
 {"t":"2026-11-06T05:47:59.610Z","ev":"task_note","id":"the-icon-previews-strip-reads-as-previews-no-chi"}
 {"t":"2026-11-06T05:48:59.650Z","ev":"task_done","id":"the-icon-previews-strip-reads-as-previews-no-chi","from":"in_progress","note":"The card says Actual sizes and draws every size on a Light and a Dark ground, so no size looks picked. A press stops at the card and does nothing. It keeps off the icon: another corner, the empty artboard, fewer sizes, then gone when zoomed right in. Measured on real captures: dark plates per size went from 0,0,1,0 to 1,1,1,1, and 6 presses changed 0 card pixels with the shape still picked. Walks: icon-previews-read-as-previews-walk, both-grounds, keep-off-the-icon, stay-with-nothing-picked, icon-preview-walk, motion-loop-preview-walk all ok. Scripts/test.sh exit 0. Audit: queue/audits/2026-11-05-icon-previews-strip.json. Pushed c21010de."}
+{"t":"2026-11-06T06:06:37.515Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":903,"of":1105,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-11-06T06:06:37.700Z","ev":"task_started","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli","title":"A clip's own sound is the bottom half of the clip, not a row of its own","priority":"p1-high"}
+{"t":"2026-11-06T06:16:11.282Z","ev":"task_walks","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli","walks":["a-clip-s-sound-is-inside-the-clip-walk","a-clip-s-sound-is-linked-under-it-walk","a-clip-s-sound-stays-under-its-video-walk","re-attach-audio-walk"]}
+{"t":"2026-11-06T07:56:39.297Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-26"}
+{"t":"2026-11-06T08:22:36.836Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:36.915Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:36.991Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:37.068Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:37.145Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:37.220Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:37.295Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:37.371Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:37.448Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:22:37.531Z","ev":"task_note","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli"}
+{"t":"2026-11-06T08:25:04.309Z","ev":"task_walks","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli","walks":["a-clip-s-sound-is-inside-the-clip-walk","a-clip-s-sound-is-linked-under-it-walk","a-clip-s-sound-stays-under-its-video-walk","re-attach-audio-walk"]}
+{"t":"2026-11-06T08:25:04.398Z","ev":"task_done","id":"a-clip-s-own-sound-is-the-bottom-half-of-the-cli","from":"in_progress","note":"One clip with its sound in the bottom half at Next defaults; Detach and Re-attach work, mocks updated. 15,537 tests pass. Walks: new a-clip-s-sound-is-inside-the-clip-walk plus about 130 others green; video-tool-bar and transitions-where-clips-meet still fail and are on the standing walk task, neither from this change. Full set requested. Audit: queue/audits/2026-11-06-a-clip-s-own-sound-is-the-bottom-half-of-the-cli.json"}
