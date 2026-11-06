@@ -22533,3 +22533,18 @@ cause, and they reach that Mac only with the next release.
 
 Real Chrome 20 of 20. Native targets unmeasured: no Apple Events grant here.
 Open: the 20 of 20 in every target on one released Photonz.
+
+## 2026-11-05: Ask's icons: the balloon reaches its bar, and icons can be tweaked
+
+Changed: an icon of something breaking is drawn whole by the model and torn by a
+vector tool (`AskIconBreak`), since the model cannot write that geometry. A new
+`restyle_icon` tool changes a whole icon's look, weight or colour in place, offered
+only on a picture holding an icon. "Make it outline" no longer redraws an icon in
+a new window, and change_part recolours a shape drawn only in line.
+
+Numbers: balloon 88.8, 88, 85.6, 88.8 (55.4 and 25.8 before), at its bar on three
+readings of four. Tweaks 8 of 8 (3 of 7 before). 14 icon cases 90.8 (88.3).
+Held-out 62.7 against 68.4, mostly more time-outs, cause unknown.
+
+Next: the held-out fall is an open question, and the tear reads lower than no tear
+on an egg and a bubble; both are filed.

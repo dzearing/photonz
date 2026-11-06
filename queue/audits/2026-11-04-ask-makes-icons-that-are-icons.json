@@ -1,14 +1,31 @@
 {
   "feature": "Ask makes icons that are icons",
-  "epic": "local-edit",
-  "summary": "Ask an icon and you get a few clean named shapes in a square picture of its own, instead of a traced painting beside your work. Most requests now read as real icons; the popping balloon now shows a tear and is named as popping, but it is still a lumpy icon.",
-  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: ask-makes-an-icon-walk, ask-puts-an-icon-in-its-own-picture-walk, new-image-icon-sizes-walk.",
+  "epic": "icon-vector",
+  "summary": "Ask an icon and you get a few clean named shapes in a square picture of its own. A balloon popping now reads as one, and you can tweak an icon in words: make it outline or filled, thicker or thinner lines, a colour, in place, with one Undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: ask-makes-an-icon-walk, ask-puts-an-icon-in-its-own-picture-walk, new-image-icon-sizes-walk, ask-tweaks-an-icon-walk.",
   "switched": {},
   "try": [
     {
-      "do": "Open a new blank image, press Ask, and type: a trash can icon.",
-      "shot": "2026-11-04-ask-icons-blank-picture-sc.png",
+      "do": "Open a new blank image, press Ask, and type: make an icon of a balloon popping.",
+      "shot": "2026-11-05-ask-icons-balloon-torn-sheet.png"
+    },
+    {
+      "do": "Open a new blank image, press Ask, and type: an envelope icon, outline.",
+      "shot": "2026-11-05-ask-icon-tweak-1-the-icon-sc.png",
       "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Ask again and type: make it filled.",
+      "shot": "2026-11-05-ask-icon-tweak-2-filled-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: the icon is outlines again and its row reads off.",
+      "shot": "2026-11-05-ask-icon-tweak-3-undone-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Ask for: thicker lines. Then: make it red."
     },
     {
       "do": "Open a screenshot, press Ask, and type: a bell icon. The screenshot keeps its size and the row reads Made a new icon: Bell.",
@@ -16,43 +33,32 @@
       "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
     },
     {
-      "do": "Look at the new window Ask opened for the bell."
-    },
-    {
-      "do": "Press Command C on the icon and paste it somewhere that reads SVG."
-    },
-    {
-      "do": "Press Command Z on the icon from the blank image; the canvas goes back to its old size."
-    },
-    {
-      "do": "Ask for a rocket app icon and look at its 1024 tile."
+      "do": "Ask for a broken heart icon and compare it with this sheet.",
+      "shot": "2026-11-05-ask-icons-heart-torn-sheet.png"
     },
     {
       "do": "Choose File, New, Image and find the Icon and App Icon rows.",
       "shot": "2026-11-04-ask-icons-new-image-sc.png",
       "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
-    },
-    {
-      "do": "Ask for an icon of a balloon popping and compare it with this sheet.",
-      "shot": "2026-11-05-ask-icons-balloon-designed-sheet.png"
     }
   ],
   "evaluate": [
+    "Does the balloon read as popping to you, at 64 and at 24 pixels?",
+    "When you say make it filled, is a white line for the flap what you expected?",
+    "Is the tear at the upper right right for a balloon, or should it sit somewhere else?",
     "Do the trash can, search and padlock icons look like they belong beside SF Symbols?",
-    "Is a new window the right place for an icon asked for on a screenshot, or would you rather be asked?",
-    "Is the plain dark outline the right look when you name no style, or did you prefer the colour of the old traced icons?",
-    "Is this balloon good enough to animate, or should it stay open until it looks like a clean icon?"
+    "Is the plain dark outline the right look when you name no style?"
   ],
   "rough": [
-    "The popping balloon is still short of its bar: 55.4 in the shipped version, did what was asked 5 and reads as an icon 4, against 7 for each. It is named as popping 3 of 3 blind, up from 0, but the body is lumpy and the string floats loose. This keeps ask-makes-icons-that-are-icons-one-subject-clean open.",
-    "The balloon's score is mostly noise so far: five versions read 84.8, 44.8, 42.5, 55.4 and 28.6, one run each. The 84.8 was not the shipped version and did not repeat.",
-    "When something is happening to the object, Ask now writes a short design first, about ten seconds more, and lands what it draws without the look and redraw. Only one of the 14 eval cases is an action icon, so that route is lightly measured.",
-    "An icon at rest that still does not read after two redraws lands with the line: This icon may not read clearly yet. An icon drawn from a design never gets that line, because it is not looked at.",
+    "The balloon reached its bar on three readings of four: did what was asked and reads as an icon 8 and 7, 8 and 7, 7 and 6, 8 and 7, scores 88.8, 88, 85.6 and 88.8, named 3 of 3 each. The shipped code before it read 55.4 and 25.8. The miss is one point on one reading, on a knot the model drew clumsily.",
+    "The held-out set fell: 62.7 over all 45 cases, against 68.4 before. Drawing cases that ran out of time went from 1 to 4 of 36, which is about 4.7 of the 5.7 points, and the 3 redline cases read 33.8 against 44.1. Median request time did not move and prompts for anything but an icon did not change, but why those ran out is not known yet: filed as find-out-why-the-held-out-set-lost-points-on-202.",
+    "The tear suits some objects better than others. One reading each, tear off then on: heart 30.5 to 55.4, egg 84.8 to 70.6, bubble 71.3 to 54.8. A broken heart looks bitten, not cracked, and a bubble was named a cracked egg 2 of 3. Filed as a-broken-icon-reads-as-what-breaks-it-a-crack-th.",
+    "Every break tears at the upper right and looks the same, whatever is breaking. Asked if an object is breaking, the model answered rightly on all 19 requests tried, but that was one try each.",
+    "A cut made by filling is plain white, so it is white on a dark picture too, not a real hole. Left in the task log.",
+    "Rounder corners on an icon is still done part by part, and reads as moderate: it passed at 7 on matching the words, the same as smaller on the balloon's knot.",
+    "The 14 original icon cases read 90.8, up from 88.3, reads as an icon 7.6; all 17 read 85.4 with the three new breaking objects in.",
     "Ask's model writes one SVG that lands as shape and path layers, rather than one add_shape or add_path call per part as the task said. The layers are the same kind and it is one undo step.",
-    "Some old traced icons had more colour and charm than the new plain ones: compare the gear and the rocket on the before and after sheet.",
     "The numbers in an icon's SVG are fractions, because a 24 grid does not divide into 512. The file is clean paths with no picture.",
-    "The held-out set read 68.4 over all 45 cases on the shipped code, against 66.7 on the run before; the 14 icon cases read 88.3.",
-    "No mock covers where an icon lands; the rule is the user's own, from 2026-11-04.",
-    "The walk for New Image proves the two rows are there and can be pressed. It did not photograph the 1024 canvas that opens."
+    "No mock covers where an icon lands or how it is tweaked; where it lands is the user's own rule, from 2026-11-04."
   ]
 }
