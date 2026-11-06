@@ -5,11 +5,11 @@
   "epic": "ui-prototyping",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:44:52.741Z",
-  "updated": "2026-11-06T18:49:51.991Z",
+  "updated": "2026-11-06T20:58:29.819Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'When we make a component, i'm not sure how to preview it interactively. e.g. i make a page with a bunch of components and want to preview it and hover over things or click on things...is this possible already?' and 2026-11-05: 'what happened to previewing the states of controls' (the intake window had proposed Preview mode and not filed it). Today: components have looks per state (ComponentVersionMatching names them), nothing plays them. Objective ui-prototyping ('Click-through prototyping') was staged later; this is its first step, asked for by the user. Mock reference: docs/design/mocks/pages/ui-prototype.html.",
@@ -82,7 +82,68 @@
     {
       "t": "2026-11-06T18:49:51.990Z",
       "note": "seq 70 -> 10"
+    },
+    {
+      "t": "2026-11-06T18:52:44.582Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T18:55:19.555Z",
+      "note": "Build started after the card's answer (a). Plan: pure ComponentPreview in PhotonzCore, test first; the app draws it through displayDocument on a throwaway value, never History.perform. Reading a look generalises the prototype's plain and compound rule to stem plus latch plus state, so Primary Hover works beside Hover and On Hover."
+    },
+    {
+      "t": "2026-11-06T19:46:01.444Z",
+      "note": "Walks green but the pictures are not: in 1-preview-sc.png the tool bar, panel and name tags stayed up and the pill never drew, and in 6-note-sc.png a picked tab shows Tab instead of Privacy. Green claims read state, not the window. Not closing on those walks; chasing both."
+    },
+    {
+      "t": "2026-11-06T19:58:46.537Z",
+      "note": "Correction: the unfolded chrome is NOT a buried window. The front:true run entered by the action step still kept the panel and tool bar and drew no pill (pv-reel 3-pressed-sc, 6-note-sc, 7-focus-sc), while the front walk entered by a real click and key folded (3-front-sc). So the variable is how Preview was entered. Testing that."
+    },
+    {
+      "t": "2026-11-06T19:59:22.082Z",
+      "note": "Isolated: same walk, same front setup, only the way in changed. windowClick on the button folds everything and draws the pill and its note (pv-reel2 6-note-sc); the action step does not (pv-reel 6-note-sc). A person's click and Cmd-Return are fine. Still finding out why the action path differs."
+    },
+    {
+      "t": "2026-11-06T20:30:04.245Z",
+      "note": "owns these walks: component-preview-walk, component-preview-front-walk"
+    },
+    {
+      "t": "2026-11-06T20:31:28.582Z",
+      "note": "Adversarial review of the built thing, on the real app. Green walks hid three defects only the pictures showed: (1) name tags stayed over the page: now gone in Preview. (2) A copy's own words vanished in any look but the first, so a clicked tab read Tab: a wording knob made after the looks exist sits on one drawing; applyOverrides now carries a text answer across, which also fixes the panel's State row and pages already saved. (3) Going in from async work left the panel and tool bar up with no pill. I first called that a buried window and was wrong: a front run did the same. Changing only the way in showed it, and hopping to the next main loop turn fixed it in a background walk. Why SwiftUI does this is not known; the hop lives in the preview command so an agent's run_command is safe too."
+    },
+    {
+      "t": "2026-11-06T20:31:28.658Z",
+      "note": "Also found by the picture: Ask leaves a component's looks as copies below the page, so Tab stopped on things nobody could see. Copies off the canvas are now not on the page, for Tab and for the pointer."
+    },
+    {
+      "t": "2026-11-06T20:31:28.735Z",
+      "note": "Chose reading order for Tab over layer order because the layers list says nothing about where things sit. Chose a press on nothing letting go of Focus, which the prototype does not do, because a field that stays lit after clicking away reads as stuck. Chose to keep measurements on the page in Preview, since they are the person's content, and asked in the audit. Chose to let a copy with a lock play, since a lock only means not while editing. Chose fit above the pill over the prototype's strip top and bottom: same promise, the pill never sits on the page. Chose stopping Command keys at the canvas with a short list that passes (leave, close, save, hide, zoom) over dimming every menu row."
+    },
+    {
+      "t": "2026-11-06T20:31:28.812Z",
+      "note": "Measured: Save fill in the window's own pictures reads #3B82F7 at rest, #579BF8 under the pointer, #285EC1 held; switch track #E9E9EA to #65C466. A hover change costs about 15 ms of main thread. Looked at every frame of 2026-11-06-component-preview-sheet.png: chrome gone in Preview, pill and its note shown, tab keeps Privacy, Focused ring on Billing, editor restored on leaving."
+    },
+    {
+      "t": "2026-11-06T20:31:28.889Z",
+      "note": "Left rough, by reading only and not tried: a copy on a look other than the first keeps its words but the panel may not list them to edit, since componentProperties reads the shown look's knobs. A row picked by hand from the menu bar in Preview still acts; its keys are stopped. Note for the first Tab press: one 60 to 97 ms pass, once. None of these earned a task yet. Filed: a-copy-s-own-words-stay-centred-in-their-control, leaving-preview-slides-back-without-a-hitch."
+    },
+    {
+      "t": "2026-11-06T20:31:28.966Z",
+      "note": "Left for the user to ask for, as the checklist says: connections between frames, a click going to another page, as ui-prototype.html draws. Typing into a field is not in this step either."
+    },
+    {
+      "t": "2026-11-06T20:41:11.089Z",
+      "note": "component-drag-lands-a-copy-walk fails at step 24 with Cannot go inside itself. Not this change: queue/sweep/2026-11-05-000550.log line 300 has the identical failure at head 4c11ccf7, and walks-that-fail-in-the-full-sweep-26 carries it in its log. Left there."
+    },
+    {
+      "t": "2026-11-06T20:58:29.817Z",
+      "note": "Preview shipped in 559f21e6, at Next defaults: title bar button, View > Preview and Cmd-Return in, Esc, the button or Cmd-Return out. Each copy plays its own Hover, Pressed, On, Selected and Focused looks from their names; Disabled does not respond; leaving restores selection, tool, zoom and Undo, and the document is identical. A copy's own words now follow it into every look. Verified: Scripts/test.sh green (exit 0, second run; first run failed one flat timing bar under load, 50.3 against 48 ms, 5 ms alone), component-preview-walk and component-preview-front-walk green, every component and wording walk green except component-drag-lands-a-copy-walk, which failed identically in the 2026-11-05 sweep. Reel and frames in queue/audits, all looked at. Filed leaving-preview-slides-back-without-a-hitch and a-copy-s-own-words-stay-centred-in-their-control."
     }
   ],
-  "started": "2026-11-06T08:25:38.051Z"
+  "started": "2026-11-06T18:52:44.581Z",
+  "walks": [
+    "component-preview-walk",
+    "component-preview-front-walk"
+  ],
+  "completed": "2026-11-06T20:58:29.818Z"
 }

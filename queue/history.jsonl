@@ -15983,3 +15983,20 @@
 {"t":"2026-11-06T18:51:39.087Z","ev":"task_note","id":"an-animated-icon-s-flap-reads-and-a-drawn-line-e"}
 {"t":"2026-11-06T18:52:05.788Z","ev":"triage","summary":"open 92 to 88; merged 4, moved 2 (p1 to p2), epic fixed 1, reset 0, filed 0, leftovers settled 1, renumbered 86"}
 {"t":"2026-11-06T18:52:05.817Z","ev":"digest","file":"2026-11-06.md"}
+{"t":"2026-11-06T18:52:44.587Z","ev":"task_started","id":"preview-a-page-of-components-and-use-it-hover-pr","title":"Preview a page of components and use it: hover, press, toggle and focus show each component's own looks","priority":"p1-high"}
+{"t":"2026-11-06T18:55:19.557Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T19:46:01.446Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T19:58:46.539Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T19:59:22.084Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:30:04.247Z","ev":"task_walks","id":"preview-a-page-of-components-and-use-it-hover-pr","walks":["component-preview-walk","component-preview-front-walk"]}
+{"t":"2026-11-06T20:30:58.714Z","ev":"task_created","id":"a-copy-s-own-words-stay-centred-in-their-control","priority":"p2-normal","title":"A copy's own words stay centred in their control"}
+{"t":"2026-11-06T20:30:58.862Z","ev":"task_created","id":"leaving-preview-slides-back-without-a-hitch","priority":"p2-normal","title":"Leaving Preview slides back without a hitch"}
+{"t":"2026-11-06T20:31:28.584Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:31:28.660Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:31:28.737Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:31:28.814Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:31:28.891Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:31:28.968Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:41:11.091Z","ev":"task_note","id":"preview-a-page-of-components-and-use-it-hover-pr"}
+{"t":"2026-11-06T20:54:26.124Z","ev":"task_note","id":"the-full-test-suite-stays-green-on-a-busy-mac-wh"}
+{"t":"2026-11-06T20:58:29.820Z","ev":"task_done","id":"preview-a-page-of-components-and-use-it-hover-pr","from":"in_progress","note":"Preview shipped in 559f21e6, at Next defaults: title bar button, View > Preview and Cmd-Return in, Esc, the button or Cmd-Return out. Each copy plays its own Hover, Pressed, On, Selected and Focused looks from their names; Disabled does not respond; leaving restores selection, tool, zoom and Undo, and the document is identical. A copy's own words now follow it into every look. Verified: Scripts/test.sh green (exit 0, second run; first run failed one flat timing bar under load, 50.3 against 48 ms, 5 ms alone), component-preview-walk and component-preview-front-walk green, every component and wording walk green except component-drag-lands-a-copy-walk, which failed identically in the 2026-11-05 sweep. Reel and frames in queue/audits, all looked at. Filed leaving-preview-slides-back-without-a-hitch and a-copy-s-own-words-stay-centred-in-their-control."}

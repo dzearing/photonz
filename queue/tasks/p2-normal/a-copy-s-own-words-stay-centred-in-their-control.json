@@ -1,0 +1,26 @@
+{
+  "id": "a-copy-s-own-words-stay-centred-in-their-control",
+  "title": "A copy's own words stay centred in their control",
+  "goal": "When a copy of a component is given its own words, they sit off centre: a tab worded Privacy reads several points to the right of the middle of its tab, while the component's own word is centred. Anyone wording a row of tabs or buttons sees them look crooked.",
+  "epic": "ui-prototyping",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-11-06T20:30:58.710Z",
+  "updated": "2026-11-06T20:30:58.713Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-11-06 at Next defaults with Scripts/playtest/component-preview-walk.json (place_component words on a Tab whose Label is centred across a 96 wide box), measured on its picture with /tmp/pv/ink.py: 'Tab worded Privacy (own words): plate centre 430.0 pt, ink centre 441.0 pt, off by +11.0 pt', 'Tab worded Billing (own words): plate centre 540.0 pt, ink centre 547.0 pt, off by +7.0 pt', and for the look's own words 'Field worded Robin Avery: plate centre 379.5 pt, ink centre 380.0 pt, off by +0.5 pt'. Seen in the first draft of that walk too, before the wording change in applyOverrides, so that change did not cause it. Cause not looked into. See queue/audits/2026-11-06-component-preview-5-tab.png.",
+  "acceptance": [
+    "A copy given longer words than its component's keeps them centred in the control, within 1 point, on the canvas and in Preview",
+    "A left or right aligned label stays left or right aligned when a copy rewords it"
+  ],
+  "log": [
+    {
+      "t": "2026-11-06T20:30:58.712Z",
+      "note": "created (manual)"
+    }
+  ]
+}
