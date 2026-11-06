@@ -15809,3 +15809,14 @@
 {"t":"2026-11-06T04:50:15.808Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
 {"t":"2026-11-06T04:50:15.899Z","ev":"task_done","id":"animating-a-picture-is-as-simple-as-setting-a-mo","from":"in_progress","note":"Animating a picture is Add Key or K, then change things: it keys itself and tweens, at Next defaults, on pictures and videos (e75a3228). Verified by 6 walks with no flag, 32 core tests, Scripts/test.sh exit 0, and audit 2026-11-05-animating-a-picture-is-as-simple-as-setting-a-mo. K through the live menu bar still wants one press by hand."}
 {"t":"2026-11-06T04:50:25.279Z","ev":"task_note","id":"animating-a-picture-is-as-simple-as-setting-a-mo"}
+{"t":"2026-11-06T04:50:52.760Z","ev":"loop_reloaded","from":"a461f30be8be","to":"69108e9d0b50"}
+{"t":"2026-11-06T04:50:52.883Z","ev":"loop_started","pid":36463}
+{"t":"2026-11-06T04:50:52.929Z","ev":"loop_awake","held":true,"pid":36473,"screenLocked":false}
+{"t":"2026-11-06T04:50:53.705Z","ev":"task_started","id":"the-icon-previews-strip-reads-as-previews-no-chi","title":"The icon previews strip reads as previews: no chip looks selected, and it says what it is","priority":"p1-high"}
+{"t":"2026-11-06T04:56:17.014Z","ev":"task_note","id":"the-icon-previews-strip-reads-as-previews-no-chi"}
+{"t":"2026-11-06T05:36:20.196Z","ev":"task_walks","id":"the-icon-previews-strip-reads-as-previews-no-chi","walks":["icon-previews-read-as-previews-walk","icon-previews-both-grounds-walk","icon-previews-keep-off-the-icon-walk","icon-previews-stay-with-nothing-picked-walk"]}
+{"t":"2026-11-06T05:47:59.399Z","ev":"task_note","id":"the-icon-previews-strip-reads-as-previews-no-chi"}
+{"t":"2026-11-06T05:47:59.469Z","ev":"task_note","id":"the-icon-previews-strip-reads-as-previews-no-chi"}
+{"t":"2026-11-06T05:47:59.539Z","ev":"task_note","id":"the-icon-previews-strip-reads-as-previews-no-chi"}
+{"t":"2026-11-06T05:47:59.610Z","ev":"task_note","id":"the-icon-previews-strip-reads-as-previews-no-chi"}
+{"t":"2026-11-06T05:48:59.650Z","ev":"task_done","id":"the-icon-previews-strip-reads-as-previews-no-chi","from":"in_progress","note":"The card says Actual sizes and draws every size on a Light and a Dark ground, so no size looks picked. A press stops at the card and does nothing. It keeps off the icon: another corner, the empty artboard, fewer sizes, then gone when zoomed right in. Measured on real captures: dark plates per size went from 0,0,1,0 to 1,1,1,1, and 6 presses changed 0 card pixels with the shape still picked. Walks: icon-previews-read-as-previews-walk, both-grounds, keep-off-the-icon, stay-with-nothing-picked, icon-preview-walk, motion-loop-preview-walk all ok. Scripts/test.sh exit 0. Audit: queue/audits/2026-11-05-icon-previews-strip.json. Pushed c21010de."}
