@@ -1,0 +1,454 @@
+{
+  "out": "/tmp/photonz-playtest/picture-keys-walk",
+  "seed": "Animating a picture is setting moments and changing things (docs/design/mocks/pages/picture-keys.html). At Next defaults, with no flag changed: pick a layer, press Add Key at a point on its face, drag it, move the playhead on the ruler, drag it again, fade it, play, click a key, delete a key.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1420,
+      "height": 980
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        230
+      ],
+      "to": [
+        260,
+        370
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        650,
+        80
+      ],
+      "to": [
+        750,
+        180
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        190,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-picked",
+      "note": "one layer picked on a still picture. Add Key is on screen before anything moves, and there is no plus to choose a property from."
+    },
+    {
+      "do": "expect",
+      "control": "Add Key",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Add Motion",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "1-add-key-on-a-still"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1270,
+        583
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "2-first-key",
+      "note": "THE TEST: a click on the button's face. The strip rises, two seconds long, the playhead at nought, one hollow diamond and no rows."
+    },
+    {
+      "do": "expect",
+      "field": "Key Time",
+      "reads": "0:00.00"
+    },
+    {
+      "do": "expect",
+      "field": "Key Length",
+      "reads": "0:02.00"
+    },
+    {
+      "do": "expect",
+      "control": "Key Rectangle",
+      "reads": "Key row Rectangle, on a key"
+    },
+    {
+      "do": "expect",
+      "control": "Key 1",
+      "in": "Rectangle",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "2-first-key-is-hollow"
+    },
+    {
+      "do": "drag",
+      "from": [
+        190,
+        300
+      ],
+      "to": [
+        190,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-first-change",
+      "note": "the change fills the hollow diamond, and a Position row appears. Nothing else does."
+    },
+    {
+      "do": "expect",
+      "field": "Key lane Rectangle Position",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-drag-fills-it"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        625,
+        913
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Key Time",
+      "reads": "0:01.00"
+    },
+    {
+      "do": "describe",
+      "stage": "4-moved-the-playhead",
+      "note": "a hollow diamond stands at the playhead on the line: that is where the next change lands."
+    },
+    {
+      "do": "snapshot",
+      "name": "4-the-next-change-lands-here"
+    },
+    {
+      "do": "drag",
+      "from": [
+        190,
+        400
+      ],
+      "to": [
+        700,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key Rectangle",
+      "reads": "Key row Rectangle, on a key"
+    },
+    {
+      "do": "expect",
+      "control": "Key 2",
+      "in": "Rectangle",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "5-second-key"
+    },
+    {
+      "do": "focus",
+      "field": "Opacity"
+    },
+    {
+      "do": "type",
+      "text": "30"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Key lane Rectangle Opacity",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "6-a-fade-joins"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        386,
+        892
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "render",
+      "name": "7-half-way"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-it-tweens"
+    },
+    {
+      "do": "describe",
+      "stage": "7-half-way",
+      "note": "THE TEST: half way between the keys the rectangle is half way across and half faded."
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "control": "Pause",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "8-playing"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.2,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "control": "Pause",
+      "present": true
+    },
+    {
+      "do": "key",
+      "key": "space"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Play",
+      "present": true
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        154,
+        892
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "9-clicked-the-first-key"
+    },
+    {
+      "do": "describe",
+      "stage": "10-first-key-picked",
+      "note": "a click on a key goes to it and picks it."
+    },
+    {
+      "do": "expect",
+      "field": "Key Time",
+      "reads": "0:00.00"
+    },
+    {
+      "do": "drag",
+      "from": [
+        190,
+        400
+      ],
+      "to": [
+        190,
+        460
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "10-changed-the-first-key"
+    },
+    {
+      "do": "describe",
+      "stage": "11-still-two-keys",
+      "note": "a change at a key rewrites that key: still two moments."
+    },
+    {
+      "do": "expect",
+      "control": "Key 2",
+      "in": "Rectangle",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key 3",
+      "in": "Rectangle",
+      "present": false
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        625,
+        892
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        625,
+        932
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        130
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "drag",
+      "from": [
+        700,
+        130
+      ],
+      "to": [
+        560,
+        130
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "12-never-by-surprise",
+      "note": "THE TEST: the ellipse has no keys, so dragging it moved it for the whole picture and no row appeared."
+    },
+    {
+      "do": "expect",
+      "control": "Key Ellipse",
+      "reads": "Key row Ellipse, not keyed"
+    },
+    {
+      "do": "snapshot",
+      "name": "12-a-layer-with-no-keys"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "click",
+      "at": [
+        190,
+        430
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    }
+  ]
+}

@@ -512,6 +512,7 @@ extension PhotonzDocument {
         // frame falls back to a lap as long as its own last motion, and an icon
         // exported on its own runs faster than the icon on the canvas.
         scoped.motionCycleMS = motionCycleMS
+        scoped.keyLap = keyLap
         return scoped
     }
 

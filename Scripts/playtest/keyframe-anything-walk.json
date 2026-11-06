@@ -86,8 +86,7 @@
    "control": "Properties section"
   },
   {
-   "do": "press",
-   "control": "Animate a property"
+   "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
   },
   {
    "do": "wait",
@@ -133,8 +132,7 @@
    "atMost": 0
   },
   {
-   "do": "press",
-   "control": "Animate a property"
+   "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
   },
   {
    "do": "wait",
@@ -146,8 +144,7 @@
    "in": "Animate a property"
   },
   {
-   "do": "press",
-   "control": "Animate a property"
+   "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
   },
   {
    "do": "wait",
@@ -415,8 +412,7 @@
    "control": "Properties section"
   },
   {
-   "do": "press",
-   "control": "Animate a property"
+   "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
   },
   {
    "do": "wait",
@@ -432,8 +428,7 @@
    "seconds": 0.4
   },
   {
-   "do": "press",
-   "control": "Animate a property"
+   "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
   },
   {
    "do": "wait",

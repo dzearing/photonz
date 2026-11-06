@@ -42,7 +42,7 @@ extension EditorState {
         guard Experiments.shared.keyValuesEnabled, let anchor = keyValuesAnchor,
               let keySelection, keySelection.layerID == anchor.layerID,
               keySelection.refs.contains(anchor.ref), keyLaneDrag == nil,
-              !isDocumentPlaying, !isWatching, documentHasTime else { return false }
+              !isDocumentPlaying, !isWatching, documentHasKeyClock else { return false }
         return !keyValueRows.isEmpty
     }
 

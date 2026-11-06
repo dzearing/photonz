@@ -20,21 +20,29 @@ import SwiftUI
 /// preset is a combination of these, and combinations are what you make.
 struct MotionListInspector: View {
     @Environment(EditorState.self) private var editorState
+    /// Animate a property's list, under the arrow beside Add Key.
+    @State private var isPicking = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if editorState.motionNeedsOneLayer {
                 oneLayerOnly
-            } else if editorState.motionRows.isEmpty {
+            } else if editorState.motionRows.isEmpty, !editorState.offersAddKeyOnAStill {
                 empty
             } else {
                 ForEach(editorState.motionRows) { motion in
                     MotionRowView(motion: motion)
                 }
+                // A still picture's way in. Once it has keys this is the
+                // Animating section's (`PropertyKeysInspector`).
+                if editorState.offersAddKeyOnAStill { AddKeyControl(isPicking: $isPicking) }
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
+        .panelPopover(isPresented: $isPicking, height: AnimatePropertyPicker.tallest) {
+            AnimatePropertyPicker(isOpen: $isPicking)
+        }
     }
 
     /// One line, saying where the gesture is. The same line the Effects list

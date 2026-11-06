@@ -80,7 +80,7 @@ extension EditorState {
     /// already on a key right here, or on a layer with nothing animating, no
     /// key moment here yet.
     var canKeyAtPlayhead: Bool {
-        guard let layer = keyLayer else { return false }
+        guard let layer = keyLayer else { return offersAddKeyOnAStill }
         if animatingRows.isEmpty { return headerKeyDiamond(layer.id) != .onKey }
         return keyAtPlayheadProperties.contains { keyDiamond($0) != .onKey }
     }
@@ -89,7 +89,9 @@ extension EditorState {
     /// the value it has now, as one step to undo. Nothing on screen moves: it
     /// gives the next change somewhere to travel from.
     func keyAtPlayhead() {
-        guard let layer = keyLayer else { return }
+        // A still picture's first key gives it a lap (`EditorState+PictureKeys`).
+        guard let layer = keyLayer else { return addFirstPictureKey() }
+        stopPictureForAKey()
         if animatingRows.isEmpty {
             guard headerKeyDiamond(layer.id) != .onKey else { return }
             toggleHeaderKey(layer.id)

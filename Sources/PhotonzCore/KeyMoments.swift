@@ -83,7 +83,7 @@ extension PhotonzDocument {
     }
 
     public func isAnimating(layerID: UUID) -> Bool {
-        guard hasTime, let layer = layer(id: layerID) else { return false }
+        guard hasKeyClock, let layer = layer(id: layerID) else { return false }
         return isAnimating(layer)
     }
 
@@ -107,7 +107,7 @@ extension PhotonzDocument {
     /// row: on a key where any moment of the layer is at `ms`, hollow ones
     /// included; between keys where the layer is animating; dormant else.
     public func keyMomentDiamond(layerID: UUID, atDocumentTimeMS ms: Int) -> KeyDiamond {
-        guard hasTime, let layer = layer(id: layerID), isAnimating(layer) else { return .dormant }
+        guard hasKeyClock, let layer = layer(id: layerID), isAnimating(layer) else { return .dormant }
         let onKey = clipKeyMarks(layerID: layerID).contains { abs($0.documentMS - ms) <= PropertyKeys.nearMS }
         return onKey ? .onKey : .betweenKeys
     }
@@ -120,8 +120,9 @@ extension PhotonzDocument {
     /// they are changed. False where there is a key here already.
     @discardableResult
     public mutating func addKeyMoment(layerID: UUID, atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
-        guard hasTime, let layer = layer(id: layerID),
+        guard let layer = layer(id: layerID),
               keyMomentDiamond(layerID: layerID, atDocumentTimeMS: ms) != .onKey else { return false }
+        startKeyLap()
         let animating = keyedMotions(of: layer).map { KeyedProperty.motion($0.property, effect: $0.effectOrdinal) }
         guard animating.isEmpty else {
             var changed = false
@@ -165,7 +166,7 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func animate(layerID: UUID, _ property: KeyedProperty,
                                  atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
-        guard hasTime else { return false }
+        startKeyLap()
         return startKeying(layerID: layerID, property, atDocumentTimeMS: ms, ease: ease)
     }
 

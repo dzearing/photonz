@@ -1,0 +1,66 @@
+{
+  "feature": "Animate a picture by setting moments and changing things",
+  "epic": "icon-animate",
+  "summary": "Pick a layer, press Add Key or K, and change things: each change keys itself at the playhead and the picture tweens between keys. Videos get the same Add Key button.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Draw two shapes on a blank picture.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Click a shape, then press Add Key in the Motion section, or K.",
+      "shot": "2026-11-05-picture-keys-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the shape. The hollow diamond fills in and a Position row appears.",
+      "shot": "2026-11-05-picture-keys-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the ruler at 1s. A hollow diamond stands at the playhead.",
+      "shot": "2026-11-05-picture-keys-4.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the shape somewhere else, then set Opacity to 30.",
+      "shot": "2026-11-05-picture-keys-5.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Space. It plays and repeats. Press Space again to stop."
+    },
+    {
+      "do": "Drag a different shape, one with no keys. It moves for the whole picture.",
+      "shot": "2026-11-05-picture-keys-6.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Rotation row on a turning layer, then drag the crosshair.",
+      "shot": "2026-11-05-picture-keys-9.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click each key on the bar and press Delete. The timeline goes, and it is a still.",
+      "shot": "2026-11-05-picture-keys-7.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "After the first key, did you know to move the playhead, or did you stall? The brief said to tell us if you did.",
+    "Does the hollow diamond at the playhead tell you where the next change will land before you make it?",
+    "Dragging a layer with no keys moves it for the whole picture. Did that ever surprise you?",
+    "Is Rotation's pivot easy enough to find, now it only shows with the Rotation row picked?",
+    "A still export shows the first moment. Would you rather it showed the moment the playhead is on?"
+  ],
+  "rough": [
+    "From first click to playing took 16.2 seconds in a walk with two seconds of looking before each of its seven actions. That pace is scripted: nobody new has been timed.",
+    "After the first key nothing says to move the playhead. The Icons guide now teaches it, and the brief asked you to say if you stall there.",
+    "A key at 0:00 stands 6 points right of the playhead, the same as on the video timeline, whose lanes clip at their edge. Centring it there cut the diamond in half, so I left it.",
+    "The mock's diamond and time in the size pill are not built yet: the-size-pill-says-the-key-and-the-time-while-a.",
+    "The video mock draws Animate a property where Add Key now stands, and the bell mock draws the pivot from the start: your call on 2026-11-05.",
+    "The Lens has no letter now, only its tool bar button and menu row: your call on 2026-11-05.",
+    "A still PNG, Copy and a still SVG show the first moment, not the moment the playhead is on.",
+    "14 walks pin next-picture-keys off, because saved From and To rows still show and those walks are the only proof of them.",
+    "Rotation's Around dropdown is not on the keyed row. The pivot is moved by dragging the crosshair with the row picked.",
+    "K itself was pressed through the walk's stand-in for the menu bar, because a walk cannot reach a live menu. Please press it by hand once."
+  ]
+}

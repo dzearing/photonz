@@ -169,7 +169,7 @@ public enum SVGExport {
                             type: typeSetter,
                             animation: animation, flatImages: flatImages,
                             omitLayer: omit)
-        return writer.run(document)
+        return writer.run(animation == .still ? document.keyedStill : document.lappingKeys)
     }
 
     /// The layer that is nothing but the canvas the drawing sits on: the

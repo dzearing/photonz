@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/a-ring-or-arc-arrives-spinning",
   "seed": "A spinner is a ring or an arc in an icon, and Rotation on one arrives as the mock's answer: 0 to 360, Linear, Forever, a turn every 1.2 seconds (icon-loop-wt.html step 3, 'because that is what you would have typed'). Before 2026-10-15 every shape arrived as a small swing back and forth, so a person had to retype both ends, the curve and the repeat before anything spun. This walk draws an arc with the pen and a ring with the ellipse tool in a 24 unit icon frame, adds Rotation to each and reads the row, then draws a box and checks it still arrives as the swing. Next defaults, no switch changed.",
-  "setup": { "forget": ["all"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
     { "do": "action", "action": "newFrameDialog" },

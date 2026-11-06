@@ -2154,7 +2154,8 @@ accent ring round the timeline dock says when it is the timeline.
 - **Everywhere, wherever the keyboard is:** Space, Home, End, ⌘B split (Final
   Cut's Blade; ⌘K is Ask, see §7), ⌥I / ⌥O clear the marks. No picture tool
   wants them.
-- **The picture tools those letters would pick** (K Lens, L Line, I Measure, O
+- **The picture tools those letters would pick** (K is Add Key on the canvas and
+  the Lens has no letter, the user's answer on 2026-11-05; L Line, I Measure, O
   Ellipse, M Marquee, A Arrow) are reached from the tool bar, always, and by
   their letter once the canvas has the keyboard: a press on the canvas (or
   anywhere else outside the dock) gives it to the canvas and the ring goes. A letter the timeline does not use still

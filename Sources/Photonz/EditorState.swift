@@ -1374,6 +1374,8 @@ final class EditorState {
     /// against: a canvas showing a layer somewhere other than where the
     /// document says it is would be a canvas you cannot drag anything on.
     var motionPlayheadMS: Int = 0
+    /// A hand on a keyed picture's repeats mark (`EditorState+PictureKeys`).
+    var keyLapDrag: KeyLapDrag?
     /// Whether the preview is running. The play button on the Motion header
     /// answers for this, and so does adding or changing a motion, because the
     /// answer to "did that do anything" should be on screen without being
@@ -3802,7 +3804,10 @@ final class EditorState {
         // that moves, and `playMotionPreview` on a still document returns
         // without cancelling anything.
         pauseMotionPreview()
-        playMotionPreview()
+        // A keyed picture arrives at its first moment, stopped: it has a
+        // playhead to say where you are, and Space plays it.
+        documentTimeMS = 0
+        if !document.isKeyedPicture { playMotionPreview() }
         // ...and the DOCUMENT's own clock, which is a different clock and has
         // to be stopped for the same reason: a window handed a screenshot while
         // a recording was playing in it would keep a timer running on a
@@ -4099,7 +4104,7 @@ final class EditorState {
     /// (phase 11.5) to write an edited capture back to the store.
     func compositeImage() -> CGImage? {
         guard let document else { return nil }
-        return previewRenderer.render(document, store: store)
+        return previewRenderer.render(document.keyedStill, store: store)
     }
 
     /// Writes the document out as a real SVG where the user picks (Next,
@@ -4261,7 +4266,7 @@ final class EditorState {
         let background = background
             ?? (Experiments.shared.copyLeavesTheCanvasOutEnabled ? .drop : .keep)
         guard let document,
-              let image = previewRenderer.render(document.copied(with: background, store: store),
+              let image = previewRenderer.render(document.keyedStill.copied(with: background, store: store),
                                                  store: store) else { return }
         let carriesSpecList = Experiments.shared.measurePanelEnabled
         let specList = carriesSpecList
@@ -4966,6 +4971,9 @@ final class EditorState {
     /// A drag is starting on `id`: kick off the underlay + sprite renders.
     /// Until they land, per-move previews fall back to full submits.
     func beginLayerDrag(id: UUID) {
+        // A hand on a keyed picture stops the lap where it is: that moment is
+        // what the change lands on.
+        if isMotionPlaying, isKeyedPicture { pauseMotionPreview() }
         guard dragPreview?.layerID != id else { return }
         dragPreview = nil
         clearPreviewAfterNextFrame = false
@@ -5567,7 +5575,11 @@ final class EditorState {
         // worked out, so a layer part way along the path rides the arc as it
         // bends (`EditorState+MotionPath`).
         document = withPreviewedMotionPath(document)
-        if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
+        if document.isKeyedPicture {
+            // A keyed picture is drawn at its playhead, stopped or playing:
+            // what is on the canvas is the moment the next change lands on.
+            document = document.moved(toMotionTimeMS: isMotionPlaying ? motionPlayheadMS : documentTimeMS)
+        } else if Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion {
             document = document.moved(toMotionTimeMS: motionPlayheadMS)
         }
         // A document that HAS time is drawn at the moment the playhead is on:

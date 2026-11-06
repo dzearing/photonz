@@ -80,8 +80,7 @@
       "control": "Properties section"
     },
     {
-      "do": "press",
-      "control": "Animate a property"
+      "do": "panelMenu", "menu": "Add Key Menu", "at": ["centre"], "choose": "Animate a Property"
     },
     {
       "do": "wait",

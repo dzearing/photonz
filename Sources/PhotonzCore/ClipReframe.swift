@@ -495,7 +495,7 @@ extension PhotonzDocument {
         guard motion.property == .position, motion.effectOrdinal == 0, layer.positionReadsAsCentre,
               case let .point(origin) = key.value else { return key.value }
         var percent: Double = 100
-        let cycle = layer.motionCycleMS(documentCycleMS: max(1, documentDurationMS))
+        let cycle = layer.motionCycleMS(documentCycleMS: max(1, timelineLengthMS))
         if let scale = layer.keyedMotion(.scale),
            case let .number(number) = scale.value(atMS: key.atMS, cycleMS: cycle), number > 0 {
             percent = number

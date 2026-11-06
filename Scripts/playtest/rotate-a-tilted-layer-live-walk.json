@@ -53,7 +53,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "press", "control": "Position", "in": "Animate a property" },
     { "do": "wait", "seconds": 0.6 },

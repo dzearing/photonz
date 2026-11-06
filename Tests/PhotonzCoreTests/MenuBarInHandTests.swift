@@ -39,7 +39,7 @@ struct MenuBarInHandTests {
             ToolMenu.printedKey(for: tool, among: tools, active: .select, remembered: { $0.tools[0] })
         }
         #expect(printed.count == Set(printed).count)
-        #expect(Set(printed) == ["v", "m", "w", "c", "i", "a", "l", "r", "o", "h", "t", "k", "f", "p", "g"])
+        #expect(Set(printed) == ["v", "m", "w", "c", "i", "a", "l", "r", "o", "h", "t", "f", "p", "g"])
     }
 
     @Test("M is on the marquee a press of M hands you: the other one, once one is in hand")

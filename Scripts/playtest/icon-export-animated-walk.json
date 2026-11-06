@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/icon-export-animated-walk",
   "seed": "An icon that swings is only useful if it still swings once somebody else has the file. This walk draws a shape, tells it to turn, and then hands it over: it writes the SVG the app writes and reports how many moving parts landed in it, and it photographs the Export sheet asking WHERE THE FILE IS GOING before it asks for a format, with the list of what survives the trip underneath. The same sheet is then photographed bound for a code host, where the answer changes on its own: a README strips an animation out, so the format moves to a picture and a plain sentence says why.",
-  "setup": { "forget": ["tools", "panel"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["tools", "panel"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },

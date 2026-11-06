@@ -20,7 +20,7 @@ extension EditorState {
         // rather than through the whole style reading, because every row of
         // the Keys section asks this several times per draw, and on a long
         // captioned talk that reading was a scan of every layer each time.
-        guard documentHasTime, let document else { return nil }
+        guard documentHasKeyClock, let document else { return nil }
         var sole: Layer?
         for id in colorStyleTargetIDs {
             guard let layer = document.layer(id: id), !layer.isLocked else { continue }
@@ -31,12 +31,12 @@ extension EditorState {
     }
 
     /// The values it lists, keyed or not, in the mock's order.
-    var keyRows: [KeyedProperty] { keyLayer?.keyableProperties ?? [] }
+    var keyRows: [KeyedProperty] { addKeyLayer?.keyableProperties ?? [] }
 
     /// What a value's row is called on the picked layer: "Shadow 3 distance"
     /// on a title with three shadows, so each row says which one it keys.
     func keyTitle(_ property: KeyedProperty) -> String {
-        keyLayer.map { property.title(on: $0) } ?? property.title
+        addKeyLayer.map { property.title(on: $0) } ?? property.title
     }
 
     /// How many of them are keyed, for the header's count.
@@ -224,7 +224,7 @@ extension EditorState {
     /// change to the layer: a document with time, and something on the layer
     /// keyed.
     func dragMakesKeys(_ id: UUID) -> Bool {
-        guard documentHasTime, let document else { return false }
+        guard documentHasKeyClock, let document else { return false }
         // A hollow moment Add Key left counts: the next change keys there.
         return document.isAnimating(layerID: id)
     }
@@ -235,7 +235,7 @@ extension EditorState {
     /// the picture rather than round where the layer was first drawn.
     var canvasGeometryDocument: PhotonzDocument? {
         guard let document else { return nil }
-        guard documentHasTime else { return document }
+        guard documentHasKeyClock else { return document }
         // Posed at the moment the PICTURE on the canvas was drawn at, which
         // trails the playhead while a composite is being drawn. Posing at the
         // playhead put the outline a frame or two ahead of the very layer it

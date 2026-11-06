@@ -105,6 +105,11 @@ extension EditorState {
     /// be a copy of every layer in it, thirty times a second.
     private func iconPreviewSource(_ document: PhotonzDocument, frameID: UUID) -> PhotonzDocument {
         let document = withDraggedMotionTiming(document)
+        // A keyed picture's previews show the moment the canvas does.
+        if document.isKeyedPicture {
+            return document.moved(layerID: frameID,
+                                  toMotionTimeMS: isMotionPlaying ? motionPlayheadMS : documentTimeMS)
+        }
         guard Experiments.shared.motionEnabled, isMotionPlaying, document.hasMotion else { return document }
         return document.moved(layerID: frameID, toMotionTimeMS: motionPlayheadMS)
     }

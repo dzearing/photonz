@@ -941,6 +941,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the way its tick flips it), and Easing, Ease out back, the one shaped
     /// curve a walk needs to show the keys cannot say.
     case keyAtPlayhead, curveThePath, easingEaseOutBack
+    /// A click on the picked layer's Rotation row, for a walk that drives a
+    /// guide and so has to survive a lock: a row is picked by a tap, which only
+    /// a real click reaches (`picture-keys-pivot-walk` makes that click).
+    case pickRotationRow
     case hideInspector, showInspector, zoomIn, zoomOut, zoomToFit
     /// View ▸ Actual Size, and the picture at exactly twice that: a brush walk
     /// films a stroke at 100% and at 200%, where the canvas lays a sharper

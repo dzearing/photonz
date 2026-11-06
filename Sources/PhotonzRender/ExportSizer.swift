@@ -116,7 +116,7 @@ public actor ExportSizer {
         if let kept, kept.of == key { return kept.picture }
         // The same scoping Export itself uses, so what gets weighed and what
         // gets saved can never be two different pictures.
-        let scoped = document.exportTarget(frameID: frameID)
+        let scoped = document.exportTarget(frameID: frameID).keyedStill
         // Leaving the canvas out is the canvas layer hidden: the drawing lands
         // on nothing and every other layer is where it was. Reading which
         // bitmaps are flat walks their pixels, so it is only asked for when

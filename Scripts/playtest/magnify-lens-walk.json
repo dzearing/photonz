@@ -39,7 +39,7 @@
     { "do": "describe", "stage": "7-undone", "note": "each switch is one undo step, so two undos put the magnifier back as it was drawn" },
     { "do": "snapshot", "name": "7-undone" },
 
-    { "do": "key", "key": "k" },
+    { "do": "tool", "tool": "lens" },
     { "do": "waitFor", "condition": "tool", "value": "lens" },
     { "do": "action", "action": "armLensPixelate" },
     { "do": "wait", "seconds": 0.5 },

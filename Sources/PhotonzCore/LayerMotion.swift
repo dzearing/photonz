@@ -884,6 +884,11 @@ public enum MotionRepeat: Hashable, Codable, Sendable {
     case times(Int)
     case forever
     case foreverThereAndBack
+    /// Keys on a picture's repeating lap, as they PLAY: once a lap, for ever.
+    /// Never written down and never offered. Keys are stored as `once` so
+    /// they are keys wherever they are read, and this is what a drawing or an
+    /// export turns them into (`PhotonzDocument.lappingKeys`).
+    case everyLap
 
     /// What the Repeat menu offers, in order.
     public static let choices: [MotionRepeat] = [.once, .times(3), .forever, .foreverThereAndBack]
@@ -894,6 +899,7 @@ public enum MotionRepeat: Hashable, Codable, Sendable {
         case let .times(count): "\(count) times"
         case .forever: "Forever"
         case .foreverThereAndBack: "Forever, there and back"
+        case .everyLap: "Every lap"
         }
     }
 
@@ -912,7 +918,7 @@ public enum MotionRepeat: Hashable, Codable, Sendable {
         switch self {
         case .once: 1
         case let .times(count): max(1, count)
-        case .forever, .foreverThereAndBack: nil
+        case .forever, .foreverThereAndBack, .everyLap: nil
         }
     }
 }
@@ -1959,7 +1965,7 @@ extension PhotonzDocument {
         let cycle = motionCycleLengthMS
         guard cycle > 0 else { return self }
         var moved = self
-        moved.layers = layers.map { $0.movedTree(toMotionTimeMS: ms, cycleMS: cycle) }
+        moved.layers = lappingKeys.layers.map { $0.movedTree(toMotionTimeMS: ms, cycleMS: cycle) }
         moved.camera = camera?.shown(atMS: ms, cycleMS: cycle)
         return moved
     }
@@ -1975,8 +1981,9 @@ extension PhotonzDocument {
         let cycle = motionCycleLengthMS
         guard cycle > 0 else { return self }
         var moved = self
+        let shown = lappingKeys.layer(id: layerID)
         moved.updateLayer(id: layerID) { layer in
-            layer = layer.movedTree(toMotionTimeMS: ms, cycleMS: cycle)
+            layer = (shown ?? layer).movedTree(toMotionTimeMS: ms, cycleMS: cycle)
         }
         return moved
     }
@@ -1986,6 +1993,9 @@ extension PhotonzDocument {
     public func motionHasSettled(atMS ms: Int) -> Bool {
         let cycle = motionCycleLengthMS
         guard cycle > 0 else { return true }
+        // A keyed picture is one lap long or goes round for ever, whatever a
+        // motion on it would say for itself.
+        if isKeyedPicture, let keyLap { return !keyLap.repeats && ms >= cycle }
         return allLayers.allSatisfy { layer in
             (layer.motions ?? []).allSatisfy { $0.hasSettled(atMS: ms, cycleMS: cycle) }
         } && (camera?.motions ?? []).allSatisfy { $0.hasSettled(atMS: ms, cycleMS: cycle) }

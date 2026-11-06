@@ -1311,7 +1311,7 @@ struct InspectorPanel: View {
         // In a document with time only a motion that loops earns the section:
         // everything that plays once is a keyed value, shown in Animating.
         if editorState.motionLayer != nil || editorState.motionNeedsOneLayer,
-           !editorState.documentHasTime || !editorState.motionRows.isEmpty {
+           editorState.motionSectionHasAPlace {
             set.insert(.motion)
         }
         // How loud the picked layer plays (Next, `next-sound-on-the-timeline`).
@@ -1768,7 +1768,9 @@ struct InspectorPanel: View {
             text = DockGroupHeader.cutChip(carriesTransition: editorState.cutInHand?.cut.transition != nil)
             return text.map { .init(text: $0, field: "Properties Kind") }
         case .keys:
-            text = editorState.timelinePickSummary != nil ? nil : DockGroupHeader.chip(editorState.keyLayerKind)
+            // A layer in a picture is no clip, so a keyed picture has no chip.
+            text = editorState.timelinePickSummary != nil || !editorState.documentHasTime
+                ? nil : DockGroupHeader.chip(editorState.keyLayerKind)
             return text.map { .init(text: $0, field: "Properties Kind") }
         case .library:
             text = libraryScope.title
@@ -1811,6 +1813,11 @@ struct InspectorPanel: View {
             // play button, because "does it look right" is a question you ask
             // after every single change and it may never be the thing you have
             // to go looking for.
+            // With keys on a picture Add Key is the way in, and it is in the
+            // section: there is no plus to add from.
+            if Experiments.shared.pictureKeysEnabled {
+                return editorState.motionRows.isEmpty ? nil : AnyView(MotionPreviewButton())
+            }
             return AnyView(HStack(spacing: 6) {
                 MotionPreviewButton()
                 AddMotionButton()
@@ -1941,6 +1948,9 @@ struct InspectorPanel: View {
         // reading "Position & Size" over a layer's name would take them for
         // the layer's.
         if id == .geometry, editorState.regionGeometry != nil { return "Selection" }
+        // On a keyed picture this section is what the Motion section was:
+        // the same word for the same job, keys or none.
+        if id == .keys, editorState.isKeyedPicture { return InspectorSectionID.motion.title }
         // A video clip's sound sections say they are its audio, so Fades on
         // a video is never read as the picture fading (`TimePanelOrder`).
         if let role = timeRole, TimePanelOrder.trails(role).contains(id.rawValue) {

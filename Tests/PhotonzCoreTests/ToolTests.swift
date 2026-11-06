@@ -399,7 +399,8 @@ struct AnnotationBuilderTests {
         // The marquee family is the one exception: the three region selectors
         // share a slot and M / ⇧M / W are resolved by the group, not per tool.
         // The Hand is only on a bar that has it, and there it takes H.
-        for tool in Tool.allCases where !tool.isRegionSelectionTool {
+        // The Lens gave K to Add Key (the user's answer on 2026-11-05).
+        for tool in Tool.allCases where !tool.isRegionSelectionTool && tool != .lens {
             #expect(tool.shortcutKey(handOnBar: true) != nil, "\(tool) has no keyboard shortcut")
         }
     }

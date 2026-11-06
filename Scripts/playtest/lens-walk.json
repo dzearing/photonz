@@ -8,7 +8,7 @@
     { "do": "describe", "stage": "1-open", "note": "the capture as it arrived, nothing touched" },
     { "do": "snapshot", "name": "1-open" },
 
-    { "do": "key", "key": "k" },
+    { "do": "tool", "tool": "lens" },
     { "do": "waitFor", "condition": "tool", "value": "lens" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "describe", "stage": "2-tool", "note": "K picked up the Lens tool; the capsule over the tool bar should now say Lens with its adjustment and its setting" },

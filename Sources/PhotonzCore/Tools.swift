@@ -104,10 +104,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .highlight: handOnBar ? "u" : "h"
         case .text: "t"
         case .zoomCallout: "z"
-        // K is one of the two letters Photoshop leaves unassigned, so a tool
-        // Photoshop has no equivalent for displaces nothing. E, S, J and Y
-        // all belong to erasers and stamps this app will want later.
-        case .lens: "k"
+        // K is Add Key (the user's answer on 2026-11-05), so the Lens has its
+        // menu row and no letter: E, S, J and Y all belong to erasers and
+        // stamps this app will want later.
+        case .lens: nil
         case .measure: "i"
         case .fill: "g"
         case .wand: "w"

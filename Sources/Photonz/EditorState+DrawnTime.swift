@@ -74,6 +74,7 @@ extension EditorState {
         let time = documentTimeMS
         let ease = newKeyEaseToWrite
         if isDocumentPlaying { pauseDocument() }
+        stopPictureForAKey()
         perform { $0.toggleKeyMoment(layerID: layerID, atDocumentTimeMS: time, ease: ease) }
     }
 }

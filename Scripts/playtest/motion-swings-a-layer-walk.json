@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-swings-a-layer-walk",
   "seed": "Motion is a property of a layer, read the same way the Effects list above it is read. This walk draws one shape, opens the plus on the Motion header to show that the menu is built out of THAT LAYER (every property it actually has, with the number it is wearing right now), adds a Rotation, and checks the row that arrives: a switch, the name, the curve drawn small, and a summary a person can read back. It then photographs the canvas twice while the preview is running, to show the picture really is moving, stops it to show the picture goes back to the one you drew, and takes the whole thing back with undo and forward again with redo. It then checks the two things about the SECTION rather than the list: that Motion is the next section down from Effects even with a screen picked, where Frame, Columns and Layout used to wedge themselves into the gap, and that picking a second layer leaves the section on the panel holding one line saying why it works on one layer at a time, instead of the section silently disappearing.",
-  "setup": { "forget": ["tools", "panel"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["tools", "panel"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
     { "do": "wait", "seconds": 1 },

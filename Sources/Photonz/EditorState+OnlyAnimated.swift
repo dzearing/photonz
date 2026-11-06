@@ -16,7 +16,7 @@ extension EditorState {
     /// The row picked by a click on its name, while its layer is the one in
     /// hand and no keys are picked instead.
     var keyRowInHand: KeyLaneRowID? {
-        guard let row = pickedKeyRow, documentHasTime, selectedLayerID == row.layerID,
+        guard let row = pickedKeyRow, documentHasKeyClock, selectedLayerID == row.layerID,
               keySelection == nil, !isClipLocked(row.layerID),
               keyLanes(layerID: row.layerID).contains(where: { $0.motionID == row.motionID }) else { return nil }
         return row
@@ -76,7 +76,7 @@ extension EditorState {
     /// What Animate ▸ lists on a layer: every value it can key that is not
     /// animating, under the panel's groups. Empty for a sound.
     func animateGroups(layerID: UUID) -> [(group: AnimateGroup, properties: [KeyedProperty])] {
-        guard documentHasTime, let layer = document?.layer(id: layerID), !layer.isSoundOnly else { return [] }
+        guard documentHasKeyClock || offersAddKeyOnAStill, let layer = document?.layer(id: layerID), !layer.isSoundOnly else { return [] }
         let animating = Set(keyLanes(layerID: layerID).map { KeyedProperty.motion($0.property, effect: $0.effect) })
         return layer.animateGroups(excluding: animating)
     }

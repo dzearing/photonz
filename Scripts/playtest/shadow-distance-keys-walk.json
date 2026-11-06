@@ -18,7 +18,7 @@
     { "do": "wait", "seconds": 1.0 },
     { "do": "reveal", "control": "Properties section" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-the-picker", "note": "THE FIRST TEST: a title's shadow offers its distance, direction, color and opacity under Effects in Animate a property, beside the size it always offered" },
     { "do": "expect", "control": "Shadow 1 distance", "in": "Animate a property", "present": true },

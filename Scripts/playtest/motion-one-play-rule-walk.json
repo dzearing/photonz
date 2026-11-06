@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-one-play-rule",
   "seed": "One rule for when the motion loop plays without being asked: motion plays unless you stop it. Three gestures used to answer that question three different ways in one sitting — adding a motion started the loop, grabbing the pivot started it only if it was stopped, and typing a number into a row while the preview was paused started nothing at all, so the edit landed with nothing on screen to show it. This walk drives all three in one run and reads the transport back after each, then checks the two things that deliberately do NOT start it: working on the drawing rather than the motion, and changing the speed you are watching at.",
-  "setup": { "forget": ["tools", "panel"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["tools", "panel"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 1000 },
     { "do": "wait", "seconds": 1 },

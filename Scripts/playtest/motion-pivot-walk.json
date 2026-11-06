@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-pivot-walk",
   "seed": "A turn has to say what it turns AROUND. A bell that swings hangs from its mount, not from its middle: put the pivot in the middle and the top swings one way while the bottom swings the other, which reads as a bobblehead. So this walk adds a Rotation, checks that a pivot arrives with it sitting on the middle of the layer with a crosshair on the picture, DRAGS that crosshair up above the shape, and checks the drag was taken by the crosshair rather than by the shape it was sitting in the middle of. It then sets the same point by name from the Around menu and by typing two numbers, because those are the three ways in and they all write one value.",
-  "setup": {
+  "setup": { "flags": { "next-picture-keys": false },
     "forget": [
       "tools",
       "panel"

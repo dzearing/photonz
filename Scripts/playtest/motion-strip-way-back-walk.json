@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-strip-way-back",
   "seed": "Putting the timing strip away used to close it to NOTHING: the screen then said neither that a strip existed nor how to get it back, so the only ways were the View menu and knowing the chord, and a way back you have to already know is not a way back. It now collapses to ONE ROW across the bottom which says what is still moving and opens the strip again when it is clicked, which is what UX-PATTERNS D9 asks a bottom dock for. This walk closes the strip with its own x, reads the row, opens it again by clicking the row alone (no menu and no chord), and then checks the row states the SELECTION rather than just the strip's name when a second layer starts moving.",
-  "setup": { "forget": ["tools", "panel", "motion"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["tools", "panel", "motion"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 560, "width": 1420, "height": 1000 },
     { "do": "wait", "seconds": 1 },

@@ -26,11 +26,11 @@
     { "do": "panelMenu", "menu": "Properties Menu" },
     { "do": "describe", "stage": "1-nothing-to-reset", "note": "THE FIRST TEST: a title nobody has animated. The Properties menu lists Copy Look, Paste Look and Reset to Defaults, and Reset to Defaults is dimmed because there is nothing to put back" },
 
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "press", "control": "Scale", "in": "Animate a property" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "press", "control": "Opacity", "in": "Animate a property" },
     { "do": "wait", "seconds": 0.6 },

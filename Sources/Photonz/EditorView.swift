@@ -245,7 +245,8 @@ struct EditorView: View {
                     .modifier(PlayerControlsTuck())
             } else {
                 switch editorState.motionStripPhase {
-                case .open: MotionStripView()
+                case .open:
+                    if editorState.isKeyedPicture { PictureKeyStrip() } else { MotionStripView() }
                 case .row: MotionStripRailView()
                 case .none: EmptyView()
                 }

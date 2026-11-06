@@ -159,8 +159,7 @@
       "note": "The clip's Properties (its clip line and Centre, picked from Animate a property), Time and Sound rows at 220pt: a value that cannot sit beside its name drops under it, so Centre keeps its name and px never wraps, and a long clip name is cut short before its times are."
     },
     {
-      "do": "press",
-      "control": "Animate a property"
+      "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
     },
     {
       "do": "wait",

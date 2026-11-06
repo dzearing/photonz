@@ -260,6 +260,8 @@ public enum FeatureCatalog {
 
     public static let motionStripFlag = "next-motion-strip"
 
+    public static let pictureKeysFlag = "next-picture-keys"
+
     public static let exportQualityFlag = "next-export-quality"
 
     public static let webPExportFlag = "next-export-webp"
@@ -1211,6 +1213,16 @@ public enum FeatureCatalog {
                     name: scrubAuditionFlag,
                     title: "Hear the sound under the playhead while you drag it",
                     description: "Dragging the playhead plays the sound under it, backwards too, so you can find a word or a beat by ear. Off means scrubbing is silent.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: pictureKeysFlag,
+                    title: "Animate a picture by setting moments and changing things",
+                    description: "Press Add Key or K on a layer, and any change to it keys itself at the playhead and tweens. Off, a picture animates through the Motion list's plus.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

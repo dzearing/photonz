@@ -156,6 +156,17 @@ struct LayersRow: View, Equatable {
                               place: place, press: { pressOutOfViewMark(outOfView) })
             }
             Spacer(minLength: 4)
+            // This layer keys itself: the one thing that says so before the
+            // hand moves, on the row the eye goes to for "which layer".
+            if editorState.isKeyedPicture, editorState.document?.isAnimating(layerID: id) == true {
+                Image(systemName: "diamond.fill")
+                    .font(.system(size: 8))
+                    .foregroundStyle(VideoKit.Palette.accent)
+                    .accessibilityLabel("Has keys")
+                    .panelHelp("Changes to this layer key themselves at the playhead")
+                    .playtestField("Keyed \(display.name)")
+                    .panelReadout("has keys")
+            }
             // A shut group says how much it is hiding, so the row is not a
             // dead end you have to open to understand.
             if panelRow.isGroup, !panelRow.isExpanded, showsTwist {

@@ -409,7 +409,7 @@ struct MotionStripRailView: View {
 
 /// The ruler: one lap and a third, so a bar that overruns the restart has
 /// somewhere to be drawn.
-private struct MotionStripRulerView: View {
+struct MotionStripRulerView: View {
     let ruler: MotionStripRuler
 
     static let height: CGFloat = 15
@@ -1163,7 +1163,7 @@ private struct MotionStripMarksView: View {
 
 
 /// The restart, as a line down the middle of its one point of width.
-private struct MotionStripRestartLine: Shape {
+struct MotionStripRestartLine: Shape {
     func path(in rect: CGRect) -> Path {
         Path { path in
             path.move(to: CGPoint(x: rect.midX, y: rect.minY))

@@ -54,6 +54,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// that loops is. It also means the ruler holds still while a bar is
     /// dragged along it, instead of rescaling under the hand that is dragging.
     public var motionCycleMS: Int?
+    /// That this picture is animated by keys on its lap, and whether the lap
+    /// repeats, or nil where nobody has pressed Add Key on it
+    /// (`PictureKeys.swift`). A document with time ignores it: its clock is
+    /// its own.
+    public var keyLap: KeyLap?
     /// How long this document runs for, in milliseconds, or nil for a document
     /// with no time in it: the far commoner case, and every document anybody
     /// has today (`DocumentTime.swift`).
@@ -128,7 +133,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
-        case gridOriginX, gridOriginY, motionCycleMS, readWords, durationMS
+        case gridOriginX, gridOriginY, motionCycleMS, keyLap, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
         case captionLook, captionsListenedTo, componentOriginals, camera
     }
@@ -153,6 +158,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // cycle simply follows its longest motion saves byte for byte as it did
         // before laps could be written down at all.
         if let motionCycleMS { try c.encode(motionCycleMS, forKey: .motionCycleMS) }
+        // ...and the same for a picture nobody has keyed.
+        try c.encodeIfPresent(keyLap, forKey: .keyLap)
         // A document with no time in it writes no duration, so every picture
         // saved before time existed is byte for byte what it was.
         if let durationMS { try c.encode(durationMS, forKey: .durationMS) }
@@ -206,6 +213,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // Nothing written means the lap follows the longest motion, which is
         // what every document written before this did.
         motionCycleMS = try c.decodeIfPresent(Int.self, forKey: .motionCycleMS)
+        keyLap = try c.decodeIfPresent(KeyLap.self, forKey: .keyLap)
         // Nothing written means no time in the document, which is what every
         // document written before this did.
         storedDurationMS = try c.decodeIfPresent(Int.self, forKey: .durationMS)

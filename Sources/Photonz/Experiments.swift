@@ -737,6 +737,12 @@ extension Experiments {
     /// layer to move there is never anything to draw a bar for: a strip that
     /// could only ever be empty is a strip that never appears, which is worse
     /// than no strip at all because the switch for it would look broken.
+    /// `next-picture-keys`: a picture is animated by Add Key and changing
+    /// things, the video editor's way (`PictureKeys.swift`).
+    var pictureKeysEnabled: Bool {
+        motionEnabled && isEnabled(FeatureCatalog.pictureKeysFlag)
+    }
+
     var motionStripEnabled: Bool {
         motionEnabled && isEnabled(FeatureCatalog.motionStripFlag)
     }

@@ -733,7 +733,7 @@ public enum AppCommandTable {
             make(.goToNextKey, "Go to Next Key", animate, .timeline, needs: "a key after the playhead"),
             make(.goToPreviousKey, "Go to Previous Key", animate, .timeline, needs: "a key before the playhead"),
             make(.keyAtPlayhead, "Key at Playhead", animate, .timeline, needs: "a layer in hand",
-                 picks: [.playhead, .layers]),
+                 picks: [.playhead, .layers], also: ["Add Key"]),
             make(.curveThePath, "Curve the Path", animate, .timeline, needs: "a layer that moves along a path",
                  picks: .layers, toggle: true),
             make(.removeKeyAtPlayhead, "Remove Key at Playhead", animate, .timeline, needs: "a key at the playhead",

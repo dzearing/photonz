@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/a-lone-spinner-strip-reads-one-turn",
   "seed": "The spinner page (icon-loop-wt.html, step 5 'Put it back, and look at the join'): with only a Forever spinner moving, the timing dock is called One turn, reads 800 ms per turn and, beside it, ends where it starts. There is no lap to type, because a spinner's lap is its turn. This walk draws one ring, gives it 0 to 360, Linear, Forever, over 800 ms, and reads the strip's header the way the mock prints it. Next defaults, no switch changed.",
-  "setup": { "forget": ["tools", "panel", "motion"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["tools", "panel", "motion"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 560, "width": 1420, "height": 1000 },
     { "do": "wait", "seconds": 1 },

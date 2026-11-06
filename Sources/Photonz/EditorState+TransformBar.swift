@@ -127,7 +127,7 @@ extension EditorState {
         guard let document else { return LayerGeometrySelection([]) }
         let picked = transformBarTargets
         guard !picked.isEmpty else { return LayerGeometrySelection([]) }
-        let posed = documentHasTime ? document.posedForCanvas(atTimeMS: documentTimeMS) : document
+        let posed = documentHasKeyClock ? document.posedForCanvas(atTimeMS: documentTimeMS) : document
         let members = document.allLayers.compactMap { stored -> LayerGeometrySelection.Member? in
             guard picked.contains(stored.id) else { return nil }
             var parent = document.parentID(of: stored.id)
@@ -182,7 +182,7 @@ extension EditorState {
     /// key, hollow between keys, none at all where nothing keys it. One layer
     /// only, like every diamond in the panel.
     func transformBarKey(_ field: TransformBar.Field) -> KeyDiamond {
-        guard documentHasTime, keyLayer != nil, transformBarTargets.count == 1 else { return .dormant }
+        guard documentHasKeyClock, keyLayer != nil, transformBarTargets.count == 1 else { return .dormant }
         return keyDiamond(.motion(field.property))
     }
 
@@ -280,7 +280,7 @@ extension EditorState {
     /// depth, or a size an animation has changed.
     var canResetTransformBar: Bool {
         guard let document else { return false }
-        let posed = documentHasTime ? document.posedForCanvas(atTimeMS: documentTimeMS) : document
+        let posed = documentHasKeyClock ? document.posedForCanvas(atTimeMS: documentTimeMS) : document
         let time = documentTimeMS
         return transformBarTargets.contains { id in
             guard let stored = document.layer(id: id) else { return false }
@@ -301,7 +301,7 @@ extension EditorState {
     func resetTransformBar() {
         guard let document, canResetTransformBar else { return }
         let ids = document.allLayers.map(\.id).filter(transformBarTargets.contains)
-        let posed = documentHasTime ? document.posedForCanvas(atTimeMS: documentTimeMS) : document
+        let posed = documentHasKeyClock ? document.posedForCanvas(atTimeMS: documentTimeMS) : document
         let time = documentTimeMS
         let ease = newKeyEaseToWrite
         let ownSizes = Dictionary(uniqueKeysWithValues: ids.compactMap { id -> (UUID, CGSize)? in

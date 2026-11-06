@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/spinner-turns-about-the-artboard",
   "seed": "A spinner is an arc on a 24 unit icon, and an arc's own middle is not the middle of its circle: turned about its own box it orbits the icon instead of spinning (icon-loop-wt.html, step 3). This walk draws a shape off the middle of an icon frame, adds Rotation, and picks Artboard from the Around row (step 4): the pivot jumps to 12, 12, the middle of the icon, and the copied SVG turns about the same point. Then it drags the crosshair off and back, checking it pulls onto the icon's middle and onto the shape's own. Next defaults, no switch changed.",
-  "setup": { "forget": ["all"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
     { "do": "action", "action": "newFrameDialog" },

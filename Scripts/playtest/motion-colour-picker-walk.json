@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-colour-picker",
   "seed": "A motion that changes a layer's COLOUR has two colours to choose, From and To, and they used to be the only two colours in the panel that opened the Mac's own colour window: no shades, no colours out of the document, and none of the colours you had saved. This walk saves a colour called Brand off a shape's Fill, adds a Colour motion to that shape, then drives both wells through the app's own picker, which is the proof on its own: a walk can press the app's picker and cannot touch the system colour panel at all. Then To is driven a second time from the saved colours mark beside the well, by name. Both ends are put on colours of their own first, because the motion starts with both on the layer's own crimson and Brand IS that crimson: picking it straight away would be picking the colour already there. Both rows say the colour they are holding out loud, so each pick is read straight back, and one undo per pick puts it back.",
-  "setup": {
+  "setup": { "flags": { "next-picture-keys": false },
     "forget": [
       "tools",
       "panel",

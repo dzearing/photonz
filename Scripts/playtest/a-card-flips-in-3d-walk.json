@@ -22,7 +22,7 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "reveal", "control": "Properties section" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-the-picker", "note": "Animate a property on a box drawn on a recording lists a 3D group: Rotation X, Rotation Y, Depth and Pivot depth" },
     { "do": "expect", "control": "Rotation Y", "in": "Animate a property", "present": true },

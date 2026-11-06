@@ -26,7 +26,9 @@ extension EditorState {
         // would otherwise lose its timeline and with it the document
         // (`docs/design/video-surface.md` §2, §6).
         if document.hasTime { return Experiments.shared.cutRecordingEnabled }
-        return Experiments.shared.motionStripEnabled && document.hasMotion
+        // A keyed picture has one from its first hollow moment, before
+        // anything on it has moved.
+        return Experiments.shared.motionStripEnabled && (document.hasMotion || document.isKeyedPicture)
     }
 
     /// Whether it is on screen right now: there is one, and it has not been
@@ -85,6 +87,8 @@ extension EditorState {
     /// The length the strip measures, apart from one held through a glide.
     var motionStripCycleMSPastAGlide: Int {
         if let drag = motionTimingDrag { return drag.heldCycleMS }
+        // ...and a keyed picture's repeats mark (`EditorState+PictureKeys`).
+        if let drag = keyLapDrag { return drag.heldRulerMS }
         // ...and the same for a CLIP's bar, for the same reason
         // (`EditorState+ClipBar`).
         if let held = clipBarHeldTimelineMS { return held }

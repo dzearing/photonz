@@ -43,7 +43,7 @@ extension EditorState {
 
     /// The lanes of a layer, as the timeline is showing it.
     func keyLanes(layerID: UUID) -> [KeyLane] {
-        guard documentHasTime, let document = shownDocument ?? document else { return [] }
+        guard documentHasKeyClock, let document = shownDocument ?? document else { return [] }
         return document.keyLanes(layerID: layerID)
     }
 
@@ -54,13 +54,13 @@ extension EditorState {
     /// Captions track asking clip by clip searched the document 170 times on
     /// every far jump of the playhead.
     func keyedMotionsAtRest(layerIDs: [UUID]) -> [UUID: Set<UUID>] {
-        guard documentHasTime, let document else { return [:] }
+        guard documentHasKeyClock, let document else { return [:] }
         return document.keyedMotionIDs(anyOf: Set(layerIDs))
     }
 
     /// Whether any clip on a track has a value keyed: the arrow on its header.
     func trackHasKeyLanes(_ layerIDs: [UUID]) -> Bool {
-        guard documentHasTime, let document else { return false }
+        guard documentHasKeyClock, let document else { return false }
         return document.hasKeyLanes(anyOf: Set(layerIDs))
     }
 
@@ -296,7 +296,7 @@ extension EditorState {
         if canDeletePickedSoundPoints { return true }
         // A segment picked on a graph is in hand too, so ⌫ never reaches past
         // it to the clip; it deletes only the points picked with it.
-        guard documentHasTime, let keySelection, !keySelection.linePick.isEmpty,
+        guard documentHasKeyClock, let keySelection, !keySelection.linePick.isEmpty,
               selectedLayerID == keySelection.layerID,
               !isClipLocked(keySelection.layerID) else { return false }
         return true
@@ -414,7 +414,7 @@ extension EditorState {
 
     /// Whether ⌘C means keys: some are picked on the layer in hand.
     var canCopyPickedKeys: Bool {
-        guard documentHasTime, let keySelection, !keySelection.refs.isEmpty,
+        guard documentHasKeyClock, let keySelection, !keySelection.refs.isEmpty,
               selectedLayerID == keySelection.layerID else { return false }
         return true
     }
@@ -455,7 +455,7 @@ extension EditorState {
     /// Whether ⌘V means keys onto this layer (the picked one where nil): keys
     /// on the clipboard, and a value of theirs the layer has.
     func canPasteKeys(onto layerID: UUID? = nil) -> Bool {
-        guard documentHasTime, let id = layerID ?? pickedLayerID, !isClipLocked(id),
+        guard documentHasKeyClock, let id = layerID ?? pickedLayerID, !isClipLocked(id),
               let copied = keysOnClipboard, let document else { return false }
         return document.canPasteKeys(copied, layerID: id)
     }
@@ -521,7 +521,7 @@ extension EditorState {
     private var keyStepLayers: [UUID]? { pickedLayerID.map { [$0] } }
 
     func canGoToKey(forward: Bool) -> Bool {
-        guard documentHasTime, let document else { return false }
+        guard documentHasKeyClock, let document else { return false }
         return document.neighbourKeyMoment(layerIDs: keyStepLayers, from: documentTimeMS,
                                            forward: forward) != nil
     }
@@ -529,7 +529,7 @@ extension EditorState {
     /// ⇧K and ⌥K: the playhead to the next or previous key of the picked
     /// layer, or of anything where nothing is picked.
     func goToKey(forward: Bool) {
-        guard documentHasTime, let document,
+        guard documentHasKeyClock, let document,
               let moment = document.neighbourKeyMoment(layerIDs: keyStepLayers, from: documentTimeMS,
                                                        forward: forward) else { return }
         if isDocumentPlaying { pauseDocument() }

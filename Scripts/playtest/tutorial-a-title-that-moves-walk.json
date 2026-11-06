@@ -32,7 +32,7 @@
     { "do": "describe", "stage": "4-key-where-it-starts", "note": "the panel brought to the Properties section, which the card rings: Animate a property is how Position starts" },
     { "do": "snapshot", "name": "4-key-where-it-starts" },
 
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "press", "control": "Position", "in": "Animate a property" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "then-where-it-ends", "timeout": 6 },

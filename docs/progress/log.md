@@ -22565,3 +22565,20 @@ cannot do yet.
 
 Open question: whether K moves off the Lens (on the card).
 
+
+## 2026-11-05: Animating a picture, built
+
+The user answered the card with option a, and it is built at Next defaults
+(`next-picture-keys`). Pick a layer, press Add Key or K, change things: each change
+keys itself at the playhead and the picture tweens. It stays a picture: `Document.keyLap`
+plus the lap, never `hasTime`. A video's panel has the same button, the Lens gave up K,
+and the pivot shows only with the Rotation row picked.
+
+Walks: `picture-keys-*`, `video-add-key-walk`, and `tutorial-make-something-move-walk`
+rewritten for keys. 14 walks pin the flag off, because saved From and To rows still show.
+
+Next: the size pill's diamond and time (`the-size-pill-says-the-key-and-the-time-while-a`),
+and Ask setting keys through the same model (`ask-animates-what-it-makes-an-animated-svg-icon`).
+
+Open questions: whether a first timer stalls after the first key, and whether a still
+export should show the first moment or the playhead's.

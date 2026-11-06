@@ -18,7 +18,7 @@
     { "do": "describe", "stage": "2-pick-the-lens", "note": "a waiting step aimed at the lens button in the tool bar, which has a slot of its own so it is always on screen" },
     { "do": "snapshot", "name": "2-pick-the-lens" },
 
-    { "do": "key", "key": "k" },
+    { "do": "tool", "tool": "lens" },
     { "do": "waitFor", "condition": "tool", "value": "lens" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "drag-over-it", "timeout": 5 },
     { "do": "wait", "seconds": 0.5 },

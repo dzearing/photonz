@@ -655,7 +655,7 @@ public enum TutorialGuides {
                 id: "pick-the-lens",
                 anchor: .tool(.lens),
                 title: "Pick up the lens",
-                body: "Press K, or click it in the tool bar.",
+                body: "Click it in the tool bar, or pick it from the Tools menu.",
                 side: .above,
                 advance: .waitsFor(.toolPicked(.lens))),
             TutorialStep(
@@ -1931,18 +1931,23 @@ public enum TutorialGuides {
             TutorialStep(
                 id: "the-motion-list",
                 anchor: .panelSection("motion"),
-                title: "Motion is a list, like Effects",
-                body: "Same header, same plus, same rows. An Effects row is something the layer paints. A Motion row is something about it that changes.",
-                side: .leading,
-                prepare: [.showPanel, .revealTarget]),
-            TutorialStep(
-                id: "add-a-rotation",
-                anchor: .panelSection("motion"),
-                title: "Add a Rotation",
-                body: "The plus offers the properties this layer has, each with the number it is wearing. Take Rotation. It starts moving at once.",
+                title: "Press Add Key",
+                body: "Or press K. That sets a moment, and the timeline comes up under the picture. From now on a change to this layer lands on the diamond at the playhead.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "add-a-rotation",
+                anchor: .canvas,
+                title: "Turn it one way",
+                body: "Drag the round handle above the bell. Rotation is the property you changed, so it gets a row of its own and nothing else does.",
+                advance: .waitsFor(.editMade)),
+            TutorialStep(
+                id: "turn-it-back",
+                anchor: .canvas,
+                title: "Move on, and turn it back",
+                body: "Click the ruler further along, then turn the bell the other way. That is a second key, and the app tweens between the two. Press Space to watch.",
+                advance: .waitsFor(.editMade)),
             TutorialStep(
                 id: "the-bobblehead",
                 anchor: .canvas,
@@ -1950,17 +1955,15 @@ public enum TutorialGuides {
                 body: "It is turning about its own middle, so the top goes one way while the bottom goes the other. Nothing is wrong with the angles. The point it turns about is."),
             TutorialStep(
                 id: "say-what-it-turns-around",
-                anchor: .panelSection("motion"),
-                title: "Set Around to Top centre",
-                body: "A bell hangs from its crown. You can also drag the crosshair on the picture, which is the same one setting.",
-                side: .leading,
-                advance: .waitsFor(.editMade),
-                prepare: [.showPanel, .revealTarget]),
+                anchor: .canvas,
+                title: "Click Rotation, then drag the crosshair",
+                body: "A bell hangs from its crown. The crosshair shows while the Rotation row is picked, so drag it to the top of the bell.",
+                advance: .waitsFor(.editMade)),
             TutorialStep(
                 id: "nothing-is-baked-in",
                 anchor: .canvas,
                 title: "Now it swings",
-                body: "The drawing itself never changed. A motion is worked out as the picture is drawn, like a shadow, so the shape you can still drag is the one you drew."),
+                body: "The drawing itself never changed. A key is worked out as the picture is drawn, like a shadow, so the shape you can still drag is the one you drew."),
         ])
 
     /// When it happens and how long it takes, which is the whole difference
@@ -2286,7 +2289,7 @@ public enum TutorialGuides {
                 id: "key-where-it-starts",
                 anchor: .panelSection("keys"),
                 title: "Key where it starts",
-                body: "With the title picked, click Animate a property and choose Position. That writes down where it is at this moment.",
+                body: "With the title picked, press Add Key, then drag the title a little. That writes down where it is at this moment.",
                 advance: .waitsFor(.keyAdded),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(

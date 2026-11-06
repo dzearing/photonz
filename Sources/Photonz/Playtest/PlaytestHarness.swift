@@ -2290,9 +2290,17 @@ private final class Run {
         case .clickRuler(let seconds):
             let editor = try requireEditor()
             let ms = try rulerMoment(seconds, on: editor, doing: "click")
-            editor.beginRulerPress(atMS: ms, reachMS: 0)
-            editor.dragRulerPress(toMS: ms, moved: false, snapMS: 0)
-            editor.endRulerPress(atMS: ms, moved: false)
+            if editor.isKeyedPicture {
+                // A keyed picture's ruler has no marks or ranges to press:
+                // the press puts the playhead there (`PictureKeyRuler`).
+                editor.beginPlayheadDrag()
+                editor.dragPlayhead(toMS: ms)
+                editor.endPlayheadDrag()
+            } else {
+                editor.beginRulerPress(atMS: ms, reachMS: 0)
+                editor.dragRulerPress(toMS: ms, moved: false, snapMS: 0)
+                editor.endRulerPress(atMS: ms, moved: false)
+            }
             await sleep(0.1)
             note(number, step.name, "clicked the ruler at \(EditorState.timecode(ms: ms)): playhead "
                  + "\(editor.documentTimeMS) ms of \(editor.documentLengthTimecode)", state: describe())
@@ -7401,7 +7409,7 @@ private final class Run {
 
         case .action(let action) where action.drivesTheTrimTool && recording == nil:
             let editor = try requireEditor()
-            guard editor.documentHasTime else {
+            guard editor.documentHasKeyClock else {
                 throw Failure(description: "\(action.rawValue) needs a document that runs for a "
                     + "length of time, and this one does not")
             }
@@ -7723,6 +7731,11 @@ private final class Run {
                                            width: 1200, height: 720), display: true)
                 }
             case .keyAtPlayhead: editor.keyAtPlayhead()
+            case .pickRotationRow:
+                guard let layer = editor.keyLayer, let motion = layer.keyedMotion(.rotation) else {
+                    throw Failure(description: "the picked layer has no Rotation row to pick")
+                }
+                editor.pickKeyRow(layerID: layer.id, motionID: motion.id)
             case .curveThePath:
                 editor.setMotionPathShape(editor.motionPathShape == .curved ? .straight : .curved)
             case .easingEaseOutBack: editor.curveBetweenKeys(.easeOutBack)
@@ -20204,7 +20217,7 @@ private final class Run {
     }
 
     private func rulerMoment(_ seconds: Double, on editor: EditorState, doing what: String) throws -> Int {
-        guard editor.documentHasTime else {
+        guard editor.documentHasKeyClock else {
             throw Failure(description: "the ruler needs a document that runs for a length of time")
         }
         let ms = Int((seconds * 1000).rounded())

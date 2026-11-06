@@ -50,7 +50,7 @@ extension PhotonzDocument {
     /// left alone (`posedForCanvas` is theirs), and a layer with no keyed look
     /// is left exactly as it is.
     public func lookPosed(layerIDs: [UUID], atDocumentTimeMS ms: Int) -> PhotonzDocument {
-        guard hasTime else { return self }
+        guard hasKeyClock else { return self }
         var posed = self
         for id in layerIDs {
             guard let layer = layer(id: id) else { continue }
@@ -82,7 +82,7 @@ extension PhotonzDocument {
     public mutating func editLooks(layerIDs: [UUID], atDocumentTimeMS ms: Int,
                                    ease: KeyEase? = nil,
                                    _ mutate: (inout PhotonzDocument) -> Void) {
-        guard hasTime else { return mutate(&self) }
+        guard hasKeyClock else { return mutate(&self) }
         var stored: [UUID: Layer] = [:]
         // On a layer with keys every look the edit changes keys itself, the
         // ones not animating yet joining (`KeyMoments.swift`).

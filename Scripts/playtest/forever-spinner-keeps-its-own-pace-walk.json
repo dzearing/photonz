@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/forever-spinner-keeps-its-own-pace",
   "seed": "A spinner beside a bell (icon-loop-wt.html: 'with Forever on it, a length becomes a rate'). Every motion in an icon shares one lap as long as the longest, and until 2026-10-15 a Forever spinner shorter than that lap reached 360 degrees and sat there until the lap came round: an 800 ms spinner beside the bell's 900 ms swing stood still for a tenth of a second every turn, on the canvas and in the exported SVG. This walk draws the bell and the spinner, gives the bell the Rotation Add Motion offers and the spinner 0 to 360, Linear, Forever, over 800 ms, and checks the strip draws the spinner's next turn past its bar and the copied SVG turns the spinner every 800 ms with no hold while the bell keeps its 900 ms lap. The strip's header reads the spinner's own pace, 800 ms per turn, and says the turn ends where it starts, then says it does not when To is 300. Next defaults, no switch changed.",
-  "setup": { "forget": ["tools", "panel", "motion"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["tools", "panel", "motion"] },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 560, "width": 1420, "height": 1000 },
     { "do": "wait", "seconds": 1 },

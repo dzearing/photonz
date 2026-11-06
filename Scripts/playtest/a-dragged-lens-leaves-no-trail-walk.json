@@ -19,8 +19,7 @@
       "seconds": 1.5
     },
     {
-      "do": "key",
-      "key": "k"
+      "do": "tool", "tool": "lens"
     },
     {
       "do": "waitFor",

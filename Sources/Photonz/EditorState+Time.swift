@@ -34,7 +34,12 @@ extension EditorState {
     /// while a trim is running: then the clip is laid out at full length, so
     /// the transport and the ruler say how much there is to choose from rather
     /// than how much is currently kept (`EditorState+Trim`).
-    var documentLengthMS: Int { shownDocument?.documentDurationMS ?? 0 }
+    ///
+    /// A keyed picture runs for its lap (`PictureKeys.swift`).
+    var documentLengthMS: Int {
+        guard let shown = shownDocument else { return 0 }
+        return shown.isKeyedPicture ? shown.motionCycleLengthMS : shown.documentDurationMS
+    }
 
     /// The last moment there is a picture at.
     var lastDocumentTimeMS: Int { max(0, documentLengthMS - 1) }
@@ -66,6 +71,8 @@ extension EditorState {
     /// Put the playhead somewhere. Anything outside the document is clamped to
     /// it: there is no frame before the first one and none after the last.
     func scrubDocument(toMS ms: Int) {
+        // A hand on a keyed picture's ruler takes over from the lap.
+        if isMotionPlaying, isKeyedPicture { pauseMotionPreview() }
         let landing = min(max(0, ms), lastDocumentTimeMS)
         guard landing != documentTimeMS else { return }
         playheadTravel = landing < documentTimeMS ? .backward : .forward

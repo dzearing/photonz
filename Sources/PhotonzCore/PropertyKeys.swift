@@ -367,7 +367,7 @@ extension PhotonzDocument {
     }
 
     private func keyCycle(of layer: Layer) -> Int {
-        clockOwner(of: layer).motionCycleMS(documentCycleMS: max(1, documentDurationMS))
+        clockOwner(of: layer).motionCycleMS(documentCycleMS: max(1, timelineLengthMS))
     }
 
     /// The layer whose clock a layer's keys are read on: itself where it has a
@@ -523,7 +523,7 @@ extension PhotonzDocument {
                 updateLayer(id: layerID) { edited in
                     edited.motions = (edited.motions ?? []).map { $0.id == keyed.id ? next : $0 }
                 }
-            } else if hasTime, isAnimating(layer) {
+            } else if hasKeyClock, isAnimating(layer) {
                 // On a layer with keys any change keys itself, and a value
                 // that was not animating joins (`KeyMoments.swift`).
                 guard joinKeying(value, layerID: layerID, motion, effect: effect, clock: clock,
@@ -626,13 +626,13 @@ extension PhotonzDocument {
     public mutating func foldEditIntoKeys(layerID: UUID, before: Layer, restoring stored: Layer? = nil,
                                           atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
         let stored = stored ?? before
-        guard let after = layer(id: layerID), hasTime ? isAnimating(after) : after.hasMotion else { return false }
+        guard let after = layer(id: layerID), hasKeyClock ? isAnimating(after) : after.hasMotion else { return false }
         let keyed = Set((after.motions ?? []).map(\.property))
         // On a layer with keys any change keys itself (the user's answer on
         // 2026-10-13): a place, size or angle nobody keyed JOINS the
         // animation, holding its old value at the layer's key moments either
         // side (`KeyMoments.swift`). Outside time only what is keyed folds.
-        let joins = hasTime
+        let joins = hasKeyClock
         var restored = after
         var keys: [(MotionProperty, MotionValue)] = []
 
@@ -746,10 +746,13 @@ extension PhotonzDocument {
         let posing: Set<MotionProperty> = [.position, .scale, .rotation, .rotationX, .rotationY,
                                            .depth, .pivotDepth]
         let cameraMoves = !(camera?.motions ?? []).isEmpty
-        guard hasTime, cameraMoves || layers.contains(where: { layer in
+        // A keyed picture's layers are as often inside a frame as not: an
+        // icon's always are (`PictureKeys.swift`).
+        if isKeyedPicture { return posedPicture(atTimeMS: ms, posing: posing) }
+        guard hasKeyClock, cameraMoves || layers.contains(where: { layer in
             (layer.motions ?? []).contains { posing.contains($0.property) }
         }) else { return self }
-        let cycle = max(1, documentDurationMS)
+        let cycle = max(1, timelineLengthMS)
         var posed = self
         if cameraMoves { posed.camera = camera?.shown(atMS: ms, cycleMS: cycle) }
         posed.layers = layers.map { layer in

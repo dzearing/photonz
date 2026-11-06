@@ -1174,7 +1174,11 @@ extension CanvasNSView {
         // its calipers spread over (`MeasureSizeGroup`), so the stored box is
         // asked for rather than worked out from the slack.
         let stored = selectedLayer.withSlack(frame)
-        let center = CGPoint(x: stored.midX, y: stored.midY)
+        // A keyed turn with its pivot moved goes about the pivot, so the chrome
+        // does too, or the handles sit beside the shape they hold
+        // (`Layer.turnPivot`).
+        let center = selectedLayer.motionPivot?.point(in: stored)
+            ?? CGPoint(x: stored.midX, y: stored.midY)
         // Where the box the chrome is drawn round sits when nothing is in
         // flight, so a move in flight is the difference from it.
         let seen = selectedLayer.withoutSlack(selectedLayer.frame)

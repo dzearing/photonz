@@ -19,7 +19,7 @@
     { "do": "tool", "tool": "select" },
     { "do": "reveal", "control": "Properties section" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-the-list-open", "note": "THE FIRST PICTURE: the list open over the Properties section, its find box ready, every value the title can key under it" },
     { "do": "expect", "field": "Find a property", "reads": "Find a property" },
@@ -53,20 +53,20 @@
     { "do": "describe", "stage": "5-return-keys-blur", "note": "THE FOURTH TEST: Return keys the first value left, Blur, at the playhead, and the list closes" },
     { "do": "expect", "control": "Key", "in": "Blur", "reads": "on a key" },
     { "do": "expect", "control": "Position", "in": "Animate a property", "present": false },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "control": "Position", "in": "Animate a property", "present": true },
     { "do": "key", "key": "escape" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "6-escape-closes", "note": "THE FIFTH TEST: Escape closes the list" },
     { "do": "expect", "control": "Position", "in": "Animate a property", "present": false },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "control": "Position", "in": "Animate a property", "present": true },
     { "do": "press", "control": "Timeline Select" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "7-click-outside-closes", "note": "THE SIXTH TEST: a pointer click outside the list (the timeline's Select, already in hand) closes it, and the title stays picked" },
     { "do": "expect", "control": "Position", "in": "Animate a property", "present": false },
-    { "do": "expect", "control": "Animate a property", "present": true }
+    { "do": "expect", "control": "Add Key Menu", "present": true }
   ]
 }

@@ -101,8 +101,7 @@
       "present": false
     },
     {
-      "do": "press",
-      "control": "Animate a property"
+      "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
     },
     {
       "do": "wait",
@@ -414,8 +413,7 @@
       "name": "6-keying-off-keeps-the-size"
     },
     {
-      "do": "press",
-      "control": "Animate a property"
+      "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
     },
     {
       "do": "wait",

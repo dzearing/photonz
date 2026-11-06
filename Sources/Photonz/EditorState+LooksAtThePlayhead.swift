@@ -15,7 +15,7 @@ extension EditorState {
     /// playhead between keys. Just the document where nothing is keyed.
     var lookReadingDocument: PhotonzDocument? {
         guard let document else { return nil }
-        guard documentHasTime else { return document }
+        guard documentHasKeyClock else { return document }
         let ids = colorStyleTargetIDs.filter { document.layer(id: $0)?.motions?.isEmpty == false }
         guard !ids.isEmpty else { return document }
         return document.lookPosed(layerIDs: ids, atDocumentTimeMS: documentTimeMS)
@@ -24,7 +24,7 @@ extension EditorState {
     /// One layer as the look rows read it.
     func lookAtPlayhead(of id: UUID) -> Layer? {
         guard let document, let layer = document.layer(id: id) else { return nil }
-        guard documentHasTime, layer.motions?.isEmpty == false else { return layer }
+        guard documentHasKeyClock, layer.motions?.isEmpty == false else { return layer }
         return document.lookPosed(layerIDs: [id], atDocumentTimeMS: documentTimeMS).layer(id: id)
     }
 
@@ -33,14 +33,14 @@ extension EditorState {
     /// the commit alike, so what the hand sees is what lands.
     func editingLooksHere(_ ids: [UUID], in doc: inout PhotonzDocument,
                           _ mutate: (inout PhotonzDocument) -> Void) {
-        guard documentHasTime else { return mutate(&doc) }
+        guard documentHasKeyClock else { return mutate(&doc) }
         doc.editLooks(layerIDs: ids, atDocumentTimeMS: documentTimeMS,
                       ease: newKeyEaseToWrite, mutate)
     }
 
     /// `perform`, for a look row: one undo step, made at the playhead.
     func performLooksHere(_ ids: [UUID], _ mutate: (inout PhotonzDocument) -> Void) {
-        guard documentHasTime else { return perform(mutate) }
+        guard documentHasKeyClock else { return perform(mutate) }
         let time = documentTimeMS
         let ease = newKeyEaseToWrite
         perform { $0.editLooks(layerIDs: ids, atDocumentTimeMS: time, ease: ease, mutate) }

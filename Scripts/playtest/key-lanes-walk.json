@@ -80,8 +80,7 @@
       "control": "Properties section"
     },
     {
-      "do": "press",
-      "control": "Animate a property"
+      "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
     },
     {
       "do": "wait",
@@ -93,8 +92,7 @@
       "in": "Animate a property"
     },
     {
-      "do": "press",
-      "control": "Animate a property"
+      "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property"
     },
     {
       "do": "wait",

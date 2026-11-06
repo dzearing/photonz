@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/timing-strip-long-names-walk",
   "seed": "Layer names longer than one line of the timing strip's name column: Notification bell, Settings window and Title text layer, which used to fit before each heading gained its kind mark, plus one name too long even for two lines. At Next defaults, nothing switched on by hand. The mock (icon-animate-wt.html, the timing dock) wraps a long name onto a second line, so every one of the three reads whole without pointing at it; only the overlong one is cut, and it reads in full by resting the pointer on it.",
-  "setup": {
+  "setup": { "flags": { "next-picture-keys": false },
     "forget": [
       "tools",
       "panel",

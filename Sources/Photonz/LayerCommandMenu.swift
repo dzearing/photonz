@@ -122,6 +122,8 @@ enum LayerCommandList {
                 editorState.pasteLookOntoRow(id: id)
             })
         }
+        // Actions live where you click: the way into animating, on the layer.
+        rows.append(contentsOf: editorState.addKeyMenuRows(layerID: id))
         rows.append(.command("Select Pixels") { editorState.selectLayerPixels(id: id) })
         rows.append(.command("Merge Down", .command("e"),
                              enabled: editorState.canMergeDown(id: id)) { editorState.mergeDown(id: id) })

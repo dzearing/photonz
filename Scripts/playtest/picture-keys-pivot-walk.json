@@ -1,0 +1,202 @@
+{
+  "out": "/tmp/photonz-playtest/picture-keys-pivot-walk",
+  "seed": "Grabbing the layer (picture-keys.html): on a layer with a keyed Rotation a press in its middle moves the layer, never a pivot. A real click on the Rotation row brings the crosshair up, and the same drag then moves the pivot and writes no Position key. Next defaults.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1420,
+      "height": 980
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        120,
+        230
+      ],
+      "to": [
+        260,
+        370
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        190,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "shortcut",
+      "key": "k",
+      "modifiers": [],
+      "menuItem": "Add Key"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Key Menu",
+      "choose": "Animate a Property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Rotation",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "focus",
+      "field": "Rotation"
+    },
+    {
+      "do": "type",
+      "text": "30"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "1-turned"
+    },
+    {
+      "do": "describe",
+      "stage": "1-no-crosshair",
+      "note": "a keyed turn, nothing picked in the strip: no crosshair, so the first drag anybody makes moves the layer."
+    },
+    {
+      "do": "drag",
+      "from": [
+        190,
+        300
+      ],
+      "to": [
+        240,
+        300
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Key lane Rectangle Position",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-drag-moved-the-layer"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Key lane Rectangle Position",
+      "present": false
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        50,
+        961
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "3-the-row-picked-brings-the-crosshair"
+    },
+    {
+      "do": "drag",
+      "from": [
+        190,
+        300
+      ],
+      "to": [
+        190,
+        240
+      ],
+      "steps": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-the-pivot-moved",
+      "note": "THE TEST: the same drag from the same place, the row picked: the pivot moved and no Position key was written."
+    },
+    {
+      "do": "expect",
+      "field": "Key lane Rectangle Position",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "4-the-pivot-moved"
+    }
+  ]
+}

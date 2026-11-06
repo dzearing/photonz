@@ -42,6 +42,9 @@ extension EditorState {
     /// whether or not it was running: a number you just changed is a thing you
     /// want to SEE, and half a lap of the old timing is not it.
     func motionChanged() {
+        // A keyed picture has a playhead, and what it shows is the answer: it
+        // is stopped there on purpose (`EditorState+PictureKeys`).
+        guard !isKeyedPicture else { return }
         playMotionPreview()
     }
 
@@ -51,7 +54,7 @@ extension EditorState {
     /// changed yet, and snapping to the top under the hand is a jolt rather
     /// than an answer.
     func motionGestureBegan() {
-        guard !isMotionPlaying else { return }
+        guard !isMotionPlaying, !isKeyedPicture else { return }
         playMotionPreview()
     }
 
@@ -102,7 +105,7 @@ extension EditorState {
         // Animating shows it, and its curve is set on its keys on the
         // timeline, so a From and a To here would say it twice
         // (`a-layer-s-track-opens-into-one-lane-per-keyed-va`).
-        if documentHasTime { rows.removeAll { $0.repeats == .once && $0.isOn } }
+        if documentHasKeyClock { rows.removeAll { $0.repeats == .once && $0.isOn } }
         if let drag = motionTimingDrag,
            let index = rows.firstIndex(where: { $0.id == drag.motionID }) {
             rows[index] = rows[index].retimed(to: drag.timing)
@@ -227,8 +230,17 @@ extension EditorState {
 
     /// The turn on the picked layer, if it has one. Only a rotation has a
     /// pivot, and one property is one answer, so there is at most one.
+    ///
+    /// A keyed turn has a pivot too, but a press on a layer with keys always
+    /// moves the layer, so it answers only while its Rotation row is picked
+    /// (`picture-keys.html`, "Grabbing the layer"): a crosshair in the middle
+    /// of a turning layer otherwise takes the first drag anybody makes.
     var turningMotion: LayerMotion? {
-        motionRows.first { $0.property == .rotation }
+        if let looping = motionRows.first(where: { $0.property == .rotation }) { return looping }
+        guard Experiments.shared.pictureKeysEnabled, documentHasKeyClock,
+              let keyed = motionLayer?.keyedMotion(.rotation),
+              keyRowInHand?.motionID == keyed.id else { return nil }
+        return keyed
     }
 
     /// What the canvas draws a crosshair for, and drags: nil whenever nothing
@@ -403,7 +415,7 @@ extension EditorState {
     /// one rule, the next number typed would start a loop of a still icon.
     var canPlayMotion: Bool {
         guard Experiments.shared.motionEnabled, let document else { return false }
-        return document.automaticMotionCycleLengthMS > 0
+        return document.automaticMotionCycleLengthMS > 0 || document.isKeyedPicture
     }
 
     func toggleMotionPreview() {
@@ -418,9 +430,13 @@ extension EditorState {
 
     func restartMotionPreview() {
         motionTask?.cancel()
-        motionPlayheadMS = 0
+        // A keyed picture plays on from its playhead, like any timeline, and
+        // starts over from the end of a lap that does not repeat.
+        let keyed = document?.isKeyedPicture ?? false
+        let startMS = keyed && documentTimeMS < lastDocumentTimeMS ? documentTimeMS : 0
+        motionPlayheadMS = startMS
         isMotionPlaying = true
-        motionStartedAt = Date()
+        motionStartedAt = Date().addingTimeInterval(-motionSpeed.realSeconds(forMotionMS: startMS))
         rerender()
         motionTask = Task { @MainActor [weak self] in
             // Thirty frames a second. The composite is redrawn for each one,
@@ -438,11 +454,14 @@ extension EditorState {
                 let elapsed = self.motionSpeed.motionMS(
                     afterRealSeconds: Date().timeIntervalSince(started))
                 self.motionPlayheadMS = elapsed
+                let keyed = document.isKeyedPicture
+                if keyed { self.documentTimeMS = elapsed % max(1, document.motionCycleLengthMS) }
                 self.submit(document)
                 // Once nothing is moving any more the preview stops on its own
                 // rather than burning frames on a finished icon. The picture
                 // stays where the motion left it until you press play again.
                 if document.motionHasSettled(atMS: elapsed) {
+                    if keyed { self.documentTimeMS = self.lastDocumentTimeMS }
                     self.isMotionPlaying = false
                     self.motionTask = nil
                     return

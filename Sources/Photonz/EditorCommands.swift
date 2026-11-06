@@ -2070,6 +2070,14 @@ struct EditorCommands: Commands {
             // its key: the next press on the canvas puts the picked turn's
             // pivot down. Dimmed with nothing turning, so the row is where a
             // person learns the key exists.
+            // K only ever adds. The rows that walk the keys sit under it on a
+            // picture; a video has them in its own menu.
+            if Experiments.shared.pictureKeysEnabled {
+                Button("Add Key") { editor?.run(.keyAtPlayhead) }
+                    .keyboardShortcut("k", modifiers: [])
+                    .disabled(!(editor?.canRun(.keyAtPlayhead) ?? false))
+                if !(editor?.documentHasTime ?? false) { keyNavigationRows }
+            }
             if Experiments.shared.motionEnabled {
                 Button(MotionPivot.PlaceOnCanvas.menuBarTitle) { editor?.beginPlacingMotionPivot() }
                     .keyboardShortcut(KeyEquivalent(MotionPivot.PlaceOnCanvas.key), modifiers: [])

@@ -199,7 +199,7 @@ struct TutorialLooksTrackTests {
         let guide = try #require(TutorialCatalog.guide(id: "blur-what-is-underneath"))
         #expect(guide.steps.compactMap(\.advance.trigger).contains(.toolPicked(.lens)))
         let copy = guide.steps.map(\.body).joined(separator: " ")
-        #expect(copy.contains("K"), "the guide never says which key picks the lens up")
+        #expect(copy.contains("tool bar"), "the guide never says where the lens is picked up")
         // The reason most people reach for this: hiding something before
         // sending a screenshot on. Said out loud, including what really leaves
         // the app.

@@ -184,7 +184,7 @@ extension PhotonzDocument {
             return shown
         }
         var percent: Double = 100
-        let cycle = layer.motionCycleMS(documentCycleMS: max(1, documentDurationMS))
+        let cycle = layer.motionCycleMS(documentCycleMS: max(1, timelineLengthMS))
         if let scale = layer.keyedMotion(.scale),
            case let .number(number) = scale.value(atMS: key.atMS, cycleMS: cycle), number > 0 {
             percent = number

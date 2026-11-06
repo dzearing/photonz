@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-loop-preview-walk",
   "seed": "Watching a motion loop at the sizes it will really be used. An icon is drawn at 512 and used at 16, so a swing that reads beautifully on the canvas can be a shimmer where it counts, and the only way to find that out is to watch it at those sizes. This walk draws two shapes inside an icon frame, gives each of them a rotation, puts the second ninety milliseconds behind the first, and then works the previews card: it checks that the card grows a transport only once something moves, that the play button and the space bar are the same switch, that the speed control on the card and the one on the timing strip are one setting, and that dropping to a quarter leaves the loop running rather than starting it over.",
-  "setup": { "forget": ["tools", "panel", "shapes", "frames"] },
+  "setup": { "flags": { "next-picture-keys": false }, "forget": ["tools", "panel", "shapes", "frames"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
     { "do": "action", "action": "newFrameDialog" },

@@ -20,7 +20,7 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "reveal", "control": "Properties section" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "press", "control": "Animate a property" },
+    { "do": "panelMenu", "menu": "Add Key Menu", "choose": "Animate a Property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-the-picker", "note": "THE FIRST TEST: with three shadows on the title, Animate a property says which shadow each value belongs to, the way the Effects list numbers them" },
     { "do": "expect", "control": "Shadow 1 distance", "in": "Animate a property", "present": true },

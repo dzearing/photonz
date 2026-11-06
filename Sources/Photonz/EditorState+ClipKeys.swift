@@ -12,14 +12,14 @@ extension EditorState {
 
     /// The diamonds a layer's clip carries, as the timeline is showing it.
     func clipKeyMarks(layerID: UUID) -> [ClipKeyMark] {
-        guard documentHasTime, let document = shownDocument ?? document else { return [] }
+        guard documentHasKeyClock, let document = shownDocument ?? document else { return [] }
         return document.clipKeyMarks(layerID: layerID)
     }
 
     /// The same, for a clip's own bar, which only follows a drag it is in
     /// (`shownDocument(forClip:)`).
     func clipKeyMarks(onBarOf layerID: UUID) -> [ClipKeyMark] {
-        guard documentHasTime, let document = shownDocument(forClip: layerID) else { return [] }
+        guard documentHasKeyClock, let document = shownDocument(forClip: layerID) else { return [] }
         return document.clipKeyMarks(layerID: layerID)
     }
 
@@ -87,7 +87,7 @@ extension EditorState {
     /// Animate In ▸ and Animate Out ▸, for anything placed in time: a title, a
     /// piece of clip art, a component. Empty for everything else.
     func titleAnimationMenuRows(layerID: UUID) -> [MenuRow] {
-        guard documentHasTime, !isClipLocked(layerID),
+        guard documentHasKeyClock, !isClipLocked(layerID),
               let layer = document?.layer(id: layerID), layer.isPlacedInTime else { return [] }
         return [
             .submenu("Animate In", TitleAnimation.allCases.map { kind in

@@ -222,3 +222,23 @@ moving picture is stale before it lands.
 
 The **cycle timing strip** in the bottom dock is slice 3. The looping preview at real icon
 sizes is slice 4, and animated SVG export is slice 5.
+
+## Keys on a picture (2026-11-05)
+
+The plus and the From and To form are no longer how a picture starts moving.
+With `next-picture-keys` on (Next's default), a picture is animated the way a
+video is: pick a layer, press Add Key or K, change things. The approved design
+is `docs/design/mocks/pages/picture-keys.html`, and the model is
+`Sources/PhotonzCore/PictureKeys.swift`.
+
+- A keyed picture stays a picture. `hasTime` stays false, so the chip, the tool
+  bar and the title do not change. `Document.keyLap` says keys are on the lap and
+  whether it repeats, and `isKeyedPicture` asks whether anything still has a key,
+  so the last key going by any route leaves a still and undo needs nothing.
+- Keys are stored as `.once`, which is what makes them keys wherever they are
+  read. A repeating lap turns them into `.everyLap` only as it plays or writes a
+  file (`lappingKeys`), so Repeat rewrites nothing.
+- The rule above, "motion plays unless you stop it", is for motions on a picture
+  with no keys. A keyed picture has a playhead and stays where you put it.
+- Motion saved From and To keeps playing and keeps its rows, and a saved Once is
+  left alone until somebody presses Add Key on that picture.

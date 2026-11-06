@@ -58,7 +58,8 @@ struct PropertyKeysInspector: View {
 
     /// The one layer picked: its clip line, and what is keyed on it.
     @ViewBuilder private var keysOfOneLayer: some View {
-        if let line = editorState.keyClipLine {
+        // A layer in a picture is there all the time: no in, no out, no speed.
+        if editorState.documentHasTime, let line = editorState.keyClipLine {
             ClipLineRow(line: line)
         }
         // A recording's clicks, drawn or not (`ClickEffectRows`): a
@@ -75,8 +76,13 @@ struct PropertyKeysInspector: View {
         ForEach(rows, id: \.self) { property in
             PropertyKeyRow(property: property)
         }
-        AnimatePropertyButton(isOpen: $isPicking)
-            .padding(.top, 4)
+        if Experiments.shared.pictureKeysEnabled {
+            AddKeyControl(isPicking: $isPicking)
+                .padding(.top, 4)
+        } else {
+            AnimatePropertyButton(isOpen: $isPicking)
+                .padding(.top, 4)
+        }
         // How it gets from one key to the next, once something has two
         // (`video-move-wt.html`, `#secEase`).
         if editorState.betweenKeysProperty != nil {
@@ -88,7 +94,7 @@ struct PropertyKeysInspector: View {
     /// under an empty list ("Any property can be keyed, including colours and
     /// border width"); the panel holds labels and tools, never sentences.
     static let sectionHelp = "Any property can be keyed, even color and stroke width. "
-        + "Pick one from Animate a property to key it at the playhead"
+        + "Press Add Key, then change the layer. The arrow beside it keys one value without changing it"
 
     private var asking: Binding<Bool> {
         Binding(get: { editorState.keyStopQuestion != nil },
@@ -451,7 +457,7 @@ private struct AnimatePropertyButton: View {
 /// has now. Drawn over the panel rather than in a popover window beside it
 /// (`PanelPopover`), which is where the mock puts it and what keeps opening
 /// and closing it from redrawing the whole panel.
-private struct AnimatePropertyPicker: View {
+struct AnimatePropertyPicker: View {
     @Environment(EditorState.self) private var editorState
     @Binding var isOpen: Bool
     @State private var query = ""
@@ -530,7 +536,7 @@ private struct AnimatePropertyPicker: View {
         Task { @MainActor in
             await NextRunLoopPass.start()
             state.catchUpOnTheNextPassOnAVideo()
-            state.startAnimating(property)
+            state.animateFromThePicker(property)
         }
     }
 }
