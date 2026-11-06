@@ -5,11 +5,11 @@
   "epic": "ui-prototyping",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-11-05T14:44:52.741Z",
-  "updated": "2026-11-05T14:49:57.828Z",
+  "updated": "2026-11-06T08:41:13.429Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User, 2026-11-04 (intake): 'When we make a component, i'm not sure how to preview it interactively. e.g. i make a page with a bunch of components and want to preview it and hover over things or click on things...is this possible already?' and 2026-11-05: 'what happened to previewing the states of controls' (the intake window had proposed Preview mode and not filed it). Today: components have looks per state (ComponentVersionMatching names them), nothing plays them. Objective ui-prototyping ('Click-through prototyping') was staged later; this is its first step, asked for by the user. Mock reference: docs/design/mocks/pages/ui-prototype.html.",
@@ -38,6 +38,43 @@
     {
       "t": "2026-11-05T14:49:57.827Z",
       "note": "seq 4.5e-7 -> 70"
+    },
+    {
+      "t": "2026-11-06T08:25:38.052Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-11-06T08:29:51.392Z",
+      "note": "Reproduced at Next defaults: /tmp/pv-repro/walk.json is button-states-journey-walk plus a rest snapshot and a move to document point 240,640, on the Save copy of a component with Default, Hover, Pressed and Disabled looks. Walk status ok. Pixel diff of rest-sc.png against hovering-a-copy-sc.png: 3335 changed px, bbox 385,1021 to 470,1064, which is only the name tag above the copy opening from a diamond to Badge; the copy keeps its look. So nothing plays looks today, as the user reported. Click was not separately tested here: the same walk's click at that point picks the copy for editing."
+    },
+    {
+      "t": "2026-11-06T08:36:41.826Z",
+      "note": "Design done, no app code touched: docs/design/mocks/pages/component-preview.html, interactive, in the design site's nav under Prototyping. Its engine is the rule a build would run, in miniature; its word lists are AgentComponentSense's. Card preview-a-page-of-components-and-use-it-hover-pr-should-a-page-of-components-work has two marked pictures and a brief."
+    },
+    {
+      "t": "2026-11-06T08:36:41.893Z",
+      "note": "Checked in the browser with trusted clicks, hovers and keys on the Preview button, Save, the switch, a tab, a segment word, Tab, Esc and Cmd-Return, plus dispatched pointer events through the page's own handlers for press, slide off, slide back and release off. Hover, Pressed, click, flip, one tab kept, Month picked, Focused all read right; document JSON identical after leaving; Undo count 14 throughout; Show me ran to the end with no console errors. This proves the prototype's rules, not the app: nothing is built."
+    },
+    {
+      "t": "2026-11-06T08:36:41.961Z",
+      "note": "Adversarial review of the design, found by running it: (1) Ask leaving moved the Preview button about 97 pt under the pointer, so the second click missed: Ask now keeps its space. (2) A held press lit Hover on other controls: fixed. (3) The panel only went invisible, keeping 268 pt, since .edit.lean is flex, not grid: now collapses. (4) In a short window the pill sat 54 pt over the page: fit leaves its strip and the page is centred by hand; measured 8 pt clear at 520 and 420 high. (5) A plain Hover on an On or Selected copy would flip it back: a latched look needs a look naming both, else it stays. (6) Real sheets draw a segmented control as ONE component with looks named for its words, which state names alone miss: a click on the word shows that look. (7) A first timer cannot tell what is live; left as is, since a hint would add chrome and Preview draws only their looks. The user can say if it stalls them."
+    },
+    {
+      "t": "2026-11-06T08:36:42.037Z",
+      "note": "Chose a Preview button over reusing View and Edit because View already means a player on a video; the card offers the switch as option b. Chose Cmd-Return because no menu row holds it, the text field's use only applies while it has the keyboard, and ui-prototype.html prints it for Play flow; neither Photoshop nor Premiere settles it (UX-PATTERNS §7). Chose same parent as the rule for one group over nearness because the document already holds it. Chose Tab stopping only where a Focused look can show over a ring of our own because the task says only the looks they made. Chose instant look changes over a crossfade to match real Mac controls."
+    },
+    {
+      "t": "2026-11-06T08:36:42.103Z",
+      "note": "For the build, after approval. Pure core first, test first: state words beside AgentComponentSense, shown look, click, tab stops. Each variant question is read on its own, so a Type x State x Size copy only changes its State answer and nearestComponentDrawing covers the rest. Draw through displayDocument with the swapped instanceVersion on a throwaway value, never History.perform. Still to settle while building: a document changed from outside during Preview (an agent's tool call) should rebuild the throwaway copy; whether measurements hide; a long component name in the pill note must stay inside the 30 character chrome budget; main drawings on a sheet rest on their own look, so the Hover column shows Hover at rest."
+    },
+    {
+      "t": "2026-11-06T08:36:42.170Z",
+      "note": "Left for the user to ask for, per the checklist: connections between frames, click a button to go to another page, as ui-prototype.html draws. Also not in this step: typing into a field."
+    },
+    {
+      "t": "2026-11-06T08:41:13.425Z",
+      "note": "Design finished and with the user: interactive prototype at docs/design/mocks/pages/component-preview.html (commit 5c81ba66), card preview-a-page-of-components-and-use-it-hover-pr-should-a-page-of-components-work with two marked pictures and a brief. The task's own checklist says to build after approval, so no app code is written. The first checklist item is the only one finished; the rest wait on the answer. If the card comes back as option c, the next runner changes the prototype from the note and opens a new card; it does not build."
     }
-  ]
+  ],
+  "started": "2026-11-06T08:25:38.051Z"
 }
