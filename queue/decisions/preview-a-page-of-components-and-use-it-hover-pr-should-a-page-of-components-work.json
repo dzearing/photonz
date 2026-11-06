@@ -1,0 +1,66 @@
+{
+  "id": "preview-a-page-of-components-and-use-it-hover-pr-should-a-page-of-components-work",
+  "taskId": "preview-a-page-of-components-and-use-it-hover-pr",
+  "question": "Should a page of components work like this prototype: press Preview (1), then Save shows its Hover look under the pointer (2), a clicked switch stays On (3), one tab stays picked (4), and a pill says how to leave (5)?",
+  "context": "Try it at http://127.0.0.1:8791/index.html#component-preview and press Show me, or press Preview and use the page. This is the review your task asked for: nothing is built until you answer. Checked first on the real app: pointing at a copy only opens its name tag, and its look stays the same.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Build it as shown: a Preview button in the title bar, View ▸ Preview and ⌘Return to go in, Esc to leave, and one small pill on the canvas while you are in",
+      "summary": "On a picture with component copies, press Preview. The tools and panel go, the page shows at 100 percent, and every component behaves like the real control using the looks you made. Leave and nothing has changed.",
+      "pros": [
+        "Nothing to set up",
+        "One plain word, in the area that says how you are looking at the window",
+        "Never touches the document or Undo"
+      ],
+      "cons": [
+        "The pill is the one status pill allowed on the canvas",
+        "A new button in the title bar on pictures with components"
+      ],
+      "mitigation": "The pill sits where the tool bar was and covers nothing, and the button is absent on a picture with no components."
+    },
+    {
+      "id": "b",
+      "label": "Build it as shown, but the title bar uses video's View and Edit switch in place of a Preview button",
+      "summary": "Everything else is the same. Pictures with components get the switch a video already has, and View is the Preview. Use the switch above the prototype's window to see it.",
+      "shot": "2026-11-06-component-preview-option-switch.png",
+      "pros": [
+        "One control for looking and editing, on pictures and videos alike"
+      ],
+      "cons": [
+        "View on a video means a player, so the same word means two things",
+        "Pictures have had no View or Edit until now"
+      ],
+      "mitigation": "⌘Return stays the key, so nothing clashes with ⌘1, which is 100 percent on a picture."
+    },
+    {
+      "id": "c",
+      "label": "Not yet: change the prototype first, and build nothing until you see it again",
+      "summary": "Say what is wrong in the note on your answer. The prototype changes and a new card comes back to you.",
+      "pros": [
+        "Nothing gets built on a design you doubt"
+      ],
+      "cons": [
+        "Preview arrives later"
+      ],
+      "mitigation": "The prototype takes minutes to change; the build does not."
+    },
+    {
+      "id": "d",
+      "label": "Do not build this: the canvas stays for editing only",
+      "summary": "Drops the task. Looks can still be set by hand from the panel, one copy at a time.",
+      "pros": [
+        "No new mode to learn"
+      ],
+      "cons": [
+        "You still cannot try a page you made"
+      ],
+      "mitigation": "It can be asked for again at any time.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-11-06T08:36:09.502Z",
+  "shot": "2026-11-06-component-preview-review.png"
+}

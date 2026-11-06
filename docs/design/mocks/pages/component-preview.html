@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · component-preview</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+  /* Prototype for review (2026-11-06): trying a page of components for real.
+     Task `preview-a-page-of-components-and-use-it-hover-pr`. Page-local, `cp-`.
+
+     The engine below is the rule a build would run, in miniature: which look
+     means which state is read from the look's own name (the same word lists as
+     AgentComponentSense), a copy's stored look is never written, and everything
+     Preview does lives in `P`, which is thrown away on leaving. */
+  #component-preview .win.shell{height:760px;min-height:0}
+  #component-preview .cp-stage,#component-preview .cp-stage *{-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+
+  /* ---------- TRY IT · the flow, ticking itself off ---------- */
+  #component-preview .cp-try{display:flex;align-items:stretch;gap:var(--s2);margin:0 0 var(--s3);flex-wrap:wrap}
+  #component-preview .cp-step{flex:1 1 120px;min-width:112px;display:flex;gap:var(--s2);align-items:flex-start;
+    padding:var(--s2) var(--pad-sm);border-radius:var(--r3);background:var(--panel);border:1px solid var(--edge-lo);
+    font-size:12px;line-height:1.35;color:var(--dim);transition:border-color .2s ease}
+  #component-preview .cp-step b{color:var(--ink);font-weight:600;display:block}
+  #component-preview .cp-n{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;
+    font:600 10px/1 var(--sans);background:var(--panel-2);color:var(--dim);border:1px solid var(--line)}
+  #component-preview .cp-step.now{border-color:var(--accent)}
+  #component-preview .cp-step.done .cp-n{background:var(--good);border-color:var(--good);color:#fff}
+  #component-preview .cp-foot{display:flex;align-items:center;gap:var(--s2);margin:0 0 var(--s3);font-size:12px;color:var(--dim);flex-wrap:wrap}
+  #component-preview .cp-doc{font-variant-numeric:tabular-nums;color:var(--ink)}
+  #component-preview .cp-sp{flex:1}
+
+  /* ---------- THE WINDOW, and what leaves it in Preview ---------- */
+  #component-preview .pdock{transition:width .22s ease,opacity .18s ease}
+  #component-preview .tbar{transition:opacity .18s ease,transform .22s ease}
+  /* .edit.lean is a flex row (dock.css). data-dock="closed" would leave the rail
+     behind, and in Preview nothing of the panel stays. */
+  #cpWin.cp-on .pdock{width:0;min-width:0;border:0;opacity:0;pointer-events:none;overflow:hidden}
+  #cpWin.cp-on .splitter.v,#cpWin.cp-on .drail{display:none}
+  #cpWin.cp-on .tbar{opacity:0;transform:translate(-50%,12px);pointer-events:none}
+  /* Kept in its place, unseen: taking Ask out of the row would slide the Preview
+     button under the pointer, and the second click, the one that leaves, would
+     land beside it (UX-PATTERNS: a click never moves the control it landed on). */
+  #cpWin.cp-on .askbtn{visibility:hidden}
+  #component-preview .titlebar .cp-door{margin-left:auto;margin-right:var(--s2)}
+  #component-preview .titlebar .cp-door + .askbtn{margin-left:0}
+  #component-preview .cp-pv.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+
+  #component-preview .cp-stage{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}
+  /* Centred by hand: in a short window the unscaled box is taller than the stage,
+     and a grid cell would then start it at the top and leave it low. */
+  #component-preview .cp-page{position:absolute;left:50%;top:50%;margin:-300px 0 0 -320px;width:640px;height:600px;background:#fff;color:#1b1e26;
+    border-radius:2px;box-shadow:0 8px 30px rgba(0,0,0,.28);transform-origin:center;transition:transform .22s ease;
+    font:13px/1.3 var(--sans);padding:26px 32px}
+  #component-preview .cp-h{font-size:22px;font-weight:680;letter-spacing:-.01em;margin:0 0 14px}
+  #component-preview .cp-tabs{display:flex;gap:22px;border-bottom:1px solid #e3e5ea;margin-bottom:20px}
+  #component-preview .cp-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px 36px}
+  #component-preview .cp-lb{font-size:11.5px;font-weight:600;color:#5a6070;margin:0 0 6px}
+  #component-preview .cp-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:30px}
+  #component-preview .cp-radios{display:flex;gap:18px}
+  #component-preview .cp-acts{position:absolute;left:32px;right:32px;bottom:26px;display:flex;gap:10px;align-items:center}
+  #component-preview .cp-acts .cp-gap{flex:1}
+
+  /* ---------- THE COMPONENTS, one look each ---------- */
+  #component-preview .cp-c{position:relative;outline:0 solid transparent}
+  /* Button */
+  #component-preview .cp-btn{height:34px;padding:0 16px;border-radius:8px;display:inline-flex;align-items:center;font-weight:600;
+    background:#3f63f5;color:#fff}
+  #component-preview .cp-btn[data-look=hover]{background:#2f50dc}
+  #component-preview .cp-btn[data-look=pressed]{background:#2340b8;transform:translateY(1px)}
+  #component-preview .cp-btn[data-look=focused]{box-shadow:0 0 0 3px #b9c6ff}
+  #component-preview .cp-btn[data-look=disabled]{background:#e7e9ee;color:#747a86}
+  #component-preview .cp-btn.cp-quiet{background:#eef0f4;color:#1b1e26}
+  #component-preview .cp-btn.cp-quiet[data-look=hover]{background:#e0e3ea}
+  #component-preview .cp-btn.cp-quiet[data-look=pressed]{background:#d0d4dd}
+  /* Switch */
+  #component-preview .cp-sw{width:42px;height:24px;border-radius:12px;background:#d9dbe1}
+  #component-preview .cp-sw::after{content:"";position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  #component-preview .cp-sw[data-look=hover]{background:#c8cbd3}
+  #component-preview .cp-sw[data-look=focused]{box-shadow:0 0 0 3px #b9c6ff}
+  #component-preview .cp-sw[data-look=on],#component-preview .cp-sw[data-look="on hover"],#component-preview .cp-sw[data-look="on focused"]{background:#28b463}
+  #component-preview .cp-sw[data-look="on hover"]{background:#209a54}
+  #component-preview .cp-sw[data-look="on focused"]{box-shadow:0 0 0 3px #b9c6ff}
+  #component-preview .cp-sw[data-look^=on]::after{left:20px}
+  /* Checkbox */
+  #component-preview .cp-cbw{display:inline-flex;align-items:center;gap:8px}
+  #component-preview .cp-cb{display:inline-flex;align-items:center;gap:8px}
+  #component-preview .cp-cb i{width:18px;height:18px;border-radius:5px;border:1.5px solid #b4b8c2;background:#fff;display:grid;place-items:center;color:#fff;font:700 12px/1 var(--sans);font-style:normal}
+  #component-preview .cp-cb[data-look=hover] i{border-color:#3f63f5}
+  #component-preview .cp-cb[data-look=checked] i{background:#3f63f5;border-color:#3f63f5}
+  #component-preview .cp-cb[data-look=checked] i::after{content:"✓"}
+  /* Radio */
+  #component-preview .cp-rd{display:inline-flex;align-items:center;gap:6px}
+  #component-preview .cp-rd i{width:16px;height:16px;border-radius:50%;border:1.5px solid #b4b8c2;background:#fff;box-sizing:border-box}
+  #component-preview .cp-rd[data-look=hover] i{border-color:#3f63f5}
+  #component-preview .cp-rd[data-look=focused] i{box-shadow:0 0 0 3px #b9c6ff}
+  #component-preview .cp-rd[data-look=on] i{border:5px solid #3f63f5}
+  /* Tab */
+  #component-preview .cp-tab{padding:0 2px 9px;color:#5a6070;font-weight:560;border-bottom:2px solid transparent;margin-bottom:-1px}
+  #component-preview .cp-tab[data-look=hover]{color:#1b1e26}
+  #component-preview .cp-tab[data-look=focused]{color:#1b1e26;box-shadow:0 0 0 2px #b9c6ff;border-radius:4px}
+  #component-preview .cp-tab[data-look=selected]{color:#3f63f5;border-bottom-color:#3f63f5;font-weight:640}
+  /* Segmented, ONE component whose looks are named for its own words */
+  #component-preview .cp-seg{display:inline-flex;padding:2px;border-radius:8px;background:#eceef2}
+  #component-preview .cp-seg span{padding:4px 13px;border-radius:6px;color:#4d5362;font-weight:560}
+  #component-preview .cp-seg[data-look=day] [data-word=day],
+  #component-preview .cp-seg[data-look=week] [data-word=week],
+  #component-preview .cp-seg[data-look=month] [data-word=month]{background:#fff;color:#1b1e26;box-shadow:0 1px 2px rgba(0,0,0,.14)}
+  /* Field */
+  #component-preview .cp-fld{height:34px;border-radius:8px;border:1px solid #cfd2da;padding:0 10px;display:flex;align-items:center;background:#fff;color:#1b1e26}
+  #component-preview .cp-fld[data-look=hover]{border-color:#9096a4}
+  #component-preview .cp-fld[data-look=focused]{border-color:#3f63f5;box-shadow:0 0 0 3px #d6deff}
+  #component-preview .cp-fld[data-look=disabled]{background:#f1f2f5;color:#747a86;border-color:#e3e5ea}
+  /* Plan card: looks named for something other than a state */
+  #component-preview .cp-card{padding:10px 12px;border-radius:10px;background:#f5f1ff;border:1px solid #e0d4ff;color:#3b2a7a}
+  #component-preview .cp-card b{display:block;font-weight:640}
+  #component-preview .cp-card small{display:block;font-size:11.5px;color:#5b4b96}
+
+  /* Selection, only while editing */
+  #cpWin:not(.cp-on) .cp-c.cp-pick{outline:1.5px solid var(--comp);outline-offset:3px;border-radius:4px}
+  #component-preview .cp-tag{position:absolute;left:-3px;top:-25px;padding:1px 6px;border-radius:4px;background:#4d2a8c;color:#fff;
+    font:560 10.5px/16px var(--sans);white-space:nowrap;display:none;pointer-events:none}
+  #cpWin:not(.cp-on) .cp-c.cp-pick>.cp-tag{display:block}
+
+  /* ---------- THE PILL, the one thing Preview adds ---------- */
+  #component-preview .cp-pill{position:absolute;left:50%;bottom:16px;transform:translate(-50%,10px);opacity:0;pointer-events:none;
+    display:flex;align-items:center;gap:var(--s2);height:30px;padding:0 var(--pad-sm);border-radius:15px;white-space:nowrap;
+    background:color-mix(in srgb,var(--panel) 78%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.5);backdrop-filter:blur(18px) saturate(1.5);
+    border:1px solid var(--edge-lo);box-shadow:0 6px 20px rgba(0,0,0,.28);font-size:12px;color:var(--ink);
+    transition:opacity .18s ease,transform .22s ease}
+  #cpWin.cp-on .cp-pill{opacity:1;transform:translate(-50%,0)}
+  #component-preview .cp-pill b{font-weight:640}
+  #component-preview .cp-pill .cp-esc{color:var(--dim)}
+  #component-preview .cp-note{color:var(--dim);border-left:1px solid var(--line-strong);padding-left:var(--s2)}
+  #component-preview .cp-note:empty{display:none}
+
+  /* The demo's hand */
+  #component-preview .cp-hand{position:fixed;left:0;top:0;width:18px;height:18px;z-index:40;pointer-events:none;display:none;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+
+  /* ---------- PANEL ---------- */
+  #component-preview .cp-sec{padding:var(--s2) var(--pad-sm);font-size:12px;color:var(--dim)}
+  #component-preview .cp-sech{font-size:11px;font-weight:640;color:var(--ink);margin-bottom:var(--s2)}
+  #component-preview .cp-prop{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);min-height:26px}
+  #component-preview .cp-prop select{font:12px var(--sans);max-width:130px;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:6px;height:24px}
+  #component-preview .cp-lrow{display:flex;align-items:center;gap:var(--s2);padding:3px var(--s2);border-radius:5px;font-size:12px;color:var(--dim);cursor:default}
+  #component-preview .cp-lrow.on{background:var(--comp-soft);color:var(--ink)}
+  #component-preview .cp-lrow span:last-child{margin-left:auto;color:var(--faint);font-size:11px}
+
+  #component-preview .cp-tbl{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.4;margin-top:var(--s2)}
+  #component-preview .cp-tbl th{text-align:left;font-size:11px;color:var(--faint);font-weight:600;padding:var(--s1) var(--s2) var(--s1) 0;border-bottom:1px solid var(--line)}
+  #component-preview .cp-tbl td{vertical-align:top;padding:var(--s2) var(--s3) var(--s2) 0;border-bottom:1px solid var(--line-soft);color:var(--dim)}
+  #component-preview .cp-tbl td:first-child{color:var(--ink);font-weight:560;white-space:nowrap}
+  #component-preview .cp-tbl b{color:var(--ink);font-weight:600}
+  @media (prefers-reduced-motion:reduce){
+    #component-preview .cp-page,#component-preview .pdock,#component-preview .tbar,#component-preview .cp-pill{transition:none}
+  }
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="component-preview">
+  <div class="scen-head"><span class="pip" style="background:var(--comp)"></span><h2>Preview a page of components</h2><span class="k">· prototype: try the page as the real thing</span></div>
+
+  <p class="pglead">For review. Today the canvas is always for editing: pointing at a copy only opens its name tag, and clicking picks it.
+    Here, <b>Preview</b> makes the page in front of you behave like the real controls, using <b>only the looks you already made</b>, with nothing to
+    set up. Everything below really works, so press Preview and use the page. The page is drawn in HTML; every rule about which look shows when is the one a build would run.</p>
+
+  <div class="cp-try" id="cpTry"></div>
+  <div class="cp-foot">
+    <button class="btn sm" id="cpDemo">Show me</button>
+    <button class="btn ghost sm" id="cpReset">Start over</button>
+    <span class="cp-sp"></span>
+    <span>Title bar shows</span>
+    <span class="seg sm" id="cpDoorSeg"><button class="on" data-door="button">Preview button</button><button data-door="switch">View | Edit switch</button></span>
+    <span class="cp-doc" id="cpDoc"></span>
+  </div>
+
+  <div class="win tall cq shell" data-shell="settings-page · 640 × 600" data-ws="ui" id="cpWin">
+    <div class="edit lean" id="cpShell" data-dock="open">
+      <div class="cnv" id="cpCnv">
+        <div class="canvas">
+          <div class="cp-stage" id="cpStage"><div class="cp-page" id="cpPage" aria-label="The page"></div></div>
+        </div>
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <button class="tool" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+          </span>
+        </div>
+        <div class="cp-pill" id="cpPill" role="status"><b>Preview</b><span class="cp-esc">Esc to leave</span><span class="cp-note" id="cpNote"></span></div>
+      </div>
+      <div class="pdock" id="cpDock">
+        <div class="dgrp" id="cpLayersGrp">
+          <div class="dgrp-h"><span class="ttl">Layers</span><span class="cnt" id="cpCnt"></span></div>
+          <div class="dgrp-b" style="padding:var(--s1)" id="cpLayers"></div>
+        </div>
+        <div class="dgrp grow">
+          <div class="dgrp-h"><span class="ttl">Properties</span></div>
+          <div class="dgrp-b" style="padding:0" id="cpProps"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <svg class="cp-hand" id="cpHand" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 1v13l3.4-3 2.2 5 2.2-1-2.2-5H13z" fill="#111" stroke="#fff" stroke-width="1.2"/></svg>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Nothing to set up</div><p>The looks' <b>own names</b> say what they are for. Default, Hover, Pressed, Focused, Disabled, On, Off, Checked and Selected are read straight off the component. A look named for words the control shows (<b>Day, Week, Month</b>) moves to the word you click.</p></div>
+    <div class="c"><div class="lab g2">A state with no look</div><p>The copy <b>keeps the look it has</b>. Point at the Selected tab, or at the checked box: there is no Selected Hover, so it stays put rather than flipping back to Default. Name a look <b>On Hover</b> and it is used, as the switch here shows.</p></div>
+    <div class="c"><div class="lab g2">Nothing is kept</div><p>Flip everything, then leave. The page, the selection, the zoom and <b>Undo</b> are exactly as you left them, because Preview never touches the document. The count above the window never moves.</p></div>
+  </div>
+
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#6f9bff"></span><h2>The answers</h2><span class="k">· each with what is recommended and why</span></div>
+  <table class="cp-tbl">
+    <thead><tr><th>Question</th><th>Recommendation</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>The way in</td><td>A <b>Preview button at the right of the title bar</b>, on a picture holding at least one component copy, plus <b>View ▸ Preview</b> and <b>⌘Return</b>.</td><td>The title bar's job is how you are looking at the window. ⌘Return is free, and it is the key the prototyping mock already prints for Play flow. While text is being typed it still finishes the text.</td></tr>
+      <tr><td>The way out</td><td><b>Esc</b>, ⌘Return again, or the same button.</td><td>Three doors, none of them on the page, so nothing you are trying can be mistaken for a way out.</td></tr>
+      <tr><td>What goes</td><td>Tool bar, tool options, panel, Ask, name tags, selection, guides and rulers. The title bar stays, with the button lit.</td><td>You are looking at the page, not working on it. Keeping the title bar keeps the way out where you pressed to come in.</td></tr>
+      <tr><td>The page</td><td><b>100 percent</b>, or fitted when it would not fit. Your zoom and scroll come back on leaving. On a canvas with several screens, the screen holding your selection, else the one most in view.</td><td>A control is judged at its real size.</td></tr>
+      <tr><td>The pill</td><td>One small glass pill at the bottom, where the tool bar was: <b>Preview, Esc to leave</b>. It stays while you are in Preview.</td><td>Your task asked for it. It is the one status pill allowed on the canvas, since the placement contract otherwise keeps pills off it; everything that would have explained things has gone.</td></tr>
+      <tr><td>Looks named otherwise</td><td>Pointing at one puts a short note in the pill: <b>Plan: no state looks</b>. Try the card. It never blocks anything.</td><td>Your checklist asks for a note, not an error, and the pill is the only place that covers nothing you are trying.</td></tr>
+      <tr><td>Tab</td><td>Tab and ⇧Tab move in reading order and wrap. They stop only where a Focused look can show; <b>Space or Return is a click</b> on what has focus.</td><td>A stop that shows nothing looks like the key failed. Preview draws only your looks, so it adds no focus ring of its own.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#3ecf8e"></span><h2>What each kind does</h2><span class="k">· decided by the looks it has</span></div>
+  <table class="cp-tbl">
+    <thead><tr><th>It has</th><th>It behaves as</th><th>In Preview</th></tr></thead>
+    <tbody>
+      <tr><td>Hover, Pressed</td><td>A button</td><td>Point: Hover. Press: Pressed. Slide off while held: back, and no click. Release over it: a click, then Hover again.</td></tr>
+      <tr><td>On, or Checked</td><td>A switch or checkbox</td><td>A click flips it and it stays. Default beside Checked counts as Off.</td></tr>
+      <tr><td>On, in a component named Radio</td><td>A radio</td><td>A click turns it on, and the others of that component in the same group turn off. A click on the one that is on does nothing.</td></tr>
+      <tr><td>Selected</td><td>A tab</td><td>The same: copies of one component in one group keep one selected. A lone copy flips like a switch. Copies not in a group count as the page's group.</td></tr>
+      <tr><td>Looks named for its own words</td><td>A segmented control</td><td>A click on a word shows that word's look. That is how the sheets Ask makes draw them, as one component.</td></tr>
+      <tr><td>Focused, without Pressed or On</td><td>A field</td><td>A click gives it focus and Focused holds until focus moves. Typing into it is not part of this step.</td></tr>
+      <tr><td>Disabled, as the look it shows</td><td>Disabled</td><td>Nothing responds, and Tab passes over it.</td></tr>
+      <tr><td>Anything else</td><td>A picture of itself</td><td>It stays still. Plain layers do too.</td></tr>
+    </tbody>
+  </table>
+  <p class="pglead" style="margin-top:var(--s4)">Not in this step: clicking a button to go to another page, as the Prototyping mock draws. That comes after, when you ask for it.</p>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var WIN = $("cpWin"), PAGE = $("cpPage");
+
+  // ---- the document: components with looks, and copies of them --------------
+  var COMPONENTS = {
+    button: { name: "Button", cls: "cp-btn", looks: ["Default", "Hover", "Pressed", "Focused", "Disabled"] },
+    quiet: { name: "Quiet Button", cls: "cp-btn cp-quiet", looks: ["Default", "Hover", "Pressed"] },
+    sw: { name: "Switch", cls: "cp-sw", looks: ["Off", "Hover", "Focused", "On", "On Hover", "On Focused"] },
+    check: { name: "Checkbox", cls: "cp-cb", looks: ["Default", "Hover", "Checked"] },
+    radio: { name: "Radio", cls: "cp-rd", looks: ["Off", "Hover", "Focused", "On"] },
+    tab: { name: "Tab", cls: "cp-tab", looks: ["Default", "Hover", "Focused", "Selected"] },
+    seg: { name: "Range", cls: "cp-seg", looks: ["Day", "Week", "Month"], words: true },
+    field: { name: "Text Field", cls: "cp-fld", looks: ["Default", "Hover", "Focused", "Disabled"] },
+    plan: { name: "Plan", cls: "cp-card", looks: ["Compact", "Expanded"] }
+  };
+  function freshCopies() {
+    return [
+      { id: "tab1", c: "tab", look: "Selected", group: "tabs", text: "General" },
+      { id: "tab2", c: "tab", look: "Default", group: "tabs", text: "Privacy" },
+      { id: "tab3", c: "tab", look: "Default", group: "tabs", text: "Billing" },
+      { id: "name", c: "field", look: "Default", text: "Robin Avery" },
+      { id: "email", c: "field", look: "Disabled", text: "robin@example.com" },
+      { id: "notify", c: "sw", look: "Off" },
+      { id: "digest", c: "check", look: "Default", text: "Weekly digest" },
+      { id: "r1", c: "radio", look: "On", group: "theme", text: "Light" },
+      { id: "r2", c: "radio", look: "Off", group: "theme", text: "Dark" },
+      { id: "r3", c: "radio", look: "Off", group: "theme", text: "Auto" },
+      { id: "range", c: "seg", look: "Week" },
+      { id: "plan", c: "plan", look: "Compact" },
+      { id: "del", c: "button", look: "Disabled", text: "Delete Account" },
+      { id: "cancel", c: "quiet", look: "Default", text: "Cancel" },
+      { id: "save", c: "button", look: "Default", text: "Save" }
+    ];
+  }
+  var D = { copies: freshCopies(), history: 14 };
+  var door = "button", pick = null;
+  function copy(id) { return D.copies.filter(function (x) { return x.id === id; })[0]; }
+  function comp(c) { return COMPONENTS[c.c]; }
+
+  // ---- which look means which state, from its name --------------------------
+  var ROLE = {
+    rest: ["default", "normal", "rest", "resting"], off: ["off", "unchecked", "unselected", "deselected"],
+    on: ["on", "checked"], selected: ["selected"], hover: ["hover", "hovered"], pressed: ["pressed"],
+    focused: ["focused", "focus"], disabled: ["disabled"]
+  };
+  function words(look) { return look.toLowerCase().split(/[^a-z]+/).filter(Boolean); }
+  function roleOfWord(w) { for (var r in ROLE) if (ROLE[r].indexOf(w) >= 0) return r; return null; }
+  function rolesOf(look) { return words(look).map(roleOfWord); }
+  function plain(c, role) {   // the look that is exactly this role
+    return comp(c).looks.filter(function (l) { var r = rolesOf(l); return r.length === 1 && r[0] === role; })[0] || null;
+  }
+  function compound(c, base, role) {   // "On Hover": the resting look plus this state
+    return comp(c).looks.filter(function (l) {
+      var r = rolesOf(l); return r.length === 2 && r.indexOf(role) >= 0 && r.indexOf(rolesOf(base)[0]) >= 0;
+    })[0] || null;
+  }
+  function hasStateLooks(c) {
+    return comp(c).words || comp(c).looks.some(function (l) { return rolesOf(l).some(function (r) { return r && r !== "rest"; }); });
+  }
+  function isLatched(base) { var r = rolesOf(base)[0]; return r === "on" || r === "selected"; }
+
+  // ---- Preview: everything here is thrown away on leaving --------------------
+  var P = null;   // { rest:{id:look}, hover:id, pressed:id, armed:id, focus:id }
+  function resting(c) { return (P && P.rest[c.id]) || c.look; }
+  function isDisabled(c) { return rolesOf(resting(c))[0] === "disabled"; }
+  function stateLook(c, base, role) {
+    // The look for a state from where this copy rests. On or Selected needs a
+    // look naming both; a plain Hover drawn for the off copy would flip it back.
+    return compound(c, base, role) || (isLatched(base) ? null : plain(c, role));
+  }
+  function shown(c) {
+    var base = resting(c);
+    if (!P || isDisabled(c)) return base;
+    // While a press is held nothing else lights up, as with real controls.
+    var held = P.pressed === c.id, over = P.hover === c.id && (!P.armed || P.armed === c.id), foc = P.focus === c.id, l = null;
+    if (held) l = stateLook(c, base, "pressed");
+    if (!l && (over || held)) l = stateLook(c, base, "hover");
+    if (!l && foc) l = stateLook(c, base, "focused");
+    return l || base;
+  }
+  function groupOf(c) {
+    return D.copies.filter(function (o) { return o.c === c.c && o.group === c.group; });
+  }
+  function click(c, word) {
+    if (isDisabled(c)) return;
+    var base = resting(c), k = comp(c);
+    if (k.words) {
+      var hit = k.looks.filter(function (l) { return l.toLowerCase() === word; })[0];
+      if (hit) { P.rest[c.id] = hit; flags.seg = true; }
+      return;
+    }
+    var on = plain(c, "on"), sel = plain(c, "selected"), latch = on || sel;
+    if (latch) {
+      var off = plain(c, "off") || plain(c, "rest");
+      var keepsOne = groupOf(c).length > 1 && (sel || /radio/i.test(k.name));
+      if (keepsOne) {
+        groupOf(c).forEach(function (o) { P.rest[o.id] = o === c ? latch : off; });
+      } else {
+        P.rest[c.id] = base === latch ? off : latch;
+      }
+      if (c.c === "sw" || c.c === "check") flags.flipped = true;
+      if (c.c === "tab" || c.c === "radio") flags.group = true;
+      return;
+    }
+    if (plain(c, "focused") && !plain(c, "pressed")) { P.focus = c.id; return; }
+    if (plain(c, "pressed")) flags.clicked = true;
+  }
+  function tabStops() {
+    return D.copies.filter(function (c) {
+      if (isDisabled(c)) return false;
+      return !!stateLook(c, resting(c), "focused");
+    });
+  }
+  function tabKey(back) {
+    var s = tabStops(); if (!s.length) return;
+    var i = s.map(function (c) { return c.id; }).indexOf(P.focus);
+    var n = i < 0 ? (back ? s.length - 1 : 0) : (i + (back ? -1 : 1) + s.length) % s.length;
+    P.focus = s[n].id; flags.tabbed = true; draw();
+  }
+
+  // ---- entering and leaving ---------------------------------------------------
+  var before = null;
+  function enter() {
+    if (P) return;
+    P = { rest: {}, hover: null, pressed: null, armed: null, focus: null };
+    before = JSON.stringify(D);
+    flags.entered = true;
+    WIN.classList.add("cp-on"); draw(); fit();
+  }
+  function leave() {
+    if (!P) return;
+    if (flags.entered && (flags.clicked || flags.flipped || flags.group)) flags.left = JSON.stringify(D) === before;
+    P = null;
+    WIN.classList.remove("cp-on"); draw(); fit();
+  }
+  function togglePreview() { if (P) leave(); else enter(); }
+
+  // ---- drawing -----------------------------------------------------------------
+  var EL = {};
+  function make(id, extra) {
+    var c = copy(id), k = comp(c), e = document.createElement("div");
+    e.className = "cp-c " + k.cls; e.dataset.copy = id; e.setAttribute("aria-label", k.name);
+    var tag = '<span class="cp-tag">' + k.name + "</span>";
+    if (c.c === "check") e.innerHTML = "<i></i>" + c.text + tag;
+    else if (c.c === "radio") e.innerHTML = "<i></i>" + c.text + tag;
+    else if (c.c === "seg") e.innerHTML = k.looks.map(function (l) { return '<span data-word="' + l.toLowerCase() + '">' + l + "</span>"; }).join("") + tag;
+    else if (c.c === "plan") e.innerHTML = "<b>Pro plan</b><small>Billed yearly, renews in March</small>" + tag;
+    else e.innerHTML = (c.text || "") + tag;
+    EL[id] = e; return e;
+  }
+  function div(cls, html) { var e = document.createElement("div"); e.className = cls; if (html) e.innerHTML = html; return e; }
+  function build() {
+    PAGE.innerHTML = ""; EL = {};
+    PAGE.appendChild(div("cp-h", "Settings"));
+    var tabs = div("cp-tabs"); ["tab1", "tab2", "tab3"].forEach(function (i) { tabs.appendChild(make(i)); }); PAGE.appendChild(tabs);
+    var cols = div("cp-cols");
+    var a = div(""); a.appendChild(div("cp-lb", "Name")); a.appendChild(make("name")); cols.appendChild(a);
+    var b = div(""); b.appendChild(div("cp-lb", "Email")); b.appendChild(make("email")); cols.appendChild(b);
+    var c = div(""); var r1 = div("cp-row"); r1.appendChild(div("", "Notifications")); r1.appendChild(make("notify")); c.appendChild(r1);
+    var r2 = div("cp-row"); r2.appendChild(make("digest")); c.appendChild(r2); cols.appendChild(c);
+    var d = div(""); d.appendChild(div("cp-lb", "Theme")); var rr = div("cp-radios"); ["r1", "r2", "r3"].forEach(function (i) { rr.appendChild(make(i)); }); d.appendChild(rr); cols.appendChild(d);
+    var e = div(""); e.appendChild(div("cp-lb", "Show activity by")); e.appendChild(make("range")); cols.appendChild(e);
+    var f = div(""); f.appendChild(div("cp-lb", "Plan")); f.appendChild(make("plan")); cols.appendChild(f);
+    PAGE.appendChild(cols);
+    var acts = div("cp-acts"); acts.appendChild(make("del")); acts.appendChild(div("cp-gap")); acts.appendChild(make("cancel")); acts.appendChild(make("save")); PAGE.appendChild(acts);
+  }
+  function drawDoor() {
+    var tb = WIN.querySelector(".titlebar"), old = tb.querySelector(".cp-door"); if (old) old.remove();
+    var h;
+    if (door === "button") {
+      h = document.createElement("button"); h.className = "btn sm cp-door cp-pv" + (P ? " on" : "");
+      h.id = "cpPreviewBtn"; h.title = "Preview (⌘Return)"; h.innerHTML = '<i class="ic ic-play"></i> Preview';
+      h.addEventListener("click", togglePreview);
+    } else {
+      h = document.createElement("span"); h.className = "seg sm cp-door"; h.id = "cpPreviewBtn";
+      h.innerHTML = '<button class="' + (P ? "on" : "") + '" title="View (⌘Return)">View</button><button class="' + (P ? "" : "on") + '" title="Edit (⌘Return)">Edit</button>';
+      h.children[0].addEventListener("click", enter); h.children[1].addEventListener("click", leave);
+    }
+    tb.insertBefore(h, tb.querySelector(".askbtn"));
+  }
+  function draw() {
+    D.copies.forEach(function (c) {
+      var e = EL[c.id]; e.dataset.look = shown(c).toLowerCase();
+      e.classList.toggle("cp-pick", pick === c.id);
+    });
+    drawDoor();
+    var over = P && P.hover ? copy(P.hover) : null;
+    $("cpNote").textContent = over && !hasStateLooks(over) ? comp(over).name + ": no state looks" : "";
+    $("cpCnt").textContent = D.copies.length;
+    $("cpLayers").innerHTML = D.copies.map(function (c) {
+      return '<div class="cp-lrow' + (pick === c.id ? " on" : "") + '" data-row="' + c.id + '"><span>' + (c.text || comp(c).name) + "</span><span>" + c.look + "</span></div>";
+    }).join("");
+    var p = pick && copy(pick);
+    $("cpProps").innerHTML = p
+      ? '<div class="cp-sec"><div class="cp-sech">' + comp(p).name + '</div><div class="cp-prop"><span>State</span><select id="cpState" aria-label="State">' +
+        comp(p).looks.map(function (l) { return "<option" + (l === p.look ? " selected" : "") + ">" + l + "</option>"; }).join("") + "</select></div></div>"
+      : '<div class="cp-sec" style="color:var(--faint)">Pick a component</div>';
+    var st = $("cpState"); if (st) st.addEventListener("change", function () { p.look = st.value; D.history++; draw(); });
+    $("cpDoc").textContent = "Undo history: " + D.history + " steps";
+    drawTry();
+  }
+  var STEPS = [
+    ["entered", "Go in", "Press Preview, or ⌘Return"],
+    ["hovered", "Point", "Hold the pointer on Save"],
+    ["clicked", "Press", "Press and release Save"],
+    ["flipped", "Flip", "Click the switch: it stays"],
+    ["group", "Pick", "Click a tab: one stays picked"],
+    ["tabbed", "Tab", "Press Tab to move Focus"],
+    ["left", "Leave", "Esc: all back as it was"]
+  ];
+  var flags;
+  function resetFlags() { flags = { entered: false, hovered: false, clicked: false, flipped: false, group: false, tabbed: false, left: false, seg: false }; }
+  function drawTry() {
+    var nowSet = false;
+    $("cpTry").innerHTML = STEPS.map(function (s, i) {
+      var done = !!flags[s[0]], now = !done && !nowSet; if (now) nowSet = true;
+      return '<div class="cp-step' + (done ? " done" : now ? " now" : "") + '"><span class="cp-n">' + (done ? "✓" : i + 1) + "</span><span><b>" + s[1] + "</b>" + s[2] + "</span></div>";
+    }).join("");
+  }
+  function fit() {
+    var s = $("cpStage"), w = s.clientWidth, h = s.clientHeight;
+    if (!w || !h) return;
+    // Editing sits at whatever zoom you left it; Preview is 100 per cent, or fitted.
+    // The fit leaves the pill's strip clear, top and bottom alike since the page
+    // is centred, so the pill can never sit on the page being tried.
+    var k = P ? Math.min((w - 40) / 640, (h - 108) / 600, 1) : Math.min((w - 40) / 640, (h - 150) / 600, 0.8);
+    PAGE.style.transform = "scale(" + k + ")";
+  }
+
+  // ---- the hand --------------------------------------------------------------
+  function copyAt(t) { var e = t && t.closest ? t.closest("[data-copy]") : null; return e ? e.dataset.copy : null; }
+  function point(id) {
+    if (!P || P.hover === id) return;
+    P.hover = id;
+    if (id === "save" && shown(copy("save")) === "Hover") flags.hovered = true;
+    draw();
+  }
+  function press(id) {
+    if (!P) return;
+    var c = copy(id); if (!c || isDisabled(c)) { P.armed = null; return; }
+    P.armed = id; P.pressed = id; draw();
+  }
+  function release(id, word) {
+    if (!P) return;
+    var armed = P.armed; P.armed = null; P.pressed = null;
+    if (armed && armed === id) click(copy(id), word);
+    draw();
+  }
+  PAGE.addEventListener("pointermove", function (ev) {
+    if (!P) return;
+    var id = copyAt(ev.target);
+    if (P.armed) { P.pressed = id === P.armed ? id : null; }
+    point(id);
+    if (P.armed) draw();
+  });
+  PAGE.addEventListener("pointerleave", function () { if (P) { if (P.armed) P.pressed = null; point(null); draw(); } });
+  PAGE.addEventListener("pointerdown", function (ev) { if (P) { var id = copyAt(ev.target); if (id) press(id); } });
+  window.addEventListener("pointerup", function (ev) {
+    if (!P) return;
+    var w = ev.target && ev.target.dataset ? ev.target.dataset.word : null;
+    release(copyAt(ev.target), w);
+  });
+  PAGE.addEventListener("click", function (ev) { if (P) return; var id = copyAt(ev.target); pick = id; draw(); });
+  $("cpLayers").addEventListener("click", function (ev) { var r = ev.target.closest("[data-row]"); if (r && !P) { pick = r.dataset.row; draw(); } });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && ev.metaKey) { ev.preventDefault(); togglePreview(); return; }
+    if (!P) return;
+    if (ev.key === "Escape") { ev.preventDefault(); leave(); return; }
+    if (ev.key === "Tab") { ev.preventDefault(); tabKey(ev.shiftKey); return; }
+    if ((ev.key === " " || ev.key === "Enter") && P.focus) { ev.preventDefault(); click(copy(P.focus)); draw(); }
+  });
+  $("cpDoorSeg").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-door]"); if (!b) return;
+    door = b.dataset.door;
+    Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle("on", x === b); });
+    draw();
+  });
+
+  // ---- start over, and Show me ------------------------------------------------
+  var demoRun = 0;
+  function reset() { demoRun++; $("cpHand").style.display = "none"; P = null; WIN.classList.remove("cp-on"); D = { copies: freshCopies(), history: 14 }; pick = null; resetFlags(); build(); draw(); fit(); }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function centre(id) { var r = EL[id].getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+  var hand = { x: 0, y: 0 };
+  function glide(id, run) {
+    var to = centre(id), from = { x: hand.x, y: hand.y }, a = performance.now();
+    $("cpHand").style.display = "block";
+    return new Promise(function (done) {
+      (function go(now) {
+        if (run !== demoRun) return done();
+        var k = Math.min(1, (now - a) / 520), e = k * k * (3 - 2 * k);
+        hand.x = from.x + (to.x - from.x) * e; hand.y = from.y + (to.y - from.y) * e;
+        $("cpHand").style.transform = "translate(" + hand.x + "px," + hand.y + "px)";
+        if (k < 1) requestAnimationFrame(go); else { point(id); done(); }
+      })(a);
+    });
+  }
+  async function demo() {
+    reset(); var run = demoRun;
+    var r = WIN.getBoundingClientRect(); hand = { x: r.left + r.width / 2, y: r.top + 60 };
+    await wait(500); if (run !== demoRun) return;
+    enter(); await wait(700); if (run !== demoRun) return;
+    await glide("save", run); await wait(700); if (run !== demoRun) return;
+    press("save"); await wait(450); if (run !== demoRun) return;
+    release("save"); await wait(500); if (run !== demoRun) return;
+    await glide("notify", run); await wait(400); if (run !== demoRun) return;
+    press("notify"); await wait(160); release("notify"); await wait(700); if (run !== demoRun) return;
+    await glide("tab2", run); await wait(300); if (run !== demoRun) return;
+    press("tab2"); await wait(160); release("tab2"); await wait(700); if (run !== demoRun) return;
+    await glide("del", run); await wait(500); if (run !== demoRun) return;
+    await glide("plan", run); await wait(1100); if (run !== demoRun) return;
+    point(null); $("cpHand").style.display = "none"; await wait(300);
+    tabKey(); await wait(700); if (run !== demoRun) return;
+    tabKey(); await wait(700); if (run !== demoRun) return;
+    leave();
+  }
+  $("cpDemo").addEventListener("click", demo);
+  $("cpReset").addEventListener("click", reset);
+
+  if (window.ResizeObserver) new ResizeObserver(fit).observe($("cpStage"));
+  resetFlags(); build(); draw(); fit();
+
+  /* The loop saves files while somebody tries this, and a save reloads the page:
+     hold it while they are in Preview (dev-server.mjs). */
+  window.__holdReload = function () { return !!P; };
+
+  /* For the checks that drive this page. */
+  window.cpMock = {
+    look: function (id) { return shown(copy(id)); }, stored: function (id) { return copy(id).look; }, doc: function () { return JSON.stringify(D); },
+    enter: enter, leave: leave, point: point, press: press, release: release, tab: tabKey, stops: function () { return tabStops().map(function (c) { return c.id; }); },
+    flags: function () { return flags; }, note: function () { return $("cpNote").textContent; }, reset: reset, demo: demo,
+    on: function () { return !!P; }
+  };
+})();
+</script>
+</body>
+</html>

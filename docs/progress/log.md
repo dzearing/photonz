@@ -22586,3 +22586,13 @@ export should show the first moment or the playhead's.
 ## 2026-11-05: the icon previews read as previews
 
 The card says Actual sizes and draws every size on a Light and a Dark ground, so nothing looks picked. A press stops at the card and does nothing. The card keeps off the icon: another corner, then the empty artboard, then fewer sizes, and it goes when zoomed right in (`IconPreviews.placement`). icon-draw-wt.html is redrawn to match. Open question: the animate mocks still print Real size on this card.
+
+## 2026-11-06: Preview a page of components, designed and with the user
+
+What changed: `docs/design/mocks/pages/component-preview.html`, an interactive prototype in the design site's nav under Prototyping, and a review card with two marked pictures and a brief. No app code. Reproduced first on the real app: pointing at a copy only opens its name tag, and its look stays the same.
+
+The prototype answers how Preview is entered and left, what the window looks like, and what each kind of component does. Trying it found what reading did not: Ask leaving moved the Preview button under the pointer, a plain Hover would flip an On copy back, real sheets draw a segmented control as one component named for its words, and the pill overlapped a fitted page in a short window. All four are settled in the prototype.
+
+What's next: the task waits on the card, since its checklist says to build after approval. The build notes are in the task log. Option c changes the prototype and opens a new card; it does not build.
+
+Open question: whether a first timer can tell what is live on the page, since Preview draws only their looks and adds no hints.
